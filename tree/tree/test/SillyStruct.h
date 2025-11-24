@@ -1,3 +1,6 @@
+#ifndef SILLYSTRUCT_H
+#define SILLYSTRUCT_H
+
 #include "Rtypes.h"
 #include "TObject.h"
 
@@ -15,3 +18,5 @@ public:
 
    ClassDefOverride(SillyStruct, 1)
 };
+
+#endif

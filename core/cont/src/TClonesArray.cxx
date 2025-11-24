@@ -131,6 +131,7 @@ When investigating misuse of TClonesArray, please make sure of the following:
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"
+#include "TProcessID.h"
 #include "snprintf.h"
 
 #include <cstdlib>
@@ -430,9 +431,13 @@ void TClonesArray::Clear(Option_t *option)
          TObject *obj = UncheckedAt(i);
          if (obj) {
             obj->Clear(cplus);
-            obj->ResetBit( kHasUUID );
-            obj->ResetBit( kIsReferenced );
-            obj->SetUniqueID( 0 );
+            if (obj->TestBit(TObject::kIsReferenced))
+               if (auto pid = TProcessID::GetProcessWithUID(obj)) {
+                  pid->RecursiveRemove(obj);
+                  obj->ResetBit(TObject::kIsReferenced);
+               }
+            obj->ResetBit(kHasUUID);
+            obj->SetUniqueID(0);
          }
       }
    }
@@ -444,9 +449,23 @@ void TClonesArray::Clear(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Clear a slot in the array with option opt, later nullify it and call Compress
+/// \param index the index of the array to clear, it must be in range of length of fCont, range-check is not performed
+/// \param opt the option passed to the Clear function
+/// \note Consider calling Compress() after this operation
+void TClonesArray::ClearSlot(Int_t index, Option_t *opt)
+{
+   if (fCont[index]) {
+      fCont[index]->Clear(opt);
+      fCont[index] = nullptr;
+      Changed();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clear the clones array. Use this routine when your objects allocate
 /// memory (e.g. objects inheriting from TNamed or containing TStrings
-/// allocate memory). If not you better use Clear() since if is faster.
+/// allocate memory). If not you better use Clear() since it is faster.
 
 void TClonesArray::Delete(Option_t *)
 {
