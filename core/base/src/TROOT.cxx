@@ -1466,7 +1466,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return path name of obj somewhere in the //root/... path.
-/// The function returns the first occurence of the object in the list
+/// The function returns the first occurrence of the object in the list
 /// of folders. The returned string points to a static char array in TROOT.
 /// If this function is called in a loop or recursively, it is the
 /// user's responsibility to copy this string in their area.

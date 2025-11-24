@@ -361,7 +361,7 @@ When using the options 2 or 3 above, the labels are automatically
        h->SetCanExtend(TH1::kAllAxes);
 ~~~
  then, the Fill Function will automatically extend the axis range to
- accomodate the new value specified in the Fill argument. The method
+ accommodate the new value specified in the Fill argument. The method
  used is to double the bin size until the new value fits in the range,
  merging bins two by two. This automatic binning options is extensively
  used by the TTree::Draw function when histogramming Tree variables
@@ -6310,7 +6310,7 @@ void TH1::Paint(Option_t *option)
 /// NOTE:  The bin edges specified in xbins should correspond to bin edges
 /// in the original histogram. If a bin edge in the new histogram is
 /// in the middle of a bin in the original histogram, all entries in
-/// the split bin in the original histogram will be transfered to the
+/// the split bin in the original histogram will be transferred to the
 /// lower of the two possible bins in the new histogram. This is
 /// probably not what you want. A warning message is emitted in this
 /// case

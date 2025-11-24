@@ -6943,7 +6943,7 @@ void TClass::StreamerDefault(const TClass* pThis, void *object, TBuffer &b, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Adopt a TClassStreamer object.  Ownership is transfered to this TClass
+/// Adopt a TClassStreamer object.  Ownership is transferred to this TClass
 /// object.
 
 void TClass::AdoptStreamer(TClassStreamer *str)

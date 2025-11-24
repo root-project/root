@@ -435,7 +435,7 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
       if (fVerbose) std::cout << "-- free chunk " << chunk->first <<  " size = " << chunk->second << std::endl;
    }
    for (auto &it : op_input_tensors) {
-      // last occurence of the tensor is reached => flush it from memory
+      // last occurrence of the tensor is reached => flush it from memory
       if (fVerbose) std::cout << ".. input tensors : " << it;
       if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
          if (fVerbose) std::cout << "  flash condition is met - looping on chunks to find matching one \n";

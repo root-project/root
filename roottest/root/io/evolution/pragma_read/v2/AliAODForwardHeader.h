@@ -330,7 +330,7 @@ public:
   /** 
    * Utility function to make a trigger mask from the passed string. 
    * 
-   * The string is a comma or space seperated list of case-insensitive
+   * The string is a comma or space separated list of case-insensitive
    * strings
    * 
    * - INEL 

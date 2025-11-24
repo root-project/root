@@ -1998,7 +1998,7 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
              ) {
-            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and destructor
          }
       }
 

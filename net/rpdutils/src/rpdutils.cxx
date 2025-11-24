@@ -3210,7 +3210,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
       }
    }
 
-   // Write the key if no error occured
+   // Write the key if no error occurred
    if (retval == 0) {
       while (write(ipuk, PubKey, gPubKeyLen) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -3870,7 +3870,7 @@ void RpdFreeKeys()
 ////////////////////////////////////////////////////////////////////////////////
 /// Receives client protocol and returns daemon protocol.
 /// Returns:  0 if ok
-///          -1 if any error occured
+///          -1 if any error occurred
 ///          -2 if special action (e.g. cleanup): no need to continue
 
 int RpdProtocol(int ServType)

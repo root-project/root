@@ -90,7 +90,7 @@ public:
 \ingroup Base
 \brief Common handling of the error case for RResult<T> (T != void) and RResult<void>
 
-RResultBase captures a possible runtime error that might have occured.  If the RResultBase leaves the scope unchecked,
+RResultBase captures a possible runtime error that might have occurred.  If the RResultBase leaves the scope unchecked,
 it will throw an exception.  RResultBase should only be allocated on the stack, which is helped by deleting the
 new operator.  RResultBase is movable but not copyable to avoid throwing multiple exceptions about the same failure.
 */

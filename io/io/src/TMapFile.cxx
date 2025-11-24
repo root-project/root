@@ -509,7 +509,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    newMapFile   = this;
    ROOT::Internal::gMmallocDesc = 0;

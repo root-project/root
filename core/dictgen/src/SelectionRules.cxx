@@ -1027,7 +1027,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
    }
 }
 
-// In rootcint we could select and deselect methods independantly of the class/struct/union rules
+// In rootcint we could select and deselect methods independently of the class/struct/union rules
 // That's why we first have to check the explicit rules for the functions - to see if there
 // is rule corresponding to our method.
 // Which is more - if we have (and we can have) a pattern for the parent class, than a pattern for the

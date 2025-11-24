@@ -51,7 +51,7 @@ namespace seal
    *
    *  The clock ticks are represented as a 64-bit signed integral type
    *  (see #NanoTicks).  Nanosecond times are represented as a double
-   *  (see #NanoSecs).  This accomodates some 290 years worth of cycle
+   *  (see #NanoSecs).  This accommodates some 290 years worth of cycle
    *  counter ticks on a 1GHz CPU.  Cycle counters are usually zeroed on
    *  boot, so this should be plenty enough for another few years to
    *  come.  Please note however that not all systems provide cycle

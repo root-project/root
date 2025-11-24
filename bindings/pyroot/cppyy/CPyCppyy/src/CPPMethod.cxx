@@ -277,12 +277,12 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
 // Helper to report errors in a consistent format (derefs msg).
 //
 // Handles three cases:
-//   1. No Python error occured yet:
+//   1. No Python error occurred yet:
 //      Set a new TypeError with the message "msg" and the docstring of this
 //      C++ method to give some context.
-//   2. A C++ exception has occured:
+//   2. A C++ exception has occurred:
 //      Augment the exception message with the docstring of this method
-//   3. A Python exception has occured:
+//   3. A Python exception has occurred:
 //      Do nothing, Python exceptions are already informative enough
 
 #if PY_VERSION_HEX >= 0x030c0000
@@ -319,7 +319,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
     if (!isCppExc) {
-    // this is the case where no Python error has occured yet, and we set a new
+    // this is the case where no Python error has occurred yet, and we set a new
     // error with context info
         PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
     } else {

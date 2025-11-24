@@ -304,7 +304,7 @@ void testUnfold3()
                              0.95 // high Pt efficiency is 95%
   };
 
-  // weighting factor to accomodate for the different luminosity in data and MC
+  // weighting factor to accommodate for the different luminosity in data and MC
   Double_t lumiWeight = lumiData/lumiMC;
   intLumi=0.0;
   while(intLumi<lumiMC) {

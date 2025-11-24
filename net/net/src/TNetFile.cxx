@@ -622,7 +622,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;
@@ -730,7 +730,7 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;

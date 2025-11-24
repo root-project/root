@@ -168,7 +168,7 @@ public:
       }
 
       // Add some margin to the axis interval to make sure the maximum is included in the last bin, but also to
-      // accomodate closeby values.
+      // accommodate closeby values.
       const auto margin = fMarginFraction * (fMaximum - fMinimum);
       const auto high = fMaximum + margin;
       const auto low = fMinimum - margin;

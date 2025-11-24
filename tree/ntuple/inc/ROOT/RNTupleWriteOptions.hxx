@@ -82,7 +82,7 @@ on how large the I/O buffer can grow during writing.
 <td>`std::size_t`</td>
 <td>256</td>
 <td>
-Initially, columns start with a page of this size. The default value is chosen to accomodate at least 32 elements
+Initially, columns start with a page of this size. The default value is chosen to accommodate at least 32 elements
 of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
 given by the option `MaxUnzippedPageSize` or until the total page buffer limit is reached (as a sum of all page buffers).
 The total write buffer limit needs to be large enough to hold the initial pages of all columns.

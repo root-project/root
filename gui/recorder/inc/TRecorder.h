@@ -187,7 +187,7 @@ protected:
 
    EGEventType    fType;            // Type of event (see EGEventType)
    Window_t       fWindow;          // Window ID which reported event is relative to
-   Time_t         fTime;            // Time event occured in ms
+   Time_t         fTime;            // Time event occurred in ms
    Int_t          fX;               // Pointer x coordinate in event window
    Int_t          fY;               // Pointer y coordinate in event window
    Int_t          fXRoot;           // x coordinate relative to root

@@ -1341,7 +1341,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
          // delete the object or collection
          if (start[j] && TStreamerInfo::CanDelete())
-            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and destructor
          start[j] = ReadObjectAny(cl);
       }
 

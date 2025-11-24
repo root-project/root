@@ -882,7 +882,7 @@ bool TFormula::PrepareEvalMethod()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Inputs formula, transfered to C++ code into Cling
+///    Inputs formula, transferred to C++ code into Cling
 
 void TFormula::InputFormulaIntoCling()
 {
@@ -2211,7 +2211,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
-            // look for last occurence of "::"
+            // look for last occurrence of "::"
             std::string name(fun.fName.Data());
             size_t index = name.rfind("::");
             assert(index != std::string::npos);

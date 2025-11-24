@@ -524,7 +524,7 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          return kTRUE;
       }
 
-      // fUser[0] contains the subwindow (child) in which the event occured
+      // fUser[0] contains the subwindow (child) in which the event occurred
       // (see GX11Gui.cxx)
       Window_t subw = (Window_t)event->fUser[0];
 
@@ -754,7 +754,7 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          return kTRUE;
       }
 
-      // fUser[0] contains the subwindow (child) in which the event occured
+      // fUser[0] contains the subwindow (child) in which the event occurred
       // (see GX11Gui.cxx)
       Window_t subw = (Window_t)event->fUser[0];
 

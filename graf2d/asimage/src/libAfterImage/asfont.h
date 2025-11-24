@@ -390,7 +390,7 @@ void    destroy_font_manager( struct ASFontManager *fontman, Bool reusable );
  * DESCRIPTION
  * open_X11_font() attempts to load and query font using Xlib calls.
  * On success it goes thgroughthe codemap of the font and renders all
- * the glyphs available. Glyphs then gets transfered to the client's
+ * the glyphs available. Glyphs then gets transferred to the client's
  * memory and encoded using RLE compression. At this time smoothing
  * filters are applied on glyph pixmaps, if its size exceeds threshold.
  * TODO
