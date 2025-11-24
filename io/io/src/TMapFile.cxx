@@ -333,7 +333,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    // Open file to which memory will be mapped
    if (create || update) {
 #ifndef WIN32
-      fFd = open(fname, O_RDWR | O_CREAT, 0644);
+      fFd = open(fname, O_RDWR | O_CREAT, 0666);
 #else
       fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_WRITE | GENERIC_READ,       // access (read-write) mode

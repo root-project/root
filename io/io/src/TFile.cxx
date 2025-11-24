@@ -533,7 +533,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    // Connect to file system stream
    if (create || update) {
 #ifndef WIN32
-      fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT, 0644);
+      fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT, 0666);
 #else
       fD = TFile::SysOpen(fname.Data(), O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
@@ -545,7 +545,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fWritable = kTRUE;
    } else {
 #ifndef WIN32
-      fD = TFile::SysOpen(fname.Data(), O_RDONLY, 0644);
+      fD = TFile::SysOpen(fname.Data(), O_RDONLY, 0666);
 #else
       fD = TFile::SysOpen(fname.Data(), O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
@@ -2236,7 +2236,7 @@ Int_t TFile::ReOpen(Option_t *mode)
       // open in READ mode
       fOption = opt;    // set fOption before SysOpen() for TNetFile
 #ifndef WIN32
-      fD = SysOpen(fRealName, O_RDONLY, 0644);
+      fD = SysOpen(fRealName, O_RDONLY, 0666);
 #else
       fD = SysOpen(fRealName, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
@@ -2258,7 +2258,7 @@ Int_t TFile::ReOpen(Option_t *mode)
       // open in UPDATE mode
       fOption = opt;    // set fOption before SysOpen() for TNetFile
 #ifndef WIN32
-      fD = SysOpen(fRealName, O_RDWR | O_CREAT, 0644);
+      fD = SysOpen(fRealName, O_RDWR | O_CREAT, 0666);
 #else
       fD = SysOpen(fRealName, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
