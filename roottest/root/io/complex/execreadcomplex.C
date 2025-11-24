@@ -1,15 +1,16 @@
 // This macro must be v5/v6 executable!
 
-void compareValues(const char* filename, const char *where,
-                   complex<float> cFloat, complex<float> cFloatRef,
-                   complex<double> cDouble, complex<double> cDoubleRef){
+void compareValues(const char *filename, const char *where, complex<float> cFloat, complex<float> cFloatRef,
+                   complex<double> cDouble, complex<double> cDoubleRef)
+{
    if (cFloatRef != cFloat) {
-      cout << "ERROR complex<float> on file " << filename << " numbers differ for " << where << " ! Reference: " << cFloatRef << " on disk " << cFloat << endl;
+      cout << "ERROR complex<float> on file " << filename << " numbers differ for " << where
+           << " ! Reference: " << cFloatRef << " on disk " << cFloat << endl;
    }
    if (cDoubleRef != cDouble) {
-      cout << "ERROR complex<double> on file " << filename << " numbers differ for " << where << " ! Reference: " << cDoubleRef << " on disk " << cDouble << endl;
+      cout << "ERROR complex<double> on file " << filename << " numbers differ for " << where
+           << " ! Reference: " << cDoubleRef << " on disk " << cDouble << endl;
    }
-
 }
 
 void readcomplex(const std::string base)
@@ -70,7 +71,8 @@ void readcomplex(const std::string base)
             continue;
          }
          // compare them bit-by-bit
-         compareValues(ifilename, TString::Format("cFloat/cDouble #%i", j), *cFloatPtr, cFloatRef, *cDoublePtr, cDoubleRef);
+         compareValues(ifilename, TString::Format("cFloat/cDouble #%i", j), *cFloatPtr, cFloatRef, *cDoublePtr,
+                       cDoubleRef);
       }
 
       if (iFile != 1) {
@@ -89,8 +91,10 @@ void readcomplex(const std::string base)
             auto rnd14 = rndm.Uniform(theMin, theMax);
             std::complex<float> cFloatn(rnd11, rnd12);
             std::complex<double> cDoublen(rnd13, rnd14);
-            compareValues(ifilename, TString::Format("Split branch entry #%i", e), *cFloat_split, cFloatn, *cDouble_split, cDoublen);
-            compareValues(ifilename, TString::Format("Streamed branch entry #%i", e), *cFloat, cFloatn, *cDouble, cDoublen);
+            compareValues(ifilename, TString::Format("Split branch entry #%i", e), *cFloat_split, cFloatn,
+                          *cDouble_split, cDoublen);
+            compareValues(ifilename, TString::Format("Streamed branch entry #%i", e), *cFloat, cFloatn, *cDouble,
+                          cDoublen);
             ++e;
          }
       }

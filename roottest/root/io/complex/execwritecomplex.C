@@ -16,7 +16,7 @@ void writecomplex(const std::string base)
    ofileNames.push_back(base + rVersion + ".xml");
    ofileNames.push_back(base + rVersion + ".root");
 
-   for (int iFile=0; iFile < ofileNames.size(); ++iFile) {
+   for (int iFile = 0; iFile < ofileNames.size(); ++iFile) {
 
       const char* ofileName = ofileNames[iFile].c_str();
 
@@ -27,7 +27,7 @@ void writecomplex(const std::string base)
       TRandom3 rndm(1);
 
       // Write nentries random complex per type
-      for (int j=0; j < nentries; ++j) {
+      for (int j = 0; j < nentries; ++j) {
          // Since the order of execution of function arguments are not guarantees by the standard,
          // don't pass TRandom3 methods as function arguments, to avoid potential cross-platform differences
          auto rnd1 = rndm.Uniform(theMin, theMax);
@@ -44,8 +44,8 @@ void writecomplex(const std::string base)
       if (iFile != 0) { // tree not supported on xml
 
          // Now write a tree with nentries events with one branch per type, split and unsplit
-         std::complex<float>*  cFloat = new std::complex<float>(0.f, 0.f);
-         std::complex<double>* cDouble = new std::complex<double>(0., 0.);
+         std::complex<float> *cFloat = new std::complex<float>(0.f, 0.f);
+         std::complex<double> *cDouble = new std::complex<double>(0., 0.);
          TTree t("t", "Test Tree");
          t.Branch("cFloat_split", &cFloat, 16000, 99);
          t.Branch("cFloat", &cFloat, 16000, 0);
