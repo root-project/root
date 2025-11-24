@@ -9,7 +9,7 @@
 /// \file
 /// Provide views around LLVM structures to represents an instruction instance,
 /// as well as its implicit and explicit arguments in a uniform way.
-/// Arguments that are explicit and independent (non tied) also have a Variable
+/// Arguments that are explicit and independant (non tied) also have a Variable
 /// associated to them so the instruction can be fully defined by reading its
 /// Variables.
 ///

@@ -225,7 +225,7 @@ public:
 
   // Returns the maximum number of bytes a load/store instruction can access at
   // once. This is typically the size of the largest register available on the
-  // processor. Note that this only used as a hint to generate independent
+  // processor. Note that this only used as a hint to generate independant
   // load/stores to/from memory, so the exact returned value does not really
   // matter as long as it's large enough.
   virtual unsigned getMaxMemoryAccessSize() const { return 0; }

@@ -73,7 +73,7 @@ FunctionPass *createX86OptimizeLEAs();
 /// Return a pass that transforms setcc + movzx pairs into xor + setcc.
 FunctionPass *createX86FixupSetCC();
 
-/// Return a pass that transform inline buffer security check into separate bb
+/// Return a pass that transform inline buffer security check into seperate bb
 FunctionPass *createX86WinFixupBufferSecurityCheckPass();
 
 /// Return a pass that avoids creating store forward block issues in the hardware.

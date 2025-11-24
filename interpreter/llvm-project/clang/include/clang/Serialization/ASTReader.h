@@ -1058,7 +1058,7 @@ private:
 
   /// A list of modules that were imported by precompiled headers or
   /// any other non-module AST file and have not yet been made visible. If a
-  /// module is made visible in the ASTReader, it will be transferred to
+  /// module is made visible in the ASTReader, it will be transfered to
   /// \c PendingImportedModulesSema.
   SmallVector<ImportedSubmodule, 2> PendingImportedModules;
 
