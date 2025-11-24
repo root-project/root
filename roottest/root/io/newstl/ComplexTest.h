@@ -24,9 +24,4 @@ class Test: public TObject
   ClassDefOverride(Test, 1);
 };
 
-#ifdef __ROOTCLING__
-#pragma link C++ class std::complex<double>+;
-#pragma link C++ class Test+;
-#endif
-
 #endif /* Test_hh */
