@@ -3809,7 +3809,8 @@ void TTree::Delete(Option_t* option /* = "" */)
       char header[16];
       Int_t ntot  = 0;
       Int_t nbask = 0;
-      Int_t nbytes,objlen,keylen;
+      Long64_t nbytes,objlen;
+      Int_t keylen;
       while ((leaf = (TLeaf*)next())) {
          TBranch *branch = leaf->GetBranch();
          Int_t nbaskets = branch->GetMaxBaskets();
@@ -4651,10 +4652,10 @@ void TTree::DropBuffers(Int_t)
 ///       greater than `TTree::fgMaxTreeSize`. This doesn't happen if the tree is
 ///       attached to a `TMemFile` or derivate.
 
-Int_t TTree::Fill()
+Long64_t TTree::Fill()
 {
-   Int_t nbytes = 0;
-   Int_t nwrite = 0;
+   Long64_t nbytes = 0;
+   Long64_t nwrite = 0;
    Int_t nerror = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
 
@@ -4690,7 +4691,7 @@ Int_t TTree::Fill()
 #endif
       if (nwrite < 0) {
          if (nerror < 2) {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%lld, entry=%lld\n"
                           " This error is symptomatic of a Tree created as a memory-resident Tree\n"
                           " Instead of doing:\n"
                           "    TTree *T = new TTree(...)\n"
@@ -4700,7 +4701,7 @@ Int_t TTree::Fill()
                           "    TTree *T = new TTree(...)\n\n",
                   GetName(), branch->GetName(), nwrite, fEntries + 1);
          } else {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld", GetName(), branch->GetName(), nwrite,
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%lld, entry=%lld", GetName(), branch->GetName(), nwrite,
                   fEntries + 1);
          }
          ++nerror;
@@ -4729,7 +4730,7 @@ Int_t TTree::Fill()
       KeepCircular();
 
    if (gDebug > 0)
-      Info("TTree::Fill", " - A: %d %lld %lld %lld %lld %lld %lld \n", nbytes, fEntries, fAutoFlush, fAutoSave,
+      Info("TTree::Fill", " - A: %lld %lld %lld %lld %lld %lld %lld \n", nbytes, fEntries, fAutoFlush, fAutoSave,
            GetZipBytes(), fFlushedBytes, fSavedBytes);
 
    bool autoFlush = false;
@@ -5193,10 +5194,10 @@ Int_t TTree::FlushBaskets(bool create_cluster) const
 ///
 /// Otherwise, the comments for FlushBaskets applies.
 ///
-Int_t TTree::FlushBasketsImpl() const
+Long64_t TTree::FlushBasketsImpl() const
 {
    if (!fDirectory) return 0;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Int_t nerror = 0;
    TObjArray *lb = const_cast<TTree*>(this)->GetListOfBranches();
    Int_t nb = lb->GetEntriesFast();
@@ -5716,7 +5717,7 @@ Long64_t TTree::GetEntriesFriend() const
 /// Note: See the comments in TBranchElement::SetAddress() for the
 /// object ownership policy of the underlying (user) data.
 
-Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TTree::GetEntry(Long64_t entry, Int_t getall)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let return
@@ -5724,7 +5725,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
    if (entry < 0 || entry >= fEntries) return 0;
    Int_t i;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    fReadEntry = entry;
 
    // create cache if wanted
@@ -6006,7 +6007,7 @@ Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 ///  to (major,minor).
 /// \note See TTreeIndex::GetEntryNumberWithIndex for information about the maximum values accepted for major and minor
 
-Int_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
+Long64_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
@@ -6022,11 +6023,11 @@ Int_t TTree::GetEntryWithIndex(Long64_t major, Long64_t minor)
       SetCacheSizeAux();
 
    Int_t i;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    fReadEntry = serial;
    TBranch *branch;
    Int_t nbranches = fBranches.GetEntriesFast();
-   Int_t nb;
+   Long64_t nb;
    for (i = 0; i < nbranches; ++i) {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       nb = branch->GetEntry(serial);
@@ -6954,7 +6955,7 @@ Int_t TTree::MakeSelector(const char* selector, Option_t* option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if adding nbytes to memory we are still below MaxVirtualsize.
 
-bool TTree::MemoryFull(Int_t nbytes)
+bool TTree::MemoryFull(Long64_t nbytes)
 {
    if ((fTotalBuffers + nbytes) < fMaxVirtualSize) {
       return false;
@@ -10006,7 +10007,7 @@ void TTree::UseCurrentStyle()
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Long64_t bufsize) const
+Long64_t TTree::Write(const char *name, Int_t option, Long64_t bufsize) const
 {
    FlushBasketsImpl();
    if (R__unlikely(option & kOnlyPrepStep))
@@ -10018,7 +10019,7 @@ Int_t TTree::Write(const char *name, Int_t option, Long64_t bufsize) const
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Long64_t bufsize)
+Long64_t TTree::Write(const char *name, Int_t option, Long64_t bufsize)
 {
    return ((const TTree*)this)->Write(name, option, bufsize);
 }

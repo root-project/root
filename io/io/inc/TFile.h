@@ -322,8 +322,8 @@ public:
    virtual Long64_t    GetBytesWritten() const;
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
            Int_t       GetVersion() const { return fVersion; }
-           Int_t       GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes,
-                                       Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+           Int_t       GetRecordHeader(char *buf, Long64_t first, Long64_t maxbytes,
+                                       Long64_t &nbytes, Long64_t &objlen, Int_t &keylen);
    virtual Int_t       GetNbytesInfo() const {return fNbytesInfo;}
    virtual Int_t       GetNbytesFree() const {return fNbytesFree;}
    virtual TString     GetNewUrl() { return ""; }
@@ -372,11 +372,11 @@ public:
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
    virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();
-           Int_t       Sizeof() const override;
+           Long64_t    Sizeof() const override;
            void        SumBuffer(Long64_t bufsize);
-   virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) const override;
+   virtual Bool_t      WriteBuffer(const char *buf, Long64_t len);
+           Long64_t    Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) override;
+           Long64_t    Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);

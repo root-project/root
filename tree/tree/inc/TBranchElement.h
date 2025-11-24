@@ -188,15 +188,15 @@ public:
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
    TVirtualCollectionProxy *GetCollectionProxy();
    TClass                  *GetCurrentClass(); // Class referenced by transient description
-           Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
-           Int_t            GetExpectedType(TClass *&clptr,EDataType &type) override;
-           TString          GetFullName() const override;
-           const char      *GetIconName() const override;
-           Int_t            GetID() const { return fID; }
-           TStreamerInfo   *GetInfo() const;
-           bool             GetMakeClass() const override;
-           char            *GetObject() const;
-           TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
+   Long64_t GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+   Int_t GetExpectedType(TClass *&clptr, EDataType &type) override;
+   TString GetFullName() const override;
+   const char *GetIconName() const override;
+   Int_t GetID() const { return fID; }
+   TStreamerInfo *GetInfo() const;
+   bool GetMakeClass() const override;
+   char *GetObject() const;
+   TVirtualArray *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;
            Int_t            GetNdata() const { return fNdata; }
@@ -250,7 +250,7 @@ public:
    };
 
 private:
-   Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Long64_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
    ClassDefOverride(TBranchElement,10)  // Branch in case of an object
 };

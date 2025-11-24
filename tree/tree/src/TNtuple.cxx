@@ -165,7 +165,7 @@ void TNtuple::Browse(TBrowser *b)
 /// Note that this function is protected.
 /// Currently called only by TChain::Merge
 
-Int_t TNtuple::Fill()
+Long64_t TNtuple::Fill()
 {
    return TTree::Fill();
 }

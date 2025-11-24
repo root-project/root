@@ -460,7 +460,7 @@ void TBasket::ResetEntryOffset()
 /// There is a lot of code duplication but it was necessary to assure
 /// the expected behavior when there is no cache.
 
-Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
+Long64_t TBasket::ReadBasketBuffers(Long64_t pos, Long64_t len, TFile *file)
 {
    if(!fBranch->GetDirectory()) {
       return -1;
@@ -468,7 +468,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    bool oldCase;
    char *rawUncompressedBuffer, *rawCompressedBuffer;
-   Int_t uncompressedBufferLen;
+   Long64_t uncompressedBufferLen;
 
    // See if the cache has already unzipped the buffer for us.
    TFileCacheRead *pf = nullptr;
@@ -662,7 +662,7 @@ AfterBuffer:
    if (R__unlikely(!fEntryOffset)) {
       fEntryOffset = new Int_t[fNevBuf+1];
       fEntryOffset[0] = fKeylen;
-      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
+      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%lld, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
       return 0;
    }
    if (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) {
@@ -694,13 +694,17 @@ AfterBuffer:
 /// Read first bytes of a logical record starting at position pos
 /// return record length (first 4 bytes of record).
 
-Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
+Long64_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 {
    const Int_t len = 128;
    char buffer[len];
    Int_t keylen;
-   file->GetRecordHeader(buffer, pos,len, fNbytes, fObjlen, keylen);
+   Long64_t nbytes = fNbytes;
+   Long64_t objlen = fObjlen;
+   file->GetRecordHeader(buffer, pos,len, nbytes, objlen, keylen);
+   fNbytes = nbytes;
    fKeylen = keylen;
+   fObjlen = objlen;
    return fNbytes;
 }
 

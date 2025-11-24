@@ -4054,7 +4054,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
          TBufferText::SetDoubleFormat(new_format_dbl.Data());
          TBufferText::SetFloatFormat(new_format_dbl.Data());
       }
-      Int_t nbytes = Write(keyname);
+      Long64_t nbytes = Write(keyname);
       if (sfile.Contains(".xml")) {
          TBufferText::SetFloatFormat(precision_dbl);
          TBufferText::SetDoubleFormat(precision_flt);

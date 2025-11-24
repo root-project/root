@@ -1361,9 +1361,9 @@ void TKey::Reset()
 /// | fTitle            | 1+ bytes   |
 /// | **TOTAL**         | 29+ or 37+ |
 
-Int_t TKey::Sizeof() const
+Long64_t TKey::Sizeof() const
 {
-   Int_t nbytes = 22; if (fVersion > 1000) nbytes += 8;
+   Long64_t nbytes = 22; if (fVersion > 1000) nbytes += 8;
    nbytes      += fDatime.Sizeof();
    if (TestBit(kIsDirectoryFile)) {
       nbytes   += 11; // strlen("TDirectory")+1
@@ -1507,7 +1507,7 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
 /// The function returns the number of bytes committed to the file.
 /// If a write error occurs, the number of bytes returned is -1.
 
-Int_t TKey::WriteFileKeepBuffer(TFile *f)
+Long64_t TKey::WriteFileKeepBuffer(TFile *f)
 {
    if (!f) f = GetFile();
    if (!f) return -1;

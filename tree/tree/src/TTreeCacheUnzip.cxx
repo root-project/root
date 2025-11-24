@@ -466,13 +466,13 @@ Int_t TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option)
 /// if maxbytes >=16
 /// Note: This was adapted from TFile... so some things dont apply
 
-Int_t TTreeCacheUnzip::GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
+Long64_t TTreeCacheUnzip::GetRecordHeader(char *buf, Int_t maxbytes, Long64_t &nbytes, Long64_t &objlen, Long64_t &keylen)
 {
    Version_t versionkey;
    Short_t klen;
    UInt_t datime;
-   Int_t nb = 0, olen;
-   Int_t nread = maxbytes;
+   Long64_t nb = 0, olen;
+   Long64_t nread = maxbytes;
    frombuf(buf, &nb);
    nbytes = nb;
    if (nb < 0) return nread;
@@ -523,16 +523,16 @@ void TTreeCacheUnzip::ResetCache()
 /// fUnzipStatus after fUnzipChunks and fUnzipLen and make sure fUnzipChunks
 /// and fUnzipLen are ready before main thread fetch the data.
 
-Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
+Long64_t TTreeCacheUnzip::UnzipCache(Int_t index)
 {
    Int_t myCycle;
    const Int_t hlen = 128;
-   Int_t objlen = 0, keylen = 0;
-   Int_t nbytes = 0;
-   Int_t readbuf = 0;
+   Long64_t objlen = 0, keylen = 0;
+   Long64_t nbytes = 0;
+   Long64_t readbuf = 0;
 
    Long64_t rdoffs = 0;
-   Int_t rdlen = 0;
+   Long64_t rdlen = 0;
 
    // To synchronize with the 'paging'
    myCycle = fCycle;
@@ -665,7 +665,7 @@ Int_t TTreeCacheUnzip::CreateTasks()
 /// responsibility of the caller to free it... it is useful for example
 /// to pass it to the creator of TBuffer
 
-Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, bool *free)
+Long64_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Long64_t len, bool *free)
 {
    Int_t res = 0;
    Int_t loc = -1;
@@ -850,14 +850,14 @@ void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
 /// src is the original buffer with the record (header+compressed data)
 /// *dest is the inflated buffer (including the header)
 
-Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
+Long64_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
 {
    Int_t  uzlen = 0;
    bool alloc = false;
 
    // Here we read the header of the buffer
    const Int_t hlen = 128;
-   Int_t nbytes = 0, objlen = 0, keylen = 0;
+   Long64_t nbytes = 0, objlen = 0, keylen = 0;
    GetRecordHeader(src, hlen, nbytes, objlen, keylen);
 
    if (!(*dest)) {
@@ -903,7 +903,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
                  nin, nbuf, bufcur[3], bufcur[4], bufcur[5]);
          if (oldCase && (nin > objlen || nbuf > objlen)) {
             if (gDebug > 2)
-               Info("UnzipBuffer", "oldcase objlen :%d ", objlen);
+               Info("UnzipBuffer", "oldcase objlen :%lld ", objlen);
 
             //buffer was very likely not compressed in an old version
             memcpy(*dest + keylen, src + keylen, objlen);
@@ -925,7 +925,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
       }
 
       if (noutot != objlen) {
-         Error("UnzipBuffer", "nbytes = %d, keylen = %d, objlen = %d, noutot = %d, nout=%d, nin=%d, nbuf=%d",
+         Error("UnzipBuffer", "nbytes = %lld, keylen = %lld, objlen = %lld, noutot = %d, nout=%d, nin=%d, nbuf=%d",
                nbytes,keylen,objlen, noutot,nout,nin,nbuf);
          uzlen = -1;
          if(alloc) delete [] *dest;

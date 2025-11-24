@@ -566,7 +566,7 @@ void TTreeSQL::Init()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the information from the user object to the TTree
 
-Int_t TTreeSQL::Fill()
+Long64_t TTreeSQL::Fill()
 {
    Int_t nb = fBranches.GetEntriesFast();
    TString typeName;
@@ -725,7 +725,7 @@ Long64_t  TTreeSQL::GetEntriesFast()    const
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the data for the entry from the database.
 
-Int_t TTreeSQL::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TTreeSQL::GetEntry(Long64_t entry, Int_t getall)
 {
    if (PrepEntry(entry)>=0) return TTree::GetEntry(entry,getall);
    else return -1;

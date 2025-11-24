@@ -137,16 +137,16 @@ public:
 #ifdef R__USE_IMT
    Int_t          CreateTasks();
 #endif
-   Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   Int_t          GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, bool *free) override;
+   Long64_t       GetRecordHeader(char *buf, Int_t maxbytes, Long64_t &nbytes, Long64_t &objlen, Long64_t &keylen);
+   Long64_t       GetUnzipBuffer(char **buf, Long64_t pos, Long64_t len, bool *free) override;
    Int_t          GetUnzipGroupSize() { return fUnzipGroupSize; }
    void           ResetCache() override;
    Int_t          SetBufferSize(Long64_t buffersize) override;
    void           SetUnzipBufferSize(Long64_t bufferSize);
    void           SetUnzipGroupSize(Int_t groupSize) { fUnzipGroupSize = groupSize; }
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
-   Int_t          UnzipBuffer(char **dest, char *src);
-   Int_t          UnzipCache(Int_t index);
+   Long64_t       UnzipBuffer(char **dest, char *src);
+   Long64_t       UnzipCache(Int_t index);
 
    // Methods to get stats
    Int_t  GetNUnzip() { return fNUnzip; }

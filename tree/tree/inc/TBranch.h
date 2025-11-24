@@ -184,7 +184,7 @@ private:
    Int_t    GetBulkEntries(Long64_t, TBuffer&);
    Int_t    GetEntriesSerialized(Long64_t N, TBuffer& user_buf) {return GetEntriesSerialized(N, user_buf, nullptr);}
    Int_t    GetEntriesSerialized(Long64_t, TBuffer&, TBuffer*);
-   Int_t    FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
+   Long64_t FillEntryBuffer(TBasket *basket, TBuffer *buf, Int_t &lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
    TBranch(const TBranch&) = delete;             // not implemented
    TBranch& operator=(const TBranch&) = delete;  // not implemented
@@ -197,17 +197,17 @@ public:
 
    virtual void      AddBasket(TBasket &b, bool ondisk, Long64_t startEntry);
    virtual void      AddLastBasket(Long64_t startEntry);
-           Int_t     BackFill();
+           Long64_t  BackFill();
            void      Browse(TBrowser *b) override;
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
-           Int_t     Fill() { return FillImpl(nullptr); }
-   virtual Int_t     FillImpl(ROOT::Internal::TBranchIMTHelper *);
+           Long64_t  Fill() { return FillImpl(nullptr); }
+   virtual Long64_t  FillImpl(ROOT::Internal::TBranchIMTHelper *);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);
-           Int_t     FlushBaskets();
-           Int_t     FlushOneBasket(UInt_t which);
+   Long64_t FlushBaskets();
+   Long64_t FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
            TBasket  *GetBasket(Int_t basket) {return GetBasketImpl(basket, nullptr);}
@@ -222,10 +222,10 @@ public:
            Int_t     GetCompressionLevel() const;
            Int_t     GetCompressionSettings() const;
    TDirectory       *GetDirectory() const {return fDirectory;}
-   virtual Int_t     GetEntry(Long64_t entry=0, Int_t getall = 0);
-   virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
-           Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
-           Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
+   virtual Long64_t  GetEntry(Long64_t entry=0, Int_t getall = 0);
+   virtual Long64_t GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Long64_t n);
+   Int_t GetEntryOffsetLen() const { return fEntryOffsetLen; }
+   Int_t GetEvent(Long64_t entry = 0) { return GetEntry(entry); }
    virtual TString   GetFullName() const;
          const char *GetIconName() const override;
    virtual Int_t     GetExpectedType(TClass *&clptr,EDataType &type);

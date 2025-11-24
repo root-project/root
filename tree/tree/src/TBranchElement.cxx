@@ -1263,9 +1263,9 @@ void TBranchElement::BuildTitle(const char* name)
 ///
 /// Note: We not not use any member functions from TLeafElement!
 
-Int_t TBranchElement::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+Long64_t TBranchElement::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Int_t nwrite = 0;
    Int_t nerror = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -1339,7 +1339,7 @@ Int_t TBranchElement::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
       // Debugging.
       Long64_t entry = fEntries;
       if ((entry >= fTree->GetDebugMin()) && (entry <= fTree->GetDebugMax())) {
-         printf("Fill: %lld, branch=%s, nbytes=%d\n", entry, GetName(), nbytes);
+         printf("Fill: %lld, branch=%s, nbytes=%lld\n", entry, GetName(), nbytes);
       }
    }
 
@@ -2712,7 +2712,7 @@ TClass* TBranchElement::GetCurrentClass()
 ///
 /// See IMPORTANT REMARKS in TTree::GetEntry.
 
-Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 {
    // Remember which entry we are reading.
    auto prevEntry = fReadEntry;
@@ -2730,7 +2730,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       bref->SetRequestedEntry(entry);
    }
 
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
 
    if (R__unlikely(IsAutoDelete())) {
       SetBit(kDeleteObject);
@@ -2835,7 +2835,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 
    if (R__unlikely(fTree->Debug() > 0)) {
       if ((entry >= fTree->GetDebugMin()) && (entry <= fTree->GetDebugMax())) {
-         Info("GetEntry", "%lld, branch=%s, nbytes=%d", entry, GetName(), nbytes);
+         Info("GetEntry", "%lld, branch=%s, nbytes=%lld", entry, GetName(), nbytes);
       }
    }
    return nbytes;

@@ -163,15 +163,33 @@ public:
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
    virtual void        Print(Option_t *option="") const;
-   virtual Int_t       Read(const char *name);
+   virtual Long64_t    Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual void        UseCurrentStyle();
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0);
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0) const;
+   virtual Long64_t    Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0);
+   virtual Long64_t    Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0) const;
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
+#elif __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
+   /// \deprecated Please override the `Long64_t` overload instead of the `Int_t` version.
+   [[deprecated]] virtual Int_t Write(const char *name, Int_t option, Int_t bufsize) final
+   { return Write(name, option, (Long64_t)bufsize); }
+   /// \deprecated Please override the `Long64_t` overload instead of the `Int_t` version.
+   [[deprecated]] virtual Int_t Write(const char *name, Int_t option, Int_t bufsize) const final
+   { return Write(name, option, (Long64_t)bufsize); }
+#ifdef __clang__
+#pragma clang diagnostic pop
+#elif __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
    /// IsDestructed
    ///

@@ -175,7 +175,7 @@ private:
 
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
-   Int_t            FlushBasketsImpl() const;
+   Long64_t FlushBasketsImpl() const;
    void             MarkEventCluster();
    Long64_t         GetMedianClusterSize();
 
@@ -473,12 +473,14 @@ public:
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
            bool            EnableCache();
-   virtual Int_t           Fill();
-   virtual TBranch        *FindBranch(const char* name);
-   virtual TLeaf          *FindLeaf(const char* name);
-   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Int_t           FlushBaskets(bool create_cluster = true) const;
-   virtual const char     *GetAlias(const char* aliasName) const;
+           virtual Long64_t Fill();
+           virtual TBranch *FindBranch(const char *name);
+           virtual TLeaf *FindLeaf(const char *name);
+           virtual Int_t Fit(const char *funcname, const char *varexp, const char *selection = "",
+                             Option_t *option = "", Option_t *goption = "", Long64_t nentries = kMaxEntries,
+                             Long64_t firstentry = 0); // *MENU*
+           virtual Int_t FlushBaskets(bool create_cluster = true) const;
+           virtual const char *GetAlias(const char *aliasName) const;
            UInt_t          GetAllocationCount() const { return fAllocationCount; }
 #ifdef R__TRACK_BASKET_ALLOC_TIME
            ULong64_t       GetAllocationTime() const { return fAllocationTime; }
@@ -544,9 +546,9 @@ public:
    virtual Long64_t        GetEntriesFast() const { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }
-   virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
-           Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
-   virtual Int_t           GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
+   virtual Long64_t GetEntry(Long64_t entry, Int_t getall = 0);
+   Int_t GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
+   virtual Long64_t GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
@@ -632,7 +634,7 @@ public:
    virtual Int_t           MakeCode(const char *filename = nullptr);
    virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = nullptr, const char* cutfilename = nullptr, const char* option = nullptr, Int_t maxUnrolling = 3);
    virtual Int_t           MakeSelector(const char *selector = nullptr, Option_t *option = "");
-   bool                    MemoryFull(Int_t nbytes);
+   bool MemoryFull(Long64_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
@@ -743,8 +745,8 @@ public:
    virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
            void            UseCurrentStyle() override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) const override;
+           Long64_t        Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) override;
+           Long64_t        Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) const override;
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };

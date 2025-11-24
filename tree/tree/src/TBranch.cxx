@@ -680,7 +680,8 @@ void TBranch::AddLastBasket(Long64_t startEntry)
 ///   // all the baskets for that branch are consecutive.
 /// ~~~
 
-Int_t TBranch::BackFill() {
+Long64_t TBranch::BackFill()
+{
 
    // Get the end of the next cluster.
    auto cluster  = GetTree()->GetClusterIterator( GetEntries() );
@@ -856,7 +857,7 @@ void TBranch::ExpandBasketArrays()
 /// If no data are written, because e.g. the branch is disabled,
 /// the number of bytes returned is 0.
 
-Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+Long64_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    if (TestBit(kDoNotProcess)) {
       return 0;
@@ -884,7 +885,7 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
    }
 
    Int_t lnew = 0;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
 
    if (fEntryBuffer) {
       nbytes = FillEntryBuffer(basket,buf,lnew);
@@ -935,9 +936,9 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the data from fEntryBuffer into the current basket.
 
-Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
+Long64_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
 {
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Int_t objectStart = 0;
    Int_t last = 0;
    Int_t lold = buf->Length();
@@ -1136,10 +1137,10 @@ TLeaf* TBranch::FindLeaf(const char* searchname)
 /// Flush to disk all the baskets of this branch and any of subbranches.
 /// Return the number of bytes written or -1 in case of write error.
 
-Int_t TBranch::FlushBaskets()
+Long64_t TBranch::FlushBaskets()
 {
    UInt_t nerror = 0;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
 
    Int_t maxbasket = fWriteBasket + 1;
    // The following protection is not necessary since we should always
@@ -1182,9 +1183,9 @@ Int_t TBranch::FlushBaskets()
 /// has not yet been written to disk, we write it and delete it from memory.
 /// Return the number of bytes written;
 
-Int_t TBranch::FlushOneBasket(UInt_t ibasket)
+Long64_t TBranch::FlushOneBasket(UInt_t ibasket)
 {
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    if (fDirectory && fBaskets.GetEntriesFast()) {
       TBasket *basket = (TBasket*)fBaskets.UncheckedAt(ibasket);
 
@@ -1706,7 +1707,7 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
 ///
 /// See IMPORTANT REMARKS in TTree::GetEntry.
 
-Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 {
    // Remember which entry we are reading.
    fReadEntry = entry;
@@ -1716,7 +1717,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
 
-   Int_t result = GetBasketAndFirst(basket, first, nullptr);
+   Long64_t result = GetBasketAndFirst(basket, first, nullptr);
    if (R__unlikely(result < 0)) { return result + 1; }
 
    basket->PrepareBasket(entry);
@@ -1739,7 +1740,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    }
 
    Int_t* entryOffset = basket->GetEntryOffset();
-   Int_t bufbegin = 0;
+   Long64_t bufbegin = 0;
    if (entryOffset) {
       bufbegin = entryOffset[entry-first];
       buf->SetBufferOffset(bufbegin);
@@ -1762,7 +1763,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
 ///
 /// Returns total number of bytes read.
 
-Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li, Int_t nentries)
+Long64_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray *li, Long64_t nentries)
 {
    // Remember which entry we are reading.
    fReadEntry = entry;
@@ -1773,7 +1774,7 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    if ((entry < 0) || (entry >= fEntryNumber)) {
       return 0;
    }
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Long64_t first  = fFirstBasketEntry;
    Long64_t last = fNextBasketEntry - 1;
    // Are we still in the same ReadBasket?

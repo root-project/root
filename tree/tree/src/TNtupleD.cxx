@@ -146,7 +146,7 @@ void TNtupleD::Browse(TBrowser *b)
 /// Note that this function is protected.
 /// Currently called only by TChain::Merge
 
-Int_t TNtupleD::Fill()
+Long64_t TNtupleD::Fill()
 {
    return TTree::Fill();
 }
@@ -154,7 +154,7 @@ Int_t TNtupleD::Fill()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Ntuple with an array of floats.
 
-Int_t TNtupleD::Fill(const Double_t *x)
+Long64_t TNtupleD::Fill(const Double_t *x)
 {
 //*-*- Store array x into buffer
    for (Int_t i=0;i<fNvar;i++)  {
@@ -167,7 +167,7 @@ Int_t TNtupleD::Fill(const Double_t *x)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill a Ntuple: Each Ntuple item is an argument.
 
-Int_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
+Long64_t TNtupleD::Fill(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4
               ,Double_t x5,Double_t x6,Double_t x7,Double_t x8,Double_t x9
               ,Double_t x10,Double_t x11,Double_t x12,Double_t x13,Double_t x14)
 {

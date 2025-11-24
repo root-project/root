@@ -952,7 +952,7 @@ Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *optio
       TString keyname(name);
       if (keyname.IsNull())
          keyname = GetName();
-      Int_t nbytes = Write(keyname);
+      Long64_t nbytes = Write(keyname);
       delete f;
       return nbytes;
    }

@@ -153,7 +153,7 @@ void TDirectoryFile::InitDirectoryFile(TClass *cl)
       }
       TDirectory* motherdir = GetMotherDir();
       fSeekParent  = motherdir->GetSeekDir();
-      Int_t nbytes = TDirectoryFile::Sizeof();
+      Long64_t nbytes = TDirectoryFile::Sizeof();
       TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
       fNbytesName  = key->GetKeylen();
       fSeekDir     = key->GetSeekKey();
@@ -1406,7 +1406,7 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
       fKeys->Delete();
       //In case directory was updated by another process, read new
       //position for the keys
-      Int_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
+      Long64_t nbytes = fNbytesName + TDirectoryFile::Sizeof();
       char *header = new char[nbytes];
       buffer       = header;
       fFile->Seek(fSeekDir);
@@ -1478,7 +1478,7 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 /// The object must have been created before via the default constructor.
 /// See TObject::Write().
 
-Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
+Long64_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
 {
    if (!fFile) { Error("ReadTObject","No file open"); return 0; }
    auto listOfKeys = dynamic_cast<THashList *>(GetListOfKeys());
@@ -1599,7 +1599,7 @@ void TDirectoryFile::Save()
 /// JavaScript ROOT (https://root.cern/js/) to display object in web browser
 /// When creating JSON file, option string may contain compression level from 0 to 3 (default 0)
 
-Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
+Long64_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
    // option can contain single letter args: "a" for append, "q" for quiet in any combinations
 
@@ -1611,7 +1611,7 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
       fname.Form("%s.root", obj->GetName());
    opt.ToLower();
 
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    if (fname.Index(".json") > 0) {
       nbytes = TBufferJSON::ExportToFile(fname, obj, option);
    } else {
@@ -1721,9 +1721,9 @@ void TDirectoryFile::SetWritable(Bool_t writable)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size in bytes of the directory header
 
-Int_t TDirectoryFile::Sizeof() const
+Long64_t TDirectoryFile::Sizeof() const
 {
-   Int_t nbytes = 22;
+   Long64_t nbytes = 22;
 
    nbytes     += fDatimeC.Sizeof();
    nbytes     += fDatimeM.Sizeof();
@@ -1852,7 +1852,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 /// For allowed options see TObject::Write().
 /// The directory header info is rewritten on the directory header record.
 
-Int_t TDirectoryFile::Write(const char *, Int_t opt, Long64_t bufsize)
+Long64_t TDirectoryFile::Write(const char *, Int_t opt, Long64_t bufsize)
 {
    if (!IsWritable()) return 0;
    TDirectory::TContext ctxt(this);
@@ -1860,7 +1860,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Long64_t bufsize)
    // Loop on all objects (including subdirs)
    TIter next(fList);
    TObject *obj;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    while ((obj=next())) {
       nbytes += obj->Write(0,opt,bufsize);
    }
@@ -1873,7 +1873,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Long64_t bufsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TDirectoryFile::Write(const char *n, Int_t opt, Long64_t bufsize) const
+Long64_t TDirectoryFile::Write(const char *n, Int_t opt, Long64_t bufsize) const
 {
    Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
    return const_cast<TDirectoryFile*>(this)->Write(n, opt, bufsize);
@@ -1923,7 +1923,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Long64_t bufsize) const
 /// WARNING: avoid special characters like '^','$','.' in the name as they
 /// are used by the regular expression parser (see TRegexp).
 
-Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Long64_t bufsize)
+Long64_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Long64_t bufsize)
 {
    TDirectory::TContext ctxt(this);
 
@@ -1999,7 +1999,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
       return 0;
    }
    fFile->SumBuffer(key->GetObjlen());
-   Int_t nbytes = key->WriteFile(0);
+   Long64_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) {
       if (bufsize) fFile->SetBufferSize(bufsize);
       return 0;
@@ -2042,7 +2042,8 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// ~~~
 /// See also remarks in TDirectoryFile::WriteTObject
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Long64_t bufsize)
+Long64_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option,
+                                        Long64_t bufsize)
 {
    TClass *cl = TClass::GetClass(classname);
    if (!cl) {
@@ -2069,7 +2070,8 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 /// An alternative is to call the function WriteObjectAny above.
 /// see TDirectoryFile::WriteTObject for comments
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Long64_t bufsize)
+Long64_t
+TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Long64_t bufsize)
 {
    TDirectory::TContext ctxt(this);
 
@@ -2150,7 +2152,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       return 0;
    }
    fFile->SumBuffer(key->GetObjlen());
-   Int_t nbytes = key->WriteFile(0);
+   Long64_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) return 0;
 
    if (oldkey) {
@@ -2175,7 +2177,7 @@ void TDirectoryFile::WriteDirHeader()
       return;
    }
 
-   Int_t nbytes  = TDirectoryFile::Sizeof();  //Warning ! TFile has a Sizeof()
+   Long64_t nbytes  = TDirectoryFile::Sizeof();  //Warning ! TFile has a Sizeof()
    char *header = new char[nbytes];
    char *buffer = header;
    fDatimeM.Set();
@@ -2211,7 +2213,7 @@ void TDirectoryFile::WriteKeys()
    TIter next(fKeys);
    TKey *key;
    Int_t nkeys  = fKeys->GetSize();
-   Int_t nbytes = sizeof nkeys;          //*-* Compute size of all keys
+   Long64_t nbytes = sizeof nkeys;          //*-* Compute size of all keys
    if (f->GetEND() > TFile::kStartBigFile) nbytes += 8;
    while ((key = (TKey*)next())) {
       nbytes += key->Sizeof();

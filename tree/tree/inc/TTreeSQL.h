@@ -81,13 +81,13 @@ public:
 
    TBranch               *Branch(const char *name, void *address, const char *leaflist, Long64_t bufsize) override;
 
-   Int_t          Fill() override;
-   Int_t          GetEntry(Long64_t entry=0, Int_t getall=0) override;
-   Long64_t       GetEntries() const override;
+   Long64_t               Fill() override;
+   Long64_t               GetEntry(Long64_t entry=0, Int_t getall=0) override;
+   Long64_t               GetEntries() const override;
    Long64_t               GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
    Long64_t               GetEntriesFast()const override;
    TString                GetTableName(){ return fTable; }
-   Long64_t       LoadTree(Long64_t entry) override;
+   Long64_t               LoadTree(Long64_t entry) override;
    virtual Long64_t       PrepEntry(Long64_t entry);
    void                   Refresh() override;
 

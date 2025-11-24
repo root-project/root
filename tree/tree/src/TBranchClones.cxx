@@ -223,10 +223,10 @@ void TBranchClones::Browse(TBrowser* b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all branches and fill Basket buffer.
 
-Int_t TBranchClones::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+Long64_t TBranchClones::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    Int_t i = 0;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    char** ppointer = (char**) fAddress;
    if (!ppointer) {
@@ -262,12 +262,12 @@ Int_t TBranchClones::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches and return total number of bytes read.
 
-Int_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TBranchClones::GetEntry(Long64_t entry, Int_t getall)
 {
    if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
-   Int_t nbytes = fBranchCount->GetEntry(entry, getall);
+   Long64_t nbytes = fBranchCount->GetEntry(entry, getall);
    TLeaf* leafcount = (TLeaf*) fBranchCount->GetListOfLeaves()->UncheckedAt(0);
    fN = Int_t(leafcount->GetValue());
    if (fN <= 0) {

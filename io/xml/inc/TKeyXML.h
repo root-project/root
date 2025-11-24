@@ -66,7 +66,7 @@ public:
    void UpdateAttributes();
 
 protected:
-   Int_t Read(const char *name) final { return TKey::Read(name); }
+   Long64_t Read(const char *name) final { return TKey::Read(name); }
    void StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj = kFALSE);
    void StoreKeyAttributes();
    TXMLEngine *XMLEngine();

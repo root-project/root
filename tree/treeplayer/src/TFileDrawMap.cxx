@@ -227,11 +227,11 @@ void  TFileDrawMap::AnimateTree(const char *branches)
          branch = (TBranch*)list.At(ib);
          Int_t nbaskets = branch->GetListOfBaskets()->GetSize();
          Int_t basket = TMath::BinarySearch(nbaskets,branch->GetBasketEntry(), (Long64_t) entry);
-         Int_t nbytes = branch->GetBasketBytes()[basket];
-         Int_t bseek  = branch->GetBasketSeek(basket);
-         Int_t entry0 = branch->GetBasketEntry()[basket];
-         Int_t entryn = branch->GetBasketEntry()[basket+1];
-         Int_t eseek  = (Int_t)(bseek + nbytes*Double_t(entry-entry0)/Double_t(entryn-entry0));
+         Long64_t nbytes = branch->GetBasketBytes()[basket];
+         Long64_t bseek  = branch->GetBasketSeek(basket);
+         Long64_t entry0 = branch->GetBasketEntry()[basket];
+         Long64_t entryn = branch->GetBasketEntry()[basket+1];
+         Long64_t eseek  = (Int_t)(bseek + nbytes*Double_t(entry-entry0)/Double_t(entryn-entry0));
          DrawMarker(ib,branch->GetUniqueID());
          DrawMarker(ib,eseek);
          branch->SetUniqueID(eseek);
@@ -414,7 +414,7 @@ bool TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString
    Double_t y = gPad->AbsPixeltoY(py);
    Int_t iy   = (Int_t)y;
    Long64_t pbyte = (Long64_t)(fXsize*iy+x);
-   Int_t nbytes;
+   Long64_t nbytes;
    Long64_t bseek;
    TDirectory *dirsav = gDirectory;
    dir->cd();
@@ -467,9 +467,9 @@ bool TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString
       bseek = key->GetSeekKey();
       if (pbyte >= bseek && pbyte < bseek+nbytes) {
          if (curdir == (TDirectory*)fFile) {
-            info.Form("%s%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
+            info.Form("%s%s ::%s, nbytes=%lld",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          } else {
-            info.Form("%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
+            info.Form("%s/%s ::%s, nbytes=%lld",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          }
          dirsav->cd();
          return true;
@@ -521,7 +521,7 @@ void TFileDrawMap::Paint(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the object at bseek with nbytes using the box object.
 
-void TFileDrawMap::PaintBox(TBox &box, Long64_t bseek, Int_t nbytes)
+void TFileDrawMap::PaintBox(TBox &box, Long64_t bseek, Long64_t nbytes)
 {
    Int_t iy = bseek/fXsize;
    Int_t ix = bseek%fXsize;
@@ -560,7 +560,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
    TBox box;
    TRegexp re(keys,true);
    while ((key = (TKey*)next())) {
-      Int_t nbytes = key->GetNbytes();
+      Long64_t nbytes = key->GetNbytes();
       Long64_t bseek = key->GetSeekKey();
       TClass *cl = TClass::GetClass(key->GetClassName());
       if (cl) {

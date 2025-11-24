@@ -39,7 +39,7 @@ protected:
    friend class TTreeCloner;
 
    void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Long64_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
-   Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Long64_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
 public:
    TBranchClones();
@@ -49,7 +49,7 @@ public:
 
    void    Browse(TBrowser *b) override;
    const char* GetClassName() const override { return fClassName; }
-   Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0) override;
+   Long64_t GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
    virtual Int_t   GetN() const {return fN;}
    TClonesArray    *GetList() const {return fList;}
    bool            IsFolder() const override {return true;}

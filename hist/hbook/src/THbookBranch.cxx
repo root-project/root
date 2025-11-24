@@ -55,7 +55,7 @@ void THbookBranch::Browse(TBrowser *b)
 ////////////////////////////////////////////////////////////////////////////////
 ///get one entry from hbook ntuple
 
-Int_t THbookBranch::GetEntry(Long64_t entry, Int_t /*getall*/)
+Long64_t THbookBranch::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
    THbookTree *tree = (THbookTree*)GetTree();
    THbookFile *file = tree->GetHbookFile();

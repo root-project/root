@@ -1254,12 +1254,12 @@ void TDirectory::rmdir(const char *name)
 /// JavaScript ROOT (https://root.cern/js/) to display object in web browser
 /// When creating JSON file, option string may contain compression level from 0 to 3 (default 0)
 
-Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
+Long64_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
    // option can contain single letter args: "a" for append, "q" for quiet in any combinations
 
    if (!obj) return 0;
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    TString fname, opt = option, cmd;
    if (filename && *filename)
       fname = filename;
@@ -1426,7 +1426,7 @@ void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_p
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Long64_t).
 
-Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Long64_t /*bufsize*/)
+Long64_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Long64_t /*bufsize*/)
 {
    const char *objname = "no name specified";
    if (name) objname = name;

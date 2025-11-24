@@ -73,7 +73,7 @@ public:
    Bool_t  ReadBuffer(char *buf, Int_t len) override;
    Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
    Bool_t  ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf) override;
-   Bool_t  WriteBuffer(const char *buf, Int_t len) override;
+   Bool_t  WriteBuffer(const char *buf, Long64_t len) override;
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
    const TUrl *GetEndpointUrl() const override { return &fEndpointUrl; }

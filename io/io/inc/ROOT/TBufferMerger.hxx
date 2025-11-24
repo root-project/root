@@ -172,7 +172,7 @@ public:
     * This function must be called before the TBufferMergerFile gets destroyed,
     * or no data is appended to the TBufferMerger.
     */
-   Int_t Write(const char *name = nullptr, Int_t opt = 0, Long64_t bufsize = 0) override;
+   Long64_t Write(const char *name = nullptr, Int_t opt = 0, Long64_t bufsize = 0) override;
 
    ClassDefOverride(TBufferMergerFile, 0);
 };

@@ -247,12 +247,12 @@ public:
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t * /*option*/="") {}
    virtual Int_t       ReadKeys(Bool_t /*forceRead*/=kTRUE) {return 0;}
-   virtual Int_t       ReadTObject(TObject * /*obj*/, const char * /*keyname*/) {return 0;}
+   virtual Long64_t    ReadTObject(TObject * /*obj*/, const char * /*keyname*/) {return 0;}
    virtual TObject    *Remove(TObject*);
            void        RecursiveRemove(TObject *obj) override;
    virtual void        rmdir(const char *name);
    virtual void        Save() {}
-   virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="") const;
+   virtual Long64_t    SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="") const;
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
    virtual void        SetBufferSize(Long64_t /* bufsize */) {}
    virtual void        SetModified() {}
@@ -261,13 +261,13 @@ public:
    virtual void        SetTRefAction(TObject * /*ref*/, TObject * /*parent*/) {}
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
-           Int_t       Sizeof() const override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) const override {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Long64_t /*bufsize*/ =0);
+           Long64_t    Sizeof() const override {return 0;}
+           Long64_t    Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) override {return 0;}
+           Long64_t    Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) const override {return 0;}
+   virtual Long64_t    WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Long64_t /*bufsize*/ =0);
 private:
 /// \cond HIDDEN_SYMBOLS
-           Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Long64_t bufsize=0); // Intentionally not implemented.
+           Long64_t    WriteObject(void *obj, const char* name, Option_t *option="", Long64_t bufsize=0); // Intentionally not implemented.
 /// \endcond
 public:
    /// \brief Write an object with proper type checking.
@@ -293,13 +293,13 @@ public:
    /// This overload takes care of instances of classes that are derived from
    /// TObject. The method redirects to TDirectory::WriteTObject.
    template <typename T>
-   inline std::enable_if_t<std::is_base_of<TObject, T>::value, Int_t>
+   inline std::enable_if_t<std::is_base_of<TObject, T>::value, Long64_t>
    WriteObject(const T *obj, const char *name, Option_t *option = "", Long64_t bufsize = 0)
    {
       return WriteTObject(obj, name, option, bufsize);
    }
-   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
-   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
+   virtual Long64_t    WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
+   virtual Long64_t    WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
    virtual void        WriteDirHeader() {}
    virtual void        WriteKeys() {}
 

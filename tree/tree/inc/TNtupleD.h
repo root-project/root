@@ -31,7 +31,7 @@ protected:
    Int_t       fNvar;            ///<  Number of columns
    Double_t    *fArgs;           ///<! [fNvar] Array of variables
 
-   Int_t  Fill() override;
+   Long64_t Fill() override;
 
 private:
    TNtupleD(const TNtupleD&) = delete;
@@ -43,8 +43,8 @@ public:
    ~TNtupleD() override;
 
            void      Browse(TBrowser *b) override;
-   virtual Int_t     Fill(const Double_t *x);
-   virtual Int_t     Fill(Double_t x0, Double_t x1, Double_t x2=0, Double_t x3=0,
+   virtual Long64_t  Fill(const Double_t *x);
+   virtual Long64_t  Fill(Double_t x0, Double_t x1, Double_t x2=0, Double_t x3=0,
                           Double_t x4=0, Double_t x5=0, Double_t x6=0, Double_t x7=0,
                           Double_t x8=0, Double_t x9=0, Double_t x10=0,
                           Double_t x11=0, Double_t x12=0, Double_t x13=0,

@@ -170,9 +170,9 @@ void TBranchObject::Browse(TBrowser* b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Loop on all leaves of this branch to fill Basket buffer.
 
-Int_t TBranchObject::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+Long64_t TBranchObject::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
-   Int_t nbytes = 0;
+   Long64_t nbytes = 0;
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches) {
       ++fEntries;
@@ -204,12 +204,12 @@ Int_t TBranchObject::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 /// - If entry does not exist  the function returns 0.
 /// - If an I/O error occurs,  the function returns -1.
 
-Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 {
    if (TestBit(kDoNotProcess) && !getall) {
       return 0;
    }
-   Int_t nbytes;
+   Long64_t nbytes;
    Int_t nbranches = fBranches.GetEntriesFast();
 
    if (nbranches) {

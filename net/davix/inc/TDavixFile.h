@@ -105,7 +105,7 @@ public:
     Bool_t ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
     Bool_t ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
     Bool_t ReadBufferAsync(Long64_t offs, Int_t len) override;
-    Bool_t WriteBuffer(const char *buffer, Int_t bufferLength) override;
+    Bool_t WriteBuffer(const char *buffer, Long64_t bufsiz) override;
     TString GetNewUrl() override;
 
     // TDavixFile options

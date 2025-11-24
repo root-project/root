@@ -91,7 +91,7 @@ public:
    Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
    Long64_t  Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override; // *MENU*
    void      Draw(Option_t* opt) override { Draw(opt, "", "", kMaxEntries, 0); }
-   Int_t     Fill() override { MayNotUse("Fill()"); return -1; }
+   Long64_t  Fill() override { MayNotUse("Fill()"); return -1; }
    TBranch  *FindBranch(const char* name) override;
    TLeaf    *FindLeaf(const char* name) override;
    TBranch  *GetBranch(const char* name) override;
@@ -102,27 +102,27 @@ public:
            Int_t     GetNtrees() const { return fNtrees; }
    Long64_t  GetEntries() const override;
    Long64_t  GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
-   Int_t     GetEntry(Long64_t entry=0, Int_t getall=0) override;
+   Long64_t  GetEntry(Long64_t entry=0, Int_t getall=0) override;
    Long64_t  GetEntryNumber(Long64_t entry) const override;
-   Int_t     GetEntryWithIndex(Long64_t major, Long64_t minor=0) override;
-   TFile            *GetFile() const;
+   Long64_t  GetEntryWithIndex(Long64_t major, Long64_t minor=0) override;
+   TFile    *GetFile() const;
    TLeaf    *GetLeaf(const char* branchname, const char* leafname) override;
    TLeaf    *GetLeaf(const char* name) override;
    TObjArray *GetListOfBranches() override;
    //                Warning, GetListOfFiles returns the list of TChainElements (not the list of files)
    //                see TChain::AddFile to see how to get the corresponding TFile objects
-   TObjArray        *GetListOfFiles() const {return fFiles;}
+   TObjArray *GetListOfFiles() const {return fFiles;}
    TObjArray *GetListOfLeaves() override;
    const char *GetAlias(const char *aliasName) const override;
    Double_t  GetMaximum(const char *columname) override;
    Double_t  GetMinimum(const char *columname) override;
    Int_t     GetNbranches() override;
    Long64_t  GetReadEntry() const override;
-   TList            *GetStatus() const { return fStatus; }
+   TList    *GetStatus() const { return fStatus; }
    TTree    *GetTree() const override { return fTree; }
    Int_t     GetTreeNumber() const override { return fTreeNumber; }
-           Long64_t *GetTreeOffset() const { return fTreeOffset; }
-           Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
+   Long64_t *GetTreeOffset() const { return fTreeOffset; }
+   Int_t     GetTreeOffsetLen() const { return fTreeOffsetLen; }
    Double_t  GetWeight() const override;
    bool      InPlaceClone(TDirectory *newdirectory, const char *options = "") override;
    Int_t     LoadBaskets(Long64_t maxmemory) override;

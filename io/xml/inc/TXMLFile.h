@@ -88,11 +88,11 @@ public:
    void Seek(Long64_t, ERelativeTo = kBeg) final {}
 
    void SetEND(Long64_t) final {}
-   Int_t Sizeof() const final { return 0; }
+   Long64_t Sizeof() const final { return 0; }
 
-   Bool_t WriteBuffer(const char *, Int_t) final { return kFALSE; }
-   Int_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) final { return 0; }
-   Int_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) const final { return 0; }
+   Bool_t WriteBuffer(const char *, Long64_t) final { return kFALSE; }
+   Long64_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) final { return 0; }
+   Long64_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) const final { return 0; }
    void WriteFree() final {}
    void WriteHeader() final {}
    void WriteStreamerInfo() final;

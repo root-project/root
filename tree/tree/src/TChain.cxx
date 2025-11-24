@@ -975,7 +975,7 @@ Long64_t TChain::GetEntries() const
 /// Return the total number of bytes read,
 /// 0 bytes read indicates a failure.
 
-Int_t TChain::GetEntry(Long64_t entry, Int_t getall)
+Long64_t TChain::GetEntry(Long64_t entry, Int_t getall)
 {
    Long64_t treeReadEntry = LoadTree(entry);
    if (treeReadEntry < 0) {
@@ -1028,7 +1028,7 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
 /// to (major,minor).
 /// \note See TTreeIndex::GetEntryNumberWithIndex for information about the maximum values accepted for major and minor
 
-Int_t TChain::GetEntryWithIndex(Long64_t major, Long64_t minor)
+Long64_t TChain::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;

@@ -31,7 +31,7 @@ protected:
    Int_t       fNvar;            ///<  Number of columns
    Float_t    *fArgs;            ///<! [fNvar] Array of variables
 
-   Int_t  Fill() override;
+   Long64_t Fill() override;
 
 private:
    TNtuple(const TNtuple&) = delete;

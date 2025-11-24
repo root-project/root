@@ -58,7 +58,7 @@ public:
    Long64_t GetSize() const override;
    Int_t    ReOpen(Option_t *modestr) override;
    Bool_t   IsOpen() const override;
-   Bool_t   WriteBuffer(const char *buffer, Int_t length) override;
+   Bool_t   WriteBuffer(const char *buffer, Long64_t length) override;
    void     Flush() override;
    Bool_t   ReadBuffer(char *buffer, Int_t length) override;
    Bool_t   ReadBuffer(char *buffer, Long64_t position, Int_t length) override;

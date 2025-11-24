@@ -94,7 +94,7 @@ public:
            Int_t       GetNtot() const { return fNtot; }   // Return the total size of the prefetched blocks.
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
    virtual Int_t       GetNoCacheReadCalls() const { return fNoCacheReadCalls; }
-   virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
+   virtual Long64_t    GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Long64_t /*len*/, Bool_t * /*free*/) { return -1; }
            Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE);

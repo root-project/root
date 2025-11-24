@@ -63,10 +63,10 @@ protected:
    TBuffer(const TBuffer &) = delete;
    void operator=(const TBuffer &) = delete;
 
-   Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) override
+   Long64_t Read(const char *name) override { return TObject::Read(name); }
+   Long64_t Write(const char *name, Int_t opt, Long64_t bufsize) override
                               { return TObject::Write(name, opt, bufsize); }
-   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
+   Long64_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
                               { return TObject::Write(name, opt, bufsize); }
 
 public:

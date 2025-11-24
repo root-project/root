@@ -34,7 +34,7 @@ public:
    THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Long64_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    ~THbookBranch() override;
    void     Browse(TBrowser *b) override;
-   Int_t    GetEntry(Long64_t entry=0, Int_t getall=0) override;
+   Long64_t GetEntry(Long64_t entry=0, Int_t getall=0) override;
    const char      *GetBlockName() const {return fBlockName.Data();}
    void     SetAddress(void *addobj) override;
            void     SetBlockName(const char *name) {fBlockName=name;}
