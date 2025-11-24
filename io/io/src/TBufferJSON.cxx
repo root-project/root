@@ -809,7 +809,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
@@ -889,7 +889,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const void *obj, const TCl
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
