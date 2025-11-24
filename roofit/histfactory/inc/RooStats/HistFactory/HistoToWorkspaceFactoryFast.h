@@ -11,7 +11,7 @@
 #ifndef ROOSTATS_HISTOTOWORKSPACEFACTORYFAST
 #define ROOSTATS_HISTOTOWORKSPACEFACTORYFAST
 
-#include <RooStats/HistFactory/Systematics.h>
+#include <RooStats/HistFactory/Measurement.h>
 
 #include <RooArgSet.h>
 #include <RooDataSet.h>

@@ -24,45 +24,31 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
   HEADERS
-    RooStats/HistFactory/Asimov.h
-    RooStats/HistFactory/Channel.h
-    RooStats/HistFactory/Data.h
     RooStats/HistFactory/Detail/HistFactoryImpl.h
     RooStats/HistFactory/FlexibleInterpVar.h
     RooStats/HistFactory/HistFactoryException.h
     RooStats/HistFactory/HistFactoryModelUtils.h
     RooStats/HistFactory/HistFactoryNavigation.h
     RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
-    RooStats/HistFactory/HistRef.h
     RooStats/HistFactory/LinInterpVar.h
     RooStats/HistFactory/MakeModelAndMeasurementsFast.h
     RooStats/HistFactory/Measurement.h
     RooStats/HistFactory/ParamHistFunc.h
     RooStats/HistFactory/PiecewiseInterpolation.h
-    RooStats/HistFactory/PreprocessFunction.h
     RooStats/HistFactory/RooBarlowBeestonLL.h
-    RooStats/HistFactory/Sample.h
-    RooStats/HistFactory/Systematics.h
     ${HISTFACTORY_XML_HEADERS}
   SOURCES
-    src/Asimov.cxx
-    src/Channel.cxx
-    src/Data.cxx
     src/FlexibleInterpVar.cxx
     src/HistFactoryImpl.cxx
     src/HistFactoryModelUtils.cxx
     src/HistFactoryNavigation.cxx
-    src/HistRef.cxx
     src/HistoToWorkspaceFactoryFast.cxx
     src/LinInterpVar.cxx
     src/MakeModelAndMeasurementsFast.cxx
     src/Measurement.cxx
     src/ParamHistFunc.cxx
     src/PiecewiseInterpolation.cxx
-    src/PreprocessFunction.cxx
     src/RooBarlowBeestonLL.cxx
-    src/Sample.cxx
-    src/Systematics.cxx
     ${HISTFACTORY_XML_SOURCES}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
