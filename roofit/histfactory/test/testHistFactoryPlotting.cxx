@@ -3,7 +3,6 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
-#include <RooStats/HistFactory/Sample.h>
 #include <RooFit/ModelConfig.h>
 
 #include <RooCategory.h>
