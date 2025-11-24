@@ -138,8 +138,14 @@ public:
   static bool _printScientific ;
   static Int_t  _printSigDigits ;
 
-  void setValFast(double value) override { _value = value ; setValueDirty() ; }
-
+   void setValFast(double value) override
+   {
+      if (_value != value) {
+         ++_valueResetCounter;
+      }
+      _value = value;
+      setValueDirty();
+   }
 
   double evaluate() const override { return _value ; } // dummy because we overloaded getVal()
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
