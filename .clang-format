@@ -3,7 +3,11 @@ AccessModifierOffset: -3
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: None
 # This would be nice to have but seems to also (mis)align function parameters
-AlignConsecutiveDeclarations: None
+# AlignFunctionDeclarations: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+  # Part of clang-format 20.1.0
+  AlignFunctionDeclarations: true
 AlignEscapedNewlines: Left
 AlignOperands:   true
 AlignTrailingComments: true
