@@ -270,9 +270,19 @@ This improves compile times and reduces code inter-dependency; see https://githu
 
 ## Items addressed for this release
 
-More than 240 items were addressed for this release:
+More than 250 items were addressed for this release:
 
+  * [[#20450](https://github.com/root-project/root/issues/20450)] - Disable %jsroot magic in notebook when TWebCanvas is not compiled
+  * [[#20377](https://github.com/root-project/root/issues/20377)] - Investigate I/O of `std::unique_ptr` on latest MacOS beta
+  * [[#20342](https://github.com/root-project/root/issues/20342)] - Precision not set for matrix values when writing gdml
+  * [[#20324](https://github.com/root-project/root/issues/20324)] - [RF] RooEffProd uses different names for the same proxy in the copy constructor
+  * [[#20320](https://github.com/root-project/root/issues/20320)] - [DF] Crash when applying Filter on Snapshot written with Vary'ed quantities
+  * [[#20293](https://github.com/root-project/root/issues/20293)] - RooPolyVar.x() yields a default variable Name of "x"
+  * [[#20283](https://github.com/root-project/root/issues/20283)] - [Python] Comparisons with `None` very dangerous because linters tell you to do wrong things
+  * [[#20282](https://github.com/root-project/root/issues/20282)] - [ntuple] use meta normalized name for streamer info records
+  * [[#20280](https://github.com/root-project/root/issues/20280)] - Byte count mismatch and TPaletteAxis::Streamer
   * [[#20266](https://github.com/root-project/root/issues/20266)] - Cannot access methods of branches with TChain::Scan and friends
+  * [[#20265](https://github.com/root-project/root/issues/20265)] - UHI histogram kind
   * [[#20252](https://github.com/root-project/root/issues/20252)] - TGraph::SetHistogram() can leak memory
   * [[#20251](https://github.com/root-project/root/issues/20251)] - TInterpreter crash
   * [[#20249](https://github.com/root-project/root/issues/20249)] - TTree cannot find branch of friend TChain stored in inner TTree
@@ -303,7 +313,7 @@ More than 240 items were addressed for this release:
   * [[#19867](https://github.com/root-project/root/issues/19867)] - ROOT dictionary crash related to default template arguments
   * [[#19850](https://github.com/root-project/root/issues/19850)] - Error: "no member named 'getenv' in the global namespace" during the compilation with libc++
   * [[#19834](https://github.com/root-project/root/issues/19834)] - HasColumn crashing for an empty RDataFrame
-  * [[#19820](https://github.com/root-project/root/issues/19820)] - Name collisions in Workspace when using RooAbsPdf.derivative()
+  * [[#19820](https://github.com/root-project/root/issues/19820)] - Name collisions in Workspace when using RooAbsPdf.derviative()
   * [[#19814](https://github.com/root-project/root/issues/19814)] - Regression in 6.34: segfault when using TTreeReader on partially initialized TChain
   * [[#19777](https://github.com/root-project/root/issues/19777)] - Complete roottest/root/meta/callfunc runmemberFunc.C
   * [[#19776](https://github.com/root-project/root/issues/19776)] - “HIST” option for TRatioPlot(TH1*, THStack)
@@ -333,7 +343,7 @@ More than 240 items were addressed for this release:
   * [[#19362](https://github.com/root-project/root/issues/19362)] - [RDF] Automatic axis extension not working with weighted filling
   * [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with `TH1::SetBuffer` and `TH1::Sumw2`
   * [[#19349](https://github.com/root-project/root/issues/19349)] - typo: documentation for RooCrystalBall mathematical implementation does not match code implementation
-  * [[#19346](https://github.com/root-project/root/issues/19346)] - Duplicated tests in tree/treeplayer/test lead to random failures
+  * [[#19346](https://github.com/root-project/root/issues/19346)] - Duplicated tests in tree/treeplayer/test lead to ramdom failures
   * [[#19338](https://github.com/root-project/root/issues/19338)] - Feature Request ( Functions for Acoplanarity, Vector and Scalar Pt asymmetries)
   * [[#19333](https://github.com/root-project/root/issues/19333)] - Ninja build cannot start if `builtin_xrootd=ON`
   * [[#19330](https://github.com/root-project/root/issues/19330)] - A partial merge in TFileMerger creates directories that users didn't ask for
@@ -386,6 +396,7 @@ More than 240 items were addressed for this release:
   * [[#18778](https://github.com/root-project/root/issues/18778)] - [RF] Definitely lost reported by Valgrind in RooDataSet::emptyClone()
   * [[#18768](https://github.com/root-project/root/issues/18768)] - Regression in i-adding array.array to std::vector in PyROOT
   * [[#18751](https://github.com/root-project/root/issues/18751)] - Better thread safety in TClassEdit::CleanType
+  * [[#18744](https://github.com/root-project/root/issues/18744)] - Add environment variable to enable batch mode
   * [[#18736](https://github.com/root-project/root/issues/18736)] - Test failure with -Dminimal=ON -Dtesting=ON
   * [[#18712](https://github.com/root-project/root/issues/18712)] - Bug Report: Incorrect Error Propagation in Histo2D Division
   * [[#18697](https://github.com/root-project/root/issues/18697)] - HS3/RooFit issue with ROOT_STANDARD_LIBRARY_PACKAGE usage
@@ -437,6 +448,7 @@ More than 240 items were addressed for this release:
   * [[#14778](https://github.com/root-project/root/issues/14778)] - `-Dbuiltin_llvm=OFF` conflicts with use of 3D graphics (via Mesa built with LLVM)
   * [[#14581](https://github.com/root-project/root/issues/14581)] - [ROOT-9733] TRandom3 does not implement perfectly a Mersenne Twister PRNG
   * [[#14579](https://github.com/root-project/root/issues/14579)] - [ROOT-10190] Excluded fastcloningeventtree test in roottest.git should be re-enabled back
+  * [[#14554](https://github.com/root-project/root/issues/14554)] - [ROOT-2927] Particular instance of data causes segfault in TDecompSparse
   * [[#14442](https://github.com/root-project/root/issues/14442)] - Cling not recognizing __sincospif on MacOS (from math.h)
   * [[#14155](https://github.com/root-project/root/issues/14155)] - roottest.root.hist.h2root Fails always on march=native builds and sporadically on all other platforms
   * [[#14024](https://github.com/root-project/root/issues/14024)] - New CI does not rebase roottest branch on top of roottest master
