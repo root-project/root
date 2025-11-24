@@ -64,18 +64,15 @@ class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
       const auto &currentVariations = GetVariations();
 
       // If this node hangs from the RLoopManager itself, just use that as the upstream node for each variation
-      auto nominalPrevNode = fPrevNodes.begin();
-      if (static_cast<ROOT::Detail::RDF::RNodeBase *>(nominalPrevNode->get()) == fLoopManager) {
-         fPrevNodes.resize(1 + currentVariations.size(), *nominalPrevNode);
+      auto nominalPrevNode = fPrevNodes.front();
+      if (static_cast<ROOT::Detail::RDF::RNodeBase *>(nominalPrevNode.get()) == fLoopManager) {
+         fPrevNodes.resize(1 + currentVariations.size(), nominalPrevNode);
          return;
       }
 
       // Otherwise, append one varied filter per variation
-      const auto &prevVariations = (*nominalPrevNode)->GetVariations();
-
-      fPrevNodes.reserve(1 + prevVariations.size());
-      // Get valid iterator after resizing
-      nominalPrevNode = fPrevNodes.begin();
+      const auto &prevVariations = nominalPrevNode->GetVariations();
+      fPrevNodes.reserve(1 + currentVariations.size());
 
       // Need to populate parts of the computation graph for which we have empty shells, e.g. RJittedFilters
       if (!currentVariations.empty())
@@ -83,9 +80,9 @@ class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
       for (const auto &variation : currentVariations) {
          if (IsStrInVec(variation, prevVariations)) {
             fPrevNodes.emplace_back(
-               std::static_pointer_cast<PrevNodeCommon_t>((*nominalPrevNode)->GetVariedFilter(variation)));
+               std::static_pointer_cast<PrevNodeCommon_t>(nominalPrevNode->GetVariedFilter(variation)));
          } else {
-            fPrevNodes.push_back(*nominalPrevNode);
+            fPrevNodes.push_back(nominalPrevNode);
          }
       }
    }
