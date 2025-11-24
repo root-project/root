@@ -41,7 +41,7 @@ to database server.
 #include <iostream>
 
 namespace sqlio {
-const Int_t Ids_NullPtr = 0;       // used to identify NULL pointer in tables
+const Int_t Ids_NullPtr = 0;       // used to identify nullptr pointer in tables
 const Int_t Ids_RootDir = 0;       // dir:id, used for keys stored in root directory.
 const Int_t Ids_TSQLFile = 0;      // keyid for TSQLFile entry in keys list
 const Int_t Ids_StreamerInfos = 1; // keyid used to store StreamerInfos in ROOT directory

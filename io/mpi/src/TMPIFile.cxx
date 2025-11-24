@@ -501,7 +501,7 @@ void TMPIFile::SplitMPIComm()
    Int_t flag;
    MPI_Initialized(&flag);
    if (!flag) {
-      MPI_Init(NULL, NULL);
+      MPI_Init(nullptr, nullptr);
    }
    // get global size and current global rank
    MPI_Comm_size(MPI_COMM_WORLD, &fMPIGlobalSize);

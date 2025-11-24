@@ -2660,7 +2660,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 
    if (!actualObjectStart) {
 
-      // save kNullTag to represent NULL pointer
+      // save kNullTag to represent nullptr pointer
       *this << (UInt_t) kNullTag;
 
    } else {
