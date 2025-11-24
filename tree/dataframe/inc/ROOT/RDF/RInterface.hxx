@@ -2938,6 +2938,7 @@ public:
       auto sumV = std::make_shared<RDFDetail::SumReturnType_t<T>>(initValue);
       return CreateAction<RDFInternal::ActionTags::Sum, T>(userColumns, sumV, sumV, fProxiedPtr);
    }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the product of the values in the specified column.
    /// \tparam T The type of the column values (Default: double)
