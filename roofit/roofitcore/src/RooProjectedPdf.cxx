@@ -286,10 +286,9 @@ RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
    auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *newArg);
 
-   ctx.markAsCompiled(*newArg);
-   ctx.markAsCompiled(*newArgPdf);
+   ctx.compileServers(*newArgPdf, normSet);
 
-   newArgPdf->addOwnedComponents(std::move(newArg));
+   ctx.markAsCompiled(*newArgPdf);
 
    return newArgPdf;
 }
