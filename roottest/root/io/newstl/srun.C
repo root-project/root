@@ -10,7 +10,7 @@ enum EWhich {
    kEnd = 256
 };
 
-void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
+void srun(const TString &srcpath = "", const TString &readpath = "", int which = kEnd - 1) {
 
    // use current directory as build directory
    gSystem->SetBuildDir(gSystem->pwd(), true);
@@ -18,7 +18,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
    int result = gSystem->CompileMacro(srcpath + "TestHelpers.C","k");
    if (result != 0 && result != 1) return;
 
-   TString arg = exec > 1 ? "(true)" : "(false)";
+   TString arg = "(\"" + readpath + "\")";
 
    if ( which & kRVec ) {
 
@@ -28,7 +28,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "rtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("rtest" + arg);
+      gROOT->ProcessLine("rtest" + arg);
 
    }
 
@@ -40,7 +40,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "vtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("vtest" + arg);
+      gROOT->ProcessLine("vtest" + arg);
 
    }
 
@@ -52,7 +52,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "dtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("dtest" + arg);
+      gROOT->ProcessLine("dtest" + arg);
 
    }
 
@@ -64,7 +64,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "ltest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ltest" + arg);
+      gROOT->ProcessLine("ltest" + arg);
 
    }
 
@@ -76,7 +76,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "stest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("stest" + arg);
+      gROOT->ProcessLine("stest" + arg);
 
    }
 
@@ -88,7 +88,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "ttest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ttest" + arg);
+      gROOT->ProcessLine("ttest" + arg);
 
    }
 
@@ -100,7 +100,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "mtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("mtest" + arg);
+      gROOT->ProcessLine("mtest" + arg);
 
    }
 
@@ -112,7 +112,7 @@ void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
       result = gSystem->CompileMacro(srcpath + "ntest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ntest" + arg);
+      gROOT->ProcessLine("ntest" + arg);
 
    }
 
