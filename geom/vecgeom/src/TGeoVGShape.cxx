@@ -138,7 +138,12 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
    // THE BOX
    if (shape->IsA() == TGeoBBox::Class()) {
       TGeoBBox const *const box = static_cast<TGeoBBox const *>(shape);
-      unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
+      if ((box->GetOrigin()[0] != 0.0) || (box->GetOrigin()[1] != 0.0) || (box->GetOrigin()[2] != 0.0)) {
+        // skip solids with shifted origin
+        printf("Unsupported box shape with shifted origin\n");
+      } else {
+        unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
+      }
    }
 
    // THE TUBE
@@ -288,14 +293,17 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
 
    // THE SCALED SHAPE
    if (shape->IsA() == TGeoScaledShape::Class()) {
-      TGeoScaledShape const *const p = static_cast<TGeoScaledShape const *>(shape);
-      // First convert the referenced shape
-      VUnplacedVolume *referenced_shape = Convert(p->GetShape());
-      if (!referenced_shape)
-         return nullptr;
-      const double *scale_root = p->GetScale()->GetScale();
-      unplaced_volume =
-         GeoManager::MakeInstance<UnplacedScaledShape>(referenced_shape, scale_root[0], scale_root[1], scale_root[2]);
+      // TGeoScaledShape const *const p = static_cast<TGeoScaledShape const *>(shape);
+      // // First convert the referenced shape
+      // VUnplacedVolume *referenced_shape = Convert(p->GetShape());
+      // if (!referenced_shape)
+      //    return nullptr;
+      // const double *scale_root = p->GetScale()->GetScale();
+      // unplaced_volume =
+      //    GeoManager::MakeInstance<UnplacedScaledShape>(referenced_shape, scale_root[0], scale_root[1], scale_root[2]);
+
+      // temporarily skip scaled solids which cannot be excluded via EShapeType selection
+      printf("Unsupported scaled shape\n");
    }
 
    // THE CUT TUBE
