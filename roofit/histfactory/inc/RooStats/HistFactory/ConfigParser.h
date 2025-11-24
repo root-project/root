@@ -12,9 +12,7 @@
 #ifndef ROOSTATS_CONFIGPARSER_h
 #define ROOSTATS_CONFIGPARSER_h
 
-#include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/Sample.h"
 
 #include <cstdlib>
 #include <string>
