@@ -788,7 +788,7 @@ Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t siz
 
    close(fd);
 
-   chmod(file, 0644);
+   chmod(file, 0666);
 
    return 0;
 }
