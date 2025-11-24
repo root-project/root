@@ -161,6 +161,7 @@ if(pyroot)
   endif()
   if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(dataframe_merge_results dataframe_merge_results.py)
+    ROOT_ADD_PYUNITTEST(dataframe_snapshot_py dataframe_snapshot.py)
   endif()
 endif()
 
