@@ -281,7 +281,7 @@ static void PrintRNTuple(std::ostream &stream, const ROOT::RNTupleDescriptor &de
    std::size_t maxNameLen = 0, maxTypeLen = 0;
    std::vector<const ROOT::RFieldDescriptor *> fields;
    fields.reserve(rootField.GetLinkIds().size());
-   for (const auto &field: desc.GetFieldIterable(rootField.GetId())) {
+   for (const auto &field : desc.GetFieldIterable(rootField.GetId())) {
       fields.push_back(&field);
       maxNameLen = std::max(maxNameLen, field.GetFieldName().length());
       maxTypeLen = std::max(maxTypeLen, field.GetTypeName().length());
@@ -481,11 +481,11 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
 
    const bool isTerminal = terminalSize.x + terminalSize.y > 0;
 
-   bool mustIndent = false;
+   auto curCol = 0u;
    for (auto i = 0u; i < nNodes; ++i) {
       NodeIdx childIdx = nodesBegin[i];
       const auto &child = tree.fNodes[childIdx];
-      if ((i % nCols) == 0 || mustIndent) {
+      if (curCol == 0) {
          PrintIndent(stream, indent);
       }
 
@@ -498,22 +498,39 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
             stream << Color(kAnsiGreen);
       }
 
-      const bool isExtremal = !(((i + 1) % nCols) != 0 && i != nNodes - 1);
+      // Handle line breaks. Lines are broken in the following situations:
+      // - when the current column number reaches the max number of columns
+      // - when we are in recursive mode and the item is a directory with children
+      // - when we are in recursive mode and the NEXT item is a directory with children
+      
+      const bool isDirWithRecursiveDisplay = isDir && (flags & RootLsArgs::kRecursiveListing) && child.fNChildren > 0;
+
+      bool nextIsDirWithRecursiveDisplay = false;
+      if ((flags & RootLsArgs::kRecursiveListing) && i < nNodes - 1) {
+         NodeIdx nextChildIdx = nodesBegin[i + 1];
+         const auto &nextChild = tree.fNodes[nextChildIdx];
+         nextIsDirWithRecursiveDisplay =
+            nextChild.fNChildren > 0 && ClassInheritsFrom(nextChild.fClassName.c_str(), "TDirectory");
+      }
+
+      const bool isExtremal = (((curCol + 1) % nCols) == 0) || (i == nNodes - 1) || isDirWithRecursiveDisplay ||
+                              nextIsDirWithRecursiveDisplay;
       if (!isExtremal) {
-         stream << std::left << std::setw(colWidths[i % nCols]) << child.fName;
+         stream << std::left << std::setw(colWidths[curCol % nCols]) << child.fName;
       } else {
          stream << std::setw(1) << child.fName;
       }
       stream << Color(kAnsiNone);
 
-      if (isExtremal)
-         stream << "\n";
+      if (isExtremal) {
+         stream << '\n';
+         curCol = 0;
+      } else {
+         ++curCol;
+      }
 
-      if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
-         if (!isExtremal)
-            stream << "\n";
+      if (isDirWithRecursiveDisplay) {
          PrintChildrenInColumns(stream, tree, childIdx, flags, indent + 2);
-         mustIndent = true;
       }
    }
 }
