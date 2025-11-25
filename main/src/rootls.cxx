@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "logging.hxx"
 #include "optparse.hxx"
 #include "wildcards.hpp"
 
@@ -106,12 +107,6 @@ Examples:
 - rootls -r example.root
   Display contents of the ROOT file 'example.root', traversing recursively any TDirectory.
 )";
-
-static ROOT::RLogChannel &RootLsChannel()
-{
-   static ROOT::RLogChannel sLog("ROOTLS");
-   return sLog;
-}
 
 static bool ClassInheritsFrom(const char *class_, const char *baseClass)
 {
@@ -385,7 +380,7 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
                const auto &desc = reader->GetDescriptor();
                PrintRNTuple(stream, desc, indent + 2, desc.GetFieldZero());
             } else {
-               R__LOG_ERROR(RootLsChannel()) << "failed to read RNTuple object: " << child.fName;
+               Err() << "failed to read RNTuple object: " << child.fName;
             }
          }
       }
@@ -691,7 +686,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
-      R__LOG_ERROR(RootLsChannel()) << err;
+      Err() << err;
 
    if (opts.GetSwitch("help")) {
       outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kLong;
@@ -744,6 +739,8 @@ int main(int argc, char **argv)
 {
    // Ignore diagnostics up to (but excluding) kError to avoid spamming users with TClass::Init warnings.
    gErrorIgnoreLevel = kError;
+
+   InitLog("rootls");
 
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
    if (args.fPrintUsageAndExit != RootLsArgs::EPrintUsage::kNo) {
