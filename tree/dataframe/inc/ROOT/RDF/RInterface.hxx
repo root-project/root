@@ -2906,7 +2906,60 @@ public:
       return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV, fProxiedPtr);
    }
 
-   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the skewness of processed column values (*lazy action*).
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the skewness of the selected column wrapped in a RResultPtr.
+   ///
+   /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto skew = df.Skewness("values");
+   /// ~~~
+   ///
+   /// \ingroup dataframe_actions
+   template <typename T = RDFDetail::RInferredType>
+   RResultPtr<double> Skewness(std::string_view columnName = "")
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto skewnessV = std::make_shared<double>(0);
+      return CreateAction<RDFInternal::ActionTags::Skewness, T>(userColumns, skewnessV, skewnessV, fProxiedPtr);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the excess kurtosis of processed column values (*lazy action*).
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the excess kurtosis of the selected column wrapped in a RResultPtr.
+   ///
+   /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto kurt = df.Kurtosis("values");
+   /// ~~~
+   ///
+   /// \ingroup dataframe_actions
+   template <typename T = RDFDetail::RInferredType>
+   RResultPtr<double> Kurtosis(std::string_view columnName = "")
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto kurtosisV = std::make_shared<double>(0);
+      return CreateAction<RDFInternal::ActionTags::Kurtosis, T>(userColumns, kurtosisV, kurtosisV, fProxiedPtr);
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*).
    /// \tparam T The type of the branch/column.

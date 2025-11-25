@@ -100,6 +100,8 @@ struct Sum{};
 struct Mean{};
 struct Fill{};
 struct StdDev{};
+struct Skewness{};
+struct Kurtosis{};
 struct Display{};
 struct Snapshot{};
 struct Book{};
@@ -244,6 +246,28 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
+}
+
+// Skewness action
+template <typename ColType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &skewnessV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Skewness, const RColumnRegister &colRegister)
+{
+   using Helper_t = SkewnessHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
+   return std::make_unique<Action_t>(Helper_t(skewnessV, nSlots), bl, prevNode, colRegister);
+}
+
+// Kurtosis action
+template <typename ColType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &kurtosisV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Kurtosis, const RColumnRegister &colRegister)
+{
+   using Helper_t = KurtosisHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
+   return std::make_unique<Action_t>(Helper_t(kurtosisV, nSlots), bl, prevNode, colRegister);
 }
 
 using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
