@@ -509,26 +509,6 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootObjTree &tree
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
-static std::string NodeFullPath(const RootObjTree &tree, NodeIdx_t nodeIdx)
-{
-   std::vector<const std::string *> fragments;
-   const RootObjNode *node = &tree.fNodes[nodeIdx];
-   NodeIdx_t prevParent;
-   do {
-      prevParent = node->fParent;
-      fragments.push_back(&node->fName);
-      node = &tree.fNodes[node->fParent];
-   } while (node->fParent != prevParent);
-
-   assert(!fragments.empty());
-
-   std::string fullPath = **fragments.rbegin();
-   for (auto it = std::next(fragments.rbegin()), end = fragments.rend(); it != end; ++it) {
-      fullPath += '/' + **it;
-   }
-   return fullPath;
-}
-
 // Main entrypoint of the program
 static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 {
