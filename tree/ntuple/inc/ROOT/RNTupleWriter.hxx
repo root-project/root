@@ -146,7 +146,8 @@ public:
             std::string_view storage, const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    /// Creates an RNTupleWriter that writes into an existing TFile or TDirectory, without overwriting its content.
-   /// `fileOrDirectory` may be an empty TFile.
+   /// `fileOrDirectory` may be an empty TFile and its reference **must remain valid** for the lifetime of the
+   /// RNTupleWriter (which means the TDirectory object must not be moved, destroyed or replaced during that time).
    /// \see Recreate()
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
