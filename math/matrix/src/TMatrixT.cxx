@@ -3076,20 +3076,20 @@ TMatrixT<Element> &TMatrixTAutoloadOps::ElementDiv(TMatrixT<Element> &target, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Elementary routine to calculate matrix multiplication A*B
 
-
 template <class Element>
 void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa, const Element *const bp, Int_t nb,
-                                 Int_t ncolsb, Element *cp) {
+                                 Int_t ncolsb, Element *cp)
+{
    // i,k,j loop order with blocking and unrolling
    const Int_t M = na / ncolsa; // Rows of A
-   const Int_t N = ncolsa;	// Columns of A, rows of B
-   const Int_t P = ncolsb;	// Columns of B and C
+   const Int_t N = ncolsa;      // Columns of A, rows of B
+   const Int_t P = ncolsb;      // Columns of B and C
 
    const Int_t BLOCK = 32;
 
-   #ifdef _OPENMP
-   #pragma omp parallel for collapse(2) if(M * P > 10000)
-   #endif
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) if (M * P > 10000)
+#endif
    for (Int_t i0 = 0; i0 < M; i0 += BLOCK) {
       for (Int_t k0 = 0; k0 < N; k0 += BLOCK) {
          for (Int_t j0 = 0; j0 < P; j0 += BLOCK) {
@@ -3100,7 +3100,7 @@ void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa
                for (Int_t k = k0; k < kMax; ++k) {
                   Element aik = ap[i * N + k]; // Hoist A[i,k]
                   Int_t j = j0;
-                  #pragma GCC ivdep
+#pragma GCC ivdep
                   for (; j <= jMax - 4; j += 4) {
                      // Unroll by 4: update C[i,j], C[i,j+1], C[i,j+2], C[i,j+3]
                      Element cij0 = cp[i * P + j];
@@ -3116,7 +3116,7 @@ void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa
                      cp[i * P + (j + 2)] = cij2;
                      cp[i * P + (j + 3)] = cij3;
                   }
-                  #pragma GCC ivdep
+#pragma GCC ivdep
                   for (; j < jMax; ++j) {
                      // Cleanup loop for remaining j
                      cp[i * P + j] += aik * bp[k * P + j];
