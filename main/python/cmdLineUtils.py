@@ -694,7 +694,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
             obj = key.ReadObj()
             # Determine the actual name that will be written
             actualName = setName if setName != "" else objectName
-            
+
             # Delete existing object if replace option is enabled
             if replaceOption and isExisting(destFile, destPathSplit + [actualName]):
                 retcodeTemp = deleteObject(destFile, destPathSplit + [actualName])
@@ -702,7 +702,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
                     retcode += retcodeTemp
                     obj.Delete()
                     continue
-            
+
             if issubclass(obj.__class__, ROOT.TCollection):
                 # probably the object was written with kSingleKey
                 changeDirectory(destFile, destPathSplit)
