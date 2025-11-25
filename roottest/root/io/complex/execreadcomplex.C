@@ -1,15 +1,16 @@
 // This macro must be v5/v6 executable!
 
-void compareValues(const char* filename,
-                   complex<float> cFloat, complex<float> cFloatRef,
-                   complex<double> cDouble, complex<double> cDoubleRef){
+void compareValues(const char *filename, const char *where, complex<float> cFloat, complex<float> cFloatRef,
+                   complex<double> cDouble, complex<double> cDoubleRef)
+{
    if (cFloatRef != cFloat) {
-      cout << "ERROR complex<float> on file " << filename << " numbers differ! Reference: " << cFloatRef << " on disk " << cFloat << endl;
+      cout << "ERROR complex<float> on file " << filename << " numbers differ for " << where
+           << " ! Reference: " << cFloatRef << " on disk " << cFloat << endl;
    }
    if (cDoubleRef != cDouble) {
-      cout << "ERROR complex<double> on file " << filename << " numbers differ! Reference: " << cDoubleRef << " on disk " << cDouble << endl;
+      cout << "ERROR complex<double> on file " << filename << " numbers differ for " << where
+           << " ! Reference: " << cDoubleRef << " on disk " << cDouble << endl;
    }
-
 }
 
 void readcomplex(const std::string base)
@@ -46,8 +47,14 @@ void readcomplex(const std::string base)
       for (int j = 0; j < nIters; ++j) {
 
          // Re-generate values
-         std::complex<float> cFloatRef(rndm.Uniform(theMin, theMax), rndm.Uniform(theMin, theMax));
-         std::complex<double> cDoubleRef(rndm.Uniform(theMin, theMax), rndm.Uniform(theMin, theMax));
+         // Since the order of execution of function arguments are not guarantees by the standard,
+         // don't pass TRandom3 methods as function arguments, to avoid potential cross-platform differences
+         auto rnd1 = rndm.Uniform(theMin, theMax);
+         auto rnd2 = rndm.Uniform(theMin, theMax);
+         auto rnd3 = rndm.Uniform(theMin, theMax);
+         auto rnd4 = rndm.Uniform(theMin, theMax);
+         std::complex<float> cFloatRef(rnd1, rnd2);
+         std::complex<double> cDoubleRef(rnd3, rnd4);
 
          // read them
          TString cFloatName(TString::Format("cFloat_%i", j));
@@ -63,14 +70,12 @@ void readcomplex(const std::string base)
             cout << "ERROR Cannot get " << cDoubleName << " from file " << ifilename << endl;
             continue;
          }
-
          // compare them bit-by-bit
-         compareValues(ifilename, *cFloatPtr, cFloatRef, *cDoublePtr, cDoubleRef);
-
+         compareValues(ifilename, TString::Format("cFloat/cDouble #%i", j), *cFloatPtr, cFloatRef, *cDoublePtr,
+                       cDoubleRef);
       }
 
       if (iFile != 1) {
-
          // Now the tree
          TTreeReader reader ("t",ifile);
          TTreeReaderValue<complex<float>> cFloat_split(reader, "cFloat_split");
@@ -78,21 +83,26 @@ void readcomplex(const std::string base)
          TTreeReaderValue<complex<double>> cDouble_split(reader, "cDouble_split");
          TTreeReaderValue<complex<double>> cDouble(reader, "cDouble");
 
+         int e = 0;
          while (reader.Next()) {
-            std::complex<float> cFloatn(rndm.Uniform(theMin,theMax),rndm.Uniform(theMin,theMax));
-            std::complex<double> cDoublen(rndm.Uniform(theMin,theMax),rndm.Uniform(theMin,theMax));
-            compareValues(ifilename, *cFloat_split, cFloatn, *cDouble_split, cDoublen);
-            compareValues(ifilename, *cFloat, cFloatn, *cDouble, cDoublen);
+            auto rnd11 = rndm.Uniform(theMin, theMax);
+            auto rnd12 = rndm.Uniform(theMin, theMax);
+            auto rnd13 = rndm.Uniform(theMin, theMax);
+            auto rnd14 = rndm.Uniform(theMin, theMax);
+            std::complex<float> cFloatn(rnd11, rnd12);
+            std::complex<double> cDoublen(rnd13, rnd14);
+            compareValues(ifilename, TString::Format("Split branch entry #%i", e), *cFloat_split, cFloatn,
+                          *cDouble_split, cDoublen);
+            compareValues(ifilename, TString::Format("Streamed branch entry #%i", e), *cFloat, cFloatn, *cDouble,
+                          cDoublen);
+            ++e;
          }
-
       }
-
    }
 }
 
 void execreadcomplex()
 {
-
    // Files produced on this very platform
    readcomplex("complexOfileROOT6");
 
@@ -100,5 +110,4 @@ void execreadcomplex()
    readcomplex("complexOfilekubuntuROOT5");
    readcomplex("complexOfilekubuntuROOT6");
    readcomplex("complexOfileslc6ROOT5");
-
 }
