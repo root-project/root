@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+set(GUI_HEADERS
   GuiTypes.h
   TApplicationImp.h
   TBrowser.h
@@ -24,6 +24,10 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TToggleGroup.h
   TToggle.h
 )
+
+
+
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${GUI_HEADERS})
 
 target_sources(Core PRIVATE
   src/InitGui.cxx
@@ -45,5 +49,20 @@ target_sources(Core PRIVATE
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
+
+set(RELATIVE_INC_HEADERS ${GUI_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+  )
+endif()
 
 ROOT_INSTALL_HEADERS()

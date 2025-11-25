@@ -12,5 +12,16 @@ target_link_libraries(Core PRIVATE xxHash::xxHash LZ4::LZ4)
 target_include_directories(Core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/
+      FILES
+          inc/ZipLZ4.h
+  )
+endif()
 
 ROOT_INSTALL_HEADERS()
