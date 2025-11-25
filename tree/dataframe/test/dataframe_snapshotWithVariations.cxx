@@ -529,3 +529,51 @@ TEST(RDFVarySnapshot, GH20320)
    EXPECT_EQ(take_val->front(), 2);
    EXPECT_EQ(take_var_up->front(), 3);
 }
+
+// https://github.com/root-project/root/issues/20506
+// When snapshot is invoked on JITted Defines with variations, the Snapshot
+// Action needs to JIT the computation graph before creating outputs.
+// When this wasn't happening, the varied Defines be identical to nominal and
+// not be snapshot.
+TEST(RDFVarySnapshot, IncludeDependentColumns_JIT)
+{
+   const char *fileName{"dataframe_snapshot_include_dependent_columns.root"};
+   RemoveFileRAII(fileName);
+   constexpr unsigned int N = 10;
+
+   ROOT::RDataFrame rdf(N);
+   auto df = rdf.Define("Muon_pt", "return static_cast<double>(rdfentry_)")
+                .Vary("Muon_pt", "ROOT::VecOps::RVec<double>({Muon_pt*0.5, Muon_pt*2})", {"down", "up"}, "muon_unc")
+                .Define("Muon_2pt", "return 2. * Muon_pt;");
+
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fOverwriteIfExists = true;
+   opts.fIncludeVariations = true;
+
+   auto snapshot = df.Snapshot("Events", fileName, {"Muon_pt", "Muon_2pt"}, opts);
+
+   TFile file(fileName);
+   auto tree = file.Get<TTree>("Events");
+   ASSERT_NE(tree, nullptr);
+   tree->Scan();
+
+   double Muon_pt, Muon_pt_up, Muon_pt_down;
+   double Muon_2pt, Muon_2pt_up, Muon_2pt_down;
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_pt", &Muon_pt));
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_pt__muon_unc_up", &Muon_pt_up));
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_pt__muon_unc_down", &Muon_pt_down));
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_2pt", &Muon_2pt));
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_2pt__muon_unc_up", &Muon_2pt_up));
+   ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress("Muon_2pt__muon_unc_down", &Muon_2pt_down));
+
+   EXPECT_EQ(tree->GetEntries(), N);
+   for (unsigned int i = 0; i < tree->GetEntries(); ++i) {
+      ASSERT_GT(tree->GetEntry(i), 0);
+      EXPECT_EQ(2. * Muon_pt, Muon_2pt);
+
+      EXPECT_EQ(0.5 * Muon_pt, Muon_pt_down);
+      EXPECT_EQ(0.5 * Muon_2pt, Muon_2pt_down);
+      EXPECT_EQ(2. * Muon_pt, Muon_pt_up);
+      EXPECT_EQ(2. * Muon_2pt, Muon_2pt_up);
+   }
+}
