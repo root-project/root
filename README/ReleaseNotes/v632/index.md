@@ -900,3 +900,12 @@ This branch includes bugfixes for issues signalled by ATLAS and CMS as well as s
 
 ### Platforms
 MacOS26 was added and macOS13 removed from the battery of platforms used for the integration.
+
+
+## Release 6.32.20
+
+Published on November 25, 2025
+
+### Items addressed in this release
+
+This branch includes one bugfix ([[#20083](https://github.com/root-project/root/issues/20083)] - TTreeIndex fails under Valgrind due to long double emulation) and adds the support for the new new Apple XCode 26.2.
