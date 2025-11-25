@@ -34,3 +34,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
 target_include_directories(RooFitXRooFit PRIVATE inc/RooFit)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+if(webgui)
+  # provider for browsing of RooWorkspace
+
+  ROOT_LINKER_LIBRARY(ROOTFitWorkspaceProvider
+      src/xRooProvider.cxx
+    DEPENDENCIES
+      ROOTBrowsable
+      RooFitCore
+  )
+
+endif(webgui)
