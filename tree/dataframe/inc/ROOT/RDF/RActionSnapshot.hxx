@@ -74,9 +74,6 @@ class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
       const auto &prevVariations = nominalPrevNode->GetVariations();
       fPrevNodes.reserve(1 + currentVariations.size());
 
-      // Need to populate parts of the computation graph for which we have empty shells, e.g. RJittedFilters
-      if (!currentVariations.empty())
-         fLoopManager->Jit();
       for (const auto &variation : currentVariations) {
          if (IsStrInVec(variation, prevVariations)) {
             fPrevNodes.emplace_back(
@@ -105,7 +102,19 @@ public:
          fIsDefine.push_back(colRegister.IsDefineOrAlias(columns[i]));
 
       if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
+         // Need to populate parts of the computation graph for which we have empty shells, e.g. RJittedFilters and
+         // varied Defines
+         if (!GetVariations().empty())
+            fLoopManager->Jit();
+
          AppendVariedPrevNodes();
+
+         for (auto i = 0u; i < nColumns; ++i) {
+            if (fIsDefine[i]) {
+               auto define = colRegister.GetDefine(columns[i]);
+               define->MakeVariations(GetVariations());
+            }
+         }
       }
    }
 
