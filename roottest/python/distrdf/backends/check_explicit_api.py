@@ -104,8 +104,8 @@ class TestDeprecation:
 
             msg_warng = textwrap.dedent(
                 """
-                In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. ROOT 6.38
-                will remove the 'Experimental' keyword completely, so it is suggested to move to the stable API in user 
+                In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
+                future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
                 code. You can now change lines such as:
                 ```
                 connection = ... # your distributed Dask client or SparkContext
