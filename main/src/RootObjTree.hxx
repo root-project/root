@@ -56,6 +56,14 @@ struct RootObjTree {
    std::unique_ptr<TFile> fFile;
 };
 
+enum class ENodeFullPathOpt {
+   kExcludeFilename,
+   kIncludeFilename,
+};
+/// Given a node, returns its full path. If `opt == kIncludeFilename`, the path is prepended by "filename.root:"
+std::string
+NodeFullPath(const RootObjTree &tree, NodeIdx_t nodeIdx, ENodeFullPathOpt opt = ENodeFullPathOpt::kExcludeFilename);
+
 struct RootSource {
    std::string fFileName;
    RootObjTree fObjectTree;
