@@ -91,6 +91,11 @@ ROOTTEST_ADD_TEST(RecursiveRootls2
                   OUTREF RecursiveRootls2.ref
                   ENVIRONMENT ${test_env})
 
+ROOTTEST_ADD_TEST(RecursiveRootls3
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -r subdirs.root
+                  OUTREF RecursiveRootls3.ref
+                  ENVIRONMENT ${test_env})
+
 ROOTTEST_ADD_TEST(RootlsRNTuple
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -R RNTuple.root
                   OUTREF RootlsRNTuple.ref
