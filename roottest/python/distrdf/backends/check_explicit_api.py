@@ -1,10 +1,9 @@
-import pytest
 import textwrap
 import warnings
 
-import ROOT
-
 import DistRDF
+import pytest
+import ROOT
 
 
 class TestExplicitAPI:
@@ -49,8 +48,7 @@ class TestExplicitAPI:
             RDataFrame = ROOT.RDF.Distributed.Spark.RDataFrame
 
         histoproxies = [
-            RDataFrame(treename, filename, npartitions=2,
-                       executor=connection).Histo1D((col, col, 1, 40, 45), col)
+            RDataFrame(treename, filename, npartitions=2, executor=connection).Histo1D((col, col, 1, 40, 45), col)
             for col in ["b1", "b2", "b3"]
         ]
 
@@ -89,6 +87,7 @@ class TestExplicitAPI:
         assert sum_before.GetValue() == 10.0
         assert sum_after.GetValue() == 20.0
 
+
 class TestDeprecation:
     """Test the deprecation message regarding the 'Experimental' module"""
 
@@ -124,6 +123,7 @@ class TestDeprecation:
             assert str(warninglist[0].message == msg_warng)
 
             assert df.Count().GetValue() == 10
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
