@@ -641,4 +641,23 @@ The list of issues addressed for this release is the following:
   * [[#10522](https://github.com/root-project/root/issues/10522)] - complex numbers in RDataFrame (PyROOT)
   * [[#8899](https://github.com/root-project/root/issues/8899)] - dataframe_concurrency LLVM valgrind error: SelectionDAG::Combine
 
+## Release 6.36.06
+
+Published on November 25, 2025
+
+### Items addressed in this release
+
+This release features a few minor fixes. It will also be compatible with the new Apple XCode 26.2.
+
+The list of issues addressed for this release is the following:
+
+  * [[#20377](https://github.com/root-project/root/issues/20377)] - Investigate I/O of `std::unique_ptr` on latest MacOS beta
+  * [[#20282](https://github.com/root-project/root/issues/20282)] - [ntuple] use meta normalized name for streamer info records
+  * [[#20083](https://github.com/root-project/root/issues/20083)] - [RF] Offset() option is ignored by the fitTo() function
+  * [[#19963](https://github.com/root-project/root/issues/19963)] - Reading individual TTree sub-branch into a std::map lead to write into delete memory.
+  * [[#19889](https://github.com/root-project/root/issues/19889)] - Mixing Clang 20 and ROOT causes very sporadic crashes
+  * [[#19814](https://github.com/root-project/root/issues/19814)] - Regression in 6.34: segfault when using TTreeReader on partially initialized TChain
+  * [[#19327](https://github.com/root-project/root/issues/19327)] - Build Fails on MacOS (ARM, 15)
+  * [[#18782](https://github.com/root-project/root/issues/18782)] - Segfault in TTree::Branch with seemingly simple custom class
+
 ## HEAD of the v6-36-00-patches branch
