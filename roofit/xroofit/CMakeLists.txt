@@ -43,6 +43,7 @@ if(webgui)
     DEPENDENCIES
       ROOTBrowsable
       RooFitCore
+      RooFitXRooFit
   )
 
 endif(webgui)
