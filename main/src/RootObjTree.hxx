@@ -56,6 +56,9 @@ struct RootObjTree {
    std::unique_ptr<TFile> fFile;
 };
 
+/// Prints out the structure of the object tree. Helpful for debugging.
+void PrintObjTree(const RootObjTree &tree, std::ostream &out = std::cout);
+
 enum class ENodeFullPathOpt {
    kExcludeFilename,
    kIncludeFilename,
