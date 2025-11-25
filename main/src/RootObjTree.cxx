@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <deque>
 #include <iostream>
+#include <set>
 
 static bool MatchesGlob(std::string_view haystack, std::string_view pattern)
 {
@@ -154,6 +155,49 @@ ROOT::CmdLine::ParseRootSources(const std::vector<std::string> &sourcesRaw, std:
    }
 
    return sources;
+}
+
+void ROOT::CmdLine::PrintObjTree(const RootObjTree &tree, std::ostream &out)
+{
+   if (tree.fNodes.empty())
+      return;
+
+   struct RevNode {
+      std::set<NodeIdx_t> fChildren;
+   };
+   std::vector<RevNode> revNodes;
+   revNodes.resize(tree.fNodes.size());
+
+   // Un-linearize the tree
+   for (int i = (int)tree.fNodes.size() - 1; i >= 0; --i) {
+      const auto *node = &tree.fNodes[i];
+      NodeIdx_t childIdx = i;
+      NodeIdx_t parentIdx = node->fParent;
+      while (childIdx != parentIdx) {
+         auto &revNodeParent = revNodes[parentIdx];
+         revNodeParent.fChildren.insert(childIdx);
+         node = &tree.fNodes[parentIdx];
+         childIdx = parentIdx;
+         parentIdx = node->fParent;
+      }
+   }
+
+   // Print out the tree.
+   // Vector of {nesting, nodeIdx}
+   std::vector<std::pair<std::uint32_t, NodeIdx_t>> nodesToVisit = {{0, 0}};
+   while (!nodesToVisit.empty()) {
+      const auto [nesting, nodeIdx] = nodesToVisit.back();
+      nodesToVisit.pop_back();
+      const auto &cur = revNodes[nodeIdx];
+      const auto &node = tree.fNodes[nodeIdx];
+      for (auto i = 0u; i < 2 * nesting; ++i)
+         out << ' ';
+      out << node.fName << " : " << node.fClassName << "\n";
+      // Add the children in reverse order to preserve alphabetical order during depth-first visit.
+      for (auto it = cur.fChildren.rbegin(); it != cur.fChildren.rend(); ++it) {
+         nodesToVisit.push_back({nesting + 1, *it});
+      }
+   }
 }
 
 std::string ROOT::CmdLine::NodeFullPath(const ROOT::CmdLine::RootObjTree &tree, ROOT::CmdLine::NodeIdx_t nodeIdx,
