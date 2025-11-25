@@ -155,3 +155,17 @@ ROOT::CmdLine::ParseRootSources(const std::vector<std::string> &sourcesRaw, std:
 
    return sources;
 }
+
+std::string ROOT::CmdLine::NodeFullPath(const ROOT::CmdLine::RootObjTree &tree, ROOT::CmdLine::NodeIdx_t nodeIdx,
+                                        ROOT::CmdLine::ENodeFullPathOpt opt)
+{
+   const RootObjNode *node = &tree.fNodes[nodeIdx];
+   std::string fullPath = node->fName;
+   while (node->fParent != 0) {
+      node = &tree.fNodes[node->fParent];
+      fullPath = node->fName + (fullPath.empty() ? "" : "/") + fullPath;
+   }
+   if (opt == ENodeFullPathOpt::kIncludeFilename && nodeIdx > 0)
+      fullPath = tree.fNodes[0].fName + ":" + fullPath;
+   return fullPath;
+}
