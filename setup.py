@@ -33,9 +33,34 @@ INSTALL_DIR = tempfile.mkdtemp()
 ROOT_BUILD_INTERNAL_DIRNAME = "mock_site_packages"
 
 
+def _patch_root_init():
+    warning_patch = '''
+import warnings
+import textwrap
+
+warnings.warn(
+textwrap.dedent("""
+This distribution of ROOT is in alpha stage. Feedback is welcome and appreciated. Feel free to reach out to the user forum for questions and general feedback at https://root-forum.cern.ch or to submit an issue at https://github.com/root-project/root/issues. Do not rely on this distribution for production purposes.
+""")
+)
+'''
+    root_init_path = pathlib.Path(SOURCE_DIR) / "bindings/pyroot/pythonizations/python/ROOT/__init__.py"
+    with open(root_init_path) as init_file:
+        full_init_text = init_file.read()
+
+    new_init_text = warning_patch + full_init_text
+    with open(root_init_path, "w") as init_file:
+        init_file.write(new_init_text)
+
+
 class ROOTBuild(_build):
     def run(self):
         _build.run(self)
+
+        # The PyPI distribution is in alpha stage, signal this to the user
+        # with a warning at import ROOT time. We inject the warning in the
+        # __init__.py file of the package before the start of the build
+        _patch_root_init()
 
         # Configure ROOT build
         configure_command = shlex.split(
