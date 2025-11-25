@@ -72,7 +72,7 @@ class HelperDerived : public HelperClassDef {
    HelperDerived() : f(-1) {};
    explicit HelperDerived(int v,double d, float finput) : HelperClassDef(v,d),f(finput) {};
 
-   virtual bool IsEquiv(const Helper &rhs) const {
+   bool IsEquiv(const Helper &rhs) const override {
       bool result = Helper::IsEquiv(rhs);
       if (result) {
          const HelperDerived *drhs = dynamic_cast<const HelperDerived*>(&rhs);
@@ -82,7 +82,7 @@ class HelperDerived : public HelperClassDef {
       return result;
    }
 
-   virtual const char* CompMsg(const Helper& copy) const {
+   const char* CompMsg(const Helper& copy) const override {
       const HelperDerived *drhs = dynamic_cast<const HelperDerived*>(&copy);
       if (drhs==0) {
          TString msg = Helper::CompMsg(copy);
@@ -113,7 +113,7 @@ class THelperDerived : public THelper {
    THelperDerived() : f(-1) {};
    explicit THelperDerived(int v,double d, float finput) : THelper(v,d),f(finput) {};
 
-   virtual bool IsEquiv(const Helper &rhs) const {
+   bool IsEquiv(const Helper &rhs) const override {
       bool result = Helper::IsEquiv(rhs);
       if (result) {
          const THelperDerived *drhs = dynamic_cast<const THelperDerived*>(&rhs);
@@ -123,7 +123,7 @@ class THelperDerived : public THelper {
       return true;
    }
 
-   virtual const char* CompMsg(const Helper& copy) const {
+   const char* CompMsg(const Helper& copy) const override {
       const THelperDerived *drhs = dynamic_cast<const THelperDerived*>(&copy);
       if (drhs==0) {
          TString msg = THelper::CompMsg(copy);
