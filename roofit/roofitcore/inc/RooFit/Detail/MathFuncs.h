@@ -787,8 +787,8 @@ double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, Doubl
    return norm * (xmax - xmin);
 }
 
-template <typename DoubleArray>
-double multiVarGaussian(int n, DoubleArray x, DoubleArray mu, DoubleArray covI)
+template <typename XArray, typename MuArray, typename CovArray>
+double multiVarGaussian(int n, XArray x, MuArray mu, CovArray covI)
 {
    double result = 0.0;
 

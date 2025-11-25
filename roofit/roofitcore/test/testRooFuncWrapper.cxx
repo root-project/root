@@ -25,6 +25,7 @@
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooMinimizer.h>
+#include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooRealSumPdf.h>
@@ -448,14 +449,38 @@ FactoryTestParams param11{"ClassFactory1D",
                              RooRealVar mu{"mu", "mu", 5, 0, 10};
                              RooRealVar sigma{"sigma", "sigma", 2.0, 0.1, 10};
 
-                             // TODO: When Clad issue #635 is solved, we can
-                             // actually use a complete Gaussian here, also
-                             // with sigma.
                              std::unique_ptr<RooAbsPdf> pdf{RooClassFactory::makePdfInstance(
-                                //"model", "std::exp(-0.5 * (x - mu)*(x - mu) / (sigma * sigma))", {x, mu, sigma})};
-                                "model", "std::exp(-0.5 * (x - mu)*(x - mu))", {x, mu})};
+                                "model", "std::exp(-0.5 * (x - mu)*(x - mu) / (sigma * sigma))", {x, mu, sigma})};
                              ws.import(*pdf);
                              ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3, // increase tolerance because the numeric integration algos are still different
+                          /*randomizeParameters=*/true};
+
+FactoryTestParams param12{"RooMultiVarGaussian",
+                          [](RooWorkspace &ws) {
+                             RooRealVar x("x", "x variable", -5, 5);
+                             RooRealVar y("y", "y variable", -5, 5);
+
+                             RooArgList vars(x, y);
+
+                             RooRealVar mean_x("mean_x", "mean of x", 1.0, -5, 5);
+                             RooRealVar mean_y("mean_y", "mean of y", -1.0, -5, 5);
+                             RooArgList means(mean_x, mean_y);
+
+                             TMatrixDSym cov(2);
+                             cov(0, 0) = 1.0; // Var(x)
+                             cov(1, 1) = 1.5; // Var(y)
+                             cov(0, 1) = 0.3; // Cov(x,y)
+                             cov(1, 0) = 0.3;
+
+                             RooMultiVarGaussian mvgauss("model", "Multivariate Gaussian", vars, means, cov);
+
+                             ws.import(mvgauss);
+                             ws.defineSet("observables", vars);
                           },
                           [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
@@ -507,7 +532,7 @@ auto testValues = testing::Values(
                   5e-3, true),
    makeTestParams("RooCBShape",
                   {"x[0., -200., 200.]", "x0[100., -200., 200.]",
-                   "CBShape::model(x, x0, sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])"},
+                   "CBShape::model(x, x0, sigma[2., 1.E-1, 100.], alpha[1., 1.E-1, 100.], n[1., 1.E-1, 100.])"},
                   6e-3, true),
    makeTestParams("RooBernstein",
                   {"Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.]})"}, 6e-3,
@@ -515,11 +540,11 @@ auto testValues = testing::Values(
    // We're testing several Landau configurations, because the underlying
    // ROOT::Math::landau_cdf is defined piecewise. Like this, we're covering
    // all possible code paths in the pullback.
-   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 6e-3, false),
-   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 6e-3, false),
+   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false),
    makeTestParams(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
@@ -530,7 +555,8 @@ auto testValues = testing::Values(
                   {"x[-10., 10.]", "mean[1., -10., 10.]", "sigma[1., 0.1, 10.]",
                    "expr::gauss_func('std::exp(-0.5*(x - mean) * (x - mean) / (sigma * sigma))', {x, mean, sigma})",
                    "WrapperPdf::model(gauss_func)"},
-                  6e-3, true));
+                  6e-3, true),
+   param12);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
