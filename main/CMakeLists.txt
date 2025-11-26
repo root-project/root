@@ -53,7 +53,6 @@ generateHeader(hadd
 
 if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern CMAKENOEXPORT)
-  set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern CMAKENOEXPORT)
 
   # This is needed in particular for macOS, where the path of the GNU Fortran
