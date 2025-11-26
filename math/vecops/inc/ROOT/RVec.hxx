@@ -213,7 +213,9 @@ class R__CLING_PTRCHECK(off) SmallVectorTemplateCommon : public SmallVectorBase 
    /// SmallVectorStorage is properly-aligned even for small-size of 0.
    void *getFirstEl() const
    {
-      return const_cast<void *>(reinterpret_cast<const void *>(reinterpret_cast<const char *>(this) +
+      // get the SmallVectorBase subobject inside RVec
+      auto *base = static_cast<const SmallVectorBase *>(this);
+      return const_cast<void *>(reinterpret_cast<const void *>(reinterpret_cast<const char *>(base) +
                                                                offsetof(SmallVectorAlignmentAndSize<T>, FirstEl)));
    }
    // Space after 'FirstEl' is clobbered, do not add any instance vars after it.
