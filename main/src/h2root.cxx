@@ -479,9 +479,9 @@ void convert_1d(Int_t id)
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
 #ifndef WIN32
-   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,80);
+   hgive(id,chtitl,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb,128);
 #else
-   hgive(id,chtitl,80,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
+   hgive(id,chtitl,128,ncx,xmin,xmax,ncy,ymin,ymax,nwt,idb);
 #endif
    chtitl[4*nwt] = 0;
    TH1F *h1;
