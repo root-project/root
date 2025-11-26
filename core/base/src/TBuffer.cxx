@@ -159,12 +159,13 @@ void TBuffer::AutoExpand(ULong64_t size_needed)
    if (size_needed > kMaxBufferSize) {
       Fatal("AutoExpand","Request to expand a too large buffer: 0x%llx for a max of 0x%x.", size_needed, kMaxBufferSize);
    }
-   if (size_needed > fBufSize) {
+   auto size_asked = Long64_t(size_needed); // temporary cast as long as fBufSize keeps being a signed variable
+   if (size_asked > fBufSize) {
       Long64_t doubling = 2LLU * fBufSize;
       if (doubling > kMaxBufferSize)
          doubling = kMaxBufferSize;
-      if (size_needed > doubling) {
-         Expand(size_needed);
+      if (size_asked > doubling) {
+         Expand(size_asked);
       } else {
          Expand(doubling);
       }
