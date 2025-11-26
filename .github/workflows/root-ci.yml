@@ -101,12 +101,13 @@ jobs:
       run:
         shell: bash -leo pipefail {0} # Use login shell, so profile scripts get sourced
 
+    env:
+      VIRTUAL_ENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+
     strategy:
       fail-fast: false
       matrix:
-        # Specify platform + arch + (optional) build option overrides
-        #
-        # Common configs: {Release,Debug,RelWithDebInfo)
+        # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - platform: mac14
@@ -121,10 +122,8 @@ jobs:
             is_special: true
             arch: ARM64
 
-    runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
+    runs-on:
       - self-hosted
-      - macOS
-      - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
     name: |
@@ -141,8 +140,13 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
-      - name: Set up curl CA bundle for Davix to work with https
-        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
+      - name: Export SSL certificate files for Davix
+        run: |
+          for cert in /opt/homebrew/opt/ca-certificates/share/ca-certificates/cacert.pem /opt/local/share/curl/curl-ca-bundle.crt; do
+            if [ -f ${cert} ]; then
+              echo "SSL_CERT_FILE=${cert}" >> $GITHUB_ENV
+            fi
+          done
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -151,52 +155,63 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype       RelWithDebInfo
-                    --incremental     $INCREMENTAL
-                    --base_ref        ${{ github.base_ref }}
-                    --sha             ${{ github.sha }}
-                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}
-                    --platform        ${{ matrix.platform }}
-                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}"
+        run: |
+          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
+          echo "Python is now $(which python3) $(python3 --version)"
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype       RelWithDebInfo          \
+                    --incremental     $INCREMENTAL            \
+                    --base_ref        ${{ github.base_ref }}  \
+                    --sha             ${{ github.sha }}       \
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}  \
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
+                    --head_sha        ${{ github.event.pull_request.head.sha }}             \
+                    --repository      ${{ github.server_url }}/${{ github.repository }}     \
+                    --platform        ${{ matrix.platform }}                                \
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
 
       - name: Workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ inputs.buildtype }}
-                    --platform       ${{ matrix.platform }}
-                    --incremental    ${{ inputs.incremental }}
-                    --base_ref       ${{ inputs.base_ref }}
-                    --head_ref       ${{ inputs.head_ref }}
-                    --binaries       ${{ inputs.binaries }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+        run: |
+          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
+          echo "Python is now $(which python3) $(python3 --version)"
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype      ${{ inputs.buildtype }}  \
+                    --platform       ${{ matrix.platform }}   \
+                    --incremental    ${{ inputs.incremental }}\
+                    --base_ref       ${{ inputs.base_ref }}   \
+                    --head_ref       ${{ inputs.head_ref }}   \
+                    --binaries       ${{ inputs.binaries }}   \
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
 
       - name: Nightly build
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Release
-                    --platform       ${{ matrix.platform }}
-                    --incremental    false
-                    --binaries       true
-                    --base_ref       ${{ inputs.ref_name }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+        run: |
+          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
+          echo "Python is now $(which python3) $(python3 --version)"
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype      Release                  \
+                    --platform       ${{ matrix.platform }}   \
+                    --incremental    false                    \
+                    --binaries       true                     \
+                    --base_ref       ${{ inputs.ref_name }}   \
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
 
       - name: Update build cache after push to release branch
         if:   github.event_name == 'push'
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.platform }}
-                    --incremental    false
-                    --base_ref       ${{ github.ref_name }}
-                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
+          echo "Python is now $(which python3) $(python3 --version)"
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype      RelWithDebInfo           \
+                    --platform       ${{ matrix.platform }}   \
+                    --incremental    false                    \
+                    --base_ref       ${{ github.ref_name }}   \
+                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}  \
+                    --repository     ${{ github.server_url }}/${{ github.repository }}  \
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
-             "
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
