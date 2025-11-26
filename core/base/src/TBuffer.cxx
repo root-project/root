@@ -154,7 +154,7 @@ TBuffer::~TBuffer()
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
-void TBuffer::AutoExpand(Long64_t size_needed)
+void TBuffer::AutoExpand(ULong64_t size_needed)
 {
    if (size_needed > kMaxBufferSize) {
       Fatal("AutoExpand","Request to expand a too large buffer: 0x%llx for a max of 0x%x.", size_needed, kMaxBufferSize);

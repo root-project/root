@@ -542,9 +542,9 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Write	 : 0
       Long64_t TObject::Write(const char* name = nullptr, Int_t option = 0, Long64_t bufsize = 0) const
  OBJ: TMethod	Write	 : 0
-      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0)
+      Long64_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0)
  OBJ: TMethod	Write	 : 0
-      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0) const
+      Long64_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0) const
  OBJ: TMethod	ls	 : 0
       void TLine::ls(Option_t* option = "") const
  OBJ: TMethod	ls	 : 0

@@ -99,7 +99,7 @@ public:
    void     DetachBuffer() { fBuffer = nullptr; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
    void     Expand(Long64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Long64_t size_needed);  // expand buffer to newsize
+   void     AutoExpand(ULong64_t size_needed);  // expand buffer to newsize
    Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
