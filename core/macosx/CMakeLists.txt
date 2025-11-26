@@ -42,7 +42,7 @@ if(cocoa)
         BASE_DIRS inc/
         FILES
             inc/CocoaUtils.h
-            inc/TMacOSXSystem
+            inc/TMacOSXSystem.h
             inc/LinkDef.h
     )
   endif()
