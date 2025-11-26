@@ -15,6 +15,13 @@ if(roofit_multiprocess)
     src/TestStatistics/LikelihoodJob.cxx
     src/TestStatistics/MinuitFcnGrad.cxx
   )
+  set(RooFitMPTestStatisticsHeaders
+    src/TestStatistics/LikelihoodGradientJob.h
+    src/TestStatistics/ConstantTermsOptimizer.h
+    src/TestStatistics/LikelihoodSerial.h
+    src/TestStatistics/MinuitFcnGrad.h
+    src/TestStatistics/LikelihoodJob.h
+  )
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
   #FIXME: The ProcessTimer.h exposes json in its interface:
   list(APPEND EXTRA_LIBRARIES nlohmann_json::nlohmann_json)
@@ -24,13 +31,21 @@ endif()
 if(roofit_legacy_eval_backend)
   set(LegacyEvalBackendSources
     src/BidirMMapPipe.cxx
-    src/BidirMMapPipe.h
     src/RooAbsOptTestStatistic.cxx
     src/RooAbsTestStatistic.cxx
     src/RooChi2Var.cxx
     src/RooNLLVar.cxx
     src/RooRealMPFE.cxx
     src/RooXYChi2Var.cxx
+  )
+  set(LegacyEvalBackendHeaders
+    src/BidirMMapPipe.h
+    src/RooAbsOptTestStatistic.h
+    src/RooAbsTestStatistic.h
+    src/RooChi2Var.h
+    src/RooNLLVar.h
+    src/RooRealMPFE.h
+    src/RooXYChi2Var.h
   )
 endif()
 
@@ -532,32 +547,22 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           src/RooFoamGenerator.h
           src/RooAbsMinimizerFcn.h
           src/RooSentinel.h
-          src/RooChi2Var.h
           src/RooAcceptReject.h
           src/TreeReadBuffer.h
           src/ConstraintHelpers.h
           src/RooRombergIntegrator.h
-          src/BidirMMapPipe.h
           src/RooBinIntegrator.h
-          src/TestStatistics/LikelihoodGradientJob.h
-          src/TestStatistics/ConstantTermsOptimizer.h
-          src/TestStatistics/LikelihoodSerial.h
-          src/TestStatistics/MinuitFcnGrad.h
-          src/TestStatistics/LikelihoodJob.h
-          src/RooNLLVar.h
+          ${RooFitMPTestStatisticsHeaders}
+          ${LegacyEvalBackendHeaders}
           src/RooFit/BatchModeDataHelpers.h
           src/RooMinimizerFcn.h
-          src/RooXYChi2Var.h
           src/RooAbsNumGenerator.h
           src/FitHelpers.h
           src/RooGenProdProj.h
           src/RooNumGenFactory.h
-          src/RooRealMPFE.h
-          src/RooAbsTestStatistic.h
           src/RooGrid.h
           src/RooAddHelpers.h
           src/RooAdaptiveIntegratorND.h
-          src/RooAbsOptTestStatistic.h
           src/ValueChecking.h
           src/RooImproperIntegrator1D.h
           res/RooFitImplHelpers.h
