@@ -1672,15 +1672,35 @@ TEST_P(VecOpsSwap, BothSmallVectors)
 
 TEST_P(VecOpsSwap, BothRegularVectors)
 {
-   RVec<int> fixed_vreg1{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3};
-   RVec<int> fixed_vreg2{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
-   RVec<int> fixed_vreg3{7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7};
+   constexpr std::size_t smallVecSize = ROOT::Internal::VecOps::RVecInlineStorageSize<int>::value;
+
+   // The number of elemens in the large RVecs will be the smallest multiple of
+   // three that larger than smallVecSize.
+   constexpr int nCycle = 3;
+   constexpr std::size_t nElems = ((smallVecSize / nCycle) + 1) * nCycle;
+
+   RVec<int> fixed_vreg1(nElems);
+   RVec<int> fixed_vreg2(nElems);
+   RVec<int> fixed_vreg3(nElems + 1);
    RVec<int> fixed_vmocksmall{0, 7};
 
-   RVec<int> vreg1{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3};
-   RVec<int> vreg2{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
-   RVec<int> vreg3{7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7};
-   RVec<int> vmocksmall{0, 7, 8, 9, 7, 8, 9, 7, 8, 9, 7, 8, 7, 8, 9, 7, 8, 9};
+   RVec<int> vreg1(nElems);
+   RVec<int> vreg2(nElems);
+   RVec<int> vreg3(nElems + 1);
+   RVec<int> vmocksmall(nElems + 1);
+
+   for (std::size_t i = 0; i < nElems; ++i) {
+      vreg1[i] = (i % nCycle) + 1;
+      vreg2[i] = vreg1[i] + nCycle;
+      vreg3[i] = vreg2[i] + nCycle;
+      fixed_vreg1[i] = vreg1[i];
+      fixed_vreg2[i] = vreg2[i];
+      fixed_vreg3[i] = vreg3[i];
+      vmocksmall[i + 1] = vreg3[i];
+   }
+   fixed_vreg3[nElems] = fixed_vreg3[0];
+   vreg3[nElems] = vreg3[0];
+
    vmocksmall.erase(vmocksmall.begin() + 2, vmocksmall.end());
    // vmocksmall is a regular vector of size 2
 
@@ -1798,11 +1818,22 @@ TEST_P(VecOpsSwap, BothAdoptingVectors)
 // in cases where ROOT::VecOps::swap produces 1 regular and 1 adopting vector
 TEST_P(VecOpsSwap, SmallRegularVectors)
 {
+   constexpr std::size_t smallVecSize = ROOT::Internal::VecOps::RVecInlineStorageSize<int>::value;
+
+   // The number of elemens in the large RVecs will be the smallest multiple of
+   // three that larger than smallVecSize.
+   constexpr int nCycle = 3;
+   constexpr std::size_t nElems1 = ((smallVecSize / nCycle) + 1) * nCycle;
+   constexpr std::size_t nElems2 = nElems1 + nCycle; // some vectors should be larger than others
+
    RVec<int> fixed_vsmall{1, 2, 3};
    RVec<int> fixed_vreg1{4, 5, 6};
    RVec<int> fixed_vreg2{7, 8};
    RVec<int> fixed_vreg3{9, 10, 11, 12, 13, 14};
-   RVec<int> fixed_vreg4{15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
+   RVec<int> fixed_vreg4(nElems1);
+   for (std::size_t i = 0; i < nElems1; ++i) {
+      fixed_vreg4[i] = i + 15;
+   }
 
    // need multiple hard copies since after swap of a small and a regular,
    // there is no fixed policy whether 2 regular vectors are produced or 1 small and 1 regular
@@ -1815,19 +1846,33 @@ TEST_P(VecOpsSwap, SmallRegularVectors)
    RVec<int> vsmall7{1, 2, 3};
    RVec<int> vsmall8{1, 2, 3};
 
-   RVec<int> vreg1{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
-   vreg1.erase(vreg1.begin() + 3, vreg1.end()); // regular vector of size 3
-   RVec<int> vreg10{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
+   RVec<int> vreg1;
+   RVec<int> vreg10;
+   RVec<int> vreg2{7, 8};
+   RVec<int> vreg20{7, 8};
+   RVec<int> vreg3{9, 10, 11, 12, 13, 14};
+   RVec<int> vreg30{9, 10, 11, 12, 13, 14};
+   RVec<int> vreg4(nElems1);
+
+   for (std::size_t i = 0; i < nElems2; ++i) {
+      double val = (i % nCycle) + 4;
+      vreg1.push_back(val);
+      vreg10.push_back(vreg1.back());
+      vreg2.push_back(val);
+      vreg20.push_back(vreg2.back());
+      vreg3.push_back(val);
+      vreg30.push_back(vreg3.back());
+   }
+   for (std::size_t i = 0; i < nElems1; ++i) {
+      vreg4[i] = i + 15;
+   }
+
+   vreg1.erase(vreg1.begin() + 3, vreg1.end());    // regular vector of size 3
    vreg10.erase(vreg10.begin() + 3, vreg10.end()); // regular vector of size 3
-   RVec<int> vreg2{7, 8, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
-   vreg2.erase(vreg2.begin() + 2, vreg2.end()); // regular vector of size 2
-   RVec<int> vreg20{7, 8, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
+   vreg2.erase(vreg2.begin() + 2, vreg2.end());    // regular vector of size 2
    vreg20.erase(vreg20.begin() + 2, vreg20.end()); // regular vector of size 2
-   RVec<int> vreg3{9, 10, 11, 12, 13, 14, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
-   vreg3.erase(vreg3.begin() + 6, vreg3.end()); // regular vector of size 6
-   RVec<int> vreg30{9, 10, 11, 12, 13, 14, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
+   vreg3.erase(vreg3.begin() + 6, vreg3.end());    // regular vector of size 6
    vreg30.erase(vreg30.begin() + 6, vreg30.end()); // regular vector of size 6
-   RVec<int> vreg4{15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
    // vreg4 is a regular vector that cannot "fit" to small vector
 
    // verify that initially vectors are not small
