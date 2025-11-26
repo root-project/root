@@ -5,6 +5,8 @@
 
 #include "gtest/gtest.h"
 
+#include <ROOT/TestSupport.hxx>
+
 #include "TFile.h"
 #include "TMemFile.h"
 #include "TDirectory.h"
@@ -278,6 +280,21 @@ TEST(TDirectoryFile, SeekParent)
    dir11 = static_cast<TDirectory*>(dir1->Get("dir-11"));
    EXPECT_EQ(dir11->GetSeekDir(), 348);
    EXPECT_EQ(dir11->GetSeekParent(), 239);
+}
+
+TEST(TDirectoryFile, RecursiveMkdir)
+{
+   TMemFile f("mkdirtest.root", "RECREATE");
+   auto dir1 = f.mkdir("a/b/c");
+   EXPECT_NE(dir1, nullptr);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TDirectoryFile::mkdir","An object with name c exists already");
+      auto dir2 = f.mkdir("a/b/c", "", /* returnExisting = */ false);
+      EXPECT_EQ(dir2, nullptr);
+   }
+   auto dir3 = f.mkdir("a/b/c", "", /* returnExisting = */ true);
+   EXPECT_EQ(dir3, dir1);
 }
 
 // https://its.cern.ch/jira/browse/ROOT-10581
