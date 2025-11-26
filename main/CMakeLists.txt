@@ -136,6 +136,7 @@ add_dependencies(rootcint rootcint)
 if (TARGET Gui)
   ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
 endif()
+ROOT_EXECUTABLE(rootcp_cxx src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
 ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

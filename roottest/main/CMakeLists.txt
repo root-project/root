@@ -266,7 +266,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
 #########################################################################
 
-############################# ROOCP TESTS ############################
+############################# ROOTCP TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootcp1PrepareInput
                   COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy1.root
                   FIXTURES_SETUP main-SimpleRootcp1PrepareInput-fixture)
