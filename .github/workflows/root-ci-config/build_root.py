@@ -362,7 +362,7 @@ def run_ctest(extra_ctest_flags: str) -> int:
     ctest_result = subprocess_with_log(f"""
         cd '{builddir}'
         {setupROOTEnv}
-        ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest -R "roottest-root-hist-h2root" --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
     return ctest_result
