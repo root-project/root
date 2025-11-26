@@ -1,0 +1,75 @@
+name: 'Cling Test CI'
+
+on:
+  pull_request:
+    paths:
+      - 'interpreter/cling/**'
+      - '.github/workflows/cling-test.yml'
+
+jobs:
+  check-cling:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - cpu
+
+    name: Cling Tests
+
+    container:
+      image: registry.cern.ch/root-ci/alma9:buildready
+      options: --security-opt label=disable --rm
+      volumes:
+        - alma9_clingtest_ccache:/github/home/.cache/ccache
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+        CONTAINER_IMAGE: "registry.cern.ch/root-ci/alma9:buildready"
+        CONTAINER_OPTIONS: "--security-opt label=disable --rm "
+
+    steps:
+      - name: Configure large ccache
+        run: |
+          ccache -o max_size=5G
+          ccache -p || true
+          ccache -s || true
+
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
+
+      - name: Pull Request Build
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        shell: bash
+        run: |
+          set -x
+          .github/workflows/root-ci-config/build_root.py                                    \
+                    --buildtype       RelWithDebInfo                                        \
+                    --platform        alma9                                                 \
+                    --dockeropts      \"\$CONTAINER_OPTIONS\"                               \
+                    --incremental     $INCREMENTAL                                          \
+                    --base_ref        ${{ github.base_ref }}                                \
+                    --sha             ${{ github.sha }}                                     \
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}  \
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }} \
+                    --head_sha        ${{ github.event.pull_request.head.sha }}             \
+                    --repository      ${{ github.server_url }}/${{ github.repository }}     \
+                    --clingtests_only true
+
+      - name: ccache info (post)
+        run: |
+          ccache -s || true

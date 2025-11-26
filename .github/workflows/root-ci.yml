@@ -6,6 +6,7 @@ on:
     branches:
       - '**'
     paths-ignore:
+      - '**'
       - 'doc/**'
       - 'documentation/**'
 
@@ -423,6 +424,11 @@ jobs:
           #   is_special: true
           #   property: gpu
           #   extra-runs-on: gpu
+          - image: alma9
+            clingtests_only: true
+            is_special: true
+            property: clingtests_only
+            overrides: ["minimal=ON", "clingtest=ON", "testing=ON", "roottest=OFF"]
 
     runs-on:
       - self-hosted
@@ -526,18 +532,27 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype       RelWithDebInfo
-                    --platform        ${{ matrix.image }}
-                    --dockeropts      \"$CONTAINER_OPTIONS\"
-                    --incremental     $INCREMENTAL
-                    --base_ref        ${{ github.base_ref }}
-                    --sha             ${{ github.sha }}
-                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}
-              "
+        shell: bash
+        run: |
+          set -x
+
+          CLING_ARG=""
+          if [[ "${{ matrix.clingtests_only }}" == "true" ]]; then
+            CLING_ARG="--clingtests_only true"
+          fi
+
+          .github/workflows/root-ci-config/build_root.py                                    \
+                    --buildtype       RelWithDebInfo                                        \
+                    --platform        ${{ matrix.image }}                                   \
+                    --dockeropts      \"\$CONTAINER_OPTIONS\"                               \
+                    --incremental     $INCREMENTAL                                          \
+                    --base_ref        ${{ github.base_ref }}                                \
+                    --sha             ${{ github.sha }}                                     \
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}  \
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }} \
+                    --head_sha        ${{ github.event.pull_request.head.sha }}             \
+                    --repository      ${{ github.server_url }}/${{ github.repository }}     \
+                    $CLING_ARG
 
       - name: Workflow dispatch
         if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
