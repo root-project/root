@@ -3257,7 +3257,7 @@ class TFile {
                return send_new_request(true);
             }
 
-            if ((file.fMaxRanges === 1) || !first)
+            if ((file.fMaxRanges === 1) || first)
                return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
 
             file.fMaxRanges = 1;
