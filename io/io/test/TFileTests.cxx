@@ -285,7 +285,7 @@ TEST(TDirectoryFile, SeekParent)
 TEST(TDirectoryFile, RecursiveMkdir)
 {
    TMemFile f("mkdirtest.root", "RECREATE");
-   auto dir1 = f.mkdir("a/b/c");
+   auto dir1 = f.mkdir("a/b/c", "my dir");
    EXPECT_NE(dir1, nullptr);
    {
       ROOT::TestSupport::CheckDiagsRAII diags;
@@ -293,8 +293,15 @@ TEST(TDirectoryFile, RecursiveMkdir)
       auto dir2 = f.mkdir("a/b/c", "", /* returnExisting = */ false);
       EXPECT_EQ(dir2, nullptr);
    }
-   auto dir3 = f.mkdir("a/b/c", "", /* returnExisting = */ true);
+   auto dir3 = f.mkdir("a/b/c", "foobar", /* returnExisting = */ true);
    EXPECT_EQ(dir3, dir1);
+   EXPECT_STREQ(dir3->GetTitle(), "my dir");
+   auto dirB = dir3->GetMotherDir();
+   ASSERT_NE(dirB, nullptr);
+   EXPECT_STREQ(dirB->GetTitle(), "b");
+   auto dirA = dirB->GetMotherDir();
+   ASSERT_NE(dirA, nullptr);
+   EXPECT_STREQ(dirA->GetTitle(), "a");
 }
 
 // https://its.cern.ch/jira/browse/ROOT-10581
