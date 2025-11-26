@@ -148,7 +148,7 @@ IGenFunction * Polynomial::Clone() const {
 }
 
 
-const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
+const std::vector< std::complex <double> > &  Polynomial::FindRoots() const {
 
 
     // check if order is correct
@@ -234,7 +234,7 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
   }
 
 
-std::vector< double >  Polynomial::FindRealRoots(){
+std::vector< double >  Polynomial::FindRealRoots() const {
   FindRoots();
   std::vector<double> roots;
   roots.reserve(fOrder);
@@ -244,7 +244,7 @@ std::vector< double >  Polynomial::FindRealRoots(){
   }
   return roots;
 }
-const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
+const std::vector< std::complex <double> > &  Polynomial::FindNumRoots() const {
 
 
     // check if order is correct
