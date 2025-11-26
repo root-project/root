@@ -94,6 +94,9 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+
     strategy:
       fail-fast: false
       matrix:
@@ -105,20 +108,26 @@ jobs:
           - platform: mac14
             arch: X64
             overrides: ["CMAKE_CXX_STANDARD=20"]
+            run_on: mac14
           - platform: mac15
             arch: ARM64
+            run_on: mac15
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac15
+            arch: ARM64
+            run_on: experimental-brew-ci
+            overrides: ["CMAKE_CXX_STANDARD=23", "tmva-sofie=Off"]
           - platform: mac26
             arch: ARM64
+            run_on: mac26
           - platform: mac-beta
             is_special: true
             arch: ARM64
+            run_on: mac-beta
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - macOS
-      - ${{ matrix.arch }}
-      - ${{ matrix.platform }}
+      - ${{ matrix.run_on }}
 
     name: |
       ${{ matrix.platform }} ${{ matrix.arch }} 
@@ -129,13 +138,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: "src/"
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
-      - name: Set up curl CA bundle for Davix to work with https
-        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
+      - name: Export SSL certificate files for Davix
+        run: |
+          for cert in /opt/homebrew/opt/ca-certificates/share/ca-certificates/cacert.pem /opt/local/share/curl/curl-ca-bundle.crt; do
+            if [ -f ${cert} ]; then
+              echo "SSL_CERT_FILE=${cert}" >> $GITHUB_ENV
+            fi
+          done
+
+      - name: Enter Python venv
+        run: |
+          if [ -d ${VENV_DIR} ]; then
+            source ${VENV_DIR}/bin/activate
+            echo "${PATH}" >> $GITHUB_PATH
+            echo "VIRTUAL_ENV=${VIRTUAL_ENV}" >> $GITHUB_ENV
+          fi
 
       - name: Pull Request Build
         shell: bash -leo pipefail {0}
@@ -145,7 +168,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: "src/.github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
