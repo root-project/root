@@ -994,7 +994,7 @@ class FunctionsHandler {
    #painter;  // object painter to which functions belongs
    #pad_painter; // pad painter
 
-   constructor(painter, pp, funcs, statpainter) {
+   constructor(painter, pp, funcs, statpainter, update_statpainter) {
       this.#painter = painter;
       this.#pad_painter = pp;
 
@@ -1053,6 +1053,8 @@ class FunctionsHandler {
          const indx = painters.indexOf(statpainter);
          if (indx >= 0)
             painters.splice(indx, 1);
+         if (update_statpainter && (update_painters.indexOf(statpainter) < 0))
+            update_painters.push(statpainter);
       }
 
       // remove all function which are not found in new list of functions
@@ -1432,7 +1434,7 @@ class THistPainter extends ObjectPainter {
             histo.fBins = obj.fBins;
 
          // remove old functions, update existing, prepare to draw new one
-         this.#funcs_handler = new FunctionsHandler(this, pp, obj.fFunctions, statpainter);
+         this.#funcs_handler = new FunctionsHandler(this, pp, obj.fFunctions, statpainter, this.create_stats);
 
          const changed_opt = (histo.fOption !== obj.fOption);
          histo.fOption = obj.fOption;
