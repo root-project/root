@@ -1287,7 +1287,7 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
          tmpdir = (TDirectoryFile*)mkdir(workname.Data(),title);
          if (!tmpdir) return nullptr;
       }
-      return tmpdir->mkdir(slash + 1);
+      return tmpdir->mkdir(slash + 1, "", returnExistingDirectory);
    }
 
    TDirectory::TContext ctxt(this);
