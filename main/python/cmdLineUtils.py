@@ -784,52 +784,6 @@ REPLACE_HELP = "replace object if already existing"
 ##########
 
 ##########
-# ROOTCP
-
-
-def _copyObjects(fileName, pathSplitList, destFile, destPathSplit, oneFile, recursive, replace):
-    retcode = 0
-    destFileName = destFile.GetName()
-    rootFile = openROOTFile(fileName) if fileName != destFileName else destFile
-    if not rootFile:
-        return 1
-    ROOT.gROOT.GetListOfFiles().Remove(rootFile)  # Fast copy necessity
-    for pathSplit in pathSplitList:
-        oneSource = oneFile and len(pathSplitList) == 1
-        retcode += copyRootObject(rootFile, pathSplit, destFile, destPathSplit, oneSource, recursive, replace)
-    if fileName != destFileName:
-        rootFile.Close()
-    return retcode
-
-
-def rootCp(sourceList, destFileName, destPathSplit, compress=None, recreate=False, recursive=False, replace=False):
-    # Check arguments
-    if sourceList == [] or destFileName == "":
-        return 1
-    if recreate and destFileName in [n[0] for n in sourceList]:
-        logging.error("cannot recreate destination file if this is also a source file")
-        return 1
-
-    # Open destination file
-    destFile = openROOTFileCompress(destFileName, compress, recreate)
-    if not destFile:
-        return 1
-    ROOT.gROOT.GetListOfFiles().Remove(destFile)  # Fast copy necessity
-
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _copyObjects(
-            fileName, pathSplitList, destFile, destPathSplit, len(sourceList) == 1, recursive, replace
-        )
-    destFile.Close()
-    return retcode
-
-
-# End of ROOTCP
-##########
-
-##########
 # ROOTEVENTSELECTOR
 
 
