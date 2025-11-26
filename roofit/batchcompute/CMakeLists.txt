@@ -18,6 +18,31 @@ set(shared_object_sources src/RooBatchCompute.cxx src/ComputeFunctions.cxx)
 ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
 target_compile_options(RooBatchCompute_GENERIC  PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      RooBatchCompute
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS res/
+      FILES
+          res/RooBatchCompute.h
+  )
+  target_sources(
+        RooBatchCompute_GENERIC
+        PRIVATE
+        FILE_SET private_header_files
+        TYPE HEADERS
+        BASE_DIRS src/ res/
+        FILES
+            res/RooBatchComputeTypes.h
+            res/RooHeterogeneousMath.h
+            res/RooNaNPacker.h
+            src/Batches.h
+            src/RooVDTHeaders.h
+  )
+endif()
+
 # Windows platform and ICC compiler need special code and testing, thus the feature has not been implemented yet for these.
 if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_64 AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
@@ -43,6 +68,17 @@ if (cuda)
   set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -lineinfo --expt-relaxed-constexpr)
+  if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+    target_sources(
+        RooBatchCompute_CUDA
+        PRIVATE
+        FILE_SET private_header_files
+        TYPE HEADERS
+        BASE_DIRS src/
+        FILES
+            src/CudaInterface.h
+    )
+  endif()
 endif()
 
 if(vdt OR builtin_vdt)
