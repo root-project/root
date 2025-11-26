@@ -1,0 +1,90 @@
+name: 'Update Homebrew Macs'
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: 'Python version to use for the virtual environment'
+        type: string
+        required: true
+        default: 3.12
+
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflow/update-brew-macs.yml'
+
+  pull_request:
+    branches:
+      - 'master'
+env:
+  VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+
+jobs:
+  update-macos:
+    if: github.repository_owner == 'root-project'
+
+    permissions:
+      contents: read
+
+    # Use login shells to have brew and java available
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runner-label: [ experimental-brew-ci, experimental-brew-ci-2 ]
+
+    runs-on:
+      - 'self-hosted'
+      - ${{ matrix.runner-label }}
+
+    name: Update homebrew and Python
+
+    env:
+      PYTHON_PACKAGE_BREW: ${{ format('python@{0}', inputs.python_version != '' && inputs.python_version || 3.12 ) }}
+      PYTHON_EXECUTABLE: ${{ format('python{0}', inputs.python_version != '' && inputs.python_version || 3.12 ) }}
+      OPENJDK_PACKAGE_BREW: openjdk@17
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: src/
+
+      - name: Update brew packages
+        run: |
+            brew update
+            brew install ca-certificates ccache googletest "${OPENJDK_PACKAGE_BREW}" pyenv "${PYTHON_PACKAGE_BREW}"
+            echo "Installing official brew deps: $(brew deps --direct --include-build root)"
+            brew install $(brew deps --direct --include-build root)
+
+      - name: Run brew cleanup
+        run: brew cleanup --prune=7
+
+      - name: Display software versions
+        run: |
+            java --version || { echo "Probably missing the homebrew link for openjdk: sudo ln -sfn $(brew --prefix "${OPENJDK_PACKAGE_BREW}")/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk"; false; }
+            cmake --version || { echo "Error when checking for cmake"; false; }
+            which "${PYTHON_EXECUTABLE}"
+            "${PYTHON_EXECUTABLE}" --version
+
+      - name: Recreate Python venv
+        run: |
+          rm -rf ${VENV_DIR}
+          $(brew --prefix "${PYTHON_PACKAGE_BREW}")/bin/${PYTHON_EXECUTABLE} -m venv "${VENV_DIR}"
+          source "${VENV_DIR}"/bin/activate
+          pip3 install --upgrade pip
+          while read -r PACKAGE; do
+            PACKAGE="${PACKAGE%%#*}" # Skip comments
+            if [ -n "${PACKAGE}" ]; then
+              pip3 --no-cache-dir install -U "${PACKAGE}" || echo "::error file=update-brew-macs.yml::Could not install package ${PACKAGE}"
+            fi
+          done < ${{ github.workspace }}/src/requirements.txt
+
+      - name: Purge pip cache
+        run: ${VENV_DIR}/bin/pip3 cache purge
+
