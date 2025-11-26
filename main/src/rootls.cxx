@@ -380,7 +380,7 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
                const auto &desc = reader->GetDescriptor();
                PrintRNTuple(stream, desc, indent + 2, desc.GetFieldZero());
             } else {
-               Err() << "failed to read RNTuple object: " << child.fName;
+               Err() << "failed to read RNTuple object: " << child.fName << "\n";
             }
          }
       }
@@ -703,7 +703,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
-      Err() << err;
+      Err() << err << "\n";
 
    if (opts.GetSwitch("help")) {
       outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kLong;

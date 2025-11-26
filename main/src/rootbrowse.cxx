@@ -116,7 +116,7 @@ int main(int argc, char **argv)
       gErrorIgnoreLevel = kError;
       file = std::unique_ptr<TFile>(TFile::Open(std::string(args.fFileName).c_str(), "READ"));
       if (!file || file->IsZombie()) {
-         Err() << "File " << args.fFileName << " does not exist or is unreadable.";
+         Err() << "File " << args.fFileName << " does not exist or is unreadable.\n";
          return 1;
       }
       gErrorIgnoreLevel = kUnset;
