@@ -116,20 +116,20 @@ public:
       equation is very small. In that case it might be more robust to use the numerical method, by calling directly FindNumRoots()
 
    */
-   const std::vector<std::complex <double> > & FindRoots();
+   const std::vector<std::complex<double>> FindRoots() const;
 
    /**
       Find the only the real polynomial roots.
       For n <= 4, the roots are found analytically while for larger order an iterative numerical method is used
       The numerical method used is from GSL (see <A HREF="https://www.gnu.org/software/gsl/doc/html/poly.html">documentation</A> )
    */
-   std::vector<double > FindRealRoots();
+   std::vector<double> FindRealRoots() const;
 
    /**
       Find the polynomial roots using always an iterative numerical methods
       The numerical method used is from GSL (see <A HREF="https://www.gnu.org/software/gsl/doc/html/poly.html">documentation</A> )
    */
-   const std::vector<std::complex <double> > & FindNumRoots();
+   const std::vector<std::complex<double>> FindNumRoots() const;
 
    /**
       Order of Polynomial
@@ -164,11 +164,6 @@ private:
 
    // cache Parameters for Gradient
    mutable std::vector<double> fDerived_params;
-
-   // roots
-
-   std::vector< std::complex < double > > fRoots;
-
 };
 
 } // namespace Math

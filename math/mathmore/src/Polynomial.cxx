@@ -147,16 +147,16 @@ IGenFunction * Polynomial::Clone() const {
     return f;
 }
 
+const std::vector<std::complex<double>> Polynomial::FindRoots() const
+{
 
-const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
-
-
-    // check if order is correct
-    unsigned int n = fOrder;
-    while ( Parameters()[n] == 0 ) {
+   // check if order is correct
+   unsigned int n = fOrder;
+   while (Parameters()[n] == 0) {
       n--;
     }
 
+    std::vector<std::complex<double>> fRoots;
     fRoots.clear();
     fRoots.reserve(n);
 
@@ -226,32 +226,34 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
     }
     else {
     // for higher order polynomial use numerical fRoots
-      FindNumRoots();
+    return FindNumRoots();
     }
 
     return fRoots;
-
-  }
-
-
-std::vector< double >  Polynomial::FindRealRoots(){
-  FindRoots();
-  std::vector<double> roots;
-  roots.reserve(fOrder);
-  for (unsigned int i = 0; i < fOrder; ++i) {
-    if (fRoots[i].imag() == 0)
-      roots.push_back( fRoots[i].real() );
-  }
-  return roots;
 }
-const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
 
+std::vector<double> Polynomial::FindRealRoots() const
+{
 
-    // check if order is correct
-    unsigned int n = fOrder;
-    while ( Parameters()[n] == 0 ) {
+   std::vector<std::complex<double>> fRoots = FindRoots();
+   std::vector<double> roots;
+   roots.reserve(fOrder);
+   for (unsigned int i = 0; i < fOrder; ++i) {
+      if (fRoots[i].imag() == 0)
+         roots.push_back(fRoots[i].real());
+   }
+   return roots;
+}
+const std::vector<std::complex<double>> Polynomial::FindNumRoots() const
+{
+
+   // check if order is correct
+   unsigned int n = fOrder;
+   while (Parameters()[n] == 0) {
       n--;
     }
+
+    std::vector<std::complex<double>> fRoots;
     fRoots.clear();
     fRoots.reserve(n);
 
@@ -270,7 +272,6 @@ const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
 
     return fRoots;
 }
-
 
 } // namespace Math
 } // namespace ROOT
