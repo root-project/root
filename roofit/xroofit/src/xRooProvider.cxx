@@ -10,46 +10,82 @@
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/TObjectItem.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RShared.hxx>
 
 #include <RooFit/xRooFit/xRooNode.h>
 
+#include "TVirtualPad.h"
 
 #include "RooWorkspace.h"
 
 using namespace ROOT::Browsable;
 using namespace std::string_literals;
-
+using namespace ROOT::Experimental::XRooFit;
 
 class xRooBrowsingElement : public RElement {
-   std::shared_ptr<ROOT::Experimental::XRooFit::xRooNode> fNode;
+   std::shared_ptr<xRooNode> fNode;
 public:
-   xRooBrowsingElement(std::shared_ptr<ROOT::Experimental::XRooFit::xRooNode> node);
-   bool IsCapable(EActionKind action) const override;
-   /** Get default action */
-   EActionKind GetDefaultAction() const override;
+   xRooBrowsingElement(std::shared_ptr<xRooNode> node)
+   {
+      fNode = node;
+   }
 
-   std::string GetName() const override { return fNode->GetName(); }
+   bool IsCapable(EActionKind action) const override
+   {
+      return (action == kActDraw6) || (action == kActBrowse);
+   }
+
+   /** Get default action */
+   EActionKind GetDefaultAction() const override
+   {
+      if (fNode->IsFolder())
+         return kActBrowse;
+      return kActDraw6;
+   }
+
+   std::string GetName() const override
+   {
+      return fNode->GetName();
+   }
+
+   std::string GetTitle() const override
+   {
+      return fNode->GetTitle();
+   }
+
+
+   bool IsFolder() const override
+   {
+      return fNode->IsFolder();
+   }
+
+   int GetNumChilds() override
+   {
+      return fNode->IsFolder() ? (int) fNode->size() : 0;
+   }
+
+   std::unique_ptr<RHolder> GetObject() override
+   {
+      return std::make_unique<RShared<xRooNode>>(fNode);
+   }
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 };
 
 class xRooLevelIter : public RLevelIter {
 
-   std::shared_ptr<ROOT::Experimental::XRooFit::xRooNode> fNode;
+   std::shared_ptr<xRooNode> fNode;
 
    int fCounter{-1};
 
 public:
-   explicit xRooLevelIter(std::shared_ptr<ROOT::Experimental::XRooFit::xRooNode> node) { fNode = node; }
+   explicit xRooLevelIter(std::shared_ptr<xRooNode> node) { fNode = node; }
 
    ~xRooLevelIter() override = default;
 
    auto NumElements() const { return fNode->size(); }
 
    bool Next() override { return ++fCounter < (int) fNode->size(); }
-
-   // use default implementation for now
-   // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
    std::string GetItemName() const override { return (*fNode)[fCounter]->GetName(); }
 
@@ -89,26 +125,8 @@ public:
 
       return RLevelIter::Find(name, -1);
    }
-
 };
 
-
-xRooBrowsingElement::xRooBrowsingElement(std::shared_ptr<ROOT::Experimental::XRooFit::xRooNode> node)
-{
-   fNode = node;
-}
-
-   /** Check if want to perform action */
-bool xRooBrowsingElement::IsCapable(RElement::EActionKind action) const
-{
-   return action == kActDraw6;
-}
-
-   /** Get default action */
-RElement::EActionKind xRooBrowsingElement::GetDefaultAction() const
-{
-   return kActDraw6;
-}
 
 std::unique_ptr<RLevelIter> xRooBrowsingElement::GetChildsIter()
 {
@@ -123,7 +141,6 @@ std::unique_ptr<RLevelIter> xRooBrowsingElement::GetChildsIter()
    return std::make_unique<xRooLevelIter>(fNode);
 }
 
-
 // ==============================================================================================
 
 class xRooProvider : public RProvider {
@@ -134,12 +151,23 @@ public:
       RegisterBrowse(RooWorkspace::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          auto wk = object->get_shared<RooWorkspace>();
 
-         printf("Create entry for workspace %s %s\n", wk->GetName(), wk->ClassName());
-
-         auto wkNode = std::make_shared<ROOT::Experimental::XRooFit::xRooNode>(wk);
+         auto wkNode = std::make_shared<xRooNode>(wk);
 
          return std::make_shared<xRooBrowsingElement>(wkNode);
       });
+
+      RegisterDraw6(xRooNode::Class(), [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+         auto xnode = const_cast<xRooNode *>(obj->Get<xRooNode>());
+         if (!xnode)
+            return false;
+
+         pad->cd();
+         xnode->Draw(opt.c_str());
+         return true;
+      });
+
+      // example how custom icons can be provided
+      RegisterClass("RooRealVar", "sap-icon://picture");
    }
 
 } newxRooProvider;
