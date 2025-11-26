@@ -79,7 +79,7 @@ TEST(MiniFile, Stream)
    EXPECT_EQ(1u, ntuple.GetVersionEpoch());
    EXPECT_EQ(0u, ntuple.GetVersionMajor());
    EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(1u, ntuple.GetVersionPatch());
+   EXPECT_EQ(2u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
@@ -118,7 +118,7 @@ TEST(MiniFile, Proper)
    EXPECT_EQ(1u, ntuple.GetVersionEpoch());
    EXPECT_EQ(0u, ntuple.GetVersionMajor());
    EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(1u, ntuple.GetVersionPatch());
+   EXPECT_EQ(2u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
@@ -817,7 +817,7 @@ TEST(MiniFile, UUID)
 TEST(MiniFile, FreeSlots)
 {
    FileRaii fileGuard("test_ntuple_minifile_freeslot.root");
-   
+
    // Write a TFile, delete some objects in it to create free slots, then write a RNTuple into it with a RBlob
    // fitting into a free slot with some free bytes left. Verify that we properly write the new free slot header
    // and don't end up with a corrupted TFile.
@@ -828,8 +828,8 @@ TEST(MiniFile, FreeSlots)
       file->WriteObject(&dummyObj, "dummy2");
       file->WriteObject(&dummyObj, "dummy3");
       // These deletes will create a free slot about 200 B wide.
-      file->Delete("dummy;*"); 
-      file->Delete("dummy2;*"); 
+      file->Delete("dummy;*");
+      file->Delete("dummy2;*");
    }
 
    int maxKeySize = -1;
@@ -880,7 +880,7 @@ TEST(MiniFile, FreeSlots)
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
    auto keysInfoIter = file->WalkTKeys();
    std::vector<ROOT::Detail::TKeyMapNode> keysInfo(keysInfoIter.begin(), keysInfoIter.end());
-   
+
    // Indices into `keysInfo` with the "interesting" free slots, i.e. those that have likely been shrunk by
    // RMiniFileWriter allocating an RBlob into them.
    std::vector<int> gapIndices;
