@@ -104,8 +104,8 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
-public:
-   /// the RRVecDeleter is also used by RArrayAsRVecField and therefore declared public
+   friend class RArrayAsRVecField; // to use the RRVecDeleter
+
    class RRVecDeleter : public RDeleter {
    private:
       std::size_t fItemAlignment;
@@ -154,16 +154,6 @@ public:
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 template <typename ItemT>
@@ -238,16 +228,6 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 template <typename ItemT>
@@ -296,16 +276,6 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

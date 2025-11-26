@@ -123,7 +123,7 @@ public:
    explicit TKeyMapIterable(TFile *file) : fFile(file) {}
 
    TIterator begin() const { return TIterator(fFile, 0); }
-   TIterator end() const { return TIterator(fFile, -1); }
+   TIterator end() const { return TIterator(fFile, (std::uint64_t) -1); }
 };
 
 } // namespace ROOT::Detail
@@ -290,7 +290,7 @@ public:
 
            void        Close(Option_t *option="") override; // *MENU*
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t buffersize = 1000000);
+   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t bufsize = 1000000);
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);
@@ -379,8 +379,8 @@ public:
            Int_t       Sizeof() const override;
            void        SumBuffer(Int_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);

@@ -47,8 +47,9 @@ TEST(RNTuple, EnumBasics)
    EXPECT_EQ(kCustomEnumVal, reader->GetModel().GetDefaultEntry().GetPtr<std::vector<CustomEnum>>("ve")->at(1));
 }
 
-using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
-                                       CustomEnumInt32, CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
+using EnumClassInts =
+   ::testing::Types<CustomEnumBool, CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16, CustomEnumInt32,
+                    CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
 
 template <typename EnumT>
 class EnumClass : public ::testing::Test {
@@ -2055,6 +2056,9 @@ TEST(RNTuple, TClassStlDerived)
 
 TEST(RNTuple, TVirtualCollectionProxy)
 {
+   // Unsupported stdlib collections should throw
+   EXPECT_THROW(ROOT::RFieldBase::Create("l", "std::list<int>").Unwrap(), ROOT::RException);
+
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
    // Exposing as a non-vector forces iteration over collection elements in `ReadGlobalImpl()`
    SimpleCollectionProxy<StructUsingCollectionProxy<float>, ROOT::kSTLdeque> proxyF;

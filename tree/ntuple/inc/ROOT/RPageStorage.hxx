@@ -447,7 +447,7 @@ private:
    std::vector<ROOT::RClusterDescriptor::RPageRange> fOpenPageRanges;
 
    /// Union of the streamer info records that are sent from streamer fields to the sink before committing the dataset.
-   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfStreamerFields;
 
 protected:
    /// Set of optional features supported by the persistent sink
@@ -521,7 +521,7 @@ public:
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
-   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) override;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over

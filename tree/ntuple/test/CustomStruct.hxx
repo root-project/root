@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <random>
 #include <string>
 #include <variant>
@@ -22,6 +23,8 @@
 
 enum CustomEnum { kCustomEnumVal = 7 };
 // TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
+enum class CustomEnumBool : bool {
+};
 enum class CustomEnumInt8 : char {};
 enum class CustomEnumUInt8 : unsigned char {};
 enum class CustomEnumInt16 : short int {};
@@ -91,6 +94,12 @@ class EdmWrapper {
 public:
    bool fIsPresent = true;
    T fMember;
+};
+
+class EdmContainer {
+public:
+   // Used to test that the streamer info for fWrapper will use long long
+   EdmWrapper<long long> fWrapper;
 };
 
 template <typename T>

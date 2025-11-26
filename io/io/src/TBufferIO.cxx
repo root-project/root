@@ -48,7 +48,7 @@ TBufferIO::TBufferIO(TBuffer::EMode mode) : TBuffer(mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz) : TBuffer(mode, bufsiz)
+TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsize) : TBuffer(mode, bufsize)
 {
    fMapSize = fgMapSize;
 }
@@ -56,8 +56,8 @@ TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz) : TBuffer(mode, bufsiz)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
-   : TBuffer(mode, bufsiz, buf, adopt, reallocfunc)
+TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+   : TBuffer(mode, bufsize, buf, adopt, reallocfunc)
 {
    fMapSize = fgMapSize;
 }

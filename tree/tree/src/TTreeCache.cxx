@@ -317,8 +317,8 @@ TTreeCache::TTreeCache() : TFileCacheRead(), fPrefillType(GetConfiguredPrefillTy
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCache::TTreeCache(TTree *tree, Int_t buffersize)
-   : TFileCacheRead(tree->GetCurrentFile(), buffersize, tree), fEntryMax(tree->GetEntriesFast()), fEntryNext(0),
+TTreeCache::TTreeCache(TTree *tree, Int_t bufsize)
+   : TFileCacheRead(tree->GetCurrentFile(), bufsize, tree), fEntryMax(tree->GetEntriesFast()), fEntryNext(0),
      fBrNames(new TList), fTree(tree), fPrefillType(GetConfiguredPrefillType())
 {
    fEntryNext = fEntryMin + fgLearnEntries;

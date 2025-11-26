@@ -341,7 +341,7 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
    // Get size of the first RVec of the bulk
    RNTupleLocalIndex firstItemIndex;
    ROOT::NTupleSize_t collectionSize;
-   this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
+   fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
    *capacityPtr = -1;
@@ -488,7 +488,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 std::unique_ptr<ROOT::RVectorField>
 ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
 {
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, std::move(itemField), true));
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), true));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const

@@ -29,12 +29,8 @@ ROOT_GENERATE_DICTIONARY(RXTupleDict ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
                        MODULE ntuple_compat
                        LINKDEF RXTupleLinkDef.h
                        DEPENDENCIES RIO)
-ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTupleDescriptorDict.hxx
-                       MODULE ntuple_descriptor
-                       LINKDEF RNTupleDescriptorLinkDef.h
-                       OPTIONS -inlineInputHeader
-                       DEPENDENCIES RIO CustomStruct)
+ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple)
+
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.

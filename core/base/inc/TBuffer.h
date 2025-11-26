@@ -64,10 +64,10 @@ protected:
    void operator=(const TBuffer &) = delete;
 
    Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) override
-                              { return TObject::Write(name, opt, bufs); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) const override
-                              { return TObject::Write(name, opt, bufs); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufsize) override
+                              { return TObject::Write(name, opt, bufsize); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufsize) const override
+                              { return TObject::Write(name, opt, bufsize); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
@@ -78,8 +78,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBuffer(EMode mode, Int_t bufsize);
+   TBuffer(EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -87,7 +87,7 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, UInt_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }

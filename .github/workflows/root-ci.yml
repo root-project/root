@@ -35,12 +35,12 @@ on:
         description: rebase from ...
         type: string
         required: true
-        default: master
+        default: v6-36-00-patches
       base_ref:
         description: ... to ... (can have same value)
         type: string
         required: true
-        default: master
+        default: v6-36-00-patches
       incremental:
         description: 'Do incremental build'
         type: boolean
@@ -96,15 +96,14 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
-            overrides: ["builtin_zlib=ON"]
           - platform: mac14
             arch: X64
             overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac26
+            arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
@@ -361,7 +360,6 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora41
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: alma8

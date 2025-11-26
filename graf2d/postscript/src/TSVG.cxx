@@ -1793,7 +1793,8 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t ftsize;
 
    Int_t font  = abs(fTextFont)/10;
-   if (font > 42 || font < 1) font = 1;
+   if (font > 15 || font < 1)
+      font = 1;
    if (wh < hh) {
       ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    } else {
