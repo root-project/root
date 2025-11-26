@@ -180,10 +180,10 @@ public:
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
    /// \deprecated Please override the `Long64_t` overload instead of the `Int_t` version.
-   [[deprecated]] virtual Int_t Write(const char *name, Int_t option, Int_t bufsize) final
+   [[deprecated]] virtual Long64_t Write(const char *name, Int_t option, Int_t bufsize) final
    { return Write(name, option, (Long64_t)bufsize); }
    /// \deprecated Please override the `Long64_t` overload instead of the `Int_t` version.
-   [[deprecated]] virtual Int_t Write(const char *name, Int_t option, Int_t bufsize) const final
+   [[deprecated]] virtual Long64_t Write(const char *name, Int_t option, Int_t bufsize) const final
    { return Write(name, option, (Long64_t)bufsize); }
 #ifdef __clang__
 #pragma clang diagnostic pop
