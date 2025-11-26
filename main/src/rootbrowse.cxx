@@ -6,6 +6,7 @@
 /// \date 2025-08-21
 #include <ROOT/RLogger.hxx>
 
+#include "logging.hxx"
 #include "optparse.hxx"
 
 #include <TApplication.h>
@@ -43,12 +44,6 @@ Examples:
 - rootbrowse file.root
   Open the ROOT file 'file.root' in a TBrowser
 )";
-
-static ROOT::RLogChannel &RootBrowseLog()
-{
-   static ROOT::RLogChannel channel("RootBrowse");
-   return channel;
-}
 
 struct RootBrowseArgs {
    enum class EPrintUsage {
@@ -97,6 +92,8 @@ static RootBrowseArgs ParseArgs(const char **args, int nArgs)
 
 int main(int argc, char **argv)
 {
+   InitLog("rootbrowse");
+   
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
    if (args.fPrintHelp != RootBrowseArgs::EPrintUsage::kNo) {
       std::cerr << kShortHelp;
@@ -119,7 +116,8 @@ int main(int argc, char **argv)
       gErrorIgnoreLevel = kError;
       file = std::unique_ptr<TFile>(TFile::Open(std::string(args.fFileName).c_str(), "READ"));
       if (!file || file->IsZombie()) {
-         R__LOG_WARNING(RootBrowseLog()) << "File " << args.fFileName << " does not exist or is unreadable.";
+         Err() << "File " << args.fFileName << " does not exist or is unreadable.\n";
+         return 1;
       }
       gErrorIgnoreLevel = kUnset;
    }
