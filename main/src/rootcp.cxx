@@ -43,7 +43,8 @@ options:
   --recreate            recreate the destination file.
   -r, --recursive       recurse inside directories
   --replace             replace object if already existing
-  -v, --verbose         be verbose
+  -v                    be verbose
+  -vv                   be even more verbose
 
 Note: If an object has been written to a file multiple times, rootcp will copy only the latest version of that object.
 
@@ -100,7 +101,8 @@ static RootCpArgs ParseArgs(const char **args, int nArgs)
    opts.AddFlag({"--replace"});
    opts.AddFlag({"-r", "--recursive"});
    opts.AddFlag({"-h", "--help"});
-   opts.AddFlag({"-v", "--verbose"});
+   opts.AddFlag({"-v"});
+   opts.AddFlag({"-vv"});
 
    opts.Parse(args, nArgs);
 
@@ -123,7 +125,9 @@ static RootCpArgs ParseArgs(const char **args, int nArgs)
    outArgs.fReplace = opts.GetSwitch("replace");
    outArgs.fRecreate = opts.GetSwitch("recreate");
 
-   if (opts.GetSwitch("verbose"))
+   if (opts.GetSwitch("vv"))
+      SetLogVerbosity(3);
+   else if (opts.GetSwitch("v"))
       SetLogVerbosity(2);
 
    outArgs.fSources = opts.GetArgs();
@@ -201,11 +205,11 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
       destFullPath = std::string(destDirPath) + "/" + node.fName;
    }
 
-   Info(1) << "cp " << src.fFileName << ":" << srcFullPath << " -> " << dest.fFname << ":" << destFullPath << "\n";
+   Info(2) << "cp " << src.fFileName << ":" << srcFullPath << " -> " << dest.fFname << ":" << destFullPath << "\n";
 
    TDirectory *destDir = dest.fFile;
    if (!destDirPath.empty()) {
-      Info(2) << "mkdir " << destDirPath << "\n";
+      Info(3) << "mkdir " << destDirPath << "\n";
       destDir = dest.fFile->mkdir(std::string(destDirPath).c_str(), /* title = */ "",
                                   /* returnPreExisting = */ true);
    }
@@ -242,7 +246,7 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
       return;
    }
 
-   Info(2) << "read object \"" << srcFullPath << "\" of type " << node.fClassName << "\n";
+   Info(3) << "read object \"" << srcFullPath << "\" of type " << node.fClassName << "\n";
    if (!destDir) {
       Err() << "failed to create or get destination directory \"" << dest.fFname << ":" << destDirPath << "\"\n";
       return;
