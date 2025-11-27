@@ -111,7 +111,7 @@ def _TCanvas_Update(self, block = False):
       run_root_event_loop()
 
 
-def _TCanvas_Draw(self, block = False):
+def _TCanvas_Draw(self, option: str = "", block: bool = False):
    """
    Draw the canvas.
    Also blocks script execution and runs the ROOT graphics event loop until the <space> keyword is pressed,
@@ -121,14 +121,10 @@ def _TCanvas_Draw(self, block = False):
    * The script is running not in ipython notebooks.
    """
 
-   if isinstance(block, str):
-      self._Draw(block)
-      return
-
-   self._Draw()
+   self._Draw(option)
 
    # run loop if block flag is set
-   if block == True:
+   if block:
       self._Update()
       run_root_event_loop()
 
