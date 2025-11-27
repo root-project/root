@@ -476,3 +476,20 @@ TEST(OptParse, PositionalMixedWithFlags)
    EXPECT_EQ(opts.GetSwitch("noarg"), true);
    EXPECT_EQ(opts.GetArgs(), std::vector<std::string>({"somename", "bar"}));
 }
+
+TEST(OptParse, UnexpectedFlagComplex)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-c", "--compress"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+   opts.AddFlag({"--recreate"});
+   opts.AddFlag({"--replace"});
+   opts.AddFlag({"-r", "--recursive"});
+   opts.AddFlag({"-h", "--help"});
+   opts.AddFlag({"-v"});
+   opts.AddFlag({"-vv"});
+
+   const char *args[] = {"rootcp", "--recreate", "-r", "test.root", "copy1.root", "-c", "505", "-vvv"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_EQ(opts.GetErrors(), std::vector<std::string>({"Unknown flag: -vvv"}));
+}
