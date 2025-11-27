@@ -212,9 +212,6 @@ std::string HeaderSearch::getPrebuiltModuleFileName(StringRef ModuleName,
   if (FileMapOnly || HSOpts->PrebuiltModulePaths.empty())
     return {};
 
-  llvm::StringRef ModuleCachePath = getModuleCachePath();
-  bool CacheFailure = true;
-
   // Then go through each prebuilt module directory and try to find the pcm
   // file.
   for (const std::string &Dir : HSOpts->PrebuiltModulePaths) {
@@ -229,13 +226,7 @@ std::string HeaderSearch::getPrebuiltModuleFileName(StringRef ModuleName,
                                           ".pcm");
     else
       llvm::sys::path::append(Result, ModuleName + ".pcm");
-    // If we have the same ModuleCachePath and PrebuiltModulePath pointing
-    // to the same folder we should not cache the file lookup failure as it
-    // may be currently building an implicit module.
-    if (!ModuleCachePath.empty() && ModuleCachePath == Dir)
-      CacheFailure = false;
-
-    if (getFileMgr().getOptionalFileRef(Result.str(), /*Open=*/false, CacheFailure))
+    if (getFileMgr().getOptionalFileRef(Result))
       return std::string(Result);
   }
 
@@ -459,9 +450,7 @@ OptionalFileEntryRef HeaderSearch::getFileAndSuggestModule(
     std::error_code EC = llvm::errorToErrorCode(File.takeError());
     if (EC != llvm::errc::no_such_file_or_directory &&
         EC != llvm::errc::invalid_argument &&
-        EC != llvm::errc::is_a_directory &&
-        EC != llvm::errc::not_a_directory &&
-        EC != llvm::errc::permission_denied) {
+        EC != llvm::errc::is_a_directory && EC != llvm::errc::not_a_directory) {
       Diags.Report(IncludeLoc, diag::err_cannot_open_file)
           << FileName << EC.message();
     }
@@ -960,9 +949,13 @@ OptionalFileEntryRef HeaderSearch::LookupFile(
       // If we have no includer, that means we're processing a #include
       // from a module build. We should treat this as a system header if we're
       // building a [system] module.
-      bool IncluderIsSystemHeader =
-          Includer ? getFileInfo(*Includer).DirInfo != SrcMgr::C_User :
-          BuildSystemModule;
+      bool IncluderIsSystemHeader = [&]() {
+        if (!Includer)
+          return BuildSystemModule;
+        const HeaderFileInfo *HFI = getExistingFileInfo(*Includer);
+        assert(HFI && "includer without file info");
+        return HFI->DirInfo != SrcMgr::C_User;
+      }();
       if (OptionalFileEntryRef FE = getFileAndSuggestModule(
               TmpDir, IncludeLoc, IncluderAndDir.second, IncluderIsSystemHeader,
               RequestingModule, SuggestedModule)) {

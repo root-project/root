@@ -190,7 +190,7 @@ CXXRecordDecl *Sema::getCurrentInstantiationOf(NestedNameSpecifier *NNS) {
 /// a class template specialization that is not a complete type, we
 /// will attempt to instantiate that class template.
 bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
-                                      DeclContext *&DC) {
+                                      DeclContext *DC) {
   assert(DC && "given null context");
 
   TagDecl *tag = dyn_cast<TagDecl>(DC);
@@ -216,12 +216,6 @@ bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
   // The type must be complete.
   if (RequireCompleteType(loc, type, diag::err_incomplete_nested_name_spec,
                           SS.getRange())) {
-    // The actual information about the decl may have been loaded via an
-    // external source that created a new AST node/decl for the definition
-    // rather than reusing the one we had (DC) like the ASTReader does.
-    // To avoid the caller to continue using the still incomplete decl, let's
-    // set it to the definition.
-    DC = tag->getDefinition();
     SS.SetInvalid(SS.getRange());
     return true;
   }
@@ -450,15 +444,9 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
     // nested-name-specifier.
 
     // The declaration context must be complete.
-    if (!LookupCtx->isDependentContext()) {
-      if (RequireCompleteDeclContext(SS, LookupCtx)) {
-        return true;
-      } else if (TagDecl* TD = dyn_cast<TagDecl>(LookupCtx)) {
-        // Update the DeclContext to point to the Tag definition.
-        LookupCtx = TD->getDefinition();
-      }
-    }
-
+    if (!LookupCtx->isDependentContext() &&
+        RequireCompleteDeclContext(SS, LookupCtx))
+      return true;
 
     LookupQualifiedName(Found, LookupCtx);
 

@@ -2049,14 +2049,6 @@ Token ASTReader::ReadToken(ModuleFile &M, const RecordDataImpl &Record,
     if (IdentifierInfo *II = getLocalIdentifier(M, Record[Idx++]))
       Tok.setIdentifierInfo(II);
   }
-
-  if (Tok.isLiteral()) {
-    const RecordData& RD = reinterpret_cast<const RecordData&>(Record);
-    std::string* Lit = new std::string(ReadString(RD, Idx));
-    TokenLiteralDataLoaded.push_back(Lit);
-    Tok.setLiteralData(Lit->c_str());
-  }
-
   return Tok;
 }
 
@@ -2471,7 +2463,7 @@ void ASTReader::markIdentifierUpToDate(const IdentifierInfo *II) {
 
   // Update the generation for this identifier.
   if (getContext().getLangOpts().Modules)
-    IdentifierGeneration[II] = getGenerationOrNull();
+    IdentifierGeneration[II] = getGeneration();
 }
 
 void ASTReader::resolvePendingMacro(IdentifierInfo *II,
@@ -2741,12 +2733,8 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
 
   // For an overridden file, create a virtual file with the stored
   // size/timestamp.
-  bool DisableValidation = bool(PP.getPreprocessorOpts().DisablePCHOrModuleValidation &
-                                DisableValidationForModuleKind::All);
-  if ((Overridden || Transient || SkipChecks) && (!File || DisableValidation)) {
+  if ((Overridden || Transient || SkipChecks) && !File)
     File = FileMgr.getVirtualFileRef(*Filename, StoredSize, StoredTime);
-    Overridden = true;
-  }
 
   if (!File) {
     if (Complain) {
@@ -3090,10 +3078,9 @@ ASTReader::ReadControlBlock(ModuleFile &F,
       // All user input files reside at the index range [0, NumUserInputs), and
       // system input files reside at [NumUserInputs, NumInputs). For explicitly
       // loaded module files, ignore missing inputs.
-      bool Validate = !DisableValidation && F.Kind != MK_ExplicitModule &&
-        F.Kind != MK_PrebuiltModule;
+      if (!DisableValidation && F.Kind != MK_ExplicitModule &&
+          F.Kind != MK_PrebuiltModule) {
         bool Complain = (ClientLoadCapabilities & ARR_OutOfDate) == 0;
-        Complain &= Validate;
 
         // If we are reading a module, we will create a verification timestamp,
         // so we verify all input files.  Otherwise, verify only user input
@@ -3105,13 +3092,12 @@ ASTReader::ReadControlBlock(ModuleFile &F,
             F.Kind == MK_ImplicitModule)
           N = NumUserInputs;
 
-        for (unsigned I = 0; I < NumInputs; ++I) {
-          if (I == N)
-            Complain = false;
+        for (unsigned I = 0; I < N; ++I) {
           InputFile IF = getInputFile(F, I+1, Complain);
-          if (Validate && (!IF.getFile() || IF.isOutOfDate()))
+          if (!IF.getFile() || IF.isOutOfDate())
             return OutOfDate;
         }
+      }
 
       if (Listener)
         Listener->visitModuleFile(F.FileName, F.Kind);
@@ -3159,7 +3145,7 @@ ASTReader::ReadControlBlock(ModuleFile &F,
           //
           // FIXME: Allow this for files explicitly specified with -include-pch.
           bool AllowCompatibleConfigurationMismatch =
-            F.Kind == MK_ExplicitModule || F.Kind == MK_PrebuiltModule;
+              F.Kind == MK_ExplicitModule || F.Kind == MK_PrebuiltModule;
 
           ASTReadResult Result =
               ReadOptionsBlock(Stream, F.FileName, ClientLoadCapabilities,
@@ -3315,28 +3301,6 @@ ASTReader::ReadControlBlock(ModuleFile &F,
           // ModuleCache as when writing.
           ImportedFile =
               ReadPathBlob(BaseDirectoryAsWritten, Record, Idx, Blob);
-        }
-      }
-
-      // Check if ImportedFile exists on disk
-      if (!llvm::sys::fs::is_directory(ImportedFile)) {
-        StringRef ModuleName = llvm::sys::path::filename(ImportedFile.c_str());
-        ModuleName.consume_back(".pcm");
-        // Get clang::Module pointer by looking up the module name
-        HeaderSearch &HS = PP.getHeaderSearchInfo();
-        Module *M = HS.lookupModule(ModuleName, SourceLocation(),
-                                    /*AllowSearch*/ true,
-                                    /*AllowExtraModuleMapSearch*/ true);
-        if (M) {
-          std::string Path = HS.getPrebuiltModuleFileName(M->Name);
-          if (Path.empty())
-            Path = HS.getCachedModuleFileName(
-                M->Name,
-                HS.getModuleMap().getModuleMapFileForUniquing(M)->getName());
-          // FIXME: Add a hash comparison to check if ImportedFile's hash and
-          // the new Modules Path's hash matches or not.
-          if (!Path.empty())
-            ImportedFile = Path;
         }
       }
 
@@ -4385,32 +4349,10 @@ void ASTReader::ReadModuleOffsetMap(ModuleFile &F) const {
                           ? ModuleMgr.lookupByModuleName(Name)
                           : ModuleMgr.lookupByFileName(Name));
     if (!OM) {
-      StringRef ModuleName = llvm::sys::path::filename(Name);
-      ModuleName.consume_back(".pcm");
-      HeaderSearch &HS = PP.getHeaderSearchInfo();
-      Module *M = HS.lookupModule(ModuleName, SourceLocation(),
-                                  /*AllowSearch*/ true,
-                                  /*AllowExtraModuleMapSearch*/ true);
-      std::string Path;
-      // If module definition exists in modulemap, search the modulepath in
-      // HeaderSearchInfo
-      if (M) {
-        Path = HS.getPrebuiltModuleFileName(M->Name);
-        if (Path.empty())
-          Path = HS.getCachedModuleFileName(
-              M->Name,
-              HS.getModuleMap().getModuleMapFileForUniquing(M)->getName());
-      }
-
-      StringRef NewName = StringRef(Path);
-      OM = ModuleMgr.lookupByFileName(NewName);
-      if (!OM) {
-        std::string Msg =
-            "SourceLocation remap refers to unknown module, cannot find ";
-        Msg.append(std::string(NewName));
-        Error(Msg);
-        return;
-      }
+      std::string Msg = "refers to unknown module, cannot find ";
+      Msg.append(std::string(Name));
+      Error(Msg);
+      return;
     }
 
     ImportedModuleVector.push_back(OM);
@@ -4490,15 +4432,9 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
 
     assert(M && M->Name == F.ModuleName && "found module with different name");
 
-    // Check any additional module map files (e.g. module.private.modulemap)
-    // that are not in the pcm.
-    bool DisableValidation =
-        PP.getPreprocessorOpts().DisablePCHOrModuleValidation !=
-        DisableValidationForModuleKind::None;
-
     // Check the primary module map file.
     auto StoredModMap = FileMgr.getOptionalFileRef(F.ModuleMapPath);
-    if (!DisableValidation && (!StoredModMap || *StoredModMap != ModMap)) {
+    if (!StoredModMap || *StoredModMap != ModMap) {
       assert(ModMap && "found module is missing module map file");
       assert((ImportedBy || F.Kind == MK_ImplicitModule) &&
              "top-level import should be verified");
@@ -4523,7 +4459,8 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
       AdditionalStoredMaps.insert(*SF);
     }
 
-    if (!DisableValidation) {
+    // Check any additional module map files (e.g. module.private.modulemap)
+    // that are not in the pcm.
     if (auto *AdditionalModuleMaps = Map.getAdditionalModuleMapFiles(M)) {
       for (FileEntryRef ModMap : *AdditionalModuleMaps) {
         // Remove files that match
@@ -4545,7 +4482,6 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
           << F.ModuleName << /*not new*/1 << ModMap.getName();
       return OutOfDate;
     }
-  }
   }
 
   if (Listener)
@@ -5022,10 +4958,11 @@ ASTReader::ReadASTCore(StringRef FileName,
                        unsigned ClientLoadCapabilities) {
   ModuleFile *M;
   std::string ErrorStr;
-  ModuleManager::AddModuleResult AddResult =
-      ModuleMgr.addModule(FileName, Type, ImportLoc, ImportedBy,
-                          getGenerationOrNull(), ExpectedSize, ExpectedModTime,
-                          ExpectedSignature, readASTFileSignature, M, ErrorStr);
+  ModuleManager::AddModuleResult AddResult
+    = ModuleMgr.addModule(FileName, Type, ImportLoc, ImportedBy,
+                          getGeneration(), ExpectedSize, ExpectedModTime,
+                          ExpectedSignature, readASTFileSignature,
+                          M, ErrorStr);
 
   switch (AddResult) {
   case ModuleManager::AlreadyLoaded:
@@ -7947,8 +7884,14 @@ void ASTReader::CompleteRedeclChain(const Decl *D) {
     }
   }
 
-  if (Template)
-    Template->loadLazySpecializationsImpl(Args);
+  if (Template) {
+    // For partitial specialization, load all the specializations for safety.
+    if (isa<ClassTemplatePartialSpecializationDecl,
+            VarTemplatePartialSpecializationDecl>(D))
+      Template->loadLazySpecializationsImpl();
+    else
+      Template->loadLazySpecializationsImpl(Args);
+  }
 }
 
 CXXCtorInitializer **
@@ -9200,7 +9143,7 @@ void ASTReader::ReadMethodPool(Selector Sel) {
   // Get the selector generation and update it to the current generation.
   unsigned &Generation = SelectorGeneration[Sel];
   unsigned PriorGeneration = Generation;
-  Generation = getGenerationOrNull();
+  Generation = getGeneration();
   SelectorOutOfDate[Sel] = false;
 
   // Search for methods defined with this selector.
@@ -10972,9 +10915,6 @@ ASTReader::ASTReader(Preprocessor &PP, InMemoryModuleCache &ModuleCache,
 ASTReader::~ASTReader() {
   if (OwnsDeserializationListener)
     delete DeserializationListener;
-  for (auto PStr: TokenLiteralDataLoaded) {
-     delete PStr;
-  }
 }
 
 IdentifierResolver &ASTReader::getIdResolver() {

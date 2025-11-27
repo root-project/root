@@ -757,9 +757,6 @@ private:
   /// files.
   llvm::DenseSet<LoadedMacroInfo> LoadedUndefs;
 
-  /// \Token literal data loaded and owned by us.
-  std::vector<std::string *> TokenLiteralDataLoaded;
-
   using GlobalMacroMapType =
       ContinuousRangeMap<serialization::MacroID, ModuleFile *, 4>;
 
@@ -1510,12 +1507,6 @@ private:
                    SourceLocation ImportLoc)
         : Mod(Mod), ImportedBy(ImportedBy), ImportLoc(ImportLoc) {}
   };
-
-  uint32_t getGenerationOrNull() const {
-    if (ContextObj)
-      return getGeneration(*ContextObj);
-    return 0u;
-  }
 
   ASTReadResult ReadASTCore(StringRef FileName, ModuleKind Type,
                             SourceLocation ImportLoc, ModuleFile *ImportedBy,

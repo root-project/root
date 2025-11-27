@@ -356,25 +356,6 @@ bool SourceManager::isMainFile(const FileEntry &SourceFile) {
   return false;
 }
 
-void SourceManager::invalidateCache(FileID FID) {
-  OptionalFileEntryRef Entry = getFileEntryRefForID(FID);
-  if (!Entry)
-    return;
-  if (ContentCache *&E = FileInfos[*Entry]) {
-    E->setBuffer(nullptr);
-    E = 0;
-  }
-  if (!FID.isInvalid()) {
-    const SrcMgr::SLocEntry& SLocE = getSLocEntry(FID);
-    if (SLocE.isFile()) {
-      SrcMgr::ContentCache& CC =
-        const_cast<SrcMgr::ContentCache&>(SLocE.getFile().getContentCache());
-      CC.setBuffer(nullptr);
-    }
-  }
-  getFileManager().invalidateCache(*Entry);
-}
-
 void SourceManager::initializeForReplay(const SourceManager &Old) {
   assert(MainFileID.isInvalid() && "expected uninitialized SourceManager");
 
@@ -1492,16 +1473,6 @@ StringRef SourceManager::getBufferName(SourceLocation Loc,
   auto B = getBufferOrNone(getFileID(Loc));
   if (Invalid)
     *Invalid = !B;
-
-  // Try to get the name without reading the buffer.
-  FileID FID = getFileID(Loc);
-  const SrcMgr::SLocEntry &Entry = getSLocEntry(FID, Invalid);
-  if (!Invalid && Entry.isFile()) {
-    if (OptionalFileEntryRef FE =
-            Entry.getFile().getContentCache().ContentsEntry)
-      return FE->getName();
-  }
-
   return B ? B->getBufferIdentifier() : "<invalid buffer>";
 }
 

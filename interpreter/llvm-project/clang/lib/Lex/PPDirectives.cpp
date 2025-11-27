@@ -988,7 +988,7 @@ OptionalFileEntryRef Preprocessor::LookupFile(
   // stack, record the parent #includes.
   SmallVector<std::pair<OptionalFileEntryRef, DirectoryEntryRef>, 16> Includers;
   bool BuildSystemModule = false;
-  if (!FromDir && !FromFile && getCurrentFileLexer()) {
+  if (!FromDir && !FromFile) {
     FileID FID = getCurrentFileLexer()->getFileID();
     OptionalFileEntryRef FileEnt = SourceMgr.getFileEntryRefForID(FID);
 

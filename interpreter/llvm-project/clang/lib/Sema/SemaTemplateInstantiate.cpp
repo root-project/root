@@ -4198,16 +4198,6 @@ static ActionResult<CXXRecordDecl *> getPatternForClassTemplateSpecialization(
     }
     Pattern = PartialSpec;
   } else {
-    //   -- If no matches are found, the instantiation is generated
-    //      from the primary template.
-
-    // Try first to get it externally:
-    if(S.getExternalSource()) {
-      S.getExternalSource()->CompleteType(ClassTemplateSpec);
-      if (ClassTemplateSpec->getDefinition())
-        return ClassTemplateSpec;
-    }
-
     ClassTemplateDecl *Template = ClassTemplateSpec->getSpecializedTemplate();
     while (Template->getInstantiatedFromMemberTemplate()) {
       // If we've found an explicit specialization of this class template,

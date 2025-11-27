@@ -276,10 +276,6 @@ class ASTContext : public RefCountedBase<ASTContext> {
   mutable llvm::ContextualFoldingSet<ArrayParameterType, ASTContext &>
       ArrayParameterTypes;
 
-  /// Generation number for this external AST source. Must be increased
-  /// whenever we might have added new redeclarations for existing decls.
-  uint32_t CurrentGeneration = 0;
-
   /// The set of nested name specifiers.
   ///
   /// This set is managed by the NestedNameSpecifier class.
@@ -733,15 +729,6 @@ public:
   /// Forwards to get node parents from the ParentMapContext. New callers should
   /// use ParentMapContext::getParents() directly.
   template <typename NodeT> DynTypedNodeList getParents(const NodeT &Node);
-
-  uint32_t getGeneration() const { return CurrentGeneration; }
-  uint32_t incrementGeneration() {
-    uint32_t OldGeneration = CurrentGeneration;
-    CurrentGeneration++;
-    assert(CurrentGeneration > OldGeneration &&
-           "Overflowed generation counter");
-    return OldGeneration;
-  }
 
   const clang::PrintingPolicy &getPrintingPolicy() const {
     return PrintingPolicy;
@@ -3725,7 +3712,7 @@ typename clang::LazyGenerationalUpdatePtr<Owner, T, Update>::ValueType
   // include ASTContext.h. We explicitly instantiate it for all relevant types
   // in ASTContext.cpp.
   if (auto *Source = Ctx.getExternalSource())
-    return new (Ctx) LazyData(&Ctx, Source, Value);
+    return new (Ctx) LazyData(Source, Value);
   return Value;
 }
 
