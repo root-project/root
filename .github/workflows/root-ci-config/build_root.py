@@ -30,7 +30,6 @@ from build_utils import (
     die,
     github_log_group,
     is_macos,
-    load_config,
     subprocess_with_capture,
     subprocess_with_log,
     upload_file,
@@ -67,16 +66,29 @@ def main():
 
     cleanup_previous_build()
 
-    # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    options_dict = {
-        **load_config(f'{this_script_dir}/buildconfig/global.txt'),
-        # file below overwrites values from above
-        **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
-    }
+    # Compute CMake build options:
+    # - Get global options
+    # - Override with options from .github/workflows/root-ci-config/buildconfig/[platform].txt
+    # - Apply overrides from command line if necessary
+    options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
+    last_options = dict(options_dict)
+
+    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"))
+    print(f"Build option overrides for {args.platform}:")
+    build_utils.print_options_diff(options_dict, last_options)
+
+    if args.overrides is not None:
+        print("Build option overrides from command line:")
+        last_options = dict(options_dict)
+        options_dict.update((arg.split("=", maxsplit=1) for arg in args.overrides))
+        build_utils.print_options_diff(options_dict, last_options)
 
     options = build_utils.cmake_options_from_dict(options_dict)
+    print("Full build options")
+    for key, val in sorted(options_dict.items()):
+        print(f"\t{key: <30}{val}")
 
     if WINDOWS:
         options = "-Thost=x64 " + options
@@ -193,6 +205,7 @@ def parse_args():
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
+    parser.add_argument("--overrides",       default=None,      help="Override build options using a syntax like 'A=1 B=2'", nargs="*")
 
     args = parser.parse_args()
 
