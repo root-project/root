@@ -14,9 +14,6 @@ from http import HTTPStatus
 from shutil import which
 from typing import Callable, Dict
 
-from openstack.connection import Connection
-from requests import get
-
 
 def is_macos():
     return 'Darwin' == platform.system()
@@ -238,7 +235,7 @@ def calc_options_hash(options: str) -> str:
         options_and_defines += sp_result.stdout
     return sha1(options_and_defines.encode('utf-8')).hexdigest()
 
-def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
+def upload_file(connection, container: str, dest_object: str, src_file: str) -> None:
     print(f"Attempting to upload {src_file} to {dest_object}")
 
     if not os.path.exists(src_file):
@@ -282,6 +279,8 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
 
 
 def download_file(url: str, dest: str) -> None:
+    from requests import get
+
     print(f"\nAttempting to download {url} to {dest}")
 
     parent_dir = os.path.dirname(dest)
@@ -297,6 +296,7 @@ def download_latest(url: str, prefix: str, destination: str) -> str:
     """Downloads latest build artifact starting with <prefix>,
        and returns the file path to the downloaded file and shell_log."""
 
+    from requests import get
     # https://docs.openstack.org/api-ref/object-store/#show-container-details-and-list-objects
     with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as req:
         if req.status_code == HTTPStatus.NO_CONTENT or req.content == b'[]':
