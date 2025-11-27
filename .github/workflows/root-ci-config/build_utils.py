@@ -316,7 +316,7 @@ def remove_file_match_ext(directory: str, extension: str) -> str:
         extension (str): The regular expression pattern to match filenames against.
     """
     print_fancy(f"Removing gcda files from {directory}")
-    log.add(f"\nfind {directory} -name \*.gcda -exec rm {{}} \;")
+    log.add(f"\nfind {directory} -name \\*.gcda -exec rm {{}} \\;")
     pattern = "." + extension
     count = 0
     for currentdir, _, files in os.walk(directory):
