@@ -265,10 +265,13 @@ public:
    {
       bool forcePositional = false;
 
+      // Contains one or more flags coming from one of the arguments (e.g. "-abc" may be split
+      // into flags "a", "b", and "c", which will be stored in `argStr`).
       std::vector<std::string_view> argStr;
 
       for (std::size_t i = 0; i < nArgs && fErrors.empty(); ++i) {
          const char *arg = args[i];
+         const char *const argOrig = arg;
 
          if (strcmp(arg, "--") == 0) {
             forcePositional = true;
@@ -322,7 +325,7 @@ public:
                std::string_view argS = argStr[j];
                const auto *exp = GetExpectedFlag(argS);
                if (!exp) {
-                  fErrors.push_back(std::string("Unknown flag: ") + args[j]);
+                  fErrors.push_back(std::string("Unknown flag: ") + argOrig);
                   break;
                }
 
