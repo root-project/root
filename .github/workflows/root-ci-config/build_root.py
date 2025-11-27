@@ -24,7 +24,6 @@ import tarfile
 import time
 
 import build_utils
-import openstack
 from build_utils import (
     calc_options_hash,
     die,
@@ -37,12 +36,6 @@ from build_utils import (
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
-
-try:
-    CONNECTION = openstack.connect(cloud='envvars')
-except Exception as exc:
-    print("Failed to open the S3 connection:", exc, file=sys.stderr)
-    CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
 WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
@@ -345,6 +338,14 @@ def archive_and_upload(archive_name, prefix):
     with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
         targz.add("src")
         targz.add("build")
+
+    try:
+        import openstack
+        CONNECTION = openstack.connect(cloud='envvars')
+    except Exception as exc:
+        print("Failed to open the S3 connection:", exc, file=sys.stderr)
+        CONNECTION = None
+
 
     upload_file(
         connection=CONNECTION,
