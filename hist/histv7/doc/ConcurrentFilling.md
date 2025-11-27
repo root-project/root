@@ -46,4 +46,4 @@ For large histograms and reasonable data, contention on individual bins is expec
 On the other hand, updates of the (global) histogram statistics (`RHistStats`) can easily lead to contention.
 For this reason, `RHist` does **not** offer a `FillAtomic` method because it cannot be implemented efficiently.
 Instead, the user has to create a `RHistConcurrentFiller` and (potentially many) `RHistFillContext`s.
-These will work together to accumulate the (global) histogram statistics during concurrent filling.
+These work together to accumulate the (global) histogram statistics during concurrent filling.

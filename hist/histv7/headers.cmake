@@ -6,7 +6,9 @@ set(histv7_headers
     ROOT/RCategoricalAxis.hxx
     ROOT/RHist.hxx
     ROOT/RHistAutoAxisFiller.hxx
+    ROOT/RHistConcurrentFiller.hxx
     ROOT/RHistEngine.hxx
+    ROOT/RHistFillContext.hxx
     ROOT/RHistStats.hxx
     ROOT/RHistUtils.hxx
     ROOT/RLinearizedIndex.hxx
