@@ -29,7 +29,7 @@
 //      Timeout() signal and call connected slots.                      //
 //                                                                      //
 //  Minimum timeout interval is defined in TSystem::ESysConstants as    //
-//  kItimerResolution (currently 10 ms).                                //
+//  kItimerResolution (currently 5 ms).                                 //
 //                                                                      //
 //  Signal/slots example:                                               //
 //       TTimer *timer = new TTimer();                                  //
