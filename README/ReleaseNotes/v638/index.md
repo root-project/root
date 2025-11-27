@@ -1,5 +1,5 @@
 % ROOT Version 6.38 Release Notes
-% 2025-11
+% 2025-11-27
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -272,6 +272,8 @@ This improves compile times and reduces code inter-dependency; see https://githu
 
 More than 250 items were addressed for this release:
 
+  * [[#20506](https://github.com/root-project/root/issues/20506)] - [RDF] When combining a JIT-ted Vary and Define, the varied values are missing in a Snapshot
+  * [[#20463](https://github.com/root-project/root/issues/20463)] - pyROOT TH1::GetDefaultSumw2 throws error when called
   * [[#20450](https://github.com/root-project/root/issues/20450)] - Disable %jsroot magic in notebook when TWebCanvas is not compiled
   * [[#20377](https://github.com/root-project/root/issues/20377)] - Investigate I/O of `std::unique_ptr` on latest MacOS beta
   * [[#20342](https://github.com/root-project/root/issues/20342)] - Precision not set for matrix values when writing gdml
