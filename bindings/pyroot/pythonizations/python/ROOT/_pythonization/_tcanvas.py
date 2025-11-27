@@ -32,67 +32,7 @@ c.SaveAs("canvas.root")
 \endpythondoc
 '''
 
-from . import pythonization
-
-def wait_press_windows():
-   from ROOT import gSystem
-   import msvcrt
-   import time
-
-   while not gSystem.ProcessEvents():
-      if msvcrt.kbhit():
-         k = msvcrt.getch()
-         if k[0] == 32:
-            break
-      else:
-         time.sleep(0.01)
-
-
-def wait_press_posix():
-   from ROOT import gSystem
-   import sys
-   import select
-   import tty
-   import termios
-   import time
-
-   old_settings = termios.tcgetattr(sys.stdin)
-
-   tty.setcbreak(sys.stdin.fileno())
-
-   try:
-
-      while not gSystem.ProcessEvents():
-         c = ''
-         if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-            c = sys.stdin.read(1)
-         if (c == '\x20'):
-            break
-         time.sleep(0.01)
-
-   finally:
-      termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-
-def run_root_event_loop():
-   from ROOT import gROOT
-   import os
-   import sys
-
-   # no special handling in batch mode
-   if gROOT.IsBatch():
-      return
-
-   # no special handling in case of notebooks
-   if 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
-      return
-
-   print("Press <space> key to continue")
-
-   if os.name == 'nt':
-      wait_press_windows()
-   else:
-      wait_press_posix()
-
+from . import pythonization, run_root_event_loop
 
 def _TCanvas_Update(self, block = False):
    """
