@@ -293,17 +293,14 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
 
    // THE SCALED SHAPE
    if (shape->IsA() == TGeoScaledShape::Class()) {
-      // TGeoScaledShape const *const p = static_cast<TGeoScaledShape const *>(shape);
-      // // First convert the referenced shape
-      // VUnplacedVolume *referenced_shape = Convert(p->GetShape());
-      // if (!referenced_shape)
-      //    return nullptr;
-      // const double *scale_root = p->GetScale()->GetScale();
-      // unplaced_volume =
-      //    GeoManager::MakeInstance<UnplacedScaledShape>(referenced_shape, scale_root[0], scale_root[1], scale_root[2]);
-
-      // temporarily skip scaled solids which cannot be excluded via EShapeType selection
-      printf("Unsupported scaled shape\n");
+      TGeoScaledShape const *const p = static_cast<TGeoScaledShape const *>(shape);
+      // First convert the referenced shape
+      VUnplacedVolume *referenced_shape = Convert(p->GetShape());
+      if (!referenced_shape)
+         return nullptr;
+      const double *scale_root = p->GetScale()->GetScale();
+      unplaced_volume =
+         GeoManager::MakeInstance<UnplacedScaledShape>(referenced_shape, scale_root[0], scale_root[1], scale_root[2]);
    }
 
    // THE CUT TUBE

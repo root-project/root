@@ -76,13 +76,15 @@ void TGeoVGConverter::ConvertGeometry()
       top->SetShape(vgshape);
    }
 
-   // Uncomment to print info about selected/excluded shapes
-   // if ( ! fSelectedShapeTypes.empty()) {
-   //   printf("# %zu selected shape type for conversion \n", fSelectedShapeTypes.size());
-   // }
-   // if ( ! fExcludedShapeTypes.empty()) {
-   //   printf("# %zu shape types excluded from conversion \n", fExcludedShapeTypes.size());
-   // }
+   // Print info about selected/excluded shapes
+   if (gGeoManager->GetVerboseLevel() > 1) {
+      if ( ! fSelectedShapeTypes.empty()) {
+        Info("ConvertGeometry","# %zu selected shape type for conversion \n", fSelectedShapeTypes.size());
+      }
+      if ( ! fExcludedShapeTypes.empty()) {
+        Info("ConvertGeometry","# %zu shape types excluded from conversion \n", fExcludedShapeTypes.size());
+      }
+   }
 
    // Now iterate the active geometry tree
    TGeoIterator next(fGeom->GetTopVolume());
@@ -96,29 +98,38 @@ void TGeoVGConverter::ConvertGeometry()
       // If fSelectedShapeTypes is not empty, convert only selected shapes
       if ((! fSelectedShapeTypes.empty()) &&
           (! isInSelection(vol->GetShape(), fSelectedShapeTypes))) {
-         printf("# Shape type %s is not selected for conversion\n", vol->GetShape()->IsA()->GetName());
+         if (gGeoManager->GetVerboseLevel() > 1) {
+            Info("ConvertGeometry","# Shape type %s is not selected for conversion\n",
+                 vol->GetShape()->IsA()->GetName());
+         }
          continue;
       }
 
       // Skip shapes excluded from conversion
       if (isInSelection(vol->GetShape(), fExcludedShapeTypes)) {
-         printf("# Shape type %s is excluded from conversion\n", vol->GetShape()->IsA()->GetName());
+         if (gGeoManager->GetVerboseLevel() > 1) {
+            Info("ConvertGeometry","# Shape type %s is excluded from conversion\n",
+                 vol->GetShape()->IsA()->GetName());
+         }
          continue;
       }
 
-      // printf("Converting %s\n", vol->GetName());
+      // Info("ConvertGeometry","Converting %s\n", vol->GetName());
       vgshape = TGeoVGShape::Create(vol->GetShape());
       if (vgshape) {
          nconverted++;
          vol->SetShape(vgshape);
       }
    }
-   printf("# Converted %d shapes to VecGeom ones\n", nconverted);
+   if (gGeoManager->GetVerboseLevel() > 0) {
+      Info("ConvertGeometry","# Converted %d shapes to VecGeom ones\n", nconverted);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Select shape(s) for conversion.
-/// Conversion is performed only on selected shapes (if set)
+/// Conversion is performed only on selected shapes. If unset, all solid types
+/// will be converted.
 
 void TGeoVGConverter::SelectShapeType(TGeoShape::EShapeType shapeType)
 {
@@ -127,6 +138,7 @@ void TGeoVGConverter::SelectShapeType(TGeoShape::EShapeType shapeType)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Exclude shape(s) from conversion.
+/// Excluded types have precedence in case a type is also selected.
 
 void TGeoVGConverter::ExcludeShapeType(TGeoShape::EShapeType shapeType)
 {

@@ -61,6 +61,7 @@ public:
       kGeoParaboloid = BIT(28),
       kGeoHalfSpace = BIT(29),
       kGeoHype = BIT(30),
+      kGeoScaled = BIT(31),
       kGeoSavePrimitive = BIT(20)
    };
 
