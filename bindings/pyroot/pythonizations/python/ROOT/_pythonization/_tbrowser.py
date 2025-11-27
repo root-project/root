@@ -11,7 +11,7 @@
 r'''
 \pythondoc TBrowser
 
-Functionality of TBrowser::Draw() method was extended to support interactive
+Functionality of constructor and Draw() methods were extended to support interactive
 work in the python scripts. If extra block parameter is True, script execution
 will be suspended until <space> key pressed by user. Simple example:
 
@@ -19,16 +19,27 @@ will be suspended until <space> key pressed by user. Simple example:
 \endcode
 import ROOT
 
-br = ROOT.TBrowser()
+# block until space is pressed
+br = ROOT.TBrowser(block = True)
 
-# block here until space is pressed
-br.Draw(block=True)
+# continue work to load new files
+
+# block here again until space is pressed
+br.Draw(block = True)
 
 # continues after <space> is pressed
 \endpythondoc
 '''
 
 from . import pythonization, run_root_event_loop
+
+
+def _TBrowser_constructor(self, *args, block: bool = False):
+
+   self._original_constructor(*args)
+
+   if block:
+      run_root_event_loop()
 
 
 def _TBrowser_Draw(self, option: str = "", block: bool = False):
@@ -52,6 +63,9 @@ def _TBrowser_Draw(self, option: str = "", block: bool = False):
 def pythonize_tbrowser(klass):
     # Parameters:
     # klass: class to be pythonized
+
+    klass._original_constructor = klass.__init__
+    klass.__init__ = _TBrowser_constructor
 
     klass._Draw = klass.Draw
     klass.Draw = _TBrowser_Draw
