@@ -1427,11 +1427,6 @@ public:
     return appendDefMacroDirective(II, MI, MI->getDefinitionLoc());
   }
 
-  /// Remove a IdentifierInfo and MacroDirective from the history.
-  /// Given an IdentifierInfo and a MacroDirective we can remove them from
-  /// the macros vector.
-  void removeMacro(IdentifierInfo *II, MacroDirective *MD);
-
   /// Set a MacroDirective that was loaded from a PCH file.
   void setLoadedMacroDirective(IdentifierInfo *II, MacroDirective *ED,
                                MacroDirective *MD);
@@ -1697,77 +1692,6 @@ public:
     EnterTokenStream(Toks.data(), Toks.size(), DisableMacroExpansion, false,
                      IsReinject);
   }
-
-  /// A RAII object to temporarily reset PP's state and restore it.
-  class CleanupAndRestoreCacheRAII {
-  private:
-    Preprocessor &PP;
-    CachedTokensTy SavedCachedTokens;
-    CachedTokensTy::size_type SavedCachedLexPos;
-    std::vector<CachedTokensTy::size_type> SavedBacktrackPositions;
-    std::vector<IncludeStackInfo> SavedStack;
-    Lexer *SavedCurLexer;
-    PreprocessorLexer *SavedCurPPLexer;
-    TokenLexer* SavedCurTokenLexer;
-    ConstSearchDirIterator SavedCurDirLookup;
-    LexerCallback SavedCurLexerCallback;
-    unsigned SavedLexLevel;
-
-  public:
-    CleanupAndRestoreCacheRAII(Preprocessor &PP)
-        : PP(PP), SavedCachedTokens(std::move(PP.CachedTokens)),
-          SavedCachedLexPos(PP.CachedLexPos),
-          SavedBacktrackPositions(std::move(PP.BacktrackPositions)),
-          SavedStack(std::move(PP.IncludeMacroStack)),
-          SavedCurLexer(PP.CurLexer.release()), SavedCurPPLexer(PP.CurPPLexer),
-          SavedCurTokenLexer(PP.CurTokenLexer.release()),
-          SavedCurDirLookup(PP.CurDirLookup),
-          SavedCurLexerCallback(PP.CurLexerCallback),
-          SavedLexLevel(PP.LexLevel) {
-      PP.CachedTokens.clear();
-      PP.CachedLexPos = 0;
-      PP.BacktrackPositions.clear();
-      PP.IncludeMacroStack.clear();
-      PP.CurLexer.reset(0);
-      PP.CurPPLexer = 0;
-      PP.CurTokenLexer.reset(0);
-      PP.CurDirLookup = 0;
-      PP.CurLexerCallback = CLK_CachingLexer;
-      PP.LexLevel = 0;
-    }
-
-    void pop() {
-      if (SavedCurLexerCallback == nullptr)
-        return;
-
-      // ExitCachingLexMode();
-      PP.CachedTokens = std::move(SavedCachedTokens);
-      PP.CachedLexPos = SavedCachedLexPos;
-      PP.BacktrackPositions = std::move(SavedBacktrackPositions);
-      PP.IncludeMacroStack = std::move(SavedStack);
-      PP.CurLexer.reset(SavedCurLexer);
-      PP.CurPPLexer = SavedCurPPLexer;
-      PP.CurTokenLexer.reset(SavedCurTokenLexer);
-      PP.CurDirLookup = SavedCurDirLookup;
-      PP.CurLexerCallback = SavedCurLexerCallback;
-      PP.LexLevel = SavedLexLevel;
-
-      SavedCachedTokens.clear();
-      SavedCachedLexPos = 0;
-      SavedBacktrackPositions.clear();
-      SavedStack.clear();
-      SavedCurLexer = 0;
-      SavedCurPPLexer = 0;
-      SavedCurTokenLexer = 0;
-      SavedCurDirLookup = 0;
-      SavedCurLexerCallback = nullptr;
-      SavedLexLevel = ~0U;
-    }
-
-    ~CleanupAndRestoreCacheRAII() {
-      pop();
-    }
-  };
 
   /// Pop the current lexer/macro exp off the top of the lexer stack.
   ///
@@ -2289,12 +2213,6 @@ public:
   void DumpLocation(SourceLocation Loc) const;
   void DumpMacro(const MacroInfo &MI) const;
   void dumpMacroInfo(const IdentifierInfo *II);
-
-  /// Print a Macro to an ostream used for ClangInternalState
-  /// Same as dump, but without orinting source location.
-  void printMacros(raw_ostream &OS) const;
-  void printMacro(const IdentifierInfo* II, const MacroDirective *MD,
-                  llvm::raw_ostream &OS) const;
 
   /// Given a location that specifies the start of a
   /// token, return a new location that specifies a character within the token.

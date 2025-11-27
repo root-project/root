@@ -657,7 +657,7 @@ DeclResult Sema::ActOnModuleImport(SourceLocation StartLoc,
          diag::warn_import_implementation_partition_unit_in_interface_unit)
         << Mod->Name;
 
-  //checkModuleImportContext(*this, Mod, ImportLoc, CurContext);
+  checkModuleImportContext(*this, Mod, ImportLoc, CurContext);
 
   // FIXME: we should support importing a submodule within a different submodule
   // of the same top-level module. Until we do, make it an error rather than
