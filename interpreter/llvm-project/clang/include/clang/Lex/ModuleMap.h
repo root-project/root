@@ -251,12 +251,9 @@ private:
     LLVM_PREFERRED_TYPE(bool)
     unsigned NoUndeclaredIncludes : 1;
 
-    /// Whether we can have a submodule with missing header files.
-    unsigned IsOptional : 1;
-
     Attributes()
         : IsSystem(false), IsExternC(false), IsExhaustive(false),
-          NoUndeclaredIncludes(false), IsOptional(false) {}
+          NoUndeclaredIncludes(false) {}
   };
 
   /// A directory for which framework modules can be inferred.

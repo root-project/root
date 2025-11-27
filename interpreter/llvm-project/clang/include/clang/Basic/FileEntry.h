@@ -327,7 +327,6 @@ public:
   ~FileEntry();
 
   StringRef tryGetRealPathName() const { return RealPathName; }
-  bool isOpen() const { return (bool)File; }
   off_t getSize() const { return Size; }
   // Size may increase due to potential z/OS EBCDIC -> UTF-8 conversion.
   void setSize(off_t NewSize) { Size = NewSize; }
