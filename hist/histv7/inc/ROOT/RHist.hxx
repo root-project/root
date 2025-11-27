@@ -24,6 +24,10 @@ class TBuffer;
 namespace ROOT {
 namespace Experimental {
 
+// forward declaration for friend declaration
+template <typename BinContentType>
+class RHistFillContext;
+
 /**
 A histogram for aggregation of data along multiple dimensions.
 
@@ -55,6 +59,8 @@ Feedback is welcome!
 */
 template <typename BinContentType>
 class RHist final {
+   friend class RHistFillContext<BinContentType>;
+
    /// The histogram engine including the bin contents.
    RHistEngine<BinContentType> fEngine;
    /// The global histogram statistics.
