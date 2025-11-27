@@ -147,43 +147,40 @@ IGenFunction * Polynomial::Clone() const {
     return f;
 }
 
+std::vector<std::complex<double>> Polynomial::FindRoots() const
+{
 
-const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
-
-
-    // check if order is correct
-    unsigned int n = fOrder;
-    while ( Parameters()[n] == 0 ) {
+   // check if order is correct
+   unsigned int n = fOrder;
+   while (Parameters()[n] == 0) {
       n--;
-    }
+   }
 
-    fRoots.clear();
-    fRoots.reserve(n);
+   std::vector<std::complex<double>> roots;
 
-
-    if (n == 0) {
-      return fRoots;
-    }
-    else if (n == 1 ) {
-      if ( Parameters()[1] == 0) return fRoots;
+   if (n == 0) {
+      return roots;
+   } else if (n == 1) {
+      if (Parameters()[1] == 0)
+         return roots;
       double r = - Parameters()[0]/ Parameters()[1];
-      fRoots.push_back( std::complex<double> ( r, 0.0) );
-    }
-    // quadratic equations
-    else if (n == 2 ) {
+      roots.push_back(std::complex<double>(r, 0.0));
+   }
+   // quadratic equations
+   else if (n == 2) {
       gsl_complex z1, z2;
       int nr = gsl_poly_complex_solve_quadratic(Parameters()[2], Parameters()[1], Parameters()[0], &z1, &z2);
       if ( nr != 2) {
 #ifdef DEBUG
          std::cout << "Polynomial quadratic ::-  FAILED to find roots" << std::endl;
 #endif
-         return fRoots;
+         return roots;
       }
-      fRoots.push_back(std::complex<double>(z1.dat[0],z1.dat[1]) );
-      fRoots.push_back(std::complex<double>(z2.dat[0],z2.dat[1]) );
-    }
-    // cubic equations
-    else if (n == 3 ) {
+      roots.push_back(std::complex<double>(z1.dat[0], z1.dat[1]));
+      roots.push_back(std::complex<double>(z2.dat[0], z2.dat[1]));
+   }
+   // cubic equations
+   else if (n == 3) {
       gsl_complex  z1, z2, z3;
       // renormmalize params in this case
       double w = Parameters()[3];
@@ -195,15 +192,14 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
 #ifdef DEBUG
          std::cout << "Polynomial  cubic::-  FAILED to find roots" << std::endl;
 #endif
-         return fRoots;
-
+         return roots;
       }
-      fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) );
-      fRoots.push_back(std::complex<double> (z2.dat[0],z2.dat[1]) );
-      fRoots.push_back(std::complex<double> (z3.dat[0],z3.dat[1]) );
-    }
-    // quartic equations
-    else if (n == 4 ) {
+      roots.push_back(std::complex<double>(z1.dat[0], z1.dat[1]));
+      roots.push_back(std::complex<double>(z2.dat[0], z2.dat[1]));
+      roots.push_back(std::complex<double>(z3.dat[0], z3.dat[1]));
+   }
+   // quartic equations
+   else if (n == 4) {
       // quartic eq.
       gsl_complex  z1, z2, z3, z4;
       // renormalize params in this case
@@ -217,60 +213,55 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
 #ifdef DEBUG
          std::cout << "Polynomial quartic ::-  FAILED to find roots" << std::endl;
 #endif
-         return fRoots;
+         return roots;
       }
-      fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) );
-      fRoots.push_back(std::complex<double> (z2.dat[0],z2.dat[1]) );
-      fRoots.push_back(std::complex<double> (z3.dat[0],z3.dat[1]) );
-      fRoots.push_back(std::complex<double> (z4.dat[0],z4.dat[1]) );
-    }
-    else {
-    // for higher order polynomial use numerical fRoots
-      FindNumRoots();
-    }
+      roots.push_back(std::complex<double>(z1.dat[0], z1.dat[1]));
+      roots.push_back(std::complex<double>(z2.dat[0], z2.dat[1]));
+      roots.push_back(std::complex<double>(z3.dat[0], z3.dat[1]));
+      roots.push_back(std::complex<double>(z4.dat[0], z4.dat[1]));
+   } else {
+      // for higher order polynomial use numerical roots
+      return FindNumRoots();
+   }
 
-    return fRoots;
-
-  }
-
-
-std::vector< double >  Polynomial::FindRealRoots(){
-  FindRoots();
-  std::vector<double> roots;
-  roots.reserve(fOrder);
-  for (unsigned int i = 0; i < fOrder; ++i) {
-    if (fRoots[i].imag() == 0)
-      roots.push_back( fRoots[i].real() );
-  }
-  return roots;
+   return roots;
 }
-const std::vector< std::complex <double> > &  Polynomial::FindNumRoots(){
 
+std::vector<double> Polynomial::FindRealRoots() const
+{
+   auto roots = FindRoots();
+   std::vector<double> realRoots;
+   for (const auto &r : roots)
+      if (std::abs(r.imag()) < std::numeric_limits<double>::epsilon())
+         realRoots.push_back(r.real());
 
-    // check if order is correct
-    unsigned int n = fOrder;
-    while ( Parameters()[n] == 0 ) {
+   return realRoots;
+}
+std::vector<std::complex<double>> Polynomial::FindNumRoots() const
+{
+
+   // check if order is correct
+   unsigned int n = fOrder;
+   while (Parameters()[n] == 0) {
       n--;
-    }
-    fRoots.clear();
-    fRoots.reserve(n);
+   }
 
+   std::vector<std::complex<double>> roots;
+   if (n == 0) {
+      return roots;
+   }
 
-    if (n == 0) {
-      return fRoots;
-    }
+   gsl_poly_complex_workspace *w = gsl_poly_complex_workspace_alloc(n + 1);
+   std::vector<double> z(2 * n);
+   int status = gsl_poly_complex_solve(Parameters(), n + 1, w, &z.front());
+   gsl_poly_complex_workspace_free(w);
+   if (status != GSL_SUCCESS)
+      return roots;
+   for (unsigned int i = 0; i < n; ++i)
+      roots.push_back(std::complex<double>(z[2 * i], z[2 * i + 1]));
 
-    gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc( n + 1);
-    std::vector<double> z(2*n);
-    int status = gsl_poly_complex_solve ( Parameters(), n+1, w, &z.front() );
-    gsl_poly_complex_workspace_free(w);
-    if (status != GSL_SUCCESS) return fRoots;
-    for (unsigned int i = 0; i < n; ++i)
-      fRoots.push_back(std::complex<double> (z[2*i],z[2*i+1] ) );
-
-    return fRoots;
+   return roots;
 }
-
 
 } // namespace Math
 } // namespace ROOT
