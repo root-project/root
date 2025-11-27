@@ -3080,47 +3080,61 @@ template <class Element>
 void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa, const Element *const bp, Int_t nb,
                                  Int_t ncolsb, Element *cp)
 {
-   // i,k,j loop order with blocking and unrolling
-   const Int_t M = na / ncolsa; // Rows of A
-   const Int_t N = ncolsa;      // Columns of A, rows of B
-   const Int_t P = ncolsb;      // Columns of B and C
+   const Int_t M = na / ncolsa;
+   const Int_t N = ncolsa;
+   const Int_t P = ncolsb;
 
-   const Int_t BLOCK = 32;
-
+   if (M <= 12 && N <= 12 && P <= 12) {
+      for (Int_t i = 0; i < M; ++i) {
+         for (Int_t j = 0; j < P; ++j) {
+            Element sum = Element(0);
+            for (Int_t k = 0; k < N; ++k) {
+               sum += ap[i * N + k] * bp[k * P + j];
+            }
+            cp[i * P + j] = sum;
+         }
+      }
+      return;
+   }
+   const Int_t BLOCK = (M >= 192 && N >= 192 && P >= 192) ? 48 : 32;
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) if (M * P > 10000)
 #endif
    for (Int_t i0 = 0; i0 < M; i0 += BLOCK) {
-      for (Int_t k0 = 0; k0 < N; k0 += BLOCK) {
-         for (Int_t j0 = 0; j0 < P; j0 += BLOCK) {
-            const Int_t iMax = (i0 + BLOCK < M) ? i0 + BLOCK : M;
-            const Int_t kMax = (k0 + BLOCK < N) ? k0 + BLOCK : N;
-            const Int_t jMax = (j0 + BLOCK < P) ? j0 + BLOCK : P;
-            for (Int_t i = i0; i < iMax; ++i) {
-               for (Int_t k = k0; k < kMax; ++k) {
-                  Element aik = ap[i * N + k]; // Hoist A[i,k]
+      for (Int_t j0 = 0; j0 < P; j0 += BLOCK) {
+         const Int_t i1 = (i0 + BLOCK < M) ? i0 + BLOCK : M;
+         const Int_t j1 = (j0 + BLOCK < P) ? j0 + BLOCK : P;
+         for (Int_t i = i0; i < i1; ++i) {
+            Int_t j = j0;
+            for (; j <= j1 - 4; j += 4) {
+               cp[i * P + j + 0] = Element(0);
+               cp[i * P + j + 1] = Element(0);
+               cp[i * P + j + 2] = Element(0);
+               cp[i * P + j + 3] = Element(0);
+            }
+            for (; j < j1; ++j)
+               cp[i * P + j] = Element(0);
+         }
+
+         // ────────────────────── Accumulate over k blocks ──────────────────────
+         for (Int_t k0 = 0; k0 < N; k0 += BLOCK) {
+            const Int_t k1 = (k0 + BLOCK < N) ? k0 + BLOCK : N;
+
+            for (Int_t i = i0; i < i1; ++i) {
+               for (Int_t k = k0; k < k1; ++k) {
+                  const Element aik = ap[i * N + k];
+
                   Int_t j = j0;
-#pragma GCC ivdep
-                  for (; j <= jMax - 4; j += 4) {
-                     // Unroll by 4: update C[i,j], C[i,j+1], C[i,j+2], C[i,j+3]
-                     Element cij0 = cp[i * P + j];
-                     Element cij1 = cp[i * P + (j + 1)];
-                     Element cij2 = cp[i * P + (j + 2)];
-                     Element cij3 = cp[i * P + (j + 3)];
-                     cij0 += aik * bp[k * P + j];
-                     cij1 += aik * bp[k * P + (j + 1)];
-                     cij2 += aik * bp[k * P + (j + 2)];
-                     cij3 += aik * bp[k * P + (j + 3)];
-                     cp[i * P + j] = cij0;
-                     cp[i * P + (j + 1)] = cij1;
-                     cp[i * P + (j + 2)] = cij2;
-                     cp[i * P + (j + 3)] = cij3;
+                  // Main 4-wide accumulation
+                  for (; j <= j1 - 4; j += 4) {
+                     cp[i * P + j + 0] += aik * bp[k * P + j + 0];
+                     cp[i * P + j + 1] += aik * bp[k * P + j + 1];
+                     cp[i * P + j + 2] += aik * bp[k * P + j + 2];
+                     cp[i * P + j + 3] += aik * bp[k * P + j + 3];
                   }
-#pragma GCC ivdep
-                  for (; j < jMax; ++j) {
-                     // Cleanup loop for remaining j
+                  // Remainder
+                  for (; j < j1; ++j)
                      cp[i * P + j] += aik * bp[k * P + j];
-                  }
                }
             }
          }
