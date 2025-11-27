@@ -21,7 +21,7 @@ class TPython(unittest.TestCase):
             {
                std::any out;
                std::stringstream cmd;
-               cmd << "_anyresult = ROOT.std.make_any['int'](" << nIn << ")";
+               cmd << "_anyresult = ROOT.std.any(" << nIn << ")";
                TPython::Exec(cmd.str().c_str(), &out);
                return std::any_cast<int>(out);
             }

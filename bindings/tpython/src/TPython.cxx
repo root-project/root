@@ -48,15 +48,15 @@
 ///
 ///  // Create a TNamed on the python side, and transfer it back and forth.
 ///  root [1] std::any res1;
-///  root [2] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed']('hello', '')", &res1);
+///  root [2] TPython::Exec("_anyresult = ROOT.std.any(ROOT.TNamed('hello', ''))", &res1);
 ///  root [3] TPython::Bind(&std::any_cast<TNamed&>(res1), "n");
 ///  root [4] std::any res2;
-///  root [5] TPython::Exec("_anyresult = ROOT.std.make_any['TNamed*', 'TNamed*'](n)", &res2);
-///  root [6] (&std::any_cast<TNamed&>(res1) == std::any_cast<TNamed*>(res2))
+///  root [5] TPython::Exec("_anyresult = ROOT.std.any(n)", &res2);
+///  root [6] strcmp(std::any_cast<TNamed&>(res1).GetName(), std::any_cast<TNamed&>(res2).GetName()) == 0
 ///  (bool) true
 ///
 ///  // Variables can cross-over by using an `std::any` with a specific name.
-///  root [6] TPython::Exec("_anyresult = ROOT.std.make_any['Int_t'](1 + 1)", &res1);
+///  root [6] TPython::Exec("_anyresult = ROOT.std.any(1 + 1)", &res1);
 ///  root [7] std::any_cast<int>(res1)
 ///  (int) 2
 /// ~~~
