@@ -133,31 +133,6 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
 
-      - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
-        env:
-          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
-        shell: bash
-        run: |
-          set -x
-
-          echo '' >> "$CONFIGFILE"
-
-          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
-              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-
-              # Add entry to file if not exists, otherwise replace
-
-              if grep -q "$KEY=" "$CONFIGFILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-              else
-                  echo "$ENTRY" >> "$CONFIGFILE"
-              fi
-          done
-
-          cat "$CONFIGFILE" || true
-
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
@@ -172,6 +147,7 @@ jobs:
           HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
@@ -181,7 +157,8 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
-                    --platform        ${{ matrix.platform }}"
+                    --platform        ${{ matrix.platform }}
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}"
 
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
@@ -209,13 +186,17 @@ jobs:
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
+             "
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
@@ -496,31 +477,6 @@ jobs:
                ls -la
               '
 
-      - name: Apply option overrides from matrix for this job for all builds except non-special nightlies and releases
-        if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
-        env:
-          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
-        shell: bash
-        run: |
-          set -x
-
-          echo '' >> "$CONFIGFILE"
-
-          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
-              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-
-              # Add entry to file if not exists, otherwise replace
-
-              if grep -q "$KEY=" "$CONFIGFILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-              else
-                  echo "$ENTRY" >> "$CONFIGFILE"
-              fi
-          done
-
-          cat "$CONFIGFILE" || true
-
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /github/home/ROOT-CI/src/
@@ -531,6 +487,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
@@ -542,6 +499,7 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
 
       - name: Workflow dispatch
@@ -569,6 +527,8 @@ jobs:
 
       - name: Update build cache after push to release branch
         if:   github.event_name == 'push'
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
@@ -576,6 +536,7 @@ jobs:
                     --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
 
       - name: Upload test results
