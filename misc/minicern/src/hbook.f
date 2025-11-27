@@ -305,6 +305,11 @@
       DIMENSION IOPT(6)
       EQUIVALENCE (IOPTN,IOPT(1)),(IOPTG,IOPT(2)),(IOPTQ,IOPT(3))
       EQUIVALENCE (IOPTM,IOPT(4)),(IOPTO,IOPT(5)),(IOPTE,IOPT(6))
+
+      ! --- new local temporaries for safe short-character assignment
+      CHARACTER*16 CHTMP
+      INTEGER NCHR
+
       IF(NCHTOP.GE.MXFILES)THEN
          print*, 'Too many open files','HRFILE',LUN
          GO TO 99
@@ -356,14 +361,28 @@
       ENDIF
       IF(IQUEST(1).NE.0)RETURN
       NCHTOP=NCHTOP+1
-      CHTOP(NCHTOP)=CHDIR
+
+      ! ---- safe assignment of CHTOP(NCHTOP) from CHDIR (CHTOP is 16 chars)
+      CHTMP = ' '
+      NCHR = LEN_TRIM(CHDIR)
+      IF (NCHR .GT. 16) THEN
+         CHTMP = CHDIR(1:16)
+      ELSE
+         IF (NCHR .GT. 0) THEN
+            CHTMP(1:NCHR) = CHDIR(1:NCHR)
+         ENDIF
+      ENDIF
+      CHTOP(NCHTOP) = CHTMP
+
       ICHLUN(NCHTOP)=0
       IF(IOPTG.EQ.0)THEN
          ICHTOP(NCHTOP)=LUN
          ICHTYP(NCHTOP)=NWK
          HFNAME(NCHTOP)=CHDIR
       ELSE
-         ICHTOP(NCHTOP)=-LOCF(LUN)
+         ! ---- replaced non-portable pointer storage: do NOT store LOCF() into INTEGER
+         !      store a safe negative marker instead (unique per top index)
+         ICHTOP(NCHTOP) = -NCHTOP
          ICHTYP(NCHTOP)=0
          IF(IOPTM.EQ.0)THEN
             HFNAME(NCHTOP)='Global section - '//CHDIR
