@@ -27,14 +27,11 @@ void fillListOfDir(const TString &directory, TList &l) {
 
          TString dirname = file;
          if (directory != ".") {
-            auto _dirname = gSystem->ConcatFileName(directory, file);
-            dirname = _dirname;
-            delete [] _dirname;
+            gSystem->PrependPathName(directory, dirname);
          }
 
-         auto _vfile = gSystem->ConcatFileName(dirname, "vector.root");
-         TString vfile = _vfile;
-         delete [] _vfile;
+         TString vfile = "vector.root";
+         gSystem->PrependPathName(dirname, vfile);
 
          if (gSystem->GetPathInfo(vfile,(Long_t*)0,(Long_t*)0,(Long_t*)0,0)==0) {
             l.Add(new TObjString(dirname));
