@@ -483,13 +483,13 @@ end:
 /// Write specified byte range to remote file via rootd daemon.
 /// Returns kTRUE in case of error.
 
-Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t TNetFile::WriteBuffer(const char *buf, Long64_t len)
 {
    if (!fSocket || !fWritable) return kTRUE;
 
    Bool_t result = kFALSE;
 
-   Int_t st;
+   Long64_t st;
    if ((st = WriteBufferViaCache(buf, len))) {
       if (st == 2)
          return kTRUE;
@@ -498,7 +498,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    gSystem->IgnoreInterrupt();
 
-   if (fSocket->Send(Form("%lld %d", fOffset, len), kROOTD_PUT) < 0) {
+   if (fSocket->Send(Form("%lld %lld", fOffset, len), kROOTD_PUT) < 0) {
       SetBit(kWriteError);
       Error("WriteBuffer", "error sending kROOTD_PUT command");
       result = kTRUE;

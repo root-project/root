@@ -55,7 +55,7 @@ public:
    virtual  void     SetTitle(const char *title=""); // *MENU*
             void     ls(Option_t *option="") const override;
             void     Print(Option_t *option="") const override;
-   virtual  Int_t    Sizeof() const;
+   virtual  Long64_t Sizeof() const;
 
    ClassDefOverride(TNamed,1)  //The basis for a named object (name, title)
 };

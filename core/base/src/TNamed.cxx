@@ -179,8 +179,8 @@ void TNamed::SetTitle(const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return size of the TNamed part of the TObject.
 
-Int_t TNamed::Sizeof() const
+Long64_t TNamed::Sizeof() const
 {
-   Int_t nbytes = fName.Sizeof() + fTitle.Sizeof();
+   Long64_t nbytes = fName.Sizeof() + fTitle.Sizeof();
    return nbytes;
 }

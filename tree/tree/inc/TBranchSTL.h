@@ -24,17 +24,17 @@ class TBranchSTL: public TBranch {
       TBranchSTL();
       TBranchSTL( TTree* tree, const char* name,
                   TVirtualCollectionProxy* collProxy,
-                  Int_t bufsize, Int_t splitlevel );
+                  Long64_t bufsize, Int_t splitlevel );
       TBranchSTL( TBranch* parent, const char* name,
                   TVirtualCollectionProxy* collProxy,
-                  Int_t bufsize, Int_t splitlevel,
+                  Long64_t bufsize, Int_t splitlevel,
                   TStreamerInfo* info, Int_t id );
       ~TBranchSTL() override;
               void           Browse( TBrowser *b ) override;
               bool           IsFolder() const override;
               const char    *GetClassName() const override { return fClassName.Data(); }
               Int_t          GetExpectedType(TClass *&clptr,EDataType &type) override;
-              Int_t          GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+              Long64_t       GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
       virtual TStreamerInfo *GetInfo() const;
               void           Print(Option_t* = "") const override;
               void           SetAddress(void* addr) override;
@@ -45,7 +45,7 @@ class TBranchSTL: public TBranch {
 
       void ReadLeavesImpl( TBuffer& b );
       void FillLeavesImpl( TBuffer& b );
-              Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+              Long64_t       FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
       struct ElementBranchHelper_t
       {

@@ -93,7 +93,7 @@ THbookTree::~THbookTree()
 ////////////////////////////////////////////////////////////////////////////////
 ///get one entry from the hbook ntuple
 
-Int_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
+Long64_t THbookTree::GetEntry(Long64_t entry, Int_t /*getall*/)
 {
    fReadEntry = entry;
    return fFile->GetEntry(entry,fID,fType,GetX());

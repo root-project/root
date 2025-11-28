@@ -62,7 +62,7 @@ TNtuple::TNtuple(): TTree()
 ///  - Use TTree to create branches with variables of different data types.
 ///  - Use TTree when the number of branches is large (> 100).
 
-TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t bufsize)
+TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Long64_t bufsize)
        :TTree(name,title)
 {
    Int_t i;
@@ -165,7 +165,7 @@ void TNtuple::Browse(TBrowser *b)
 /// Note that this function is protected.
 /// Currently called only by TChain::Merge
 
-Int_t TNtuple::Fill()
+Long64_t TNtuple::Fill()
 {
    return TTree::Fill();
 }

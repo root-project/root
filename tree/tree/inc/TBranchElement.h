@@ -122,12 +122,12 @@ protected:
    void                     SetupInfo();
    void                     SetBranchCount(TBranchElement* bre);
    void                     SetBranchCount2(TBranchElement* bre) { fBranchCount2 = bre; }
-   Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype);
+   Int_t                    Unroll(const char* name, TClass* cltop, TClass* cl, char* ptr, Long64_t basketsize, Int_t splitlevel, Int_t btype);
    inline void              ValidateAddress() const;
 
-   void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   void Init(TTree *tree, TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   void Init(TTree *tree, TBranch *parent, const char* name, TClonesArray* clones, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   void Init(TTree *tree, TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
    void SetActionSequence(TClass *originalClass, TStreamerInfo *localInfo, TStreamerInfoActions::TActionSequence::SequenceGetter_t create, TStreamerInfoActions::TActionSequence *&actionSequence);
    void ReadLeavesImpl(TBuffer& b);
@@ -166,12 +166,12 @@ protected:
 // Public Interface.
 public:
    TBranchElement();
-   TBranchElement(TTree *tree, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   TBranchElement(TTree *tree, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   TBranchElement(TTree *tree, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   TBranchElement(TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
-   TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TTree *tree, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   TBranchElement(TTree *tree, const char* name, TClonesArray* clones, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TTree *tree, const char* name, TVirtualCollectionProxy* cont, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TBranch *parent, const char* name, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t btype = 0);
+   TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Long64_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
                     ~TBranchElement() override;
 
@@ -188,15 +188,15 @@ public:
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
    TVirtualCollectionProxy *GetCollectionProxy();
    TClass                  *GetCurrentClass(); // Class referenced by transient description
-           Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
-           Int_t            GetExpectedType(TClass *&clptr,EDataType &type) override;
-           TString          GetFullName() const override;
-           const char      *GetIconName() const override;
-           Int_t            GetID() const { return fID; }
-           TStreamerInfo   *GetInfo() const;
-           bool             GetMakeClass() const override;
-           char            *GetObject() const;
-           TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
+   Long64_t GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+   Int_t GetExpectedType(TClass *&clptr, EDataType &type) override;
+   TString GetFullName() const override;
+   const char *GetIconName() const override;
+   Int_t GetID() const { return fID; }
+   TStreamerInfo *GetInfo() const;
+   bool GetMakeClass() const override;
+   char *GetObject() const;
+   TVirtualArray *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
    virtual Int_t            GetMaximum() const;
            Int_t            GetNdata() const { return fNdata; }
@@ -222,7 +222,7 @@ public:
            void             SetAddress(void* addobj) override;
            bool             SetMakeClass(bool decomposeObj = true) override;
            void             SetObject(void *objadd) override;
-           void             SetBasketSize(Int_t bufsize) override;
+           void             SetBasketSize(Long64_t bufsize) override;
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
            void             SetOffset(Int_t offset) override;
@@ -233,7 +233,7 @@ public:
            void             SetupAddresses() override;
    virtual void             SetType(Int_t btype) { fType = btype; }
            void             UpdateFile() override;
-           void             Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Int_t bufsize, Int_t splitlevel);
+           void             Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Long64_t bufsize, Int_t splitlevel);
 
    enum EBranchElementType {
       kLeafNode = 0,
@@ -250,7 +250,7 @@ public:
    };
 
 private:
-   Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Long64_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
    ClassDefOverride(TBranchElement,10)  // Branch in case of an object
 };

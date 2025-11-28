@@ -81,8 +81,8 @@ namespace ROOT::Internal::TreeUtils {
 void TBranch__SetTree(TTree *tree, TObjArray &branches);
 
 TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass, EDataType datatype, void *addobj,
-                          Int_t bufsize = 32000, Int_t splitlevel = 99);
-TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize = 32000,
+                          Long64_t bufsize = 32000, Int_t splitlevel = 99);
+TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Long64_t bufsize = 32000,
                        Int_t splitlevel = 99);
 }
 
@@ -175,7 +175,7 @@ private:
 
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
-   Int_t            FlushBasketsImpl() const;
+   Long64_t FlushBasketsImpl() const;
    void             MarkEventCluster();
    Long64_t         GetMedianClusterSize();
 
@@ -187,19 +187,19 @@ private:
 
 protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
-                                                               EDataType datatype, void *addobj, Int_t bufsize,
+                                                               EDataType datatype, void *addobj, Long64_t bufsize,
                                                                Int_t splitlevel);
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass,
-                                                            void *addobj, Int_t bufsize, Int_t splitlevel);
+                                                            void *addobj, Long64_t bufsize, Int_t splitlevel);
    virtual void     KeepCircular();
-   virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual TBranch *BranchImpRef(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
-   virtual TBranch *BranchImpArr(const char* branchname, EDataType datatype, std::size_t N, void* addobj, Int_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Long64_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Long64_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImpRef(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Long64_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Long64_t bufsize, Int_t splitlevel);
+   virtual TBranch *BranchImpArr(const char* branchname, EDataType datatype, std::size_t N, void* addobj, Long64_t bufsize, Int_t splitlevel);
    virtual Int_t    CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, bool ptr);
-   virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, bool isptrptr, Int_t bufsize, Int_t splitlevel);
-   friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel);
+   virtual TBranch *BronchExec(const char* name, const char* classname, void* addobj, bool isptrptr, Long64_t bufsize, Int_t splitlevel);
+   friend  TBranch *TTreeBranchImpRef(TTree *tree, const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Long64_t bufsize, Int_t splitlevel);
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
@@ -386,7 +386,7 @@ public:
    /// A small value for bufsize is beneficial if entries in the Tree are accessed randomly and the Tree is in split mode.
    /// \param[in] splitlevel If T is a class or struct and splitlevel > 0, the members of the object are serialised as separate branches.
    /// \return Pointer to the TBranch that was created. The branch is owned by the tree.
-   template <class T> TBranch *Branch(const char* name, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   template <class T> TBranch *Branch(const char* name, T* obj, Long64_t bufsize = 32000, Int_t splitlevel = 99)
    {
       return BranchImpRef(name, TClass::GetClass<T>(), TDataType::GetType(typeid(T)), obj, bufsize, splitlevel);
    }
@@ -403,42 +403,42 @@ public:
    /// A small value for bufsize is beneficial if entries in the Tree are accessed randomly and the Tree is in split mode.
    /// \param[in] splitlevel If T is a class or struct and splitlevel > 0, the members of the object are serialised as separate branches.
    /// \return Pointer to the TBranch that was created. The branch is owned by the tree.
-   template <class T> TBranch *Branch(const char* name, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   template <class T> TBranch *Branch(const char* name, T** addobj, Long64_t bufsize = 32000, Int_t splitlevel = 99)
    {
       return BranchImp(name, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
    }
 
-   virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
-   virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
-   virtual Int_t           Branch(const char* folder, Int_t bufsize = 32000, Int_t splitlevel = 99);
-   virtual TBranch        *Branch(const char* name, void* address, const char* leaflist, Int_t bufsize = 32000);
-           TBranch        *Branch(const char* name, char* address, const char* leaflist, Int_t bufsize = 32000)
+   virtual Int_t           Branch(TCollection* list, Long64_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
+   virtual Int_t           Branch(TList* list, Long64_t bufsize = 32000, Int_t splitlevel = 99);
+   virtual Int_t           Branch(const char* folder, Long64_t bufsize = 32000, Int_t splitlevel = 99);
+   virtual TBranch        *Branch(const char* name, void* address, const char* leaflist, Long64_t bufsize = 32000);
+           TBranch        *Branch(const char* name, char* address, const char* leaflist, Long64_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, Longptr_t address, const char* leaflist, Int_t bufsize = 32000)
+   TBranch        *Branch(const char* name, Longptr_t address, const char* leaflist, Long64_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000)
+   TBranch        *Branch(const char* name, int address, const char* leaflist, Long64_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)(Longptr_t)address,leaflist,bufsize);
    }
-   virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
-   template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Long64_t bufsize = 32000, Int_t splitlevel = 99);
+   template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Long64_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImpRed for details. Here we __ignore
       return BranchImpRef(name, classname, TClass::GetClass<T>(), obj, bufsize, splitlevel);
    }
-   template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   template <class T> TBranch *Branch(const char* name, const char* classname, T** addobj, Long64_t bufsize = 32000, Int_t splitlevel = 99)
    {
       // See BranchImp for details
       return BranchImp(name, classname, TClass::GetClass<T>(), addobj, bufsize, splitlevel);
    }
-   template <typename T, std::size_t N> TBranch *Branch(const char* name, std::array<T, N> *obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
+   template <typename T, std::size_t N> TBranch *Branch(const char* name, std::array<T, N> *obj, Long64_t bufsize = 32000, Int_t splitlevel = 99)
    {
       TClass *cl = TClass::GetClass<T>();
       if (cl) {
@@ -449,8 +449,8 @@ public:
       }
       return BranchImpArr(name, TDataType::GetType(typeid(T)), N, obj, bufsize, splitlevel);
    }
-   virtual TBranch        *Bronch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
-   virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
+   virtual TBranch        *Bronch(const char* name, const char* classname, void* addobj, Long64_t bufsize = 32000, Int_t splitlevel = 99);
+   virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Long64_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
    virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool long64major = false, bool long64minor = false);
@@ -473,12 +473,14 @@ public:
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
            bool            EnableCache();
-   virtual Int_t           Fill();
-   virtual TBranch        *FindBranch(const char* name);
-   virtual TLeaf          *FindLeaf(const char* name);
-   virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
-   virtual Int_t           FlushBaskets(bool create_cluster = true) const;
-   virtual const char     *GetAlias(const char* aliasName) const;
+           virtual Long64_t Fill();
+           virtual TBranch *FindBranch(const char *name);
+           virtual TLeaf *FindLeaf(const char *name);
+           virtual Int_t Fit(const char *funcname, const char *varexp, const char *selection = "",
+                             Option_t *option = "", Option_t *goption = "", Long64_t nentries = kMaxEntries,
+                             Long64_t firstentry = 0); // *MENU*
+           virtual Int_t FlushBaskets(bool create_cluster = true) const;
+           virtual const char *GetAlias(const char *aliasName) const;
            UInt_t          GetAllocationCount() const { return fAllocationCount; }
 #ifdef R__TRACK_BASKET_ALLOC_TIME
            ULong64_t       GetAllocationTime() const { return fAllocationTime; }
@@ -544,9 +546,9 @@ public:
    virtual Long64_t        GetEntriesFast() const { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }
-   virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
-           Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
-   virtual Int_t           GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
+   virtual Long64_t GetEntry(Long64_t entry, Int_t getall = 0);
+   Int_t GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
+   virtual Long64_t GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
@@ -632,7 +634,7 @@ public:
    virtual Int_t           MakeCode(const char *filename = nullptr);
    virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = nullptr, const char* cutfilename = nullptr, const char* option = nullptr, Int_t maxUnrolling = 3);
    virtual Int_t           MakeSelector(const char *selector = nullptr, Option_t *option = "");
-   bool                    MemoryFull(Int_t nbytes);
+   bool MemoryFull(Long64_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
@@ -660,7 +662,7 @@ public:
    virtual bool            SetAlias(const char* aliasName, const char* aliasFormula);
    virtual void            SetAutoSave(Long64_t autos = -300000000);
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
-   virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
+   virtual void            SetBasketSize(const char* bname, Long64_t bufsize = 16000);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = nullptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, bool isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
@@ -743,8 +745,8 @@ public:
    virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
            void            UseCurrentStyle() override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const override;
+           Long64_t        Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) override;
+           Long64_t        Write(const char *name=nullptr, Int_t option=0, Long64_t bufsize=0) const override;
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };

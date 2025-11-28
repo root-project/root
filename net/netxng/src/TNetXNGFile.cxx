@@ -617,7 +617,7 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
 /// param length: the size of the buffer
 /// returns:      kTRUE in case of failure
 
-Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
+Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Long64_t length)
 {
    using namespace XrdCl;
 
