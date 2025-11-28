@@ -3265,8 +3265,9 @@ void TGuiBldDragManager::CloneEditable()
    }
 
    TString tmpfile = gSystem->TempDirectory();
-   TString temp = TString::Format("tmp%d.C", gRandom->Integer(100));
-   const char *s = gSystem->PrependPathName(tmpfile.Data(), temp);
+   TString temp;
+   temp.Form("tmp%d.C", gRandom->Integer(100));
+   const char *s = gSystem->PrependPathName(tmpfile, temp);
    Save(s);
    gROOT->Macro(s);
    gSystem->Unlink(s);

@@ -3112,42 +3112,41 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 Int_t TAuthenticate::ReadRootAuthrc()
 {
    // rootauthrc family
-   const char *authrc;
-   TString temp_rootauthrc = ".rootauthrc";
-   TString temp_system = "system.rootauthrc";
+   TString tRootAuthrc;
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
-      authrc = gSystem->Getenv("ROOTAUTHRC");
+      tRootAuthrc = gSystem->Getenv("ROOTAUTHRC");
    } else {
-      if (fgReadHomeAuthrc)
-         authrc = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_rootauthrc);
+      if (fgReadHomeAuthrc) {
+         tRootAuthrc = ".rootauthrc";
+         gSystem->PrependPathName(gSystem->HomeDirectory(), tRootAuthrc);
+      }
    }
-   if (authrc && gDebug > 2)
-      ::Info("TAuthenticate::ReadRootAuthrc", "Checking file: %s", authrc);
-   if (!authrc || gSystem->AccessPathName(authrc, kReadPermission)) {
-      if (authrc && gDebug > 1)
+   if (!tRootAuthrc.IsNull() && gDebug > 2)
+      ::Info("TAuthenticate::ReadRootAuthrc", "Checking file: %s", tRootAuthrc.Data());
+   if (tRootAuthrc.IsNull() || gSystem->AccessPathName(tRootAuthrc, kReadPermission)) {
+      if (!tRootAuthrc.IsNull() && gDebug > 1)
          ::Info("TAuthenticate::ReadRootAuthrc",
-                "file %s cannot be read (errno: %d)", authrc, errno);
-      authrc = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_system);
+                "file %s cannot be read (errno: %d)", tRootAuthrc.Data(), errno);
+      tRootAuthrc = "system.rootauthrc";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), tRootAuthrc);
       if (gDebug > 2)
-         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file: %s", authrc);
-      if (gSystem->AccessPathName(authrc, kReadPermission)) {
+         ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file: %s", tRootAuthrc.Data());
+      if (gSystem->AccessPathName(tRootAuthrc, kReadPermission)) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
-                   "file %s cannot be read (errno: %d)", authrc, errno);
+                   "file %s cannot be read (errno: %d)", tRootAuthrc.Data(), errno);
          return 0;
       }
    }
 
    // Check if file has changed since last read
-   TString tRootAuthrc = authrc;
    if (tRootAuthrc == fgRootAuthrc) {
       struct stat si;
       stat(tRootAuthrc, &si);
       if ((UInt_t)si.st_mtime < fgLastAuthrc.Convert()) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
-                   "file %s already read", authrc);
-         delete [] authrc;
+                   "file %s already read", tRootAuthrc.Data());
          return 0;
       }
    }
@@ -3172,17 +3171,16 @@ Int_t TAuthenticate::ReadRootAuthrc()
    FILE *fd = 0;
    // If the temporary file is open, copy everything to the new file ...
    if (expand == 1) {
-      TAuthenticate::FileExpand(authrc, ftmp);
+      TAuthenticate::FileExpand(tRootAuthrc, ftmp);
       fd = ftmp;
       rewind(fd);
    } else {
       // Open file
-      fd = fopen(authrc, "r");
+      fd = fopen(tRootAuthrc, "r");
       if (fd == 0) {
          if (gDebug > 2)
             ::Info("TAuthenticate::ReadRootAuthrc",
-                   "file %s cannot be open (errno: %d)", authrc, errno);
-         delete [] authrc;
+                   "file %s cannot be open (errno: %d)", tRootAuthrc.Data(), errno);
          return 0;
       }
    }
@@ -3313,8 +3311,6 @@ Int_t TAuthenticate::ReadRootAuthrc()
    fclose(fd);
    if (expand == 1)
       gSystem->Unlink(filetmp);
-   // Cleanup allocated memory
-   delete [] authrc;
 
    // Update authinfo with new info found
    TAuthenticate::MergeHostAuthList(authinfo,&tmpAuthInfo);
