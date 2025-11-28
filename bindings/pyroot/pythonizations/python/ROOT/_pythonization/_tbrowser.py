@@ -31,7 +31,7 @@ br.Draw(block = True)
 \endpythondoc
 '''
 
-from . import pythonization, run_root_event_loop
+from . import pythonization, _run_root_event_loop
 
 
 def _TBrowser_constructor(self, *args, block: bool = False):
@@ -39,7 +39,7 @@ def _TBrowser_constructor(self, *args, block: bool = False):
    self._original_constructor(*args)
 
    if block:
-      run_root_event_loop()
+      _run_root_event_loop()
 
 
 def _TBrowser_Draw(self, option: str = "", block: bool = False):
@@ -56,7 +56,7 @@ def _TBrowser_Draw(self, option: str = "", block: bool = False):
 
    # run loop if block flag is set
    if block:
-      run_root_event_loop()
+      _run_root_event_loop()
 
 
 @pythonization('TBrowser')

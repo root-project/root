@@ -32,7 +32,7 @@ c.SaveAs("canvas.root")
 \endpythondoc
 '''
 
-from . import pythonization, run_root_event_loop
+from . import pythonization, _run_root_event_loop
 
 def _TCanvas_Update(self, block = False):
    """
@@ -48,7 +48,7 @@ def _TCanvas_Update(self, block = False):
 
    # run loop if block flag is set
    if block:
-      run_root_event_loop()
+      _run_root_event_loop()
 
 
 def _TCanvas_Draw(self, option: str = "", block: bool = False):
@@ -66,7 +66,7 @@ def _TCanvas_Draw(self, option: str = "", block: bool = False):
    # run loop if block flag is set
    if block:
       self._Update()
-      run_root_event_loop()
+      _run_root_event_loop()
 
 
 @pythonization('TCanvas')
