@@ -54,6 +54,16 @@ This distribution of ROOT is in alpha stage. Feedback is welcome and appreciated
 
 
 class ROOTBuild(_build):
+    def finalize_options(self):
+        # Normalize the distribution name before building
+        if self.distribution.metadata.name == "ROOT":
+            # Store original name for metadata
+            self.distribution.metadata._original_name = "ROOT"
+            # Use normalized name to comply with PEP625 and avoid errors
+            # caused by https://github.com/pypi/warehouse/pull/18924
+            self.distribution.metadata.name = "root"
+        super().finalize_options()
+
     def run(self):
         _build.run(self)
 
@@ -94,6 +104,16 @@ class ROOTBuild(_build):
 
 
 class ROOTInstall(_install):
+    def finalize_options(self):
+        # Normalize the distribution name before installing
+        if self.distribution.metadata.name == "ROOT":
+            # Store original name for metadata
+            self.distribution.metadata._original_name = "ROOT"
+            # Use normalized name to comply with PEP625 and avoid errors
+            # caused by https://github.com/pypi/warehouse/pull/18924
+            self.distribution.metadata.name = "root"
+        super().finalize_options()
+
     def _get_install_path(self):
         if hasattr(self, "bdist_dir") and self.bdist_dir:
             install_path = self.bdist_dir
