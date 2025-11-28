@@ -1,0 +1,22 @@
+name: 'Lint Github Action Files'
+
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - '.github/workflows/*.yml'
+
+jobs:
+  lint-action-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: actionlint
+        uses: raven-actions/actionlint@v2
+        with:
+          files: '.github/workflows/*.yml'
+          fail-on-error: false
+          flags: '-ignore SC2046 -ignore SC2086' # Variable quoting error in shellcheck
