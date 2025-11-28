@@ -346,7 +346,7 @@ void TThread::Init()
      if (!ROOT::gCoreMutex) {
         // To avoid dead locks, caused by shared library opening and/or static initialization
         // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #else
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
