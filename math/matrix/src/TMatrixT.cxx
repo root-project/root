@@ -31,7 +31,6 @@ See the \ref Matrix page for the documentation of the linear algebra package
 #include "TMatrixDEigen.h"
 #include "TMath.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x ncols) matrix
 
@@ -3260,43 +3259,43 @@ template class TMatrixT<Float_t>;
 #include "TMatrixFfwd.h"
 #include "TMatrixFSymfwd.h"
 
-template TMatrixF TMatrixTAutoloadOps::operator+<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator+<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator+<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator+<Float_t>(const TMatrixF &source, Float_t val);
-template TMatrixF TMatrixTAutoloadOps::operator+<Float_t>(Float_t val, const TMatrixF &source);
-template TMatrixF TMatrixTAutoloadOps::operator-<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator-<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator-<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator-<Float_t>(const TMatrixF &source, Float_t val);
-template TMatrixF TMatrixTAutoloadOps::operator-<Float_t>(Float_t val, const TMatrixF &source);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(Float_t val, const TMatrixF &source);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(const TMatrixF &source, Float_t val);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator*<Float_t>(const TMatrixFSym &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator&&<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator&&<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator&&<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator||<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator||<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator||<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator>=<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator>=<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator>=<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator<=<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator<=<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator<=<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator+ <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator+ <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator+ <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator+ <Float_t>(const TMatrixF &source, Float_t val);
+template TMatrixF TMatrixTAutoloadOps::operator+ <Float_t>(Float_t val, const TMatrixF &source);
+template TMatrixF TMatrixTAutoloadOps::operator- <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator- <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator- <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator- <Float_t>(const TMatrixF &source, Float_t val);
+template TMatrixF TMatrixTAutoloadOps::operator- <Float_t>(Float_t val, const TMatrixF &source);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(Float_t val, const TMatrixF &source);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(const TMatrixF &source, Float_t val);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator* <Float_t>(const TMatrixFSym &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator&& <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator&& <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator&& <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator|| <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator|| <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator|| <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixF & source1, const TMatrixF & source2);
+template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixF & source1, const TMatrixFSym & source2);
+template TMatrixF TMatrixTAutoloadOps::operator><Float_t>(const TMatrixFSym & source1, const TMatrixF & source2);
+template TMatrixF TMatrixTAutoloadOps::operator>= <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator>= <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator>= <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator<= <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator<= <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator<= <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
 template TMatrixF TMatrixTAutoloadOps::operator< <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
 template TMatrixF TMatrixTAutoloadOps::operator< <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
 template TMatrixF TMatrixTAutoloadOps::operator< <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator!=<Float_t>(const TMatrixF &source1, const TMatrixF &source2);
-template TMatrixF TMatrixTAutoloadOps::operator!=<Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
-template TMatrixF TMatrixTAutoloadOps::operator!=<Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator!= <Float_t>(const TMatrixF &source1, const TMatrixF &source2);
+template TMatrixF TMatrixTAutoloadOps::operator!= <Float_t>(const TMatrixF &source1, const TMatrixFSym &source2);
+template TMatrixF TMatrixTAutoloadOps::operator!= <Float_t>(const TMatrixFSym &source1, const TMatrixF &source2);
 
 template TMatrixF &TMatrixTAutoloadOps::Add<Float_t>(TMatrixF &target, Float_t scalar, const TMatrixF &source);
 template TMatrixF &TMatrixTAutoloadOps::Add<Float_t>(TMatrixF &target, Float_t scalar, const TMatrixFSym &source);
@@ -3317,43 +3316,43 @@ template void TMatrixTAutoloadOps::AMultBt<Float_t>(const Float_t *const ap, Int
 
 template class TMatrixT<Double_t>;
 
-template TMatrixD TMatrixTAutoloadOps::operator+<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator+<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator+<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator+<Double_t>(const TMatrixD &source, Double_t val);
-template TMatrixD TMatrixTAutoloadOps::operator+<Double_t>(Double_t val, const TMatrixD &source);
-template TMatrixD TMatrixTAutoloadOps::operator-<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator-<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator-<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator-<Double_t>(const TMatrixD &source, Double_t val);
-template TMatrixD TMatrixTAutoloadOps::operator-<Double_t>(Double_t val, const TMatrixD &source);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(Double_t val, const TMatrixD &source);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(const TMatrixD &source, Double_t val);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator*<Double_t>(const TMatrixDSym &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator&&<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator&&<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator&&<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator||<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator||<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator||<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator>=<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator>=<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator>=<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator<=<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator<=<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator<=<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator+ <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator+ <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator+ <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator+ <Double_t>(const TMatrixD &source, Double_t val);
+template TMatrixD TMatrixTAutoloadOps::operator+ <Double_t>(Double_t val, const TMatrixD &source);
+template TMatrixD TMatrixTAutoloadOps::operator- <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator- <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator- <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator- <Double_t>(const TMatrixD &source, Double_t val);
+template TMatrixD TMatrixTAutoloadOps::operator- <Double_t>(Double_t val, const TMatrixD &source);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(Double_t val, const TMatrixD &source);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(const TMatrixD &source, Double_t val);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator* <Double_t>(const TMatrixDSym &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator&& <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator&& <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator&& <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator|| <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator|| <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator|| <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixD & source1, const TMatrixD & source2);
+template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixD & source1, const TMatrixDSym & source2);
+template TMatrixD TMatrixTAutoloadOps::operator><Double_t>(const TMatrixDSym & source1, const TMatrixD & source2);
+template TMatrixD TMatrixTAutoloadOps::operator>= <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator>= <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator>= <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator<= <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator<= <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator<= <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
 template TMatrixD TMatrixTAutoloadOps::operator< <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
 template TMatrixD TMatrixTAutoloadOps::operator< <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
 template TMatrixD TMatrixTAutoloadOps::operator< <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator!=<Double_t>(const TMatrixD &source1, const TMatrixD &source2);
-template TMatrixD TMatrixTAutoloadOps::operator!=<Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
-template TMatrixD TMatrixTAutoloadOps::operator!=<Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator!= <Double_t>(const TMatrixD &source1, const TMatrixD &source2);
+template TMatrixD TMatrixTAutoloadOps::operator!= <Double_t>(const TMatrixD &source1, const TMatrixDSym &source2);
+template TMatrixD TMatrixTAutoloadOps::operator!= <Double_t>(const TMatrixDSym &source1, const TMatrixD &source2);
 
 template TMatrixD &TMatrixTAutoloadOps::Add<Double_t>(TMatrixD &target, Double_t scalar, const TMatrixD &source);
 template TMatrixD &TMatrixTAutoloadOps::Add<Double_t>(TMatrixD &target, Double_t scalar, const TMatrixDSym &source);
