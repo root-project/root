@@ -376,9 +376,8 @@ def _wait_press_posix():
    finally:
       termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
-# \endcond
 
-def run_root_event_loop():
+def _run_root_event_loop():
    from ROOT import gROOT
    import os
    import sys
@@ -397,4 +396,7 @@ def run_root_event_loop():
       _wait_press_windows()
    else:
       _wait_press_posix()
+
+
+# \endcond
 
