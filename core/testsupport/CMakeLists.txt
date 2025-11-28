@@ -26,6 +26,19 @@ install(TARGETS ${libname}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${header_dir})
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      ${libname}
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/${header_dir}
+      FILES
+          inc/${header_dir}/TestSupport.hxx
+  )
+endif()
+
+
 # Make it usable inside and outside of ROOT under a single name if somebody writes their own tests using ROOT_ADD_GTEST
 add_library(ROOT::${libname} ALIAS ${libname})
 
