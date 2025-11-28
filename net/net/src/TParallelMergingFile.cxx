@@ -133,9 +133,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
    fMessage.WriteLong64(GetEND());
    CopyTo(fMessage);
 
-   // FIXME: CXX17: Use init-statement in if to declare `error` variable
-   int error;
-   if ((error = fSocket->Send(fMessage)) <= 0) {
+   if (int error = fSocket->Send(fMessage); error <= 0) {
       Error("UploadAndReset","Upload to the merging server failed with %d\n",error);
       delete fSocket;
       fSocket = 0;
@@ -177,8 +175,12 @@ Bool_t TParallelMergingFile::UploadAndReset()
 
 Int_t TParallelMergingFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
-   Int_t nbytes = TMemFile::Write(0,opt,bufsize);
-   if (nbytes) {
+   std::size_t prevSize = GetBytesWritten();
+   auto nbytes = TMemFile::Write(0,opt,bufsize);
+   std::size_t newSize = GetBytesWritten();
+   // NOTE: we don't rely on nbytes > 0 to do UploadAndReset() because nbytes may be 0 if the file
+   // only contains non-TObject objects (as they are not written by TMemFile::Write).
+   if (newSize > prevSize) {
       UploadAndReset();
    }
    return nbytes;
