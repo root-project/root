@@ -8,10 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from .. import pythonization
-import cppyy
-
 import json
+
+import cppyy
 
 
 def get_basescore(model):
@@ -60,7 +59,7 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
         "reg:squarederror": "identity",
     }
     model_objective = xgb_model.objective
-    if not model_objective in objective_map:
+    if model_objective not in objective_map:
         raise Exception(
             'XGBoost model has unsupported objective "{}". Supported objectives are {}.'.format(
                 model_objective, objective_map.keys()
@@ -74,13 +73,13 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     # Dump XGB model as json file
     xgb_model.get_booster().dump_model(output_path, dump_format="json")
 
-    with open(output_path, "r") as json_file:
-        forest = json.load(json_file)
-
     # Dump XGB model as txt file
     xgb_model.get_booster().dump_model(output_path)
 
-    features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    if xgb_model.get_booster().feature_names is None:
+        features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    else:
+        features = cppyy.gbl.std.vector["std::string"](xgb_model.get_booster().feature_names)
     bs = get_basescore(xgb_model)
     logistic = objective == "logistic"
     bdt = cppyy.gbl.TMVA.Experimental.RBDT.LoadText(

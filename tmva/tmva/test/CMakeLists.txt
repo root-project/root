@@ -37,9 +37,12 @@ endif()
 
 if(dataframe)
   # Test uses the xgboost sklearn plugin, so we need to check for sklearn too.
+  # It also uses pandas to test the case where the training data is passed via
+  # a pandas DataFrame.
   ROOT_FIND_PYTHON_MODULE(xgboost)
+  ROOT_FIND_PYTHON_MODULE(pandas)
   ROOT_FIND_PYTHON_MODULE(sklearn)
-  if (ROOT_XGBOOST_FOUND AND ROOT_SKLEARN_FOUND)
+  if (ROOT_XGBOOST_FOUND AND ROOT_SKLEARN_FOUND AND ROOT_PANDAS_FOUND)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
   endif()
 endif()
