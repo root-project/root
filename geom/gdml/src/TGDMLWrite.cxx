@@ -765,13 +765,12 @@ void TGDMLWrite::ExtractVolumes(TGeoNode *node)
    {
       TGeoRCExtension *rcext = (TGeoRCExtension *)volume->GetUserExtension();
       if (rcext) {
-         TMap *auxmap = nullptr;
          TObject *userObj = rcext->GetUserObject();
          if (userObj && userObj->InheritsFrom("TMap")) {
             TMap *auxmap = (TMap *)userObj;
             TIterator *it = auxmap->MakeIterator();
             TObject *k = nullptr;
-            while (k = it->Next()) {
+            while ((k = it->Next())) {
                TObject *valobj = auxmap->GetValue(k);
                if (!valobj || !k->InheritsFrom("TObjString") || !valobj->InheritsFrom("TObjString"))
                   continue;
