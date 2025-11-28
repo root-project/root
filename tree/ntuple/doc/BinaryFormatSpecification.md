@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.1.0
+# RNTuple Binary Format Specification 1.0.1.1
 
 ## Versioning Notes
 
@@ -887,6 +887,23 @@ except that the field alias type name does not apply any type name resolution.
 For example, the type name `const pair<size_t, array<class ::Event, 2>>` will be normalized on 64bit architectures to
 `std::pair<std::uint64_t,std::array<Event,2>>` with an alias type name
 `std::pair<size_t,std::array<Event,2>>`.
+
+#### Treatment of ROOT Typedefs
+
+A noteworthy implementation detail of the ROOT implemetation is the treatment of ROOT typedefs for fundamental types.
+The types `Bool_t`, `Float_t`, `Double_t`, `[U]Char_t`, `[U]Short_t`, `[U]Int_t`, `[U]Long[64]_t`
+are not treated as typedefs but they are directly mapped to the corresponding normalized RNTuple fundamental types.
+
+An exception is `[U]Long64_t` that appears as a template parameter of a user-defined class,
+either directly or indirectly.
+This case is treated as a normal typedef,
+i.e. the RNTuple alias type will contain the type spelling that uses `[U]Long64_t`.
+For example, the type `MyClass<std::set<Long64_t>>` will be normalized to `MyClass<std::set<std::int64_t>>`
+with a type alias that is equal to the original spelling.
+This treatment is necessary for compatibility between the RNTuple schema and the ROOT streamer info records.
+
+The typedef `Double32_t` is treated as a normal typedef.
+It is always normalized to `double` and the type name containing `Double32_t` is stored as type alias.
 
 ### Fundamental Types
 
