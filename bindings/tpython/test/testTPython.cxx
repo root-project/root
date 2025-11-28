@@ -37,6 +37,6 @@ TEST(TPython, ExecMultithreading)
 
    // In the end, let's check if the size is correct.
    std::any len;
-   TPython::Exec("_anyresult = ROOT.std.make_any['int'](len(arr))", &len);
+   TPython::Exec("_anyresult = ROOT.std.any(len(arr))", &len);
    EXPECT_EQ(std::any_cast<int>(len), nThreads);
 }
