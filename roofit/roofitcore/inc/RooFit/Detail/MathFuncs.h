@@ -177,7 +177,7 @@ template <typename DoubleArray>
 double constraintSum(DoubleArray comp, unsigned int compSize)
 {
    double sum = 0;
-   #ifdef __CLING__
+   #if defined(__CLING__) && defined(ROOFIT_CLAD)
    #pragma clad checkpoint loop
    #endif
    for (unsigned int i = 0; i < compSize; i++) {
