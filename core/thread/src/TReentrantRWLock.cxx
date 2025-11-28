@@ -414,7 +414,7 @@ template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecu
 template class TReentrantRWLock<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TReentrantRWLock<std::mutex, ROOT::Internal::UniqueLockRecurseCount>;
 
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
 template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBB>;
 template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>;
 #endif

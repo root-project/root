@@ -77,10 +77,11 @@ target_include_directories(Thread PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
-if((tbb OR builtin_tbb) AND NOT MSVC)
+if((TBB_FOUND OR builtin_tbb) AND NOT MSVC)
   target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
   set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
+  target_compile_definitions(Thread PUBLIC ROOT_CORE_THREAD_TBB)
 endif()
 
 if(WIN32)
