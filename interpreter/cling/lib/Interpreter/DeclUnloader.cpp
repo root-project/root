@@ -493,12 +493,12 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
-    SourceManager& SM = m_Sema->getSourceManager();
-    for (FileIDs::iterator I = m_FilesToUncache.begin(),
-           E = m_FilesToUncache.end(); I != E; ++I) {
-      // We need to reset the cache
-      SM.invalidateCache(*I);
-    }
+    // SourceManager& SM = m_Sema->getSourceManager();
+    // for (FileIDs::iterator I = m_FilesToUncache.begin(),
+    //        E = m_FilesToUncache.end(); I != E; ++I) {
+    //   // We need to reset the cache
+    //   SM.invalidateCache(*I);
+    // }
   }
 
   void DeclUnloader::CollectFilesToUncache(SourceLocation Loc) {
@@ -1024,8 +1024,8 @@ namespace cling {
     bool Successful = true;
 
     // Remove specializations, but do not invalidate the iterator!
-    for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
-           E = FTD->loaded_spec_end(); I != E; ++I)
+    for (FunctionTemplateDecl::spec_iterator I = FTD->spec_begin(),
+           E = FTD->spec_end(); I != E; ++I)
       Successful &= VisitFunctionDecl(*I, /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
@@ -1036,9 +1036,9 @@ namespace cling {
   bool DeclUnloader::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
-    // Remove specializations, but do not invalidate the iterator!
-    for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
-           E = CTD->loaded_spec_end(); I != E; ++I)
+    // Remove specializations:
+    for (ClassTemplateDecl::spec_iterator I = CTD->spec_begin(),
+           E = CTD->spec_end(); I != E; ++I)
       Successful &=
           VisitClassTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
@@ -1082,8 +1082,8 @@ namespace cling {
     // VarTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
     // Remove specializations, but do not invalidate the iterator!
-    for (VarTemplateDecl::spec_iterator I = VTD->loaded_spec_begin(),
-                                        E = VTD->loaded_spec_end();
+    for (VarTemplateDecl::spec_iterator I = VTD->spec_begin(),
+                                        E = VTD->spec_end();
          I != E; ++I)
       Successful &=
           VisitVarTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);

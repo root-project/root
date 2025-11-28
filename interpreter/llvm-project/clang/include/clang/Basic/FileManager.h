@@ -32,7 +32,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <set>
 
 namespace llvm {
 
@@ -107,11 +106,6 @@ class FileManager : public RefCountedBase<FileManager> {
 
   /// The canonical names of files and directories .
   llvm::DenseMap<const void *, llvm::StringRef> CanonicalNames;
-
-  std::set<const FileEntry*> FileEntriesToReread;
-
-  /// The canonical names of directories.
-  llvm::DenseMap<const DirectoryEntry *, llvm::StringRef> CanonicalDirNames;
 
   /// Storage for canonical names that we have computed.
   llvm::BumpPtrAllocator CanonicalNameStorage;
@@ -331,9 +325,6 @@ public:
   /// \returns a \c std::error_code describing an error, if there was one
   std::error_code getNoncachedStatValue(StringRef Path,
                                         llvm::vfs::Status &Result);
-
-  /// Remove the real file \p Entry from the cache.
-  void invalidateCache(FileEntryRef Entry);
 
   /// If path is not absolute and FileSystemOptions set the working
   /// directory, the path is modified to be relative to the given
