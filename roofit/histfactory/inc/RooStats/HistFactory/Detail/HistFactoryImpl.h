@@ -13,7 +13,7 @@
 #ifndef HistFactoryImplHelpers_h
 #define HistFactoryImplHelpers_h
 
-#include <RooStats/HistFactory/Systematics.h>
+#include <RooStats/HistFactory/Measurement.h>
 
 #include <RooGlobalFunc.h>
 #include <RooWorkspace.h>
