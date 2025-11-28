@@ -1280,16 +1280,16 @@ void TApplicationServer::ExecLogon()
    TString name = ".rootlogon.C";
    TString sname = "system";
    sname += name;
-   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+   TString temp_sname = sname;
+   TString temp_name = name;
+   const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_sname);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }
-   delete [] s;
-   s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
+   s = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_name);
    if (!gSystem->AccessPathName(s, kReadPermission)) {
       ProcessFile(s);
    }
-   delete [] s;
    // avoid executing ~/.rootlogon.C twice
    if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
       if (!gSystem->AccessPathName(name, kReadPermission))

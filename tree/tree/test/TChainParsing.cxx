@@ -22,8 +22,9 @@ void EXPECT_VEC_EQ(const std::vector<std::string> &v1, const std::vector<std::st
 
 std::string ConcatUnixFileName(const char *dir, const char *name)
 {
-   std::unique_ptr<char[]> fileName{gSystem->ConcatFileName(dir, name)};
-   return gSystem->UnixPathName(fileName.get());
+   TString fileName{name};
+   gSystem->PrependPathName(dir, fileName);
+   return gSystem->UnixPathName(fileName);
 }
 
 TEST(TChainParsing, RemoteAdd)

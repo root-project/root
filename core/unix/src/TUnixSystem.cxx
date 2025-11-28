@@ -1521,13 +1521,11 @@ const char *TUnixSystem::TempDirectory() const
 
 FILE *TUnixSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
-   char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
-   base = b;
+   PrependPathName(dir ? dir : TempDirectory(), base);
    base += "XXXXXX";
    const bool hasSuffix = suffix && *suffix;
    if (hasSuffix)
       base.Append(suffix);
-   delete [] b;
 
    char *arg = StrDup(base);
    int fd = hasSuffix ? mkstemps(arg, strlen(suffix)) : mkstemp(arg);
