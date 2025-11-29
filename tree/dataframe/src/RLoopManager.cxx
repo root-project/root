@@ -812,14 +812,14 @@ void RLoopManager::Jit()
       auto &nameMap = GetJitHelperNameMap();
       auto clinfo = gInterpreter->ClassInfo_Factory("R_rdf");
       assert(gInterpreter->ClassInfo_IsValid(clinfo));
-      for (auto & codeAndName : nameMap) {
-         JitHelperFunc * & addr = funcMap[codeAndName.second];
+      for (auto &codeAndName : nameMap) {
+         JitHelperFunc *&addr = funcMap[codeAndName.second];
          if (!addr) {
             // fast fetch of the address via gInterpreter
             // (faster than gInterpreter->Evaluate(function name, ret), ret->GetAsPointer())
             auto declid = gInterpreter->GetFunction(clinfo, codeAndName.second.c_str());
             assert(declid);
-            auto minfo  = gInterpreter->MethodInfo_Factory(declid);
+            auto minfo = gInterpreter->MethodInfo_Factory(declid);
             assert(gInterpreter->MethodInfo_IsValid(minfo));
             auto mname = gInterpreter->MethodInfo_GetMangledName(minfo);
             addr = reinterpret_cast<JitHelperFunc *>(gInterpreter->FindSym(mname));

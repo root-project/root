@@ -784,14 +784,14 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
                   << "reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedVariation>*>(wkJittedVariation),"
                   << "colRegister, prevNodeOnHeap);\n"
                   << "delete variedColNames;\n}\n";
-   lm.RegisterJitHelperCall(varyInvocation.str(), upcastNodeOnHeap, colRegisterCopy, parsedExpr.fUsedCols, MakeWeakOnHeap(jittedVariation), variedColsOnHeap);
+   lm.RegisterJitHelperCall(varyInvocation.str(), upcastNodeOnHeap, colRegisterCopy, parsedExpr.fUsedCols,
+                            MakeWeakOnHeap(jittedVariation), variedColsOnHeap);
    return jittedVariation;
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-std::string JitBuildAction(const ColumnNames_t &cols,
-                           const std::type_info &helperArgType, const std::type_info &at,
+std::string JitBuildAction(const ColumnNames_t &cols, const std::type_info &helperArgType, const std::type_info &at,
                            TTree *tree, const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
                            const bool vector2RVec)
 {
