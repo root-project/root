@@ -17,7 +17,7 @@ on:
       paths-ignore:
         - 'doc/**'
         - 'documentation/**'
-        - 'README/ReleaseNotes/**'
+        - 'README/**'
 
   # Allows nightly builds to trigger one run for each branch easily, by
   # providing the relevant branch as "default" value here:
