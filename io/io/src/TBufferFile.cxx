@@ -3327,6 +3327,22 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
    return offset;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reserve space for a leading byte count and return the position where to
+/// store the byte count value.
+///
+/// \param[in] mask The mask to apply to the placeholder value (default kByteCountMask)
+/// \return The position (cntpos) where the byte count should be stored later,
+///         or 0 if the position exceeds kMaxInt
+
+UInt_t TBufferFile::ReserveByteCount()
+{
+   // reserve space for leading byte count
+   auto full_cntpos = fBufCur - fBuffer;
+   fByteCountStack.push_back(full_cntpos);
+   *this << (UInt_t)kByteCountMask; // placeholder for byte count
+   return full_cntpos < kMaxInt ? full_cntpos : kMaxInt;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read max bytes from the I/O buffer into buf. The function returns
