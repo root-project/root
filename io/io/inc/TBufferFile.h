@@ -52,6 +52,16 @@ protected:
    TStreamerInfo  *fInfo{nullptr};  ///< Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
+   using ByteCountLocator_t = std::size_t; // This might become a pair<chunk_number, local_offset> if we implement chunked keys
+   using ByteCountStack_t = std::vector<ByteCountLocator_t>;
+   ByteCountStack_t fByteCountStack; ///<! Stack to keep track of byte count storage positions
+
+   using ByteCount_t = std::uint64_t; ///< Type used to store byte count values, can be changed to uint32_t if we implement chunked keys
+   using ByteCountFinder_t = std::unordered_map<ByteCountLocator_t, ByteCount_t>;
+   // fByteCounts will be stored either in the header/summary tkey or at the end
+   // of the last segment/chunk for a large TKey.
+   ByteCountFinder_t fByteCounts; ///< Map to find the byte count value for a given position
+
    // Default ctor
    TBufferFile() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
@@ -62,6 +72,7 @@ protected:
    Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
    void     CheckCount(UInt_t offset) override;
    UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
+   UInt_t   ReserveByteCount();
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
@@ -105,6 +116,8 @@ public:
    void       WriteClass(const TClass *cl) override;
 
    TObject   *ReadObject(const TClass *cl) override;
+
+   ByteCountFinder_t GetByteCounts() const { return fByteCounts; }
 
    using TBufferIO::CheckObject;
 
