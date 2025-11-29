@@ -323,7 +323,26 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
         && (fBufCur >= fBuffer)
         && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
         && "Byte count position is after the end of the buffer");
-   const UInt_t cnt = UInt_t(fBufCur - fBuffer) - UInt_t(cntpos) - sizeof(UInt_t);
+
+   // We can either make this unconditional or we could split the routine
+   // in two, one with a new signature and guarantee to get the 64bit position
+   // (which may be chunk number + local offset) and one with the old signature
+   // which uses the stack to get the position and call the new one.
+   // This (of course) also requires that we do the 'same' to the WriteVersion
+   // routines.
+   R__ASSERT( !fByteCountStack.empty() );
+   if (cntpos == kMaxInt) {
+      cntpos = fByteCountStack.back();
+   }
+   fByteCountStack.pop_back();
+   // if we are not in the same TKey chunk or if the cntpos is too large to fit in UInt_t
+   // let's postpone the writing of the byte count
+   const ULong64_t full_cnt = ULong64_t(fBufCur - fBuffer) - cntpos - sizeof(UInt_t);
+   if (full_cnt >= kMaxMapCount) {
+      fByteCounts[cntpos] = full_cnt;
+      return;
+   }
+   UInt_t cnt = static_cast<UInt_t>(full_cnt);
    char  *buf = (char *)(fBuffer + cntpos);
 
    // if true, pack byte count in two consecutive shorts, so it can
@@ -2714,8 +2733,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          }
 
          // reserve space for leading byte count
-         UInt_t cntpos = UInt_t(fBufCur-fBuffer);
-         fBufCur += sizeof(UInt_t);
+         UInt_t cntpos = ReserveByteCount();
 
          // write class of object first
          Int_t mapsize = fMap->Capacity(); // The slot depends on the capacity and WriteClass might induce an increase.
@@ -3214,8 +3232,7 @@ UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
-      cntpos   = UInt_t(fBufCur-fBuffer);
-      fBufCur += sizeof(UInt_t);
+      cntpos = ReserveByteCount();
    }
 
    Version_t version = cl->GetClassVersion();
@@ -3244,8 +3261,7 @@ UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
-      cntpos   = UInt_t(fBufCur-fBuffer);
-      fBufCur += sizeof(UInt_t);
+      cntpos = ReserveByteCount();
    }
 
    Version_t version = cl->GetClassVersion();
