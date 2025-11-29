@@ -14,10 +14,10 @@ on:
     branches:
       - 'master'
       - 'v*-*-*-patches'
-      paths-ignore:
-        - 'doc/**'
-        - 'documentation/**'
-        - 'README/**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+      - 'README/**'
 
   # Allows nightly builds to trigger one run for each branch easily, by
   # providing the relevant branch as "default" value here:
