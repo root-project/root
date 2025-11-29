@@ -360,7 +360,15 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 
 Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char *classname)
 {
-   if (!bcnt) return 0;
+   if (startpos == kMaxInt && !fByteCountStack.empty()) {
+      startpos = fByteCountStack.back();
+      bcnt = fByteCounts[startpos];
+   }
+   R__ASSERT(!fByteCountStack.empty());
+   fByteCountStack.pop_back();
+
+   if (!bcnt || startpos == kMaxInt)
+      return 0;
    R__ASSERT(startpos <= kMaxUInt && bcnt <= kMaxUInt);
    Long64_t offset = 0;
 
@@ -2749,6 +2757,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       bcnt = 0;
    } else {
       fVersion = 1;
+      if (objTag)
+         fByteCountStack.push_back(fBufCur - fBuffer);
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
@@ -2933,6 +2943,8 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
    if (startpos) {
       // before reading object save start position
       *startpos = UInt_t(fBufCur-fBuffer);
+      if (bcnt)
+         fByteCountStack.push_back(fBufCur - fBuffer);
    }
 
    // read byte count (older files don't have byte count)
@@ -2956,7 +2968,17 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       fBufCur -= sizeof(UInt_t);
       v.cnt = 0;
    }
-   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   if (bcnt) {
+      *bcnt = (v.cnt & ~kByteCountMask);
+      if (*bcnt == 0) {
+         // The byte count was stored but is zero, this means the data
+         // did not fit and thus we stored it in 'fByteCounts' instead.
+         // Mark this case by setting startpos to zero.
+         if (startpos)
+            *startpos = 0;
+         fByteCountStack.pop_back();
+      }
+   }
    frombuf(this->fBufCur,&version);
 
    if (version<=1) {
@@ -3039,6 +3061,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
    if (startpos) {
       // before reading object save start position
       *startpos = UInt_t(fBufCur-fBuffer);
+      if (bcnt)
+         fByteCountStack.push_back(fBufCur - fBuffer);
    }
 
    // read byte count (older files don't have byte count)
@@ -3062,7 +3086,18 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       fBufCur -= sizeof(UInt_t);
       v.cnt = 0;
    }
-   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   if (bcnt) {
+      *bcnt = (v.cnt & ~kByteCountMask);
+      if (*bcnt == 0) {
+         // The byte count was stored but is zero, this means the data
+         // did not fit and thus we stored it in 'fByteCounts' instead.
+         // Mark this case by setting startpos to zero.
+         if (startpos) {
+            *startpos = 0;
+            fByteCountStack.pop_back();
+         }
+      }
+   }
    frombuf(this->fBufCur,&version);
 
    return version;
