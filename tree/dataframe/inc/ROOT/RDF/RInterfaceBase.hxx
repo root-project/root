@@ -204,10 +204,12 @@ protected:
                                                                              fColRegister, proxiedPtr->GetVariations());
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
-                                               typeid(ActionTag), helperArgOnHeap, nullptr, nSlots, fColRegister,
-                                               GetDataSource(), jittedActionOnHeap, vector2RVec);
-      fLoopManager->ToJitExec(toJit);
+      auto definesCopy = new RDFInternal::RColumnRegister(fColRegister); // deleted in jitted call
+      auto funcBody = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
+                                                  typeid(ActionTag), helperArgOnHeap, nullptr, nSlots, fColRegister,
+                                                  GetDataSource(), jittedActionOnHeap, vector2RVec);
+      fLoopManager->RegisterJitHelperCall(funcBody, upcastNodeOnHeap, definesCopy, validColumnNames, jittedActionOnHeap,
+                                          helperArgOnHeap);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
 
