@@ -1045,7 +1045,6 @@ T CallT(Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, size_t nargs, void
     T t{};
     if (WrapperCall(method, nargs, args, (void*)self, &t))
         return t;
-    throw std::runtime_error("failed to resolve function");
     return (T)-1;
 }
 
@@ -1076,7 +1075,6 @@ void* Cppyy::CallR(TCppMethod_t method, TCppObject_t self, size_t nargs, void* a
     void* r = nullptr;
     if (WrapperCall(method, nargs, args, (void*)self, &r))
         return r;
-    throw std::runtime_error("failed to resolve function");
     return nullptr;
 }
 
@@ -1094,7 +1092,6 @@ char* Cppyy::CallS(
     } else {
        *length = 0;
        free((void *)cppresult);
-       throw std::runtime_error("failed to resolve function");
     }
     return cstr;
 }
@@ -1105,7 +1102,6 @@ Cppyy::TCppObject_t Cppyy::CallConstructor(
     void* obj = nullptr;
     if (WrapperCall(method, nargs, args, nullptr, &obj))
         return (TCppObject_t)obj;
-    throw std::runtime_error("failed to resolve function");
     return (TCppObject_t)0;
 }
 
@@ -1123,7 +1119,6 @@ Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     if (WrapperCall(method, nargs, args, self, obj))
         return (TCppObject_t)obj;
     ::operator delete(obj);
-    throw std::runtime_error("failed to resolve function");
     return (TCppObject_t)0;
 }
 
@@ -2197,6 +2192,7 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::strin
     if (name.back() == '>') {
         auto pos = name.find('<');
         if (pos != std::string::npos) {
+            std::ostringstream diagnostics2;
             TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto, diagnostics2);
             if (cppmeth) {
             // allow if requested template names match up to the result
@@ -2213,6 +2209,7 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::strin
                         
                 }
             }
+            diagnostics << diagnostics2.str();
         }
     }
 

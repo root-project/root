@@ -884,7 +884,6 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     if (!cppmeth) {
        PyErr_Format(PyExc_TypeError, "Failed in template overload resolution \"%s(%s)\"\n%s",
                     pytmpl->fTI->fCppName.c_str(), proto.c_str(), diagnostics.str().c_str());
-       PyErr_Restore(pytype, pyvalue, pytrace);
        return nullptr;
     }
 
