@@ -64,6 +64,7 @@ protected:
    virtual Bool_t SetSuspendAutoParsing(Bool_t value) = 0;
 
    friend class SuspendAutoParsing;
+   friend class RedirectDiagnostics;
 
 public:
    // See as in TSchemaType.h.
@@ -129,6 +130,39 @@ public:
       ~SuspendAutoLoadingRAII() { fInterp->SetClassAutoLoading(fOldValue); }
    };
 
+private:
+   bool fIsRedirectingDiagnostics = false;
+
+public:
+   class DiagnosticsRAII {
+   public:
+      virtual ~DiagnosticsRAII() {};
+   };
+
+   class RedirectDiagnostics {
+      TInterpreter *fInterp;
+      bool fOldValue;
+      std::unique_ptr<DiagnosticsRAII> fRedirect;
+
+   public:
+      RedirectDiagnostics(TInterpreter *where, std::ostream &os, bool enableColors = false, unsigned int indent = 0)
+         : fInterp(where),
+           fOldValue(fInterp->fIsRedirectingDiagnostics),
+           fRedirect(fInterp->MakeRedirectDiagnosticsRAII(os, enableColors, indent))
+      {
+         fInterp->fIsRedirectingDiagnostics = true;
+      }
+
+      ~RedirectDiagnostics() { fInterp->fIsRedirectingDiagnostics = fOldValue; }
+   };
+
+   bool IsRedirectingDiagnostics() const { return fIsRedirectingDiagnostics; }
+
+protected:
+   virtual std::unique_ptr<DiagnosticsRAII>
+   MakeRedirectDiagnosticsRAII(std::ostream &os, bool enableColors = false, unsigned int indent = 0) = 0;
+
+public:
    typedef int (*AutoLoadCallBack_t)(const char*);
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
