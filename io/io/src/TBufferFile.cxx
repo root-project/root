@@ -360,10 +360,30 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 
 Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char *classname)
 {
-   if (!bcnt) return 0;
-   R__ASSERT(startpos <= kMaxUInt && bcnt <= kMaxUInt);
-   Long64_t offset = 0;
+   R__ASSERT(!fByteCountStack.empty());
+   if (startpos == kMaxInt) {
+      // The position is above 1GB and was cached using a 32 bit variable.
+      startpos = fByteCountStack.back();
+   }
+   if (bcnt == kMaxInt) {
+      // in case we are checking a byte count for which we postponed
+      // the writing because it was too large, we retrieve it now
+      auto it = fByteCounts.find(startpos);
+      if (it != fByteCounts.end()) {
+         bcnt = it->second;
+      } else {
+         bcnt = 0;
+         Error("CheckByteCount",
+               "Could not find byte count for position %llu in the byte count map (size=%zu)",
+               startpos, fByteCounts.size());
+      }
+   }
+   fByteCountStack.pop_back();
 
+   if (!bcnt)
+      return 0;
+
+   Long64_t offset = 0;
    Longptr_t endpos = Longptr_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
 
    if (Longptr_t(fBufCur) != endpos) {
@@ -390,7 +410,7 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       if ( ((char *)endpos) > fBufMax ) {
          offset = fBufMax-fBufCur;
          Error("CheckByteCount",
-               "Byte count probably corrupted around buffer position %llu:\n\t%llu for a possible maximum of %lld",
+               "Byte count probably corrupted around buffer position %llu:\n\tByte count is %llu while the buffer size is %lld",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
 
@@ -2749,6 +2769,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       bcnt = 0;
    } else {
       fVersion = 1;
+      if (objTag)
+         fByteCountStack.push_back(fBufCur - fBuffer);
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
@@ -2932,7 +2954,10 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 
    if (startpos) {
       // before reading object save start position
-      *startpos = UInt_t(fBufCur-fBuffer);
+      auto full_startpos = fBufCur - fBuffer;
+      *startpos = full_startpos < kMaxInt ? UInt_t(full_startpos) : kMaxInt;
+      if (bcnt)
+         fByteCountStack.push_back(full_startpos);
    }
 
    // read byte count (older files don't have byte count)
@@ -2956,8 +2981,29 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       fBufCur -= sizeof(UInt_t);
       v.cnt = 0;
    }
-   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   if (bcnt) {
+      if (!v.cnt) {
+         // no byte count stored
+         *bcnt = 0;
+         if (startpos) // Undo the push_back only if it happened.
+            fByteCountStack.pop_back();
+      } else {
+         *bcnt = (v.cnt & ~kByteCountMask);
+         if (*bcnt == 0) {
+            // The byte count was stored but is zero, this means the data
+            // did not fit and thus we stored it in 'fByteCounts' instead.
+            // Mark this case by setting startpos to kMaxInt.
+            *bcnt = kMaxInt;
+            if (startpos)
+               *startpos = kMaxInt;
+         }
+      }
+   }
    frombuf(this->fBufCur,&version);
+
+   // NOTE: The code above is not straightforward to refactor by a call
+   // to ReadVersionNoCheckSum because of the following code need the
+   // 'raw' value in `v`.
 
    if (version<=1) {
       if (version <= 0)  {
@@ -3038,7 +3084,10 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 
    if (startpos) {
       // before reading object save start position
-      *startpos = UInt_t(fBufCur-fBuffer);
+      auto full_startpos = fBufCur - fBuffer;
+      *startpos = full_startpos < kMaxInt ? UInt_t(full_startpos) : kMaxInt;
+      if (bcnt)
+         fByteCountStack.push_back(full_startpos);
    }
 
    // read byte count (older files don't have byte count)
@@ -3062,7 +3111,24 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       fBufCur -= sizeof(UInt_t);
       v.cnt = 0;
    }
-   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   if (bcnt) {
+      if (!v.cnt) {
+         // no byte count stored
+         *bcnt = 0;
+         if (startpos) // Undo the push_back only if it happened.
+            fByteCountStack.pop_back();
+      } else {
+         *bcnt = (v.cnt & ~kByteCountMask);
+         if (*bcnt == 0) {
+            // The byte count was stored but is zero, this means the data
+            // did not fit and thus we stored it in 'fByteCounts' instead.
+            // Mark this case by setting startpos to kMaxInt.
+            *bcnt = kMaxInt;
+            if (startpos)
+               *startpos = kMaxInt;
+         }
+      }
+   }
    frombuf(this->fBufCur,&version);
 
    return version;
