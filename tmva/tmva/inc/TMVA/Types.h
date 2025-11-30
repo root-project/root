@@ -100,7 +100,6 @@ namespace TMVA {
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
-         kPyKeras, // deprecated, will be removed in ROOT 6.42
          kPyTorch        ,
          kC50            ,
          kRSNNS          ,

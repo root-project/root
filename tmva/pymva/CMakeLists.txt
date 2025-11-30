@@ -14,14 +14,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
   HEADERS
     TMVA/MethodPyAdaBoost.h
     TMVA/MethodPyGTB.h
-    TMVA/MethodPyKeras.h
     TMVA/MethodPyRandomForest.h
     TMVA/MethodPyTorch.h
     TMVA/PyMethodBase.h
   SOURCES
     src/MethodPyAdaBoost.cxx
     src/MethodPyGTB.cxx
-    src/MethodPyKeras.cxx
     src/MethodPyRandomForest.cxx
     src/MethodPyTorch.cxx
     src/PyMethodBase.cxx

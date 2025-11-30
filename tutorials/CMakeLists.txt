@@ -327,7 +327,7 @@ if(NOT TARGET Gui)
 endif()
 
 if (NOT ROOT_tmva_FOUND)
-  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
+  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/pytorch/*.py )
 else()
   #copy input data files
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
@@ -370,8 +370,11 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
-  if (NOT tmva-pymva)
-    # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
+  if (TRUE)
+    # TODO: these SOFIE tutorials use models that were created with old TMVA
+    # PyKeras tutorials, which are now removed. The required models need to be
+    # created by other means, preferrable by tutorials that show Keras model
+    # training with the RBatchGenerator.
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
@@ -644,10 +647,6 @@ set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learnin
 set (machine_learning-TMVA_SOFIE_Keras_HiggsModel-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame_JIT)
 set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel)
 set (machine_learning-TMVA_SOFIE_Inference-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
-set (machine_learning-keras-RegressionKeras-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
-set (machine_learning-keras-ClassificationKeras-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
-set (machine_learning-keras-ApplicationRegressionKeras-depends tutorial-machine_learning-keras-RegressionKeras-py)
-set (machine_learning-keras-ApplicationClassificationKeras-depends tutorial-machine_learning-keras-ClassificationKeras-py)
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -840,11 +839,6 @@ if(ROOT_pyroot_FOUND)
   # Disable tutorial showing connection to the HTCondor service at CERN
   list(APPEND pyveto analysis/dataframe/distrdf004_dask_lxbatch.py)
 
-  if(NOT tmva-pymva)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
-    list(APPEND pyveto ${tmva_veto_py})
-  endif()
-
   if (ROOT_KERAS_FOUND)
     set (machine_learning-TMVA_SOFIE_RDataFrame-py-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel)
   endif()
@@ -943,7 +937,6 @@ if(ROOT_pyroot_FOUND)
       machine_learning/TMVA_SOFIE_Inference.py
       machine_learning/TMVA_SOFIE_Models.py
       machine_learning/TMVA_SOFIE_RDataFrame.py
-      machine_learning/keras/*.py
   )
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/pytorch/*.py

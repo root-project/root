@@ -152,22 +152,9 @@ maxepochs = 10
 
 nTotEvts = 2000  # total events to be generated for signal or background
 
-useKeras = False
-
 useTMVA_RNN = True
 useTMVA_DNN = True
-useTMVA_BDT = False
-
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
-    useKeras = True
-
-if useKeras:
-   try:
-      import tensorflow
-   except:
-      ROOT.Warning("TMVA_RNN_Classification", "Skip using Keras since tensorflow cannot be imported")
-      useKeras = False
-
+useTMVA_BDT = True
 
 rnn_types = ["RNN", "LSTM", "GRU"]
 use_rnn_type = [1, 1, 1]
@@ -195,8 +182,6 @@ rnn_type = "RNN"
 
 if "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
     TMVA.PyMethodBase.PyInitialize()
-else:
-    useKeras = False
 
 
 
@@ -378,69 +363,6 @@ if useTMVA_DNN:
         TrainingStrategy=trainingString1
     )
 
-
-## Book Keras recurrent models
-
-# Book the different types of recurrent models in Keras  (SimpleRNN, LSTM or GRU)
-
-
-if useKeras:
-    for i in range(3):
-        if use_rnn_type[i]:
-            modelName = "model_" + rnn_types[i] + ".h5"
-            trainedModelName = "trained_" + modelName
-            print("Building recurrent keras model using a", rnn_types[i], "layer")
-            # create python script which can be executed
-            # create 2 conv2d layer + maxpool + dense
-            from tensorflow.keras.models import Sequential
-            from tensorflow.keras.optimizers import Adam
-
-            # from keras.initializers import TruncatedNormal
-            # from keras import initializations
-            from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, BatchNormalization
-
-            model = Sequential()
-            model.add(Reshape((10, 30), input_shape=(10 * 30,)))
-            # add recurrent neural network depending on type / Use option to return the full output
-            if rnn_types[i] == "LSTM":
-                model.add(LSTM(units=10, return_sequences=True))
-            elif rnn_types[i] == "GRU":
-                model.add(GRU(units=10, return_sequences=True))
-            else:
-                model.add(SimpleRNN(units=10, return_sequences=True))
-            # m.AddLine("model.add(BatchNormalization())");
-            model.add(Flatten())  # needed if returning the full time output sequence
-            model.add(Dense(64, activation="tanh"))
-            model.add(Dense(2, activation="sigmoid"))
-            model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-            model.save(modelName)
-            model.summary()
-            print("saved recurrent model", modelName)
-
-            if not os.path.exists(modelName):
-                useKeras = False
-                print("Error creating Keras recurrent model file - Skip using Keras")
-            else:
-                # book PyKeras method only if Keras model could be created
-                print("Booking Keras  model ", rnn_types[i])
-                factory.BookMethod(
-                    dataloader,
-                    TMVA.Types.kPyKeras,
-                    "PyKeras_" + rnn_types[i],
-                    H=True,
-                    V=False,
-                    VarTransform=None,
-                    FilenameModel=modelName,
-                    FilenameTrainedModel="trained_" + modelName,
-                    NumEpochs=maxepochs,
-                    BatchSize=batchSize,
-                    GpuOptions="allow_growth=True",
-                )
-
-
-# use BDT in case not using Keras or TMVA DL
-if not useKeras or not useTMVA_BDT:
-    useTMVA_BDT = True
 
 
 ## Book TMVA BDT

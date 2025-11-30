@@ -29,7 +29,6 @@ import importlib.util
 
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
-useKerasCNN = opt[1] if len(opt) > 1 else False
 useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
@@ -118,7 +117,6 @@ if (not hasCPU and not hasGPU) :
     useTMVADNN = False
 
 if not "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
-    useKerasCNN = False
     usePyTorchCNN = False
 else:
     TMVA.PyMethodBase.PyInitialize()
@@ -408,8 +406,6 @@ if useTMVACNN:
     )
 
 
-### Book Convolutional Neural Network in Keras using a generated model
-
 
 if usePyTorchCNN:
     ROOT.Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model")
@@ -440,53 +436,6 @@ if usePyTorchCNN:
             "TMVA_CNN_Classification",
             "PyTorch is not installed or model building file is not existing - skip using PyTorch",
         )
-
-if useKerasCNN:
-    ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
-    # create python script which can be executed
-    # create 2 conv2d layer + maxpool + dense
-    import tensorflow
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.optimizers import Adam
-
-    # from keras.initializers import TruncatedNormal
-    # from keras import initializations
-    from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
-
-    # from keras.callbacks import ReduceLROnPlateau
-    model = Sequential()
-    model.add(Reshape((16, 16, 1), input_shape=(256,)))
-    model.add(Conv2D(10, kernel_size=(3, 3), kernel_initializer="TruncatedNormal", activation="relu", padding="same"))
-    model.add(Conv2D(10, kernel_size=(3, 3), kernel_initializer="TruncatedNormal", activation="relu", padding="same"))
-    # stride for maxpool is equal to pool size
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dense(64, activation="tanh"))
-    # model.add(Dropout(0.2))
-    model.add(Dense(2, activation="sigmoid"))
-    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-    model.save("model_cnn.h5")
-    model.summary()
-
-    if not os.path.exists("model_cnn.h5"):
-        raise FileNotFoundError("Error creating Keras model file - skip using Keras")
-    else:
-        # book PyKeras method only if Keras model could be created
-        ROOT.Info("TMVA_CNN_Classification", "Booking convolutional keras model")
-        factory.BookMethod(
-            loader,
-            TMVA.Types.kPyKeras,
-            "PyKeras",
-            H=True,
-            V=False,
-            VarTransform=None,
-            FilenameModel="model_cnn.h5",
-            FilenameTrainedModel="trained_model_cnn.h5",
-            NumEpochs=max_epochs,
-            BatchSize=100,
-            GpuOptions="allow_growth=True",
-        )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
-
 
 
 ## Train Methods

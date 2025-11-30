@@ -151,12 +151,9 @@ void TMVA_RNN_Classification(int nevts = 2000, int use_type = 1)
 
    int nTotEvts = nevts; // total events to be generated for signal or background
 
-   bool useKeras = true;
-
-
    bool useTMVA_RNN = true;
    bool useTMVA_DNN = true;
-   bool useTMVA_BDT = false;
+   bool useTMVA_BDT = true;
 
    std::vector<std::string> rnn_types = {"RNN", "LSTM", "GRU"};
    std::vector<bool> use_rnn_type = {1, 1, 1};
@@ -185,8 +182,6 @@ void TMVA_RNN_Classification(int nevts = 2000, int use_type = 1)
 
 #ifdef R__HAS_PYMVA
    TMVA::PyMethodBase::PyInitialize();
-#else
-   useKeras = false;
 #endif
 
 #ifdef R__USE_IMT
@@ -383,79 +378,6 @@ the option string
       TString dnnName = "TMVA_DNN";
       factory->BookMethod(dataloader, TMVA::Types::kDL, dnnName, dnnOptions);
    }
-
-   /**
-    ## Book Keras recurrent models
-
-     Book the different types of recurrent models in Keras  (SimpleRNN, LSTM or GRU)
-
-   **/
-
-   if (useKeras) {
-
-      for (int i = 0; i < 3; i++) {
-
-         if (use_rnn_type[i]) {
-
-            TString modelName = TString::Format("model_%s.h5", rnn_types[i].c_str());
-            TString trainedModelName = TString::Format("trained_model_%s.h5", rnn_types[i].c_str());
-
-            Info("TMVA_RNN_Classification", "Building recurrent keras model using a %s layer", rnn_types[i].c_str());
-            // create python script which can be executed
-            // create 2 conv2d layer + maxpool + dense
-            TMacro m;
-            m.AddLine("import tensorflow");
-            m.AddLine("from tensorflow.keras.models import Sequential");
-            m.AddLine("from tensorflow.keras.optimizers import Adam");
-            m.AddLine("from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, SimpleRNN, GRU, LSTM, Reshape, "
-                      "BatchNormalization");
-            m.AddLine("");
-            m.AddLine("model = Sequential() ");
-            m.AddLine("model.add(Reshape((10, 30), input_shape = (10*30, )))");
-            // add recurrent neural network depending on type / Use option to return the full output
-            if (rnn_types[i] == "LSTM")
-               m.AddLine("model.add(LSTM(units=10, return_sequences=True) )");
-            else if (rnn_types[i] == "GRU")
-               m.AddLine("model.add(GRU(units=10, return_sequences=True) )");
-            else
-               m.AddLine("model.add(SimpleRNN(units=10, return_sequences=True) )");
-
-            // m.AddLine("model.add(BatchNormalization())");
-            m.AddLine("model.add(Flatten())"); // needed if returning the full time output sequence
-            m.AddLine("model.add(Dense(64, activation = 'tanh')) ");
-            m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-            m.AddLine(
-               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
-            m.AddLine(TString::Format("modelName = '%s'", modelName.Data()));
-            m.AddLine("model.save(modelName)");
-            m.AddLine("model.summary()");
-
-            m.SaveSource("make_rnn_model.py");
-            // execute python script to make the model
-            auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
-            TString python_exe = (ret) ? *(ret) : "python";
-            gSystem->Exec(python_exe + " make_rnn_model.py");
-
-            if (gSystem->AccessPathName(modelName)) {
-               Warning("TMVA_RNN_Classification", "Error creating Keras recurrent model file - Skip using Keras");
-               useKeras = false;
-            } else {
-               // book PyKeras method only if Keras model could be created
-               Info("TMVA_RNN_Classification", "Booking Keras %s model", rnn_types[i].c_str());
-               factory->BookMethod(dataloader, TMVA::Types::kPyKeras,
-                                   TString::Format("PyKeras_%s", rnn_types[i].c_str()),
-                                   TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:tf.keras:"
-                                                   "FilenameTrainedModel=%s:GpuOptions=allow_growth=True:"
-                                                   "NumEpochs=%d:BatchSize=%d",
-                                                   modelName.Data(), trainedModelName.Data(), maxepochs, batchSize));
-            }
-         }
-      }
-   }
-
-   // use BDT in case not using Keras or TMVA DL
-   if (!useKeras || !useTMVA_BDT)
-      useTMVA_BDT = true;
 
    /**
          ## Book TMVA BDT

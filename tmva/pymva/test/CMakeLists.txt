@@ -15,7 +15,6 @@ set(Libraries Core MathCore TMVA PyMVA)
 
 # Look for needed python modules
 ROOT_FIND_PYTHON_MODULE(torch)
-ROOT_FIND_PYTHON_MODULE(keras)
 ROOT_FIND_PYTHON_MODULE(tensorflow)
 ROOT_FIND_PYTHON_MODULE(sklearn)
 
@@ -81,32 +80,3 @@ if(ROOT_TORCH_FOUND)
    ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass DEPENDS ${PyMVA-Torch-Multiclass-depends})
 
 endif(ROOT_TORCH_FOUND)
-
-if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSORFLOW_FOUND))
-
-   if (ROOT_TORCH_FOUND)
-      set(PyMVA-Keras-Classification-depends PyMVA-Torch-Classification)
-      set(PyMVA-Keras-Regression-depends PyMVA-Torch-Regression)
-      set(PyMVA-Keras-Multiclass-depends PyMVA-Torch-Multiclass)
-   endif()
-
-
-   # Test PyKeras: Binary classification
-   ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
-      LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Keras-Classification COMMAND testPyKerasClassification DEPENDS ${PyMVA-Keras-Classification-depends})
-
-   # Test PyKeras: Regression
-   if (NOT ROOT_ARCHITECTURE MATCHES macosx)
-      #veto also keras tutorial on macos due to issue in disabling eager execution on macos
-      ROOT_EXECUTABLE(testPyKerasRegression testPyKerasRegression.C
-         LIBRARIES ${Libraries})
-      ROOT_ADD_TEST(PyMVA-Keras-Regression COMMAND testPyKerasRegression DEPENDS ${PyMVA-Keras-Regression-depends})
-   endif()
-
-
-   # Test PyKeras: Multi-class classification
-   ROOT_EXECUTABLE(testPyKerasMulticlass testPyKerasMulticlass.C
-      LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS ${PyMVA-Keras-Multiclass-depends})
-endif()
