@@ -617,7 +617,7 @@ std::string PrettyPrintAddr(const void *const addr)
 
 /// Book the jitting of a Filter call
 std::shared_ptr<RDFDetail::RJittedFilter>
-BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name, std::string_view expression,
+BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> prevNode, std::string_view name, std::string_view expression,
               const RColumnRegister &colRegister, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
@@ -630,39 +630,34 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string
    if (type != "bool")
       std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
 
-   // definesOnHeap is deleted by the jitted call to JitFilterHelper
-   ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(colRegister);
-
+   auto *lm = prevNode->GetLoopManagerUnchecked();
    const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(
-      (*prevNodeOnHeap)->GetLoopManagerUnchecked(), name,
-      Union(colRegister.GetVariationDeps(parsedExpr.fUsedCols), (*prevNodeOnHeap)->GetVariations()));
+      lm, name, Union(colRegister.GetVariationDeps(parsedExpr.fUsedCols), prevNode->GetVariations()), prevNode);
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
-   // lifetime of pointees:
-   // - jittedFilter: heap-allocated weak_ptr to the actual jittedFilter that will be deleted by JitFilterHelper
-   // - prevNodeOnHeap: heap-allocated shared_ptr to the actual previous node that will be deleted by JitFilterHelper
-   // - definesOnHeap: heap-allocated, will be deleted by JitFilterHelper
    std::stringstream filterInvocation;
-   filterInvocation << "(ROOT::Detail::RDF::RLoopManager *lm, "
-                    << "std::shared_ptr<ROOT::Detail::RDF::RNodeBase> *prevNodeOnHeap,"
-                    << "ROOT::Internal::RDF::RColumnRegister* colRegister, "
-                    << "const std::vector<std::string> & colNames, "
-                    << "void *wkJittedFilter, void *) {\n";
-   filterInvocation << "  ROOT::Internal::RDF::JitFilterHelper(" << funcName << ", "
-                    << "  colNames, \"" << name << "\", "
-                    << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedFilter>*>(wkJittedFilter),"
-                    << "prevNodeOnHeap, colRegister);\n}\n";
-   auto lm = jittedFilter->GetLoopManagerUnchecked();
-   lm->RegisterJitHelperCall(filterInvocation.str(), prevNodeOnHeap, definesOnHeap, parsedExpr.fUsedCols,
-                             MakeWeakOnHeap(jittedFilter));
+   filterInvocation << "(const std::vector<std::string> &colNames, "
+                    << "ROOT::Internal::RDF::RColumnRegister &colRegister, "
+                    << "ROOT::Detail::RDF::RLoopManager &lm, "
+                    << "void *jittedFilter, "
+                    << "std::shared_ptr<void> *) {\n";
+   filterInvocation << "   ROOT::Internal::RDF::JitFilterHelper(" << funcName << ", "
+                    << "colNames, "
+                    << "\"" << name << "\", "
+                    << "colRegister, "
+                    << "lm, "
+                    << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(jittedFilter)"
+                    << ");\n}\n";
+   lm->RegisterJitHelperCall(filterInvocation.str(),
+                             std::make_unique<ROOT::Internal::RDF::RColumnRegister>(colRegister), parsedExpr.fUsedCols,
+                             jittedFilter);
 
    return jittedFilter;
 }
 
 /// Book the jitting of a Define call
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &colRegister,
-                                             std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+                                             RDataSource *ds, const RColumnRegister &colRegister)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -672,7 +667,6 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
-   auto definesCopy = new RColumnRegister(colRegister);
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm, colRegister, parsedExpr.fUsedCols);
 
    // lifetime of pointees:
@@ -680,35 +674,33 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    std::stringstream defineInvocation;
-   defineInvocation << "(ROOT::Detail::RDF::RLoopManager *lm, "
-                    << "std::shared_ptr<ROOT::Detail::RDF::RNodeBase> *prevNodeOnHeap,"
-                    << "ROOT::Internal::RDF::RColumnRegister* colRegister, "
-                    << "const std::vector<std::string> & colNames, "
-                    << "void *wkJittedDefine, void *) {\n";
-   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>(" << funcName
-                    << ",  colNames, \"" << name << "\", "
-                    << "lm, "
-                    << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>(wkJittedDefine),"
+   defineInvocation << "(const std::vector<std::string> &colNames, "
+                    << "ROOT::Internal::RDF::RColumnRegister &colRegister, "
+                    << "ROOT::Detail::RDF::RLoopManager &lm, "
+                    << "void *jittedDefine, "
+                    << "std::shared_ptr<void> *) {\n";
+   defineInvocation << "   ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>("
+                    << funcName << ", "
+                    << "colNames, "
+                    << "\"" << name << "\", "
                     << "colRegister, "
-                    << "prevNodeOnHeap);\n}\n";
-
-   lm.RegisterJitHelperCall(defineInvocation.str(), upcastNodeOnHeap, definesCopy, parsedExpr.fUsedCols,
-                            MakeWeakOnHeap(jittedDefine));
+                    << "lm, "
+                    << "reinterpret_cast<ROOT::Detail::RDF::RJittedDefine *>(jittedDefine)"
+                    << ");\n}\n";
+   lm.RegisterJitHelperCall(defineInvocation.str(), std::make_unique<ROOT::Internal::RDF::RColumnRegister>(colRegister),
+                            parsedExpr.fUsedCols, jittedDefine);
 
    return jittedDefine;
 }
 
 /// Book the jitting of a DefinePerSample call
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &colRegister,
-                                                      std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+                                                      RLoopManager &lm, const RColumnRegister &colRegister)
 {
    const auto funcName = DeclareFunction(std::string(expression), {"rdfslot_", "rdfsampleinfo_"},
                                          {"unsigned int", "const ROOT::RDF::RSampleInfo"});
    const auto retType = RetTypeOfFunc(funcName);
 
-   auto definesCopy = new RColumnRegister(colRegister);
-   auto definesAddr = PrettyPrintAddr(definesCopy);
    auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm, colRegister, ColumnNames_t{});
 
    // lifetime of pointees:
@@ -716,16 +708,21 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
    // - jittedDefine: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    std::stringstream defineInvocation;
-   defineInvocation << "(ROOT::Detail::RDF::RLoopManager *lm, "
-                    << "std::shared_ptr<ROOT::Detail::RDF::RNodeBase> *prevNodeOnHeap,"
-                    << "ROOT::Internal::RDF::RColumnRegister* colRegister, "
-                    << "const std::vector<std::string> & colNames, "
-                    << "void *wkJittedDefine, void *) {\n";
-   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
-                    << funcName << ", colNames, \"" << name << "\", lm, "
-                    << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedDefine>*>(wkJittedDefine), "
-                    << "colRegister, prevNodeOnHeap);\n}\n";
-   lm.RegisterJitHelperCall(defineInvocation.str(), upcastNodeOnHeap, definesCopy, {}, MakeWeakOnHeap(jittedDefine));
+   defineInvocation << "(const std::vector<std::string> &colNames, "
+                    << "ROOT::Internal::RDF::RColumnRegister &colRegister, "
+                    << "ROOT::Detail::RDF::RLoopManager &lm, "
+                    << "void *jittedDefine, "
+                    << "std::shared_ptr<void> *) {\n";
+   defineInvocation << "   ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
+                    << funcName << ", "
+                    << "colNames, "
+                    << "\"" << name << "\", "
+                    << "colRegister, "
+                    << "lm, "
+                    << "reinterpret_cast<ROOT::Detail::RDF::RJittedDefine *>(jittedDefine)"
+                    << ");\n}\n";
+   lm.RegisterJitHelperCall(defineInvocation.str(), std::make_unique<ROOT::Internal::RDF::RColumnRegister>(colRegister),
+                            {}, jittedDefine);
    return jittedDefine;
 }
 
@@ -733,8 +730,7 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, std::shared_ptr<RNodeBase> *upcastNodeOnHeap,
-                 bool isSingleColumn)
+                 RDataSource *ds, const RColumnRegister &colRegister, bool isSingleColumn)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -745,19 +741,13 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    const auto type = RetTypeOfFunc(funcName);
 
    if (type.rfind("ROOT::VecOps::RVec", 0) != 0) {
-      // Avoid leak
-      delete upcastNodeOnHeap;
-      upcastNodeOnHeap = nullptr;
       throw std::runtime_error(
          "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
          " instead:\n" + parsedExpr.fExpr);
    }
 
-   auto colRegisterCopy = new RColumnRegister(colRegister);
-   const auto colRegisterAddr = PrettyPrintAddr(colRegisterCopy);
    auto jittedVariation = std::make_shared<RJittedVariation>(colNames, variationName, variationTags, type, colRegister,
                                                              lm, parsedExpr.fUsedCols);
-   auto variedColsOnHeap = new ColumnNames_t(colNames);
 
    // build invocation to JitVariationHelper
    // variation tag (array of strings) passed as const char** plus size.
@@ -767,25 +757,28 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    // - variedColsOnHeap: deleted by registration function
    std::stringstream varyInvocation;
-   varyInvocation << "(ROOT::Detail::RDF::RLoopManager *lm, "
-                  << "std::shared_ptr<ROOT::Detail::RDF::RNodeBase> *prevNodeOnHeap,"
-                  << "ROOT::Internal::RDF::RColumnRegister* colRegister, "
-                  << "const std::vector<std::string> & inputColNames, "
-                  << "void *wkJittedVariation, void *variedColsOnHeap) {\n";
-   varyInvocation << "auto * variedColNames = reinterpret_cast<std::vector<std::string>*>(variedColsOnHeap);\n";
-   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper<" << (isSingleColumn ? "true" : "false") << ">("
-                  << funcName << ", inputColNames, *variedColNames, ";
-   varyInvocation << "new const char*[" << variationTags.size() << "]{";
-   for (const auto &tag : variationTags) {
-      varyInvocation << "\"" << tag << "\", ";
-   }
-   varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
-   varyInvocation << "}, " << variationTags.size() << ", \"" << variationName << "\", lm, "
-                  << "reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedVariation>*>(wkJittedVariation),"
-                  << "colRegister, prevNodeOnHeap);\n"
-                  << "delete variedColNames;\n}\n";
-   lm.RegisterJitHelperCall(varyInvocation.str(), upcastNodeOnHeap, colRegisterCopy, parsedExpr.fUsedCols,
-                            MakeWeakOnHeap(jittedVariation), variedColsOnHeap);
+   varyInvocation << "(const std::vector<std::string> &inputColNames, "
+                  << "ROOT::Internal::RDF::RColumnRegister &colRegister, "
+                  << "ROOT::Detail::RDF::RLoopManager &lm, "
+                  << "void *jittedVariation, "
+                  << "std::shared_ptr<void> *helperArg) {\n";
+   varyInvocation
+      << "   auto *variedColNamesAndTags = reinterpret_cast<std::shared_ptr<std::pair<std::vector<std::string>, "
+         "std::vector<std::string>>> *>(helperArg);"
+      << "   ROOT::Internal::RDF::JitVariationHelper<" << (isSingleColumn ? "true" : "false") << ">(" << funcName
+      << ", "
+      << "inputColNames, "
+      << "\"" << variationName << "\", "
+      << "colRegister, "
+      << "lm, "
+      << "reinterpret_cast<ROOT::Internal::RDF::RJittedVariation *>(jittedVariation), "
+      << "(*variedColNamesAndTags)->first, "
+      << "(*variedColNamesAndTags)->second"
+      << ");\n}\n";
+   lm.RegisterJitHelperCall(
+      varyInvocation.str(), std::make_unique<ROOT::Internal::RDF::RColumnRegister>(colRegister), parsedExpr.fUsedCols,
+      jittedVariation,
+      std::make_shared<std::pair<std::vector<std::string>, std::vector<std::string>>>(colNames, variationTags));
    return jittedVariation;
 }
 
@@ -813,19 +806,22 @@ std::string JitBuildAction(const ColumnNames_t &cols, const std::type_info &help
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
-   createAction_str << "(ROOT::Detail::RDF::RLoopManager *, "
-                    << "std::shared_ptr<ROOT::Detail::RDF::RNodeBase> *prevNodeOnHeap,"
-                    << "ROOT::Internal::RDF::RColumnRegister* colRegister, "
-                    << "const std::vector<std::string> & colNames, "
-                    << "void *wkJittedAction, void *actionArg) {\n";
-   createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
+   createAction_str << "(const std::vector<std::string> &colNames, "
+                    << "ROOT::Internal::RDF::RColumnRegister &colRegister, "
+                    << "ROOT::Detail::RDF::RLoopManager &lm, "
+                    << "void *jittedAction, "
+                    << "std::shared_ptr<void> *helperArg) {\n";
+   createAction_str << "   ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
    const auto columnTypeNames = GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2RVec);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
-   createAction_str << ">(prevNodeOnHeap, colNames," << nSlots << ", "
-                    << " reinterpret_cast<shared_ptr<" << helperArgTypeName << ">*>(actionArg),"
-                    << " reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>(wkJittedAction),"
-                    << "colRegister);\n}\n";
+   createAction_str << ">("
+                    << "colNames, "
+                    << "colRegister, "
+                    << "lm, "
+                    << "reinterpret_cast<ROOT::Internal::RDF::RJittedAction *>(jittedAction), " << nSlots << ", "
+                    << "reinterpret_cast<std::shared_ptr<" << helperArgTypeName << "> *>(helperArg)"
+                    << ");\n}\n";
    return createAction_str.str();
 }
 
