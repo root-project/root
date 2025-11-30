@@ -40,8 +40,6 @@ void CompileModelForRDF(const std::string & headerModelFile, unsigned int ninput
 
 void TMVA_SOFIE_RDataFrame_JIT(std::string modelFile = "Higgs_trained_model.h5"){
 
-    TMVA::PyMethodBase::PyInitialize();
-
     // check if the input file exists
     if (gSystem->AccessPathName(modelFile.c_str())) {
         Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_Higgs_Classification.C to generate the Keras trained model");

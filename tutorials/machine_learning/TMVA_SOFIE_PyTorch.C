@@ -42,12 +42,11 @@ torch.jit.save(m,'PyTorchModel.pt')\n";
 void TMVA_SOFIE_PyTorch(){
 
     //Running the Python script to generate PyTorch .pt file
-    TMVA::PyMethodBase::PyInitialize();
 
     TMacro m;
     m.AddLine(pythonSrc);
     m.SaveSource("make_pytorch_model.py");
-    gSystem->Exec(TMVA::Python_Executable() + " make_pytorch_model.py");
+    gSystem->Exec("python3 make_pytorch_model.py");
 
     //Parsing a PyTorch model requires the shape and data-type of input tensor
     //Data-type of input tensor defaults to Float if not specified
