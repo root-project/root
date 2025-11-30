@@ -55,6 +55,10 @@ endif(ROOT_SKLEARN_FOUND)
 
 # Enable tests based on available python modules
 if(ROOT_TORCH_FOUND)
+   configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
+   configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
+   configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
+
    # Test PyTorch: Binary classification
 
    if (ROOT_SKLEARN_FOUND)
