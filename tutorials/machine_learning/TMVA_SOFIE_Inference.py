@@ -18,9 +18,6 @@ import ROOT
 import numpy as np
 
 
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
-
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"
 if (ROOT.gSystem.AccessPathName(modelFile)) :
