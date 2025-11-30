@@ -145,9 +145,6 @@ endif()
 
 # Any features that link against libpython are disabled if built with tpython=OFF
 if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT broken_onnx)
-  configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
-  configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
-  configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
   configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
 
   # Test RModelParser_PyTorch
