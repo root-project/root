@@ -182,6 +182,10 @@ void MethodPyKeras::InitKeras() {
    // initialize first Keras. This is done only here when class has
    // all state variable set from options or read from XML file
    // Import Keras
+   Log() << kWARNING
+         << "The PyKeras TMVA method was deprecated in ROOT 6.40 and will be removed in ROOT 6.42, since it was broken "
+            "by the API changes in Keras 3, released in November 2023 and part of TensorFlow 2.16 or newer."
+         << Endl;
 
    if (fUseTFKeras)
       Log() << kINFO << "Setting up tf.keras" << Endl;

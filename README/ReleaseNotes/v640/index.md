@@ -38,6 +38,7 @@ The following people have contributed to this new version:
 * Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
 * The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that were installed when building ROOT with `builtin_glew=ON` are no longer installed. This is done because ROOT is moving away from GLEW for loading OpenGL extensions.
+* The TMVA `PyKeras` method is deprecated. It was broken by the API changes in Keras 3, released in November 2023 and part of TensorFlow 2.16 or newer. The `PyKeras` method will be removed in ROOT 6.42 (unless an updated implementation for Keras 3 that matches usage, performance and stability requirements will be found unexpectedly).
 
 ## Build System
 
