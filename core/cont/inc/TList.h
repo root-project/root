@@ -38,9 +38,9 @@ class TListIter;
 class TList : public TSeqCollection {
 
 friend  class TListIter;
-
-protected:
+public:
    using TObjLinkPtr_t = std::shared_ptr<TObjLink>;
+protected:
    using TObjLinkWeakPtr_t = std::weak_ptr<TObjLink>;
 
    TObjLinkPtr_t     fFirst;     //! pointer to first entry in linked list
@@ -126,9 +126,9 @@ public:
 class TObjLink : public std::enable_shared_from_this<TObjLink> {
 
 friend class TList;
-
-private:
+public:
    using TObjLinkPtr_t = std::shared_ptr<TObjLink>;
+private:
    using TObjLinkWeakPtr_t = std::weak_ptr<TObjLink>;
 
    TObjLinkPtr_t     fNext;

@@ -60,9 +60,12 @@ private:
 
    virtual Int_t GetOffsetHeaderSize() const {return 0;}
 
-protected:
+public:
 
    using Counts_t = std::vector<Int_t>;
+
+protected:
+
    struct LeafCountValues {
       Counts_t fValues;
       Long64_t fStartEntry{-1}; ///<! entry number of corresponding to element 0 of the vector.

@@ -18,6 +18,7 @@
 #include "TGeoBBox.h"
 
 class TGeoFacet {
+public:
    using Vertex_t = Tessellated::Vertex_t;
    using VertexVec_t = Tessellated::VertexVec_t;
 

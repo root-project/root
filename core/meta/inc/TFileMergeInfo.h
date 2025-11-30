@@ -39,9 +39,9 @@ class TIOFeatures;
 }
 
 class TFileMergeInfo {
-private:
+public:
    using TIOFeatures = ROOT::TIOFeatures;
-
+private:
    TFileMergeInfo() = delete;
    TFileMergeInfo(const TFileMergeInfo&) = delete;
    TFileMergeInfo& operator=(const TFileMergeInfo&) = delete;
