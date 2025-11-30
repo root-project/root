@@ -60,8 +60,9 @@ class GraphNode;
 
 RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
                              const ROOT::Internal::RDF::RColumnRegister &colRegister,
-                             const std::vector<std::string> &prevVariations)
-   : RActionBase(&lm, columns, colRegister, prevVariations)
+                             const std::vector<std::string> &prevVariations,
+                             std::shared_ptr<ROOT::Detail::RDF::RNodeBase> prevNode)
+   : RActionBase(&lm, columns, colRegister, prevVariations), fPrevNode(prevNode)
 {
 }
 
@@ -158,4 +159,9 @@ std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::CloneAction(voi
 {
    assert(fConcreteAction != nullptr);
    return fConcreteAction->CloneAction(newResult);
+}
+
+std::shared_ptr<ROOT::Detail::RDF::RNodeBase> RJittedAction::MoveOutPrevNode()
+{
+   return std::move(fPrevNode);
 }

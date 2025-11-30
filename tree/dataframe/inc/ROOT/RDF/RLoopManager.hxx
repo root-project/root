@@ -204,24 +204,25 @@ class RLoopManager : public RNodeBase {
 
    // deferred function calls to Jitted functions
    struct DeferredJitCall {
-      std::string functionId;
-      std::shared_ptr<RNodeBase> *prevNodeOnHeap;
-      ROOT::Internal::RDF::RColumnRegister *colRegister;
-      std::vector<std::string> colNames;
-      void *wkJittedNode, *argument;
-      DeferredJitCall(const std::string &id, std::shared_ptr<RNodeBase> *prevNode,
-                      ROOT::Internal::RDF::RColumnRegister *cols, const std::vector<std::string> &colnames,
-                      void *wkNodePtr, void *arg)
-         : functionId(id),
-           prevNodeOnHeap(prevNode),
-           colRegister(cols),
-           colNames(colnames),
-           wkJittedNode(wkNodePtr),
-           argument(arg)
-      {
-      }
+      std::size_t fFunctionId{};
+      std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> fColRegister;
+      std::vector<std::string> fColNames;
+      std::shared_ptr<void> fJittedNode;
+      // Extra arguments to be passed to the jitted function, in one value. Each function will need to unpack it
+      // accordingly.
+      std::shared_ptr<void> fExtraArgs;
+      DeferredJitCall(std::size_t id, std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> cols,
+                      const std::vector<std::string> &colNamesArg, std::shared_ptr<void> jittedNode,
+                      std::shared_ptr<void> arg);
+
+      DeferredJitCall(const DeferredJitCall &) = delete;
+      DeferredJitCall &operator=(const DeferredJitCall &) = delete;
+      DeferredJitCall(DeferredJitCall &&) noexcept;
+      DeferredJitCall &operator=(DeferredJitCall &&) noexcept;
+      ~DeferredJitCall();
    };
-   std::vector<DeferredJitCall> fJitHelperCalls;
+   std::vector<DeferredJitCall> fJitHelperCalls{};
+   std::hash<std::string> fStringHasher{};
 
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
@@ -263,9 +264,10 @@ public:
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
-   void RegisterJitHelperCall(const std::string &funcBody, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
-                              ROOT::Internal::RDF::RColumnRegister *colRegister,
-                              const std::vector<std::string> &colNames, void *wkJittedPtr, void *argument = nullptr);
+   void RegisterJitHelperCall(const std::string &funcBody,
+                              std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> colRegister,
+                              const std::vector<std::string> &colnames, std::shared_ptr<void> jittedNode,
+                              std::shared_ptr<void> argument = nullptr);
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
