@@ -42,6 +42,8 @@
 
 #include "RtypesCore.h"
 
+#include <ROOT/RConfig.hxx> // for R__DEPRECATED
+
 #include "TString.h"
 
 namespace TMVA {
@@ -100,7 +102,12 @@ namespace TMVA {
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
+#ifdef PYMVA_BUILDS_ITSELF
          kPyKeras        ,
+#else
+         kPyKeras
+            R__DEPRECATED(6, 42, "the PyKeras method is dropped since it didn't support Keras 3 (TensorFlow 2.16+)"),
+#endif
          kPyTorch        ,
          kC50            ,
          kRSNNS          ,

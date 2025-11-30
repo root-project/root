@@ -36,4 +36,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     TMVA
 )
 
+# To avoid deprecation warnings during build of ROOT.
+target_compile_definitions(PyMVA PUBLIC PYMVA_BUILDS_ITSELF)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
