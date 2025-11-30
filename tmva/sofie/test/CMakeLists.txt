@@ -107,7 +107,28 @@ endif()
 
 # Look for needed Python modules
 ROOT_FIND_PYTHON_MODULE(torch)
-if (ROOT_TORCH_FOUND)
+
+# onnx 1.19.0 has a bug that makes this version unusable:
+
+
+# https://github.com/onnx/onnx/issues/7249
+
+
+# In that case, we have to disable the "TestSofieModels" and
+
+
+# "TestRModelParserPyTorch" tests, which import onnx indirectly via torch.onnx
+
+
+ROOT_FIND_PYTHON_MODULE(onnx)
+if (ROOT_ONNX_FOUND AND DEFINED ROOT_ONNX_VERSION)
+  if(ROOT_ONNX_VERSION VERSION_EQUAL "1.19.0")
+    message(WARNING "Found broken onnx version ${ROOT_ONNX_VERSION} (see https://github.com/onnx/onnx/issues/7249). Some TMVA SOFIE tests will be disabled.")
+    set(broken_onnx TRUE)
+  endif()
+endif()
+
+if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
   configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
   configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
