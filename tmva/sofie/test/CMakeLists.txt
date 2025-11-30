@@ -154,7 +154,7 @@ endif()
 # Any reatures that link against libpython are disabled if built with tpython=OFF
 if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
 
-  set(unsupported_keras_version "3.10.0")
+  set(unsupported_keras_version "3.5.0")
 
   # TODO: make sure we also support the newest Keras
   if (NOT DEFINED ROOT_KERAS_VERSION)
