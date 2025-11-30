@@ -16,8 +16,6 @@
 import ROOT
 from os.path import exists
 
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
 
 ## generate and train Keras models with different architectures
 

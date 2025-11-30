@@ -40,13 +40,12 @@ model.save('KerasModel.h5')\n";
 void TMVA_SOFIE_Keras(const char * modelFile = nullptr, bool printModelInfo = true){
 
     //Running the Python script to generate Keras .h5 file
-    TMVA::PyMethodBase::PyInitialize();
 
     if (modelFile == nullptr) {
         TMacro m;
         m.AddLine(pythonSrc);
         m.SaveSource("make_keras_model.py");
-        gSystem->Exec(TMVA::Python_Executable() + " make_keras_model.py");
+        gSystem->Exec("python3 make_keras_model.py");
         modelFile = "KerasModel.h5";
     }
 
