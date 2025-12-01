@@ -3,39 +3,59 @@ import unittest
 import ROOT
 
 
-class FillWithNumpyArray(unittest.TestCase):
+class FillWithArrayLike(unittest.TestCase):
     """
     Test for the FillN method of TH1 and subclasses, which fills
-    the histogram with a numpy array.
+    the histogram with array-like input.
     """
 
-    # Tests
-    def test_fill(self):
+    def _run_fill_test(self, data):
         import numpy as np
-        # Create sample data
-        data = np.array([1., 2, 2, 3, 3, 3, 4, 4, 5])
+
+        # Convert once for the reference FillN call
+        data_np = np.asanyarray(data, dtype=np.float64)
+        n = len(data_np)
+
         # Create histograms
         nbins = 5
-        min_val = 0
-        max_val = 10
-        verbose_hist = ROOT.TH1F("verbose_hist", "verbose_hist", nbins, min_val, max_val)
-        simple_hist = ROOT.TH1F("simple_hist", "simple_hist", nbins, min_val, max_val)
-        # Fill histograms
-        verbose_hist.FillN(len(data), data, np.ones(len(data)))
-        simple_hist.Fill(data)
-        # Test if the histograms have the same content
-        for i in range(nbins):
-            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
-        # Test filling with weights
-        weights = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
-        verbose_hist.FillN(len(data), data, weights)
-        simple_hist.Fill(data, weights)
-        for i in range(nbins):
-            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
-        # Test filling with weights with a different length
-        weights = np.array([0.1, 0.2, 0.3, 0.4])
-        with self.assertRaises(ValueError):
-            simple_hist.Fill(data, weights)
+        verbose_hist = ROOT.TH1F("verbose_hist", "verbose_hist", nbins, 0, 10)
+        simple_hist = ROOT.TH1F("simple_hist", "simple_hist", nbins, 0, 10)
 
-if __name__ == '__main__':
+        # Test filling without weights
+        verbose_hist.FillN(n, data_np, np.ones(n))
+        simple_hist.Fill(data)
+
+        for i in range(nbins):
+            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
+
+        # Test filling with weights
+        weights_np = np.linspace(0.1, 0.9, n)
+        weights = list(weights_np)  # also array-like
+
+        verbose_hist.FillN(n, data_np, weights_np)
+        simple_hist.Fill(data, weights)
+
+        for i in range(nbins):
+            self.assertAlmostEqual(verbose_hist.GetBinContent(i), simple_hist.GetBinContent(i))
+
+        # Test mismatched weight size
+        with self.assertRaises(ValueError):
+            simple_hist.Fill(data, [0.1, 0.2, 0.3])  # too short
+
+    # Run with different inputs
+    def test_fill_arraylike(self):
+        import numpy as np
+
+        inputs = [
+            np.array([1.0, 2, 2, 3, 3, 3, 4, 4, 5]),  # numpy
+            [1.0, 2, 2, 3, 3, 3, 4, 4, 5],  # list
+            range(9),  # range
+        ]
+
+        for input_data in inputs:
+            with self.subTest(input_type=type(input_data).__name__):
+                self._run_fill_test(input_data)
+
+
+if __name__ == "__main__":
     unittest.main()
