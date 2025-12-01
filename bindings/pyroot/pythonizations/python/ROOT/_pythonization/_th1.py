@@ -185,22 +185,22 @@ def _imul(self, c):
     self.Scale(c)
     return self
 
-# Fill with numpy array
-
-def _FillWithNumpyArray(self, *args):
+# Fill with array-like data
+def _FillWithArrayTH1(self, *args):
     """
-    Fill histogram with numpy array.
+    Fill a histogram using array-like input.
     Parameters:
     - self: histogram
     - args: arguments to FillN
-            If the first argument is numpy.ndarray:
+            If the first argument is array-like:
+            - converts it to a numpy array
             - fills the histogram with this array
             - optional second argument is weights array,
               if not provided, weights of 1 are used
             Otherwise:
             - Arguments are passed directly to the original FillN method
     Returns:
-    - Result of FillN if numpy case is detected, otherwise result of Fill
+    - Result of FillN if array case is detected, otherwise result of Fill
     Raises:
     - ValueError: If weights length doesn't match data length
     """
@@ -213,16 +213,19 @@ def _FillWithNumpyArray(self, *args):
 
     import numpy as np
 
-    if args and isinstance(args[0], np.ndarray):
-        data = args[0]
-        weights = np.ones(len(data)) if len(args) < 2 or args[1] is None else args[1]
-        if len(weights) != len(data):
+    data = np.asanyarray(args[0], dtype=np.float64)
+    n = len(data)
+
+    if len(args) >=2 and args[1] is not None:
+        weights = np.asanyarray(args[1], dtype=np.float64)
+        if len(weights) != n:
             raise ValueError(
-                f"Length mismatch: data length ({len(data)}) != weights length ({len(weights)})"
+                f"Length mismatch: data length ({n}) != weights length ({len(weights)})"
             )
-        return self.FillN(len(data), data, weights)
     else:
-        return self._Fill(*args)
+        weights = np.ones(n)
+
+    return self.FillN(n, data, weights)
 
 
 # The constructors need to be pythonized for each derived class separately:
@@ -244,6 +247,12 @@ for klass in _th1_derived_classes_to_pythonize:
     # Add UHI plotting features
     pythonization(klass)(_add_plotting_features)
 
+    # Support vectorized Fill
+    @pythonization(klass)
+    def _enable_numpy_fill(klass):
+        klass._Fill = klass.Fill
+        klass.Fill = _FillWithArrayTH1
+
 
 @pythonization('TH1')
 def pythonize_th1(klass):
@@ -253,10 +262,6 @@ def pythonize_th1(klass):
 
     # Support hist *= scalar
     klass.__imul__ = _imul
-
-    # Support hist.Fill(numpy_array) and hist.Fill(numpy_array, numpy_array)
-    klass._Fill = klass.Fill
-    klass.Fill = _FillWithNumpyArray
 
     klass._Original_SetDirectory = klass.SetDirectory
     klass.SetDirectory = _SetDirectory_SetOwnership
