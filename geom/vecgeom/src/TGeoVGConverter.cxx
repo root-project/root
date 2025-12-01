@@ -78,11 +78,11 @@ void TGeoVGConverter::ConvertGeometry()
 
    // Print info about selected/excluded shapes
    if (gGeoManager->GetVerboseLevel() > 1) {
-      if ( ! fSelectedShapeTypes.empty()) {
-        Info("ConvertGeometry","# %zu selected shape type for conversion \n", fSelectedShapeTypes.size());
+      if (!fSelectedShapeTypes.empty()) {
+         Info("ConvertGeometry", "# %zu selected shape type for conversion \n", fSelectedShapeTypes.size());
       }
-      if ( ! fExcludedShapeTypes.empty()) {
-        Info("ConvertGeometry","# %zu shape types excluded from conversion \n", fExcludedShapeTypes.size());
+      if (!fExcludedShapeTypes.empty()) {
+         Info("ConvertGeometry", "# %zu shape types excluded from conversion \n", fExcludedShapeTypes.size());
       }
    }
 
@@ -99,7 +99,7 @@ void TGeoVGConverter::ConvertGeometry()
       if ((! fSelectedShapeTypes.empty()) &&
           (! isInSelection(vol->GetShape(), fSelectedShapeTypes))) {
          if (gGeoManager->GetVerboseLevel() > 1) {
-            Info("ConvertGeometry","# Shape type %s is not selected for conversion\n",
+            Info("ConvertGeometry", "# Shape type %s is not selected for conversion\n",
                  vol->GetShape()->IsA()->GetName());
          }
          continue;
@@ -108,8 +108,7 @@ void TGeoVGConverter::ConvertGeometry()
       // Skip shapes excluded from conversion
       if (isInSelection(vol->GetShape(), fExcludedShapeTypes)) {
          if (gGeoManager->GetVerboseLevel() > 1) {
-            Info("ConvertGeometry","# Shape type %s is excluded from conversion\n",
-                 vol->GetShape()->IsA()->GetName());
+            Info("ConvertGeometry", "# Shape type %s is excluded from conversion\n", vol->GetShape()->IsA()->GetName());
          }
          continue;
       }
@@ -122,7 +121,7 @@ void TGeoVGConverter::ConvertGeometry()
       }
    }
    if (gGeoManager->GetVerboseLevel() > 0) {
-      Info("ConvertGeometry","# Converted %d shapes to VecGeom ones\n", nconverted);
+      Info("ConvertGeometry", "# Converted %d shapes to VecGeom ones\n", nconverted);
    }
 }
 
