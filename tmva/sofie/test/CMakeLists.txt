@@ -118,7 +118,9 @@ endif()
 # gtest
 # Look for needed python modules
 find_python_module(torch QUIET)
-if(PY_TORCH_FOUND)
+find_python_module(onnx QUIET)
+
+if(PY_TORCH_FOUND AND PY_ONNX_FOUND)
   configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
   configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
   configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
