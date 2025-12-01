@@ -13,18 +13,17 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
-import ROOT
-from os.path import exists
+import os
 
+import numpy as np
+import ROOT
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
 
 ## generate and train Keras models with different architectures
 
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
-
-from sklearn.model_selection import train_test_split
 
 def CreateModel(nlayers = 4, nunits = 64):
    model = Sequential()
@@ -101,7 +100,6 @@ def GenerateModelCode(modelFile, generatedHeaderFile):
 
 generatedHeaderFile = "Higgs_Model.hxx"
 #need to remove existing header file since we are appending on same one
-import os
 if (os.path.exists(generatedHeaderFile)):
    weightFile = "Higgs_Model.root"
    print("removing existing files", generatedHeaderFile,weightFile)
