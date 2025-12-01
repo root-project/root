@@ -81,10 +81,10 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
-template <typename Proxied, typename DataSource>
+template <typename Proxied>
 class RInterface;
 
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase>;
 } // namespace RDF
 
 namespace Internal {
@@ -107,22 +107,20 @@ namespace RDF {
  * \ingroup dataframe
  * \brief The public interface to the RDataFrame federation of classes.
  * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
- * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
  *
  * The documentation of each method features a one liner illustrating how to use the method, for example showing how
  * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
  */
 // clang-format on
-template <typename Proxied, typename DataSource = void>
+template <typename Proxied>
 class RInterface : public RInterfaceBase {
-   using DS_t = DataSource;
    using RFilterBase = RDFDetail::RFilterBase;
    using RRangeBase = RDFDetail::RRangeBase;
    using RLoopManager = RDFDetail::RLoopManager;
    friend std::string cling::printValue(::ROOT::RDataFrame *tdf); // For a nice printing at the prompt
    friend class RDFInternal::GraphDrawing::GraphCreatorHelper;
 
-   template <typename T, typename W>
+   template <typename T>
    friend class RInterface;
 
    friend void RDFInternal::TriggerRun(RNode node);
@@ -221,8 +219,7 @@ public:
    /// df.Filter("return Sum(Map(vec, [](float e) { return e*e > 0.5; }))")
    /// ~~~
    template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<RDFDetail::RFilter<F, Proxied>, DS_t>
-   Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
+   RInterface<RDFDetail::RFilter<F, Proxied>> Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
       RDFInternal::CheckFilter(f);
       using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
@@ -233,7 +230,7 @@ public:
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
       auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fColRegister, name);
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
+      return RInterface<F_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -245,7 +242,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<RDFDetail::RFilter<F, Proxied>, DS_t> Filter(F f, std::string_view name)
+   RInterface<RDFDetail::RFilter<F, Proxied>> Filter(F f, std::string_view name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
       // rather than this template method.
@@ -261,7 +258,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   RInterface<RDFDetail::RFilter<F, Proxied>, DS_t> Filter(F f, const std::initializer_list<std::string> &columns)
+   RInterface<RDFDetail::RFilter<F, Proxied>> Filter(F f, const std::initializer_list<std::string> &columns)
    {
       return Filter(f, ColumnNames_t{columns});
    }
@@ -291,7 +288,7 @@ public:
    /// ~~~{.cpp}
    /// df.Filter("return Sum(Map(vec, [](float e) { return e*e > 0.5; }))")
    /// ~~~
-   RInterface<RDFDetail::RJittedFilter, DS_t> Filter(std::string_view expression, std::string_view name = "")
+   RInterface<RDFDetail::RJittedFilter> Filter(std::string_view expression, std::string_view name = "")
    {
       // deleted by the jitted call to JitFilterHelper
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
@@ -300,7 +297,7 @@ public:
       const auto jittedFilter =
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fColRegister, nullptr, GetDataSource());
 
-      return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
+      return RInterface<RDFDetail::RJittedFilter>(std::move(jittedFilter), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -339,7 +336,7 @@ public:
    ///
    /// \note See FilterMissing() if you want to keep only the entries with
    ///       missing values instead.
-   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>, DS_t> FilterAvailable(std::string_view column)
+   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>> FilterAvailable(std::string_view column)
    {
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
@@ -349,7 +346,7 @@ public:
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ true, fProxiedPtr, fColRegister, columns);
       CheckAndFillDSColumns(columns, TTraits::TypeList<void>{});
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
+      return RInterface<F_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -390,7 +387,7 @@ public:
    ///
    /// \note See FilterAvailable() if you want to discard the entries in case
    ///       there is a missing value instead.
-   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>, DS_t> FilterMissing(std::string_view column)
+   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>> FilterMissing(std::string_view column)
    {
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
@@ -400,7 +397,7 @@ public:
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ false, fProxiedPtr, fColRegister, columns);
       CheckAndFillDSColumns(columns, TTraits::TypeList<void>{});
-      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
+      return RInterface<F_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    // clang-format off
@@ -443,7 +440,7 @@ public:
    /// df.Define("x2", "return Map(v, [](float e) { return e*e; })")
    /// ~~~
    template <typename F, typename std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<Proxied, DS_t> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::None>(name, std::move(expression), columns, "Define");
    }
@@ -473,7 +470,7 @@ public:
    ///
    /// See Define() for more information.
    template <typename F>
-   RInterface<Proxied, DS_t> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::Slot>(name, std::move(expression), columns, "DefineSlot");
    }
@@ -504,7 +501,7 @@ public:
    ///
    /// See Define() for more information.
    template <typename F>
-   RInterface<Proxied, DS_t> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::SlotAndEntry>(name, std::move(expression), columns,
                                                                         "DefineSlotEntry");
@@ -532,7 +529,7 @@ public:
    /// ~~~
    ///
    /// Refer to the first overload of this method for the full documentation.
-   RInterface<Proxied, DS_t> Define(std::string_view name, std::string_view expression)
+   RInterface<Proxied> Define(std::string_view name, std::string_view expression)
    {
       constexpr auto where = "Define";
       RDFInternal::CheckValidCppVarName(name, where);
@@ -547,7 +544,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -564,7 +561,7 @@ public:
    /// An exception is thrown in case the column to redefine does not already exist.
    /// See Define() for more information.
    template <typename F, std::enable_if_t<!std::is_convertible<F, std::string>::value, int> = 0>
-   RInterface<Proxied, DS_t> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> Redefine(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::None>(name, std::move(expression), columns, "Redefine");
    }
@@ -583,7 +580,7 @@ public:
    /// See DefineSlot() for more information.
    // clang-format on
    template <typename F>
-   RInterface<Proxied, DS_t> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> RedefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::Slot>(name, std::move(expression), columns, "RedefineSlot");
    }
@@ -602,7 +599,7 @@ public:
    /// See DefineSlotEntry() for more information.
    // clang-format on
    template <typename F>
-   RInterface<Proxied, DS_t> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   RInterface<Proxied> RedefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return DefineImpl<F, RDFDetail::ExtraArgsForDefine::SlotAndEntry>(name, std::move(expression), columns,
                                                                         "RedefineSlotEntry");
@@ -622,7 +619,7 @@ public:
    /// An exception is thrown in case the column to re-define does not already exist.
    ///
    /// Aliases cannot be overridden. See the corresponding Define() overload for more information.
-   RInterface<Proxied, DS_t> Redefine(std::string_view name, std::string_view expression)
+   RInterface<Proxied> Redefine(std::string_view name, std::string_view expression)
    {
       constexpr auto where = "Redefine";
       RDFInternal::CheckValidCppVarName(name, where);
@@ -637,7 +634,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -676,7 +673,7 @@ public:
    /// colz = df_default.Take[int]("z")
    /// \endcode
    template <typename T>
-   RInterface<Proxied, DS_t> DefaultValueFor(std::string_view column, const T &defaultValue)
+   RInterface<Proxied> DefaultValueFor(std::string_view column, const T &defaultValue)
    {
       constexpr auto where{"DefaultValueFor"};
       RDFInternal::CheckForNoVariations(where, column, fColRegister);
@@ -739,7 +736,7 @@ public:
    // clang-format on
    // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
-   RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
+   RInterface<Proxied> DefinePerSample(std::string_view name, F expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
       RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister,
@@ -800,7 +797,7 @@ public:
    /// column names other than those mentioned above: the expression is evaluated once before the processing of the
    /// sample even starts, so column values are not accessible.
    // clang-format on
-   RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, std::string_view expression)
+   RInterface<Proxied> DefinePerSample(std::string_view name, std::string_view expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
       // these checks must be done before jitting lest we throw exceptions in jitted code
@@ -814,7 +811,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddDefine(std::move(jittedDefine));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -866,8 +863,8 @@ public:
    /// See other overloads for examples when variations are added for multiple existing columns,
    /// or when the tags are auto-generated instead of being directly defined.
    template <typename F>
-   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
-                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   RInterface<Proxied> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
+                            const std::vector<std::string> &variationTags, std::string_view variationName = "")
    {
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
@@ -905,8 +902,8 @@ public:
    ///
    /// \note See also This Vary() overload for more information.
    template <typename F>
-   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
-                                  std::size_t nVariations, std::string_view variationName = "")
+   RInterface<Proxied> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
+                            std::size_t nVariations, std::string_view variationName = "")
    {
       R__ASSERT(nVariations > 0 && "Must have at least one variation.");
 
@@ -953,9 +950,8 @@ public:
    /// \note See also This Vary() overload for more information.
 
    template <typename F>
-   RInterface<Proxied, DS_t>
-   Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
-        const std::vector<std::string> &variationTags, std::string_view variationName)
+   RInterface<Proxied> Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
+                            const std::vector<std::string> &variationTags, std::string_view variationName)
    {
       return VaryImpl<false>(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
@@ -975,7 +971,7 @@ public:
    ///
    /// \note See also This Vary() overload for more information.
    template <typename F>
-   RInterface<Proxied, DS_t>
+   RInterface<Proxied>
    Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
         const std::vector<std::string> &variationTags, std::string_view variationName)
    {
@@ -1015,9 +1011,8 @@ public:
    ///
    /// \note See also This Vary() overload for more information.
    template <typename F>
-   RInterface<Proxied, DS_t>
-   Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
-        std::size_t nVariations, std::string_view variationName)
+   RInterface<Proxied> Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
+                            std::size_t nVariations, std::string_view variationName)
    {
       R__ASSERT(nVariations > 0 && "Must have at least one variation.");
 
@@ -1046,9 +1041,8 @@ public:
    ///
    /// \note See also This Vary() overload for more information.
    template <typename F>
-   RInterface<Proxied, DS_t>
-   Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
-        std::size_t nVariations, std::string_view variationName)
+   RInterface<Proxied> Vary(std::initializer_list<std::string> colNames, F &&expression,
+                            const ColumnNames_t &inputColumns, std::size_t nVariations, std::string_view variationName)
    {
       return Vary(std::vector<std::string>(colNames), std::forward<F>(expression), inputColumns, nVariations, variationName);
    }
@@ -1078,8 +1072,8 @@ public:
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
-   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
-                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   RInterface<Proxied> Vary(std::string_view colName, std::string_view expression,
+                            const std::vector<std::string> &variationTags, std::string_view variationName = "")
    {
       std::vector<std::string> colNames{{std::string(colName)}};
       const std::string theVariationName{variationName.empty() ? colName : variationName};
@@ -1111,8 +1105,8 @@ public:
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
-   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
-                                  std::string_view variationName = "")
+   RInterface<Proxied> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
+                            std::string_view variationName = "")
    {
       std::vector<std::string> variationTags;
       variationTags.reserve(nVariations);
@@ -1148,8 +1142,8 @@ public:
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
-   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
-                                  std::size_t nVariations, std::string_view variationName)
+   RInterface<Proxied> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                            std::size_t nVariations, std::string_view variationName)
    {
       std::vector<std::string> variationTags;
       variationTags.reserve(nVariations);
@@ -1172,8 +1166,8 @@ public:
    /// is avoided.
    ///
    /// \note See also This Vary() overload for more information.
-   RInterface<Proxied, DS_t> Vary(std::initializer_list<std::string> colNames, std::string_view expression,
-                                  std::size_t nVariations, std::string_view variationName)
+   RInterface<Proxied> Vary(std::initializer_list<std::string> colNames, std::string_view expression,
+                            std::size_t nVariations, std::string_view variationName)
    {
       return Vary(std::vector<std::string>(colNames), expression, nVariations, variationName);
    }
@@ -1200,8 +1194,8 @@ public:
    /// ~~~
    ///
    /// \note See also This Vary() overload for more information.
-   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
-                                  const std::vector<std::string> &variationTags, std::string_view variationName)
+   RInterface<Proxied> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                            const std::vector<std::string> &variationTags, std::string_view variationName)
    {
       return JittedVaryImpl(colNames, expression, variationTags, variationName, /*isSingleColumn=*/false);
    }
@@ -1218,7 +1212,7 @@ public:
    /// ~~~{.cpp}
    /// auto df_with_alias = df.Alias("simple_name", "very_long&complex_name!!!");
    /// ~~~
-   RInterface<Proxied, DS_t> Alias(std::string_view alias, std::string_view columnName)
+   RInterface<Proxied> Alias(std::string_view alias, std::string_view columnName)
    {
       // The symmetry with Define is clear. We want to:
       // - Create globally the alias and return this very node, unchanged
@@ -1237,7 +1231,7 @@ public:
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddAlias(alias, validColumnName);
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -1659,7 +1653,7 @@ public:
    /// auto d_15_end_3 = d.Range(15, 0, 3); // Stride: from event 15, pick an event every 3
    /// ~~~
    // clang-format on
-   RInterface<RDFDetail::RRange<Proxied>, DS_t> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
+   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
       // check invariants
       if (stride == 0 || (end != 0 && end < begin))
@@ -1668,7 +1662,7 @@ public:
 
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      RInterface<RDFDetail::RRange<Proxied>, DS_t> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
+      RInterface<RDFDetail::RRange<Proxied>> newInterface(std::move(rangePtr), *fLoopManager, fColRegister);
       return newInterface;
    }
 
@@ -1680,7 +1674,7 @@ public:
    ///
    /// See the other Range overload for a detailed description.
    // clang-format on
-   RInterface<RDFDetail::RRange<Proxied>, DS_t> Range(unsigned int end) { return Range(0, end, 1); }
+   RInterface<RDFDetail::RRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -3281,7 +3275,7 @@ public:
 
 private:
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
-   std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied, DS_t>>
+   std::enable_if_t<std::is_default_constructible<RetType>::value, RInterface<Proxied>>
    DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns, const std::string &where)
    {
       if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
@@ -3332,7 +3326,7 @@ private:
    template <typename F, typename DefineType, typename RetType = typename TTraits::CallableTraits<F>::ret_type,
              bool IsFStringConv = std::is_convertible<F, std::string>::value,
              bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
-   std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>
+   std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied>>
    DefineImpl(std::string_view, F, const ColumnNames_t &, const std::string &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
@@ -3364,7 +3358,7 @@ private:
    }
 
    template <bool IsSingleColumn, typename F>
-   RInterface<Proxied, DS_t>
+   RInterface<Proxied>
    VaryImpl(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
             const std::vector<std::string> &variationTags, std::string_view variationName)
    {
@@ -3398,9 +3392,9 @@ private:
       return newInterface;
    }
 
-   RInterface<Proxied, DS_t> JittedVaryImpl(const std::vector<std::string> &colNames, std::string_view expression,
-                                            const std::vector<std::string> &variationTags,
-                                            std::string_view variationName, bool isSingleColumn)
+   RInterface<Proxied> JittedVaryImpl(const std::vector<std::string> &colNames, std::string_view expression,
+                                      const std::vector<std::string> &variationTags, std::string_view variationName,
+                                      bool isSingleColumn)
    {
       R__ASSERT(!variationTags.empty() && "Must have at least one variation.");
       R__ASSERT(!colNames.empty() && "Must have at least one varied column.");
@@ -3428,7 +3422,7 @@ private:
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
 
-      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister));
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister));
 
       return newInterface;
    }

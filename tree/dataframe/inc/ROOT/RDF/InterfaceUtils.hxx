@@ -49,9 +49,9 @@ class RNodeBase;
 }
 }
 namespace RDF {
-template<typename T, typename V>
+template <typename Proxied>
 class RInterface;
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase>;
 } // namespace RDF
 
 } // namespace ROOT

@@ -80,8 +80,8 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from a Filter or Range, prints the branch it belongs to
-   template <typename Proxied, typename DataSource>
-   std::string RepresentGraph(ROOT::RDF::RInterface<Proxied, DataSource> &rInterface)
+   template <typename Proxied>
+   std::string RepresentGraph(ROOT::RDF::RInterface<Proxied> &rInterface)
    {
       auto loopManager = rInterface.GetLoopManager();
       loopManager->Jit();
