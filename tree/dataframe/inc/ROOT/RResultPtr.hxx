@@ -34,7 +34,7 @@ template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr);
 } // namespace Experimental
 
-template <typename Proxied, typename DataSource>
+template <typename Proxied>
 class RInterface;
 } // namespace RDF
 
@@ -59,7 +59,7 @@ ROOT::RDF::RResultPtr<T> CloneResultAndAction(const ROOT::RDF::RResultPtr<T> &in
                                    inptr.fActionPtr->CloneAction(reinterpret_cast<void *>(&copiedResult)));
 }
 
-using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
+using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>>;
 /**
  * \brief Creates a new RResultPtr with a cloned Snapshot action.
  *

@@ -948,13 +948,13 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
                        "storing its result in a variable and for example calling the GetValue() method on it.");
 }
 
-RResultPtr<RInterface<RLoopManager, void>> ReturnLazySnapshot(const char *fname)
+RResultPtr<RInterface<RLoopManager>> ReturnLazySnapshot(const char *fname)
 {
    auto d = ROOT::RDataFrame(1);
    ROOT::RDF::RSnapshotOptions opts;
    opts.fLazy = true;
    auto res = d.Snapshot("t", fname, {"rdfentry_"}, opts);
-   RResultPtr<RInterface<RLoopManager, void>> res2 = res;
+   RResultPtr<RInterface<RLoopManager>> res2 = res;
    return res;
 }
 
