@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -53,7 +54,7 @@ private:
    std::optional<RHist<BinContentType>> fHist;
 
    /// The number of normal bins
-   std::size_t fNNormalBins;
+   std::uint64_t fNNormalBins;
    /// The maximum buffer size until Flush() is automatically called
    std::size_t fMaxBufferSize;
    /// The fraction of the axis interval to use as margin
@@ -74,7 +75,8 @@ public:
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] maxBufferSize the maximum buffer size, must be > 0
    /// \param[in] marginFraction the fraction of the axis interval to use as margin, must be > 0
-   explicit RHistAutoAxisFiller(std::size_t nNormalBins, std::size_t maxBufferSize = 1024, double marginFraction = 0.05)
+   explicit RHistAutoAxisFiller(std::uint64_t nNormalBins, std::size_t maxBufferSize = 1024,
+                                double marginFraction = 0.05)
       : fNNormalBins(nNormalBins), fMaxBufferSize(maxBufferSize), fMarginFraction(marginFraction)
    {
       if (nNormalBins == 0) {
@@ -88,7 +90,7 @@ public:
       }
    }
 
-   std::size_t GetNNormalBins() const { return fNNormalBins; }
+   std::uint64_t GetNNormalBins() const { return fNNormalBins; }
    std::size_t GetMaxBufferSize() const { return fMaxBufferSize; }
    double GetMarginFraction() const { return fMarginFraction; }
 
