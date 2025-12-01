@@ -14,9 +14,8 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
-import ROOT
 import numpy as np
-
+import ROOT
 
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"
