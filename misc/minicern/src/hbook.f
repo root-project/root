@@ -19,16 +19,10 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
+      INCLUDE 'hcflag.inc'
+      INCLUDE 'pawc.inc'
       COMMON/BIGBUF/BIGB(4000000)
       character BIGB
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -59,7 +53,7 @@
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
      +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      CHARACTER*(*)  CHTAG, CHFULL, BLOCK
+      CHARACTER*99  CHTAG, CHFULL, BLOCK
       CHARACTER*80 VAR
       CHARACTER*32   NAME, SUBS
       LOGICAL        LDUM
@@ -162,12 +156,9 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLIMIT (LIMIT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
-      INTEGER   IQ        ,LQ
-      REAL            Q
+      INCLUDE 'pawc.inc'
+      INTEGER IQ,LQ
+      REAL Q
       DIMENSION IQ(2),Q(2),LQ(8000)
       EQUIVALENCE (LQ(1),LMAIN),(IQ(1),LQ(9)),(Q(1),IQ(1))
       INTEGER       HVERSN,IHWORK,LHBOOK,LHPLOT,LGTIT,LHWORK,
@@ -245,8 +236,8 @@
      +              ,CHTOP(NLPATM)
       CHARACTER*(LENHFN) HFNAME
       COMMON /HCFILE/HFNAME(MXFILES)
-      COMMON/QUEST/IQUEST(100)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
+      INCLUDE 'quest.inc'
       CHARACTER*8 CHOPT
       CHOPT=CHOPTT
       CALL CLTOU(CHOPT)
@@ -379,10 +370,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HRIN(IDD,ICYCLE,KOFSET)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -425,11 +413,8 @@
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
       COMMON /HNTCUR/ NTCUR
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'hcflag.inc'
+      INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD
       INTEGER       KEYS(2)
       DATA KHIDE,KHID1,KHID2,KHCO1,KHCO2/4HHIDE,4HHID1,4HHID2,
@@ -612,10 +597,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HRZIN(IXDIV,LBANK,JBIAS,KEYS,ICYCLE,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -648,7 +630,7 @@
       COMMON /HCFILE/HFNAME(MXFILES)
       CHARACTER*128  CHMAIL
       COMMON /HCMAIL/CHMAIL
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       DIMENSION LBANK(1),JBIAS(1)
       INTEGER      KEYS(2)
       CHARACTER*(*)CHOPT
@@ -664,10 +646,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNOENT(IDD,NUMB)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -690,7 +669,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       CALL HFIND(IDD,'HNOENT')
       IF(IQUEST(1).NE.0)THEN
          NUMB=0
@@ -707,10 +686,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGIVE(IDD,CHTITL,NCX,XMIN,XMAX,NCY,YMIN,YMAX,NWT,IDB)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -752,7 +728,7 @@
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
      +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      CHARACTER*(*) CHTITL
+      CHARACTER*99 CHTITL
       NARG=10
       NCX=0
       IF(NARG.GT.5)NCY=0
@@ -794,7 +770,7 @@
       IF(NWT.EQ.0)GO TO 99
       NCH=LEN(CHTITL)
       NWCH=MIN(NCH,4*NWT)
-      IF(NCH.GT.0)CHTITL=' '
+      IF (NCH .GT. 0) CHTITL = ' '
       CALL UHTOC(IQ(IWT),4,CHTITL,NWCH)
   99  RETURN
       END
@@ -802,10 +778,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGIVEN( ID1, CHTITL, NVAR, TAGS, RLOW, RHIGH )
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -839,10 +812,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
@@ -851,7 +821,7 @@
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
      +I28,  I29,  I30,  I31,  I32,  I33,  I34,  I35,  I123, I230
-      CHARACTER*(*) CHTITL, TAGS(*)
+      CHARACTER*99 CHTITL, TAGS(*)
       INTEGER       ID1, NVAR
       REAL          RLOW(*), RHIGH(*)
       CHARACTER*8   BLOCK
@@ -911,10 +881,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNPAR(IDN,CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -989,10 +956,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNF(IDN,IDNEVT,X,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1023,7 +987,7 @@
      +              ,CHTOP(NLPATM)
       CHARACTER*(LENHFN) HFNAME
       COMMON /HCFILE/HFNAME(MXFILES)
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       DIMENSION X(*)
       INTEGER   KEYS(2)
       LC=LQ(LCIDN-1)
@@ -1077,10 +1041,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNT1(IDD,BLKNA1,VAR,IOFFST,NVAR,IDNEVT,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1103,10 +1064,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
      +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
      +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
@@ -1184,10 +1142,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNT2(VAR1,IVOFF,NVAR1,IDNEVT,IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1210,10 +1165,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
      +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
      +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
@@ -1547,10 +1499,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HDCOFL
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1596,10 +1545,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HDELET(ID1)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1633,10 +1579,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       IF(LCDIR.LE.0)GO TO 999
       IF(ID1.EQ.0)GO TO 120
       ID=ID1
@@ -1692,10 +1635,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HBNAM(IDD, BLKNA1, ADDRES, FORM1, ISCHAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1731,10 +1671,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER        IDD, ADDRES, HNBPTR
       CHARACTER*(*)  BLKNA1, FORM1
       PARAMETER     (MAXTOK = 50)
@@ -1811,10 +1748,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HIE(IDD,I)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1863,10 +1797,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HIX(IDD,I,X)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1911,10 +1842,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HIJXY(IDD,I,J,X,Y)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1954,10 +1882,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HCDIR(CHPATH,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -1988,15 +1913,12 @@
      +              ,CHTOP(NLPATM)
       CHARACTER*(LENHFN) HFNAME
       COMMON /HCFILE/HFNAME(MXFILES)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
       CHARACTER*128  CHMAIL
       COMMON /HCMAIL/CHMAIL
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*2   NODIR
       PARAMETER    (NODIR = '@#')
       CHARACTER*128 CHAIN, CACHE
@@ -2092,10 +2014,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HMACHI
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2118,10 +2037,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
@@ -2216,10 +2132,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HCX(ICX,IOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2328,10 +2241,7 @@
 *-------------------------------------------------------------------------------
 
       FUNCTION HCXY(ICX,ICY,IOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2388,10 +2298,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HFIND(IDD,CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2414,10 +2321,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER       IFW   ,NW    ,NB    ,IH    ,NHT   ,ICN   ,IPONCE,
      +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
      +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,       ICBLAC,ICSTAR,ICFUNC,
@@ -2427,7 +2331,7 @@
      +       NH    ,MSTEP ,NOENT ,NOLD  ,IDOLAR,IBLANC,KBINSZ,INO   ,
      +       KSQUEZ,NCOLMA,NCOLPA,NLINPA,BIGP  ,ICBLAC,ICSTAR,ICFUNC,
      +       IDG   ,MAXBIT,IDENT
-      COMMON /QUEST/ IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*(*) CHROUT
       IF(LFIX.NE.0)GO TO 99
       IQUEST(1)=0
@@ -2487,10 +2391,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNMADR(VAR1, IADD, ISCHAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2731,10 +2632,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNDESC(IOFF, NSUB, ITYPE, ISIZE, NBITS, INDVAR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2782,10 +2680,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HPARNT(IDN, CHROUT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2853,10 +2748,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTMP(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2879,10 +2771,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
      +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
      +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
@@ -2939,10 +2828,7 @@
 
 *-------------------------------------------------------------------------------
       SUBROUTINE HNBUFR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -2965,10 +2851,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
      +          ZIFNAM, ZIFCHA, ZIFINT, ZIFREA, ZNWTIT, ZITIT1,
      +          ZNCHRZ, ZDESC,  ZLNAME, ZNAME,  ZARIND, ZRANGE, ZNADDR,
@@ -2980,7 +2863,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
       LOGICAL       MEMORY
@@ -3076,10 +2959,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTRD(INDX, IOFF, IBANK, IERROR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3115,7 +2995,7 @@
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
       LOGICAL         NRECOV
       COMMON /HCRECV/ NRECOV
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
       IF (IQ(LNAME+IOFF+ZIBANK) .EQ. IBANK) THEN
@@ -3231,10 +3111,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HSPACE (N,CHROUT,IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3257,11 +3134,8 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'hcflag.inc'
+      INCLUDE 'quest.inc'
       CHARACTER*(*) CHROUT
       IDLAST=0
       IERR=0
@@ -3279,10 +3153,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTMPD(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3327,10 +3198,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBUFD(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3376,10 +3244,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTVAR(ID1,IVAR,CHTAG,BLOCK,NSUB,ITYPE,ISIZE,IELEM)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3413,10 +3278,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER           I1,   I2,   I3,   I4,   I5,   I6,   I7,   I8,
      +                  I9,   I10,  I11,  I12,  I13,  I14,  I15,  I16,
      +I17,  I18,  I19,  I20,  I21,  I22,  I23,  I24,  I25,  I26,  I27,
@@ -3496,10 +3358,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNMSET(IDD, ITEM, IVAL)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3533,10 +3392,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       ID    = IDD
       IDPOS = LOCATI(IQ(LTAB+1),IQ(LCDIR+KNRH),ID)
       IF (IDPOS .LE. 0) THEN
@@ -3562,10 +3418,7 @@
 *-------------------------------------------------------------------------------
 
       INTEGER FUNCTION HNBPTR(BLKNA1)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3619,10 +3472,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBUFF(IDD, FATAL)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3645,10 +3495,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       LOGICAL  FATAL
       IF (LQ(LCDIR-4) .EQ. 0) THEN
          IF (FATAL) THEN
@@ -3677,10 +3524,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBFWR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3714,10 +3558,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
       IERR = 0
@@ -3772,10 +3613,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNHDWR(IDD)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3809,10 +3647,7 @@
      +          ZDESC=1,   ZLNAME=2,  ZNAME=3,   ZRANGE=4,  ZNADDR=12,
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
       IERR = 0
@@ -3845,10 +3680,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLDIR(CHPATH,CHOPT)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3885,7 +3717,7 @@
       COMMON /HCMAIL/CHMAIL
       DIMENSION IPAWC(99)
       EQUIVALENCE (NWPAW,IPAWC(1))
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*(*) CHPATH,CHOPT
       CHARACTER*128 CHWOLD
       DIMENSION LCUR(15),IOPT(5)
@@ -3962,10 +3794,7 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HLDIRT(CHDIR)
-      INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
-      REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
-     +HCV(4000000-11)
+      INCLUDE 'pawc.inc'
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -3988,10 +3817,7 @@
      +          KNCY=7,KYMIN=8,KYMAX=9,KMIN2=6,KMAX2=10,KSCAL2=11,
      +          KTIT2=12,KNBIT=1,KNOENT=2,KSTAT1=3,KNSDIR=5,KNRH=6,
      +          KCON1=9,KCON2=3,KBITS=1,KNTOT=2)
-      INTEGER       ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
-      COMMON/HCFLAG/ID    ,IDBADD,LID   ,IDLAST,IDHOLD,NBIT  ,NBITCH,
-     +       NCHAR ,NRHIST,IERR  ,NV
+      INCLUDE 'hcflag.inc'
       INTEGER       LOUT,LERR,LINFIT
       COMMON/HCUNIT/LOUT,LERR,LINFIT
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
@@ -4006,7 +3832,7 @@
      +          ZARIND=11, ZIBLOK=8,  ZNBLOK=10, ZIBANK=9,  ZIFTMP=11,
      +          ZID=12,    ZITMP=10,  ZNTMP=6,   ZNTMP1=3,  ZLINK=6)
       CHARACTER*(*) CHDIR
-      COMMON/QUEST/IQUEST(100)
+      INCLUDE 'quest.inc'
       CHARACTER*1 HTYPE
       INTEGER     KEYS(2)
       NCH=LENOCC(CHDIR)
@@ -4123,4 +3949,3 @@
       END
 
 *-------------------------------------------------------------------------------
-
