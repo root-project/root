@@ -99,7 +99,9 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 #pragma omp parallel for if (fDoParallelOMP)
    //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
-   for (unsigned int i = 0; i < n; i++) {
+   // Note: the MSVC compiler enforces that the index variable in OpenMP 'for'
+   // statements must have signed int type!
+   for (int i = 0; i < int(n); i++) {
 
 #endif
 
