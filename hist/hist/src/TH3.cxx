@@ -241,43 +241,71 @@ Int_t TH3::BufferEmpty(Int_t action)
       Reset("ICES");
       fBuffer = buffer;
    }
-   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
-      fYaxis.GetXmax() <= fYaxis.GetXmin() ||
-      fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-         //find min, max of entries in buffer
-         Double_t xmin = fBuffer[2];
-         Double_t xmax = xmin;
-         Double_t ymin = fBuffer[3];
-         Double_t ymax = ymin;
-         Double_t zmin = fBuffer[4];
-         Double_t zmax = zmin;
-         for (Int_t i=1;i<nbentries;i++) {
-            Double_t x = fBuffer[4*i+2];
-            if (x < xmin) xmin = x;
-            if (x > xmax) xmax = x;
-            Double_t y = fBuffer[4*i+3];
-            if (y < ymin) ymin = y;
-            if (y > ymax) ymax = y;
-            Double_t z = fBuffer[4*i+4];
-            if (z < zmin) zmin = z;
-            if (z > zmax) zmax = z;
-         }
-         if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
-         } else {
-            fBuffer = nullptr;
-            Int_t keep = fBufferSize; fBufferSize = 0;
-            if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-            if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
-            if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
-            if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
-            if (zmin <  fZaxis.GetXmin()) ExtendAxis(zmin,&fZaxis);
-            if (zmax >= fZaxis.GetXmax()) ExtendAxis(zmax,&fZaxis);
-            fBuffer = buffer;
-            fBufferSize = keep;
-         }
+   const bool xbinAuto = fXaxis.GetXmax() <= fXaxis.GetXmin();
+   Double_t xmin = fBuffer[2];
+   Double_t xmax = xmin;
+   if (CanExtendAllAxes() || xbinAuto) {
+      //find min, max of entries in buffer
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[4*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+      }
+      if (xbinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+      } else {
+         fBuffer = nullptr;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
    }
-   fBuffer = nullptr;
+   const bool ybinAuto = fYaxis.GetXmax() <= fYaxis.GetXmin();
+   Double_t ymin = fBuffer[3];
+   Double_t ymax = ymin;
+   if (CanExtendAllAxes() || ybinAuto) {
+      //find min, max of entries in buffer
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t y = fBuffer[4*i+3];
+         if (y < ymin) ymin = y;
+         if (y > ymax) ymax = y;
+      }
+      if (ybinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+      } else {
+         fBuffer = nullptr;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
+         if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
+   }
+   const bool zbinAuto = fZaxis.GetXmax() <= fZaxis.GetXmin();
+   Double_t zmin = fBuffer[4];
+   Double_t zmax = zmin;
+   if (CanExtendAllAxes() || zbinAuto) {
+      //find min, max of entries in buffer
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t z = fBuffer[4*i+4];
+         if (z < zmin) zmin = z;
+         if (z > zmax) zmax = z;
+      }
+      if (zbinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
+      } else {
+         fBuffer = nullptr;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (zmin <  fZaxis.GetXmin()) ExtendAxis(zmin,&fZaxis);
+         if (zmax >= fZaxis.GetXmax()) ExtendAxis(zmax,&fZaxis);
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
+   }
+   
+   buffer = fBuffer; fBuffer = nullptr;
 
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);

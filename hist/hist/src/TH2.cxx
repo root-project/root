@@ -260,35 +260,50 @@ Int_t TH2::BufferEmpty(Int_t action)
       fBuffer = buffer;
    }
 
-   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+   const bool xbinAuto = fXaxis.GetXmax() <= fXaxis.GetXmin();
+   Double_t xmin = fBuffer[2];
+   Double_t xmax = xmin;
+   if (CanExtendAllAxes() || xbinAuto) {
       //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      Double_t ymin = fBuffer[3];
-      Double_t ymax = ymin;
       for (Int_t i=1;i<nbentries;i++) {
          Double_t x = fBuffer[3*i+2];
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
-         Double_t y = fBuffer[3*i+3];
-         if (y < ymin) ymin = y;
-         if (y > ymax) ymax = y;
       }
-      if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+      if (xbinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
       } else {
          fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
+   }
+   const bool ybinAuto = fYaxis.GetXmax() <= fYaxis.GetXmin();
+   Double_t ymin = fBuffer[3];
+   Double_t ymax = ymin;
+   if (CanExtendAllAxes() || ybinAuto) {
+      //find min, max of entries in buffer
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t y = fBuffer[3*i+3];
+         if (y < ymin) ymin = y;
+         if (y > ymax) ymax = y;
+      }
+      if (ybinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+      } else {
+         fBuffer = nullptr;
+         Int_t keep = fBufferSize; fBufferSize = 0;
          if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
          if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
    }
-
-   fBuffer = nullptr;
+   
+   buffer = fBuffer; fBuffer = nullptr;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
