@@ -222,7 +222,7 @@ namespace Experimental {
 template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 {
-   using SnapshotResult_t = ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>;
+   using SnapshotResult_t = ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>;
    static_assert(!std::is_same_v<T, SnapshotResult_t>,
                  "Snapshot with variations can only be enabled via RSnapshotOptions.");
 
