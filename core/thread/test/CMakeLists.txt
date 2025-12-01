@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_ADD_GTEST(testRWLock testRWLock.cxx LIBRARIES Core Thread Hist ${TBB_LIBRARIES})
+ROOT_ADD_GTEST(testRWLock testRWLock.cxx LIBRARIES Core Thread Hist ${TBB_LIBRARIES} INCLUDE_DIRS ${TBB_INCLUDE_DIRS})
 
 ROOT_ADD_GTEST(testTThreadedObject testTThreadedObject.cxx LIBRARIES Hist)
 
