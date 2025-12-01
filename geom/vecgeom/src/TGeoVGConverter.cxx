@@ -23,12 +23,13 @@ Geometry converter to VecGeom
 
 namespace {
 
-Bool_t  isInSelection(const TGeoShape* shape,  const std::set<TGeoShape::EShapeType>& selection) {
+Bool_t isInSelection(const TGeoShape *shape, const std::set<TGeoShape::EShapeType> &selection)
+{
    for (auto element : selection) {
 
       // Special treatment of TGeo::kGeoBox, which is base class for all other shapes
       if (element == TGeoShape::kGeoBox) {
-         if (typeid(*shape) == typeid(TGeoBBox) ) {
+         if (typeid(*shape) == typeid(TGeoBBox)) {
             return true;
          } else {
             continue;
@@ -37,13 +38,13 @@ Bool_t  isInSelection(const TGeoShape* shape,  const std::set<TGeoShape::EShapeT
 
       // Just test bit for other shapes
       if (shape->TestShapeBit(element)) {
-        return true;
+         return true;
       }
    }
    return false;
 }
 
-}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -96,8 +97,7 @@ void TGeoVGConverter::ConvertGeometry()
          continue;
 
       // If fSelectedShapeTypes is not empty, convert only selected shapes
-      if ((! fSelectedShapeTypes.empty()) &&
-          (! isInSelection(vol->GetShape(), fSelectedShapeTypes))) {
+      if ((!fSelectedShapeTypes.empty()) && (!isInSelection(vol->GetShape(), fSelectedShapeTypes))) {
          if (gGeoManager->GetVerboseLevel() > 1) {
             Info("ConvertGeometry", "# Shape type %s is not selected for conversion\n",
                  vol->GetShape()->IsA()->GetName());

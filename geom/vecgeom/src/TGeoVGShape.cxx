@@ -139,10 +139,10 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
    if (shape->IsA() == TGeoBBox::Class()) {
       TGeoBBox const *const box = static_cast<TGeoBBox const *>(shape);
       if ((box->GetOrigin()[0] != 0.0) || (box->GetOrigin()[1] != 0.0) || (box->GetOrigin()[2] != 0.0)) {
-        // skip solids with shifted origin
-        printf("Unsupported box shape with shifted origin\n");
+         // skip solids with shifted origin
+         printf("Unsupported box shape with shifted origin\n");
       } else {
-        unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
+         unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
       }
    }
 
