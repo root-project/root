@@ -10,6 +10,7 @@
 #include "RWeight.hxx"
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>

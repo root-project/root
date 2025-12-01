@@ -12,6 +12,8 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -72,10 +74,11 @@ public:
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
-   /// the
-   /// \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins)
-   /// "constructor of RRegularAxis"
-   RHist(std::size_t nNormalBins, std::pair<double, double> interval) : RHist({RRegularAxis(nNormalBins, interval)}) {}
+   /// the \ref RRegularAxis::RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool
+   /// enableFlowBins) "constructor of RRegularAxis"
+   RHist(std::uint64_t nNormalBins, std::pair<double, double> interval) : RHist({RRegularAxis(nNormalBins, interval)})
+   {
+   }
 
    /// The copy constructor is deleted.
    ///
@@ -104,7 +107,7 @@ public:
 
    const std::vector<RAxisVariant> &GetAxes() const { return fEngine.GetAxes(); }
    std::size_t GetNDimensions() const { return fEngine.GetNDimensions(); }
-   std::size_t GetTotalNBins() const { return fEngine.GetTotalNBins(); }
+   std::uint64_t GetTotalNBins() const { return fEngine.GetTotalNBins(); }
 
    std::uint64_t GetNEntries() const { return fStats.GetNEntries(); }
    /// \copydoc RHistStats::ComputeNEffectiveEntries()

@@ -66,8 +66,8 @@ public:
       }
    }
 
-   std::size_t GetNNormalBins() const { return fBinEdges.size() - 1; }
-   std::size_t GetTotalNBins() const { return fEnableFlowBins ? fBinEdges.size() + 1 : fBinEdges.size() - 1; }
+   std::uint64_t GetNNormalBins() const { return fBinEdges.size() - 1; }
+   std::uint64_t GetTotalNBins() const { return fEnableFlowBins ? fBinEdges.size() + 1 : fBinEdges.size() - 1; }
    const std::vector<double> &GetBinEdges() const { return fBinEdges; }
    bool HasFlowBins() const { return fEnableFlowBins; }
 
@@ -122,7 +122,7 @@ public:
          return {0, false};
       }
       assert(index.IsNormal());
-      std::size_t bin = index.GetIndex();
+      std::uint64_t bin = index.GetIndex();
       return {bin, bin < fBinEdges.size() - 1};
    }
 

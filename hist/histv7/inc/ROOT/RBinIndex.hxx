@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 
 namespace ROOT {
 namespace Experimental {
@@ -20,21 +21,25 @@ Objects of this type should be passed by value.
 Feedback is welcome!
 */
 class RBinIndex final {
-   static constexpr std::size_t UnderflowIndex = -3;
-   static constexpr std::size_t OverflowIndex = -2;
-   static constexpr std::size_t InvalidIndex = -1;
+   static constexpr std::uint64_t UnderflowIndex = -3;
+   static constexpr std::uint64_t OverflowIndex = -2;
+   static constexpr std::uint64_t InvalidIndex = -1;
 
-   std::size_t fIndex = InvalidIndex;
+   // We use std::uint64_t instead of std::size_t for the index because for sparse histograms, not all bins have to be
+   // allocated in memory. However, we require that the index has at least that size.
+   static_assert(sizeof(std::uint64_t) >= sizeof(std::size_t), "index type not large enough to address all bins");
+
+   std::uint64_t fIndex = InvalidIndex;
 
 public:
    /// Construct an invalid bin index.
    RBinIndex() = default;
 
    /// Construct a bin index for a normal bin.
-   RBinIndex(std::size_t index) : fIndex(index) { assert(IsNormal()); }
+   RBinIndex(std::uint64_t index) : fIndex(index) { assert(IsNormal()); }
 
    /// Return the index for a normal bin.
-   std::size_t GetIndex() const
+   std::uint64_t GetIndex() const
    {
       assert(IsNormal());
       return fIndex;
@@ -48,13 +53,13 @@ public:
    bool IsOverflow() const { return fIndex == OverflowIndex; }
    bool IsInvalid() const { return fIndex == InvalidIndex; }
 
-   RBinIndex &operator+=(std::size_t a)
+   RBinIndex &operator+=(std::uint64_t a)
    {
       if (!IsNormal()) {
          // Arithmetic operations on special values go to InvalidIndex.
          fIndex = InvalidIndex;
       } else {
-         std::size_t old = fIndex;
+         std::uint64_t old = fIndex;
          fIndex += a;
          if (fIndex < old || !IsNormal()) {
             // The addition wrapped around, go to InvalidIndex.
@@ -64,7 +69,7 @@ public:
       return *this;
    }
 
-   RBinIndex operator+(std::size_t a) const
+   RBinIndex operator+(std::uint64_t a) const
    {
       RBinIndex ret = *this;
       ret += a;
@@ -84,7 +89,7 @@ public:
       return old;
    }
 
-   RBinIndex &operator-=(std::size_t a)
+   RBinIndex &operator-=(std::uint64_t a)
    {
       if (!IsNormal()) {
          // Arithmetic operations on special values go to InvalidIndex.
@@ -98,7 +103,7 @@ public:
       return *this;
    }
 
-   RBinIndex operator-(std::size_t a) const
+   RBinIndex operator-(std::uint64_t a) const
    {
       RBinIndex ret = *this;
       ret -= a;

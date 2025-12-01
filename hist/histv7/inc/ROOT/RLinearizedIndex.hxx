@@ -6,6 +6,7 @@
 #define ROOT_RLinearizedIndex
 
 #include <cstddef>
+#include <cstdint>
 
 namespace ROOT {
 namespace Experimental {
@@ -19,7 +20,11 @@ For example, when an argument is outside the axis and underflow / overflow bins 
 Feedback is welcome!
 */
 struct RLinearizedIndex final {
-   std::size_t fIndex = 0;
+   // We use std::uint64_t instead of std::size_t for the index because for sparse histograms, not all bins have to be
+   // allocated in memory. However, we require that the index has at least that size.
+   static_assert(sizeof(std::uint64_t) >= sizeof(std::size_t), "index type not large enough to address all bins");
+
+   std::uint64_t fIndex = 0;
    bool fValid = false;
 };
 

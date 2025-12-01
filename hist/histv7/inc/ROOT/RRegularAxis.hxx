@@ -10,7 +10,7 @@
 #include "RLinearizedIndex.hxx"
 
 #include <cassert>
-#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -40,7 +40,7 @@ public:
 
 private:
    /// The number of normal bins
-   std::size_t fNNormalBins;
+   std::uint64_t fNNormalBins;
    /// The lower end of the axis interval
    double fLow;
    /// The upper end of the axis interval
@@ -56,7 +56,7 @@ public:
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
-   RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins = true)
+   RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins = true)
       : fNNormalBins(nNormalBins), fLow(interval.first), fHigh(interval.second), fEnableFlowBins(enableFlowBins)
    {
       if (nNormalBins == 0) {
@@ -69,8 +69,8 @@ public:
       fInvBinWidth = nNormalBins / (fHigh - fLow);
    }
 
-   std::size_t GetNNormalBins() const { return fNNormalBins; }
-   std::size_t GetTotalNBins() const { return fEnableFlowBins ? fNNormalBins + 2 : fNNormalBins; }
+   std::uint64_t GetNNormalBins() const { return fNNormalBins; }
+   std::uint64_t GetTotalNBins() const { return fEnableFlowBins ? fNNormalBins + 2 : fNNormalBins; }
    double GetLow() const { return fLow; }
    double GetHigh() const { return fHigh; }
    bool HasFlowBins() const { return fEnableFlowBins; }
@@ -100,7 +100,7 @@ public:
          return {fNNormalBins + 1, fEnableFlowBins};
       }
 
-      std::size_t bin = (x - fLow) * fInvBinWidth;
+      std::uint64_t bin = (x - fLow) * fInvBinWidth;
       if (bin >= fNNormalBins) {
          bin = fNNormalBins - 1;
       }
@@ -124,7 +124,7 @@ public:
          return {0, false};
       }
       assert(index.IsNormal());
-      std::size_t bin = index.GetIndex();
+      std::uint64_t bin = index.GetIndex();
       return {bin, bin < fNNormalBins};
    }
 

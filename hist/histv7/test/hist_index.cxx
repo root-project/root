@@ -1,5 +1,6 @@
 #include "hist_test.hxx"
 
+#include <cstdint>
 #include <iterator>
 #include <vector>
 
@@ -56,7 +57,7 @@ TEST(RBinIndex, Plus)
    }
 
    // Matches RBinIndex::UnderflowIndex
-   static constexpr std::size_t UnderflowIndex = -3;
+   static constexpr std::uint64_t UnderflowIndex = -3;
    EXPECT_TRUE((RBinIndex(0) + UnderflowIndex).IsInvalid());
    EXPECT_TRUE((RBinIndex(3) + UnderflowIndex).IsInvalid());
 }
