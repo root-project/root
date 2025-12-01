@@ -19,23 +19,11 @@ __all__ = [
     '_end_capture_stderr'
     ]
 
-# First load the dependency libraries of the backend, then pull in the libcppyy
-# extension module. If the backed can't be loaded, it was probably linked
-# statically into the extension module, so we don't error out at this point.
-try:
-    from cppyy_backend import loader
-    c = loader.load_cpp_backend()
-except ImportError:
-    c = None
-
 if platform.system() == "Windows":
     # On Windows, the library has to be searched without prefix
     import libcppyy as _backend
 else:
     import cppyy.libcppyy as _backend
-
-if c is not None:
-    _backend._cpp_backend = c
 
 # explicitly expose APIs from libcppyy
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
