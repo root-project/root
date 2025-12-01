@@ -215,10 +215,18 @@ extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const 
 #endif
 
 extern "C" void  type_of_call hprntu(const int&);
-extern "C" void  type_of_call hgnpar(const int&,const char *,const int);
+#ifndef WIN32
+extern "C" void  type_of_call hgnpar(const int&,DEFCHAR,fortran_charlen_t);
+#else
+extern "C" void  type_of_call hgnpar(const int&,DEFCHAR);
+#endif
 extern "C" void  type_of_call hgnf(const int&,const int&,const float&,const int&);
 extern "C" void  type_of_call hgnt(const int&,const int&,const int&);
-extern "C" void  type_of_call rzink(const int&,const int&,const char *,const int);
+#ifndef WIN32
+extern "C" void  type_of_call rzink(const int&,const int&,DEFCHAR,fortran_charlen_t);
+#else
+extern "C" void  type_of_call rzink(const int&,const int&,DEFCHAR);
+#endif
 extern "C" void  type_of_call hdcofl();
 extern "C" void  type_of_call hmaxim(const int&,const float&);
 extern "C" void  type_of_call hminim(const int&,const float&);
