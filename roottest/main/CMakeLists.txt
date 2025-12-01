@@ -368,11 +368,27 @@ ROOTTEST_ADD_TEST(SimpleRootcp5CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootcp5Clean
                   COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy5.root
                   FIXTURES_REQUIRED main-SimpleRootcp5CheckOutput-fixture)
-#########################################################################
 
-############################# ROOMV TESTS ############################
-ROOTTEST_ADD_TEST(SimpleRootmv1PrepareInput
-                  COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move1.root
+
+ROOTTEST_ADD_TEST(RootcpReplaceRecursivePrepareInput
+                  COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy_replace_recursive.root
+                  FIXTURES_SETUP main-RootcpReplaceRecursivePrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(RootcpReplaceRecursive
+                  COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --replace -r copy_replace_recursive.root:tof copy_replace_recursive.root:tof
+                  FIXTURES_REQUIRED main-RootcpReplaceRecursivePrepareInput-fixture
+                  FIXTURES_SETUP main-RootcpReplaceRecursive-fixture)
+
+ROOTTEST_ADD_TEST(RootcpReplaceRecursiveCheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy_replace_recursive.root:tof
+                  OUTREF RootcpReplaceRecursive.ref
+                  FIXTURES_REQUIRED main-RootcpReplaceRecursive-fixture
+                  FIXTURES_SETUP main-RootcpReplaceRecursiveCheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(RootcpReplaceRecursiveClean
+                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_replace_recursive.root
+                  FIXTURES_REQUIRED main-RootcpReplaceRecursiveCheckOutput-fixture)
                   FIXTURES_SETUP main-SimpleRootmv1PrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(SimpleRootmv1
