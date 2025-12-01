@@ -14,6 +14,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -64,9 +65,9 @@ public:
    /// It is the product of each dimension's total number of bins.
    ///
    /// \return the total number of bins
-   std::size_t ComputeTotalNBins() const
+   std::uint64_t ComputeTotalNBins() const
    {
-      std::size_t totalNBins = 1;
+      std::uint64_t totalNBins = 1;
       for (auto &&axis : fAxes) {
          if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
             totalNBins *= regular->GetTotalNBins();
@@ -155,7 +156,7 @@ public:
       if (N != fAxes.size()) {
          throw std::invalid_argument("invalid number of indices passed to ComputeGlobalIndex");
       }
-      std::size_t globalIndex = 0;
+      std::uint64_t globalIndex = 0;
       for (std::size_t i = 0; i < N; i++) {
          const auto &index = indices[i];
          const auto &axis = fAxes[i];

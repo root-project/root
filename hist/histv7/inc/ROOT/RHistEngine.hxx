@@ -14,6 +14,8 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -87,10 +89,9 @@ public:
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
-   /// the
-   /// \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins)
-   /// "constructor of RRegularAxis"
-   RHistEngine(std::size_t nNormalBins, std::pair<double, double> interval)
+   /// the \ref RRegularAxis::RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool
+   /// enableFlowBins) "constructor of RRegularAxis"
+   RHistEngine(std::uint64_t nNormalBins, std::pair<double, double> interval)
       : RHistEngine({RRegularAxis(nNormalBins, interval)})
    {
    }
@@ -119,7 +120,7 @@ public:
 
    const std::vector<RAxisVariant> &GetAxes() const { return fAxes.Get(); }
    std::size_t GetNDimensions() const { return fAxes.GetNDimensions(); }
-   std::size_t GetTotalNBins() const { return fBinContents.size(); }
+   std::uint64_t GetTotalNBins() const { return fBinContents.size(); }
 
    /// Get the content of a single bin.
    ///
