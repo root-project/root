@@ -39,14 +39,11 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 // clang-format off
 /**
- * \class ROOT::Internal::RDF::RInterfaceBase
+ * \class ROOT::RDF::RInterfaceBase
  * \ingroup dataframe
- * \brief The public interface to the RDataFrame federation of classes.
- * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
- * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
+ * \brief The base public interface to the RDataFrame federation of classes.
  *
- * The documentation of each method features a one liner illustrating how to use the method, for example showing how
- * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
+ * This class contains common methods for all RInterface instantiations.
  */
 // clang-format on
 class RInterfaceBase {
