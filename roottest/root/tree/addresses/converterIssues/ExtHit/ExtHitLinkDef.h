@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class Belle2::RelationsInterface<TObject>+;
 #pragma link C++ class Belle2::ExtHit+;
