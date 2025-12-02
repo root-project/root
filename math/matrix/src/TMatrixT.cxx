@@ -3076,7 +3076,7 @@ TMatrixT<Element> &TMatrixTAutoloadOps::ElementDiv(TMatrixT<Element> &target, co
 /// Elementary routine to calculate matrix multiplication A*B
 
 template <class Element>
-void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa, const Element *const bp, Int_t nb,
+void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa, const Element *const bp, Int_t /*nb*/,
                                  Int_t ncolsb, Element *cp)
 {
    const Int_t M = na / ncolsa;
