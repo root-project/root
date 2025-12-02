@@ -1306,6 +1306,7 @@ Bool_t TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t
 ///      filling directly a TH1D using the 2-nd value as a weight.
 ///      This makes sense only for profile filled with weights =1. If not, the error of the
 ///       projected histogram obtained with this option will not be correct.
+///  - option "width" does not exist for this method. If needed, call TH1::Normalize on the result.
 
 TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 {

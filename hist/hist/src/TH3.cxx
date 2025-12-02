@@ -1743,10 +1743,10 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 3-D histogram into a 1-D histogram along X.
+/// Project a 3-D histogram into a 1-D histogram along X (integration along Y and Z).
 ///
 ///   The projection is always of the type TH1D.
-///   The projection is made from the cells along the X axis
+///   The projection is made from summing the cells along the Y and Z axes
 ///   ranging from iymin to iymax and izmin to izmax included.
 ///   By default, underflow and overflows are included in both the Y and Z axis.
 ///   By Setting iymin=1 and iymax=NbinsY the underflow and/or overflow in Y will be excluded
@@ -1756,6 +1756,9 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
 ///   if option "d" is specified, the projection is drawn in the current pad.
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its YZ bin-area during projection
 ///
 ///   NOTE that if a TH1D named "name" exists in the current directory or pad
 ///   the histogram is reset and filled again with the projected contents of the TH3.
@@ -1770,16 +1773,16 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax,
    if (hname == "_px") hname = TString::Format("%s%s", GetName(), name);
    TString title =  TString::Format("%s ( Projection X )",GetTitle());
 
-   // when projecting in Z outer axis are Y and Z (order is important. It is defined in the DoProject1D function)
+   // when projecting in X outer axis are Y and Z (order is important. It is defined in the DoProject1D function)
    return DoProject1D(hname, title, iymin, iymax, izmin, izmax, &fXaxis, &fYaxis, &fZaxis, option);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 3-D histogram into a 1-D histogram along Y.
+/// Project a 3-D histogram into a 1-D histogram along Y (integration along X and Z).
 ///
 ///   The projection is always of the type TH1D.
-///   The projection is made from the cells along the Y axis
+///   The projection is made from summing the cells along the X and Z axes
 ///   ranging from ixmin to ixmax and izmin to izmax included.
 ///   By default, underflow and overflow are included in both the X and Z axis.
 ///   By setting ixmin=1 and ixmax=NbinsX the underflow and/or overflow in X will be excluded
@@ -1789,6 +1792,9 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax,
 ///   if option "d" is specified, the projection is drawn in the current pad.
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its XZ bin-area during projection
 ///
 ///   NOTE that if a TH1D named "name" exists in the current directory or pad,
 ///   the histogram is reset and filled again with the projected contents of the TH3.
@@ -1802,15 +1808,15 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax,
    if (hname == "_py") hname = TString::Format("%s%s", GetName(), name);
    TString title =  TString::Format("%s ( Projection Y )",GetTitle());
 
-   // when projecting in Z outer axis are X and Y (order is important. It is defined in the DoProject1D function)
+   // when projecting in Y outer axis are X and Z (order is important. It is defined in the DoProject1D function)
    return DoProject1D(hname, title, ixmin, ixmax, izmin, izmax, &fYaxis, &fXaxis, &fZaxis, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 3-D histogram into a 1-D histogram along Z.
+/// Project a 3-D histogram into a 1-D histogram along Z (integration along X and Y).
 ///
 ///   The projection is always of the type TH1D.
-///   The projection is made from the cells along the Z axis
+///   The projection is made from summing the cells along the X and Y axis
 ///   ranging from ixmin to ixmax and iymin to iymax included.
 ///   By default, bins 1 to nx and 1 to ny  are included
 ///   By default, underflow and overflow are included in both the X and Y axis.
@@ -1821,6 +1827,9 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax,
 ///   if option "d" is specified, the projection is drawn in the current pad.
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its XY bin-area during projection
 ///
 ///   NOTE that if a TH1D named "name" exists in the current directory or pad,
 ///   the histogram is reset and filled again with the projected contents of the TH3.
@@ -1878,7 +1887,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
       opt.Remove(opt.First("o"),1);
    }
 
-   TH1D * h1 = DoProject1D(name, title, projAxis, &out1, &out2, computeErrors, originalRange,true,true);
+   TH1D * h1 = DoProject1D(name, title, projAxis, &out1, &out2, computeErrors, originalRange,true,true,opt.Contains("width"));
 
    // // restore original range
    // if (axis1->TestBit(TAxis::kAxisRange)) {
@@ -1901,13 +1910,13 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// internal methdod performing the projection to 1D histogram
+/// internal method performing the projection to 1D histogram
 /// called from other TH3::DoProject1D
 
 TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
                        const TAxis * out1, const TAxis * out2,
                        bool computeErrors, bool originalRange,
-                       bool useUF, bool useOF) const
+                       bool useUF, bool useOF, bool useWidth) const
 {
    // Create the projection histogram
    TH1D *h1 = nullptr;
@@ -2051,9 +2060,10 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
             Int_t bin = GetBin(*refX, *refY, *refZ);
 
             // sum the bin contents and errors if needed
-            cont += RetrieveBinContent(bin);
+            double step = useWidth ? out1->GetBinWidth(out1bin) * out2->GetBinWidth(out2bin) : 1;
+            cont += RetrieveBinContent(bin) * step;
             if (computeErrors) {
-               Double_t exyz = GetBinError(bin);
+               Double_t exyz = GetBinError(bin) * step;
                err2 += exyz*exyz;
             }
          }
@@ -2120,7 +2130,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
 
 TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                     bool computeErrors, bool originalRange,
-                    bool useUF, bool useOF) const
+                    bool useUF, bool useOF, bool useWidth) const
 {
    TH2D *h2 = nullptr;
 
@@ -2282,9 +2292,10 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
             Int_t bin = GetBin(*refX,*refY,*refZ);
 
             // sum the bin contents and errors if needed
-            cont += RetrieveBinContent(bin);
+            double step = useWidth ? out->GetBinWidth(outbin) : 1;
+            cont += RetrieveBinContent(bin) * step;
             if (computeErrors) {
-               Double_t exyz = GetBinError(bin);
+               Double_t exyz = GetBinError(bin) * step;
                err2 += exyz*exyz;
             }
 
@@ -2394,6 +2405,9 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 ///
 /// If option contains the string "e", errors are computed
 ///
+/// If option "width" is specified, each bin content is multiplied
+/// by its width (area) along the integrated dimension(s)
+///
 /// The projection is made for the selected bins only.
 /// To select a bin range along an axis, use TAxis::SetRange, eg
 ///    h3.GetYaxis()->SetRange(23,56);
@@ -2434,7 +2448,7 @@ TH1 *TH3::Project3D(Option_t *option) const
       opt.Remove(0,underscore+1);
     }
    opt.ToLower();
-
+   bool useWidth = opt.Contains("width");
    Int_t pcase = 0;
    TString ptype;
    if (opt.Contains("x"))  { pcase = 1; ptype = "x"; }
@@ -2493,55 +2507,55 @@ TH1 *TH3::Project3D(Option_t *option) const
       case 1:
          // "x"
          h = DoProject1D(name, title, this->GetXaxis(), nullptr, nullptr,
-                        computeErrors, originalRange, useUF, useOF);
+                        computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 2:
          // "y"
          h = DoProject1D(name, title, this->GetYaxis(), nullptr, nullptr,
-                         computeErrors, originalRange, useUF, useOF);
+                         computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 3:
          // "z"
          h = DoProject1D(name, title, this->GetZaxis(), nullptr, nullptr,
-                         computeErrors, originalRange, useUF, useOF);
+                         computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 4:
          // "xy"
          h = DoProject2D(name, title, this->GetXaxis(),this->GetYaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 5:
          // "yx"
          h = DoProject2D(name, title, this->GetYaxis(),this->GetXaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 6:
          // "xz"
          h = DoProject2D(name, title, this->GetXaxis(),this->GetZaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 7:
          // "zx"
          h = DoProject2D(name, title, this->GetZaxis(),this->GetXaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 8:
          // "yz"
          h = DoProject2D(name, title, this->GetYaxis(),this->GetZaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
       case 9:
          // "zy"
          h = DoProject2D(name, title, this->GetZaxis(),this->GetYaxis(),
-                       computeErrors, originalRange, useUF, useOF);
+                       computeErrors, originalRange, useUF, useOF, useWidth);
          break;
 
    }
@@ -2591,8 +2605,8 @@ void TH3::DoFillProfileProjection(TProfile2D * p2,
 /// internal method to project to a 2D Profile
 /// called from TH3::Project3DProfile
 
-TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                          bool originalRange, bool useUF, bool useOF) const
+TProfile2D *TH3::DoProjectProfile2D(const char *name, const char *title, const TAxis *projX, const TAxis *projY,
+                                    bool originalRange, bool useUF, bool useOF, bool useWidth) const
 {
    // Get the ranges where we will work.
    Int_t ixmin = std::max(projX->GetFirst(),1);
@@ -2745,8 +2759,8 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
             Int_t bin = GetBin(*refX,*refY,*refZ);
 
             //DoFillProfileProjection(p2, *projY, *projX, *outAxis, iybin, ixbin, outbin, bin, useWeights);
-
-            Double_t cont = RetrieveBinContent(bin);
+            double step = useWidth ? outAxis->GetBinWidth(outbin) : 1;
+            Double_t cont = RetrieveBinContent(bin) * step;
             if (!cont) continue;
 
             Double_t tmp = 0;
@@ -2797,6 +2811,9 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 /// option = "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
 ///
+/// if option "width" is specified, each bin content is multiplied
+/// by its bin-width across integrated dimension during projection
+///
 /// The projection is made for the selected bins only.
 /// To select a bin range along an axis, use TAxis::SetRange, eg
 ///    h3.GetYaxis()->SetRange(23,56);
@@ -2823,7 +2840,9 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 
 TProfile2D *TH3::Project3DProfile(Option_t *option) const
 {
-   TString opt = option; opt.ToLower();
+   TString opt = option;
+   opt.ToLower();
+   Bool_t useWidth = opt.Contains("width");
    Int_t pcase = 0;
    TString ptype;
    if (opt.Contains("xy")) { pcase = 4; ptype = "xy"; }
@@ -2867,32 +2886,32 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    switch (pcase) {
       case 4:
          // "xy"
-         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetYaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetYaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
       case 5:
          // "yx"
-         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetXaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetXaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
       case 6:
          // "xz"
-         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetZaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetXaxis(), GetZaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
       case 7:
          // "zx"
-         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetXaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetXaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
       case 8:
          // "yz"
-         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetZaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetYaxis(), GetZaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
       case 9:
          // "zy"
-         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetYaxis(), originalRange, useUF, useOF);
+         p2 = DoProjectProfile2D(name, title, GetZaxis(), GetYaxis(), originalRange, useUF, useOF, useWidth);
          break;
 
    }
@@ -3517,21 +3536,21 @@ void TH3::Streamer(TBuffer &R__b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static methdod performing the projection to 1D histogram
+/// static method performing the projection to 1D histogram
 
 TH1D *TH3::DoProject1D(const TH3 &h, const char *name, const char *title, const TAxis *projX, bool computeErrors,
-                       bool originalRange, bool useUF, bool useOF)
+                       bool originalRange, bool useUF, bool useOF, bool useWidth)
 {
-   return h.DoProject1D(name, title, projX, nullptr, nullptr, computeErrors, originalRange, useUF, useOF);
+   return h.DoProject1D(name, title, projX, nullptr, nullptr, computeErrors, originalRange, useUF, useOF, useWidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static methdod performing the projection to 2D histogram
+/// static method performing the projection to 2D histogram
 
 TH2D *TH3::DoProject2D(const TH3 &h, const char *name, const char *title, const TAxis *projX, const TAxis *projY,
-                       bool computeErrors, bool originalRange, bool useUF, bool useOF)
+                       bool computeErrors, bool originalRange, bool useUF, bool useOF, bool useWidth)
 {
-   return h.DoProject2D(name, title, projX, projY, computeErrors, originalRange, useUF, useOF);
+   return h.DoProject2D(name, title, projX, projY, computeErrors, originalRange, useUF, useOF, useWidth);
 }
 
 //______________________________________________________________________________
