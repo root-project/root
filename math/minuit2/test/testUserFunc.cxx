@@ -54,7 +54,7 @@ void testUserFunc(std::string type = "Minuit2", int n = 1000)
    h1->Draw();
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc, char **argv)
 {
    if (argc > 1) {
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 }
 #endif
 
-//#ifndef __CINT__
+//#ifndef __CLING__
 // int main() {
 //  testUserFunc( );
 //}

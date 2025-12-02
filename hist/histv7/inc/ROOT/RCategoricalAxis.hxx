@@ -11,6 +11,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -69,8 +70,8 @@ public:
       }
    }
 
-   std::size_t GetNNormalBins() const { return fCategories.size(); }
-   std::size_t GetTotalNBins() const { return fEnableOverflowBin ? fCategories.size() + 1 : fCategories.size(); }
+   std::uint64_t GetNNormalBins() const { return fCategories.size(); }
+   std::uint64_t GetTotalNBins() const { return fEnableOverflowBin ? fCategories.size() + 1 : fCategories.size(); }
    const std::vector<std::string> &GetCategories() const { return fCategories; }
    bool HasOverflowBin() const { return fEnableOverflowBin; }
 
@@ -118,7 +119,7 @@ public:
          return {0, false};
       }
       assert(index.IsNormal());
-      std::size_t bin = index.GetIndex();
+      std::uint64_t bin = index.GetIndex();
       return {bin, bin < fCategories.size()};
    }
 

@@ -1840,7 +1840,7 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
                      std::string &code_for_parser)
 {
-   code_for_parser += "#ifdef __CINT__\n\n";
+   code_for_parser += "#ifdef __CLING__\n\n";
    code_for_parser += "#pragma link off all globals;\n";
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
@@ -4274,8 +4274,8 @@ int RootClingMain(int argc,
    // Data is in 'outputFile', therefore in the same scope.
    llvm::StringRef moduleName;
    std::string vfsArg;
-   // Adding -fmodules to the args will break lexing with __CINT__ defined,
-   // and we actually do lex with __CINT__ and reuse this variable later,
+   // Adding -fmodules to the args will break lexing with __CLING__ defined,
+   // and we actually do lex with __CLING__ and reuse this variable later,
    // we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
 
@@ -4486,8 +4486,8 @@ int RootClingMain(int argc,
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
-   clingArgs.push_back("-D__CINT__");
-   clingArgs.push_back("-D__MAKECINT__");
+   clingArgs.push_back("-D__CINT__"); // backward compatibility. Now __CLING__ should be used instead
+   clingArgs.push_back("-D__MAKECINT__"); // backward compatibility. Now __ROOTCLING__ should used instead
 
    AddPlatformDefines(clingArgs);
 
@@ -4750,8 +4750,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
-
+      
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(nullptr, "Parsing #pragma failed %s\n", linkdefFilename.c_str());

@@ -14,6 +14,8 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -87,10 +89,9 @@ public:
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
-   /// the
-   /// \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins)
-   /// "constructor of RRegularAxis"
-   RHistEngine(std::size_t nNormalBins, std::pair<double, double> interval)
+   /// the \ref RRegularAxis::RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool
+   /// enableFlowBins) "constructor of RRegularAxis"
+   RHistEngine(std::uint64_t nNormalBins, std::pair<double, double> interval)
       : RHistEngine({RRegularAxis(nNormalBins, interval)})
    {
    }
@@ -119,7 +120,7 @@ public:
 
    const std::vector<RAxisVariant> &GetAxes() const { return fAxes.Get(); }
    std::size_t GetNDimensions() const { return fAxes.GetNDimensions(); }
-   std::size_t GetTotalNBins() const { return fBinContents.size(); }
+   std::uint64_t GetTotalNBins() const { return fBinContents.size(); }
 
    /// Get the content of a single bin.
    ///
@@ -307,6 +308,36 @@ public:
       }
    }
 
+   /// Fill an entry into the histogram with a user-defined weight.
+   ///
+   /// This overload is only available for user-defined bin content types.
+   ///
+   /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
+   /// discarded.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration, or if an argument cannot be
+   /// converted for the axis type at run-time.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \param[in] weight the weight for this entry
+   template <typename... A, typename W>
+   void Fill(const std::tuple<A...> &args, const W &weight)
+   {
+      static_assert(std::is_class_v<BinContentType>,
+                    "user-defined weight types are only supported for user-defined bin content types");
+
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (sizeof...(A) != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         fBinContents[index.fIndex] += weight;
+      }
+   }
+
    /// Fill an entry into the histogram.
    ///
    /// \code
@@ -392,6 +423,31 @@ public:
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
          Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+      }
+   }
+
+   /// Fill an entry into the histogram with a user-defined weight using atomic instructions.
+   ///
+   /// This overload is only available for user-defined bin content types.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \param[in] weight the weight for this entry
+   /// \see Fill(const std::tuple<A...> &args, const W &weight)
+   template <typename... A, typename W>
+   void FillAtomic(const std::tuple<A...> &args, const W &weight)
+   {
+      static_assert(std::is_class_v<BinContentType>,
+                    "user-defined weight types are only supported for user-defined bin content types");
+
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (sizeof...(A) != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         Internal::AtomicAdd(&fBinContents[index.fIndex], weight);
       }
    }
 
