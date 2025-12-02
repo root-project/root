@@ -7,7 +7,7 @@ private:
    ClassDef(Parameter,1);
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class Parameter<Long64_t>+;
 #pragma link C++ class Parameter<ULong64_t>+;
 #pragma link C++ class Parameter<long long>+;
