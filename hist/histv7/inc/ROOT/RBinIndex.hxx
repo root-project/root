@@ -21,9 +21,9 @@ Objects of this type should be passed by value.
 Feedback is welcome!
 */
 class RBinIndex final {
-   static constexpr std::uint64_t UnderflowIndex = -3;
-   static constexpr std::uint64_t OverflowIndex = -2;
-   static constexpr std::uint64_t InvalidIndex = -1;
+   static constexpr auto UnderflowIndex = static_cast<std::uint64_t>(-3);
+   static constexpr auto OverflowIndex = static_cast<std::uint64_t>(-2);
+   static constexpr auto InvalidIndex = static_cast<std::uint64_t>(-1);
 
    // We use std::uint64_t instead of std::size_t for the index because for sparse histograms, not all bins have to be
    // allocated in memory. However, we require that the index has at least that size.

@@ -57,7 +57,7 @@ TEST(RBinIndex, Plus)
    }
 
    // Matches RBinIndex::UnderflowIndex
-   static constexpr std::uint64_t UnderflowIndex = -3;
+   static constexpr auto UnderflowIndex = static_cast<std::uint64_t>(-3);
    EXPECT_TRUE((RBinIndex(0) + UnderflowIndex).IsInvalid());
    EXPECT_TRUE((RBinIndex(3) + UnderflowIndex).IsInvalid());
 }
