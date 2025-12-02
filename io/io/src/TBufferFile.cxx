@@ -323,8 +323,13 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
         && (fBufCur >= fBuffer)
         && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
         && "Byte count position is after the end of the buffer");
-   const UInt_t cnt = UInt_t(fBufCur - fBuffer) - UInt_t(cntpos) - sizeof(UInt_t);
+
    char  *buf = (char *)(fBuffer + cntpos);
+   if ((fBufCur - fBuffer - cntpos - sizeof(UInt_t)) >= kMaxMapCount) {
+      tobuf(buf, 0 | kByteCountMask);
+      return;
+   }
+   const UInt_t cnt = UInt_t(fBufCur - fBuffer) - UInt_t(cntpos) - sizeof(UInt_t);
 
    // if true, pack byte count in two consecutive shorts, so it can
    // be read by ReadVersion()
