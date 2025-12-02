@@ -67,7 +67,7 @@ protected:
    Double_t GetBinErrorSqUnchecked(Int_t bin) const override { Double_t err = GetBinError(bin); return err*err; }
 
    TProfile2D *DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                          bool originalRange, bool useUF, bool useOF) const override;
+                                          bool originalRange, bool useUF, bool useOF, bool useWidth) const override;
 
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}

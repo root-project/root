@@ -151,17 +151,17 @@ protected:
    virtual TH1D    *DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2,
                                 const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const;
    virtual TH1D    *DoProject1D(const char *name, const char *title, const TAxis *projAxis, const TAxis *axis1,
-                                const TAxis *axis2, bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
+                                const TAxis *axis2, bool computeErrors, bool originalRange, bool useUF, bool useOF, bool useWidth) const;
    virtual TH2D    *DoProject2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
+                                bool computeErrors, bool originalRange, bool useUF, bool useOF, bool useWidth) const;
    virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                           bool originalRange, bool useUF, bool useOF) const;
+                                           bool originalRange, bool useUF, bool useOF, bool useWidth) const;
 
    // these functions are need to be used inside TProfile3D::DoProjectProfile2D
    static TH1D     *DoProject1D(const TH3 & h, const char* name, const char * title, const TAxis* projX,
-                                bool computeErrors, bool originalRange, bool useUF, bool useOF);
+                                bool computeErrors, bool originalRange, bool useUF, bool useOF, bool useWidth);
    static TH2D     *DoProject2D(const TH3 & h, const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                bool computeErrors, bool originalRange, bool useUF, bool useOF);
+                                bool computeErrors, bool originalRange, bool useUF, bool useOF, bool useWidth);
 
    ClassDefOverride(TH3,6)  //3-Dim histogram base class
 };
