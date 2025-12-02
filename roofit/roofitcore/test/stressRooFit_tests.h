@@ -900,18 +900,16 @@ public:
       // Fit model to data, extended ML term automatically included
       model.fitTo(*data);
 
-      // Plot data and PDF overlaid, use expected number of events for p.d.f projection normalization
-      // rather than observed number of events (==data->numEntries())
+      // Plot data and PDF overlaid
       RooPlot *xframe = x.frame(Title("extended ML fit example"));
       data->plotOn(xframe);
-      model.plotOn(xframe, Normalization(1.0, RooAbsReal::RelativeExpected));
+      model.plotOn(xframe);
 
       // Overlay the background component of model with a dashed line
-      model.plotOn(xframe, Components(bkg), LineStyle(kDashed), Normalization(1.0, RooAbsReal::RelativeExpected));
+      model.plotOn(xframe, Components(bkg), LineStyle(kDashed));
 
       // Overlay the background+sig2 components of model with a dotted line
-      model.plotOn(xframe, Components(RooArgSet(bkg, sig2)), LineStyle(kDotted),
-                   Normalization(1.0, RooAbsReal::RelativeExpected));
+      model.plotOn(xframe, Components(RooArgSet(bkg, sig2)), LineStyle(kDotted));
 
       /////////////////////
       // M E T H O D   2 //
