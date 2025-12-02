@@ -274,14 +274,14 @@ namespace cling {
           // There is content - a memory buffer or a file.
           // We know it's a file because we started off the FileEntry.
 
-          // FIXME: LLVM will completely migrate to FileEntryRef.
-          // We added `isOpen()` in our commit:
-          // `Accessor to "is file opened"; this is crucial info for us.`
-          // Move this logic to FileEntryRef or have a workaround.
-          if (FE.getFileEntry().isOpen())
-            ParsedOpen.emplace_back(std::move(fileName));
-          else
-            Parsed.emplace_back(std::move(fileName));
+          // // FIXME: LLVM will completely migrate to FileEntryRef.
+          // // We added `isOpen()` in our commit:
+          // // `Accessor to "is file opened"; this is crucial info for us.`
+          // // Move this logic to FileEntryRef or have a workaround.
+          // if (FE.getFileEntry().isOpen())
+          //   ParsedOpen.emplace_back(std::move(fileName));
+          // else
+          //   Parsed.emplace_back(std::move(fileName));
         } else
          AST.emplace_back(std::move(fileName));
       }

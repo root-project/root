@@ -161,9 +161,9 @@ namespace cling {
     else
       T->setState(Transaction::kRolledBackWithErrors);
 
-    // Release the input_line_X file unless verifying diagnostics.
-    if (!m_Interp->getCI()->getDiagnosticOpts().VerifyDiagnostics)
-      m_Sema->getSourceManager().invalidateCache(T->getBufferFID());
+    // // Release the input_line_X file unless verifying diagnostics.
+    // if (!m_Interp->getCI()->getDiagnosticOpts().VerifyDiagnostics)
+    //   m_Sema->getSourceManager().invalidateCache(T->getBufferFID());
 
     return Successful;
   }
