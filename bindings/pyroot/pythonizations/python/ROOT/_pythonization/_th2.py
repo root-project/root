@@ -8,8 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
 from ROOT._pythonization._memory_utils import inject_constructor_releasing_ownership
+
+from . import pythonization
 
 
 # Fill with array-like data
@@ -47,22 +48,19 @@ def _FillWithArrayTH2(self, *args):
     y = np.asanyarray(args[1], dtype=np.float64)
 
     if len(x) != len(y):
-        raise ValueError(
-            f"Length mismatch: x length ({len(x)}) != y length ({len(y)})"
-        )
+        raise ValueError(f"Length mismatch: x length ({len(x)}) != y length ({len(y)})")
 
     n = len(x)
 
-    if len(args) >=3 and args[2] is not None:
+    if len(args) >= 3 and args[2] is not None:
         weights = np.asanyarray(args[2], dtype=np.float64)
         if len(weights) != n:
-            raise ValueError(
-                f"Length mismatch: data length ({n}) != weights length ({len(weights)})"
-            )
+            raise ValueError(f"Length mismatch: data length ({n}) != weights length ({len(weights)})")
     else:
         weights = np.ones(n)
 
     return self.FillN(n, x, y, weights)
+
 
 # The constructors need to be pythonized for each derived class separately:
 _th2_derived_classes_to_pythonize = [
