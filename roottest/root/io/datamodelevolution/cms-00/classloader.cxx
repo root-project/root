@@ -7,7 +7,7 @@
 //        Author     : M.Frank
 //====================================================================
 
-#ifndef __CINT__
+#ifndef __CLING__
 #include "Cintex/Cintex.h"
 #endif
 #include "Reflex/Reflex.h"
@@ -21,7 +21,7 @@
 #include "TDataMember.h"
 
 #include "TCollectionProxyFactory.h"
-#ifndef __CINT__
+#ifndef __CLING__
 #include "Api.h"
 #endif
 
@@ -45,7 +45,7 @@ void patchClass(TClass* cl, TypeH& ) {
 #include <utility>
 #include <vector>
 
-#ifndef __CINT__
+#ifndef __CLING__
 namespace ROOT { namespace Cintex  {
   bool IsSTLinternal(const std::string& nam);
   bool IsSTL(const std::string& nam);

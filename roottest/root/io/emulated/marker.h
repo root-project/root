@@ -25,7 +25,7 @@ public:
    ClassDef(Marker,2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class Marker+;
 #endif
 
