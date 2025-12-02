@@ -5,6 +5,7 @@
 
 #include <benchmark/benchmark.h>
 
+#include <cstddef>
 #include <random>
 #include <vector>
 
@@ -21,7 +22,7 @@ struct RHistEngine_int_Regular1 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(state.range(0));
+      fNumbers.resize(static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
@@ -51,7 +52,7 @@ struct RHistEngine_int_Regular2 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(2 * state.range(0));
+      fNumbers.resize(2 * static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
@@ -81,7 +82,7 @@ struct RHistEngine_float_Regular1 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(state.range(0));
+      fNumbers.resize(static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
@@ -121,7 +122,7 @@ struct RHistEngine_float_Regular2 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(2 * state.range(0));
+      fNumbers.resize(2 * static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
@@ -161,7 +162,7 @@ struct RHistEngine_RBinWithError_Regular1 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(state.range(0));
+      fNumbers.resize(static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
@@ -201,7 +202,7 @@ struct RHistEngine_RBinWithError_Regular2 : public benchmark::Fixture {
    {
       std::mt19937 gen;
       std::uniform_real_distribution<> dis;
-      fNumbers.resize(2 * state.range(0));
+      fNumbers.resize(2 * static_cast<std::size_t>(state.range(0)));
       for (std::size_t i = 0; i < fNumbers.size(); i++) {
          fNumbers[i] = dis(gen);
       }
