@@ -6047,8 +6047,8 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
       ::Error("GetWinNTMemInfo", "Error on GetPerformanceInfo()");
       return;
    }
-   used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
-   free  = (Long64_t)statex.ullAvailPhys;
+   used = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
+   free = (Long64_t)statex.ullAvailPhys;
    total = (Long64_t)statex.ullTotalPhys;
    sys_cache = (Long64_t)(statex2.SystemCache * statex2.PageSize);
 
@@ -6060,11 +6060,11 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
-   swap_used  = swap_total - swap_avail;
+   swap_used = swap_total - swap_avail;
 
    meminfo->fSwapTotal = (Int_t)(swap_total >> 20);
-   meminfo->fSwapUsed  = (Int_t)(swap_used >> 20);
-   meminfo->fSwapFree  = (Int_t)(swap_avail >> 20);
+   meminfo->fSwapUsed = (Int_t)(swap_used >> 20);
+   meminfo->fSwapFree = (Int_t)(swap_avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
