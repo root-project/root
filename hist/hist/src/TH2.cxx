@@ -1851,6 +1851,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    }
    opt.ToLower();
    bool originalRange = opt.Contains("o");
+   bool useWidth = opt.Contains("width");
 
    const TAxis& outAxis = ( onX ? fXaxis : fYaxis );
    const TAxis&  inAxis = ( onX ? fYaxis : fXaxis );
@@ -1990,13 +1991,13 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
          }
          Int_t bin = GetBin(binx, biny);
          Double_t cxy = RetrieveBinContent(bin);
-
+         double step = useWidth ? inAxis.GetBinWidth(inbin) : 1;
 
          if (cxy) {
             Double_t tmp = 0;
             // the following fill update wrongly the fBinSumw2- need to save it before
             if ( useWeights ) tmp = binSumw2.fArray[binOut];
-            h1->Fill( xOut, inAxis.GetBinCenter(inbin), cxy );
+            h1->Fill( xOut, inAxis.GetBinCenter(inbin), cxy * step);
             if ( useWeights ) binSumw2.fArray[binOut] = tmp + fSumw2.fArray[bin];
          }
 
@@ -2026,9 +2027,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 2-D histogram into a profile histogram along X.
+/// Project a 2-D histogram into a profile histogram along X (integration along Y).
 ///
-///   The projection is made from the channels along the Y axis
+///   The projection is made from summing the channels along the Y axis
 ///   ranging from firstybin to lastybin included.
 ///   By default, bins 1 to ny are included
 ///   When all bins are included, the number of entries in the projection
@@ -2039,6 +2040,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 ///
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its Y bin-width during projection
 ///
 ///   The option can also be used to specify the projected profile error type.
 ///   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
@@ -2076,9 +2080,9 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 2-D histogram into a profile histogram along Y.
+/// Project a 2-D histogram into a profile histogram along Y (integration along X).
 ///
-///   The projection is made from the channels along the X axis
+///   The projection is made from summing the channels along the X axis
 ///   ranging from firstxbin to lastxbin included.
 ///   By default, bins 1 to nx are included
 ///   When all bins are included, the number of entries in the projection
@@ -2089,6 +2093,9 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 ///
 ///   if option "o" , the original axis range of the target axis will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its X bin-width during projection
 ///
 ///   The option can also be used to specify the projected profile error type.
 ///   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
@@ -2144,6 +2151,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    }
    opt.ToLower();  //must be called after having parsed the cut name
    bool originalRange = opt.Contains("o");
+   bool useWidth = opt.Contains("width");
 
    if ( onX )
    {
@@ -2286,9 +2294,10 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          // sum bin content and error if needed
-         cont  += GetBinContent(binx,biny);
+         double step = useWidth ? inAxis->GetBinWidth(inbin) : 1;
+         cont  += GetBinContent(binx,biny)*step;
          if (computeErrors) {
-            Double_t exy = GetBinError(binx,biny);
+            Double_t exy = GetBinError(binx,biny)*step;
             err2  += exy*exy;
          }
       }
@@ -2363,10 +2372,10 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 2-D histogram into a 1-D histogram along X.
+/// Project a 2-D histogram into a 1-D histogram along X (integration along Y).
 ///
 ///   The projection is always of the type TH1D.
-///   The projection is made from the channels along the Y axis
+///   The projection is made from summing the channels along the Y axis
 ///   ranging from firstybin to lastybin included.
 ///   By default, all bins including under- and overflow are included.
 ///   The number of entries in the projection is estimated from the
@@ -2379,6 +2388,9 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 ///   if option "d" is specified, the projection is drawn in the current pad.
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its Y bin-width during projection
 ///
 ///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
 ///   One must create a graphical cut (mouse or C++) and specify the name
@@ -2402,10 +2414,10 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Project a 2-D histogram into a 1-D histogram along Y.
+/// Project a 2-D histogram into a 1-D histogram along Y (integration along X).
 ///
 ///   The projection is always of the type TH1D.
-///   The projection is made from the channels along the X axis
+///   The projection is made from summing the channels along the X axis
 ///   ranging from firstxbin to lastxbin included.
 ///   By default, all bins including under- and overflow are included.
 ///   The number of entries in the projection is estimated from the
@@ -2418,6 +2430,9 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 ///   if option "d" is specified, the projection is drawn in the current pad.
 ///   if option "o" original axis range of the target axes will be
 ///   kept, but only bins inside the selected range will be filled.
+///
+///   if option "width" is specified, each bin content is multiplied
+///   by its X bin-width during projection
 ///
 ///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
 ///   One must create a graphical cut (mouse or C++) and specify the name
