@@ -55,28 +55,17 @@ data = model.generate({x})
 # Fit model to data, ML term automatically included
 model.fitTo(data, PrintLevel=-1)
 
-# Plot data and PDF overlaid, expected number of events for pdf projection normalization
-# rather than observed number of events (==data.numEntries())
+# Plot data and PDF overlaid
 xframe = x.frame(Title="extended ML fit example")
 data.plotOn(xframe)
-model.plotOn(xframe, Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
-model.plotOn(
-    xframe,
-    Components={bkg},
-    LineStyle=":",
-    Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
-)
+model.plotOn(xframe, Components={bkg}, LineStyle=":")
 
 # Overlay the background+sig2 components of model with a dotted line
 ras_bkg_sig2 = {bkg, sig2}
-model.plotOn(
-    xframe,
-    Components=ras_bkg_sig2,
-    LineStyle=":",
-    Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
-)
+model.plotOn(xframe, Components=ras_bkg_sig2, LineStyle=":")
 
 # Print structure of composite pdf
 model.Print("t")
