@@ -112,9 +112,11 @@ def _hasWeights(hist: Any) -> bool:
 def _axes(self) -> Tuple[Union[PlottableAxisContinuous, PlottableAxisDiscrete], ...]:
     return tuple(PlottableAxisFactory.create(_get_axis(self, i)) for i in range(self.GetDimension()))
 
-# TODO this is not correct?
 def _kind(self) -> Kind:
-    return Kind.COUNT if not _hasWeights(self) else Kind.MEAN
+    # TProfile -> MEAN, everything else -> COUNT
+    if self.__class__.__name__.startswith("TProfile"):
+        return Kind.MEAN
+    return Kind.COUNT
 
 
 def _shape(hist: Any, include_flow_bins: bool = True) -> Tuple[int, ...]:
@@ -129,6 +131,7 @@ def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
     return ret.reshape(_shape(self), order="F")[tuple([slice(1, -1)] * len(_shape(self)))]
 
 
+# Special case for TH*C and TProfile*
 def _values_by_copy(self, include_flow_bins=False) -> np.typing.NDArray[Any]:  # noqa: F821
     from itertools import product
 
