@@ -34,8 +34,8 @@ public:
    THLimitsFinder();
    ~THLimitsFinder() override;
    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax);
-   virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
-   virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
+   virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t newbinsx = 0, Int_t newbinsy = 0);
+   virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t newbinsx = 0, Int_t newbinsy = 0, Int_t newbinsz = 0);
 
    static  void       Optimize(Double_t A1,  Double_t A2,  Int_t nold
                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID, Option_t *option="");
