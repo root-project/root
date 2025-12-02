@@ -229,7 +229,7 @@ if(MSVC)
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
-      GLEW::GLEW
+      RGlew
     DEPENDENCIES
       Core
       EG
@@ -238,6 +238,7 @@ if(MSVC)
       RGL
       Physics
   )
+  target_compile_definitions(Eve PRIVATE GLAD_API_CALL_EXPORT)
 
   ROOT_GENERATE_DICTIONARY(G__Eve2
     ${EVE_HEADERS2}
@@ -264,7 +265,7 @@ else()
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
-      GLEW::GLEW
+      RGlew
     DEPENDENCIES
       Core
       EG

@@ -43,6 +43,9 @@ ROOT_LINKER_LIBRARY(FTGL
   BUILTINS
     FREETYPE
 )
+if(MSVC)
+  target_compile_definitions(FTGL PRIVATE GLAD_API_CALL_EXPORT)
+endif()
 
 target_include_directories(FTGL PRIVATE
       ${FREETYPE_INCLUDE_DIRS}

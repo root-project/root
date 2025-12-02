@@ -28,6 +28,8 @@
 #include "TGLUtil.h"
 #include "TMath.h"
 
+#include <glad/gl.h>
+
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +341,12 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 
 void TGLPadPainter::InitPainter()
 {
+   static bool gl_init = false;
+   if (!gl_init) {
+      int status = gladLoaderLoadGL();
+      printf("GLAD loader GL version %d.%d\n", GLAD_VERSION_MAJOR(status), GLAD_VERSION_MINOR(status));
+      gl_init = true;
+   }
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glDisable(GL_LIGHTING);
