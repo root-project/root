@@ -133,7 +133,7 @@ const char *TRootDialog::GetParameters()
 
       // TODO: Combobox...
 
-      // if necessary, replace the selected object by it's address
+      // if necessary, replace the selected object by its address
       if (selfobjpos == nparam-1) {
          if (params.Length()) params += ",";
          param = TString::Format("(TObject*)0x%zx",

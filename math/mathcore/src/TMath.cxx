@@ -2272,7 +2272,7 @@ Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 /// F-distribution arises in testing whether two random samples
 /// have the same variance. It is the ratio of two chi-square
 /// distributions, with N and M degrees of freedom respectively,
-/// where each chi-square is first divided by it's number of degrees
+/// where each chi-square is first divided by its number of degrees
 /// of freedom.
 ///
 /// \author Anna Kreshuk
