@@ -6,9 +6,6 @@
 
 void writefitter()
 {
-#ifdef __CINT__
-   G__SetCatchException(0);  
-#endif
    Int_t npoints = 100;
    Int_t ndim = 3;
    TFormula *f = new TFormula("f", "x[0]++x[1]++x[2]");
@@ -43,9 +40,6 @@ void writefitter()
 
 void readfitter()
 {
-#ifdef __CINT__
-   // G__SetCatchException(0);
-#endif
    TVectorD vect;  
    TFile *f = TFile::Open("linfitter.root");
    if (!f) return;
@@ -102,9 +96,6 @@ void readfitter()
 
 void writeformula()
 {
-#ifdef __CINT__
-   G__SetCatchException(0);  
-#endif
    TFormula *f = new TFormula("ffffff", "x[0]++x[1]++x[2]");
 
     TFile *file = TFile::Open("formula.root", "RECREATE");

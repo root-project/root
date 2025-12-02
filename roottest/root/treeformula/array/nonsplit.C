@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include <vector>
 
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class std::vector<std::vector<int> >+;
 #endif
 
