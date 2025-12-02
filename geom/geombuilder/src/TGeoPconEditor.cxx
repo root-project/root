@@ -27,6 +27,7 @@ Editor for a TGeoPcon.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
+#include "TMath.h"
 #include "TGCanvas.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
