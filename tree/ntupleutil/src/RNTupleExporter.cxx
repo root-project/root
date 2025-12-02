@@ -154,6 +154,8 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
          const auto &pages = clusterDesc.GetPageRange(columnId);
          const auto &colRange = clusterDesc.GetColumnRange(columnId);
          auto colElement = ROOT::Internal::RColumnElementBase::Generate<void>(colInfo.fColDesc->GetType());
+         colElement->SetBitsOnStorage(colInfo.fColDesc->GetBitsOnStorage());
+
          std::uint64_t pageIdx = 0;
 
          R__LOG_DEBUG(0, RNTupleExporterLog())

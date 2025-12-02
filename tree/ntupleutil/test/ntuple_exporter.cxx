@@ -34,10 +34,12 @@ enum : bool {
    kWithChecksums = true,
 };
 
-void CreateExportRNTuple(std::string_view fileName, bool checksums, int compression = 0)
+void CreateExportRNTuple(std::string_view fileName, bool checksums, int compression = 0, bool truncateFloat = false)
 {
    auto model = ROOT::RNTupleModel::Create();
    auto pFlt = model->MakeField<float>("flt");
+   if (truncateFloat)
+      dynamic_cast<ROOT::RRealField<float> &>(model->GetMutableField("flt")).SetTruncated(12);
    auto pVec = model->MakeField<std::vector<int>>("vec");
 
    auto opts = ROOT::RNTupleWriteOptions();
@@ -70,8 +72,7 @@ const char kVecIdxBytes[] =
    "\x30\x00\x00\x00\x00\x00\x00\x00\x36\x00\x00\x00\x00\x00\x00\x00\x3c\x00\x00\x00\x00\x00\x00\x00\xaa\xde\x1b\xde"
    "\xb5\xf3\xbc\x1a";
 const char kFltBytes[] =
-   "\x00\x00\x00\x00\x00\x00\x80\x3f\x00\x00\x00\x40\x00\x00\x40\x40\x00\x00\x80\x40\x00\x00\xa0\x40\x00\x00\xc0"
-   "\x40"
+   "\x00\x00\x00\x00\x00\x00\x80\x3f\x00\x00\x00\x40\x00\x00\x40\x40\x00\x00\x80\x40\x00\x00\xa0\x40\x00\x00\xc0\x40"
    "\x00\x00\xe0\x40\x00\x00\x00\x41\x00\x00\x10\x41\x1b\xad\x67\xa6\xe6\x61\x56\x9d";
 
 constexpr auto kVecBytesLenChecksums = std::size(kVecBytes) - 1;
@@ -239,6 +240,40 @@ TEST(RNTupleExporter, ExportToFilesUncompressed)
 
    auto vecBytes = ReadFileToString(pageVec.GetPath().c_str());
    EXPECT_EQ(vecBytes.length(), sizeof(int) * 60);
+}
+
+TEST(RNTupleExporter, ExportUncompresLowPrecisionFloats)
+{
+   const char kTruncFltBytes[] = "\x00\x80\x3f\x00\x44\x40\x08\xa4\x40\x0c\xe4\x40\x10\x14\x41";
+   constexpr auto kTruncFltBytesLen = std::size(kTruncFltBytes) - 1;
+
+   // Decompress and dump pages of a regular RNTuple with with low-precision floats where the number of bits on storage
+   // is variable.
+   FileRaii fileGuard("ntuple_exporter_uncompress_low_precision_floats.root");
+
+   // Create RNTuple to export
+   CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums, /*compression=*/505, /*truncateFloat=*/true);
+
+   // Now export the pages
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFlags |= RNTupleExporter::RPagesOptions::kDecompress;
+   opts.fColumnTypeFilter.fType = RNTupleExporter::EFilterType::kWhitelist;
+   opts.fColumnTypeFilter.fSet.insert(ROOT::ENTupleColumnType::kReal32Trunc);
+   auto res = RNTupleExporter::ExportPages(*source, opts);
+
+   // Should have only exported the float column
+   EXPECT_EQ(res.fExportedFileNames.size(), 1);
+
+   FileRaii pageFlt("./cluster_0_flt-0_page_0_elems_10_comp_505.page");
+
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
+               res.fExportedFileNames.end());
+
+   // Check the file contents
+   auto fltBytes = ReadFileToString(pageFlt.GetPath().c_str());
+   EXPECT_EQ(fltBytes.length(), kTruncFltBytesLen);
+   EXPECT_EQ(memcmp(fltBytes.data(), kTruncFltBytes, fltBytes.length()), 0);
 }
 
 TEST(RNTupleExporter, ExportToFilesManyPages)
