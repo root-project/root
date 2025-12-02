@@ -23,7 +23,7 @@ void tform(int formula, int iter) {
       
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc,char**argv) {
 
    if (argc!=3) {
