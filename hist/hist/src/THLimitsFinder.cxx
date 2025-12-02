@@ -71,75 +71,86 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the best axis limits for the X and Y axis.
+/// Compute the best axis limits for the X and Y axis
+/// if the corresponding `newbins` variable is set to 0, i.e. the default value.
 ///
 /// If the bit kIsInteger is set, the number of channels is also recomputed.
 /// The axis parameters are replaced by the optimized parameters
 
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
+Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t newbinsx,
+                                     Int_t newbinsy)
 {
-   Int_t newbinsx,newbinsy;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
 
-   if (xmin >= xmax) {
+   const Bool_t xbinAuto = newbinsx == 0;
+   const Bool_t ybinAuto = newbinsy == 0;
+
+   if (xbinAuto && xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
       else                    {xmin -= 1; xmax += 1;}
    }
-   if (ymin >= ymax) {
+   if (ybinAuto && ymin >= ymax) {
       if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
       else                    {ymin -= 1; ymax += 1;}
    }
 
-   THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
-                                  newbinsx,xmin,xmax,
-                                  xaxis->TestBit(TAxis::kIsInteger));
-
-   THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
-                                  newbinsy,ymin,ymax,
-                                  yaxis->TestBit(TAxis::kIsInteger));
+   if (xbinAuto)
+      THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
+                                     newbinsx,xmin,xmax,
+                                     xaxis->TestBit(TAxis::kIsInteger));
+   if (ybinAuto)
+      THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
+                                     newbinsy,ymin,ymax,
+                                     yaxis->TestBit(TAxis::kIsInteger));
 
    h->SetBins(newbinsx,xmin,xmax,newbinsy,ymin,ymax);
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the best axis limits for the X, Y and Z axis.
+/// Compute the best axis limits and bins for the X, Y and Z axis
+/// if the corresponding `newbins` variable is set to 0, i.e. the default value.
 ///
 /// If the bit kIsInteger is set, the number of channels is also recomputed.
 /// The axis parameters are replaced by the optimized parameters
 
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
+Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin,
+                                     Double_t zmax, Int_t newbinsx, Int_t newbinsy, Int_t newbinsz)
 {
-   Int_t newbinsx,newbinsy,newbinsz;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
    TAxis *zaxis = h->GetZaxis();
 
-   if (xmin >= xmax) {
+   const Bool_t xbinAuto = newbinsx == 0;
+   const Bool_t ybinAuto = newbinsy == 0;
+   const Bool_t zbinAuto = newbinsz == 0;
+
+   if (xbinAuto && xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
       else                    {xmin -= 1; xmax += 1;}
    }
-   if (ymin >= ymax) {
+   if (ybinAuto && ymin >= ymax) {
       if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
       else                    {ymin -= 1; ymax += 1;}
    }
-   if (zmin >= zmax) {
+   if (zbinAuto && zmin >= zmax) {
       if (zaxis->GetLabels()) {zmin  = 0; zmax  = zmin +zaxis->GetNbins();}
       else                    {zmin -= 1; zmax += 1;}
    }
 
-   THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
-                                  newbinsx,xmin,xmax,
-                                  xaxis->TestBit(TAxis::kIsInteger));
-
-   THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
-                                  newbinsy,ymin,ymax,
-                                  yaxis->TestBit(TAxis::kIsInteger));
-
-   THLimitsFinder::OptimizeLimits(zaxis->GetNbins(),
-                                  newbinsz,zmin,zmax,
-                                  zaxis->TestBit(TAxis::kIsInteger));
+   if (xbinAuto)
+      THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
+                                     newbinsx,xmin,xmax,
+                                     xaxis->TestBit(TAxis::kIsInteger));
+   if (ybinAuto)
+      THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
+                                     newbinsy,ymin,ymax,
+                                     yaxis->TestBit(TAxis::kIsInteger));
+   if (zbinAuto)
+      THLimitsFinder::OptimizeLimits(zaxis->GetNbins(),
+                                     newbinsz,zmin,zmax,
+                                     zaxis->TestBit(TAxis::kIsInteger));
 
    h->SetBins(newbinsx,xmin,xmax,newbinsy,ymin,ymax,newbinsz,zmin,zmax);
    return 0;
