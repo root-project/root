@@ -83,8 +83,8 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
 
-   const Bool_t xbinAuto = newbinsx != 0;
-   const Bool_t ybinAuto = newbinsy != 0;
+   const Bool_t xbinAuto = newbinsx == 0;
+   const Bool_t ybinAuto = newbinsy == 0;
 
    if (xbinAuto && xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
@@ -122,9 +122,9 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    TAxis *yaxis = h->GetYaxis();
    TAxis *zaxis = h->GetZaxis();
 
-   const Bool_t xbinAuto = newbinsx != 0;
-   const Bool_t ybinAuto = newbinsy != 0;
-   const Bool_t zbinAuto = newbinsz != 0;
+   const Bool_t xbinAuto = newbinsx == 0;
+   const Bool_t ybinAuto = newbinsy == 0;
+   const Bool_t zbinAuto = newbinsz == 0;
 
    if (xbinAuto && xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
