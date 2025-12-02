@@ -6048,23 +6048,23 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
       return;
    }
    used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
-   free  = (Long64_t) statex.ullAvailPhys;
-   total = (Long64_t) statex.ullTotalPhys;
+   free  = (Long64_t)statex.ullAvailPhys;
+   total = (Long64_t)statex.ullTotalPhys;
    sys_cache = (Long64_t)(statex2.SystemCache * statex2.PageSize);
 
-   meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
-   meminfo->fMemUsed   = (Int_t) (used >> 20);
-   meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fMemTotal = (Int_t)(total >> 20); // divide by 1024 * 1024
+   meminfo->fMemUsed = (Int_t)(used >> 20);
+   meminfo->fMemFree = (Int_t)(free >> 20);
    meminfo->fMemAvailable = meminfo->fMemFree;
-   meminfo->fMemCached = (Int_t) (sys_cache >> 20);
+   meminfo->fMemCached = (Int_t)(sys_cache >> 20);
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
    swap_used  = swap_total - swap_avail;
 
-   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
-   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
-   meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
+   meminfo->fSwapTotal = (Int_t)(swap_total >> 20);
+   meminfo->fSwapUsed  = (Int_t)(swap_used >> 20);
+   meminfo->fSwapFree  = (Int_t)(swap_avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6077,7 +6077,7 @@ static void GetWinNTProcInfo(ProcInfo_t *procinfo)
    timeval ru_stime, ru_utime;
    ULARGE_INTEGER li;
 
-   if (GetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc))) {
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
       procinfo->fMemResident = pmc.WorkingSetSize / 1024;
       procinfo->fMemVirtual  = pmc.PagefileUsage / 1024;
    }
