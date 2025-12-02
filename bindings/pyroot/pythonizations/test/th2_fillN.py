@@ -28,10 +28,7 @@ class FillWithArrayLike(unittest.TestCase):
 
         for i in range(nbins):
             for j in range(nbins):
-                self.assertAlmostEqual(
-                    verbose_hist.GetBinContent(i, j),
-                    simple_hist.GetBinContent(i, j)
-                )
+                self.assertAlmostEqual(verbose_hist.GetBinContent(i, j), simple_hist.GetBinContent(i, j))
 
         # Test filling with weights
         weights_np = np.linspace(0.1, 0.9, n)
@@ -42,10 +39,7 @@ class FillWithArrayLike(unittest.TestCase):
 
         for i in range(nbins):
             for j in range(nbins):
-                self.assertAlmostEqual(
-                    verbose_hist.GetBinContent(i, j),
-                    simple_hist.GetBinContent(i, j)
-                )
+                self.assertAlmostEqual(verbose_hist.GetBinContent(i, j), simple_hist.GetBinContent(i, j))
 
         # Test mismatched weight size
         with self.assertRaises(ValueError):
@@ -56,10 +50,10 @@ class FillWithArrayLike(unittest.TestCase):
         import numpy as np
 
         inputs = [
-            (np.array([1., 2, 3, 4, 5]), np.array([5., 4, 3, 2, 1])),
-            ([1., 2, 3, 4, 5], [5., 4, 3, 2, 1]),
+            (np.array([1.0, 2, 3, 4, 5]), np.array([5.0, 4, 3, 2, 1])),
+            ([1.0, 2, 3, 4, 5], [5.0, 4, 3, 2, 1]),
             (range(1, 6), range(5, 0, -1)),
-            ([1., 2, 3, 4, 5], np.array([5., 4, 3, 2, 1])),
+            ([1.0, 2, 3, 4, 5], np.array([5.0, 4, 3, 2, 1])),
         ]
 
         for x_data, y_data in inputs:

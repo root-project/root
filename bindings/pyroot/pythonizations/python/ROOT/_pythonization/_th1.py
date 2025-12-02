@@ -51,7 +51,7 @@ myResult = myTH1D.Fit("gaus", "s")
 myResult.Parameters()
 
 # Get the error of the first parameter
-myResult.ParError(0) 
+myResult.ParError(0)
 \endcode
 
 
@@ -80,10 +80,10 @@ def myGaussian(x, pars):
     '''
     Defines a Gaussian function
     '''
-    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2)) 
+    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2))
 
 # Initialize from the Python function with the range -5 to +5, with two parameters to fit, and a one-dimensional input x
-myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1) 
+myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1)
 
 # Create a 1D histogram and initialize it with the built-in ROOT Gaussian "gaus"
 myTH1D = ROOT.TH1D("th1d", "Test", 200, -5, 5)
@@ -176,6 +176,7 @@ from . import pythonization
 
 # Multiplication by constant
 
+
 def _imul(self, c):
     # Parameters:
     # - self: histogram
@@ -184,6 +185,7 @@ def _imul(self, c):
     # - A multiplied histogram (in place)
     self.Scale(c)
     return self
+
 
 # Fill with array-like data
 def _FillWithArrayTH1(self, *args):
@@ -216,12 +218,10 @@ def _FillWithArrayTH1(self, *args):
     data = np.asanyarray(args[0], dtype=np.float64)
     n = len(data)
 
-    if len(args) >=2 and args[1] is not None:
+    if len(args) >= 2 and args[1] is not None:
         weights = np.asanyarray(args[1], dtype=np.float64)
         if len(weights) != n:
-            raise ValueError(
-                f"Length mismatch: data length ({n}) != weights length ({len(weights)})"
-            )
+            raise ValueError(f"Length mismatch: data length ({n}) != weights length ({len(weights)})")
     else:
         weights = np.ones(n)
 
@@ -254,7 +254,7 @@ for klass in _th1_derived_classes_to_pythonize:
         klass.Fill = _FillWithArrayTH1
 
 
-@pythonization('TH1')
+@pythonization("TH1")
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
