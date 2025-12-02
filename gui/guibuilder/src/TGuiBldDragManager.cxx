@@ -230,7 +230,7 @@ const char *TGuiBldMenuDialog::GetParameters()
 
       // TODO: Combobox...
 
-      // if necessary, replace the selected object by it's address
+      // if necessary, replace the selected object by its address
       if (selfobjpos == nparam-1) {
          if (params[0]) strlcat(params, ",", 1024-strlen(params));
          snprintf(param, 255, "(TObject*)0x%zx", (size_t)fObject);
