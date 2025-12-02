@@ -114,6 +114,13 @@ ROOT_GENERATE_DICTIONARY(StreamerFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerF
                          MODULE rfield_streamer LINKDEF StreamerFieldLinkDef.h OPTIONS -inlineInputHeader
                          DEPENDENCIES RIO)
 
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+   ROOT_ADD_GTEST(rfield_streamer_beyond rfield_streamer_beyond.cxx StreamerBeyond.cxx LIBRARIES ROOTNTuple)
+   ROOT_GENERATE_DICTIONARY(StreamerBeyondDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerBeyond.hxx
+                           MODULE rfield_streamer_beyond LINKDEF StreamerBeyondLinkDef.h OPTIONS -inlineInputHeader
+                           DEPENDENCIES RIO)
+endif()
+
 if(MSVC)
   set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
 else()
