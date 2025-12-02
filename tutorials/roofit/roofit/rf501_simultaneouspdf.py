@@ -13,7 +13,6 @@
 
 import ROOT
 
-
 # Create model for physics sample
 # -------------------------------------------------------------
 
@@ -96,28 +95,28 @@ fitResult.Print()
 frame1 = x.frame(Title="Physics sample")
 
 # Plot all data tagged as physics sample
-combData.plotOn(frame1, Cut="sample==sample::physics")
+slicedData1 = combData.reduce(Cut="sample==sample::physics")
+slicedData1.plotOn(frame1)
 
 # Plot "physics" slice of simultaneous pdf.
-# NB: You *must* project the sample index category with data using ProjWData as
-# a RooSimultaneous makes no prediction on the shape in the index category and
-# can thus not be integrated. In other words: Since the PDF doesn't know the
-# number of events in the different category states, it doesn't know how much
-# of each component it has to project out. This info is read from the data.
-simPdf.plotOn(frame1, Slice=(sample, "physics"), ProjWData=(sample, combData))
-simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sample, combData), LineStyle="--")
+simPdf.getPdf("physics").plotOn(frame1)
+simPdf.getPdf("physics").plotOn(frame1, Components="px", LineStyle="--")
 
 # The same plot for the control sample slice. We do this with a different
-# approach this time, for illustration purposes. Here, we are slicing the
-# dataset and then use the data slice for the projection, because then the
-# RooFit::Slice() becomes unnecessary. This approach is more general,
-# because you can plot sums of slices by using logical or in the Cut()
-# command.
+# approach, using the data slice for the projection. This approach is more
+# general, because you can plot sums of slices by using logical or in the
+# Cut() command.
+# NBL You _must_ project the sample index category with data using ProjWData
+# as a RooSimultaneous makes no prediction on the shape in the index category
+# and can thus not be integrated.
+# In other words: Since the PDF doesn't know the number of events in the different
+# category states, it doesn't know how much of each component it has to project out.
+# This information is read from the data.
 frame2 = x.frame(Title="Control sample")
-slicedData = combData.reduce(Cut="sample==sample::control")
-slicedData.plotOn(frame2)
-simPdf.plotOn(frame2, ProjWData=(sample, slicedData))
-simPdf.plotOn(frame2, Components="px_ctl", ProjWData=(sample, slicedData), LineStyle="--")
+slicedData2 = combData.reduce(Cut="sample==sample::control")
+slicedData2.plotOn(frame2)
+simPdf.plotOn(frame2, ProjWData=(sample, slicedData2))
+simPdf.plotOn(frame2, Components="px_ctl", ProjWData=(sample, slicedData2), LineStyle="--")
 
 # The same plot for all the phase space. Here, we can just use the original
 # combined dataset.
