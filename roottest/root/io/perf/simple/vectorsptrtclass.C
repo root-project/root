@@ -38,7 +38,7 @@ public:
 #include "TStreamerInfoActions.h"
 #include "TVirtualCollectionIterators.h"
 #include "Riostream.h"
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<simple*>+;
 #endif
 

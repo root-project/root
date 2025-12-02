@@ -1,5 +1,5 @@
 #include "dequeHolder.h"
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class dequeHolder+;
 #endif
