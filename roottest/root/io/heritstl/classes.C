@@ -64,6 +64,3 @@ void testing() {
    f->Close();
 }
 
-#ifndef __CINT__
-#endif
-
