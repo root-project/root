@@ -777,7 +777,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
        projDataTmp(projData->reduce(RooFit::SelectVars(projDataVars), RooFit::Cut(cutString.c_str())));
 
     // Override normalization and projection dataset
-    RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(idxCatClone->getCurrentLabel()),stype) ;
+    RooCmdArg tmp1 =
+       RooFit::Normalization(scaleFactor * wTable->get(idxCatClone->getCurrentLabel()), RooAbsReal::NumEvent);
     RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
 
     // WVE -- do not adjust normalization for asymmetry plots
