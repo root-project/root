@@ -898,22 +898,28 @@ bool RooPlot::drawAfter(const char *after, const char *target)
 /// methods to change the drawing style attributes of a contained
 /// object directly.
 
-TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
+TObject *RooPlot::findObject(const char *name, const TClass *tClass) const
 {
-  TObject *ret = nullptr;
+   TObject *ret = nullptr;
 
-  for(auto const& item : _items) {
-    TObject &obj = *item.first;
-    if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
-        && (!tClass || (obj.IsA()==tClass))) {
-      ret = &obj ;
-    }
-  }
+   for (auto const &item : _items) {
+      TObject &obj = *item.first;
+      if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName())) && (!tClass || (obj.IsA() == tClass))) {
+         ret = &obj;
+      }
+   }
 
-  if (ret == nullptr) {
-    coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << std::endl ;
-  }
-  return ret ;
+   if (ret == nullptr) {
+      std::stringstream error;
+      error << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name ? name : "<last>") << "\n"
+            << "Available objects are:\n";
+      for (auto const &item : _items) {
+         TObject &obj = *item.first;
+         error << "  - " << obj.IsA()->GetName() << " \"" << obj.GetName() << "\"\n";
+      }
+      coutE(InputArguments) << error.str();
+   }
+   return ret;
 }
 
 
