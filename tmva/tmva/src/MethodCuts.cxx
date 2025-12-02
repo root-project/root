@@ -91,7 +91,9 @@
 #include "TMVA/MCFitter.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/MethodFDA.h"
+#ifdef TMVA_MINUIT_1
 #include "TMVA/MinuitFitter.h"
+#endif
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Results.h"
@@ -674,7 +676,11 @@ void  TMVA::MethodCuts::Train( void )
          fitter = new MCFitter     ( *this, TString::Format("%sFitter_MC",     GetName()), ranges, GetOptions() );
          break;
       case kUseMinuit:
+#ifdef TMVA_MINUIT_1
          fitter = new MinuitFitter ( *this, TString::Format("%sFitter_MINUIT", GetName()), ranges, GetOptions() );
+#else
+         Log() << kFATAL << "Can't use MINUIT fitter because ROOT was build without MINUIT 1" << Endl;
+#endif
          break;
       case kUseSimulatedAnnealing:
          fitter = new SimulatedAnnealingFitter( *this, TString::Format("%sFitter_SA", GetName()), ranges, GetOptions() );

@@ -255,7 +255,7 @@ int main(int argc, const char *argv[])
 
    // string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root";
-   string minimizerName = "Minuit";
+   string minimizerName = "Minuit2";
 
    auto verbosityOptionErrorMsg = "Multiple verbosity-related options have been passed to stressRooFit! The options "
                                   "-v, -vv, and -q are mutually exclusive.";
