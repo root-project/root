@@ -21,7 +21,7 @@ ROOTTEST_ADD_TEST(missingSymbol
 if (NOT MSVC)
 # ROOT-5843
 ROOTTEST_ADD_TEST(dotLibraries
-                  COMMAND root -b -q -l -e ".libraries"
+                  COMMAND $<TARGET_FILE:root> -b -q -l -e ".libraries"
                   PASSREGEX "libRint")
 endif()
 
