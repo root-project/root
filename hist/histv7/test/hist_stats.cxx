@@ -92,10 +92,12 @@ TEST(RHistStats, DisableDimension)
    EXPECT_THROW(stats.GetDimensionStats(1), std::invalid_argument);
 
    // The argument for the disabled dimension will be ignored.
+   stats.Fill(1, "b", 3);
+   stats.Fill(1, "b", 3, RWeight(1));
    stats.Fill(4, 5, 6);
    stats.Fill(4, 5, 6, RWeight(1));
 
-   EXPECT_EQ(stats.GetNEntries(), 2);
+   EXPECT_EQ(stats.GetNEntries(), 4);
 }
 
 TEST(RHistStats, Add)
@@ -529,6 +531,14 @@ TEST(RHistStats, FillInvalidNumberOfArguments)
    EXPECT_THROW(stats2.Fill(1, 2, 3), std::invalid_argument);
 }
 
+TEST(RHistStats, FillInvalidArgumentType)
+{
+   RHistStats stats(1);
+
+   EXPECT_NO_THROW(stats.Fill(1));
+   EXPECT_THROW(stats.Fill("a"), std::invalid_argument);
+}
+
 TEST(RHistStats, FillWeightInvalidNumberOfArguments)
 {
    RHistStats stats1(1);
@@ -540,6 +550,14 @@ TEST(RHistStats, FillWeightInvalidNumberOfArguments)
    EXPECT_THROW(stats2.Fill(1, RWeight(1)), std::invalid_argument);
    EXPECT_NO_THROW(stats2.Fill(1, 2, RWeight(1)));
    EXPECT_THROW(stats2.Fill(1, 2, 3, RWeight(1)), std::invalid_argument);
+}
+
+TEST(RHistStats, FillWeightInvalidArgumentType)
+{
+   RHistStats stats(1);
+
+   EXPECT_NO_THROW(stats.Fill(1, RWeight(1)));
+   EXPECT_THROW(stats.Fill("a", RWeight(1)), std::invalid_argument);
 }
 
 TEST(RHistStats, FillTupleWeightInvalidNumberOfArguments)
