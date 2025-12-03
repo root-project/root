@@ -181,39 +181,31 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
   }
 
   // Generate lookup table from expected event counts
-  std::vector<double> nGen(_numPdf) ;
+  std::vector<double> nGen(_numPdf);
+  std::vector<double> nExpected;
+  nExpected.reserve(_numPdf) ;
+  double nExpectedTotal = 0.;
+  for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
+    RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
+    nExpected.push_back(pdf->expectedEvents(&_allVarsPdf));
+    nExpectedTotal += nExpected.back();
+  }
+
   if (extendedMode ) {
-    Int_t i(0) ;
-    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      //nGen[i] = Int_t(pdf->expectedEvents(&_allVarsPdf)+0.5) ;
-      nGen[i] = pdf->expectedEvents(&_allVarsPdf) ;
-      i++ ;
-    }
-
+    nGen = nExpected;
   } else {
-    Int_t i(1) ;
-    std::vector<double> fracThresh(_numPdf + 1);
-    for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
-      RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      fracThresh[i] = fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
-      i++ ;
-    }
-    for(i=0 ; i<_numPdf ; i++) {
-      fracThresh[i] /= fracThresh[_numPdf] ;
-    }
-
     // Determine from that total number of events to be generated for each component
     double nGenSoFar(0) ;
     while (nGenSoFar<nEvents) {
-      double rand = RooRandom::uniform() ;
-      i=0 ;
-      for (i=0 ; i<_numPdf ; i++) {
-   if (rand>fracThresh[i] && rand<fracThresh[i+1]) {
-     nGen[i]++ ;
-     nGenSoFar++ ;
-     break ;
-   }
+      double rand = RooRandom::uniform() * nExpectedTotal;
+      double cumsum = 0;
+      for (int i=0 ; i<_numPdf ; i++) {
+        if (rand >= cumsum && rand < cumsum + nExpected[i]) {
+          nGen[i]++ ;
+          nGenSoFar++ ;
+          break ;
+        }
+        cumsum += nExpected[i];
       }
     }
   }
