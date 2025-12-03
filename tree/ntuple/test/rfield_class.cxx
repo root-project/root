@@ -419,6 +419,8 @@ TEST(RNTuple, StreamerInfoRecords)
       {"std::map<int, CustomStruct>", {"CustomStruct"}, ""},
       {"DerivedA", {"DerivedA", "CustomStruct"}, ""},
       {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}, ""},
+      {"std::vector<EdmWrapper<long long>>", {"EdmWrapper<Long64_t>"}, "std::vector<EdmWrapper<Long64_t>>"},
+      {"ROOT::RVec<EdmWrapper<long long>>", {"EdmWrapper<Long64_t>"}, "ROOT::VecOps::RVec<EdmWrapper<Long64_t>>"},
       {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}, "EdmWrapper<Long64_t>"},
       {"EdmWrapper<map<int, EdmContent<float, Long64_t> > >",
        {"EdmWrapper<map<int,EdmContent<float,Long64_t> > >", "EdmContent<float,Long64_t>"},
