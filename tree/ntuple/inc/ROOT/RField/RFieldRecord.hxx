@@ -87,17 +87,17 @@ protected:
    /// that ensure that the resulting memory layout matches std::pair or std::tuple, resp.
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
-   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields);
+   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields, bool useNumberedFields);
 
    template <std::size_t N>
-   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> itemFields)
+   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> itemFields, bool useNumberedFields)
    {
       fTraits |= kTraitTrivialType;
       for (unsigned i = 0; i < N; ++i) {
          fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
          fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
          fTraits &= itemFields[i]->GetTraits();
-         Attach(std::move(itemFields[i]));
+         Attach(std::move(itemFields[i]), useNumberedFields ? ("_" + std::to_string(i)) : "");
       }
       // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
       // requirements of the type with strictest alignment

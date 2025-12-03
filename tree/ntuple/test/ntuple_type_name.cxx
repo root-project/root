@@ -501,7 +501,7 @@ TEST(RNTuple, PropagateTypeAlias)
    {
       std::vector<std::unique_ptr<RFieldBase>> items;
       items.emplace_back(GetDouble32Item());
-      items.emplace_back(std::make_unique<RField<int>>("f"));
+      items.emplace_back(std::make_unique<RField<int>>("_1"));
       auto f = std::make_unique<ROOT::RVariantField>("f", std::move(items));
       EXPECT_EQ("std::variant<double,std::int32_t>", f->GetTypeName());
       EXPECT_EQ("std::variant<Double32_t,std::int32_t>", f->GetTypeAlias());
@@ -510,7 +510,7 @@ TEST(RNTuple, PropagateTypeAlias)
    {
       std::array<std::unique_ptr<RFieldBase>, 2> items;
       items[0] = GetDouble32Item();
-      items[1] = std::make_unique<RField<int>>("f");
+      items[1] = std::make_unique<RField<int>>("_1");
       auto f = std::make_unique<ROOT::RPairField>("f", std::move(items));
       EXPECT_EQ("std::pair<double,std::int32_t>", f->GetTypeName());
       EXPECT_EQ("std::pair<Double32_t,std::int32_t>", f->GetTypeAlias());
@@ -519,14 +519,14 @@ TEST(RNTuple, PropagateTypeAlias)
    {
       std::vector<std::unique_ptr<RFieldBase>> items;
       items.emplace_back(GetDouble32Item());
-      items.emplace_back(std::make_unique<RField<int>>("f"));
+      items.emplace_back(std::make_unique<RField<int>>("_1"));
       auto f = std::make_unique<ROOT::RTupleField>("f", std::move(items));
       EXPECT_EQ("std::tuple<double,std::int32_t>", f->GetTypeName());
       EXPECT_EQ("std::tuple<Double32_t,std::int32_t>", f->GetTypeAlias());
    }
 
    {
-      auto f = std::make_unique<ROOT::ROptionalField>("f", GetDouble32Item());
+      auto f = std::make_unique<ROOT::ROptionalField>("_0", GetDouble32Item());
       EXPECT_EQ("std::optional<double>", f->GetTypeName());
       EXPECT_EQ("std::optional<Double32_t>", f->GetTypeAlias());
    }
@@ -534,9 +534,9 @@ TEST(RNTuple, PropagateTypeAlias)
    {
       std::array<std::unique_ptr<RFieldBase>, 2> items;
       items[0] = GetDouble32Item();
-      items[1] = std::make_unique<RField<int>>("f");
+      items[1] = std::make_unique<RField<int>>("_1");
       auto f = std::make_unique<ROOT::RMapField>("f", ROOT::RMapField::EMapType::kMultiMap,
-                                                 std::make_unique<ROOT::RPairField>("f", std::move(items)));
+                                                 std::make_unique<ROOT::RPairField>("_0", std::move(items)));
       EXPECT_EQ("std::multimap<double,std::int32_t>", f->GetTypeName());
       EXPECT_EQ("std::multimap<Double32_t,std::int32_t>", f->GetTypeAlias());
    }

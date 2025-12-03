@@ -123,7 +123,7 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idKlass, ROOT::kInvalidDescriptorId);
    auto idA = source->GetSharedDescriptorGuard()->FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::kInvalidDescriptorId);
-   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec_a", "float").Unwrap());
+   auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("_0", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
 
    auto field = std::make_unique<ROOT::RVectorField>("klassVec", std::move(fieldInner));
