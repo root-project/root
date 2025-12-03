@@ -313,6 +313,26 @@ void TMemFile::Print(Option_t *option /* = "" */) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Writes the contents of the TMemFile to the given file. This is meant to be
+/// used mostly for debugging, as it dumps the current file's content as-is with
+/// no massaging (meaning the content might not be a valid ROOT file): for regular use cases, use Cp().
+/// Example usage:
+/// ~~~ {.cpp}
+/// FILE *out = fopen("memfile_dump.root", "wb");
+/// ROOT::Internal::DumpBin(memFile, out);
+/// fclose(out);
+/// ~~~
+void ROOT::Internal::DumpBin(const TMemFile &file, FILE *out)
+{
+   const auto *cur = &file.fBlockList;
+   while (cur && cur->fSize) {
+      fwrite(cur->fBuffer, cur->fSize, 1, out);
+      cur = cur->fNext;
+   }
+   fflush(out);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Wipe all the data from the permanent buffer but keep, the in-memory object
 /// alive.
 
