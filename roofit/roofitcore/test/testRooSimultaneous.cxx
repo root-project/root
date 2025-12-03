@@ -2,10 +2,12 @@
 // Authors: Jonas Rembser, CERN  06/2021
 
 #include <Roo1DTable.h>
+#include <RooAddPdf.h>
 #include <RooAddition.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
+#include <RooExponential.h>
 #include <RooFitResult.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
@@ -509,6 +511,51 @@ TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
 
    EXPECT_TRUE(resSimWrapped->isIdentical(*resDirect))
       << "Inconsistency in RooSimultaneous wrapping with ConditionalObservables";
+}
+
+/// GitHub issue #18718.
+/// Make sure that we can do a ranged fit on an extended RooAddPdf in a
+/// RooSimultaneous with the new CPU backend.
+TEST(RooSimultaneous, RangedExtendedRooAddPdf)
+{
+
+   const double nBkgA_nom = 9000;
+   const double nBkgB_nom = 10000;
+
+   RooRealVar x("x", "Observable", 100, 150);
+   x.setRange("fitRange", 100, 130);
+
+   RooRealVar nBkgA("nBkgA", "", nBkgA_nom, 0.8 * nBkgA_nom, 1.2 * nBkgA_nom);
+   RooRealVar nBkgB("nBkgB", "", nBkgB_nom, 0.8 * nBkgB_nom, 1.2 * nBkgB_nom);
+
+   RooExponential expA("expA", "", x, RooFit::RooConst(-0.06));
+   RooAddPdf modelA("modelA", "", {expA}, {nBkgA});
+
+   RooExponential expB("expB", "", x, RooFit::RooConst(-0.09));
+   RooAddPdf modelB("modelB", "", {expB}, {nBkgB});
+
+   RooCategory runCat("runCat", "", {{"RunA", 0}, {"RunB", 1}});
+
+   RooSimultaneous simPdf("simPdf", "", {{"RunA", &modelA}, {"RunB", &modelB}}, runCat);
+
+   using namespace RooFit;
+
+   std::unique_ptr<RooDataSet> combData{simPdf.generate(RooArgSet(x, runCat), Extended())};
+
+   using Res = std::unique_ptr<RooFitResult>;
+
+   RooArgSet params;
+   RooArgSet paramsSnap;
+   simPdf.getParameters(combData->get(), params);
+   params.snapshot(paramsSnap);
+
+   Res fitResult{simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(RooFit::EvalBackend::Cpu()))};
+
+   params.assign(paramsSnap);
+
+   Res fitResultRef{simPdf.fitTo(*combData, Save(), Range("fitRange"), EvalBackend(RooFit::EvalBackend::Legacy()))};
+
+   EXPECT_TRUE(fitResult->isIdentical(*fitResultRef));
 }
 
 /// GitHub issue #20383.

@@ -16,7 +16,6 @@
 
 #include <array>
 
-
 /**
  * \class RooNormalizedPdf
  *
@@ -24,8 +23,7 @@
  * normalization set into a new self-normalized pdf.
  */
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
 {
@@ -53,5 +51,4 @@ void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
    }
 }
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
