@@ -27,27 +27,27 @@
 #include <ROOT/RSpan.hxx>
 
 template<class Element> class TVectorT : public TObject {
+class TVectorT : public TObject {
 
 protected:
-   Int_t    fNrows{0};             // number of rows
-   Int_t    fRowLwb{0};            // lower bound of the row index
-   Element *fElements{nullptr};    //[fNrows] elements themselves
+   static constexpr Int_t kSizeMax = 5;   // size data container on stack, see New_m(),Delete_m()
+   static constexpr Int_t kWorkMax = 100; // size of work array's in several routines
 
-   enum {kSizeMax = 5};            // size data container on stack, see New_m(),Delete_m()
-   enum {kWorkMax = 100};          // size of work array's in several routines
+   Element *fElements{nullptr}; // //[fNrows] elements themselves
+   Int_t fNrows{0};             // number of rows
+   Int_t fRowLwb{0};            // lower bound of the row index
 
-   Element  fDataStack[kSizeMax];  //! data container
-   Bool_t   fIsOwner{kTRUE};       //!default kTRUE, when Use array kFALSE
+   Bool_t fIsOwner{kTRUE}; //! default kTRUE, when Use array kFALSE
+   // 16-byte alignment is more than enough for double, __m128, __m256
+   alignas(16) Element fDataStack[kSizeMax]; //! data container
 
-   Element* New_m   (Int_t size);
-   void     Delete_m(Int_t size,Element*&);
-   Int_t    Memcpy_m(Element *newp,const Element *oldp,Int_t copySize,
-                     Int_t newSize,Int_t oldSize);
-
-   void     Allocate(Int_t nrows,Int_t row_lwb = 0,Int_t init = 0);
+   Element *New_m(Int_t size);
+   void Delete_m(Int_t size, Element *&ptr);
+   Int_t Memcpy_m(Element *newp, const Element *oldp, Int_t copySize, Int_t newSize, Int_t oldSize);
+   void Allocate(Int_t nrows, Int_t row_lwb = 0, Int_t init = 0);
 
    enum EVectorStatusBits {
-     kStatus = BIT(14) // set if vector object is valid
+      kStatus = BIT(14) // set if vector object is valid
    };
 
 public:
