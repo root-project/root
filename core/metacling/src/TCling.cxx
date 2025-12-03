@@ -111,6 +111,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Diagnostics.h"
 #include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
@@ -398,6 +399,19 @@ extern "C" void TCling__UnlockCompilationDuringUserCodeExecution(void* /*state*/
       gInterpreterMutex->UnLock();
    }
 }
+
+namespace {
+class TClingDiagnosticsRAII : public TInterpreter::DiagnosticsRAII {
+   cling::utils::ReplaceDiagnostics fReplace;
+   std::unique_ptr<clang::DiagnosticConsumer> fConsumer;
+
+public:
+   TClingDiagnosticsRAII(clang::DiagnosticsEngine &Diags, clang::DiagnosticConsumer *Replace)
+      : fReplace(Diags, *Replace, false), fConsumer(Replace)
+   {
+   }
+};
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
@@ -7589,6 +7603,22 @@ int TCling::LoadFile(const char* path) const
 Bool_t TCling::LoadText(const char* text) const
 {
    return (fInterpreter->declare(text) == cling::Interpreter::kSuccess);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make RAII for redirecting diagnostic messages to an ostream
+std::unique_ptr<TInterpreter::DiagnosticsRAII>
+TCling::MakeRedirectDiagnosticsRAII(std::ostream &os, bool enableColors, unsigned int indent)
+{
+
+   auto *consumer = new TClingRedirectDiagnosticPrinter(os, &fInterpreter->getDiagnostics().getDiagnosticOptions(),
+                                                        fInterpreter->getCI()->getLangOpts(), enableColors, indent);
+
+   // redirect owns consumer
+   auto *redirect = new TClingDiagnosticsRAII(fInterpreter->getDiagnostics(), consumer);
+
+   // returned unique_ptr owns redirect
+   return std::unique_ptr<TInterpreter::DiagnosticsRAII>(redirect);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

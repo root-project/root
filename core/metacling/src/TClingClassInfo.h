@@ -36,6 +36,8 @@
 #include <utility>
 #include <mutex>
 
+#include "cling/Interpreter/LookupHelper.h"
+
 #include "llvm/ADT/DenseMap.h"
 
 namespace cling {
@@ -173,6 +175,7 @@ public:
    bool                 IsLoaded() const;
    bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, Longptr_t *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    int                  InternalNext();
+   cling::LookupHelper::DiagSetting LookupDiagnostics() const;
    int                  Next();
    void                *New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    void                *New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
