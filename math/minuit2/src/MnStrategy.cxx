@@ -9,6 +9,9 @@
 
 #include "Minuit2/MnStrategy.h"
 
+#include <algorithm>
+#include <limits>
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -87,6 +90,20 @@ void MnStrategy::SetVeryHighStrategy()
     SetHessianGradientNCycles(6);
     SetHessianCentralFDMixedDerivatives(1);
     SetHessianForcePosDef(0);
+}
+
+MnStrategy MnStrategy::NextLower() const
+{
+   return MnStrategy(std::max(0, int(fStrategy - 1)));
+}
+
+double MnStrategy::HessianRecomputeThreshold() const
+{
+   if (fStrategy == 0)
+      return std::numeric_limits<double>::infinity();
+   if (fStrategy == 1)
+      return 0.05;
+   return -std::numeric_limits<double>::infinity();
 }
 
 } // namespace Minuit2

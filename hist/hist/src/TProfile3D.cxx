@@ -1093,8 +1093,8 @@ TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
 /// Called from TH3::Project3DProfile but re-implemented in case of the TPRofile3D
 /// since what is done is different.
 
-TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                           bool originalRange, bool useUF, bool useOF) const
+TProfile2D *TProfile3D::DoProjectProfile2D(const char *name, const char *title, const TAxis *projX, const TAxis *projY,
+                                           bool originalRange, bool useUF, bool useOF, bool useWidth) const
 {
    // Get the ranges where we will work.
    Int_t ixmin = projX->GetFirst();
@@ -1166,8 +1166,8 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    if (projY == GetXaxis() ) {  projY_hW =  h3dW->GetXaxis();  projY_hN =  h3dN->GetXaxis(); }
    if (projY == GetZaxis() ) {  projY_hW =  h3dW->GetZaxis();  projY_hN =  h3dN->GetZaxis(); }
 
-   TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF);
-   TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF);
+   TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF, useWidth);
+   TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF, useWidth);
    h2W->SetDirectory(nullptr); h2N->SetDirectory(nullptr);
 
 
