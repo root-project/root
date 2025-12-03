@@ -36,7 +36,16 @@ private:
    RHistStats fStats;
 
    /// \sa RHistConcurrentFiller::CreateFillContent()
-   explicit RHistFillContext(RHist<BinContentType> &hist) : fHist(&hist), fStats(hist.GetNDimensions()) {}
+   explicit RHistFillContext(RHist<BinContentType> &hist) : fHist(&hist), fStats(hist.GetNDimensions())
+   {
+      // Propagate disabled dimensions to the local histogram statistics object.
+      const auto &histStats = hist.GetStats();
+      for (std::size_t i = 0; i < histStats.GetNDimensions(); i++) {
+         if (!histStats.IsEnabled(i)) {
+            fStats.DisableDimension(i);
+         }
+      }
+   }
    RHistFillContext(const RHistFillContext<BinContentType> &) = delete;
    RHistFillContext(RHistFillContext<BinContentType> &&) = default;
    RHistFillContext<BinContentType> &operator=(const RHistFillContext<BinContentType> &) = delete;
