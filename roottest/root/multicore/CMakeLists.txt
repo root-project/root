@@ -24,7 +24,7 @@ endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(testSetAddress
                              testSetAddress.cpp
-                             LIBRARIES Core MathCore RIO Tree
+                             LIBRARIES Core MathCore RIO Tree GenVector Physics
                              FIXTURES_SETUP root-multicore-testSetAddress-fixture)
 
 if(MSVC)
@@ -296,7 +296,7 @@ if(imt)
 
    ROOTTEST_GENERATE_EXECUTABLE(tp_process_imt
                                 tp_process_imt.cpp
-                                LIBRARIES Core Imt Thread Tree TreePlayer
+                                LIBRARIES Core Imt Thread Tree TreePlayer Physics
                                 FIXTURES_SETUP root-multicore-tp_process_imt-fixture)
 
    ROOTTEST_ADD_TEST(tp_process_imt
