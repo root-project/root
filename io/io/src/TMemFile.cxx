@@ -348,11 +348,6 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fCacheRead    = 0;
    fCacheWrite   = 0;
    fReadCalls    = 0;
-   if (fFree) {
-      fFree->Delete();
-      delete fFree;
-      fFree = nullptr;
-   }
 
    fSysOffset   = 0;
    fBlockSeek   = &fBlockList;
@@ -375,7 +370,6 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
             ((TDirectoryFile*)idcur)->ResetAfterMerge(info);
          }
       }
-
    }
 }
 
