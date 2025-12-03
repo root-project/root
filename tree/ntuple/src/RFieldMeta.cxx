@@ -71,6 +71,24 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+std::string GetTypeList(std::span<std::unique_ptr<ROOT::RFieldBase>> itemFields, bool useTypeAliases)
+{
+   std::string result;
+   for (size_t i = 0; i < itemFields.size(); ++i) {
+      if (useTypeAliases && !itemFields[i]->GetTypeAlias().empty()) {
+         result += itemFields[i]->GetTypeAlias();
+      } else {
+         result += itemFields[i]->GetTypeName();
+      }
+      result.push_back(',');
+   }
+   if (result.empty()) {
+      throw ROOT::RException(R__FAIL("invalid empty type list provided as template argument"));
+   }
+   result.pop_back(); // remove trailing comma
+   return result;
+}
+
 std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField)
 {
    std::string typePrefix;
@@ -667,14 +685,9 @@ void ROOT::REnumField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 
 //------------------------------------------------------------------------------
 
-std::string ROOT::RPairField::RPairField::GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields)
-{
-   return itemFields[0]->GetTypeName() + "," + itemFields[1]->GetTypeName();
-}
-
 ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
                              const std::array<std::size_t, 2> &offsets)
-   : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
+   : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
    AttachItemFields(std::move(itemFields));
    fOffsets.push_back(offsets[0]);
@@ -682,7 +695,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
 }
 
 ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields)
-   : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields) + ">")
+   : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
    AttachItemFields(std::move(itemFields));
 
@@ -1268,28 +1281,16 @@ void ROOT::RField<TObject>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) 
 
 //------------------------------------------------------------------------------
 
-std::string ROOT::RTupleField::RTupleField::GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields)
-{
-   std::string result;
-   if (itemFields.empty())
-      throw RException(R__FAIL("the type list for std::tuple must have at least one element"));
-   for (size_t i = 0; i < itemFields.size(); ++i) {
-      result += itemFields[i]->GetTypeName() + ",";
-   }
-   result.pop_back(); // remove trailing comma
-   return result;
-}
-
 ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                const std::vector<std::size_t> &offsets)
-   : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
+   : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
    AttachItemFields(std::move(itemFields));
    fOffsets = offsets;
 }
 
 ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
-   : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields) + ">")
+   : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
    AttachItemFields(std::move(itemFields));
 
@@ -1362,17 +1363,6 @@ struct RVariantTag {
 
 } // anonymous namespace
 
-std::string ROOT::RVariantField::GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields)
-{
-   std::string result;
-   for (size_t i = 0; i < itemFields.size(); ++i) {
-      result += itemFields[i]->GetTypeName() + ",";
-   }
-   R__ASSERT(!result.empty()); // there is always at least one variant
-   result.pop_back();          // remove trailing comma
-   return result;
-}
-
 ROOT::RVariantField::RVariantField(std::string_view name, const RVariantField &source)
    : ROOT::RFieldBase(name, source.GetTypeName(), ROOT::ENTupleStructure::kVariant, false /* isSimple */),
      fMaxItemSize(source.fMaxItemSize),
@@ -1387,8 +1377,8 @@ ROOT::RVariantField::RVariantField(std::string_view name, const RVariantField &s
 }
 
 ROOT::RVariantField::RVariantField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
-   : ROOT::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields) + ">", ROOT::ENTupleStructure::kVariant,
-                      false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">",
+                      ROOT::ENTupleStructure::kVariant, false /* isSimple */)
 {
    // The variant needs to initialize its own tag member
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
