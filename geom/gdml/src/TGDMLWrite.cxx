@@ -763,7 +763,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode *node)
 
    // export auxiliary user-data if present (TMap of TObjString->TObjString)
    {
-      TGeoRCExtension *rcext = (TGeoRCExtension *)volume->GetUserExtension();
+      TGeoRCExtension *rcext = dynamic_cast<TGeoRCExtension *>(volume->GetUserExtension());
       if (rcext) {
          TObject *userObj = rcext->GetUserObject();
          if (userObj && userObj->InheritsFrom("TMap")) {
