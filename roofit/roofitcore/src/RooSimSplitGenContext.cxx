@@ -78,12 +78,9 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
   // Initialize fraction threshold array (used only in extended mode)
   _numPdf = model._pdfProxyList.GetSize() ;
-  _fracThresh = new double[_numPdf+1] ;
-  _fracThresh[0] = 0 ;
 
   // Generate index category and all registered PDFS
   _allVarsPdf.add(allPdfVars) ;
-  Int_t i(1) ;
   for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
     auto pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
@@ -96,14 +93,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
     _gcIndex.push_back(state);
-
-    // Fill fraction threshold array
-    _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&allPdfVars) ;
-    i++ ;
-  }
-
-  for(i=0 ; i<_numPdf ; i++) {
-    _fracThresh[i] /= _fracThresh[_numPdf] ;
   }
 
   // Clone the index category
@@ -121,7 +110,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
 RooSimSplitGenContext::~RooSimSplitGenContext()
 {
-  delete[] _fracThresh ;
   for (RooAbsGenContext *item : _gcList) {
     delete item;
   }
@@ -205,14 +193,14 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
   } else {
     Int_t i(1) ;
-    _fracThresh[0] = 0 ;
+    std::vector<double> fracThresh(_numPdf + 1);
     for(auto * proxy : static_range_cast<RooRealProxy*>(_pdf->_pdfProxyList)) {
       RooAbsPdf* pdf=static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
+      fracThresh[i] = fracThresh[i-1] + pdf->expectedEvents(&_allVarsPdf) ;
       i++ ;
     }
     for(i=0 ; i<_numPdf ; i++) {
-      _fracThresh[i] /= _fracThresh[_numPdf] ;
+      fracThresh[i] /= fracThresh[_numPdf] ;
     }
 
     // Determine from that total number of events to be generated for each component
@@ -221,7 +209,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
       double rand = RooRandom::uniform() ;
       i=0 ;
       for (i=0 ; i<_numPdf ; i++) {
-   if (rand>_fracThresh[i] && rand<_fracThresh[i+1]) {
+   if (rand>fracThresh[i] && rand<fracThresh[i+1]) {
      nGen[i]++ ;
      nGenSoFar++ ;
      break ;
