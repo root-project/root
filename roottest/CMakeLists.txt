@@ -1,14 +1,3 @@
-# Use ${ROOTSYS} CMake variable to search for ROOT. This is set when roottest is
-# built as part of ROOT, i.e., when ROOT is configured with -Droottest=ON. It
-# may also be set by passing -DROOTSYS=<PATH> to CMake when configuring a
-# standalone roottest against an installation of ROOT. If this is set, it takes
-# precedence over the environment to ensure that when roottest is being built in
-# a ROOT build configured with -Droottest=ON, it will find the ROOT being built,
-# and not a ROOT installation sourced with thisroot.sh or found in $PATH.
-if(DEFINED ROOTSYS)
-  list(INSERT CMAKE_PREFIX_PATH 0 ${ROOTSYS})
-endif()
-
 find_package(ROOT REQUIRED CONFIG)
 
 if(MSVC)
