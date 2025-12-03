@@ -92,7 +92,7 @@ std::string GetTypeList(std::span<std::unique_ptr<ROOT::RFieldBase>> itemFields,
    return result;
 }
 
-std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField)
+std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField, bool useTypeAlias)
 {
    std::string typePrefix;
    switch (setType) {
@@ -102,10 +102,13 @@ std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFie
    case ROOT::RSetField::ESetType::kUnorderedMultiSet: typePrefix = "std::unordered_multiset<"; break;
    default: R__ASSERT(false);
    }
-   return typePrefix + innerField.GetTypeName() + ">";
+   return typePrefix +
+          ((useTypeAlias && !innerField.GetTypeAlias().empty()) ? innerField.GetTypeAlias()
+                                                                : innerField.GetTypeName()) +
+          ">";
 }
 
-std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField)
+std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField, bool useTypeAliases)
 {
    if (const auto pairField = dynamic_cast<const ROOT::RPairField *>(innerField)) {
       std::string typePrefix;
@@ -116,8 +119,18 @@ std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFie
       case ROOT::RMapField::EMapType::kUnorderedMultiMap: typePrefix = "std::unordered_multimap<"; break;
       default: R__ASSERT(false);
       }
-      auto subFields = pairField->GetConstSubfields();
-      return typePrefix + subFields[0]->GetTypeName() + "," + subFields[1]->GetTypeName() + ">";
+      const auto &items = pairField->GetConstSubfields();
+      std::string type = typePrefix;
+      for (int i : {0, 1}) {
+         if (useTypeAliases && !items[i]->GetTypeAlias().empty()) {
+            type += items[i]->GetTypeAlias();
+         } else {
+            type += items[i]->GetTypeName();
+         }
+         if (i == 0)
+            type.push_back(',');
+      }
+      return type + ">";
    }
 
    throw ROOT::RException(R__FAIL("RMapField inner field type must be of RPairField"));
@@ -692,6 +705,10 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
                              const std::array<std::size_t, 2> &offsets)
    : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   const std::string typeAlias = "std::pair<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
+   if (typeAlias != GetTypeName())
+      fTypeAlias = typeAlias;
+
    AttachItemFields(std::move(itemFields));
    fOffsets.push_back(offsets[0]);
    fOffsets.push_back(offsets[1]);
@@ -700,6 +717,10 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
 ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields)
    : ROOT::RRecordField(fieldName, "std::pair<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   const std::string typeAlias = "std::pair<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
+   if (typeAlias != GetTypeName())
+      fTypeAlias = typeAlias;
+
    AttachItemFields(std::move(itemFields));
 
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
@@ -945,8 +966,13 @@ void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 //------------------------------------------------------------------------------
 
 ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get()))), fMapType(mapType)
+   : RProxiedCollectionField(fieldName,
+                             EnsureValidClass(BuildMapTypeName(mapType, itemField.get(), false /* useTypeAliases */))),
+     fMapType(mapType)
 {
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = BuildMapTypeName(mapType, itemField.get(), true /* useTypeAliases */);
+
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
 
@@ -976,10 +1002,15 @@ void ROOT::RMapField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 //------------------------------------------------------------------------------
 
 ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField))),
+   : ROOT::RProxiedCollectionField(fieldName,
+                                   EnsureValidClass(BuildSetTypeName(setType, *itemField, false /* useTypeAlias */))),
      fSetType(setType)
 {
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = BuildSetTypeName(setType, *itemField, true /* useTypeAlias */);
+
    fItemSize = itemField->GetValueSize();
+
    Attach(std::move(itemField));
 }
 
@@ -1288,6 +1319,10 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
                                const std::vector<std::size_t> &offsets)
    : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   const std::string typeAlias = "std::tuple<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
+   if (typeAlias != GetTypeName())
+      fTypeAlias = typeAlias;
+
    AttachItemFields(std::move(itemFields));
    fOffsets = offsets;
 }
@@ -1295,6 +1330,10 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
 ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, "std::tuple<" + GetTypeList(itemFields, false /* useTypeAliases */) + ">")
 {
+   const std::string typeAlias = "std::tuple<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
+   if (typeAlias != GetTypeName())
+      fTypeAlias = typeAlias;
+
    AttachItemFields(std::move(itemFields));
 
    auto *c = TClass::GetClass(GetTypeName().c_str());
@@ -1385,6 +1424,10 @@ ROOT::RVariantField::RVariantField(std::string_view fieldName, std::vector<std::
 {
    // The variant needs to initialize its own tag member
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
+
+   const std::string typeAlias = "std::variant<" + GetTypeList(itemFields, true /* useTypeAliases */) + ">";
+   if (typeAlias != GetTypeName())
+      fTypeAlias = typeAlias;
 
    auto nFields = itemFields.size();
    if (nFields == 0 || nFields > kMaxVariants) {
