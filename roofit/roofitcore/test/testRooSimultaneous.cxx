@@ -1,6 +1,7 @@
 // Tests for the RooSimultaneous
 // Authors: Jonas Rembser, CERN  06/2021
 
+#include <Roo1DTable.h>
 #include <RooAddition.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
@@ -540,4 +541,36 @@ TEST(RooSimultaneous, PlotProjWData)
    // single bin and the model is uniform, to the curve should be equal to the
    // sum of data entries in the center.
    EXPECT_DOUBLE_EQ(frame->getCurve()->interpolate(0.), combData.sumEntries());
+}
+
+/// JIRA ticket https://its.cern.ch/jira/browse/ROOT-7499
+/// Check that we can also generate Asimov datasets with non-integer weights
+/// via RooSimultaneous.
+TEST(RooSimultaneous, ExpectedDataWithNonIntegerWeights)
+{
+
+   RooWorkspace ws{"ws"};
+   ws.factory("dummy_obs_a[0,1]");
+   ws.factory("dummy_obs_b[0,1]");
+   ws.factory("Uniform::uniform_a(dummy_obs_a)");
+   ws.factory("Uniform::uniform_b(dummy_obs_b)");
+   ws.factory("SUM::model_a(coeff_a[3.5]*uniform_a)");
+   ws.factory("SUM::model_b(coeff_b[6.5]*uniform_b)");
+
+   RooRealVar &dummy_obs_a = *ws.var("dummy_obs_a");
+   RooRealVar &dummy_obs_b = *ws.var("dummy_obs_b");
+
+   ws.factory("dummy_cat[a]");
+   ws.factory("SIMUL::sim_model(dummy_cat, a = model_a, b = model_b)");
+   RooAbsCategory &dummy_cat = *ws.cat("dummy_cat");
+
+   // std::cout << "simultaneous expected = " << ws.pdf("sim_model")->expectedEvents(dummy_obs) << std::endl;
+   RooDataSet *data = ws.pdf("sim_model")->generate({dummy_obs_a, dummy_obs_b, dummy_cat}, RooFit::ExpectedData());
+
+   std::unique_ptr<Roo1DTable> tab{data->table(dummy_cat)};
+
+   // Check that the sum of entries for each category is as expected, matching
+   // the coefficients from the RooAddPdf.
+   EXPECT_FLOAT_EQ(tab->get("a"), ws.var("coeff_a")->getVal());
+   EXPECT_FLOAT_EQ(tab->get("b"), ws.var("coeff_b")->getVal());
 }
