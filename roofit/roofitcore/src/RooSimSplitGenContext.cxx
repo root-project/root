@@ -191,7 +191,11 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
     nExpectedTotal += nExpected.back();
   }
 
-  if (extendedMode ) {
+  // We don't randomize events in two cases:
+  //  1. When the generation is extended, each component pdf will already
+  //     randomize the expected number of events so we don't need to do it here.
+  //  2. If we want to create an expected Asimov dataset.
+  if (extendedMode || _expectedData) {
     nGen = nExpected;
   } else {
     // Determine from that total number of events to be generated for each component
@@ -237,6 +241,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 
 void RooSimSplitGenContext::setExpectedData(bool flag)
 {
+  _expectedData = flag;
   for(RooAbsGenContext *elem : _gcList) {
     elem->setExpectedData(flag) ;
   }

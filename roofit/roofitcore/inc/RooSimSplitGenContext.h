@@ -54,6 +54,7 @@ protected:
   std::vector<int>               _gcIndex ; ///< Index value corresponding to component
   TString _idxCatName ;                     ///< Name of index category
   Int_t _numPdf ;                           ///< Number of generated PDFs
+  bool _expectedData = false;               ///< Asimov?
 
   RooArgSet _allVarsPdf ; ///< All pdf variables
 
