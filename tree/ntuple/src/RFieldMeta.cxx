@@ -852,11 +852,10 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    auto clone =
       std::unique_ptr<RProxiedCollectionField>(new RProxiedCollectionField(newName, fProxy->GetCollectionClass()));
    clone->fItemSize = fItemSize;
-   clone->Attach(std::move(newItemField));
+   clone->Attach(fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
    return clone;
 }
 
