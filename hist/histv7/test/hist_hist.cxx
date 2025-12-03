@@ -192,6 +192,43 @@ TEST(RHist, FillWeight)
    EXPECT_FLOAT_EQ(hist.ComputeStdDev(), 0.49913420);
 }
 
+TEST(RHist, FillCategorical)
+{
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis axis(categories);
+   RHist<int> hist({axis});
+
+   hist.Fill("b");
+   hist.Fill(std::make_tuple("c"));
+
+   EXPECT_EQ(hist.GetBinContent(RBinIndex(1)), 1);
+   std::array<RBinIndex, 1> indices = {2};
+   EXPECT_EQ(hist.GetBinContent(indices), 1);
+
+   EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(hist.ComputeNEffectiveEntries(), 2);
+}
+
+TEST(RHist, FillCategoricalWeight)
+{
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis axis(categories);
+   RHist<float> hist({axis});
+
+   hist.Fill("b", RWeight(0.8));
+   hist.Fill(std::make_tuple("c"), RWeight(0.9));
+
+   EXPECT_FLOAT_EQ(hist.GetBinContent(RBinIndex(1)), 0.8);
+   std::array<RBinIndex, 1> indices = {2};
+   EXPECT_FLOAT_EQ(hist.GetBinContent(indices), 0.9);
+
+   EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW(), 1.7);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW2(), 1.45);
+   // Cross-checked with TH1
+   EXPECT_FLOAT_EQ(hist.ComputeNEffectiveEntries(), 1.9931034);
+}
+
 TEST(RHist, Scale)
 {
    static constexpr std::size_t Bins = 20;

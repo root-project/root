@@ -7,6 +7,7 @@
 
 #include "RAxes.hxx" // for RAxisVariant
 #include "RBinIndex.hxx"
+#include "RCategoricalAxis.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
 #include "RRegularAxis.hxx"
@@ -18,6 +19,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 class TBuffer;
@@ -74,7 +76,16 @@ public:
    /// Construct a histogram.
    ///
    /// \param[in] axes the axis objects, must have size > 0
-   explicit RHist(std::vector<RAxisVariant> axes) : fEngine(std::move(axes)), fStats(fEngine.GetNDimensions()) {}
+   explicit RHist(std::vector<RAxisVariant> axes) : fEngine(std::move(axes)), fStats(fEngine.GetNDimensions())
+   {
+      // The axes parameter was moved, use from the engine.
+      const auto &engineAxes = fEngine.GetAxes();
+      for (std::size_t i = 0; i < engineAxes.size(); i++) {
+         if (std::get_if<RCategoricalAxis>(&engineAxes[i])) {
+            fStats.DisableDimension(i);
+         }
+      }
+   }
 
    /// Construct a histogram.
    ///
