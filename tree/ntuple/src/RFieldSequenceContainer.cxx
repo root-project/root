@@ -124,7 +124,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
      fArrayLength(arrayLength)
 {
    fTraits |= itemField->GetTraits() & ~kTraitMappable;
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayField::CloneImpl(std::string_view newName) const
@@ -245,7 +245,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
 {
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
 
    // Determine if we can optimimize bulk reading
@@ -551,7 +551,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
@@ -859,7 +859,7 @@ ROOT::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldName, std::uniq
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);
@@ -961,7 +961,7 @@ ROOT::RArrayAsVectorField::RArrayAsVectorField(std::string_view fieldName, std::
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);
 }

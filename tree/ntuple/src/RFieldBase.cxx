@@ -648,12 +648,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue 
    return std::vector<RValue>();
 }
 
-void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child)
+void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::string_view childName)
 {
    // Note that during a model update, new fields will be attached to the zero field. The zero field, however,
    // does not change its inital state because only its sub fields get connected by RPageSink::UpdateSchema.
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
+
+   if (!childName.empty() && child->GetFieldName() != childName)
+      child = child->Clone(childName);
+
    child->fParent = this;
    fSubfields.emplace_back(std::move(child));
 }
