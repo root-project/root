@@ -1,0 +1,6 @@
+
+Processing /Users/pcanal/root_working/roottest/root/meta/tclass/issue-6840/execPair.C...
+Warning in <TClass::Init>: no dictionary for class pair<SameAsShort,SameAsShort> is available
+Warning in <TClass::Init>: no dictionary for class SameAsShort is available
+Warning in <TClass::Init>: no dictionary for class pair<short,SameAsShort> is available
+(int) 0

@@ -42,7 +42,6 @@
 #include "TObject.h"
 #include "TRef.h"
 
-ClassImp(TMVA::PDEFoamCell);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

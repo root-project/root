@@ -18,10 +18,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <fcntl.h>
@@ -167,7 +167,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service)
 out:
    // Close any open file descriptors
    for (fd = 0; fd < NOFILE; fd++) {
-      if ((fd != fdkeep) || (service == kPROOFD)) close(fd);
+      if ((fd != fdkeep)) close(fd);
    }
 
    ResetErrno();   // probably got set to EBADF from a close

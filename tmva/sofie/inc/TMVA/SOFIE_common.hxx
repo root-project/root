@@ -21,14 +21,12 @@
 #include <cassert>
 #include <limits>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
-
-//typedef RTensor tensor_t;
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
 
 enum class ETensorType{
-   UNDEFINED = 0, FLOAT = 1, UNINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
+   UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
 
@@ -40,7 +38,7 @@ constexpr size_t GetTypeSize(ETensorType type) {
     switch (type) {
         case ETensorType::FLOAT:     return sizeof(float);
         case ETensorType::DOUBLE:    return sizeof(double);
-        case ETensorType::UNINT8:     return sizeof(uint8_t);
+        case ETensorType::UINT8:     return sizeof(uint8_t);
         case ETensorType::INT8:      return sizeof(int8_t);
         case ETensorType::UINT16:    return sizeof(uint16_t);
         case ETensorType::INT16:     return sizeof(int16_t);
@@ -59,6 +57,9 @@ typedef std::int64_t int_t;
 std::string ConvertTypeToString(ETensorType type);
 ETensorType ConvertStringToType(std::string type);
 
+// find if a string represents a number
+bool IsInteger(const std::string & s);
+
 struct Dim{
    bool isParam = false;
    size_t dim = 0;
@@ -68,16 +69,42 @@ struct Dim{
    Dim() {}
 
    // constructor for a parametric dimension with the option to pass a default dim value
-   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+   // We use -1 for dim to indicate that the param dimension is an expression (e.g. "d1+d2")
+   // in case the string represents a number make Dim not parametric
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p)
+   {
+      if (IsInteger(p)) {
+            isParam = false;
+            dim = std::stoi(p);
+      }
+   }
 
    // constructor for a non-parametric dimension
    Dim(size_t d) : dim(d) {}
 
    std::string GetVal() const {
-      return (isParam) ? param : std::to_string(dim);
+      // cast to int64_t for negative shape values
+      return (isParam) ? param : std::to_string(static_cast<int64_t>(dim));
+   }
+
+   std::ostream& operator<< (std::ostream& os) const {
+      os << GetVal();
+      return os;
+   }
+
+   bool operator==(const Dim& rhs) const {
+       return (isParam && rhs.isParam) ? param == rhs.param : dim == rhs.dim;
+   }
+   bool operator!=(const Dim& rhs) const {
+       return !(*this == rhs);
    }
 };
 
+//bool operator==(const Dim& lhs, const Dim& rhs);
+inline std::ostream & operator<< (std::ostream &os, const Dim &d) {
+   os << d.GetVal();
+   return os;
+}
 
 struct InputTensorInfo{
    ETensorType type;
@@ -92,6 +119,18 @@ struct TensorInfo{
 struct DynamicTensorInfo{
    ETensorType type;
    std::vector<Dim> shape;
+};
+
+// template traits for Tensor Shape
+template <typename T>
+struct TensorShape {};
+template<>
+struct TensorShape<Dim> {
+   static bool IsDim() { return true; }
+};
+template<>
+struct TensorShape<size_t> {
+   static bool IsDim() { return false; }
 };
 
 // template traits for Tensor type
@@ -121,6 +160,10 @@ template<>
 struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
+template<>
+struct TensorType<bool> {
+   static const std::string Name() { return "bool"; }
+};
 
 struct TensorMemoryInfo {
    std::string_view tensor_name;
@@ -149,19 +192,21 @@ struct MemoryPoolInfo {
    std::map<size_t, size_t> available_stack;
 };
 
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+std::vector<Dim> ConvertShapeToDim(const std::vector<size_t> & shape);
 
-std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
+std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape);
 
-std::size_t ConvertShapeToLength(std::vector<size_t> shape);
+std::size_t ConvertShapeToLength(const std::vector<size_t> & shape);
 
-std::string ConvertShapeToString(std::vector<size_t> shape);
-std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
-// std::string ConvertShapeToString(std::vector<Dim> shape) {
-//    return ConvertDynamicShapeToString(shape);
-// }
+std::string ConvertShapeToString(const std::vector<size_t> & shape);
+std::string ConvertDimShapeToString(const std::vector<Dim> & shape);
+std::string ConvertShapeToString(const std::vector<Dim> & shape);
 
-std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
+
+
+std::string ConvertDimShapeToLength(const std::vector<Dim> & shape);
+std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape);
+
 
 template<class T>
 std::string ConvertValToString(T value) {
@@ -272,7 +317,7 @@ private:
 template <typename T>
 ETensorType GetTemplatedType(T /*obj*/ ){
    if (std::is_same<T, float>::value) return ETensorType::FLOAT;
-   if (std::is_same<T, uint8_t>::value) return ETensorType::UNINT8;
+   if (std::is_same<T, uint8_t>::value) return ETensorType::UINT8;
    if (std::is_same<T, int8_t>::value) return ETensorType::INT8;
    if (std::is_same<T, uint16_t>::value) return ETensorType::UINT16;
    if (std::is_same<T, int16_t>::value) return ETensorType::INT16;
@@ -288,6 +333,12 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 }
 
 namespace UTILITY{
+
+
+
+// clean operator and tensor names
+std::string Clean_name(std::string input_tensor_name);
+
 // Check if two shapes are equal
 bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
 bool AreSameShape(const std::vector<size_t>&, const std::vector<Dim>&);
@@ -297,10 +348,14 @@ bool AreSameShape(const std::vector<Dim>&, const std::vector<Dim>&);
 // Multidirectional broadcast a list of tensors to the same shape
 std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);
 
-// Unidirectional broadcast two shapes to the same shape
-std::vector<size_t> UnidirectionalBroadcastShape(std::vector<size_t>, std::vector<size_t>);
+// Multidirectional broadcast two shapes to the same shape
 
-std::string Clean_name(std::string input_tensor_name);
+std::pair<int, std::vector<size_t>> MultidirectionalBroadcastShape(std::vector<size_t> &, std::vector<size_t> &);
+std::vector<size_t> UnidirectionalBroadcastShape(std::vector<size_t> &, std::vector<size_t> &);
+
+std::pair<int, std::vector<Dim>> MultidirectionalBroadcastShape(std::vector<Dim> &, std::vector<Dim> &);
+
+
 
 template<typename T>
 T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size_t>& targetShape) {
@@ -353,7 +408,7 @@ void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const st
    size_t targetLength = broadcastedData.size();
    assert(ConvertShapeToLength(targetShape) == targetLength);
    // special case when broadcasting last dimensions (initial shapes must be the same)
-   if (shape.front() == targetShape.front() && shape.back() == 1 && size > 1) {
+   if (size > 1 && shape.front() == targetShape.front() && shape.back() == 1) {
       size_t bsize = targetShape.back();
       // compute the size of the data to broadcast
       for (int k = int(size)-2; k >=0; k--) {
@@ -450,8 +505,6 @@ void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, co
    }
    BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, broadcastedData);
 }
-// specialization for vector of boolean
-void UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData);
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
@@ -620,7 +673,15 @@ void col2im(const Dtype* data_col, const int channels,
   //std::cout << "finishing col2imp" << std::endl;
 }
 
-
+// Used at the end of infer() to fill the return object.
+template <class T>
+void FillOutput(T const *arr, std::vector<T> &out, std::size_t n)
+{
+   out.resize(n);
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] = arr[i];
+   }
+}
 
 }  // end namespace UTILITY
 
@@ -705,8 +766,47 @@ inline GNN_Data Copy(const GNN_Data & data) {
    return out;
 }
 
-}//SOFIE
-}//Experimental
-}//TMVA
+inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int k, float alpha, const float *A,
+                      const float *B, float beta, const float *C)
+{
+   char ct = 't';
+   char cn = 'n';
+   const int *lda = transa ? &k : &m;
+   const int *ldb = transb ? &n : &k;
+   const int *ldc = &m;
+   if (C != nullptr) {
+      std::copy(C, C + m * n, output);
+   }
+   TMVA::Experimental::SOFIE::BLAS::sgemm_(transa ? &ct : &cn, transb ? &ct : &cn, &m, &n, &k, &alpha, A, lda, B, ldb,
+                                           &beta, output, ldc);
+}
 
-#endif //TMVA_SOFIE_RMODEL
+template <class T>
+void ReadTensorFromStream(std::istream &is, T &target, std::string const &expectedName, std::size_t expectedLength)
+{
+   std::string name;
+   std::size_t length;
+   is >> name >> length;
+   if (name != expectedName) {
+      std::string err_msg =
+         "TMVA-SOFIE failed to read the correct tensor name; expected name is " + expectedName + " , read " + name;
+      throw std::runtime_error(err_msg);
+   }
+   if (length != expectedLength) {
+      std::string err_msg = "TMVA-SOFIE failed to read the correct tensor size; expected size is " +
+                            std::to_string(expectedLength) + " , read " + std::to_string(length);
+      throw std::runtime_error(err_msg);
+   }
+   for (size_t i = 0; i < length; ++i) {
+      is >> target[i];
+   }
+   if (is.fail()) {
+      throw std::runtime_error("TMVA-SOFIE failed to read the values for tensor " + expectedName);
+   }
+}
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
+
+#endif //TMVA_SOFIE_COMMON

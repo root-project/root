@@ -48,7 +48,7 @@ started either via inetd or by hand from the command line (no need
 to be super user).
 **/
 
-#include <errno.h>
+#include <cerrno>
 
 #include "Bytes.h"
 #include "NetErrors.h"
@@ -64,8 +64,6 @@ to be super user).
 
 // fgClientProtocol is now in TAuthenticate
 
-ClassImp(TNetFile);
-ClassImp(TNetSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TNetFile object. This is actually done inside Create(), so
@@ -624,7 +622,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;
@@ -732,7 +730,7 @@ void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;

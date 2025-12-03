@@ -90,7 +90,7 @@ public:
 \ingroup Base
 \brief Common handling of the error case for RResult<T> (T != void) and RResult<void>
 
-RResultBase captures a possible runtime error that might have occured.  If the RResultBase leaves the scope unchecked,
+RResultBase captures a possible runtime error that might have occurred.  If the RResultBase leaves the scope unchecked,
 it will throw an exception.  RResultBase should only be allocated on the stack, which is helped by deleting the
 new operator.  RResultBase is movable but not copyable to avoid throwing multiple exceptions about the same failure.
 */
@@ -125,6 +125,7 @@ public:
    void Throw();
 
    /// Used by R__FORWARD_ERROR in order to keep track of the stack trace.
+   [[nodiscard]]
    static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation)
    {
       if (!result.fError) {
@@ -189,15 +190,15 @@ RResult<T>::Unwrap() can be used as a short hand for
 int value = FuncThatReturnsRResultOfInt().Unwrap();  // may throw
 ~~~
 
-There is no implict operator that converts RResult<T> to T. This is intentional to make it clear in the calling code
+There is no implicit operator that converts RResult<T> to T. This is intentional to make it clear in the calling code
 where an exception may be thrown.
 */
 // clang-format on
 template <typename T>
 class RResult : public RResultBase {
 private:
-   /// The result value in case of successful execution
-   T fValue;
+   /// The result value, only present in case of successful execution.
+   std::optional<T> fValue;
 
    // Ensure accessor methods throw in case of errors
    inline void ThrowOnError()
@@ -239,7 +240,7 @@ public:
    const T &Inspect()
    {
       ThrowOnError();
-      return fValue;
+      return *fValue;
    }
 
    /// If the operation was successful, returns the inner type by value.
@@ -252,7 +253,7 @@ public:
    T Unwrap()
    {
       ThrowOnError();
-      return std::move(fValue);
+      return std::move(*fValue);
    }
 
    explicit operator bool() { return Check(); }

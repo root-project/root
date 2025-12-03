@@ -1,0 +1,19 @@
+<lcgdict>
+<selection>
+  <class name="GEMRecHit" splitLevel="0" ClassVersion="10">
+   <version ClassVersion="10" checksum="3680872192"/>
+  </class>
+  <class name="std::vector<GEMRecHit>" splitLevel="0"/>
+  <class name="std::vector<GEMRecHit*>" splitLevel="0"/>
+  <class name="std::map<GEMDetId, std::pair<unsigned int, unsigned int> >" splitLevel="0"/>
+  <class name="std::map<GEMDetId, std::pair<unsigned long, unsigned long> >" splitLevel="0"/>
+  <class name="edm::OwnVector<GEMRecHit, edm::ClonePolicy<GEMRecHit> >" splitLevel="0"/>
+  <class name="edm::RangeMap<GEMDetId, edm::OwnVector<GEMRecHit, edm::ClonePolicy<GEMRecHit> >, edm::ClonePolicy<GEMRecHit> >" splitLevel="0"/>
+  <class name="edm::Wrapper<edm::RangeMap<GEMDetId, edm::OwnVector<GEMRecHit, edm::ClonePolicy<GEMRecHit> >, edm::ClonePolicy<GEMRecHit> > >" splitLevel="0"/>
+</selection>
+<exclusion>
+  <class name="edm::OwnVector<GEMRecHit, edm::ClonePolicy<GEMRecHit> >">
+    <method name="sort" splitLevel="0"/>
+  </class>
+</exclusion>
+</lcgdict>

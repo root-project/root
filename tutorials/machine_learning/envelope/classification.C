@@ -2,8 +2,9 @@
 /// \ingroup tutorial_tmva_envelope
 /// \notebook -nodraw
 
-/// \macro_output
 /// \macro_code
+/// \macro_output
+
 
 
 #include "TMVA/Factory.h"

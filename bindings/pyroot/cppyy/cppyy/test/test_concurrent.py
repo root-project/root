@@ -1,5 +1,6 @@
+import pytest
 from pytest import raises, skip, mark
-from .support import IS_MAC_ARM
+from support import IS_MAC_ARM
 
 
 class TestCONCURRENT:
@@ -10,6 +11,11 @@ class TestCONCURRENT:
         cls.data = [3.1415, 2.7183, 1.4142, 1.3807, -9.2848]
 
         cppyy.cppdef("""\
+        // as recommended by:
+        // https://docs.python.org/3/c-api/intro.html#include-files
+        #define PY_SSIZE_T_CLEAN
+        #include "Python.h"
+
         namespace Workers {
             double calc(double d) { return d*42.; }
         }""")
@@ -104,7 +110,7 @@ class TestCONCURRENT:
         };
 
         struct worker {
-            worker(consumer* c) : cons(c) { }
+            worker(consumer* c) : cons(c) {}
             ~worker() { wait(); }
 
             void start() {
@@ -302,3 +308,7 @@ class TestCONCURRENT:
 
         assert State.c1 == 1000
         assert State.c2 == State.c3
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

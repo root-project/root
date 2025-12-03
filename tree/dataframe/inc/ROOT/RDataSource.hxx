@@ -51,7 +51,7 @@ std::string printValue(ROOT::RDF::RDataSource *ds);
 namespace ROOT {
 
 namespace Internal {
-namespace TDS {
+namespace RDF {
 
 /// Mother class of TTypedPointerHolder. The instances
 /// of this class can be put in a container. Upon destruction,
@@ -85,16 +85,13 @@ public:
    ~TTypedPointerHolder() { delete static_cast<T *>(fPointer); }
 };
 
-} // ns TDS
-
-namespace RDF {
 std::string GetTypeNameWithOpts(const ROOT::RDF::RDataSource &ds, std::string_view colName, bool vector2RVec);
 const std::vector<std::string> &GetTopLevelFieldNames(const ROOT::RDF::RDataSource &ds);
 const std::vector<std::string> &GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &ds);
 void CallInitializeWithOpts(ROOT::RDF::RDataSource &ds, const std::set<std::string> &suppressErrorsForMissingColumns);
 std::string DescribeDataset(ROOT::RDF::RDataSource &ds);
 ROOT::RDF::RSampleInfo
-CreateSampleInfo(const ROOT::RDF::RDataSource &ds,
+CreateSampleInfo(const ROOT::RDF::RDataSource &ds, unsigned int slot,
                  const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap);
 void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
 void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
@@ -168,10 +165,10 @@ protected:
    virtual std::string DescribeDataset() { return "Dataframe from datasource " + GetLabel(); }
 
    friend ROOT::RDF::RSampleInfo
-   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &,
+   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &, unsigned int,
                                          const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &);
    virtual ROOT::RDF::RSampleInfo
-   CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
+   CreateSampleInfo(unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
 
    friend void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &, bool);
    virtual void RunFinalChecks(bool) const {}

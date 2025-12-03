@@ -333,7 +333,6 @@ enum EButtonIdentifiers {
    kBGLast
 };
 
-ClassImp(TTreeViewer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TTreeViewer default constructor
@@ -478,7 +477,7 @@ void TTreeViewer::SetNexpressions(Int_t expr)
    Int_t diff = expr - fNexpressions;
    if (diff <= 0) return;
    if (!fLVContainer) return;
-   for (Int_t i=0; i<TMath::Abs(diff); i++) NewExpression();
+   for (Int_t i=0; i<std::abs(diff); i++) NewExpression();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the name of the file where to redirect `<Scan>` output.

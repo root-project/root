@@ -59,13 +59,6 @@
 # Building the confidence belt can be computationally expensive.
 # Once it is built, one could save it to a file and use it in a separate step.
 #
-# We can use PROOF to speed things along in parallel, however,
-# the test statistic has to be installed on the workers
-# so either turn off PROOF or include the modified test statistic
-# in your $ROOTSYS/roofit/roostats/inc directory,
-# add the additional line to the LinkDef.h file,
-# and recompile root.
-#
 # Note, if you have a boundary on the parameter of interest (eg. cross-section)
 # the threshold on the two-sided test statistic starts off at moderate values and plateaus.
 #

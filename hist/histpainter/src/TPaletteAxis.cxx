@@ -23,7 +23,6 @@
 
 #include <iostream>
 
-ClassImp(TPaletteAxis);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +118,7 @@ End_Macro
 TPaletteAxis::TPaletteAxis()
 {
    fH = nullptr;
+   fLog = 0;
    SetName("");
 }
 
@@ -130,6 +130,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
    : TPave(x1, y1, x2, y2)
 {
    fH = h;
+   fLog = 0;
    if (!fH) return;
    SetName("palette");
    TAxis *zaxis = fH->GetZaxis();
@@ -144,7 +145,8 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, Double_t min, Double_t max)
    : TPave(x1, y1, x2, y2)
 {
-   fH    = nullptr;
+   fH = nullptr;
+   fLog = 0;
    fAxis.SetWmin(min);
    fAxis.SetWmax(max);
    SetName("palette");
@@ -159,6 +161,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
    : TPave(x1, y1, x2, y2)
 {
    fH = nullptr;
+   fLog = 0;
    SetName("palette");
    fAxis.ImportAxisAttributes(ax);
    if (gPad->GetView()) SetBit(kHasView);
@@ -289,7 +292,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                if (fH->GetDimension() == 2) {
                   Double_t zmin = fH->GetMinimum();
                   Double_t zmax = fH->GetMaximum();
-                  if (gPad->GetLogz()) {
+                  if (GetLog()) {
                      if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
                                                                      (Double_t)0.001 * zmax);
                      zmin = TMath::Log10(zmin);
@@ -299,7 +302,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                   Double_t newmax = zmin + (zmax - zmin) * ratio2;
                   if (newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
                   if (newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
-                  if (gPad->GetLogz()) {
+                  if (GetLog()) {
                      newmin = TMath::Exp(2.302585092994 * newmin);
                      newmax = TMath::Exp(2.302585092994 * newmax);
                   }
@@ -316,6 +319,21 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns whether the palette is in log scale.
+///
+/// By default, the palette axis is logarithmic if the TPad's option Logz is set.
+/// However, in some cases, such as with TScatter2D, the color represents a fourth dimension,
+/// and the log scale is not defined by the Z axis but by a dedicated setting specified
+/// through a separate option.
+///
+/// This method handles these various cases and returns the correct state of the palette axis.
+
+Int_t TPaletteAxis::GetLog() const
+{
+   if (fLog == 0) return gPad->GetLogz();
+   return fLog-1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the color index of the bin (i,j).
@@ -360,7 +378,7 @@ char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
    Int_t   y2   = gPad->GetWh() - gPad->VtoPixel(fY2NDC);
    Int_t   y    = gPad->GetWh() - py;
 
-   if (gPad->GetLogz()) {
+   if (GetLog()) {
       if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
                                                       (Double_t)0.001 * zmax);
       Double_t zminl = TMath::Log10(zmin);
@@ -402,7 +420,7 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
 
-   if (gPad->GetLogz()) {
+   if (GetLog()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1,
                                                       (Double_t)0.001 * wmax);
       wlmin = TMath::Log10(wmin);
@@ -417,7 +435,7 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
    Int_t theColor, color;
    Double_t scale = ndivz / (wlmax - wlmin);
 
-   if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz()) zc = TMath::Log10(zc);
+   if (fH->TestBit(TH1::kUserContour) && GetLog()) zc = TMath::Log10(zc);
    if (zc < wlmin) zc = wlmin;
 
    color = Int_t(0.01 + (zc - wlmin) * scale);
@@ -463,7 +481,7 @@ void TPaletteAxis::Paint(Option_t *)
 
    if (GetX2NDC()-GetX1NDC() > GetY2NDC()-GetY1NDC()) kHorizontal = true;
 
-   if (gPad->GetLogz()) {
+   if (GetLog()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1, (Double_t)0.001 * wmax);
       wlmin = TMath::Log10(wmin);
       wlmax = TMath::Log10(wmax);
@@ -518,7 +536,7 @@ void TPaletteAxis::Paint(Option_t *)
 
       if (fH) zc = fH->GetContourLevel(i);
       else    zc = wlmin + i*dw;
-      if (fH && fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+      if (fH && fH->TestBit(TH1::kUserContour) && GetLog())
          zc = TMath::Log10(zc);
       w1 = zc;
       if (w1 < wlmin) w1 = wlmin;
@@ -527,7 +545,7 @@ void TPaletteAxis::Paint(Option_t *)
       if (i < ndivz - 1) {
          if (fH) zc = fH->GetContourLevel(i + 1);
          else    zc = wlmin + (i+1)*dw;
-         if (fH && fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+         if (fH && fH->TestBit(TH1::kUserContour) && GetLog())
             zc = TMath::Log10(zc);
          w2 = zc;
       }
@@ -560,7 +578,7 @@ void TPaletteAxis::Paint(Option_t *)
          Double_t lsize = fAxis.GetLabelSize();
          Double_t lsize_user = lsize*(gPad->GetUymax()-gPad->GetUymin());
          Double_t zlab = fH->GetContourLevel(i);
-         if (gPad->GetLogz()&& !fH->TestBit(TH1::kUserContour)) {
+         if (GetLog()&& !fH->TestBit(TH1::kUserContour)) {
             zlab = TMath::Power(10, zlab);
          }
          // make sure labels dont overlap
@@ -600,7 +618,7 @@ void TPaletteAxis::Paint(Option_t *)
       ndiv = TMath::Abs(ndiv);
       strncat(chopt, "N", 2);
    }
-   if (gPad->GetLogz()) {
+   if (GetLog()) {
       wmin = TMath::Power(10., wlmin);
       wmax = TMath::Power(10., wlmax);
       strncat(chopt, "G", 2);

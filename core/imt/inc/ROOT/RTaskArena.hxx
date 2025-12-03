@@ -24,6 +24,7 @@
 #define ROOT_RTaskArena
 
 #include "RConfigure.h"
+#include "TROOT.h" // For ROOT::EIMTConfig
 #include <memory>
 
 // exclude in case ROOT does not have IMT support
@@ -33,9 +34,6 @@
 #  error "Cannot use ROOT::Internal::RTaskArenaWrapper if build option imt=OFF."
 # endif
 #else
-
-/// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
-/// to forward declare tbb::task_arena without forward declaring tbb::interface7
 
 namespace ROOT {
 
@@ -53,21 +51,27 @@ namespace Internal {
 ////////////////////////////////////////////////////////////////////////////////
 int LogicalCPUBandwidthControl();
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper for tbb::task_arena.
 ///
 /// Necessary in order to keep tbb away from ROOT headers.
 /// This class is thought out to be used as a singleton.
+///
+/// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
+/// to forward declare tbb::task_arena without forward declaring tbb::interface7
 ////////////////////////////////////////////////////////////////////////////////
 class RTaskArenaWrapper {
 public:
    ~RTaskArenaWrapper(); // necessary to set size back to zero
    static unsigned TaskArenaSize(); // A static getter lets us check for RTaskArenaWrapper's existence
    ROOT::ROpaqueTaskArena &Access();
-private:
+   struct Attach {}; ///< Marker for attaching to an existing tbb::task_arena
+
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
-   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency);
+   RTaskArenaWrapper(Attach);
+
+private:
+   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned, ROOT::EIMTConfig);
    std::unique_ptr<ROOT::ROpaqueTaskArena> fTBBArena;
    static unsigned fNWorkers;
 };
@@ -81,6 +85,7 @@ private:
 /// references to the previous one are gone and the object destroyed.
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency = 0);
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(ROOT::EIMTConfig config);
 
 } // namespace Internal
 } // namespace ROOT

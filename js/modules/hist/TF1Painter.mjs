@@ -1,6 +1,6 @@
 import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, setHistogramTitle, clTF1, clTF12, kNoStats } from '../core.mjs';
 import { floatToString } from '../base/BasePainter.mjs';
-import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
+import { getElementPadPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 import { proivdeEvalPar, _getTF1Save } from '../base/func.mjs';
@@ -28,23 +28,24 @@ function produceTAxisLogScale(axis, num, min, max) {
 }
 
 function scanTF1Options(opt) {
-   if (!isStr(opt)) opt = '';
-   let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, use_saved = 0;
+   if (!isStr(opt))
+      opt = '';
+   let p = opt.indexOf(';webcanv_hist'), _webcanv_hist = false, _use_saved = 0;
    if (p >= 0) {
-      webcanv_hist = true;
+      _webcanv_hist = true;
       opt = opt.slice(0, p);
    }
    p = opt.indexOf(';force_saved');
    if (p >= 0) {
-      use_saved = 2;
+      _use_saved = 2;
       opt = opt.slice(0, p);
    }
    p = opt.indexOf(';prefer_saved');
    if (p >= 0) {
-      use_saved = 1;
+      _use_saved = 1;
       opt = opt.slice(0, p);
    }
-   return { opt, webcanv_hist, use_saved };
+   return { opt, _webcanv_hist, _use_saved };
 }
 
 
@@ -57,12 +58,18 @@ function scanTF1Options(opt) {
 class TF1Painter extends TH1Painter {
 
    #use_saved_points; // use saved points for drawing
+   #func; // func object
+   #tmp_tooltip; // temporary tooltip
+   #fail_eval; // fail evaluation of function
+
+   /** @summary Assign function  */
+   setFunc(f) { this.#func = f; }
 
    /** @summary Returns drawn object name */
-   getObjectName() { return this.$func?.fName ?? 'func'; }
+   getObjectName() { return this.#func?.fName ?? 'func'; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF1; }
+   getClassName() { return this.#func?._typename ?? clTF1; }
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
@@ -70,7 +77,7 @@ class TF1Painter extends TH1Painter {
    isTF12() { return this.getClassName() === clTF12; }
 
    /** @summary Returns primary function which was then drawn as histogram */
-   getPrimaryObject() { return this.$func; }
+   getPrimaryObject() { return this.#func; }
 
    /** @summary Update function */
    updateObject(obj /* , opt */) {
@@ -79,12 +86,13 @@ class TF1Painter extends TH1Painter {
       delete obj.evalPar;
       const histo = this.getHisto();
 
-      if (this.webcanv_hist) {
+      if (this._webcanv_hist) {
          const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
-         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+         if (h0)
+            this.updateAxes(histo, h0, this.getFramePainter());
       }
 
-      this.$func = obj;
+      this.setFunc(obj);
       this.createTF1Histogram(obj, histo);
       this.scanContent();
       return true;
@@ -94,7 +102,7 @@ class TF1Painter extends TH1Painter {
      * @private */
    redraw(reason) {
       if (!this.#use_saved_points && (reason === 'logx' || reason === 'zoom')) {
-         this.createTF1Histogram(this.$func, this.getHisto());
+         this.createTF1Histogram(this.#func, this.getHisto());
          this.scanContent();
       }
 
@@ -118,7 +126,7 @@ class TF1Painter extends TH1Painter {
             xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
-      this.#use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || (this.use_saved > 1));
+      this.#use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || (this._use_saved > 1));
 
       const ensureBins = num => {
          if (hist.fNcells !== num + 2) {
@@ -130,7 +138,7 @@ class TF1Painter extends TH1Painter {
          hist.fXaxis.fXbins = [];
       };
 
-      delete this._fail_eval;
+      this.#fail_eval = undefined;
 
       // this.#use_saved_points = true;
 
@@ -157,7 +165,7 @@ class TF1Painter extends TH1Painter {
 
          if (logx)
             produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
-          else {
+         else {
             hist.fXaxis.fXmin = xmin;
             hist.fXaxis.fXmax = xmax;
          }
@@ -176,7 +184,7 @@ class TF1Painter extends TH1Painter {
          }
 
          if (iserror)
-            this._fail_eval = true;
+            this.#fail_eval = true;
 
          if (iserror && (tf1.fSave.length > 3))
             this.#use_saved_points = true;
@@ -236,7 +244,7 @@ class TF1Painter extends TH1Painter {
    extractAxesProperties(ndim) {
       super.extractAxesProperties(ndim);
 
-      const func = this.$func, nsave = func?.fSave.length ?? 0;
+      const func = this.#func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 3 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
@@ -250,13 +258,13 @@ class TF1Painter extends TH1Painter {
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis, min, max) {
-      const nsave = this.$func?.fSave.length ?? 0;
+      const nsave = this.#func?.fSave.length ?? 0;
       if ((nsave > 3) && this.#use_saved_points && (axis === 'x')) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          const nb_points = nsave - 2,
-             xmin = this.$func.fSave[nsave - 2],
-             xmax = this.$func.fSave[nsave - 1];
+               xmin = this.#func.fSave[nsave - 2],
+               xmax = this.#func.fSave[nsave - 1];
 
          return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
       }
@@ -267,11 +275,12 @@ class TF1Painter extends TH1Painter {
 
    /** @summary return tooltips for TF2 */
    getTF1Tooltips(pnt) {
-      delete this.$tmp_tooltip;
+      this.#tmp_tooltip = undefined;
       const lines = [this.getObjectHint()],
-            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+            o = this.getOptions(),
+            funcs = this.getFramePainter()?.getGrFuncs(o.second_x, o.second_y);
 
-      if (!funcs || !isFunc(this.$func?.evalPar)) {
+      if (!funcs || !isFunc(this.#func?.evalPar)) {
          lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
          return lines;
       }
@@ -280,7 +289,7 @@ class TF1Painter extends TH1Painter {
       let y = 0, gry = 0, iserror = false;
 
       try {
-         y = this.$func.evalPar(x);
+         y = this.#func.evalPar(x);
          gry = Math.round(funcs.gry(y));
       } catch {
          iserror = true;
@@ -290,7 +299,7 @@ class TF1Painter extends TH1Painter {
                  'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
 
       if (!iserror)
-         this.$tmp_tooltip = { y, gry };
+         this.#tmp_tooltip = { y, gry };
       return lines;
    }
 
@@ -299,32 +308,34 @@ class TF1Painter extends TH1Painter {
       if (this.#use_saved_points)
          return super.processTooltipEvent(pnt);
 
-      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+      let ttrect = this.getG()?.selectChild('.tooltip_bin');
 
-      if (!this.draw_g || !pnt) {
+      if (!this.getG() || !pnt) {
          ttrect?.remove();
          return null;
       }
 
-      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
-                    x: pnt.x, y: pnt.y,
-                    color1: this.lineatt?.color ?? 'green',
-                    color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                    lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
+      const res = {
+         name: this.#func?.fName, title: this.#func?.fTitle,
+         x: pnt.x, y: pnt.y,
+         color1: this.lineatt?.color ?? 'green',
+         color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+         lines: this.getTF1Tooltips(pnt), exact: true, menu: true
+      };
 
       if (pnt.disabled)
          ttrect.remove();
       else {
          if (ttrect.empty()) {
-            ttrect = this.draw_g.append('svg:circle')
-                             .attr('class', 'tooltip_bin')
-                             .style('pointer-events', 'none')
-                             .style('fill', 'none')
-                             .attr('r', (this.lineatt?.width ?? 1) + 4);
+            ttrect = this.getG().append('svg:circle')
+                         .attr('class', 'tooltip_bin')
+                         .style('pointer-events', 'none')
+                         .style('fill', 'none')
+                         .attr('r', (this.lineatt?.width ?? 1) + 4);
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y);
+               .attr('cy', this.#tmp_tooltip?.gry ?? pnt.y);
          if (this.lineatt)
             ttrect.call(this.lineatt.func);
       }
@@ -336,7 +347,7 @@ class TF1Painter extends TH1Painter {
     * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
-      opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';
+      opt.fcust = this.#fail_eval && !this._use_saved ? 'func_fail' : '';
    }
 
    /** @summary draw TF1 object */
@@ -346,10 +357,8 @@ class TF1Painter extends TH1Painter {
       delete web.opt;
       let hist;
 
-      if (web.webcanv_hist) {
-         const dummy = new ObjectPainter(dom);
-         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
-      }
+      if (web._webcanv_hist)
+         hist = getElementPadPainter(dom)?.findInPrimitives('Func', clTH1D);
 
       if (!hist) {
          hist = createHistogram(clTH1D, 100);
@@ -361,7 +370,7 @@ class TF1Painter extends TH1Painter {
 
       const painter = new TF1Painter(dom, hist);
 
-      painter.$func = tf1;
+      painter.setFunc(tf1);
       Object.assign(painter, web);
 
       painter.createTF1Histogram(tf1, hist);

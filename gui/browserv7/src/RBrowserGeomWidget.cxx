@@ -58,7 +58,7 @@ public:
       fViewer.SetShowHierarchy(false);
    }
 
-   virtual ~RBrowserGeomWidget() = default;
+   ~RBrowserGeomWidget() override = default;
 
    std::string GetKind() const override { return "geom"s; }
 
@@ -116,5 +116,5 @@ protected:
    }
 public:
    RBrowserGeomProvider() : RBrowserWidgetProvider("geom") {}
-   ~RBrowserGeomProvider() = default;
+   ~RBrowserGeomProvider() override = default;
 } sRBrowserGeomProvider;

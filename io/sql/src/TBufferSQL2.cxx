@@ -38,8 +38,9 @@ few other, which can not be converted to SQL (yet).
 #include "TStreamerInfoActions.h"
 #include "snprintf.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <limits>
 #include <string>
 
 #include "TSQLServer.h"
@@ -50,7 +51,6 @@ few other, which can not be converted to SQL (yet).
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 
-ClassImp(TBufferSQL2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor, should not be used
@@ -1341,7 +1341,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
          // delete the object or collection
          if (start[j] && TStreamerInfo::CanDelete())
-            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and destructor
          start[j] = ReadObjectAny(cl);
       }
 

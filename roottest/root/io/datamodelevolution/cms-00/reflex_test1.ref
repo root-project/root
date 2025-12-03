@@ -1,0 +1,1978 @@
+
+Processing test1.cxx+("r")...
+[i] Generating test data model version 1
+Content of reflex_test01_wv1.log
+Processing object of class: ClassA
+Processing bases of: ClassA
+  Processing object of class: ClassABase
+  [mem] p int m_a = 30
+  [mem] p double m_b = 0.16291
+  End of ClassABase
+End of bases of: ClassA
+[mem] p double m_c = 0.282618
+[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns
+  [mem] p int m_a = 29
+  [mem] p double m_b = 0.231657
+  [mem] t ClassAIns::Transient m_cache = 
+    Processing object of class: ClassAIns::Transient
+    [mem] t bool fCached = 0
+    End of ClassAIns::Transient
+  End of ClassAIns
+[mem] p unsigned int m_e = 29
+[mem] p int m_unit = 23
+End of ClassA
+
+Content of reflex_test02_wv1.log
+Processing object of class: ClassAIns
+[mem] p int m_a = 17
+[mem] p double m_b = 0.739953
+[mem] t ClassAIns::Transient m_cache = 
+  Processing object of class: ClassAIns::Transient
+  [mem] t bool fCached = 1
+  End of ClassAIns::Transient
+End of ClassAIns
+
+Content of reflex_test03_wv1.log
+Processing object of class: ClassD
+[mem] p float m_c = 0.658637
+[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns
+  [mem] p int m_a = 10
+  [mem] p double m_b = 0.804403
+  [mem] t ClassAIns::Transient m_cache = 
+    Processing object of class: ClassAIns::Transient
+    [mem] t bool fCached = 1
+    End of ClassAIns::Transient
+  End of ClassAIns
+[mem] p int m_e = 6
+End of ClassD
+
+Content of reflex_test04_wv1.log
+Processing object of class: pair<int,double>
+[mem] p int first = 15
+[mem] p double second = 0.392314
+End of pair<int,double>
+
+Content of reflex_test05_wv1.log
+Processing object of class: vector<double>
+Length = 7
+[ele] [0] = 0.21319
+[ele] [1] = 0.0303352
+[ele] [2] = 0.333539
+[ele] [3] = 0.194149
+[ele] [4] = 0.943717
+[ele] [5] = 0.579932
+[ele] [6] = 0.898305
+End of vector<double>
+
+Content of reflex_test06_wv1.log
+Processing object of class: vector<pair<int,double> >
+Length = 20
+[ele] [0] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 15
+  [mem] p double second = 0.560628
+  End of pair<int,double>
+[ele] [1] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 6
+  [mem] p double second = 0.296526
+  End of pair<int,double>
+[ele] [2] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 4
+  [mem] p double second = 0.0629177
+  End of pair<int,double>
+[ele] [3] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 20
+  [mem] p double second = 0.725419
+  End of pair<int,double>
+[ele] [4] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 20
+  [mem] p double second = 0.713885
+  End of pair<int,double>
+[ele] [5] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 3
+  [mem] p double second = 0.699267
+  End of pair<int,double>
+[ele] [6] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 4
+  [mem] p double second = 0.129243
+  End of pair<int,double>
+[ele] [7] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 16
+  [mem] p double second = 0.20778
+  End of pair<int,double>
+[ele] [8] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 9
+  [mem] p double second = 0.0831748
+  End of pair<int,double>
+[ele] [9] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 4
+  [mem] p double second = 0.547371
+  End of pair<int,double>
+[ele] [10] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 3
+  [mem] p double second = 0.292141
+  End of pair<int,double>
+[ele] [11] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 27
+  [mem] p double second = 0.227118
+  End of pair<int,double>
+[ele] [12] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 13
+  [mem] p double second = 0.140733
+  End of pair<int,double>
+[ele] [13] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 13
+  [mem] p double second = 0.686947
+  End of pair<int,double>
+[ele] [14] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 6
+  [mem] p double second = 0.440821
+  End of pair<int,double>
+[ele] [15] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 2
+  [mem] p double second = 0.311296
+  End of pair<int,double>
+[ele] [16] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 16
+  [mem] p double second = 0.182411
+  End of pair<int,double>
+[ele] [17] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 16
+  [mem] p double second = 0.740788
+  End of pair<int,double>
+[ele] [18] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 11
+  [mem] p double second = 0.160809
+  End of pair<int,double>
+[ele] [19] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 14
+  [mem] p double second = 0.627836
+  End of pair<int,double>
+End of vector<pair<int,double> >
+
+Content of reflex_test07_wv1.log
+Processing object of class: vector<ClassA>
+Length = 21
+[ele] [0] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.478537
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.0901076
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 11
+    [mem] p double m_b = 0.0952138
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 15
+  [mem] p int m_unit = 13
+  End of ClassA
+[ele] [1] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 24
+    [mem] p double m_b = 0.624611
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.980437
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.830813
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 23
+  [mem] p int m_unit = 25
+  End of ClassA
+[ele] [2] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.621956
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.346699
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.613066
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 15
+  [mem] p int m_unit = 22
+  End of ClassA
+[ele] [3] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 5
+    [mem] p double m_b = 0.0423032
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.310787
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 4
+    [mem] p double m_b = 0.24207
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 14
+  [mem] p int m_unit = 18
+  End of ClassA
+[ele] [4] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.432626
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.555968
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 22
+    [mem] p double m_b = 0.642363
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 3
+  [mem] p int m_unit = 4
+  End of ClassA
+[ele] [5] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.820072
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.125539
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 10
+    [mem] p double m_b = 0.180567
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 20
+  [mem] p int m_unit = 21
+  End of ClassA
+[ele] [6] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.436343
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.964459
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 27
+    [mem] p double m_b = 0.13088
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 12
+  [mem] p int m_unit = 28
+  End of ClassA
+[ele] [7] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.679635
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.622874
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 30
+    [mem] p double m_b = 0.440715
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 30
+  [mem] p int m_unit = 17
+  End of ClassA
+[ele] [8] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.638946
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.57591
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.191593
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 5
+  [mem] p int m_unit = 30
+  End of ClassA
+[ele] [9] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 4
+    [mem] p double m_b = 0.651539
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.0277951
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.827913
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 19
+  [mem] p int m_unit = 8
+  End of ClassA
+[ele] [10] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 13
+    [mem] p double m_b = 0.677715
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.847127
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0813827
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 15
+  [mem] p int m_unit = 24
+  End of ClassA
+[ele] [11] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.943338
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.980801
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 11
+    [mem] p double m_b = 0.202668
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 20
+  [mem] p int m_unit = 21
+  End of ClassA
+[ele] [12] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.0999271
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.766255
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 23
+    [mem] p double m_b = 0.241139
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 29
+  [mem] p int m_unit = 13
+  End of ClassA
+[ele] [13] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 11
+    [mem] p double m_b = 0.000249498
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.868841
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 1
+    [mem] p double m_b = 0.165846
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 19
+  [mem] p int m_unit = 22
+  End of ClassA
+[ele] [14] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.965768
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.497098
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 16
+    [mem] p double m_b = 0.461608
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 18
+  [mem] p int m_unit = 21
+  End of ClassA
+[ele] [15] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.0236552
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.28011
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 27
+    [mem] p double m_b = 0.299333
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 10
+  [mem] p int m_unit = 29
+  End of ClassA
+[ele] [16] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 26
+    [mem] p double m_b = 0.753346
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.538244
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 13
+    [mem] p double m_b = 0.212371
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 9
+  [mem] p int m_unit = 1
+  End of ClassA
+[ele] [17] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.384619
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.454907
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.440189
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 25
+  [mem] p int m_unit = 5
+  End of ClassA
+[ele] [18] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 9
+    [mem] p double m_b = 0.172685
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.935842
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.133697
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 12
+  [mem] p int m_unit = 12
+  End of ClassA
+[ele] [19] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 22
+    [mem] p double m_b = 0.277837
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.693569
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 16
+    [mem] p double m_b = 0.118406
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 21
+  [mem] p int m_unit = 22
+  End of ClassA
+[ele] [20] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 30
+    [mem] p double m_b = 0.696779
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.55721
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.955352
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 24
+  [mem] p int m_unit = 28
+  End of ClassA
+End of vector<ClassA>
+
+Content of reflex_test08_wv1.log
+Processing object of class: vector<ClassA*>
+Length = 20
+[ele] [0] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 18
+      [mem] p double m_b = 0.953039
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.162923
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 11
+      [mem] p double m_b = 0.951825
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 19
+    [mem] p int m_unit = 29
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 30
+  [mem] p double m_g = 0.0707377
+  End of ClassB
+[ele] [1] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.55332
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.587006
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.462648
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 3
+  [mem] p int m_unit = 20
+  End of ClassA
+[ele] [2] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 7
+    [mem] p double m_b = 0.0022318
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.495657
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.022265
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 23
+  [mem] p int m_unit = 14
+  End of ClassA
+[ele] [3] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 23
+    [mem] p double m_b = 0.437753
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.190983
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 18
+    [mem] p double m_b = 0.132688
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 15
+  [mem] p int m_unit = 29
+  End of ClassA
+[ele] [4] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 3
+      [mem] p double m_b = 0.612436
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.514749
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 19
+      [mem] p double m_b = 0.130645
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 5
+    [mem] p int m_unit = 20
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 8
+  [mem] p double m_g = 0.381805
+  End of ClassB
+[ele] [5] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.554332
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.0195048
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.99118
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 20
+  [mem] p int m_unit = 18
+  End of ClassA
+[ele] [6] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 10
+    [mem] p double m_b = 0.396742
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.883965
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 24
+    [mem] p double m_b = 0.599075
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 1
+  [mem] p int m_unit = 21
+  End of ClassA
+[ele] [7] = 0
+[ele] [8] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 30
+      [mem] p double m_b = 0.749792
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.484956
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 25
+      [mem] p double m_b = 0.622777
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 2
+    [mem] p int m_unit = 23
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 12
+  [mem] p double m_g = 0.0368008
+  End of ClassB
+[ele] [9] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 26
+      [mem] p double m_b = 0.345082
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.0818426
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 7
+      [mem] p double m_b = 0.152476
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 16
+    [mem] p int m_unit = 25
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 2
+  [mem] p double m_g = 0.117889
+  End of ClassB
+[ele] [10] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.204642
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.238722
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 30
+    [mem] p double m_b = 0.258591
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 26
+  [mem] p int m_unit = 10
+  End of ClassA
+[ele] [11] = 0
+[ele] [12] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 6
+      [mem] p double m_b = 0.508978
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.0215451
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 21
+      [mem] p double m_b = 0.813562
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 15
+    [mem] p int m_unit = 17
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 24
+  [mem] p double m_g = 0.335849
+  End of ClassB
+[ele] [13] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 13
+      [mem] p double m_b = 0.825241
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.945614
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 17
+      [mem] p double m_b = 0.710495
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 20
+    [mem] p int m_unit = 2
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 5
+  [mem] p double m_g = 0.885354
+  End of ClassB
+[ele] [14] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 29
+      [mem] p double m_b = 0.430301
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.132031
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 14
+      [mem] p double m_b = 0.467188
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 9
+    [mem] p int m_unit = 9
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 29
+  [mem] p double m_g = 0.804357
+  End of ClassB
+[ele] [15] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 30
+      [mem] p double m_b = 0.94716
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.248551
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 1
+      [mem] p double m_b = 0.444727
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 15
+    [mem] p int m_unit = 1
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 25
+  [mem] p double m_g = 0.108546
+  End of ClassB
+[ele] [16] = 0
+[ele] [17] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 14
+      [mem] p double m_b = 0.906907
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.55404
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 23
+      [mem] p double m_b = 0.815551
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 2
+    [mem] p int m_unit = 2
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 27
+  [mem] p double m_g = 0.146907
+  End of ClassB
+[ele] [18] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.281162
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.932849
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 16
+    [mem] p double m_b = 0.564503
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p unsigned int m_e = 20
+  [mem] p int m_unit = 10
+  End of ClassA
+[ele] [19] = 0
+End of vector<ClassA*>
+
+Content of reflex_test09_wv1.log
+Processing object of class: vector<ClassB>
+Length = 8
+[ele] [0] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 22
+      [mem] p double m_b = 0.670994
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.605286
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 5
+      [mem] p double m_b = 0.79525
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 26
+    [mem] p int m_unit = 25
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 3
+  [mem] p double m_g = 0.0687936
+  End of ClassB
+[ele] [1] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 27
+      [mem] p double m_b = 0.758046
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.0703106
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 26
+      [mem] p double m_b = 0.775357
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 8
+    [mem] p int m_unit = 14
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 29
+  [mem] p double m_g = 0.664946
+  End of ClassB
+[ele] [2] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 14
+      [mem] p double m_b = 0.887824
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.574622
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 1
+      [mem] p double m_b = 0.767355
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 19
+    [mem] p int m_unit = 7
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 20
+  [mem] p double m_g = 0.571393
+  End of ClassB
+[ele] [3] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 25
+      [mem] p double m_b = 0.962336
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.40177
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 30
+      [mem] p double m_b = 0.745946
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 12
+    [mem] p int m_unit = 4
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 16
+  [mem] p double m_g = 0.83338
+  End of ClassB
+[ele] [4] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 28
+      [mem] p double m_b = 0.825608
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.445915
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 9
+      [mem] p double m_b = 0.664399
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 20
+    [mem] p int m_unit = 16
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 26
+  [mem] p double m_g = 0.622405
+  End of ClassB
+[ele] [5] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 14
+      [mem] p double m_b = 0.554983
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.365814
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 20
+      [mem] p double m_b = 0.917039
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 4
+    [mem] p int m_unit = 29
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 21
+  [mem] p double m_g = 0.443548
+  End of ClassB
+[ele] [6] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 19
+      [mem] p double m_b = 0.368347
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.238192
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 10
+      [mem] p double m_b = 0.710332
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 15
+    [mem] p int m_unit = 3
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 4
+  [mem] p double m_g = 0.993102
+  End of ClassB
+[ele] [7] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 11
+      [mem] p double m_b = 0.764864
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.9041
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 12
+      [mem] p double m_b = 0.817135
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 8
+    [mem] p int m_unit = 12
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 23
+  [mem] p double m_g = 0.5878
+  End of ClassB
+End of vector<ClassB>
+
+Content of reflex_test10_wv1.log
+Processing object of class: vector<ClassB*>
+Length = 15
+[ele] [0] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 10
+      [mem] p double m_b = 0.853946
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.832381
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 5
+      [mem] p double m_b = 0.322411
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 3
+    [mem] p int m_unit = 7
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 26
+  [mem] p double m_g = 0.359627
+  End of ClassB
+[ele] [1] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 1
+      [mem] p double m_b = 0.82865
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.516809
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 15
+      [mem] p double m_b = 0.963977
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 21
+    [mem] p int m_unit = 26
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 14
+  [mem] p double m_g = 0.332391
+  End of ClassB
+[ele] [2] = 0
+[ele] [3] = 0
+[ele] [4] = 0
+[ele] [5] = 0
+[ele] [6] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 10
+      [mem] p double m_b = 0.892976
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.490045
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 8
+      [mem] p double m_b = 0.968999
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 1
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 7
+    [mem] p int m_unit = 10
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 9
+  [mem] p double m_g = 0.142515
+  End of ClassB
+[ele] [7] = 0
+[ele] [8] = 0
+[ele] [9] = 0
+[ele] [10] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 12
+      [mem] p double m_b = 0.788661
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.200816
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 30
+      [mem] p double m_b = 0.882862
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 11
+    [mem] p int m_unit = 17
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 21
+  [mem] p double m_g = 0.643816
+  End of ClassB
+[ele] [11] = 0
+[ele] [12] = 0
+[ele] [13] = 0
+[ele] [14] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 23
+      [mem] p double m_b = 0.767636
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.245442
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 21
+      [mem] p double m_b = 0.886989
+      [mem] t ClassAIns::Transient m_cache = 
+        Processing object of class: ClassAIns::Transient
+        [mem] t bool fCached = 0
+        End of ClassAIns::Transient
+      End of ClassAIns
+    [mem] p unsigned int m_e = 16
+    [mem] p int m_unit = 16
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 10
+  [mem] p double m_g = 0.622541
+  End of ClassB
+End of vector<ClassB*>
+
+Content of reflex_test11_wv1.log
+Processing object of class: vector<ClassC>
+Length = 1
+[ele] [0] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.429819
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.232835
+  [mem] p double m_g = 0.987619
+  End of ClassC
+End of vector<ClassC>
+
+Content of reflex_test12_wv1.log
+Processing object of class: vector<ClassC*>
+Length = 10
+[ele] [0] = 0
+[ele] [1] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 27
+    [mem] p double m_b = 0.0452855
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.427561
+  [mem] p double m_g = 0.226978
+  End of ClassC
+[ele] [2] = 0
+[ele] [3] = 0
+[ele] [4] = 0
+[ele] [5] = 0
+[ele] [6] = 0
+[ele] [7] = 0
+[ele] [8] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.877482
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.455502
+  [mem] p double m_g = 0.497302
+  End of ClassC
+[ele] [9] = 0
+End of vector<ClassC*>
+
+Content of reflex_test13_wv1.log
+Processing object of class: vector<ClassD>
+Length = 27
+[ele] [0] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.73607
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 4
+    [mem] p double m_b = 0.397922
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 25
+  End of ClassD
+[ele] [1] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.936655
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.639689
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 3
+  End of ClassD
+[ele] [2] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.780138
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.701116
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 22
+  End of ClassD
+[ele] [3] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.77676
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.00692527
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 28
+  End of ClassD
+[ele] [4] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.242083
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.735085
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 30
+  End of ClassD
+[ele] [5] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.982848
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.0187736
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 11
+  End of ClassD
+[ele] [6] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.509016
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 23
+    [mem] p double m_b = 0.567923
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 13
+  End of ClassD
+[ele] [7] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.981055
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 11
+    [mem] p double m_b = 0.517878
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 30
+  End of ClassD
+[ele] [8] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.258895
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.437341
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 7
+  End of ClassD
+[ele] [9] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.550821
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.550098
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 8
+  End of ClassD
+[ele] [10] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.157108
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 7
+    [mem] p double m_b = 0.116278
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 5
+  End of ClassD
+[ele] [11] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.476354
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 17
+    [mem] p double m_b = 0.878978
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 17
+  End of ClassD
+[ele] [12] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.318018
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 24
+    [mem] p double m_b = 0.871721
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 3
+  End of ClassD
+[ele] [13] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.301399
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.571564
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 20
+  End of ClassD
+[ele] [14] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.230476
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 30
+    [mem] p double m_b = 0.966159
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 6
+  End of ClassD
+[ele] [15] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.312883
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 30
+    [mem] p double m_b = 0.568391
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 5
+  End of ClassD
+[ele] [16] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.459941
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.184123
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 19
+  End of ClassD
+[ele] [17] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.838197
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 6
+    [mem] p double m_b = 0.0302745
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 4
+  End of ClassD
+[ele] [18] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.270395
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 27
+    [mem] p double m_b = 0.37051
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 13
+  End of ClassD
+[ele] [19] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.881878
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.236987
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 9
+  End of ClassD
+[ele] [20] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.0943204
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.121679
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 3
+  End of ClassD
+[ele] [21] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.642197
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.334927
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 10
+  End of ClassD
+[ele] [22] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.538738
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.490514
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 22
+  End of ClassD
+[ele] [23] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.881698
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.854243
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 16
+  End of ClassD
+[ele] [24] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.49331
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 9
+    [mem] p double m_b = 0.583077
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 29
+  End of ClassD
+[ele] [25] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.771417
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.498433
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 17
+  End of ClassD
+[ele] [26] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.960362
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.528628
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 6
+  End of ClassD
+End of vector<ClassD>
+
+Content of reflex_test14_wv1.log
+Processing object of class: vector<ClassD*>
+Length = 17
+[ele] [0] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.152731
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.186826
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 26
+  End of ClassD
+[ele] [1] = 0
+[ele] [2] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.796045
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.00934952
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 20
+  End of ClassD
+[ele] [3] = 0
+[ele] [4] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.677918
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.396318
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 20
+  End of ClassD
+[ele] [5] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.992711
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.0678933
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 29
+  End of ClassD
+[ele] [6] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.466818
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.748581
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 7
+  End of ClassD
+[ele] [7] = 0
+[ele] [8] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.0289023
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.84693
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 27
+  End of ClassD
+[ele] [9] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.452805
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 10
+    [mem] p double m_b = 0.352035
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 8
+  End of ClassD
+[ele] [10] = 0
+[ele] [11] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.712
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.125439
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 0
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 28
+  End of ClassD
+[ele] [12] = 0
+[ele] [13] = 0
+[ele] [14] = 0
+[ele] [15] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.667841
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 1
+    [mem] p double m_b = 0.491332
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 22
+  End of ClassD
+[ele] [16] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.578338
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.730411
+    [mem] t ClassAIns::Transient m_cache = 
+      Processing object of class: ClassAIns::Transient
+      [mem] t bool fCached = 1
+      End of ClassAIns::Transient
+    End of ClassAIns
+  [mem] p int m_e = 14
+  End of ClassD
+End of vector<ClassD*>
+
+Warning in <TStreamerInfo::Build>: LHCb::Track: ROOT::Math::SMatrix<double,2,5,ROOT::Math::MatRepStd<double,2,5> > has no streamer or dictionary, data member "m_projections_file" will not be saved
+Warning in <TStreamerInfo::Build>: ROOT::Math::SMatrix<double,2,5,ROOT::Math::MatRepStd<double,2,5> >: ROOT::Math::MatRepStd<double,2,5> has no streamer or dictionary, data member "fRep" will not be saved
+(int) 0

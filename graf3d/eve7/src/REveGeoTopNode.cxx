@@ -143,7 +143,7 @@ int REveGeoTopNodeViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    } else {
       std::string json = fGeoData->fDesc.ProduceJson();
       j["geomDescription"] = TBase64::Encode(json.c_str());
-      printf("REveGeoTopNodeViz::WriteCoreJson stream geomDescription json size = %lu\n", json.size());
+      printf("REveGeoTopNodeViz::WriteCoreJson stream geomDescription json size = %ld\n", (long) json.size());
       j["dataId"] = fGeoData->GetElementId();
    }
    return ret;

@@ -1,0 +1,11 @@
+<lcgdict>
+	<class name="TrigMissingETContainer" id="9481B442-D877-44A2-BB21-7A1B5D47710F"/>
+
+	<class name="TrigMissingET" id="1403772C-7444-4340-930B-ABD51C243A09"/>
+	<class name="DataVector<TrigMissingET>" id="301D572F-D972-45C8-B3ED-0CC090F15C7A" />
+	<class name="std::vector<TrigMissingET*>" />
+
+        <class name="TrigMissingEtComponent"/>
+        <class name="std::vector<TrigMissingEtComponent>"/>
+
+</lcgdict>

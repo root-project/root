@@ -1,0 +1,68 @@
+
+Processing execMemberWise.cxx+...
+Reading in object-wise mode
+Reading member : fOne index: 1
+Reading member : fTwo index: 1
+Reading member : fOne index: 2
+Reading member : fTwo index: 2
+Reading member : fOne index: 3
+Reading member : fTwo index: 3
+Reading member : fOne index: 4
+Reading member : fTwo index: 4
+Reading member : top-1 index: 11
+Reading member : top-2 index: 12
+Reading member : fOne index: 5
+Reading member : fTwo index: 5
+Reading member : fOne index: 6
+Reading member : fTwo index: 6
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 7
+Reading member : WithAttachedStreamer fTwo index: 7
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 8
+Reading member : WithAttachedStreamer fTwo index: 8
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 11
+Reading member : WithAttachedStreamer fTwo index: 11
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 12
+Reading member : WithAttachedStreamer fTwo index: 12
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 13
+Reading member : WithStreamerOnly fTwo index: 13
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 14
+Reading member : WithStreamerOnly fTwo index: 14
+Reading in member-wise mode
+Reading member : fOne index: 1
+Reading member : fOne index: 2
+Reading member : fTwo index: 1
+Reading member : fTwo index: 2
+Reading member : fOne index: 3
+Reading member : fOne index: 4
+Reading member : fTwo index: 3
+Reading member : fTwo index: 4
+Reading member : top-1 index: 11
+Reading member : top-2 index: 12
+Reading member : fOne index: 5
+Reading member : fTwo index: 5
+Reading member : fOne index: 6
+Reading member : fTwo index: 6
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 7
+Reading member : WithAttachedStreamer fTwo index: 7
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 8
+Reading member : WithAttachedStreamer fTwo index: 8
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 11
+Reading member : WithAttachedStreamer fTwo index: 11
+Reading a WithAttachedStreamer
+Reading member : WithAttachedStreamer fOne index: 12
+Reading member : WithAttachedStreamer fTwo index: 12
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 13
+Reading member : WithStreamerOnly fTwo index: 13
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 14
+Reading member : WithStreamerOnly fTwo index: 14

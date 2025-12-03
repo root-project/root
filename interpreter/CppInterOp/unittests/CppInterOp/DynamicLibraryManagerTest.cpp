@@ -1,9 +1,11 @@
-#include "gtest/gtest.h"
+#include "CppInterOp/CppInterOp.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include "clang/Basic/Version.h"
 
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
+
+#include "gtest/gtest.h"
 
 // This function isn't referenced outside its translation unit, but it
 // can't use the "static" keyword because its address is used for
@@ -21,6 +23,12 @@ TEST(DynamicLibraryManagerTest, Sanity) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
+
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32)
+  GTEST_SKIP() << "Test fails with Cling on Windows";
+#endif
+
   EXPECT_TRUE(Cpp::CreateInterpreter());
   EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
 
@@ -56,4 +64,30 @@ TEST(DynamicLibraryManagerTest, Sanity) {
   // require the library to be actually unloaded but just the handle to be
   // invalidated...
   // EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
+}
+
+TEST(DynamicLibraryManagerTest, BasicSymbolLookup) {
+#ifndef EMSCRIPTEN
+  GTEST_SKIP() << "This test is only intended for Emscripten builds.";
+#else
+  #if CLANG_VERSION_MAJOR < 20
+    GTEST_SKIP() << "Support for loading shared libraries was added in LLVM 20.";
+  #endif
+#endif
+
+  ASSERT_TRUE(Cpp::CreateInterpreter());
+  EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
+
+  // Load the library manually. Use known preload path (MEMFS path)
+  const char* wasmLibPath = "libTestSharedLib.so";  // Preloaded path in MEMFS
+  EXPECT_TRUE(Cpp::LoadLibrary(wasmLibPath, false));
+
+  Cpp::Process("");
+
+  void* Addr = Cpp::GetFunctionAddress("ret_zero");
+  EXPECT_NE(Addr, nullptr) << "Symbol 'ret_zero' not found after dlopen.";
+
+  using RetZeroFn = int (*)();
+  auto Fn = reinterpret_cast<RetZeroFn>(Addr);
+  EXPECT_EQ(Fn(), 0);
 }

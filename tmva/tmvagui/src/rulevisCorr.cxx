@@ -235,7 +235,7 @@ void TMVA::rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrd
          hrf2->Draw("colz ah");
          Float_t sc = 1.1;
          if (countPad==2) sc = 1.3;
-         sig->SetMaximum( TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
+         sig->SetMaximum( std::max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
          Double_t smax = sig->GetMaximum();
 
          sig->Scale(1.0/smax);

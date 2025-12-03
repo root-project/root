@@ -19,6 +19,7 @@
 #define ROOT_Math_GenVector_PtEtaPhiM4D  1
 
 #include "Math/Math.h"
+#include "TMath.h"
 
 #include "Math/GenVector/etaMax.h"
 
@@ -47,7 +48,7 @@ namespace Math {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 */
 
 template <class ScalarType>
@@ -81,26 +82,6 @@ public :
    template <class CoordSystem >
    explicit constexpr PtEtaPhiM4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fM(c.M())  { RestrictPhi(); }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // so we decided to re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-    */
-   PtEtaPhiM4D(const PtEtaPhiM4D & v) :
-      fPt(v.fPt), fEta(v.fEta), fPhi(v.fPhi), fM(v.fM) { }
-
-   /**
-      assignment operator
-    */
-   PtEtaPhiM4D & operator = (const PtEtaPhiM4D & v) {
-      fPt  = v.fPt;
-      fEta = v.fEta;
-      fPhi = v.fPhi;
-      fM   = v.fM;
-      return *this;
-   }
 
 
    /**
@@ -228,8 +209,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw  ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
-                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         GenVector_Throw("PtEtaPhiM4D::Mt() - Tachyonic:\n"
+                         "    Pz^2 > E^2 so the transverse mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }
@@ -250,7 +231,7 @@ public :
    Scalar Et() const { using std::cosh; return E() / cosh(fEta); }
 
 private:
-   inline static Scalar pi() { return M_PI; }
+   inline static Scalar pi() { return TMath::Pi(); }
    inline void RestrictPhi() {
       using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
@@ -260,7 +241,7 @@ private:
    inline void RestrictNegMass() {
       if (fM < 0) {
          if (P2() - fM * fM < 0) {
-            GenVector::Throw("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
+            GenVector_Throw("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
             fM = -P();
          }
       }
@@ -318,7 +299,7 @@ public:
    void Negate( ) {
       fPhi = ( (fPhi > 0) ? fPhi - pi() : fPhi + pi()  );
       fEta = - fEta;
-      GenVector::Throw ("PtEtaPhiM4D::Negate - cannot negate the energy - can negate only the spatial components");
+      GenVector_Throw("PtEtaPhiM4D::Negate - cannot negate the energy - can negate only the spatial components");
    }
 
    /**
@@ -364,7 +345,7 @@ public:
    Scalar t() const { return E(); }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -408,7 +389,7 @@ inline void PtEtaPhiM4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
 }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
   // ====== Set member functions for coordinates in other systems =======
 

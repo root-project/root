@@ -18,6 +18,15 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 elseif(MSVC)
+
+  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    # Change the default install from "C:/Program Files/${PROJECT_NAME}" to
+    # "C:/${PROJECT_NAME}-${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}"
+    # to prevent having (unsupported) spaces in the install PATH
+    set (CMAKE_INSTALL_PREFIX "C:/${PROJECT_NAME}-${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}"
+         CACHE PATH "default install path" FORCE)
+  endif()
+
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(ARCH "-wd4267")
     set(ROOT_ARCHITECTURE win64)
@@ -31,14 +40,17 @@ elseif(MSVC)
   math(EXPR VC_MINOR "${MSVC_VERSION} % 100")
 
   #---Select compiler flags----------------------------------------------------------------
+  if(winrtdebug AND dev)
+    set(ROOT_RTC_FLAGS "-RTC1")
+  endif()
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-MD -O2 -Ob2 -Z7 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_MINSIZEREL     "-MD -O1 -Ob1 -DNDEBUG")
   set(CMAKE_CXX_FLAGS_RELEASE        "-MD -O2 -Ob2 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_DEBUG          "-MDd -Od -Ob0 -Z7")
+  set(CMAKE_CXX_FLAGS_DEBUG          "-MDd -Od -Ob0 -Z7 ${ROOT_RTC_FLAGS}")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-MD -O2 -Ob2 -Z7 -DNDEBUG")
   set(CMAKE_C_FLAGS_MINSIZEREL       "-MD -O1 -Ob1 -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE          "-MD -O2 -Ob2 -DNDEBUG")
-  set(CMAKE_C_FLAGS_DEBUG            "-MDd -Od -Ob0 -Z7")
+  set(CMAKE_C_FLAGS_DEBUG            "-MDd -Od -Ob0 -Z7 ${ROOT_RTC_FLAGS}")
 
   if(winrtdebug)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)

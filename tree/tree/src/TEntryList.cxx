@@ -161,7 +161,6 @@ End_Macro
 #include "TSystem.h"
 #include "TObjString.h"
 
-ClassImp(TEntryList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default c-tor
@@ -430,7 +429,7 @@ void TEntryList::Add(const TEntryList *elist)
             TEntryListBlock *block1=nullptr;
             TEntryListBlock *block2=nullptr;
             Int_t i;
-            Int_t nmin = TMath::Min(fNBlocks, elist->fNBlocks);
+            Int_t nmin = std::min(fNBlocks, elist->fNBlocks);
             Long64_t nnew, nold;
             for (i=0; i<nmin; i++){
                block1 = (TEntryListBlock*)fBlocks->UncheckedAt(i);
@@ -1313,6 +1312,7 @@ void TEntryList::SetTree(const TTree *tree)
       filename = tree->GetTree()->GetCurrentFile()->GetName();
       TUrl url(filename.Data(), true);
       if (!strcmp(url.GetProtocol(), "file")){
+         filename = url.GetFile(); // Get the file part, excluding the anchor, then expand
          gSystem->ExpandPathName(filename);
          if (!gSystem->IsAbsoluteFileName(filename))
             gSystem->PrependPathName(gSystem->pwd(), filename);

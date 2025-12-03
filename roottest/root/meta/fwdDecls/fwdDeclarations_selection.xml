@@ -1,0 +1,8 @@
+<rootdict>
+   <class name="Gaudi::XYZPoint" />
+   <class name="reco::CandidateRef" />
+   <class name="MyMap" />
+   <class pattern="C<*" />
+   <class name="e_int" />
+   <class name="Gaudi::Examples::MyTrack"/>
+</rootdict>

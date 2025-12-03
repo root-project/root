@@ -1,0 +1,123 @@
+<!-- $Id: selection.xml 575751 2013-12-16 16:45:36Z krasznaa $ -->
+<lcgdict>
+  <!-- VERTEX DICTIONARIES -->
+  
+  <!-- Vertex_v1 dictionaries: -->
+  <class name="xAOD::Vertex_v1" >
+    <field name="m_position" transient="true" />
+    <field name="m_positionCached" transient="true" />
+    <field name="m_covariance" transient="true" />
+    <field name="m_covarianceCached" transient="true" />
+  </class>
+  <read sourceClass="xAOD::Vertex_v1" version="[1-]"
+        targetClass="xAOD::Vertex_v1" source="" target="" >
+    <![CDATA[
+       newObj->resetCache();
+    ]]>
+  </read>
+  <class name="xAOD::VertexContainer_v1"
+         id="00B6DBA1-0E0D-4FDA-BFEF-F08EEFFE4BA0" />
+  <class name="xAOD::VertexAuxContainer_v1"
+         id="B1F73A82-9B4E-4508-8EB0-EF7D6E05BA57" />
+
+  <!-- Vertex_v1 links: -->
+  <class name="DataLink<xAOD::VertexContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::VertexContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::VertexContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::VertexContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::VertexContainer_v1> > >" />
+  
+  <!-- TRACK PARTICLE DICTIONARIES -->
+  
+  <!-- TrackParticle_v1 dictionaries: -->
+  <class name="xAOD::TrackParticle_v1">
+         <field name="m_p4" transient="true"/>
+         <field name="m_p4Cached" transient="true"/>
+         <field name="m_perigeeCached" transient="true"/>
+  </class>
+
+  <read sourceClass="xAOD::TrackParticle_v1" version="[1-]"
+        targetClass="xAOD::TrackParticle_v1"
+        source="" target="m_p4Cached">
+    <![CDATA[
+      m_p4Cached = false;
+     ]]>
+  </read>
+  <read sourceClass="xAOD::TrackParticle_v1" version="[1-]"
+        targetClass="xAOD::TrackParticle_v1"
+        source="" target="m_perigeeCached">
+    <![CDATA[
+      m_perigeeCached = false;
+     ]]>
+  </read>
+
+  <class name="xAOD::TrackParticleAuxContainer_v1"
+         id="C3B01EA0-CA87-4C96-967F-E0F9A75BD370"/>
+  <class name="xAOD::TrackParticleContainer_v1"
+         id="F7564EE8-3BD2-11E3-A42F-6C3BE51AB9F1"/>
+  
+  <!-- NeutralParticle_v1 dictionaries: -->
+  <class name="xAOD::NeutralParticle_v1">
+         <field name="m_p4" transient="true"/>
+         <field name="m_p4Cached" transient="true"/>
+         <field name="m_perigeeCached" transient="true"/>
+  </class>
+  
+  <read sourceClass="xAOD::NeutralParticle_v1" version="[1-]"
+        targetClass="xAOD::NeutralParticle_v1"
+        source="" target="m_p4Cached">
+    <![CDATA[
+      m_p4Cached = false;
+     ]]>
+  </read>
+  <read sourceClass="xAOD::NeutralParticle_v1" version="[1-]"
+        targetClass="xAOD::NeutralParticle_v1"
+        source="" target="m_perigeeCached">
+    <![CDATA[
+      m_perigeeCached = false;
+     ]]>
+  </read>
+  
+  <class name="xAOD::NeutralParticleAuxContainer_v1"
+         id="006862BC-5CEB-11E3-9FB4-02163E00A92F"/>
+  <class name="xAOD::NeutralParticleContainer_v1"
+         id="12869D6A-5CEB-11E3-B64A-02163E00A92F"/>  
+
+  <class name="xAOD::PrepRawData_v1"/>
+  <class name="xAOD::PrepRawDataAuxContainer_v1"
+         id="11B4BF93-0074-4BF5-AD64-216762A58E5C"/>
+  <class name="xAOD::PrepRawDataContainer_v1"
+         id="451E4762-1860-4F89-A90F-9A17003ED01F"/>
+  
+  <!-- Maybe drop these? -->
+  <class name="std::vector<std::vector<float> >" />
+  <class name="std::vector<uint64_t>" />
+
+  <!-- All smart pointer dictionaries for xAOD::IParticle -->
+  <class name="DataLink<xAOD::TrackParticleContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::TrackParticleContainer_v1> >" />
+  
+  <class name="ElementLink<xAOD::TrackParticleContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TrackParticleContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TrackParticleContainer_v1> > >" />
+    
+  <!-- All smart pointer dictionaries for xAOD::IParticle -->
+  <class name="DataLink<xAOD::NeutralParticleContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::NeutralParticleContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::NeutralParticleContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::NeutralParticleContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::NeutralParticleContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+  </exclusion>
+
+
+
+</lcgdict>

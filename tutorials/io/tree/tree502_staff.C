@@ -4,7 +4,6 @@
 /// Create a plot of the data in `cernstaff.root`
 /// To create `cernstaff.root`, execute tutorial `$ROOTSYS/tutorials/io/tree/tree500_cernbuild.C`
 ///
-/// \macro_image
 /// \macro_code
 ///
 /// \author Rene Brun

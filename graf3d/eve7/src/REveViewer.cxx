@@ -129,13 +129,8 @@ void REveViewer::SetBlackBackground(bool x)
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   std::string ct;
-   switch (fCameraType)
-   {
-      case kCameraPerspXOZ: ct = "PerspXOZ"; break;
-      case kCameraOrthoXOY: ct = "OrthoXOY"; break;
-   }
-   j["CameraType"] = ct;
+   fCamera.WriteCoreJson(j, rnr_offset);
+
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
    j["BlackBg"] = fBlackBackground;
@@ -170,6 +165,80 @@ void REveViewer::SetMandatory(bool x)
       REveSceneInfo *sinfo = dynamic_cast<REveSceneInfo *>(c);
       sinfo->GetScene()->GetScene()->SetMandatory(fMandatory);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+//  Set base vectors of camera base matrix
+//
+void REveViewer::SetCameraType(ECameraType cameraType)
+{
+   switch(cameraType) {
+      case kCameraPerspXOZ:
+         fCamera.Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // XOZ floor
+         break;
+      case kCameraPerspYOZ:
+         fCamera.Setup(kCameraPerspYOZ, "PerspYOZ", REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0));// YOZ floor
+         break;
+      case kCameraPerspXOY:
+         fCamera.Setup(kCameraPerspXOY, "PerspXOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0));// XOY floor
+         break;
+      case kCameraOrthoXOY:
+         fCamera.Setup(kCameraOrthoXOY, "OrthoXOY", REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0));// Looking down  Z axis,  X horz, Y vert
+         break;
+      case kCameraOrthoXOZ:
+         fCamera.Setup(kCameraOrthoXOZ, "OrthoXOZ", REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking along Y axis,  X horz, Z vert
+         break;
+      case kCameraOrthoZOY:
+         fCamera.Setup(kCameraOrthoZOY, "OrthoZOY", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));// Looking along X axis,  Z horz, Y vert
+         break;
+      case kCameraOrthoZOX:
+         fCamera.Setup(kCameraOrthoZOX, "OrthoZOX", REveVector(0.0,-1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking along Y axis,  Z horz, X vert
+         break;
+      case kCameraOrthoXnOY:
+         fCamera.Setup(kCameraOrthoXnOY,  "OrthoXnOY", REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0));// Looking along Z axis, -X horz, Y vert
+         break;
+      case kCameraOrthoXnOZ:
+         fCamera.Setup(kCameraOrthoXnOZ, "OrthoXnOZ", REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0));// Looking down  Y axis, -X horz, Z vert
+         break;
+      case kCameraOrthoZnOY:
+         fCamera.Setup(kCameraOrthoZnOY, "OrthoZnOY", REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)); // Looking down  X axis, -Z horz, Y vert
+         break;
+      case kCameraOrthoZnOX:
+         fCamera.Setup(kCameraOrthoZnOX, "OrthoZnOX", REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)); // Looking down  Y axis, -Z horz, X vert
+         break;
+      default:
+         Error("REveViewer::SetCurrentCamera", "invalid camera type");
+         return;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Set camera base matrix
+//
+void REveViewer::REveCamera::Setup( ECameraType type, const std::string& name, REveVector v1, REveVector v2)
+{
+   fType = type;
+   fName = name;
+   fV1 = v1;
+   fV2 = v2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+//  Stream camera info
+//
+int REveViewer::REveCamera::WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/)
+{
+   nlohmann::json out;
+   out["type"] = fName;
+   out["V1"] = {fV1.fX, fV1.fY, fV1.fZ};
+   out["V2"] = {fV2.fX, fV2.fY, fV2.fZ};
+
+   j["camera"] = out;
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

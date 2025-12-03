@@ -30,7 +30,7 @@ public:
   RooRealSumPdf(const char *name, const char *title,
          RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
   RooRealSumPdf(const RooRealSumPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooRealSumPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRealSumPdf(*this,newname) ; }
 
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;

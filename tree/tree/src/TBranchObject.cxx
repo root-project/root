@@ -32,7 +32,6 @@ A Branch for the case of an object.
 #include "TTree.h"
 #include "snprintf.h"
 
-ClassImp(TBranchObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for BranchObject.
@@ -528,9 +527,9 @@ void TBranchObject::SetAutoDelete(bool autodel)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset basket size for all subbranches of this branch.
 
-void TBranchObject::SetBasketSize(Int_t buffsize)
+void TBranchObject::SetBasketSize(Int_t bufsize)
 {
-   TBranch::SetBasketSize(buffsize);
+   TBranch::SetBasketSize(bufsize);
 
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i)  {

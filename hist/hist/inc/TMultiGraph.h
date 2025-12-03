@@ -79,6 +79,7 @@ public:
    void              Print(Option_t *chopt="") const override;
    void              RecursiveRemove(TObject *obj) override;
    void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void              SetHistogram(TH1F *hist);
    virtual void      SetMaximum(Double_t maximum=-1111);
    virtual void      SetMinimum(Double_t minimum=-1111);
 

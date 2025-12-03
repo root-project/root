@@ -12,6 +12,7 @@
 #include "cling/Interpreter/Interpreter.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/Basic/ASTSourceDescriptor.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/CodeCompleteConsumer.h"
@@ -33,7 +34,7 @@ namespace cling {
     cling::InterpreterCallbacks* m_Callbacks;
   public:
     InterpreterPPCallbacks(InterpreterCallbacks* C) : m_Callbacks(C) { }
-    ~InterpreterPPCallbacks() { }
+    ~InterpreterPPCallbacks() override {}
 
     void InclusionDirective(clang::SourceLocation HashLoc,
                             const clang::Token &IncludeTok,
@@ -44,11 +45,12 @@ namespace cling {
                             llvm::StringRef SearchPath,
                             llvm::StringRef RelativePath,
                             const clang::Module *Imported,
+                            bool ModuleImported,
                             SrcMgr::CharacteristicKind FileType) override {
       m_Callbacks->InclusionDirective(HashLoc, IncludeTok, FileName,
                                       IsAngled, FilenameRange, File,
                                       SearchPath, RelativePath, Imported,
-                                      FileType);
+                                      ModuleImported, FileType);
     }
 
     void EnteredSubmodule(clang::Module* M,
@@ -77,39 +79,39 @@ namespace cling {
       assert(m_Source && "Can't wrap nullptr ExternalASTSource");
     }
 
-    virtual Decl* GetExternalDecl(uint32_t ID) override {
+    Decl* GetExternalDecl(GlobalDeclID ID) override {
       return m_Source->GetExternalDecl(ID);
     }
 
-    virtual Selector GetExternalSelector(uint32_t ID) override {
+    Selector GetExternalSelector(uint32_t ID) override {
       return m_Source->GetExternalSelector(ID);
     }
 
-    virtual uint32_t GetNumExternalSelectors() override {
+    uint32_t GetNumExternalSelectors() override {
       return m_Source->GetNumExternalSelectors();
     }
 
-    virtual Stmt* GetExternalDeclStmt(uint64_t Offset) override {
+    Stmt* GetExternalDeclStmt(uint64_t Offset) override {
       return m_Source->GetExternalDeclStmt(Offset);
     }
 
-    virtual CXXCtorInitializer**
+    CXXCtorInitializer**
     GetExternalCXXCtorInitializers(uint64_t Offset) override {
       return m_Source->GetExternalCXXCtorInitializers(Offset);
     }
 
-    virtual CXXBaseSpecifier*
-    GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
+    CXXBaseSpecifier* GetExternalCXXBaseSpecifiers(uint64_t Offset) override {
       return m_Source->GetExternalCXXBaseSpecifiers(Offset);
     }
 
-    virtual void updateOutOfDateIdentifier(IdentifierInfo& II) override {
+    void updateOutOfDateIdentifier(const IdentifierInfo& II) override {
       m_Source->updateOutOfDateIdentifier(II);
     }
 
-    virtual bool FindExternalVisibleDeclsByName(const DeclContext* DC,
-                                                DeclarationName Name) override {
-      return m_Source->FindExternalVisibleDeclsByName(DC, Name);
+    bool
+    FindExternalVisibleDeclsByName(const DeclContext* DC, DeclarationName Name,
+                                   const DeclContext* OriginalDC) override {
+      return m_Source->FindExternalVisibleDeclsByName(DC, Name, OriginalDC);
     }
 
     bool LoadExternalSpecializations(const Decl* D, bool OnlyPartial) override {
@@ -121,65 +123,56 @@ namespace cling {
       return m_Source->LoadExternalSpecializations(D, TemplateArgs);
     }
 
-    virtual void completeVisibleDeclsMap(const DeclContext* DC) override {
+    void completeVisibleDeclsMap(const DeclContext* DC) override {
       m_Source->completeVisibleDeclsMap(DC);
     }
 
-    virtual Module* getModule(unsigned ID) override {
-      return m_Source->getModule(ID);
-    }
+    Module* getModule(unsigned ID) override { return m_Source->getModule(ID); }
 
-    virtual std::optional<ASTSourceDescriptor>
+    std::optional<ASTSourceDescriptor>
     getSourceDescriptor(unsigned ID) override {
       return m_Source->getSourceDescriptor(ID);
     }
 
-    virtual ExtKind hasExternalDefinitions(const Decl* D) override {
+    ExtKind hasExternalDefinitions(const Decl* D) override {
       return m_Source->hasExternalDefinitions(D);
     }
 
-    virtual void
+    void
     FindExternalLexicalDecls(const DeclContext* DC,
                              llvm::function_ref<bool(Decl::Kind)> IsKindWeWant,
                              SmallVectorImpl<Decl*>& Result) override {
       m_Source->FindExternalLexicalDecls(DC, IsKindWeWant, Result);
     }
 
-    virtual void FindFileRegionDecls(FileID File, unsigned Offset,
-                                     unsigned Length,
-                                     SmallVectorImpl<Decl*>& Decls) override {
+    void FindFileRegionDecls(FileID File, unsigned Offset, unsigned Length,
+                             SmallVectorImpl<Decl*>& Decls) override {
       m_Source->FindFileRegionDecls(File, Offset, Length, Decls);
     }
 
-    virtual void CompleteRedeclChain(const Decl* D) override {
+    void CompleteRedeclChain(const Decl* D) override {
       m_Source->CompleteRedeclChain(D);
     }
 
-    virtual void CompleteType(TagDecl* Tag) override {
-      m_Source->CompleteType(Tag);
-    }
+    void CompleteType(TagDecl* Tag) override { m_Source->CompleteType(Tag); }
 
-    virtual void CompleteType(ObjCInterfaceDecl* Class) override {
+    void CompleteType(ObjCInterfaceDecl* Class) override {
       m_Source->CompleteType(Class);
     }
 
-    virtual void ReadComments() override { m_Source->ReadComments(); }
+    void ReadComments() override { m_Source->ReadComments(); }
 
-    virtual void StartedDeserializing() override {
-      m_Source->StartedDeserializing();
-    }
+    void StartedDeserializing() override { m_Source->StartedDeserializing(); }
 
-    virtual void FinishedDeserializing() override {
-      m_Source->FinishedDeserializing();
-    }
+    void FinishedDeserializing() override { m_Source->FinishedDeserializing(); }
 
-    virtual void StartTranslationUnit(ASTConsumer* Consumer) override {
+    void StartTranslationUnit(ASTConsumer* Consumer) override {
       m_Source->StartTranslationUnit(Consumer);
     }
 
-    virtual void PrintStats() override { m_Source->PrintStats(); }
+    void PrintStats() override { m_Source->PrintStats(); }
 
-    virtual bool layoutRecordType(
+    bool layoutRecordType(
         const RecordDecl* Record, uint64_t& Size, uint64_t& Alignment,
         llvm::DenseMap<const FieldDecl*, uint64_t>& FieldOffsets,
         llvm::DenseMap<const CXXRecordDecl*, CharUnits>& BaseOffsets,
@@ -209,7 +202,7 @@ namespace cling {
     InterpreterExternalSemaSource(InterpreterCallbacks* C)
       : m_Callbacks(C), m_Sema(nullptr) {}
 
-    ~InterpreterExternalSemaSource() {
+    ~InterpreterExternalSemaSource() override {
       // FIXME: Another gross hack due to the missing multiplexing AST external
       // source see Interpreter::setCallbacks.
       if (m_Sema) {
@@ -248,7 +241,8 @@ namespace cling {
     }
 
     bool FindExternalVisibleDeclsByName(const clang::DeclContext* DC,
-                                        clang::DeclarationName Name) override {
+                                        clang::DeclarationName Name,
+                                        const DeclContext *OriginalDC) override {
       if (m_Callbacks)
         return m_Callbacks->LookupObject(DC, Name);
 
@@ -433,8 +427,13 @@ namespace test {
         return false;
 
       // Only for demo resolve all unknown objects to cling::test::Tester
+      // but skip unresolved names coming from system headers,
+      // like __path_iter_distance from <filesystem>
+      clang::Sema& SemaR = m_Interpreter->getSema();
+      clang::SourceManager& SM = SemaR.getSourceManager();
+      if (SM.isInSystemHeader(R.getNameLoc()))
+        return false;
       if (!m_TesterDecl) {
-        clang::Sema& SemaR = m_Interpreter->getSema();
         clang::NamespaceDecl* NSD = utils::Lookup::Namespace(&SemaR, "cling");
         NSD = utils::Lookup::Namespace(&SemaR, "test", NSD);
         m_TesterDecl = utils::Lookup::Named(&SemaR, "Tester", NSD);

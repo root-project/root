@@ -1,6 +1,5 @@
 // Authors: Bertrand Bellenot <bertrand.bellenot@cern.ch> Sergey Linev <S.Linev@gsi.de>
 // Date: 2019-02-28
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
@@ -86,11 +85,11 @@ public:
    void AddTCanvas() { AddInitWidget("tcanvas"); }
    void AddRCanvas() { AddInitWidget("rcanvas"); }
 
-   /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
-   /// hide Browser
    void Hide();
+
+   void Sync();
 
    std::string GetWindowUrl(bool remote);
 

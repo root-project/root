@@ -12,6 +12,32 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
+if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
+  # The SYSROOT *must* be set before the project() call
+  # TODO: The following code is *necessary* on a standard MacOS platform (e.g. an Apple MacOS machine), but may not
+  # be as necessary on other MacOS platforms (e.g. Nix). A PR removed the following code https://github.com/root-project/root/pull/19718
+  # and the CI was happy with it, but unfortunately it was working simply because during our CI run jobs something is
+  # setting the SDKROOT environment variable, which implicitly sets the CMAKE_OSX_SYSROOT variable. This was highlighted
+  # by another PR https://github.com/root-project/root/pull/19855. On a standard Apple MacOS system, where the SDKROOT
+  # variable is not set by default, the build of ROOT would fail without the following code. It is unclear what is setting
+  # the SDKROOT variable only during our CI jobs, logging to the same CI machines and launching a build manually shows
+  # the same build error.
+  find_program(XCRUN_EXECUTABLE xcrun)
+  if(EXISTS ${XCRUN_EXECUTABLE})
+    execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --show-sdk-path
+      OUTPUT_VARIABLE SDK_PATH
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT EXISTS "${SDK_PATH}")
+      message(FATAL_ERROR "Could not detect macOS SDK path")
+    endif()
+
+    set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
+  else()
+    message(WARNING "The CMAKE_OSX_SYSROOT variable is not set and the 'xcrun' executable is not available. "
+                    "This build of ROOT might not be able to find the correct MacOS SDK.")
+  endif()
+endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
@@ -19,7 +45,16 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
     " Please see README/INSTALL for more information.")
 endif()
 
-set(policy_new CMP0072 CMP0076 CMP0077 CMP0079)
+set(unsupported_chars " *+")
+foreach(directoryName IN ITEMS ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_INSTALL_PREFIX})
+  if(${directoryName} MATCHES "[${unsupported_chars}]+")
+    message(FATAL_ERROR "Unsupported chars in directory \"${directoryName}\". Avoid any of \"${unsupported_chars}\".")
+  endif()
+endforeach()
+
+set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
+    CMP0156 CMP0179 #deduplicate static libraries when linker supports it
+)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
@@ -36,6 +71,12 @@ endforeach()
 include(cmake/modules/CaptureCommandLine.cmake)
 
 project(ROOT)
+
+if(NOT WIN32)
+  # See https://gitlab.kitware.com/cmake/cmake/-/issues/23040
+  unset(MSVC_C_ARCHITECTURE_ID)
+  unset(MSVC_CXX_ARCHITECTURE_ID)
+endif()
 
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
@@ -57,19 +98,26 @@ set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE G
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
-if(NOT $ENV{ROOTSYS} STREQUAL "")
+if(NOT $ENV{ROOTSYS} STREQUAL "" AND NOT $ENV{ROOTSYS} STREQUAL "${CMAKE_BINARY_DIR}")
   function(strip_path ENV_VAR _path)
-    string(REPLACE ":${_path}:" ":" _temp_envvar $ENV{${ENV_VAR}})
-    string(REGEX REPLACE "^${_path}:" "" _temp_envvar ${_temp_envvar})
-    string(REGEX REPLACE ":${_path}$" "" _temp_envvar ${_temp_envvar})
-    if (_temp_envvar STREQUAL _path)
-      set(ENV{ENV_VAR} "")
-    else()
-      set(ENV{ENV_VAR} "${_temp_envvar}")
+    if(NOT $ENV{${ENV_VAR}} STREQUAL "")
+      string(REPLACE ":${_path}:" ":" _temp_envvar $ENV{${ENV_VAR}})
+      string(REGEX REPLACE "^${_path}:" "" _temp_envvar ${_temp_envvar})
+      string(REGEX REPLACE ":${_path}$" "" _temp_envvar ${_temp_envvar})
+      if (_temp_envvar STREQUAL _path)
+        set(ENV{ENV_VAR} "")
+      else()
+        set(ENV{ENV_VAR} "${_temp_envvar}")
+      endif()
     endif()
   endfunction()
   strip_path("PATH" "$ENV{ROOTSYS}/bin")
-  strip_path("LD_LIBRARY_PATH" "$ENV{ROOTSYS}/lib")
+  if(NOT WIN32)
+    strip_path("LD_LIBRARY_PATH" "$ENV{ROOTSYS}/lib")
+  endif()
+  if(APPLE)
+    strip_path("DYLD_LIBRARY_PATH" "$ENV{ROOTSYS}/lib")
+  endif()
   strip_path("PYTHONPATH" "$ENV{ROOTSYS}/lib")
   # if we leave the ':' it will result in an empty entry in the CMAKE_PREFIX_PATH
   # which will interpreted as the current directory.
@@ -97,6 +145,14 @@ include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+#---Enable testing------------------------------------------------------------------------------
+if(testing)
+  enable_testing()
+endif()
+
+#---Here we look for installed software and switch on and off the different build options-------
+include(SearchInstalledSoftware)
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
@@ -270,15 +326,6 @@ if(asan)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
-#---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
-if(testing)
-  enable_testing()
-endif()
-
-#---Here we look for installed software and switch on and of the different build options--------
-include(SearchInstalledSoftware)
-
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
@@ -291,25 +338,6 @@ if (JEMALLOC_FOUND)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
 endif()
 
-#---Populate the configure arguments returned by 'root-config --config'-------------------------
-get_cmake_property(variables CACHE_VARIABLES)
-foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
-     (NOT ${${var}} STREQUAL "") AND
-     (NOT ${var} MATCHES "NOTFOUND"))
-    if (var MATCHES "^QT_")
-      # filter out the very long list of Qt libraries and include dirs
-      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    else()
-      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_"))
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    endif()
-  endif()
-endforeach()
-
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
@@ -320,7 +348,7 @@ add_custom_command(OUTPUT ${stamp_file}
 
 
 #---Copy files to the build area at build time---------------------------------
-set(directories_to_copy etc test icons fonts macros tutorials)
+set(directories_to_copy test icons fonts macros tutorials)
 if(http)
   list(APPEND directories_to_copy js)
 endif()
@@ -334,8 +362,7 @@ foreach(dir_to_copy ${directories_to_copy})
   file(GLOB_RECURSE artifacts_in ${dir_to_copy}/*)
   list(FILTER artifacts_in EXCLUDE REGEX "\.(d|swp|so|dylib|lib|dll|pcm|bak)$")
 
-  set(artifacts_out ${artifacts_in})
-  list(TRANSFORM artifacts_out REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} artifacts_out "${artifacts_in}")
   list(APPEND all_artifacts ${artifacts_out})
 
   add_custom_command(OUTPUT ${artifacts_out}
@@ -344,16 +371,46 @@ foreach(dir_to_copy ${directories_to_copy})
       DEPENDS ${artifacts_in})
 endforeach()
 
+#---Copy etc/* files individually to the build area at build time---------------------------------
+# The reason why we don't copy these files with copy_directory as above is that
+# we want to exclude a subset of the files.
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} etc/*)
+
+# Exclude the *.in files, just like in the install tree
+list(FILTER artifact_files EXCLUDE REGEX "\.(in)$")
+
+# Exclude etc/notebook/JsMVA
+list(FILTER artifact_files EXCLUDE REGEX "^etc/notebook/JsMVA/")
+
+foreach(artifact_file ${artifact_files})
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+  list(APPEND all_artifacts ${CMAKE_BINARY_DIR}/${artifact_file})
+endforeach()
+
+unset(artifact_files)
+
+
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 
+if(builtin_cling)
+    set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+endif()
 
 #---Add the main sources ---------------------------------
 add_subdirectory (interpreter)
 
 # Update etc/gitinfo.txt for every build.
+find_package(Git)
 add_custom_target(gitinfotxt
   ALL
-  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  COMMAND ${CMAKE_COMMAND}
+          -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR}
+          # Forward git executable info so that the script doesn't have to find it again
+          -DGit_FOUND=${Git_FOUND} -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+          -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
   COMMENT "Updating etc/gitinfo.txt."
   BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
 )
@@ -369,7 +426,9 @@ add_subdirectory (io)
 add_subdirectory (net)
 add_subdirectory (graf2d)
 add_subdirectory (graf3d)
-add_subdirectory (gui)
+if(NOT minimal)
+  add_subdirectory (gui)
+endif()
 add_subdirectory (montecarlo)
 if(geom)
   add_subdirectory (geom)
@@ -381,9 +440,6 @@ add_subdirectory (misc)
 add_subdirectory (main)
 add_subdirectory (bindings)
 add_subdirectory (sql)
-if(proof)
-  add_subdirectory(proof)
-endif()
 if(tmva)
   add_subdirectory(tmva)
 endif()
@@ -392,7 +448,6 @@ if(roofit)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 # Each subdirectory added above will register headers to be copied to the build tree.
 # Here, the copy targets are created:
@@ -403,36 +458,14 @@ get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
-
-add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
-add_custom_command(
-		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
-)
-install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-
-add_dependencies(move_headers copymodulemap)
-
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
-# if it's unchanged.
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
-configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
-    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-    COPYONLY)
+string(REPLACE ";" "" ROOT_GENERATED_MODULEMAP_CONTENT "${__modulemap_extra_content}")
+# Now append the generated content to the original modulemap
+configure_file(${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/ROOT.modulemap)
+install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
@@ -515,10 +548,6 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
-if(Vc_INCLUDE_DIR)
-  set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
-endif()
-
 # modules.idx
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
@@ -527,7 +556,7 @@ if(runtime_cxxmodules)
     set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${library_output_dir}\\\;%PATH%"
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
-    set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+    set(modules_idx_cmd COMMAND ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
@@ -542,14 +571,17 @@ if(runtime_cxxmodules)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
 
+ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
+
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+                          ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+  set(hsimple_cmd COMMAND ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 endif()
 add_custom_command(OUTPUT tutorials/hsimple.root
@@ -578,6 +610,28 @@ endif()
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
+#---Populate the configure arguments returned by 'root-config --config'-------------------------
+get_cmake_property(variables CACHE_VARIABLES)
+foreach(var ${variables})
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
+     (NOT ${${var}} STREQUAL "") AND
+     (NOT ${var} MATCHES "NOTFOUND"))
+    if (var MATCHES "^QT_")
+      # filter out the very long list of Qt libraries and include dirs
+      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    else()
+      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_")
+          AND NOT(var MATCHES "^CMAKE_PROJECT_VERSION") # Created by the 'latest' call to project()
+          AND NOT(var MATCHES "^CMAKE_CACHE_") # related to previous CMake invocation eg CMAKE_CACHE_MAJOR_VERSION
+          AND NOT(var MATCHES "^ROOT_.*_LIBRARY$")) # Created for users in ROOTConfig.cmake
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    endif()
+  endif()
+endforeach()
+
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
 
@@ -591,6 +645,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          ${DIR_PERMISSIONS}
+                         PATTERN "notebook/JsMVA" EXCLUDE
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
@@ -651,48 +706,6 @@ if(testing)
   set(upstreamprefix https://github.com/root-project)
 
   if(roottest)
-    find_package(Git REQUIRED)
-
-    # Check whether the repository exists in the source directory or its parent
-    get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-    if(IS_DIRECTORY ${source_dir}/roottest/.git)
-      set(repo_dir ${source_dir}/roottest)
-    elseif(IS_DIRECTORY ${source_dir}/../roottest/.git)
-      set(repo_dir ${source_dir}/../roottest)
-    endif()
-    if(DEFINED repo_dir)
-      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${repo_dir}/.git
-                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE
-                      RESULT_VARIABLE query_result
-                      ERROR_VARIABLE query_error)
-      if(NOT query_result EQUAL 0)
-        message(STATUS "Searching for \"origin\" repo of roottest: ${query_error}")
-      endif()
-    else()
-       # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
-       # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
-       # value is used instead.
-       if(DEFINED ENV{GITHUB_PR_ORIGIN})
-         set(originurl $ENV{GITHUB_PR_ORIGIN})
-       else()
-         execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                         remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
-       endif()
-    endif()
-    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix "${originurl}")
-    relatedrepo_GetClosestMatch(REPO_NAME roottest
-                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
-                                FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
-    # Use `-Droottest_force_checkout=ON` to force fetch and checkout in an existing repository
-    if(roottest_force_checkout)
-       set(roottest_opts FORCE)
-    endif()
-    relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
-                         REPO_DIR_VARIABLE roottest_dir ${roottest_opts})
-    if(NOT IS_DIRECTORY ${roottest_dir})
-      message(FATAL_ERROR "Expected roottest at '${roottest_dir}' (not a directory?)")
-    endif()
-    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
     add_subdirectory(${roottest_dir} roottest)
   endif()
 

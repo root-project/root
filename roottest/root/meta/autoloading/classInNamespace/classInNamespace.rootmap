@@ -1,0 +1,12 @@
+{ decls }
+namespace ns1 { namespace ns2 { namespace ns3 { namespace ns4 {  } } } }
+
+[ libclassInNamespace_dictrflx ]
+# List of selected classes
+class ns1::ns2::ns3::ns4::A
+header classInNamespace.h
+# List of selected namespaces
+namespace ns1
+namespace ns1::ns2
+namespace ns1::ns2::ns3
+namespace ns1::ns2::ns3::ns4

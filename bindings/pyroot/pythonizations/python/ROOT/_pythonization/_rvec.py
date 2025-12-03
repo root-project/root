@@ -56,28 +56,96 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 \endpythondoc
 """
 
-from . import pythonization
-import cppyy
 import sys
 
+import cppyy
 
+from . import pythonization
+
+# This map includes all relevant C++ fundamental types found at
+# https://en.cppreference.com/w/cpp/language/types.html and the associated
+# ROOT portable types when available.
 _array_interface_dtype_map = {
+    # Integral types
+    # C++ standard integer types
+    "short": "i",
+    "short int": "i",
+    "signed short": "i",
+    "signed short int": "i",
+    "unsigned short": "u",
+    "unsigned short int": "u",
+    "int": "i",
+    "signed": "i",
+    "signed int": "i",
+    "unsigned": "u",
+    "unsigned int": "u",
+    "long": "i",
+    "long int": "i",
+    "signed long": "i",
+    "signed long int": "i",
+    "unsigned long": "u",
+    "unsigned long int": "u",
+    "long long": "i",
+    "long long int": "i",
+    "signed long long": "i",
+    "signed long long int": "i",
+    "unsigned long long": "u",
+    "unsigned long long int": "u",
+    "std::size_t": "i",
+    # Extended standard integer types
+    "std::int8_t": "i",
+    "std::int16_t": "i",
+    "std::int32_t": "i",
+    "std::int64_t": "i",
+    "std::uint8_t": "u",
+    "std::uint16_t": "u",
+    "std::uint32_t": "u",
+    "std::uint64_t": "u",
+    # ROOT integer types
+    "Int_t": "i",
+    "UInt_t": "u",
+    "Short_t": "i",
+    "UShort_t": "u",
+    "Long_t": "i",
+    "ULong_t": "u",
     "Long64_t": "i",
     "ULong64_t": "u",
-    "double": "f",
+    # Boolean type
+    "bool": "b",
+    "Bool_t": "b",
+    # Character types
+    "char": "i",
+    "Char_t": "i",
+    "signed char": "i",
+    "unsigned char": "u",
+    "UChar_t": "u",
+    "char16_t": "i",
+    "char32_t": "i",
+    # Floating-point types
+    # C++ standard floating-point types
     "float": "f",
-    "int": "i",
-    "long": "i",
-    "unsigned char": "b",
-    "unsigned int": "u",
-    "unsigned long": "u",
+    "double": "f",
+    "long double": "f",
+    # ROOT floating-point types
+    "Float_t": "f",
+    "Double_t": "f",
 }
 
 
 def _get_cpp_type_from_numpy_type(dtype):
-    cpptypes = {"i4": "int", "u4": "unsigned int", "i8": "Long64_t", "u8": "ULong64_t", "f4": "float", "f8": "double"}
+    cpptypes = {
+        "i2": "Short_t",
+        "u2": "UShort_t",
+        "i4": "int",
+        "u4": "unsigned int",
+        "i8": "Long64_t",
+        "u8": "ULong64_t",
+        "f4": "float",
+        "f8": "double",
+        "b1": "bool",
+    }
 
-    if not dtype in cpptypes:
+    if dtype not in cpptypes:
         raise RuntimeError("Object not convertible: Python object has unknown data-type '" + dtype + "'.")
 
     return cpptypes[dtype]
@@ -93,10 +161,13 @@ def _AsRVec(arr):
     This function returns an RVec which adopts the memory of the given
     PyObject. The RVec takes the data pointer and the size from the array
     interface dictionary.
+    Note that for arrays of strings, the input strings are copied into the RVec.
     """
-    import ROOT
     import math
-    import platform
+
+    import numpy as np
+
+    import ROOT
 
     # Get array interface of object
     interface = arr.__array_interface__
@@ -110,6 +181,23 @@ def _AsRVec(arr):
 
     # Get the typestring and properties thereof
     typestr = interface["typestr"]
+    dtype = typestr[1:]
+
+    # Construct an RVec of strings
+    if dtype == "O" or dtype.startswith("U"):
+        underlying_object_types = {type(elem) for elem in arr}
+        if len(underlying_object_types) > 1:
+            raise TypeError(
+                "All elements in the numpy array must be of the same type. Found types: {}".format(
+                    underlying_object_types
+                )
+            )
+
+        if underlying_object_types and underlying_object_types.pop() in [str, np.str_]:
+            return ROOT.VecOps.RVec["std::string"](arr)
+        else:
+            raise TypeError("Cannot create an RVec from a numpy array of data type object.")
+
     if len(typestr) != 3:
         raise RuntimeError(
             "Object not convertible: __array_interface__['typestr'] returned '"
@@ -117,10 +205,8 @@ def _AsRVec(arr):
             + "' with invalid length unequal 3."
         )
 
-    dtype = typestr[1:]
-    cppdtype = _get_cpp_type_from_numpy_type(dtype)
-
     # Construct an RVec of the correct data-type
+    cppdtype = _get_cpp_type_from_numpy_type(dtype)
     out = ROOT.VecOps.RVec[cppdtype](ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
 
     # Bind pyobject holding adopted memory to the RVec

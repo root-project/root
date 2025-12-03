@@ -1,0 +1,9 @@
+<rootdict>
+   <class name = "CustomClass" />
+   <class name = "CustomClass2" />
+   <class name = "vector<CustomClass2>" />
+   <class name = "set<CustomClass2>" />
+   <class name = "list<CustomClass2>" />
+   <class name = "map<int,CustomClass2>" />
+
+</rootdict>

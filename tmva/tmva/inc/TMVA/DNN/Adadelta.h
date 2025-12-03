@@ -65,10 +65,10 @@ protected:
    std::vector<std::vector<Matrix_t>>  fWorkBiasTensor2; ///< working tensor used to keep a temporary copy of bias or bias gradients
 
    /*! Update the weights, given the current weight gradients. */
-   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
+   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients) override;
 
    /*! Update the biases, given the current bias gradients. */
-   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients);
+   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients) override;
 
 public:
    /*! Constructor. */
@@ -117,8 +117,8 @@ TAdadelta<Architecture_t, Layer_t, DeepNet_t>::TAdadelta(DeepNet_t &deepNet, Sca
    for (size_t i = 0; i < layersNSlices; i++) {
       const size_t weightsNSlices = (layers[i]->GetWeights()).size();
 
-      Architecture_t::CreateWeightTensors( fPastSquaredWeightGradients[i], layers[i]->GetWeights()); 
-      Architecture_t::CreateWeightTensors( fPastSquaredWeightUpdates[i], layers[i]->GetWeights()); 
+      Architecture_t::CreateWeightTensors( fPastSquaredWeightGradients[i], layers[i]->GetWeights());
+      Architecture_t::CreateWeightTensors( fPastSquaredWeightUpdates[i], layers[i]->GetWeights());
 
       for (size_t j = 0; j < weightsNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredWeightGradients[i][j], EInitialization::kZero);
@@ -127,8 +127,8 @@ TAdadelta<Architecture_t, Layer_t, DeepNet_t>::TAdadelta(DeepNet_t &deepNet, Sca
 
       const size_t biasesNSlices = (layers[i]->GetBiases()).size();
 
-      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases()); 
-      Architecture_t::CreateWeightTensors( fPastSquaredBiasUpdates[i], layers[i]->GetBiases()); 
+      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases());
+      Architecture_t::CreateWeightTensors( fPastSquaredBiasUpdates[i], layers[i]->GetBiases());
 
       for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredBiasGradients[i][j], EInitialization::kZero);
@@ -160,13 +160,13 @@ auto TAdadelta<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIn
 
       // Vt = rho * Vt-1 + (1-rho) * currentSquaredWeightGradients
       initialize<Architecture_t>(accumulation, EInitialization::kZero);
-      
+
       Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[i]);
       Architecture_t::SquareElementWise(currentSquaredWeightGradients);
       Architecture_t::ScaleAdd(accumulation, currentLayerPastSquaredWeightGradients[i], this->GetRho());
       Architecture_t::ScaleAdd(accumulation, currentSquaredWeightGradients, 1 - (this->GetRho()));
       Architecture_t::Copy(currentLayerPastSquaredWeightGradients[i], accumulation);
-   
+
 
       // updating the weights.
       // currentWeightUpdates = sqrt(Wt + epsilon) * currentGradients / sqrt(Vt + epsilon)

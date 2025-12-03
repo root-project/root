@@ -19,12 +19,13 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <unordered_set>
 #include <cctype>
 
 #include "RConfigure.h"
+#include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
@@ -54,6 +55,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/InterpreterAccessRAII.h"
 
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
@@ -220,7 +222,7 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(clang::Sema &SemaR, c
    clang::DeclarationName DName = &SemaR.Context.Idents.get(what);
    clang::LookupResult R(SemaR, DName, clang::SourceLocation(),
                          clang::Sema::LookupOrdinaryName,
-                         clang::Sema::ForExternalRedeclaration);
+                         RedeclarationKind::ForExternalRedeclaration);
    SemaR.LookupInSuper(R, &const_cast<clang::CXXRecordDecl&>(cl));
    if (R.empty())
       return nullptr;
@@ -521,17 +523,16 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
-                                       TNormalizedCtxt &normCtxt,
-                                       ExistingTypeCheck_t existingTypeCheck,
-                                       AutoParse_t autoParse,
-                                       bool *shuttingDownPtr,
-                                       const int* pgDebug /*= 0*/):
-   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
-   fExistingTypeCheck(existingTypeCheck),
-   fAutoParse(autoParse),
-   fInterpreterIsShuttingDownPtr(shuttingDownPtr),
-   fPDebug(pgDebug)
+TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
+                                       ExistingTypeCheck_t existingTypeCheck, CheckInClassTable_t CheckInClassTable,
+                                       AutoParse_t autoParse, bool *shuttingDownPtr, const int *pgDebug /*= 0*/)
+   : fInterpreter(&interpreter),
+     fNormalizedCtxt(&normCtxt),
+     fExistingTypeCheck(existingTypeCheck),
+     fCheckInClassTable(CheckInClassTable),
+     fAutoParse(autoParse),
+     fInterpreterIsShuttingDownPtr(shuttingDownPtr),
+     fPDebug(pgDebug)
 {
 }
 
@@ -546,6 +547,17 @@ bool TClingLookupHelper::ExistingTypeCheck(const std::string &tname,
 
    if (fExistingTypeCheck) return fExistingTypeCheck(tname,result);
    else return false;
+}
+
+bool TClingLookupHelper::CheckInClassTable(const std::string &tname, std::string &result)
+{
+   if (tname.empty())
+      return false;
+
+   if (fCheckInClassTable)
+      return fCheckInClassTable(tname, result);
+   else
+      return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,6 +581,9 @@ void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nondef,
                                                          const std::string &nameLong)
 {
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(nondef.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
@@ -584,6 +599,9 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
 
 bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInlined)
 {
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Decl *scope = lh.findScope(base.c_str(), ToLHDS(WantDiags()), nullptr);
 
@@ -617,6 +635,9 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    }
 
    if (fAutoParse) fAutoParse(tname.c_str());
+
+   // We are going to use and possibly update the interpreter information.
+   cling::InterpreterAccessRAII LockAccess(*fInterpreter);
 
    // Since we already check via other means (TClassTable which is populated by
    // the dictonary loading, and the gROOT list of classes and enums, which are
@@ -2807,7 +2828,7 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
       // We want to check for all headers except the list of excluded headers here.
       for (auto HK : {clang::Module::HK_Normal, clang::Module::HK_Textual, clang::Module::HK_Private,
                       clang::Module::HK_PrivateTextual}) {
-         auto &headerList = m->Headers[HK];
+         const auto &headerList = m->getHeaders(HK);
          for (const clang::Module::Header &moduleHeader : headerList) {
             closure(moduleHeader);
          }
@@ -3084,7 +3105,12 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
-      unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
+      // If we have more arguments than the TSTdecl, it is a variadic template
+      // and we want all template arguments.
+      if (template_arguments.size() > Edecl) {
+         Edecl = template_arguments.size();
+      }
+      unsigned int maxAddArg = Edecl - dropDefault;
       for (const clang::TemplateArgument *I = template_arguments.begin(), *E = template_arguments.end(); Idecl != Edecl;
            I != E ? ++I : nullptr, ++Idecl, ++Param) {
 
@@ -3715,7 +3741,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
 
    // Try the fast solution
-   QualType tParQualType = ttpdPtr->getDefaultArgument();
+   QualType tParQualType = ttpdPtr->getDefaultArgument().getArgument().getAsType();
    const QualType tArgQualType = tArg.getAsType();
 
    // Now the equality tests for non template specialisations.
@@ -3815,7 +3841,7 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 
    // 64 bits wide and signed (non unsigned, that is why "false")
    llvm::APSInt defaultValueAPSInt(64, false);
-   if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
+   if (Expr* defArgExpr = nttpd.getDefaultArgument().getArgument().getAsExpr()) {
       const ASTContext& astCtxt = nttpdPtr->getASTContext();
       if (auto Value = defArgExpr->getIntegerConstantExpr(astCtxt))
          defaultValueAPSInt = *Value;
@@ -4174,10 +4200,18 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
+   // Remove the _Atomic type specifyier if present before normalising
+   TClassEdit::AtomicTypeNameHandlerRAII atomicTypeNameHandler_step1(
+      normalizedNameStep1, TClassEdit::AtomicTypeNameHandlerRAII::EBehavior::kDetectStrip);
+
    // Still remove the std:: and default template argument for STL container and
    // normalize the location and amount of white spaces.
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+
+   TClassEdit::AtomicTypeNameHandlerRAII atomicTypeNameHandler_norm_name(
+      norm_name, atomicTypeNameHandler_step1.IsAtomic() ? TClassEdit::AtomicTypeNameHandlerRAII::EBehavior::kReadd
+                                                        : TClassEdit::AtomicTypeNameHandlerRAII::EBehavior::kNoOp);
 
    // The result of this routine is by definition a fully qualified name.  There is an implicit starting '::' at the beginning of the name.
    // Depending on how the user typed their code, in particular typedef declarations, we may end up with an explicit '::' being
@@ -4912,10 +4946,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          replacedCtxt = nullptr;
       }
 
-      if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
-          || /* the following is likely just redundant */
-          substType->getReplacedParameter()
-          == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
+      if (replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
       {
          const auto &TAs = TST->template_arguments();
          if (index >= TAs.size()) {
@@ -5162,7 +5193,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
          endVar = endVarName;
       }
 
-      const char* val = getenv(txt.substr(beginVarName,
+      const char* val = std::getenv(txt.substr(beginVarName,
                                           endVarName - beginVarName).c_str());
       if (!val) val = "";
 
@@ -5184,7 +5215,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
 
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
-   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+   const char* envInclPath = std::getenv("ROOT_INCLUDE_PATH");
 
    if (!envInclPath)
       return;

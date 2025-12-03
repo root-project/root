@@ -101,12 +101,12 @@ namespace TMVA {
       UInt_t    GetDepth();                                  // Get depth in binary tree
       UInt_t    GetTreeDepth(UInt_t depth=0);                // Get depth of binary tree
       //--- other ---
-      void Print(Option_t *option) const ;                   // Prints cell content
+      void Print(Option_t *option) const override;           // Prints cell content
       //--- getter and setter for user variable ---
       void SetElement(TObject* fobj){ fElement = fobj; }     // Set user variable
       TObject* GetElement() const { return fElement; }       // Get pointer to user variable
       ////////////////////////////////////////////////////////////////////////////
-      ClassDef(PDEFoamCell,2)  //Single cell of FOAM
+      ClassDefOverride(PDEFoamCell,2)  //Single cell of FOAM
          }; // end of PDEFoamCell
 } // namespace TMVA
 

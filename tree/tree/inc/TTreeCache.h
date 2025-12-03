@@ -127,7 +127,7 @@ private:
 public:
 
    TTreeCache();
-   TTreeCache(TTree *tree, Int_t buffersize=0);
+   TTreeCache(TTree *tree, Int_t bufsize=0);
    ~TTreeCache() override;
    Int_t                AddBranch(TBranch *b, bool subgbranches = false) override;
    Int_t                AddBranch(const char *branch, bool subbranches = false) override;

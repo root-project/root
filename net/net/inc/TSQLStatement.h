@@ -85,7 +85,11 @@ public:
    virtual ULong64_t   GetULong64(Int_t) { return 0; }
    virtual Double_t    GetDouble(Int_t) { return 0.; }
    virtual const char *GetString(Int_t) { return nullptr; }
+   /// \see GetLargeObject
    virtual Bool_t      GetBinary(Int_t, void* &, Long_t&) { return kFALSE; }
+   /// \note Since ROOT 6.36, this API is defined to return new memory that must be released with
+   /// `delete [] (unsigned char *) mem` by the caller. Older uses of this API (such as those of oracle, mysql, odbc)
+   /// that relied on internal buffer management (owning pointers) were removed in ROOT 6.38.
    virtual Bool_t      GetLargeObject(Int_t col, void* &mem, Long_t& size) { return GetBinary(col, mem, size); }
 
    virtual Bool_t      GetDate(Int_t, Int_t&, Int_t&, Int_t&) { return kFALSE; }

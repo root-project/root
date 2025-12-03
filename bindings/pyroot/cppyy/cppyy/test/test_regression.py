@@ -1,6 +1,6 @@
-import os, sys
+import os, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, IS_WINDOWS, ispypy
+from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86, IS_MAC_ARM, IS_MAC
 
 
 class TestREGRESSION:
@@ -83,6 +83,7 @@ class TestREGRESSION:
         # TODO: it's deeply silly that namespaces inherit from CPPInstance (in CPyCppyy)
         assert ('CPPInstance' in helptext or 'CPPNamespace' in helptext)
 
+    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
     def test03_pyfunc_doc(self):
         """Help on a generated pyfunc used to crash."""
 
@@ -103,6 +104,7 @@ class TestREGRESSION:
 
         assert 1 == cppyy.gbl.py2long(1)
 
+    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
     def test04_avx(self):
         """Test usability of AVX by default."""
 
@@ -1018,17 +1020,16 @@ class TestREGRESSION:
 
         import cppyy
 
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            cppyy.cppdef("""\
-            #include <filesystem>
-            std::string stack_std_path() {
-                std::filesystem::path p = "/usr";
-                std::ostringstream os;
-                os << p;
-                return os.str();
-            }""")
+        cppyy.cppdef("""\
+        #include <filesystem>
+        std::string stack_std_path() {
+            std::filesystem::path p = "/usr";
+            std::ostringstream os;
+            os << p;
+            return os.str();
+        }""")
 
-            assert cppyy.gbl.stack_std_path() == '"/usr"'
+        assert cppyy.gbl.stack_std_path() == '"/usr"'
 
     def test36_ctypes_sizeof(self):
         """cppyy.sizeof forwards to ctypes.sizeof where necessary"""
@@ -1319,7 +1320,7 @@ class TestREGRESSION:
         try:
             # The scope with the heuristic memory policy is in a try-except-finally block
             # to ensure the memory policy is always reset.
-            old_memory_policy = cppyy._backend.SetMemoryPolicy(cppyy._backend.kMemoryHeuristics)
+            old_memory_policy = cppyy._backend.SetHeuristicMemoryPolicy(True)
 
             # Validate the intended behavior for different argument types:
             #   const ref : caller keeps ownership
@@ -1346,7 +1347,7 @@ class TestREGRESSION:
         except:
             raise # rethrow the exception
         finally:
-            cppyy._backend.SetMemoryPolicy(old_memory_policy)
+            cppyy._backend.SetHeuristicMemoryPolicy(old_memory_policy)
 
     @mark.xfail()
     def test45_typedef_resolution(self):
@@ -1362,6 +1363,8 @@ class TestREGRESSION:
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("my_custom_type_t") == "const int"
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("cmy_custom_type_t") == "const int"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test46_exception_narrowing(self):
         """Exception narrowing to C++ exception of all overloads"""
 
@@ -1381,3 +1384,6 @@ class TestREGRESSION:
         with raises(cppyy.gbl.std.logic_error):
             foo.bar()
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

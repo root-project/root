@@ -269,8 +269,7 @@ TRatioPlot::TRatioPlot(TH1 *h1, THStack *st, Option_t *option) : TRatioPlot()
       tmpHist->Add(static_cast<TH1 *>(stackHists->At(i)));
    }
 
-   fHistDrawProxy = st;
-   fHistDrawProxyStack = kTRUE;
+   fHistDrawProxy = h1;
 
    Init(h1, tmpHist, option);
 

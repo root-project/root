@@ -72,7 +72,7 @@ namespace Impl {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 
 */
 
@@ -214,9 +214,6 @@ public:
       and with an identity rotation
    */
    explicit constexpr Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
-
-   //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
-
 
 #ifdef OLD_VERSION
    /**

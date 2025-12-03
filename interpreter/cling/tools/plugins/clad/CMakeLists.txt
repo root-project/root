@@ -74,14 +74,15 @@ if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
 else()
   list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v1.9)
+  list(APPEND _clad_extra_settings GIT_TAG v2.2)
 endif()
 
-#list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
+## list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
+#list(APPEND _clad_patches_list "")
 #set(_clad_patch_command
 #      ${CMAKE_COMMAND} -E copy_directory
 #      ${CMAKE_SOURCE_DIR}/interpreter/cling/tools/plugins/clad/patches <SOURCE_DIR>
-#      && git checkout <SOURCE_DIR>
+#      && git checkout -q <SOURCE_DIR>
 #      && git apply --ignore-space-change --ignore-whitespace ${_clad_patches_list}
 #      )
 
@@ -95,6 +96,7 @@ ExternalProject_Add(
              -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
              -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
              -DCMAKE_CXX_FLAGS=${CLAD_CXX_FLAGS}
+             -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
              -DCMAKE_INSTALL_PREFIX=${clad_install_dir}/plugins
              -DLLVM_DIR=${LLVM_DIR}
              -DClang_DIR=${CLANG_CMAKE_DIR}

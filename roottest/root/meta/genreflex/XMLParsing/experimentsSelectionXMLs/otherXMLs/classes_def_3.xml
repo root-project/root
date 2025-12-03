@@ -1,0 +1,87 @@
+<lcgdict>
+  <class name="reco::CaloTauDiscriminatorAgainstElectronBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::CaloTauDiscriminatorAgainstElectron" ClassVersion="10">
+   <version ClassVersion="10" checksum="3692008801"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::CaloTauDiscriminatorAgainstElectronRef"/>
+  <class name="reco::CaloTauDiscriminatorAgainstElectronRefProd"/>
+  <class name="reco::CaloTauDiscriminatorAgainstElectronRefVector"/>
+  <class name="edm::Wrapper<reco::CaloTauDiscriminatorAgainstElectron>"/>
+  
+  <class name="std::pair<reco::CaloTauRef, int>"/>
+  <class name="std::vector<std::pair<reco::CaloTauRef, int> >" />
+
+  <class name="std::pair<reco::CaloTauRef, float>"/>
+  <class name="std::vector<std::pair<reco::CaloTauRef, float> >" />
+
+  <class name="reco::PFTauDiscriminatorByIsolationBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::PFTauDiscriminatorByIsolation" ClassVersion="10">
+   <version ClassVersion="10" checksum="1187112623"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::PFTauDiscriminatorByIsolationRef"/>
+  <class name="reco::PFTauDiscriminatorByIsolationRefProd"/>
+  <class name="reco::PFTauDiscriminatorByIsolationRefVector"/>
+  <class name="edm::Wrapper<reco::PFTauDiscriminatorByIsolation>"/>
+  
+  <class name="std::pair<reco::PFTauRef, int>"/>
+  <class name="std::vector<std::pair<reco::PFTauRef, int> >" />
+
+  <class name="std::pair<reco::PFTauRef, float>"/>
+  <class name="std::vector<std::pair<reco::PFTauRef, float> >" />
+
+  <class name="reco::PFTauDiscriminatorBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+
+  <class name="reco::PFTauDiscriminator" ClassVersion="10">
+   <version ClassVersion="10" checksum="4019319043"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::PFTauDiscriminatorRef"/>
+  <class name="reco::PFTauDiscriminatorRefProd"/>
+  <class name="reco::PFTauDiscriminatorRefVector"/>
+  <class name="edm::Wrapper<reco::PFTauDiscriminator>"/>
+
+  <class name="reco::JetPiZeroAssociationBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+
+  <class name="reco::JetPiZeroAssociation" ClassVersion="10">
+   <version ClassVersion="10" checksum="3488813045"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::JetPiZeroAssociationRef"/>
+  <class name="reco::JetPiZeroAssociationRefProd"/>
+  <class name="reco::JetPiZeroAssociationRefVector"/>
+  <class name="edm::Wrapper<reco::JetPiZeroAssociation>"/>
+
+  <class name="std::pair<reco::PFJetRef, std::vector<reco::RecoTauPiZero> >"/>
+  <class name="std::vector<std::pair<reco::PFJetRef, std::vector<reco::RecoTauPiZero> > >" />
+
+  <class name="reco::PFTauDecayModeAssociation">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::PFTauDecayModeAssociationRef"/>
+  <class name="reco::PFTauDecayModeAssociationRefProd"/>
+  <class name="reco::PFTauDecayModeAssociationRefVector"/>
+  <class name="edm::Wrapper<reco::PFTauDecayModeAssociation>"/>
+  
+  <class name="std::pair<reco::PFTauRef, reco::PFTauDecayMode>"/>
+  <class name="std::vector<std::pair<reco::PFTauRef, reco::PFTauDecayMode> >" />
+
+</lcgdict>

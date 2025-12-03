@@ -8,24 +8,27 @@ pandas
 dm-sonnet # used for GNNs
 graph_nets
 onnx
+onnxscript
+packaging
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow<2.16 ; python_version < "3.12"
+tensorflow
 torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.48
-cffi>=1.9.1
+numba
+cffi
 
 # Notebooks: ROOT C++ kernel
-ipython<9.0.0 # ipython 9.0.0 is incompatible the the latest metakernel, as of 03/03/25
-notebook>=4.4.1
+IPython
+jupyter
 metakernel>=0.20.0
+notebook>=4.4.1
 
 # Distributed RDataFrame
-pyspark>=2.4 # Spark backend
+pyspark # Spark backend
 dask>=2022.08.1 # Dask backend
 distributed>=2022.08.1 # Dask backend
 
@@ -34,6 +37,10 @@ ipywidgets
 
 # Unified Histogram Interface (UHI)
 uhi
+matplotlib
+mplhep
 
-# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
--f https://download.pytorch.org/whl/cpu/torch_stable.html
+# For testing
+nbconvert>=7.4.0
+pytest
+setuptools

@@ -12,6 +12,9 @@
 
 #include <gtest/gtest.h>
 
+#include <TFile.h>
+#include <TTree.h>
+
 using ROOT::RDF::Experimental::VariationsFor;
 
 class RDFVary : public ::testing::TestWithParam<bool> {
@@ -668,7 +671,7 @@ TEST_P(RDFVary, SimultaneousVariations)
 TEST_P(RDFVary, VaryTTreeBranch)
 {
    const auto fname = "rdfvary_varyttreebranch.root";
-   ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot<int>("t", fname, {"x"});
+   ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot("t", fname, {"x"});
 
    ROOT::RDataFrame df("t", fname);
    auto sum = df.Vary("x", SimpleVariation, {}, 2).Sum<int>("x");
@@ -1345,6 +1348,23 @@ TEST_P(RDFVary, VaryHistos)
    res = hNs["x:1"].Projection(3);
    EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
    delete res;
+
+   auto hNSparse = df.HistoNSparseD<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 4, nbins, xmin, xmax},
+                                                                                        {"x", "x", "x", "x"});
+   auto hNSparses = VariationsFor(hNSparse);
+
+   auto res_sparse = hNSparse->Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
+   res_sparse = hNSparses["nominal"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
+   res_sparse = hNSparses["x:0"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 0.);
+   delete res_sparse;
+   res_sparse = hNSparses["x:1"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
 }
 
 TEST_P(RDFVary, VaryMax)
@@ -1552,27 +1572,6 @@ TEST_P(RDFVary, VaryTake)
    EXPECT_EQ(sorted(rs["nominal"]), std::vector<int>({0, 1, 2}));
    EXPECT_EQ(sorted(rs["x:0"]), std::vector<int>({-1, 0, 1}));
    EXPECT_EQ(sorted(rs["x:1"]), std::vector<int>({1, 2, 3}));
-}
-
-TEST_P(RDFVary, VarySnapshot)
-{
-   const auto fname = "dummy.root";
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 1, x + 1};
-                  },
-                  {"x"}, 2)
-               .Snapshot<int>("t", fname, {"x"});
-   EXPECT_THROW(
-      try { VariationsFor(h); } catch (const std::logic_error &err) {
-         const auto msg = "Varying a Snapshot result is not implemented yet.";
-         EXPECT_STREQ(err.what(), msg);
-         throw;
-      },
-      std::logic_error);
 }
 
 // this is a regression test, we used to read from wrong addresses in this case

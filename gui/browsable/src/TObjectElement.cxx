@@ -45,7 +45,7 @@ class TObjectLevelIter : public RLevelIter {
 public:
    explicit TObjectLevelIter() {}
 
-   virtual ~TObjectLevelIter() = default;
+   ~TObjectLevelIter() override = default;
 
    void AddElement(std::shared_ptr<RElement> &&elem)
    {
@@ -102,7 +102,7 @@ class TMyBrowserImp : public TBrowserImp {
 public:
 
    TMyBrowserImp(TObjectLevelIter *iter, TObject *obj) : TBrowserImp(nullptr), fIter(iter), fBrowseObj(obj) {}
-   virtual ~TMyBrowserImp() = default;
+   ~TMyBrowserImp() override = default;
 
    void SetIgnore(bool on = true) { fIgnore = on; }
 
@@ -154,7 +154,7 @@ public:
 
    explicit TCollectionIter(const TCollection *coll) : RLevelIter(), fIter(coll) {}
 
-   virtual ~TCollectionIter() = default;
+   ~TCollectionIter() override = default;
 
    bool Next() override { return fIter.Next() != nullptr; }
 

@@ -24,7 +24,6 @@ collection since no copying needs to be done.
 #include "TError.h"
 
 
-ClassImp(TOrdCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an ordered collection.
@@ -63,7 +62,7 @@ void TOrdCollection::AddAt(TObject *obj, Int_t idx)
    if (idx > fSize) idx = fSize;
 
    if (fGapSize <= 0)
-      SetCapacity(GrowBy(TMath::Max(fCapacity, (int)kMinExpand)));
+      SetCapacity(GrowBy(std::max(fCapacity, (int)kMinExpand)));
 
    if (idx == fGapStart) {
       physIdx = fGapStart;
@@ -352,7 +351,7 @@ TObject *TOrdCollection::RemoveAt(Int_t idx)
    Changed();
 
    if (LowWaterMark()) {
-      Int_t newCapacity = TMath::Max(int(fCapacity / kShrinkFactor), 1);
+      Int_t newCapacity = std::max(int(fCapacity / kShrinkFactor), 1);
       if (fCapacity > newCapacity)
          SetCapacity(newCapacity);
    }
@@ -444,7 +443,6 @@ Int_t TOrdCollection::BinarySearch(TObject *obj)
 Iterator of ordered collection.
 */
 
-ClassImp(TOrdCollectionIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create collection iterator. By default the iteration direction

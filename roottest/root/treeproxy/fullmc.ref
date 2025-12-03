@@ -1,0 +1,19 @@
+
+Processing runfullmc.C+(5)...
+Warning in <TClass::Init>: no dictionary for class EventInfo_p3 is available
+Warning in <TClass::Init>: no dictionary for class McEventCollection_p5 is available
+Warning in <TClass::Init>: no dictionary for class DataHeaderForm_p5 is available
+Warning in <TClass::Init>: no dictionary for class DataHeader_p5 is available
+Warning in <TClass::Init>: no dictionary for class GenEvent_p5 is available
+Warning in <TClass::Init>: no dictionary for class GenVertex_p5 is available
+Warning in <TClass::Init>: no dictionary for class GenParticle_p5 is available
+Warning in <TClass::Init>: no dictionary for class DataHeaderElement_p5 is available
+Warning in <TClass::Init>: no dictionary for class EventStreamInfo_p2 is available
+Warning in <TClass::Init>: no dictionary for class IOVMetaDataContainer_p1 is available
+Warning in <TClass::Init>: no dictionary for class IOVPayloadContainer_p1 is available
+Warning in <TClass::Init>: no dictionary for class EventType_p1 is available
+Warning in <TClass::Init>: no dictionary for class IOVPayloadContainer_p1::CondAttrListCollection_p1 is available
+Warning in <TClass::Init>: no dictionary for class IOVPayloadContainer_p1::CondAttrListEntry_p1 is available
+Warning in <TClass::Init>: no dictionary for class IOVPayloadContainer_p1::IOVRange_p1 is available
+Warning in <TClass::Init>: no dictionary for class AttrListIndexes is available
+(int) 0

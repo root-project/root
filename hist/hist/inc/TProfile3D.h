@@ -67,7 +67,7 @@ protected:
    Double_t GetBinErrorSqUnchecked(Int_t bin) const override { Double_t err = GetBinError(bin); return err*err; }
 
    TProfile2D *DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                          bool originalRange, bool useUF, bool useOF) const override;
+                                          bool originalRange, bool useUF, bool useOF, bool useWidth) const override;
 
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
@@ -100,6 +100,7 @@ public:
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t tmin, Double_t tmax, Option_t *option);
    Int_t     BufferEmpty(Int_t action=0) override;
+   Double_t  Chi2Test(const TH1* h2, Option_t *option = "WW", Double_t *res = nullptr) const override;
    void      Copy(TObject &hnew) const override;
    Bool_t    Divide(TF1 *h1, Double_t c1=1) override;
    Bool_t    Divide(const TH1 *h1) override;
@@ -143,7 +144,7 @@ public:
    void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
                              const Double_t *zBins) override;
    void      SetBinsLength(Int_t n=-1) override;
-   void      SetBuffer(Int_t buffersize, Option_t *opt="") override;
+   void      SetBuffer(Int_t bufsize, Option_t *opt="") override;
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    void      Sumw2(Bool_t flag = kTRUE) override;
 

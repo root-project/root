@@ -27,7 +27,7 @@ public:
   RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
                    const RooParamHistFunc *paramSource = nullptr, bool paramRelative = true);
   RooParamHistFunc(const RooParamHistFunc& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooParamHistFunc(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooParamHistFunc(*this,newname); }
 
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;

@@ -12,14 +12,6 @@
 #ifndef ROOT_TStreamerElement
 #define ROOT_TStreamerElement
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStreamerElement                                                     //
-//                                                                      //
-// Describe one element (data member) to be Streamed                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TNamed.h"
 
 #include "ESTLType.h"
@@ -29,6 +21,7 @@ class TClass;
 class TStreamerBasicType;
 class TVirtualStreamerInfo;
 
+/// Describe one element (data member) to be Streamed
 class TStreamerElement : public TNamed {
 
 private:

@@ -49,7 +49,7 @@ class TDirectoryReadWrite(unittest.TestCase):
         self.dir0["h"]
         # check that the cached value in is actually the object
         # inside the directory
-        self.assertEqual(self.dir0._cached_items["h"], self.dir0["h"])
+        self.assertTrue(self.dir0._cached_items["h"] is self.dir0["h"])
 
 
 if __name__ == '__main__':

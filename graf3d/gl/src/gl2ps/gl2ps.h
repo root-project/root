@@ -38,7 +38,15 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <TGLIncludes.h>
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
 
 #define GL2PSDLL_API
 

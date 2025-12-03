@@ -19,6 +19,8 @@
 #include "Math/RotationZYX.h"
 
 #include "Math/LorentzRotation.h"
+#include "Math/PtEtaPhiM4D.h"
+#include "Math/LorentzVector.h"
 
 #include "Math/VectorUtil.h"
 #ifndef NO_SMATRIX
@@ -151,6 +153,11 @@ int testVector3D() {
   vg4 = vg - vl;
 #endif
 
+  // test structured bindings
+  auto const [x, y, z] = vg;
+  iret |= (x != vg.x());
+  iret |= (y != vg.y());
+  iret |= (z != vg.z());
 
   if (iret == 0) std::cout << "\t\t\t\t\tOK\n";
   else std::cout << "\t\t\t\tFAILED\n";
@@ -282,6 +289,10 @@ int testVector2D() {
   vg4 = vg - vl;
 #endif
 
+  // test structured bindings
+  auto const [x, y] = vg;
+  iret |= (x != vg.x());
+  iret |= (y != vg.y());
 
   if (iret == 0) std::cout << "\t\t\t\tOK\n";
   else std::cout << "\t\t\tFAILED\n";
@@ -466,6 +477,21 @@ int testRotations3D() {
   iret |= compare(qr1.Y(), qr2.Y(),"y diff",10 );
   iret |= compare(qr1.Z(), qr2.Z(),"z diff",10 );
 
+  // test TVector3-like Rotate function around some axis by an angle. Test case taken from cwessel:
+  // https://root-forum.cern.ch/t/tvector3-rotate-to-arbitrary-rotation-using-xyzvector/63244/7
+  XYZVector ag(17, -4, -23);
+  double angle = 100;
+  XYZVector axisg(-23.4, 1.7, -0.3);
+  XYZVector rotated = Rotate(ag, angle, axisg);
+  // should be equivalent to:
+  // TVector3 at(17, -4, -23);
+  // TVector3 axist(-23.4, 1.7, -0.3);
+  // at.Rotate(angle, axist);
+  // at.Print();
+  // (17.856456,8.106555,-21.199782)
+  iret |= compare(rotated.X(), 17.856456, "x diff", 1e10);
+  iret |= compare(rotated.Y(), 8.106555, "y diff", 1e10);
+  iret |= compare(rotated.Z(), -21.199782, "z diff", 1e10);
 
   if (iret == 0) std::cout << "\tOK\n";
   else std::cout << "\t FAILED\n";
@@ -779,6 +805,32 @@ int testVectorUtil() {
 
 }
 
+int testLorentzVector()
+{
+   std::cout << "testing LorentzVector  \t:\t";
+   int iret = 0;
+   LorentzVector<PtEtaPhiM4D<float>> v1(1,2,3,4);
+   LorentzVector<PtEtaPhiM4D<float>> v2(5,6,7,8);
+   iret |= compare(v1.DeltaR(v2), 4.60575f);
+   // Result cross-validated using:
+   // TLorentzVector t1, t2;
+   // t1.SetPtEtaPhiM(1,2,3,4); t2.SetPtEtaPhiM(5,6,7,8);
+   // t1.DeltaR(t2)
+
+   // test structured bindings
+   auto const [x, y, z, E] = v1;
+   iret |= (x != v1.X());
+   iret |= (y != v1.Y());
+   iret |= (z != v1.Z());
+   iret |= (E != v1.E());
+
+   if (iret == 0)
+      std::cout << "\t\t\tOK\n";
+   else
+      std::cout << "\t\t\t\t\t\tFAILED\n";
+   return iret;
+}
+
 int testGenVector() {
 
   int iret = 0;
@@ -793,7 +845,7 @@ int testGenVector() {
   iret |= testTransform3D();
 
   iret |= testVectorUtil();
-
+  iret |= testLorentzVector();
 
   if (iret !=0) std::cout << "\nTest GenVector FAILED!!!!!!!!!\n";
   return iret;

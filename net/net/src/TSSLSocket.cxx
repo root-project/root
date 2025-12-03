@@ -36,7 +36,7 @@ char TSSLSocket::fgSSLUKey[FILENAME_MAX]   = "";
 void ssl_info_callback(const SSL* ssl, int where, int ret)
 {
    if (ret == 0) {
-      std::cout << "-- ssl_info_callback: error occured.\n";
+      std::cout << "-- ssl_info_callback: error occurred.\n";
       return;
    }
    if (where) {
@@ -104,7 +104,6 @@ wrapFailed:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TSSLSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 

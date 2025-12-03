@@ -7,7 +7,7 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -440,7 +440,7 @@ bool stressInterpreter(Int_t ntimes = 10, const char* runTests = 0, const char* 
    return !stress.run(ntimes, runTests);
 }
 
-#if !defined(__CINT__) && !defined(__CLING__)
+#if !defined(__CLING__)
 // If compiled: interpret! (by default)
 
 int main(int argc, char **argv)

@@ -25,7 +25,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <utility>
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <fstream>
 
@@ -643,15 +643,20 @@ void RWebWindow::CheckPendingConnections()
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
-   float tmout = fMgr->GetLaunchTmout();
+   float launchTmout = fMgr->GetLaunchTmout();
+   float reconnectTmout = fMgr->GetReconnectTmout();
 
    ConnectionsList_t selected;
+
+   bool doClearOnClose = false;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       auto pred = [&](std::shared_ptr<WebConn> &e) {
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
+
+         float tmout = e->fWasEstablished ? reconnectTmout : launchTmout;
 
          if (diff.count() > tmout) {
             R__LOG_DEBUG(0, WebGUILog()) << "Remove pending connection " << e->fKey << " after " << diff.count() << " sec";
@@ -663,7 +668,12 @@ void RWebWindow::CheckPendingConnections()
       };
 
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
+
+      doClearOnClose = (selected.size() > 0) && (fPendingConn.size() == 0) && (fConn.size() == 0);
    }
+
+   if (doClearOnClose)
+      fClearOnClose.reset();
 }
 
 
@@ -820,7 +830,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       for (auto &conn : fPendingConn)
          if (_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
-             return true;
+            return true;
 
       return false;
    }
@@ -855,11 +865,15 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          conn->fWSId = arg.GetWSId();
          conn->fActive = true;
+         conn->fWasEstablished = true;
          conn->fRecvSeq = 0;
          conn->fSendSeq = 1;
          // preserve key for longpoll or when with session key used for HMAC hash of messages
          // conn->fKey.clear();
          conn->ResetStamps();
+         // remove files which are required for startup
+         if (conn->fDisplayHandle)
+            conn->fDisplayHandle->RemoveStartupFiles();
          if (conn->fWasFirst)
             fConn.emplace(fConn.begin(), conn);
          else
@@ -899,23 +913,24 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId(), true);
 
       if (conn) {
-         bool do_clear_on_close = false;
-         if (!conn->fNewKey.empty()) {
+         bool doClearOnClose = false;
+         if (!conn->fNewKey.empty() && (fMgr->GetReconnectTmout() > 0)) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
             conn->fKeyUsed = 0;
             conn->fKey = conn->fNewKey;
             conn->fNewKey.clear();
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+            conn->fWasEstablished = true;
             conn->ResetData();
             conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
             fPendingConn.emplace_back(conn);
          } else {
             std::lock_guard<std::mutex> grd(fConnMutex);
-            do_clear_on_close = (fPendingConn.size() == 0) && (fConn.size() == 0);
+            doClearOnClose = (fPendingConn.size() == 0) && (fConn.size() == 0);
          }
 
-         if (do_clear_on_close)
+         if (doClearOnClose)
             fClearOnClose.reset();
       }
 
@@ -1472,6 +1487,14 @@ std::vector<unsigned> RWebWindow::GetConnections(unsigned excludeid) const
 
 bool RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto & entry : lst)
+         if (fMaster->HasConnection(entry.connid, only_active))
+            return true;
+      return false;
+   }
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &conn : fConn) {
@@ -1543,19 +1566,27 @@ RWebWindow::ConnectionsList_t RWebWindow::GetWindowConnections(unsigned connid, 
 
 bool RWebWindow::CanSend(unsigned connid, bool direct) const
 {
-   auto arr = GetWindowConnections(connid, direct); // for direct sending connection has to be active
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto &entry : lst) {
+         if (!fMaster->CanSend(entry.connid, direct))
+            return false;
+      }
+   } else {
+      auto arr = GetWindowConnections(connid, direct); // for direct sending connection has to be active
 
-   auto maxqlen = GetMaxQueueLength();
+      auto maxqlen = GetMaxQueueLength();
 
-   for (auto &conn : arr) {
+      for (auto &conn : arr) {
 
-      std::lock_guard<std::mutex> grd(conn->fMutex);
+         std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
-         return false;
+         if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
+            return false;
 
-      if (conn->fQueue.size() >= maxqlen)
-         return false;
+         if (conn->fQueue.size() >= maxqlen)
+            return false;
+      }
    }
 
    return true;
@@ -1570,10 +1601,21 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 {
    int maxq = -1;
 
-   for (auto &conn : GetWindowConnections(connid)) {
-      std::lock_guard<std::mutex> grd(conn->fMutex);
-      int len = conn->fQueue.size();
-      if (len > maxq) maxq = len;
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto &entry : lst) {
+         int len = fMaster->GetSendQueueLength(entry.connid);
+         if (len > maxq)
+            maxq = len;
+      }
+   } else {
+      auto lst = GetWindowConnections(connid);
+      for (auto &conn : lst) {
+         std::lock_guard<std::mutex> grd(conn->fMutex);
+         int len = conn->fQueue.size();
+         if (len > maxq)
+            maxq = len;
+      }
    }
 
    return maxq;
@@ -1654,7 +1696,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
          else
             conn->fQueue.emplace(chid, txt, std::move(data));  // move content
       } else {
-         R__LOG_ERROR(WebGUILog()) << "Maximum queue length achieved";
+         R__LOG_ERROR(WebGUILog()) << "Maximum queue length " << maxqlen << " achieved, can be changed with SetMaxQueueLength(v) method";
       }
    }
 

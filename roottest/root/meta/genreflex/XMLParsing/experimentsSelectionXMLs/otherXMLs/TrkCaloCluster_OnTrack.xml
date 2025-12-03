@@ -1,0 +1,8 @@
+<lcgdict> 
+   <class name = "Trk::CaloCluster_OnTrack" >
+     <field name = "m_surface" transient="false" />
+     <field name = "m_globalpos" transient="true" />
+     <field name = "m_eloss" transient="false" /> 
+   </class>
+</lcgdict>
+

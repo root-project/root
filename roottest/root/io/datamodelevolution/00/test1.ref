@@ -1,0 +1,94 @@
+
+Processing test1.cxx+...
+Create an object
+ACache::x     6
+ACache::y:    7
+ACache::zcalc 0
+ACache::z     -1
+ACache::c     13
+Collection name='persist', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+Collection name='all', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+ OBJ: TNamed	objecttwo	for memory
+ACache::fN    6
+ACache::fArray[0] 10
+ACache::fArray[1] 11
+ACache::fArray[2] 12
+ACache::fArray[3] 13
+ACache::fArray[4] 14
+ACache::fArray[5] 15
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+Unversioned::fCached: 4
+Stream out object
+Modify object
+ACache::x     6
+ACache::y:    7
+ACache::zcalc 1
+ACache::z     6070
+ACache::c     13
+Collection name='persist', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+Collection name='all', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+ OBJ: TNamed	objecttwo	for memory
+ACache::fN    6
+ACache::fArray[0] 10
+ACache::fArray[1] 11
+ACache::fArray[2] 12
+ACache::fArray[3] 13
+ACache::fArray[4] 14
+ACache::fArray[5] 15
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+Unversioned::fCached: 4
+Stream in object into existing object
+ACache::x     6
+ACache::y:    7
+ACache::zcalc 0
+ACache::z     6070
+ACache::c     13
+Collection name='persist', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+Collection name='all', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+ACache::fN    6
+ACache::fArray[0] 10
+ACache::fArray[1] 11
+ACache::fArray[2] 12
+ACache::fArray[3] 13
+ACache::fArray[4] 14
+ACache::fArray[5] 15
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+Unversioned::fCached: 1
+Create embedded object
+ACache::x     9
+ACache::y:    10
+ACache::zcalc 0
+ACache::z     -1
+ACache::c     19
+Collection name='persist', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+Collection name='all', class='TObjArray', size=16
+ OBJ: TNamed	objectone	for file
+ OBJ: TNamed	objecttwo	for memory
+ACache::fN    9
+ACache::fArray[0] 10
+ACache::fArray[1] 11
+ACache::fArray[2] 12
+ACache::fArray[3] 13
+ACache::fArray[4] 14
+ACache::fArray[5] 15
+ACache::fArray[6] 16
+ACache::fArray[7] 17
+ACache::fArray[8] 18
+ACache::fValues[0] 0
+ACache::fValues[1] 0.01
+ACache::fValues[2] 0.02
+Unversioned::fCached: 4
+Store on file

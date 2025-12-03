@@ -87,7 +87,7 @@ protected:
 private:
    void DumpPoints(int npoints, float *pointbuff) const;
    void DumpSegments(int nsegments, int *segbuff) const;
-   void DumpPolygons(int npolygons, int *polybuff, int buffsize) const;
+   void DumpPolygons(int npolygons, int *polybuff, int bufsize) const;
 
    ClassDefOverride(TXTRU,1)  //TXTRU shape
 };

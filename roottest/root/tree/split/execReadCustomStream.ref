@@ -1,0 +1,14 @@
+
+Processing execReadCustomStream.cxx+...
+Info in <MyClass::Streamer>: In the custom streamer
+Info in <MyClass::Streamer>: In the custom streamer
+x=1
+Info in <MyClass::Streamer>: In the custom streamer
+x=65537
+Info in <MyClass::Streamer>: In the custom streamer
+x=131073
+Info in <MyClass::Streamer>: In the custom streamer
+x=196609
+Info in <MyClass::Streamer>: In the custom streamer
+x=262144
+(int) 0

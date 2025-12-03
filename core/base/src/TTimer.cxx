@@ -48,7 +48,6 @@ To emit the Timeout signal repeatedly with minimum timeout:
 #include "TSystem.h"
 #include "TROOT.h"
 
-ClassImp(TTimer);
 
 
 class TSingleShotCleaner : public TTimer {
@@ -56,7 +55,11 @@ private:
    TList  *fGarbage;
 public:
    TSingleShotCleaner() : TTimer(10, kTRUE) { fGarbage = new TList(); }
-   virtual ~TSingleShotCleaner() { fGarbage->Delete(); delete fGarbage; }
+   ~TSingleShotCleaner() override
+   {
+      fGarbage->Delete();
+      delete fGarbage;
+   }
    void TurnOn() override
    {
       TObject *obj = (TObject *)gTQSender;

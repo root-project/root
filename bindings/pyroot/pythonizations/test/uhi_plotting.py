@@ -2,29 +2,30 @@
 Tests to verify that th1 1D histograms conform to the UHI PlottableHistogram protocol.
 """
 
-import ROOT
-from ROOT._pythonization._th1 import _th1_derived_classes_to_pythonize
-
-import pytest
-from uhi.typing.plottable import PlottableHistogram
 import numpy as np
+import pytest
+from ROOT._pythonization._uhi import _shape
+from uhi.typing.plottable import PlottableHistogram
 
-th1_classes = [getattr(ROOT, klass) for klass in _th1_derived_classes_to_pythonize]
 
-@pytest.mark.parametrize("hist_type", th1_classes)
+def _iterate_bins(hist):
+    dim = hist.GetDimension()
+    for i in range(1, hist.GetNbinsX() + 1):
+        for j in range(1, hist.GetNbinsY() + 1) if dim > 1 else [None]:
+            for k in range(1, hist.GetNbinsZ() + 1) if dim > 2 else [None]:
+                yield tuple(filter(None, (i, j, k)))
+
+
 class TestTH1Plotting:
-    @pytest.fixture
-    def hist_setup(self, hist_type):
-        hist = hist_type("h", "h", 10, 0, 5)
-        for _ in range(100):
-            hist.Fill(ROOT.gRandom.Uniform(0, 5), ROOT.gRandom.Uniform(0, 5))
-        yield hist
-
     def test_isinstance_plottablehistogram(self, hist_setup):
         assert isinstance(hist_setup, PlottableHistogram)
 
     def test_histogram_values(self, hist_setup):
-        assert np.allclose(hist_setup.values(), [hist_setup.GetBinContent(i) for i in range(1, hist_setup.GetNbinsX() + 1)])
+        values = np.array(
+            [hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup)]
+        ).reshape(_shape(hist_setup, include_flow_bins=False))
+        assert np.array_equal(hist_setup.values(), values)
+
 
 if __name__ == "__main__":
-    pytest.main(args=[__file__])
+    raise SystemExit(pytest.main(args=[__file__]))

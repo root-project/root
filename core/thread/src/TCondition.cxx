@@ -25,7 +25,6 @@
 #include "TThreadFactory.h"
 
 
-ClassImp(TCondition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a condition variable. The actual condition implementation
@@ -35,7 +34,7 @@ ClassImp(TCondition);
 
 TCondition::TCondition(TMutex *m)
 {
-   fPrivateMutex = (m == 0);
+   fPrivateMutex = (m == nullptr);
    if (fPrivateMutex) {
       fMutex = new TMutex();
    } else {
@@ -66,7 +65,7 @@ TMutex *TCondition::GetMutex() const
 {
    if (fPrivateMutex)
       return fMutex;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

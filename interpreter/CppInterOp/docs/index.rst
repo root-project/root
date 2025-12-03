@@ -24,5 +24,6 @@ C++ to simpler, more interactive languages like Python.
   UsingCppInterOp
   reference
   tutorials
+  DebuggingCppInterOp
   FAQ
   DevelopersDocumentation

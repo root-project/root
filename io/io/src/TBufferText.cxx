@@ -32,7 +32,8 @@ actions list for both are the same.
 #include "TError.h"
 #include "snprintf.h"
 
-ClassImp(TBufferText);
+#include <cmath>
+
 
 const char *TBufferText::fgFloatFmt = "%e";
 const char *TBufferText::fgDoubleFmt = "%.14e";

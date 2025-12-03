@@ -19,6 +19,16 @@
 #include <string>
 #include <vector>
 
+namespace ROOT::Internal::RDF {
+class R__CLING_PTRCHECK(off) RSqliteDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   void *fValuePtr;
+   void *GetImpl(Long64_t) final { return fValuePtr; }
+
+public:
+   RSqliteDSColumnReader(void *valuePtr) : fValuePtr(valuePtr) {}
+};
+} // namespace ROOT::Internal::RDF
+
 namespace ROOT {
 
 namespace RDF {
@@ -112,6 +122,9 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
    void Initialize() final;
    std::string GetLabel() final;
+
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &tid) final;
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;

@@ -19,7 +19,7 @@ private:
 
    std::string fNX;
    std::string fNY;
-   std::vector<size_t> fShape;
+   std::vector<Dim> fShape;
 
 public:
    ROperator_Sigmoid(){}
@@ -42,7 +42,7 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Sigmoid Op Input Tensor is not found in model");
       }
-      fShape = model.GetTensorShape(fNX);
+      fShape = model.GetDimTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
    }
 
@@ -52,10 +52,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Sigmoid called to Generate without being initialized first");
       }
       std::stringstream out;
-      int length = 1;
-      for(auto& i: fShape){
-         length *= i;
-      }
+      auto length = ConvertDimShapeToLength(fShape);
       out << "\n//------ Sigmoid -- " << opName << "\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
       out << SP << SP  << "tensor_" << fNY << "[id] = 1 / (1 + std::exp( - tensor_"  << fNX << "[id]));\n";

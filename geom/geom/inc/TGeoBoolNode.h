@@ -92,12 +92,7 @@ public:
    ClassDefOverride(TGeoBoolNode, 1) // a boolean node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoUnion - Boolean node representing a union between two components.    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing a union between two components.
 class TGeoUnion : public TGeoBoolNode {
 public:
    // constructors
@@ -128,13 +123,7 @@ public:
    ClassDefOverride(TGeoUnion, 1) // union node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoIntersection - Boolean node representing an intersection between two //
-// components.                                                              //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing an intersection between two components.
 class TGeoIntersection : public TGeoBoolNode {
 public:
    // constructors
@@ -165,12 +154,7 @@ public:
    ClassDefOverride(TGeoIntersection, 1) // intersection node
 };
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoSubtraction - Boolean node representing a subtraction.               //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// Boolean node representing a subtraction
 class TGeoSubtraction : public TGeoBoolNode {
 public:
    // constructors

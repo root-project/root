@@ -1,0 +1,11 @@
+<lcgdict>
+<class name="t">
+<function name="get<int>"/>
+</class>
+<!--   t::get<float>();
+   t::get<double>();
+   t::set<int>();
+   t::set<float>();
+   t::set<double>(); -->
+
+</lcgdict>

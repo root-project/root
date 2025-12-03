@@ -938,8 +938,9 @@ invoked through corresponding GUI buttons.
             results\index{ROOT!macros}}
 \label{sec:rootmacros}
 
-TMVA provides simple GUIs (\code{TMVAGui.C} and
-\code{TMVARegGui.C}\index{Graphical user interface (GUI)}, see
+TMVA provides simple GUIs (\code{TMVA::TMVAGui()},
+\code{TMVA::TMVARegGui()} and \code{TMVA::TMVAMultiClassGui()}
+\index{Graphical user interface (GUI)}, see
 Fig.~\ref{fig:tmvagui}), which interface ROOT macros that visualise
 the various steps of the training analysis. The macros are
 respectively located in \code{TMVA/macros/} (Sourceforge.net
@@ -1019,8 +1020,8 @@ paracoor.C              & Draws diagrams of ``Parallel coordinates''~\cite{paral
 \caption[.]{\programCaptionSize ROOT macros for the representation of the 
          TMVA input variables and {\bf classification results}. All macros take as first 
          argument the name of the ROOT file containing the histograms (default is 
-         \code{TMVA.root}). They are conveniently called via the \code{TMVAGui.C} GUI
-         (the first three macros are also called from the regression GUI \code{TMVARegGui.C}).      
+         \code{TMVA.root}). They are conveniently called via the \code{TMVA::TMVAGui()} GUI
+         (the first three macros are also called from the regression GUI \code{TMVA::TMVARegGui()}).      
          Macros for the representation of regression results are given in Table~\ref{pgr:scripttable_reg}.    
          Plotting macros for MVA method specific information are listed in 
          Table~\ref{pgr:scripttable2}. 
@@ -1037,7 +1038,7 @@ regression\_averagedevs.C & Draws the average deviation between the MVA output a
 \caption[.]{\programCaptionSize ROOT macros for the representation of the 
          TMVA {\bf regression results}. All macros take as first argument the name of 
          the ROOT file containing the histograms (default is \code{TMVA.root}). They 
-         are conveniently called from the \code{TMVARegGui.C} GUI. 
+         are conveniently called from the \code{TMVA::TMVARegGui()} GUI. 
          \index{ROOT!macros}}
 \label{pgr:scripttable_reg}
 \end{table}

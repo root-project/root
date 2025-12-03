@@ -47,8 +47,6 @@ TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;
 
 //--- this is temp here...
 
-ClassImp(TGTreeLBEntry);
-ClassImp(TGFSComboBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a tree (i.e. entry can be indented) listbox entry.
@@ -156,7 +154,7 @@ TGDimension TGTreeLBEntry::GetDefaultSize() const
    TGDimension lsize(fTWidth, fTHeight+1);
 
    return TGDimension(isize.fWidth + lsize.fWidth + 4,
-                      TMath::Max(isize.fHeight, lsize.fHeight) + 2);
+                      std::max(isize.fHeight, lsize.fHeight) + 2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

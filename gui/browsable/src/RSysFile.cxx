@@ -225,7 +225,7 @@ class RSysDirLevelIter : public RLevelIter {
 public:
    explicit RSysDirLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
 
-   virtual ~RSysDirLevelIter() { CloseDir(); }
+   ~RSysDirLevelIter() override { CloseDir(); }
 
    bool Next() override { return NextDirEntry(); }
 
@@ -362,39 +362,16 @@ std::string RSysFile::GetFileIcon(const std::string &fname)
       return (name.length() > suffix.length()) ? (0 == name.compare (name.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
-   if ((EndsWith(".c")) ||
-       (EndsWith(".cpp")) ||
-       (EndsWith(".cxx")) ||
-       (EndsWith(".c++")) ||
-       (EndsWith(".cxx")) ||
-       (EndsWith(".cc")) ||
-       (EndsWith(".h")) ||
-       (EndsWith(".hh")) ||
-       (EndsWith(".hpp")) ||
-       (EndsWith(".hxx")) ||
-       (EndsWith(".h++")) ||
-       (EndsWith(".py")) ||
-       (EndsWith(".txt")) ||
-       (EndsWith(".cmake")) ||
-       (EndsWith(".dat")) ||
-       (EndsWith(".log")) ||
-       (EndsWith(".xml")) ||
-       (EndsWith(".htm")) ||
-       (EndsWith(".html")) ||
-       (EndsWith(".json")) ||
-       (EndsWith(".sh")) ||
-       (EndsWith(".md")) ||
-       (EndsWith(".css")) ||
-       (EndsWith(".js")))
+   if (EndsWith(".c") || EndsWith(".cpp") || EndsWith(".cxx") || EndsWith(".c++") || EndsWith(".cxx") ||
+       EndsWith(".cc") || EndsWith(".h") || EndsWith(".hh") || EndsWith(".hpp") || EndsWith(".hxx") ||
+       EndsWith(".h++") || EndsWith(".py") || EndsWith(".txt") || EndsWith(".cmake") || EndsWith(".dat") ||
+       EndsWith(".log") || EndsWith(".xml") || EndsWith(".htm") || EndsWith(".html") || EndsWith(".json") ||
+       EndsWith(".sh") || EndsWith(".md") || EndsWith(".css") || EndsWith(".mjs") || EndsWith(".js"))
       return "sap-icon://document-text"s;
-   if ((EndsWith(".bmp")) ||
-       (EndsWith(".gif")) ||
-       (EndsWith(".jpeg")) ||
-       (EndsWith(".jpg")) ||
-       (EndsWith(".png")) ||
-       (EndsWith(".svg")))
+   if (EndsWith(".bmp") || EndsWith(".gif") || EndsWith(".jpeg") || EndsWith(".jpg") || EndsWith(".png") ||
+       EndsWith(".webp") || EndsWith(".svg"))
       return "sap-icon://picture"s;
-  if (EndsWith(".root"))
+   if (EndsWith(".root"))
       return "sap-icon://org-chart"s;
 
    return "sap-icon://document"s;

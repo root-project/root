@@ -41,7 +41,7 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 
 
 RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue &x, const RooArgList &coefList)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefficients", "List of coefficients", this)
+   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this)
 {
    _coefList.addTyped<RooAbsReal>(coefList);
 }
@@ -49,7 +49,7 @@ RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue
 RooBernstein::RooBernstein(const RooBernstein &other, const char *name)
    : RooAbsPdf(other, name),
      _x("x", this, other._x),
-     _coefList("coefList", this, other._coefList),
+     _coefList(this, other._coefList),
      _refRangeName{other._refRangeName},
      _buffer{other._buffer}
 {

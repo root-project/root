@@ -45,7 +45,7 @@ public:
   RooRealVar(const char *name, const char *title, double value,
       double minValue, double maxValue, const char *unit= "") ;
   RooRealVar(const RooRealVar& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooRealVar(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooRealVar(*this,newname); }
   ~RooRealVar() override;
 
   // Parameter value and error accessors
@@ -55,6 +55,7 @@ public:
   std::size_t valueResetCounter() const { return _valueResetCounter; }
   void setVal(double value) override;
   void setVal(double value, const char* rangeName) override;
+  static void enableSilentClipping(bool flag = true);
   inline double getError() const { return _error>=0?_error:0. ; }
   inline bool hasError(bool allowZero=true) const { return allowZero ? (_error>=0) : (_error>0) ; }
   inline void setError(double value) { _error= value ; }
@@ -137,16 +138,20 @@ public:
   static bool _printScientific ;
   static Int_t  _printSigDigits ;
 
-  void setValFast(double value) override { _value = value ; setValueDirty() ; }
-
+   void setValFast(double value) override
+   {
+      if (_value != value) {
+         ++_valueResetCounter;
+      }
+      _value = value;
+      setValueDirty();
+   }
 
   double evaluate() const override { return _value ; } // dummy because we overloaded getVal()
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
   void attachToVStore(RooVectorDataStore& vstore) override ;
   void fillTreeBranch(TTree& t) override ;
-
-  double chopAt(double what, Int_t where) const ;
 
   double _error;      ///< Symmetric error associated with current value
   double _asymErrLo ; ///< Low side of asymmetric error associated with current value
@@ -167,6 +172,8 @@ public:
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; ///<! Shared binnings associated with this instance
 
   std::size_t _valueResetCounter = 0; ///<! How many times the value of this variable was reset
+
+  static bool &isSilentClippingEnabled();
 
   ClassDefOverride(RooRealVar,10); // Real-valued variable
 };

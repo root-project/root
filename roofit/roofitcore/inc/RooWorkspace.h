@@ -99,8 +99,6 @@ public:
   // Retrieve list of parameter snapshots
   RooLinkedList const& getSnapshots() const { return _snapshots; }
 
-  void merge(const RooWorkspace& /*other*/) {} ;
-
   // Accessor functions
   RooAbsPdf* pdf(RooStringView name) const ;
   RooAbsReal* function(RooStringView name) const ;

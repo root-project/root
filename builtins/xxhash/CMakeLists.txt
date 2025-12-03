@@ -21,6 +21,7 @@ set(xxHash_VERSION_STRING ${xxHash_VERSION_STRING} CACHE INTERNAL "")
 
 set(xxHash_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 set(xxHash_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
+mark_as_advanced(xxHash_INCLUDE_DIR)
 
 add_library(xxhash STATIC xxhash.h xxhash.c)
 set_target_properties(xxhash PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)

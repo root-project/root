@@ -77,7 +77,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }
    public:
 
-       ClassDef(ClassInfo,1);
+       ClassDefOverride(ClassInfo,1);
 
    };
 }

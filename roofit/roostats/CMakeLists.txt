@@ -28,7 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/FeldmanCousins.h
     RooStats/FrequentistCalculator.h
     RooStats/Heaviside.h
-    RooStats/HLFactory.h
     RooStats/HybridCalculator.h
     RooStats/HybridPlot.h
     RooStats/HybridResult.h
@@ -83,7 +82,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/FeldmanCousins.cxx
     src/FrequentistCalculator.cxx
     src/Heaviside.cxx
-    src/HLFactory.cxx
     src/HybridCalculator.cxx
     src/HybridPlot.cxx
     src/HybridResult.cxx

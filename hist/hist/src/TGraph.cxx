@@ -14,9 +14,6 @@
 #include "TBuffer.h"
 #include "TEnv.h"
 #include "TGraph.h"
-#include "TGraphErrors.h"
-#include "TGraphAsymmErrors.h"
-#include "TGraphBentErrors.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
@@ -49,7 +46,6 @@
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TGraph);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +97,25 @@ Begin_Macro(source)
    g->Draw();
 }
 End_Macro
+
+#### X-axis zooming
+
+The underlying x axis of a TGraph is based on a virtual fixed binwidth histogram, which means that one can not infinitely zoom on it, just down to one bin.
+The number of virtual bins is the maximum between 100 and the number of points in the TGraph. If you find a case where you would like to zoom deeper than allowed,
+you can either start canvas in web mode, or keep in classic mode but predefine the histogram before the first drawing of the graph:
+
+\code{.cpp}
+TGraph gr;
+for(auto i = 0; i < 100; ++i) gr.AddPoint(i,i);
+gr.AddPoint(10000, 0);
+// If one draws here, one can not zoom between x = 0 and x = 50, since first bin goes from x = 0 to 100.
+auto h1 = new TH1F("hist", "hist", 10000, -10., 11000.); // Define underlying hist with 10000 instead of 101 bins
+h1->SetMaximum(120);
+h1->SetStats(0);
+h1->SetDirectory(nullptr);
+gr.SetHistogram(h1);
+gr.Draw("A*")
+\endcode
 
 */
 
@@ -343,12 +358,13 @@ TGraph::TGraph(const TH1 *h)
       Error("TGraph", "Histogram must be 1-D; h %s is %d-D", h->GetName(), h->GetDimension());
       fNpoints = 0;
    } else {
-      fNpoints = ((TH1*)h)->GetXaxis()->GetNbins();
+      fNpoints = h->GetXaxis()->GetNbins();
    }
 
-   if (!CtorAllocate()) return;
+   if (!CtorAllocate())
+      return;
 
-   TAxis *xaxis = ((TH1*)h)->GetXaxis();
+   auto xaxis = h->GetXaxis();
    for (Int_t i = 0; i < fNpoints; i++) {
       fX[i] = xaxis->GetBinCenter(i + 1);
       fY[i] = h->GetBinContent(i + 1);
@@ -425,6 +441,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
 /// For example, set format to  `"%lg,%lg"` for a comma-separated file.
+/// If format string is empty, suitable value will be provided based on file extension
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
@@ -458,11 +475,21 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    std::string line;
    Int_t np = 0;
 
-   // No delimiters specified (standard constructor).
-   if (strcmp(option, "") == 0) {
+   TString format_ = format;
+
+   if (!option || !*option) { // No delimiters specified (standard constructor).
+      // is empty format string specified - try to guess format from the file extension
+      if (format_.IsNull()) {
+         if (fname.EndsWith(".txt", TString::kIgnoreCase))
+            format_ = "%lg %lg";
+         else if (fname.EndsWith(".tsv", TString::kIgnoreCase))
+            format_ = "%lg\t%lg";
+         else
+            format_ = "%lg,%lg";
+      }
 
       while (std::getline(infile, line, '\n')) {
-         if (2 != sscanf(line.c_str(), format, &x, &y)) {
+         if (2 != sscanf(line.c_str(), format_.Data(), &x, &y)) {
             continue; //skip empty and ill-formed lines
          }
          SetPoint(np, x, y);
@@ -474,7 +501,6 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    } else {
 
       // Checking format and creating its boolean counterpart
-      TString format_ = TString(format) ;
       format_.ReplaceAll(" ", "") ;
       format_.ReplaceAll("\t", "") ;
       format_.ReplaceAll("lg", "") ;
@@ -1439,7 +1465,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
-   TH1F *historg = nullptr;
+   TH1F *histogr = nullptr;
    if (fHistogram) {
       if (!TestBit(kResetHisto)) {
          if (gPad && gPad->GetLogx()) {
@@ -1452,7 +1478,7 @@ TH1F *TGraph::GetHistogram() const
       } else {
          const_cast <TGraph*>(this)->ResetBit(kResetHisto);
       }
-      historg = fHistogram;
+      histogr = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
@@ -1493,7 +1519,7 @@ TH1F *TGraph::GetHistogram() const
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
    // do not add the histogram to gDirectory
-   // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+   // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
    // will avoid that histogram is added in the global directory
    {
       TDirectory::TContext ctx(nullptr);
@@ -1505,24 +1531,24 @@ TH1F *TGraph::GetHistogram() const
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
    // Restore the axis attributes if needed
-   if (historg) {
-      fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
-      fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
-      fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
-      fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
-      fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
-      fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
-      historg->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
+   if (histogr) {
+      fHistogram->GetXaxis()->SetTitle(histogr->GetXaxis()->GetTitle());
+      fHistogram->GetXaxis()->CenterTitle(histogr->GetXaxis()->GetCenterTitle());
+      fHistogram->GetXaxis()->RotateTitle(histogr->GetXaxis()->GetRotateTitle());
+      fHistogram->GetXaxis()->SetNoExponent(histogr->GetXaxis()->GetNoExponent());
+      fHistogram->GetXaxis()->SetTimeDisplay(histogr->GetXaxis()->GetTimeDisplay());
+      fHistogram->GetXaxis()->SetTimeFormat(histogr->GetXaxis()->GetTimeFormat());
+      histogr->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
 
-      fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
-      fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
-      fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
-      fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
-      fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
-      fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
-      historg->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
+      fHistogram->GetYaxis()->SetTitle(histogr->GetYaxis()->GetTitle());
+      fHistogram->GetYaxis()->CenterTitle(histogr->GetYaxis()->GetCenterTitle());
+      fHistogram->GetYaxis()->RotateTitle(histogr->GetYaxis()->GetRotateTitle());
+      fHistogram->GetYaxis()->SetNoExponent(histogr->GetYaxis()->GetNoExponent());
+      fHistogram->GetYaxis()->SetTimeDisplay(histogr->GetYaxis()->GetTimeDisplay());
+      fHistogram->GetYaxis()->SetTimeFormat(histogr->GetYaxis()->GetTimeFormat());
+      histogr->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
 
-      delete historg;
+      delete histogr;
    }
    return fHistogram;
 }
@@ -2089,7 +2115,18 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 ///  - `.tsv` : tab
 ///  - `.txt` : space
 ///
-/// If option = "title" a title line is generated with the axis titles.
+/// By default file contains lines with (X, Y) coordinates. If errors are present,
+/// (X, EX, Y, EY) are written. With asymmetric errors (X, EXL, EXH, Y, EYL, EYH) are stored.
+/// If option contains "asroot" string, order of values will match such order in TGraph constructors.
+/// So one will get (X, Y, EX, EY) or (X, Y, EXL, EXH, EYL, EYH).
+///
+/// Also one can directly select that kind of errors are stored:
+///   - "errors" - (X, Y, EX, EY) will be stored
+///   - "asymmerrors" - (X, Y, EXL, EXH, EYL, EYH) will be stored
+///   - "noerrors" - just (X, Y) will be stored disregard of graph kind
+///
+/// If option contains "title" a title line is generated with the axis titles.
+
 
 void TGraph::SaveAs(const char *filename, Option_t *option) const
 {
@@ -2097,6 +2134,7 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
    TString ext = "";
    TString fname = filename;
    TString opt = option;
+   opt.ToLower();
 
    if (filename) {
       if      (fname.EndsWith(".csv")) {del = ',';  ext = "csv";}
@@ -2110,27 +2148,73 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          Error("SaveAs", "cannot open file: %s", filename);
          return;
       }
-      if (InheritsFrom(TGraphErrors::Class()) ) {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
-         double *ex = this->GetEX();
-         double *ey = this->GetEY();
-         for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << (ex?ex[i]:0) << del << fY[i] << del << (ey?ey[i]:0) << std::endl;
-      } else if (InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
-         double *exl = this->GetEXlow();
-         double *exh = this->GetEXhigh();
-         double *eyl = this->GetEYlow();
-         double *eyh = this->GetEYhigh();
-         for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << (exl?exl[i]:0) << del << (exh?exh[i]:0) << del << fY[i] << del << (eyl?eyl[i]:0) << del << (eyh?eyh[i]:0) << std::endl;
-      } else {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
-         for (int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << fY[i] << std::endl;
+      Bool_t store_title = opt.Contains("title");
+      Bool_t no_errors = kFALSE, plain_errors = kFALSE, asymm_erros = kFALSE;
+      Bool_t as_root = opt.Contains("asroot") || opt.Contains("native");
+      if (opt.Contains("noerrors"))
+         no_errors = kTRUE;
+      else if (opt.Contains("asymmerrors"))
+         asymm_erros = kTRUE;
+      else if (opt.Contains("errors"))
+         plain_errors = kTRUE;
+      else if (InheritsFrom("TGraphErrors"))
+         plain_errors = kTRUE;
+      else if (InheritsFrom("TGraphAsymmErrors") || InheritsFrom("TGraphBentErrors"))
+         asymm_erros = kTRUE;
+      else
+         no_errors = kTRUE;
+
+      TString xtitle, ytitle;
+      if (fHistogram) {
+         xtitle = fHistogram->GetXaxis()->GetTitle();
+         ytitle = fHistogram->GetYaxis()->GetTitle();
+      }
+      if (xtitle.IsNull())
+         xtitle = "x";
+      if (ytitle.IsNull())
+         ytitle = "y";
+
+      if (plain_errors) {
+         if(store_title) {
+            if (as_root)
+               out << "# " << xtitle << "\t" << ytitle << "\tex\tey\n";
+            else
+               out << "# " << xtitle << "\tex\t" << ytitle << "\tey\n";
+         }
+         for(int i = 0; i < fNpoints ; i++) {
+            Double_t x = GetPointX(i);
+            Double_t y = GetPointY(i);
+            Double_t ex = GetErrorX(i);
+            Double_t ey = GetErrorY(i);
+            if (as_root)
+               out << x << del << y << del <<  ex << del << ey << "\n";
+            else
+               out << x << del << ex << del << y << del << ey << "\n";
+         }
+      } else if (asymm_erros) {
+         if(store_title) {
+            if (as_root)
+               out << "# " << xtitle << "\t" << ytitle << "\texl\texh\teyl\teyh\n";
+            else
+               out << "# " << xtitle << "\texl\texh\t" << ytitle << "\teyl\teyh\n";
+         }
+         for(int i = 0; i < GetN(); i++) {
+            Double_t x = GetPointX(i);
+            Double_t y = GetPointY(i);
+            Double_t exl = GetErrorXlow(i);
+            Double_t exh = GetErrorXhigh(i);
+            Double_t eyl = GetErrorYlow(i);
+            Double_t eyh = GetErrorYhigh(i);
+            if (as_root)
+               out << x << del << y << del << exl << del << exh << del << eyl << del << eyh << "\n";
+            else
+               out << x << del << exl << del << exh << del << y << del << eyl << del << eyh << "\n";
+         }
+      } else if (no_errors) {
+         if(store_title)
+            out << "# " << xtitle << "\t" << ytitle << "\n";
+         for (Int_t i = 0 ; i < GetN(); i++)
+            out << GetPointX(i) << del << GetPointY(i) << "\n";
       }
       out.close();
       Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
@@ -2165,9 +2249,11 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
 {
    thread_local Int_t frameNumber = 0;
 
-   SavePrimitiveNameTitle(out, varname);
+   TString ref = "Graph";
+   if ((ref != GetName()) || (ref != GetTitle()))
+      SavePrimitiveNameTitle(out, varname);
 
-   SaveFillAttributes(out, varname, 0, 1001);
+   SaveFillAttributes(out, varname, 0, 1000);
    SaveLineAttributes(out, varname, 1, 1, 1);
    SaveMarkerAttributes(out, varname, 1, 1, 1);
 
@@ -2265,6 +2351,13 @@ void TGraph::SetHighlight(Bool_t set)
    if (!painter) return;
    SetBit(kIsHighlight, set);
    painter->SetHighlight(this);
+}
+
+/// Set the histogram underlying the TGraph. This transfers the ownership of h to the TGraph. The preexisting fHistogram will be deleted.
+void  TGraph::SetHistogram(TH1F *h)
+{
+   delete fHistogram;
+   fHistogram = h;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2445,7 +2538,7 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph:
    // Create a vector to store the indices of the graph data points.
    // We use std::vector<Int_t> instead of std::vector<ULong64_t> to match the input type
    // required by the comparison operator's signature provided as `greaterfunc`
-   std::vector<Int_t> sorting_indices(fNpoints);
+   std::vector<int> sorting_indices(fNpoints);
    std::iota(sorting_indices.begin(), sorting_indices.end(), 0);
 
    // Sort the indices using the provided comparison function
@@ -2453,7 +2546,7 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph:
    // is not standard-compliant until LLVM 14 which caused errors on the mac nodes
    // of our CI, related issue: https://github.com/llvm/llvm-project/issues/21211
    std::stable_sort(sorting_indices.begin() + low, sorting_indices.begin() + high + 1,
-             [&](const auto &left, const auto &right) { return greaterfunc(this, left, right) != ascending; });
+             [&](int left, int right) { return left != right && greaterfunc(this, left, right) != ascending; });
 
    Int_t numSortedPoints = high - low + 1;
    UpdateArrays(sorting_indices, numSortedPoints, low);

@@ -1,0 +1,26 @@
+<lcgdict>
+ <class name="TrigConf::HLTChainList"/>
+ <class name="TrigConf::HLTSequenceList"/>
+ <class name="std::vector<TrigConf::HLTChain*>"/>
+ <class name="TrigConf::HLTChain"/>
+ <class name="std::vector<TrigConf::HLTSignature*>"/>
+ <class name="TrigConf::HLTSignature"/>
+ <class name="std::vector<TrigConf::HLTTriggerElement*>"/>
+ <class name="TrigConf::HLTTriggerElement"/>
+ <class name="std::vector<TrigConf::HLTTriggerType*>"/>
+ <class name="TrigConf::HLTTriggerType"/>
+ <class name="std::vector<TrigConf::HLTStreamTag*>"/>
+ <class name="TrigConf::HLTStreamTag"/>
+ <class name="std::vector<TrigConf::HLTSequence*>"/>
+ <class name="TrigConf::HLTSequence"/>
+
+ <class name="TrigConf::TrigConfigARA"/>
+ <class name="TrigConf::TrigConfigSvcARA"/>
+
+ <class name="TrigConf::TriggerItem"/>
+ <class name="TrigConf::CTPConfig"/>
+ <class name="TrigConf::L1DataBaseclass"/>
+ <class name="TrigConf::TrigConfData"/>
+ <class name="TrigConf::ThresholdConfig"/>
+
+</lcgdict>

@@ -453,3 +453,10 @@ Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
+void REveDataCollection::ClearItems()
+{
+   for (size_t i = 0; i < fItemList->fItems.size(); ++i) {
+      delete fItemList->fItems[i];
+   }
+   fItemList->fItems.clear();
+}

@@ -41,7 +41,6 @@ Often used in combination with a TGHorizontal3DLine.
 #include "TMap.h"
 
 
-ClassImp(TGToolBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 

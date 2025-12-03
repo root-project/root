@@ -1,0 +1,4 @@
+
+Processing execSkipbaseclass.cxx+...
+Warning in <TClass::Init>: no dictionary for class MyBase is available
+Reading MyDerived

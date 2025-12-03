@@ -24,8 +24,8 @@ private:
 
    std::string fNData;
    std::string fNOutput;
-   std::vector<size_t> fShapeData;
-   std::vector<size_t> fShapeOutput;
+   std::vector<Dim> fShapeData;
+   std::vector<Dim> fShapeOutput;
 
 public:
 
@@ -67,21 +67,32 @@ public:
          std::cout<<"Input tensor for transpose: "<<fNData<<'\n';
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");
       }
-      fShapeData = model.GetTensorShape(fNData);
+      fShapeData = model.GetDimTensorShape(fNData);
       if (fAttrPerm.empty()){
          fAttrPerm.reserve(fShapeData.size());
          for (int i = fShapeData.size() - 1; i >= 0; i--){
             fAttrPerm.push_back(i);
          }
       }
-      std::vector<std::vector<size_t>> inputs = { fShapeData };
-      fShapeOutput = ShapeInference(inputs).front();
-      if (model.IsInitializedTensor(fNData)) {
+
+      // inference of output shape
+      if (fAttrPerm.size() != fShapeData.size() )
+         throw std::runtime_error("TMVA SOFIE Tranpose Op - Invalid axes attributes");
+
+      fShapeOutput.resize(fAttrPerm.size());
+      for (size_t i = 0; i < fAttrPerm.size(); i++){
+         fShapeOutput[i] = fShapeData[fAttrPerm[i]];
+      }
+
+      if (model.IsInitializedTensor(fNData) ) {
+         // here we know the shape
+         auto shapeX = ConvertShapeToInt(fShapeData);
+         auto shapeY = ConvertShapeToInt(fShapeOutput);
          fIsOutputConstant = true;
          // case input is a constant or initialized tensor we perform here the transpose
-         auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
-         auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
-         size_t length = ConvertShapeToLength(fShapeOutput);
+         auto inStrides = UTILITY::ComputeStrideFromShape(shapeX);
+         auto outStrides = UTILITY::ComputeStrideFromShape(shapeY);
+         size_t length = ConvertShapeToLength(shapeY);
          auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNData).get());
          size_t dim = fShapeData.size();
          std::vector<size_t> outputIdx(dim);
@@ -100,9 +111,9 @@ public:
             }
             outputData[i] = inputData[inputIndex];
          }
-         model.AddConstantTensor<T>(fNOutput, fShapeOutput, outputData.data());
+         model.AddConstantTensor<T>(fNOutput, shapeY, outputData.data());
          if (model.Verbose()) {
-            std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+            std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(shapeY) << " : "
                << ConvertValuesToString(outputData) << std::endl;
          }
       } else {
@@ -122,8 +133,8 @@ public:
       int dim = fShapeData.size();
       auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
       auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
-      size_t length = inStrides[0]*fShapeData[0];  // total tensor size
-      assert (length == outStrides[0]*fShapeOutput[0]);
+      auto length = ConvertDimShapeToLength(fShapeData);
+      //assert (length == outStrides[0]*fShapeOutput[0]);
 
       std::stringstream out;
       // Implement transpose operator using consecutive read inputs.
@@ -136,7 +147,8 @@ public:
       //......
       // and we have j_k = i_fAttrPerm[k]
       // since we are using consecutive writes we should find the inverse of fAttrPerm
-      out << SP << "///------- Transpose operator\n" << std::endl;
+      out << SP << "///------- Transpose operator " << OpName << ConvertDimShapeToString(fShapeData)
+                  << " --> " << ConvertDimShapeToString(fShapeOutput) << std::endl;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNOutput << "[id] = tensor_" << fNData << "[ ";
       // compute output j indices
@@ -145,9 +157,9 @@ public:
          if (k == 0)
             i_out[k] = "id";
          else
-            i_out[k] = "(id % " + std::to_string(outStrides[k-1]) + ")";
+            i_out[k] = "(id % (" + outStrides[k-1].GetVal() + "))";
          if (k < dim-1)
-            i_out[k] += " / " + std::to_string(outStrides[k]);
+            i_out[k] += " / (" + outStrides[k].GetVal() + ")";
       }
       // use now them for input tensors
       // need to invert the fAttrPerm[k]

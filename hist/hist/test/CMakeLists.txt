@@ -5,11 +5,14 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(testTProfile2Poly test_tprofile2poly.cxx LIBRARIES Hist Matrix MathCore RIO)
+ROOT_ADD_GTEST(testTFractionFitter test_TFractionFitter.cxx LIBRARIES Hist MathCore)
 ROOT_ADD_GTEST(testTH2PolyBinError test_TH2Poly_BinError.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyAdd test_TH2Poly_Add.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyGetNumberOfBins test_TH2Poly_GetNumberOfBins.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testTH2 test_TH2.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testTH3 test_TH3.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTHStack test_THStack.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testProject3Dname test_Project3D_name.cxx LIBRARIES Hist)
 if(geom)
@@ -26,6 +29,8 @@ ROOT_ADD_GTEST(testMapCppName test_MapCppName.cxx LIBRARIES Hist Gpad)
 ROOT_ADD_GTEST(testTGraphSorting test_TGraph_sorting.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testSpline test_spline.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF1Simple test_tf1_simple.cxx LIBRARIES Hist RIO)
+ROOT_ADD_GTEST(testTF1DrawCopy test_tf1_drawcopy.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(test_TProfile test_TProfile.cxx LIBRARIES Hist)
 
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
@@ -35,6 +40,8 @@ ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF3 test_tf3.cxx LIBRARIES Hist)
 
 ROOT_ADD_GTEST(testTH1sa test_TH1_SaveAs.cxx LIBRARIES Hist)
+
+ROOT_ADD_GTEST(testTGraphsa test_TGraph_SaveAs.cxx LIBRARIES Hist)
 
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)

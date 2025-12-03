@@ -1,0 +1,25 @@
+
+Processing runcd.C...
+gFile is: runcd.root
+gDirectory is: Rint
+gFile is: runcd.root
+gDirectory is: toplevel
+gFile is: runcd.root
+gDirectory is: subdir
+gFile is: runcd.root
+gDirectory is: toplevel
+gFile is: runcd.root
+gDirectory is: runcd.root
+gFile is: runcd1.root
+gDirectory is: onetop
+Error in <TDirectoryFile::cd>: Unknown directory lowerdir3
+gFile is: runcd1.root
+gDirectory is: onetop
+gFile is: runcd.root
+gDirectory is: lowerdir
+gFile is: runcd1.root
+gDirectory is: runcd1.root
+gFile is: runcd.root
+gDirectory is: subdir
+gFile is: runcd.root
+gDirectory is: lowerdir

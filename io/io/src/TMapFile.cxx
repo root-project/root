@@ -85,7 +85,7 @@ robust Streamer mechanism I opted for 3).
 #endif
 
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "TMapFile.h"
 #include "TKeyMapFile.h"
@@ -203,7 +203,6 @@ TObject *TMapRec::GetObject() const
 
 
 
-ClassImp(TMapFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Does not much except setting some basic values.
@@ -339,10 +338,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_WRITE | GENERIC_READ,       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
-                     NULL,                               // pointer to security attributes
+                     nullptr,                               // pointer to security attributes
                      OPEN_ALWAYS,                        // how to create
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
-                     (HANDLE) NULL);                     // handle to file with attributes to copy
+                     (HANDLE) nullptr);                     // handle to file with attributes to copy
 #endif
       if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened", fname);
@@ -356,10 +355,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_READ,                       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
-                     NULL,                               // pointer to security attributes
+                     nullptr,                               // pointer to security attributes
                      OPEN_EXISTING,                      // how to create
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
-                     (HANDLE) NULL);                     // handle to file with attributes to copy
+                     (HANDLE) nullptr);                     // handle to file with attributes to copy
 #endif
       if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened for reading", fname);
@@ -510,7 +509,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    newMapFile   = this;
    ROOT::Internal::gMmallocDesc = 0;
@@ -865,7 +864,7 @@ void TMapFile::CreateSemaphore(int pid)
    char buffer[] ="ROOT_Semaphore_xxxxxxxx";
    int lbuf = strlen(buffer);
    if (!pid) fSemaphore = getpid();
-   fhSemaphore = (ULongptr_t)CreateMutex(NULL,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
+   fhSemaphore = (ULongptr_t)CreateMutex(nullptr,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
    if (fhSemaphore == 0) fSemaphore = (Longptr_t)INVALID_HANDLE_VALUE;
 #endif
 #endif
@@ -1143,7 +1142,7 @@ Int_t TMapFile::GetBestBuffer()
 {
    if (!fWritten) return TBuffer::kMinimalSize;
    Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer - mean*mean);
+   Double_t rms2 = std::abs(fSum2Buffer/fSumBuffer - mean*mean);
    return (Int_t)(mean + std::sqrt(rms2));
 }
 

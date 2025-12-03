@@ -1,0 +1,7 @@
+
+Processing execNonExistingFriend.C...
+Error in <TFile::TFile>: file asfasgfags.root does not exist
+Error in <TFile::TFile>: file asfasgfags.root does not exist
+Error in <TTree::AddFriend>: Cannot find tree 'asfasf' in file 'asfasgfags.root', friend not added
+The TFriendElement instance is a zombie.
+(int) 0

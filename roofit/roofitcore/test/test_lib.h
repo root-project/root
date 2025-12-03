@@ -117,12 +117,14 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEv
       {
          std::ostringstream os;
          os << "m" << ix;
-         dynamic_cast<RooRealVar *>(ws.arg(os.str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
+         auto *val = static_cast<RooRealVar *>(ws.arg(os.str().c_str()));
+         val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
       }
       {
          std::ostringstream os;
          os << "s" << ix;
-         dynamic_cast<RooRealVar *>(ws.arg(os.str()))->setVal(0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2)));
+         auto *val = static_cast<RooRealVar *>(ws.arg(os.str().c_str()));
+         val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
       }
    }
 

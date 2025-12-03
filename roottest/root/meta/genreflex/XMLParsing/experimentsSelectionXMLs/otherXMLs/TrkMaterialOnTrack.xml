@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="Trk::EnergyLoss" />
+  <class name="Trk::ScatteringAngles" />
+  <class name="Trk::MaterialEffectsBase" />
+  <class name="Trk::MaterialEffectsOnTrack" />
+  <class name="Trk::EstimatedBremOnTrack" />
+<!--    <field name="m_globalPosition"       transient="false" />
+  </class-->
+</lcgdict>

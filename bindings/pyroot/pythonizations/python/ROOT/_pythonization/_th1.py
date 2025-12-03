@@ -51,7 +51,7 @@ myResult = myTH1D.Fit("gaus", "s")
 myResult.Parameters()
 
 # Get the error of the first parameter
-myResult.ParError(0) 
+myResult.ParError(0)
 \endcode
 
 
@@ -80,10 +80,10 @@ def myGaussian(x, pars):
     '''
     Defines a Gaussian function
     '''
-    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2)) 
+    return pars[0]*np.exp(-0.5* pow(x[0] - pars[1], 2))
 
 # Initialize from the Python function with the range -5 to +5, with two parameters to fit, and a one-dimensional input x
-myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1) 
+myTF1 = ROOT.TF1("myFunction", myGaussian, -5, 5, npar=2, ndim=1)
 
 # Create a 1D histogram and initialize it with the built-in ROOT Gaussian "gaus"
 myTH1D = ROOT.TH1D("th1d", "Test", 200, -5, 5)
@@ -176,6 +176,7 @@ from . import pythonization
 
 # Multiplication by constant
 
+
 def _imul(self, c):
     # Parameters:
     # - self: histogram
@@ -185,22 +186,23 @@ def _imul(self, c):
     self.Scale(c)
     return self
 
-# Fill with numpy array
 
-def _FillWithNumpyArray(self, *args):
+# Fill with array-like data
+def _FillWithArrayTH1(self, *args):
     """
-    Fill histogram with numpy array.
+    Fill a histogram using array-like input.
     Parameters:
     - self: histogram
     - args: arguments to FillN
-            If the first argument is numpy.ndarray:
+            If the first argument is array-like:
+            - converts it to a numpy array
             - fills the histogram with this array
             - optional second argument is weights array,
               if not provided, weights of 1 are used
             Otherwise:
             - Arguments are passed directly to the original FillN method
     Returns:
-    - Result of FillN if numpy case is detected, otherwise result of Fill
+    - Result of FillN if array case is detected, otherwise result of Fill
     Raises:
     - ValueError: If weights length doesn't match data length
     """
@@ -213,16 +215,17 @@ def _FillWithNumpyArray(self, *args):
 
     import numpy as np
 
-    if args and isinstance(args[0], np.ndarray):
-        data = args[0]
-        weights = np.ones(len(data)) if len(args) < 2 or args[1] is None else args[1]
-        if len(weights) != len(data):
-            raise ValueError(
-                f"Length mismatch: data length ({len(data)}) != weights length ({len(weights)})"
-            )
-        return self.FillN(len(data), data, weights)
+    data = np.asanyarray(args[0], dtype=np.float64)
+    n = len(data)
+
+    if len(args) >= 2 and args[1] is not None:
+        weights = np.asanyarray(args[1], dtype=np.float64)
+        if len(weights) != n:
+            raise ValueError(f"Length mismatch: data length ({n}) != weights length ({len(weights)})")
     else:
-        return self._Fill(*args)
+        weights = np.ones(n)
+
+    return self.FillN(n, data, weights)
 
 
 # The constructors need to be pythonized for each derived class separately:
@@ -233,33 +236,37 @@ _th1_derived_classes_to_pythonize = [
     "TH1L",
     "TH1F",
     "TH1D",
-    "TH1K",
     "TProfile",
 ]
 
 for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-    from ROOT._pythonization._uhi import add_plotting_features
-    
-    # Add UHI components
-    uhi_components = [add_plotting_features]
-    for uc in uhi_components:
-        pythonization(klass)(uc)
+    from ROOT._pythonization._uhi import _add_plotting_features
 
-@pythonization('TH1')
+    # Add UHI plotting features
+    pythonization(klass)(_add_plotting_features)
+
+    # Support vectorized Fill
+    @pythonization(klass)
+    def _enable_numpy_fill(klass):
+        klass._Fill = klass.Fill
+        klass.Fill = _FillWithArrayTH1
+
+
+@pythonization("TH1")
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
+    from ROOT._pythonization._uhi import _add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul
 
-    # Support hist.Fill(numpy_array) and hist.Fill(numpy_array, numpy_array)
-    klass._Fill = klass.Fill
-    klass.Fill = _FillWithNumpyArray
-
     klass._Original_SetDirectory = klass.SetDirectory
     klass.SetDirectory = _SetDirectory_SetOwnership
+
+    # Add UHI indexing features
+    _add_indexing_features(klass)
 
     inject_clone_releasing_ownership(klass)

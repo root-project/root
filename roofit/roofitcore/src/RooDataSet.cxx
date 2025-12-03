@@ -67,7 +67,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
 
 ### Creating a dataset using RDataFrame
-\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 
 ### Uniquely identifying RooDataSet objects
 
@@ -516,81 +516,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
    }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an existing data
-/// set. The dimensions of the data set are defined by the 'vars'
-/// RooArgSet, which can be identical to 'dset' dimensions, or a
-/// subset thereof. The 'cuts' string is an optional RooFormula
-/// expression and can be used to select the subset of the data
-/// points in 'dset' to be copied. The cut expression can refer to
-/// any variable in the source dataset. For cuts involving variables
-/// other than those contained in the source data set, such as
-/// intermediate formula objects, use the equivalent constructor
-/// accepting RooFormulaVar reference as cut specification.
-///
-/// For most uses the RooAbsData::reduce() wrapper function, which
-/// uses this constructor, is the most convenient way to create a
-/// subset of an existing data
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
-             const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
-{
-  // Initialize datastore
-  if(defaultStorageType == Tree) {
-    _dstore = std::make_unique<RooTreeDataStore>(name,title,_vars,*dset->_dstore,cuts,wgtVarName);
-  } else {
-    std::unique_ptr<RooFormulaVar> cutVar;
-    if (cuts && strlen(cuts) != 0) {
-      // Create a RooFormulaVar cut from given cut expression
-      cutVar = std::make_unique<RooFormulaVar>(cuts, cuts, _vars, /*checkVariables=*/false);
-    }
-    _dstore = std::make_unique<RooVectorDataStore>(name,title,
-            /*tds=*/*dset->_dstore,
-            /*vars=*/_vars,
-            /*cutVar=*/cutVar.get(),
-            /*cutRange=*/nullptr,
-            /*nStart=*/0,
-            /*nStop=*/dset->numEntries(),
-            /*wgtVarName=*/wgtVarName);
-  }
-
-  appendToDir(this,true) ;
-
-  if (wgtVarName) {
-    // Use the supplied weight column
-    initialize(wgtVarName) ;
-  } else {
-    if (dset->_wgtVar && vars.find(dset->_wgtVar->GetName())) {
-      // Use the weight column of the source data set
-      initialize(dset->_wgtVar->GetName()) ;
-    } else {
-      initialize(nullptr);
-    }
-  }
-  TRACE_CREATE;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an existing data
-/// set. The dimensions of the data set are defined by the 'vars'
-/// RooArgSet, which can be identical to 'dset' dimensions, or a
-/// subset thereof. The 'cutVar' formula variable is used to select
-/// the subset of data points to be copied.  For subsets without
-/// selection on the data points, or involving cuts operating
-/// exclusively and directly on the data set dimensions, the
-/// equivalent constructor with a string based cut expression is
-/// recommended.
-///
-/// For most uses the RooAbsData::reduce() wrapper function, which
-/// uses this constructor, is the most convenient way to create a
-/// subset of an existing data
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
-             const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
-  : RooDataSet{name, title, dset, vars, cutVar.expression(), wgtVarName} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -1763,4 +1688,59 @@ void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::strin
       }
       _dstore->loadValues(sliceData->store(), cutVar, rangeName);
    }
+}
+
+/**
+ * \brief Prints the contents of the RooDataSet to the specified output stream.
+ *
+ * This function iterates through all events (rows) of the dataset and prints
+ * the value of each observable, along with the event's weight.
+ * It is designed to be robust, handling empty or invalid datasets gracefully,
+ * and works for datasets of any dimension.
+ *
+ * \param os The output stream (e.g., std::cout) to write the contents to.
+ */
+void RooDataSet::printContents(std::ostream& os) const
+{
+    os << "Contents of RooDataSet \"" << GetName() << "\"" << std::endl;
+
+    if (numEntries() == 0) {
+        os << "(dataset is empty)" << std::endl;
+        return;
+    }
+
+    if (get() == nullptr || get()->empty()) {
+        os << "(dataset has no observables)" << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < numEntries(); ++i) {
+        const RooArgSet* row = get(i); // reuses internal buffers
+        os << "  Entry " << i << ": ";
+
+        bool first = true;
+        for (const auto* var : *row) {
+            if (!first) os << ", ";
+            first = false;
+
+            os << var->GetName() << "=";
+            if (auto realVar = dynamic_cast<const RooRealVar*>(var)) {
+                os << realVar->getVal();
+            } else if (auto catVar = dynamic_cast<const RooCategory*>(var)) {
+                os << catVar->getLabel();
+            } else {
+                os << "(unsupported type)"; //added as a precaution
+            }
+        }
+
+        os << ", weight=" << weight();
+
+        double lo, hi;
+        weightError(lo, hi);
+        if (lo != 0.0 || hi != 0.0) {
+            os << " ±[" << lo << "," << hi << "]";
+        }
+
+        os << std::endl;
+    }
 }

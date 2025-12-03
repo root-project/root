@@ -1,7 +1,9 @@
 #include "Utils.h"
 
+#include "CppInterOp/CppInterOp.h"
+
 #include "clang/AST/ASTContext.h"
-#include "clang/Interpreter/CppInterOp.h"
+#include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
@@ -232,6 +234,7 @@ TEST(VariableReflectionTest, GetVariableType) {
     E<int> e;
     E<int> *f;
     int g[4];
+    auto fn = []() { return 1; };
     )";
 
   GetAllTopLevelDecls(code, Decls);
@@ -243,6 +246,9 @@ TEST(VariableReflectionTest, GetVariableType) {
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetVariableType(Decls[6])), "E<int>");
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetVariableType(Decls[7])), "E<int> *");
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetVariableType(Decls[8])), "int[4]");
+
+  EXPECT_FALSE(Cpp::IsLambdaClass(Cpp::GetVariableType(Decls[8])));
+  EXPECT_TRUE(Cpp::IsLambdaClass(Cpp::GetVariableType(Decls[9])));
 }
 
 #define CODE                                                                   \
@@ -264,7 +270,9 @@ CODE
 
 TEST(VariableReflectionTest, GetVariableOffset) {
 #ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR < 20
   GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
 #endif
   std::vector<Decl *> Decls;
 #define Stringify(s) Stringifyx(s)
@@ -295,6 +303,47 @@ TEST(VariableReflectionTest, GetVariableOffset) {
 
   auto* VD_C_s_a = Cpp::GetNamed("s_a", Decls[4]); // C::s_a
   EXPECT_TRUE((bool) Cpp::GetVariableOffset(VD_C_s_a));
+
+  struct K {
+    int x;
+    int y;
+    int z;
+  };
+  Cpp::Declare("struct K;");
+  Cpp::TCppScope_t k = Cpp::GetNamed("K");
+  EXPECT_TRUE(k);
+
+  Cpp::Declare("struct K { int x; int y; int z; };");
+
+  datamembers.clear();
+  Cpp::GetDatamembers(k, datamembers);
+  EXPECT_EQ(datamembers.size(), 3);
+
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[0]), offsetof(K, x));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[1]), offsetof(K, y));
+  EXPECT_EQ(Cpp::GetVariableOffset(datamembers[2]), offsetof(K, z));
+
+  Cpp::Declare(R"(
+    template <typename T> struct ClassWithStatic {
+      static T const ref_value;
+    };
+    template <typename T> T constexpr ClassWithStatic<T>::ref_value = 42;
+  )");
+
+  Cpp::TCppScope_t klass = Cpp::GetNamed("ClassWithStatic");
+  EXPECT_TRUE(klass);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> template_args = {
+      {C.IntTy.getAsOpaquePtr()}};
+  Cpp::TCppScope_t klass_instantiated = Cpp::InstantiateTemplate(
+      klass, template_args.data(), template_args.size());
+  EXPECT_TRUE(klass_instantiated);
+
+  Cpp::TCppScope_t var = Cpp::GetNamed("ref_value", klass_instantiated);
+  EXPECT_TRUE(var);
+
+  EXPECT_TRUE(Cpp::GetVariableOffset(var));
 }
 
 #define CODE                                                                   \
@@ -331,8 +380,15 @@ TEST(VariableReflectionTest, GetVariableOffset) {
 CODE
 
 TEST(VariableReflectionTest, VariableOffsetsWithInheritance) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
 
   Cpp::Declare("#include<string>");
 
@@ -478,7 +534,7 @@ TEST(VariableReflectionTest, IsConstVariable) {
 }
 
 TEST(VariableReflectionTest, DISABLED_GetArrayDimensions) {
-  std::vector<Decl *> Decls, SubDecls;
+  std::vector<Decl *> Decls;
   std::string code =  R"(
     int a;
     int b[1];
@@ -542,7 +598,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   intptr_t offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(3, *(int*)offset);
+  EXPECT_EQ(3, *(size_t*)offset);
 
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {
@@ -558,7 +614,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(5, *(int*)offset);
+  EXPECT_EQ(5, *(size_t*)offset);
 
   std::vector<Cpp::TemplateArgInfo> ele_template_args = {
       {C.IntTy.getAsOpaquePtr()}, {C.FloatTy.getAsOpaquePtr()}};
@@ -577,7 +633,7 @@ TEST(VariableReflectionTest, StaticConstExprDatamember) {
   EXPECT_EQ(datamembers.size(), 1);
 
   offset = Cpp::GetVariableOffset(datamembers[0]);
-  EXPECT_EQ(2, *(int*)offset);
+  EXPECT_EQ(2, *(size_t*)offset);
 }
 
 TEST(VariableReflectionTest, GetEnumConstantDatamembers) {
@@ -666,4 +722,33 @@ TEST(VariableReflectionTest, Is_Get_Reference) {
             Cpp::GetVariableType(Decls[5]));
 
   EXPECT_FALSE(Cpp::GetNonReferenceType(Cpp::GetVariableType(Decls[5])));
+
+  EXPECT_TRUE(Cpp::IsLValueReferenceType(Cpp::GetVariableType(Decls[2])));
+  EXPECT_EQ(Cpp::GetReferencedType(Cpp::GetVariableType(Decls[1])),
+            Cpp::GetVariableType(Decls[2]));
+  EXPECT_TRUE(Cpp::IsRValueReferenceType(
+      Cpp::GetReferencedType(Cpp::GetVariableType(Decls[1]), true)));
+}
+
+TEST(VariableReflectionTest, GetPointerType) {
+  Cpp::CreateInterpreter();
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+  class A {};
+  int a;
+  int *b = &a;
+  double c;
+  double *d = &c;
+  A e;
+  A *f = &e;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_EQ(Cpp::GetPointerType(Cpp::GetVariableType(Decls[1])),
+            Cpp::GetVariableType(Decls[2]));
+  EXPECT_EQ(Cpp::GetPointerType(Cpp::GetVariableType(Decls[3])),
+            Cpp::GetVariableType(Decls[4]));
+  EXPECT_EQ(Cpp::GetPointerType(Cpp::GetVariableType(Decls[5])),
+            Cpp::GetVariableType(Decls[6]));
 }

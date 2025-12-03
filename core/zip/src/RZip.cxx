@@ -203,9 +203,9 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
     stream.avail_out = (uInt)(*tgtsize) - HDRSIZE;
 
-    stream.zalloc    = (alloc_func)0;
-    stream.zfree     = (free_func)0;
-    stream.opaque    = (voidpf)0;
+    stream.zalloc = nullptr;
+    stream.zfree = nullptr;
+    stream.opaque = nullptr;
 
     if (cxlevel > 9) cxlevel = 9;
     err = deflateInit(&stream, cxlevel);
@@ -364,12 +364,13 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
    obufcnt = *tgtsize;
 
    if (obufcnt < isize) {
-      fprintf(stderr, "R__unzip: too small target\n");
+      fprintf(stderr, "R__unzip: too small target (needed: %ld, given: %ld)\n", isize, obufcnt);
       return;
    }
 
    if (ibufcnt + HDRSIZE != *srcsize) {
-      fprintf(stderr, "R__unzip: discrepancy in source length\n");
+      fprintf(stderr, "R__unzip: discrepancy in source length (expected size: %d, real size: %ld)\n",
+              *srcsize, ibufcnt + HDRSIZE);
       return;
    }
 
@@ -415,9 +416,9 @@ void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
      stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
      stream.next_out = (Bytef *)tgt;
      stream.avail_out = (uInt)(*tgtsize);
-     stream.zalloc = (alloc_func)0;
-     stream.zfree = (free_func)0;
-     stream.opaque = (voidpf)0;
+     stream.zalloc = nullptr;
+     stream.zfree = nullptr;
+     stream.opaque = nullptr;
 
      err = inflateInit(&stream);
      if (err != Z_OK) {

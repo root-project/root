@@ -1,0 +1,14 @@
+
+Processing test3.cxx+("r")...
+[i] Reading test data model version 2
+Warning in <TClass::Init>: no dictionary for class ClassAIns is available
+Warning in <TClass::Init>: no dictionary for class ClassA is available
+Warning in <TClass::Init>: no dictionary for class ClassABase is available
+Error in <TBufferFile::ReadClass>: The on-file class is "ClassB" which is not compatible with the requested class: "ClassA"
+Error in <TBufferFile::ReadObject>: got object of wrong class! requested ClassA but got ClassB
+Error in <TBufferFile::ReadClass>: The on-file class is "ClassB" which is not compatible with the requested class: "ClassA"
+Error in <TBufferFile::ReadObject>: got object of wrong class! requested ClassA but got ClassB
+MATCH: rflx_test02_wv1.log - rflx_test02_rv3.log beside ClassAIns2 change
+MATCH: rflx_test03_wv1.log - rflx_test03_rv3.log beside ClassAIns2 change
+MATCH: rflx_test03_wv1.log - rflx_test03_rv3ns.log beside ClassAIns2 change
+(int) 0

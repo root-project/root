@@ -1,0 +1,5 @@
+<lcgdict> 
+ <class name="DataVector<Trk::MaterialStep>"  id="C58C062D-D1D0-4A43-87EC-BA825A93401D" />
+ <class name="std::vector<Trk::MaterialStep*>" />   
+ <class name="Trk::MaterialStep"  />
+</lcgdict>

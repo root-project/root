@@ -24,9 +24,13 @@ def get_argparse():
     parser.add_argument("-f", help=textwrap.fill(
         "Force overwriting of output file"), action = 'store_true')
     parser.add_argument("-f[0-9]", help=textwrap.fill(
-        "Gives the ability to specify the compression level of the target file. "
-        "Default is 1 (kDefaultZLIB), 0 is uncompressed, 9 is maximum compression (see TFile::TFile documentation). "
-        "You can also specify the full compresion algorithm, e.g. -f206"), action = 'store_true')
+        "Gives the ability to specify the compression algorithm i and level j of the target file, "
+        "by passing the number i*100 + j, e.g. -f505. "
+        "The last digit (j) can be set from 0 = uncompressed to 9 = highly compressed. "
+        "The first digit (i) is 1 for ZLIB, 2 for LZMA, 4 for LZ4 and 5 for ZSTD. "
+        "Recommended numbers are 101 (ZLIB), 207 (LZMA), 404 (LZ4), 505 (ZSTD). "
+        "The default value for this flag is 101 (kDefaultZLIB). "
+        "See ROOT::RCompressionSetting and TFile::TFile documentation for more details."), action = 'store_true')
     parser.add_argument("-fk", help=textwrap.fill(
         "Sets the target file to contain the baskets with the same compression "
         "as the input files (unless -O is specified). Compresses the meta data "

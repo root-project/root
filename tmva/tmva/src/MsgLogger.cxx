@@ -49,7 +49,6 @@ ostringstream derivative to redirect and format output
 #include <memory>
 
 
-ClassImp(TMVA::MsgLogger);
 
 // declaration of global variables
 // this is the hard-coded maximum length of the source names

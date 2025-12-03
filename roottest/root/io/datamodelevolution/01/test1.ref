@@ -1,0 +1,956 @@
+
+Processing test1.cxx+...
+[i] Generating test data model version 1
+Content of test01_wv1.log
+Processing object of class: ClassA
+Processing bases of: ClassA
+  Processing object of class: ClassABase
+  [mem] p int m_a = 30
+  [mem] p double m_b = 0.16291
+  End of ClassABase
+End of bases of: ClassA
+[mem] p double m_c = 0.282618
+[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns
+  [mem] p int m_a = 29
+  [mem] p double m_b = 0.231657
+  End of ClassAIns
+[mem] p int m_e = 15
+End of ClassA
+
+Content of test02_wv1.log
+Processing object of class: ClassAIns
+[mem] p int m_a = 29
+[mem] p double m_b = 0.744305
+End of ClassAIns
+
+Content of test03_wv1.log
+Processing object of class: ClassD
+[mem] p float m_c = 0.540044
+[mem] p ClassAIns m_d = 
+  Processing object of class: ClassAIns
+  [mem] p int m_a = 23
+  [mem] p double m_b = 0.759944
+  End of ClassAIns
+[mem] p int m_e = 20
+End of ClassD
+
+Content of test04_wv1.log
+Processing object of class: pair<int,double>
+[mem] p int first = 10
+[mem] p double second = 0.804403
+End of pair<int,double>
+
+Content of test05_wv1.log
+Processing object of class: vector<double>
+Length = 16
+[ele] [0] = 0.168572
+[ele] [1] = 0.47553
+[ele] [2] = 0.392314
+[ele] [3] = 0.221668
+[ele] [4] = 0.21319
+[ele] [5] = 0.0303352
+[ele] [6] = 0.333539
+[ele] [7] = 0.194149
+[ele] [8] = 0.943717
+[ele] [9] = 0.579932
+[ele] [10] = 0.898305
+[ele] [11] = 0.665564
+[ele] [12] = 0.49861
+[ele] [13] = 0.560628
+[ele] [14] = 0.182285
+[ele] [15] = 0.296526
+End of vector<double>
+
+Content of test06_wv1.log
+Processing object of class: vector<pair<int,double> >
+Length = 4
+[ele] [0] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 2
+  [mem] p double second = 0.648126
+  End of pair<int,double>
+[ele] [1] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 22
+  [mem] p double second = 0.637131
+  End of pair<int,double>
+[ele] [2] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 22
+  [mem] p double second = 0.0995762
+  End of pair<int,double>
+[ele] [3] = 
+  Processing object of class: pair<int,double>
+  [mem] p int first = 21
+  [mem] p double second = 0.107812
+  End of pair<int,double>
+End of vector<pair<int,double> >
+
+Content of test07_wv1.log
+Processing object of class: vector<ClassA>
+Length = 4
+[ele] [0] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 16
+    [mem] p double m_b = 0.20778
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.28891
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.128124
+    End of ClassAIns
+  [mem] p int m_e = 17
+  End of ClassA
+[ele] [1] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.292141
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.891624
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 7
+    [mem] p double m_b = 0.431845
+    End of ClassAIns
+  [mem] p int m_e = 5
+  End of ClassA
+[ele] [2] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 13
+    [mem] p double m_b = 0.686947
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.170671
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 14
+    [mem] p double m_b = 0.0453366
+    End of ClassAIns
+  [mem] p int m_e = 10
+  End of ClassA
+[ele] [3] = 
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 16
+    [mem] p double m_b = 0.182411
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.511032
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 23
+    [mem] p double m_b = 0.365989
+    End of ClassAIns
+  [mem] p int m_e = 5
+  End of ClassA
+End of vector<ClassA>
+
+Content of test08_wv1.log
+Processing object of class: vector<ClassA*>
+Length = 14
+[ele] [0] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.698197
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.478537
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 3
+    [mem] p double m_b = 0.338729
+    End of ClassAIns
+  [mem] p int m_e = 3
+  End of ClassA
+[ele] [1] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.419246
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.777537
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.980437
+    End of ClassAIns
+  [mem] p int m_e = 12
+  End of ClassA
+[ele] [2] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 5
+      [mem] p double m_b = 0.744085
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.82974
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 12
+      [mem] p double m_b = 0.621956
+      End of ClassAIns
+    [mem] p int m_e = 11
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 2
+  [mem] p double m_g = 0.613066
+  End of ClassB
+[ele] [3] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.723802
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.144551
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.310787
+    End of ClassAIns
+  [mem] p int m_e = 4
+  End of ClassA
+[ele] [4] = 0
+[ele] [5] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 14
+    [mem] p double m_b = 0.599796
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.644575
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 13
+    [mem] p double m_b = 0.555968
+    End of ClassAIns
+  [mem] p int m_e = 22
+  End of ClassA
+[ele] [6] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.0961581
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.122933
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.820072
+    End of ClassAIns
+  [mem] p int m_e = 4
+  End of ClassA
+[ele] [7] = 0
+[ele] [8] = 0
+[ele] [9] = 0
+[ele] [10] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.191002
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.436343
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.868164
+    End of ClassAIns
+  [mem] p int m_e = 4
+  End of ClassA
+[ele] [11] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.900475
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.178657
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 21
+    [mem] p double m_b = 0.622874
+    End of ClassAIns
+  [mem] p int m_e = 30
+  End of ClassA
+[ele] [12] =
+  Processing object of class: ClassA
+  Processing bases of: ClassA
+    Processing object of class: ClassABase
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.994845
+    End of ClassABase
+  End of bases of: ClassA
+  [mem] p double m_c = 0.541551
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 8
+    [mem] p double m_b = 0.638946
+    End of ClassAIns
+  [mem] p int m_e = 18
+  End of ClassA
+[ele] [13] = 0
+End of vector<ClassA*>
+
+Content of test09_wv1.log
+Processing object of class: vector<ClassB>
+Length = 6
+[ele] [0] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 14
+      [mem] p double m_b = 0.149267
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.996724
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 4
+      [mem] p double m_b = 0.651539
+      End of ClassAIns
+    [mem] p int m_e = 1
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 12
+  [mem] p double m_g = 0.827913
+  End of ClassB
+[ele] [1] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 9
+      [mem] p double m_b = 0.610204
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.236413
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 13
+      [mem] p double m_b = 0.677715
+      End of ClassAIns
+    [mem] p int m_e = 26
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 20
+  [mem] p double m_g = 0.0813827
+  End of ClassB
+[ele] [2] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 4
+      [mem] p double m_b = 0.479199
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.777878
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 15
+      [mem] p double m_b = 0.943338
+      End of ClassAIns
+    [mem] p int m_e = 30
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 11
+  [mem] p double m_g = 0.202668
+  End of ClassB
+[ele] [3] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 11
+      [mem] p double m_b = 0.653544
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.682759
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 19
+      [mem] p double m_b = 0.0999271
+      End of ClassAIns
+    [mem] p int m_e = 23
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 23
+  [mem] p double m_g = 0.241139
+  End of ClassB
+[ele] [4] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 8
+      [mem] p double m_b = 0.96087
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.423396
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 11
+      [mem] p double m_b = 0.000249498
+      End of ClassAIns
+    [mem] p int m_e = 27
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 1
+  [mem] p double m_g = 0.165846
+  End of ClassB
+[ele] [5] = 
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 1
+      [mem] p double m_b = 0.606455
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.729972
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 19
+      [mem] p double m_b = 0.965768
+      End of ClassAIns
+    [mem] p int m_e = 15
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 16
+  [mem] p double m_g = 0.461608
+  End of ClassB
+End of vector<ClassB>
+
+Content of test10_wv1.log
+Processing object of class: vector<ClassB*>
+Length = 22
+[ele] [0] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 21
+      [mem] p double m_b = 0.953922
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.0236552
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 9
+      [mem] p double m_b = 0.869526
+      End of ClassAIns
+    [mem] p int m_e = 9
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 10
+  [mem] p double m_g = 0.300952
+  End of ClassB
+[ele] [1] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 26
+      [mem] p double m_b = 0.753346
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.538244
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 13
+      [mem] p double m_b = 0.212371
+      End of ClassAIns
+    [mem] p int m_e = 3
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 9
+  [mem] p double m_g = 0.0197818
+  End of ClassB
+[ele] [2] = 0
+[ele] [3] = 0
+[ele] [4] = 0
+[ele] [5] = 0
+[ele] [6] = 0
+[ele] [7] = 0
+[ele] [8] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 5
+      [mem] p double m_b = 0.28253
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.172685
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 29
+      [mem] p double m_b = 0.680953
+      End of ClassAIns
+    [mem] p int m_e = 5
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 8
+  [mem] p double m_g = 0.399445
+  End of ClassB
+[ele] [9] = 0
+[ele] [10] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 9
+      [mem] p double m_b = 0.693569
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.500355
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 4
+      [mem] p double m_b = 0.151303
+      End of ClassAIns
+    [mem] p int m_e = 21
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 22
+  [mem] p double m_g = 0.979647
+  End of ClassB
+[ele] [11] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 17
+      [mem] p double m_b = 0.680821
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.955352
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 18
+      [mem] p double m_b = 0.770454
+      End of ClassAIns
+    [mem] p int m_e = 28
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 20
+  [mem] p double m_g = 0.670975
+  End of ClassB
+[ele] [12] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 29
+      [mem] p double m_b = 0.162923
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.335057
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 29
+      [mem] p double m_b = 0.109662
+      End of ClassAIns
+    [mem] p int m_e = 19
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 29
+  [mem] p double m_g = 0.985243
+  End of ClassB
+[ele] [13] = 0
+[ele] [14] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 21
+      [mem] p double m_b = 0.55332
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.587006
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 21
+      [mem] p double m_b = 0.462648
+      End of ClassAIns
+    [mem] p int m_e = 18
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 3
+  [mem] p double m_g = 0.638267
+  End of ClassB
+[ele] [15] = 0
+[ele] [16] = 0
+[ele] [17] = 0
+[ele] [18] = 0
+[ele] [19] = 0
+[ele] [20] = 0
+[ele] [21] =
+  Processing object of class: ClassB
+  Processing bases of: ClassB
+    Processing object of class: ClassA
+    Processing bases of: ClassA
+      Processing object of class: ClassABase
+      [mem] p int m_a = 23
+      [mem] p double m_b = 0.444531
+      End of ClassABase
+    End of bases of: ClassA
+    [mem] p double m_c = 0.417702
+    [mem] p ClassAIns m_d = 
+      Processing object of class: ClassAIns
+      [mem] p int m_a = 23
+      [mem] p double m_b = 0.437753
+      End of ClassAIns
+    [mem] p int m_e = 6
+    End of ClassA
+  End of bases of: ClassB
+  [mem] p int m_f = 18
+  [mem] p double m_g = 0.132688
+  End of ClassB
+End of vector<ClassB*>
+
+Content of test11_wv1.log
+Processing object of class: vector<ClassC>
+Length = 10
+[ele] [0] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.939091
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.933946
+  [mem] p double m_g = 0.0736601
+  End of ClassC
+[ele] [1] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 19
+    [mem] p double m_b = 0.514749
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.624664
+  [mem] p double m_g = 0.130645
+  End of ClassC
+[ele] [2] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.134149
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.652926
+  [mem] p double m_g = 0.26521
+  End of ClassC
+[ele] [3] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.590215
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.669704
+  [mem] p double m_g = 0.554332
+  End of ClassC
+[ele] [4] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 1
+    [mem] p double m_b = 0.184347
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.99118
+  [mem] p double m_g = 0.573678
+  End of ClassC
+[ele] [5] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 20
+    [mem] p double m_b = 0.594858
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.515245
+  [mem] p double m_g = 0.330694
+  End of ClassC
+[ele] [6] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 12
+    [mem] p double m_b = 0.883965
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.771485
+  [mem] p double m_g = 0.599075
+  End of ClassC
+[ele] [7] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 1
+    [mem] p double m_b = 0.0122588
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.698452
+  [mem] p double m_g = 0.265991
+  End of ClassC
+[ele] [8] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 23
+    [mem] p double m_b = 0.999973
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.749792
+  [mem] p double m_g = 0.484956
+  End of ClassC
+[ele] [9] = 
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.622777
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.902512
+  [mem] p double m_g = 0.0565051
+  End of ClassC
+End of vector<ClassC>
+
+Content of test12_wv1.log
+Processing object of class: vector<ClassC*>
+Length = 23
+[ele] [0] = 0
+[ele] [1] = 0
+[ele] [2] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 26
+    [mem] p double m_b = 0.345082
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.0818426
+  [mem] p double m_g = 0.222622
+  End of ClassC
+[ele] [3] = 0
+[ele] [4] = 0
+[ele] [5] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.0407776
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.117889
+  [mem] p double m_g = 0.57519
+  End of ClassC
+[ele] [6] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 7
+    [mem] p double m_b = 0.238722
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.996929
+  [mem] p double m_g = 0.258591
+  End of ClassC
+[ele] [7] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 26
+    [mem] p double m_b = 0.306584
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.0333625
+  [mem] p double m_g = 0.70642
+  End of ClassC
+[ele] [8] = 0
+[ele] [9] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 1
+    [mem] p double m_b = 0.672733
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.813562
+  [mem] p double m_g = 0.807284
+  End of ClassC
+[ele] [10] = 0
+[ele] [11] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 24
+    [mem] p double m_b = 0.335849
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.699259
+  [mem] p double m_g = 0.425855
+  End of ClassC
+[ele] [12] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 29
+    [mem] p double m_b = 0.554841
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.710495
+  [mem] p double m_g = 0.37836
+  End of ClassC
+[ele] [13] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 2
+    [mem] p double m_b = 0.155477
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.885354
+  [mem] p double m_g = 0.721566
+  End of ClassC
+[ele] [14] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 13
+    [mem] p double m_b = 0.132031
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.439331
+  [mem] p double m_g = 0.467188
+  End of ClassC
+[ele] [15] = 0
+[ele] [16] = 0
+[ele] [17] = 0
+[ele] [18] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.96851
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.999723
+  [mem] p double m_g = 0.94716
+  End of ClassC
+[ele] [19] = 0
+[ele] [20] = 0
+[ele] [21] = 0
+[ele] [22] =
+  Processing object of class: ClassC
+  Processing bases of: ClassC
+    Processing object of class: ClassABase
+    [mem] p int m_a = 15
+    [mem] p double m_b = 0.0210093
+    End of ClassABase
+  End of bases of: ClassC
+  [mem] p double m_f = 0.831763
+  [mem] p double m_g = 0.108546
+  End of ClassC
+End of vector<ClassC*>
+
+Content of test13_wv1.log
+Processing object of class: vector<ClassD>
+Length = 3
+[ele] [0] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.890206
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 14
+    [mem] p double m_b = 0.906907
+    End of ClassAIns
+  [mem] p int m_e = 17
+  End of ClassD
+[ele] [1] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.759434
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 25
+    [mem] p double m_b = 0.532969
+    End of ClassAIns
+  [mem] p int m_e = 2
+  End of ClassD
+[ele] [2] = 
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.0539857
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 27
+    [mem] p double m_b = 0.146907
+    End of ClassAIns
+  [mem] p int m_e = 15
+  End of ClassD
+End of vector<ClassD>
+
+Content of test14_wv1.log
+Processing object of class: vector<ClassD*>
+Length = 3
+[ele] [0] = 0
+[ele] [1] =
+  Processing object of class: ClassD
+  [mem] p float m_c = 0.507318
+  [mem] p ClassAIns m_d = 
+    Processing object of class: ClassAIns
+    [mem] p int m_a = 17
+    [mem] p double m_b = 0.800713
+    End of ClassAIns
+  [mem] p int m_e = 20
+  End of ClassD
+[ele] [2] = 0
+End of vector<ClassD*>
+
+(int) 0

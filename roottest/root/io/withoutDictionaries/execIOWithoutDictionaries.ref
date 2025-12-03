@@ -1,0 +1,19 @@
+
+Processing execIOWithoutDictionaries.C...
+Error in <TFile::WriteObjectAny>: The class requested (vector<classWithDictionary1>) for the key name "cwd1Instances" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<classWithDictionary1>). No data will be written.
+Error in <TTree::Branch>: The class requested (vector<classWithDictionary1>) for the branch "cwd1Instances" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<classWithDictionary1>) to avoid to write corrupted data.
+Error in <TTree::SetBranchAddress>: unknown branch -> cwd1Instances
+Row-wise streaming
+Column-wise streaming
+Error: no data could be read for cwd1Instances
+Entry 0
+Entry 10
+Entry 20
+Entry 30
+Entry 40
+Entry 50
+Entry 60
+Entry 70
+Entry 80
+Entry 90
+Differences detected between the written and expected objects (this is expected)

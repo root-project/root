@@ -18,7 +18,7 @@
 #include "TStorage.h"
 #include "TVersionCheck.h"
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <string>
 #include <iosfwd>
 
@@ -55,7 +55,7 @@ protected:
 
    static void SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs = "", Bool_t empty_line = kTRUE);
 
-   static TString SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line = kFALSE);
+   static TString SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Int_t flag = 0);
 
    static void SavePrimitiveDraw(std::ostream &out, const char *variable_name, Option_t *option = nullptr);
 
@@ -115,8 +115,8 @@ protected:
 public:
 
    TObject();
-   TObject(const TObject &object);
-   TObject &operator=(const TObject &rhs);
+   TObject(const TObject &object) noexcept;
+   TObject &operator=(const TObject &rhs) noexcept;
    virtual ~TObject();
 
    virtual void        AppendPad(Option_t *option="");
@@ -190,11 +190,8 @@ public:
    void    *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
    void     operator delete(void *ptr);
    void     operator delete[](void *ptr);
-#ifdef R__SIZEDDELETE
-   // Sized deallocation.
    void     operator delete(void*, size_t);
    void     operator delete[](void*, size_t);
-#endif
    void     operator delete(void *ptr, void *vp);
    void     operator delete[](void *ptr, void *vp);
 
@@ -275,7 +272,7 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject copy ctor.
 
-inline TObject::TObject(const TObject &obj)
+inline TObject::TObject(const TObject &obj) noexcept
 {
    fBits = obj.fBits;
 
@@ -299,7 +296,7 @@ inline TObject::TObject(const TObject &obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject assignment operator.
 
-inline TObject &TObject::operator=(const TObject &rhs)
+inline TObject &TObject::operator=(const TObject &rhs) noexcept
 {
    if (R__likely(this != &rhs)) {
       fUniqueID = rhs.fUniqueID; // when really unique don't copy

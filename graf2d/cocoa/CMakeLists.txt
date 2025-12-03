@@ -39,7 +39,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
-    GLEW::GLEW
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)

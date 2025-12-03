@@ -1,0 +1,38 @@
+
+Processing /Users/mato/Development/ROOT/root.git/roottest/cling/offset/runvbase.C+...
+derived Basement -> base Top: Compiler and interpreter say the same value.
+derived Basement -> base Top: Compiler and interpreter say the same value.
+Top does not derive from Basement:
+derived Top -> base Basement: Compiler says something, interpreter says -1.
+The object is a base ptr object:
+derived Basement -> base Top: Compiler and TClass agree or offset fail - this is as good as it gets.
+derived Basement -> base Fill: Compiler and interpreter say the same value.
+derived Basement -> base Mid1: Compiler and interpreter say the same value.
+derived Basement -> base Bottom: Compiler and interpreter say the same value.
+derived Basement -> base Basement: Compiler and interpreter say the same value.
+derived Bottom -> base Top: Compiler and interpreter say the same value.
+derived Bottom -> base Mid1: Compiler and interpreter say the same value.
+derived Bottom -> base Mid2: Compiler and interpreter say the same value.
+derived Bottom -> base Bottom: Compiler and interpreter say the same value.
+derived Mid1 -> base Top: Compiler and interpreter say the same value.
+derived Mid1 -> base Mid1: Compiler and interpreter say the same value.
+derived Mid1 -> base Mid2: Compiler says something, interpreter says -1.
+derived Mid2 -> base Top: Compiler and interpreter say the same value.
+derived Mid2 -> base Mid2: Compiler and interpreter say the same value.
+derived Basement -> base Top: Compiler and interpreter say the same value.
+derived Basement -> base Top: Compiler and interpreter say the same value.
+Top does not derive from Basement:
+derived Top -> base Basement: Compiler says something, interpreter says -1.
+derived Basement -> base Fill: Compiler and interpreter say the same value.
+derived Basement -> base Mid1: Compiler and interpreter say the same value.
+derived Basement -> base Bottom: Compiler and interpreter say the same value.
+derived Basement -> base Basement: Compiler and interpreter say the same value.
+derived Bottom -> base Top: Compiler and interpreter say the same value.
+derived Bottom -> base Mid1: Compiler and interpreter say the same value.
+derived Bottom -> base Mid2: Compiler and interpreter say the same value.
+derived Bottom -> base Bottom: Compiler and interpreter say the same value.
+derived Mid1 -> base Top: Compiler and interpreter say the same value.
+derived Mid1 -> base Mid1: Compiler and interpreter say the same value.
+derived Mid1 -> base Mid2: Compiler says something, interpreter says -1.
+derived Mid2 -> base Top: Compiler and interpreter say the same value.
+derived Mid2 -> base Mid2: Compiler and interpreter say the same value.

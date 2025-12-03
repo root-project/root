@@ -1,17 +1,20 @@
 #include <sstream>
 
-#include <ROOT/InternalTreeUtils.hxx> // GetTopLevelBranchNames
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RFriendInfo.hxx>
 #include <ROOT/RTTreeDS.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RLoopManager.hxx> // GetBranchNames
 #include <ROOT/RDF/RTreeColumnReader.hxx>
 #include <ROOT/RDF/Utils.hxx> // GetBranchOrLeafTypeName
 
+#include <TBranchObject.h>
 #include <TClassEdit.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TChain.h>
+#include <TFriendElement.h>
 #include <TTreeReader.h>
+#include <ROOT/RFriendInfo.hxx>
+#include <ROOT/InternalTreeUtils.hxx> // GetTopLevelBranchNames
 
 #ifdef R__USE_IMT
 #include <TROOT.h>
@@ -59,10 +62,194 @@ GetCollectionInfo(const std::string &typeName)
 
    return {false, "", ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ECollectionType::kRVec};
 }
+
+bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+{
+   return (leaves.find(leaf) != leaves.end());
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload does not check whether the leaf/branch is already in bNamesReg. In case this is a friend leaf/branch,
+/// `allowDuplicates` controls whether we add both `friendname.bname` and `bname` or just the shorter version.
+void InsertBranchName(std::set<std::string> &bNamesReg, std::vector<std::string> &bNames, const std::string &branchName,
+                      const std::string &friendName, bool allowDuplicates)
+{
+   if (!friendName.empty()) {
+      // In case of a friend tree, users might prepend its name/alias to the branch names
+      const auto friendBName = friendName + "." + branchName;
+      if (bNamesReg.insert(friendBName).second)
+         bNames.push_back(friendBName);
+   }
+
+   if (allowDuplicates || friendName.empty()) {
+      if (bNamesReg.insert(branchName).second)
+         bNames.push_back(branchName);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload makes sure that the TLeaf has not been already inserted.
+void InsertBranchName(std::set<std::string> &bNamesReg, std::vector<std::string> &bNames, const std::string &branchName,
+                      const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+{
+   const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
+   if (!canAdd) {
+      return;
+   }
+
+   InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
+
+   foundLeaves.insert(leaf);
+}
+
+void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames, TBranch *b,
+                   std::string prefix, std::string &friendName, bool allowDuplicates)
+{
+   // We want to avoid situations of overlap between the prefix and the
+   // sub-branch name that might happen when the branch is composite, e.g.
+   // prefix=reco_Wdecay2_from_tbar_4vect_NOSYS.fCoordinates.
+   // subBranchName=fCoordinates.fPt
+   // which would lead to a repetition of fCoordinates in the output branch name
+   // Boundary to search for the token before the last dot
+   auto prefixEndingDot = std::string::npos;
+   if (!prefix.empty() && prefix.back() == '.')
+      prefixEndingDot = prefix.size() - 2;
+   std::string lastPrefixToken{};
+   if (auto prefixLastRealDot = prefix.find_last_of('.', prefixEndingDot); prefixLastRealDot != std::string::npos)
+      lastPrefixToken = prefix.substr(prefixLastRealDot + 1, prefixEndingDot - prefixLastRealDot);
+
+   for (auto sb : *b->GetListOfBranches()) {
+      TBranch *subBranch = static_cast<TBranch *>(sb);
+      auto subBranchName = std::string(subBranch->GetName());
+      auto fullName = prefix + subBranchName;
+
+      if (auto subNameFirstDot = subBranchName.find_first_of('.'); subNameFirstDot != std::string::npos) {
+         // Concatenate the prefix to the sub-branch name without overlaps
+         if (!lastPrefixToken.empty() && lastPrefixToken == subBranchName.substr(0, subNameFirstDot))
+            fullName = prefix + subBranchName.substr(subNameFirstDot + 1);
+      }
+
+      std::string newPrefix;
+      if (!prefix.empty())
+         newPrefix = fullName + ".";
+
+      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName, allowDuplicates);
+
+      auto branchDirectlyFromTree = t.GetBranch(fullName.c_str());
+      if (!branchDirectlyFromTree)
+         branchDirectlyFromTree = t.FindBranch(fullName.c_str()); // try harder
+      if (branchDirectlyFromTree)
+         InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
+                          allowDuplicates);
+
+      if (bNamesReg.find(subBranchName) == bNamesReg.end() && t.GetBranch(subBranchName.c_str()))
+         InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
+   }
+}
+
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+                        std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
+{
+   std::set<TLeaf *> foundLeaves;
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   const auto branches = t.GetListOfBranches();
+   // Getting the branches here triggered the read of the first file of the chain if t is a chain.
+   // We check if a tree has been successfully read, otherwise we throw (see ROOT-9984) to avoid further
+   // operations
+   if (!t.GetTree()) {
+      std::string err("GetBranchNames: error in opening the tree ");
+      err += t.GetName();
+      throw std::runtime_error(err);
+   }
+   if (branches) {
+      for (auto b : *branches) {
+         TBranch *branch = static_cast<TBranch *>(b);
+         const auto branchName = std::string(branch->GetName());
+         if (branch->IsA() == TBranch::Class()) {
+            // Leaf list
+            auto listOfLeaves = branch->GetListOfLeaves();
+            if (listOfLeaves->GetEntriesUnsafe() == 1) {
+               auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+               InsertBranchName(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
+            }
+
+            for (auto leaf : *listOfLeaves) {
+               auto castLeaf = static_cast<TLeaf *>(leaf);
+               const auto leafName = std::string(leaf->GetName());
+               const auto fullName = branchName + "." + leafName;
+               InsertBranchName(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
+            }
+         } else if (branch->IsA() == TBranchObject::Class()) {
+            // TBranchObject
+            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
+         } else {
+            // TBranchElement
+            // Check if there is explicit or implicit dot in the name
+
+            bool dotIsImplied = false;
+            auto be = dynamic_cast<TBranchElement *>(b);
+            if (!be)
+               throw std::runtime_error("GetBranchNames: unsupported branch type");
+            // TClonesArray (3) and STL collection (4)
+            if (be->GetType() == 3 || be->GetType() == 4)
+               dotIsImplied = true;
+
+            if (dotIsImplied || branchName.back() == '.')
+               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName, allowDuplicates);
+            else
+               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
+         }
+      }
+   }
+
+   // The list of friends needs to be accessed via GetTree()->GetListOfFriends()
+   // (and not via GetListOfFriends() directly), otherwise when `t` is a TChain we
+   // might not recover the list correctly (https://github.com/root-project/root/issues/6741).
+   auto friendTrees = t.GetTree()->GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+
+      std::string frName;
+      auto alias = t.GetFriendAlias(friendTree);
+      if (alias != nullptr)
+         frName = std::string(alias);
+      else
+         frName = std::string(friendTree->GetName());
+
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the branches names, including the ones of the friend trees
+std::vector<std::string> RetrieveDatasetSchema(TTree &t, bool allowDuplicates = true)
+{
+   std::set<std::string> bNamesSet;
+   std::vector<std::string> bNames;
+   std::set<TTree *> analysedTrees;
+   std::string emptyFrName = "";
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
+   return bNames;
+}
 } // namespace
 
 // Destructor is defined here, where the data member types are actually available
-ROOT::Internal::RDF::RTTreeDS::~RTTreeDS() = default;
+ROOT::Internal::RDF::RTTreeDS::~RTTreeDS()
+{
+   if (fNoCleanupNotifier && fTree)
+      // fNoCleanupNotifier was created only if the input TTree is a TChain
+      fNoCleanupNotifier->RemoveLink(*static_cast<TChain *>(fTree.get()));
+};
 
 void ROOT::Internal::RDF::RTTreeDS::Setup(std::shared_ptr<TTree> &&tree, const ROOT::TreeUtils::RFriendInfo *friendInfo)
 {
@@ -77,9 +264,9 @@ void ROOT::Internal::RDF::RTTreeDS::Setup(std::shared_ptr<TTree> &&tree, const R
    }
 
    if (fBranchNamesWithDuplicates.empty())
-      fBranchNamesWithDuplicates = ROOT::Internal::RDF::GetBranchNames(*fTree);
+      fBranchNamesWithDuplicates = RetrieveDatasetSchema(*fTree);
    if (fBranchNamesWithoutDuplicates.empty())
-      fBranchNamesWithoutDuplicates = ROOT::Internal::RDF::GetBranchNames(*fTree, /*allowDuplicates*/ false);
+      fBranchNamesWithoutDuplicates = RetrieveDatasetSchema(*fTree, /*allowDuplicates*/ false);
    if (fTopLevelBranchNames.empty())
       fTopLevelBranchNames = ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*fTree);
 }
@@ -108,6 +295,16 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, TDirectory *d
                                dirPtr->GetName() + "'.");
    }
    Setup(ROOT::Internal::RDF::MakeAliasedSharedPtr(tree));
+
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, std::string_view fileNameGlob)
@@ -118,6 +315,15 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, std::string_v
    chain->Add(fileNameGlobInt.c_str());
 
    Setup(std::move(chain));
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, const std::vector<std::string> &fileNameGlobs)
@@ -128,6 +334,16 @@ ROOT::Internal::RDF::RTTreeDS::RTTreeDS(std::string_view treeName, const std::ve
       chain->Add(f.c_str());
 
    Setup(std::move(chain));
+
+   // We keep the existing functionality from RLoopManager, until proven not necessary.
+   // See https://github.com/root-project/root/pull/10729
+   // The only constructors that were using this functionality are the ones taking a TDirectory * and the ones taking
+   // a file name or list of file names, see
+   // https://github.com/root-project/root/blob/f8b8277627f08cb79d71cec1006b219a82ae273c/tree/dataframe/src/RDataFrame.cxx
+   if (auto ch = dynamic_cast<TChain *>(fTree.get()); ch && !fNoCleanupNotifier) {
+      fNoCleanupNotifier = std::make_unique<ROOT::Internal::TreeUtils::RNoCleanupNotifier>();
+      fNoCleanupNotifier->RegisterChain(*ch);
+   }
 }
 
 ROOT::RDataFrame ROOT::Internal::RDF::FromTTree(std::string_view treeName, std::string_view fileNameGlob)
@@ -142,7 +358,7 @@ ROOT::Internal::RDF::FromTTree(std::string_view treeName, const std::vector<std:
 }
 
 ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
-   const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
+   unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
 {
    // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
    auto *tree = fTreeReader->GetTree()->GetTree();
@@ -290,15 +506,32 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
    if (!treeReader)
       return nullptr;
 
-   if (ti == typeid(void))
-      return std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col);
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> colReader;
 
-   const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
-   if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
-      return std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, col, innerTypeName,
-                                                                                  collType);
-   else
-      return std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName);
+   if (ti == typeid(void)) {
+      colReader = std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col);
+   } else {
+      const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
+      if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, col,
+                                                                                          innerTypeName, collType);
+      else
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName);
+   }
+
+   if (TDirectory *treeDir = treeReader->GetTree()->GetDirectory(); treeDir) {
+      using Map_t = std::unordered_map<std::string, std::pair<std::string, unsigned int>>;
+      const std::string bitmaskMapName =
+         std::string{"R_rdf_column_to_bitmask_mapping_"} + treeReader->GetTree()->GetName();
+      if (Map_t const *columnMaskMap = treeDir->Get<Map_t>(bitmaskMapName.c_str()); columnMaskMap) {
+         if (auto it = columnMaskMap->find(std::string(col)); it != columnMaskMap->end()) {
+            colReader = std::make_unique<RMaskedColumnReader>(*treeReader, std::move(colReader), it->second.first,
+                                                              it->second.second);
+         }
+      }
+   }
+
+   return colReader;
 }
 
 bool ROOT::Internal::RDF::RTTreeDS::SetEntry(unsigned int, ULong64_t entry)
@@ -399,15 +632,14 @@ void ROOT::Internal::RDF::RTTreeDS::Finalize()
 
 void ROOT::Internal::RDF::RTTreeDS::Initialize()
 {
-   if (fNSlots == 1) {
-      assert(!fTreeReader);
-      fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
-      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
-          fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
-          fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) !=
-             TTreeReader::kEntryValid) {
-         throw std::logic_error("Something went wrong in initializing the TTreeReader.");
-      }
+   if (ROOT::IsImplicitMTEnabled())
+      return;
+   assert(!fTreeReader);
+   fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
+   if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
+       fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
+       fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) != TTreeReader::kEntryValid) {
+      throw std::logic_error("Something went wrong in initializing the TTreeReader.");
    }
 }
 

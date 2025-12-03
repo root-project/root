@@ -1,0 +1,9 @@
+{ decls }
+
+
+[ libfclassVal_dictrflx ]
+# List of selected classes
+class B
+# List of selected enums and outer classes
+enum pclass
+enum a::pclass

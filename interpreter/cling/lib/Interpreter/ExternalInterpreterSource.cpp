@@ -32,7 +32,7 @@ namespace {
                      cling::ExternalInterpreterSource& source):
       ASTImporter(ToContext, ToFileManager, FromContext, FromFileManager,
                   MinimalImport), m_Source(source) {}
-    virtual ~ClingASTImporter() = default;
+    ~ClingASTImporter() override = default;
 
     void Imported(Decl *From, Decl *To) override {
       ASTImporter::Imported(From, To);
@@ -188,7 +188,8 @@ namespace cling {
   /// Decl(s) (Contexts).
   ///
   bool ExternalInterpreterSource::FindExternalVisibleDeclsByName(
-    const DeclContext *childCurrentDeclContext, DeclarationName childDeclName) {
+      const DeclContext* childCurrentDeclContext, DeclarationName childDeclName,
+      const DeclContext* OriginalDC) {
 
     assert(childDeclName && "Child Decl name is empty");
 

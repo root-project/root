@@ -12,16 +12,6 @@
 #ifndef ROOT_TContextMenuImp
 #define ROOT_TContextMenuImp
 
-
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TContextMenuImp                                                            //
-//                                                                            //
-// This class provides an interface to GUI independent                        //
-// context sensitive popup menus.                                             //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 #include "Rtypes.h"
 
 class TContextMenu;
@@ -29,7 +19,7 @@ class TObject;
 class TMethod;
 class TFunction;
 
-
+// interface to GUI independent context sensitive popup menus.
 class TContextMenuImp {
 
 protected:

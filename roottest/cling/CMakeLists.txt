@@ -1,0 +1,5 @@
+if (NOT MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+endif()
+
+ROOTTEST_ADD_TESTDIRS()

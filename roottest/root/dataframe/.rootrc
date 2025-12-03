@@ -1,0 +1,3 @@
+# First two lines are taken from ROOTTEST_ADD_TESTDIRS in RootMacros.cmake
+Rint.History:  .root_hist
+ACLiC.LinkLibs:  1

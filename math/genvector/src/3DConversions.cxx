@@ -21,7 +21,7 @@
 
 #include "Math/GenVector/3DConversions.h"
 
-#include "Math/Math.h"
+#include "TMath.h"
 
 #include "Math/GenVector/Rotation3D.h"
 #include "Math/GenVector/AxisAngle.h"
@@ -73,7 +73,7 @@ void convert( Rotation3D const & from, AxisAngle   & to)
 
    u.SetCoordinates( uX, uY, uZ );
 
-   static const double pi = M_PI;
+   static const double pi = TMath::Pi();
 
    double angle;
    const double cosdelta = (m[kXX] + m[kYY] + m[kZZ] - 1.0) / 2.0;
@@ -93,7 +93,7 @@ void convert( Rotation3D const & from, AxisAngle   & to)
 } // convert to AxisAngle
 
 static void correctByPi ( double& psi, double& phi ) {
-   static const double pi = M_PI;
+   static const double pi = TMath::Pi();
    if (psi > 0) {
       psi -= pi;
    } else {
@@ -109,16 +109,14 @@ static void correctByPi ( double& psi, double& phi ) {
 void convert( Rotation3D const & from, EulerAngles & to)
 {
    // conversion from Rotation3D to Euler Angles
-   // Mathematical justification appears in
-   // http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
 
    double r[9];
    from.GetComponents(r,r+9);
 
    double phi, theta, psi;
    double psiPlusPhi, psiMinusPhi;
-   static const double pi = M_PI;
-   static const double pi_2 = M_PI_2;
+   static const double pi = TMath::Pi();
+   static const double pi_2 = TMath::PiOver2();
 
    theta = (std::fabs(r[kZZ]) <= 1.0) ? std::acos(r[kZZ]) :
       (r[kZZ]  >  0.0) ?     0            : pi;
@@ -252,15 +250,14 @@ void convert( Rotation3D const & from, Quaternion  & to)
 ////////////////////////////////////////////////////////////////////////////////
 /// conversion from Rotation3D to RotationZYX
 /// same Math used as for EulerAngles apart from some different meaning of angles and
-/// matrix elements. But the basic algorithms principles are the same described in
-/// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
+/// matrix elements.
 
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
    // theta is assumed to be in range [-PI/2,PI/2].
    // this is guaranteed by the Rectify function
 
-   static const double pi_2 = M_PI_2;
+   static const double pi_2 = TMath::PiOver2();
 
    double r[9];
    from.GetComponents(r,r+9);

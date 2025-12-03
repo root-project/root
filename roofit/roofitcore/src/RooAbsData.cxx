@@ -473,10 +473,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const Roo
 
 RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut) const
 {
-  RooFormulaVar cutVar(cut,cut,*get()) ;
-  auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
-  ret->copyGlobalObservables(*this);
-  return RooFit::makeOwningPtr(std::move(ret));
+  return reduce(RooFormulaVar{cut,cut,*get()});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1228,7 +1225,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
   if(!box) return nullptr;
-  box->SetName(Form("%s_statBox",GetName())) ;
+  box->SetName((std::string{GetName()} + "_statBox").c_str());
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);
@@ -1482,15 +1479,16 @@ SplittingSetup initSplit(RooAbsData const &data, RooAbsCategory const &splitCat)
    return setup;
 }
 
-RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool createEmptyDataSets,
-                                   std::function<std::unique_ptr<RooAbsData>(const char *label)> createEmptyData)
+std::vector<std::unique_ptr<RooAbsData>>
+splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool createEmptyDataSets,
+          std::function<std::unique_ptr<RooAbsData>(const char *label)> createEmptyData)
 {
-   auto dsetList = std::make_unique<TList>();
+   std::vector<std::unique_ptr<RooAbsData>> dsetList;
 
    // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
    if (createEmptyDataSets) {
       for (const auto &nameIdx : cloneCat) {
-         dsetList->Add(createEmptyData(nameIdx.first.c_str()).release());
+         dsetList.emplace_back(createEmptyData(nameIdx.first.c_str()).release());
       }
    }
 
@@ -1499,10 +1497,13 @@ RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory 
    // Loop over dataset and copy event to matching subset
    for (int i = 0; i < data.numEntries(); ++i) {
       const RooArgSet *row = data.get(i);
-      auto subset = static_cast<RooAbsData *>(dsetList->FindObject(cloneCat.getCurrentLabel()));
+      auto found = std::find_if(dsetList.begin(), dsetList.end(), [&](auto const &item) {
+         return strcmp(item->GetName(), cloneCat.getCurrentLabel()) == 0;
+      });
+      RooAbsData *subset = found != dsetList.end() ? found->get() : nullptr;
       if (!subset) {
-         subset = createEmptyData(cloneCat.getCurrentLabel()).release();
-         dsetList->Add(subset);
+         dsetList.emplace_back(createEmptyData(cloneCat.getCurrentLabel()));
+         subset = dsetList.back().get();
       }
 
       // For datasets with weight errors or sumW2, the interface to fill
@@ -1514,7 +1515,7 @@ RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory 
       }
    }
 
-   return RooFit::makeOwningPtr(std::move(dsetList));
+   return dsetList;
 }
 
 } // namespace
@@ -1534,21 +1535,46 @@ RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory 
  * channel depends on. This is much faster in case of many channels, and the
  * resulting sub-datasets don't waste memory for unused columns.
  *
+ * \throws `std::runtime_error` if an error occurs.
+ *
  * \param splitCat The categorical variable used for splitting the dataset.
  * \param createEmptyDataSets Flag indicating whether to create empty datasets
  *                            for missing categories (`false` by default).
  *
- * \return An owning pointer to a TList of subsets of the dataset.
- *         Returns `nullptr` if an error occurs.
+ * \return Subsets of the dataset.
+ *
+ * \note **Backwards compatibility:**
+ * In releases before ROOT 6.38.00, this function returned a `TList*`. If you
+ * still need a `TList*`, you can convert the return value with a small helper:
+ *
+ * ```cpp
+ * TList *splitsToTList(std::vector<std::unique_ptr<RooAbsData>> &&vec) {
+ *     auto *tlist = new TList;
+ *     for (auto &d : vec)
+ *         tlist->Add(d.release());
+ *     return tlist;
+ * }
+ *
+ * // Example usage:
+ * TList *splits = splitsToTList(data->split(*category));
+ * // ... do something with splits ...
+ * splits->Delete();
+ * delete splits;
+ * ```
+ *
+ * This way, you can continue to work with `TList` while adopting the new
+ * `std::vector<std::unique_ptr<RooAbsData>>` API over time, which ensures
+ * automatic cleanup of resources.
  */
 
-RooFit::OwningPtr<TList> RooAbsData::split(const RooAbsCategory &splitCat, bool createEmptyDataSets) const
+std::vector<std::unique_ptr<RooAbsData>>
+RooAbsData::split(const RooAbsCategory &splitCat, bool createEmptyDataSets) const
 {
    SplittingSetup setup = initSplit(*this, splitCat);
 
    // Something went wrong
    if (!setup.cloneCat)
-      return nullptr;
+      throw std::runtime_error("runtime error in RooAbsData::split");
 
    auto createEmptyData = [&](const char *label) -> std::unique_ptr<RooAbsData> {
       return std::unique_ptr<RooAbsData>{
@@ -1567,14 +1593,16 @@ RooFit::OwningPtr<TList> RooAbsData::split(const RooAbsCategory &splitCat, bool 
  * only contain variables that the pdf for the corresponding channel depends
  * on.
  *
+ * \throws `std::runtime_error` if an error occurs.
+ *
  * \param simPdf The simultaneous pdf used for splitting the dataset.
  * \param createEmptyDataSets Flag indicating whether to create empty datasets
  *                            for missing categories (`false` by default).
  *
- * \return An owning pointer to a TList of subsets of the dataset.
- *         Returns `nullptr` if an error occurs.
+ * \return Subsets of the dataset.
  */
-RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simPdf, bool createEmptyDataSets) const
+std::vector<std::unique_ptr<RooAbsData>>
+RooAbsData::split(const RooSimultaneous &simPdf, bool createEmptyDataSets) const
 {
    auto &splitCat = const_cast<RooAbsCategoryLValue &>(simPdf.indexCat());
 
@@ -1582,7 +1610,7 @@ RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simPdf, bool c
 
    // Something went wrong
    if (!setup.cloneCat)
-      return nullptr;
+      throw std::runtime_error("runtime error in RooAbsData::split");
 
    // Get the observables for a given pdf in the RooSimultaneous, or an empty
    // RooArgSet if no pdf is set
@@ -1939,6 +1967,44 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   return frame;
 }
 
+namespace {
+
+RooHist *createAndFillRooHist(RooAbsData const &absData, RooPlot const &frame, RooAbsRealLValue const &var,
+                              std::string cuts1, std::string cuts2, RooAbsData::PlotOpt opt, bool efficiency,
+                              double scaleFactor)
+{
+   // create and fill temporary histograms of this variable for each state
+   std::string hist1Name = std::string{absData.GetName()} + "_plot_1";
+   std::string hist2Name = std::string{absData.GetName()} + "_plot_2";
+   std::unique_ptr<TH1> hist1;
+   std::unique_ptr<TH1> hist2;
+
+   if (opt.bins) {
+      hist1.reset(var.createHistogram(hist1Name.c_str(), "Events", *opt.bins));
+      hist2.reset(var.createHistogram(hist2Name.c_str(), "Events", *opt.bins));
+   } else {
+      auto &axis = *frame.GetXaxis();
+      hist1.reset(var.createHistogram(hist1Name.c_str(), "Events", axis.GetXmin(), axis.GetXmax(), frame.GetNbinsX()));
+      hist2.reset(var.createHistogram(hist2Name.c_str(), "Events", axis.GetXmin(), axis.GetXmax(), frame.GetNbinsX()));
+   }
+
+   if (opt.cuts && strlen(opt.cuts)) {
+      std::string cuts = opt.cuts;
+      cuts1 += "&&(" + cuts + ")";
+      cuts2 += "&&(" + cuts + ")";
+   }
+
+   if (!absData.fillHistogram(hist1.get(), RooArgList(var), cuts1.c_str(), opt.cutRange) ||
+       !absData.fillHistogram(hist2.get(), RooArgList(var), cuts2.c_str(), opt.cutRange)) {
+      return nullptr;
+   }
+
+   // convert this histogram to a RooHist object on the heap
+   return new RooHist(*hist1, *hist2, 0, 1, opt.etype, opt.xErrorSize, efficiency, scaleFactor);
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
 /// where N(+/-) is the number of data points with asymCat=+1 and asymCat=-1
@@ -1966,48 +2032,14 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
     return nullptr;
   }
 
-  // create and fill temporary histograms of this variable for each state
-  std::string hist1Name(GetName());
-  std::string hist2Name(GetName());
-  hist1Name += "_plot1";
-  std::unique_ptr<TH1> hist1;
-  std::unique_ptr<TH1> hist2;
-  hist2Name += "_plot2";
-
-  if (o.bins) {
-    hist1.reset( var->createHistogram(hist1Name.c_str(), "Events", *o.bins) );
-    hist2.reset( var->createHistogram(hist2Name.c_str(), "Events", *o.bins) );
-  } else {
-    hist1.reset( var->createHistogram(hist1Name.c_str(), "Events",
-            frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-            frame->GetNbinsX()) );
-    hist2.reset( var->createHistogram(hist2Name.c_str(), "Events",
-            frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-            frame->GetNbinsX()) );
+  std::string catName = asymCat.GetName();
+  RooHist *graph =
+     createAndFillRooHist(*this, *frame, *var, "(" + catName + ">0)", "(" + catName + "<0)", o, false, o.scaleFactor);
+  if (graph == nullptr) {
+     coutE(Plotting) << ClassName() << "::" << GetName() << ":plotAsymOn: createHistogram() failed" << std::endl;
+     return nullptr;
   }
-
-  assert(hist1 && hist2);
-
-  std::string cuts1;
-  std::string cuts2;
-  if (o.cuts && strlen(o.cuts)) {
-    cuts1 = Form("(%s)&&(%s>0)",o.cuts,asymCat.GetName());
-    cuts2 = Form("(%s)&&(%s<0)",o.cuts,asymCat.GetName());
-  } else {
-    cuts1 = Form("(%s>0)",asymCat.GetName());
-    cuts2 = Form("(%s<0)",asymCat.GetName());
-  }
-
-  if(! fillHistogram(hist1.get(), RooArgList(*var),cuts1.c_str(),o.cutRange) ||
-     ! fillHistogram(hist2.get(), RooArgList(*var),cuts2.c_str(),o.cutRange)) {
-    coutE(Plotting) << ClassName() << "::" << GetName()
-    << ":plotAsymOn: createHistogram() failed" << std::endl;
-    return nullptr;
-  }
-
-  // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,false,o.scaleFactor);
-  graph->setYAxisLabel(Form("Asymmetry in %s",asymCat.GetName())) ;
+  graph->setYAxisLabel((std::string{"Asymmetry in "} + asymCat.GetName()).c_str());
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
@@ -2016,14 +2048,15 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
   if (o.histName) {
     graph->SetName(o.histName) ;
   } else {
-    std::string hname{Form("h_%s_Asym[%s]",GetName(),asymCat.GetName())};
-    if (o.cutRange && strlen(o.cutRange)>0) {
-      hname += Form("_CutRange[%s]",o.cutRange);
+     std::stringstream hname;
+     hname << "h_" << GetName() << "_Asym[" << asymCat.GetName() << "]";
+     if (o.cutRange && strlen(o.cutRange) > 0) {
+        hname << "_CutRange[" << o.cutRange << "]";
     }
     if (o.cuts && strlen(o.cuts)>0) {
-      hname += Form("_Cut[%s]",o.cuts);
+       hname << "_Cut[" << o.cuts << "]";
     }
-    graph->SetName(hname.c_str()) ;
+    graph->SetName(hname.str().c_str());
   }
 
   // add the RooHist to the specified plot
@@ -2059,48 +2092,16 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
     return nullptr;
   }
 
-  // create and fill temporary histograms of this variable for each state
-  std::string hist1Name(GetName());
-  std::string hist2Name(GetName());
-  hist1Name += "_plot1";
-  std::unique_ptr<TH1> hist1;
-  std::unique_ptr<TH1> hist2;
-  hist2Name += "_plot2";
+  std::string catName = effCat.GetName();
+  RooHist *graph =
+     createAndFillRooHist(*this, *frame, *var, "(" + catName + "==1)", "(" + catName + "==0)", o, true, 1.0);
 
-  if (o.bins) {
-    hist1.reset( var->createHistogram(hist1Name.c_str(), "Events", *o.bins) );
-    hist2.reset( var->createHistogram(hist2Name.c_str(), "Events", *o.bins) );
-  } else {
-    hist1.reset( var->createHistogram(hist1Name.c_str(), "Events",
-            frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-            frame->GetNbinsX()) );
-    hist2.reset( var->createHistogram(hist2Name.c_str(), "Events",
-            frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-            frame->GetNbinsX()) );
+  if (graph == nullptr) {
+     coutE(Plotting) << ClassName() << "::" << GetName() << ":plotEffOn: createHistogram() failed" << std::endl;
+     return nullptr;
   }
 
-  assert(hist1 && hist2);
-
-  std::string cuts1;
-  std::string cuts2;
-  if (o.cuts && strlen(o.cuts)) {
-    cuts1 = Form("(%s)&&(%s==1)",o.cuts,effCat.GetName());
-    cuts2 = Form("(%s)&&(%s==0)",o.cuts,effCat.GetName());
-  } else {
-    cuts1 = Form("(%s==1)",effCat.GetName());
-    cuts2 = Form("(%s==0)",effCat.GetName());
-  }
-
-  if(! fillHistogram(hist1.get(), RooArgList(*var),cuts1.c_str(),o.cutRange) ||
-     ! fillHistogram(hist2.get(), RooArgList(*var),cuts2.c_str(),o.cutRange)) {
-    coutE(Plotting) << ClassName() << "::" << GetName()
-    << ":plotEffOn: createHistogram() failed" << std::endl;
-    return nullptr;
-  }
-
-  // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,true);
-  graph->setYAxisLabel(Form("Efficiency of %s=%s", effCat.GetName(), effCat.lookupName(1).c_str()));
+  graph->setYAxisLabel(("Efficiency of " + catName + "=" + effCat.lookupName(1)).c_str());
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
@@ -2109,12 +2110,12 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
   if (o.histName) {
     graph->SetName(o.histName) ;
   } else {
-      std::string hname(Form("h_%s_Eff[%s]",GetName(),effCat.GetName())) ;
-    if (o.cutRange && strlen(o.cutRange)>0) {
-      hname += Form("_CutRange[%s]",o.cutRange);
+     std::string hname = "h_" + std::string{GetName()} + "_Eff[" + catName + "]";
+     if (o.cutRange && strlen(o.cutRange) > 0) {
+        hname += "_CutRange[" + std::string{o.cutRange} + " ]";
     }
     if (o.cuts && strlen(o.cuts)>0) {
-      hname += Form("_Cut[%s]",o.cuts);
+       hname += "_Cut[" + std::string{o.cuts} + " ]";
     }
     graph->SetName(hname.c_str()) ;
   }
@@ -2610,11 +2611,12 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
       }
    }
 
-   const std::string histName = std::string{GetName()} + "_" + name  + "_" + Form("%08x", counter++);
+   std::stringstream histName;
+   histName << GetName() << "_" << name << "_" << std::setw(8) << std::setfill('0') << std::hex << counter++;
 
    // create the histogram
    auto *histogram =
-      new TH2F(histName.c_str(), "Events", nx, var1.getMin(), var1.getMax(), ny, var2.getMin(), var2.getMax());
+      new TH2F(histName.str().c_str(), "Events", nx, var1.getMin(), var1.getMax(), ny, var2.getMin(), var2.getMax());
    if (!histogram) {
       coutE(DataHandling) << GetName() << "::createHistogram: unable to create a new histogram" << std::endl;
       return nullptr;

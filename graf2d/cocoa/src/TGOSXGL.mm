@@ -13,7 +13,6 @@
 #include "TEnv.h"
 
 
-ClassImp(TGOSXGLManager)
 
 //______________________________________________________________________________
 TGOSXGLManager::TGOSXGLManager()

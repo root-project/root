@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include "TString.h"
 
 namespace ROOT {
 
@@ -35,6 +36,7 @@ protected:
       virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) = 0;
       virtual bool IsActive() const { return true; }
       virtual ~Creator() = default;
+      virtual bool IsSnapBrowser() const { return false; }
    };
 
    class BrowserCreator : public Creator {
@@ -50,6 +52,7 @@ protected:
       BrowserCreator(bool custom = true, const std::string &exec = "");
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
       ~BrowserCreator() override = default;
+      static FILE *TemporaryFile(TString &name, int use_home_dir = 0, const char *suffix = nullptr);
    };
 
    class SafariCreator : public BrowserCreator {
@@ -67,6 +70,7 @@ protected:
       ChromeCreator(bool is_edge = false);
       ~ChromeCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
+      bool IsSnapBrowser() const override { return fProg == "/snap/bin/chromium"; }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool) override;
    };
@@ -76,6 +80,7 @@ protected:
       FirefoxCreator();
       ~FirefoxCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
+      bool IsSnapBrowser() const override { return fProg == "/snap/bin/firefox"; }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &) override;
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
@@ -104,6 +109,9 @@ public:
 
    /// resize web window - if possible
    virtual bool Resize(int, int) { return false; }
+
+   /// remove file which was used to startup widget - if possible
+   virtual void RemoveStartupFiles() {}
 
    static bool NeedHttpServer(const RWebDisplayArgs &args);
 

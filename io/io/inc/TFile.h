@@ -101,7 +101,7 @@ public:
 
    public:
       using iterator = TIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = TKeyMapNode;
       using pointer = value_type *;
@@ -109,7 +109,7 @@ public:
 
       TIterator(TFile *file, std::uint64_t addr);
 
-      iterator operator++()
+      iterator &operator++()
       {
          Advance();
          return *this;
@@ -123,7 +123,7 @@ public:
    explicit TKeyMapIterable(TFile *file) : fFile(file) {}
 
    TIterator begin() const { return TIterator(fFile, 0); }
-   TIterator end() const { return TIterator(fFile, -1); }
+   TIterator end() const { return TIterator(fFile, (std::uint64_t) -1); }
 };
 
 } // namespace ROOT::Detail
@@ -229,10 +229,6 @@ protected:
 
    virtual InfoListRet GetStreamerInfoListImpl(bool lookupSICache);
 
-   // Creating projects
-           Int_t       MakeProjectParMake(const char *packname, const char *filename);
-           Int_t       MakeProjectParProofInf(const char *packname, const char *proofinfdir);
-
    // Interface to basic system I/O routines
    virtual Int_t       SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    virtual Int_t       SysClose(Int_t fd);
@@ -290,7 +286,7 @@ public:
 
            void        Close(Option_t *option="") override; // *MENU*
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t buffersize = 1000000);
+   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t bufsize = 1000000);
    virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
                                  const char* name, Int_t bufsize);
@@ -379,8 +375,8 @@ public:
            Int_t       Sizeof() const override;
            void        SumBuffer(Int_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);

@@ -1,0 +1,43 @@
+
+Processing execWriteCustomCollection.cxx+...
+Writing
+values: 0 / 3 : name0_3
+values: 1 / 3 : name1_3
+values: 2 / 3 : name2_3
+***********************************************************************
+*    Row   * Instance *  coll.fId * coll.fNam *   vec.fId * vec.fName *
+***********************************************************************
+*        0 *        0 *         0 *   name0_3 *         0 *   name0_3 *
+*        0 *        1 *         1 *   name0_3 *         1 *   name0_3 *
+*        0 *        2 *         2 *   name0_3 *         2 *   name0_3 *
+***********************************************************************
+Writing file with just a TTree.
+Reading
+values: 0 / 3 : name0_3
+values: 1 / 3 : name1_3
+values: 2 / 3 : name2_3
+Reading TTree
+values: 0 / 3 : name0_3
+values: 1 / 3 : name1_3
+values: 2 / 3 : name2_3
+***********************************************************************
+*    Row   * Instance *  coll.fId * coll.fNam *   vec.fId * vec.fName *
+***********************************************************************
+*        0 *        0 *         0 *   name0_3 *         0 *   name0_3 *
+*        0 *        1 *         1 *   name0_3 *         1 *   name0_3 *
+*        0 *        2 *         2 *   name0_3 *         2 *   name0_3 *
+***********************************************************************
+Reading file with just a TTree
+values: 0 / 4 : name0_4
+values: 1 / 4 : name1_4
+values: 2 / 4 : name2_4
+values: 3 / 4 : name3_4
+***********************************************************************
+*    Row   * Instance *  coll.fId * coll.fNam *   vec.fId * vec.fName *
+***********************************************************************
+*        0 *        0 *         0 *   name0_4 *         0 *   name0_4 *
+*        0 *        1 *         1 *   name0_4 *         1 *   name0_4 *
+*        0 *        2 *         2 *   name0_4 *         2 *   name0_4 *
+*        0 *        3 *         3 *   name0_4 *         3 *   name0_4 *
+***********************************************************************
+(int) 0

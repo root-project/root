@@ -11,9 +11,10 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
-#include "RColumnRegister.hxx"
 #include <ROOT/RDF/RAction.hxx>
+#include <ROOT/RDF/RActionSnapshot.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
+#include <ROOT/RDF/SnapshotHelpers.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RDefinePerSample.hxx>
@@ -33,15 +34,13 @@
 
 #include <deque>
 #include <functional>
-#include <map>
+#include <list>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
-#include <unordered_map>
 
-class TObjArray;
 class TTree;
 namespace ROOT {
 namespace Detail {
@@ -50,12 +49,9 @@ class RNodeBase;
 }
 }
 namespace RDF {
-template <typename T>
-class RResultPtr;
-template<typename T, typename V>
+template <typename Proxied>
 class RInterface;
-using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
-class RDataSource;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase>;
 } // namespace RDF
 
 } // namespace ROOT
@@ -93,6 +89,7 @@ struct Histo1D{};
 struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
+struct HistoNSparseD{};
 struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
@@ -111,7 +108,6 @@ struct Book{};
 
 template <typename T, bool ISV6HISTO = std::is_base_of<TH1, std::decay_t<T>>::value>
 struct HistoUtils {
-   static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
    {
       auto xaxis = h.GetXaxis();
@@ -121,11 +117,10 @@ struct HistoUtils {
 
 template <typename T>
 struct HistoUtils<T, false> {
-   static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
 
-// Generic filling (covers Histo2D, Histo3D, HistoND, Profile1D and Profile2D actions, with and without weights)
+// Generic filling (covers Histo2D, HistoND, HistoNSparseD, Profile1D and Profile2D actions, with and without weights)
 template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
@@ -152,6 +147,27 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
       using Helper_t = BufferedFillHelper;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+   }
+}
+
+// Action for Histo3D, where thread safe filling might be supported to save memory
+template <typename... ColTypes, typename ActionResultType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Histo3D, const RColumnRegister &colRegister)
+{
+   if (RDFInternal::NThreadPerTH3() <= 1 || nSlots == 1) {
+      using Helper_t = FillHelper<ActionResultType>;
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+      return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
+   } else {
+      using Helper_t = ThreadSafeFillHelper<ActionResultType>;
+      using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+      if constexpr (sizeof...(ColTypes) > 3) {
+         h->Sumw2();
+      }
+      const auto histoSlots = std::max(nSlots / RDFInternal::NThreadPerTH3(), 1u);
+      return std::make_unique<Action_t>(Helper_t(h, histoSlots), bl, std::move(prevNode), colRegister);
    }
 }
 
@@ -250,71 +266,69 @@ struct SnapshotHelperArgs {
    std::string fTreeName;
    std::vector<std::string> fOutputColNames;
    ROOT::RDF::RSnapshotOptions fOptions;
-   ROOT::Detail::RDF::RLoopManager *fLoopManager;
-   ROOT::RDF::RDataSource *fDataSource;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
    bool fToNTuple;
+   bool fIncludeVariations;
 };
 
-// SnapshotTTree action
-template <typename... ColTypes, typename PrevNodeType>
+template <typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
-            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Snapshot,
-            const RColumnRegister &colRegister)
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, const RColumnRegister &colRegister,
+            const std::vector<const std::type_info *> &colTypeIDs)
 {
    const auto &filename = snapHelperArgs->fFileName;
    const auto &dirname = snapHelperArgs->fDirName;
    const auto &treename = snapHelperArgs->fTreeName;
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
-   const auto &lmPtr = snapHelperArgs->fLoopManager;
-   const auto &dataSource = snapHelperArgs->fDataSource;
+   const auto &outputLM = snapHelperArgs->fOutputLoopManager;
+   const auto &inputLM = snapHelperArgs->fInputLoopManager;
 
-   auto sz = sizeof...(ColTypes);
+   auto sz = colNames.size();
    std::vector<bool> isDefine(sz);
    for (auto i = 0u; i < sz; ++i)
       isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
 
    std::unique_ptr<RActionBase> actionPtr;
    if (snapHelperArgs->fToNTuple) {
-#ifdef R__HAS_ROOT7
-      if (!ROOT::IsImplicitMTEnabled()) {
-         // single-thread snapshot
-         using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
-         using Action_t = RAction<Helper_t, PrevNodeType>;
+      // We use the same helper for single- and multi-thread snapshot.
+      using Helper_t = UntypedSnapshotRNTupleHelper;
+      using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
 
-         actionPtr.reset(new Action_t(
-            Helper_t(filename, dirname, treename, colNames, outputColNames, options, lmPtr, std::move(isDefine)),
-            colNames, prevNode, colRegister));
-      } else {
-         // multi-thread snapshot to RNTuple is not yet supported
-         // TODO(fdegeus) Add MT snapshotting
-         throw std::runtime_error("Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
-      }
-
-      return actionPtr;
-#else
-      throw std::runtime_error(
-         "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
-         "components enabled.");
-#endif
+      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
+                                            inputLM, outputLM, colTypeIDs),
+                                   colNames, colTypeIDs, prevNode, colRegister));
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = SnapshotTTreeHelper<ColTypes...>;
-         using Action_t = RAction<Helper_t, PrevNodeType>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), lmPtr, dataSource),
-                                      colNames, prevNode, colRegister));
+         if (snapHelperArgs->fIncludeVariations) {
+            using Helper_t = SnapshotHelperWithVariations;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         } else {
+            using Helper_t = UntypedSnapshotTTreeHelper;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         }
       } else {
+         if (snapHelperArgs->fIncludeVariations) {
+            throw std::invalid_argument("Multi-threaded snapshot with variations is not supported yet.");
+         }
          // multi-thread snapshot
-         using Helper_t = SnapshotTTreeHelperMT<ColTypes...>;
-         using Action_t = RAction<Helper_t, PrevNodeType>;
+         using Helper_t = UntypedSnapshotTTreeHelperMT;
+         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
          actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), lmPtr, dataSource),
-                                      colNames, prevNode, colRegister));
+                                               std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                      colNames, colTypeIDs, prevNode, colRegister));
       }
    }
+
    return actionPtr;
 }
 
@@ -343,10 +357,10 @@ ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const st
 void CheckValidCppVarName(std::string_view var, const std::string &where);
 
 void CheckForRedefinition(const std::string &where, std::string_view definedCol, const RColumnRegister &colRegister,
-                          const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
+                          const ColumnNames_t &dataSourceColumns);
 
 void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
-                        const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
+                        const ColumnNames_t &dataSourceColumns);
 
 void CheckForNoVariations(const std::string &where, std::string_view definedColView,
                           const RColumnRegister &colRegister);
@@ -354,12 +368,12 @@ void CheckForNoVariations(const std::string &where, std::string_view definedColV
 std::string PrettyPrintAddr(const void *const addr);
 
 std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
-                                             std::string_view expression, const ColumnNames_t &branches,
-                                             const RColumnRegister &colRegister, TTree *tree, RDataSource *ds);
+                                             std::string_view expression, const RColumnRegister &colRegister,
+                                             TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                              RDataSource *ds, const RColumnRegister &colRegister,
-                                             const ColumnNames_t &branches, std::shared_ptr<RNodeBase> *prevNodeOnHeap);
+                                             std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RColumnRegister &colRegister,
@@ -368,8 +382,8 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
-                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap, bool isSingleColumn);
+                 RDataSource *ds, const RColumnRegister &colRegister, std::shared_ptr<RNodeBase> *upcastNodeOnHeap,
+                 bool isSingleColumn);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
@@ -407,8 +421,6 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                                               TTree *tree, RDataSource *ds, const std::string &context,
                                               bool vector2RVec);
-
-std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RColumnRegister &colRegister)
@@ -454,6 +466,10 @@ void AddDSColumns(const std::vector<std::string> &requiredCols, RLoopManager &lm
    int i = 0;
    (void)expander{(AddDSColumnsHelper<ColumnTypes>(requiredCols[i], lm, ds, colRegister), ++i)..., 0};
 }
+
+void AddDSColumns(const std::vector<std::string> &requiredCols, ROOT::Detail::RDF::RLoopManager &lm,
+                  ROOT::RDF::RDataSource &ds, const std::vector<const std::type_info *> &colTypeIDs,
+                  ROOT::Internal::RDF::RColumnRegister &colRegister);
 
 // this function is meant to be called by the jitted code generated by BookFilterJit
 template <typename F, typename PrevNode>
@@ -743,8 +759,8 @@ void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames);
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
-                                 const RColumnRegister &definedCols, const ColumnNames_t &dataSourceColumns);
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const RColumnRegister &definedCols,
+                                 const ColumnNames_t &dataSourceColumns);
 
 /// Returns the list of Filters defined in the whole graph
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager);
@@ -795,6 +811,8 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
 
+void CheckSnapshotOptionsFormatCompatibility(const ROOT::RDF::RSnapshotOptions &opts);
+
 template <typename T>
 struct InnerValueType {
    using type = T; // fallback for when T is not a nested RVec
@@ -809,14 +827,11 @@ template <typename T>
 using InnerValueType_t = typename InnerValueType<T>::type;
 
 std::pair<std::vector<std::string>, std::vector<std::string>>
-AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource *ds,
-                std::vector<std::string> &&colsWithoutAliases, std::vector<std::string> &&colsWithAliases);
+AddSizeBranches(ROOT::RDF::RDataSource *ds, std::vector<std::string> &&colsWithoutAliases,
+                std::vector<std::string> &&colsWithAliases);
 
 void RemoveDuplicates(ColumnNames_t &columnNames);
-
-#ifdef R__HAS_ROOT7
 void RemoveRNTupleSubFields(ColumnNames_t &columnNames);
-#endif
 
 } // namespace RDF
 } // namespace Internal

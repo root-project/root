@@ -1,0 +1,116 @@
+<lcgdict>
+
+  <class name="TPCnv::MuonMeasurements_tlp3" id="5C8C4552-9F05-11E3-8164-6C3BE51AB9F1" />  
+
+    <!-- MuonRIO_OnTrack -->
+    <class name="Muon::CscClusterOnTrack_p2" />
+    <class name="std::vector<Muon::CscClusterOnTrack_p2>" />
+    <class name="Muon::RpcClusterOnTrack_p3" />
+    <class name="std::vector<Muon::RpcClusterOnTrack_p3>" />
+    <class name="Muon::TgcClusterOnTrack_p2" />
+    <class name="std::vector<Muon::TgcClusterOnTrack_p2>" />
+    <class name="Muon::MdtDriftCircleOnTrack_p2" />
+    <class name="std::vector<Muon::MdtDriftCircleOnTrack_p2>" />
+    <class name="Muon::MM_ClusterOnTrack_p1" />
+    <class name="std::vector<Muon::MM_ClusterOnTrack_p1>" />
+    <class name="Muon::STGC_ClusterOnTrack_p1" />
+    <class name="std::vector<Muon::STGC_ClusterOnTrack_p1>" />
+
+    <!-- MuonCompetingMuonClustersOnTrack -->
+    <class name="Muon::CompetingMuonClustersOnTrack_p1" />
+    <class name="std::vector<Muon::CompetingMuonClustersOnTrack_p1>" />
+
+    <!--MuonPrepRawData-->
+    <class name="Muon::MuonPRD_Collection_p2" />
+    <class name="std::vector<Muon::MuonPRD_Collection_p2>" />
+    
+    <class name="Muon::MdtPrepData_p2" />
+    <class name="std::vector<Muon::MdtPrepData_p2>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::MdtPrepData_p2>" />
+    <class name="Muon::MdtPrepDataContainer_p2" id="BBC02355-570A-4C28-81A6-65F23779509E"/>
+    
+    <class name="Muon::CscPrepData_p2" />
+    <class name="std::vector<Muon::CscPrepData_p2>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::CscPrepData_p2>" />
+    <class name="Muon::CscPrepDataContainer_p2" id="BF5DA875-6D5B-4DCA-9CD8-E0ABC4FD92F5"/>
+
+    <class name="Muon::CscStripPrepData_p1" />
+    <class name="std::vector<Muon::CscStripPrepData_p1>" />
+    <class name="Muon::CscStripPrepDataContainer_tlp1" id="6075244C-C6BB-4E24-B711-E7E4ED0F7462"/>
+
+    <class name="Muon::RpcPrepData_p3" />
+    <class name="std::vector<Muon::RpcPrepData_p3>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::RpcPrepData_p3>" />
+    <class name="Muon::RpcPrepDataContainer_p3" id="65496D1F-E660-42A9-84C9-2002D39B87CB"/>
+
+    <class name="Muon::TgcPrepData_p2" />
+    <class name="std::vector<Muon::TgcPrepData_p2>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::TgcPrepData_p2>" />
+    <class name="Muon::TgcPrepDataContainer_p2" id="EBB4DCEC-CE23-4A30-BEF7-F3150E4060CB"/>
+
+    <class name="Muon::TgcPrepData_p3" />
+    <class name="std::vector<Muon::TgcPrepData_p3>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::TgcPrepData_p3>" />
+    <class name="Muon::TgcPrepDataContainer_p3" id="215726D6-15F4-41D2-B808-1B9E9FD84166"/>
+
+    <class name="Muon::MdtTwinPrepData_p1" />
+    <class name="std::vector<Muon::MdtTwinPrepData_p1>" />
+
+    <class name="Muon::MMPrepData_p1" />
+    <class name="std::vector<Muon::MMPrepData_p1>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::MMPrepData_p1>" />
+    <class name="Muon::MMPrepDataContainer_p1" id="5E5C97E2-8D7C-11E2-9FCB-001517648C14"/>
+
+    <class name="Muon::sTgcPrepData_p1" />
+    <class name="std::vector<Muon::sTgcPrepData_p1>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::sTgcPrepData_p1>" />
+    <class name="Muon::sTgcPrepDataContainer_p1" id="7AB87DDE-8D7C-11E2-AA7C-001517648C14"/>
+
+    <!--MuonTrigCoinData-->
+    <class name="Muon::MuonCoinDataCollection_p1" />
+    <class name="Muon::MuonCoinDataContainer_p1" />
+    <class name="std::vector<Muon::MuonCoinDataCollection_p1>" />
+    <class name="std::vector<Muon::MuonCoinDataContainer_p1>" />
+
+    <class name="Muon::TgcCoinData_p2" />
+    <class name="std::vector<Muon::TgcCoinData_p2>" />
+    <class name="Muon::TgcCoinDataContainer_tlp2" id="524775D8-A66F-4AD3-912E-7D05389C1011"/>
+
+    <class name="Muon::RpcCoinData_p1" />
+    <class name="std::vector<Muon::RpcCoinData_p1>" />
+    <class name="Muon::MuonPRD_Container_p2<Muon::RpcCoinData_p1>" id="AF0DB103-E825-45E5-9C29-9C32342756DD"/>
+
+    <!--MuonSegment-->
+    <class name="Muon::MuonSegment_p1" />
+    <class name="std::vector<Muon::MuonSegment_p1>" />
+    <class name="Muon::MuonSegmentQuality_p1" />
+    <class name="std::vector<Muon::MuonSegmentQuality_p1>" />
+
+    <!--MuonSimEvent-->
+    <class name="Muon::CSCSimHitCollection_p1" id="E45CD293-4599-41BE-8B65-945A18F41AB7"/>
+    <class name="Muon::CSCSimHitCollection_p2" id="7E5A120C-E64F-4519-A24B-B485A58724BF"/>
+    <class name="Muon::RPCSimHitCollection_p1" id="C4C57487-41DC-4706-9604-721D76F0AA52"/>
+    <class name="Muon::RPCSimHitCollection_p2" id="1B611C70-CC6F-42AE-9F6D-7DA6A9A22546"/>
+    <class name="Muon::TGCSimHitCollection_p1" id="BD569381-2489-4402-BBD3-91EE8C009F26"/>
+    <class name="Muon::TGCSimHitCollection_p2" id="710241EE-D5F7-4CB6-A1D7-6E80D040E637"/>
+    <class name="Muon::TGCSimHitCollection_p3" id="BACD19A8-4737-4857-A22D-B9DF833A0A80"/>
+    <class name="Muon::MDTSimHitCollection_p1" id="EA781971-65C5-4B30-9D22-EEFB764BA0B3"/>
+    <class name="Muon::MDTSimHitCollection_p2" id="92880B97-75BB-4C5D-8183-577338059FCC"/>
+    <class name="Muon::GenericMuonSimHitCollection_p1" id="C2D5D558-2671-11E1-AAFA-001E4F3E5646"/>
+    
+    <!-- MuonChamberT0s -->
+    <class name="Muon::ChamberT0s_p1" id="67E3F1AE-6254-4B29-8D61-5F17D0C19BB2"/>
+    <class name="std::pair< unsigned int, float>"/>
+    <class name="std::vector< std::pair< unsigned int, float> >"/>
+    
+    <!-- MuonDigitContainer -->
+    <class name="Muon::MM_Digit_p1" />
+    <class name="std::vector<Muon::MM_Digit_p1>" />
+    <class name="Muon::MuonDigitContainer_p1<Muon::MM_Digit_p1>" />
+    <class name="Muon::MM_DigitContainer_p1" id="444DEE03-9A1D-44BA-8880-968C78EA51D1"/>
+    <class name="Muon::STGC_Digit_p1" />
+    <class name="std::vector<Muon::STGC_Digit_p1>" />
+    <class name="Muon::MuonDigitContainer_p1<Muon::STGC_Digit_p1>" />
+    <class name="Muon::STGC_DigitContainer_p1" id="F3581998-EC4F-4F34-A153-9F3415C4087A"/>
+
+</lcgdict>

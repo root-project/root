@@ -108,7 +108,7 @@ public:
    ~TImage() override { }
 
    // Cloning
-           TObject *Clone(const char *) const override { return nullptr; }
+           TObject *Clone(const char * = "") const override { return nullptr; }
 
    // Input / output
    virtual void ReadImage(const char * /*file*/, EImageFileTypes /*type*/ = TImage::kUnknown) {}

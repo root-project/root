@@ -69,30 +69,24 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
       auto &buffer = buffers.top();
       buffers.emplace();
       auto &bufferSumW2 = buffers.top();
-      if (weight.empty()) {
-         // If the dataset has no weight, we fill the data spans with a scalar
-         // unity weight so we don't need to check for the existence of weights
-         // later in the likelihood.
-         buffer.push_back(1.0);
-         bufferSumW2.push_back(1.0);
-         assignSpan(weight, {buffer.data(), 1});
-         assignSpan(weightSumW2, {bufferSumW2.data(), 1});
-         nNonZeroWeight = nEvents;
-      } else {
-         buffer.reserve(nEvents);
-         bufferSumW2.reserve(nEvents);
-         for (std::size_t i = 0; i < nEvents; ++i) {
-            if (!skipZeroWeights || weight[i] != 0) {
-               buffer.push_back(weight[i]);
-               bufferSumW2.push_back(weightSumW2[i]);
-               ++nNonZeroWeight;
-            } else {
-               hasZeroWeight[i] = true;
-            }
+      buffer.reserve(nEvents);
+      bufferSumW2.reserve(nEvents);
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         if (weight.empty()) {
+            // No weights in the dataset imply a constant weight of one
+            buffer.push_back(1.0);
+            bufferSumW2.push_back(1.0);
+            ++nNonZeroWeight;
+         } else if (!skipZeroWeights || weight[i] != 0) {
+            buffer.push_back(weight[i]);
+            bufferSumW2.push_back(weightSumW2[i]);
+            ++nNonZeroWeight;
+         } else {
+            hasZeroWeight[i] = true;
          }
-         assignSpan(weight, {buffer.data(), nNonZeroWeight});
-         assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       }
+      assignSpan(weight, {buffer.data(), nNonZeroWeight});
+      assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       insert(RooFit::Detail::RooNLLVarNew::weightVarName, weight);
       insert(RooFit::Detail::RooNLLVarNew::weightVarNameSumW2, weightSumW2);
    }
@@ -211,20 +205,20 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
    bool splitRange = false;
+
+   // The split datasets need to be kept alive because the datamap points to their content
    std::vector<std::unique_ptr<RooAbsData>> splitDataSets;
 
    if (simPdf) {
-      std::unique_ptr<TList> splits{data.split(*simPdf, true)};
-      for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
+      splitDataSets = data.split(*simPdf, true);
+      for (auto const &d : splitDataSets) {
          RooAbsPdf *simComponent = simPdf->getPdf(d->GetName());
          // If there is no PDF for that component, we also don't need to fill the data
          if (!simComponent) {
             continue;
          }
-         datasets.emplace_back(std::string("_") + d->GetName() + "_", d);
+         datasets.emplace_back(std::string("_") + d->GetName() + "_", d.get());
          isBinnedL.emplace_back(simComponent->getAttribute("BinnedLikelihoodActive"));
-         // The dataset need to be kept alive because the datamap points to their content
-         splitDataSets.emplace_back(d);
       }
       splitRange = simPdf->getAttribute("SplitRange");
    } else {
@@ -266,8 +260,9 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
 /// \return A `std::map` with output sizes for each node in the computation graph.
 /// \param[in] topNode The top node of the computation graph.
 /// \param[in] inputSizeFunc A function to get the input sizes.
-std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::determineOutputSizes(
-   RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
+std::map<RooFit::Detail::DataKey, std::size_t>
+RooFit::BatchModeDataHelpers::determineOutputSizes(RooAbsArg const &topNode,
+                                                   std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
 {
    std::map<RooFit::Detail::DataKey, std::size_t> output;
 

@@ -1,0 +1,13 @@
+<!-- Example xml from atlas to test the </method> and </field> closing tags-->
+<lcgdict>
+  <class name="SG::ELVRef< AthExIParticles >">
+    <field name="m_link" transient="true" > </field>
+  </class>
+  <exclusion>
+    <class name="ElementLinkVector< AthExIParticles >" >
+      <!-- The signatures for these are often so long as to crash cint. -->
+      <method name="insert"></method>
+      <method name="erase"></method>
+    </class>
+  </exclusion>
+</lcgdict>

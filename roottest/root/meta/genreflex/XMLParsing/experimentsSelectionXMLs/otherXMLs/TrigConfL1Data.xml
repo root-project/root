@@ -1,0 +1,6 @@
+<lcgdict>
+ <class name="TrigConf::CTPConfig"/>
+ <class name="TrigConf::L1DataBaseclass"/>
+ <class name="TrigConf::TrigConfData"/>
+ <class name="TrigConf::ThresholdConfig"/>
+</lcgdict>

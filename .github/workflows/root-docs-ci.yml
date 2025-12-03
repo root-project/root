@@ -13,10 +13,10 @@ on:
   workflow_dispatch:
     inputs:
       incremental:
-        description: 'Do incremental build'
+        description: 'Do full build'
         type: boolean
-        required: true
-        default: true
+        required: false
+        default: false
       # docu_input: # opportunity: overwrite makeinput.sh with these args
       #   description: Folders to build documentation for. All folders are built if empty.
       #   type: string
@@ -60,6 +60,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        ref: ${{ env.BASE_REF }}
         fetch-depth: 0
 
     - name: Set up Python Virtual Env
@@ -116,10 +117,12 @@ jobs:
 
     - name: Build ROOT - Workflow Dispatch
       if:   github.event_name == 'workflow_dispatch'
+      env:
+          INCREMENTAL: ${{ inputs.incremental == 'true' }}
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    ${{ inputs.incremental }}
+                  --incremental    ${{ env.INCREMENTAL }}
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
@@ -205,7 +208,7 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
       # only at most 65536 in one go. For this reason, we copy files in batches, dividing
-      # them by extension. Once that is fixed in XRootD, a single command can be used 
+      # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}

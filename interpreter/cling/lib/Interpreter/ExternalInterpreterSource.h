@@ -60,13 +60,14 @@ namespace cling {
       public:
         ExternalInterpreterSource(const cling::Interpreter *parent,
                                   cling::Interpreter *child);
-        virtual ~ExternalInterpreterSource();
+        ~ExternalInterpreterSource() override;
 
         void completeVisibleDeclsMap(const clang::DeclContext *DC) override;
 
         bool FindExternalVisibleDeclsByName(
                               const clang::DeclContext *childCurrentDeclContext,
-                              clang::DeclarationName childDeclName) override;
+                              clang::DeclarationName childDeclName,
+                              const clang::DeclContext *OriginalDC) override;
 
         bool Import(clang::DeclContext::lookup_result lookupResult,
                     const clang::DeclContext *childCurrentDeclContext,

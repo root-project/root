@@ -141,12 +141,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   ${EXTRA_DICT_OPTS}
 )
 
-if(builtin_nlohmannjson)
-   target_include_directories(ROOTEve PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-   target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
-endif()
-
+target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
 # this is required for glew
 target_include_directories(ROOTEve PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/eve7)
 

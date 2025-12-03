@@ -18,7 +18,6 @@
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -131,7 +130,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       edm = result.back().Edm();
       // need to correct again for Dcovar: edm *= (1. + 3. * e.Dcovar()) ???
 
-      if ((strategy.Strategy() >= 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
+      if (min.Error().Dcovar() > strategy.HessianRecomputeThreshold()) {
 
          print.Debug("MnMigrad will verify convergence and Error matrix; dcov =", min.Error().Dcovar());
 
@@ -273,7 +272,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
          }
       }
 
-      MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+      auto pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
       // <= needed for case 0 <= 0
       if (std::fabs(pp.Y() - s0.Fval()) <= std::fabs(s0.Fval()) * prec.Eps()) {

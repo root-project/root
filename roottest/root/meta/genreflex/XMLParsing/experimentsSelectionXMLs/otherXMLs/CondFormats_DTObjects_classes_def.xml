@@ -1,0 +1,96 @@
+<lcgdict>
+  <class name="DTReadOutMapping" id="6E1247AF-2A00-DA11-96EE-000E0C4DE431">
+    <field name="mType" transient="true"/>
+    <field name="rgBuf" transient="true"/>
+    <field name="rgROB" transient="true"/>
+    <field name="rgROS" transient="true"/>
+    <field name="rgDDU" transient="true"/>
+    <field name="grBuf" transient="true"/>
+    <field name="grROB" transient="true"/>
+    <field name="grROS" transient="true"/>
+    <field name="grDDU" transient="true"/>
+  </class>
+  <class name="std::vector<DTReadOutGeometryLink>"/> 
+  <class name="DTReadOutGeometryLink" id="C428DA7A-EE34-DA11-89FB-000E0C5CE283"/>
+  <class name="DTT0" id="FAEFE9C5-2A00-DA11-89E6-000E0C4DE431">
+    <field name="dataList" mapping="blob"/>
+  </class>
+  <class name="std::vector<DTT0Data>"/>
+  <class name="DTT0Data" id="604A5767-1B3B-DA11-9D99-000E0C5CE283"/>
+  <class name="DTTtrig" id="FA524625-415C-DA11-A1AE-000E0C5CE283">
+    <field name="dataList" mapping="blob"/>
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTTtrigId,DTTtrigData>"/>
+  <class name="std::vector< std::pair<DTTtrigId,DTTtrigData> >"/>
+  <class name="DTTtrigId" id="B0103027-415C-DA11-8831-000E0C5CE283"/>
+  <class name="DTTtrigData" id="1465F61D-E708-DB11-BDAF-000E0C5CE283"/>
+  <class name="DTMtime" id="DE34E051-095D-DA11-86A8-000E0C5CE283">
+    <field name="dataList" mapping="blob"/>
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTMtimeId,DTMtimeData>"/> 
+  <class name="std::vector< std::pair<DTMtimeId,DTMtimeData> >"/> 
+  <class name="DTMtimeId" id="6A4F37E1-085D-DA11-95BC-000E0C5CE283"/>
+  <class name="DTMtimeData" id="1652A588-ED08-DB11-8A60-000E0C5CE283"/>
+  <class name="DTRangeT0" id="C4574CFD-EDD9-DA11-8194-000E0C5CE283">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTRangeT0Id,DTRangeT0Data>"/>
+  <class name="std::vector<std::pair<DTRangeT0Id,DTRangeT0Data> >"/>
+  <class name="DTRangeT0Id" id="7E44AD27-EED9-DA11-88D9-000E0C5CE283"/>
+  <class name="DTRangeT0Data" id="2A604FAD-F208-DB11-8307-000E0C5CE283"/>
+  <class name="DTStatusFlag" id="80AB52A5-E3E4-DA11-A636-000E0C5CE283">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTStatusFlagId,DTStatusFlagData>"/>
+  <class name="std::vector< std::pair<DTStatusFlagId,DTStatusFlagData> >"/>
+  <class name="DTStatusFlagId" id="D29C0DA7-E3E4-DA11-B3BF-000E0C5CE283"/>
+  <class name="DTStatusFlagData" id="DE44FE7A-0509-DB11-947C-000E0C5CE283"/>
+  <class name="DTDeadFlag" id="BAE2BE38-1A4B-DC11-82DE-000E0C5CE282">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTDeadFlagId,DTDeadFlagData>"/>
+  <class name="std::vector<std::pair<DTDeadFlagId,DTDeadFlagData> >"/>
+  <class name="DTDeadFlagId" id="2A899460-1A4B-DC11-A3A9-000E0C5CE282"/>
+  <class name="DTDeadFlagData" id="BEE2F160-1A4B-DC11-B0DB-000E0C5CE282"/>
+  <class name="DTPerformance" id="684587E2-C306-DB11-9361-000E0C5CE283">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTPerformanceId,DTPerformanceData>"/>
+  <class name="std::vector<std::pair<DTPerformanceId,DTPerformanceData> >"/>
+  <class name="DTPerformanceId" id="B0D31E0B-C406-DB11-B446-000E0C5CE283"/>
+  <class name="DTPerformanceData" id="9E02CF0B-C406-DB11-A68B-000E0C5CE283"/>
+  <class name="DTCCBConfig" id="40303F32-EC9F-DB11-B3E2-000E0C5CE283">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTCCBId,int>"/>
+  <class name="std::vector<std::pair<DTCCBId,int> >"/>
+  <class name="DTCCBId" id="1433B332-EC9F-DB11-BD6F-000E0C5CE283"/>
+  <class name="DTConfigKey" id="98dbb21d-8624-44b9-94d6-ac7ff16ed2d2"/>
+  <class name="std::vector<DTConfigKey>"/>
+  <class name="DTKeyedConfig" id="7b1403fe-f056-4f44-980c-3ea1665adcb1"/>
+  <class name="DTLVStatus" id="926ACBCB-E3B7-DD11-B87E-000E0C5CE282">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTLVStatusId,DTLVStatusData>"/>
+  <class name="std::vector<std::pair<DTLVStatusId,DTLVStatusData> >"/>
+  <class name="DTLVStatusId" id="247E954C-E4B7-DD11-8EAE-000E0C5CE282"/>
+  <class name="DTLVStatusData" id="BA71D84D-E4B7-DD11-81D2-000E0C5CE282"/>
+  <class name="DTHVStatus" id="A4DD98F1-E8B7-DD11-8802-000E0C5CE282">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTHVStatusId,DTHVStatusData>"/>
+  <class name="std::vector<std::pair<DTHVStatusId,DTHVStatusData> >"/>
+  <class name="DTHVStatusId" id="923F57F2-E8B7-DD11-BBCC-000E0C5CE282"/>
+  <class name="DTHVStatusData" id="FA40B6F2-E8B7-DD11-B586-000E0C5CE282"/>
+  <class name="DTTPGParameters" id="80556B7A-C7C5-DD11-8FEE-000E0C5CE282">
+    <field name="dBuf" transient="true"/>
+  </class>
+  <class name="std::pair<DTTPGParametersId,DTTPGParametersData>"/>
+  <class name="std::vector<std::pair<DTTPGParametersId,DTTPGParametersData> >"/>
+  <class name="DTTPGParametersId" id="D0D7107B-C7C5-DD11-AA5A-000E0C5CE282"/>
+  <class name="DTTPGParametersData" id="5EEE8E7B-C7C5-DD11-A18E-000E0C5CE282"/>
+<!-- comment -->
+</lcgdict>
+

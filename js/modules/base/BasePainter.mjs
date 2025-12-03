@@ -1,6 +1,6 @@
 import { select as d3_select } from '../d3.mjs';
 import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
-import { getColor } from './colors.mjs';
+import { getColor, addColor } from './colors.mjs';
 
 /** @summary Standard prefix for SVG file context as data url
  * @private */
@@ -27,7 +27,8 @@ function getElementRect(elem, sizearg) {
 
    const styleValue = name => {
       let value = elem.style(name);
-      if (!value || !isStr(value)) return 0;
+      if (!value || !isStr(value))
+         return 0;
       value = parseFloat(value.replace('px', ''));
       return !Number.isFinite(value) ? 0 : Math.round(value);
    };
@@ -90,19 +91,19 @@ function floatToString(value, fmt, ret_fmt) {
    if (len < 2)
       return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
 
-   const kind = fmt[len-1].toLowerCase(),
-         compact = (len > 1) && (fmt[len-2] === 'c') ? 'c' : '';
+   const kind = fmt[len - 1].toLowerCase(),
+         compact = (len > 1) && (fmt[len - 2] === 'c') ? 'c' : '';
    fmt = fmt.slice(0, len - (compact ? 2 : 1));
 
    if (kind === 'g') {
-      const se = floatToString(value, fmt+'ce', true),
-            sg = floatToString(value, fmt+'cf', true),
+      const se = floatToString(value, fmt + 'ce', true),
+            sg = floatToString(value, fmt + 'cf', true),
             res = se[0].length < sg[0].length || ((sg[0] === '0') && value) ? se : sg;
       return ret_fmt ? res : res[0];
    }
 
    let isexp, prec = fmt.indexOf('.');
-   prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
+   prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec + 1));
    if (!Number.isInteger(prec) || (prec <= 0))
       prec = 4;
 
@@ -126,7 +127,7 @@ function floatToString(value, fmt, ret_fmt) {
                pe = se.toLowerCase().indexOf('e');
          if ((pnt > 0) && (pe > pnt)) {
             let p = pe;
-            while ((p > pnt) && (se[p-1] === '0'))
+            while ((p > pnt) && (se[p - 1] === '0'))
                p--;
             if (p === pnt + 1)
                p--;
@@ -135,7 +136,7 @@ function floatToString(value, fmt, ret_fmt) {
          }
       }
 
-      return ret_fmt ? [se, `${prec+2}.${prec}${compact}e`] : se;
+      return ret_fmt ? [se, `${prec + 2}.${prec}${compact}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -146,9 +147,10 @@ function floatToString(value, fmt, ret_fmt) {
          l++;
 
       let diff = sg.length - l - prec;
-      if (sg.indexOf('.') > l) diff--;
+      if (sg.indexOf('.') > l)
+         diff--;
 
-      if (diff !== 0) {
+      if (diff) {
          prec -= diff;
          if (prec < 0)
             prec = 0;
@@ -160,7 +162,7 @@ function floatToString(value, fmt, ret_fmt) {
       const pnt = sg.indexOf('.');
       if (pnt > 0) {
          let p = sg.length;
-         while ((p > pnt) && (sg[p-1] === '0'))
+         while ((p > pnt) && (sg[p - 1] === '0'))
             p--;
          if (p === pnt + 1)
             p--;
@@ -171,7 +173,7 @@ function floatToString(value, fmt, ret_fmt) {
          sg = '0';
    }
 
-   return ret_fmt ? [sg, `${prec+2}.${prec}${compact}f`] : sg;
+   return ret_fmt ? [sg, `${prec + 2}.${prec}${compact}f`] : sg;
 }
 
 
@@ -180,39 +182,75 @@ function floatToString(value, fmt, ret_fmt) {
 class DrawOptions {
 
    constructor(opt) {
-      this.opt = isStr(opt) ? opt.toUpperCase().trim() : '';
-      this.part = '';
+      if (isStr(opt)) {
+         this.origin = opt.trim();
+         this.opt = this.origin.toUpperCase();
+      } else
+         this.opt = this.origin = '';
+      this.part = this.partO = '';
    }
 
    /** @summary Returns true if remaining options are empty or contain only separators symbols. */
-   empty() {
-      if (this.opt.length === 0) return true;
-      return this.opt.replace(/[ ;_,]/g, '').length === 0;
-   }
+   empty() { return !this.opt ? true : !this.opt.replace(/[ ;_,]/g, ''); }
 
    /** @summary Returns remaining part of the draw options. */
    remain() { return this.opt; }
 
+   /** @summary Remove [pos, pos2) part from the string */
+   #cut(pos, pos2) {
+      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+      this.origin = this.origin.slice(0, pos) + this.origin.slice(pos2);
+   }
+
    /** @summary Checks if given option exists */
    check(name, postpart) {
       const pos = this.opt.indexOf(name);
-      if (pos < 0) return false;
-      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
+      if (pos < 0)
+         return false;
+      this.#cut(pos, pos + name.length);
       this.part = '';
-      if (!postpart) return true;
+      if (!postpart)
+         return true;
 
       let pos2 = pos;
-      while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
+      const is_array = postpart === 'array';
+      if (is_array) {
+         if (this.opt[pos2] !== '[')
+            return false;
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ']'))
+            pos2++;
+         if (++pos2 > this.opt.length)
+            return false;
+      } else {
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';'))
+            pos2++;
+      }
       if (pos2 > pos) {
          this.part = this.opt.slice(pos, pos2);
-         this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+         this.partO = this.origin.slice(pos, pos2);
+         this.#cut(pos, pos2);
+      }
+
+      if (is_array) {
+         try {
+            this.array = JSON.parse(this.part);
+         } catch {
+            this.array = undefined;
+         }
+         return this.array?.length !== undefined;
       }
 
       if (postpart !== 'color')
          return true;
 
+      if (((this.part.length === 6) || (this.part.length === 8)) && this.part.match(/^[a-fA-F0-9]+/)) {
+         this.color = addColor('#' + this.part);
+         return true;
+      }
+
       this.color = this.partAsInt(1) - 1;
-      if (this.color >= 0) return true;
+      if (this.color >= 0)
+         return true;
       for (let col = 0; col < 8; ++col) {
          if (getColor(col).toUpperCase() === this.part) {
             this.color = col;
@@ -222,10 +260,13 @@ class DrawOptions {
       return false;
    }
 
+   /** @summary Returns (original) part after found options. */
+   getPart(origin) { return origin ? this.partO : this.part; }
+
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
       let mult = 1;
-      const last = this.part ? this.part[this.part.length - 1] : '';
+      const last = this.part ? this.part.at(-1) : '';
       if (last === 'K')
          mult = 1e3;
       else if (last === 'M')
@@ -234,7 +275,7 @@ class DrawOptions {
          mult = 1e9;
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val, 10) : Number.NaN;
-      return !Number.isInteger(val) ? (dflt || 0) : mult*val + (offset || 0);
+      return !Number.isInteger(val) ? (dflt || 0) : mult * val + (offset || 0);
    }
 
    /** @summary Returns remaining part of found option as float. */
@@ -252,7 +293,8 @@ class DrawOptions {
 class TRandom {
 
    constructor(i) {
-      if (i !== undefined) this.seed(i);
+      if (i !== undefined)
+         this.seed(i);
    }
 
    /** @summary Seed simple random generator */
@@ -268,7 +310,8 @@ class TRandom {
 
    /** @summary Produce random value between 0 and 1 */
    random() {
-      if (this.m_z === undefined) return Math.random();
+      if (this.m_z === undefined)
+         return Math.random();
       this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & 0xffffffff;
       this.m_w = (18000 * (this.m_w & 65535) + (this.m_w >> 16)) & 0xffffffff;
       let result = ((this.m_z << 16) + this.m_w) & 0xffffffff;
@@ -291,7 +334,8 @@ function buildSvgCurve(p, args) {
       args.ndig = 0;
 
    let npnts = p.length;
-   if (npnts < 3) args.line = true;
+   if (npnts < 3)
+      args.line = true;
 
    args.t = args.t ?? 0.2;
 
@@ -300,33 +344,35 @@ function buildSvgCurve(p, args) {
       args.mindiff = 100;
       for (let i = 1; i < npnts; i++) {
          args.maxy = Math.max(args.maxy, p[i].gry);
-         args.mindiff = Math.min(args.mindiff, Math.abs(p[i].grx - p[i-1].grx), Math.abs(p[i].gry - p[i-1].gry));
+         args.mindiff = Math.min(args.mindiff, Math.abs(p[i].grx - p[i - 1].grx), Math.abs(p[i].gry - p[i - 1].gry));
       }
       if (args.ndig === undefined)
          args.ndig = args.mindiff > 20 ? 0 : (args.mindiff > 5 ? 1 : 2);
    }
 
    const end_point = (pnt1, pnt2, sign) => {
-      const len = Math.sqrt((pnt2.gry - pnt1.gry)**2 + (pnt2.grx - pnt1.grx)**2) * args.t,
+      const len = Math.sqrt((pnt2.gry - pnt1.gry) ** 2 + (pnt2.grx - pnt1.grx) ** 2) * args.t,
             a2 = Math.atan2(pnt2.dgry, pnt2.dgrx),
-            a1 = Math.atan2(sign*(pnt2.gry - pnt1.gry), sign*(pnt2.grx - pnt1.grx));
+            a1 = Math.atan2(sign * (pnt2.gry - pnt1.gry), sign * (pnt2.grx - pnt1.grx));
 
-      pnt1.dgrx = len * Math.cos(2*a1 - a2);
-      pnt1.dgry = len * Math.sin(2*a1 - a2);
+      pnt1.dgrx = len * Math.cos(2 * a1 - a2);
+      pnt1.dgry = len * Math.sin(2 * a1 - a2);
    }, conv = val => {
       if (!args.ndig || (Math.round(val) === val))
          return val.toFixed(0);
       let s = val.toFixed(args.ndig), p1 = s.length - 1;
-      while (s[p1] === '0') p1--;
-      if (s[p1] === '.') p1--;
-      s = s.slice(0, p1+1);
+      while (s[p1] === '0')
+         p1--;
+      if (s[p1] === '.')
+         p1--;
+      s = s.slice(0, p1 + 1);
       return (s === '-0') ? '0' : s;
    };
 
    if (args.calc) {
       for (let i = 1; i < npnts - 1; i++) {
-         p[i].dgrx = (p[i+1].grx - p[i-1].grx) * args.t;
-         p[i].dgry = (p[i+1].gry - p[i-1].gry) * args.t;
+         p[i].dgrx = (p[i + 1].grx - p[i - 1].grx) * args.t;
+         p[i].dgry = (p[i + 1].gry - p[i - 1].gry) * args.t;
       }
 
       if (npnts > 2) {
@@ -346,24 +392,30 @@ function buildSvgCurve(p, args) {
       let i0 = 1;
       if (args.qubic) {
          npnts--; i0++;
-         path += `Q${conv(p[1].grx-p[1].dgrx)},${conv(p[1].gry-p[1].dgry)},${conv(p[1].grx)},${conv(p[1].gry)}`;
+         path += `Q${conv(p[1].grx - p[1].dgrx)},${conv(p[1].gry - p[1].dgry)},${conv(p[1].grx)},${conv(p[1].gry)}`;
       }
-      path += `C${conv(p[i0-1].grx+p[i0-1].dgrx)},${conv(p[i0-1].gry+p[i0-1].dgry)},${conv(p[i0].grx-p[i0].dgrx)},${conv(p[i0].gry-p[i0].dgry)},${conv(p[i0].grx)},${conv(p[i0].gry)}`;
+      path += `C${conv(p[i0 - 1].grx + p[i0 - 1].dgrx)},${conv(p[i0 - 1].gry + p[i0 - 1].dgry)},${conv(p[i0].grx - p[i0].dgrx)},${conv(p[i0].gry - p[i0].dgry)},${conv(p[i0].grx)},${conv(p[i0].gry)}`;
 
       // continue with simpler points
       for (let i = i0 + 1; i < npnts; i++)
-         path += `S${conv(p[i].grx-p[i].dgrx)},${conv(p[i].gry-p[i].dgry)},${conv(p[i].grx)},${conv(p[i].gry)}`;
+         path += `S${conv(p[i].grx - p[i].dgrx)},${conv(p[i].gry - p[i].dgry)},${conv(p[i].grx)},${conv(p[i].gry)}`;
 
       if (args.qubic)
-         path += `Q${conv(p[npnts].grx-p[npnts].dgrx)},${conv(p[npnts].gry-p[npnts].dgry)},${conv(p[npnts].grx)},${conv(p[npnts].gry)}`;
+         path += `Q${conv(p[npnts].grx - p[npnts].dgrx)},${conv(p[npnts].gry - p[npnts].dgry)},${conv(p[npnts].grx)},${conv(p[npnts].gry)}`;
    } else if (npnts < 10000) {
       // build simple curve
 
       let acc_x = 0, acc_y = 0, currx = Math.round(p[0].grx), curry = Math.round(p[0].gry);
 
       const flush = () => {
-         if (acc_x) { path += 'h' + acc_x; acc_x = 0; }
-         if (acc_y) { path += 'v' + acc_y; acc_y = 0; }
+         if (acc_x) {
+            path += 'h' + acc_x;
+            acc_x = 0;
+         }
+         if (acc_y) {
+            path += 'v' + acc_y;
+            acc_y = 0;
+         }
       };
 
       for (let n = 1; n < npnts; ++n) {
@@ -374,13 +426,16 @@ function buildSvgCurve(p, args) {
             flush();
             path += `l${dx},${dy}`;
          } else if (!dx && dy) {
-            if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
+            if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0)))
+               flush();
             acc_y += dy;
          } else if (dx && !dy) {
-            if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
+            if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0)))
+               flush();
             acc_x += dx;
          }
-         currx += dx; curry += dy;
+         currx += dx;
+         curry += dy;
       }
 
       flush();
@@ -404,10 +459,10 @@ function buildSvgCurve(p, args) {
 
          if (cminy !== cmaxy) {
             if (cminy !== curry)
-               path += `v${cminy-curry}`;
-            path += `v${cmaxy-cminy}`;
+               path += `v${cminy - curry}`;
+            path += `v${cmaxy - cminy}`;
             if (cmaxy !== prevy)
-               path += `v${prevy-cmaxy}`;
+               path += `v${prevy - cmaxy}`;
             curry = prevy;
          }
          const dy = lasty - curry;
@@ -415,16 +470,17 @@ function buildSvgCurve(p, args) {
             path += `l${dx},${dy}`;
          else
             path += `h${dx}`;
-         currx = lastx; curry = lasty;
+         currx = lastx;
+         curry = lasty;
          prevy = cminy = cmaxy = lasty;
       }
 
       if (cminy !== cmaxy) {
          if (cminy !== curry)
-            path += `v${cminy-curry}`;
-         path += `v${cmaxy-cminy}`;
+            path += `v${cminy - curry}`;
+         path += `v${cmaxy - cminy}`;
          if (cmaxy !== prevy)
-            path += `v${prevy-cmaxy}`;
+            path += `v${prevy - cmaxy}`;
       }
    }
 
@@ -464,12 +520,16 @@ class BasePainter {
 
    #divid;  // either id of DOM element or element itself
    #selected_main; // d3.select for dom elements
+   #hitemname; // item name in the hpainter
+   #hdrawopt; // draw option in the hpainter
+   #hpainter; // assigned hpainter
 
    /** @summary constructor
      * @param {object|string} [dom] - dom element or id of dom element */
    constructor(dom) {
       this.#divid = null; // either id of DOM element or element itself
-      if (dom) this.setDom(dom);
+      if (dom)
+         this.setDom(dom);
    }
 
    /** @summary Assign painter to specified DOM element
@@ -486,6 +546,9 @@ class BasePainter {
    /** @summary Returns assigned dom element */
    getDom() { return this.#divid; }
 
+   /** @summary Returns argument for draw function */
+   getDrawDom() { return this.#divid; }
+
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
@@ -498,7 +561,8 @@ class BasePainter {
       if (!res) {
          if (isStr(this.#divid)) {
             let id = this.#divid;
-            if (id[0] !== '#') id = '#' + id;
+            if (id[0] !== '#')
+               id = '#' + id;
             res = d3_select(id);
             if (!res.empty())
                this.#divid = res.node();
@@ -528,10 +592,11 @@ class BasePainter {
      * @private */
    #accessTopPainter(on) {
       const chld = this.selectDom().node()?.firstChild;
-      if (!chld) return null;
+      if (!chld)
+         return null;
       if (on === true)
          chld.painter = this;
-      else if (on === false)
+      else if ((on === false) && (chld.painter === this))
          delete chld.painter;
       return chld.painter;
    }
@@ -554,16 +619,17 @@ class BasePainter {
    cleanup(keep_origin) {
       this.clearTopPainter();
       const origin = this.selectDom('origin');
-      if (!origin.empty() && !keep_origin) origin.html('');
+      if (!origin.empty() && !keep_origin)
+         origin.html('');
       this.#divid = null;
       this.#selected_main = undefined;
 
-      if (isFunc(this._hpainter?.removePainter))
-         this._hpainter.removePainter(this);
+      if (isFunc(this.#hpainter?.removePainter))
+         this.#hpainter.removePainter(this);
 
-      delete this._hitemname;
-      delete this._hdrawopt;
-      delete this._hpainter;
+      this.#hitemname = undefined;
+      this.#hdrawopt = undefined;
+      this.#hpainter = undefined;
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
@@ -591,11 +657,11 @@ class BasePainter {
             can_resize = origin.attr('can_resize');
       let do_resize = false;
 
-      if (can_resize === 'height')
-         if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
+      if ((can_resize === 'height') && height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width)
+         do_resize = true;
 
-      if (((rect_origin.height <= lmt) || (rect_origin.width <= lmt)) &&
-         can_resize && can_resize !== 'false') do_resize = true;
+      if (((rect_origin.height <= lmt) || (rect_origin.width <= lmt)) && can_resize && (can_resize !== 'false'))
+         do_resize = true;
 
       if (do_resize && (enlarge !== 'on')) {
          // if zero size and can_resize attribute set, change container size
@@ -612,6 +678,14 @@ class BasePainter {
             old_w = main.property('_jsroot_width');
 
       rect.changed = false;
+
+      if (!rect.width && !rect.height && !main.empty() && main.attr('style')) {
+         const ws = main.style('width'), hs = main.style('height');
+         if (isStr(ws) && isStr(hs) && ws.match(/^\d+px$/) && hs.match(/^\d+px$/)) {
+            rect.width = parseInt(ws.slice(0, ws.length - 2));
+            rect.height = parseInt(hs.slice(0, hs.length - 2));
+         }
+      }
 
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
@@ -646,20 +720,25 @@ class BasePainter {
             origin = this.selectDom('origin'),
             doc = getDocument();
 
-      if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
+      if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false))
+         return false;
 
-      if ((action === undefined) || (action === 'verify')) return true;
+      if ((action === undefined) || (action === 'verify'))
+         return true;
 
       const state = origin.property('use_enlarge') ? 'on' : 'off';
 
-      if (action === 'state') return state;
+      if (action === 'state')
+         return state;
 
-      if (action === 'toggle') action = (state === 'off');
+      if (action === 'toggle')
+         action = (state === 'off');
 
       let enlarge = d3_select(doc.getElementById('jsroot_enlarge_div'));
 
       if ((action === true) && (state !== 'on')) {
-         if (!enlarge.empty()) return false;
+         if (!enlarge.empty())
+            return false;
 
          enlarge = d3_select(doc.body)
             .append('div')
@@ -679,7 +758,7 @@ class BasePainter {
             }
          }
 
-         while (main.node().childNodes.length > 0)
+         while (main.node().childNodes.length)
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
@@ -687,7 +766,7 @@ class BasePainter {
          return true;
       }
       if ((action === false) && (state !== 'off')) {
-         while (enlarge.node() && enlarge.node().childNodes.length > 0)
+         while (enlarge.node()?.childNodes.length)
             main.node().appendChild(enlarge.node().firstChild);
 
          enlarge.remove();
@@ -703,24 +782,24 @@ class BasePainter {
      * @desc Used by {@link HierarchyPainter}
      * @private */
    setItemName(name, opt, hpainter) {
-      if (isStr(name))
-         this._hitemname = name;
-      else
-         delete this._hitemname;
+      this.#hitemname = isStr(name) ? name : undefined;
       // only update draw option, never delete.
       if (isStr(opt))
-         this._hdrawopt = opt;
+         this.#hdrawopt = opt;
 
-      this._hpainter = hpainter;
+      this.#hpainter = hpainter;
    }
+
+   /** @summary Returns assigned histogram painter */
+   getHPainter() { return this.#hpainter; }
 
    /** @summary Returns assigned item name
      * @desc Used with {@link HierarchyPainter} to identify drawn item name */
-   getItemName() { return this._hitemname ?? null; }
+   getItemName() { return this.#hitemname ?? null; }
 
    /** @summary Returns assigned item draw option
      * @desc Used with {@link HierarchyPainter} to identify drawn item option */
-   getItemDrawOpt() { return this._hdrawopt ?? ''; }
+   getItemDrawOpt() { return this.#hdrawopt ?? ''; }
 
 } // class BasePainter
 
@@ -744,12 +823,17 @@ async function _loadJSDOM() {
   * @private */
 function makeTranslate(g, x, y, scale = 1) {
    if (!isObject(g)) {
-      scale = y; y = x; x = g; g = null;
+      scale = y;
+      y = x;
+      x = g;
+      g = null;
    }
    let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
    if (scale && scale !== 1) {
-      if (res) res += ' ';
-          else res = '';
+      if (res)
+         res += ' ';
+      else
+         res = '';
       res += `scale(${scale.toFixed(3)})`;
    }
 
@@ -793,7 +877,7 @@ async function svgToImage(svg, image_format, args) {
    if (isNodeJs()) {
       svg = encodeURIComponent(doctype + svg);
       svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-         const c = String.fromCharCode('0x'+p1);
+         const c = String.fromCharCode('0x' + p1);
          return c === '%' ? '%25' : c;
       });
 
@@ -860,11 +944,11 @@ function convertDate(dt) {
    let res = '';
 
    if (settings.TimeZone && isStr(settings.TimeZone)) {
-     try {
-        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
-     } catch {
-        res = '';
-     }
+      try {
+         res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+      } catch {
+         res = '';
+      }
    }
    return res || dt.toLocaleString('en-GB');
 }
@@ -872,8 +956,8 @@ function convertDate(dt) {
 /** @summary Box decorations
   * @private */
 function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh) {
-   const side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-         side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
+   const side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2 * pww - ww}v${hh - 2 * phh}l${-pww},${phh}z`,
+         side2 = `M${xx + ww},${yy + hh}v${-hh}l${-pww},${phh}v${hh - 2 * phh}h${2 * pww - ww}l${-pww},${phh}z`;
    return bmode > 0 ? [side1, side2] : [side2, side1];
 }
 

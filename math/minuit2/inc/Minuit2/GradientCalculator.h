@@ -35,6 +35,10 @@ public:
 
    virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const { return false;}
 
+   static bool SetParallelOMP(bool doParallel = true);
+
+protected:
+   static inline bool fDoParallelOMP = false; ///< flag to indicate if parallel OpenMP processing is used
 };
 
 } // namespace Minuit2

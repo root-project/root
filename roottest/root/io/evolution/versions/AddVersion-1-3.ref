@@ -1,0 +1,33 @@
+
+Processing runAddVersion.cxx(1, "3")...
+
+Loading library lib3
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
+  double         a               offset=na type= 8
+   i= 0, a               type=  8, offset=na, len=1, method=0
+
+Loading myclass1.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
+  double         a               offset=na type= 8
+   i= 0, a               type=  8, offset=na, len=1, method=0
+
+Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5
+
+StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
+  double         a               offset=na type= 8
+   i= 0, a               type=  8, offset=na, len=1, method=0
+(int) 0

@@ -1,0 +1,654 @@
+
+Processing runMemberComments.C...
+
+TH1F::Class()->GetListOfAllPublicDataMembers():
+OBJ: TViewPubDataMembers	TViewPubDataMembers	 : 0
+ OBJ: TDataMember	kNormal	 : 0
+ OBJ: TDataMember	kPoisson	 : 0
+ OBJ: TDataMember	kPoisson2	 : 0
+ OBJ: TDataMember	kNoAxis	 : 0
+ OBJ: TDataMember	kXaxis	 : 0
+ OBJ: TDataMember	kYaxis	 : 0
+ OBJ: TDataMember	kZaxis	 : 0
+ OBJ: TDataMember	kAllAxes	 : 0
+ OBJ: TDataMember	kIgnore	 : 0
+ OBJ: TDataMember	kConsider	 : 0
+ OBJ: TDataMember	kNeutral	 : 0
+ OBJ: TDataMember	kFullyConsistent	 : 0
+ OBJ: TDataMember	kDifferentLabels	 : 0
+ OBJ: TDataMember	kDifferentBinLimits	 : 0
+ OBJ: TDataMember	kDifferentAxisLimits	 : 0
+ OBJ: TDataMember	kDifferentNumberOfBins	 : 0
+ OBJ: TDataMember	kDifferentDimensions	 : 0
+ OBJ: TDataMember	kNoStats	 : 0
+ OBJ: TDataMember	kUserContour	 : 0
+ OBJ: TDataMember	kLogX	 : 0
+ OBJ: TDataMember	kIsZoomed	 : 0
+ OBJ: TDataMember	kNoTitle	 : 0
+ OBJ: TDataMember	kIsAverage	 : 0
+ OBJ: TDataMember	kIsNotW	 : 0
+ OBJ: TDataMember	kAutoBinPTwo	 : 0
+ OBJ: TDataMember	kIsHighlight	 : 0
+ OBJ: TDataMember	kNstat	 : 0
+ OBJ: TDataMember	kCanDelete	 : 0
+ OBJ: TDataMember	kMustCleanup	 : 0
+ OBJ: TDataMember	kIsReferenced	 : 0
+ OBJ: TDataMember	kHasUUID	 : 0
+ OBJ: TDataMember	kCannotPick	 : 0
+ OBJ: TDataMember	kNoContextMenu	 : 0
+ OBJ: TDataMember	kInvalidObject	 : 0
+ OBJ: TDataMember	kObjInCanvas	 : 0
+ OBJ: TDataMember	kIsOnHeap	 : 0
+ OBJ: TDataMember	kNotDeleted	 : 0
+ OBJ: TDataMember	kZombie	 : 0
+ OBJ: TDataMember	kInconsistent	 : 0
+ OBJ: TDataMember	kBitMask	 : 0
+ OBJ: TDataMember	kSingleKey	 : 0
+ OBJ: TDataMember	kOverwrite	 : 0
+ OBJ: TDataMember	kWriteDelete	 : 0
+ OBJ: TDataMember	fArray	[fN] Array of fN floats : 0
+ OBJ: TDataMember	fN	Number of array elements : 0
+
+TArrow::Class()->GetListOfAllPublicMethods():
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TMethod	AbstractMethod	 : 0
+      void TObject::AbstractMethod(const char* method) const
+ OBJ: TMethod	AppendPad	 : 0
+      void TObject::AppendPad(Option_t* option = "")
+ OBJ: TMethod	Browse	 : 0
+      void TObject::Browse(TBrowser* b)
+ OBJ: TMethod	CheckedHash	Not virtual : 0
+      ULong_t TObject::CheckedHash()
+ OBJ: TMethod	Class	 : 0
+      TClass* TArrow::Class()
+ OBJ: TMethod	Class	 : 0
+      TClass* TLine::Class()
+ OBJ: TMethod	Class	 : 0
+      TClass* TObject::Class()
+ OBJ: TMethod	Class	 : 0
+      TClass* TAttLine::Class()
+ OBJ: TMethod	Class	 : 0
+      TClass* TAttBBox2D::Class()
+ OBJ: TMethod	Class	 : 0
+      TClass* TAttFill::Class()
+ OBJ: TMethod	ClassName	 : 0
+      const char* TObject::ClassName() const
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TArrow::Class_Name()
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TLine::Class_Name()
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TObject::Class_Name()
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TAttLine::Class_Name()
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TAttBBox2D::Class_Name()
+ OBJ: TMethod	Class_Name	 : 0
+      const char* TAttFill::Class_Name()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TArrow::Class_Version()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TLine::Class_Version()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TObject::Class_Version()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TAttLine::Class_Version()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TAttBBox2D::Class_Version()
+ OBJ: TMethod	Class_Version	 : 0
+      Version_t TAttFill::Class_Version()
+ OBJ: TMethod	Clear	 : 0
+      void TObject::Clear(Option_t* = "")
+ OBJ: TMethod	Clone	 : 0
+      TObject* TObject::Clone(const char* newname = "") const
+ OBJ: TMethod	Compare	 : 0
+      Int_t TObject::Compare(const TObject* obj) const
+ OBJ: TMethod	Copy	 : 0
+      void TArrow::Copy(TObject& arrow) const
+ OBJ: TMethod	Copy	 : 0
+      void TLine::Copy(TObject& line) const
+ OBJ: TMethod	Copy	 : 0
+      void TObject::Copy(TObject& object) const
+ OBJ: TMethod	Copy	 : 0
+      void TAttLine::Copy(TAttLine& attline) const
+ OBJ: TMethod	Copy	 : 0
+      void TAttFill::Copy(TAttFill& attfill) const
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TArrow::DeclFileLine()
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TLine::DeclFileLine()
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TObject::DeclFileLine()
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TAttLine::DeclFileLine()
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TAttBBox2D::DeclFileLine()
+ OBJ: TMethod	DeclFileLine	 : 0
+      int TAttFill::DeclFileLine()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TArrow::DeclFileName()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TLine::DeclFileName()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TObject::DeclFileName()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TAttLine::DeclFileName()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TAttBBox2D::DeclFileName()
+ OBJ: TMethod	DeclFileName	 : 0
+      const char* TAttFill::DeclFileName()
+ OBJ: TMethod	Delete	*MENU* : 0
+      void TObject::Delete(Option_t* option = "")
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TArrow::Dictionary()
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TLine::Dictionary()
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TObject::Dictionary()
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TAttLine::Dictionary()
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TAttBBox2D::Dictionary()
+ OBJ: TMethod	Dictionary	 : 0
+      TClass* TAttFill::Dictionary()
+ OBJ: TMethod	DistancetoLine	 : 0
+      Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, Double_t xp2, Double_t yp2)
+ OBJ: TMethod	DistancetoPrimitive	 : 0
+      Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
+ OBJ: TMethod	DistancetoPrimitive	 : 0
+      Int_t TObject::DistancetoPrimitive(Int_t px, Int_t py)
+ OBJ: TMethod	Draw	 : 0
+      void TArrow::Draw(Option_t* option = "")
+ OBJ: TMethod	Draw	 : 0
+      void TObject::Draw(Option_t* option = "")
+ OBJ: TMethod	DrawArrow	 : 0
+      TArrow* TArrow::DrawArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0, Option_t* option = "")
+ OBJ: TMethod	DrawClass	*MENU* : 0
+      void TObject::DrawClass() const
+ OBJ: TMethod	DrawClone	*MENU* : 0
+      TObject* TObject::DrawClone(Option_t* option = "") const
+ OBJ: TMethod	DrawLine	 : 0
+      TLine* TLine::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+ OBJ: TMethod	DrawLineNDC	 : 0
+      TLine* TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+ OBJ: TMethod	Dump	*MENU* : 0
+      void TObject::Dump() const
+ OBJ: TMethod	Error	 : 0
+      void TObject::Error(const char* method, const char* msgfmt,...) const
+ OBJ: TMethod	Execute	 : 0
+      void TObject::Execute(const char* method, const char* params, Int_t* error = nullptr)
+ OBJ: TMethod	Execute	 : 0
+      void TObject::Execute(TMethod* method, TObjArray* params, Int_t* error = nullptr)
+ OBJ: TMethod	ExecuteEvent	 : 0
+      void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+ OBJ: TMethod	ExecuteEvent	 : 0
+      void TObject::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+ OBJ: TMethod	Fatal	 : 0
+      void TObject::Fatal(const char* method, const char* msgfmt,...) const
+ OBJ: TMethod	FindObject	 : 0
+      TObject* TObject::FindObject(const char* name) const
+ OBJ: TMethod	FindObject	 : 0
+      TObject* TObject::FindObject(const TObject* obj) const
+ OBJ: TMethod	GetAngle	 : 0
+      Float_t TArrow::GetAngle() const
+ OBJ: TMethod	GetArrowSize	 : 0
+      Float_t TArrow::GetArrowSize() const
+ OBJ: TMethod	GetBBox	 : 0
+      Rectangle_t TLine::GetBBox()
+ OBJ: TMethod	GetBBox	Get TopLeft Corner with width and height : 0
+      Rectangle_t TAttBBox2D::GetBBox()
+ OBJ: TMethod	GetBBoxCenter	 : 0
+      TPoint TLine::GetBBoxCenter()
+ OBJ: TMethod	GetBBoxCenter	 : 0
+      TPoint TAttBBox2D::GetBBoxCenter()
+ OBJ: TMethod	GetDefaultAngle	 : 0
+      Float_t TArrow::GetDefaultAngle()
+ OBJ: TMethod	GetDefaultArrowSize	 : 0
+      Float_t TArrow::GetDefaultArrowSize()
+ OBJ: TMethod	GetDefaultOption	 : 0
+      Option_t* TArrow::GetDefaultOption()
+ OBJ: TMethod	GetDrawOption	 : 0
+      Option_t* TObject::GetDrawOption() const
+ OBJ: TMethod	GetDtorOnly	 : 0
+      Longptr_t TObject::GetDtorOnly()
+ OBJ: TMethod	GetFillColor	Return the fill area color : 0
+      Color_t TAttFill::GetFillColor() const
+ OBJ: TMethod	GetFillStyle	Return the fill area style : 0
+      Style_t TAttFill::GetFillStyle() const
+ OBJ: TMethod	GetIconName	 : 0
+      const char* TObject::GetIconName() const
+ OBJ: TMethod	GetLineColor	Return the line color : 0
+      Color_t TAttLine::GetLineColor() const
+ OBJ: TMethod	GetLineStyle	Return the line style : 0
+      Style_t TAttLine::GetLineStyle() const
+ OBJ: TMethod	GetLineWidth	Return the line width : 0
+      Width_t TAttLine::GetLineWidth() const
+ OBJ: TMethod	GetName	 : 0
+      const char* TObject::GetName() const
+ OBJ: TMethod	GetObjectInfo	 : 0
+      char* TObject::GetObjectInfo(Int_t px, Int_t py) const
+ OBJ: TMethod	GetObjectStat	 : 0
+      Bool_t TObject::GetObjectStat()
+ OBJ: TMethod	GetOption	 : 0
+      Option_t* TArrow::GetOption() const
+ OBJ: TMethod	GetOption	 : 0
+      Option_t* TObject::GetOption() const
+ OBJ: TMethod	GetSlope	 : 0
+      Double_t TLine::GetSlope() const
+ OBJ: TMethod	GetTitle	 : 0
+      const char* TObject::GetTitle() const
+ OBJ: TMethod	GetUniqueID	 : 0
+      UInt_t TObject::GetUniqueID() const
+ OBJ: TMethod	GetX1	 : 0
+      Double_t TLine::GetX1() const
+ OBJ: TMethod	GetX2	 : 0
+      Double_t TLine::GetX2() const
+ OBJ: TMethod	GetY1	 : 0
+      Double_t TLine::GetY1() const
+ OBJ: TMethod	GetY2	 : 0
+      Double_t TLine::GetY2() const
+ OBJ: TMethod	GetYIntercept	 : 0
+      Double_t TLine::GetYIntercept() const
+ OBJ: TMethod	HandleTimer	 : 0
+      Bool_t TObject::HandleTimer(TTimer* timer)
+ OBJ: TMethod	HasInconsistentHash	 : 0
+      Bool_t TObject::HasInconsistentHash() const
+ OBJ: TMethod	Hash	 : 0
+      ULong_t TObject::Hash() const
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TArrow::ImplFileLine()
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TLine::ImplFileLine()
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TObject::ImplFileLine()
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TAttLine::ImplFileLine()
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TAttBBox2D::ImplFileLine()
+ OBJ: TMethod	ImplFileLine	 : 0
+      int TAttFill::ImplFileLine()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TArrow::ImplFileName()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TLine::ImplFileName()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TObject::ImplFileName()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TAttLine::ImplFileName()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TAttBBox2D::ImplFileName()
+ OBJ: TMethod	ImplFileName	 : 0
+      const char* TAttFill::ImplFileName()
+ OBJ: TMethod	Info	 : 0
+      void TObject::Info(const char* method, const char* msgfmt,...) const
+ OBJ: TMethod	InheritsFrom	 : 0
+      Bool_t TObject::InheritsFrom(const char* classname) const
+ OBJ: TMethod	InheritsFrom	 : 0
+      Bool_t TObject::InheritsFrom(const TClass* cl) const
+ OBJ: TMethod	Inspect	*MENU* : 0
+      void TObject::Inspect() const
+ OBJ: TMethod	InvertBit	 : 0
+      void TObject::InvertBit(UInt_t f)
+ OBJ: TMethod	IsA	 : 0
+      TClass* TArrow::IsA() const
+ OBJ: TMethod	IsA	 : 0
+      TClass* TLine::IsA() const
+ OBJ: TMethod	IsA	 : 0
+      TClass* TObject::IsA() const
+ OBJ: TMethod	IsA	 : 0
+      TClass* TAttLine::IsA() const
+ OBJ: TMethod	IsA	 : 0
+      TClass* TAttBBox2D::IsA() const
+ OBJ: TMethod	IsA	 : 0
+      TClass* TAttFill::IsA() const
+ OBJ: TMethod	IsDestructed	 : 0
+      Bool_t TObject::IsDestructed() const
+ OBJ: TMethod	IsEqual	 : 0
+      Bool_t TObject::IsEqual(const TObject* obj) const
+ OBJ: TMethod	IsFolder	 : 0
+      Bool_t TObject::IsFolder() const
+ OBJ: TMethod	IsHorizontal	 : 0
+      Bool_t TLine::IsHorizontal()
+ OBJ: TMethod	IsOnHeap	 : 0
+      Bool_t TObject::IsOnHeap() const
+ OBJ: TMethod	IsSortable	 : 0
+      Bool_t TObject::IsSortable() const
+ OBJ: TMethod	IsTransparent	 : 0
+      Bool_t TAttFill::IsTransparent() const
+ OBJ: TMethod	IsVertical	 : 0
+      Bool_t TLine::IsVertical()
+ OBJ: TMethod	IsZombie	 : 0
+      Bool_t TObject::IsZombie() const
+ OBJ: TMethod	MayNotUse	 : 0
+      void TObject::MayNotUse(const char* method) const
+ OBJ: TMethod	Modify	 : 0
+      void TAttLine::Modify()
+ OBJ: TMethod	Modify	 : 0
+      void TAttFill::Modify()
+ OBJ: TMethod	Notify	 : 0
+      Bool_t TObject::Notify()
+ OBJ: TMethod	Obsolete	 : 0
+      void TObject::Obsolete(const char* method, const char* asOfVers, const char* removedFromVers) const
+ OBJ: TMethod	Paint	 : 0
+      void TArrow::Paint(Option_t* option = "")
+ OBJ: TMethod	Paint	 : 0
+      void TLine::Paint(Option_t* option = "")
+ OBJ: TMethod	Paint	 : 0
+      void TObject::Paint(Option_t* option = "")
+ OBJ: TMethod	PaintArrow	 : 0
+      void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0.050000000000000003, Option_t* option = ">")
+ OBJ: TMethod	PaintArrowNDC	 : 0
+      void TArrow::PaintArrowNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2, Float_t arrowsize = 0.050000000000000003, Option_t* option = ">")
+ OBJ: TMethod	PaintLine	 : 0
+      void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+ OBJ: TMethod	PaintLineNDC	 : 0
+      void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
+ OBJ: TMethod	Pop	 : 0
+      void TObject::Pop()
+ OBJ: TMethod	Print	 : 0
+      void TLine::Print(Option_t* option = "") const
+ OBJ: TMethod	Print	 : 0
+      void TObject::Print(Option_t* option = "") const
+ OBJ: TMethod	Read	 : 0
+      Int_t TObject::Read(const char* name)
+ OBJ: TMethod	RecursiveRemove	 : 0
+      void TObject::RecursiveRemove(TObject* obj)
+ OBJ: TMethod	ResetAttFill	 : 0
+      void TAttFill::ResetAttFill(Option_t* option = "")
+ OBJ: TMethod	ResetAttLine	 : 0
+      void TAttLine::ResetAttLine(Option_t* option = "")
+ OBJ: TMethod	ResetBit	 : 0
+      void TObject::ResetBit(UInt_t f)
+ OBJ: TMethod	SaveAs	*MENU* : 0
+      void TObject::SaveAs(const char* filename = "", Option_t* option = "") const
+ OBJ: TMethod	SaveFillAttributes	 : 0
+      void TAttFill::SaveFillAttributes(ostream& out, const char* name, Int_t coldef = 1, Int_t stydef = 1001)
+ OBJ: TMethod	SaveLineAttributes	 : 0
+      void TAttLine::SaveLineAttributes(ostream& out, const char* name, Int_t coldef = 1, Int_t stydef = 1, Int_t widdef = 1)
+ OBJ: TMethod	SavePrimitive	 : 0
+      void TArrow::SavePrimitive(ostream& out, Option_t* option = "")
+ OBJ: TMethod	SavePrimitive	 : 0
+      void TLine::SavePrimitive(ostream& out, Option_t* option = "")
+ OBJ: TMethod	SavePrimitive	 : 0
+      void TObject::SavePrimitive(ostream& out, Option_t* option = "")
+ OBJ: TMethod	SetAngle	*MENU* : 0
+      void TArrow::SetAngle(Float_t angle = 60)
+ OBJ: TMethod	SetArrowSize	*MENU* : 0
+      void TArrow::SetArrowSize(Float_t arrowsize = 0.050000000000000003)
+ OBJ: TMethod	SetBBoxCenter	 : 0
+      void TLine::SetBBoxCenter(const TPoint& p)
+ OBJ: TMethod	SetBBoxCenter	 : 0
+      void TAttBBox2D::SetBBoxCenter(const TPoint& p)
+ OBJ: TMethod	SetBBoxCenterX	 : 0
+      void TLine::SetBBoxCenterX(const Int_t x)
+ OBJ: TMethod	SetBBoxCenterX	 : 0
+      void TAttBBox2D::SetBBoxCenterX(const Int_t x)
+ OBJ: TMethod	SetBBoxCenterY	 : 0
+      void TLine::SetBBoxCenterY(const Int_t y)
+ OBJ: TMethod	SetBBoxCenterY	 : 0
+      void TAttBBox2D::SetBBoxCenterY(const Int_t y)
+ OBJ: TMethod	SetBBoxX1	 : 0
+      void TLine::SetBBoxX1(const Int_t x)
+ OBJ: TMethod	SetBBoxX1	set lhs of BB to value : 0
+      void TAttBBox2D::SetBBoxX1(const Int_t x)
+ OBJ: TMethod	SetBBoxX2	 : 0
+      void TLine::SetBBoxX2(const Int_t x)
+ OBJ: TMethod	SetBBoxX2	set rhs of BB to value : 0
+      void TAttBBox2D::SetBBoxX2(const Int_t x)
+ OBJ: TMethod	SetBBoxY1	 : 0
+      void TLine::SetBBoxY1(const Int_t y)
+ OBJ: TMethod	SetBBoxY1	set top of BB to value : 0
+      void TAttBBox2D::SetBBoxY1(const Int_t y)
+ OBJ: TMethod	SetBBoxY2	 : 0
+      void TLine::SetBBoxY2(const Int_t y)
+ OBJ: TMethod	SetBBoxY2	set bottom of BB to value : 0
+      void TAttBBox2D::SetBBoxY2(const Int_t y)
+ OBJ: TMethod	SetBit	 : 0
+      void TObject::SetBit(UInt_t f, Bool_t set)
+ OBJ: TMethod	SetBit	 : 0
+      void TObject::SetBit(UInt_t f)
+ OBJ: TMethod	SetDefaultAngle	 : 0
+      void TArrow::SetDefaultAngle(Float_t Angle)
+ OBJ: TMethod	SetDefaultArrowSize	 : 0
+      void TArrow::SetDefaultArrowSize(Float_t ArrowSize)
+ OBJ: TMethod	SetDefaultOption	 : 0
+      void TArrow::SetDefaultOption(Option_t* Option)
+ OBJ: TMethod	SetDrawOption	*MENU* : 0
+      void TObject::SetDrawOption(Option_t* option = "")
+ OBJ: TMethod	SetDtorOnly	 : 0
+      void TObject::SetDtorOnly(void* obj)
+ OBJ: TMethod	SetFillAttributes	*MENU* : 0
+      void TAttFill::SetFillAttributes()
+ OBJ: TMethod	SetFillColor	Set the fill area color : 0
+      void TAttFill::SetFillColor(Color_t fcolor)
+ OBJ: TMethod	SetFillColor	 : 0
+      void TAttFill::SetFillColor(TColorNumber)
+ OBJ: TMethod	SetFillColorAlpha	 : 0
+      void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
+ OBJ: TMethod	SetFillStyle	Set the fill area style : 0
+      void TAttFill::SetFillStyle(Style_t fstyle)
+ OBJ: TMethod	SetHorizontal	*TOGGLE* *GETTER=IsHorizontal : 0
+      void TLine::SetHorizontal(Bool_t set = kTRUE)
+ OBJ: TMethod	SetLineAttributes	*MENU* : 0
+      void TAttLine::SetLineAttributes()
+ OBJ: TMethod	SetLineColor	Set the line color : 0
+      void TAttLine::SetLineColor(Color_t lcolor)
+ OBJ: TMethod	SetLineColor	 : 0
+      void TAttLine::SetLineColor(TColorNumber lcolor)
+ OBJ: TMethod	SetLineColorAlpha	 : 0
+      void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
+ OBJ: TMethod	SetLineStyle	Set the line style : 0
+      void TAttLine::SetLineStyle(Style_t lstyle)
+ OBJ: TMethod	SetLineWidth	Set the line width : 0
+      void TAttLine::SetLineWidth(Width_t lwidth)
+ OBJ: TMethod	SetNDC	 : 0
+      void TLine::SetNDC(Bool_t isNDC = kTRUE)
+ OBJ: TMethod	SetObjectStat	 : 0
+      void TObject::SetObjectStat(Bool_t stat)
+ OBJ: TMethod	SetOption	 : 0
+      void TArrow::SetOption(Option_t* option = ">")
+ OBJ: TMethod	SetUniqueID	 : 0
+      void TObject::SetUniqueID(UInt_t uid)
+ OBJ: TMethod	SetVertical	*TOGGLE* *GETTER=IsVertical : 0
+      void TLine::SetVertical(Bool_t set = kTRUE)
+ OBJ: TMethod	SetX1	 : 0
+      void TLine::SetX1(Double_t x1)
+ OBJ: TMethod	SetX2	 : 0
+      void TLine::SetX2(Double_t x2)
+ OBJ: TMethod	SetY1	 : 0
+      void TLine::SetY1(Double_t y1)
+ OBJ: TMethod	SetY2	 : 0
+      void TLine::SetY2(Double_t y2)
+ OBJ: TMethod	ShowMembers	 : 0
+      void TArrow::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	ShowMembers	 : 0
+      void TLine::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	ShowMembers	 : 0
+      void TObject::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	ShowMembers	 : 0
+      void TAttLine::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	ShowMembers	 : 0
+      void TAttBBox2D::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	ShowMembers	 : 0
+      void TAttFill::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	Streamer	 : 0
+      void TArrow::Streamer(TBuffer&)
+ OBJ: TMethod	Streamer	 : 0
+      void TLine::Streamer(TBuffer&)
+ OBJ: TMethod	Streamer	 : 0
+      void TObject::Streamer(TBuffer&)
+ OBJ: TMethod	Streamer	 : 0
+      void TAttLine::Streamer(TBuffer&)
+ OBJ: TMethod	Streamer	 : 0
+      void TAttBBox2D::Streamer(TBuffer&)
+ OBJ: TMethod	Streamer	 : 0
+      void TAttFill::Streamer(TBuffer&)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TArrow::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TLine::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TObject::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TAttLine::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TAttBBox2D::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	StreamerNVirtual	 : 0
+      void TAttFill::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
+ OBJ: TMethod	SysError	 : 0
+      void TObject::SysError(const char* method, const char* msgfmt,...) const
+ OBJ: TMethod	TArrow	 : 0
+      TArrow TArrow::TArrow()
+ OBJ: TMethod	TArrow	 : 0
+      TArrow TArrow::TArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0.050000000000000003, Option_t* option = ">")
+ OBJ: TMethod	TArrow	 : 0
+      TArrow TArrow::TArrow(const TArrow& arrow)
+ OBJ: TMethod	TAttBBox2D	 : 0
+      TAttBBox2D TAttBBox2D::TAttBBox2D()
+ OBJ: TMethod	TAttBBox2D	 : 0
+      TAttBBox2D TAttBBox2D::TAttBBox2D(const TAttBBox2D&)
+ OBJ: TMethod	TAttFill	 : 0
+      TAttFill TAttFill::TAttFill()
+ OBJ: TMethod	TAttFill	 : 0
+      TAttFill TAttFill::TAttFill(Color_t fcolor, Style_t fstyle)
+ OBJ: TMethod	TAttFill	 : 0
+      TAttFill TAttFill::TAttFill(const TAttFill&)
+ OBJ: TMethod	TAttLine	 : 0
+      TAttLine TAttLine::TAttLine()
+ OBJ: TMethod	TAttLine	 : 0
+      TAttLine TAttLine::TAttLine(Color_t lcolor, Style_t lstyle, Width_t lwidth)
+ OBJ: TMethod	TAttLine	 : 0
+      TAttLine TAttLine::TAttLine(const TAttLine&)
+ OBJ: TMethod	TLine	 : 0
+      TLine TLine::TLine()
+ OBJ: TMethod	TLine	 : 0
+      TLine TLine::TLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+ OBJ: TMethod	TLine	 : 0
+      TLine TLine::TLine(const TLine& line)
+ OBJ: TMethod	TObject	 : 0
+      TObject TObject::TObject()
+ OBJ: TMethod	TObject	 : 0
+      TObject TObject::TObject(const TObject& object)
+ OBJ: TMethod	TestBit	 : 0
+      Bool_t TObject::TestBit(UInt_t f) const
+ OBJ: TMethod	TestBits	 : 0
+      Int_t TObject::TestBits(UInt_t f) const
+ OBJ: TMethod	UseCurrentStyle	 : 0
+      void TObject::UseCurrentStyle()
+ OBJ: TMethod	Warning	 : 0
+      void TObject::Warning(const char* method, const char* msgfmt,...) const
+ OBJ: TMethod	Write	 : 0
+      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0)
+ OBJ: TMethod	Write	 : 0
+      Int_t TObject::Write(const char* name = nullptr, Int_t option = 0, Int_t bufsize = 0) const
+ OBJ: TMethod	ls	 : 0
+      void TLine::ls(Option_t* option = "") const
+ OBJ: TMethod	ls	 : 0
+      void TObject::ls(Option_t* option = "") const
+ OBJ: TMethod	operator delete	 : 0
+      void TObject::operator delete(void* ptr)
+ OBJ: TMethod	operator delete	 : 0
+      void TObject::operator delete(void*, size_t)
+ OBJ: TMethod	operator delete	 : 0
+      void TObject::operator delete(void* ptr, void* vp)
+ OBJ: TMethod	operator delete[]	 : 0
+      void TObject::operator delete[](void* ptr)
+ OBJ: TMethod	operator delete[]	 : 0
+      void TObject::operator delete[](void*, size_t)
+ OBJ: TMethod	operator delete[]	 : 0
+      void TObject::operator delete[](void* ptr, void* vp)
+ OBJ: TMethod	operator new	 : 0
+      void* TObject::operator new(size_t sz)
+ OBJ: TMethod	operator new	 : 0
+      void* TObject::operator new(size_t sz, void* vp)
+ OBJ: TMethod	operator new[]	 : 0
+      void* TObject::operator new[](size_t sz)
+ OBJ: TMethod	operator new[]	 : 0
+      void* TObject::operator new[](size_t sz, void* vp)
+ OBJ: TMethod	operator=	 : 0
+      TArrow& TArrow::operator=(const TArrow&)
+ OBJ: TMethod	operator=	 : 0
+      TLine& TLine::operator=(const TLine& src)
+ OBJ: TMethod	operator=	 : 0
+      TObject& TObject::operator=(const TObject& rhs)
+ OBJ: TMethod	operator=	 : 0
+      TAttLine& TAttLine::operator=(const TAttLine&)
+ OBJ: TMethod	operator=	 : 0
+      TAttBBox2D& TAttBBox2D::operator=(const TAttBBox2D&)
+ OBJ: TMethod	operator=	 : 0
+      TAttFill& TAttFill::operator=(const TAttFill&)
+ OBJ: TMethod	~TArrow	 : 0
+      void TArrow::~TArrow()
+ OBJ: TMethod	~TAttBBox2D	 : 0
+      void TAttBBox2D::~TAttBBox2D()
+ OBJ: TMethod	~TAttFill	 : 0
+      void TAttFill::~TAttFill()
+ OBJ: TMethod	~TAttLine	 : 0
+      void TAttLine::~TAttLine()
+ OBJ: TMethod	~TLine	 : 0
+      void TLine::~TLine()
+ OBJ: TMethod	~TObject	 : 0
+      void TObject::~TObject()
+
+TH1::Class()->GetMenuItems():
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TMethod	DrawPanel	*MENU* : 0
+      void TH1::DrawPanel()
+ OBJ: TMethod	Fit	*MENU* : 0
+      TFitResultPtr TH1::Fit(const char* formula, Option_t* option = "", Option_t* goption = "", Double_t xmin = 0, Double_t xmax = 0)
+ OBJ: TMethod	FitPanel	*MENU* : 0
+      void TH1::FitPanel()
+ OBJ: TMethod	Normalize	*MENU* : 0
+      void TH1::Normalize(Option_t* option = "")
+ OBJ: TMethod	Rebin	*MENU* : 0
+      TH1* TH1::Rebin(Int_t ngroup = 2, const char* newname = "", const Double_t* xbins = nullptr)
+ OBJ: TMethod	Scale	*MENU* : 0
+      void TH1::Scale(Double_t c1 = 1, Option_t* option = "")
+ OBJ: TMethod	SetHighlight	*TOGGLE* *GETTER=IsHighlight : 0
+      void TH1::SetHighlight(Bool_t set = kTRUE)
+ OBJ: TMethod	SetMaximum	*MENU* : 0
+      void TH1::SetMaximum(Double_t maximum = -1111)
+ OBJ: TMethod	SetMinimum	*MENU* : 0
+      void TH1::SetMinimum(Double_t minimum = -1111)
+ OBJ: TMethod	SetStats	*MENU* : 0
+      void TH1::SetStats(Bool_t stats = kTRUE)
+ OBJ: TMethod	ShowBackground	*MENU* : 0
+      TH1* TH1::ShowBackground(Int_t niter = 20, Option_t* option = "same")
+ OBJ: TMethod	ShowPeaks	*MENU* : 0
+      Int_t TH1::ShowPeaks(Double_t sigma = 2, Option_t* option = "", Double_t threshold = 0.050000000000000003)
+ OBJ: TMethod	Smooth	*MENU* : 0
+      void TH1::Smooth(Int_t ntimes = 1, Option_t* option = "")
+ OBJ: TMethod	SetName	*MENU* : 0
+      void TNamed::SetName(const char* name)
+ OBJ: TMethod	SetTitle	*MENU* : 0
+      void TNamed::SetTitle(const char* title = "")
+ OBJ: TMethod	Delete	*MENU* : 0
+      void TObject::Delete(Option_t* option = "")
+ OBJ: TMethod	DrawClass	*MENU* : 0
+      void TObject::DrawClass() const
+ OBJ: TMethod	DrawClone	*MENU* : 0
+      TObject* TObject::DrawClone(Option_t* option = "") const
+ OBJ: TMethod	Dump	*MENU* : 0
+      void TObject::Dump() const
+ OBJ: TMethod	Inspect	*MENU* : 0
+      void TObject::Inspect() const
+ OBJ: TMethod	SaveAs	*MENU* : 0
+      void TObject::SaveAs(const char* filename = "", Option_t* option = "") const
+ OBJ: TMethod	SetDrawOption	*MENU* : 0
+      void TObject::SetDrawOption(Option_t* option = "")
+ OBJ: TMethod	SetLineAttributes	*MENU* : 0
+      void TAttLine::SetLineAttributes()
+ OBJ: TMethod	SetFillAttributes	*MENU* : 0
+      void TAttFill::SetFillAttributes()
+ OBJ: TMethod	SetMarkerAttributes	*MENU* : 0
+      void TAttMarker::SetMarkerAttributes()
+
+childCl::Class()->GetListOfAllPublicMethods():
+childCl::childCl() // 
+childCl::childCl(const childCl&) // 
+childCl::fGetIndex(Int_t aIndex) // Title Derived
+childCl::~childCl() // 
+baseCl::baseCl() // 
+baseCl::baseCl(const baseCl&) // 
+baseCl::fGetIndex(Int_t aIndex = 0) // Title Base
+baseCl::~baseCl() // 

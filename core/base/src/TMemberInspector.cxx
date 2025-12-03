@@ -57,10 +57,9 @@ void TMemberInspector::TParentBuf::Remove(Ssiz_t startingAt)
    fBuf[startingAt] = 0;
 }
 
-ClassImp(TMemberInspector);
 
 TMemberInspector::TMemberInspector():
-   fObjectPointerState(kUnset)
+   fObjectPointerState(kUnset), fNestedTransient(0)
 {
    // Construct a member inspector
 

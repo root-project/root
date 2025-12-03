@@ -399,7 +399,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet branchListVD;
   branchListVD.reserve(branchListVDAll.size());
   for (RooAbsArg *branch : branchListVDAll) {
-    if (branch != &function) branchListVD.add(*branch);
+    if (branch != &function) {
+      // The branchListVDAll is a RooArgList, so it's not de-duplicated yet.
+      // Add elements to the branchListVD with the "silent" flag, so it
+      // de-duplicates while adding without printing errors.
+      branchListVD.add(*branch, /*silent=*/true);
+    }
   }
 
   for (auto branch: branchList) {
@@ -694,11 +699,11 @@ bool RooRealIntegral::initNumIntegrator() const
     return false;
   }
 
-  cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
+  cxcoutI(NumericIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
            << integratorName << " to calculate Int" << _intList << std::endl ;
 
   if (_intList.size()>3) {
-    cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;
+    cxcoutI(NumericIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;
   }
 
   _restartNumIntEngine = false ;

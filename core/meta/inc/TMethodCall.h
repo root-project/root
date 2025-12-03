@@ -122,6 +122,8 @@ public:
    void     Execute(const char *params, Longptr_t &retLong);
    void     Execute(Double_t &retDouble);
    void     Execute(const char *params, Double_t &retDouble);
+   void     Execute(char **retText);
+   void     Execute(const char *params, char **retText);
 
    void     Execute(void *objAddress, const void* args[], int nargs, void *ret = nullptr);
 
@@ -140,5 +142,9 @@ inline void TMethodCall::Execute(Double_t &retDouble)
    { Execute((void *)0, retDouble); }
 inline void TMethodCall::Execute(const char *params, Double_t &retDouble)
    { Execute((void *)0, params, retDouble); }
+inline void TMethodCall::Execute(char **retText)
+   { Execute((void *)0, retText); }
+inline void TMethodCall::Execute(const char *params, char **retText)
+   { Execute((void *)0, params, retText); }
 
 #endif

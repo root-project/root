@@ -92,7 +92,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
          fNSequence_lens(UTILITY::Clean_name(nameSequence_lens)),
          fNInitial_h(UTILITY::Clean_name(nameInitial_h)),
          fNY(UTILITY::Clean_name(nameY)), fNY_h(UTILITY::Clean_name(nameY_h)) {
-      
+
       fInputTensorNames = { fNX, fNW, fNR };
       if (!fNB.empty()){
         fInputTensorNames.emplace_back(fNB);
@@ -124,35 +124,29 @@ template <typename T> class ROperator_GRU final : public ROperator {
     *
     * \param input type of the input tensors
     */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> /*input*/);
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> /*input*/) override;
 
    /*! \brief Infers the shape of the output tensors
     *
     * \param input shape of the input tensors
     */
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> /*input*/);
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> /*input*/) override;
 
    /*! \brief Initialize the model
     *
     * \param model Model
     */
-   void Initialize(RModel &);
+   void Initialize(RModel &) override;
 
    /*! \brief Generate the inference code
     *
     * \param OpName name of the operator
     */
-   std::string Generate(std::string /*OpName*/);
-
-   /*! \brief Generate the code for the Session internal data vectors
-    *
-    * \param opName name of the operator
-    */
-   std::string GenerateSessionMembersCode(std::string opName);
+   std::string Generate(std::string /*OpName*/) override;
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

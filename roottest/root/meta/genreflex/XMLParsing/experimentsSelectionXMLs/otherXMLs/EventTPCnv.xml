@@ -1,0 +1,38 @@
+<lcgdict>
+
+  <!-- this library is optimized by ilija@vukotic.me    it takes 436 kb   -->
+	
+  <class name="EventInfo_p3"       id="3E240CA8-5124-405B-9059-FAFC4C5954C6" />
+  <class name="EventInfo_p4"       id="C634FDB6-CC4B-4BA2-B8F9-A84BE6A786C7" />
+
+  <class name="EventStreamInfo_p2" id="9AD4889D-C8EB-4F3B-9920-D37FF092CAB6" />
+  <class name="EventStreamInfo_p3" id="11DF1B8C-0DEE-4687-80D7-E74B520ACBB4" />
+
+  <class name="EventType_p1" />
+  <class name="std::set<EventType_p1>" />
+  <class name="std::vector<EventType_p1>" />
+  <class name="EventType_p3" />
+  <class name="std::vector<EventType_p3>" />
+
+  <class name="EventID_p1" />
+  <class name="TriggerInfo_p2" />
+
+  <class name="TriggerInfo_p2::StreamTag_p2" />
+  <class name="std::vector<TriggerInfo_p2::StreamTag_p2>" />
+  <class name="MergedEventInfo_p2" id="5B0C1A92-6836-4B3C-9EE6-5E69792A28B5" />
+
+  <class name="PileUpEventInfo_p4" id="7D72CE05-E814-4A70-B3B2-B54B05069103" />
+  <class name="PileUpEventInfo_p4::SubEvent" />
+  <class name="std::vector<PileUpEventInfo_p4::SubEvent>" />
+
+
+  <class name="PileUpEventInfo_p5" id="F53A1735-F61A-4CA4-B25F-DB0E277E2DDC" />
+  <class name="PileUpEventInfo_p5::SubEvent" />
+  <class name="std::vector<PileUpEventInfo_p5::SubEvent>" />
+
+  <class name="std::pair<unsigned int, std::string>"/> 
+
+  <class name="ByteStreamMetadata_p1" id="2DED41DC-E2FF-4562-AD58-53BEF1612619" />
+  <class name="ByteStreamMetadataContainer_p1" id="E0A5F063-F07D-4D2E-8D3B-49205CD712C1" />
+
+</lcgdict>

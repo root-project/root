@@ -1,0 +1,14 @@
+Philippe,
+
+The example enclosed is used as follows:
+
+1) Set ROOTSYS to point to ROOT 3.0.3.
+2) Run 'buildit" to build 'x".  This first runs rootcint.
+3) Run x with two arguments, like so: x <allocated> <filled>,
+where allocated and filled refer to the size of vector<int>.
+(If filled > allocated, allocated is set to filled, so no error).
+4) Note the size of "mytest.root" does not increase as the vector grows.
+This doesn't work, but gives no error.
+If ClassDef() and ClassImp() are uncommented, everything works.
+
+Bill

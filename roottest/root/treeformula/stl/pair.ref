@@ -1,0 +1,28 @@
+
+Processing runpair.C...
+Warning in <TClass::Init>: no dictionary for class edm::BranchKey is available
+Warning in <TClass::Init>: no dictionary for class edm::ProductID is available
+Warning in <TClass::Init>: no dictionary for class edm::PS_ID is available
+Warning in <TClass::Init>: no dictionary for class edm::ModuleDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::ProductDescription is available
+Warning in <TClass::Init>: no dictionary for class edm::ProductRegistry is available
+Warning in <TClass::Init>: no dictionary for class edm::EventAux is available
+Warning in <TClass::Init>: no dictionary for class edm::RefItem is available
+Warning in <TClass::Init>: no dictionary for class edm::RefCore is available
+Warning in <TClass::Init>: no dictionary for class edm::RefVectorBase is available
+Warning in <TClass::Init>: no dictionary for class edm::RefVector<vector<edmreftest::Thing> > is available
+Warning in <TClass::Init>: no dictionary for class edm::RefBase is available
+Warning in <TClass::Init>: no dictionary for class edm::Ref<vector<edmreftest::Thing> > is available
+Warning in <TClass::Init>: no dictionary for class edmreftest::OtherThing is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<vector<edmreftest::OtherThing> > is available
+Warning in <TClass::Init>: no dictionary for class edmreftest::Thing is available
+Warning in <TClass::Init>: no dictionary for class edm::Wrapper<vector<edmreftest::Thing> > is available
+Warning in <TClass::Init>: no dictionary for class edm::Provenance is available
+Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
+**************************************
+*    Row   * Instance * ProductDescr *
+**************************************
+*        0 *        0 *   OtherThing *
+*        0 *        1 *        Thing *
+**************************************

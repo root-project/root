@@ -1,0 +1,8 @@
+
+Processing printLittle.C...
+
+StreamerInfo for class: little, checksum=0xf2470c06
+  int            var1            offset=na type= 3                     
+  float          var2            offset=na type= 5                     
+   i= 0, var1            type=  3, offset=na, len=1, method=0
+   i= 1, var2            type=  5, offset=na, len=1, method=0

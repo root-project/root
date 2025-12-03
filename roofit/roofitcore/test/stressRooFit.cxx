@@ -171,18 +171,18 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    gBenchmark->Start("StressRooFit");
 
    int i(1);
-   for (list<RooUnitTest *>::iterator iter = testList.begin(); iter != testList.end(); ++iter) {
+   for (RooUnitTest *unitTest : testList) {
       if (oneTest < 0 || oneTest == i) {
          if (doDump) {
-            (*iter)->setDebug(true);
+            unitTest->setDebug(true);
          }
-         int status = (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
-         StatusPrint(i, (*iter)->GetName(), status);
+         int status = unitTest->isTestAvailable() ? unitTest->runTest() : -1;
+         StatusPrint(i, unitTest->GetName(), status);
          // increment retVal for every failed test
          if (!status)
             ++retVal;
       }
-      delete (*iter);
+      delete unitTest;
       i++;
    }
 
@@ -215,7 +215,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
 
    printf("******************************************************************\n");
    gBenchmark->Print("StressFit");
-#ifdef __CINT__
+#ifdef __CLING__
    Double_t reftime = 186.34; // pcbrun4 interpreted
 #else
    Double_t reftime = 93.59; // pcbrun4 compiled
@@ -241,7 +241,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
 }
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 int main(int argc, const char *argv[])
 {

@@ -66,7 +66,6 @@
 #pragma link C++ class TCollectionPropertyBrowsable+;
 #pragma link C++ class TCollectionMethodBrowsable+;
 #pragma link C++ class TSelectorScalar+;
-#pragma link C++ class TQueryResult+;
 #pragma link C++ class TBranchSTL+;
 #pragma link C++ class TIndArray+;
 
@@ -96,4 +95,5 @@
 #pragma link C++ class ROOT::Internal::TreeUtils::RNoCleanupNotifier;
 #pragma link C++ class TNotifyLink<ROOT::Internal::TreeUtils::RNoCleanupNotifierHelper>;
 
+#pragma link C++ class ROOT::Experimental::Internal::TBulkBranchRead+;
 #endif

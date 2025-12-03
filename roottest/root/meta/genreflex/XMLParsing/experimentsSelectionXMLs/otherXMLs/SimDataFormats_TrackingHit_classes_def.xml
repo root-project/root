@@ -1,0 +1,15 @@
+<lcgdict>
+  <class name="PSimHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1181355938"/>
+  </class>
+  <class name="std::vector<PSimHit>"/>
+  <class name="edm::Wrapper<std::vector<PSimHit> >" splitLevel="0"/>
+  <class name="std::vector<const PSimHit*>"/>
+  <class name="edm::RefProd<std::vector<PSimHit> >"/>
+  <class name="edm::Ref<std::vector<PSimHit>,PSimHit,edm::refhelper::FindUsingAdvance<std::vector<PSimHit>,PSimHit> >"/>
+
+  <class name="edm::RefToBase<PSimHit>"/>
+  <class name="std::vector<edm::RefToBase<PSimHit> >"/>
+  <class name="edm::reftobase::Holder<PSimHit,edm::Ref<std::vector<PSimHit>,PSimHit,edm::refhelper::FindUsingAdvance<std::vector<PSimHit>,PSimHit> > >"/>
+
+</lcgdict>

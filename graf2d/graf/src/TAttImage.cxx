@@ -94,9 +94,6 @@ This class provides a way to edit the palette via a GUI.
 #include "TStyle.h"
 #include <vector>
 
-ClassImp(TPaletteEditor);
-ClassImp(TAttImage);
-ClassImp(TImagePalette);
 
 
 // definition of a default palette
@@ -613,14 +610,20 @@ void TAttImage::SaveImageAttributes(std::ostream &out, const char *name,
                                     UInt_t comprdef, Bool_t constRatiodef)
 {
    if (fImageQuality != qualdef) {
-      out<<"   "<<name<<"->SetImageQuality("<<fImageQuality<<");"<<std::endl;
+      out << "   " << name << "->SetImageQuality(TAttImage::";
+      switch (fImageQuality) {
+         case kImgPoor: out << "kImgPoor"; break;
+         case kImgFast: out << "kImgFast"; break;
+         case kImgGood: out << "kImgGood"; break;
+         case kImgBest: out << "kImgBest"; break;
+         default: out << "kImgDefault";
+      }
+      out << ");\n";
    }
-   if (fImageCompression != comprdef) {
-      out<<"   "<<name<<"->SetImageCompression("<<fImageCompression<<");"<<std::endl;
-   }
-   if (fConstRatio != constRatiodef) {
-      out<<"   "<<name<<"->SetConstRatio("<<fConstRatio<<");"<<std::endl;
-   }
+   if (fImageCompression != comprdef)
+      out << "   " << name << "->SetImageCompression(" << fImageCompression << ");\n";
+   if (fConstRatio != constRatiodef)
+      out << "   " << name << "->SetConstRatio(" << (fConstRatio ? "kTRUE" : "kFALSE") << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

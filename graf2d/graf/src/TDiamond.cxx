@@ -19,7 +19,6 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 
-ClassImp(TDiamond);
 
 /** \class TDiamond
 \ingroup BasicGraphics
@@ -462,7 +461,7 @@ void TDiamond::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "diamond", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out, "diamond", 0, 1001);
+   SaveFillAttributes(out, "diamond", -1, -1);
    SaveLineAttributes(out, "diamond", 1, 1, 1);
    SaveTextAttributes(out, "diamond", 11, 0, 1, 62, 0.05);
 

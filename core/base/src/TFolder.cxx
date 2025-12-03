@@ -101,7 +101,6 @@ static char  gFolderPath[512];
 
 enum { kOwnFolderList = BIT(15) };
 
-ClassImp(TFolder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor used by the Input functions.
@@ -419,7 +418,7 @@ void TFolder::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return occurence number of object in the list of objects of this folder.
+/// Return occurrence number of object in the list of objects of this folder.
 /// The function returns the number of objects with the same name as object
 /// found in the list of objects in this folder before object itself.
 /// If only one object is found, return 0.

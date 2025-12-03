@@ -175,58 +175,6 @@ namespace ROOT {
       struct TF1Builder<Func *> {
          static void Build(TF1 *f, Func *func);
       };
-
-      /// %Internal class used by TF1 for obtaining the type from a functor
-      /// out of the set of valid operator() signatures.
-      template<typename T>
-      struct GetFunctorType {
-      };
-
-      template<typename F, typename T>
-      struct GetFunctorType<T(F::*)(const T *, const double *)> {
-         using type = T;
-      };
-
-      template<typename F, typename T>
-      struct GetFunctorType<T(F::*)(const T *, const double *) const> {
-         using type = T;
-      };
-
-      template<typename F, typename T>
-      struct GetFunctorType<T(F::*)(T *, double *)> {
-         using type = T;
-      };
-
-      template<typename F, typename T>
-      struct GetFunctorType<T(F::*)(T *, double *) const> {
-         using type = T;
-      };
-
-      /// %Internal class used by TF1 to get the right operator() signature
-      /// from a Functor with several ones.
-      template<typename T, typename F>
-      auto GetTheRightOp(T(F::*opPtr)(const T *, const double *)) -> decltype(opPtr)
-      {
-         return opPtr;
-      }
-
-      template<typename T, typename F>
-      auto GetTheRightOp(T(F::*opPtr)(const T *, const double *) const) -> decltype(opPtr)
-      {
-         return opPtr;
-      }
-
-      template<typename T, typename F>
-      auto GetTheRightOp(T(F::*opPtr)(T *, double *)) -> decltype(opPtr)
-      {
-         return opPtr;
-      }
-
-      template<typename T, typename F>
-      auto GetTheRightOp(T(F::*opPtr)(T *, double *) const) -> decltype(opPtr)
-      {
-         return opPtr;
-      }
    }
 }
 
@@ -769,18 +717,32 @@ namespace ROOT {
       template<class Func>
       void TF1Builder<Func>::Build(TF1 *f, Func func)
       {
-         using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-         f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-         f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
+         // check if vector interface is supported by Func
+         if constexpr(std::is_invocable_r_v<Double_v, Func, Double_v*, double *>) {
+            // if ROOT was not built with veccore and vc, Double_v is just an alias for the scalar double
+            f->fType = std::is_same<Double_v, double>::value ? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<Double_v>(func)));
+         } else {
+            f->fType = TF1::EFType::kTemplScalar;
+            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+         }
+
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 
       template<class Func>
       void TF1Builder<Func *>::Build(TF1 *f, Func *func)
       {
-         using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-         f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-         f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
+         // check if vector interface is supported by Func
+         if constexpr(std::is_invocable_r_v<Double_v, Func, Double_v*, double *>) {
+            // if ROOT was not built with veccore and vc, Double_v is just an alias for the scalar double
+            f->fType = std::is_same<Double_v, double>::value ? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<Double_v>(func)));
+         } else {
+            f->fType = TF1::EFType::kTemplScalar;
+            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+         }
+
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 

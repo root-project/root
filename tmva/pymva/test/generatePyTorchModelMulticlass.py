@@ -2,11 +2,7 @@ import torch
 from torch import nn
 
 # Define model
-model = nn.Sequential(
-                nn.Linear(4, 64),
-                nn.ReLU(),
-                nn.Linear(64, 4),
-                nn.Softmax(dim=1))
+model = nn.Sequential(nn.Linear(4, 64), nn.ReLU(), nn.Linear(64, 4), nn.Softmax(dim=1))
 
 # Construct loss function and Optimizer.
 criterion = nn.CrossEntropyLoss()
@@ -34,8 +30,8 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
 
             # print train statistics
             running_train_loss += train_loss.item()
-            if i % 4 == 3:    # print every 4 mini-batches
-                print(f"[{epoch+1}, {i+1}] train loss: {running_train_loss / 4 :.3f}")
+            if i % 4 == 3:  # print every 4 mini-batches
+                print(f"[{epoch + 1}, {i + 1}] train loss: {running_train_loss / 4:.3f}")
                 running_train_loss = 0.0
 
         if schedule:
@@ -53,15 +49,15 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
 
             curr_val = running_val_loss / len(val_loader)
             if save_best:
-               if best_val==None:
-                   best_val = curr_val
-               best_val = save_best(model, curr_val, best_val)
+                if best_val is None:
+                    best_val = curr_val
+                best_val = save_best(model, curr_val, best_val)
 
             # print val statistics per epoch
-            print(f"[{epoch+1}] val loss: {curr_val :.3f}")
+            print(f"[{epoch + 1}] val loss: {curr_val:.3f}")
             running_val_loss = 0.0
 
-    print(f"Finished Training on {epoch+1} Epochs!")
+    print(f"Finished Training on {epoch + 1} Epochs!")
 
     return model
 
@@ -69,7 +65,7 @@ def fit(model, train_loader, val_loader, num_epochs, batch_size, optimizer, crit
 def predict(model, test_X, batch_size=32):
     # Set to eval mode
     model.eval()
-   
+
     test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -80,7 +76,7 @@ def predict(model, test_X, batch_size=32):
             outputs = model(X)
             predictions.append(outputs)
         preds = torch.cat(predictions)
-   
+
     return preds.numpy()
 
 
@@ -88,5 +84,4 @@ load_model_custom_objects = {"optimizer": optimizer, "criterion": criterion, "tr
 
 # Store model to file
 m = torch.jit.script(model)
-torch.jit.save(m,"PyTorchModelMulticlass.pt")
-
+torch.jit.save(m, "PyTorchModelMulticlass.pt")

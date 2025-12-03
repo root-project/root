@@ -22,10 +22,9 @@
 #include "TPosixMutex.h"
 #include "PosixThreadInc.h"
 
-#include <errno.h>
+#include <cerrno>
 
 
-ClassImp(TPosixCondition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Condition variable. Ctor must be given a pointer to an
@@ -37,7 +36,7 @@ TPosixCondition::TPosixCondition(TMutexImp *m)
 {
    fMutex = (TPosixMutex *) m;
 
-   int rc = pthread_cond_init(&fCond, 0);
+   int rc = pthread_cond_init(&fCond, nullptr);
 
    if (rc)
       SysError("TPosixCondition", "pthread_cond_init error");

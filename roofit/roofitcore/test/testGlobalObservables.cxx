@@ -77,7 +77,7 @@ public:
       gs.setConstant(true);
 
       // the model multiplied with the constraint term
-      _ws.factory("ProdPdf::modelc(model, mconstraint, sconstraint)");
+      _ws.factory("ProdPdf::modelc({model, mconstraint, sconstraint})");
 
       // generate small dataset for use in fitting below, also cloned versions
       // with one or two global observables attached

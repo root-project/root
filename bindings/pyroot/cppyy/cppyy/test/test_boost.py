@@ -1,6 +1,6 @@
-import os
+import os, pytest
 from pytest import mark, raises, skip
-from .support import setup_make
+from support import setup_make
 
 noboost = False
 if not (os.path.exists(os.path.join(os.path.sep, 'usr', 'include', 'boost')) or \
@@ -166,3 +166,7 @@ class TestBOOSTERASURE:
         """)
 
         assert cppyy.gbl.lengths() is not None
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

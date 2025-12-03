@@ -1,0 +1,3 @@
+
+List of typedefs
+mycl.so  -1 typedef ConstLink<Toy> MyClass<Toy>::value_type

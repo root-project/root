@@ -71,10 +71,20 @@ class TVirtualIndex;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
+class TTree;
 class TTreeCache;
 class TTreeCloner;
 class TFileMergeInfo;
 class TVirtualPerfStats;
+
+namespace ROOT::Internal::TreeUtils {
+void TBranch__SetTree(TTree *tree, TObjArray &branches);
+
+TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass, EDataType datatype, void *addobj,
+                          Int_t bufsize = 32000, Int_t splitlevel = 99);
+TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize = 32000,
+                       Int_t splitlevel = 99);
+}
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -160,13 +170,27 @@ private:
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
+   std::unordered_map<std::string, TBranch *>
+      fNamesToBranches; ///<! maps names to their branches, useful when retrieving branches by name
+
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
    Int_t            FlushBasketsImpl() const;
    void             MarkEventCluster();
    Long64_t         GetMedianClusterSize();
 
+   void RegisterBranchFullName(std::pair<std::string, TBranch *> &&kv) { fNamesToBranches.insert(kv); }
+   friend void ROOT::Internal::TreeUtils::TBranch__SetTree(TTree *tree, TObjArray &branches);
+
+   Int_t
+   SetBranchAddressImp(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
+
 protected:
+   friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
+                                                               EDataType datatype, void *addobj, Int_t bufsize,
+                                                               Int_t splitlevel);
+   friend TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass,
+                                                            void *addobj, Int_t bufsize, Int_t splitlevel);
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
@@ -184,6 +208,15 @@ protected:
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
    Int_t            SetCacheSizeAux(bool autocache = true, Long64_t cacheSize = 0);
+
+   TBranch *GetBranchFromSelf(const char *branchName);
+   TBranch *GetBranchFromFriends(const char *branchName);
+   // This overload is used when setting the branch address of friends of this tree. When registering the branches
+   // to be found later, we can't know a priori which friend will have branch 'bname'. TTree and TChain have different
+   // ways to deal with the fact that we should not print spurious error messages that a branch cannot be found
+   // if it is not in one particular friend but in another
+   virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                                  bool isptr, bool suppressMissingBranchError);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
@@ -226,7 +259,9 @@ protected:
    };
 
 public:
-   // Used as the max value for any TTree range operation.
+   /// Used as the max value for any TTree range operation.
+   /// The maximum number of entries allowed in a TTree is strictly smaller than this value
+   /// (`maxTreeEntries<= kMaxEntries-1`), ie the last entry index is at maximum `kMaxEntries-2`.
    static constexpr Long64_t kMaxEntries = TVirtualTreePlayer::kMaxEntries;
 
    // SetBranchAddress return values
@@ -418,7 +453,10 @@ public:
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
-   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0");
+   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool long64major = false, bool long64minor = false);
+   /// Build index with only a major formula. Minor formula will be set to "0" ie skip.
+   /// \see TTree::BuildIndex(const char *, const char *, bool, bool)
+           Int_t           BuildIndex(const char *majorname, bool long64major) { return BuildIndex(majorname, "0", long64major, false); } 
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, bool canOptimize = true);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
@@ -508,7 +546,7 @@ public:
    virtual Long64_t        GetEstimate() const { return fEstimate; }
    virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
            Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
-   virtual Int_t           GetEntryWithIndex(Int_t major, Int_t minor = 0);
+   virtual Int_t           GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
@@ -649,6 +687,11 @@ public:
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
+   /// Enables (or disables) the early decompression of the baskets of the current cluster
+   /// (whose compressed data is already in memory if used in conjunction with the TTreeCache).
+   /// This affects performance only in conjunction with non-sequential use/load/read of the entries, ie
+   /// within a cluster you can have cheap random access to the entries (instead of having to decompress again and again).
+   /// \note This setting is totally different from SetCacheSize and from TFile.AsyncPrefetching, which save read calls
    virtual void            SetClusterPrefetch(bool enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
    virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, bool updateExisting = false);
@@ -687,7 +730,7 @@ public:
     * \brief Sets the default maximum number of lines to be shown before `<CR>` when calling Scan().
     * \param n the maximum number of lines. Default=50, if 0, all entries of the Tree are shown
     * and there is no need to press `<CR>` or `q` to exit the function.
-    * \see TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
+    * \note See TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
     */
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }

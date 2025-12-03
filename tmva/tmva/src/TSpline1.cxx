@@ -35,7 +35,6 @@ Linear interpolation of TGraph
 #include "TGraph.h"
 #include "TMath.h"
 
-ClassImp(TMVA::TSpline1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from TGraph pointer (not owned by TSpline1)
@@ -59,7 +58,7 @@ TMVA::TSpline1::~TSpline1( void ) {}
 Double_t TMVA::TSpline1::Eval( Double_t x ) const
 {
    Int_t N = fX.size();
-   Int_t ibin = std::distance(fX.begin(), TMath::BinarySearch(fX.begin(), fX.end(), x));
+   Int_t ibin = std::distance(std::lower_bound(fX.rbegin(), fX.rend(), x, std::greater{}), fX.rend()) - 1;
    // sanity checks
    if (ibin < 0 ) ibin = 0;
    if (ibin >= N) ibin = N - 1;

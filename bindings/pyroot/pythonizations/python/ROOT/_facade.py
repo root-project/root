@@ -1,17 +1,11 @@
 import importlib
-import types
-import sys
 import os
+import sys
+import types
 from functools import partial
 
 import cppyy
-
 import cppyy.ll
-
-from ._application import PyROOTApplication
-from ._numbadeclare import _NumbaDeclareDecorator
-
-from ._pythonization import pythonization
 
 
 class PyROOTConfiguration(object):
@@ -59,6 +53,8 @@ class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
     def __init__(self, module, is_ipython):
+        from ._pythonization import pythonization
+
         types.ModuleType.__init__(self, module.__name__)
 
         self.module = module
@@ -81,9 +77,8 @@ class ROOTFacade(types.ModuleType):
             "bind_object",
             "as_cobject",
             "addressof",
-            "SetMemoryPolicy",
-            "kMemoryHeuristics",
-            "kMemoryStrict",
+            "SetHeuristicMemoryPolicy",
+            "SetImplicitSmartPointerConversion",
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
@@ -175,7 +170,7 @@ class ROOTFacade(types.ModuleType):
             "Double32_t&": "double&",
         }
 
-        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+        from ROOT.libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
 
         for name, target in converter_aliases.items():
             CPyCppyyRegisterConverterAlias(name, target)
@@ -184,6 +179,8 @@ class ROOTFacade(types.ModuleType):
             CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
+        from ._application import PyROOTApplication
+
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
@@ -198,7 +195,16 @@ class ROOTFacade(types.ModuleType):
         # Set memory policy to kUseHeuristics.
         # This restores the default in PyROOT which was changed
         # by new Cppyy
-        self.SetMemoryPolicy(self.kMemoryHeuristics)
+        self.SetHeuristicMemoryPolicy(True)
+
+        # The automatic conversion of ordinary obejcts to smart pointers is
+        # disabled for ROOT because it can cause trouble with overload
+        # resolution. If a function has overloads for both ordinary objects and
+        # smart pointers, then the implicit conversion to smart pointers can
+        # result in the smart pointer overload being hit, even though there
+        # would be an overload for the regular object. Since PyROOT didn't have
+        # this feature before 6.32 anyway, disabling it was the safest option.
+        self.SetImplicitSmartPointerConversion(False)
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
@@ -240,7 +246,7 @@ class ROOTFacade(types.ModuleType):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, "argv")
         # -n disables the reading of the logon file, just like with root
-        if hasargv and not "-n" in sys.argv and not self.PyConfig.DisableRootLogon:
+        if hasargv and "-n" not in sys.argv and not self.PyConfig.DisableRootLogon:
             file_path_home = os.path.expanduser("~/.rootlogon.py")
             file_path_local = os.path.join(os.getcwd(), ".rootlogon.py")
             if os.path.exists(file_path_home):
@@ -307,7 +313,7 @@ class ROOTFacade(types.ModuleType):
             from ._pythonization._rvec import _AsRVec
 
             ns.AsRVec = _AsRVec
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace VecOps")
         del type(self).VecOps
         return ns
@@ -317,61 +323,70 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         self._finalSetup()
         ns = self._fallback_getattr("RDF")
-        try:
-            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
+        def MakeCSVDataFrame(fileName, readHeaders=True, delimiter=",", linesChunkSize=-1, colTypes={}, **kwargs):
+            options = ns.RCsvDS.ROptions()
+            options.fHeaders = readHeaders
+            options.fDelimiter = delimiter
+            options.fLinesChunkSize = linesChunkSize
+            options.fColumnTypes = colTypes
+            for key, val in kwargs.items():
+                structMemberName = "f" + key[0].upper() + key[1:]
+                if hasattr(options, structMemberName):
+                    setattr(options, structMemberName, val)
+            return ns._FromCSV(fileName, options)
+
+        if hasattr(ns, "FromCSV"):
             # Provide a FromCSV factory method that uses keyword arguments instead of the ROptions config struct.
             # In Python, the RCsvDS::ROptions struct members are available without the leading 'f' and in camelCase,
             # e.g. fDelimiter --> delimiter.
             # We need to keep the parameters of the old FromCSV signature for backward compatibility.
             ns._FromCSV = ns.FromCSV
-            def MakeCSVDataFrame(
-                    fileName, readHeaders = True, delimiter = ',', linesChunkSize = -1, colTypes = {}, **kwargs):
-                options = ns.RCsvDS.ROptions()
-                options.fHeaders = readHeaders
-                options.fDelimiter = delimiter
-                options.fLinesChunkSize = linesChunkSize
-                options.fColumnTypes = colTypes
-                for key, val in kwargs.items():
-                    structMemberName = 'f' + key[0].upper() + key[1:]
-                    if hasattr(options, structMemberName):
-                        setattr(options, structMemberName, val)
-                return ns._FromCSV(fileName, options)
             ns.FromCSV = MakeCSVDataFrame
 
-            # Make a copy of the arrays that have strides to make sure we read the correct values
-            # TODO a cleaner fix
-            def MakeNumpyDataFrameCopy(np_dict):
-                import numpy
+        # Make a copy of the arrays that have strides to make sure we read the correct values
+        # TODO a cleaner fix
+        def MakeNumpyDataFrameCopy(np_dict):
+            import numpy
 
-                for key in np_dict.keys():
-                    if (np_dict[key].__array_interface__["strides"]) is not None:
-                        np_dict[key] = numpy.copy(np_dict[key])
-                return _MakeNumpyDataFrame(np_dict)
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
-            ns.FromNumpy = MakeNumpyDataFrameCopy
+            for key in np_dict.keys():
+                if (np_dict[key].__array_interface__["strides"]) is not None:
+                    np_dict[key] = numpy.copy(np_dict[key])
+            return _MakeNumpyDataFrame(np_dict)
 
-            # make a RDataFrame from a Pandas dataframe
-            def MakePandasDataFrame(df):
-                np_dict = {}
-                for key in df.columns:
-                    np_dict[key] = df[key].to_numpy()
-                return _MakeNumpyDataFrame(np_dict)
+        ns.FromNumpy = MakeNumpyDataFrameCopy
 
-            ns.FromPandas = MakePandasDataFrame
+        # make a RDataFrame from a Pandas dataframe
+        def MakePandasDataFrame(df):
+            from ._pythonization._rdataframe import _MakeNumpyDataFrame
 
-            try:
-                # Inject Pythonizations to interact between local and distributed RDF package
-                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor, _fromspec
-                ns.Experimental.Distributed = _create_distributed_module(ns.Experimental)
-                ns.RunGraphs = _rungraphs(ns.Experimental.Distributed.RunGraphs, ns.RunGraphs)
-                ns.Experimental.VariationsFor = _variationsfor(ns.Experimental.Distributed.VariationsFor, ns.Experimental.VariationsFor)
-                ns.Experimental.FromSpec = _fromspec(ns.Experimental.Distributed.FromSpec, ns.Experimental.FromSpec)
-            except ImportError:
-                pass
-                
-        except:
-            raise Exception("Failed to pythonize the namespace RDF")
+            np_dict = {}
+            for key in df.columns:
+                np_dict[key] = df[key].to_numpy()
+            return _MakeNumpyDataFrame(np_dict)
+
+        ns.FromPandas = MakePandasDataFrame
+
+        try:
+            # Inject Pythonizations to interact between local and distributed RDF package
+            from ._pythonization._rdf_namespace import (
+                _create_distributed_module,
+                _fromspec,
+                _rungraphs,
+                _variationsfor,
+            )
+
+            ns.Distributed = _create_distributed_module(ns)
+            # Inject the experimental package which shows a warning before usage
+            ns.Experimental.Distributed = _create_distributed_module(ns, True)
+            ns.RunGraphs = _rungraphs(ns.Distributed.RunGraphs, ns.RunGraphs)
+            ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
+            ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
+        except ImportError:
+            pass
+
         del type(self).RDF
         return ns
 
@@ -384,12 +399,12 @@ class ROOTFacade(types.ModuleType):
         local_rdf = self.__getattr__("RDataFrame")
         try:
             import DistRDF
+
             from ._pythonization._rdf_namespace import _rdataframe
+
             return _rdataframe(local_rdf, DistRDF.RDataFrame)
         except ImportError:
             return local_rdf
-        
-
 
     # Overload RooFit namespace
     @property
@@ -399,7 +414,7 @@ class ROOTFacade(types.ModuleType):
         ns = self._fallback_getattr("RooFit")
         try:
             pythonize_roofit_namespace(ns)
-        except:
+        except Exception:
             raise Exception("Failed to pythonize the namespace RooFit")
         del type(self).RooFit
         return ns
@@ -407,19 +422,20 @@ class ROOTFacade(types.ModuleType):
     # Overload TMVA namespace
     @property
     def TMVA(self):
-        # this line is needed to import the pythonizations in _tmva directory
-        from ._pythonization import _tmva
+        # This line is needed to import the pythonizations in _tmva directory.
+        # The comment suppresses linter errors about unused imports.
+        from ._pythonization import _tmva  # noqa: F401
 
         ns = self._fallback_getattr("TMVA")
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
+                from ._pythonization._tmva import SaveXGBoost, _AsRTensor, inject_rbatchgenerator
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
                 ns.Experimental.SaveXGBoost = SaveXGBoost
-            except:
+            except Exception:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA
         return ns
@@ -427,6 +443,8 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
+        from ._numbadeclare import _NumbaDeclareDecorator
+
         cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
@@ -440,7 +458,8 @@ class ROOTFacade(types.ModuleType):
         if not hasattr(numba, "version_info") or numba.version_info < (0, 54):
             raise Exception("NumbaExt requires Numba version 0.54 or higher")
 
-        import cppyy.numba_ext
+        # The comment in the next line suppresses linter errors about unused imports
+        import cppyy.numba_ext  # noqa: F401
 
         # Return something as it is a property function
         return self
@@ -452,3 +471,17 @@ class ROOTFacade(types.ModuleType):
         tpd = cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
+
+    # Create the uhi namespace
+    @property
+    def uhi(self):
+        uhi_module = types.ModuleType("uhi")
+        uhi_module.__file__ = "<module ROOT>"
+        uhi_module.__package__ = self
+        try:
+            from ._pythonization._uhi import _add_module_level_uhi_helpers
+
+            _add_module_level_uhi_helpers(uhi_module)
+        except ImportError:
+            raise Exception("Failed to pythonize the namespace uhi")
+        return uhi_module

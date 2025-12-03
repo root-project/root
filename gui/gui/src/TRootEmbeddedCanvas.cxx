@@ -89,7 +89,6 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
    fEditDisabled = kEditDisableGrab;
 }
 
-ClassImp(TRootEmbeddedCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an TCanvas embedded in a TGFrame. A pointer to the TCanvas can

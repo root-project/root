@@ -69,39 +69,39 @@ namespace TMVA
 
       virtual ~MethodSVM( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // optimise tuning parameters
-      virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="Minuit");
-      virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+      std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="Minuit") override;
+      void SetTuneParameters(std::map<TString,Double_t> tuneParameters) override;
       std::vector<TMVA::SVKernelFunction::EKernelType> MakeKernelList(std::string multiKernels, TString kernel);
       std::map< TString,std::vector<Double_t> > GetTuningOptions();
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       // revoke training (required for optimise tuning parameters)
-      void Reset( void );
+      void Reset( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
       void WriteWeightsToStream( TFile& fout   ) const;
-      void AddWeightsXMLTo     ( void*  parent ) const;
+      void AddWeightsXMLTo     ( void*  parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromStream( TFile& fFin     );
-      void ReadWeightsFromXML   ( void*  wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromStream( TFile& fFin     ) override;
+      void ReadWeightsFromXML   ( void*  wghtnode ) override;
       // calculate the MVA value
 
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
-      const std::vector<Float_t>& GetRegressionValues();
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
+      const std::vector<Float_t>& GetRegressionValues() override;
 
-      void Init( void );
+      void Init( void ) override;
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
       // for SVM optimisation
       void SetGamma(Double_t g){fGamma = g;}
@@ -117,17 +117,17 @@ namespace TMVA
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void DeclareCompatibilityOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void DeclareCompatibilityOptions() override;
+      void ProcessOptions() override;
       Double_t getLoss( TString lossFunction );
 
       Float_t                       fCost;                ///< cost value
@@ -162,7 +162,7 @@ namespace TMVA
       Int_t                 fDataSize;
       TString fLoss;
 
-      ClassDef(MethodSVM,0);  // Support Vector Machine
+      ClassDefOverride(MethodSVM,0);  // Support Vector Machine
    };
 
 } // namespace TMVA

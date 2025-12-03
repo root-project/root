@@ -1,0 +1,9 @@
+
+Processing runtemplatefriend.C...
+Automatic building of dictionaries now off
+my_shared_ptr<Child>::c'tor(T)
+my_shared_ptr<Parent>::c'tor(Y)
+(int) 0
+my_shared_ptr<Child>::c'tor(T)
+my_shared_ptr<Parent>::c'tor(Y)
+(int) 0

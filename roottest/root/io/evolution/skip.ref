@@ -1,0 +1,151 @@
+
+Processing runSkip.C...
+Warning in <TStreamerInfo::Compile>: Counter skipsize should not be skipped from class MyClass
+Reading .xml file
+x1  = 1001
+x2  = 2002
+x3  = 3003
+x4  = 4004
+x5  = 5005
+x6  = 6006
+x7  = 7007
+x8  = 8008
+x9  = 9009
+x10 = 10010
+x11 = 110011
+
+StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
+  TObject        BASE            offset=na type=66 Basic ROOT object   
+  TAttFill       BASE            offset=na-1 type= 0 Fill area attributes
+  int            x               offset=na type= 3                     
+  TNamed         obj             offset=na type=67 newtype=-1                     
+  int            x1              offset=na type= 3 newtype= 8                     
+  TNamed*        pobj            offset=na type=64 newtype=-1                     
+  int            x2              offset=na type= 3 newtype= 8                     
+  TObject*       skipObjectp     offset=na type=63 newtype=-1 ->                  
+  int            x3              offset=na type= 3 newtype= 8                     
+  TObject*       skipObjectP     offset=na type=64 newtype=-1                     
+  int            x4              offset=na type= 3 newtype= 8                     
+  TCut           skipObject      offset=na type=61 newtype=-1                     
+  int            x5              offset=na type= 3 newtype= 8                     
+  TRef           skipTRef        offset=na type=61 newtype=-1                     
+  int            x6              offset=na type= 3 newtype= 8                     
+  TRef*          skipTRefP       offset=na type=64 newtype=-1                     
+  int            x7              offset=na type= 3 newtype= 8                     
+  TRef*          skipTRefp       offset=na type=63 newtype=-1 ->                  
+  int            x8              offset=na type= 3 newtype= 8                     
+  int            host1           offset=na type= 3 newtype=-1                     
+  int            host2           offset=na type= 3 newtype=-1                     
+  int            host3           offset=na type= 3 newtype=-1                     
+  int            skipsize        offset=na type= 6 newtype=-1                     
+  int            x9              offset=na type= 3 newtype= 8                     
+  float*         skip3           offset=na type=45 newtype=-1 [skipsize]          
+  int            x10             offset=na type= 3 newtype= 8                     
+  const char*    skipstr         offset=na type= 7 newtype=-1                     
+  int            x11             offset=na type= 3                     
+  int            x12             offset=na type= 3 newtype=-1                     
+  int            x13             offset=na type= 3 newtype=-1                     
+   i= 0, TObject         type= 66, offset=na, len=1, method=0
+   i= 1, TAttFill        type=100, offset=na-1, len=1, method=0
+   i= 2, x               type=  3, offset=na, len=1, method=0
+   i= 3, obj             type=167, offset=na, len=1, method=0
+   i= 4, x1              type=203, offset=na, len=1, method=0
+   i= 5, pobj            type=164, offset=na, len=1, method=0
+   i= 6, x2              type=203, offset=na, len=1, method=0
+   i= 7, skipObjectp     type=163, offset=na, len=1, method=0
+   i= 8, x3              type=203, offset=na, len=1, method=0
+   i= 9, skipObjectP     type=164, offset=na, len=1, method=0
+   i=10, x4              type=203, offset=na, len=1, method=0
+   i=11, skipObject      type=161, offset=na, len=1, method=0
+   i=12, x5              type=203, offset=na, len=1, method=0
+   i=13, skipTRef        type=161, offset=na, len=1, method=0
+   i=14, x6              type=203, offset=na, len=1, method=0
+   i=15, skipTRefP       type=164, offset=na, len=1, method=0
+   i=16, x7              type=203, offset=na, len=1, method=0
+   i=17, skipTRefp       type=163, offset=na, len=1, method=0
+   i=18, x8              type=203, offset=na, len=1, method=0
+   i=19, host1           type=103, offset=na, len=1, method=0
+   i=20, host2           type=103, offset=na, len=1, method=0
+   i=21, host3           type=103, offset=na, len=1, method=0
+   i=22, skipsize        type=106, offset=na, len=1, method=0
+   i=23, x9              type=203, offset=na, len=1, method=0
+   i=24, skip3           type=145, offset=na, len=1, method=0
+   i=25, x10             type=203, offset=na, len=1, method=0
+   i=26, skipstr         type=107, offset=na, len=1, method=0
+   i=27, x11             type=  3, offset=na, len=1, method=0
+   i=28, x12             type=103, offset=na, len=1, method=0
+   i=29, x13             type=103, offset=na, len=1, method=0
+Reading .root file
+x1  = 1001
+x2  = 2002
+x3  = 3003
+x4  = 4004
+x5  = 5005
+x6  = 6006
+x7  = 7007
+x8  = 8008
+x9  = 9009
+x10 = 10010
+x11 = 110011
+
+StreamerInfo for class: MyClass, version=1, checksum=0x43db4a7d
+  TObject        BASE            offset=na type=66 Basic ROOT object   
+  TAttFill       BASE            offset=na-1 type= 0 Fill area attributes
+  int            x               offset=na type= 3                     
+  TNamed         obj             offset=na type=67 newtype=-1                     
+  int            x1              offset=na type= 3 newtype= 8                     
+  TNamed*        pobj            offset=na type=64 newtype=-1                     
+  int            x2              offset=na type= 3 newtype= 8                     
+  TObject*       skipObjectp     offset=na type=63 newtype=-1 ->                  
+  int            x3              offset=na type= 3 newtype= 8                     
+  TObject*       skipObjectP     offset=na type=64 newtype=-1                     
+  int            x4              offset=na type= 3 newtype= 8                     
+  TCut           skipObject      offset=na type=61 newtype=-1                     
+  int            x5              offset=na type= 3 newtype= 8                     
+  TRef           skipTRef        offset=na type=61 newtype=-1                     
+  int            x6              offset=na type= 3 newtype= 8                     
+  TRef*          skipTRefP       offset=na type=64 newtype=-1                     
+  int            x7              offset=na type= 3 newtype= 8                     
+  TRef*          skipTRefp       offset=na type=63 newtype=-1 ->                  
+  int            x8              offset=na type= 3 newtype= 8                     
+  int            host1           offset=na type= 3 newtype=-1                     
+  int            host2           offset=na type= 3 newtype=-1                     
+  int            host3           offset=na type= 3 newtype=-1                     
+  int            skipsize        offset=na type= 6 newtype=-1                     
+  int            x9              offset=na type= 3 newtype= 8                     
+  float*         skip3           offset=na type=45 newtype=-1 [skipsize]          
+  int            x10             offset=na type= 3 newtype= 8                     
+  const char*    skipstr         offset=na type= 7 newtype=-1                     
+  int            x11             offset=na type= 3                     
+  int            x12             offset=na type= 3 newtype=-1                     
+  int            x13             offset=na type= 3 newtype=-1                     
+   i= 0, TObject         type= 66, offset=na, len=1, method=0
+   i= 1, TAttFill        type=100, offset=na-1, len=1, method=0
+   i= 2, x               type=  3, offset=na, len=1, method=0
+   i= 3, obj             type=167, offset=na, len=1, method=0
+   i= 4, x1              type=203, offset=na, len=1, method=0
+   i= 5, pobj            type=164, offset=na, len=1, method=0
+   i= 6, x2              type=203, offset=na, len=1, method=0
+   i= 7, skipObjectp     type=163, offset=na, len=1, method=0
+   i= 8, x3              type=203, offset=na, len=1, method=0
+   i= 9, skipObjectP     type=164, offset=na, len=1, method=0
+   i=10, x4              type=203, offset=na, len=1, method=0
+   i=11, skipObject      type=161, offset=na, len=1, method=0
+   i=12, x5              type=203, offset=na, len=1, method=0
+   i=13, skipTRef        type=161, offset=na, len=1, method=0
+   i=14, x6              type=203, offset=na, len=1, method=0
+   i=15, skipTRefP       type=164, offset=na, len=1, method=0
+   i=16, x7              type=203, offset=na, len=1, method=0
+   i=17, skipTRefp       type=163, offset=na, len=1, method=0
+   i=18, x8              type=203, offset=na, len=1, method=0
+   i=19, host1           type=103, offset=na, len=1, method=0
+   i=20, host2           type=103, offset=na, len=1, method=0
+   i=21, host3           type=103, offset=na, len=1, method=0
+   i=22, skipsize        type=106, offset=na, len=1, method=0
+   i=23, x9              type=203, offset=na, len=1, method=0
+   i=24, skip3           type=145, offset=na, len=1, method=0
+   i=25, x10             type=203, offset=na, len=1, method=0
+   i=26, skipstr         type=107, offset=na, len=1, method=0
+   i=27, x11             type=  3, offset=na, len=1, method=0
+   i=28, x12             type=103, offset=na, len=1, method=0
+   i=29, x13             type=103, offset=na, len=1, method=0

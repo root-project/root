@@ -270,7 +270,7 @@ namespace TMVA {
       friend class PDEFoamKernelGauss;
 
       // ---------- ROOT class definition
-      ClassDef(PDEFoam,7) // Tree of PDEFoamCells
+      ClassDefOverride(PDEFoam,7) // Tree of PDEFoamCells
          }; // end of PDEFoam
 
 }  // namespace TMVA

@@ -22,7 +22,7 @@ public:
   RooTFnPdfBinding() = default;
   RooTFnPdfBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooTFnPdfBinding(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooTFnPdfBinding(*this,newname); }
 
   void printArgs(std::ostream& os) const override ;
 

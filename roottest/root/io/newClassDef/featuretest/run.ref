@@ -1,0 +1,24 @@
+
+Processing Run.C...
+Expect A: A
+Expect B: B
+Expect A: A
+Expect B: B
+Expect A: A
+Expect A: A
+Expect B: B
+Expect C: C
+Expect C++'s B*: P1B
+Expect C++'s C: 1C
+Expect C++'s void*: Pv
+Expect 1A : 1A
+Expect 1A : 1A
+Expect 1B : 1B
+Expect 1C : 1C
+Expect A: A
+Expect A: A
+Expect B: B
+Expect C: C
+Properly run the protected function!
+Properly run the protected function!
+(bool) true

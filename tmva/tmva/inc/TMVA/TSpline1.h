@@ -46,17 +46,17 @@ namespace TMVA {
       TSpline1(const TString &title, const TGraph *theGraph);
       virtual ~TSpline1( void );
 
-      virtual  Double_t Eval( Double_t x ) const;
+      Double_t Eval( Double_t x ) const override;
 
       // dummy implementations
-      virtual void BuildCoeff( void );
-      virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
+      void BuildCoeff( void ) override;
+      void GetKnot( Int_t i, Double_t& x, Double_t& y ) const override;
 
    private:
       std::vector<Double_t> fX;
       std::vector<Double_t> fY;
 
-      ClassDef(TSpline1,0); //Linear interpolation class
+      ClassDefOverride(TSpline1,0); //Linear interpolation class
    };
 
 } // namespace TMVA

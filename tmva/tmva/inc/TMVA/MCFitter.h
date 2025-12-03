@@ -52,17 +52,17 @@ namespace TMVA {
 
       void SetParameters( Int_t cycles );
 
-      Double_t Run( std::vector<Double_t>& pars );
+      Double_t Run( std::vector<Double_t>& pars ) override;
 
    private:
 
-      void DeclareOptions();
+      void DeclareOptions() override;
 
       Int_t    fSamples;     ///< number of MC samples
       Double_t fSigma;       ///< new samples are generated randomly with a gaussian probability with fSigma around the current best value
       UInt_t   fSeed;        ///< Seed for the random generator (0 takes random seeds)
 
-      ClassDef(MCFitter,0); //  Fitter using Monte Carlo sampling of parameters
+      ClassDefOverride(MCFitter,0); //  Fitter using Monte Carlo sampling of parameters
    };
 
 } // namespace TMVA

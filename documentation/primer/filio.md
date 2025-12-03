@@ -202,19 +202,15 @@ to insert your own analysis code, `MySelector.C`.
 @ROOT_INCLUDE_FILE macros/makeMySelector.C
 ```
 
-The template contains the entry points `Begin()` and `SlaveBegin()`
-called before processing of the `TChain` starts, `Process()` called for
-every entry of the chain, and `SlaveTerminate()` and `Terminate()`
+The template contains the entry points `Begin()` before processing 
+of the `TChain` starts, `Process()` called for
+every entry of the chain, and `Terminate()`
 called after the last entry has been processed. Typically,
 initialization like booking of histograms is performed in
-`SlaveBegin()`, the analysis, i.e. the selection of entries,
+`Begin()`, the analysis, i.e. the selection of entries,
 calculations and filling of histograms, is done in `Process()`, and
 final operations like plotting and storing of results happen in
-`SlaveTerminate()` or `Terminate()`.
-
-The entry points `SlaveBegin()` and `SlaveTerminate()` are called on
-so-called slave nodes only if parallel processing via `PROOF` or
-`PROOF lite` is enabled, as will be explained below.
+`Terminate()`.
 
 A simple example of a selector class is shown in the macro
 `MySelector.C`. The example is executed with the following sequence of
@@ -231,8 +227,8 @@ initiates the compilation of the `MySelector.C` with the system compiler
 in order to improve performance.
 
 The code in `MySelector.C`, shown in the listing below, books some
-histograms in `SlaveBegin()` and adds them to the instance `fOutput`,
-which is of the class `TList` [^6]. The final processing in
+histograms in `Begin()` and adds them to the instance `fOutput`,
+which is of the class `TList`. The final processing in
 `Terminate()` allows to access histograms and store, display or save
 them as pictures. This is shown in the example via the `TList`
 `fOutput`. See the commented listing below for more details; most of the
@@ -242,98 +238,6 @@ text is actually comments generated automatically by
 ``` {.cpp}
 @ROOT_INCLUDE_FILE macros/MySelector.C
 ```
-
-### *For power-users:* Multi-core processing with `PROOF lite` ###
-
-
-The processing of n-tuples via a selector function of type `TSelector`
-through `TChain::Process()`, as described at the end of the previous
-section, offers an additional advantage in particular for very large
-data sets: on distributed systems or multi-core architectures, portions
-of data can be processed in parallel, thus significantly reducing the
-execution time. On modern computers with multi-core CPUs or
-hardware-threading enabled, this allows a much faster turnaround of
-analyses, since all the available CPU power is used.
-
-On distributed systems, a PROOF server and worker nodes have to be set
-up, as described in detail in the ROOT documentation. On a single
-computer with multiple cores, `PROOF lite` can be used instead. Try the
-following little macro, `RunMySelector.C`, which contains two extra
-lines compared to the example above (adjust the number of workers
-according to the number of CPU cores):
-
-``` {.cpp}
-{// set up a TChain
-TChain *ch=new TChain("cond_data", "My Chain for Example N-Tuple");
- ch->Add("conductivity_experiment*.root");
-// eventually, start Proof Lite on cores
-TProof::Open("workers=4");
-ch->SetProof();
-ch->Process("MySelector.C+");}
-```
-
-The first command, `TProof::Open(const char*)` starts a local PROOF
-server (if no arguments are specified, all cores will be used), and the
-command `ch->SetProof();` enables processing of the chain using PROOF.
-Now, when issuing the command `ch->Process("MySelector.C+);`, the code
-in `MySelector.C` is compiled and executed on each slave node. The
-methods `Begin()` and `Terminate()` are executed on the master only. The
-list of n-tuple files is analysed, and portions of the data are assigned
-to the available slave processes. Histograms booked in `SlaveBegin()`
-exist in the processes on the slave nodes, and are filled accordingly.
-Upon termination, the PROOF master collects the histograms from the
-slaves and merges them. In `Terminate()` all merged histograms are
-available and can be inspected, analysed or stored. The histograms are
-handled via the instances `fOutput` of class `TList` in each slave
-process, and can be retrieved from this list after merging in
-`Terminate`.
-
-To explore the power of this mechanism, generate some very large
-n-tuples using the script from the section
-[Storing Arbitrary N-tuples](#storing-arbitrary-n-tuples) -
-you could try 10 000 000 events (this
-results in a large n-tuple of about 160 MByte in size). You could also
-generate a large number of files and use wildcards to add the to the
-`TChain`. Now execute: `> root -l RunMySelector.C` and watch what
-happens:
-
-``` {.cpp}
-Processing RunMySelector.C...
- +++ Starting PROOF-Lite with 4 workers +++
-Opening connections to workers: OK (4 workers)
-Setting up worker servers: OK (4 workers)
-PROOF set to parallel mode (4 workers)
-
-Info in <TProofLite::SetQueryRunning>: starting query: 1
-Info in <TProofQueryResult::SetRunning>: nwrks: 4
-Info in <TUnixSystem::ACLiC>: creating shared library
-                             ~/DivingROOT/macros/MySelector_C.so
-*==* ----- Begin of Job ----- Date/Time = Wed Feb 15 23:00:04 2012
-Looking up for exact location of files: OK (4 files)
-Looking up for exact location of files: OK (4 files)
-Info in <TPacketizerAdaptive::TPacketizerAdaptive>:
-                      Setting max number of workers per node to 4
-Validating files: OK (4 files)
-Info in <TPacketizerAdaptive::InitStats>:
-                      fraction of remote files 1.000000
-Info in <TCanvas::Print>:
-       file ResistanceDistribution.png has been created
-*==* ----- End of Job ----- Date/Time = Wed Feb 15 23:00:08 2012
-Lite-0: all output objects have been merged
-```
-
-Log files of the whole processing chain are kept in the directory
-`~.proof` for each worker node. This is very helpful for debugging or if
-something goes wrong. As the method described here also works without
-using PROOF, the development work on an analysis script can be done in
-the standard way on a small subset of the data, and only for the full
-processing one would use parallelism via PROOF.
-
-It is worth to remind the reader that the speed of typical data analysis
-programs limited by the I/O speed (for example the latencies implied by
-reading data from a hard drive). It is therefore expected that this
-limitation cannot be eliminated with the usage of any parallel analysis
-toolkit.
 
 ### Optimisation Regarding N-tuples ###
 
@@ -370,5 +274,3 @@ minutes.
     beneficial to store meta data and payload data separately, i.e.
     write the meta data tree in a bulk to a file at the end of your job
     instead of writing both trees interleaved.
-
-[^6]: The usage of `fOutput` is not really needed for this simple example, but it allows re-usage of the exact code in parallel processing with `PROOF` (see next section).

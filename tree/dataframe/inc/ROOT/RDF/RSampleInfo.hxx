@@ -25,7 +25,7 @@ namespace ROOT {
 namespace RDF {
 
 /// This type represents a sample identifier, to be used in conjunction with RDataFrame features such as
-/// \ref ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" and per-sample callbacks.
+/// \ref ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" and per-sample callbacks.
 ///
 /// When the input data comes from a TTree, the string representation of RSampleInfo (which is returned by AsString()
 /// and that can be queried e.g. with Contains()) is of the form "<filename>/<treename>".
@@ -129,8 +129,8 @@ public:
 };
 
 /// The type of a data-block callback, registered with an RDataFrame computation graph via e.g.  \ref
-/// ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" or by certain actions (e.g. \ref
-/// ROOT::RDF::RInterface<Proxied,DataSource>::Snapshot "Snapshot()").
+/// ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" or by certain actions (e.g. \ref
+/// ROOT::RDF::RInterface<Proxied>::Snapshot "Snapshot()").
 using SampleCallback_t = std::function<void(unsigned int, const ROOT::RDF::RSampleInfo &)>;
 
 } // namespace RDF

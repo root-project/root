@@ -23,8 +23,6 @@
 #include <RooGlobalFunc.h>
 #include <RooWorkspaceHandle.h>
 
-#include <TRef.h>
-
 #include <string>
 
 class RooFitResult;
@@ -32,6 +30,7 @@ class RooFitResult;
 // ModelConfig kept in the RooStats namespace for backwards compatibility.
 namespace RooStats {
 
+///< A class that holds configuration information for a model using a workspace as a store
 class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
@@ -68,7 +67,7 @@ public:
    /// Set a workspace that owns all the necessary components for the analysis.
    void SetWS(RooWorkspace &ws) override;
    //// alias for SetWS(...)
-   virtual void SetWorkspace(RooWorkspace &ws) { SetWS(ws); }
+   void SetWorkspace(RooWorkspace &ws) { SetWS(ws); }
 
    /// Remove the existing reference to a workspace and replace it with this new one.
    void ReplaceWS(RooWorkspace *ws) override
@@ -78,28 +77,28 @@ public:
    }
 
    /// Set the proto DataSet, add to the workspace if not already there
-   virtual void SetProtoData(RooAbsData &data)
+   void SetProtoData(RooAbsData &data)
    {
       ImportDataInWS(data);
       SetProtoData(data.GetName());
    }
 
    /// Set the Pdf, add to the workspace if not already there
-   virtual void SetPdf(const RooAbsPdf &pdf)
+   void SetPdf(const RooAbsPdf &pdf)
    {
       ImportPdfInWS(pdf);
       SetPdf(pdf.GetName());
    }
 
    /// Set the Prior Pdf, add to the workspace if not already there
-   virtual void SetPriorPdf(const RooAbsPdf &pdf)
+   void SetPriorPdf(const RooAbsPdf &pdf)
    {
       ImportPdfInWS(pdf);
       SetPriorPdf(pdf.GetName());
    }
 
    /// Specify parameters of the PDF.
-   virtual void SetParameters(const RooArgSet &set)
+   void SetParameters(const RooArgSet &set)
    {
       if (!SetHasOnlyParameters(set, "ModelConfig::SetParameters"))
          return;
@@ -108,7 +107,7 @@ public:
    }
 
    /// Specify parameters of interest.
-   virtual void SetParametersOfInterest(const RooArgSet &set)
+   void SetParametersOfInterest(const RooArgSet &set)
    {
       if (!SetHasOnlyParameters(set, "ModelConfig::SetParametersOfInterest"))
          return;
@@ -117,7 +116,7 @@ public:
 
    /// Specify parameters
    /// using a list of comma-separated list of arguments already in the workspace.
-   virtual void SetParameters(const char *argList)
+   void SetParameters(const char *argList)
    {
       if (!GetWS())
          return;
@@ -126,10 +125,10 @@ public:
 
    /// Specify parameters of interest
    /// using a comma-separated list of arguments already in the workspace.
-   virtual void SetParametersOfInterest(const char *argList) { SetParameters(argList); }
+   void SetParametersOfInterest(const char *argList) { SetParameters(argList); }
 
    /// Specify the nuisance parameters (parameters that are not POI).
-   virtual void SetNuisanceParameters(const RooArgSet &set)
+   void SetNuisanceParameters(const RooArgSet &set)
    {
       if (!SetHasOnlyParameters(set, "ModelConfig::SetNuisanceParameters"))
          return;
@@ -139,7 +138,7 @@ public:
 
    /// Specify the nuisance parameters
    /// using a comma-separated list of arguments already in the workspace.
-   virtual void SetNuisanceParameters(const char *argList)
+   void SetNuisanceParameters(const char *argList)
    {
       if (!GetWS())
          return;
@@ -147,7 +146,7 @@ public:
    }
 
    /// Specify the constraint parameters
-   virtual void SetConstraintParameters(const RooArgSet &set)
+   void SetConstraintParameters(const RooArgSet &set)
    {
       if (!SetHasOnlyParameters(set, "ModelConfig::SetConstrainedParameters"))
          return;
@@ -156,7 +155,7 @@ public:
    }
    /// Specify the constraint parameters
    /// through a comma-separated list of arguments already in the workspace.
-   virtual void SetConstraintParameters(const char *argList)
+   void SetConstraintParameters(const char *argList)
    {
       if (!GetWS())
          return;
@@ -164,7 +163,7 @@ public:
    }
 
    /// Specify the observables.
-   virtual void SetObservables(const RooArgSet &set)
+   void SetObservables(const RooArgSet &set)
    {
       if (!SetHasOnlyParameters(set, "ModelConfig::SetObservables"))
          return;
@@ -173,27 +172,27 @@ public:
    }
    /// specify the observables
    /// through a comma-separated list of arguments already in the workspace.
-   virtual void SetObservables(const char *argList)
+   void SetObservables(const char *argList)
    {
       if (!GetWS())
          return;
       SetObservables(GetWS()->argSet(argList));
    }
 
-   virtual void SetConditionalObservables(const RooArgSet &set);
+   void SetConditionalObservables(const RooArgSet &set);
    /// Specify the conditional observables
    /// through a comma-separated list of arguments already in the workspace.
-   virtual void SetConditionalObservables(const char *argList)
+   void SetConditionalObservables(const char *argList)
    {
       if (!GetWS())
          return;
       SetConditionalObservables(GetWS()->argSet(argList));
    }
 
-   virtual void SetGlobalObservables(const RooArgSet &set);
+   void SetGlobalObservables(const RooArgSet &set);
    /// Specify the global observables
    /// through a comma-separated list of arguments already in the workspace.
-   virtual void SetGlobalObservables(const char *argList)
+   void SetGlobalObservables(const char *argList)
    {
       if (!GetWS())
          return;
@@ -203,7 +202,7 @@ public:
    void SetExternalConstraints(const RooArgSet &set);
    /// Specify the external constraints
    /// through a comma-separated list of arguments already in the workspace.
-   virtual void SetExternalConstraints(const char *argList)
+   void SetExternalConstraints(const char *argList)
    {
       if (!GetWS())
          return;
@@ -212,10 +211,10 @@ public:
 
    /// Set parameter values for a particular hypothesis if using a common PDF
    /// by saving a snapshot in the workspace.
-   virtual void SetSnapshot(const RooArgSet &set);
+   void SetSnapshot(const RooArgSet &set);
 
    /// Specify the name of the PDF in the workspace to be used.
-   virtual void SetPdf(const char *name)
+   void SetPdf(const char *name)
    {
       if (!GetWS())
          return;
@@ -232,7 +231,7 @@ public:
    }
 
    /// Specify the name of the PDF in the workspace to be used.
-   virtual void SetPriorPdf(const char *name)
+   void SetPriorPdf(const char *name)
    {
       if (!GetWS())
          return;
@@ -249,7 +248,7 @@ public:
    }
 
    /// Specify the name of the dataset in the workspace to be used.
-   virtual void SetProtoData(const char *name)
+   void SetProtoData(const char *name)
    {
       if (!GetWS())
          return;
@@ -309,7 +308,12 @@ public:
    /// alias for GetWS()
    RooWorkspace *GetWorkspace() const { return GetWS(); }
 
-   void GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig = true);
+   void GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig = true);
+
+   inline void GuessObsAndNuisance(const RooDataSet &data, bool printModelConfig = true)
+   {
+      return GuessObsAndNuisance(*data.get(), printModelConfig);
+   }
 
    /// overload the print method
    void Print(Option_t *option = "") const override;
@@ -339,9 +343,9 @@ protected:
    /// internal function to import data in WS
    void ImportDataInWS(RooAbsData &data);
 
-   TRef fRefWS; ///< WS reference used in the file
-
-   std::string fWSName; ///< name of the WS
+   // The reference to the workspace is not persistent because it is always
+   // filled when the workspace is read (see RooWorkspace::Streamer()).
+   RooWorkspace *fRefWS = nullptr; ///<! WS reference used in the file
 
    std::string fPdfName;  ///< name of  PDF in workspace
    std::string fDataName; ///< name of data set in workspace
@@ -364,8 +368,7 @@ private:
    std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
    std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
 
-   ClassDefOverride(ModelConfig,
-                    6); ///< A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig, 7);
 };
 
 } // end namespace RooStats

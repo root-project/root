@@ -1,0 +1,8 @@
+<lcgdict>
+ <class name="InDetSimDataCollection" id="5A50C32E-C036-4A49-AE97-716D53210BE1" />
+     <class name="InDetSimData" />
+     <class name="std::pair< HepMcParticleLink , float>" /> 
+     <class name="std::vector<std::pair< HepMcParticleLink , float> >" />
+     <class name="std::map<Identifier,InDetSimData>" />
+</lcgdict>
+ 

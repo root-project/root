@@ -159,7 +159,7 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
-from libROOTPythonizations import GetBranchAttr, BranchPyz
+from ROOT.libROOTPythonizations import GetBranchAttr, BranchPyz
 from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 from . import pythonization
 from ROOT._pythonization._memory_utils import _should_give_up_ownership, _constructor_releasing_ownership, _SetDirectory_SetOwnership
@@ -254,11 +254,12 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     ```
     """
     import cppyy
+    import cppyy.types
 
     branch = self.GetBranch(bname)
 
     # Pythonization for cppyy proxies (of type CPPInstance)
-    if isinstance(addr, cppyy._backend.CPPInstance):
+    if isinstance(addr, cppyy.types.Instance):
         addr = _pythonize_branch_addr(branch, addr)
 
     # Figure out data_type in case addr is a numpy.ndarray or array.array

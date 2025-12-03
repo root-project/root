@@ -11,27 +11,32 @@
 #ifndef ROOT_RSLOTSTACK
 #define ROOT_RSLOTSTACK
 
-#include <ROOT/TSpinMutex.hxx>
-
-#include <stack>
+#include <atomic>
+#include <vector>
 
 namespace ROOT {
 namespace Internal {
 
-/// A thread-safe stack of N indexes (0 to size - 1).
-/// RSlotStack can be used to safely assign a "processing slot" number to
-/// each thread in multi-thread applications.
-/// In release builds, pop and push operations are unchecked, potentially
-/// resulting in undefined behavior if more slot numbers than available are
-/// requested.
-/// An important design assumption is that a slot will almost always be available
-/// when a thread asks for it, and if it is not available it will be very soon,
-/// therefore a spinlock is used for synchronization.
+/// A thread-safe list of N indexes (0 to size - 1).
+/// RSlotStack can be used to atomically assign a "processing slot" number to
+/// each thread in multi-threaded applications.
+/// When there are no more slots available, the thread busy-waits for a slot.
+/// This case should be avoided by the scheduler.
 class RSlotStack {
-private:
-   const unsigned int fSize;
-   std::stack<unsigned int> fStack;
-   ROOT::TSpinMutex fMutex;
+   struct alignas(8) AtomicWrapper {
+      std::atomic_bool fAtomic{false};
+      AtomicWrapper() = default;
+      ~AtomicWrapper() = default;
+      AtomicWrapper(const AtomicWrapper &) = delete;
+      AtomicWrapper &operator=(const AtomicWrapper &) = delete;
+      AtomicWrapper(AtomicWrapper &&other) { fAtomic = other.fAtomic.load(); }
+      AtomicWrapper &operator=(AtomicWrapper &&other)
+      {
+         fAtomic = other.fAtomic.load();
+         return *this;
+      }
+   };
+   std::vector<AtomicWrapper> fSlots;
 
 public:
    RSlotStack() = delete;
@@ -44,7 +49,7 @@ public:
 /// After construction the slot number is available as the data member fSlot.
 struct RSlotStackRAII {
    ROOT::Internal::RSlotStack &fSlotStack;
-   unsigned int fSlot;
+   const unsigned int fSlot;
    RSlotStackRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
    ~RSlotStackRAII() { fSlotStack.ReturnSlot(fSlot); }
 };

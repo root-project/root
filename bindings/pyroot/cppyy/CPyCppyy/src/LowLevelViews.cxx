@@ -1001,10 +1001,8 @@ template<> struct typecode_traits<signed char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 template<> struct typecode_traits<std::byte> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
-#endif
 template<> struct typecode_traits<char*> {
     static constexpr const char* format = "b"; static constexpr const char* name = "char*"; };
 template<> struct typecode_traits<const char*> {
@@ -1142,9 +1140,7 @@ PyObject* CPyCppyy::CreateLowLevelView(type** address, cdims_t shape) {     \
 CPPYY_IMPL_VIEW_CREATOR(bool);
 CPPYY_IMPL_VIEW_CREATOR(signed char);
 CPPYY_IMPL_VIEW_CREATOR(unsigned char);
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_VIEW_CREATOR(std::byte);
-#endif
 CPPYY_IMPL_VIEW_CREATOR(short);
 CPPYY_IMPL_VIEW_CREATOR(unsigned short);
 CPPYY_IMPL_VIEW_CREATOR(int);
@@ -1199,4 +1195,44 @@ PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t* address,  cdims_t shape) {
 PyObject* CPyCppyy::CreateLowLevelView_i8(uint8_t** address, cdims_t shape) {
     LowLevelView* ll = CreateLowLevelViewT<uint8_t>(address, shape, "B", "uint8_t");
     CPPYY_RET_W_CREATOR(uint8_t**, CreateLowLevelView_i8);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+    CPPYY_RET_W_CREATOR(int16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(int16_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+    CPPYY_RET_W_CREATOR(int16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+    CPPYY_RET_W_CREATOR(uint16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i16(uint16_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+    CPPYY_RET_W_CREATOR(uint16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+    CPPYY_RET_W_CREATOR(int32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(int32_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+    CPPYY_RET_W_CREATOR(int32_t**, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t* address,  cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+    CPPYY_RET_W_CREATOR(uint32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* CPyCppyy::CreateLowLevelView_i32(uint32_t** address, cdims_t shape) {
+    LowLevelView* ll = CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+    CPPYY_RET_W_CREATOR(uint32_t**, CreateLowLevelView_i32);
 }

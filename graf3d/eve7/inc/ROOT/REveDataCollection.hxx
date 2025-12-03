@@ -132,7 +132,7 @@ public:
 
    void ReserveItems(Int_t items_size) { fItemList->fItems.reserve(items_size); }
    void AddItem(void *data_ptr, const std::string& n, const std::string& t);
-   void ClearItems() { fItemList->fItems.clear(); }
+   void ClearItems();
 
    Bool_t SingleRnrState() const override { return kTRUE; }
    Bool_t SetRnrState(Bool_t) override;

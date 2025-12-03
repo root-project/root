@@ -114,8 +114,8 @@ int RMetaData::GetI(const std::string &key, int defaultVal) const
       throw std::logic_error("Metadata value found at key '" + key + "' is not of type int.");
    return fJson->payload[key].get<int>();
 }
-/// @brief Return the metadata value of type int given the key, a default int metadata value if the key is not found, or
-/// an error if the metadata value is of a non-double type.
+/// @brief Return the metadata value of type double given the key, a default double metadata value if the key is not
+/// found, or an error if the metadata value is of a non-double type.
 /// @param[in] key input key for a given RMetaData instance.
 /// @param[in] defaultVal metadata value of type double which is read as default while a given key cannot be found in
 /// the dataset.
@@ -145,3 +145,13 @@ const std::string RMetaData::GetS(const std::string &key, const std::string &def
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
+
+void ROOT::Internal::RDF::ImportJSON(ROOT::RDF::Experimental::RMetaData &metadata, const std::string &jsonString)
+{
+   metadata.fJson->payload = nlohmann::json::parse(jsonString);
+}
+
+std::string ROOT::Internal::RDF::ExportJSON(ROOT::RDF::Experimental::RMetaData &metadata)
+{
+   return metadata.fJson->payload.dump();
+}

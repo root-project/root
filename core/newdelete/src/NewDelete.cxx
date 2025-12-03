@@ -57,8 +57,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 
 #include "TObjectTable.h"
 #include "TError.h"
@@ -359,7 +359,7 @@ void *operator new(size_t size, std::align_val_t al)
       vp = ::mcalloc(ROOT::Internal::gMmallocDesc, real_size, sizeof(char));
    else
       vp = ::calloc(real_size, sizeof(char));
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, gSpaceErr, real_size);
    StoreSizeMagic(vp, size, al); // NOLINT
    return ExtStart(vp, al);
@@ -415,8 +415,6 @@ void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noex
    ::operator delete(ptr, al);
 }
 
-
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete(void *ptr, std::size_t) noexcept
@@ -427,7 +425,6 @@ void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
@@ -464,7 +461,6 @@ void operator delete[](void *ptr, std::align_val_t al) noexcept
    ::operator delete(ptr, al);
 }
 
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete[](void *ptr, std::size_t) noexcept
@@ -475,7 +471,6 @@ void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.
@@ -494,7 +489,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 {
    static const char *where = "CustomReAlloc2";
 
-   if (ovp == 0)
+   if (ovp == nullptr)
       return ::operator new(size);
 
    if (!gNewInit)
@@ -518,7 +513,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    } else {
       vp = ::realloc((char *)realstart, RealSize(size, al));
    }
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, gSpaceErr, RealSize(size, al));
    if (size > oldsize)
       MemClearRe(ExtStart(vp, al), oldsize, size - oldsize); // NOLINT

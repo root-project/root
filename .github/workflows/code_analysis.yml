@@ -15,17 +15,27 @@ jobs:
     # can be skipped if the tag [skip-ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     env:
       TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_PULL_REQUEST_REPO: ${{ github.event.pull_request.head.repo.html_url }}
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1024
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Fetch base sha
-      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+      run: git fetch --depth=1024 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+    - name: Determine merge base
+      run: echo "MERGE_BASE=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_ENV
     - name: install clang-format
       run: sudo apt-get install -y clang-format
     - name: run clang-format script
@@ -34,7 +44,11 @@ jobs:
   ruff:
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     steps:
@@ -45,7 +59,7 @@ jobs:
       id: diff
       run: |
         git fetch --depth=1 origin $GITHUB_BASE_REF 
-        git diff --name-only origin/$GITHUB_BASE_REF > changed_files.txt
+        git diff --diff-filter=AMR --name-only origin/$GITHUB_BASE_REF > changed_files.txt
 
     - name: Install ruff
       uses: astral-sh/ruff-action@v3
@@ -73,6 +87,10 @@ jobs:
             while IFS=- read -r start length; do
               [ -z "$start" ] && continue
               length=${length:-1}
+              # Skip invalid ranges
+              if [ "$start" -eq 0 ] || [ "$length" -eq 0 ]; then
+                continue
+              fi
               end=$((start + length))
               diff_command+="ruff format --diff --range $start-$end $file && "
               apply_command+="ruff format --range $start-$end $file && "

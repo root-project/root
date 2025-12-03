@@ -1,0 +1,10 @@
+<lcgdict>
+   <class name="VertexTimeOffset"/>
+<!--    <class name="PrimaryEventRotations"/> -->
+<exclusion>
+   <class name="VertexTimeOffset">
+        <method name="EventInitialization"/>
+        <method name="EditVertex"/>
+   </class>
+</exclusion>
+</lcgdict>

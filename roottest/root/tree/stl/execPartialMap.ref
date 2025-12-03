@@ -1,0 +1,30 @@
+Automatic building of dictionaries now off
+
+Processing /uscms_data/d2/pcanal/eaf_root_working/code/quick-devel/roottest/root/tree/stl/execPartialMap.cxx+...
+Creating tree
+Reading tree
+Entry 0:
+AddressKey::Streamer called 1 times
+AddressValue::Streamer called 1 times
+Entry 1:
+AddressKey::Streamer called 3 times
+AddressValue::Streamer called 3 times
+Entry 2:
+AddressKey::Streamer called 6 times
+AddressValue::Streamer called 6 times
+Deleting tree
+done
+Open file
+Reading tree
+Entry 0:
+AddressKey::Streamer called 0 times
+AddressValue::Streamer called 1 times
+Entry 1:
+AddressKey::Streamer called 0 times
+AddressValue::Streamer called 3 times
+Entry 2:
+AddressKey::Streamer called 0 times
+AddressValue::Streamer called 6 times
+Deleting tree
+done
+(int) 0

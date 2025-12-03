@@ -23,8 +23,6 @@ class TGeoManager;
 class TVirtualGeoTrack;
 class TParticle;
 class TObjArray;
-class TH2F;
-class TStopwatch;
 class TGeoBatemanSol;
 class TGeoIteratorPlugin;
 class TGeoPolygon;
@@ -58,14 +56,6 @@ public:
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *particle) = 0;
    virtual void AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset = kFALSE) = 0;
    virtual void BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
-   virtual void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) = 0;
-   virtual void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) = 0;
-   virtual void CheckBoundaryErrors(Int_t ntracks = 1000000, Double_t radius = -1.) = 0;
-   virtual void CheckBoundaryReference(Int_t icheck = -1) = 0;
-   virtual void CheckGeometryFull(Bool_t checkoverlaps = kTRUE, Bool_t checkcrossings = kTRUE, Int_t nrays = 10000,
-                                  const Double_t *vertex = nullptr) = 0;
-   virtual void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
-   virtual void CheckOverlaps(const TGeoVolume *vol, Double_t ovlp = 0.1, Option_t *option = "") const = 0;
    virtual Int_t CountVisibleNodes() = 0;
    virtual void DefaultAngles() = 0;
    virtual void DefaultColors() = 0;
@@ -100,32 +90,20 @@ public:
    virtual Bool_t IsPaintingShape() const = 0;
    virtual Bool_t IsRaytracing() const = 0;
    virtual Bool_t IsExplodedView() const = 0;
-   virtual TH2F *LegoPlot(Int_t ntheta = 60, Double_t themin = 0., Double_t themax = 180., Int_t nphi = 90,
-                          Double_t phimin = 0., Double_t phimax = 360., Double_t rmin = 0., Double_t rmax = 9999999,
-                          Option_t *option = "") = 0;
    virtual void ModifiedPad(Bool_t update = kFALSE) const = 0;
-   virtual void OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch = nullptr,
-                           Bool_t last = kFALSE, Bool_t refresh = kFALSE, const char *msg = "") = 0;
    void Paint(Option_t *option = "") override = 0;
    virtual void PaintNode(TGeoNode *node, Option_t *option = "", TGeoMatrix *global = nullptr) = 0;
    virtual void PaintShape(TGeoShape *shape, Option_t *option = "") = 0;
    virtual void PaintOverlap(void *ovlp, Option_t *option = "") = 0;
-   virtual void PrintOverlaps() const = 0;
    virtual void PaintVolume(TGeoVolume *vol, Option_t *option = "", TGeoMatrix *global = nullptr) = 0;
-   virtual void RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option = "") = 0;
-   virtual void RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol,
-                           Bool_t check_norm) = 0;
    virtual void Raytrace(Option_t *option = "") = 0;
-   virtual TGeoNode *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path) = 0;
    virtual void
    SetBombFactors(Double_t bombx = 1.3, Double_t bomby = 1.3, Double_t bombz = 1.3, Double_t bombr = 1.3) = 0;
    virtual void SetClippingShape(TGeoShape *shape) = 0;
    virtual void SetExplodedView(Int_t iopt = 0) = 0;
    virtual void SetGeoManager(TGeoManager *geom) = 0;
    virtual void SetIteratorPlugin(TGeoIteratorPlugin *plugin) = 0;
-   virtual void SetCheckedNode(TGeoNode *node) = 0;
    virtual void SetNsegments(Int_t nseg = 20) = 0;
-   virtual void SetNmeshPoints(Int_t npoints) = 0;
    virtual void SetRaytracing(Bool_t flag = kTRUE) = 0;
    static TVirtualGeoPainter *GeoPainter();
    static void SetPainter(const TVirtualGeoPainter *painter);
@@ -134,11 +112,7 @@ public:
    virtual void SetVisLevel(Int_t level = 3) = 0;
    virtual void SetVisOption(Int_t option = 0) = 0;
    virtual Int_t ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const = 0;
-   virtual void Test(Int_t npoints, Option_t *option) = 0;
-   virtual void TestOverlaps(const char *path) = 0;
-   virtual Bool_t TestVoxels(TGeoVolume *vol) = 0;
    virtual void UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
-   virtual Double_t Weight(Double_t precision, Option_t *option = "v") = 0;
 
    ClassDefOverride(TVirtualGeoPainter, 0) // Abstract interface for geometry painters
 };

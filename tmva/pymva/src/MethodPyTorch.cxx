@@ -32,7 +32,6 @@ public:
 
 REGISTER_METHOD(PyTorch)
 
-ClassImp(MethodPyTorch);
 
 
 MethodPyTorch::MethodPyTorch(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)

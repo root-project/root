@@ -1,8 +1,9 @@
-import unittest
-import ROOT
-import numpy as np
-import sys
 import gc
+import sys
+import unittest
+
+import numpy as np
+import ROOT
 
 
 class DataFrameFromNumpy(unittest.TestCase):
@@ -11,9 +12,7 @@ class DataFrameFromNumpy(unittest.TestCase):
     with RDataFrame.
     """
 
-    dtypes = [
-        "int32", "int64", "uint32", "uint64", "float32", "float64"
-    ]
+    dtypes = ["int32", "int64", "uint32", "uint64", "float32", "float64"]
 
     def test_dtypes(self):
         """
@@ -23,6 +22,39 @@ class DataFrameFromNumpy(unittest.TestCase):
             data = {"x": np.array([1, 2, 3], dtype=dtype)}
             df = ROOT.RDF.FromNumpy(data)
             self.assertEqual(df.Mean("x").GetValue(), 2)
+
+    def test_object_dtype_strings(self):
+        """
+        Test reading numpy arrays with dtype=object containing strings
+        """
+        data = {"x": np.array(["test_string_1", "test_string_2"], dtype=object)}
+        df = ROOT.RDF.FromNumpy(data)
+        colnames = df.GetColumnNames()
+
+        self.assertIn("x", colnames)
+
+        entries = df.AsNumpy()["x"]
+        self.assertTrue(np.array_equal(entries, np.array(["test_string_1", "test_string_2"], dtype=object)))
+
+    def test_empty_arrays(self):
+        """
+        Test creating an RDataFrame from an empty numpy array with different data types
+        """
+        for dtype in self.dtypes:
+            data = {"x": np.array([], dtype=dtype)}
+            df = ROOT.RDF.FromNumpy(data)
+            colnames = df.GetColumnNames()
+            self.assertIn("x", colnames)
+            self.assertEqual(df.Count().GetValue(), 0)
+
+        data_obj = {"x": np.array([], dtype="object")}
+        with self.assertRaises(RuntimeError) as context:
+            df = ROOT.RDF.FromNumpy(data_obj)
+
+        self.assertIn(
+            "Failure in creating column 'x' for RDataFrame: the input column type is 'object', which is not supported. Make sure your column type is supported",
+            str(context.exception),
+        )
 
     def test_multiple_columns(self):
         """
@@ -43,15 +75,23 @@ class DataFrameFromNumpy(unittest.TestCase):
     def test_refcount(self):
         """
         Check refcounts of associated PyObjects
+
+        In case of Python <=3.14, we expect a refcount of 2 for the data dict,
+        because the call to sys.getrefcount creates a second reference by
+        itself. Starting from Python 3.14, we expect a refcount of 1 because
+        there were changes to the interpreter to avoid some unnecessary ref
+        counts. See also:
+        https://docs.python.org/3.14/whatsnew/3.14.html#whatsnew314-refcount
         """
+        extra_ref_count = int(sys.version_info < (3, 14))
         data = {"x": np.array([1, 2, 3], dtype="float32")}
         gc.collect()
-        self.assertEqual(sys.getrefcount(data), 2)
+        self.assertEqual(sys.getrefcount(data), 1 + extra_ref_count)
         self.assertEqual(sys.getrefcount(data["x"]), 2)
 
         df = ROOT.RDF.FromNumpy(data)
         gc.collect()
-        self.assertEqual(sys.getrefcount(df), 2)
+        self.assertEqual(sys.getrefcount(df), 1 + extra_ref_count)
 
         self.assertEqual(sys.getrefcount(data["x"]), 3)
 
@@ -146,14 +186,14 @@ class DataFrameFromNumpy(unittest.TestCase):
         """
         Test correct reading of a sliced numpy array (#13690)
         """
-        table = np.array([[1,2], [3,4]], dtype="int64")
-        columns = {'x': table[:,0], 'y': table[:,1]}
+        table = np.array([[1, 2], [3, 4]], dtype="int64")
+        columns = {"x": table[:, 0], "y": table[:, 1]}
         df = ROOT.RDF.FromNumpy(columns)
-        x_col = df.Take['Long64_t']("x")
-        y_col = df.Take['Long64_t']("y")
-        self.assertEqual(list(x_col.GetValue()), [1,3])
-        self.assertEqual(list(y_col.GetValue()), [2,4])
+        x_col = df.Take["Long64_t"]("x")
+        y_col = df.Take["Long64_t"]("y")
+        self.assertEqual(list(x_col.GetValue()), [1, 3])
+        self.assertEqual(list(y_col.GetValue()), [2, 4])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

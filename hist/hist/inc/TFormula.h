@@ -156,7 +156,6 @@ protected:
    static Bool_t IsOperator(const char c);
    static Bool_t IsBracket(const char c);
    static Bool_t IsFunctionNameChar(const char c);
-   static Bool_t IsScientificNotation(const TString & formula, int ipos);
    static Bool_t IsHexadecimal(const TString & formula, int ipos);
    static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
@@ -238,6 +237,8 @@ public:
       return fHessFuncPtr != nullptr;
    }
 
+   static Bool_t IsScientificNotation(const TString & formula, int ipos);
+
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    template <class T>
@@ -247,7 +248,7 @@ public:
 #ifdef R__HAS_VECCORE
    ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = nullptr) const;
 #endif
-   TString        GetExpFormula(Option_t *option = "", const char *fl_format = "%g") const;
+   TString        GetExpFormula(Option_t *option = "") const;
    TString        GetGradientFormula() const;
    TString        GetHessianFormula() const;
    TString        GetUniqueFuncName() const {

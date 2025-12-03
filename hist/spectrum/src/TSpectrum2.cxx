@@ -44,14 +44,14 @@
 #include "TSpectrum2.h"
 #include "TPolyMarker.h"
 #include "TList.h"
-#include "TH1.h"
+#include "TH2.h"
 #include "TMath.h"
+#include "TVirtualPad.h"
 #define PEAK_WINDOW 1024
 
 Int_t TSpectrum2::fgIterations    = 3;
 Int_t TSpectrum2::fgAverageWindow = 3;
 
-ClassImp(TSpectrum2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -123,28 +123,15 @@ void TSpectrum2::SetDeconIterations(Int_t n)
 ///
 ///   Function parameters:
 ///   - h: input 2-d histogram
-///   - numberIterations, (default value = 20)
-///     Increasing numberIterations make the result smoother and lower.
+///   - nIterX, nIterY, (default value = 20), iterations for X and Y
+///     Increasing number of iterations make the result smoother and lower.
 ///   - option: may contain one of the following options
-///      - to set the direction parameter
-///        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
-///      - filterOrder-order of clipping filter. Possible values:
-///            - "BackOrder2" (default)
-///            - "BackOrder4"
-///            - "BackOrder6"
-///            - "BackOrder8"
-///      - "nosmoothing"- if selected, the background is not smoothed
-///         By default the background is smoothed.
-///      - smoothWindow-width of smoothing window. Possible values:
-///            - "BackSmoothing3" (default)
-///            - "BackSmoothing5"
-///            - "BackSmoothing7"
-///            - "BackSmoothing9"
-///            - "BackSmoothing11"
-///            - "BackSmoothing13"
-///            - "BackSmoothing15"
-///      - "Compton" if selected the estimation of Compton edge
-///                  will be included.
+///      - direction of change of clipping window
+///               - possible values=kBackIncreasingWindow
+///                                 kBackDecreasingWindow
+///      - filterType-determines the algorithm of the filtering
+///               - possible values=kBackSuccessiveFiltering
+///                                 kBackOneStepFiltering
 ///      - "same" : if this option is specified, the resulting background
 ///                 histogram is superimposed on the picture in the current pad.
 ///
@@ -154,12 +141,67 @@ void TSpectrum2::SetDeconIterations(Int_t n)
 ///  as the input histogram h, but only bins from binmin to binmax will be filled
 ///  with the estimated background.
 
-TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
-                                   Option_t * option)
+TH1 *TSpectrum2::Background(const TH1 *h, Int_t nIterX, Int_t nIterY, Option_t *option)
 {
-   Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
-        , h->GetName(), number_of_iterations, option);
-   return nullptr;
+   if (h == nullptr)
+      return nullptr;
+   Int_t dimension = h->GetDimension();
+   if (dimension != 2) {
+      Error("Background", "Only implemented for 2-d histograms");
+      return nullptr;
+   }
+   TString opt = option;
+   opt.ToLower();
+
+   // set options
+   Int_t direction = kBackDecreasingWindow;
+   if (opt.Contains("backincreasingwindow"))
+      direction = kBackIncreasingWindow;
+   Int_t filterType = kBackSuccessiveFiltering;
+   if (opt.Contains("backonestepfiltering"))
+      filterType = kBackOneStepFiltering;
+   Int_t firstX = h->GetXaxis()->GetFirst();
+   Int_t lastX = h->GetXaxis()->GetLast();
+   Int_t sizeX = lastX - firstX + 1;
+   Int_t firstY = h->GetYaxis()->GetFirst();
+   Int_t lastY = h->GetYaxis()->GetLast();
+   Int_t sizeY = lastY - firstY + 1;
+   Int_t i, j;
+   Double_t **source = new Double_t *[sizeX];
+   for (i = 0; i < sizeX; i++) {
+      source[i] = new Double_t[sizeY];
+      for (j = 0; j < sizeY; j++)
+         source[i][j] = h->GetBinContent(i + firstX, j + firstY);
+   }
+
+   // find background (source is input and in output contains the background
+   Background(source, sizeX, sizeY, nIterX, nIterY, direction, filterType);
+
+   // create output histogram containing background
+   // only bins in the range of the input histogram are filled
+   Int_t nch = strlen(h->GetName());
+   char *hbname = new char[nch + 20];
+   snprintf(hbname, nch + 20, "%s_background", h->GetName());
+   TH2 *hb = (TH2 *)h->Clone(hbname);
+   hb->Reset();
+   hb->GetListOfFunctions()->Delete();
+   for (i = 0; i < sizeX; i++)
+      for (j = 0; j < sizeY; j++)
+         hb->SetBinContent(i + firstX, j + firstY, source[i][j]);
+   hb->SetEntries(sizeX * sizeY);
+
+   // if option "same is specified, draw the result in the pad
+   if (opt.Contains("same")) {
+      if (gPad)
+         delete gPad->GetPrimitive(hbname);
+      hb->Draw("same");
+   }
+   for (i = 0; i < sizeX; i++) {
+      delete[] source[i];
+   }
+   delete[] source;
+   delete[] hbname;
+   return hb;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1707,7 +1749,7 @@ Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function (called by TH1), interface to TSpectrum2::Search
+/// static function (called by TH2), interface to TSpectrum2::Search
 
 Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
 {
@@ -1716,10 +1758,10 @@ Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// static function (called by TH1), interface to TSpectrum2::Background
+/// static function (called by TH2), interface to TSpectrum2::Background
 
-TH1 *TSpectrum2::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
+TH1 *TSpectrum2::StaticBackground(const TH1 *hist, Int_t nIterX, Int_t nIterY, Option_t *option)
 {
    TSpectrum2 s;
-   return s.Background(hist,niter,option);
+   return s.Background(hist, nIterX, nIterY, option);
 }

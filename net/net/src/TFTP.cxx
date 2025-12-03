@@ -22,7 +22,7 @@
 #include <ROOT/RConfig.hxx>
 
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #ifndef R__WIN32
 #   include <unistd.h>
@@ -60,7 +60,6 @@ Long64_t TFTP::fgBytesWrite = 0;
 Long64_t TFTP::fgBytesRead  = 0;
 
 
-ClassImp(TFTP);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open connection to host specified by the url using par parallel sockets.
@@ -223,7 +222,7 @@ void TFTP::SetBlockSize(Int_t blockSize)
 /// Transfer file to remote host. Returns number of bytes
 /// sent or < 0 in case of error. Error -1 connection is still
 /// open, error -2 connection has been closed. In case of failure
-/// fRestartAt is set to the number of bytes correclty transfered.
+/// fRestartAt is set to the number of bytes correclty transferred.
 /// Calling PutFile() immediately afterwards will restart at fRestartAt.
 /// If this is not desired call SetRestartAt(0) before calling PutFile().
 /// If rootd reports that the file is locked, and you are sure this is not
@@ -396,7 +395,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 /// Transfer file from remote host. Returns number of bytes
 /// received or < 0 in case of error. Error -1 connection is still
 /// open, error -2 connection has been closed. In case of failure
-/// fRestartAt is set to the number of bytes correclty transfered.
+/// fRestartAt is set to the number of bytes correclty transferred.
 /// Calling GetFile() immediately afterwards will restart at fRestartAt.
 /// If this is not desired call SetRestartAt(0) before calling GetFile().
 /// If rootd reports that the file is locked, and you are sure this is not

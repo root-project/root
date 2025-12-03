@@ -28,24 +28,31 @@ protected:
    static void SetUpTestCase()
    {
       ROOT::RDataFrame d(kSizeSmall);
-      d.Define("x", [] { return 1; }).Snapshot<int>("t", kFile1, {"x"});
-      d.Define("y", [] { return 2; }).Snapshot<int>("t2", kFile2, {"y"});
+      d.Define("x", [] { return 1; }).Snapshot("t", kFile1, {"x"});
+      d.Define("y", [] { return 2; }).Snapshot("t2", kFile2, {"y"});
 
-      TFile f(kFile3, "RECREATE");
-      TTree t("t3", "t3");
+      // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+      // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+      // living on the stack.
+      // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+      // mark a heap object appearing by chance on the stack.
+      // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+      // so for now we are forced to work around the bug rather than fixing it.
+      auto f = std::make_unique<TFile>(kFile3, "RECREATE");
+      auto t = std::make_unique<TTree>("t3", "t3");
       float arr[4];
-      t.Branch("arr", arr, "arr[4]/F");
+      t->Branch("arr", arr, "arr[4]/F");
       for (auto i : ROOT::TSeqU(kSizeSmall)) {
          for (auto j : ROOT::TSeqU(kSizeSmall)) {
             arr[j] = i + j;
          }
-         t.Fill();
+         t->Fill();
       }
-      t.Write();
+      f->Write();
 
       ROOT::RDataFrame d2(kSizeBig);
-      d2.Define("x", [] { return 4; }).Snapshot<int>("t", kFile4, {"x"});
-      d2.Define("y", [] { return 5; }).Snapshot<int>("t2", kFile5, {"y"});
+      d2.Define("x", [] { return 4; }).Snapshot("t", kFile4, {"x"});
+      d2.Define("y", [] { return 5; }).Snapshot("t2", kFile5, {"y"});
    }
 
    static void TearDownTestCase()
@@ -263,46 +270,58 @@ TEST_F(RDFAndFriends, FriendChainMT)
 // ROOT-9559
 void FillIndexedFriend(const char *mainfile, const char *auxfile)
 {
+   // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+   // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+   // living on the stack.
+   // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+   // mark a heap object appearing by chance on the stack.
+   // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+   // so for now we are forced to work around the bug rather than fixing it.
+
    // Start by creating main Tree
-   TFile f(mainfile, "RECREATE");
-   TTree mainTree("mainTree", "mainTree");
-   int idx;
-   mainTree.Branch("idx", &idx);
-   int x;
-   mainTree.Branch("x", &x);
+   {
+      auto f = std::make_unique<TFile>(mainfile, "RECREATE");
+      auto mainTree = std::make_unique<TTree>("mainTree", "mainTree");
+      int idx;
+      mainTree->Branch("idx", &idx);
+      int x;
+      mainTree->Branch("x", &x);
 
-   idx = 1;
-   x = 1;
-   mainTree.Fill();
-   idx = 1;
-   x = 2;
-   mainTree.Fill();
-   idx = 1;
-   x = 3;
-   mainTree.Fill();
-   idx = 2;
-   x = 4;
-   mainTree.Fill();
-   idx = 2;
-   x = 5;
-   mainTree.Fill();
-   mainTree.Write();
-   f.Close();
-
+      idx = 1;
+      x = 1;
+      mainTree->Fill();
+      idx = 1;
+      x = 2;
+      mainTree->Fill();
+      idx = 1;
+      x = 3;
+      mainTree->Fill();
+      idx = 2;
+      x = 4;
+      mainTree->Fill();
+      idx = 2;
+      x = 5;
+      mainTree->Fill();
+      mainTree->Write();
+      f->Write();
+   }
    // And aux tree
-   TFile f2(auxfile, "RECREATE");
-   TTree auxTree("auxTree", "auxTree");
-   auxTree.Branch("idx", &idx);
-   int y;
-   auxTree.Branch("y", &y);
-   idx = 2;
-   y = 5;
-   auxTree.Fill();
-   idx = 1;
-   y = 7;
-   auxTree.Fill();
-   auxTree.Write();
-   f2.Close();
+   {
+      auto f2 = std::make_unique<TFile>(auxfile, "RECREATE");
+      auto auxTree = std::make_unique<TTree>("auxTree", "auxTree");
+      int idx;
+      auxTree->Branch("idx", &idx);
+      int y;
+      auxTree->Branch("y", &y);
+      idx = 2;
+      y = 5;
+      auxTree->Fill();
+      idx = 1;
+      y = 7;
+      auxTree->Fill();
+      auxTree->Write();
+      f2->Write();
+   }
 }
 
 void TestIndexedFriendChain()
@@ -369,7 +388,7 @@ TEST(RDFAndFriendsNoFixture, IndexedFriendChain)
 
 TEST(RDFAndFriendsNoFixture, IndexedFriendTree)
 {
-   TestIndexedFriendChain();
+   TestIndexedFriendTree();
 }
 
 #ifdef R__USE_IMT
@@ -394,17 +413,23 @@ TEST(RDFAndFriendsNoFixture, AutomaticFriendsLoad)
    const auto fname = "rdf_automaticfriendsloadtest.root";
    {
       // write a TTree and its friend to the same file
-      TFile f(fname, "recreate");
-      TTree t1("t1", "t1");
-      TTree t2("t2", "t2");
+      // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+      // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+      // living on the stack.
+      // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+      // mark a heap object appearing by chance on the stack.
+      // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+      // so for now we are forced to work around the bug rather than fixing it.
+      auto f = std::make_unique<TFile>(fname, "recreate");
+      auto t1 = std::make_unique<TTree>("t1", "t1");
+      auto t2 = std::make_unique<TTree>("t2", "t2");
       int x = 42;
-      t2.Branch("x", &x);
-      t1.Fill();
-      t2.Fill();
-      t1.AddFriend(&t2);
-      t1.Write();
-      t2.Write();
-      f.Close();
+      t2->Branch("x", &x);
+      t1->Fill();
+      t2->Fill();
+      t1->AddFriend(t2.get());
+      t1->Write();
+      t2->Write();
    }
    EXPECT_EQ(ROOT::RDataFrame("t1", fname).Max<int>("t2.x").GetValue(), 42);
 

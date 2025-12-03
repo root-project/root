@@ -50,7 +50,7 @@ target_include_directories(MetaCling SYSTEM PRIVATE
   ${CLANG_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${CLAD_INCLUDE_DIRS}
-  ${CPPINTEROP_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/interpreter/CppInterOp/include
 )
 
 target_include_directories(MetaCling PRIVATE
@@ -87,12 +87,18 @@ add_dependencies(MetaCling CLING clangCppInterOp)
 
 if(NOT builtin_clang)
   set(prefixed_link_libraries)
-  foreach(dep ${CLING_DEPEND_LIBS})
-    if("${dep}" MATCHES "^clang")
-      set(dep "${LLVM_LIBRARY_DIR}/lib${dep}.a")
-     endif()
-     list(APPEND prefixed_link_libraries "${dep}")
-   endforeach()
+  if(MSVC)
+    set(clang_libraries)
+    ROOT_GET_CLANG_LIBRARIES(clang_libraries)
+    list(APPEND prefixed_link_libraries "${clang_libraries}")
+  else()
+    foreach(dep ${CLING_DEPEND_LIBS})
+      if("${dep}" MATCHES "^clang")
+        set(dep "${LLVM_LIBRARY_DIR}/${dep}.a")
+      endif()
+      list(APPEND prefixed_link_libraries "${dep}")
+    endforeach()
+  endif()
   set(LINK_LIBS "${prefixed_link_libraries}")
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
@@ -108,7 +114,8 @@ if (clad)
   else()
     set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
   endif()
-  if(TARGET clang)
+  # This will cause a cyclic dependency in adaptiveCpp, as it requires clang to build
+  if(TARGET clang AND NOT experimental_adaptivecpp)
     # Link our clad libraries to clang. If users use the clang from ROOT they will
     # also be able to use clad out of the box.
     add_dependencies(clang clad)
@@ -122,6 +129,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         $<TARGET_OBJECTS:clangCppInterOp>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
+
+target_link_libraries(Cling PRIVATE Core RIO)
 
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
@@ -138,15 +147,6 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if(MSVC_VERSION GREATER_EQUAL 1933)
-    set(cling_exports ${cling_exports}
-        __std_find_trivial_1
-        __std_find_trivial_2
-        __std_find_trivial_4
-        __std_find_trivial_8
-    )
-  endif()
-
   set(cling_exports ${cling_exports}
     _Smtx_lock_shared
     _Smtx_unlock_shared
@@ -219,17 +219,30 @@ if(MSVC)
     set(cling_link_str "${cling_link_str} /EXPORT:${sym}")
   endforeach(sym ${cling_exports})
   set_property(TARGET Cling APPEND_STRING PROPERTY LINK_FLAGS "${cling_link_str} ${CLAD_LIBS}")
-  add_dependencies(Cling Core RIO)
-  target_link_libraries(Cling PUBLIC Core RIO)
 endif()
 
-if(APPLE)
-  target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load -Wl,-undefined,dynamic_lookup)
-elseif(NOT MSVC)
-  target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
+if(NOT APPLE AND NOT MSVC)
+  # Require the linker to resolve the symbol internally and prevent
+  # conflicts when linked with another software using also LLVM like in
+  # the problem reported for Julia in
+  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
+  # and by ALICE in https://github.com/root-project/root/issues/19889
+  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
+  target_link_libraries(Cling PRIVATE -Wl,-Bsymbolic)
+  # We compile with -fvisibility=hidden in interpreter/, but some symbols of
+  # instantiated templates remain. Use a version script to hide them.
+  target_link_libraries(Cling PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
+  set_target_properties(Cling PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
+  # After inlining and hiding symbols, some of them are not referenced anymore
+  # and can be collected by the linker, reducing the library size.
+  target_link_libraries(Cling PRIVATE -Wl,--gc-sections)
+  # Additionally, for Release builds, strip the binary to remove symbol tables.
+  add_custom_command(TARGET Cling POST_BUILD
+    COMMAND $<$<CONFIG:Release>:${CMAKE_STRIP}>
+    ARGS $<TARGET_FILE:Cling>)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
-  target_link_libraries(Cling PUBLIC util procstat)
+  target_link_libraries(Cling PRIVATE util procstat)
 endif()
 

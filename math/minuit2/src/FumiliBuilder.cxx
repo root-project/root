@@ -10,7 +10,6 @@
 #include "Minuit2/FumiliBuilder.h"
 #include "Minuit2/FumiliStandardMaximumLikelihoodFCN.h"
 #include "Minuit2/GradientCalculator.h"
-//#include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MinimumError.h"
 #include "Minuit2/FunctionGradient.h"
@@ -20,7 +19,6 @@
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -99,7 +97,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
       // call always Hesse (error matrix from Fumili is never accurate since is approximate)
 
-      if (strategy.Strategy() > 0) {
+      if (min.Error().Dcovar() > strategy.HessianRecomputeThreshold()) {
       print.Debug("FumiliBuilder will verify convergence and Error matrix; "
                   "dcov",
                   min.Error().Dcovar());
@@ -237,6 +235,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
    double lambda = (doLineSearch) ? 0.001 : 0;
 
+   MnFcnCaller fcnCaller{fcn};
+
    do {
 
       //     const MinimumState& s0 = result.back();
@@ -265,11 +265,10 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          }
       }
 
-
       // take a full step
 
       //evaluate function only if doing a line search
-      double fval2 = (doLineSearch) ? fcn(s0.Vec() + step) : 0;
+      double fval2 = (doLineSearch) ? fcnCaller(s0.Vec() + step) : 0;
       MinimumParameters p(s0.Vec() + step, fval2);
 
       // check that taking the full step does not deteriorate minimum
@@ -277,7 +276,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       if (doLineSearch && p.Fval() >= s0.Fval()) {
          print.Debug("Do a line search", fcn.NumOfCalls());
          MnLineSearch lsearch;
-         MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+         auto pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
          if (std::fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
             // std::cout<<"FumiliBuilder: no improvement"<<std::endl;
@@ -324,7 +323,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
          // if the proposed point (newton step) is inside the trust region radius accept it
          if (norm <= delta) {
-            p = MinimumParameters(s0.Vec() + step, fcn(s0.Vec() + step));
+            p = MinimumParameters(s0.Vec() + step, fcnCaller(s0.Vec() + step));
             print.Debug("Accept full Newton step - it is inside TR ",delta);
          } else {
             //step = - (delta/norm) * step;
@@ -403,7 +402,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
             }
             print.Debug("New accepted step is ",step);
 
-            p = MinimumParameters(s0.Vec() + step, fcn(s0.Vec() + step));
+            p = MinimumParameters(s0.Vec() + step, fcnCaller(s0.Vec() + step));
             norm = delta;
             gdel = inner_product(step, s0.Gradient().Grad());
          }

@@ -16,27 +16,28 @@ if(NOT WIN32)
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
 endif()
-ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint CMAKENOEXPORT)
+ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
       /STACK:4000000 setargv.obj")
+  if(MSVC_VERSION GREATER_EQUAL 1933)
+    set(root_exports "${root_exports} /EXPORT:__std_find_trivial_1 \
+        /EXPORT:__std_find_trivial_2 /EXPORT:__std_find_trivial_4 \
+        /EXPORT:__std_find_trivial_8")
+  endif()
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
   add_custom_command(TARGET root.exe POST_BUILD
                      COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
-if(proof)
-  ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
-endif()
-
 
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore CMAKENOEXPORT)
   set_property(TARGET hadd APPEND_STRING PROPERTY LINK_FLAGS "setargv.obj")
 else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc CMAKENOEXPORT)
-  if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-    target_link_libraries(hadd stdc++fs)
+  if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(hadd PRIVATE stdc++fs)
   endif()
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core CMAKENOEXPORT)
@@ -54,6 +55,20 @@ if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern CMAKENOEXPORT)
   set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern CMAKENOEXPORT)
+
+  # This is needed in particular for macOS, where the path of the GNU Fortran
+  # library might not be in the default DYLD_LIBRARY_PATH, but it gets picked
+  # up with enable_language(Fortran).
+  if(APPLE AND CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+    # Compute path to quadmath
+    execute_process(
+      COMMAND ${CMAKE_Fortran_COMPILER} -print-file-name=libgfortran.dylib
+      OUTPUT_VARIABLE LIBGFORTRAN_PATH
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    get_filename_component(LIBGFORTRAN_DIR "${LIBGFORTRAN_PATH}" DIRECTORY)
+    set_property(TARGET h2root APPEND PROPERTY BUILD_RPATH "${LIBGFORTRAN_DIR}")
+    set_property(TARGET h2root APPEND PROPERTY INSTALL_RPATH "${LIBGFORTRAN_DIR}")
+  endif()
 endif()
 
 file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
@@ -93,50 +108,34 @@ set_source_files_properties(src/rootcling.cxx PROPERTIES
   VISIBILITY_INLINES_HIDDEN "ON"
 )
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
+set(rootcling_exe_names rootcling genreflex rootcint)
 
-# rootcling includes the ROOT complex header which would build the complex
-# dictionary with modules. To make sure that rootcling_stage1 builds this
-# dict before we use it, we add a dependency here.
-add_dependencies(rootcling complexDict)
+foreach(exe_name IN LISTS rootcling_exe_names)
+  ROOT_EXECUTABLE(${exe_name} src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
-target_include_directories(rootcling PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/metacling/res
-        ${CMAKE_SOURCE_DIR}/core/dictgen/res
-        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
-set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
-if(WIN32)
-  set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
-  set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
-endif()
+  # rootcling includes the ROOT complex header which would build the complex
+  # dictionary with modules. To make sure that rootcling_stage1 builds this
+  # dict before we use it, we add a dependency here.
+  add_dependencies(${exe_name} complexDict)
 
-# Create aliases: rootcint, genreflex.
-if(WIN32)
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND copy /y rootcling.exe rootcint.exe
-                     COMMAND copy /y rootcling.exe genreflex.exe
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-else()
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND ln -f rootcling rootcint
-                     COMMAND ln -f rootcling genreflex
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif()
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-                         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
-
-if(CMAKE_HOST_UNIX)
-  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-else()
-  if(MSVC)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-  else()
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
-                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  target_include_directories(${exe_name} PRIVATE
+          ${CMAKE_SOURCE_DIR}/core/metacling/res
+          ${CMAKE_SOURCE_DIR}/core/dictgen/res
+          ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+  set_property(TARGET ${exe_name} PROPERTY ENABLE_EXPORTS 1)
+  if(WIN32)
+    set_target_properties(${exe_name} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+    set_property(TARGET ${exe_name} APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
   endif()
+endforeach()
+
+# To inherit the dependencies from rootcling
+add_dependencies(genreflex rootcling)
+add_dependencies(rootcint rootcint)
+
+if (TARGET Gui)
+  ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
 endif()
+ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

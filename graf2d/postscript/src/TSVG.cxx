@@ -16,10 +16,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <cmath>
 #include <fstream>
 
 #include "TROOT.h"
 #include "TDatime.h"
+#include "TBase64.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -33,7 +35,7 @@
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
 
-ClassImp(TSVG);
+const Double_t kEpsilon = 1e-9;
 
 /** \class TSVG
 \ingroup PS
@@ -82,6 +84,7 @@ TSVG::TSVG() : TVirtualPS()
 {
    fStream      = nullptr;
    fType        = 0;
+   fCompact     = kFALSE;
    gVirtualPS   = this;
    fBoundingBox = kFALSE;
    fRange       = kFALSE;
@@ -100,10 +103,11 @@ TSVG::TSVG() : TVirtualPS()
 ///            necessary to specify this parameter at creation time because it
 ///            has a default value (which is ignore in the SVG case).
 
-TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
+TSVG::TSVG(const char *fname, Int_t wtype, Bool_t compact) : TVirtualPS(fname, wtype)
 {
    fStream = nullptr;
    SetTitle("SVG");
+   fCompact = compact;
    Open(fname, wtype);
 }
 
@@ -244,7 +248,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
          PrintFast(10,"\" height=\"");
          WriteReal(iy1-iy2, kFALSE);
          PrintFast(7,"\" fill=");
-         SetColorAlpha(5);
+         SetColorAlpha(5, kTRUE, kFALSE);
          PrintFast(2,"/>");
       }
    }
@@ -259,7 +263,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(7,"\" fill=");
-      SetColorAlpha(fFillColor);
+      SetColorAlpha(fFillColor, kTRUE, kFALSE);
       PrintFast(2,"/>");
    }
    if (fillis == 0) {
@@ -274,9 +278,85 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColorAlpha(fLineColor);
+      SetColorAlpha(fLineColor, kFALSE, kTRUE);
       PrintFast(2,"/>");
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a svg path statement for specified points
+
+void TSVG::PrintPath(Bool_t convert, Int_t n, Double_t *xps, Double_t *yps, Bool_t close_path)
+{
+   Double_t idx = 0, idy = 0;
+
+   Double_t ixd0 = convert ? XtoSVG(xps[0]) : xps[0];
+   Double_t iyd0 = convert ? YtoSVG(yps[0]) : yps[0];
+   Double_t firstx = ixd0, firsty = iyd0;
+
+   PrintFast(1,"M");
+   WriteReal(ixd0, kFALSE);
+   PrintFast(1,",");
+   WriteReal(iyd0, kFALSE);
+
+   for (Int_t i = 1; i < n; i++) {
+      Double_t ixdi = convert ? XtoSVG(xps[i]) : xps[i];
+      Double_t iydi = convert ? YtoSVG(yps[i]) : yps[i];
+      Double_t ix   = ixdi - ixd0;
+      Double_t iy   = iydi - iyd0;
+
+      if (fCompact && (TMath::Abs(ix) < kEpsilon))
+         ix = 0;
+      if (fCompact && (TMath::Abs(iy) < kEpsilon))
+         iy = 0;
+
+      ixd0 = ixdi;
+      iyd0 = iydi;
+      if(ix && iy) {
+         if(idx) {
+            MovePS(idx, 0);
+            idx = 0;
+         }
+         if(idy) {
+            MovePS(0, idy);
+            idy = 0;
+         }
+         MovePS(ix, iy);
+         continue;
+      }
+      if (ix) {
+         if(idy) {
+            MovePS(0, idy);
+            idy = 0;
+         }
+         if(!idx || (ix*idx > 0)) {
+            idx += ix;
+         } else {
+            MovePS(idx, 0);
+            idx  = ix;
+         }
+         continue;
+      }
+      if(iy) {
+         if(idx) {
+            MovePS(idx, 0);
+            idx = 0;
+         }
+         if(!idy || (iy*idy > 0)) {
+            idy += iy;
+         } else {
+            MovePS(0, idy);
+            idy  = iy;
+         }
+      }
+   }
+   if(idx)
+      MovePS(idx, 0);
+   if(idy)
+      MovePS(0, idy);
+
+   if (close_path || ((TMath::Abs(ixd0 - firstx) < kEpsilon) && (TMath::Abs(iyd0 - firsty) < kEpsilon)))
+      PrintFast(1, "z");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,15 +369,11 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 ///    part of the frame
 
 void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                            Int_t mode, Int_t border, Int_t dark, Int_t light)
+                     Int_t mode, Int_t border, Int_t dark, Int_t light)
 {
-   static Double_t xps[7], yps[7];
-   Int_t i;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-   Int_t idx, idy;
+   Double_t xps[7], yps[7];
 
    //- Draw top&left part of the box
-
    xps[0] = XtoSVG(xl);          yps[0] = YtoSVG(yl);
    xps[1] = xps[0] + border;     yps[1] = yps[0] - border;
    xps[2] = xps[1];              yps[2] = YtoSVG(yt) + border;
@@ -306,59 +382,13 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[0];              yps[5] = yps[4];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   ixd0 = xps[0];
-   iyd0 = yps[0];
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
+   PrintFast(9,"<path d=\"");
+   PrintPath(kFALSE, 7, xps, yps);
+   PrintFast(7,"\" fill=");
 
-   idx = 0;
-   idy = 0;
-   for (i=1; i<7; i++) {
-      ixdi = xps[i];
-      iydi = yps[i];
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-   PrintFast(8,"z\" fill=");
-   if (mode == -1) {
-      SetColorAlpha(dark);
-   } else {
-      SetColorAlpha(light);
-   }
+   SetColorAlpha(mode == -1 ? dark : light);
+
    if (fgLineJoin)
       PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
@@ -374,59 +404,11 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[4];              yps[5] = yps[0];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   ixd0 = xps[0];
-   iyd0 = yps[0];
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
-
-   idx = 0;
-   idy = 0;
-   for (i=1;i<7;i++) {
-      ixdi = xps[i];
-      iydi = yps[i];
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-   PrintFast(8,"z\" fill=");
-   if (mode == -1) {
-      SetColorAlpha(light);
-   } else {
-      SetColorAlpha(dark);
-   }
+   PrintFast(9,"<path d=\"");
+   PrintPath(kFALSE, 7, xps, yps);
+   PrintFast(7,"\" fill=");
+   SetColorAlpha(mode == -1 ? light : dark);
    if (fgLineJoin)
       PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
@@ -444,65 +426,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
 ///  - If NN>0 the line is clipped as a line.
 ///  - If NN<0 the line is clipped as a fill area.
 
-void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
+void TSVG::DrawPolyLine(Int_t, TPoints *)
 {
-   Int_t  n, idx, idy;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-
-   if (nn > 0) {
-      n = nn;
-   } else {
-      n = -nn;
-   }
-
-   ixd0 = XtoSVG(xy[0].GetX());
-   iyd0 = YtoSVG(xy[0].GetY());
-   if( n <= 1) return;
-
-   PrintFast(2," m");
-   idx = 0;
-   idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = XtoSVG(xy[i].GetX());
-      iydi = YtoSVG(xy[i].GetY());
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-
-   if (nn > 0 ) {
-   } else {
-   }
+   Warning("DrawPolyLine", "not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -515,480 +441,16 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
 ///  --If NN>0 the line is clipped as a line.
 ///  - If NN<0 the line is clipped as a fill area.
 
-void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
+void TSVG::DrawPolyLineNDC(Int_t, TPoints *)
 {
-   Int_t  n, idx, idy;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-
-   if (nn > 0) {
-      n = nn;
-   } else {
-      n = -nn;
-   }
-
-   ixd0 = UtoSVG(xy[0].GetX());
-   iyd0 = VtoSVG(xy[0].GetY());
-   if( n <= 1) return;
-
-   idx = 0;
-   idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = UtoSVG(xy[i].GetX());
-      iydi = VtoSVG(xy[i].GetY());
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-
-   if (nn > 0 ) {
-      if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
-   } else {
-   }
+   Warning("DrawPolyLineNDC", "not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint PolyMarker
+/// Implementation of polymarker printing
 
-void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
-{
-   fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-
-   if (ms == 4)
-      ms = 24;
-   else if (ms >= 6 && ms <= 8)
-      ms = 20;
-   else if (ms >= 9 && ms <= 19)
-      ms = 1;
-
-   // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
-   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
-   if (fMarkerStyle == 6) msize = 0.02;
-   if (fMarkerStyle == 7) msize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = msize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = this->UtoSVG(s2x) - this->UtoSVG(0);
-
-   Double_t m  = msize;
-   Double_t m2 = m/2.;
-   Double_t m3 = m/3.;
-   Double_t m6 = m/6.;
-   Double_t m8 = m/8.;
-   Double_t m4 = m/4.;
-   Double_t m0 = m/10.;
-
-   // Draw the marker according to the type
-   PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor));
-      PrintStr(">");
-   } else {
-      PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor));
-      PrintStr(" stroke-width=\"");
-      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
-      PrintStr("\" fill=\"none\"");
-      if (fgLineJoin)
-         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-      if (fgLineCap)
-         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
-      PrintStr(">");
-   }
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoSVG(xw[i]);
-      iy = YtoSVG(yw[i]);
-      PrintStr("@");
-      // Dot (.)
-      if (ms == 1) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-      // Plus (+)
-      } else if (ms == 2) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-      // X shape (X)
-      } else if (ms == 5) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Asterisk shape (*)
-      } else if (ms == 3 || ms == 31) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Circle
-      } else if (ms == 24 || ms == 20) {
-         PrintStr("<circle cx=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" cy=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" r=\"");
-         if (m2<=0) m2=1;
-         WriteReal(m2, kFALSE);
-         PrintStr("\" fill=\"none\"");
-         PrintStr("/>");
-      // Square
-      } else if (ms == 25 || ms == 21) {
-         PrintStr("<rect x=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" width=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\" height=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\" fill=\"none\"");
-         PrintStr("/>");
-      // Down triangle
-      } else if (ms == 26 || ms == 22) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Up triangle
-      } else if (ms == 23 || ms == 32) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Diamond
-      } else if (ms == 27 || ms == 33) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m3); PrintStr(","); WriteReal(iy);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m3); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      // Cross
-      } else if (ms == 28 || ms == 34) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else if (ms == 29 || ms == 30) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix+0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix); PrintStr(","); WriteReal(iy-0.19098*m);
-         WriteReal(ix-0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix-0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix-0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix-0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         PrintStr("\"/>");
-      } else if (ms == 35) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 36) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 37 || ms == 39) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 38) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      } else if (ms == 40 || ms == 41) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 42 || ms == 43) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      } else if (ms == 44) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 45) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         PrintStr("\"/>");
-      } else if (ms == 46 || ms == 47) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         PrintStr("\"/>");
-      } else if (ms == 48) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*1.01);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         WriteReal(ix+m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4*0.99);
-         WriteReal(ix-m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         PrintStr("\"/>");
-      } else if (ms == 49) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*1.01);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*0.99);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-      }
-   }
-   PrintStr("@");
-   PrintStr("</g>");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint PolyMarker
-
-void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
+template<class T>
+void TSVG::PrintPolyMarker(Int_t n, T *xw, T* yw)
 {
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
@@ -1025,11 +487,11 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
       PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kTRUE, kFALSE);
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kFALSE, kTRUE);
       PrintStr(" stroke-width=\"");
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
@@ -1039,10 +501,9 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoSVG(xw[i]);
-      iy = YtoSVG(yw[i]);
+   for (Int_t i = 0; i < n; i++) {
+      Double_t ix = XtoSVG(xw[i]);
+      Double_t iy = YtoSVG(yw[i]);
       PrintStr("@");
       // Dot (.)
       if (ms == 1) {
@@ -1393,6 +854,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint PolyMarker
+
+void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
+{
+   PrintPolyMarker<Float_t>(n, xw, yw);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint PolyMarker
+
+void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
+{
+   PrintPolyMarker<Double_t>(n, xw, yw);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This function defines a path with xw and yw and draw it according the
 /// value of nn:
 ///
@@ -1401,12 +879,11 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
 void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
-   Int_t  n, fais, fasi;
-   Double_t ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
-   fais = fasi = 0;
+   Int_t n, fais = 0, fasi = 0;
 
    if (nn > 0) {
-      if (fLineWidth<=0) return;
+      if (fLineWidth <= 0)
+         return;
       n = nn;
    } else {
       n = -nn;
@@ -1421,51 +898,19 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
 
-   if( n <= 1) {
+   if(n <= 1) {
       Error("DrawPS", "Two points are needed");
       return;
    }
 
-   ixd0 = XtoSVG(xw[0]);
-   iyd0 = YtoSVG(yw[0]);
-
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
+   PrintFast(9,"<path d=\"");
 
-   idx = idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = XtoSVG(xw[i]);
-      iydi = YtoSVG(yw[i]);
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-      } else if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0;}
-         if( !idx ) { idx = ix;}
-         else if( TMath::Sign(ix,idx) == ix )       idx += ix;
-         else { MovePS(idx,0);  idx  = ix;}
-      } else if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0;}
-         if( !idy) { idy = iy;}
-         else if( TMath::Sign(iy,idy) == iy)         idy += iy;
-         else { MovePS(0,idy);    idy  = iy;}
-      }
-   }
-   if (idx) MovePS(idx,0);
-   if (idy) MovePS(0,idy);
+   PrintPath(kTRUE, n, xw, yw, nn < 0);
 
-   if (nn > 0 ) {
-      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
+   if (nn > 0) {
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColorAlpha(fLineColor);
+      SetColorAlpha(fLineColor, kFALSE, kTRUE);
       if(fLineWidth > 1.) {
          PrintFast(15," stroke-width=\"");
          WriteReal(fLineWidth, kFALSE);
@@ -1485,10 +930,10 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          PrintFast(1,"\"");
       }
    } else {
-      PrintFast(8,"z\" fill=");
+      PrintFast(7,"\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
-         SetColorAlpha(fFillColor);
+         SetColorAlpha(fFillColor, kFALSE, kTRUE);
       } else {
          SetColorAlpha(fFillColor);
       }
@@ -1498,6 +943,55 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    if (fgLineCap)
       PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Begin the Cell Array painting
+
+void TSVG::CellArrayBegin(Int_t width, Int_t height, Double_t x1, Double_t x2, Double_t y1, Double_t y2)
+{
+   Double_t svgx1 = XtoSVG(x1);
+   Double_t svgx2 = XtoSVG(x1 + (x2 - x1) * width);
+   Double_t svgy1 = YtoSVG(y1);
+   Double_t svgy2 = YtoSVG(y1 - (y2 - y1) * height);
+
+   PrintStr("@<g transform=\"translate(");
+   WriteReal(svgx1, kFALSE);
+   WriteReal(svgy1, kTRUE);
+   PrintStr(") scale(");
+   WriteReal((svgx2 - svgx1) / width, kFALSE);
+   WriteReal((svgy2 - svgy1) / height, kTRUE);
+   PrintStr(")\">@");
+   PrintStr(TString::Format("<image width=\"%d\" height=\"%d\" href=\"data:image/png;base64,", width, height));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the Cell Array as single pixel
+
+void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
+{
+   Warning("CellArrayFill", "not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the Cell Array as png image
+/// Disabled in compact mode to avoid creation of large SVG files
+
+void TSVG::CellArrayPng(char *buffer, int size)
+{
+   if (!fCompact) {
+      TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
+      PrintFast(base64.Length(), base64.Data());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// End the Cell Array painting
+
+void TSVG::CellArrayEnd()
+{
+   PrintStr("\"></image>@");
+   PrintStr("</g>@");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1512,6 +1006,9 @@ void TSVG::Initialize()
    PrintStr(GetName());
    PrintStr("@");
    PrintStr("</title>@");
+
+   if (fCompact)
+      return;
 
    // Description
    PrintStr("<desc>@");
@@ -1532,6 +1029,29 @@ void TSVG::Initialize()
    PrintStr("<defs>@");
    PrintStr("</defs>@");
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write float value into output stream
+/// In compact form try to store only first 2-3 significant digits
+
+void TSVG::WriteReal(Float_t r, Bool_t space)
+{
+   if (fCompact) {
+      auto a = std::abs(r);
+      if (a > 10)
+         TVirtualPS::WriteInteger(std::lround(r), space);
+      else if (a < 0.005)
+         TVirtualPS::WriteReal(r, space);
+      else {
+         char str[15];
+         snprintf(str, 15, (a > 1) ? "%3.1f" : "%5.3f", r);
+         if(space)
+            PrintFast(1," ");
+         PrintStr(str);
+      }
+   } else
+      TVirtualPS::WriteReal(r, space);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1696,14 +1216,18 @@ void TSVG::SetMarkerColor( Color_t cindex )
 ////////////////////////////////////////////////////////////////////////////////
 /// Set RGBa color with its color index
 
-void TSVG::SetColorAlpha(Int_t color)
+void TSVG::SetColorAlpha(Int_t color, Bool_t fill, Bool_t stroke)
 {
-   if (color < 0) color = 0;
+   if (color < 0)
+      color = 0;
    TColor *col = gROOT->GetColor(color);
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
-      if (a<1.) PrintStr(TString::Format(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+      if ((a < 1.) && fill)
+         PrintStr(TString::Format(" fill-opacity=\"%3.2f\"",a));
+      if ((a < 1.) && stroke)
+         PrintStr(TString::Format(" stroke-opacity=\"%3.2f\"",a));
    } else {
       SetColor(1., 1., 1.);
    }
@@ -1793,7 +1317,8 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t ftsize;
 
    Int_t font  = abs(fTextFont)/10;
-   if (font > 42 || font < 1) font = 1;
+   if (font > 15 || font < 1)
+      font = 1;
    if (wh < hh) {
       ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    } else {
@@ -1830,7 +1355,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintFast(18," text-anchor=\"end\"");
    }
    PrintFast(6," fill=");
-   SetColorAlpha(Int_t(fTextColor));
+   SetColorAlpha(Int_t(fTextColor), kTRUE, kFALSE);
    PrintFast(12," font-size=\"");
    WriteReal(fontsize, kFALSE);
    PrintFast(15,"\" font-family=\"");
@@ -2031,31 +1556,6 @@ Double_t TSVG::YtoSVG(Double_t y)
 {
    Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
    return  fYsizeSVG-VtoSVG(v);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Begin the Cell Array painting
-
-void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
-                          Double_t)
-{
-   Warning("TSVG::CellArrayBegin", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint the Cell Array
-
-void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
-{
-   Warning("TSVG::CellArrayFill", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// End the Cell Array painting
-
-void TSVG::CellArrayEnd()
-{
-   Warning("TSVG::CellArrayEnd", "not yet implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,9 @@
+
+Processing execRefArrayCompress.C...
+Warning in <TClass::Init>: no dictionary for class Top is available
+Warning in <TClass::Init>: no dictionary for class ObjA is available
+Events in TRefArray before compress: 10
+Events in TRefArray before compress: 10
+Events in TRefArray before compress: 5
+Events in TRefArray before compress: 5
+(int) 0

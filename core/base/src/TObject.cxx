@@ -47,6 +47,7 @@ class hierarchies (watch out for overlaps).
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 
 #include "Varargs.h"
 #include "snprintf.h"
@@ -67,7 +68,6 @@ class hierarchies (watch out for overlaps).
 Longptr_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
-ClassImp(TObject);
 
 #if defined(__clang__) || defined (__GNUC__)
 # define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
@@ -690,7 +690,7 @@ void TObject::RecursiveRemove(TObject *)
 ///   ascii file.
 ///
 /// - if "filename" contains ".cc" the object is saved in filename as C code
-///   independant from ROOT. The code is generated via SavePrimitive().
+///   independent from ROOT. The code is generated via SavePrimitive().
 ///   Specific code should be implemented in each object to handle this
 ///   option. Like in TF1::SavePrimitive().
 ///
@@ -722,7 +722,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
       return;
    }
 
-   //==============Save object as a C, ROOT independant, file===================
+   //==============Save object as a C, ROOT independent, file===================
    if (filename && strstr(filename,".cc")) {
       TString fname;
       if (filename && strlen(filename) > 0) {
@@ -784,17 +784,32 @@ void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char
 /// Save array in the output stream "out" as vector.
 /// Create unique variable name based on prefix value
 /// Returns name of vector which can be used in constructor or in other places of C++ code
+/// If flag === kTRUE, just add empty line
+/// If flag === 111, check if array is empty and return nullptr or <vectorname>.data()
 
-TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line)
+TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Int_t flag)
 {
    thread_local int vectid = 0;
 
-   TString vectame = TString::Format("%s_vect%d", prefix, vectid++);
-
-   if (empty_line)
+   if (flag == (Int_t) kTRUE)
       out << "   \n";
+   else if (flag == 111) {
+      // check if array empty or contains only zeros
+      Bool_t empty = kTRUE;
+      if (arr)
+         for(Int_t n = 0; n < len; ++n)
+            if (arr[n]) {
+               empty = kFALSE;
+               break;
+            }
 
-   out << "   std::vector<Double_t> " << vectame;
+      if (empty)
+         return "nullptr";
+   }
+
+   TString vectname = TString::Format("%s_vect%d", prefix, vectid++);
+
+   out << "   std::vector<Double_t> " << vectname;
    if (len > 0) {
       const auto old_precision{out.precision()};
       constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
@@ -812,7 +827,9 @@ TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_
       out << std::setprecision(old_precision);
    }
    out << ";\n";
-   return vectame;
+   if (flag == 111)
+      vectname.Append(".data()"); // just to be used as args
+   return vectname;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1107,8 +1124,17 @@ void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use this method to implement an "abstract" method that you don't
-/// want to leave purely abstract.
+/// Call this function within a function that you don't want to define as
+/// purely virtual, in order not to force all users deriving from that class to
+/// implement that maybe (on their side) unused function; but at the same time,
+/// emit a run-time warning if they try to call it, telling that it is not
+/// implemented in the derived class: action must thus be taken on the user side
+/// to override it. In other word, this method acts as a "runtime purely virtual"
+/// warning instead of a "compiler purely virtual" error.
+/// \warning This interface is a legacy function that is no longer recommended
+/// to be used by new development code.
+/// \note The name "AbstractMethod" does not imply that it's an abstract method
+/// in the strict C++ sense.
 
 void TObject::AbstractMethod(const char *method) const
 {
@@ -1192,7 +1218,6 @@ void TObject::operator delete[](void *ptr)
       fgDtorOnly = 0;
 }
 
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator delete for sized deallocation.
 
@@ -1214,7 +1239,6 @@ void TObject::operator delete[](void *ptr, size_t size)
    else
       fgDtorOnly = 0;
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value overload

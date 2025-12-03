@@ -1,0 +1,9 @@
+
+<lcgdict>
+<class name="TileBadChanTool" />
+<class name="ITileBadChanTool" />
+<class name="TileCablingService" />
+<class name="TileCablingSvc" />
+<class name="TileDCSSvc" />
+</lcgdict>
+

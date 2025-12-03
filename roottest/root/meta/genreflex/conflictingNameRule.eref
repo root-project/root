@@ -1,0 +1,33 @@
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 8): Yes
+		Attributes: 
+		pattern = LongCla*
+		No field sel rules
+		No method sel rules
+Conflicting rule already stored:
+		Selected (line 9): Yes
+		Attributes: 
+		pattern = LongCla*
+		Field 0:
+		Selected: Yes
+			name = fMember
+			transient = true
+		No method sel rules
+Warning in <SelectionRules::CheckDuplicates>: Duplicated rule found.
+Rule:
+		Selected (line 2): Yes
+		Attributes: 
+		name = A
+		No field sel rules
+		No method sel rules
+Conflicting rule already stored:
+		Selected (line 3): Yes
+		Attributes: 
+		name = A
+		Field 0:
+		Selected: Yes
+			name = fMember
+			transient = true
+		No method sel rules
+Error in <SelectionRules::CheckDuplicates>: Duplicates in rules were found.

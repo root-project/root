@@ -24,7 +24,7 @@ public:
       : RooPoisson{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, noRounding} {}
   RooPoisson(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, bool noRounding=false);
   RooPoisson(const RooPoisson& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooPoisson(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;

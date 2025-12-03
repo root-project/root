@@ -20,8 +20,10 @@
 // #include "Math/StaticCheck.h"
 // #endif
 
+#include <algorithm>
 #include <memory>
 #include <functional>
+#include <type_traits>
 #include <vector>
 
 namespace ROOT {

@@ -25,10 +25,9 @@ or TAR archive.
 #include "TObjString.h"
 #include "TError.h"
 #include "TUrl.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
-ClassImp(TArchiveFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify the archive name and member name.
@@ -203,7 +202,6 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 }
 
 
-ClassImp(TArchiveMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

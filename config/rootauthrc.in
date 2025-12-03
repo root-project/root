@@ -132,20 +132,4 @@
 #           The fourth directive includes the content of the system 
 #           defaults.
 #
-#    - Finally, also supported are lines of the form:
-#
-#         proofserv <host1>[:<user1>][:<method1>[:...[:<methodn>]]] \
-#                   <host2>[:<user2>][:<method1>[:...[:<methodn>]]] \
-#                   ... <hostn>[:<usern>][:<method1>[:...[:<methodn>]]]
-#
-#      which are active only for PROOF sessions and specify the list of hosts 
-#      for which the authentication info should be transmitted to the slaves
-#      of the PROOF cluster; these directives are useful, for example, in
-#      the case of data servers external to the PROOF cluster that you may
-#      want to access via a given 'user' and a given authentication 'method'; 
-#      'user' and 'method' are not mandatory; for each <host> (an user, method)
-#      specified with 'proofserv' all the information that can be collected 
-#      from the rest of the .rootauthrc file is sent to slaves via the master
-#            
-#
 default list usrpwd

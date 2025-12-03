@@ -1,0 +1,3 @@
+[ libns_dictrflx.so ]
+# List of selected namespaces
+namespace the_ns

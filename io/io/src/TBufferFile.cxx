@@ -17,7 +17,7 @@
 The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 */
 
-#include <string.h>
+#include <cstring>
 #include <typeinfo>
 #include <string>
 #include <limits>
@@ -56,7 +56,6 @@ const Version_t kMaxVersion     = 0x3FFF;      // highest possible version numbe
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
 
-ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
@@ -85,8 +84,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
-            :TBufferIO(mode,bufsiz),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
+            :TBufferIO(mode,bufsize),
              fInfo(nullptr), fInfoStack()
 {
 }
@@ -102,8 +101,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
+   TBufferIO(mode,bufsize,buf,adopt,reallocfunc),
    fInfo(nullptr), fInfoStack()
 {
 }
@@ -1697,7 +1696,7 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
              ) {
-            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
+            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and destructor
          }
       }
 
@@ -2661,7 +2660,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 
    if (!actualObjectStart) {
 
-      // save kNullTag to represent NULL pointer
+      // save kNullTag to represent nullptr pointer
       *this << (UInt_t) kNullTag;
 
    } else {
@@ -3339,7 +3338,7 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 
    if (max == 0) return 0;
 
-   Int_t n = TMath::Min(max, (Int_t)(fBufMax - fBufCur));
+   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;

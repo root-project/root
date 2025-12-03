@@ -45,7 +45,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this)
+  _coefList("coefList","List of coefficients",this)
 {
   _coefList.addTyped<RooAbsReal>(coefList);
 }
@@ -55,7 +55,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
 RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
   RooAbsPdf(other, name),
   _x("x", this, other._x),
-  _coefList("coefList",this,other._coefList),
+  _coefList(this,other._coefList),
   _refRangeName(other._refRangeName)
 {
 }

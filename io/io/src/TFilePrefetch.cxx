@@ -30,7 +30,6 @@ static const int kMAX_READ_SIZE    = 2;   //maximum size of the read list of blo
 
 inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)); }
 
-ClassImp(TFilePrefetch);
 
 /**
 \class TFilePrefetch
@@ -402,9 +401,12 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 
    Int_t value = 0;
 
-   if (!gSystem->OpenDirectory(fullPath))
+   void *fdir = gSystem->OpenDirectory(fullPath);
+   if (!fdir)
       gSystem->mkdir(fullPath);
-
+   else {
+      gSystem->FreeDirectory(fdir);
+   }
    //dir is SHA1 value modulo 16; filename is the value of the SHA1(offset+len)
    TMD5* md = new TMD5();
 
@@ -495,8 +497,12 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    dirName.Form("%i", value);
    fullPath += ("/" + dirName);
 
-   if (!gSystem->OpenDirectory(fullPath))
+   void *fdir = gSystem->OpenDirectory(fullPath);
+   if (!fdir)
       gSystem->mkdir(fullPath);
+   else {
+      gSystem->FreeDirectory(fdir);
+   }
 
    TFile* file = 0;
    fullPath += ("/" + fileName);
@@ -527,8 +533,11 @@ Bool_t TFilePrefetch::SetCache(const char* path)
 {
   fPathCache = path;
 
-  if (!gSystem->OpenDirectory(path)){
+  void *fdir = gSystem->OpenDirectory(path);
+  if (!fdir) {
     return (!gSystem->mkdir(path) ? true : false);
+  } else {
+    gSystem->FreeDirectory(fdir);
   }
 
   // Directory already exists

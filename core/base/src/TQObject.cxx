@@ -78,10 +78,6 @@ void *gTQSender; // A pointer to the object that sent the last signal.
 Bool_t TQObject::fgAllSignalsBlocked = kFALSE;
 
 
-ClassImpQ(TQObject)
-ClassImpQ(TQObjSender)
-ClassImpQ(TQClass)
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes "const" words and blanks from full (with prototype)
 /// method name and resolve any typedefs in the method signature.
@@ -314,9 +310,9 @@ private:
 public:
    TQConnectionList(const char *name, Int_t nsigargs) : TList()
       { fName = name; fSignalArgs = nsigargs; }
-   virtual ~TQConnectionList();
+   ~TQConnectionList() override;
 
-   Bool_t Disconnect(void *receiver=nullptr, const char *slot_name=nullptr);
+   Bool_t Disconnect(void *receiver = nullptr, const char *slot_name = nullptr);
    Int_t  GetNargs() const { return fSignalArgs; }
    void   ls(Option_t *option = "") const override;
 };

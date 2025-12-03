@@ -156,30 +156,10 @@ set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
 set(gl2pslib ${GL2PS_LIBRARY})
 set(gl2psincdir ${GL2PS_INCLUDE_DIR})
 
-set(buildmysql ${value${mysql}})
-set(mysqllibdir ${MYSQL_LIBRARY_DIR})
-set(mysqllib ${MYSQL_LIBRARY})
-set(mysqlincdir ${MYSQL_INCLUDE_DIR})
-
-set(buildoracle ${value${oracle}})
-set(oraclelibdir ${ORACLE_LIBRARY_DIR})
-set(oraclelib ${ORACLE_LIBRARY})
-set(oracleincdir ${ORACLE_INCLUDE_DIR})
-
-set(buildpgsql ${value${pgsql}})
-set(pgsqllibdir ${PGSQL_LIBRARY_DIR})
-set(pgsqllib ${PGSQL_LIBRARY})
-set(pgsqlincdir ${PGSQL_INCLUDE_DIR})
-
 set(buildsqlite ${value${sqlite}})
 set(sqlitelibdir ${SQLITE_LIBRARY_DIR})
 set(sqlitelib ${SQLITE_LIBRARY})
 set(sqliteincdir ${SQLITE_INCLUDE_DIR})
-
-set(buildodbc ${value${odbc}})
-set(odbclibdir ${OCDB_LIBRARY_DIR})
-set(odbclib ${OCDB_LIBRARY})
-set(odbcincdir ${OCDB_INCLUDE_DIR})
 
 set(builddavix ${value${davix}})
 set(davixlibdir ${DAVIX_LIBRARY_DIR})
@@ -307,6 +287,7 @@ find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
 find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser google-chrome-stable Google\ Chrome
+             HINTS /snap/bin
              PATH_SUFFIXES "Google/Chrome/Application")
 if(CHROME_EXECUTABLE)
   if(WIN32)
@@ -333,6 +314,7 @@ if(WIN32)
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
+             HINTS /snap/bin
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
   message(STATUS "Found Firefox browser executable ${FIREFOX_EXECUTABLE}")
@@ -410,11 +392,6 @@ if(dev)
 else()
   set(use_less_includes undef)
 endif()
-if((tbb OR builtin_tbb) AND NOT MSVC)
-  set(hastbb define)
-else()
-  set(hastbb undef)
-endif()
 if(root7)
   set(hasroot7 define)
 else()
@@ -429,7 +406,7 @@ set(use${compression_default} define)
 
 # cloudflare zlib is available only on x86 and aarch64 platforms with Linux
 # for other platforms we have available builtin zlib 1.2.8
-if(ZLIB_CF)
+if(builtin_zlib AND ZLIB_CF)
   set(usecloudflarezlib define)
 else()
   set(usecloudflarezlib undef)
@@ -494,6 +471,12 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
+if (geom)
+  set(hasgeom define)
+else()
+  set(hasgeom undef)
+endif()
+
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
@@ -513,30 +496,37 @@ else()
    set(has_found_attribute_noinline undef)
 endif()
 
-# We could just check `#ifdef __cpp_lib_hardware_interference_size`, but on at least Mac 11
-# libc++ defines that macro but is missing the actual feature
-# (see https://github.com/llvm/llvm-project/commit/174322c2737d699e199db4762aaf4217305ec465).
-# So we need to "manually" check instead.
-# `#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE` could be substituted by `#ifdef __cpp_lib_hardware_interference_size`
-# when Mac 11's life has ended (assuming the libc++ fix makes it in the next MacOS version).
-CHECK_CXX_SOURCE_COMPILES("
+# The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
+# Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
+# even be different between compiler and interpreter, or when ROOT is compiled on a different machine.
+if(CMAKE_VERSION VERSION_GREATER 3.24) # For older CMake, we simply fall back to 64
+set(test_interference_size "
 #include <new>
-using Check_t = char[std::hardware_destructive_interference_size];
-" found_hardware_interference_size)
-if(found_hardware_interference_size)
-   set(hashardwareinterferencesize define)
-else()
-   set(hashardwareinterferencesize undef)
+#include <iostream>
+int main() {
+  std::cout << std::hardware_destructive_interference_size << std::endl;
+  return 0;
+}
+")
+try_run(HARDWARE_INTERF_RUN HARDWARE_INTERF_COMPILE
+  SOURCE_FROM_VAR test_interference_size.cxx test_interference_size
+  RUN_OUTPUT_VARIABLE hardwareinterferencesize)
+endif()
+if(NOT HARDWARE_INTERF_COMPILE OR NOT HARDWARE_INTERF_RUN EQUAL 0)
+  message(STATUS "Could not detect hardware_interference_size in C++. Falling back to 64.")
+  set(hardwareinterferencesize 64)
 endif()
 
 if(webgui)
    set(root_canvas_class "TWebCanvas")
    set(root_treeviewer_class "RTreeViewer")
    set(root_geompainter_type "web")
+   set(root_jupyter_jsroot "on")
 else()
    set(root_canvas_class "TRootCanvas")
    set(root_treeviewer_class "TTreeViewer")
    set(root_geompainter_type "root")
+   set(root_jupyter_jsroot "off")
 endif()
 
 if(root7 AND webgui)
@@ -648,9 +638,9 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
 
 #---To be used from the install tree--------------------------------------------------------------------------
 # Need to calculate actual relative paths from CMAKEDIR to other locations
-file(RELATIVE_PATH ROOT_CMAKE_TO_INCLUDE_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
-file(RELATIVE_PATH ROOT_CMAKE_TO_LIB_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
-file(RELATIVE_PATH ROOT_CMAKE_TO_BIN_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_BINDIR}")
+cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_INCLUDEDIR BASE_DIRECTORY "${CMAKE_INSTALL_FULL_CMAKEDIR}" OUTPUT_VARIABLE ROOT_CMAKE_TO_INCLUDE_DIR)
+cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${CMAKE_INSTALL_FULL_CMAKEDIR}" OUTPUT_VARIABLE ROOT_CMAKE_TO_LIB_DIR)
+cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_BINDIR BASE_DIRECTORY "${CMAKE_INSTALL_FULL_CMAKEDIR}" OUTPUT_VARIABLE ROOT_CMAKE_TO_BIN_DIR)
 
 # '_' prefixed variables are used to construct the paths,
 # while the normal variants evaluate to full paths at runtime
@@ -727,11 +717,16 @@ else()
     string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
     set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
   endif()
+  if(ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES)
+    # Only set the compiledata parameter if the CMake variable is 'true'
+    set(local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES ${ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES})
+  endif()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
+        "${local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES}")
 endif()
 
 #---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line
@@ -739,19 +734,22 @@ set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
+if(thisroot_scripts)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
+  list(APPEND list_of_thisroot_scripts thisroot.sh thisroot.csh thisroot.fish setxrd.csh)
+endif()
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(WIN32)
-  set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
-  set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
-  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
-  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+  if(thisroot_scripts)
+    configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+    list(APPEND list_of_thisroot_scripts thisroot.bat thisroot.ps1)
+  endif()
   configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root-manifest.xml.in ${CMAKE_BINARY_DIR}/etc/root-manifest.xml @ONLY)
   install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
@@ -776,21 +774,22 @@ if(MSVC)
   DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
-              ${thisrootbat}
-              ${thisrootps1}
-              PERMISSIONS OWNER_WRITE OWNER_READ
-                          GROUP_READ
-                          WORLD_READ
-              DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(DEFINED list_of_thisroot_scripts)
+  # Prepend runtime output directory to list of setup scripts
+  set(final_list_of_thisroot_scripts "")
+  foreach(script IN LISTS list_of_thisroot_scripts)
+      list(APPEND final_list_of_thisroot_scripts "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${script}")
+  endforeach()
+
+  install(FILES ${final_list_of_thisroot_scripts}
+                PERMISSIONS OWNER_WRITE OWNER_READ
+                            GROUP_READ
+                            WORLD_READ
+                DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                           GROUP_EXECUTE GROUP_READ
@@ -806,13 +805,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-if(NOT gnuinstall)
-  install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
-                ${CMAKE_BINARY_DIR}/config/Makefile.config
-                DESTINATION config)
-endif()
-
 
 endfunction()
 RootConfigure()

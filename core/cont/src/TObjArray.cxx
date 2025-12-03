@@ -32,7 +32,7 @@ You can either make a shallow copy of the array:
      otherarr = new TObjArray(*myarr);
     *otherarr = *myarr;
 ~~~
-in which case ownership (if any) is not transfered but the other
+in which case ownership (if any) is not transferred but the other
 array points to the same object as the original array.  Note that
 if the content of either array is deleted the other array is not
 notified in any way (i.e. still points to the now deleted objects).
@@ -52,9 +52,8 @@ set to the owner of its own content.
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualMutex.h"
-#include <stdlib.h>
+#include <cstdlib>
 
-ClassImp(TObjArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object array. Using s one can set the array size (default is
@@ -134,7 +133,7 @@ TObject *&TObjArray::operator[](Int_t i)
 
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) {
-      fLast = TMath::Max(j, GetAbsLast());
+      fLast = std::max(j, GetAbsLast());
       Changed();
       return fCont[j];
    }
@@ -241,9 +240,9 @@ void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
       return;
    }
    if (idx-fLowerBound >= fSize)
-      Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
+      Expand(std::max(idx-fLowerBound+1, GrowBy(fSize)));
    fCont[idx-fLowerBound] = obj;
-   fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+   fLast = std::max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
 
@@ -258,7 +257,7 @@ void TObjArray::AddAt(TObject *obj, Int_t idx)
    if (!BoundsOk("AddAt", idx)) return;
 
    fCont[idx-fLowerBound] = obj;
-   fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+   fLast = std::max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
 
@@ -275,7 +274,7 @@ Int_t  TObjArray::AddAtFree(TObject *obj)
       for (i = 0; i < fSize; i++)
          if (!fCont[i]) {         // Add object at position i
             fCont[i] = obj;
-            fLast = TMath::Max(i, GetAbsLast());
+            fLast = std::max(i, GetAbsLast());
             Changed();
             return i+fLowerBound;
          }
@@ -828,7 +827,7 @@ void TObjArray::Sort(Int_t upto)
          }
       }
 
-   QSort(fCont, 0, TMath::Min(fSize, upto-fLowerBound));
+   QSort(fCont, 0, std::min(fSize, upto-fLowerBound));
 
    fLast   = -2;
    fSorted = kTRUE;
@@ -853,7 +852,7 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
    }
 
    base = 0;
-   last = TMath::Min(fSize, upto-fLowerBound) - 1;
+   last = std::min(fSize, upto-fLowerBound) - 1;
 
    while (last >= base) {
       position = (base+last) / 2;
@@ -872,7 +871,6 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
 Iterator of object array.
 */
 
-ClassImp(TObjArrayIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create array iterator. By default the iteration direction

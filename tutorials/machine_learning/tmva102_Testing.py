@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_tmva
+## \ingroup tutorial_ml
 ## \notebook -nodraw
 ## This tutorial illustrates how you can test a trained BDT model using the fast
 ## tree inference engine offered by TMVA and external tools such as scikit-learn.
@@ -22,9 +22,6 @@ x, y_true, w = load_data("test_signal.root", "test_background.root")
 
 # Load trained model
 File = "tmva101.root"
-if (ROOT.gSystem.AccessPathName(File)) :
-    ROOT.Info("tmva102_Testing.py", File+"does not exist")
-    exit()
 
 bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
 
@@ -33,6 +30,7 @@ y_pred = bdt.Compute(x)
 
 # Compute ROC using sklearn
 from sklearn.metrics import roc_curve, auc
+
 false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_pred, sample_weight=w)
 score = auc(false_positive_rate, true_positive_rate)
 

@@ -8,8 +8,8 @@
 ///                     with Deep Learning.” Nature Communications 5 (July 2, 2014).
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \author Lorenzo Moneta
 

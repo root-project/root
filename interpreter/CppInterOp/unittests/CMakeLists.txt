@@ -3,17 +3,27 @@ set(CTEST_BUILD_NAME
 enable_testing()
 
 # LLVM builds (not installed llvm) provides gtest.
-if (NOT TARGET gtest)
-  include(GoogleTest)
+if (NOT TARGET GTest::gtest AND NOT TARGET gtest)
+  find_package(GTest)
+  if (NOT GTest_FOUND)
+    message(WARNING "CppInterOp could not find GTest. Provide the package or set CPPINTEROP_ENABLE_TESTING=OFF to disable this warning.")
+    return()
+  endif()
 endif()
 
 if(EMSCRIPTEN)
-  set(gtest_libs gtest gmock)
+  if (TARGET GTest::gtest)
+    # Target names in CMake >= v3.23
+    set(gtest_libs GTest::gtest GTest::gmock)
+  else()
+    set(gtest_libs gtest gmock)
+  endif()
 else()
-  set(gtest_libs gtest gtest_main)
-  # Clang prior than clang13 (I think) merges both gmock into gtest.
-  if (TARGET gmock)
-    list(APPEND gtest_libs gmock gmock_main)
+  if (TARGET GTest::gtest)
+    # Target names in CMake >= v3.23
+    set(gtest_libs GTest::gtest GTest::gmock GTest::gtest_main)
+  else()
+    set(gtest_libs gtest gtest_main gmock)
   endif()
   set(link_pthreads_lib pthread)
 endif()
@@ -34,7 +44,13 @@ if(WIN32)
 else()
   target_link_libraries(${name} PRIVATE ${ARG_LIBRARIES} ${gtest_libs} ${link_pthreads_lib})
 endif()
+if(EMSCRIPTEN)
+  # Without this cmake will try and get node to run the html file.
+  # This guarantees that it runs the js file, and uses emsdks node.
+  add_test(NAME cppinterop-${name} COMMAND $ENV{EMSDK_NODE} ${name}.js)
+else()
   add_test(NAME cppinterop-${name} COMMAND ${name})
+endif()
   set_tests_properties(cppinterop-${name} PROPERTIES
                        TIMEOUT "${TIMEOUT_VALUE}"
                        ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc"

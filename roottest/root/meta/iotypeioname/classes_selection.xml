@@ -1,0 +1,9 @@
+<lcgdict>
+   <class name="Container" />
+   <class name="SuperCluster" >
+      <field name="energy" ioname="energy2" iotype="Double32_t"/>      
+   </class>
+   <class name="Particle">
+      <field name="vertex" iotype="ROOT::Math::Cartesian3D<Double32_t>" />
+   </class>
+</lcgdict>

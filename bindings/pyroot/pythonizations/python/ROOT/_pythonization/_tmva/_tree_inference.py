@@ -8,10 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from .. import pythonization
-import cppyy
-
 import json
+
+import cppyy
 
 
 def get_basescore(model):
@@ -20,12 +19,23 @@ def get_basescore(model):
     Copy-pasted from XGBoost unit test code.
 
     See also:
-      * https://github.com/dmlc/xgboost/blob/a99bb38bd2762e35e6a1673a0c11e09eddd8e723/python-package/xgboost/testing/updater.py#L13
+      * https://github.com/dmlc/xgboost/blob/2463938/python-package/xgboost/testing/updater.py#L43
       * https://github.com/dmlc/xgboost/issues/9347
       * https://discuss.xgboost.ai/t/how-to-get-base-score-from-trained-booster/3192
     """
-    base_score = float(json.loads(model.get_booster().save_config())["learner"]["learner_model_param"]["base_score"])
-    return base_score
+    jintercept = json.loads(model.get_booster().save_config())["learner"]["learner_model_param"]["base_score"]
+    out = json.loads(jintercept)
+    if isinstance(out, float):
+        return out
+    # For XGBoost 3.1.0 and after, the value is itself a list.
+    # However, we don't support multiple base scores yet.
+    if len(out) > 1:
+        raise ValueError(
+            f"Model contains multiple base scores ({out}). "
+            "This typically occurs with XGBoost ≥ 3.1.0, which supports multi-target base scores. "
+            "This function only supports a single base score. "
+        )
+    return out[0]
 
 
 def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
@@ -49,7 +59,7 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
         "reg:squarederror": "identity",
     }
     model_objective = xgb_model.objective
-    if not model_objective in objective_map:
+    if model_objective not in objective_map:
         raise Exception(
             'XGBoost model has unsupported objective "{}". Supported objectives are {}.'.format(
                 model_objective, objective_map.keys()
@@ -63,13 +73,13 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     # Dump XGB model as json file
     xgb_model.get_booster().dump_model(output_path, dump_format="json")
 
-    with open(output_path, "r") as json_file:
-        forest = json.load(json_file)
-
     # Dump XGB model as txt file
     xgb_model.get_booster().dump_model(output_path)
 
-    features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    if xgb_model.get_booster().feature_names is None:
+        features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+    else:
+        features = cppyy.gbl.std.vector["std::string"](xgb_model.get_booster().feature_names)
     bs = get_basescore(xgb_model)
     logistic = objective == "logistic"
     bdt = cppyy.gbl.TMVA.Experimental.RBDT.LoadText(

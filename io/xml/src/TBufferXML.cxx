@@ -48,9 +48,9 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "RZip.h"
 #include "snprintf.h"
 
+#include <limits>
 #include <memory>
 
-ClassImp(TBufferXML);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize/deserialize data to/from xml.
@@ -1998,7 +1998,7 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
              ) {
-            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
+            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and destructor
          }
       }
 

@@ -1,0 +1,6 @@
+
+Processing runscopedEnums.C...
+OK: enumerator cond::IOVSequence::ScopeTypenot found
+OK: class cond::IOVSequence should not be in the list of classes
+OK: proto class cond::IOVSequence should be in the list of proto classes as a side effect of loading
+OK: enumerator cond::IOVSequence::ScopeTypefound

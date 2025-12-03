@@ -18,14 +18,13 @@
 
 #include <TGLRnrCtx.h>
 #include <TGLSelectRecord.h>
-#include <TGLIncludes.h>
+#include "TGLIncludes.h"
 
 /** \class TPointSet3DGL
 \ingroup opengl
 Direct OpenGL renderer for TPointSet3D.
 */
 
-ClassImp(TPointSet3DGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model.

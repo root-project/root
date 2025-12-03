@@ -177,51 +177,45 @@ void ROperator_GRU<T>::Initialize(RModel& model){
          fAttrActivations = {"Sigmoid", "Tanh"};
       }
    }
-}
 
-// generate code for Session data members (e.g. internal vectors)
-template <typename T>
-std::string ROperator_GRU<T>::GenerateSessionMembersCode(std::string opName)
-{
-   opName = "op_" + opName;
-   std::stringstream out;
+   // To get unique intermediate tensor names, we add the name of the input
+   // tensor. One might also consider using the index of the operator in the
+   // RMode, but this information is not available in the current scope.
+   std::string opName = "op_gru_" + fNX;
 
    size_t num_directions = fShapeW[0];
    size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
    size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
    size_t input_size = fShapeX[2];
 
+   auto declareVector = [&](std::string const &name, std::size_t n){
+      std::string fullName = opName + "_" + name;
+      model.AddIntermediateTensor(fullName, ConvertStringToType(fType), std::vector<std::size_t>{n});
+   };
+
    if (fAttrLayout != 0) {
-      out << "std::vector<" << fType << "> fVec_" << opName << "_input = std::vector<" << fType << ">("
-          << seq_length * batch_size * input_size << ");\n";
-      out << "std::vector<" << fType << "> fVec_" << opName << "_initial_hidden_state = std::vector<" << fType << ">("
-          << num_directions * batch_size * fAttrHiddenSize << ");\n";
-      out << "std::vector<" << fType << "> fVec_" << opName << "_initial_cell_state = std::vector<" << fType << ">("
-          << num_directions * batch_size * fAttrHiddenSize << ");\n";
+      declareVector("input", seq_length * batch_size * input_size);
+      declareVector("initial_hidden_state", num_directions * batch_size * fAttrHiddenSize);
+      declareVector("initial_cell_state", num_directions * batch_size * fAttrHiddenSize);
    }
    // Set the feedforward
    size_t ff_size = seq_length * batch_size * fAttrHiddenSize;
-   out << "std::vector<" << fType << "> fVec_" << opName << "_f_update_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
-   out << "std::vector<" << fType << "> fVec_" << opName << "_f_reset_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
-   out << "std::vector<" << fType << "> fVec_" << opName << "_f_hidden_gate = std::vector<" << fType << ">(" << ff_size << ");\n";
+   declareVector("f_update_gate", ff_size);
+   declareVector("f_reset_gate", ff_size);
+   declareVector("f_hidden_gate", ff_size);
    // gate results
    size_t hs_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
-   out << "std::vector<" << fType << "> fVec_" << opName << "_update_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
-   out << "std::vector<" << fType << "> fVec_" << opName << "_reset_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
-   out << "std::vector<" << fType << "> fVec_" << opName << "_hidden_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
+   declareVector("update_gate", hs_size);
+   declareVector("reset_gate", hs_size);
+   declareVector("hidden_gate", hs_size);
 
    // feedback
-   out << "std::vector<" << fType << "> fVec_" << opName << "_feedback = std::vector<" << fType << ">("
-       << batch_size * fAttrHiddenSize << ");\n";
+   declareVector("feedback", batch_size * fAttrHiddenSize);
 
    // hiddden state
    if (fAttrLayout != 0 || fNY.empty()) {
-      out << "std::vector<" << fType << "> fVec_" << opName << "_hidden_state = std::vector<" << fType << ">(" << hs_size << ");\n";
+      declareVector("hidden_state", hs_size);
    }
-
-   out << "\n";
-
-   return out.str();
 }
 
 
@@ -236,12 +230,14 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
    size_t input_size = fShapeX[2];
    size_t num_directions = fShapeW[0];
 
+   auto getVec = [&](std::string const &name) { return "tensor_op_gru_" + fNX + "_" + name; };
+
    // set the input
    if (fAttrLayout == 0) {
-      out << SP << fType << " *" << OpName << "_input = tensor_" << fNX << ";\n";
+      out << SP << fType << " const* " << OpName << "_input = tensor_" << fNX << ";\n";
    } else {
       if (fUseSession) {
-         out << SP << fType << " * " << OpName << "_input = fVec_" << OpName << "_input.data();\n";
+         out << SP << fType << " * " << OpName << "_input = " << getVec("input") << ";\n";
       } else {
          out << SP << fType << " " << OpName << "_input[" << seq_length * batch_size * input_size << "];\n";
       }
@@ -263,8 +259,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
                 << fNInitial_h << ";\n";
       } else {
          if (fUseSession) {
-            out << SP << fType << " * " << OpName << "_initial_hidden_state = fVec_" << OpName
-                << "_initial_hidden_state.data();\n";
+            out << SP << fType << " * " << OpName << "_initial_hidden_state = " << getVec("initial_hidden_state") << ";\n";
          } else {
             out << SP << fType << " " << OpName << "_initial_hidden_state[" << num_directions * batch_size *
                 fAttrHiddenSize << "];\n";
@@ -285,9 +280,9 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
    // Set the feedforward
    size_t feedforward_size = seq_length * batch_size * fAttrHiddenSize;
    if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_f_update_gate = fVec_" << OpName << "_f_update_gate.data();\n";
-      out << SP << fType << " * " << OpName << "_f_reset_gate = fVec_" << OpName << "_f_reset_gate.data();\n";
-      out << SP << fType << " * " << OpName << "_f_hidden_gate = fVec_" << OpName << "_f_hidden_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_f_update_gate = " << getVec("f_update_gate") << ";\n";
+      out << SP << fType << " * " << OpName << "_f_reset_gate = " << getVec("f_reset_gate") << ";\n";
+      out << SP << fType << " * " << OpName << "_f_hidden_gate = " << getVec("f_hidden_gate") << ";\n";
    } else {
       out << SP << fType << " " << OpName << "_f_update_gate[" << feedforward_size << "] = {0};\n";
       out << SP << fType << " " << OpName << "_f_reset_gate[" << feedforward_size << "] = {0};\n";
@@ -296,9 +291,9 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
    // Set the gates
    size_t hidden_state_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
    if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_update_gate = fVec_" << OpName << "_update_gate.data();\n";
-      out << SP << fType << " * " << OpName << "_reset_gate = fVec_" << OpName << "_reset_gate.data();\n";
-      out << SP << fType << " * " << OpName << "_hidden_gate = fVec_" << OpName << "_hidden_gate.data();\n";
+      out << SP << fType << " * " << OpName << "_update_gate = " << getVec("update_gate") << ";\n";
+      out << SP << fType << " * " << OpName << "_reset_gate = " << getVec("reset_gate") << ";\n";
+      out << SP << fType << " * " << OpName << "_hidden_gate = " << getVec("hidden_gate") << ";\n";
    } else {
       out << SP << fType << " " << OpName << "_update_gate[" << hidden_state_size << "] = {0};\n";
       out << SP << fType << " " << OpName << "_reset_gate[" << hidden_state_size << "] = {0};\n";
@@ -309,14 +304,14 @@ auto ROperator_GRU<T>::Generate(std::string OpName)
       out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
       if (fUseSession) {
-         out << SP << fType << " * " << OpName << "_hidden_state = fVec_" << OpName << "_hidden_state.data();\n";
+         out << SP << fType << " * " << OpName << "_hidden_state = " << getVec("hidden_state") << ";\n";
       } else {
          out << SP << fType << " " << OpName << "_hidden_state[" << hidden_state_size << "] = {0};\n";
       }
    }
 
    if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_feedback = fVec_" << OpName << "_feedback.data();\n";
+      out << SP << fType << " * " << OpName << "_feedback = " << getVec("feedback") << ";\n";
    } else {
       out << SP << fType << " " << OpName << "_feedback[" << batch_size * fAttrHiddenSize << "] = {0};\n";
    }

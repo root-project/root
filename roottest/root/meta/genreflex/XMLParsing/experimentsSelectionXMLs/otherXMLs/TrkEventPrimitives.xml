@@ -1,0 +1,4 @@
+<lcgdict>
+  <class name="Trk::FitQuality" />
+  <enum pattern="Trk::*" />
+</lcgdict>

@@ -25,6 +25,7 @@ class RooAddPdf;
 class RooAddition;
 class RooBernstein;
 class RooBifurGauss;
+class RooCategory;
 class RooCBShape;
 class RooChebychev;
 class RooConstVar;
@@ -54,6 +55,8 @@ class RooRealSumPdf;
 class RooRealVar;
 class RooRecursiveFraction;
 class RooUniform;
+class RooMultiPdf;
+class RooWrapperPdf;
 
 namespace RooStats {
 namespace HistFactory {
@@ -83,6 +86,7 @@ void codegenImpl(RooAddPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooAddition &arg, CodegenContext &ctx);
 void codegenImpl(RooBernstein &arg, CodegenContext &ctx);
 void codegenImpl(RooBifurGauss &arg, CodegenContext &ctx);
+void codegenImpl(RooCategory &arg, CodegenContext &ctx);
 void codegenImpl(RooCBShape &arg, CodegenContext &ctx);
 void codegenImpl(RooChebychev &arg, CodegenContext &ctx);
 void codegenImpl(RooConstVar &arg, CodegenContext &ctx);
@@ -104,6 +108,7 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx);
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx);
 void codegenImpl(RooPolyVar &arg, CodegenContext &ctx);
 void codegenImpl(RooPolynomial &arg, CodegenContext &ctx);
+void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooProduct &arg, CodegenContext &ctx);
 void codegenImpl(RooRatio &arg, CodegenContext &ctx);
 void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx);
@@ -113,6 +118,7 @@ void codegenImpl(RooRealVar &arg, CodegenContext &ctx);
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx);
 void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &ctx);
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
+void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx);
 
 std::string codegenIntegralImpl(RooAbsReal &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBernstein &arg, int code, const char *rangeName, CodegenContext &ctx);

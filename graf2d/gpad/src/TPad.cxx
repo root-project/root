@@ -67,8 +67,6 @@ static Int_t gReadLevel = 0;
 
 Int_t TPad::fgMaxPickDistance = 5;
 
-ClassImpQ(TPad)
-
 /** \class TPad
 \ingroup gpad
 
@@ -949,16 +947,20 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 
 Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *xc, Double_t *yc, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
+   if (n <= 0)
+      return 0;
+
    Int_t nc, nc2;
    Double_t x1, y1, x2, y2, slope; // Segment to be clipped
 
    std::vector<Double_t> xc2(nn), yc2(nn);
 
    // Clip against the left boundary
-   x1 = x[n-1]; y1 = y[n-1];
+   x1 = x[n - 1];
+   y1 = y[n - 1];
    nc2 = 0;
    Int_t i;
-   for (i=0; i<n; i++) {
+   for (i = 0; i < n; i++) {
       x2 = x[i]; y2 = y[i];
       if (x1 == x2) {
          slope = 0;
@@ -981,9 +983,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
    }
 
    // Clip against the top boundary
-   x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+   if (nc2 > 0) {
+      x1 = xc2[nc2 - 1];
+      y1 = yc2[nc2 - 1];
+   }
    nc = 0;
-   for (i=0; i<nc2; i++) {
+   for (i = 0; i < nc2; i++) {
       x2 = xc2[i]; y2 = yc2[i];
       if (y1 == y2) {
          slope = 0;
@@ -1005,12 +1010,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       x1 = x2; y1 = y2;
    }
 
-   if (nc>0) {
-
-      // Clip against the right boundary
-      x1 = xc[nc-1]; y1 = yc[nc-1];
+   // Clip against the right boundary
+   if (nc > 0) {
+      x1 = xc[nc - 1];
+      y1 = yc[nc - 1];
       nc2 = 0;
-      for (i=0; i<nc; i++) {
+      for (i = 0; i < nc; i++) {
          x2 = xc[i]; y2 = yc[i];
          if (x1 == x2) {
             slope = 0;
@@ -1033,9 +1038,12 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
 
       // Clip against the bottom boundary
-      x1 = xc2[nc2-1]; y1 = yc2[nc2-1];
+      if (nc2 > 0) {
+         x1 = xc2[nc2 - 1];
+         y1 = yc2[nc2 - 1];
+      }
       nc = 0;
-      for (i=0; i<nc2; i++) {
+      for (i = 0; i < nc2; i++) {
          x2 = xc2[i]; y2 = yc2[i];
          if (y1 == y2) {
             slope = 0;
@@ -1058,7 +1066,8 @@ Int_t TPad::ClipPolygon(Int_t n, Double_t *x, Double_t *y, Int_t nn, Double_t *x
       }
    }
 
-   if (nc < 3) nc =0;
+   if (nc < 3)
+      nc = 0;
    return nc;
 }
 
@@ -1216,8 +1225,12 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// Automatic pad generation by division.
 ///
 ///  - The current canvas is divided in nx by ny equal divisions (pads).
-///  - xmargin is the space along x between pads in percent of canvas.
-///  - ymargin is the space along y between pads in percent of canvas.
+///  - xmargin defines the horizontal spacing around each pad as a percentage of the canvas
+///    width. Therefore, the distance between two adjacent pads along the x-axis is equal
+///    to twice the xmargin value.
+///  - ymargin defines the vertical spacing around each pad as a percentage of the canvas
+///    height. Therefore, the distance between two adjacent pads along the y-axis is equal
+///    to twice the ymargin value.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
@@ -1242,9 +1255,34 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///             points to the current pad. One can use gPad to set attributes
 ///             of the current pad.
 ///
-/// __Note3:__  in case xmargin <=0 and ymargin <= 0, there is no space
+/// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
 ///             between pads. The current pad margins are recomputed to
-///             optimize the layout.
+///             optimize the layout in order to have similar frames' areas.
+///             See the following example:
+///
+/// ~~~ {.cpp}
+///    void divpad(Int_t nx=3, Int_t ny=2) {
+///       gStyle->SetOptStat(0);
+///       auto C = new TCanvas();
+///       C->SetMargin(0.3, 0.3, 0.3, 0.3);
+///       C->Divide(nx,ny,-1);
+///       Int_t number = 0;
+///       auto h = new TH1F("","",100,-3.3,3.3);
+///       h->GetXaxis()->SetLabelFont(43);
+///       h->GetXaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetLabelFont(43);
+///       h->GetYaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetNdivisions(505);
+///       h->SetMaximum(30*nx*ny);
+///       h->SetFillColor(42);
+///       for (Int_t i=0;i<nx*ny;i++) {
+///          number++;
+///          C->cd(number);
+///          h->FillRandom("gaus",1000);
+///          h->DrawCopy();
+///       }
+///    }
+/// ~~~
 
 void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t color)
 {
@@ -1268,7 +1306,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    TString name, title;
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
-   if (xmargin > 0 && ymargin > 0) {
+   if (xmargin >= 0 && ymargin >= 0) {
       //general case
       dy = 1/Double_t(ny);
       dx = 1/Double_t(nx);
@@ -1289,7 +1327,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
          }
       }
    } else {
-      // special case when xmargin <= 0 && ymargin <= 0
+      // special case when xmargin < 0 or ymargin < 0
       Double_t xl = GetLeftMargin();
       Double_t xr = GetRightMargin();
       Double_t yb = GetBottomMargin();
@@ -1318,7 +1356,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             if (j == ny-1) y1 = 0;
             name.Form("%s_%d", GetName(), number);
             title.Form("%s_%d", GetTitle(), number);
-            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2);
+            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
@@ -1332,6 +1370,108 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       }
    }
    Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Divide the canvas according to ratios.
+///
+/// The current canvas is divided in nx by ny according to the width and height ratios.
+/// If the ratios are not specified they are assumed to be equal.
+///
+/// Pads are automatically named `canvasname_n` where `n` is the division number
+/// starting from top left pad.
+///
+/// Top and left margins can be defined.
+
+void TPad::DivideRatios(Int_t nx, Int_t ny,
+                        const std::vector<double>& widthRatios,
+                        const std::vector<double>& heightRatios,
+                        const double canvasTopMargin,
+                        const double canvasLeftMargin
+                        )
+{
+   cd();
+
+   int wrs = widthRatios.size();
+   int hrs = heightRatios.size();
+   int nxl = TMath::Min(nx,wrs), nyl = TMath::Min(ny,hrs);
+
+   if (wrs==0) nxl = nx;
+   if (hrs==0) nyl = ny;
+
+   int    pn = 1;
+   double xr = 0.;
+   double yr = 0.;
+   double x  = 0.;
+   double y  = 1.;
+   double x1, y1, x2, y2;
+
+   // Check the validity of the margins
+   if (canvasTopMargin <0 || canvasTopMargin >1 ) {
+      Error("DivideRatios", "The canvas top margin must be >= 0 and <= 1");
+      return;
+   } else {
+      y = 1.- canvasTopMargin;
+   }
+   if (canvasLeftMargin <0 || canvasLeftMargin >1 ) {
+      Error("DivideRatios", "The canvas left margin must be >= 0 and <= 1");
+      return;
+   }
+
+   // Check the validity of the ratios
+   double sumOfHeightRatios = canvasTopMargin;
+   if (hrs) {
+      for (int i=0; i<nyl; i++) {
+         yr = heightRatios[i];
+         sumOfHeightRatios = sumOfHeightRatios + yr;
+         if (yr <0 || yr >1 ) {
+            Error("DivideRatios", "Y ratios plus the top margin must be >= 0 and <= 1");
+            return;
+         }
+      }
+   }
+   if (sumOfHeightRatios > 1.) {
+      Error("DivideRatios", "The sum of Y ratios plus the top margin must be <= 1 %g",sumOfHeightRatios);
+      return;
+   }
+   double sumOfWidthRatios = canvasLeftMargin;
+   if (wrs) {
+      for (int j=0; j<nxl; j++) {
+         xr = widthRatios[j];
+         sumOfWidthRatios = sumOfWidthRatios +xr;
+         if (xr <0 || xr >1 ) {
+            Error("DivideRatios", "X ratios must be >= 0 and <= 1");
+            return;
+         }
+      }
+   }
+   if (sumOfWidthRatios > 1.) {
+      Error("DivideRatios", "The sum of X ratios must be <= 1 %g ",sumOfWidthRatios);
+      return;
+   }
+
+   // Create the pads according to the ratios
+   for (int i=0; i<nyl; i++) {
+      x = canvasLeftMargin;
+      if (hrs) yr = heightRatios[i];
+      else     yr = 1./nyl;
+      for (int j=0; j<nxl; j++) {
+         if (wrs) xr = widthRatios[j];
+         else     xr = 1./nxl;
+         x1 = TMath::Max(0., x);
+         y1 = TMath::Max(0., y - yr);
+         x2 = TMath::Min(1., x + xr);
+         y2 = TMath::Min(1., y);
+         auto pad = new TPad(TString::Format("%s_%d", GetName(), pn),
+                             TString::Format("%s_%d", GetName(), pn),
+                             x1, y1, x2 ,y2);
+         pad->SetNumber(pn);
+         pad->Draw();
+         x = x + xr;
+         pn++;
+      }
+      y = y - yr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4208,9 +4348,11 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
       if (yrot > ymax) ymax = yrot;
       if (yrot < ymin) ymin = yrot;
    }
-   ymax = (Double_t)((Int_t)(ymax/dy))*dy;
 
-   for (ycur=ymax; ycur>=ymin; ycur=ycur-dy) {
+   Int_t yindx = (Int_t) (ymax/dy);
+
+   while (dy * yindx >= ymin) {
+      ycur = dy * yindx--;
       nbi = 0;
       for (i=2; i<=nn+1; i++) {
          i2 = i;
@@ -4378,8 +4520,8 @@ void TPad::PaintLine3D(Float_t *p1, Float_t *p2)
 
 void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 {
-   //take into account perspective view
    if (!fView) return;
+
    // convert from 3-D to 2-D pad coordinate system
    Double_t xpad[6];
    Double_t temp[3];
@@ -4389,6 +4531,29 @@ void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
    for (i=0;i<3;i++) temp[i] = p2[i];
    fView->WCtoNDC(temp, &xpad[3]);
    PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-D marker in the CurrentPad.
+
+void TPad::PaintMarker3D(Double_t x, Double_t y, Double_t z)
+{
+   if (!fView) return;
+
+   Double_t rmin[3], rmax[3];
+   fView->GetRange(rmin, rmax);
+
+   // convert from 3-D to 2-D pad coordinate system
+   Double_t xpad[3];
+   Double_t temp[3];
+   temp[0] = x;
+   temp[1] = y;
+   temp[2] = z;
+   if (x<rmin[0] || x>rmax[0]) return;
+   if (y<rmin[1] || y>rmax[1]) return;
+   if (z<rmin[2] || z>rmax[2]) return;
+   fView->WCtoNDC(temp, &xpad[0]);
+   PaintPolyMarker(1, &xpad[0], &xpad[1]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4948,7 +5113,8 @@ static Bool_t ContainsTImage(TList *li)
 ///  generated in some loop one needs to detect the special cases of first
 ///  and last page and then munge the argument to Print() accordingly.
 ///
-///  The "[" and "]" can be used instead of "(" and ")".
+///  The "[" and "]" can be used instead of "(" and ")" to open / close without
+///  actual printing.
 ///
 /// Example:
 /// ~~~ {.cpp}
@@ -5008,6 +5174,9 @@ void TPad::Print(const char *filename, Option_t *option)
    TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
 
+   Bool_t title = kFALSE;
+   if (strstr(opt,"Title:")) title = kTRUE;
+
    if (!fs1.Length())  {
       psname = GetName();
       psname += opt;
@@ -5025,25 +5194,25 @@ void TPad::Print(const char *filename, Option_t *option)
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (strstr(opt, "gif+")) {
+   if (!title && strstr(opt, "gif+")) {
       gtype = TImage::kAnimGif;
       image = kTRUE;
-   } else if (strstr(opt, "gif")) {
+   } else if (!title && strstr(opt, "gif")) {
       gtype = TImage::kGif;
       image = kTRUE;
-   } else if (strstr(opt, "png")) {
+   } else if (!title && strstr(opt, "png")) {
       gtype = TImage::kPng;
       image = kTRUE;
-   } else if (strstr(opt, "jpg")) {
+   } else if (!title && strstr(opt, "jpg")) {
       gtype = TImage::kJpeg;
       image = kTRUE;
-   } else if (strstr(opt, "tiff")) {
+   } else if (!title && strstr(opt, "tiff")) {
       gtype = TImage::kTiff;
       image = kTRUE;
-   } else if (strstr(opt, "xpm")) {
+   } else if (!title && strstr(opt, "xpm")) {
       gtype = TImage::kXpm;
       image = kTRUE;
-   } else if (strstr(opt, "bmp")) {
+   } else if (!title && strstr(opt, "bmp")) {
       gtype = TImage::kBmp;
       image = kTRUE;
    }
@@ -5094,32 +5263,32 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a C++ script==============================
-   if (strstr(opt,"cxx")) {
+   if (!title && strstr(opt,"cxx")) {
       GetCanvas()->SaveSource(psname, "");
       return;
    }
 
    //==============Save pad/canvas as a root file===============================
-   if (strstr(opt,"root")) {
+   if (!title && strstr(opt,"root")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
-   if (strstr(opt,"xml")) {
+   if (!title && strstr(opt,"xml")) {
       // Plugin XML driver
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a JSON file================================
-   if (strstr(opt,"json")) {
+   if (!title && strstr(opt,"json")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a SVG file================================
-   if (strstr(opt,"svg")) {
+   if (!title && strstr(opt,"svg")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
@@ -5160,7 +5329,7 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a TeX file================================
-   if (strstr(opt,"tex") || strstr(opt,"Standalone")) {
+   if (!title && (strstr(opt,"tex") || strstr(opt,"Standalone"))) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
@@ -5248,7 +5417,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!gVirtualPS || mustOpen) {
 
       const char *pluginName = "ps"; // Plugin Postscript driver
-      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts"))
+      if (strstr(opt,"pdf") || title || strstr(opt,"EmbedFonts"))
          pluginName = "pdf";
       else if (image)
          pluginName = "image"; // Plugin TImageDump driver
@@ -5897,7 +6066,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
           << ", " << rmax[1] << ", " << rmax[2] << ");\n";
    }
 
-   SaveFillAttributes(out, cname, 19, 1001);
+   SaveFillAttributes(out, cname, -1, -1);
 
    if (GetBorderMode() != 1)
       out << "   " << cname << "->SetBorderMode(" << GetBorderMode() << ");\n";
@@ -5940,7 +6109,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
       out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
    if (GetFrameLineWidth() != 1)
       out << "   " << cname << "->SetFrameLineWidth(" << GetFrameLineWidth() << ");\n";
-   if (GetFrameBorderMode() != 1)
+   if (GetFrameBorderMode() != 0)
       out << "   " << cname << "->SetFrameBorderMode(" << GetFrameBorderMode() << ");\n";
    if (GetFrameBorderSize() != 1)
       out << "   " << cname << "->SetFrameBorderSize(" << GetFrameBorderSize() << ");\n";
@@ -5959,7 +6128,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
          out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(frame->GetLineColor()) << ");\n";
       if (frame->GetLineWidth() != 1)
          out << "   " << cname << "->SetFrameLineWidth(" << frame->GetLineWidth() << ");\n";
-      if (frame->GetBorderMode() != 1)
+      if (frame->GetBorderMode() != 0)
          out << "   " << cname << "->SetFrameBorderMode(" << frame->GetBorderMode() << ");\n";
       if (frame->GetBorderSize() != 1)
          out << "   " << cname << "->SetFrameBorderSize(" << frame->GetBorderSize() << ");\n";
@@ -7012,7 +7181,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    TObject *obj = nullptr;
    Bool_t testlast = kFALSE;
    Bool_t hasname = pname && (strlen(pname) > 0);
-   if (!pname[0] && !emode[0]) testlast = kTRUE;
+   if ((!pname || !pname[0]) && (!emode || !emode[0])) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad() && gPad) {
       if (gROOT->GetEditorMode() == 0) {
@@ -7348,7 +7517,7 @@ void TPad::Modified(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert absolute pixel into X/Y coordinates
 
-void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+void TPad::AbsPixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y)
 {
    x = AbsPixeltoX(xpixel);
    y = AbsPixeltoY(ypixel);
@@ -7358,7 +7527,7 @@ void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to X coordinate
 
-Double_t TPad::PixeltoX(Int_t px)
+Double_t TPad::PixeltoX(Double_t px)
 {
    if (fAbsCoord) return fAbsPixeltoXk + px*fPixeltoX;
    else           return fPixeltoXk    + px*fPixeltoX;
@@ -7367,7 +7536,7 @@ Double_t TPad::PixeltoX(Int_t px)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to Y coordinate
 
-Double_t TPad::PixeltoY(Int_t py)
+Double_t TPad::PixeltoY(Double_t py)
 {
    if (fAbsCoord) return fAbsPixeltoYk + py*fPixeltoY;
    else           return fPixeltoYk    + py*fPixeltoY;
@@ -7376,14 +7545,14 @@ Double_t TPad::PixeltoY(Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to X/Y coordinates
 
-void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+void TPad::PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y)
 {
    x = PixeltoX(xpixel);
    y = PixeltoY(ypixel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert X/Y into absolute pixel coordinates
+/// Convert X/Y into absolute pixel coordinates - integer
 
 void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
@@ -7392,7 +7561,25 @@ void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert X/Y into pixel coordinates
+/// Check value for valid range for pixel values
+
+Double_t pixel_boundary(Double_t v)
+{
+   return v < -kMaxPixel ? -kMaxPixel : (v > kMaxPixel ? kMaxPixel : v);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into absolute pixel coordinates - doble
+/// Introduced to avoid pixel rounding problems
+
+void TPad::XYtoAbsPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const
+{
+   xpixel = pixel_boundary(fXtoAbsPixelk + x*fXtoPixel);
+   ypixel = pixel_boundary(fYtoAbsPixelk + y*fYtoPixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into pixel coordinates - integer
 
 void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
@@ -7401,16 +7588,20 @@ void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into pixel coordinates - double
+
+void TPad::XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const
+{
+   xpixel = pixel_boundary(fAbsCoord ? fXtoAbsPixelk + x*fXtoPixel : fXtoPixelk + x*fXtoPixel);
+   ypixel = pixel_boundary(fAbsCoord ? fYtoAbsPixelk + y*fYtoPixel : fYtoPixelk + y*fYtoPixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Convert X NDC to pixel
 
 Int_t TPad::UtoPixel(Double_t u) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
-   else           val = u*fUtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fUtoAbsPixelk + u*fUtoPixel : fUtoPixelk + u*fUtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7418,12 +7609,7 @@ Int_t TPad::UtoPixel(Double_t u) const
 
 Int_t TPad::VtoPixel(Double_t v) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
-   else           val = fVtoPixelk    + v*fVtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fVtoAbsPixelk + v*fVtoPixel : fVtoPixelk + v*fVtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7447,10 +7633,7 @@ Int_t TPad::VtoAbsPixel(Double_t v) const
 
 Int_t TPad::XtoAbsPixel(Double_t x) const
 {
-   Double_t val = fXtoAbsPixelk + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fXtoAbsPixelk + x*fXtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7458,12 +7641,7 @@ Int_t TPad::XtoAbsPixel(Double_t x) const
 
 Int_t TPad::XtoPixel(Double_t x) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
-   else           val = fXtoPixelk    + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fXtoAbsPixelk + x*fXtoPixel : fXtoPixelk + x*fXtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7471,10 +7649,7 @@ Int_t TPad::XtoPixel(Double_t x) const
 
 Int_t TPad::YtoAbsPixel(Double_t y) const
 {
-   Double_t val = fYtoAbsPixelk + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fYtoAbsPixelk + y*fYtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7482,10 +7657,5 @@ Int_t TPad::YtoAbsPixel(Double_t y) const
 
 Int_t TPad::YtoPixel(Double_t y) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
-   else           val = fYtoPixelk    + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fYtoAbsPixelk + y*fYtoPixel : fYtoPixelk + y*fYtoPixel));
 }

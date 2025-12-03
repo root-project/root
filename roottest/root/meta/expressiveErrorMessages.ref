@@ -1,0 +1,71 @@
+
+Processing expressiveErrorMessages.C...
+expressiveErrorMessages dictionary payload:48:1: error: unknown type name 'bla'
+bla
+^
+expressiveErrorMessages dictionary payload:52:1: error: expected unqualified-id
+class BexprMsg{};
+^
+Error in <TInterpreter::AutoParse>: Error parsing payload code for class AexprMsg with content:
+
+#line 1 "expressiveErrorMessages dictionary payload"
+
+#ifndef ClingWorkAroundMissingDynamicScope
+  #define ClingWorkAroundMissingDynamicScope 1
+#endif
+#ifndef ClingWorkAroundUnnamedInclude
+  #define ClingWorkAroundUnnamedInclude 1
+#endif
+#ifndef ClingWorkAroundMissingSmartInclude
+  #define ClingWorkAroundMissingSmartInclude 1
+#endif
+#ifndef ClingWorkAroundNoDotInclude
+  #define ClingWorkAroundNoDotInclude 1
+#endif
+#ifndef ClingWorkAroundMissingAutoLoadingForTemplates
+  #define ClingWorkAroundMissingAutoLoadingForTemplates 1
+#endif
+#ifndef ClingWorkAroundAutoParseUsingNamespace
+  #define ClingWorkAroundAutoParseUsingNamespace 1
+#endif
+#ifndef ClingWorkAroundTClassUpdateDouble32
+  #define ClingWorkAroundTClassUpdateDouble32 1
+#endif
+#ifndef ClingWorkAroundAutoParseDeclaration
+  #define ClingWorkAroundAutoParseDeclaration 1
+#endif
+#ifndef ClingWorkAroundMissingUnloading
+  #define ClingWorkAroundMissingUnloading 1
+#endif
+#ifndef ClingWorkAroundBrokenUnnamedReturn
+  #define ClingWorkAroundBrokenUnnamedReturn 1
+#endif
+#ifndef ClingWorkAroundUnnamedDetection2
+  #define ClingWorkAroundUnnamedDetection2 1
+#endif
+
+#define _BACKWARD_BACKWARD_WARNING_H
+//Inlineheaders
+#ifndef __expressiveErrorMessages__
+#define __expressiveErrorMessages__
+class AexprMsg{};
+
+
+// Hello
+
+#ifdef HELLO
+bla
+#endif
+
+
+class BexprMsg{};
+#endif
+
+#undef  _BACKWARD_BACKWARD_WARNING_H
+
+In file included from input_line_23:1:
+   AexprMsg a;
+            ^
+expressiveErrorMessages dictionary forward declarations' payload:5:7: note: forward declaration of 'AexprMsg'
+class AexprMsg;
+      ^

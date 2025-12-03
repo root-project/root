@@ -34,9 +34,9 @@
 #include "TList.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "TF3.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TH1K.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -80,19 +80,20 @@ public:
    {
       fSlow = slow;
       fSlowCnt = 0;
-      SetTime(slow ? 1000 : 10);
+      SetTime(slow ? 50 : 10);
    }
 
    /// used to send control messages to clients
    void Timeout() override
    {
-      if (fProcessing || fCanv.fProcessingData) return;
+      if (fProcessing || fCanv.fProcessingData)
+         return;
       fProcessing = kTRUE;
       Bool_t res = fCanv.CheckDataToSend();
       fProcessing = kFALSE;
       if (res) {
          fSlowCnt = 0;
-      } else if (++fSlowCnt > 10 && !IsSlow()) {
+      } else if (++fSlowCnt > 100 && !IsSlow()) {
          SetSlow(kTRUE);
       }
    }
@@ -313,7 +314,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
       const char *name{nullptr};
       bool with_derived{false};
       bool reduse_by_many{false};
-   } supported_classes[] = {{"TH1", true},
+   } supported_classes[] = {{"ROOT::Experimental::RTreeMapPainter"},
+                            {"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
                             {"TScatter"},
@@ -331,6 +333,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
+                            {"TPie"},
                             {"TText"},
                             {"TLatex"},
                             {"TLink"},
@@ -857,7 +860,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if ((fTF1UseSave == 1) && f1->HasSave())
          return;
 
-      f1->Save(0, 0, 0, 0, 0, 0);
+      auto f3 = dynamic_cast<TF3 *>(f1);
+      auto f2 = dynamic_cast<TF2 *>(f1);
+      if (f3)
+         f3->Save(f3->GetXmin(), f3->GetXmax(), f3->GetYmin(), f3->GetYmax(), f3->GetZmin(), f3->GetZmax());
+      else if (f2)
+         f2->Save(f2->GetXmin(), f2->GetXmax(), f2->GetYmin(), f2->GetYmax(), 0, 0);
+      else
+         f1->Save(f1->GetXmin(), f1->GetXmax(), 0, 0, 0, 0);
    };
 
    auto create_stats = [&]() {
@@ -935,27 +945,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
          continue;
-      } else if (obj->InheritsFrom(TH1K::Class())) {
-         flush_master();
-         TH1K *hist = static_cast<TH1K *>(obj);
-
-         Int_t nbins = hist->GetXaxis()->GetNbins();
-
-         TH1D *h1 = new TH1D("__dummy_name__", hist->GetTitle(), nbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-         h1->SetDirectory(nullptr);
-         h1->SetName(hist->GetName());
-         hist->TAttLine::Copy(*h1);
-         hist->TAttFill::Copy(*h1);
-         hist->TAttMarker::Copy(*h1);
-         for (Int_t n = 1; n <= nbins; ++n)
-             h1->SetBinContent(n, hist->GetBinContent(n));
-
-         TIter fiter(hist->GetListOfFunctions());
-         while (auto fobj = fiter())
-            h1->GetListOfFunctions()->Add(fobj->Clone());
-
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
-
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
@@ -2986,6 +2975,21 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
    canvas->SetBatch(kTRUE); // mark canvas as batch
    canvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
+   // copy gStyle attributes
+   canvas->SetFillColor(gStyle->GetCanvasColor());
+   canvas->SetFillStyle(1001);
+   canvas->SetGrid(gStyle->GetPadGridX(),gStyle->GetPadGridY());
+   canvas->SetTicks(gStyle->GetPadTickX(),gStyle->GetPadTickY());
+   canvas->SetLogx(gStyle->GetOptLogx());
+   canvas->SetLogy(gStyle->GetOptLogy());
+   canvas->SetLogz(gStyle->GetOptLogz());
+   canvas->SetBottomMargin(gStyle->GetPadBottomMargin());
+   canvas->SetTopMargin(gStyle->GetPadTopMargin());
+   canvas->SetLeftMargin(gStyle->GetPadLeftMargin());
+   canvas->SetRightMargin(gStyle->GetPadRightMargin());
+   canvas->SetBorderSize(gStyle->GetCanvasBorderSize());
+   canvas->SetBorderMode(gStyle->GetCanvasBorderMode());
+
    auto imp = static_cast<TWebCanvas *> (NewCanvas(canvas, name, 0, 0, width, height));
 
    canvas->SetCanvasImp(imp);
@@ -3007,3 +3011,4 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
 
    return canvas;
 }
+

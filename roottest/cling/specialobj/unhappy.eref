@@ -1,0 +1,4 @@
+In file included from input_line_8:1:
+/home/axel/build/root/github/roottest/cling/specialobj/unhappy.C:5:19: error: use of undeclared identifier 'I_really_do_not_exist'
+  static int f(){ I_really_do_not_exist(); return 0; }
+                  ^

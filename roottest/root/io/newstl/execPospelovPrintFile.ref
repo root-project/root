@@ -1,0 +1,18 @@
+
+Processing execPospelovPrintFile.C...
+Data has 1 areas defined
+ Area 0 has title Classification and 6 dimensions
+  Dim 0 has title side and 1 bins from -1.5 to 1.5
+  Dim 1 has title |eta| and 25 bins from 0 to 5
+  Dim 2 has title phi and 1 bins from -3.14159 to 3.14159
+  Dim 3 has title log10(E_clus (MeV)) and 13 bins from 2.30103 to 6
+  Dim 4 has title log10(<#rho_{cell}> (MeV/mm^{3})) - log10(E_{clus} (MeV)) and 20 bins from -9 to -4
+  Dim 5 has title log10(#lambda_{clus} (mm)) and 20 bins from 0 to 4
+Data has 1 areas defined
+ Area 0 has title Classification and 6 dimensions
+  Dim 0 has title side and 1 bins from -1.5 to 1.5
+  Dim 1 has title |eta| and 25 bins from 0 to 5
+  Dim 2 has title phi and 1 bins from -3.14159 to 3.14159
+  Dim 3 has title log10(E_clus (MeV)) and 13 bins from 2.30103 to 6
+  Dim 4 has title log10(<#rho_{cell}> (MeV/mm^{3})) - log10(E_{clus} (MeV)) and 20 bins from -9 to -4
+  Dim 5 has title log10(#lambda_{clus} (mm)) and 20 bins from 0 to 4

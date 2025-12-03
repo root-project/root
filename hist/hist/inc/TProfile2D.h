@@ -95,6 +95,7 @@ public:
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
    Int_t     BufferEmpty(Int_t action=0) override;
+   Double_t  Chi2Test(const TH1* h2, Option_t *option = "WW", Double_t *res = nullptr) const override;
    void      Copy(TObject &hnew) const override;
    Bool_t    Divide(TF1 *h1, Double_t c1=1) override;
    Bool_t    Divide(const TH1 *h1) override;
@@ -145,7 +146,7 @@ public:
    void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax) override;
    void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins) override;
    void      SetBinsLength(Int_t n=-1) override;
-   void      SetBuffer(Int_t buffersize, Option_t *option="") override;
+   void      SetBuffer(Int_t bufsize, Option_t *option="") override;
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    void      Sumw2(Bool_t flag = kTRUE) override;
    Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }

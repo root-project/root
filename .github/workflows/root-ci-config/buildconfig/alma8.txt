@@ -1,7 +1,6 @@
 builtin_gtest=ON
 builtin_nlohmannjson=ON
 builtin_tbb=ON
-builtin_vdt=On
-fortran=OFF
-tmva-sofie=On
-ccache=On
+builtin_vdt=ON
+pythia8=ON
+tmva-sofie=ON

@@ -1,0 +1,17 @@
+<lcgdict>
+
+   <class name="std::vector<reco::SuperClusterRef>" />
+   <class name="edm::ValueMap<reco::SuperClusterRef>" />
+   <class name="edm::Wrapper<edm::ValueMap<reco::SuperClusterRef> >" />
+   <class name="edm::ValueMap<reco::CaloClusterPtr>" />
+   <class name="edm::ValueMap<reco::CaloClusterPtrVector>" />
+   <class name="edm::Wrapper<edm::ValueMap<reco::CaloClusterPtr> >" />
+   <class name="edm::Wrapper<edm::ValueMap<reco::CaloClusterPtrVector> >" />
+   <class name="reco::ConversionTrack" ClassVersion="10">
+    <version ClassVersion="10" checksum="2951396223"/>
+     <field name="traj_" transient="true" />
+   </class>
+   <class name="reco::ConversionTrackCollection" />
+   <class name="edm::Wrapper<reco::ConversionTrackCollection>" />   
+
+</lcgdict>                                                                                                                                                        

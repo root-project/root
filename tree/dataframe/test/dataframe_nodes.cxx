@@ -4,7 +4,9 @@
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
+#include <chrono>
 #include <thread>
+#include <set>
 #include <stdexcept> // std::runtime_error
 
 #include "gtest/gtest.h"
@@ -14,21 +16,23 @@
 
 TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 {
-   auto theTest = []() {
-      unsigned int n(2);
-      ROOT::Internal::RSlotStack s(n);
+   using namespace std::chrono_literals;
 
-      std::vector<std::thread> ts;
+   constexpr unsigned int NSlot = 2;
+   ROOT::Internal::RSlotStack s(NSlot);
+   std::vector<std::thread> ts;
 
-      for (unsigned int i = 0; i < 3; ++i) {
-         ts.emplace_back([&s]() { s.GetSlot(); });
-      }
+   for (unsigned int i = 0; i < NSlot + 1; ++i) {
+      ts.emplace_back([&s, NSlot]() {
+         const auto slot = s.GetSlot();
+         EXPECT_LT(slot, NSlot);
+         std::this_thread::sleep_for(10ms);
+         s.ReturnSlot(slot);
+      });
+   }
 
-      for (auto &&t : ts)
-         t.join();
-   };
-
-   EXPECT_DEATH(theTest(), "Trying to pop a slot from an empty stack!");
+   for (auto &&t : ts)
+      t.join();
 }
 
 TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
@@ -38,9 +42,59 @@ TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
       s.ReturnSlot(0);
    };
 
-   EXPECT_DEATH(theTest(), "Trying to put back a slot to a full stack!");
+   EXPECT_THROW(theTest(), std::logic_error);
 }
 
+// Run with 16 threads with 8 slots, and ensure that slot numbers
+// are always unique.
+TEST(RDataFrameNodes, RSlotStackUnique)
+{
+   constexpr unsigned int N = 8;
+   ROOT::Internal::RSlotStack s(N);
+   std::set<unsigned int> slots;
+   std::mutex mutex;
+
+   auto insert = [&](unsigned int slot, unsigned int threadId) {
+      bool inserted = false;
+      {
+         std::scoped_lock lock{mutex};
+         inserted = slots.insert(slot).second;
+      }
+      EXPECT_TRUE(inserted) << "Slot " << slot << " of thread " << threadId << " is already taken.";
+   };
+   auto remove = [&](unsigned int slot, unsigned int threadId) {
+      unsigned int nErased = 0;
+      {
+         std::scoped_lock lock{mutex};
+         nErased = slots.erase(slot);
+      }
+      EXPECT_EQ(nErased, 1) << "Slot " << slot << " of thread " << threadId << " doesn't seem to be assigned.";
+   };
+
+   auto slotTask = [&](unsigned int threadId) {
+      using namespace std::chrono_literals;
+      ROOT::Internal::RSlotStackRAII slot{s};
+      insert(slot.fSlot, threadId);
+
+      std::this_thread::sleep_for(threadId * 1us);
+
+      remove(slot.fSlot, threadId);
+   };
+
+   auto runThreads = [=, &slotTask]() {
+      std::vector<std::thread> ts;
+      for (unsigned int i = 0; i < 2 * N; ++i) {
+         ts.emplace_back(slotTask, i);
+      }
+      for (auto &&t : ts)
+         t.join();
+   };
+
+   runThreads();
+   ASSERT_TRUE(slots.empty());
+   runThreads();
+   ASSERT_TRUE(slots.empty());
+}
 #endif
 
 TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
@@ -64,7 +118,7 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
    std::vector<std::string> files{"f1.root", "f2.root"};
 
    for (auto &f : files)
-      d.Snapshot<int>("t1", f, {"x"});
+      d.Snapshot("t1", f, {"x"});
 
    ROOT::RDataFrame tdf("t1", files);
    *tdf.Count();
@@ -100,7 +154,7 @@ TEST(RDataFrameNodes, InheritanceOfDefines)
 
    // Read as TObject from disk a TStatistics object
    auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
-   ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
+   ROOT::RDataFrame(1).Define("x", createStat).Snapshot("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
    gSystem->Unlink(ofileName);
 }
 

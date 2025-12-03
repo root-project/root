@@ -4,7 +4,9 @@
 /// \preview This macro illustrates the use of the time axis on a TGraph
 /// with data read from a text file containing the SWAN usage
 /// statistics during July 2017.
-/// We exploit the TDataFrame for reading from the file. See the [RDataFrame documentation](https://root.cern/doc/master/classROOT_1_1RDataFrame.html) and [RDataFrame tutorials](https://root.cern/doc/master/group__tutorial__dataframe.html)
+/// We exploit the RDataFrame for reading from the file. See the [RDataFrame
+/// documentation](https://root.cern/doc/master/classROOT_1_1RDataFrame.html) and [RDataFrame
+/// tutorials](https://root.cern/doc/master/group__tutorial__dataframe.html)
 ///
 /// \macro_image
 /// \macro_code
@@ -19,7 +21,7 @@ void gr109_timeSeriesFromCSV_RDF()
    dir.Append("/visualisation/graphs/");
    dir.ReplaceAll("/./", "/");
 
-   // Read the data from the file using TDataFrame. We do not have headers and
+   // Read the data from the file using RDataFrame. We do not have headers and
    // we would like the delimiter to be a space
    auto rdf = ROOT::RDF::FromCSV(Form("%sSWAN2017.dat", dir.Data()), false, ' ');
 

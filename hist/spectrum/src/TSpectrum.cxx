@@ -35,7 +35,6 @@ Int_t TSpectrum::fgIterations    = 3;
 Int_t TSpectrum::fgAverageWindow = 3;
 
 #define PEAK_WINDOW 1024
-ClassImp(TSpectrum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -112,8 +111,8 @@ void TSpectrum::SetDeconIterations(Int_t n)
 /// #### Parameters:
 ///
 ///   - h: input 1-d histogram
-///   - numberIterations, (default value = 20)
-///      Increasing numberIterations make the result smoother and lower.
+///   - nIter, (default value = 20)
+///      Increasing number of iterations makes the result smoother and lower.
 ///   - option: may contain one of the following options:
 ///
 ///      - to set the direction parameter
@@ -142,13 +141,13 @@ void TSpectrum::SetDeconIterations(Int_t n)
 ///   as the input histogram h, but only bins from `binmin` to `binmax` will be filled
 ///   with the estimated background.
 
-TH1 *TSpectrum::Background(const TH1 * h, Int_t numberIterations,
+TH1 *TSpectrum::Background(const TH1 * h, Int_t nIter,
                            Option_t * option)
 {
    if (h == nullptr) return nullptr;
    Int_t dimension = h->GetDimension();
-   if (dimension > 1) {
-      Error("Search", "Only implemented for 1-d histograms");
+   if (dimension != 1) {
+      Error("Background", "Only implemented for 1-d histograms");
       return nullptr;
    }
    TString opt = option;
@@ -181,7 +180,7 @@ TH1 *TSpectrum::Background(const TH1 * h, Int_t numberIterations,
    for (i = 0; i < size; i++) source[i] = h->GetBinContent(i + first);
 
    //find background (source is input and in output contains the background
-   Background(source,size,numberIterations, direction, filterOrder,smoothing,
+   Background(source,size,nIter, direction, filterOrder,smoothing,
               smoothWindow,compton);
 
    //create output histogram containing background

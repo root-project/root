@@ -21,7 +21,7 @@ FunctionMinimum MnFumiliMinimize::operator()(unsigned int maxfcn, double toler)
    // need to reimplement otherwise base class method is done
 
    assert(fState.IsValid());
-   unsigned int npar = VariableParameters();
+   unsigned int npar = State().VariableParameters();
    //   assert(npar > 0);
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;

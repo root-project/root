@@ -18,7 +18,6 @@
 #include "TGWindow.h"
 #include "TVirtualX.h"
 
-ClassImp(TGEventHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle the event. Returns true if the event has been handled,

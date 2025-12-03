@@ -9,6 +9,7 @@
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
+#include "TChain.h"
 
 #include "gtest/gtest.h"
 
@@ -48,14 +49,21 @@ TEST(RDataFrameInterface, CreateFromStrings)
 class TreeInFileRAII {
 private:
    std::string fPath;
-   TFile fFile;
 
 public:
-   explicit TreeInFileRAII(const std::string &path) : fPath(path), fFile(path.c_str(), "recreate")
+   explicit TreeInFileRAII(const std::string &path) : fPath(path)
    {
-      TTree t("t", "t");
-      fFile.WriteObject(&t, "t");
-      fFile.Close();
+      // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
+      // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
+      // living on the stack.
+      // The bug is caused by the magic bit pattern `kObjectAllocMemValue` used by TStorage to
+      // mark a heap object appearing by chance on the stack.
+      // This is not a problem with a clear solution and in fact the whole heap detection system relies on UB,
+      // so for now we are forced to work around the bug rather than fixing it.
+      auto f = std::make_unique<TFile>(path.c_str(), "RECREATE");
+      const char *treeName{"t"};
+      auto t = std::make_unique<TTree>(treeName, treeName);
+      f->Write();
    }
    ~TreeInFileRAII() { std::remove(fPath.c_str()); }
 };
@@ -83,6 +91,14 @@ TEST(RDataFrameInterface, CreateFromNullTDirectory)
 TEST(RDataFrameInterface, CreateFromNonExistingTree)
 {
    EXPECT_ANY_THROW(RDataFrame("theTreeWhichDoesNotExist", gDirectory));
+}
+
+TEST(RDataFrameInterface, CreateFromGlob)
+{
+   EXPECT_THROW(RDataFrame("t", "globTest_invalid_[0-9].root"), std::invalid_argument);
+   TreeInFileRAII f1("globTest_1.root");
+   TreeInFileRAII f2("globTest_2.root");
+   RDataFrame("t", "globTest_[1-9].root");
 }
 
 TEST(RDataFrameInterface, CreateFromTree)
@@ -468,9 +484,9 @@ TEST(RDataFrameInterface, TypeUnknownToInterpreter)
    auto df = ROOT::RDataFrame(1).Define("res", make_s);
    bool hasThrown = false;
    std::stringstream ss;
-   ss << "The type of custom column \"res\" (" << symbol << ") is not known to the interpreter, " <<
-         "but a just-in-time-compiled Snapshot call requires this column. Make sure to create " <<
-         "and load ROOT dictionaries for this column's class.";
+   ss << "No runtime type information is available for column \"res\" with type name \"" << symbol
+      << "\". Thus, it cannot be written to disk with Snapshot. Make sure to generate and load ROOT dictionaries for "
+         "the type of this column.";
    EXPECT_RUNTIME_ERROR_WITH_MSG(
       df.Snapshot("result", "RESULT2.root"),
       ss.str().c_str());
@@ -627,7 +643,7 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
 TEST(RDataFrameInterface, JittedExprWithManyVars)
 {
    // Build expression "x + x + ... + x > 0"
-   // With 100 occurences of 'x'
+   // With 100 occurrences of 'x'
    std::string expr{"x"};
    for (int i = 0; i < 99; ++i)
       expr += " + x";
@@ -845,9 +861,7 @@ TEST(RDataFrameInterface, BookWithoutColumns)
 
 TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
 {
-   EXPECT_THROW(
-      (ROOT::RDataFrame(1).Snapshot<ULong64_t, ULong64_t>("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})),
-      std::logic_error);
+   EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
    EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
 }
 

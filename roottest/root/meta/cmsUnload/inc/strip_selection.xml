@@ -1,0 +1,7 @@
+<lcgdict>
+   <class name="SiStripCluster" splitLevel="0"/>
+   <class name="edm::Wrapper<SiStripCluster >" splitLevel="0"/>
+   <class name="edm::Wrapper<std::vector<SiStripCluster> >" splitLevel="0"/>
+   <!-- <class name="edm::Wrapper<std::vector<edm::DetSet<SiStripCluster> > >" splitLevel="0"/> -->
+   <class name="edm::Wrapper<edmNew::DetSetVector<SiStripCluster> >" splitLevel="0"/>
+</lcgdict>

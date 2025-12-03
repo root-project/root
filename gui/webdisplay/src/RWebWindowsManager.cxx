@@ -129,13 +129,18 @@ void RWebWindowsManager::AssignMainThrd()
 void RWebWindowsManager::SetLoopbackMode(bool on)
 {
    gWebWinLoopbackMode = on;
+   bool print_warning = RWebWindowWSHandler::GetBoolEnv("WebGui.Warning", 1) == 1;
    if (!on) {
-      printf("\nWARNING!\n");
-      printf("Disabling loopback mode may leads to security problem.\n");
-      printf("See https://root.cern/about/security/ for more information.\n\n");
+      if (print_warning) {
+         printf("\nWARNING!\n");
+         printf("Disabling loopback mode may leads to security problem.\n");
+         printf("See https://root.cern/about/security/ for more information.\n\n");
+      }
       if (!gWebWinUseSessionKey) {
-         printf("Enforce session key to safely work on public network.\n");
-         printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         if (print_warning) {
+            printf("Enforce session key to safely work on public network.\n");
+            printf("One may call RWebWindowsManager::SetUseSessionKey(false); to disable it.\n");
+         }
          gWebWinUseSessionKey = true;
       }
    }
@@ -437,8 +442,6 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///
 ///      WebGui.ServerLocations: location1:/file/path/to/location1;location2:/file/path/to/location2
 
-
-
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
    if (gROOT->GetWebDisplay() == "off")
@@ -507,6 +510,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
+   fReconnectTmout = gEnv->GetValue("WebGui.ReconnectTmout", 15.);
    bool assign_loopback = gWebWinLoopbackMode;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
@@ -660,6 +664,10 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       win->RecordData(fname, prefix);
    }
 
+   int queuelen = gEnv->GetValue("WebGui.QueueLength", 10);
+   if (queuelen > 0)
+      win->SetMaxQueueLength(queuelen);
+
    if (fExternalProcessEvents) {
       // special mode when window communication performed in THttpServer::ProcessRequests
       // used only with python which create special thread - but is has to be ignored!!!
@@ -777,6 +785,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxProfilePath: file path to Firefox profile
 ///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
 ///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
@@ -784,12 +793,19 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///      WebGui.ForceHttp: "no" (default), "yes" - always create real http server to run web window
 ///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///      WebGui.Debug: "no" (default), "yes" - enable more debug output on JSROOT side
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.128.0/
+///      WebGui.QueueLength: 10 - maximal number of entires in window send queue
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.135.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
-///      WebGui.openui5theme: openui5 theme like sap_belize (default) or sap_fiori_3
+///      WebGui.openui5theme: openui5 theme like sap_fiori_3 (default) or sap_horizon
+///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
 ///
 /// THttpServer-related parameters documented in \ref CreateServer method
+///
+/// In case of using web browsers based on snap sandboxing, if you see a runtime error about unauthorized access to the system
+/// `/tmp/` folder, try callign `export TMPDIR=/home/user/` (adapt path to a real folder) before running ROOT. This workaround should
+/// no longer be needed for recognized snap-installed firefox or chrome browsers if ROOT version >= 6.38
 
 unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {

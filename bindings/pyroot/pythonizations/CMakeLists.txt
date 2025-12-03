@@ -30,7 +30,6 @@ if(roofit)
         ROOT/_pythonization/_roofit/_rooarglist.py
         ROOT/_pythonization/_roofit/_rooargset.py
         ROOT/_pythonization/_roofit/_roocategory.py
-        ROOT/_pythonization/_roofit/_roochi2var.py
         ROOT/_pythonization/_roofit/_roodatahist.py
         ROOT/_pythonization/_roofit/_roodataset.py
         ROOT/_pythonization/_roofit/_roodecays.py
@@ -39,7 +38,6 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roojsonfactorywstool.py
         ROOT/_pythonization/_roofit/_roomcstudy.py
         ROOT/_pythonization/_roofit/_roomsgservice.py
-        ROOT/_pythonization/_roofit/_roonllvar.py
         ROOT/_pythonization/_roofit/_rooprodpdf.py
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py
@@ -67,21 +65,16 @@ if(tmva)
     endif()
 endif()
 
-if(root7)
-    list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
-        ROOT/_pythonization/_rntuple.py)
-endif()
-
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
-  ROOT/JsMVA/DataLoader.py
-  ROOT/JsMVA/Factory.py
-  ROOT/JsMVA/JPyInterface.py
-  ROOT/JsMVA/JsMVAMagic.py
-  ROOT/JsMVA/OutputTransformer.py
-  ROOT/JsMVA/__init__.py
+  #ROOT/JsMVA/DataLoader.py
+  #ROOT/JsMVA/Factory.py
+  #ROOT/JsMVA/JPyInterface.py
+  #ROOT/JsMVA/JsMVAMagic.py
+  #ROOT/JsMVA/OutputTransformer.py
+  #ROOT/JsMVA/__init__.py
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
@@ -93,10 +86,13 @@ set(py_sources
   ROOT/_pythonization/_generic.py
   ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
+  ROOT/_pythonization/_rfile.py
+  ROOT/_pythonization/_rntuple.py
   ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
+  ROOT/_pythonization/_tbrowser.py
   ROOT/_pythonization/_tclass.py
   ROOT/_pythonization/_tclonesarray.py
   ROOT/_pythonization/_tcollection.py
@@ -114,6 +110,7 @@ set(py_sources
   ROOT/_pythonization/_tfile.py
   ROOT/_pythonization/_tfilemerger.py
   ROOT/_pythonization/_tformula.py
+  ROOT/_pythonization/_tcanvas.py
   ROOT/_pythonization/_tgraph.py
   ROOT/_pythonization/_tgraph2d.py
   ROOT/_pythonization/_th1.py
@@ -139,7 +136,6 @@ set(cpp_sources
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
     src/TClassPyz.cxx
-    src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
@@ -178,18 +174,15 @@ add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
+target_link_libraries(${libname} PUBLIC Core Tree CPyCppyy)
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
-  target_link_libraries(${libname} PUBLIC Core Tree cppyy)
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy)
+  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy)
+  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all)
 endif()
-
-target_include_directories(${libname}
-    SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
@@ -214,18 +207,34 @@ endforeach()
 add_library(PyROOT INTERFACE)
 target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
+# Define library output directories for build and install trees
+set(pymoduledir_build "${localruntimedir}/ROOT")
+set(pymoduledir_install "${CMAKE_INSTALL_PYTHONDIR}/ROOT")
+
+# To make sure that the library also ends up in the right subdirectory in the
+# build directory tree.
+if(MSVC)
+  set_target_properties(${libname}
+      PROPERTIES
+          RUNTIME_OUTPUT_DIRECTORY_DEBUG ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_RELEASE ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${pymoduledir_build})
+else()
+  set_target_properties(${libname} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY ${pymoduledir_build})
+endif()
+
+if(NOT MSVC)
+  # Make sure that relative RUNPATH to main ROOT libraries is always correct.
+  ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${libname} ${pymoduledir_install})
+endif()
+
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
-
-# Install meta-target PyROOT3 (INTERFACE library)
-# Install library
-install(TARGETS PyROOT EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
+                            RUNTIME DESTINATION ${pymoduledir_install} COMPONENT libraries
+                            LIBRARY DESTINATION ${pymoduledir_install}  COMPONENT libraries
+                            ARCHIVE DESTINATION ${pymoduledir_install} COMPONENT libraries)
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/ROOT

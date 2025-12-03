@@ -1,0 +1,21 @@
+
+Processing execROOT_6019.C...
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<void,double,float>	 : 0
+The base of C<void,double,float> is listed as B<void,double,float>
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<void,Double32_t,Float16_t>	 : 0
+The base of C<void,Double32_t,Float16_t> is listed as B<void,Double32_t,Float16_t>
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<double,void,float>	 : 0
+The base of C<double,void,float> is listed as B<double,void,float>
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<Double32_t,void,Float16_t>	 : 0
+The base of C<Double32_t,void,Float16_t> is listed as B<Double32_t,void,Float16_t>
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<double,Float16_t,void>	 : 0
+The base of C<double,Float16_t,void> is listed as B<double,Float16_t,void>
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TBaseClass	B<Double32_t,Float16_t,void>	 : 0
+The base of C<Double32_t,Float16_t,void> is listed as B<Double32_t,Float16_t,void>
+(int) 0

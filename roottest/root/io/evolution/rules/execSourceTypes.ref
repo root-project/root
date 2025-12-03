@@ -1,0 +1,73 @@
+
+Processing execSourceTypes.cxx+...
+The A[3] values are:
+   1.5  2.6  3.7
+Error in <TStreamerInfo::InsertArtificialElements>: For class Old in StreamerInfo -1 a rule has conflicting type for the source "double fSingle",
+   The TStreamerElement has memory type 5 (needed 8) :
+   type=read sourceClass="Old" targetClass="New" version="[1-]" source="double fSingle; " target="fDouble" code="{ std::cout << "ERROR: the rule for fDouble should not be run
+"; fDouble = onfile.fSingle * 3; }"
+Warning in <TStreamerInfo::InsertArtificialElements>: For class Old in StreamerInfo -1 is missing the source data member `fArrayNew` when trying to apply the rule:
+   type=read sourceClass="Old" targetClass="New" version="[1-]" source="A fArrayNew[3]; " target="fArrayNew" code="{ examine_array<A,3>(onfile.fArrayNew); for(size_t i = 0; i < 3; ++i) fArrayNew[i].f = onfile.fArrayNew[i].f; }"
+The A value is: 1.2
+The B value is: 1.3
+The B value is: 1.3
+The A* value is: 10.2
+The B* value is: 10.3
+The A[3] values are:
+   11.5  12.6  13.7
+The B[3] values are:
+   21.5  22.6  23.7
+The A[3] values are:
+   51.5  52.6  53.7
+The B[3] values are:
+   61.5  62.6  63.7
+The RooLikeList values are:
+   b1
+   b2
+   b3
+The TList values are:
+   c1
+   c2
+   c3
+The double value is: 0 and is correct.
+The double value is: 3 and is correct.
+The double value is: 5 and is correct.
+The double value is: 20 and is correct.
+The B value is: 1.1 and is correct.
+The B value is: 1.2 and is correct.
+The C value is: 1 and is correct.
+The B* value is: 10.1 and is correct.
+The B* value is: 10.2 and is correct.
+The C* value is: 10 and is correct.
+The B[3] values are:
+   1.5  2.6  3.7   and is correct.
+The B[3] values are:
+   11.5  12.6  13.7   and is correct.
+The C[3] values are:
+   21  22  23   and is correct.
+The B[3] values are:
+   41.5  42.6  43.7   and is correct.
+The B[3] values are:
+   51.5  52.6  53.7   and is correct.
+The C[3] values are:
+   61  62  63   and is correct.
+The TList values are:
+   a1
+   a2
+   a3
+ and is correct.
+The TList values are:
+   b1
+   b2
+   b3
+ and is correct.
+The std::list<std::string> values are:
+   c1
+   c2
+   c3
+ and is correct.
+The int[3] values are:
+   111  112  113   and is correct.
+The int value is: 3 and is correct.
+The string value is: "input message" and is correct.
+(int) 0

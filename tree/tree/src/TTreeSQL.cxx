@@ -44,7 +44,6 @@ database
 #include "TTreeSQL.h"
 #include "TBasketSQL.h"
 
-ClassImp(TTreeSQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with an explicit TSQLServer

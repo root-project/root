@@ -1,0 +1,8 @@
+<rootdict>
+   <class name="classWithDictionary1" />
+   <class name="classWithDictionary2" />
+<!--    <class name="vector<classWithDictionary1>" />  Not Selected On purpose -->
+   <class name="vector<classWithoutDictionary1>" />
+<!--   <class name="classWithoutDictionary1" />
+   <class name="classWithoutDictionary2" /> Not Selected On purpose-->
+</rootdict>

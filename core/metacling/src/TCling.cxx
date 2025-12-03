@@ -115,7 +115,7 @@ clang/LLVM technology.
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include <CppInterOp/CppInterOp.h>
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -135,7 +135,7 @@ clang/LLVM technology.
 #include <map>
 #include <set>
 #include <stdexcept>
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -153,8 +153,8 @@ clang/LLVM technology.
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
 #include <sys/stat.h>
 #endif
-#include <limits.h>
-#include <stdio.h>
+#include <climits>
+#include <cstdio>
 
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -304,7 +304,21 @@ private: \
 public: \
    static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
    static const char *Class_Name() { return #name; } \
-   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd { return true; } \
+   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd {                         \
+      static std::atomic<UChar_t> recurseBlocker(0);                                           \
+      if (R__likely(recurseBlocker >= 2)) {                                                    \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;  \
+      } else if (recurseBlocker == 1) {                                                        \
+         return false;                                                                         \
+      } else if (recurseBlocker++ == 0) {                                                      \
+         ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =        \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                        \
+            ::ROOT::Internal::HasConsistentHashMember(*IsA());                                 \
+         ++recurseBlocker;                                                                     \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;  \
+      }                                                                                        \
+      return false; /* unreachable */                                                          \
+   }                                                                                           \
    static Version_t Class_Version() { return id; } \
    static TClass *Dictionary() { return 0; } \
    virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
@@ -997,6 +1011,24 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the class name is present in TClassTable.
+///
+/// \param[in] tname class name to check.
+/// \param[out] result If a class name has an alternative name registered in
+///                    TClassTable, it will be copied into this string.
+bool TClingLookupHelper__CheckInClassTable(const std::string &tname, std::string &result)
+{
+   result.clear();
+
+   if (gROOT->GetListOfClasses()->FindObject(tname.c_str()) || TClassTable::Check(tname.c_str(), result)) {
+      // This is a known class.
+      return true;
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 TCling::TUniqueString::TUniqueString(Long64_t size)
 {
@@ -1314,8 +1346,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
       PreIncludes += gClassDefInterpMacro + "\n"
                      + gInterpreterClassDef + "\n"
-                     "#undef ClassImp\n"
-                     "#define ClassImp(X);\n";
+                     "#undef ClassImp\n"       // bw compatibility
+                     "#define ClassImp(X);\n"; // bw compatibility
    }
    if (!hasCxxModules)
       PreIncludes += "#include <string>\n";
@@ -1394,6 +1426,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
+      clingArgsStorage.push_back("-fsized-deallocation");
       // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
       // See the GitHub issues #9809 and #9944
       // TODO: to be reviewed after the upgrade of LLVM & Clang
@@ -1403,6 +1436,15 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       // by -O1, but seems to require -O2 to not explode in run time.
       clingArgsStorage.push_back("-mllvm");
       clingArgsStorage.push_back("-optimize-regalloc=0");
+#endif
+
+#ifdef CLING_WITH_ADAPTIVECPP
+      std::string acppInclude(TROOT::GetIncludeDir() + "/AdaptiveCpp");
+
+      clingArgsStorage.push_back("-isystem");
+      clingArgsStorage.push_back(acppInclude);
+      clingArgsStorage.push_back("-mllvm");
+      clingArgsStorage.push_back("-acpp-sscp");
 #endif
    }
 
@@ -1571,10 +1613,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt,
-                                                            TClingLookupHelper__ExistingTypeCheck,
-                                                            TClingLookupHelper__AutoParse,
-                                                            &fIsShuttingDown);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(
+      *fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__CheckInClassTable,
+      TClingLookupHelper__AutoParse, &fIsShuttingDown);
    TClassEdit::Init(fLookupHelper);
 
    // Disallow auto-parsing in rootcling
@@ -1705,6 +1746,7 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a PCM from TFile; returns true on success.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCMImpl(TFile &pcmFile)
 {
@@ -1804,7 +1846,7 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
          }
       }
 
-      protoClasses->Clear(); // Ownership was transfered to TClassTable.
+      protoClasses->Clear(); // Ownership was transferred to TClassTable.
       delete protoClasses;
    }
 
@@ -1813,13 +1855,14 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
    if (dataTypes) {
       for (auto typedf : *dataTypes)
          gROOT->GetListOfTypes()->Add(typedf);
-      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+      dataTypes->Clear(); // Ownership was transferred to TListOfTypes.
       delete dataTypes;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tries to load a rdict PCM, issues diagnostics if it fails.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::LoadPCM(std::string pcmFileNameFullPath)
 {
@@ -2019,6 +2062,7 @@ void TCling::ProcessClassesToUpdate()
 /// libraries.
 /// The payload code is injected "as is" in the interpreter.
 /// The value of 'triggerFunc' is used to find the shared library location.
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
@@ -2720,15 +2764,6 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   if (TClassEdit::IsUniquePtr(cl->GetName())) {
-      // Ignore error caused by the inside of std::unique_ptr
-      // This is needed solely because of rootclingIO's IsUnsupportedUniquePointer
-      // which checks the number of elements in the GetListOfRealData.
-      // If this usage is removed, this can be replaced with a return statement.
-      // See https://github.com/root-project/root/issues/13574
-      isTransient = true;
-   }
-
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    // Treat the case of std::complex in a special manner. We want to enforce
@@ -2984,9 +3019,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
             Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
-
+            if (!mbr || !mbr->IsPersistent())
+               insp.IncrementNestedTransient();
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+            if (!mbr || !mbr->IsPersistent())
+               insp.DecrementNestedTransient();
 
          }
       }
@@ -3500,7 +3538,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    // Check that this is not a system library
    static const int bufsize = 260;
    char posixwindir[bufsize];
-   char *windir = getenv("WINDIR");
+   char *windir = std::getenv("WINDIR");
    if (windir)
       cygwin_conv_path(CCP_WIN_A_TO_POSIX, windir, posixwindir, bufsize);
    else
@@ -4395,6 +4433,11 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    if (cl->fBase) {
       return;
    }
+   // Ignore the base class (e.g. `std::_Complex_base` on Windows)
+   if (TClassEdit::GetComplexType(cl->GetName()) != TClassEdit::EComplexType::kNone) {
+      cl->fBase = new TList();
+      return;
+   }
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
    TClingBaseClassInfo t(GetInterpreterImpl(), tci);
@@ -4826,7 +4869,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    DeclarationName DName = &SemaR.Context.Idents.get(name);
 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                  Sema::ForExternalRedeclaration);
+                  RedeclarationKind::ForExternalRedeclaration);
 
    cling::utils::Lookup::Named(&SemaR, R);
 
@@ -5100,8 +5143,8 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
    }
 
    // NotForRedeclaration: we want to find names in inline namespaces etc.
-   clang::LookupResult R(S, DName, clang::SourceLocation(),
-                         Sema::LookupOrdinaryName, clang::Sema::NotForRedeclaration);
+   clang::LookupResult R(S, DName, clang::SourceLocation(), Sema::LookupOrdinaryName,
+                         RedeclarationKind::NotForRedeclaration);
    R.suppressDiagnostics(); // else lookup with NotForRedeclaration will check access etc
    S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
    if (R.empty()) return;
@@ -5437,7 +5480,7 @@ Longptr_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 const char* TCling::GetTopLevelMacroName() const
 {
    Warning("GetTopLevelMacroName", "Must change return type!");
-   return fCurExecutingMacros.back();
+   return fCurExecutingMacros.empty() ? nullptr : fCurExecutingMacros.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5488,7 +5531,7 @@ const char* TCling::GetCurrentMacroName() const
    Warning("GetCurrentMacroName", "Must change return type!");
 #endif
 #endif
-   return fCurExecutingMacros.back();
+   return fCurExecutingMacros.empty() ? nullptr : fCurExecutingMacros.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5686,18 +5729,18 @@ void TCling::InitRootmapFile(const char *name)
 
    TString sname = "system";
    sname += name;
-   char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+   TString temp_sname = sname;
+   const char *s1 = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_sname);
 
-   Int_t ret = ReadRootmapFile(s);
+   Int_t ret = ReadRootmapFile(s1);
    if (ret == -3) // old format
-      fMapfile->ReadFile(s, kEnvGlobal);
-   delete [] s;
+      fMapfile->ReadFile(s1, kEnvGlobal);
    if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-      s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
-      ret = ReadRootmapFile(s);
+      TString temp_name = name;
+      const char *s2 = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_name);
+      ret = ReadRootmapFile(s2);
       if (ret == -3) // old format
-         fMapfile->ReadFile(s, kEnvUser);
-      delete [] s;
+         fMapfile->ReadFile(s2, kEnvUser);
       if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
          ret = ReadRootmapFile(name);
          if (ret == -3) // old format
@@ -6675,6 +6718,18 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
       }
    } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
       cl->ResetCaches();
+      if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+         // We need to use the Emulated Tuple but we should not trigger parsing
+         // yet, so delay the creation of the ClassInfo
+         delete ((TClingClassInfo *)cl->fClassInfo);
+         cl->fClassInfo = nullptr;
+         cl->fCanLoadClassInfo = true;
+         cl->RemoveStreamerInfo(cl->fClassVersion);
+         if (cl->fState != TClass::kHasTClassInit) {
+            cl->fState = TClass::kInterpreted;
+         }
+         return;
+      }
       // yes, this is almost a waste of time, but we do need to lookup
       // the 'type' corresponding to the TClass anyway in order to
       // preserve the opaque typedefs (Double32_t)
@@ -6957,8 +7012,7 @@ void TCling::InvalidateCachedDecl(const std::tuple<TListOfDataMembers*,
             InvalidateCachedDecl(Lists, I);
 
          // For NamespaceDecl (redeclarable), only invalidate this redecl.
-         if (D->getKind() != Decl::Namespace
-             || cast<NamespaceDecl>(D)->isOriginalNamespace())
+         if (D->getKind() != Decl::Namespace || cast<NamespaceDecl>(D)->isFirstDecl())
             C->ResetClassInfo();
       }
    }
@@ -7697,6 +7751,8 @@ void TCling::CodeComplete(const std::string& line, size_t& cursor,
 /// Get the interpreter value corresponding to the statement.
 int TCling::Evaluate(const char* code, TInterpreterValue& value)
 {
+   R__LOCKGUARD_CLING(gInterpreterMutex);
+
    auto V = reinterpret_cast<cling::Value*>(value.GetValAddr());
    auto compRes = fInterpreter->evaluate(code, *V);
    return compRes!=cling::Interpreter::kSuccess ? 0 : 1 ;
@@ -8917,6 +8973,10 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
    }
 
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
+
+   if (fd && fd->getStorageClass() == clang::SC_Static)
+      property |= kIsStatic;
+
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
       if (md->getMethodQualifiers().hasConst()) {

@@ -51,6 +51,8 @@ public:
    Double_t             GetX2() const {return fX2;}
    Double_t             GetY1() const {return fY1;}
    Double_t             GetY2() const {return fY2;}
+   Double_t             GetSlope() const; 
+   Double_t             GetYIntercept() const;
    Bool_t               IsHorizontal();
    Bool_t               IsVertical();
    void                 ls(Option_t *option="") const override;

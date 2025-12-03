@@ -1,0 +1,11 @@
+
+Processing execenumsInNamespaces.C...
+Creating empty Namespace
+Enum myNamespace::A not found!
+Enum myNamespace::B not found!
+Loading library
+Enum myNamespace::A  found!
+Enum myNamespace::B not found!
+Adding enum in the interpreter
+Enum myNamespace::A  found!
+Enum myNamespace::B  found!

@@ -21,6 +21,8 @@
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
+
+#include <algorithm>
 #include <memory>
 
 std::string gPCMFilename;
@@ -75,26 +77,6 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
    if (TClassEdit::IsUniquePtr(dmTypeName)) {
 
       if (!isUniquePtrOffsetZero) return true;
-
-      auto clm = TClass::GetClass(dmTypeName);
-      if (!clm) {
-         Error("CloseStreamerInfoROOTFile", "Class %s is not available.", dmTypeName);
-         return true;
-      }
-
-      // TODO: Is it not clear what situation we are checking for by checking if
-      // the unique_ptr class has any data members.
-      clm->BuildRealData(nullptr, /* istransient = */ true);
-      auto upDms = clm->GetListOfRealData();
-      if (!upDms) {
-         Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.", dmTypeName);
-         return true;
-      }
-
-      if (0 == upDms->GetSize()) {
-         Error("CloseStreamerInfoROOTFile", "Unique pointer %s has zero data members.", dmTypeName);
-         return true;
-      }
 
       // We check if the unique_ptr has a default deleter
       std::vector<std::string> out;

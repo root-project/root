@@ -1,0 +1,4 @@
+<lcgdict>
+<class name="WithProperties" id="MyID" someProperty="42"/>
+<typedef name="WithProperties_t"/>
+</lcgdict>

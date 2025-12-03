@@ -94,12 +94,11 @@ http://en.wikipedia.org/wiki/Quaternion
 #include "TQuaternion.h"
 #include "TString.h"
 
-ClassImp(TQuaternion);
 
 /****************** CONSTRUCTORS ****************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
-TQuaternion::TQuaternion(const TQuaternion & q) : TObject(q),
+TQuaternion::TQuaternion(const TQuaternion & q) noexcept : TObject(q),
   fRealPart(q.fRealPart), fVectorPart(q.fVectorPart) {}
 
 TQuaternion::TQuaternion(const TVector3 & vect, Double_t real)

@@ -121,7 +121,6 @@
 #include <limits>
 
 
-ClassImp(TMVA::MethodBase);
 
 using std::endl;
 using std::atof;

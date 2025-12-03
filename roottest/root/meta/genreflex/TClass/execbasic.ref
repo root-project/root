@@ -1,0 +1,165 @@
+
+Processing execbasic.C...
+*** Stress TClass ***
+Loading library libbasic_allClasses_dictrflx
+
+--- Class class1
+Class category: foreign.
+ * Version: 123
+ o Methods (9):
+  * class1 class1::class1()
+  * class1 class1::class1(int i, int j)
+  * void class1::~class1()
+  * int class1::getI()
+  * void class1::setI(int i)
+  * int class1::getJ()
+  * void class1::setJ(int j)
+  * class1 class1::class1(const class1&)
+  * class1& class1::operator=(const class1&)
+ o Members (2):
+  * int m_i [ isBasic ]
+  * int m_j [ isBasic isTransient "!" ]
+--- End Class class1
+
+--- Class class2
+Class category: foreign.
+ * Version: 567
+ o Methods (9):
+  * class2 class2::class2(int i, int j)
+  * class2 class2::class2()
+  * void class2::~class2()
+  * int class2::getI()
+  * void class2::setI(int i)
+  * int class2::getJ()
+  * void class2::setJ(int i)
+  * class2 class2::class2(const class2&)
+  * class2& class2::operator=(const class2&)
+ o Members (3):
+  * int m_i [ isBasic ]
+    - property1: value1
+    - property2: value2
+  * int m_j [ isBasic ]
+  * map<float,double> m_map1
+--- End Class class2
+
+--- Class class3
+Class category: foreign.
+ * Version: 1 --> Class available to the interpreter but not Selected!
+ o Methods (9):
+  * class3 class3::class3(int i, int j)
+  * class3 class3::class3()
+  * void class3::~class3()
+  * int class3::getI()
+  * void class3::setI(int i)
+  * int class3::getJ()
+  * void class3::setJ(int j)
+  * class3 class3::class3(const class3&)
+  * class3& class3::operator=(const class3&)
+ o Members (3):
+  * int m_i [ isBasic ]
+  * int m_j [ isBasic ]
+  * class3_1 m_class3_1_obj
+--- End Class class3
+
+--- Class class3_1
+Class category: foreign.
+ * Version: 1 --> Class available to the interpreter but not Selected!
+ o Methods (7):
+  * class3_1 class3_1::class3_1(int i)
+  * class3_1 class3_1::class3_1()
+  * void class3_1::~class3_1()
+  * int class3_1::getI()
+  * void class3_1::setI(int i)
+  * class3_1 class3_1::class3_1(const class3_1&)
+  * class3_1& class3_1::operator=(const class3_1&)
+ o Members (2):
+  * int m_i [ isBasic ]
+  * class3_2 m_class3_2_obj
+--- End Class class3_1
+
+--- Class class3_2
+Class category: foreign.
+ * Version: 1 --> Class available to the interpreter but not Selected!
+ o Methods (7):
+  * class3_2 class3_2::class3_2(int i)
+  * class3_2 class3_2::class3_2()
+  * void class3_2::~class3_2()
+  * int class3_2::getI()
+  * void class3_2::setI(int i)
+  * class3_2 class3_2::class3_2(const class3_2&)
+  * class3_2& class3_2::operator=(const class3_2&)
+ o Members (1):
+  * int m_i [ isBasic ]
+--- End Class class3_2
+
+--- Class class4
+Class category: foreign.
+  - id: 000-000-000-001
+  - myProp: 1081983
+ * Version: 1977
+ o Methods (10):
+  * class4 class4::class4(int i, int j)
+  * class4 class4::class4()
+  * void class4::~class4()
+  * int class4::getI()
+  * void class4::setI(int i)
+  * int class4::getJ()
+  * void class4::setJ(int i)
+  * double* class4::getArr()
+  * class4 class4::class4(const class4&)
+  * class4& class4::operator=(const class4&)
+ o Members (3):
+  * int m_i [ isBasic ]
+  * int m_j [ isBasic isTransient "!" ]
+  * double* m_dArray [ isPtr isBasic "[m_i]" ]
+--- End Class class4
+
+--- Class class5
+Class category: foreign.
+ * Version: -1
+ o Methods (9):
+  * class5 class5::class5(int i, int j)
+  * class5 class5::class5()
+  * void class5::~class5()
+  * int class5::getI()
+  * void class5::setI(int i)
+  * int class5::getJ()
+  * void class5::setJ(int i)
+  * class5 class5::class5(const class5&)
+  * class5& class5::operator=(const class5&)
+ o Members (3):
+  * int m_i [ isBasic ]
+  * int m_j [ isBasic ]
+  * class3* m_class3_ptr [ isPtr ]
+--- End Class class5
+
+--- Class class6
+Class category: foreign.
+ * Version: -1
+ o Methods (3):
+  * class6 class6::class6(int i)
+  * void class6::~class6()
+  * class6 class6::class6(const class6&)
+ o Members (20):
+  * const int m_arrSize [ isBasic ]
+  * int* m_arr1 [ isPtr isBasic "[m_arrSize]" ]
+  * int* m_arr2 [ isPtr isBasic "[m_arrSize]" ]
+  * int* m_arr3 [ isPtr isBasic "[m_arrSize]" ]
+  * int* m_arr4 [ isPtr isBasic "[m_arrSize]" ]
+  * int m_transient1 [ isBasic isTransient "!This member is transient" ]
+  * int m_transient2 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * int m_transient3 [ isBasic isTransient "!This member is transient" ]
+  * int m_transient4 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * int m_transient5 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * int m_transient6 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
+  * class3 m_dontSplit1 [ "|| Please do not split me!" ]
+  * class3 m_dontSplit2 [ "|| Please do not split me (Doxy)!" ]
+  * class3 m_dontSplit3 [ "|| Please do not split me!" ]
+  * class3 m_dontSplit4 [ "|| Please do not split me (Doxy)!" ]
+  * Double32_t m_d321 [ isBasic "[0,  0, 14] Hi I am opaque" ]
+  * Double32_t m_d322 [ isBasic "[0,  0, 14] Hi I am opaque in Doxygen" ]
+  * Double32_t m_d323 [ isBasic "[0,  0, 14] Hi I am opaque" ]
+  * Double32_t m_d324 [ isBasic "[0,  0, 14] Hi I am opaque in Doxygen" ]
+  * int m_testComment [ isBasic "This is an important member and should not be transient !" ]
+--- End Class class6
+(int) 0

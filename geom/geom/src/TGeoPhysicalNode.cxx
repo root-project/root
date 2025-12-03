@@ -69,7 +69,6 @@ For more details please read the [misalignment section](\ref GP05).
 
 // statics and globals
 
-ClassImp(TGeoPhysicalNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -570,7 +569,6 @@ Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
    return kTRUE;
 }
 
-ClassImp(TGeoPNEntry);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -1,0 +1,60 @@
+
+Processing runstoring.C...
+res=3.000000
+            __linear1 : x[0] Ndim= 1, Npar= 0, Number= 0 
+ Formula expression: 
+	x[0] 
+            __linear2 : x[1] Ndim= 2, Npar= 0, Number= 0 
+ Formula expression: 
+	x[1] 
+
+Vector (3)  is as follows
+
+     |        1  |
+------------------
+   0 |1.01415 
+   1 |1.98143 
+   2 |3.00558 
+
+fitter retrieved
+current parameter values for fitter1:
+
+Vector (3)  is as follows
+
+     |        1  |
+------------------
+   0 |1.01415 
+   1 |1.98143 
+   2 |3.00558 
+
+current parameter values for fitter2:
+
+Vector (3)  is as follows
+
+     |        1  |
+------------------
+   0 |1.01415 
+   1 |1.98143 
+   2 |3.00558 
+
+paramter values for the sum of fitters:
+
+Vector (3)  is as follows
+
+     |        1  |
+------------------
+   0 |1.01415 
+   1 |1.98143 
+   2 |3.00558 
+
+try the robust fitting
+
+Vector (3)  is as follows
+
+     |        1  |
+------------------
+   0 |1.0097 
+   1 |1.95008 
+   2 |2.99422 
+
+(int) 0

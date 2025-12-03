@@ -83,9 +83,6 @@ const Int_t kAutoScrollFudge = 10;
 const Int_t kAcceleration[kAutoScrollFudge+1] = {1,1,1,2,3,4,6,7,8,16,32};
 const Int_t kKeyboardTime = 700;
 
-ClassImp(TGCanvas);
-ClassImp(TGViewPort);
-ClassImp(TGContainer);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +200,7 @@ void TGViewPort::SetHPos(Int_t xpos)
    //to read window's pixels, skip "optimization".
    ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
 #else
-   UInt_t adiff = TMath::Abs(diff);
+   UInt_t adiff = std::abs(diff);
 
    if (adiff < fWidth) {
       if (diff < 0) {
@@ -255,7 +252,7 @@ void TGViewPort::SetVPos(Int_t ypos)
    //to read window's pixels, skip "optimization".
    ((TGContainer*)fContainer)->DrawRegion(0, 0, fWidth, fHeight);
 #else
-   UInt_t adiff = TMath::Abs(diff);
+   UInt_t adiff = std::abs(diff);
 
    if (adiff < fHeight) {
       if (diff < 0) {
@@ -1160,10 +1157,10 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
 
       gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
                                fXf-fX0, fYf-fY0);
-      fX0 =  TMath::Min(fXp,x);
-      fY0 =  TMath::Min(fYp,y);
-      fXf =  TMath::Max(fXp,x);
-      fYf =  TMath::Max(fYp,y);
+      fX0 =  std::min(fXp,x);
+      fY0 =  std::min(fYp,y);
+      fXf =  std::max(fXp,x);
+      fYf =  std::max(fYp,y);
 
       total = selected = 0;
 
@@ -1528,8 +1525,8 @@ void TGContainer::OnAutoScroll()
    if (dx || dy) {
       if (dx) dx /= 5;
       if (dy) dy /= 5;
-      Int_t adx = TMath::Abs(dx);
-      Int_t ady = TMath::Abs(dy);
+      Int_t adx = std::abs(dx);
+      Int_t ady = std::abs(dy);
       if (adx > kAutoScrollFudge) adx = kAutoScrollFudge;
       if (ady > kAutoScrollFudge) ady = kAutoScrollFudge;
 
@@ -1546,10 +1543,10 @@ void TGContainer::OnAutoScroll()
       x += pos.fX;
       y += pos.fY;
 
-      fX0 =  TMath::Min(fXp, x);
-      fY0 =  TMath::Min(fYp, y);
-      fXf =  TMath::Max(fXp, x);
-      fYf =  TMath::Max(fYp ,y);
+      fX0 =  std::min(fXp, x);
+      fY0 =  std::min(fYp, y);
+      fXf =  std::max(fXp, x);
+      fYf =  std::max(fYp ,y);
 
       total = selected = 0;
 
@@ -1667,14 +1664,14 @@ TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
    el = (TGFrameElement *) next();
    if (!el) return 0;
 
-   dx = TMath::Abs(el->fFrame->GetX()-x);
-   dy = TMath::Abs(el->fFrame->GetY()-y);
+   dx = std::abs(el->fFrame->GetX()-x);
+   dy = std::abs(el->fFrame->GetY()-y);
    d = dx + dy;
 
    while ((el = (TGFrameElement *) next())) {
       if (exclude && (el==fLastActiveEl) ) continue;
-      dx = TMath::Abs(el->fFrame->GetX()-x);
-      dy = TMath::Abs(el->fFrame->GetY()-y);
+      dx = std::abs(el->fFrame->GetX()-x);
+      dy = std::abs(el->fFrame->GetY()-y);
       dd = dx+dy;
 
       if (dd<d) {
@@ -1810,12 +1807,12 @@ void TGContainer::AdjustPosition()
       vh =  pos + (Int_t)fViewPort->GetHeight();
 
       if (f->GetY() < pos) {
-         v = TMath::Max(0, f->GetY() - (Int_t)fViewPort->GetHeight()/2);
+         v = std::max(0, f->GetY() - (Int_t)fViewPort->GetHeight()/2);
          v = (v*pg)/GetHeight();
 
          SetVsbPosition(v);
       } else if (f->GetY() + (Int_t)f->GetHeight() > vh) {
-         v = TMath::Min((Int_t)GetHeight() - (Int_t)fViewPort->GetHeight(),
+         v = std::min((Int_t)GetHeight() - (Int_t)fViewPort->GetHeight(),
                         f->GetY() + (Int_t)f->GetHeight() - (Int_t)fViewPort->GetHeight()/2);
          v = (v*pg)/GetHeight();
          SetVsbPosition(v);
@@ -1831,12 +1828,12 @@ void TGContainer::AdjustPosition()
       hw = pos + (Int_t)fViewPort->GetWidth();
 
       if (f->GetX() < pos) {
-         h = TMath::Max(0, f->GetX() - (Int_t)fViewPort->GetWidth()/2);
+         h = std::max(0, f->GetX() - (Int_t)fViewPort->GetWidth()/2);
          h = (h*pg)/GetWidth();
 
          SetHsbPosition(h);
       } else if (f->GetX() + (Int_t)f->GetWidth() > hw) {
-         h = TMath::Min((Int_t)GetWidth() - (Int_t)fViewPort->GetWidth(),
+         h = std::min((Int_t)GetWidth() - (Int_t)fViewPort->GetWidth(),
                         f->GetX() + (Int_t)f->GetWidth() - (Int_t)fViewPort->GetWidth()/2);
          h = (h*pg)/GetWidth();
 
@@ -2293,8 +2290,8 @@ void TGCanvas::Layout()
 
    fVport->MoveResize(fBorderWidth, fBorderWidth, cw, ch);
 
-   tcw = TMath::Max(container->GetDefaultWidth(), cw);
-   tch = TMath::Max(container->GetDefaultHeight(), ch);
+   tcw = std::max(container->GetDefaultWidth(), cw);
+   tch = std::max(container->GetDefaultHeight(), ch);
    UInt_t curw = container->GetDefaultWidth();
 
    container->SetWidth(0); // force a resize in TGFrame::Resize

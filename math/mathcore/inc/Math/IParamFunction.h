@@ -140,7 +140,7 @@ namespace ROOT {
          /**
             Implement the ROOT::Math::IBaseFunctionMultiDim interface DoEval(x) using the cached parameter values
          */
-         virtual T DoEval(const T *x) const
+         T DoEval(const T *x) const override
          {
             return DoEvalPar(x, Parameters());
          }

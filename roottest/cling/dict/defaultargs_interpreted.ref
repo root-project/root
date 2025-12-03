@@ -1,0 +1,25 @@
+
+Processing rundefaultargs.C...
+-1
+1.01
+a
+abc:,def)ghi'jkl"mno'pqr<stu
+a std string arg's conversion
+16
+'
+"
+ 
+an arg's complexity
+'nested ""' quotes
+
+void TDefaultArgs::Xint(int i=-1)
+void TDefaultArgs::Xfloat(float f=1.01)
+void TDefaultArgs::Xchar(char c='a')
+void TDefaultArgs::Xstring(const char* s="abc:,def)ghi'jkl\"mno'pqr<stu")
+void TDefaultArgs::Xstdstring(const string s="a std string arg's conversion")
+void TDefaultArgs::Xenum(const TDefaultArgs::Eenum e=TDefaultArgs::kEnumConst)
+void TDefaultArgs::XcharFancy(const char c='\'')
+void TDefaultArgs::XcharFancy2(const char c='"')
+void TDefaultArgs::XcharFancy3(const char c=' ')
+void TDefaultArgs::XFunc(const char* s=GetDefArg("an arg's complexity"))
+void TDefaultArgs::XFunc2(const char* s=GetDefArg("'nested \"\"' quotes"))

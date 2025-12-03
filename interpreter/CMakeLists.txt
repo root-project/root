@@ -11,7 +11,7 @@ if (NOT builtin_clang)
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 18)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 20)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -53,7 +53,11 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # found before (because the user turned on cuda or tmva-gpu), this will not have
 # an effect, which is fine.
 # (Note that the option is very counter-intuitive: We turn *on* disabling it...)
-set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+# Except when we want to build cling with adaptiveCpp, in which case adaptiveCpp
+# needs to find CUDA in order to build the backend.
+if(NOT experimental_adaptivecpp)
+  set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+endif()
 
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
@@ -88,7 +92,7 @@ else()
   set(ROOT_CLING_TARGET "all")
 endif()
 
-if(NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
+if(cuda AND NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
   string(APPEND ROOT_CLING_TARGET ";NVPTX")
 endif()
 
@@ -126,12 +130,8 @@ else()
   set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
 if (NOT MSVC AND NOT APPLE)
-  # Requires the linker to resolve the symbol internally and prevents
-  # conflicts when linked with another software using also LLVM like in
-  # the problem reported for Julia in
-  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
-  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
-  string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,-Bsymbolic")
+  # Allow the compiler to optimize knowing that symbols defined in libCling.so
+  # are not interposed.
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-fno-semantic-interposition")
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
@@ -176,10 +176,21 @@ if(builtin_llvm)
     if(CMAKE_BUILD_TYPE MATCHES "Debug"
      OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
+      if(NOT DEFINED LLVM_ENABLE_DUMP)
+        set(LLVM_ENABLE_DUMP TRUE)
+      endif()
     else()
       set(LLVM_ENABLE_ASSERTIONS FALSE)
+      set(LLVM_ENABLE_DUMP FALSE)
     endif()
   endif()
+
+  # Regardless of LLVM_BUILD_TYPE and LLVM_ENABLE_ASSERTIONS, we never want to
+  # "optimize llvm_unreachable() as undefined behavior" but trap if we hit this
+  # in production builds.
+  set(LLVM_UNREACHABLE_OPTIMIZE FALSE)
+
+  set(_build_type ${CMAKE_BUILD_TYPE})
 
   # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
   # in that case we set the flags for all configurations to the
@@ -209,6 +220,13 @@ if(builtin_llvm)
 
   set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "")
 
+  if(experimental_adaptivecpp)
+    # Register AdaptiveCpp as an external project
+    set(LLVM_EXTERNAL_PROJECTS "AdaptiveCpp" CACHE STRING "")
+    set(LLVM_EXTERNAL_ADAPTIVECPP_SOURCE_DIR "${ADAPTIVE_CPP_SOURCE_DIR}" CACHE STRING "")
+    set(LLVM_ADAPTIVECPP_LINK_INTO_TOOLS ON CACHE BOOL "") # To force-link the plugin into clang
+  endif()
+
   # Always build LLVM with C++17. It is not necessary to compile with the same
   # C++ standard as the rest of ROOT and sometimes it doesn't even work.
   set(_cxx_standard ${CMAKE_CXX_STANDARD})
@@ -232,6 +250,7 @@ if(builtin_llvm)
   endif()
 
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
+  set(CMAKE_BUILD_TYPE ${_build_type})
 
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
@@ -266,6 +285,7 @@ else()
   # Make some LLVM variables globally available.
   set(LLVM_INCLUDE_DIRS ${LLVM_INCLUDE_DIRS} CACHE PATH "Path to llvm/include")
   set(LLVM_LIBRARY_DIR ${LLVM_LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
+  set(LLVM_LIBDIR_SUFFIX ${LLVM_LIBDIR_SUFFIX} CACHE STRING "Suffix of library directory name")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
@@ -403,10 +423,13 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
+  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
+
+  # Forward CLANG_INSTALL_PREFIX so it can be used by core/clingutils/CMakeLists.txt
+  set(CLANG_INSTALL_PREFIX ${CLANG_INSTALL_PREFIX} PARENT_SCOPE)
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
@@ -453,8 +476,6 @@ if (builtin_cling)
   set(CLING_ROOT_BUILD ON)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
-
-  set(CLING_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cling/include CACHE STRING "")
 
 
 
@@ -531,23 +552,18 @@ mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 
 ##################### LIBINTEROP ###########################
 
-#---Set InterOp include directories, for any ROOT component that requires the headers--------------------------------------------------------
-set(CPPINTEROP_INCLUDE_DIRS
-  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include
-  CACHE STRING "CppInterOp include directories.")
-
 #---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
 set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
 set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
 #---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
 if(testing)
-  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp")
 else()
-  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp")
 endif()
 
 add_subdirectory(CppInterOp)
-if(testing)
+if(TARGET CppInterOpUnitTests)
   set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()

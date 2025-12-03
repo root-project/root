@@ -17,7 +17,6 @@
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
-ClassImp(TPCON);
 
 /** \class TPCON
 \ingroup g3d

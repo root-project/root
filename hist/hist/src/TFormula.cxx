@@ -14,7 +14,6 @@
 #include "TMethod.h"
 #include "TF1.h"
 #include "TMethodCall.h" 
-#include <TBenchmark.h>
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
@@ -24,12 +23,14 @@
 #include "ROOT/StringUtils.hxx"
 
 #include <array>
-#include <iostream>
-#include <memory>
-#include <unordered_map>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <memory>
 #include <set>
 #include <sstream>
+#include <unordered_map>
 
 using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 
@@ -38,7 +39,17 @@ using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 #endif
 #include "v5/TFormula.h"
 
-ClassImp(TFormula);
+
+namespace {
+
+std::string doubleToString(double val)
+{
+   std::stringstream ss;
+   ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
+   return ss.str();
+}
+
+} // namespace
 
 /** \class TFormula  TFormula.h "inc/TFormula.h"
     \ingroup Hist
@@ -109,17 +120,17 @@ ClassImp(TFormula);
     above also applies to the predefined parametrized functions like `gaus` and
     `expo`.
 
-    Comparisons operators are also supported `(&amp;&amp;, ||, ==, &lt;=, &gt;=, !)`
+    Comparisons operators are also supported `(&&, ||, ==, <=, >=, !)`
 
     Examples:
 
-    `sin(x*(x&lt;0.5 || x&gt;1))`
+    `sin(x*(x<0.5 || x>1))`
 
     If the result of a comparison is TRUE, the result is 1, otherwise 0.
 
     Already predefined names can be given. For example, if the formula
 
-    `TFormula old("old",sin(x*(x&lt;0.5 || x&gt;1)))`
+    `TFormula old("old",sin(x*(x<0.5 || x>1)))`
 
     one can assign a name to the formula. By default the name of the object = title = formula itself.
 
@@ -127,7 +138,7 @@ ClassImp(TFormula);
 
     is equivalent to:
 
-    `TFormula new("new","x*sin(x*(x&lt;0.5 || x&gt;1))")`
+    `TFormula new("new","x*sin(x*(x<0.5 || x>1))")`
 
     The class supports unlimited number of variables and parameters.
     By default the names which can be used for the variables are `x,y,z,t` or
@@ -804,9 +815,9 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
       if (IsVectorized)
-         prototypeArguments.Append("ROOT::Double_v*");
+         prototypeArguments.Append("ROOT::Double_v const*");
       else
-         prototypeArguments.Append("Double_t*");
+         prototypeArguments.Append("Double_t const*");
    }
    auto AddDoublePtrParam = [&prototypeArguments]() {
      prototypeArguments.Append(",");
@@ -871,7 +882,7 @@ bool TFormula::PrepareEvalMethod()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Inputs formula, transfered to C++ code into Cling
+///    Inputs formula, transferred to C++ code into Cling
 
 void TFormula::InputFormulaIntoCling()
 {
@@ -2200,7 +2211,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
-            // look for last occurence of "::"
+            // look for last occurrence of "::"
             std::string name(fun.fName.Data());
             size_t index = name.rfind("::");
             assert(index != std::string::npos);
@@ -2342,8 +2353,7 @@ void TFormula::ProcessFormula(TString &formula)
          map<TString, Double_t>::iterator constIt = fConsts.find(fun.GetName());
          if (constIt != fConsts.end()) {
             TString pattern = TString::Format("{%s}", fun.GetName());
-            TString value = TString::Format("%lf", (*constIt).second);
-            formula.ReplaceAll(pattern, value);
+            formula.ReplaceAll(pattern, doubleToString(constIt->second));
             fun.fFound = true;
             // std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
             continue;
@@ -2387,7 +2397,7 @@ void TFormula::ProcessFormula(TString &formula)
          TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
 
          // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
-         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " *x").Data() : ""),
+         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " const *x").Data() : ""),
                                                       (hasParameters ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
@@ -3204,10 +3214,14 @@ static bool functionExists(const string &Name) {
 }
 
 static void IncludeCladRuntime(Bool_t &IsCladRuntimeIncluded) {
+#ifdef ROOT_SUPPORT_CLAD
    if (!IsCladRuntimeIncluded) {
       IsCladRuntimeIncluded = true;
       gInterpreter->Declare("#include <Math/CladDerivator.h>\n#pragma clad OFF");
    }
+#else
+   IsCladRuntimeIncluded = false;
+#endif
 }
 
 static bool
@@ -3277,7 +3291,9 @@ bool TFormula::GenerateGradientPar() {
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
-
+   if (!fIsCladRuntimeIncluded)
+      return false;
+    
    // Check if the gradient request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
    // formula. In that case, the hasher will give identical id and we can
@@ -3342,6 +3358,8 @@ bool TFormula::GenerateHessianPar()
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
+   if (!fIsCladRuntimeIncluded)
+      return false;
 
    // Check if the hessian request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
@@ -3599,12 +3617,8 @@ void TFormula::ReInitializeEvalMethod() {
 ///  - If option = "P" replace the parameter names with their values
 ///  - If option = "CLING" return the actual expression used to build the function  passed to cling
 ///  - If option = "CLINGP" replace in the CLING expression the parameter with their values
-///  @param fl_format specifies the printf floating point precision when option
-///  contains "p". Default is `%g` (6 decimals). If you need more precision,
-///  change e.g. to `%.9f`, or `%a` for a lossless representation.
-///  @see https://cplusplus.com/reference/cstdio/printf/
 
-TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
+TString TFormula::GetExpFormula(Option_t *option) const
 {
    TString opt(option);
    if (opt.IsNull() || TestBit(TFormula::kLambda) ) return fFormula;
@@ -3640,9 +3654,10 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
             TString parNumbName = clingFormula(i+2,j-i-2);
             int parNumber = parNumbName.Atoi();
             assert(parNumber < fNpar);
-            TString replacement = TString::Format(fl_format, GetParameter(parNumber));
-            clingFormula.Replace(i,j-i+1, replacement );
-            i += replacement.Length();
+            std::stringstream ss;
+            std::string replacement = doubleToString(GetParameter(parNumber));
+            clingFormula.Replace(i,j-i+1, replacement);
+            i += replacement.size();
          }
          i++;
       }
@@ -3662,9 +3677,10 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
                return expFormula;
             }
             TString parName = expFormula(i+1,j-i-1);
-            TString replacement = TString::Format(fl_format, GetParameter(parName));
-            expFormula.Replace(i,j-i+1, replacement );
-            i += replacement.Length();
+            std::stringstream ss;
+            std::string replacement = doubleToString(GetParameter(parName));
+            expFormula.Replace(i,j-i+1, replacement);
+            i += replacement.size();
          }
          i++;
       }
@@ -3676,7 +3692,7 @@ TString TFormula::GetExpFormula(Option_t *option, const char *fl_format) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   std::string s("(void (&)(Double_t *, Double_t *, Double_t *)) ");
+   std::string s("(void (&)(Double_t const *, Double_t *, Double_t *)) ");
    s += GetGradientFuncName();
    gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();

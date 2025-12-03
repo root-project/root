@@ -292,7 +292,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
 
    // set the input
    if (fAttrLayout == 0) {
-      out << SP << fType << " *" << OpName << "_input = tensor_" << fNX << ";\n";
+      out << SP << fType << " const *" << OpName << "_input = tensor_" << fNX << ";\n";
    } else {
       if (fUseSession)
          out << SP << fType << " * " << OpName << "_input = fVec_" << OpName << "_input.data();\n";

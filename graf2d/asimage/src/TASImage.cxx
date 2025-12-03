@@ -173,8 +173,6 @@ typedef struct {
 }\
 
 
-ClassImp(TASImage);
-ClassImp(TASImagePlugin);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy image.
@@ -299,7 +297,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage   = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage   = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fGrayImage     = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
@@ -329,7 +327,7 @@ TASImage &TASImage::operator=(const TASImage &img)
       DestroyImage();
       delete fScaledImage;
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fGrayImage = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
@@ -338,7 +336,7 @@ TASImage &TASImage::operator=(const TASImage &img)
          memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
       }
 
-      fScaledImage = img.fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fZoomUpdate = kNoZoom;
       fZoomOffX   = img.fZoomOffX;
       fZoomOffY   = img.fZoomOffY;
@@ -1339,6 +1337,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
    if (gc) gVirtualX->ChangeGC(gc, &gv);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image on the drawable wid (pixmap, window) at x,y position.
 ///
@@ -1564,6 +1563,9 @@ void TASImage::Paint(Option_t *option)
 
    // loop over pixmap and draw image to PostScript
    if (gVirtualPS) {
+
+      Bool_t paint_as_png = kFALSE;
+
       if (gVirtualPS->InheritsFrom("TImageDump")) { // PostScript is asimage
          TImage *dump = (TImage *)gVirtualPS->GetStream();
          if (!dump) return;
@@ -1591,23 +1593,12 @@ void TASImage::Paint(Option_t *option)
          Warning("Paint", "PDF not implemented yet");
          return;
       } else if (gVirtualPS->InheritsFrom("TSVG")) {
-         Warning("Paint", "SVG not implemented yet");
-         return;
+         paint_as_png = kTRUE;
       }
-
-      // get special color cell to be reused during image printing
-      TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-      TColor *color = nullptr;
-      // Look for color by name
-      if ((color = (TColor*)colors->FindObject("Image_PS")) == nullptr)
-         color = new TColor(colors->GetEntries(), 1., 1., 1., "Image_PS");
-
-      gVirtualPS->SetFillColor(color->GetNumber());
-      gVirtualPS->SetFillStyle(1001);
 
       Double_t dx = gPad->GetX2()-gPad->GetX1();
       Double_t dy = gPad->GetY2()-gPad->GetY1();
-      Double_t x1,x2,y1,y2;
+      Double_t x1, x2, y1, y2;
 
       if (expand) {
          x1 = gPad->GetX1();
@@ -1621,19 +1612,38 @@ void TASImage::Paint(Option_t *option)
          y2 = y1+(dy*(1-gPad->GetTopMargin()-gPad->GetBottomMargin()))/image->height;
       }
 
+      // get special color cell to be reused during image printing
+      gVirtualPS->SetFillColor(TColor::GetColor((Float_t) 1., (Float_t) 1., (Float_t) 1.));
+      gVirtualPS->SetFillStyle(1001);
+
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
-      ASImageDecoder *imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
-                                                   0, 0, image->width, image->height, nullptr);
-      if (!imdec) return;
-      for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
-         imdec->decode_image_scanline(imdec);
-         for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
-            gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                      imdec->buffer.green[xt],
-                                      imdec->buffer.blue[xt]);
+      if (paint_as_png) {
+         char *buffer = nullptr;
+         int size = 0;
+         ASImageExportParams params;
+         params.png.type = ASIT_Png;
+         params.png.flags = EXPORT_ALPHA;
+         params.png.compression = GetImageCompression();
+         if (!params.png.compression)
+            params.png.compression = -1;
+         if (ASImage2PNGBuff(image, (CARD8 **)&buffer, &size, &params)) {
+            gVirtualPS->CellArrayPng(buffer, size);
+            free(buffer);
+         }
+      } else {
+         auto imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
+                                           0, 0, image->width, image->height, nullptr);
+         if (imdec)
+            for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
+               imdec->decode_image_scanline(imdec);
+               for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
+                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
+                                          imdec->buffer.green[xt],
+                                          imdec->buffer.blue[xt]);
+            }
+         stop_image_decoding(&imdec);
       }
-      stop_image_decoding(&imdec);
       gVirtualPS->CellArrayEnd();
 
       // print the color bar
@@ -1647,18 +1657,33 @@ void TASImage::Paint(Option_t *option)
          gVirtualPS->CellArrayBegin(grad_im->width, grad_im->height,
                                     x1, x2, y1, y2);
 
-         imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
-                                      0, 0, grad_im->width, grad_im->height, nullptr);
-         if (imdec) {
-            for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
-               imdec->decode_image_scanline(imdec);
-               for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
-                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                            imdec->buffer.green[xt],
-                                            imdec->buffer.blue[xt]);
+         if (paint_as_png) {
+            char *buffer = nullptr;
+            int size = 0;
+            ASImageExportParams params;
+            params.png.type = ASIT_Png;
+            params.png.flags = EXPORT_ALPHA;
+            params.png.compression = GetImageCompression();
+            if (!params.png.compression)
+               params.png.compression = -1;
+
+            if (ASImage2PNGBuff(grad_im, (CARD8 **)&buffer, &size, &params)) {
+               gVirtualPS->CellArrayPng(buffer, size);
+               free(buffer);
             }
+         } else {
+            auto imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
+                                              0, 0, grad_im->width, grad_im->height, nullptr);
+            if (imdec)
+               for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
+                  imdec->decode_image_scanline(imdec);
+                  for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
+                     gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
+                                             imdec->buffer.green[xt],
+                                             imdec->buffer.blue[xt]);
+               }
+            stop_image_decoding(&imdec);
          }
-         stop_image_decoding(&imdec);
          gVirtualPS->CellArrayEnd();
 
          // values of palette
@@ -2790,7 +2815,7 @@ TObject *TASImage::Clone(const char *newname) const
       return nullptr;
    }
 
-   TASImage *im = (TASImage*)TImage::Create();
+   TASImage *im = static_cast<TASImage *>(TImage::Create());
 
    if (!im) {
       Warning("Clone", "Failed to create image");
@@ -2807,7 +2832,7 @@ TObject *TASImage::Clone(const char *newname) const
    im->fZoomWidth = fZoomWidth;
    im->fZoomHeight = fZoomHeight;
    im->fZoomUpdate = fZoomUpdate;
-   im->fScaledImage = fScaledImage ? (TASImage*)fScaledImage->Clone("") : nullptr;
+   im->fScaledImage = fScaledImage ? static_cast<TASImage *>(fScaledImage->Clone()) : nullptr;
 
    if (fImage->alt.argb32) {
       UInt_t sz = fImage->width * fImage->height;
@@ -6741,34 +6766,24 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char *buf = nullptr;
    int sz;
-
-   if (GetWidth() > 500) { // workaround CINT limitations
-      UInt_t w = 500;
-      Double_t scale = 500./GetWidth();
-      UInt_t h = TMath::Nint(GetHeight()*scale);
-      Scale(w, h);
-   }
-
    GetImageBuffer(&buf, &sz, TImage::kXpm);
    TString str = buf;
    free(buf);
 
-   TString name = GetName();
-   name.ReplaceAll(".", "_");
-   static int ii = 0;
-   ii++;
-
    str.ReplaceAll("static", "const");
-   TString xpm = "xpm_";
-   xpm += name;
-   xpm += ii;
-   str.ReplaceAll("asxpm", xpm.Data());
-   out << std::endl << str << std::endl << std::endl;
+   static int ii = 0;
 
-   out << "   TImage *";
-   out << xpm << "_img = TImage::Create();" << std::endl;
-   out << "   " << xpm << "_img->SetImageBuffer( (char **)" << xpm << ", TImage::kXpm);" << std::endl;
-   out << "   " << xpm << "_img->Draw();" << std::endl;
+   TString xpm = TString::Format("asimage_xpm_%d", ii++);
+   str.ReplaceAll("asxpm", xpm.Data());
+   out << "\n" << str << "\n\n";
+
+   out << "   ";
+   if (!gROOT->ClassSaved(TImage::Class()))
+      out << TImage::Class()->GetName() << " *";
+   out << "asimage = TImage::Create();\n";
+   out << "   asimage->SetImageBuffer( (char **)" << xpm << ", TImage::kXpm);\n";
+   SaveImageAttributes(out, "asimage");
+   out << "   asimage->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,7 +45,7 @@ sap.ui.define(['sap/ui/core/Control',
 
             var size = this.geom_painter.getSizeFor3d();
 
-            this.geom_painter.add3dCanvas(size, this.geom_painter._renderer.domElement);
+            this.geom_painter.add3dCanvas(size, this.geom_painter.getRenderer().domElement);
 
             // set as main canvas painter or just top painter
             this.geom_painter.setAsMainPainter();

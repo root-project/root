@@ -1,0 +1,6 @@
+<lcgdict>
+  <function name="dummyTriggerForTrigPartTypedefs" />
+  <class    name="ElectronMuonTopoInfoContainer" />
+  <class    name="ElectronMuonTopoInfo" />
+  <class    name="DataVector<ElectronMuonTopoInfo>" />
+</lcgdict>

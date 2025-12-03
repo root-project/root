@@ -137,6 +137,15 @@ static Int_t gLastEntry = -1;
 # define type_of_call
 # define DEFCHAR  const char*
 # define PASSCHAR(string) string
+
+// As recommended in
+// https://gcc.gnu.org/onlinedocs/gfortran/Argument-passing-conventions.html
+#if __GNUC__ > 7
+typedef size_t fortran_charlen_t;
+#else
+typedef int fortran_charlen_t;
+#endif
+
 #else
 # define hlimit  HLIMIT
 # define hldir   HLDIR
@@ -177,8 +186,8 @@ static Int_t gLastEntry = -1;
 extern "C" void  type_of_call hlimit(const int&);
 #ifndef WIN32
 extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
-                        const int&,const int&,const int,const int,const int);
-extern "C" void  type_of_call hrend(DEFCHAR,const int);
+                        const int&,const int&,fortran_charlen_t,fortran_charlen_t,fortran_charlen_t);
+extern "C" void  type_of_call hrend(DEFCHAR,fortran_charlen_t);
 #else
 extern "C" void  type_of_call hropen(const int&,DEFCHAR,DEFCHAR,DEFCHAR,
                         const int&,const int&);
@@ -189,7 +198,7 @@ extern "C" void  type_of_call hrin(const int&,const int&,const int&);
 extern "C" void  type_of_call hnoent(const int&,const int&);
 #ifndef WIN32
 extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,const float&,
-   const int&,const float&,const float&,const int&,const int&,const int);
+   const int&,const float&,const float&,const int&,const int&,fortran_charlen_t);
 #else
 extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,const float&,
    const int&,const float&,const float&,const int&,const int&);
@@ -198,8 +207,8 @@ extern "C" void  type_of_call hgive(const int&,DEFCHAR,const int&,const float&,c
   //SUBROUTINE HGNT1(IDD,BLKNA1,VAR,IOFFST,NVAR,IDNEVT,IERROR)
 #ifndef WIN32
 extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
-   const float&,const float&,const int,const int);
-extern "C" void  type_of_call hgnt1(const int&,DEFCHAR,DEFCHAR,const int&,const int&,const int&,const int&,const int,const int);
+   const float&,const float&,fortran_charlen_t,fortran_charlen_t);
+extern "C" void  type_of_call hgnt1(const int&,DEFCHAR,DEFCHAR,const int&,const int&,const int&,const int&,fortran_charlen_t,fortran_charlen_t);
 #else
 extern "C" void  type_of_call hgiven(const int&,DEFCHAR,const int&,DEFCHAR,
    const float&,const float&);
@@ -207,15 +216,15 @@ extern "C" void  type_of_call hgnt1(const int&,DEFCHAR,DEFCHAR,const int&,const 
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,const int,const int, const int);
-extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR, const int);
+extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&,fortran_charlen_t,fortran_charlen_t, fortran_charlen_t);
+extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR, fortran_charlen_t);
 #else
 extern "C" void  type_of_call hntvar2(const int&,const int&,DEFCHAR,DEFCHAR,DEFCHAR,int&,int&,int&,int&,int&);
 extern "C" void  type_of_call hntvar3(const int&,const int&,DEFCHAR);
 #endif
 
 #ifndef WIN32
-extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,const int, const int);
+extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&,fortran_charlen_t, fortran_charlen_t);
 #else
 extern "C" void  type_of_call hbnam(const int&,DEFCHAR,const int&,DEFCHAR,const int&);
 #endif
@@ -237,8 +246,8 @@ extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
 extern "C" float type_of_call hije(const int&,const int&,const int&);
 #ifndef WIN32
-extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
-extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR ,const int,const int);
+extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,fortran_charlen_t,fortran_charlen_t);
+extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR ,fortran_charlen_t,fortran_charlen_t);
 #else
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR);
 extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
@@ -247,7 +256,6 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = nullptr;
 
-ClassImp(THbookFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///the constructor

@@ -29,7 +29,7 @@ public:
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
           RooAbsReal::Ref norm, const char* rangeName=nullptr) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooExtendPdf(*this,newname) ; }
 
   double evaluate() const override { return _pdf ; }
 
@@ -50,7 +50,11 @@ public:
 
   RooAbsPdf const& pdf() const { return *_pdf; }
 
-protected:
+  RooAbsReal const &getN() const { return *_n; }
+
+  TNamed const *getRangeName() const { return _rangeName; }
+
+  protected:
 
   RooTemplateProxy<RooAbsPdf>  _pdf;  ///< Input p.d.f
   RooTemplateProxy<RooAbsReal> _n;    ///< Number of expected events

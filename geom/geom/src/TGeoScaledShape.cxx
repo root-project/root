@@ -27,13 +27,13 @@ A shape scaled by a TGeoScale transformation
 \image html geom_scaledshape.png
 */
 
-ClassImp(TGeoScaledShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 TGeoScaledShape::TGeoScaledShape()
 {
+   SetShapeBit(TGeoShape::kGeoScaled);
    fShape = nullptr;
    fScale = nullptr;
 }
@@ -43,6 +43,7 @@ TGeoScaledShape::TGeoScaledShape()
 
 TGeoScaledShape::TGeoScaledShape(const char *name, TGeoShape *shape, TGeoScale *scale) : TGeoBBox(name, 0, 0, 0)
 {
+   SetShapeBit(TGeoShape::kGeoScaled);
    fShape = shape;
    fScale = scale;
    if (!fScale->IsRegistered())
@@ -55,6 +56,7 @@ TGeoScaledShape::TGeoScaledShape(const char *name, TGeoShape *shape, TGeoScale *
 
 TGeoScaledShape::TGeoScaledShape(TGeoShape *shape, TGeoScale *scale)
 {
+   SetShapeBit(TGeoShape::kGeoScaled);
    fShape = shape;
    fScale = scale;
    if (!fScale->IsRegistered())

@@ -1,0 +1,93 @@
+<lcgdict>
+	<class name="TrigCaloCluster" id="E6545F3B-285C-4CC0-8BDC-427286A0D647"/>
+	<!--<class name="DataVector<TrigCaloCluster>"/>-->
+        <class name="TrigCaloClusterContainer"/>
+        <class name="DataVector<TrigCaloCluster>"/>
+	<!--<class name="std::vector<TrigCaloCluster*>"/>-->
+	<!--<class name="std::vector<const TrigCaloCluster*>"/>-->
+
+	<class name="TrigEMCluster" id="E60986AE-938E-4256-A100-CD99158ADE9E"/>
+	<class name="DataVector<TrigEMCluster>"/>
+	<class name="std::vector<TrigEMCluster*>"/>
+	<class name="std::vector<const TrigEMCluster*>"/>
+
+	<class name="TrigTauCluster" id="9B3B6AE8-9CE6-44AB-8B31-8B39FED52607">
+          <field name="m_clusterDetails" transient="true"/>
+        </class>
+
+	<class name="DataVector<TrigTauCluster>"/>
+	<class name="std::vector<TrigTauCluster*>"/>
+	<class name="std::vector<const TrigTauCluster*>"/>
+
+        <class name="TrigTauClusterDetails" id="1C8021CB-F4FB-473A-B379-9BEF3FC7FEB9"/>
+        <class name="DataVector<TrigTauClusterDetails>"/>
+        <class name="std::vector<TrigTauClusterDetails*>"/>
+        <class name="std::vector<const TrigTauClusterDetails*>"/>
+
+	<class name="Trig3Momentum"/>
+	<!--<class name="DataVector<Trig3Momentum>"/>-->
+	<!--<class name="std::vector<Trig3Momentum*>"/>-->
+	<!--<class name="std::vector<const Trig3Momentum*>"/>-->
+
+	<class name="TrigT2Jet"	id="242473A8-A320-49F1-A680-136EA26C1FAF">
+           <field name="m_grid" transient="true" />
+        </class>
+	<class name="DataVector<TrigT2Jet>"/>
+	<class name="std::vector<TrigT2Jet*>"/>
+	<class name="std::vector<const TrigT2Jet*>"/>
+
+	<!--class name="TrigMissingETContainer" id="9481B442-D877-44A2-BB21-7A1B5D47710F"/>-->
+
+	<!--class name="TrigMissingET" id="1403772C-7444-4340-930B-ABD51C243A09"/>-->
+	<!--class name="DataVector<TrigMissingET>" id="301D572F-D972-45C8-B3ED-0CC090F15C7A" />-->
+	<!--class name="std::vector<TrigMissingET*>" />-->
+	<!--class name="std::vector<const TrigMissingET*>" />-->
+
+        <!--class name="TrigMissingEtComponent"/>-->
+        <!--class name="std::vector<TrigMissingEtComponent>"/>-->
+        <!--class name="std::vector<const TrigMissingEtComponent>"/>-->
+
+     	<class name="TrigEMClusterContainer" id="8F88F373-63B9-40D5-B787-C6BD67B7F3BC"/>
+	<class name="DataVector<TrigEMClusterContainer>" id="B09292A3-1DBC-40CA-9174-4B44C4A7FD2D" />
+	<class name="std::vector<TrigEMClusterContainer*>" />
+	<class name="std::vector<const TrigEMClusterContainer*>" />
+
+	<class name="TrigTauClusterContainer" id="0829516A-E721-430D-91C6-DC243FD1440B"/>
+	<class name="DataVector<TrigTauClusterContainer>" id="62867C5F-A5DA-4B89-AA7A-51AAABA3F984" />
+	<class name="std::vector<TrigTauClusterContainer*>" />
+	<class name="std::vector<const TrigTauClusterContainer*>" />
+
+	<class name="TrigTauClusterDetailsContainer" id="81962c22-4199-4730-bdb0-2c3d887efb20"/>
+	<class name="DataVector<TrigTauClusterDetailsContainer>" id="36c1385e-34f1-4863-8392-15a809feb02c" />
+	<class name="std::vector<TrigTauClusterDetailsContainer*>" />
+	<class name="std::vector<const TrigTauClusterDetailsContainer*>" />
+
+	<class name="TrigT2JetContainer" id="97C4C98E-0275-4974-944D-100C7C29E959"/>
+	<class name="DataVector<TrigT2JetContainer>" id="E59E0DB0-6607-4B9D-B2CC-AC3AB113A0B3" />
+	<class name="std::vector<TrigT2JetContainer*>" />
+	<class name="std::vector<const TrigT2JetContainer*>" />
+
+
+	<class name="RingerRingsContainer" id="F9380A75-4811-4FD6-A626-439E7A381721" />
+	<class name="DataVector<RingerRings>" id="8E82762A-0223-47C4-87B4-5D9FFD3C1B86" />
+	<class name="std::vector<RingerRings*>" />
+	<class name="std::vector<const RingerRings*>" />
+	<class name="RingerRings" />
+
+
+        <class name="TrigT2MbtsBitsContainer" id="BBB00ED0-1D5C-4C73-8785-6BF239D07816"/>
+        <class name="TrigT2MbtsBits" id="C58DBDDC-AAAC-44CE-9C6A-6580CC21082E" />
+	<class name="DataVector<TrigT2MbtsBits>" id="C27AF62F-A38A-4B19-8737-D2F6B2D35623" />
+	<class name="std::vector<TrigT2MbtsBits*>" />
+
+        <class name="TrigT2ZdcSignalsContainer" id="390678B7-7BE8-4DF9-97A6-2773C00990C3" />
+        <class name="TrigT2ZdcSignals" id="789C7E5C-E45A-445C-A26E-2FA3F64F1140" />
+        <class name="DataVector<TrigT2ZdcSignals>" id="D5DFD711-99C8-4C1D-A226-02E3308A811B" />
+        <class name="std::vector<TrigT2ZdcSignals*>" />
+
+        <class name="TrigRNNOutputContainer" id="FED72B55-6275-DE11-8F1B-000423DD5A1A" />
+        <class name="DataVector<TrigRNNOutput>" id="DEDD606C-6275-DE11-9E9D-000423DD5A1A" />
+        <class name="std::vector<TrigRNNOutput*>" />
+        <class name="std::vector<const TrigRNNOutput*>" />
+        <class name="TrigRNNOutput" />
+</lcgdict>

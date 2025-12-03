@@ -1,36 +1,113 @@
 # JSROOT changelog
 
+
 ## Changes in dev
-1. Implement 'cont5' draw option for `TGraph2D` using Delaunay algorithm
-1. Implement 'pol' and 'arr_colz' draw option for `TH2`
-1. Only 'col7' draw option uses bar offset and width for color `TH2` drawing
-1. Interactive zooming and context menu on 'chord' `TH2` drawing
-1. Implement 'box1' for `TH3` with negative bins
-1. Introduce `settings.FilesTimeout` to configure global timeout for file reading operations
-1. Introduce `settings.FilesRemap` to let provide fallback address for http server, used for `root.cern`
-1. Adjust histogram title drawing with native implementation
-1. Improve float to string conversion when 'g' is specified
-1. Support 'same' option for first histogram, draw directly on pad
-1. Display underflow/overflow bins when configured for the axis, implement 'allbins' draw option for histograms
-1. Support different angle coordinates in `TGraphPolargram`, handle 'N' and 'O' draw options
-1. Support fAxisAngle in `TGraphPolargram`, provide 'rangleNN' draw option
-1. Implement 'arc' draw option for `TPave`
-1. Provide context menus for all derived from `TPave` classes
-1. Let edit histograms and graphs title via context menu
-1. Support Poisson errors for `TH1`/`TH2`, https://root-forum.cern.ch/t/62335/
-1. Test fSumw2 when detect empty TH2 bin, sync with https://github.com/root-project/root/pull/17948
-1. Support `TLink` and `TButton` object, used in `TInspectCanvas`
-1. Support `TF12` - projection of `TF2`
-1. Upgrade three.js r168 -> r174
-1. Remove support of qt5 webengine, only qt6web is supported
-1. Set 'user-select: none' style in drawings to exclude text selection, using `settings.UserSelect` value
-1. Internals - use private members and methods
-1. Internals - use `WeakRef` class for cross-referencing of painters
-1. Internals - use negative indexes in arrays and Strings
-1. Fix - handle `TPave` NDC position also when fInit is not set
-1. Fix - properly handle image sizes in svg2pdf
-1. Fix - drawing `TPaveText` with zero text size
-1. Fix - correct axis range in `TScatter` drawing
+1. Implement for `TPie` 3d, text, title drawing including interactivity
+1. Remove support for deprectaed TH1K class
+1. Fix - proper paint axis labels on both sides when pad.fTickx/y = 2
+1. Fix - paint frame border mode/size from TCanvas
+
+
+## Changes in 7.10.0
+1. `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
+2. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
+3. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
+4. Draw `TAnnotation3D` in real 3D with handling scene rotation
+5. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
+6. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
+7. Support gStyle.fBarOffset for `TGraph` bar drawing
+8. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
+9. Support dark mode when store images
+10. With 'Shift' key pressed whole graph is moved by dragging action
+11. Support `Xall` and `Yall` as projections width #340
+12. Implement `unzipJSON()` function for data embeding in jupyter
+13. Support reading `TBranch` from very old ROOT files with custom streamers
+14. Upgrade three.js r174 -> r180
+15. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+16. Upgrade svg2pdf.js 2.3.0 -> 2.6.0
+17. Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
+18. Use ES6 modules to implement geoworker, enable node.js usage
+19. Remove countGeometryFaces function - use numGeometryFaces instead
+20. Remove experimental RHist classes, deprecated in ROOT 6.38
+21. Internal - ws members are private, new methods has to be used
+22. Fix - ticks size and labels with kMoreLogLabels axis bit
+23. Fix - first color in palette drawing #365
+24. Fix - latex parsing error of `#delta_{0}_suffix` string
+25. Fix - reduce plain HTML usage to minimize danger of JS code injection
+
+
+## Changes in 7.9.3
+1. Fix - store large PDF with 3D drawing inside
+2. Fix - prevent JS code injection via `TObjString` drawing
+3. Fix - reduce use of HTML in hpainter, display and menu components
+
+
+## Changes in 7.9.2
+1. Fix - reading `TLeafC` leafs
+2. Fix - support BigInt in object inspector
+3. Fix - svg2pdf.js URL bounding box
+4. Fix - `TTree::Draw` with strings
+5. Fix - toggle vertical/horizontal palette via context menu
+6. Fix - detect HTML element size from style attribute
+7. Fix - typo in `expandToLevel` method
+8. Fix - handle missed expand in hierarchy painter
+
+
+## Changes in 7.9.1
+1. Fix - colz handling on `THStack`, avoid multiple palette drawings
+2. Fix - bug in pad.Divide context menu command
+3. Fix - drag and drop of histograms on empty sub-pads
+4. Fix - add missing colors 100 - 127
+5. Fix - correct online context menu for histogram title
+6. Fix - copy all X axis attributes in multi-graph painter
+7. Fix - if histogram WebGL drawing fails, fallback to default 2D
+
+
+## Changes in 7.9.0
+1. New draw options:
+   - 'pol' and 'arr_colz' draw option for `TH2`
+   - 'col7' uses bar offset and width for `TH2`
+   - 'cont5' for `TGraph2D` using Delaunay algorithm
+   - 'chord' drawing of `TH2` implements zooming
+   - 'box1' for `TH3` with negative bins
+   - 'same' option for first histogram on pad, draw without creating `TFrame`
+   - 'rangleNN' for `TGraphPolargram`, also support fAxisAngle member
+   - 'N' and 'O' for `TGraphPolargram` for angle coordinate systems
+   - 'arc' for `TPave` and derived classes
+   - 'allbins' for histograms to display underflow/overflow bins
+   - Poisson errors for `TH1`/`TH2`, https://root-forum.cern.ch/t/62335/
+   - test fSumw2 when detect empty `TH2` bin, sync with https://github.com/root-project/root/pull/17948
+2. New supported classes:
+   - `TF12` - projection of `TF2`
+   - `TLink` and `TButton`, used in `TInspectCanvas`
+3. New partameters in `TTree::Draw`:
+   - '>>elist' to request entries matching cut conditions
+   - 'elist' to specify entries for processing
+   - 'nmatch' to process exactly the specified number of entries, break processing afterwards
+   - 'staged' algorithm to first select entries and then process only these entries
+4. New settings parameters:
+   - `settings.FilesTimeout` global timeout for file reading operations
+   - `settings.FilesRemap` fallback address for http server, used for `root.cern`
+   - `settings.TreeReadBunchSize` bunch read size for `TTree` processing
+   - `settings.UserSelect` to set 'user-select: none' style in drawings to exclude text selection
+5. Context menus:
+   - all `TPave`-derived classes
+   - in 'chord' drawings of `TH2`
+   - editing histogram and graph title
+6. Fixes:
+   - match histogram title drawing with native ROOT implementation
+   - float to string conversion when 'g' is specified
+   - handle `TPave` NDC position also when fInit is not set
+   - properly handle image sizes in svg2pdf
+   - drawing `TPaveText` with zero text size
+   - correct axis range in `TScatter` drawing
+   - use draw option also for graph drawing in `TTree::Draw`
+7. Internals:
+   - upgrade three.js r168 -> r174
+   - use private members and methods
+   - use `WeakRef` class for cross-referencing of painters
+   - use negative indexes in arrays and Strings
+   - remove support of qt5 webengine, only qt6web can be used
 
 
 ## Changes in 7.8.2

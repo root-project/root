@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### This macro provides an example of using a trained model with Keras
 ### and make inference using SOFIE directly from Numpy
@@ -14,12 +14,8 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
-import ROOT
 import numpy as np
-
-
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
+import ROOT
 
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"

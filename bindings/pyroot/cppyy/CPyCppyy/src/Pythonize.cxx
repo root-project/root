@@ -148,30 +148,20 @@ inline PyObject* CallSelfIndex(CPPInstance* self, PyObject* idx, PyObject* pymet
 }
 
 //- "smart pointer" behavior ---------------------------------------------------
-PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+static PyObject* smart_follow(PyObject* self, PyObject* name, PyObject* method)
 {
-// Follow operator*() if present (available in python as __deref__), so that
-// smart pointers behave as expected.
-    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
-    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
-    // whereas as-is, they can accidentally dereference the result of end() on some STL
-    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
-        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
-        return nullptr;
-    }
-
     if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gDeref);
+    PyObject* pyptr = PyObject_CallMethodNoArgs(self, method);
     if (!pyptr)
         return nullptr;
 
 // prevent a potential infinite loop
     if (Py_TYPE(pyptr) == Py_TYPE(self)) {
-        PyObject* val1 = PyObject_Str(self);
+        PyObject* val1 = PyObject_Str((PyObject*)Py_TYPE(self));
         PyObject* val2 = PyObject_Str(name);
-        PyErr_Format(PyExc_AttributeError, "%s has no attribute \'%s\'",
+        PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'",
             CPyCppyy_PyText_AsString(val1), CPyCppyy_PyText_AsString(val2));
         Py_DECREF(val2);
         Py_DECREF(val1);
@@ -185,21 +175,28 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
     return result;
 }
 
+PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+{
+// Follow operator*() if present (available in python as __deref__), so that
+// smart pointers behave as expected.
+    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
+    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
+    // whereas as-is, they can accidentally dereference the result of end() on some STL
+    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
+        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
+        return nullptr;
+    }
+
+
+    return smart_follow(self, name, PyStrings::gDeref);
+}
+
 //-----------------------------------------------------------------------------
 PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyText_Check(name))
-        PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
-
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gFollow);
-    if (!pyptr)
-         return nullptr;
-
-    PyObject* result = PyObject_GetAttr(pyptr, name);
-    Py_DECREF(pyptr);
-    return result;
+    return smart_follow(self, name, PyStrings::gFollow);
 }
 
 //- pointer checking bool converter -------------------------------------------
@@ -237,8 +234,8 @@ struct CountedItemGetter : public ItemGetter {
 
 struct TupleItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyTuple_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyTuple_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyTuple_GET_SIZE(fPyObject)) {
             PyObject* item = PyTuple_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -251,8 +248,8 @@ struct TupleItemGetter : public CountedItemGetter {
 
 struct ListItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() { return PyList_GET_SIZE(fPyObject); }
-    virtual PyObject* get() {
+    Py_ssize_t size() override { return PyList_GET_SIZE(fPyObject); }
+    PyObject* get() override {
         if (fCur < PyList_GET_SIZE(fPyObject)) {
             PyObject* item = PyList_GET_ITEM(fPyObject, fCur++);
             Py_INCREF(item);
@@ -265,7 +262,7 @@ struct ListItemGetter : public CountedItemGetter {
 
 struct SequenceItemGetter : public CountedItemGetter {
     using CountedItemGetter::CountedItemGetter;
-    virtual Py_ssize_t size() {
+    Py_ssize_t size() override {
         Py_ssize_t sz = PySequence_Size(fPyObject);
         if (sz < 0) {
             PyErr_Clear();
@@ -273,13 +270,13 @@ struct SequenceItemGetter : public CountedItemGetter {
         }
         return sz;
     }
-    virtual PyObject* get() { return PySequence_GetItem(fPyObject, fCur++); }
+    PyObject* get() override { return PySequence_GetItem(fPyObject, fCur++); }
 };
 
 struct IterItemGetter : public ItemGetter {
     using ItemGetter::ItemGetter;
-    virtual Py_ssize_t size() { return PyObject_LengthHint(fPyObject, 8); }
-    virtual PyObject* get() { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
+    Py_ssize_t size() override { return PyObject_LengthHint(fPyObject, 8); }
+    PyObject* get() override { return (*(Py_TYPE(fPyObject)->tp_iternext))(fPyObject); }
 };
 
 static ItemGetter* GetGetter(PyObject* args)
@@ -448,9 +445,20 @@ PyObject* VectorIAdd(PyObject* self, PyObject* args, PyObject* /* kwds */)
         if (PyObject_CheckBuffer(fi) && !(CPyCppyy_PyText_Check(fi) || PyBytes_Check(fi))) {
             PyObject* vend = PyObject_CallMethodNoArgs(self, PyStrings::gEnd);
             if (vend) {
-                PyObject* result = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
+            // when __iadd__ is overriden, the operation does not end with
+            // calling the __iadd__ method, but also assigns the result to the
+            // lhs of the iadd. For example, performing vec += arr, Python
+            // first calls our override, and then does vec = vec.iadd(arr).
+                PyObject *it = PyObject_CallMethodObjArgs(self, PyStrings::gInsert, vend, fi, nullptr);
                 Py_DECREF(vend);
-                return result;
+
+                if (!it)
+                    return nullptr;
+
+                Py_DECREF(it);
+            // Assign the result of the __iadd__ override to the std::vector
+                Py_INCREF(self);
+                return self;
             }
         }
     }
@@ -551,13 +559,18 @@ static PyObject* vector_iter(PyObject* v) {
     vectoriterobject* vi = PyObject_GC_New(vectoriterobject, &VectorIter_Type);
     if (!vi) return nullptr;
 
-    Py_INCREF(v);
     vi->ii_container = v;
 
 // tell the iterator code to set a life line if this container is a temporary
     vi->vi_flags = vectoriterobject::kDefault;
-    if (Py_REFCNT(v) <= 2 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#if PY_VERSION_HEX >= 0x030e0000
+    if (PyUnstable_Object_IsUniqueReferencedTemporary(v) || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#else
+    if (Py_REFCNT(v) <= 1 || (((CPPInstance*)v)->fFlags & CPPInstance::kIsValue))
+#endif
         vi->vi_flags = vectoriterobject::kNeedLifeLine;
+
+    Py_INCREF(v);
 
     PyObject* pyvalue_type = PyObject_GetAttr((PyObject*)Py_TYPE(v), PyStrings::gValueType);
     if (pyvalue_type) {
@@ -885,6 +898,7 @@ PyObject* MapInit(PyObject* self, PyObject* args, PyObject* /* kwds */)
     return nullptr;
 }
 
+#if __cplusplus <= 202002L
 PyObject* STLContainsWithFind(PyObject* self, PyObject* obj)
 {
 // Implement python's __contains__ for std::map/std::set
@@ -911,6 +925,7 @@ PyObject* STLContainsWithFind(PyObject* self, PyObject* obj)
 
     return result;
 }
+#endif
 
 
 //- set behavior as primitives ------------------------------------------------
@@ -1123,15 +1138,15 @@ static int PyObject_Compare(PyObject* one, PyObject* other) {
 }
 #endif
 static inline
-PyObject* CPyCppyy_PyString_FromCppString(std::string* s, bool native=true) {
+PyObject* CPyCppyy_PyString_FromCppString(std::string_view s, bool native=true) {
     if (native)
-        return PyBytes_FromStringAndSize(s->data(), s->size());
-    return CPyCppyy_PyText_FromStringAndSize(s->data(), s->size());
+        return PyBytes_FromStringAndSize(s.data(), s.size());
+    return CPyCppyy_PyText_FromStringAndSize(s.data(), s.size());
 }
 
 static inline
-PyObject* CPyCppyy_PyString_FromCppString(std::wstring* s, bool native=true) {
-    PyObject* pyobj = PyUnicode_FromWideChar(s->data(), s->size());
+PyObject* CPyCppyy_PyString_FromCppString(std::wstring_view s, bool native=true) {
+    PyObject* pyobj = PyUnicode_FromWideChar(s.data(), s.size());
     if (pyobj && native) {
         PyObject* pybytes = PyUnicode_AsEncodedString(pyobj, "UTF-8", "strict");
         Py_DECREF(pyobj);
@@ -1146,7 +1161,7 @@ PyObject* name##StringGetData(PyObject* self, bool native=true)              \
 {                                                                            \
     if (CPyCppyy::CPPInstance_Check(self)) {                                 \
         type* obj = ((type*)((CPPInstance*)self)->GetObject());              \
-        if (obj) return CPyCppyy_PyString_FromCppString(obj, native);        \
+        if (obj) return CPyCppyy_PyString_FromCppString(*obj, native);        \
     }                                                                        \
     PyErr_Format(PyExc_TypeError, "object mismatch (%s expected)", #type);   \
     return nullptr;                                                          \
@@ -1223,6 +1238,7 @@ PyObject* name##StringCompare(PyObject* self, PyObject* obj)                 \
 
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::string, STL)
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::wstring, STLW)
+CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::string_view, STLView)
 
 static inline std::string* GetSTLString(CPPInstance* self) {
     if (!CPPInstance_Check(self)) {
@@ -1252,6 +1268,7 @@ PyObject* STLStringDecode(CPPInstance* self, PyObject* args, PyObject* kwds)
     return PyUnicode_Decode(obj->data(), obj->size(), encoding, errors);
 }
 
+#if __cplusplus <= 202302L
 PyObject* STLStringContains(CPPInstance* self, PyObject* pyobj)
 {
     std::string* obj = GetSTLString(self);
@@ -1268,6 +1285,7 @@ PyObject* STLStringContains(CPPInstance* self, PyObject* pyobj)
 
     Py_RETURN_FALSE;
 }
+#endif
 
 PyObject* STLStringReplace(CPPInstance* self, PyObject* args, PyObject* /*kwds*/)
 {
@@ -1633,8 +1651,16 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
 // for STL containers, and user classes modeled after them
-    if (HasAttrDirect(pyclass, PyStrings::gSize))
+// the attribute must be a CPyCppyy overload, otherwise the check gives false
+// positives in the case where the class has a non-function attribute that is
+// called "size".
+    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
         Utility::AddToClass(pyclass, "__len__", "size");
+    }
+
+    if (HasAttrDirect(pyclass, PyStrings::gContains)) {
+        Utility::AddToClass(pyclass, "__contains__", "contains");
+    }
 
     if (!IsTemplatedSTLClass(name, "vector")  &&      // vector is dealt with below
            !((PyTypeObject*)pyclass)->tp_iter) {
@@ -1815,6 +1841,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
         // data with size
             Utility::AddToClass(pyclass, "__real_data", "data");
+            PyErr_Clear(); // AddToClass might have failed for data
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
         // The addition of the __array__ utility to std::vector Python proxies causes a
@@ -1866,8 +1893,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     // constructor that takes python associative collections
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)MapInit, METH_VARARGS | METH_KEYWORDS);
-
+#if __cplusplus <= 202002L
+    // From C++20, std::map and std::unordered_map already implement a contains() method.
         Utility::AddToClass(pyclass, "__contains__", (PyCFunction)STLContainsWithFind, METH_O);
+#endif
     }
 
     else if (IsTemplatedSTLClass(name, "set")) {
@@ -1875,7 +1904,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__real_init", "__init__");
         Utility::AddToClass(pyclass, "__init__", (PyCFunction)SetInit, METH_VARARGS | METH_KEYWORDS);
 
+#if __cplusplus <= 202002L
+    // From C++20, std::set already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__", (PyCFunction)STLContainsWithFind, METH_O);
+#endif
     }
 
     else if (IsTemplatedSTLClass(name, "pair")) {
@@ -1903,7 +1935,10 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__cmp__",       (PyCFunction)STLStringCompare,    METH_O);
         Utility::AddToClass(pyclass, "__eq__",        (PyCFunction)STLStringIsEqual,    METH_O);
         Utility::AddToClass(pyclass, "__ne__",        (PyCFunction)STLStringIsNotEqual, METH_O);
+#if __cplusplus <= 202302L
+    // From C++23, std::sting already implements a contains() method.
         Utility::AddToClass(pyclass, "__contains__",  (PyCFunction)STLStringContains,   METH_O);
+#endif
         Utility::AddToClass(pyclass, "decode",        (PyCFunction)STLStringDecode,     METH_VARARGS | METH_KEYWORDS);
         Utility::AddToClass(pyclass, "__cpp_find",    "find");
         Utility::AddToClass(pyclass, "find",          (PyCFunction)STLStringFind,       METH_VARARGS | METH_KEYWORDS);
@@ -1917,9 +1952,15 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
     }
 
-    else if (name == "basic_string_view<char>" || name == "std::basic_string_view<char>") {
+    else if (name == "basic_string_view<char,char_traits<char> >" || name == "std::basic_string_view<char>") {
         Utility::AddToClass(pyclass, "__real_init", "__init__");
-        Utility::AddToClass(pyclass, "__init__", (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
+        Utility::AddToClass(pyclass, "__init__",  (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
+        Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLViewStringBytes,      METH_NOARGS);
+        Utility::AddToClass(pyclass, "__cmp__",   (PyCFunction)STLViewStringCompare,    METH_O);
+        Utility::AddToClass(pyclass, "__eq__",    (PyCFunction)STLViewStringIsEqual,    METH_O);
+        Utility::AddToClass(pyclass, "__ne__",    (PyCFunction)STLViewStringIsNotEqual, METH_O);
+        Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLViewStringRepr,       METH_NOARGS);
+        Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLViewStringStr,        METH_NOARGS);
     }
 
     else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {

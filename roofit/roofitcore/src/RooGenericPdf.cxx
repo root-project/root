@@ -136,7 +136,7 @@ double RooGenericPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().doEval(ctx);
+  formula().doEval(_actualVars, ctx);
 }
 
 
@@ -176,7 +176,7 @@ void RooGenericPdf::printMetaArgs(ostream& os) const
 }
 
 
-void RooGenericPdf::dumpFormula() { formula().dump() ; }
+void RooGenericPdf::dumpFormula() { formula().printMultiline(std::cout, 0) ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////

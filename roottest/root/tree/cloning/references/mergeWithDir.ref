@@ -1,0 +1,5 @@
+
+Processing runmergeWithDir.C...
+TFile**		merged.root	chain files
+ TFile*		merged.root	chain files
+  KEY: TTree	t3333;1	test

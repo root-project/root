@@ -12,14 +12,6 @@
 #ifndef ROOT_TPython
 #define ROOT_TPython
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TPython                                                                  //
-//                                                                          //
-// Access to the python interpreter and API onto PyROOT.                    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
 // ROOT
 #include "TObject.h"
 
@@ -40,6 +32,7 @@ inline void SwapWithObjAtAddr(T &a, std::intptr_t b) { std::swap(a, *reinterpret
 }
 }
 
+// Access to the python interpreter and API onto PyROOT.
 class TPython {
 
 private:

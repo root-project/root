@@ -531,11 +531,6 @@ protected:
       SetData(dataClone);
    }
 
-   /// look at the user provided FCN and get data and model function is
-   /// they derive from ROOT::Fit FCN classes
-   void ExamineFCN();
-
-
    /// internal functions to get data set and model function from FCN
    /// useful for fits done with customized FCN classes
    template <class ObjFuncType>

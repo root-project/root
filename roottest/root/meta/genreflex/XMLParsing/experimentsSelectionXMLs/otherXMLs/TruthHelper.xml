@@ -1,0 +1,17 @@
+<lcgdict>
+
+  <class name="TruthHelper::GenIMCselector" />
+  <class name="std::vector<TruthHelper::GenIMCselector*>" />
+
+  <class name="TruthHelper::IsBremsstrahlung" />
+  <class name="TruthHelper::IsConversion" />
+  <class name="TruthHelper::IsGenInteracting" />
+  <class name="TruthHelper::IsGenNonInteracting" />
+  <class name="TruthHelper::IsGenSimulStable" />
+  <class name="TruthHelper::IsGenStable" />
+  <class name="TruthHelper::IsGenType" />
+  <class name="TruthHelper::IsGenerator" />
+  <class name="TruthHelper::NCutter" />
+  <class name="TruthHelper::GenAll" />
+
+</lcgdict>

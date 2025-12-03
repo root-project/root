@@ -69,7 +69,7 @@ namespace {
   };
 
   llvm::SmallString<512> GetHistoryFilePath() {
-    if (getenv("CLING_NOHISTORY")) {
+    if (std::getenv("CLING_NOHISTORY")) {
       return {};
     }
 
@@ -198,13 +198,13 @@ namespace cling {
       outs << "\n"
         "****************** CLING ******************\n"
         "* Type C++ code and press enter to run it *\n"
-        "*             Type .q to exit             *\n"
+        "*     Type .? for help and .q to exit     *\n"
         "*******************************************\n";
     } else {
       outs << "\n"
         "***************** CLING *****************\n"
         "* Type C code and press enter to run it *\n"
-        "*            Type .q to exit            *\n"
+        "*    Type .? for help and .q to exit    *\n"
         "*****************************************\n";
     }
   }

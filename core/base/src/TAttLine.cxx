@@ -18,7 +18,6 @@
 #include <cmath>
 #include <iostream>
 
-ClassImp(TAttLine);
 using std::sqrt;
 
 /** \class TAttLine
@@ -235,7 +234,7 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    if (c <= 0)  return 9999;
    Double_t v     = sqrt(c);
    Double_t u     = (a - b + c)/(2*v);
-   Double_t d     = TMath::Abs(a - u*u);
+   Double_t d     = std::abs(a - u*u);
    if (d < 0)   return 9999;
 
    return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
@@ -247,7 +246,7 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
 void TAttLine::Modify()
 {
    if (!gPad) return;
-   Int_t lineWidth = TMath::Abs(fLineWidth%100);
+   Int_t lineWidth = std::abs(fLineWidth%100);
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineColor(fLineColor);
       if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
@@ -274,11 +273,15 @@ void TAttLine::ResetAttLine(Option_t *)
 
 void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
-   if (fLineColor != coldef)
+   // save line settings if gStyle configured differently - so 1,1,1 is not default
+   Bool_t force_saving = (coldef == 1) && (stydef == 1) && (widdef == 1) && gStyle &&
+                         ((gStyle->GetLineColor() != 1) || (gStyle->GetLineWidth() != 1) || (gStyle->GetLineStyle() != 1));
+
+   if ((fLineColor != coldef) || force_saving)
       out << "   " << name << "->SetLineColor(" << TColor::SavePrimitiveColor(fLineColor) << ");\n";
-   if (fLineStyle != stydef)
+   if ((fLineStyle != stydef) || force_saving)
       out << "   " << name << "->SetLineStyle(" << fLineStyle << ");\n";
-   if (fLineWidth != widdef)
+   if ((fLineWidth != widdef)  || force_saving)
       out << "   " << name << "->SetLineWidth(" << fLineWidth << ");\n";
 }
 

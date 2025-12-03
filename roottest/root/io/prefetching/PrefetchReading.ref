@@ -1,0 +1,22 @@
+
+Processing runPrefetchReading.C+...
+Starting to load the library
+Starting to open the file
+The file has been opened, setting up the TTree
+Setup done. Starting to read the entries
+i = 0
+i = 1000
+i = 2000
+i = 3000
+Done reading for the first pass, now closing the file
+Opening the file for the 2nd pass
+The file has been opened, setting up the TTree
+Setup done, starting the 2nd reading.
+i = 0
+i = 1000
+i = 2000
+i = 3000
+Done with the 2nd reading
+fPrefetchedBlocks = 6
+Delete tmp directory: /tmp/xcache
+(int) 0

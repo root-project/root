@@ -30,9 +30,9 @@
 #include <RooFit/TestStatistics/RooRealL.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
 #include <RooLinkedList.h>
 #include <RooMinimizer.h>
+#include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooFormulaVar.h>
@@ -246,7 +246,7 @@ struct MinimizerConfig {
    int maxCalls = -1;
    int doOffset = -1;
    int parallelize = 0;
-   bool enableParallelGradient = true;
+   bool enableParallelGradient = false;
    bool enableParallelDescent = false;
    bool timingAnalysis = false;
    const RooArgSet *minosSet = nullptr;
@@ -420,8 +420,7 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
 
 } // namespace
 
-namespace RooFit {
-namespace FitHelpers {
+namespace RooFit::FitHelpers {
 
 void defineMinimizationOptions(RooCmdConfig &pc)
 {
@@ -445,11 +444,11 @@ void defineMinimizationOptions(RooCmdConfig &pc)
    pc.defineInt("doSumW2", "SumW2Error", 0, minimizerDefaults.doSumW2);
    pc.defineInt("doAsymptoticError", "AsymptoticError", 0, minimizerDefaults.doAsymptotic);
    pc.defineInt("maxCalls", "MaxCalls", 0, minimizerDefaults.maxCalls);
-   pc.defineInt("doOffset", "OffsetLikelihood", 0, 0);
-   pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
-   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
-   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
-   pc.defineInt("timingAnalysis", "TimingAnalysis", 0, 0);
+   pc.defineInt("doOffset", "OffsetLikelihood", 0, minimizerDefaults.doOffset);
+   pc.defineInt("parallelize", "Parallelize", 0, minimizerDefaults.parallelize); // Three parallelize arguments
+   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, minimizerDefaults.enableParallelGradient);
+   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, minimizerDefaults.enableParallelDescent);
+   pc.defineInt("timingAnalysis", "TimingAnalysis", 0, minimizerDefaults.timingAnalysis);
    pc.defineString("mintype", "Minimizer", 0, minimizerDefaults.minType.c_str());
    pc.defineString("minalg", "Minimizer", 1, minimizerDefaults.minAlg.c_str());
    pc.defineSet("minosSet", "Minos", 0, minimizerDefaults.minosSet);
@@ -745,7 +744,17 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
-      normSet.remove(projDeps, true, true);
+
+      if (dynamic_cast<RooSimultaneous const *>(&pdf)) {
+         for (auto i : projDeps) {
+            auto res = normSet.find(i->GetName());
+            if (res != nullptr) {
+               res->setAttribute("__conditional__");
+            }
+         }
+      } else {
+         normSet.remove(projDeps);
+      }
 
       pdf.setAttribute("SplitRange", splitRange);
       pdf.setStringAttribute("RangeName", rangeName);
@@ -753,7 +762,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooFit::Detail::CompileContext ctx{normSet};
       ctx.setLikelihoodMode(true);
       std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
-      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(head.release())};
+      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{&dynamic_cast<RooAbsPdf &>(*head.release())};
 
       // reset attributes
       pdf.setAttribute("SplitRange", false);
@@ -778,30 +787,44 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       auto nll = createNLLNew(*pdfClone, data, std::move(compiledConstr), rangeName ? rangeName : "", projDeps, ext,
                               pc.getDouble("IntegrateBins"), offset);
 
-      std::unique_ptr<RooAbsReal> nllWrapper;
+      const double correction = pdfClone->getCorrection();
 
-      if (evalBackend == RooFit::EvalBackend::Value::Codegen ||
-          evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
-         bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
-         auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
+      if (correction > 0) {
+         oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
+                                << "Adding penalty to NLL." << std::endl;
 
-         // We destroy the timing scrope for createNLL prematurely, because we
-         // separately measure the time for jitting and gradient creation
-         // inside the RooFuncWrapper.
-         timingScope.reset();
+         // Convert the multiplicative correction to an additive term in -log L
+         auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
+                                                          "Penalty term from getCorrection()", correction);
 
-         nllWrapper = std::make_unique<RooFit::Experimental::RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper",
-                                                                             *nll, &data, simPdf, createGradient);
-         if (createGradient)
-            static_cast<Experimental::RooFuncWrapper &>(*nllWrapper).createGradient();
-      } else {
-         nllWrapper = std::make_unique<RooEvaluatorWrapper>(
-            *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-            takeGlobalObservablesFromData);
+         // add penalty and NLL
+         auto correctedNLL = std::make_unique<RooAddition>((baseName + "_corrected").c_str(), "NLL + penalty",
+                                                           RooArgSet{*nll, *penaltyTerm});
+
+         // transfer ownership of terms
+         correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+         nll = std::move(correctedNLL);
+      }
+
+      auto nllWrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
+         *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+         takeGlobalObservablesFromData);
+
+      // We destroy the timing scrope for createNLL prematurely, because we
+      // separately measure the time for jitting and gradient creation
+      // inside the RooFuncWrapper.
+      timingScope.reset();
+
+      if (evalBackend == RooFit::EvalBackend::Value::Codegen) {
+         nllWrapper->generateGradient();
+      }
+      if (evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
+         nllWrapper->setUseGeneratedFunctionCode(true);
       }
 
       nllWrapper->addOwnedComponents(std::move(nll));
       nllWrapper->addOwnedComponents(std::move(pdfClone));
+
       return nllWrapper;
    }
 
@@ -873,6 +896,23 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 
    if (offset == RooFit::OffsetMode::Initial) {
       nll->enableOffsetting(true);
+   }
+
+   if (const double correction = pdf.getCorrection(); correction > 0) {
+      oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
+                             << "Adding penalty to NLL." << std::endl;
+
+      // Convert the multiplicative correction to an additive term in -log L
+      auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
+                                                       "Penalty term from getCorrection()", correction);
+
+      auto correctedNLL = std::make_unique<RooAddition>(
+         // add penalty and NLL
+         (baseName + "_corrected").c_str(), "NLL + penalty", RooArgSet(*nll, *penaltyTerm));
+
+      // transfer ownership of terms
+      correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+      nll = std::move(correctedNLL);
    }
 #else
    throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
@@ -1074,7 +1114,6 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
    return RooFit::FitHelpers::minimize(real, *nll, data, pc);
 }
 
-} // namespace FitHelpers
-} // namespace RooFit
+} // namespace RooFit::FitHelpers
 
 /// \endcond

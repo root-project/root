@@ -98,7 +98,7 @@ namespace TMVA {
 
       MsgLogger& Log() const;
 
-      ClassDef(TSynapse,0); // Synapse class used by MethodANNBase and derivatives
+      ClassDefOverride(TSynapse,0); // Synapse class used by MethodANNBase and derivatives
    };
 
 } // namespace TMVA

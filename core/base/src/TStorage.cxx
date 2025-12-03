@@ -30,7 +30,7 @@ Set the compile option R__NOSTATS to de-activate all memory checking
 and statistics gathering in the system.
 */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TROOT.h"
 #include "TObjectTable.h"
@@ -68,7 +68,6 @@ ReAllocCFun_t TStorage::fgReAllocCHook;
 Bool_t        TStorage::fgHasCustomNewDelete;
 
 
-ClassImp(TStorage);
 
 //------------------------------------------------------------------------------
 
@@ -98,7 +97,7 @@ void *ROOT::Internal::gMmallocDesc = nullptr; //is used and set in TMapFile
 
 void TStorage::EnterStat(size_t size, void *p)
 {
-   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), size));
+   TStorage::SetMaxBlockSize(std::max(TStorage::GetMaxBlockSize(), size));
 
    if (!gMemStatistics) return;
 
@@ -333,7 +332,6 @@ void TStorage::ObjectDealloc(void *vp, void *ptr)
    if (vp && ptr) { }
 }
 
-#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Used to deallocate a TObject on the heap (via TObject::operator delete()),
 /// for sized deallocation.
@@ -342,7 +340,6 @@ void TStorage::ObjectDealloc(void *vp, size_t size)
 {
    ::operator delete(vp, size);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a free handler.

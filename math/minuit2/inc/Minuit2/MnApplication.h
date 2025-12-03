@@ -56,6 +56,7 @@ public:
    virtual const ModularFunctionMinimizer &Minimizer() const = 0;
 
    const MnMachinePrecision &Precision() const { return fState.Precision(); }
+   MnUserParameterState &State() { return fState; }
    const MnUserParameterState &State() const { return fState; }
    const MnUserParameters &Parameters() const { return fState.Parameters(); }
    const MnUserCovariance &Covariance() const { return fState.Covariance(); }
@@ -68,61 +69,6 @@ protected:
    MnUserParameterState fState;
    MnStrategy fStrategy;
    unsigned int fNumCall;
-
-public:
-   // facade: forward interface of MnUserParameters and MnUserTransformation
-   // via MnUserParameterState
-
-   // access to parameters (row-wise)
-   const std::vector<ROOT::Minuit2::MinuitParameter> &MinuitParameters() const;
-   // access to parameters and errors in column-wise representation
-   std::vector<double> Params() const;
-   std::vector<double> Errors() const;
-
-   // access to single Parameter
-   const MinuitParameter &Parameter(unsigned int i) const;
-
-   // add free Parameter
-   void Add(const char *Name, double val, double err);
-   // add limited Parameter
-   void Add(const char *Name, double val, double err, double, double);
-   // add const Parameter
-   void Add(const char *, double);
-
-   // interaction via external number of Parameter
-   void Fix(unsigned int);
-   void Release(unsigned int);
-   void SetValue(unsigned int, double);
-   void SetError(unsigned int, double);
-   void SetLimits(unsigned int, double, double);
-   void RemoveLimits(unsigned int);
-
-   double Value(unsigned int) const;
-   double Error(unsigned int) const;
-
-   // interaction via Name of Parameter
-   void Fix(const char *);
-   void Release(const char *);
-   void SetValue(const char *, double);
-   void SetError(const char *, double);
-   void SetLimits(const char *, double, double);
-   void RemoveLimits(const char *);
-   void SetPrecision(double);
-
-   double Value(const char *) const;
-   double Error(const char *) const;
-
-   // convert Name into external number of Parameter
-   unsigned int Index(const char *) const;
-   // convert external number into Name of Parameter
-   const char *Name(unsigned int) const;
-
-   // transformation internal <-> external
-   double Int2ext(unsigned int, double) const;
-   double Ext2int(unsigned int, double) const;
-   unsigned int IntOfExt(unsigned int) const;
-   unsigned int ExtOfInt(unsigned int) const;
-   unsigned int VariableParameters() const;
 };
 
 } // namespace Minuit2

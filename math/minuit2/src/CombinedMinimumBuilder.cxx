@@ -7,7 +7,6 @@
  *                                                                    *
  **********************************************************************/
 
-#include "Minuit2/AnalyticalGradientCalculator.h"
 #include "Minuit2/CombinedMinimumBuilder.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnStrategy.h"
@@ -37,10 +36,7 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn &fcn, const Gradient
 
          return min1;
       }
-      // check if gradient calculator is analytical
-      auto agc = dynamic_cast<const AnalyticalGradientCalculator *>(&gc);
-      MinimumSeed seed1 = (agc) ?
-         fVMMinimizer.SeedGenerator()(fcn, *agc, min1.UserState(), str) : fVMMinimizer.SeedGenerator()(fcn, gc, min1.UserState(), str);
+      MinimumSeed seed1 = fVMMinimizer.SeedGenerator()(fcn, gc, min1.UserState(), str);
 
       FunctionMinimum min2 = fVMMinimizer.Builder().Minimum(fcn, gc, seed1, str, maxfcn, edmval);
       if (!min2.IsValid()) {

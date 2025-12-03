@@ -497,3 +497,11 @@ TEST(TKDE, tkde_io_mirror)
       EXPECT_NEAR(t.values1[i], t.values2[i], delta);
    }
 }
+
+TEST(TKDE, tkde_fill_empty) // ROOT #7808
+{
+    TRandom3 r;
+    auto kde = new TKDE(0, nullptr, 0, 5, "KernelType:Gaussian;Iteration:Adaptive;Mirror:noMirror;Binning:RelaxedBinning", 1);
+    for (unsigned int i = 0; i < 100; i++) { kde->Fill(r.Gaus(2,1)); }
+    EXPECT_NEAR(kde->GetValue(2), 0.487581, 1e-1); // Worked on ROOT <= v6.16, failed from 6.18 until this test with result "nan"
+}

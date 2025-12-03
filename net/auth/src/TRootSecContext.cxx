@@ -19,7 +19,7 @@
 
 #include "RConfigure.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TError.h"
 #include "TRootSecContext.h"
@@ -28,7 +28,6 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
@@ -128,11 +127,9 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
       Int_t srvtyp = nscc->GetType();
       Int_t rproto = nscc->GetProtocol();
       Int_t level = 2;
-      if ((srvtyp == TSocket::kROOTD && rproto < 10) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 9))
+      if ((srvtyp == TSocket::kROOTD && rproto < 10))
          level = 1;
-      if ((srvtyp == TSocket::kROOTD && rproto < 8) ||
-          (srvtyp == TSocket::kPROOFD && rproto < 7))
+      if ((srvtyp == TSocket::kROOTD && rproto < 8))
          level = 0;
       if (level) {
          Int_t port = nscc->GetPort();
@@ -140,11 +137,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
          TSocket *news = new TSocket(fHost.Data(),port,-1);
 
          if (news && news->IsValid()) {
-            if (srvtyp == TSocket::kPROOFD) {
-               news->SetOption(kNoDelay, 1);
-               news->Send("cleaning request");
-            } else
-               news->SetOption(kNoDelay, 0);
+            news->SetOption(kNoDelay, 0);
 
             // Backward compatibility: send socket size
             if (srvtyp == TSocket::kROOTD && level == 1)
@@ -164,7 +157,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
                }
             }
             if (cleaned && gDebug > 2) {
-               char srvname[3][10] = {"sockd", "rootd", "proofd"};
+               char srvname[3][10] = {"sockd", "rootd"};
                Info("CleanupSecContext",
                     "remote %s notified for cleanup (%s,%d)",
                     srvname[srvtyp],fHost.Data(),port);
@@ -187,7 +180,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
 /// If opt is "<number>" print in special form for calls within THostAuth
 /// with cardinality "<number>"
 /// If opt is "S" prints short in-line form for calls within TFTP,
-/// TSlave, TProof ...
+/// TSlave ...
 
 void TRootSecContext::Print(Option_t *opt) const
 {

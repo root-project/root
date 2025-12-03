@@ -138,7 +138,12 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
    // THE BOX
    if (shape->IsA() == TGeoBBox::Class()) {
       TGeoBBox const *const box = static_cast<TGeoBBox const *>(shape);
-      unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
+      if ((box->GetOrigin()[0] != 0.0) || (box->GetOrigin()[1] != 0.0) || (box->GetOrigin()[2] != 0.0)) {
+         // skip solids with shifted origin
+         printf("Unsupported box shape with shifted origin\n");
+      } else {
+         unplaced_volume = GeoManager::MakeInstance<UnplacedBox>(box->GetDX(), box->GetDY(), box->GetDZ());
+      }
    }
 
    // THE TUBE
@@ -427,7 +432,7 @@ Double_t TGeoVGShape::Capacity() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal computation.
 
-void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t * /*dir*/, Double_t *norm)
+void TGeoVGShape::ComputeNormal(const Double_t *point, const Double_t * /*dir*/, Double_t *norm) const
 {
    vecgeom::cxx::Vector3D<Double_t> vnorm;
    fVGShape->Normal(vecgeom::cxx::Vector3D<Double_t>(point[0], point[1], point[2]), vnorm);

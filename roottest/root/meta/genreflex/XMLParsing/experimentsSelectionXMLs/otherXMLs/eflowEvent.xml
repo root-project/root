@@ -1,0 +1,10 @@
+<lcgdict>
+
+<class name="eflowObject" />
+<class name="eflowObjectContainer" id="0044A49A-14B8-45BE-9E62-B9780F226168" />
+<class name="DataVector<eflowObject>" />
+<class name="std::vector<eflowObject*>" />
+<class pattern="NavigableVector<Rec::TrackParticleContainer*>" />
+<class pattern="NavigableVector<CaloClusterContainer*>" />
+
+</lcgdict>

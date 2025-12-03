@@ -13,8 +13,6 @@
 
 #include "TGCocoa.h"
 
-#include <GL/glew.h>
-
 #include "ROOTOpenGLView.h"
 #include "CocoaConstants.h"
 #include "TMacOSXSystem.h"
@@ -41,6 +39,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
 #include <Cocoa/Cocoa.h>
 
 #include <algorithm>
@@ -423,7 +422,6 @@ void FixAscii(std::vector<UniChar> &text)
 
 }
 
-ClassImp(TGCocoa)
 
 Atom_t TGCocoa::fgDeleteWindowAtom = 0;
 

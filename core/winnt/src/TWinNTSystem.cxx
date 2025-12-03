@@ -47,12 +47,12 @@
 #include <process.h>
 #include <io.h>
 #include <direct.h>
-#include <ctype.h>
-#include <float.h>
+#include <cctype>
+#include <cfloat>
 #include <sys/stat.h>
-#include <signal.h>
-#include <stdio.h>
-#include <errno.h>
+#include <csignal>
+#include <cstdio>
+#include <cerrno>
 #include <lm.h>
 #include <dbghelp.h>
 #include <Tlhelp32.h>
@@ -61,11 +61,12 @@
 #include <list>
 #include <shlobj.h>
 #include <conio.h>
-#include <time.h>
+#include <ctime>
 #include <bcrypt.h>
 #include <chrono>
 #include <thread>
 #include <cstdio>
+#include <psapi.h>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -827,7 +828,7 @@ namespace {
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
       TString rootmacrodir = "macros";
-      sys->PrependPathName(getenv("ROOTSYS"), rootmacrodir);
+      sys->PrependPathName(std::getenv("ROOTSYS"), rootmacrodir);
       sys->PrependPathName(rootmacrodir.Data(), fileopen);
 
       if (regROOTwrite) {
@@ -956,7 +957,6 @@ namespace {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-ClassImp(TWinNTSystem);
 
 ULongptr_t gConsoleWindow = 0;
 
@@ -1283,7 +1283,7 @@ Int_t TWinNTSystem::GetCryptoRandom(void *buf, Int_t len)
 const char *TWinNTSystem::HostName()
 {
    if (fHostname == "")
-      fHostname = ::getenv("COMPUTERNAME");
+      fHostname = std::getenv("COMPUTERNAME");
    if (fHostname == "") {
       // This requires a DNS query - but we need it for fallback
       char hn[64];
@@ -2225,23 +2225,23 @@ std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) const
 {
    const char *h = nullptr;
-   if (!(h = ::getenv("home"))) h = ::getenv("HOME");
+   if (!(h = std::getenv("home"))) h = std::getenv("HOME");
 
    if (h) {
       strlcpy(mydir, h,kMAXPATHLEN);
    } else {
       // for Windows NT HOME might be defined as either $(HOMESHARE)/$(HOMEPATH)
       //                                         or     $(HOMEDRIVE)/$(HOMEPATH)
-      h = ::getenv("HOMESHARE");
-      if (!h)  h = ::getenv("HOMEDRIVE");
+      h = std::getenv("HOMESHARE");
+      if (!h)  h = std::getenv("HOMEDRIVE");
       if (h) {
          strlcpy(mydir, h,kMAXPATHLEN);
-         h = ::getenv("HOMEPATH");
+         h = std::getenv("HOMEPATH");
          if(h) strlcat(mydir, h,kMAXPATHLEN);
       }
       // on Windows Vista HOME is usually defined as $(USERPROFILE)
       if (!h) {
-         h = ::getenv("USERPROFILE");
+         h = std::getenv("USERPROFILE");
          if (h) strlcpy(mydir, h,kMAXPATHLEN);
       }
    }
@@ -3861,7 +3861,7 @@ void TWinNTSystem::Setenv(const char *name, const char *value)
 
 const char *TWinNTSystem::Getenv(const char *name)
 {
-   const char *env = ::getenv(name);
+   const char *env = std::getenv(name);
    if (!env) {
       if (::_stricmp(name,"home") == 0 ) {
         env = HomeDirectory();
@@ -5584,19 +5584,6 @@ typedef struct
    DWORD    dwSpare[76];
 } SYSTEM_PERFORMANCE_INFORMATION;
 
-typedef struct _PROCESS_MEMORY_COUNTERS {
-   DWORD cb;
-   DWORD PageFaultCount;
-   SIZE_T PeakWorkingSetSize;
-   SIZE_T WorkingSetSize;
-   SIZE_T QuotaPeakPagedPoolUsage;
-   SIZE_T QuotaPagedPoolUsage;
-   SIZE_T QuotaPeakNonPagedPoolUsage;
-   SIZE_T QuotaNonPagedPoolUsage;
-   SIZE_T PagefileUsage;
-   SIZE_T PeakPagefileUsage;
-} PROCESS_MEMORY_COUNTERS, *PPROCESS_MEMORY_COUNTERS;
-
 typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
@@ -6047,28 +6034,37 @@ again:
 
 static void GetWinNTMemInfo(MemInfo_t *meminfo)
 {
-   Long64_t total, used, free, swap_total, swap_used, swap_avail;
+   Long64_t total, used, free, swap_total, swap_used, swap_avail, sys_cache;
    MEMORYSTATUSEX statex;
+   PERFORMANCE_INFORMATION statex2;
    statex.dwLength = sizeof(statex);
+   statex2.cb = sizeof(statex2);
    if (!GlobalMemoryStatusEx(&statex)) {
       ::Error("GetWinNTMemInfo", "Error on GlobalMemoryStatusEx()");
       return;
    }
-   used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
-   free  = (Long64_t) statex.ullAvailPhys;
-   total = (Long64_t) statex.ullTotalPhys;
+   if (!GetPerformanceInfo(&statex2, statex2.cb)) {
+      ::Error("GetWinNTMemInfo", "Error on GetPerformanceInfo()");
+      return;
+   }
+   used = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
+   free = (Long64_t)statex.ullAvailPhys;
+   total = (Long64_t)statex.ullTotalPhys;
+   sys_cache = (Long64_t)(statex2.SystemCache * statex2.PageSize);
 
-   meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
-   meminfo->fMemUsed   = (Int_t) (used >> 20);
-   meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fMemTotal = (Int_t)(total >> 20); // divide by 1024 * 1024
+   meminfo->fMemUsed = (Int_t)(used >> 20);
+   meminfo->fMemFree = (Int_t)(free >> 20);
+   meminfo->fMemAvailable = meminfo->fMemFree;
+   meminfo->fMemCached = (Int_t)(sys_cache >> 20);
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
-   swap_used  = swap_total - swap_avail;
+   swap_used = swap_total - swap_avail;
 
-   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
-   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
-   meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
+   meminfo->fSwapTotal = (Int_t)(swap_total >> 20);
+   meminfo->fSwapUsed = (Int_t)(swap_used >> 20);
+   meminfo->fSwapFree = (Int_t)(swap_avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6077,35 +6073,15 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
 static void GetWinNTProcInfo(ProcInfo_t *procinfo)
 {
    PROCESS_MEMORY_COUNTERS pmc;
-   FILETIME    starttime, exittime, kerneltime, usertime;
-   timeval     ru_stime, ru_utime;
+   FILETIME starttime, exittime, kerneltime, usertime;
+   timeval ru_stime, ru_utime;
    ULARGE_INTEGER li;
 
-   typedef BOOL (__stdcall *GetProcessMemoryInfoProc)( HANDLE Process,
-                 PPROCESS_MEMORY_COUNTERS ppsmemCounters, DWORD cb );
-   static GetProcessMemoryInfoProc pGetProcessMemoryInfo = 0;
-
-   HMODULE hModImagehlp = LoadLibrary( "Psapi.dll" );
-   if (!hModImagehlp) {
-      ::Error("GetWinNTProcInfo", "Error on LoadLibrary(Psapi.dll)");
-      return;
-   }
-
-   pGetProcessMemoryInfo = (GetProcessMemoryInfoProc) GetProcAddress(
-                            hModImagehlp, "GetProcessMemoryInfo" );
-   if (!pGetProcessMemoryInfo) {
-      ::Error("GetWinNTProcInfo",
-              "Error on GetProcAddress(GetProcessMemoryInfo)");
-      return;
-   }
-
-   if ( pGetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) ) {
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
       procinfo->fMemResident = pmc.WorkingSetSize / 1024;
       procinfo->fMemVirtual  = pmc.PagefileUsage / 1024;
    }
-   if ( GetProcessTimes(GetCurrentProcess(), &starttime, &exittime,
-      &kerneltime, &usertime)) {
-
+   if (GetProcessTimes(GetCurrentProcess(), &starttime, &exittime, &kerneltime, &usertime)) {
       /* Convert FILETIMEs (0.1 us) to struct timeval */
       memcpy(&li, &kerneltime, sizeof(FILETIME));
       li.QuadPart /= 10L;         /* Convert to microseconds */

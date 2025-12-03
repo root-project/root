@@ -102,7 +102,7 @@ class Container {
 #include <typeinfo>
 #include <string>
 #include <cstring>
-#include <locale.h>
+#include <clocale>
 #include <cmath>
 #include <memory>
 #include <cstdlib>
@@ -136,7 +136,6 @@ class Container {
 
 #include <nlohmann/json.hpp>
 
-ClassImp(TBufferJSON);
 
 enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
@@ -523,6 +522,11 @@ TBufferJSON::~TBufferJSON()
 ///  - 1 - exclude leading and trailing zeros
 ///  - 2 - check values repetition and empty gaps
 ///
+/// Third digit of compact parameter defines typeinfo storage:
+///  - TBufferJSON::kSkipTypeInfo (100) - "_typename" will be skipped, not always can be read back
+///
+/// Fourth digit: (1 or 0) defines whether to set kStoreInfNaN (1000) - inf and nan to be stored as string
+///
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
 
@@ -543,6 +547,28 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// zip JSON string and convert into base64 string
+/// to be used with JSROOT unzipJSON() function
+/// Main application - embed large JSON code into jupyter notebooks
+
+TString TBufferJSON::zipJSON(const char *json)
+{
+   std::string buf;
+
+   int srcsize = (int) strlen(json);
+
+   buf.resize(srcsize + 500);
+
+   int tgtsize = buf.length();
+
+   int nout = 0;
+
+   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, (char *)json, &tgtsize, (char *) buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
+
+   return TBase64::Encode(buf.data(), nout);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set level of space/newline/array compression
 /// Lower digit of compact parameter define formatting rules
 ///  - kNoCompress = 0  - no any compression, human-readable form
@@ -557,6 +583,8 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 ///
 /// Third digit defines usage of typeinfo
 ///  - kSkipTypeInfo = 100   - "_typename" field will be skipped, reading by ROOT or JSROOT may be impossible
+///
+/// Fourth digit (1 or 0) defines whether to set kStoreInfNaN
 
 void TBufferJSON::SetCompact(int level)
 {
@@ -574,6 +602,7 @@ void TBufferJSON::SetCompact(int level)
       fTypeNameTag.Clear();
    else if (fTypeNameTag.Length() == 0)
       fTypeNameTag = "_typename";
+   fStoreInfNaN = ((((level / 1000) % 10) * 1000) == kStoreInfNaN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -638,12 +667,17 @@ Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 ///  - TBufferJSON::kBase64 (30) - arrays will be coded with base64 coding
 /// Third digit of compact parameter defines typeinfo storage:
 ///  - TBufferJSON::kSkipTypeInfo (100) - "_typename" will be skipped, not always can be read back
+/// Fourth digit: (1 or 0) defines whether to set kStoreInfNaN (1000) - inf and nan to be stored as string
 /// Maximal none-destructive compression can be achieved when
 /// compact parameter equal to TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression
 /// When member_name specified, converts only this data member
 
 TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t compact, const char *member_name)
 {
+   if (!cl) {
+      ::Error("TBufferJSON::ConvertToJSON", "Unknown class (probably missing dictionary).");
+      return TString();
+   }
    TClass *clActual = obj ? cl->GetActualClass(obj) : nullptr;
    const void *actualStart = obj;
    if (clActual && (clActual != cl)) {
@@ -724,11 +758,12 @@ TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts selected data member into json
-/// Parameter ptr specifies address in memory, where data member is located.
-/// Note; if data member described by 'member'is pointer, `ptr` should be the
+/// \param ptr specifies address in memory, where data member is located.
+/// \note if data member described by `member` is pointer, `ptr` should be the
 /// value of the pointer, not the address of the pointer.
-/// compact parameter defines compactness of produced JSON (from 0 to 3).
-/// arraylen (when specified) is array length for this data member,  //[fN] case
+/// \param compact defines compactness of produced JSON. See
+/// TBufferJSON::SetCompact for more details
+/// \param arraylen (when specified) is array length for this data member,  //[fN] case
 
 TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t compact, Int_t arraylen)
 {
@@ -774,7 +809,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
@@ -854,7 +889,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const void *obj, const TCl
       const char *objbuf = json.Data();
       Long_t objlen = json.Length();
 
-      unsigned long objcrc = R__crc32(0, NULL, 0);
+      unsigned long objcrc = R__crc32(0, nullptr, 0);
       objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
       // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
@@ -3709,7 +3744,21 @@ void TBufferJSON::ReadFloat(Float_t &val)
    if (json->is_null())
       val = std::numeric_limits<Float_t>::quiet_NaN();
    else
-      val = json->get<Float_t>();
+      try {
+         val = json->get<Float_t>();
+      } catch (nlohmann::detail::type_error &e) {
+         auto aux = json->get<std::string>();
+         if (aux == "nanf") {
+            val = std::numeric_limits<Float_t>::quiet_NaN();
+         } else if (aux == "inff") {
+            val = std::numeric_limits<Float_t>::infinity();
+         } else if (aux == "-inff") {
+            val = -std::numeric_limits<Float_t>::infinity();
+         } else {
+            Error("ReadFloat", "%s '%s'", e.what(), aux.c_str());
+            val = std::numeric_limits<Float_t>::quiet_NaN();
+         }
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3721,7 +3770,21 @@ void TBufferJSON::ReadDouble(Double_t &val)
    if (json->is_null())
       val = std::numeric_limits<Double_t>::quiet_NaN();
    else
-      val = json->get<Double_t>();
+      try {
+         val = json->get<Double_t>();
+      } catch (nlohmann::detail::type_error &e) {
+         auto aux = json->get<std::string>();
+         if (aux == "nan") {
+            val = std::numeric_limits<Double_t>::quiet_NaN();
+         } else if (aux == "inf") {
+            val = std::numeric_limits<Double_t>::infinity();
+         } else if (aux == "-inf") {
+            val = -std::numeric_limits<Double_t>::infinity();
+         } else {
+            Error("ReadDouble", "%s '%s'", e.what(), aux.c_str());
+            val = std::numeric_limits<Double_t>::quiet_NaN();
+         }
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3985,9 +4048,15 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    if (std::isinf(value)) {
-      fValue.Append((value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+      if (!fStoreInfNaN)
+         fValue.Append((value < 0.) ? "-2e308" : "2e308"); // JavaScript Number.MAX_VALUE is approx 1.79e308
+      else
+         fValue.Append((value < 0.) ? "\"-inff\"" : "\"inff\"");
    } else if (std::isnan(value)) {
-      fValue.Append("null");
+      if (!fStoreInfNaN)
+         fValue.Append("null");
+      else
+         fValue.Append("\"nanf\"");
    } else {
       char buf[200];
       ConvertFloat(value, buf, sizeof(buf));
@@ -4001,9 +4070,15 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    if (std::isinf(value)) {
-      fValue.Append((value < 0.) ? "-2e308" : "2e308"); // Number.MAX_VALUE is approx 1.79e308
+      if (!fStoreInfNaN)
+         fValue.Append((value < 0.) ? "-2e308" : "2e308"); // JavaScript Number.MAX_VALUE is approx 1.79e308
+      else
+         fValue.Append((value < 0.) ? "\"-inf\"" : "\"inf\"");
    } else if (std::isnan(value)) {
-      fValue.Append("null");
+      if (!fStoreInfNaN)
+         fValue.Append("null");
+      else
+         fValue.Append("\"nan\"");
    } else {
       char buf[200];
       ConvertDouble(value, buf, sizeof(buf));

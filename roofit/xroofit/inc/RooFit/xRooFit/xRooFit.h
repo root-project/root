@@ -119,7 +119,7 @@ public:
 
    public:
       std::shared_ptr<RooFitResult> fr; //!
-      ClassDef(StoredFitResult, 0)
+      ClassDefOverride(StoredFitResult, 0)
    };
 
    // can't use an enum class because pyROOT doesn't handle it

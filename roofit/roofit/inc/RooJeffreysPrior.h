@@ -21,7 +21,7 @@ public:
   RooJeffreysPrior(const char *name, const char *title, RooAbsPdf& nominal, const RooArgList& paramSet, const RooArgList& obsSet) ;
 
   RooJeffreysPrior(const RooJeffreysPrior& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooJeffreysPrior(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooJeffreysPrior(*this, newname); }
 
   const RooArgList& lowList() const { return _obsSet ; }
   const RooArgList& paramList() const { return _paramSet ; }

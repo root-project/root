@@ -23,15 +23,16 @@ class ROperator_Reduce final : public ROperator
 {
 private:
     /* Attributes*/
+    bool fInputDimShape = false;
     int fkeepdims = 1; //default value
     std::vector<int64_t> fAttrAxes;
     EReduceOpMode fReduceOpMode;
     std::string fNX;
     std::string fNAxes;
     std::string fNY;
-    std::vector<size_t> fShapeX;
-    std::vector<size_t> fShapeY;
-    std::vector<size_t> fShapeYNotPruned; // needed for fKeepdims=0
+    std::vector<Dim> fShapeX;
+    std::vector<Dim> fShapeY;
+    std::vector<Dim> fShapeYNotPruned; // needed for fKeepdims=0
 
 
 public:
@@ -48,7 +49,7 @@ public:
    ROperator_Reduce(int keepdims, std::vector<int64_t> attrAxes, std::string nameX, std::string nameAxes, std::string nameY):
    fkeepdims(keepdims), fAttrAxes(attrAxes), fNX(UTILITY::Clean_name(nameX)), fNAxes(UTILITY::Clean_name(nameAxes)), fNY(UTILITY::Clean_name(nameY)) {
       fReduceOpMode = Op;
-      
+
       fInputTensorNames = { fNX };
       if(!fNAxes.empty()){
          fInputTensorNames.emplace_back(fNAxes);
@@ -57,21 +58,16 @@ public:
       fOutputTensorNames = { fNY };
    }
 
-   // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
    // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
+   std::vector<Dim> DoShapeInference(const std::vector<Dim> &  input)  {
       auto ret = input; //suggest copy to compiler
-      auto & outputShape = ret[0];
+      auto & outputShape = ret;
       for (size_t j = 0; j < fAttrAxes.size(); j++) {
          if (fAttrAxes[j] < 0) fAttrAxes[j] += outputShape.size();
          if (fAttrAxes[j] < 0 || (size_t) fAttrAxes[j] >= outputShape.size() )
             throw std::runtime_error("TMVA SOFIE Reduce Op - invalid axes values " + std::to_string(fAttrAxes[j]));
          // set to 1 the reduced dims
-         outputShape[fAttrAxes[j]] = 1;
+         outputShape[fAttrAxes[j]] = Dim{1};
       }
       fShapeYNotPruned = outputShape;
       // in case of pruning dimension we need to sort axes attributes
@@ -97,7 +93,9 @@ public:
          // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Reduce Op Input Tensor " + fNX + " is not found in model");
       }
-      fShapeX = model.GetTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
+      if (model.IsDynamicTensor(fNX))
+         fInputDimShape = true;
       // check if tensor with axes is provided
       if (!fNAxes.empty()) {
          auto ax_shptr = model.GetInitializedTensorData(fNAxes);
@@ -112,7 +110,7 @@ public:
             fAttrAxes[i] = i;
       }
       // find shape of Y and add it in the list of intermediate tensors
-      fShapeY = ShapeInference({fShapeX})[0];
+      fShapeY = DoShapeInference(fShapeX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       if (model.Verbose()){
          std::cout << Name() << " : " << fNX << " -> " << fNY << " shape " << ConvertShapeToString(fShapeY) << std::endl;
@@ -126,8 +124,8 @@ public:
          throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
       }
 
-      size_t inputLength = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeX);
-      size_t outputLength = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY);
+      auto inputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeX);
+      auto outputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeY);
 
       auto inputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeX);
       // output stride (or not pruned vector)
@@ -165,7 +163,14 @@ public:
             }
          }
       }
-      size_t reducedLength = inputLength / outputLength;
+      std::string reducedLength;
+      if (fInputDimShape) {
+         reducedLength = "reducedLength_" + opName;
+         out << SP << "size_t " << reducedLength << " = " <<  inputLength << " / " << outputLength << ";\n";
+      } else {
+         int rLength = std::stoi(inputLength) / std::stoi(outputLength);
+         reducedLength = std::to_string(rLength);
+      }
       if (reduceDims == kLast) {
          //std::cout << "reduction for operator " << opName << " is last" << std::endl;
          // new faster implementation using a single loop

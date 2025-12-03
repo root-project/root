@@ -1,0 +1,10 @@
+
+Processing runminostest.C...
+
+StreamerInfo for class: SEIdAltL, version=3, checksum=0x289e7bdc
+  vector<SEIdAltLItem> vector<SEIdAltLItem> offset=na type=300 stl=1 ctype=61
+  unsigned int   fCurrent        offset=na type=13 current position
+  int            fError          offset=na type= 3 -1=unchecked, 0=no consistency errors
+   i= 0, vector<SEIdAltLItem> type=300, offset=na, len=1, method=0
+   i= 1, fCurrent        type= 13, offset=na, len=1, method=0
+   i= 2, fError          type=  3, offset=na, len=1, method=0

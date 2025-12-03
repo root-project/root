@@ -9,22 +9,28 @@
  *************************************************************************/
 
 #include "ROOT/RDFHelpers.hxx"
+
+#include "ROOT/RDF/RActionImpl.hxx"  // for RActionImpl
+#include "ROOT/RDF/RFilterBase.hxx"  // for RDFInternal
+#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RResultHandle.hxx" // for RResultHandle, RunGraphs
+
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
 #include "TStopwatch.h"
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RLogger.hxx"
-#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
-#include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
+#include "ROOT/RSlotStack.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
 
 #include <algorithm>
+#include <cstdio>
+#include <iomanip>
 #include <iostream>
 #include <set>
-#include <cstdio>
 
 // TODO, this function should be part of core libraries
 #include <numeric>
@@ -40,6 +46,8 @@
 #else
 #include <sys/ioctl.h>
 #endif
+
+class TTreeReader;
 
 // Get terminal size for progress bar
 int get_tty_size()
@@ -107,9 +115,12 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       << (sw.RealTime() > 1e-3 ? " in " + std::to_string(sw.RealTime()) + " seconds." : " in less than 1ms.");
 
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) {
-      if (h.fLoopManager)
+   auto slotStack = std::make_shared<ROOT::Internal::RSlotStack>(ROOT::GetThreadPoolSize());
+   auto run = [&slotStack](RResultHandle &h) {
+      if (h.fLoopManager) {
+         h.fLoopManager->SetSlotStack(slotStack);
          h.fLoopManager->Run(/*jit=*/false);
+      }
    };
 
    sw.Start();
@@ -130,15 +141,12 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    return uniqueLoops.size();
 }
 
-ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(ROOT::RDF::Experimental::SnapshotPtr_t)
+namespace ROOT::RDF::Experimental {
+
+void ThreadsPerTH3(unsigned int N)
 {
-   throw std::logic_error("Varying a Snapshot result is not implemented yet.");
+   ROOT::Internal::RDF::NThreadPerTH3() = N;
 }
-
-namespace ROOT {
-namespace RDF {
-
-namespace Experimental {
 
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
                                unsigned int printInterval, bool useColors)
@@ -382,6 +390,5 @@ void AddProgressBar(ROOT::RDataFrame dataframe)
    auto node = ROOT::RDF::AsRNode(dataframe);
    ROOT::RDF::Experimental::AddProgressBar(node);
 }
-} // namespace Experimental
-} // namespace RDF
-} // namespace ROOT
+
+} // namespace ROOT::RDF::Experimental

@@ -17,14 +17,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitJSONInterface
     src/JSONParser.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-  LIBRARIES
+  DEPENDENCIES
     Core
 )
 
-if(builtin_nlohmannjson)
-  target_include_directories(RooFitJSONInterface PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-else()
-  target_link_libraries(RooFitJSONInterface PRIVATE nlohmann_json::nlohmann_json)
-endif()
+target_link_libraries(RooFitJSONInterface PRIVATE nlohmann_json::nlohmann_json)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

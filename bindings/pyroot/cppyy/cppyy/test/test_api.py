@@ -1,5 +1,6 @@
+import pytest
 from pytest import raises, skip
-from .support import ispypy
+from support import ispypy
 
 
 class TestAPI:
@@ -222,3 +223,6 @@ class TestAPI:
         assert     Sequence_Check(cppyy.gbl.std.vector[ns.MyClass]())
         assert not Sequence_Check(cppyy.gbl.std.list[ns.MyClass]())
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

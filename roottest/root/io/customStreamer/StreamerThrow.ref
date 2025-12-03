@@ -1,0 +1,4 @@
+
+std::runtime_error: streaming not supported
+TMemFile**		mem.root	
+ TMemFile*		mem.root	

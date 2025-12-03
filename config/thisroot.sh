@@ -74,9 +74,9 @@ clean_environment()
          drop_from_path "$JUPYTER_PATH" "${old_rootsys}/etc/notebook"
          JUPYTER_PATH=$newpath
       fi
-      if [ -n "${JUPYTER_CONFIG_DIR-}" ]; then
-         drop_from_path "$JUPYTER_CONFIG_DIR" "${old_rootsys}/etc/notebook"
-         JUPYTER_CONFIG_DIR=$newpath
+      if [ -n "${JUPYTER_CONFIG_PATH-}" ]; then
+         drop_from_path "$JUPYTER_CONFIG_PATH" "${old_rootsys}/etc/notebook"
+         JUPYTER_CONFIG_PATH=$newpath
       fi
    fi
    if [ -z "${MANPATH-}" ]; then
@@ -88,6 +88,10 @@ clean_environment()
       else
          default_manpath=""
       fi
+   fi
+   if [ -n "${ROOT_INCLUDE_PATH-}" ]; then
+      drop_from_path "$ROOT_INCLUDE_PATH" "@DEFAULT_ROOT_INCLUDE_PATH@"
+      ROOT_INCLUDE_PATH=$newpath
    fi
 }
 
@@ -157,10 +161,18 @@ set_environment()
       JUPYTER_PATH=$ROOTSYS/etc/notebook:$JUPYTER_PATH; export JUPYTER_PATH
    fi
 
-   if [ -z "${JUPYTER_CONFIG_DIR-}" ]; then
-      JUPYTER_CONFIG_DIR=$ROOTSYS/etc/notebook; export JUPYTER_CONFIG_DIR # Linux, ELF HP-UX
+   if [ -z "${JUPYTER_CONFIG_PATH-}" ]; then
+      JUPYTER_CONFIG_PATH=$ROOTSYS/etc/notebook; export JUPYTER_CONFIG_PATH # Linux, ELF HP-UX
    else
-      JUPYTER_CONFIG_DIR=$ROOTSYS/etc/notebook:$JUPYTER_CONFIG_DIR; export JUPYTER_CONFIG_DIR
+      JUPYTER_CONFIG_PATH=$ROOTSYS/etc/notebook:$JUPYTER_CONFIG_PATH; export JUPYTER_CONFIG_PATH
+   fi
+
+   if [ -z "${ROOT_INCLUDE_PATH-}" ]; then
+      ROOT_INCLUDE_PATH=@DEFAULT_ROOT_INCLUDE_PATH@
+      export ROOT_INCLUDE_PATH
+   else
+      ROOT_INCLUDE_PATH=@DEFAULT_ROOT_INCLUDE_PATH@:$ROOT_INCLUDE_PATH
+      export ROOT_INCLUDE_PATH
    fi
 }
 
@@ -189,6 +201,12 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    # If the executable is a symlink, resolve it to its *ultimate*
    # target.
    while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
+   
+   if [ "$(basename $trueExe)" = "sh" -a -L "/private/var/select/sh" ]; then
+      # on MacOS, sh re-execs /private/var/select/sh, so resolve it
+      trueExe="/private/var/select/sh";
+      while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
+   fi
    # Output the executable name only.
    printf '%s' "$(basename "$trueExe")"
 }
@@ -238,22 +256,19 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   # get param to "."
-   thisroot="$(dirname "${SOURCE}")"
-   ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
-   if [ -z "$ROOTSYS" ]; then
-      echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
-      return 1
-   fi
+   thisrootdir=$(dirname $(realpath "${SOURCE}"))
+   export ROOTSYS=${thisrootdir%/*}
 fi
 
+if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
+   echo "ERROR: root-config not found under ROOTSYS=\"${ROOTSYS}/\"" >&2
+   ROOTSYS=; export ROOTSYS
+   return 1
+fi
 
 clean_environment
 set_environment
 
-
-# Prevent Cppyy from checking the PCH (and avoid warning)
-export CLING_STANDARD_PCH=none
 
 if (root-config --arch | grep -v win32gcc | grep -q -i win32); then
    ROOTSYS="$(cygpath -w "$ROOTSYS")"

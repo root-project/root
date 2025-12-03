@@ -1,0 +1,30 @@
+
+Processing read_test1.cxx+...
+[i] Reading test data model version 1
+MATCH: test01_wv1.log - test01_rv1.log
+MATCH: test01_wv1.log - test01_rv1ns.log
+MATCH: test02_wv1.log - test02_rv1.log beside transient fCached value
+MATCH: test03_wv1.log - test03_rv1.log beside transient fCached value
+MATCH: test03_wv1.log - test03_rv1ns.log beside transient fCached value
+MATCH: test04_wv1.log - test04_rv1.log
+MATCH: test04_wv1.log - test04_rv1ns.log
+MATCH: test05_wv1.log - test05_rv1.log
+MATCH: test06_wv1.log - test06_rv1.log
+MATCH: test06_wv1.log - test06_rv1ns.log
+MATCH: test07_wv1.log - test07_rv1.log beside transient fCached value
+MATCH: test07_wv1.log - test07_rv1ns.log beside transient fCached value
+MATCH: test08_wv1.log - test08_rv1.log beside transient fCached value
+MATCH: test08_wv1.log - test08_rv1ns.log beside transient fCached value
+MATCH: test09_wv1.log - test09_rv1.log beside transient fCached value
+MATCH: test09_wv1.log - test09_rv1ns.log beside transient fCached value
+MATCH: test10_wv1.log - test10_rv1.log beside transient fCached value
+MATCH: test10_wv1.log - test10_rv1ns.log beside transient fCached value
+MATCH: test11_wv1.log - test11_rv1.log
+MATCH: test11_wv1.log - test11_rv1ns.log
+MATCH: test12_wv1.log - test12_rv1.log
+MATCH: test12_wv1.log - test12_rv1ns.log
+MATCH: test13_wv1.log - test13_rv1.log beside transient fCached value
+MATCH: test13_wv1.log - test13_rv1ns.log beside transient fCached value
+MATCH: test14_wv1.log - test14_rv1.log beside transient fCached value
+MATCH: test14_wv1.log - test14_rv1ns.log beside transient fCached value
+(int) 0

@@ -72,44 +72,44 @@ namespace TMVA {
 
       virtual ~MethodLikelihood();
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type,
-                                      UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type,
+                              UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train();
+      void Train() override;
 
       // write weights to file
       void WriteWeightsToStream( TFile& rf ) const;
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromStream( TFile& istr );
-      void ReadWeightsFromXML( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromStream( TFile& istr ) override;
+      void ReadWeightsFromXML( void* wghtnode ) override;
       // calculate the MVA value
       // the argument is used for internal ranking tests
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile() const;
+      void WriteMonitoringHistosToFile() const override;
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       virtual void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
 
    protected:
 
-      void DeclareCompatibilityOptions();
+      void DeclareCompatibilityOptions() override;
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // header and auxiliary classes
-      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const;
+      void MakeClassSpecificHeader( std::ostream&, const TString& = "" ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
@@ -117,9 +117,9 @@ namespace TMVA {
       Double_t TransformLikelihoodOutput( Double_t ps, Double_t pb ) const;
 
       // the option handling methods
-      void Init();
-      void DeclareOptions();
-      void ProcessOptions();
+      void Init() override;
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // options
       Double_t             fEpsilon;                   ///< minimum number of likelihood (to avoid zero)
@@ -151,7 +151,7 @@ namespace TMVA {
       TString              fKDEtypeString;             ///< Kernel type to use for KDE (string)
       TString*             fInterpolateString;         ///< which interpolation method used for reference histograms (individual for each variable)
 
-      ClassDef(MethodLikelihood,0); // Likelihood analysis ("non-parametric approach")
+      ClassDefOverride(MethodLikelihood,0); // Likelihood analysis ("non-parametric approach")
    };
 
 } // namespace TMVA

@@ -84,6 +84,8 @@ std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Displ
 {
 
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
+   if (!args.IsStandalone())
+      handle->fCloseBrowser = false;
 
    if (fCefApp) {
       fCefApp->SetNextHandle(handle.get());
@@ -233,7 +235,7 @@ RCefWebDisplayHandle::~RCefWebDisplayHandle()
 
 void RCefWebDisplayHandle::CloseBrowser()
 {
-   if (fBrowser) {
+   if (fBrowser && fCloseBrowser) {
       auto host = fBrowser->GetHost();
       if (host) host->CloseBrowser(true);
       fBrowser = nullptr;

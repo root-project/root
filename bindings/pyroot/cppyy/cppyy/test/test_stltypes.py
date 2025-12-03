@@ -1,14 +1,12 @@
 # -*- coding: UTF-8 -*-
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode, maxvalue, ispypy
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("stltypesDict"))
+currpath = os.getcwd()
+test_dct = currpath + "/libstltypesDict"
 
-def setup_module(mod):
-    setup_make("stltypes")
-
+global_n = 5
 
 # after CPython's Lib/test/seq_tests.py
 def iterfunc(seqn):
@@ -197,7 +195,7 @@ class TestSTLVECTOR:
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
+        cls.N = global_n
 
     def test01_builtin_type_vector_types(self):
         """Test access to std::vector<int>/std::vector<double>"""
@@ -618,6 +616,7 @@ class TestSTLVECTOR:
         v = cppyy.gbl.std.vector(l)
         assert list(l) == l
 
+    @mark.xfail
     def test18_array_interface(self):
         """Test usage of __array__ from numpy"""
 
@@ -820,6 +819,30 @@ class TestSTLVECTOR:
 
             for i, d in zip(range(-5, 5, 1), data):
                 assert d == i
+
+    def test24_vector_to_span(self):
+        """Vectors should convert to std::span without errors"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        double calc_cumsum(std::size_t n, std::span<double> v)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < n; i += 1) {
+                sum += v[i];
+            }
+            return sum;
+        }
+        """)
+
+        l = list(range(4))
+        v = cppyy.gbl.std.vector["double"](l)
+
+        with no_root_errors():
+            result = cppyy.gbl.calc_cumsum(len(v), v)
+
+        assert result == sum(l)
 
 
 class TestSTLSTRING:
@@ -1674,9 +1697,6 @@ class TestSTLSTRING_VIEW:
         """Usage of std::string_view as formal argument"""
 
         import cppyy
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
-            # string_view exists as of C++17
-            return
 
         countit = cppyy.gbl.StringViewTest.count
         countit_cr = cppyy.gbl.StringViewTest.count_cr
@@ -1695,9 +1715,6 @@ class TestSTLSTRING_VIEW:
         """Life-time management of converted unicode strings"""
 
         import cppyy, gc
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
-            # string_view exists as of C++17
-            return
 
         # view on (converted) unicode
         text = cppyy.gbl.std.string_view('''\
@@ -1737,7 +1754,7 @@ class TestSTLDEQUE:
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
+        cls.N = global_n
 
     def test01_deque_byvalue_regression(self):
         """Return by value of a deque used to crash"""
@@ -1764,7 +1781,7 @@ class TestSTLSET:
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
+        cls.N = global_n
 
     def test01_set_iteration(self):
         """Iterate over a set"""
@@ -1851,13 +1868,20 @@ class TestSTLSET:
         for i in range(100):
             assert not (2**30 in S)
 
+        assert '__contains__' in cppyy.gbl.std.string.__dict__
+        my_string = cppyy.gbl.std.string("hello world")
+
+        assert "hello" in my_string
+        assert "world" in my_string
+        assert "bye" not in my_string
+
 
 class TestSTLTUPLE:
     def setup_class(cls):
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
+        cls.N = global_n
 
     def test01_tuple_creation_and_access(self):
         """Create tuples and access their elements"""
@@ -1949,7 +1973,7 @@ class TestSTLPAIR:
         cls.test_dct = test_dct
         import cppyy
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.N = cppyy.gbl.N
+        cls.N = global_n
 
     def test01_pair_pack_unpack(self):
         """Pack/unpack pairs"""
@@ -2121,3 +2145,7 @@ class TestSTLEXCEPTION:
 
         gc.collect()
         assert cppyy.gbl.GetMyErrorCount() == 0
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

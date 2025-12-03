@@ -21,6 +21,7 @@ OUTPUT_HELP = "merge files in a file named OUTPUT (only for ps and pdf)."
 SIZE_HELP = "specify canvas size on the format 'width'x'height' (ex: 600x400)"
 STYLE_HELP = "specify a C file name which define a style"
 VERBOSE_HELP = "print informations about the running"
+RECURSIVE_HELP = "Traverse file recursively entering any TDirectory."
 
 EPILOG = """Examples:
 - rootprint example.root:hist
@@ -48,6 +49,7 @@ def get_argparse():
 	parser.add_argument("-s", "--size", help=SIZE_HELP)
 	parser.add_argument("-S", "--style", help=STYLE_HELP)
 	parser.add_argument("-v", "--verbose", action="store_true", help=VERBOSE_HELP)
+	parser.add_argument("-r", "--recursive", action="store_true", help=RECURSIVE_HELP)
 	return parser
 
 def execute():
@@ -61,6 +63,7 @@ def execute():
 								divideOption = optDict["divide"], drawOption = optDict["draw"], \
 								formatOption = optDict["format"], \
 								outputOption = optDict["output"], sizeOption = optDict["size"], \
-								styleOption = optDict["style"], verboseOption = optDict["verbose"])
+								styleOption = optDict["style"], verboseOption = optDict["verbose"], \
+								recursiveOption = optDict["recursive"])
 if __name__ == "__main__":
 	sys.exit(execute())

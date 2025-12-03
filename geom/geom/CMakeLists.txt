@@ -62,6 +62,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     TGeoTessellated.h
     TGeoVector3.h
     TVirtualGeoConverter.h
+    TVirtualGeoChecker.h
     TVirtualGeoPainter.h
     TVirtualGeoTrack.h
     TVirtualMagField.h
@@ -114,6 +115,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     src/TGeoTessellated.cxx
     src/TGeoVector3.cxx
     src/TVirtualGeoConverter.cxx
+    src/TVirtualGeoChecker.cxx
     src/TVirtualGeoPainter.cxx
     src/TVirtualGeoTrack.cxx
     src/TVirtualMagField.cxx

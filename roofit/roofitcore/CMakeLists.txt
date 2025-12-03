@@ -10,8 +10,14 @@
 ############################################################################
 
 if(roofit_multiprocess)
-  set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
+  set(RooFitMPTestStatisticsSources
+    src/TestStatistics/LikelihoodGradientJob.cxx
+    src/TestStatistics/LikelihoodJob.cxx
+    src/TestStatistics/MinuitFcnGrad.cxx
+  )
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
+  #FIXME: The ProcessTimer.h exposes json in its interface:
+  list(APPEND EXTRA_LIBRARIES nlohmann_json::nlohmann_json)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
@@ -108,6 +114,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooEllipse.h
     RooErrorHandler.h
     RooErrorVar.h
+    RooEvaluatorWrapper.h
     RooExpensiveObjectCache.h
     RooExtendPdf.h
     RooExtendedBinding.h
@@ -142,7 +149,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitResult.h
     RooFormulaVar.h
     RooFracRemainder.h
-    RooFuncWrapper.h
     RooFunctor.h
     RooGenContext.h
     RooGenFitStudy.h
@@ -168,6 +174,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMoment.h
     RooMsgService.h
     RooMultiCategory.h
+    RooMultiPdf.h
+    RooMultiReal.h
     RooMultiVarGaussian.h
     RooNameReg.h
     RooNormSetCache.h
@@ -334,7 +342,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFormula.cxx
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
-    src/RooFuncWrapper.cxx
     src/RooFunctor.cxx
     src/RooGenContext.cxx
     src/RooGenFitStudy.cxx
@@ -364,6 +371,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
     src/RooMultiVarGaussian.cxx
+    src/RooMultiPdf.cxx
+    src/RooMultiReal.cxx
     src/RooNLLVarNew.cxx
     src/RooNameReg.cxx
     src/RooNormSetCache.cxx
@@ -432,7 +441,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
     src/TestStatistics/LikelihoodWrapper.cxx
-    src/TestStatistics/MinuitFcnGrad.cxx
     src/TestStatistics/RooAbsL.cxx
     src/TestStatistics/RooBinnedL.cxx
     src/TestStatistics/RooRealL.cxx
@@ -457,7 +465,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-    Smatrix
     ${EXTRA_DEPENDENCIES}
   LINKDEF
     inc/LinkDef.h
@@ -486,11 +493,14 @@ if(fftw3)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
 endif()
 
-# To avoid deprecation warnings when including old test statistics headers.
-# RooFit has to include them to build the documentation.
-target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
-
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+
+# The SMatrix package is header-only, but it's only exposed via the Smatrix
+# target, which is a shared library that also includes the dictionaries. For
+# RooFit, we are not interested in them, and want to avoid a dependency of the
+# RooFitCore library on the Smatrix dictionary library. Therefore, we just add
+# the include path.
+target_include_directories(RooFitCore PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/math/smatrix/inc>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

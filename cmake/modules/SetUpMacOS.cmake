@@ -35,7 +35,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   set(MACOSX_GLU_DEPRECATED ON)
 
   if (CMAKE_COMPILER_IS_GNUCXX)
-     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fno-common")
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wshadow -Wall -Woverloaded-virtual -fsigned-char -fsized-deallocation -fno-common")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
      SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
 
@@ -46,7 +46,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -m64")
 
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
+     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fsized-deallocation -fno-common -Qunused-arguments")
      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
      if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow")

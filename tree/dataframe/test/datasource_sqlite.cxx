@@ -111,13 +111,13 @@ TEST(RSqliteDS, DuplicateColumns)
 
    EXPECT_EQ("Long64_t", rds.GetTypeName("fint"));
    EXPECT_EQ("double", rds.GetTypeName("freal"));
-   auto vals = rds.GetColumnReaders<Long64_t>("fint");
+   auto val = rds.GetColumnReaders(/*slot*/ 0, "fint", typeid(Long64_t));
    rds.Initialize();
    auto ranges = rds.GetEntryRanges();
    ASSERT_EQ(1U, ranges.size());
    EXPECT_TRUE(rds.SetEntry(0, ranges[0].first));
-   auto val = **vals[0];
-   EXPECT_EQ(1, val);
+   auto trueval = *val->TryGet<Long64_t>(0);
+   EXPECT_EQ(1, trueval);
 }
 
 TEST(RSqliteDS, ColumnReaders)
@@ -127,17 +127,21 @@ TEST(RSqliteDS, ColumnReaders)
    ROOT_EXPECT_WARNING(rds.SetNSlots(nSlots), "SetNSlots",
                        "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
                        "Consider turning off IMT.");
-   auto vals = rds.GetColumnReaders<Long64_t>("fint");
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> vals;
+   vals.reserve(2);
+   for (auto i = 0U; i < 2U; i++) {
+      vals.push_back(rds.GetColumnReaders(/*slot*/ i, "fint", typeid(Long64_t)));
+   }
    rds.Initialize();
    auto ranges = rds.GetEntryRanges();
    EXPECT_EQ(1U, ranges.size());
    for (auto i : ROOT::TSeq<unsigned>(0, nSlots)) {
       EXPECT_TRUE(rds.SetEntry(i, ranges[0].first));
-      auto val = **vals[i];
+      auto val = *vals[i]->TryGet<Long64_t>(i);
       EXPECT_EQ(1, val);
    }
 
-   EXPECT_THROW(rds.GetColumnReaders<double>("fint"), std::runtime_error);
+   EXPECT_THROW(rds.GetColumnReaders(/*slot*/ 0, "fint", typeid(double)), std::runtime_error);
 }
 
 TEST(RSqliteDS, GetEntryRanges)
@@ -167,31 +171,31 @@ TEST(RSqliteDS, SetEntry)
 {
    RSqliteDS rds(fileName0, query0);
    rds.SetNSlots(1);
-   auto vint = rds.GetColumnReaders<Long64_t>("fint");
-   auto vreal = rds.GetColumnReaders<double>("freal");
-   auto vtext = rds.GetColumnReaders<std::string>("ftext");
-   auto vblob = rds.GetColumnReaders<std::vector<unsigned char>>("fblob");
-   auto vnull = rds.GetColumnReaders<void *>("fnull");
+   auto vint = rds.GetColumnReaders(0, "fint", typeid(Long64_t));
+   auto vreal = rds.GetColumnReaders(0, "freal", typeid(double));
+   auto vtext = rds.GetColumnReaders(0, "ftext", typeid(std::string));
+   auto vblob = rds.GetColumnReaders(0, "fblob", typeid(std::vector<unsigned char>));
+   auto vnull = rds.GetColumnReaders(0, "fnull", typeid(void *));
 
    rds.Initialize();
 
    rds.GetEntryRanges();
    EXPECT_TRUE(rds.SetEntry(0, 0));
-   EXPECT_EQ(1, **vint[0]);
-   EXPECT_NEAR(1.0, **vreal[0], epsilon);
-   EXPECT_EQ("1", **vtext[0]);
-   EXPECT_EQ(1U, (**vblob[0]).size());
-   EXPECT_EQ('1', (**vblob[0])[0]);
-   EXPECT_EQ(nullptr, **vnull[0]);
+   EXPECT_EQ(1, *vint->TryGet<Long64_t>(0));
+   EXPECT_NEAR(1.0, *vreal->TryGet<double>(0), epsilon);
+   EXPECT_EQ("1", *vtext->TryGet<std::string>(0));
+   EXPECT_EQ(1U, (*vblob->TryGet<std::vector<unsigned char>>(0)).size());
+   EXPECT_EQ('1', (*vblob->TryGet<std::vector<unsigned char>>(0))[0]);
+   EXPECT_EQ(nullptr, *vnull->TryGet<void *>(0));
 
    rds.GetEntryRanges();
    EXPECT_TRUE(rds.SetEntry(0, 1));
-   EXPECT_EQ(2, **vint[0]);
-   EXPECT_NEAR(2.0, **vreal[0], epsilon);
-   EXPECT_EQ("2", **vtext[0]);
-   EXPECT_EQ(1U, (**vblob[0]).size());
-   EXPECT_EQ('2', (**vblob[0])[0]);
-   EXPECT_EQ(nullptr, **vnull[0]);
+   EXPECT_EQ(2, *vint->TryGet<Long64_t>(0));
+   EXPECT_NEAR(2.0, *vreal->TryGet<double>(0), epsilon);
+   EXPECT_EQ("2", *vtext->TryGet<std::string>(0));
+   EXPECT_EQ(1U, (*vblob->TryGet<std::vector<unsigned char>>(0)).size());
+   EXPECT_EQ('2', (*vblob->TryGet<std::vector<unsigned char>>(0))[0]);
+   EXPECT_EQ(nullptr, *vnull->TryGet<void *>(0));
 }
 
 #ifdef R__USE_IMT

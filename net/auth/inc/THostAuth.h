@@ -35,7 +35,7 @@ class THostAuth : public TObject {
 
 private:
    TString      fHost;             // Host
-   Char_t       fServer;           // Server (kSOCKD,kROOTD,kPROOFD)
+   Char_t       fServer;           // Server (kSOCKD,kROOTD)
    TString      fUser;             // Username
    Int_t        fNumMethods;       // Number of AuthMethods
    Int_t        fMethods[kMAXSEC]; // AuthMethods
@@ -59,7 +59,6 @@ public:
              const char *details);
    THostAuth(const char *host, Int_t server, const char *user, Int_t authmeth,
              const char *details);
-   THostAuth(const char *asstring);
    THostAuth(THostAuth &ha);
 
    virtual ~THostAuth();

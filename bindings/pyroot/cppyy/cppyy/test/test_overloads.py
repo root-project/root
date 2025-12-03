@@ -1,12 +1,10 @@
-import py
-from pytest import raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+import py, pytest, os
+from pytest import raises, skip, mark
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict"))
 
-def setup_module(mod):
-    setup_make("overloads")
+currpath = os.getcwd()
+test_dct = currpath + "/liboverloadsDict"
 
 
 class TestOVERLOADS:
@@ -16,7 +14,7 @@ class TestOVERLOADS:
         cls.overloads = cppyy.load_reflection_info(cls.test_dct)
 
     def test01_class_based_overloads(self):
-        """Test functions overloaded on different C++ clases"""
+        """Test functions overloaded on different C++ classes"""
 
         import cppyy
         a_overload = cppyy.gbl.a_overload
@@ -201,6 +199,8 @@ class TestOVERLOADS:
         with raises(ValueError):
             cpp.BoolInt4.fff(2)
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test10_overload_and_exceptions(self):
         """Prioritize reporting C++ exceptions from callee"""
 
@@ -346,3 +346,64 @@ class TestOVERLOADS:
 
         assert ns.myfunc2(ns.E()) == "E"
         assert ns.myfunc2(ns.D()) == "D"
+
+    def test12_explicit_constructor_in_implicit_conversion(self):
+        """Check that explicit constructors are not used in implicit conversion."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+
+        struct Test12Class {
+          explicit Test12Class(int arg) {}
+        };
+
+        int test12_foo(Test12Class const&) { return 0; }
+        int test12_foo(bool) { return 1; }
+
+        int test12_bar(Test12Class const&) { return 0; }
+        int test12_bar(bool = true) { return 1; }
+
+        int call_test12_foo() { return test12_foo(1); }
+        int call_test12_bar() { return test12_bar(1); }
+
+        """)
+
+        # Check that the cppyy overload resolution figures out the right
+        # overload when calling the functions with an integer. In the past,
+        # this used to go wrong for the "bar" function with the default bool
+        # argument: cppyy went for the overload that takes the test class, even
+        # though implicit construction of the test class is forbidden.
+        assert cppyy.gbl.test12_foo(1) == cppyy.gbl.call_test12_foo()
+        assert cppyy.gbl.test12_bar(1) == cppyy.gbl.call_test12_bar()
+
+
+    def test13_static_call_from_derived_instance(self):
+        """Test calling a static member function via a derived instance."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            class Base {
+            public:
+                static int StaticMethod() {
+                    return 42;
+                }
+            };
+
+            class Derived : public Base {
+            };
+        """)
+
+        d = cppyy.gbl.Derived()
+
+        # Call static method through base class directly
+        result_direct = cppyy.gbl.Base.StaticMethod()
+
+        # Call static method through instance
+        result_instance = d.StaticMethod()
+
+        assert result_instance == result_direct
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

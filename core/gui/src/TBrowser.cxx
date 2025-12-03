@@ -88,7 +88,7 @@ public:
       SetBit(kCanDelete);
    }
 
-   ~TBrowserObject() {}
+   ~TBrowserObject() override {}
 
    void Browse(TBrowser *b) override { fClass->Browse(fObj, b); }
    Bool_t IsFolder() const override { return fClass->IsFolder(fObj); }
@@ -99,7 +99,6 @@ private:
    TClass *fClass; ///<! pointer to class of the foreign object
 };
 
-ClassImp(TBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Make sure the application environment exists and the GUI libs are loaded

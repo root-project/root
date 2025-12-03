@@ -148,7 +148,7 @@ RooFormula& RooFormulaVar::getFormula() const
 bool RooFormulaVar::ok() const { return getFormula().ok() ; }
 
 
-void RooFormulaVar::dumpFormula() { getFormula().dump() ; }
+void RooFormulaVar::dumpFormula() { getFormula().printMultiline(std::cout, 0) ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ double RooFormulaVar::evaluate() const
 
 void RooFormulaVar::doEval(RooFit::EvalContext &ctx) const
 {
-   getFormula().doEval(ctx);
+   getFormula().doEval(_actualVars, ctx);
 }
 
 

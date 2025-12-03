@@ -1,0 +1,146 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="385" viewBox="0 0 567 385" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+itbf.svg
+</title>
+<rect x="0.500" y="0" width="567" height="384" fill="#f2f2f2"/>
+<path d="M0.500,384l 2.0, -2.0v -380h 563l 2.0, -2.0h -567v 384z" fill="white"/>
+<path d="M0.500,384l 2.0, -2.0h 563v -380l 2.0, -2.0v 384h -567z" fill="#a9a9a9"/>
+<text xml:space="preserve" x="189" y="38" fill="black" font-size="18" font-family="Times">kern[0.3]
+</text>
+<text xml:space="preserve" x="138" y="38" fill="black" font-size="18" font-family="Times"> with #
+</text>
+<text xml:space="preserve" x="129" y="38" fill="black" font-size="18" font-family="Times">g
+</text>
+<text xml:space="preserve" x="118" y="38" fill="black" font-size="18" font-family="Times">n
+</text>
+<text xml:space="preserve" x="110" y="38" fill="black" font-size="18" font-family="Times">i
+</text>
+<text xml:space="preserve" x="100" y="38" fill="black" font-size="18" font-family="Times">n
+</text>
+<text xml:space="preserve" x="90" y="38" fill="black" font-size="18" font-family="Times">r
+</text>
+<text xml:space="preserve" x="80" y="38" fill="black" font-size="18" font-family="Times">e
+</text>
+<text xml:space="preserve" x="6.2" y="38" fill="black" font-size="18" font-family="Times">Positive k
+</text>
+<text xml:space="preserve" x="167" y="115" fill="black" font-size="18" font-family="Times">kern[-0.3]
+</text>
+<text xml:space="preserve" x="117" y="115" fill="black" font-size="18" font-family="Times"> with #
+</text>
+<text xml:space="preserve" x="108" y="115" fill="black" font-size="18" font-family="Times">g
+</text>
+<text xml:space="preserve" x="102" y="115" fill="black" font-size="18" font-family="Times">n
+</text>
+<text xml:space="preserve" x="99" y="115" fill="black" font-size="18" font-family="Times">i
+</text>
+<text xml:space="preserve" x="92" y="115" fill="black" font-size="18" font-family="Times">n
+</text>
+<text xml:space="preserve" x="88" y="115" fill="black" font-size="18" font-family="Times">r
+</text>
+<text xml:space="preserve" x="82" y="115" fill="black" font-size="18" font-family="Times">e
+</text>
+<text xml:space="preserve" x="6.2" y="115" fill="black" font-size="18" font-family="Times">Negative k
+</text>
+<text xml:space="preserve" x="198" y="192" fill="black" font-size="18" font-family="Times">lower[-0.4...+0.4]
+</text>
+<text xml:space="preserve" x="143" y="192" fill="black" font-size="18" font-family="Times">t with #
+</text>
+<text xml:space="preserve" x="134" y="193" fill="black" font-size="18" font-family="Times">n
+</text>
+<text xml:space="preserve" x="126" y="190" fill="black" font-size="18" font-family="Times">e
+</text>
+<text xml:space="preserve" x="112" y="189" fill="black" font-size="18" font-family="Times">m
+</text>
+<text xml:space="preserve" x="106" y="189" fill="black" font-size="18" font-family="Times">t
+</text>
+<text xml:space="preserve" x="100" y="191" fill="black" font-size="18" font-family="Times">s
+</text>
+<text xml:space="preserve" x="91" y="193" fill="black" font-size="18" font-family="Times">u
+</text>
+<text xml:space="preserve" x="85" y="199" fill="black" font-size="18" font-family="Times">j
+</text>
+<text xml:space="preserve" x="76" y="195" fill="black" font-size="18" font-family="Times">d
+</text>
+<text xml:space="preserve" x="6.2" y="192" fill="black" font-size="18" font-family="Times">Vertical a
+</text>
+<text xml:space="preserve" x="530" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="523" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="473" y="269" fill="black" font-size="18" font-family="Times">unbold
+</text>
+<text xml:space="preserve" x="451" y="269" fill="black" font-size="18" font-family="Times">bf{
+</text>
+<text xml:space="preserve" x="418" y="269" fill="black" font-size="18" font-family="Times">bf{#
+</text>
+<text xml:space="preserve" x="400" y="269" fill="black" font-size="18" font-family="Times">, #
+</text>
+<text xml:space="preserve" x="393" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="386" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="312" y="269" fill="black" font-size="18" font-family="Times" font-weight="bold" font-style="italic">bold italic
+</text>
+<text xml:space="preserve" x="296" y="269" fill="black" font-size="18" font-family="Times">it{
+</text>
+<text xml:space="preserve" x="264" y="269" fill="black" font-size="18" font-family="Times">bf{#
+</text>
+<text xml:space="preserve" x="246" y="269" fill="black" font-size="18" font-family="Times">, #
+</text>
+<text xml:space="preserve" x="238" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="201" y="269" fill="black" font-size="18" font-family="Times" font-style="italic">italic
+</text>
+<text xml:space="preserve" x="185" y="269" fill="black" font-size="18" font-family="Times">it{
+</text>
+<text xml:space="preserve" x="167" y="269" fill="black" font-size="18" font-family="Times">, #
+</text>
+<text xml:space="preserve" x="159" y="269" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="125" y="269" fill="black" font-size="18" font-family="Times" font-weight="bold">bold
+</text>
+<text xml:space="preserve" x="103" y="269" fill="black" font-size="18" font-family="Times">bf{
+</text>
+<text xml:space="preserve" x="6.2" y="269" fill="black" font-size="18" font-family="Times">Font styles: #
+</text>
+<text xml:space="preserve" x="376" y="346" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="369" y="346" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="360" y="346" fill="black" font-size="18" font-family="Times">&#0947;
+</text>
+<text xml:space="preserve" x="350" y="346" fill="black" font-size="18" font-family="Times">&#0946;
+</text>
+<text xml:space="preserve" x="339" y="346" fill="black" font-size="18" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="314" y="346" fill="black" font-size="18" font-family="Times">abc
+</text>
+<text xml:space="preserve" x="298" y="346" fill="black" font-size="18" font-family="Times">it{
+</text>
+<text xml:space="preserve" x="270" y="346" fill="black" font-size="18" font-family="Times">it{#
+</text>
+<text xml:space="preserve" x="252" y="346" fill="black" font-size="18" font-family="Times">, #
+</text>
+<text xml:space="preserve" x="245" y="346" fill="black" font-size="18" font-family="Times">}
+</text>
+<text xml:space="preserve" x="233" y="346" fill="black" font-size="18" font-family="Times" font-style="italic">&#0947;
+</text>
+<text xml:space="preserve" x="222" y="346" fill="black" font-size="18" font-family="Times" font-style="italic">&#0946;
+</text>
+<text xml:space="preserve" x="209" y="346" fill="black" font-size="18" font-family="Times" font-style="italic">&#0945;
+</text>
+<text xml:space="preserve" x="183" y="346" fill="black" font-size="18" font-family="Times" font-style="italic">abc
+</text>
+<text xml:space="preserve" x="167" y="346" fill="black" font-size="18" font-family="Times">it{
+</text>
+<text xml:space="preserve" x="149" y="346" fill="black" font-size="18" font-family="Times">, #
+</text>
+<text xml:space="preserve" x="140" y="346" fill="black" font-size="18" font-family="Times">&#0947;
+</text>
+<text xml:space="preserve" x="130" y="346" fill="black" font-size="18" font-family="Times">&#0946;
+</text>
+<text xml:space="preserve" x="119" y="346" fill="black" font-size="18" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="6.2" y="346" fill="black" font-size="18" font-family="Times">Font styles: abc
+</text></svg>

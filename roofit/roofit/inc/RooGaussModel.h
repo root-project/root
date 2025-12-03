@@ -33,7 +33,7 @@ public:
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
   RooGaussModel(const RooGaussModel& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooGaussModel(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooGaussModel(*this,newname) ; }
 
   Int_t basisCode(const char* name) const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
@@ -50,7 +50,13 @@ public:
 
   bool canComputeBatchWithCuda() const override;
 
-protected:
+  /// Get the mean parameter.
+  RooAbsReal const &getMean() const { return mean.arg(); }
+
+  /// Get the sigma parameter.
+  RooAbsReal const &getSigma() const { return sigma.arg(); }
+
+  protected:
 
   double evaluate() const override ;
   static double evaluate(double x, double mean, double sigma, double param1, double param2, int basisCode);

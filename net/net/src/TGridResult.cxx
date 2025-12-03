@@ -22,4 +22,3 @@
 
 #include "TGridResult.h"
 
-ClassImp(TGridResult);

@@ -11,6 +11,7 @@
 
 //#define NDEBUG
 
+#include <algorithm>
 #include <stdexcept>
 #include <cstring>
 #include <cassert>

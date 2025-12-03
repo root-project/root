@@ -1,3 +1,5 @@
+#ifndef TWO_FLOATS_H
+#define TWO_FLOATS_H
 #include "Rtypes.h"
 
 class TwoFloats {
@@ -15,3 +17,4 @@ public:
    ClassDef(TwoFloats, 2)
 };
 
+#endif

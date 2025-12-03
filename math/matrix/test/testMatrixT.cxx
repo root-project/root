@@ -11,9 +11,9 @@
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TMatrixF.h>
-#include <TMatrixFSym.h>
 #include <TMatrixDEigen.h>
 
+#include <ROOT/TestSupport.hxx>
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -216,4 +216,13 @@ TEST_F(testMatrixD, Eigen)
    C(2, 1) = -0.2182389465192604;
 
    CompareTMatrix(B, C);
+}
+
+TEST(TMatrixTSym, IsSymmetric)
+{
+   using ROOT::TestSupport::CheckDiagsRAII;
+   Double_t edata[] = {1, 2, 3, 4};
+   CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "SetMatrixArray", "Matrix is not symmetric after Set");
+   TMatrixDSym m(2, edata);
 }

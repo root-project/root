@@ -1,0 +1,258 @@
+<lcgdict>
+<selection>
+
+  <class name="reco::PFCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="1793013291"/>
+    <field name="posrep_" transient="true"/>
+    <field name="color_" transient="true"/>
+  </class>
+  <class name="std::vector<reco::PFCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFCluster> >"/>
+
+  <class name="reco::PFRecHitFraction" ClassVersion="10">
+   <version ClassVersion="10" checksum="3960206"/>
+  </class>
+  <class name="std::vector<reco::PFRecHitFraction>"/>
+
+  <class name="reco::RecoPFClusterRefCandidateBase">
+    <field name="p4Polar_" transient="true"/>
+    <field name="p4Cartesian_" transient="true"/>
+    <field name="cachePolarFixed_" transient="true"/>
+    <field name="cacheCartesianFixed_" transient="true"/>
+  </class>
+
+  <class name="reco::RecoPFClusterRefCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3428152128"/>
+  </class>
+
+  <class name="reco::PFRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="1807687081"/>
+    <field name="posrep_" transient="true"/>
+    <!-- <field name="seedState_" transient="true"/> -->
+    <field name="nNeighbours_" transient="true"/>
+    <field name="nCorners_" transient="true"/>
+    <field name="cornersrep_" transient="true"/>
+  </class>
+  <class name="std::vector<reco::PFRecHit>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFRecHit> >"/>
+  <class name="edm::Ref< std::vector<reco::PFRecHit>, reco::PFRecHit, edm::refhelper::FindUsingAdvance<std::vector<reco::PFRecHit>,reco::PFRecHit>  >"/>
+
+  <class name="reco::PFTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="496926148"/>
+  </class>
+<!--    <class name="edm::RefToBase<reco::Track>"/>
+  <class name="edm::RefToBase::BaseHolder<reco::Track>"/>
+  <class name="edm::RefToBase::Holder<reco::GsfTrack>"/>
+  <class name="edm::Holder<reco::TrackTransientTrack>"/>
+  <class name="edm::Holder<reco::GsfTransientTrack>"/> 
+  <class name="edm::Ref< std::vector<reco::Track>, reco::Track, edm::refhelper::FindUsingAdvance<std::vector<reco::Track>,reco::Track> >"/>
+-->  
+
+  <class name="reco::PFTrajectoryPoint" ClassVersion="11">
+   <version ClassVersion="11" checksum="2337677018"/>
+<!-- Removed by Patrick: avoid many useless PFTrack copies (memory+CPU) and costless for RECO/AOD
+    <field name="posrep_" transient="true"/>
+-->
+  </class>
+  <class name="std::vector<reco::PFTrajectoryPoint>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFTrajectoryPoint> >"/>
+
+  <class name="edm::RefVector<std::vector<reco::PFBlock>,reco::PFBlock,edm::refhelper::FindUsingAdvance<std::vector<reco::PFBlock>,reco::PFBlock> >"/>
+  <class name="reco::PFRecTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="2979491836"/>
+    <!-- <field name="doPropagation_" transient="true"/> -->
+    <!-- <field name="color_" transient="true"/> -->
+  </class>
+  <class name="std::vector<reco::PFRecTrack>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFRecTrack> >"/>
+
+  <class name="reco::GsfPFRecTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="3411096264"/>
+    <!-- <field name="doPropagation_" transient="true"/> -->
+    <!-- <field name="color_" transient="true"/> -->
+  </class>
+  <class name="std::vector<reco::GsfPFRecTrack>"/>
+  <class name="edm::Wrapper<std::vector<reco::GsfPFRecTrack> >"/>
+
+  <class name="reco::PFBrem" ClassVersion="10">
+   <version ClassVersion="10" checksum="3922569476"/>
+  </class>
+  <class name="std::vector<reco::PFBrem>"/>
+
+
+  <class name="reco::PFSimParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="545237333"/>
+  </class>
+  <class name="std::vector<reco::PFSimParticle>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFSimParticle> >"/>
+
+  <class name="reco::PFBlockElement" ClassVersion="11">
+   <version ClassVersion="11" checksum="3944635097"/>
+    <!-- <field name="multilinkslinks_" transient="true"/> -->
+  </class>
+  <class name="std::vector<reco::PFBlockElement *>" />
+  <class name="edm::OwnVector<reco::PFBlockElement, edm::ClonePolicy<reco::PFBlockElement> >"/>
+  <class name="edm::Wrapper<edm::OwnVector<reco::PFBlockElement, edm::ClonePolicy<reco::PFBlockElement> > >" />
+
+  <class name="reco::PFBlockElementTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="2342660248"/>
+<!-- removed by Florian. It useful to have this Ref (especially for a reprocessing)   
+    <field name="trackRefPF_" transient="true"/>
+-->
+  </class>
+
+  <class name="reco::PFBlockElementGsfTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="549349370"/>
+<!-- removed by Florian. It useful to have this Ref (especially for a reprocessing)
+   Florian
+    <field name="GsftrackRefPF_" transient="true"/> // Daniele
+-->
+  </class>
+
+  <class name="reco::PFBlockElementBrem" ClassVersion="10">
+   <version ClassVersion="10" checksum="2231967579"/>
+<!-- removed by Florian. It useful to have this Ref (especially for a reprocessing)
+   Florian
+    <field name="BremtrackRefPF_" transient="true"/> // Daniele
+-->
+  </class>
+
+
+  <class name="reco::PFBlockElementCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="2503385411"/>
+  </class>
+
+  <class name="std::map<unsigned int,reco::PFBlock::Link>"/>
+  <class name="reco::PFBlock::Link" ClassVersion="10">
+   <version ClassVersion="10" checksum="3119379929"/>
+  </class>
+  <class name="reco::PFBlock" ClassVersion="10">
+   <version ClassVersion="10" checksum="2213575983"/>
+  </class>
+
+  <class name="std::vector<reco::PFBlock>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFBlock> >"/>
+  <class name="edm::Ref< std::vector<reco::PFBlock>, reco::PFBlock, edm::refhelper::FindUsingAdvance<std::vector<reco::PFBlock>,reco::PFBlock> >"/>
+  <class name="edm::Ref<std::vector<reco::PFRecTrack>,reco::PFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::PFRecTrack>,reco::PFRecTrack> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFRecTrack>,reco::PFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::PFRecTrack>,reco::PFRecTrack> >"/>
+
+  <class name="edm::Ref<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack> >"/>
+  <class name="edm::RefVector<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack> >"/>
+  <class name="std::vector<edm::Ref<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfPFRecTrack>,reco::GsfPFRecTrack> > > "/>
+
+  <class name="edm::Ref<std::vector<reco::PFCluster>,reco::PFCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::PFCluster>,reco::PFCluster> >"/>
+
+  <class name="pftools::CalibrationResultWrapper" ClassVersion="10">
+   <version ClassVersion="10" checksum="1290295437"/>
+  </class>
+  <class name="pftools::Calibratable"  ClassVersion="10">
+   <version ClassVersion="10" checksum="594741590"/>
+  </class>
+  <class name="pftools::CalibratableElement"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2434874022"/>
+  </class>
+  <class name="pftools::CandidateWrapper"  ClassVersion="10">
+   <version ClassVersion="10" checksum="683143818"/>
+  </class>
+  <class name="edm::Wrapper<std::vector<pftools::Calibratable> >" />
+  <class name="std::vector<pftools::Calibratable>" />
+  <class name="std::vector<pftools::CalibratableElement>" />
+  <class name="std::vector<pftools::CandidateWrapper>" />
+  <class name="std::vector<pftools::CalibrationResultWrapper> "/>
+  <class name="pftools::CaloWindow"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1050281643"/>
+  </class>
+  <class name="pftools::TestCaloWindow"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2905084716"/>
+  </class>
+  <class name="pftools::CaloRing"  ClassVersion="10">
+   <version ClassVersion="10" checksum="999780310"/>
+  </class>
+  <class name="std::map<unsigned int, pftools::CaloRing>"/>
+  <class name="std::vector<pftools::CaloRing>"/>
+  <class name="pftools::CaloEllipse"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3700172067"/>
+  </class>
+  <class name="pftools::CaloBox"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3682355512"/>
+  </class>
+  <class name="std::pair<unsigned int,pftools::CaloRing>" />  
+  
+  <class name="pftools::ParticleFiltrationDecision" ClassVersion="10">
+   <version ClassVersion="10" checksum="2525480962"/>
+  </class>
+  <class name="std::vector<pftools::ParticleFiltrationDecision>"/>
+  <class name="edm::Wrapper<std::vector<pftools::ParticleFiltrationDecision> >"/>
+  <class name="edm::Wrapper<pftools::ParticleFiltrationDecision>"/>
+
+
+  <class name="std::map<unsigned int,reco::PFDisplacedVertexCandidate::VertexLink>"/>
+  <class name="reco::PFDisplacedVertexCandidate::VertexLink" ClassVersion="10">
+   <version ClassVersion="10" checksum="1506624066"/>
+  </class>
+  <class name="reco::PFDisplacedVertexCandidate::DistMap"/>
+  <class name="reco::PFDisplacedVertexCandidate" ClassVersion="10">
+   <version ClassVersion="10" checksum="165857237"/>
+  </class>
+
+  <class name="std::vector<reco::PFDisplacedVertexCandidate>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFDisplacedVertexCandidate> >"/>
+  <class name="edm::Ref< std::vector<reco::PFDisplacedVertexCandidate>, reco::PFDisplacedVertexCandidate, edm::refhelper::FindUsingAdvance<std::vector<reco::PFDisplacedVertexCandidate>,reco::PFDisplacedVertexCandidate> >"/>
+
+  <class name="reco::PFDisplacedVertex" ClassVersion="10">
+   <version ClassVersion="10" checksum="4202892065"/>
+  </class>
+
+  <class name="std::vector<reco::PFDisplacedVertex>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFDisplacedVertex> >"/>
+  <class name="edm::Ref< std::vector<reco::PFDisplacedVertex>, reco::PFDisplacedVertex, edm::refhelper::FindUsingAdvance<std::vector<reco::PFDisplacedVertex>,reco::PFDisplacedVertex> >"/>
+
+  <class name="std::vector<reco::PFDisplacedVertex::VertexTrackType>"/>
+
+  <class name="std::vector<std::pair<std::pair<unsigned int,unsigned int>,std::pair<unsigned int,unsigned int> > > "/>
+
+  <class name="std::pair<std::pair<unsigned int,unsigned int>,std::pair<unsigned int,unsigned int> >"/>
+
+  <class name="reco::PreId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1753132977"/>
+  </class>
+  <class name="std::vector<reco::PreId>"/>
+  <class name="edm::Wrapper<std::vector<reco::PreId> >"/>
+  <class name="edm::ValueMap<reco::PreIdRef>"/>
+  <class name="std::vector<reco::PreIdRef>"/>
+  <class name="edm::Wrapper<edm::ValueMap<reco::PreIdRef> >"/>
+  <class name="edm::Ref<std::vector<reco::PreId>,reco::PreId,edm::refhelper::FindUsingAdvance<std::vector<reco::PreId>,reco::PreId> >" />
+
+  <class name="reco::PFBlockElementSuperCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="456156271"/>
+  </class>
+  <class name="std::vector<reco::PFBlockElementSuperCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFBlockElementSuperCluster> >"/>
+
+  <!-- // Glowinski & Gouzevitch -->
+  <class name="reco::PFMultiLinksTC"> 
+    <field name="isValid" transient="true"/>
+    <field name="linkedClusters" transient="true"/>
+  </class>
+
+  <class name="std::vector<reco::RecoPFClusterRefCandidate>"/>
+  <class name="edm::Wrapper<std::vector<reco::RecoPFClusterRefCandidate> >"/>
+  <class name="edm::Ref<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate> >"/>
+  <class name="edm::RefProd<std::vector<reco::RecoPFClusterRefCandidate> >"/>
+  <class name="edm::RefVector<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate> >"/>
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::RecoPFClusterRefCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<reco::RecoPFClusterRefCandidateRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::RecoPFClusterRefCandidateRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::RecoPFClusterRefCandidateRefVector>" />
+
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate,edm::refhelper::FindUsingAdvance<std::vector<reco::RecoPFClusterRefCandidate>,reco::RecoPFClusterRefCandidate> > >" />
+
+</selection>
+<exclusion>
+  <class name="edm::OwnVector<reco::PFBlockElement, edm::ClonePolicy<reco::PFBlockElement> >">
+    <method name="sort"/>
+  </class>
+</exclusion>
+</lcgdict>
+

@@ -929,6 +929,7 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 
   if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
     if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+       delete _hashAssistedFind;
       _hashAssistedFind = new HashAssistedFind{_list.begin(), _list.end()};
     }
 
@@ -949,6 +950,7 @@ RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 
   if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
     if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+       delete _hashAssistedFind;
       _hashAssistedFind = new HashAssistedFind{_list.begin(), _list.end()};
     }
 
@@ -1152,7 +1154,9 @@ std::string RooAbsCollection::contentsString() const
     retVal += ",";
   }
 
-  retVal.erase(retVal.end()-1);
+  if (!retVal.empty()) {
+    retVal.erase(retVal.end()-1);
+  }
 
   return retVal;
 }
@@ -1643,4 +1647,14 @@ void RooAbsCollection::throwAddTypedException(TClass *klass, RooAbsArg *arg)
        << typeName;
    oocoutE(nullptr, InputArguments) << msg.str() << std::endl;
    throw std::invalid_argument(msg.str());
+}
+
+void RooAbsCollection::removeConstantParameters()
+{
+   RooArgSet constSet;
+   for (auto const *myarg : static_range_cast<RooRealVar *>(*this)) {
+      if (myarg->isConstant())
+         constSet.add(*myarg);
+   }
+   this->remove(constSet);
 }

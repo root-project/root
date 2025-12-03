@@ -1,0 +1,253 @@
+<lcgdict>
+
+  <class name="reco::PhotonCore" ClassVersion="10">
+   <version ClassVersion="10" checksum="1420264349"/>
+  </class>
+  <class name="reco::Photon" ClassVersion="13">
+   <version ClassVersion="13" checksum="2963666409"/>
+  </class>
+  <class name="reco::Conversion" ClassVersion="10">
+   <version ClassVersion="10" checksum="2140222741"/>
+  </class>
+  <class name="reco::Electron" ClassVersion="11">
+   <version ClassVersion="11" checksum="1178796923"/>
+  </class>
+  <class name="reco::SiStripElectron" ClassVersion="11">
+   <version ClassVersion="10" checksum="371046486"/>
+   <version ClassVersion="11" checksum="2363574304"/>
+  </class>
+
+  <class name="reco::Photon::FiducialFlags" ClassVersion="10">
+   <version ClassVersion="10" checksum="2148735796"/>
+  </class>
+  <class name="reco::Photon::ShowerShape" ClassVersion="11">
+   <version ClassVersion="11" checksum="2494542444"/>
+  </class>
+  <class name="reco::Photon::MIPVariables" ClassVersion="10">
+   <version ClassVersion="10" checksum="1613378413"/>
+  </class>
+  <class name="reco::Photon::IsolationVariables" ClassVersion="11">
+   <version ClassVersion="10" checksum="3308689624"/>
+   <version ClassVersion="11" checksum="3649971983"/>
+  </class>
+  <class name="reco::Photon::PflowIsolationVariables"  ClassVersion="11">
+   <version ClassVersion="11" checksum="3200292660"/>
+  </class>
+  <class name="reco::Photon::PflowIDVariables"  ClassVersion="-1">
+   <version ClassVersion="-1" checksum="2819734289"/>
+  </class>
+  <class name="reco::Photon::EnergyCorrections"  ClassVersion="15">
+   <version ClassVersion="15" checksum="2042715570"/>
+  </class>
+
+ 
+  <class name="std::vector<reco::PhotonCore>"/>  
+  <class name="edm::RefToBase<reco::PhotonCore>" />
+  <class name="edm::reftobase::IndirectHolder<reco::PhotonCore>" />
+  <class name="edm::RefToBaseProd<reco::PhotonCore>" />
+  <class name="edm::RefToBaseVector<reco::PhotonCore>" />
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::PhotonCore> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::PhotonCore>" />
+  <class name="edm::Wrapper<std::vector<reco::PhotonCore> >"/>
+  <class name="edm::Ref<std::vector<reco::PhotonCore>,reco::PhotonCore,edm::refhelper::FindUsingAdvance<std::vector<reco::PhotonCore>,reco::PhotonCore> >"/>
+  <class name="edm::RefProd<std::vector<reco::PhotonCore> >"/>
+  <class name="edm::RefVector<std::vector<reco::PhotonCore>,reco::PhotonCore,edm::refhelper::FindUsingAdvance<std::vector<reco::PhotonCore>,reco::PhotonCore> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::PhotonCore>,reco::PhotonCore,edm::refhelper::FindUsingAdvance<std::vector<reco::PhotonCore>,reco::PhotonCore> > >"/>
+  
+
+
+  <class name="std::vector<reco::Photon>"/>
+  <class name="edm::Wrapper<std::vector<reco::Photon> >"/>
+  <class name="edm::Ref<std::vector<reco::Photon>,reco::Photon,edm::refhelper::FindUsingAdvance<std::vector<reco::Photon>,reco::Photon> >"/>
+  <class name="edm::RefProd<std::vector<reco::Photon> >"/>
+  <class name="edm::RefVector<std::vector<reco::Photon>,reco::Photon,edm::refhelper::FindUsingAdvance<std::vector<reco::Photon>,reco::Photon> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::Photon>,reco::Photon,edm::refhelper::FindUsingAdvance<std::vector<reco::Photon>,reco::Photon> > >"/>
+  <class name="edm::RefToBase<reco::Photon>" />
+  <class name="edm::reftobase::IndirectHolder<reco::Photon>" />
+  <class name="edm::RefToBaseProd<reco::Photon>" />
+  <class name="edm::RefToBaseVector<reco::Photon>" />
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::Photon> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::Photon>" />
+
+
+
+  <class name="std::vector<reco::Electron>"/>
+  <class name="edm::Wrapper<std::vector<reco::Electron> >"/>
+  <class name="edm::Ref<std::vector<reco::Electron>,reco::Electron,edm::refhelper::FindUsingAdvance<std::vector<reco::Electron>,reco::Electron> >"/>
+  <class name="edm::RefProd<std::vector<reco::Electron> >"/>
+  <class name="edm::RefVector<std::vector<reco::Electron>,reco::Electron,edm::refhelper::FindUsingAdvance<std::vector<reco::Electron>,reco::Electron> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::Electron>,reco::Electron,edm::refhelper::FindUsingAdvance<std::vector<reco::Electron>,reco::Electron> > >"/>
+
+
+  <class name="edm::RefToBase<reco::Electron>" />
+  <class name="edm::reftobase::IndirectHolder<reco::Electron>" />
+  <class name="edm::RefToBaseProd<reco::Electron>" />
+  <class name="edm::RefToBaseVector<reco::Electron>" />
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::Electron> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::Electron>" />
+
+
+
+
+
+  <class name="reco::GsfElectronCore" ClassVersion="10">
+   <version ClassVersion="10" checksum="2226610106"/>
+  </class>
+  <class name="std::vector<reco::GsfElectronCore>"/>  
+  <class name="edm::RefToBase<reco::GsfElectronCore>" />
+  <class name="edm::reftobase::IndirectHolder<reco::GsfElectronCore>" />
+  <class name="edm::RefToBaseProd<reco::GsfElectronCore>" />
+  <class name="edm::RefToBaseVector<reco::GsfElectronCore>" />
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::GsfElectronCore> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::GsfElectronCore>" />
+  <class name="edm::Wrapper<std::vector<reco::GsfElectronCore> >"/>
+  <class name="edm::Ref<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore> >"/>
+  <class name="edm::RefProd<std::vector<reco::GsfElectronCore> >"/>
+  <class name="edm::RefVector<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectronCore>,reco::GsfElectronCore> > >"/>
+  
+  <class name="reco::GsfElectron::TrackClusterMatching" ClassVersion="10">
+   <version ClassVersion="10" checksum="1073796225"/>
+  </class>
+  <class name="reco::GsfElectron::TrackExtrapolations" ClassVersion="10">
+   <version ClassVersion="10" checksum="517526181"/>
+  </class>
+  <class name="reco::GsfElectron::ClosestCtfTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="1307042460"/>
+  </class>
+  <class name="reco::GsfElectron::FiducialFlags" ClassVersion="10">
+   <version ClassVersion="10" checksum="2564471186"/>
+  </class>
+  <class name="reco::GsfElectron::ShowerShape" ClassVersion="11">
+   <version ClassVersion="11" checksum="3451347438"/>
+   <version ClassVersion="10" checksum="3070677812"/>
+  </class>
+  <class name="reco::GsfElectron::IsolationVariables" ClassVersion="10">
+   <version ClassVersion="10" checksum="4260674990"/>
+  </class>
+  <class name="reco::GsfElectron::ConversionRejection" ClassVersion="10">
+   <version ClassVersion="10" checksum="190549577"/>
+  </class>
+  <class name="reco::GsfElectron::Corrections" ClassVersion="11">
+   <version ClassVersion="11" checksum="4279379731"/>
+  </class>
+  <class name="reco::GsfElectron::ChargeInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="1415326811"/>
+  </class>
+  <class name="reco::GsfElectron::PflowIsolationVariables" ClassVersion="10">
+   <version ClassVersion="10" checksum="4270399196"/>
+  </class>
+  <class name="reco::GsfElectron::MvaInput" ClassVersion="11">
+   <version ClassVersion="11" checksum="2106253688"/>
+   <version ClassVersion="10" checksum="2786166332"/>
+  </class>
+  <class name="reco::GsfElectron::MvaOutput" ClassVersion="12">
+   <version ClassVersion="12" checksum="3102257169"/>
+   <version ClassVersion="11" checksum="1838996036"/>
+   <version ClassVersion="10" checksum="2145829729"/>
+  </class>
+  <class name="reco::GsfElectron::ClassificationVariables" ClassVersion="11">
+   <version ClassVersion="11" checksum="2094185381"/>
+  </class>
+  <class name="reco::GsfElectron" ClassVersion="13">
+   <version ClassVersion="13" checksum="2991498573"/>
+   <version ClassVersion="12" checksum="2835360780"/>
+   <version ClassVersion="11" checksum="1755683850"/>
+  </class>
+  <class name="std::vector<reco::GsfElectron>"/>  
+  <class name="edm::RefToBase<reco::GsfElectron>" />
+  <class name="edm::reftobase::IndirectHolder<reco::GsfElectron>" />
+  <class name="edm::RefToBaseProd<reco::GsfElectron>" />
+  <class name="edm::RefToBaseVector<reco::GsfElectron>" />
+  <class name="edm::Wrapper<edm::RefToBaseVector<reco::GsfElectron> >" />
+  <class name="edm::reftobase::BaseVectorHolder<reco::GsfElectron>" />
+  <class name="edm::Wrapper<std::vector<reco::GsfElectron> >"/>
+  <class name="edm::Ref<std::vector<reco::GsfElectron>,reco::GsfElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectron>,reco::GsfElectron> >"/>
+  <class name="edm::RefProd<std::vector<reco::GsfElectron> >"/>
+  <class name="edm::RefVector<std::vector<reco::GsfElectron>,reco::GsfElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectron>,reco::GsfElectron> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::GsfElectron>,reco::GsfElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::GsfElectron>,reco::GsfElectron> > >"/>
+
+  <class name="edm::Ptr<reco::GsfElectron>" />
+  <class name="edm::Wrapper<edm::Ptr<reco::GsfElectron> >" />
+  <class name="edm::PtrVector<reco::GsfElectron>" />
+  <class name="edm::Wrapper<edm::PtrVector<reco::GsfElectron> >" />
+
+
+
+
+
+  <class name="std::vector<reco::Conversion>"/>
+  <class name="edm::Wrapper<std::vector<reco::Conversion> >"/>
+  <class name="edm::Ref<std::vector<reco::Conversion>,reco::Conversion,edm::refhelper::FindUsingAdvance<std::vector<reco::Conversion>,reco::Conversion> >"/>
+  <class name="edm::RefProd<std::vector<reco::Conversion> >"/>
+  <class name="edm::RefVector<std::vector<reco::Conversion>,reco::Conversion,edm::refhelper::FindUsingAdvance<std::vector<reco::Conversion>,reco::Conversion> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::Conversion>,reco::Conversion,edm::refhelper::FindUsingAdvance<std::vector<reco::Conversion>,reco::Conversion> > >"/>
+
+
+  <class name="std::vector<reco::SiStripElectron>"/>
+  <class name="edm::Wrapper<std::vector<reco::SiStripElectron> >"/>
+  <class name="edm::Ref<std::vector<reco::SiStripElectron>,reco::SiStripElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::SiStripElectron>,reco::SiStripElectron> >"/>
+  <class name="edm::RefProd<std::vector<reco::SiStripElectron> >"/>
+  <class name="edm::RefVector<std::vector<reco::SiStripElectron>,reco::SiStripElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::SiStripElectron>,reco::SiStripElectron> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::SiStripElectron>,reco::SiStripElectron,edm::refhelper::FindUsingAdvance<std::vector<reco::SiStripElectron>,reco::SiStripElectron> > >"/>
+
+ 
+  <class name="edm::AssociationMap<edm::OneToValue<std::vector<reco::Photon>, float, unsigned int > >">
+      <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToValue<std::vector<reco::Photon>, float, unsigned int > > >" />
+  <class name="edm::helpers::Key<edm::RefProd<std::vector<reco::Photon> > >" />
+
+
+  <class name="edm::AssociationMap<edm::OneToValue<std::vector<reco::Electron>, float, unsigned int > >">
+      <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToValue<std::vector<reco::Electron>, float, unsigned int > > >" />
+  <class name="edm::helpers::Key<edm::RefProd<std::vector<reco::Electron> > >" />
+
+
+  <class name="std::pair<reco::GsfElectronRef,double>"/>
+  <class name="std::vector<std::pair<reco::GsfElectronRef,double> >"/>
+
+  <class name="reco::GsfElectronIsoCollection">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::GsfElectronIsoCollectionRef"/>
+  <class name="reco::GsfElectronIsoCollectionRefProd"/>
+  <class name="reco::GsfElectronIsoCollectionRefVector"/>
+  <class name="edm::Wrapper<reco::GsfElectronIsoCollection>"/>
+
+  <class name="std::pair<reco::GsfElectronRef,int>"/>
+  <class name="std::vector<std::pair<reco::GsfElectronRef,int> >"/>
+
+  <class name="reco::GsfElectronIsoNumCollection">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::GsfElectronIsoNumCollectionRef"/>
+  <class name="reco::GsfElectronIsoNumCollectionRefProd"/>
+  <class name="reco::GsfElectronIsoNumCollectionRefVector"/>
+  <class name="edm::Wrapper<reco::GsfElectronIsoNumCollection>"/>
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::GsfElectronRef>" />
+  <class name="edm::reftobase::RefHolder<reco::GsfElectronRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::GsfElectronRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::GsfElectronRefVector>" />
+
+  <class name="edm::reftobase::Holder<reco::Candidate, reco::PhotonRef>" />
+  <class name="edm::reftobase::RefHolder<reco::PhotonRef>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, reco::PhotonRefVector>" />
+  <class name="edm::reftobase::RefVectorHolder<reco::PhotonRefVector>" />
+
+  <class name="edm::AssociationMap<edm::OneToOne<std::vector<reco::Photon>,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,unsigned int> >">
+     <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Photon> >,edm::RefProd<edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> > > >" />
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<std::vector<reco::Photon>,edm::OwnVector<reco::Candidate,edm::ClonePolicy<reco::Candidate> >,unsigned int> > >" />
+ 
+  <class name="edm::Ptr<reco::Photon>" />
+  <class name="edm::PtrVector<reco::Photon>" />
+  
+</lcgdict>
+

@@ -232,7 +232,6 @@ public:
 TEveProjectionManager *gRPhiMgr = nullptr;
 TEveProjectionManager *gRhoZMgr = nullptr;
 
-ClassImp(TGShapedToolTip) ClassImp(HtmlObjTable) ClassImp(HtmlSummary) ClassImp(SplitGLView)
 
    HtmlSummary *SplitGLView::fgHtmlSummary = nullptr;
 TGHtml *SplitGLView::fgHtml = nullptr;
@@ -1377,7 +1376,7 @@ void SplitGLView::UpdateSummary()
    }
 }
 
-#ifdef __CINT__
+#ifdef __CLING__
 void SplitGLView()
 {
    printf("This script is used via ACLiC by the macro \"alice_esd_split.C\"\n");

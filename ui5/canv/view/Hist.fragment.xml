@@ -82,8 +82,8 @@
          <CheckBox text="Box" selected="{/opts/Box}" />
          <CheckBox text="Text" selected="{/opts/Text}" />
          <CheckBox text="Zero" selected="{/opts/Zero}" />
-         <CheckBox text="Palette" selected="{/opts/Zscale}" title="Drawing color palette"/>
-         <CheckBox text="Vert" selected="{/opts/Zvert}" title="Drawing color palette in vertical direction"/>
+         <CheckBox text="Palette" selected="{/opts/Zscale}" tooltip="Drawing color palette"/>
+         <CheckBox text="Vert" selected="{/opts/Zvert}" tooltip="Drawing color palette in vertical direction"/>
       </Panel>
 
       <Panel visible="{= ${/opts/Mode3Dindx} === 1 &amp;&amp; ${/opts/ndim} === 2 }">
@@ -120,7 +120,7 @@
          <CheckBox text="Front" selected="{/opts/FrontBox}" />
          <CheckBox text="Back" selected="{/opts/BackBox}" />
          <CheckBox text="Errors" selected="{/opts/Error}" />
-         <CheckBox text="Palette" selected="{/opts/Zscale}"  title="Drawing color palette"/>
+         <CheckBox text="Palette" selected="{/opts/Zscale}" tooltip="Drawing color palette"/>
       </Panel>
 
       <Panel visible="{= ${/opts/ndim} === 3 }">
@@ -150,7 +150,7 @@
 
          <CheckBox text="Scat" selected="{/opts/Scat}"/>
          <CheckBox text="Glcol" selected="{/opts/GLColor}"/>
-         <CheckBox text="Palette" selected="{/opts/Zscale}" title="Drawing color palette"/>
+         <CheckBox text="Palette" selected="{/opts/Zscale}" tooltip="Drawing color palette"/>
       </Panel>
 
    </VBox>

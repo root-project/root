@@ -1,0 +1,12 @@
+<lcgdict>
+
+  <class name="INavigable"   />
+  <class name="NavigableTerminalNode"   />
+  <class name="NavigationDefaults::DefaultType"/> 
+  <class name="NavigationDefaults::DefaultContainer"/> 
+  <class name="NavigationDefaults::DefaultWeight"/> 
+  <class name="AthenaBarCodeImpl"/>
+  <class name="AthenaBarCodeBase"/>
+  <class name="IAthenaBarCode"/>
+
+</lcgdict>

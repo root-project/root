@@ -14,7 +14,7 @@
 // NetErrors                                                            //
 //                                                                      //
 // This file defines error strings mapped to the error codes generated  //
-// by rootd/proofd.                                                     //
+// by rootd.                                                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

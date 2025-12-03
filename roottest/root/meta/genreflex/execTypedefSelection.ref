@@ -1,0 +1,4 @@
+
+Processing execTypedefSelection.C...
+Warning in <TClass::Init>: no dictionary for class B is available
+Warning in <TClass::Init>: no dictionary for class ns::D is available

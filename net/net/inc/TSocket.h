@@ -41,15 +41,13 @@ class THostAuth;
 class TSocket : public TNamed {
 
 friend class TServerSocket;
-friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
-friend class TSlave;       // to be able to call SendHostAuth()
 
 public:
    enum EStatusBits { kIsUnix = BIT(16),    // set if unix socket
                       kBrokenConn = BIT(17) // set if conn reset by peer or broken
                     };
    enum EInterest { kRead = 1, kWrite = 2 };
-   enum EServiceType { kSOCKD, kROOTD, kPROOFD };
+   enum EServiceType { kSOCKD, kROOTD };
 
 protected:
    enum ESocketErrors {

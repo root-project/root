@@ -84,7 +84,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    print.Debug("Minos error for p0:  ",ey.first,ey.second);
 
    // if Minos is not at limits we can use migrad to find the other corresponding point coordinate
-   MnMigrad migrad0(fFCN, fMinimum.UserState(), MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
+   MnMigrad migrad0(fFCN, fMinimum.UserState(), fStrategy.NextLower());
 
 // function cross for a single parameter - copy the state
    MnUserParameterState ustate = fMinimum.UserState();
@@ -148,8 +148,8 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    // start from minimizing in p1 and fixing p0 to lower Minos value
    std::vector<double> yvalues_xlo(1);
-   migrad0.Fix(px);
-   migrad0.SetValue(px, valx + ex.first);
+   migrad0.State().Fix(px);
+   migrad0.State().SetValue(px, valx + ex.first);
    FunctionMinimum exy_lo = migrad0();
    nfcn += exy_lo.NFcn();
    if (!exy_lo.IsValid()) {
@@ -169,8 +169,8 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    // now minimize in pi and fix p0 to upper Minos value
    std::vector<double> yvalues_xup(1);
-   migrad0.SetValue(px, valx + ex.second);
-   migrad0.Fix(px);
+   migrad0.State().SetValue(px, valx + ex.second);
+   migrad0.State().Fix(px);
    FunctionMinimum exy_up = migrad0();
    nfcn += exy_up.NFcn();
    if (!exy_up.IsValid()) {
@@ -190,10 +190,10 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    // now look for x values when y is fixed
 
-   MnMigrad migrad1(fFCN, fMinimum.UserState(), MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
-   migrad1.Fix(py);
+   MnMigrad migrad1(fFCN, fMinimum.UserState(), fStrategy.NextLower());
+   migrad1.State().Fix(py);
    std::vector<double> xvalues_ylo(1);
-   migrad1.SetValue(py, valy + ey.first);
+   migrad1.State().SetValue(py, valy + ey.first);
    FunctionMinimum eyx_lo = migrad1();
    nfcn += eyx_lo.NFcn();
    if (!eyx_lo.IsValid()) {
@@ -212,8 +212,8 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    }
 
    std::vector<double> xvalues_yup(1);
-   migrad1.Fix(py);
-   migrad1.SetValue(py, valy + ey.second);
+   migrad1.State().Fix(py);
+   migrad1.State().SetValue(py, valy + ey.second);
    FunctionMinimum eyx_up = migrad1();
    nfcn += eyx_up.NFcn();
    if (!eyx_up.IsValid()) {

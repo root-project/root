@@ -54,7 +54,7 @@ double RooAbsIntegrator::calculate(const double *yvec)
   double ret = integral(yvec) ;
   integrand()->restoreXVec() ;
 
-  oocxcoutD(static_cast<TObject*>(nullptr), NumIntegration) << "RooAbsIntegrator::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << std::endl ;
+  oocxcoutD(static_cast<TObject*>(nullptr), NumericIntegration) << "RooAbsIntegrator::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << std::endl ;
   return ret ;
 }
 

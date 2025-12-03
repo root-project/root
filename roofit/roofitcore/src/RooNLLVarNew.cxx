@@ -253,11 +253,10 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 
    auto probas = ctx.at(_pdf);
 
-   _sumWeight = weights.size() == 1 ? weights[0] * probas.size()
-                                    : RooBatchCompute::reduceSum(config, weights.data(), weights.size());
-   if (_expectedEvents && _weightSquared && _sumWeight2 == 0.0) {
-      _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * probas.size()
-                                        : RooBatchCompute::reduceSum(config, weightsSumW2.data(), weightsSumW2.size());
+   double sumWeight = RooBatchCompute::reduceSum(config, weights.data(), weights.size());
+   double sumWeight2 = 0.;
+   if (_expectedEvents && _weightSquared) {
+      sumWeight2 = RooBatchCompute::reduceSum(config, weightsSumW2.data(), weightsSumW2.size());
    }
 
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
@@ -276,10 +275,10 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 
    if (_expectedEvents) {
       std::span<const double> expected = ctx.at(*_expectedEvents);
-      nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
+      nllOut.nllSum += _pdf->extendedTerm(sumWeight, expected[0], _weightSquared ? sumWeight2 : 0.0, _doBinOffset);
    }
 
-   finalizeResult(ctx, {nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
+   finalizeResult(ctx, {nllOut.nllSum, nllOut.nllSumCarry}, sumWeight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

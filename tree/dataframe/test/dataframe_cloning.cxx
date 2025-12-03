@@ -16,6 +16,9 @@
 
 #include <gtest/gtest.h>
 
+#include <TFile.h>
+#include <TTree.h>
+
 using ROOT::Internal::RDF::ChangeBeginAndEndEntries;
 using ROOT::Internal::RDF::ChangeEmptyEntryRange;
 using ROOT::Internal::RDF::ChangeSpec;
@@ -185,6 +188,26 @@ TEST(RDataFrameCloning, HistoND)
    EXPECT_EQ(df.GetNRuns(), 1);
 }
 
+TEST(RDataFrameCloning, HistoNSparseD)
+{
+   ROOT::RDataFrame df{100};
+   auto col1 = df.Define("x0", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+
+   int nbins[4] = {10, 10, 10, 10};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {100., 100., 100., 100.};
+   auto histo = col4.HistoNSparseD<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax},
+                                                                   {"x0", "x1", "x2", "x3"});
+   auto clone = CloneResultAndAction(histo);
+
+   EXPECT_EQ((*histo).GetEntries(), 100);
+   EXPECT_EQ((*clone).GetEntries(), 100);
+   EXPECT_EQ(df.GetNRuns(), 1);
+}
+
 TEST(RDataFrameCloning, Profile1D)
 {
    ROOT::RDataFrame df{100};
@@ -275,7 +298,7 @@ TEST(RDataFrameCloning, Snapshot)
    auto secondFile{"test_rdataframe_cloneactions_snapshot_2.root"};
 
    ROOT::RDataFrame df{10};
-   auto snap = df.Define("x", [] { return 10; }).Snapshot<int>(treeName, firstFile, {"x"}, opts);
+   auto snap = df.Define("x", [] { return 10; }).Snapshot(treeName, firstFile, {"x"}, opts);
 
    auto clone = CloneResultAndAction(snap, secondFile);
 

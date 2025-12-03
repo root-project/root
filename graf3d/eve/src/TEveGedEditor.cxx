@@ -26,7 +26,6 @@
 Specialization of TGedEditor for proper update propagation to TEveManager.
 */
 
-ClassImp(TEveGedEditor);
 
 Int_t   TEveGedEditor::fgMaxExtraEditors = 10;
 TList  *TEveGedEditor::fgExtraEditors    = new TList;
@@ -254,7 +253,6 @@ It provides the ability to undock given editor for easier use.
 Support for that is also provided from the TEveManager.
 */
 
-ClassImp(TEveGedNameFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -310,7 +308,6 @@ Specialization of TGTextButton for EVE name frame.
 It opens a context-menu on right-click.
 */
 
-ClassImp(TEveGedNameTextButton);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

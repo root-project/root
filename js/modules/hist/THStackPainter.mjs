@@ -7,7 +7,7 @@ class THStackPainter extends THStackPainter2D {
 
    /** @summary Invoke histogram drawing */
    drawHist(dom, hist, hopt) {
-      const func = (this.options.ndim === 1) ? TH1Painter.draw : TH2Painter.draw;
+      const func = (this.getOptions().ndim === 1) ? TH1Painter.draw : TH2Painter.draw;
       return func(dom, hist, hopt);
    }
 

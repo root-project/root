@@ -1,0 +1,8 @@
+{ decls }
+
+namespace std {  }
+
+[ libsimpleVector_dictrflx.so ]
+# List of selected classes
+class C
+class vector<C>

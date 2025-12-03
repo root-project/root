@@ -15,6 +15,7 @@
 #include "CallContext.h"     // for Parameter
 
 // Standard
+#include <functional>
 #include <utility>
 #include <vector>
 
@@ -83,6 +84,11 @@ public:
     void CastToArray(Py_ssize_t sz);
     Py_ssize_t ArrayLength();
 
+// implementation of the __reduce__ method: doesn't wrap any function by
+// default but can be re-assigned by libraries that add C++ object
+// serialization support, like ROOT
+    static std::function<PyObject *(PyObject *)> &ReduceMethod();
+
 private:
     void  CreateExtension();
     void* GetExtendedObject();
@@ -120,7 +126,12 @@ inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
 
 
 //- object proxy type and type verification ----------------------------------
-CPYCPPYY_IMPORT PyTypeObject CPPInstance_Type;
+// Needs to be extern because the libROOTPythonizations is secretly using it
+#ifdef _MSC_VER
+extern __declspec(dllimport) PyTypeObject CPPInstance_Type;
+#else
+extern PyTypeObject CPPInstance_Type;
+#endif
 
 template<typename T>
 inline bool CPPInstance_Check(T* object)

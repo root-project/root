@@ -16,11 +16,11 @@
 
 #include <RooAbsCollection.h>
 #include <RooFit/EvalContext.h>
-#include <RooNumber.h>
 
 #include <ROOT/RSpan.hxx>
 
 #include <cstddef>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -70,6 +70,7 @@ public:
 
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
+   int observableIndexOf(const RooAbsArg &arg) const;
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
 
@@ -108,7 +109,7 @@ public:
 
    std::string getTmpVarName() const;
 
-   std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(RooAbsCollection const &x, std::string const &arrayType = "double");
 
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
@@ -116,6 +117,7 @@ public:
    std::vector<double> const &xlArr() { return _xlArr; }
 
    void collectFunction(std::string const &name);
+   std::string const &collectedCode() { return _collectedCode; }
    std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
 
    std::string
@@ -149,7 +151,9 @@ private:
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
    {
-      return RooNumber::toString(x);
+      std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::max_digits10) << x;
+      return ss.str();
    }
 
    // If input is integer, we want to print it into the code like one (i.e. avoid the unnecessary '.0000').
@@ -204,6 +208,7 @@ private:
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
+   std::string _collectedCode;
 };
 
 template <>
@@ -222,10 +227,12 @@ std::string CodegenContext::buildArgSpanImpl(std::span<const T> arr)
 {
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();
-   std::string arrDecl = typeName<T>() + " " + arrName + "[" + std::to_string(n) + "] = {";
+   std::stringstream ss;
+   ss << typeName<T>() << " " << arrName << "[" << n << "] = {";
    for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
+      ss << " " << arr[i] << ",";
    }
+   std::string arrDecl = ss.str();
    arrDecl.back() = '}';
    arrDecl += ";\n";
    addToCodeBody(arrDecl, true);

@@ -10,6 +10,7 @@
 struct Electron {
    float pt;
 
+   friend bool operator==(const Electron &left, const Electron &right) { return left.pt == right.pt; }
    friend bool operator<(const Electron &left, const Electron &right) { return left.pt < right.pt; }
 };
 

@@ -36,7 +36,6 @@ Quadratic interpolation of TGraph
 #include "TMath.h"
 #include "TSpline.h"
 
-ClassImp(TMVA::TSpline2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from TGraph pointer (not owned by TSpline2)
@@ -61,7 +60,7 @@ Double_t TMVA::TSpline2::Eval( const Double_t x ) const
 {
    Double_t retval=0;
    Int_t N = fX.size();
-   Int_t ibin = std::distance(fX.begin(), TMath::BinarySearch( fX.begin(), fX.end(), x ));
+   Int_t ibin = std::distance(std::lower_bound(fX.rbegin(), fX.rend(), x, std::greater{}), fX.rend()) - 1;
 
    // sanity checks
    if (ibin < 0 ) ibin = 0;

@@ -1,0 +1,230 @@
+
+Processing runtemplateName.C...
+******************************************************************************
+*Tree    :mytree    : Icecube                                                *
+*Entries :      100 : Total =           13238 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Branch  :my_c                                                               *
+*Entries :      100 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :i         : Int_t                                                  *
+*Entries :      100 : Total  Size=       1029 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :j         : Int_t                                                  *
+*Entries :      100 : Total  Size=       1029 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :my_c2                                                              *
+*Entries :      100 : BranchElement (see below)                              *
+*............................................................................*
+*Br    2 :i         : Int_t                                                  *
+*Entries :      100 : Total  Size=       1029 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :j         : Int_t                                                  *
+*Entries :      100 : Total  Size=       1029 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :plot_my_i.                                                         *
+*Entries :      100 : BranchElement (see below)                              *
+*............................................................................*
+*Br    4 :plot_my_i.B<void>.i : Int_t                                        *
+*Entries :      100 : Total  Size=       1137 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :plot_my_i.j : Int_t                                                *
+*Entries :      100 : Total  Size=       1089 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :against_my_i.                                                      *
+*Entries :      100 : BranchElement (see below)                              *
+*............................................................................*
+*Br    6 :against_my_i.B<void>.i : Int_t                                     *
+*Entries :      100 : Total  Size=       1155 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    7 :against_my_i.j : Int_t                                             *
+*Entries :      100 : Total  Size=       1107 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+Warning in <TTreeProxyGenerator>: The branch name "baseB<void>" is duplicated. Only the first instance 
+	will be available directly. The other instance(s) might be available via their complete name
+	(including the name of their mother branche's name).
+Warning in <TTreeProxyGenerator>: The branch name "j" is duplicated. Only the first instance 
+	will be available directly. The other instance(s) might be available via their complete name
+	(including the name of their mother branche's name).
+Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
+************************************
+*    Row   * plot_my_i * against_m *
+************************************
+*        0 *         0 *         0 *
+*        1 *        13 *        26 *
+*        2 *        26 *        52 *
+*        3 *        39 *        78 *
+*        4 *        52 *       104 *
+*        5 *        65 *       130 *
+*        6 *        78 *       156 *
+*        7 *        91 *       182 *
+*        8 *       104 *       208 *
+*        9 *       117 *       234 *
+************************************
+************************************
+*    Row   * plot_my_i * against_m *
+************************************
+*        0 *         0 *         0 *
+*        1 *        13 *        26 *
+*        2 *        26 *        52 *
+*        3 *        39 *        78 *
+*        4 *        52 *       104 *
+*        5 *        65 *       130 *
+*        6 *        78 *       156 *
+*        7 *        91 *       182 *
+*        8 *       104 *       208 *
+*        9 *       117 *       234 *
+************************************
+******************************************************************************
+*Tree    :mytreemk  : foo                                                    *
+*Entries :        1 : Total =            2770 bytes  File  Size =          0 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Branch  :my_c                                                               *
+*Entries :        1 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :i         : Int_t                                                  *
+*Entries :        1 : Total  Size=        637 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :other_c.                                                           *
+*Entries :        1 : BranchElement (see below)                              *
+*............................................................................*
+*Br    1 :other_c.i : Int_t                                                  *
+*Entries :        1 : Total  Size=        685 bytes  One basket in memory    *
+*Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+Info in <TTreePlayer::MakeClass>: Files: cmakeclass.h and cmakeclass.C generated from TTree: mytreemk
+Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
+Info in <ACLiC>: modified script has already been compiled and loaded
+Info in <ACLiC>: it will be regenerated and reloaded!
+3,5c3,5
+< //   from TTree mytree/Icecube
+---
+> //   from TTree mytreemk/foo
+29c29
+< class C;
+---
+> class C2;
+32a33
+> #include "templateName.cpp"
+58c59
+<    struct TPx_B_void_
+---
+>    struct TPx_C2
+60c61
+<       TPx_B_void_(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+---
+>       TPx_C2(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+65c66
+<       TPx_B_void_(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+---
+>       TPx_C2(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+72,73c73,74
+<       const B<void>* operator->() { return obj.GetPtr(); }
+<       TObjProxy<B<void> > obj;
+---
+>       const C2* operator->() { return obj.GetPtr(); }
+>       TObjProxy<C2 > obj;
+77,139d77
+<    struct TPx_C
+<       : public TPx_B_void_
+<    {
+<       TPx_C(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          TPx_B_void_(director, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          j          (director, "j")
+<       {};
+<       TPx_C(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          TPx_B_void_(director, parent, membername, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername, top, mid),
+<          j          (director, "j")
+<       {};
+<       ROOT::Internal::TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const C* operator->() { return obj.GetPtr(); }
+<       TObjProxy<C > obj;
+< 
+<       TIntProxy   j;
+<    };
+<    struct TPx_B_void__1
+<    {
+<       TPx_B_void__1(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          i          (director, ffPrefix, "B<void>.i")
+<       {};
+<       TPx_B_void__1(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername, top, mid),
+<          i          (director, ffPrefix, "B<void>.i")
+<       {};
+<       ROOT::Internal::TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const B<void>* operator->() { return obj.GetPtr(); }
+<       TObjProxy<B<void> > obj;
+< 
+<       TIntProxy   i;
+<    };
+<    struct TPx_C_1
+<       : public TPx_B_void__1
+<    {
+<       TPx_C_1(TBranchProxyDirector* director,const char *top,const char *mid=0) :
+<          TPx_B_void__1(director, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, top, mid),
+<          j          (director, ffPrefix, "j")
+<       {};
+<       TPx_C_1(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :
+<          TPx_B_void__1(director, parent, membername, top, mid),
+<          ffPrefix   (top,mid),
+<          obj        (director, parent, membername, top, mid),
+<          j          (director, ffPrefix, "j")
+<       {};
+<       ROOT::Internal::TBranchProxyHelper ffPrefix;
+<       InjecTBranchProxyInterface();
+<       const C* operator->() { return obj.GetPtr(); }
+<       TObjProxy<C > obj;
+< 
+<       TIntProxy   j;
+<    };
+142,147c80,82
+<    TPx_C         my_c;
+<    TPx_B_void_   baseB_void_;
+<    TIntProxy     j;
+<    TPx_C         my_c2;
+<    TPx_C_1       plot_my_i;
+<    TPx_C_1       against_my_i;
+---
+>    TPx_C2      my_c;
+>    TIntProxy   i;
+>    TPx_C2      other_c;
+155,160c90,92
+<       my_c         (&fDirector,"my_c"),
+<       baseB_void_  (&fDirector,"B<void>"),
+<       j            (&fDirector,"j"),
+<       my_c2        (&fDirector,"my_c2"),
+<       plot_my_i    (&fDirector,"plot_my_i."),
+<       against_my_i (&fDirector,"against_my_i.")
+---
+>       my_c       (&fDirector,"my_c"),
+>       i          (&fDirector,"i"),
+>       other_c    (&fDirector,"other_c.")
+183,186c115
+< #pragma link C++ class generatedSel::TPx_B_void_-;
+< #pragma link C++ class generatedSel::TPx_C-;
+< #pragma link C++ class generatedSel::TPx_B_void__1-;
+< #pragma link C++ class generatedSel::TPx_C_1-;
+---
+> #pragma link C++ class generatedSel::TPx_C2-;

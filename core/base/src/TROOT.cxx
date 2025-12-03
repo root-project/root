@@ -71,6 +71,7 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <filesystem>
 #include <string>
 #include <map>
 #include <set>
@@ -109,8 +110,12 @@ FARPROC dlsym(void *library, const char *function_name)
       return ::GetProcAddress((HMODULE)library, function_name);
    }
 }
+#elif defined(__APPLE__)
+#include <dlfcn.h>
+#include <mach-o/dyld.h>
 #else
 #include <dlfcn.h>
+#include <link.h>
 #endif
 
 #include <iostream>
@@ -552,6 +557,31 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
+   /// @param[in] config Configuration to use. The default is kWholeMachine, which
+   ///                   will create a thread pool that spans the whole machine.
+   ///
+   /// EnableImplicitMT calls in turn EnableThreadSafety.
+   /// If ImplicitMT is already enabled, this function does nothing.
+
+   void EnableImplicitMT(ROOT::EIMTConfig config)
+   {
+#ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
+      EnableThreadSafety();
+      static void (*sym)(ROOT::EIMTConfig) =
+         (void (*)(ROOT::EIMTConfig))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT_Config");
+      if (sym)
+         sym(config);
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
+#else
+      ::Warning("EnableImplicitMT",
+                "Cannot enable implicit multi-threading with config %d, please build ROOT with -Dimt=ON",
+                static_cast<int>(config));
+#endif
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
    /// Disables the implicit multi-threading in ROOT (see EnableImplicitMT).
    void DisableImplicitMT()
    {
@@ -597,26 +627,11 @@ TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 Int_t gDebug;
 
 
-ClassImp(TROOT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TROOT::TROOT() : TDirectory(),
-     fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
-     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
-     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
-     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
-     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
-     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
-     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
-     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
-     fPluginManager(nullptr)
-{
-}
+TROOT::TROOT() : TDirectory() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the ROOT system. The creation of the TROOT object initializes
@@ -636,19 +651,7 @@ TROOT::TROOT() : TDirectory(),
 /// extend the ROOT system without adding permanent dependencies
 /// (e.g. the graphics system is initialized via such a function).
 
-TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
-   : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
-     fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(nullptr), fInterpreter(nullptr), fBatch(kTRUE),
-     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
-     fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
-     fPrimitive(nullptr),fSelectPad(nullptr),fClasses(nullptr),fTypes(nullptr),fGlobals(nullptr),fGlobalFunctions(nullptr),
-     fClosedObjects(nullptr),fFiles(nullptr),fMappedFiles(nullptr),fSockets(nullptr),fCanvases(nullptr),fStyles(nullptr),fFunctions(nullptr),
-     fTasks(nullptr),fColors(nullptr),fGeometries(nullptr),fBrowsers(nullptr),fSpecials(nullptr),fCleanups(nullptr),
-     fMessageHandlers(nullptr),fStreamerInfo(nullptr),fClassGenerators(nullptr),fSecContexts(nullptr),
-     fProofs(nullptr),fClipboard(nullptr),fDataSets(nullptr),fUUIDs(nullptr),fRootFolder(nullptr),fBrowsables(nullptr),
-     fPluginManager(nullptr)
+TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDirectory()
 {
    if (fgRootInit || ROOT::Internal::gROOTLocal) {
       //Warning("TROOT", "only one instance of TROOT allowed");
@@ -753,7 +756,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups    = setNameLocked(new THashList, "Cleanups");
    fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
    fSecContexts = setNameLocked(new TList, "SecContexts");
-   fProofs      = setNameLocked(new TList, "Proofs");
    fClipboard   = setNameLocked(new TList, "Clipboard");
    fDataSets    = setNameLocked(new TList, "DataSets");
    fTypes       = new TListOfTypes; fTypes->UseRWLock();
@@ -779,7 +781,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
    fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
-   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
@@ -826,16 +827,18 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gGXBatch         = new TVirtualX("Batch", "ROOT Interface to batch graphics");
    gVirtualX        = gGXBatch;
 
-#if defined(R__WIN32)
-   fBatch = kFALSE;
-#elif defined(R__HAS_COCOA)
-   fBatch = kFALSE;
-#else
-   if (gSystem->Getenv("DISPLAY"))
-      fBatch = kFALSE;
-   else
+   if (gSystem->Getenv("ROOT_BATCH"))
       fBatch = kTRUE;
+   else {
+#if defined(R__WIN32) || defined(R__HAS_COCOA)
+      fBatch = kFALSE;
+#else
+      if (gSystem->Getenv("DISPLAY"))
+         fBatch = kFALSE;
+      else
+         fBatch = kTRUE;
 #endif
+   }
 
    const char *webdisplay = gSystem->Getenv("ROOT_WEBDISPLAY");
    if (!webdisplay || !*webdisplay)
@@ -852,7 +855,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
-   fBrowsables->Add(fProofs, "PROOF Sessions");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -943,7 +945,6 @@ TROOT::~TROOT()
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
       SafeDelete(fTasks);
-      SafeDelete(fProofs);
       SafeDelete(fDataSets);
       SafeDelete(fClipboard);
 
@@ -960,8 +961,7 @@ TROOT::~TROOT()
       SafeDelete(fGlobalFunctions);
       fEnums.load()->Delete();
 
-      // FIXME: Causes segfault in rootcling, debug and uncomment
-      // fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+      fClasses->Delete(); SafeDelete(fClasses);     // TClass'es must be deleted last
 #endif
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
@@ -1207,7 +1207,7 @@ void TROOT::CloseFiles()
                socket->SetBit(kMustCleanup);
                fClosedObjects->AddLast(socket);
             } else {
-               // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
+               // Crap ... this is not a socket, let's try to find a Close
                Longptr_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
                gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);
@@ -1466,7 +1466,7 @@ const char *TROOT::FindObjectClassName(const char *name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return path name of obj somewhere in the //root/... path.
-/// The function returns the first occurence of the object in the list
+/// The function returns the first occurrence of the object in the list
 /// of folders. The returned string points to a static char array in TROOT.
 /// If this function is called in a loop or recursively, it is the
 /// user's responsibility to copy this string in their area.
@@ -2061,6 +2061,7 @@ void TROOT::InitThreads()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the interpreter. Should be called only after main(),
 /// to make sure LLVM/Clang is fully initialized.
+/// This function must be called in a single thread context (static initialization)
 
 void TROOT::InitInterpreter()
 {
@@ -2532,6 +2533,8 @@ static void CallCloseFiles()
 /// for headers. Calls TCling::RegisterModule() unless gCling
 /// is NULL, i.e. during startup, where the information is buffered in
 /// the static GetModuleHeaderInfoBuffer().
+/// The caller of this function should be holding the ROOT Write lock or be
+/// single threaded (dlopen)
 
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,
@@ -2799,7 +2802,8 @@ void TROOT::SetMacroPath(const char *newpath)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set batch mode for ROOT
 /// If the argument evaluates to `true`, the session does not use interactive graphics.
-/// If web graphics runs in server mode, the web widgets are still available via URL
+/// Batch mode can also be enabled by setting the ROOT_BATCH environment variable.
+/// If web graphics runs in server mode, the web widgets are still available via URL.
 
 void TROOT::SetBatch(Bool_t batch)
 {
@@ -2815,7 +2819,7 @@ void TROOT::SetBatch(Bool_t batch)
 /// `webdisplay` parameter may contain:
 ///
 ///  - "firefox": select Mozilla Firefox browser for interactive web display
-///  - "chrome": select Google Chrome browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium"
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
@@ -2827,6 +2831,8 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
+///  
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
@@ -3010,23 +3016,71 @@ const TString& TROOT::GetBinDir() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the library directory in the installation. Static utility function.
+///
+/// This function inspects the libraries currently loaded in the process to
+/// locate the ROOT Core library. Once found, it extracts and returns the
+/// directory containing that library. If the ROOT Core library was not found,
+/// it will return an empty string.
+///
+/// The result is cached in a static variable so the lookup is only performed
+/// once per process, and the implementation is platform-specific.
+///
+/// \return The directory path (as a `TString`) containing the ROOT core library.
 
-const TString& TROOT::GetLibDir() {
-#ifdef ROOTLIBDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootlibdir;
-      if (rootlibdir.IsNull()) {
-         rootlibdir = "lib";
-         gSystem->PrependPathName(GetRootSys(), rootlibdir);
+const TString &TROOT::GetLibDir()
+{
+   static bool haveLooked = false;
+   static TString rootlibdir;
+   if (haveLooked)
+      return rootlibdir;
+
+   haveLooked = true;
+
+   namespace fs = std::filesystem;
+
+#define TO_LITERAL(string) _QUOTE_(string)
+
+#if defined(__APPLE__)
+
+   uint32_t count = _dyld_image_count();
+   for (uint32_t i = 0; i < count; i++) {
+      const char *path = _dyld_get_image_name(i);
+      if (!path)
+         continue;
+
+      fs::path p(path);
+      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+         rootlibdir = p.parent_path().c_str();
+         break;
       }
-      return rootlibdir;
-#ifdef ROOTLIBDIR
-   } else {
-      const static TString rootlibdir = ROOTLIBDIR;
-      return rootlibdir;
    }
+
+#elif defined(_WIN32)
+
+   // Or Windows, the original hardcoded path is kept for now.
+   rootlibdir = "lib";
+   gSystem->PrependPathName(GetRootSys(), rootlibdir);
+
+#else
+
+   auto callback = +[](struct dl_phdr_info *info, size_t /*size*/, void *data) -> int {
+      TString &libdir = *static_cast<TString *>(data);
+      if (!info->dlpi_name)
+         return 0;
+
+      fs::path p = info->dlpi_name;
+      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+         libdir = p.parent_path().c_str();
+         return 1; // stop iteration
+      }
+      return 0; // continue
+   };
+
+   dl_iterate_phdr(callback, &rootlibdir);
+
 #endif
+
+   return rootlibdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

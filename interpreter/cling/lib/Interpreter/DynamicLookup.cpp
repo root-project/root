@@ -45,8 +45,7 @@ namespace {
                       Sema* S) :
       m_Policy(Policy), m_Addresses(Addresses), m_Sema(S) {}
 
-    virtual ~StmtPrinterHelper() {}
-
+    ~StmtPrinterHelper() override {}
 
     // Handle only DeclRefExprs since they are local and the call wrapper
     // won't "see" them. Consequently we don't need to handle:
@@ -174,7 +173,7 @@ namespace cling {
     DeclarationName Name = &m_Context->Idents.get("EvaluateT");
 
     LookupResult R(*m_Sema, Name, SourceLocation(), Sema::LookupOrdinaryName,
-                     Sema::ForVisibleRedeclaration);
+                   RedeclarationKind::ForVisibleRedeclaration);
     assert(NSD && "There must be a valid namespace.");
     m_Sema->LookupQualifiedName(R, NSD);
     // We have specialized EvaluateT but we don't care because the templated
@@ -257,15 +256,6 @@ namespace cling {
         m_CurDeclContext = FD;
         ASTNodeInfo NewBody = Visit(D->getBody());
         if (NewBody.hasErrorOccurred()) {
-          // Report unsupported feature.
-          DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
-          unsigned diagID
-          = Diags.getCustomDiagID(DiagnosticsEngine::Error,
-                                  "Syntax error");
-          Diags.Report(NewBody.getAsSingleNode()->getBeginLoc(), diagID);
-          D->dump();
-          if (NewBody.hasSingleNode())
-            NewBody.getAs<Expr>()->dump();
           return Result(nullptr, false); // Signal a fatal error.
         }
         FD->setBody(NewBody.getAsSingleNode());
@@ -413,7 +403,16 @@ namespace cling {
           continue;
 
         QualType CuredDeclTy = CuredDecl->getType();
+
+        // Handle cases where we have `auto p = expression;` where `expression`
+        // is unknown.
         if (isa<AutoType>(CuredDeclTy)) {
+          DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
+          unsigned DiagID = Diags.getCustomDiagID(
+              DiagnosticsEngine::Error,
+              "cannot deduce 'auto' from unknown expression");
+
+          auto Builder = Diags.Report(InitExpr->getBeginLoc(), DiagID);
           ASTNodeInfo result(Node, false);
           result.setErrorOccurred();
           return result;
@@ -587,6 +586,11 @@ namespace cling {
       Expr* Replacement = ContentTransform.getAs<Expr>();
       return ASTNodeInfo(Replacement, ContentTransform.isForReplacement());
     }
+    // Report unsupported feature.
+    DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
+    unsigned diagID =
+        Diags.getCustomDiagID(DiagnosticsEngine::Error, "Syntax error");
+    Diags.Report(Node->getBeginLoc(), diagID);
     ContentTransform.setErrorOccurred();
     return ContentTransform;
   }
@@ -847,9 +851,7 @@ namespace cling {
     Sema::InstantiatingTemplate Inst(*m_Sema, m_NoSLoc, m_EvalDecl);
     // Before instantiation we need the canonical type
     TemplateArgument Arg(InstTy.getCanonicalType());
-    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Arg);
-    MultiLevelTemplateArgumentList MLTAL(m_EvalDecl, TemplateArgs.asArray(),
-                                         /*Final=*/false);
+    MultiLevelTemplateArgumentList MLTAL(m_EvalDecl, Arg, /*Final=*/false);
 
     // Substitute the declaration of the templated function, with the
     // specified template argument

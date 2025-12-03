@@ -32,7 +32,7 @@ The following people have contributed to this new version:
  Bernhard Manfred Gruber,\
  Enrico Guiraud,
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
- Fernando Hueso Gonzalez, University of Valencia\
+ Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\
@@ -69,62 +69,24 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+## Python Interface
 
-## Core Libraries
+## I/O
 
+## Core
 
-## I/O Libraries
+## Histograms
 
+## Math
 
-## TTree Libraries
+## RooFit
 
+## Graphics and GUI
 
-## Histogram Libraries
+## Geometry
 
+## Documentation and Examples
 
-## Math Libraries
-
-
-## RooFit Libraries
-
-## Graphics Backends
-
-## 2D Graphics Libraries
-
-
-## 3D Graphics Libraries
-
-
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
-## Language Bindings
-
-
-## JavaScript ROOT
-
-
-## Tutorials
-
-
-## Class Reference Guide
-
-
-## Build, Configuration and Testing Infrastructure
+## Build, Configuration and Testing
 
 

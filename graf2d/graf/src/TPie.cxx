@@ -27,18 +27,73 @@
 
 #include <iostream>
 
-ClassImp(TPie);
 
 /** \class TPie
 \ingroup BasicGraphics
 
-Draw a Pie Chart,
+Define a Pie Chart
+
+\anchor PIE00
+#### The possible drawing options are:
+
+| Option | Description                                                       |
+|--------|-------------------------------------------------------------------|
+| "R"    | Print the labels along the central "R"adius of slices. |
+| "T"    | Print the label in a direction "T"angent to circle that describes the TPie. |
+| "SC"   | Paint the labels with the "S"ame "C"olor as the slices. |
+| "3D"   | Draw the pie-chart with a pseudo 3D effect. |
+| "NOL"  | No OutLine: Don't draw the slices' outlines, any property over the slices' line is ignored. |
+| ">"    | Sort the slices in increasing order. |
+| "<"    | Sort the slices in decreasing order. |
+
+After the use of > or < options the internal order of the TPieSlices is changed.
+
+\anchor PIE01
+#### Labels format
+The labels' format can be changed with TPie::SetLabelFormat().
+
+The format string must contain one of these modifiers:
+
+| Modifier | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "%txt"   | to print the text label associated with the slice |
+| "%val"   | to print the numeric value of the slice |
+| "%frac"  | to print the relative fraction of this slice |
+| "%perc"  | to print the % of this slice |
 
 Example:
+```
+mypie->SetLabelFormat("%txt (%frac)");
+```
+The numeric format in the label can be changed with TPie::SetFractionFormat.
+The numeric format the slices' values can be changed with TPie::SetValueFormat.
+The numeric format for the percent value of a slice can be changed with TPie::SetPercentFormat.
+
+If the colors are not specified (`nullptr`) they are automatically
+taken from the current color palette as shown in the following example.
+
+Begin_Macro(source)
+{
+   float vals[] = {10., 2., 5., 7.5};
+   const char* labels[]={"Label 1","Label 2","Label 3","Label4"};
+
+   auto C = new TCanvas("C","TPie test",500,500);
+   auto pie  = new TPie("pie", "Pie Title", 4, vals, nullptr, labels);
+   pie->SetTextFont(42);
+   pie->SetTextSize(0.04);
+   pie->SetLabelFormat("#splitline{%txt}{%perc}");
+   pie->SetLabelsOffset(.02);
+   pie->SetRadius(.3);
+   pie->Draw("");
+}
+End_Macro
+
+More complex example:
 
 Begin_Macro(source)
 ../../../tutorials/visualisation/graphics/piechart.C
 End_Macro
+
 */
 
 Double_t gX             = 0; // Temporary pie X position.
@@ -740,6 +795,8 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 
    fPieSlices = new TPieSlice*[fNvals];
 
+   Int_t ic = 0, dc = TMath::Max(1, gStyle->GetNumberOfColors()/fNvals);
+
    for (Int_t i=0;i<fNvals;++i) {
       TString tmplbl = "Slice";
       tmplbl += i;
@@ -748,7 +805,8 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
       fPieSlices[i]->SetLineColor(1);
       fPieSlices[i]->SetLineStyle(1);
       fPieSlices[i]->SetLineWidth(1);
-      fPieSlices[i]->SetFillColor(gStyle->GetColorPalette(i));
+      fPieSlices[i]->SetFillColor(gStyle->GetColorPalette(ic));
+      ic = TMath::Min(gStyle->GetNumberOfColors(), ic+dc);
       fPieSlices[i]->SetFillStyle(1001);
    }
 
@@ -783,23 +841,7 @@ TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, co
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a Pie chart in a canvas.
-/// The possible option are:
-///
-///  - "R"   Print the labels along the central "R"adius of slices.
-///  - "T"   Print the label in a direction "T"angent to circle that describes
-///          the TPie.
-///  - "SC"  Paint the labels with the "S"ame "C"olor as the slices.
-///  - "3D"  Draw the pie-chart with a pseudo 3D effect.
-///  - "NOL" No OutLine: Don't draw the slices' outlines, any property over the
-///          slices' line is ignored.
-///  - ">"   Sort the slices in increasing order.
-///  - "<"   Sort the slices in decreasing order.
-///
-/// After the use of > or < options the internal order of the TPieSlices
-/// is changed.
-///
-/// Other options changing the labels' format are described in
-/// TPie::SetLabelFormat().
+/// [See the class description for the possible drawing options](\ref PIE00)
 
 void TPie::Paint(Option_t *option)
 {
@@ -1136,7 +1178,7 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
       fPieSlices[i]->SavePrimitive(out, slice_name.Data());
    }
 
-   SavePrimitiveDraw(out, "pie", option);
+   out << "   gPad->Add(pie, \"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1269,15 +1311,8 @@ void TPie::SetHeight(Double_t val/*=20*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is used to customize the label format. The format string
-/// must contain one of these modifiers:
-///
-/// - %txt  : to print the text label associated with the slice
-/// - %val  : to print the numeric value of the slice
-/// - %frac : to print the relative fraction of this slice
-/// - %perc : to print the % of this slice
-///
-/// ex. : mypie->SetLabelFormat("%txt (%frac)");
+/// This method is used to customize the label format.
+/// [See the class description for the possible labels format](\ref PIE01)
 
 void TPie::SetLabelFormat(const char *fmt)
 {

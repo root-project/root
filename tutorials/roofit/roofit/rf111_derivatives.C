@@ -14,12 +14,15 @@
 /// \date July 2008
 /// \author Wouter Verkerke
 
+#include "RooDerivative.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooPlot.h"
+
 #include "TCanvas.h"
 #include "TAxis.h"
-#include "RooPlot.h"
+
 using namespace RooFit;
 
 void rf111_derivatives()

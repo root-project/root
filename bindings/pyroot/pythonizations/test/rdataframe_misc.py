@@ -3,17 +3,14 @@ import os
 import platform
 import unittest
 
+import numpy
 import ROOT
 
 
 class DatasetContext:
     """A helper class to create the dataset for the tutorial below."""
 
-    filenames = [
-        "rdataframe_misc_1.root",
-        "rdataframe_misc_2.root",
-        "rdataframe_misc_3.root"
-    ]
+    filenames = ["rdataframe_misc_1.root", "rdataframe_misc_2.root", "rdataframe_misc_3.root"]
     treename = "dataset"
     nentries = 5
 
@@ -46,6 +43,7 @@ class DatasetContext:
         for filename in self.filenames:
             os.remove(filename)
 
+
 class RDataFrameMisc(unittest.TestCase):
     """Miscellaneous RDataFrame tests"""
 
@@ -57,10 +55,7 @@ class RDataFrameMisc(unittest.TestCase):
         # https://bugs.llvm.org/show_bug.cgi?id=49692 :
         # llvm JIT fails to catch exceptions on MacOS ARM, so we disable their testing
         # Also fails on Windows for the same reason
-        if (
-            (platform.processor() != "arm" or platform.mac_ver()[0] == '') and not
-            platform.system() == "Windows"
-        ):
+        if (platform.processor() != "arm" or platform.mac_ver()[0] == "") and not platform.system() == "Windows":
             # With implicit conversions, cppyy also needs to try dispatching to the various
             # constructor overloads. The C++ exception will be thrown, but will be incapsulated
             # in a more generic TypeError telling the user that none of the overloads worked
@@ -81,7 +76,7 @@ class RDataFrameMisc(unittest.TestCase):
             chain.Add(filename)
 
         return ROOT.RDataFrame(chain)
-    
+
     def _get_chain(self, dataset):
         chain = ROOT.TChain(dataset.treename)
         for filename in dataset.filenames:
@@ -93,9 +88,8 @@ class RDataFrameMisc(unittest.TestCase):
 
     def _filter_x(self, rdf):
         return rdf.Filter("x > 2")
-    
-    def _test_rdf_in_function(self, chain):
 
+    def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)
         meanx = rdf.Mean("x")
         meany = rdf.Mean("y")
@@ -115,8 +109,8 @@ class RDataFrameMisc(unittest.TestCase):
             rdf = self._get_rdf(dataset)
 
             npy_dict = rdf.AsNumpy()
-            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["x"], numpy.array([1,2,3,4,5]*3)))
-            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["y"], numpy.array([2,4,6,8,10]*3)))
+            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["x"], numpy.array([1, 2, 3, 4, 5] * 3)))
+            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["y"], numpy.array([2, 4, 6, 8, 10] * 3)))
 
             chain = self._get_chain(dataset)
 
@@ -129,8 +123,31 @@ class RDataFrameMisc(unittest.TestCase):
 
             self.assertEqual(rdf.Count().GetValue(), 9)
 
+    def test_regression_gh_20291(self):
+        """
+        Regression test for https://github.com/root-project/root/issues/20291
+        """
+        # Issues on Windows with contention on file deletion
+        if platform.system() == "Windows":
+            return
+        out_path = "dataframe_misc_regression_gh20291.root"
+        try:
+            x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+            df = ROOT.RDF.FromNumpy({"x": x, "y": y})
+
+            df.Snapshot("tree", out_path)
+
+            df_out = ROOT.RDataFrame("tree", out_path)
+            count = df_out.Count()
+            take_x = df_out.Take["Long64_t"]("x")
+            take_y = df_out.Take["Long64_t"]("y")
+
+            self.assertEqual(count.GetValue(), 3)
+            self.assertSequenceEqual(take_x.GetValue(), [1, 2, 3])
+            self.assertSequenceEqual(take_y.GetValue(), [4, 5, 6])
+        finally:
+            os.remove(out_path)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

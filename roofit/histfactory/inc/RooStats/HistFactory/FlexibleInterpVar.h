@@ -45,7 +45,7 @@ namespace HistFactory{
     void printAllInterpCodes();
     const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
-    TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
+    TObject* clone(const char* newname=nullptr) const override { return new FlexibleInterpVar(*this, newname); }
     ~FlexibleInterpVar() override ;
 
     void printMultiline(std::ostream& os, Int_t contents, bool verbose = false, TString indent = "") const override;

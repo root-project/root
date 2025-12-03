@@ -1,0 +1,80 @@
+
+Processing rundeepClass.C...
+Warning in <TClass::Init>: no dictionary for class VldContext is available
+Warning in <TClass::Init>: no dictionary for class VldTimeStamp is available
+Warning in <TClass::Init>: no dictionary for class RecRecord is available
+Warning in <TClass::Init>: no dictionary for class RecHeader is available
+Warning in <TClass::Init>: no dictionary for class NtpBDLiteRecord is available
+Warning in <TClass::Init>: no dictionary for class RecRecordImp<BeamDataLiteHeader> is available
+Warning in <TClass::Init>: no dictionary for class BeamDataLiteHeader is available
+Warning in <TClass::Init>: no dictionary for class NtpStRecord is available
+Warning in <TClass::Init>: no dictionary for class RecRecordImp<RecCandHeader> is available
+Warning in <TClass::Init>: no dictionary for class RecCandHeader is available
+Warning in <TClass::Init>: no dictionary for class RecPhysicsHeader is available
+Warning in <TClass::Init>: no dictionary for class RecDataHeader is available
+Warning in <TClass::Init>: no dictionary for class NtpSREventSummary is available
+Warning in <TClass::Init>: no dictionary for class NtpSRPulseHeight is available
+Warning in <TClass::Init>: no dictionary for class NtpSRPlane is available
+Warning in <TClass::Init>: no dictionary for class NtpSRDate is available
+Warning in <TClass::Init>: no dictionary for class NtpSRShieldSummary is available
+Warning in <TClass::Init>: no dictionary for class NtpSRCosmicRay is available
+Warning in <TClass::Init>: no dictionary for class NtpSRDmxStatus is available
+Warning in <TClass::Init>: no dictionary for class NtpSRDetStatus is available
+Warning in <TClass::Init>: no dictionary for class NtpMCSummary is available
+Warning in <TClass::Init>: no dictionary for class NtpMCPhotonResult is available
+Warning in <TClass::Init>: no dictionary for class NtpMCDetSimResult is available
+Warning in <TClass::Init>: no dictionary for class NtpSRShieldStrip is available
+Warning in <TClass::Init>: no dictionary for class NtpSRStrip is available
+Warning in <TClass::Init>: no dictionary for class NtpSRSlice is available
+Warning in <TClass::Init>: no dictionary for class NtpSRCluster is available
+Warning in <TClass::Init>: no dictionary for class NtpSRStripPulseHeight is available
+Warning in <TClass::Init>: no dictionary for class NtpSRShower is available
+Warning in <TClass::Init>: no dictionary for class NtpSRShowerPulseHeight is available
+Warning in <TClass::Init>: no dictionary for class NtpSRVertex is available
+Warning in <TClass::Init>: no dictionary for class NtpSRTrack is available
+Warning in <TClass::Init>: no dictionary for class NtpSRTrackPlane is available
+Warning in <TClass::Init>: no dictionary for class NtpSRFiducial is available
+Warning in <TClass::Init>: no dictionary for class NtpSRTrackTime is available
+Warning in <TClass::Init>: no dictionary for class NtpSRMomentum is available
+Warning in <TClass::Init>: no dictionary for class NtpSRFitTrack is available
+Warning in <TClass::Init>: no dictionary for class NtpSREvent is available
+Warning in <TClass::Init>: no dictionary for class NtpSRBleach is available
+Warning in <TClass::Init>: no dictionary for class NtpMCTruth is available
+Warning in <TClass::Init>: no dictionary for class NtpMCFluxInfo is available
+Warning in <TClass::Init>: no dictionary for class NtpMCFluxWgt is available
+Warning in <TClass::Init>: no dictionary for class NtpMCStdHep is available
+Warning in <TClass::Init>: no dictionary for class NtpMCDigiScintHit is available
+Warning in <TClass::Init>: no dictionary for class NtpTHStrip is available
+Warning in <TClass::Init>: no dictionary for class NtpTHSlice is available
+Warning in <TClass::Init>: no dictionary for class NtpTHShower is available
+Warning in <TClass::Init>: no dictionary for class NtpTHTrack is available
+Warning in <TClass::Init>: no dictionary for class NtpTHEvent is available
+*********************************************************************************
+*    Row   * fHeader.fVldContext. * fHeader.fVldContext. * fHeader.fVldContext. *
+*********************************************************************************
+*        0 *                    2 *                    1 *           1135724189 *
+*        1 *                    2 *                    1 *           1135724201 *
+*        2 *                    2 *                    1 *           1135724207 *
+*        3 *                    2 *                    1 *           1135724223 *
+*        4 *                    2 *                    1 *           1135724227 *
+*        5 *                    2 *                    1 *           1135724232 *
+*        6 *                    2 *                    1 *           1135724239 *
+*        7 *                    2 *                    1 *           1135724240 *
+*        8 *                    2 *                    1 *           1135724245 *
+*        9 *                    2 *                    1 *           1135724247 *
+*********************************************************************************
+*********************************************************************************
+*    Row   * fHeader.fVldContext. * fHeader.fVldContext. * fHeader.fVldContext. *
+*********************************************************************************
+*        0 *                    2 *                    1 *           1135724189 *
+*        1 *                    2 *                    1 *           1135724201 *
+*        2 *                    2 *                    1 *           1135724207 *
+*        3 *                    2 *                    1 *           1135724223 *
+*        4 *                    2 *                    1 *           1135724227 *
+*        5 *                    2 *                    1 *           1135724232 *
+*        6 *                    2 *                    1 *           1135724239 *
+*        7 *                    2 *                    1 *           1135724240 *
+*        8 *                    2 *                    1 *           1135724245 *
+*        9 *                    2 *                    1 *           1135724247 *
+*********************************************************************************
+(int) 0

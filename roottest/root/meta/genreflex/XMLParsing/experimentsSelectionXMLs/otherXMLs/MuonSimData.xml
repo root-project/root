@@ -1,0 +1,15 @@
+<lcgdict>
+ <class name="MuonSimDataCollection" id="5B50C32E-A036-4B49-AC97-716E53210BE2" />
+     <class name="MuonSimData" />
+     <class name="MuonMCData" />     
+     <class name="std::pair< HepMcParticleLink ,MuonMCData>" /> 
+     <class name="std::vector<std::pair< HepMcParticleLink , MuonMCData> >" />
+     <class name="std::map<Identifier,MuonSimData>" />
+ <class name="CscSimDataCollection" id="250EC949-F98B-4F74-9034-178847D1B622" />
+     <class name="CscSimData" />
+     <class name="CscMcData" />     
+     <class name="std::pair< HepMcParticleLink,CscMcData>" /> 
+     <class name="std::vector<std::pair< HepMcParticleLink,CscMcData> >" />
+     <class name="std::map<Identifier,CscSimData>" />
+
+</lcgdict>

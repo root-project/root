@@ -1,0 +1,38 @@
+<lcgdict>
+ <class name="PGeometricDet" class_version="0">
+   <field name="pgeomdets_" mapping="blob"/>
+ </class>
+ <class name="PGeometricDet::Item"/>
+ <class name="std::vector<PGeometricDet::Item>"/>
+
+ <class name="PGeometricDetExtra" class_version="0">
+   <field name="pgdes_" mapping="blob"/>
+ </class>
+ <class name="PGeometricDetExtra::Item"/>
+ <class name="std::vector<PGeometricDetExtra::Item>"/>
+ 
+ <class name="PCaloGeometry" class_version="0">
+   <field name="m_translation" mapping="blob"/>
+   <field name="m_dimension" mapping="blob"/>
+   <field name="m_indexes" mapping="blob"/>
+   <field name="m_dins" mapping="blob"/>
+ </class>
+  
+ <class name="RecoIdealGeometry" class_version="0">
+   <field name="pDetIds" iotype="vector<DetId>" mapping="blob"/>
+   <field name="pPars" mapping="blob"/>
+   <field name="pParsIndex" mapping="blob"/>
+   <field name="pNumShapeParms" mapping="blob"/>
+   <field name="strPars" mapping="blob"/>
+   <field name="sParsIndex" mapping="blob"/>
+   <field name="sNumsParms" mapping="blob"/>
+ </class>
+ 
+ <class name="CSCRecoDigiParameters" class_version="0"> 
+   <field name="pUserParOffset" mapping="blob"/>
+   <field name="pUserParSize" mapping="blob"/>
+   <field name="pChamberType" mapping="blob"/>
+   <field name="pfupars" mapping="blob"/>
+ </class>
+
+</lcgdict> 

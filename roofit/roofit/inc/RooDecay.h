@@ -29,9 +29,18 @@ public:
   RooDecay(const char *name, const char *title, RooRealVar& t,
       RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
   RooDecay(const RooDecay& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override { return new RooDecay(*this,newname) ; }
+  TObject* clone(const char* newname=nullptr) const override { return new RooDecay(*this,newname) ; }
 
   double coefficient(Int_t basisIndex) const override ;
+
+  /// Get the cnvolution variable.
+  RooAbsReal const &getT() const { return _t.arg(); }
+
+  /// Get the decay constant.
+  RooAbsReal const &getTau() const { return _tau.arg(); }
+
+  /// Get the decay type.
+  DecayType getDecayType() const { return _type; }
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;

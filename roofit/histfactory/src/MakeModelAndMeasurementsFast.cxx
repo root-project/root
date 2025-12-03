@@ -10,7 +10,7 @@
 
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 
-// from roofit
+// from RooFit
 #include "RooFit/ModelConfig.h"
 
 // from this package
@@ -22,11 +22,9 @@
 #include <TFile.h>
 #include <TSystem.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
-#include <map>
-#include <fstream>
-#include <sstream>
 
 /** ********************************************************************************************
   \ingroup HistFactory
@@ -79,14 +77,34 @@
   </ul>
   </ul>
 */
+
+
+/// \brief Creates a statistical model and associated RooFit workspace(s) from a
+///        HistFactory measurement configuration.
+///
+/// This function processes a RooStats::HistFactory::Measurement using the fast
+/// RooStats::HistFactory::HistoToWorkspaceFactoryFast machinery. It creates
+/// individual channel workspaces, optionally writes them to disk, and then
+/// combines them into a single RooWorkspace representing the full statistical
+/// model.
+///
+/// \param measurement Object containing the configuration of the statistical
+///                    analysis, including luminosity, binning, systematic
+///                    uncertainties, and channels.
+/// \param cfg Configuration object that controls behavior such as workspace
+///            file creation.
+///
+/// \return The combined `RooWorkspace`, or `nullptr` if workspace creation fails.
+
 RooFit::OwningPtr<RooWorkspace>
 RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
                                                    HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
-  std::unique_ptr<TFile> outFile;
-
-  auto& msgSvc = RooMsgService::instance();
-  msgSvc.getStream(1).removeTopic(RooFit::ObjectHandling);
+   // Make sure that topic is added back on function return.
+   struct RemoveTopicRAII {
+      RemoveTopicRAII() { RooMsgService::instance().getStream(1).removeTopic(RooFit::ObjectHandling); }
+      ~RemoveTopicRAII() { RooMsgService::instance().getStream(1).addTopic(RooFit::ObjectHandling); }
+   } removeTopicRaii;
 
     cxcoutIHF << "Making Model and Measurements (Fast) for measurement: " << measurement.GetName() << std::endl;
 
@@ -108,38 +126,36 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     std::vector<std::unique_ptr<RooWorkspace>> channel_workspaces;
     std::vector<std::string>        channel_names;
 
-    // Create the outFile - first check if the outputfile exists
-    std::string prefix =  measurement.GetOutputFilePrefix();
-    // parse prefix to find output directory -
-    // assume there is a file prefix after the last "/" that we remove
-    // to get the directory name.
-    // We do by finding last occurrence of "/" and using as directory name what is before
-    // if we do not have a "/" in the prefix there is no output directory to be checked or created
-    size_t pos = prefix.rfind('/');
-    if (pos != std::string::npos) {
+    auto createOutputDirectory = [](std::string const &prefix) {
+       // Parse prefix to find output directory - assume there is a file prefix
+       // after the last "/" that we remove to get the directory name. We do by
+       // finding last occurrence of "/" and using as directory name what is
+       // before if we do not have a "/" in the prefix there is no output
+       // directory to be checked or created.
+       size_t pos = prefix.rfind('/');
+       if (pos == std::string::npos) {
+          return;
+       }
        std::string outputDir = prefix.substr(0,pos);
        cxcoutDHF << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
-       if (gSystem->OpenDirectory( outputDir.c_str() )  == nullptr ) {
-          cxcoutDHF << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
-          int success = gSystem->MakeDirectory( outputDir.c_str() );
-          if( success != 0 ) {
-             std::string fullOutputDir = std::string(gSystem->pwd()) + std::string("/") + outputDir;
-             cxcoutEHF << "Error: Failed to make output directory: " <<  fullOutputDir << std::endl;
-             throw hf_exc();
-          }
+       void *outdir = gSystem->OpenDirectory( outputDir.c_str() );
+       if (outdir) {
+          gSystem->FreeDirectory(outdir);
+          return;
        }
-    }
+       cxcoutDHF << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
+       int success = gSystem->MakeDirectory( outputDir.c_str() );
+       if( success != 0 ) {
+          std::string fullOutputDir = gSystem->pwd() + std::string("/") + outputDir;
+          cxcoutEHF << "Error: Failed to make output directory: " <<  fullOutputDir << std::endl;
+          throw hf_exc();
+       }
+    };
 
-    // This holds the TGraphs that are created during the fit
-    std::string outputFileName = measurement.GetOutputFilePrefix() + "_" + measurement.GetName() + ".root";
-    cxcoutIHF << "Creating the output file: " << outputFileName << std::endl;
-    outFile = std::make_unique<TFile>(outputFileName.c_str(), "recreate");
-
+    // Make the factory, and do some preprocessing
     cxcoutIHF << "Creating the HistoToWorkspaceFactoryFast factory" << std::endl;
     HistoToWorkspaceFactoryFast factory{measurement, cfg};
 
-    // Make the factory, and do some preprocessing
-    // HistoToWorkspaceFactoryFast factory(measurement, rowTitle, outFile);
     cxcoutIHF << "Setting preprocess functions" << std::endl;
     factory.SetFunctionsToPreprocess( measurement.GetPreprocessFunctions() );
 
@@ -160,8 +176,10 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       std::unique_ptr<RooWorkspace> ws_single{factory.MakeSingleChannelModel( measurement, channel )};
 
       if (cfg.createPerRegionWorkspaces) {
+        std::string prefix =  measurement.GetOutputFilePrefix();
+        createOutputDirectory(prefix);
         // Make the output
-        std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_" 
+        std::string ChannelFileName = prefix + "_" 
           + ch_name + "_" + rowTitle + "_model.root";
         cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
         std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "RECREATE" )};
@@ -187,12 +205,17 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
 
     // Use HistFactory to combine the individual channel workspaces
     std::unique_ptr<RooWorkspace> ws{factory.MakeCombinedModel(channel_names, channel_workspaces)};
+    if (!ws) {
+      return nullptr;
+    }
 
     // Configure that workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
-    {
-      std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
+    if (cfg.createWorkspaceFile) {
+      std::string prefix =  measurement.GetOutputFilePrefix();
+      createOutputDirectory(prefix);
+      std::string CombinedFileName = prefix + "_combined_"
         + rowTitle + "_model.root";
       cxcoutPHF << "Writing combined workspace to file: " << CombinedFileName << std::endl;
       std::unique_ptr<TFile> combFile{TFile::Open( CombinedFileName.c_str(), "RECREATE" )};
@@ -204,8 +227,6 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
       measurement.writeToFile( combFile.get() );
     }
-
-  msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
   return RooFit::makeOwningPtr(std::move(ws));
 }

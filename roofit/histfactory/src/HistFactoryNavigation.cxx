@@ -633,8 +633,6 @@ namespace RooStats {
       // MAKE IT WORK FOR MULTI-DIMENSIONAL
       //
 
-      std::unique_ptr<TList> dataset_list;
-
       // If the dataset covers multiple categories,
       // Split the dataset based on the categories
       if(strcmp(fModel->ClassName(),"RooSimultaneous")==0){
@@ -643,9 +641,12 @@ namespace RooStats {
    RooSimultaneous* simPdf = static_cast<RooSimultaneous*>(fModel);
    auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
 
-   dataset_list = std::unique_ptr<TList>{data->split(*channelCat)};
+   std::vector<std::unique_ptr<RooAbsData>> dataset_list{data->split(*channelCat)};
 
-   data = dynamic_cast<RooDataSet*>(dataset_list->FindObject(channel.c_str()) );
+   auto found = std::find_if(dataset_list.begin(), dataset_list.end(), [&](auto const &item) {
+     return channel == item->GetName();
+   });
+   data = found != dataset_list.end() ? dynamic_cast<RooDataSet*>(found->get()) : nullptr;
 
       }
 
@@ -657,9 +658,6 @@ namespace RooStats {
 
       if (!data) {
    std::cout << "Error: To Create Histogram from RooDataSet" << std::endl;
-   if (dataset_list) {
-      dataset_list.reset();
-   }
         throw hf_exc();
       } else if( dim==1 ) {
    RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
@@ -683,17 +681,8 @@ namespace RooStats {
    std::cout << "Error: To Create Histogram from RooDataSet, Dimension must be 1, 2, or 3" << std::endl;
    std::cout << "Observables: " << std::endl;
    vars.Print("V");
-   if (dataset_list) {
-      dataset_list->Delete();
-      dataset_list.reset();
-   }
    throw hf_exc();
       }
-
-   if (dataset_list) {
-      dataset_list->Delete();
-      dataset_list.reset();
-   }
 
       return hist;
 

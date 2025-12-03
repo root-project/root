@@ -1,0 +1,30 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="299" viewBox="0 0 567 299" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+ttext1.svg
+</title>
+<rect x="0.500" y="0" width="567" height="299" fill="#f2f2f2"/>
+<path d="M0.500,299l 2.0, -2.0v -295h 563l 2.0, -2.0h -567v 299z" fill="white"/>
+<path d="M0.500,299l 2.0, -2.0h 563v -295l 2.0, -2.0v 299h -567z" fill="#a9a9a9"/>
+<path d="M284,299v -299" fill="none" stroke="black"/>
+<path d="M0.500,269h 567" fill="none" stroke="black"/>
+<path d="M0.500,239h 567" fill="none" stroke="black"/>
+<path d="M0.500,209h 567" fill="none" stroke="black"/>
+<path d="M0.500,179h 567" fill="none" stroke="black"/>
+<path d="M0.500,149h 567" fill="none" stroke="black"/>
+<path d="M0.500,119h 567" fill="none" stroke="black"/>
+<path d="M0.500,90h 567" fill="none" stroke="black"/>
+<path d="M0.500,60h 567" fill="none" stroke="black"/>
+<path d="M0.500,30h 567" fill="none" stroke="black"/>
+<text xml:space="preserve" x="12" y="179" fill="#ff0000" font-size="28" font-family="Times" font-style="italic">jgabcdefhiklmnopqrstuvwxyz_{}
+</text>
+<text xml:space="preserve" x="284" y="269" text-anchor="middle" fill="#ff0000" font-size="42" font-family="Helvetica">j0al {&amp;`ag}_:^)Jj
+</text>
+<text xml:space="preserve" x="284" y="149" text-anchor="middle" fill="#00ff00" font-size="28" font-family="Times" font-weight="bold">j0Al {&amp;`ag}_:^)Jj
+</text>
+<text xml:space="preserve" x="284" y="209" text-anchor="end" fill="#0000ff" font-size="28" font-family="Times" font-weight="bold" font-style="italic">j0Al {&amp;`ag}_:^)Jj
+</text>
+<text xml:space="preserve" x="284" y="70" text-anchor="middle" fill="#ffff00" font-size="20" font-family="Helvetica" font-weight="bold" font-style="oblique">j0Al {&amp;`ag}_:^)Jj
+</text>
+<text xml:space="preserve" x="284" y="117" fill="#ff00ff" font-size="28" font-family="Helvetica" font-style="oblique">13 j0Al {&amp;`ag}_:^)Jj
+</text></svg>

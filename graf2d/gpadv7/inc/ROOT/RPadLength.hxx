@@ -275,11 +275,11 @@ public:
 /// using namespace ROOT::Experimental;
 /// RLine(0.1_normal, 0.0_normal, RLineExtent(0.2_normal, 0.5_normal));
 /// ```
-inline RPadLength::Normal operator"" _normal(long double val)
+inline RPadLength::Normal operator""_normal(long double val)
 {
    return RPadLength::Normal{(double)val};
 }
-inline RPadLength::Normal operator"" _normal(unsigned long long int val)
+inline RPadLength::Normal operator""_normal(unsigned long long int val)
 {
    return RPadLength::Normal{(double)val};
 }
@@ -291,11 +291,11 @@ inline RPadLength::Normal operator"" _normal(unsigned long long int val)
 /// using namespace ROOT::Experimental;
 /// RLine(100_px, 0_px, RLineExtent(20_px, 50_px));
 /// ```
-inline RPadLength::Pixel operator"" _px(long double val)
+inline RPadLength::Pixel operator""_px(long double val)
 {
    return RPadLength::Pixel{(double)val};
 }
-inline RPadLength::Pixel operator"" _px(unsigned long long int val)
+inline RPadLength::Pixel operator""_px(unsigned long long int val)
 {
    return RPadLength::Pixel{(double)val};
 }
@@ -307,11 +307,11 @@ inline RPadLength::Pixel operator"" _px(unsigned long long int val)
 /// using namespace ROOT::Experimental;
 /// RLine(0.1_user, 0.0_user, RLineExtent(0.2_user, 0.5_user));
 /// ```
-inline RPadLength::User operator"" _user(long double val)
+inline RPadLength::User operator""_user(long double val)
 {
    return RPadLength::User{(double)val};
 }
-inline RPadLength::User operator"" _user(unsigned long long int val)
+inline RPadLength::User operator""_user(unsigned long long int val)
 {
    return RPadLength::User{(double)val};
 }

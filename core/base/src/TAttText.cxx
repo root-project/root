@@ -20,7 +20,6 @@
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
 
-ClassImp(TAttText);
 
 /** \class TAttText
 \ingroup Base
@@ -312,10 +311,10 @@ Float_t TAttText::GetTextSizePercent(Float_t size)
 {
    Float_t rsize = size;
    if (fTextFont%10 > 2 && gPad) {
-      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                            gPad->XtoAbsPixel(gPad->GetX1()));
-      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                            gPad->YtoAbsPixel(gPad->GetY1()));
+      UInt_t w = std::abs(gPad->XtoAbsPixel(gPad->GetX2()) -
+                          gPad->XtoAbsPixel(gPad->GetX1()));
+      UInt_t h = std::abs(gPad->YtoAbsPixel(gPad->GetY2()) -
+                          gPad->YtoAbsPixel(gPad->GetY1()));
       if (w < h)
          rsize = rsize/w;
       else

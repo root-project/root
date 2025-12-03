@@ -1,0 +1,15 @@
+<lcgdict>
+<class name="MyClass" />
+
+<ioread sourceClass="MyClass" targetClass="MyClass" version="[1-]" source="" target="fCaches">
+<![CDATA[ 
+  newObj->fCaches[0] = 1;
+  ]]>
+</ioread>
+<ioread sourceClass="MyClass" targetClass="MyClass" version="[1-]" source="float fOldCaches[::MyClass::MaxHits]" target="fCaches">
+<![CDATA[
+  newObj->fCaches[0] = onfile.fOldCaches[0];
+  ]]>
+</ioread>
+</lcgdict>
+

@@ -1,0 +1,6 @@
+<rootdict>
+   <class name="B" />
+   <enum name="a::pclass" />
+   <enum name="pclass" />
+</rootdict>
+

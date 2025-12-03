@@ -81,7 +81,6 @@ approximate shape as set of planes. This plane set is used to perform
 interactive clipping using OpenGL clip planes.
 */
 
-ClassImp(TGLClip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a stand-alone physical clipping object.
@@ -140,7 +139,6 @@ rotated about the Y/Z local axes (the in-plane axes). It cannot be
 scaled.
 */
 
-ClassImp(TGLClipPlane);
 
 const float TGLClipPlane::fgColor[4] = { 1.0, 0.6, 0.2, 0.5 };
 
@@ -252,7 +250,6 @@ Concrete clip box object. Can be translated, rotated and scaled in
 all (xyz) axes. By default inside of the box is clipped away.
 */
 
-ClassImp(TGLClipBox);
 
 const float TGLClipBox::fgColor[4] = { 1.0, 0.6, 0.2, 0.3 };
 
@@ -328,7 +325,6 @@ void TGLClipBox::PlaneSet(TGLPlaneSet_t& set) const
 A collection of concrete TGLClip objects to be selected from.
 */
 
-ClassImp(TGLClipSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

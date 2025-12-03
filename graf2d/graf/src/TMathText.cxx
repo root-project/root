@@ -338,7 +338,6 @@ public:
    using mathtext::math_text_renderer_t::bounding_box;
 };
 
-ClassImp(TMathText);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

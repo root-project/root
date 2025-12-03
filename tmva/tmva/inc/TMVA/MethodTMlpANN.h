@@ -58,47 +58,47 @@ namespace TMVA {
 
       virtual ~MethodTMlpANN( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML(void* wghtnode);
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML(void* wghtnode) override;
 
       // calculate the MVA value ...
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the structure
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
       // make ROOT-independent C++ class
-      void MakeClass( const TString& classFileName = TString("") ) const;
+      void MakeClass( const TString& classFileName = TString("") ) const override;
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       void CreateMLPOptions( TString );
 
@@ -116,9 +116,9 @@ namespace TMVA {
       TString  fLearningMethod;     ///< the learning method (given via option string)
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init( void ) override;
 
-      ClassDef(MethodTMlpANN,0); // Implementation of interface for TMultiLayerPerceptron
+      ClassDefOverride(MethodTMlpANN,0); // Implementation of interface for TMultiLayerPerceptron
    };
 
 } // namespace TMVA

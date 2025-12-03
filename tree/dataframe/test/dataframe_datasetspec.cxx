@@ -7,10 +7,16 @@
 #include <ROOT/RDF/RSample.hxx>
 #include <ROOT/RDF/RDatasetSpec.hxx>
 #include <ROOT/RDF/RMetaData.hxx>
-#include <nlohmann/json.hpp>
 #include <TSystem.h>
 
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+
 #include <thread> // std::thread::hardware_concurrency
+
+#include <TFile.h>
+#include <TTree.h>
 
 using namespace ROOT;
 using namespace ROOT::RDF::Experimental;
@@ -103,7 +109,7 @@ public:
       for (const auto &d : data)
          for (const auto &trees : d.trees)
             for (const auto &t : trees)
-               dfWriter.Range(t.start, t.end).Snapshot<ULong64_t>(t.tree, t.file, {"x"});
+               dfWriter.Range(t.start, t.end).Snapshot(t.tree, t.file, {"x"});
    }
 
    static void TearDownTestCase()
@@ -579,10 +585,10 @@ TEST(RDatasetSpecTest, Describe)
    auto dfWriter1 = RDataFrame(10)
                        .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
                        .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
-   dfWriter1.Range(5).Snapshot<double>("subTree0", "specTestDescribe1.root", {"x"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "specTestDescribe2.root", {"x"});
-   dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestDescribe3.root", {"w"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestDescribe4.root", {"w"});
+   dfWriter1.Range(5).Snapshot("subTree0", "specTestDescribe1.root", {"x"});
+   dfWriter1.Range(5, 10).Snapshot("subTree1", "specTestDescribe2.root", {"x"});
+   dfWriter1.Range(5).Snapshot("subTree2", "specTestDescribe3.root", {"w"});
+   dfWriter1.Range(5, 10).Snapshot("subTree3", "specTestDescribe4.root", {"w"});
 
    RDatasetSpec spec;
    spec.AddSample({"sampleA", "subTree0"s, "specTestDescribe1.root"s});
@@ -619,12 +625,12 @@ TEST(RDatasetSpecTest, Describe)
 TEST(RDatasetSpecTest, FromSpec)
 {
    auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "CPPspecTestFile2.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "CPPspecTestFile3.root", {"z"});
-   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "CPPspecTestFile4.root", {"z"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "CPPspecTestFile5.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "CPPspecTestFile6.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "CPPspecTestFile7.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot("subTree", "CPPspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot("subTree", "CPPspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot("subTree", "CPPspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot("subTree1", "CPPspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot("subTree2", "CPPspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "CPPspecTestFile7.root", {"z"});
 
    auto rdf =
       FromSpec("spec.json")
@@ -661,10 +667,10 @@ TEST(RDatasetSpecTest, FromSpec)
 TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
 {
    auto dfWriter0 = ROOT::RDataFrame(1).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile1.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile2.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile4.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile3.root", {"z"});
+   dfWriter0.Snapshot("subTree", "FromSpecTestFile1.root", {"z"});
+   dfWriter0.Snapshot("subTree", "FromSpecTestFile2.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "FromSpecTestFile4.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "FromSpecTestFile3.root", {"z"});
 
    auto rdf_1 = FromSpec("spec_ordering_samples_withFriends.json");
 
@@ -752,12 +758,12 @@ TEST(RDatasetSpecTest, Clusters)
    opts[2].fAutoFlush = 7;  // last split is always shorter
    opts[3].fAutoFlush = 1;  // each entry is a split
    for (auto &opt : opts) {
-      dfWriter2.Range(40).Snapshot<ULong64_t>("mainA", "CspecTestFile0.root", {"x"}, opt);
-      dfWriter2.Range(40, 120).Snapshot<ULong64_t>("mainB", "CspecTestFile1.root", {"x"}, opt);
-      dfWriter2.Range(120, 200).Snapshot<ULong64_t>("mainC", "CspecTestFile2.root", {"x"}, opt);
-      dfWriter2.Range(50).Snapshot<ULong64_t>("friendA", "CspecTestFile3.root", {"x"}, opt);
-      dfWriter2.Range(50, 150).Snapshot<ULong64_t>("friendB", "CspecTestFile4.root", {"x"}, opt);
-      dfWriter2.Range(150, 200).Snapshot<ULong64_t>("friendC", "CspecTestFile5.root", {"x"}, opt);
+      dfWriter2.Range(40).Snapshot("mainA", "CspecTestFile0.root", {"x"}, opt);
+      dfWriter2.Range(40, 120).Snapshot("mainB", "CspecTestFile1.root", {"x"}, opt);
+      dfWriter2.Range(120, 200).Snapshot("mainC", "CspecTestFile2.root", {"x"}, opt);
+      dfWriter2.Range(50).Snapshot("friendA", "CspecTestFile3.root", {"x"}, opt);
+      dfWriter2.Range(50, 150).Snapshot("friendB", "CspecTestFile4.root", {"x"}, opt);
+      dfWriter2.Range(150, 200).Snapshot("friendC", "CspecTestFile5.root", {"x"}, opt);
 
       ROOT::EnableImplicitMT(std::min(4u, std::thread::hardware_concurrency()));
 
@@ -829,6 +835,228 @@ TEST_P(RDatasetSpecTest, TreeInSubdir)
    auto sample_ids = df_sample.Take<std::string>("sample_id");
    EXPECT_EQ(sample_ids->size(), 1);
    EXPECT_EQ(sample_ids->at(0), fraii.GetPath() + std::string("/subdir/T"));
+}
+
+// // Tests with RNTuple
+struct InputRNTuplesRAII {
+   unsigned int fNFiles = 0;
+   std::string fPrefix;
+
+   InputRNTuplesRAII(unsigned int nFiles, std::string prefix) : fNFiles(nFiles), fPrefix(std::move(prefix))
+   {
+      unsigned int fNEntries{5};
+      for (auto i = 0u; i < fNFiles; ++i) {
+         auto model = ROOT::RNTupleModel::Create();
+         auto fldX = model->MakeField<int>("x");
+         auto fn = fPrefix + std::to_string(i) + ".root";
+         auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fn);
+         for (ULong64_t entry = 0; entry < fNEntries; entry++) {
+            *fldX = entry;
+            ntpl->Fill();
+         }
+      }
+   }
+   ~InputRNTuplesRAII()
+   {
+      for (auto i = 0u; i < fNFiles; ++i)
+         std::remove((fPrefix + std::to_string(i) + ".root").c_str());
+   }
+};
+
+struct InputRNTuplesRAIIRanges {
+   unsigned int fNFiles = 0;
+   std::string fPrefix;
+   InputRNTuplesRAIIRanges(unsigned int nFiles, std::string prefix) : fNFiles(nFiles), fPrefix(std::move(prefix))
+   {
+      unsigned int fNEntries{5};
+      for (auto i = 0u; i < fNFiles; ++i) {
+         auto model = ROOT::RNTupleModel::Create();
+         auto fldX = model->MakeField<int>("x");
+         auto fn = fPrefix + std::to_string(i) + ".root";
+         auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fn);
+         for (ULong64_t entry = 0; entry < fNEntries; entry++) {
+            *fldX = i * entry;
+            ntpl->Fill();
+         }
+      }
+   }
+   ~InputRNTuplesRAIIRanges()
+   {
+      for (auto i = 0u; i < fNFiles; ++i)
+         std::remove((fPrefix + std::to_string(i) + ".root").c_str());
+   }
+};
+
+TEST_P(RDatasetSpecTest, RNTupleSingle)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", prefix + "0.root");
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   auto df1 = ROOT::RDataFrame(spec);
+   auto count = df1.Filter("x > 3").Count();
+   EXPECT_EQ(count.GetValue(), 1);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleMultiple)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(4u, prefix);
+   ROOT::RDF::Experimental::RMetaData meta, meta1, meta2;
+   meta.Add("lum", 10.0);
+   meta1.Add("lum", 20.0);
+   meta2.Add("lum", 30.0);
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple",
+                                                std::vector<std::string>{prefix + "0.root", prefix + "3.root"}, meta);
+   auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "ntuple", prefix + "1.root", meta1);
+   auto samp2 = ROOT::RDF::Experimental::RSample("mysample2", "ntuple", prefix + "2.root", meta2);
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   spec.AddSample(samp1);
+   spec.AddSample(samp2);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   auto df_final = df1.Filter("x > 3").Count();
+
+   auto definepersamp =
+      df1.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
+
+   EXPECT_EQ(df_final.GetValue(), 4);
+   EXPECT_EQ(df_filtered.GetValue(), 10);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleWithGlobalRanges)
+{
+   const std::string prefix = "rdatasetspec_ranges_rntuple";
+   InputRNTuplesRAIIRanges file(5u, prefix);
+   ROOT::RDF::Experimental::RMetaData meta, meta1, meta2;
+   meta.Add("lum", 10.0);
+   meta1.Add("lum", 20.0);
+   meta2.Add("lum", 30.0);
+   auto samp = ROOT::RDF::Experimental::RSample(
+      "mysample", "ntuple",
+      std::vector<std::string>{"rdatasetspec_ranges_rntuple1.root", "rdatasetspec_ranges_rntuple4.root"}, meta);
+   auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "ntuple", "rdatasetspec_ranges_rntuple2.root", meta1);
+   auto samp2 = ROOT::RDF::Experimental::RSample("mysample2", "ntuple", "rdatasetspec_ranges_rntuple3.root", meta2);
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   spec.AddSample(samp1);
+   spec.AddSample(samp2);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   std::vector<RDatasetSpec::REntryRange> goodRanges = {{1, 4}, {2, 7}, {6, 19}, {16, 20}};
+
+   auto df_final = df1.Filter("x > 3").Count();
+
+   auto definepersamp =
+      df1.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
+
+   auto df = RDataFrame(spec.WithGlobalRange(goodRanges[0]));
+   auto filt = df.Filter("rdfentry_ == 2");
+   auto result = filt.Take<ULong64_t>("x");
+   auto res = result.GetValue();
+   auto count_entries = df.Count().GetValue();
+   EXPECT_EQ(res[0], 2);
+   EXPECT_EQ(count_entries, 3);
+
+   auto df2 = RDataFrame(spec.WithGlobalRange(goodRanges[1]));
+   auto filt2 = df2.Filter("rdfentry_ == 3");
+   auto result2 = filt2.Take<ULong64_t>("x");
+   auto res2 = result2.GetValue();
+   auto count_entries_2 = df2.Count().GetValue();
+   EXPECT_EQ(res2[0], 3);
+   EXPECT_EQ(count_entries_2, 5);
+
+   auto df3 = RDataFrame(spec.WithGlobalRange(goodRanges[2]));
+   auto filt3 = df3.Filter("rdfentry_ == 8");
+   auto result3 = filt3.Take<ULong64_t>("x");
+   auto res3 = result3.GetValue();
+   auto count_entries_3 = df3.Count().GetValue();
+   EXPECT_EQ(res3[0], 12);
+   EXPECT_EQ(count_entries_3, 13);
+
+   auto df4 = RDataFrame(spec.WithGlobalRange(goodRanges[3]));
+   auto filt4 = df4.Filter("rdfentry_ == 19");
+   auto result4 = filt4.Take<ULong64_t>("x");
+   auto res4 = result4.GetValue();
+   auto count_entries_4 = df4.Count().GetValue();
+   EXPECT_EQ(res4[0], 12);
+   EXPECT_EQ(count_entries_4, 4);
+
+   EXPECT_EQ(df_final.GetValue(), 11);
+   EXPECT_EQ(df_filtered.GetValue(), 10);
+}
+
+TEST_P(RDatasetSpecTest, FromSpecRNTuple)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(3u, prefix);
+   auto df_fromspec = ROOT::RDF::Experimental::FromSpec("spec_rntuple.json");
+   auto df_final = df_fromspec.Filter("x > 3").Count();
+   auto definepersamp =
+      df_fromspec.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 20.").Count();
+
+   EXPECT_EQ(df_final.GetValue(), 3);
+   EXPECT_EQ(df_filtered.GetValue(), 5);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleWrong)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+
+   auto model = ROOT::RNTupleModel::Create();
+   auto fldX = model->MakeField<int>("x");
+   auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "mytuple", "rntuple_wrong.root");
+   *fldX = 2;
+   ntpl->Fill();
+
+   EXPECT_THROW(
+      try {
+         auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", prefix + "0.root");
+         auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "mytuple", "rntuple_wrong.root");
+
+         RDatasetSpec spec;
+         spec.AddSample(samp);
+         spec.AddSample(samp1);
+         auto df_error = ROOT::RDataFrame(spec);
+      }
+
+      catch (const std::runtime_error &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "More than one RNTuple name was found, please make sure to use RNTuples with the same name.");
+         throw;
+      },
+      std::runtime_error);
+}
+
+TEST_P(RDatasetSpecTest, CompareWithRNTupleReader)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+
+   auto model = ROOT::RNTupleModel::Create();
+   std::shared_ptr<int> x = model->MakeField<int>("x");
+   auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntuple", "rdatasetspec_rntuple0.root");
+
+   TH1I h("h", "x", 5, 0, 5);
+   for (auto i = 0u; i < 5; ++i) {
+      reader->LoadEntry(i);
+      h.Fill(*x);
+   }
+
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", "rdatasetspec_rntuple0.root");
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   auto mean = df1.Mean("x");
+
+   EXPECT_FLOAT_EQ(h.GetMean(), mean.GetValue());
 }
 
 // instantiate single-thread tests

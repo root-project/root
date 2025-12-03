@@ -29,7 +29,6 @@ from database tables.
 #include "TSQLFile.h"
 #include <cstdlib>
 
-ClassImp(TKeySQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeySQL and convert obj data to TSQLStructure via TBufferSQL2

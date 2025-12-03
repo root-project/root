@@ -1,0 +1,3 @@
+[ libdup2.so ]
+# List of selected classes
+class myclassduplicated

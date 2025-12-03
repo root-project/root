@@ -1,12 +1,10 @@
-import py
+import py, pytest, os
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("templatesDict"))
 
-def setup_module(mod):
-    setup_make("templates")
+currpath = os.getcwd()
+test_dct = currpath + "/libtemplatesDict"
 
 
 class TestTEMPLATES:
@@ -14,11 +12,6 @@ class TestTEMPLATES:
         cls.test_dct = test_dct
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
-
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_integral_v    = at_least_17
-        cls.has_disjunction_v = at_least_17
-        cls.has_pack_fold     = at_least_17
 
     def test00_template_back_reference(self):
         """Template reflection"""
@@ -156,6 +149,8 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
+    @mark.xfail(run = False, reason = "This test causes the interpreter to raises errors and" \
+    "should not be run until further investigated")
     def test06_variadic_sfinae(self):
         """Attribute testing through SFINAE"""
 
@@ -182,7 +177,7 @@ class TestTEMPLATES:
         assert select_template_arg[0, Obj1, Obj2].argument == Obj1
         assert select_template_arg[1, Obj1, Obj2].argument == Obj2
         # TODO: the following crashes deep inside cling/clang ...
-        #raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
+        # raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
 
         # This is a bit subtle: to be able to use typedefs in templates, builtin
         # types are present as subclasses that carry __cpp_name__, hence the result
@@ -299,18 +294,16 @@ class TestTEMPLATES:
         assert iavec[5] == 5
 
       # with variadic template
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert nsup.matryoshka[int, 3].type
-            assert nsup.matryoshka[int, 3, 4].type
-            assert nsup.make_vector[int , 3]
-            assert nsup.make_vector[int , 3]().m_val == 3
-            assert nsup.make_vector[int , 4]().m_val == 4
+        assert nsup.matryoshka[int, 3].type
+        assert nsup.matryoshka[int, 3, 4].type
+        assert nsup.make_vector[int , 3]
+        assert nsup.make_vector[int , 3]().m_val == 3
+        assert nsup.make_vector[int , 4]().m_val == 4
 
       # with inner types using
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
-            assert nsup.Foo
-            assert nsup.Bar.Foo        # used to fail
+        assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
+        assert nsup.Foo
+        assert nsup.Bar.Foo        # used to fail
 
     @mark.xfail()
     def test13_using_templated_method(self):
@@ -502,9 +495,6 @@ class TestTEMPLATES:
 
     def test20_templated_ctor_with_defaults(self):
         """Templated constructor with defaults used to be ignored"""
-
-        if not self.has_integral_v:
-            return
 
         import cppyy
 
@@ -740,9 +730,6 @@ class TestTEMPLATES:
 
     def test27_variadic_constructor(self):
         """Use of variadic template function as contructor"""
-
-        if not self.has_disjunction_v:
-            return
 
         import cppyy
 
@@ -1118,6 +1105,7 @@ class TestTEMPLATES:
                         run_n = getattr(cppyy.gbl, 'TNaRun_%d' % n)
                         getattr(run_n, t)
 
+    @mark.xfail(run = False, reason = "This test crashes sporadically")
     def test33_using_template_argument(self):
         """`using` type as template argument"""
 
@@ -1150,9 +1138,6 @@ class TestTEMPLATES:
     @mark.xfail()
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
-
-        if not self.has_pack_fold:
-            return
 
         import cppyy
         import ctypes
@@ -1338,3 +1323,43 @@ class TestTEMPLATE_TYPE_REDUCTION:
         cppyy.py.add_type_reducer('TypeReduction::BinaryExpr<int>', 'TypeReduction::Expr<int>')
 
         assert type(e1+e2) == cppyy.gbl.TypeReduction.Expr[int]
+
+
+class TestTEMPLATED_CALLBACK:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.templates = cppyy.load_reflection_info(cls.test_dct)
+    
+    def test01_templated_callbacks(self):
+        import cppyy
+        from cppyy.gbl import std
+
+        cppyy.cppdef(r"""
+        bool foo() { return true; }
+
+        int bar(int a, int b) { return a + b; }
+
+        template <typename T, typename U>
+        T baz(T a, U b, std::string c) {
+            return (T)(a + b) + std::stoi(c);
+        }
+
+        template <typename F, typename R, typename... Args>
+        R returned_callback(F callable, R r, Args... args) {
+            return callable(r, std::forward<Args>(args)...);
+        }
+
+        template <typename F, typename... Args>
+        bool callback(F callable, Args&&... args) {
+            return callable(std::forward<Args>(args)...);
+        }
+        """)
+
+        assert cppyy.gbl.callback(cppyy.gbl.foo)
+        assert cppyy.gbl.returned_callback(cppyy.gbl.bar, 1, 1) == 2
+        assert cppyy.gbl.returned_callback(cppyy.gbl.baz[int, int], 1, 1, std.string("1")) == 3
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

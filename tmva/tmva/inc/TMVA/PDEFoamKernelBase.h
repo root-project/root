@@ -54,7 +54,7 @@ namespace TMVA
       // Message logger
       MsgLogger& Log() const { return *fLogger; }
 
-      ClassDef(PDEFoamKernelBase, 1) // PDEFoam kernel interface
+      ClassDefOverride(PDEFoamKernelBase, 1) // PDEFoam kernel interface
          }; // end of PDEFoamKernelBase
 }  // namespace TMVA
 

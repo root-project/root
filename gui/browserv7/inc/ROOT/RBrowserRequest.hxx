@@ -1,6 +1,5 @@
 // Authors: Bertrand Bellenot <bertrand.bellenot@cern.ch> Sergey Linev <S.Linev@gsi.de>
 // Date: 2019-02-28
-// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -32,7 +31,6 @@ public:
    bool reverse{false};   ///< reverse item order
    bool hidden{false};    ///< show hidden files
    bool reload{false};    ///< force items reload
-   int lastcycle{0};      ///< show only last cycle, -1 - off, 0 - not change, +1 on,
    std::string regex;     ///< applied regex
 };
 

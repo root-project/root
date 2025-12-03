@@ -72,15 +72,17 @@ unsigned int lshift_(unsigned int *arg, int *len)
 void vxinvb_(int *ixv, int *n)
 {
    int limit, jloop;
-   int in;
+   int out;
+   unsigned char *n1, *n2;
+   n2 = (unsigned char *) &out;
    limit = *n;
    for (jloop = 0; jloop < limit; jloop++) {
-      in = ixv[jloop];
-      ixv[jloop] =
-            ((in >> 24) & 0x000000ff) |
-            ((in >> 8) & 0x0000ff00) |
-            ((in << 8) & 0x00ff0000) |
-            ((in << 24) & 0xff000000);
+      n1 = (unsigned char *) &ixv[jloop];
+      n2[0] = n1[3];
+      n2[1] = n1[2];
+      n2[2] = n1[1];
+      n2[3] = n1[0];
+      ixv[jloop] = out;
    }
    return;
 }
@@ -90,14 +92,17 @@ void vxinvb_(int *ixv, int *n)
 void vxinvc_ (int *iv, int *ixv, int *n)
 {
    int limit, jloop;
-   int in;
+   int out;
+   unsigned char *n1, *n2;
+   n2 = (unsigned char *) &out;
    limit = *n;
    for (jloop = 0; jloop < limit; jloop++) {
-      in = iv[jloop];
-      ixv[jloop] =
-      ((in >> 24) & 0x000000ff) |
-      ((in >> 8) & 0x0000ff00) |
-      ((in << 8) & 0x00ff0000) | ((in << 24) & 0xff000000);
+      n1 = (unsigned char *) &iv[jloop];
+      n2[0] = n1[3];
+      n2[1] = n1[2];
+      n2[2] = n1[1];
+      n2[3] = n1[0];
+      ixv[jloop] = out;
    }
    return;
 }

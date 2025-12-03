@@ -1,0 +1,122 @@
+<lcgdict>
+
+  <class name="CaloCellContainer" id="24626824-1DB4-4CDF-9B41-1B54114BE498" >
+    <field name="m_lookUpTable" transient="true" />
+    <field name="m_indexFirstCellCalo" transient="true" />
+    <field name="m_indexLastCellCalo" transient="true" />
+    <field name="m_beginConstCalo" transient="true" />
+    <field name="m_beginConstCalo" transient="true" />
+    <field name="m_endConstCalo" transient="true" />
+    <field name="m_beginCalo" transient="true" />
+    <field name="m_endCalo" transient="true" />
+  </class>
+
+  <class name="CaloCell" >
+    <field name="m_caloDDE" transient="true" />
+  </class>
+
+
+  <class name="DataVector<CaloCell>" />
+  <class name="std::vector<CaloCell*>" />
+
+  <class name="std::vector<const CaloCell*>" />
+  <class name="std::vector<std::vector<const CaloCell*> >" />
+
+  <class name="CaloClusterMoment" />
+  <class name="CaloClusterMomentStore" />
+  <class name="std::map<int,CaloClusterMoment>" />
+  <class name="CaloClusterMomentStore::CaloClusterMomentIterator" />
+
+  <class name="CaloShower" />
+  <class name="CaloSampling" />
+  <class name="CaloSamplingData" />
+
+  <class name="CaloShowerContainer" 
+	id = "CE47AFED-EC28-43BA-86C6-721B11D5B24E" />
+  <class name="DataVector<CaloShower>" />
+  <class name="std::vector<CaloShower*>" />
+
+  <class name="CaloEnergyCluster" />
+  <class name="CaloCompositeKineBase" />
+  <class name="CaloClusterNavigable" />
+  <class name="CaloCompositeCellBase<CaloClusterNavigable>" />
+  <class name="CaloCellLink" />
+  <class name="CaloCellLinkContainer"
+	 id="6DE36687-81DE-4264-8857-41AFA0C55415" />
+  <class name="DataVector<CaloCellLink>" />
+  <class name="std::vector<CaloCellLink*>" />
+
+  <class name="CaloClusterCellLink" />
+  <class name="std::vector<std::pair<unsigned int,double> >" />
+  <class name="std::pair<unsigned int,double>" />
+  <class name="DataVector<CaloClusterCellLink>" />
+  <class name="CaloClusterCellLinkContainer"
+	 id="545AC204-2749-4AAC-9783-B1E5A7A0030F" />
+
+  <class name="ElementLink<CaloClusterCellLinkContainer>" />
+  <class name="std::vector<ElementLink<CaloClusterCellLinkContainer> >" />
+
+
+  <class name="CaloCluster" >
+    <field name="m_posNorm" transient="true" />
+    <field name="m_posSamNorm" transient="true" />
+    <field name="m_nBarrel" transient="true" />
+    <field name="m_nEndcap" transient="true" />
+    <field name="m_lockPattern" transient="true" />
+    <field name="m_ownDataStore" transient="true" />
+    <field name="m_errorValue" transient="true" />
+    <field name="m_momentStore" transient="true" />
+    <field name="m_dataStore" transient="true" />
+    <field name="m_badChannelData" transient="true" />
+  </class>
+  <class name="CaloRecoStatus" />
+  <class name="CaloCluster::MomentStoreIter"/>
+   
+  <class name="CaloClusterContainer" id="6969EDA6-698A-45AF-95A2-5836F6C1FE99" />
+  <class name="DataVector<CaloCluster>" />
+  <class name="std::vector<CaloCluster*>" />
+
+
+  <class name="CaloTowerContainer" id="8F94A938-3C19-4509-BBAA-E8EB0A64B524" >
+  </class> 
+  <class name="CaloTower" />
+  <class name="CaloTowerSeg" />
+
+  <class name="CaloTopoTowerContainer" id="00B7F56C-1E49-4469-BEBA-C74620575A00" >
+    <field name="m_cells" transient="true" />
+    <field name="m_towers" transient="true" />
+    <field name="m_minimumCellEnergy" transient="true" />
+    <field name="m_minimumClusterEnergy" transient="true" />
+    <field name="m_useCellWeights" transient="true" />
+    <field name="m_useNoiseTool" transient="true" />
+    <field name="m_usePileUpNoise" transient="true" />
+    <field name="m_noiseSigma" transient="true" />
+    <field name="m_cellESignificanceThreshold" transient="true" />
+    <field name="m_caloIndices" transient="true" />
+    <field name="m_caloSelection" transient="true" />
+  </class>
+  
+
+  <!-- <class name="CaloCompositeCellBase< Navigable< CaloCellContainer ,double,std::vector<std::pair<ElementLink< CaloCellContainer ,DataProxyStorage< CaloCellContainer >,ForwardIndexingPolicy< CaloCellContainer > >,double> > > >" /> -->
+
+  <class name="DataVector<CaloTower>" >
+  </class>
+
+<!--  <class name="std::vector<double>" /> -->
+
+  <class name="CaloCompactCellContainer" id="91B7AAA5-E302-4666-A4F6-7B331240AF23" />
+
+  <class name="DataModel_detail::ElementProxy<DataVector<CaloCell> >" />
+  <class name="DataModel_detail::ElementProxy<DataVector<CaloShower> >" />
+  <class name="DataModel_detail::ElementProxy<DataVector<CaloCellLink> >" />
+  <class name="DataModel_detail::ElementProxy<DataVector<CaloCluster> >" />
+  <class name="DataModel_detail::ElementProxy<DataVector<CaloTower> >" />
+
+  <class name="NavigableIterator<CaloCellContainer,double,std::vector<std::pair<ElementLink<CaloCellContainer>,double> > >"/>
+
+  <class name="CaloClusterBadChannelData"/>
+  <class name="std::vector<CaloClusterBadChannelData>"/>
+
+  <class name="std::vector<CaloCell_ID::SUBCALO>"/>
+
+</lcgdict>

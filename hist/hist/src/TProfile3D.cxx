@@ -22,7 +22,6 @@
 
 Bool_t TProfile3D::fgApproximate = kFALSE;
 
-ClassImp(TProfile3D);
 
 /** \class TProfile3D
     \ingroup Histograms
@@ -342,6 +341,34 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
    fBuffer[5*nbentries+5] = t;
    fBuffer[0] += 1;
    return -2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run a Chi2Test between a TProfile3D and another histogram.
+/// If the argument is also a TProfile3D, this calls TH1::Chi2Test() with the option "WW".
+/// \see TH1::Chi2Test()
+
+Double_t TProfile3D::Chi2Test(const TH1 *h2, Option_t *option, Double_t *res) const
+{
+   TString opt = option;
+   opt.ToUpper();
+
+   if (auto other = dynamic_cast<const TProfile3D *>(h2); other) {
+      if (fErrorMode != kERRORMEAN || other->fErrorMode != kERRORMEAN) {
+         Error("Chi2Test", "Chi2 tests need TProfiles in 'error of mean' mode.");
+         return 0;
+      }
+
+      opt += "WW";
+      opt.ReplaceAll("UU", "WW");
+      opt.ReplaceAll("UW", "WW");
+   } else if (!opt.Contains("WW")) {
+      Error("Chi2Test", "TProfiles need to be tested with the 'W' option. Either use option 'WW' or use "
+                        "histogram.Chi2Test(<profile>, 'UW')");
+      return 0;
+   }
+
+   return TH1::Chi2Test(h2, opt, res);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1066,8 +1093,8 @@ TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
 /// Called from TH3::Project3DProfile but re-implemented in case of the TPRofile3D
 /// since what is done is different.
 
-TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
-                                           bool originalRange, bool useUF, bool useOF) const
+TProfile2D *TProfile3D::DoProjectProfile2D(const char *name, const char *title, const TAxis *projX, const TAxis *projY,
+                                           bool originalRange, bool useUF, bool useOF, bool useWidth) const
 {
    // Get the ranges where we will work.
    Int_t ixmin = projX->GetFirst();
@@ -1139,8 +1166,8 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    if (projY == GetXaxis() ) {  projY_hW =  h3dW->GetXaxis();  projY_hN =  h3dN->GetXaxis(); }
    if (projY == GetZaxis() ) {  projY_hW =  h3dW->GetZaxis();  projY_hN =  h3dN->GetZaxis(); }
 
-   TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF);
-   TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF);
+   TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF, useWidth);
+   TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF, useWidth);
    h2W->SetDirectory(nullptr); h2N->SetDirectory(nullptr);
 
 
@@ -1232,7 +1259,7 @@ void TProfile3D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       szaxis = SavePrimitiveVector(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
    }
 
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
       out << sxaxis << ".data()";
@@ -1364,19 +1391,19 @@ void TProfile3D::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the buffer size in units of 8 bytes (double).
 
-void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
+void TProfile3D::SetBuffer(Int_t bufsize, Option_t *)
 {
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
       fBuffer = nullptr;
    }
-   if (buffersize <= 0) {
+   if (bufsize <= 0) {
       fBufferSize = 0;
       return;
    }
-   if (buffersize < 100) buffersize = 100;
-   fBufferSize = 1 + 5*buffersize;
+   if (bufsize < 100) bufsize = 100;
+   fBufferSize = 1 + 5*bufsize;
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }

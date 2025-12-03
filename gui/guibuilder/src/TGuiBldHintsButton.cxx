@@ -23,7 +23,6 @@ Special button class used for editing layout hints in the ROOT GUI Builder.
 */
 
 
-ClassImp(TGuiBldHintsButton);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +93,7 @@ void TGuiBldHintsButton::DoRedraw()
 void TGuiBldHintsButton::DrawExpandX()
 {
    const int dist = 3;
-   const int amplitude = TMath::Min(3, (int)fHeight/3);
+   const int amplitude = std::min(3, (int)fHeight/3);
    int base = fHeight/2;
    int i = 0;
    const TGResourcePool *pool = fClient->GetResourcePool();
@@ -124,7 +123,7 @@ void TGuiBldHintsButton::DrawExpandX()
 void TGuiBldHintsButton::DrawExpandY()
 {
    const int dist = 3;
-   const int amplitude = TMath::Min(3, (int)fWidth/3);
+   const int amplitude = std::min(3, (int)fWidth/3);
    int base = fWidth/2;
    int i = 0;
 

@@ -1,0 +1,22 @@
+
+Processing runAddVersion.cxx(3, "6")...
+
+Loading library lib6
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x6fc1e7b8
+  Long64_t       a               offset=na type=16
+   i= 0, a               type= 16, offset=na, len=1, method=0
+Loading myclass6.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x6fc1e7b8
+  Long64_t       a               offset=na type=16
+   i= 0, a               type= 16, offset=na, len=1, method=0
+Loading myclass7.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x6fc1e7b8
+  Long64_t       a               offset=na type=16
+   i= 0, a               type= 16, offset=na, len=1, method=0
+(int) 0

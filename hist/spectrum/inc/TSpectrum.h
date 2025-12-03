@@ -52,11 +52,11 @@ public:
    TSpectrum();
    TSpectrum(Int_t maxpositions, Double_t resolution=1); // resolution is *NOT USED*
    ~TSpectrum() override;
-   virtual TH1        *Background(const TH1 *hist,Int_t niter=20, Option_t *option="");
+   virtual TH1        *Background(const TH1 *hist, Int_t nIter = 20, Option_t *option = "");
    TH1                *GetHistogram() const {return fHistogram;}
    Int_t               GetNPeaks() const {return fNPeaks;}
-   Double_t            *GetPositionX() const {return fPositionX;}
-   Double_t            *GetPositionY() const {return fPositionY;}
+   Double_t           *GetPositionX() const { return fPositionX; }
+   Double_t           *GetPositionY() const { return fPositionY; }
    void        Print(Option_t *option="") const override;
    virtual Int_t       Search(const TH1 *hist, Double_t sigma=2, Option_t *option="", Double_t threshold=0.05);
    static void         SetAverageWindow(Int_t w=3);   //set average window

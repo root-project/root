@@ -1,0 +1,5 @@
+
+Processing runstaticfunc.C...
+staticfunc.C:--:9: error: call to non-static member function without an object argument
+   Top::Run();
+   ~~~~~^~~

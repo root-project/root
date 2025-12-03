@@ -42,7 +42,6 @@ protected:
    TFile       *fFile;             ///<! Pointer to current file (We own the file).
    TObjArray   *fFiles;            ///< -> List of file names containing the trees (TChainElement, owned)
    TList       *fStatus;           ///< -> List of active/inactive branches (TChainElement, owned)
-   TChain      *fProofChain;       ///<! chain proxy when going to be processed by PROOF
    bool         fGlobalRegistration;  ///<! if true, bypass use of global lists
 
 private:
@@ -50,18 +49,22 @@ private:
    TChain& operator=(const TChain&); // not implemented
    void
    ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
+   Long64_t RefreshFriendAddresses();
 
 protected:
    void InvalidateCurrentTree();
-   void ReleaseChainProof();
+
+   // Called when setting the branch address of friends. In the case of TChain, the TChainElement for branch
+   // 'bname' is created calling IsDelayed, to avoid missing branch errors when connecting it to the trees
+   // of this chain
+   Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                          bool isptr, bool suppressMissingBranchError) override;
 
 public:
    // TChain constants
    enum EStatusBits {
       kGlobalWeight   = BIT(15),
-      kAutoDelete     = BIT(16),
-      kProofUptodate  = BIT(17),
-      kProofLite      = BIT(18)
+      kAutoDelete     = BIT(16)
    };
 
    // This used to be 1234567890, if user code hardcoded this number, the user code will need to change.
@@ -101,7 +104,7 @@ public:
    Long64_t  GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
    Int_t     GetEntry(Long64_t entry=0, Int_t getall=0) override;
    Long64_t  GetEntryNumber(Long64_t entry) const override;
-   Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0) override;
+   Int_t     GetEntryWithIndex(Long64_t major, Long64_t minor=0) override;
    TFile            *GetFile() const;
    TLeaf    *GetLeaf(const char* branchname, const char* leafname) override;
    TLeaf    *GetLeaf(const char* name) override;
@@ -124,8 +127,7 @@ public:
    bool      InPlaceClone(TDirectory *newdirectory, const char *options = "") override;
    Int_t     LoadBaskets(Long64_t maxmemory) override;
    Long64_t  LoadTree(Long64_t entry) override;
-           void      Lookup(bool force = false);
-   virtual void      Loop(Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
+   void      Lookup(bool force = false);
    void      ls(Option_t *option="") const override;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
    Long64_t  Merge(TCollection *list, Option_t *option = "") override;
@@ -166,7 +168,6 @@ public:
    void      SetMakeClass(Int_t make) override { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    void      SetName(const char *name) override;
    virtual void      SetPacketSize(Int_t size = 100);
-   virtual void      SetProof(bool on = true, bool refresh = false, bool gettreeheader = false);
    void      SetWeight(Double_t w=1, Option_t *option="") override;
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 

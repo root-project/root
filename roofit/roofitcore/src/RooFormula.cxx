@@ -72,20 +72,6 @@ using std::sregex_iterator, std::ostream;
 
 namespace {
 
-////////////////////////////////////////////////////////////////////////////////
-/// Find all input arguments which are categories, and save this information in
-/// with the names of the variables that are being used to evaluate it.
-std::vector<bool> findCategoryServers(const RooAbsCollection& collection) {
-  std::vector<bool> output;
-  output.reserve(collection.size());
-
-  for (unsigned int i = 0; i < collection.size(); ++i) {
-    output.push_back(collection[i]->InheritsFrom(RooAbsCategory::Class()));
-  }
-
-  return output;
-}
-
 /// Convert `@i`-style references to `x[i]`.
 void convertArobaseReferences(std::string &formula)
 {
@@ -134,12 +120,62 @@ std::vector<bool> getWordBoundaryFlags(std::string const &s)
    return out;
 }
 
+// Receiving a RooConstVar as parameter having a numeric value as name, checks if the numeric value
+// of the name is equal to the value of the RooConstVar
+//
+// E.g.
+// RooConstVar("2.1", "const1", 2.1) returns true
+// RooConstVar("3.4", "const2", 2.1) returns false
+bool isNumericNameValid(RooAbsArg &_rooAbsArg)
+{
+   // Extract the value from the RooAbsArg
+   std::stringstream ss;
+   ss << _rooAbsArg;
+   double nameValue, actualValue;
+   try {
+      nameValue = std::stod(_rooAbsArg.GetName());
+      actualValue = std::stod(ss.str());
+   } catch (const std::invalid_argument &e) {
+      std::stringstream ssExc;
+      ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has name or value that "
+            << "cannot be converted to number";
+      throw std::invalid_argument(ssExc.str());
+   } catch (const std::out_of_range &e) {
+      std::stringstream ssExc;
+      ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has numeric name or value that "
+            << "gets out of a double range";
+      throw std::out_of_range(ssExc.str());
+   }
+
+   return nameValue == actualValue;
+}
+
 /// Replace all named references with "x[i]"-style.
 void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varList)
 {
    std::vector<bool> isWordBoundary = getWordBoundaryFlags(formula);
    for (unsigned int i = 0; i < varList.size(); ++i) {
       std::string_view varName = varList[i].GetName();
+
+      // If the RooAbsArg has a number as name, we perform checks
+      std::string varNameStr{varName};
+      static const std::regex pureNumberNameRegex("^\\s*\\d+(\\.\\d+)?\\s*$");
+      if (std::regex_match(varNameStr, pureNumberNameRegex)) { // Name is a number
+         // Get class name
+         std::stringstream classNameSs;
+         varList[i].printClassName(classNameSs);
+         // If the RooAbsArg is a RooConstVar having (double)name == value
+         // we don't perform substitution
+         if (classNameSs.str() == "RooConstVar" && isNumericNameValid(varList[i])) {
+            continue;
+         } else {
+            std::stringstream exceptionSs;
+            exceptionSs << "Variable '" << varName << "' is not a valid argument for RooFormulaVar. "
+                        << "Variables with a name that is a number can only be of type RooConstVar "
+                        << "and have value equal to the name";
+            throw std::invalid_argument(exceptionSs.str());
+         }
+      }
 
       std::stringstream replacementStream;
       replacementStream << "x[" << i << "]";
@@ -232,18 +268,39 @@ RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &
    : TNamed(name, formula)
 {
    _origList.add(varList);
-   _isCategory = findCategoryServers(_origList);
+   _varIsUsed.resize(varList.size());
 
    installFormulaOrThrow(formula);
+
+   if (_tFormula == nullptr)
+      return;
+
+   const std::string processedFormula(_tFormula->GetTitle());
+
+   std::set<unsigned int> matchedOrdinals;
+   static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
+   for (sregex_iterator matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), newOrdinalRegex);
+        matchIt != sregex_iterator(); ++matchIt) {
+      assert(matchIt->size() == 2);
+      std::stringstream matchString((*matchIt)[1]);
+      unsigned int i;
+      matchString >> i;
+
+      matchedOrdinals.insert(i);
+   }
+
+   for (unsigned int i : matchedOrdinals) {
+      _varIsUsed[i] = true;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 RooFormula::RooFormula(const RooFormula& other, const char* name) :
-  TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other)
+  TNamed(name ? name : other.GetName(), other.GetTitle()),
+  _varIsUsed{other._varIsUsed}
 {
   _origList.add(other._origList);
-  _isCategory = findCategoryServers(_origList);
 
   std::unique_ptr<TFormula> newTF;
   if (other._tFormula) {
@@ -322,33 +379,14 @@ std::string RooFormula::processFormula(std::string formula) const {
 /// Analyse internal formula to find out which variables are actually in use.
 RooArgList RooFormula::usedVariables() const {
   RooArgList useList;
-  if (_tFormula == nullptr)
-    return useList;
 
-  const std::string formula(_tFormula->GetTitle());
-
-  std::set<unsigned int> matchedOrdinals;
-  static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
-  for (sregex_iterator matchIt = sregex_iterator(formula.begin(), formula.end(), newOrdinalRegex);
-      matchIt != sregex_iterator(); ++matchIt) {
-    assert(matchIt->size() == 2);
-    std::stringstream matchString((*matchIt)[1]);
-    unsigned int i;
-    matchString >> i;
-
-    matchedOrdinals.insert(i);
-  }
-
-  for (unsigned int i : matchedOrdinals) {
-    useList.add(_origList[i]);
+  for (std::size_t i = 0; i < _varIsUsed.size(); ++i) {
+    if (_varIsUsed[i]) {
+      useList.add(_origList[i]);
+    }
   }
 
   return useList;
-}
-
-void RooFormula::dump() const
-{
-  printMultiline(std::cout, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,8 +418,6 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
     }
   }
 
-  _isCategory = findCategoryServers(_origList);
-
   return errorStat;
 }
 
@@ -405,7 +441,7 @@ double RooFormula::eval(const RooArgSet* nset) const
   std::vector<double> pars;
   pars.reserve(_origList.size());
   for (unsigned int i = 0; i < _origList.size(); ++i) {
-    if (_isCategory[i]) {
+    if (_origList[i].isCategory()) {
       const auto& cat = static_cast<RooAbsCategory&>(_origList[i]);
       pars.push_back(cat.getCurrentIndex());
     } else {
@@ -417,15 +453,19 @@ double RooFormula::eval(const RooArgSet* nset) const
   return _tFormula->EvalPar(pars.data());
 }
 
-void RooFormula::doEval(RooFit::EvalContext &ctx) const
+void RooFormula::doEval(RooArgList const &actualVars, RooFit::EvalContext &ctx) const
 {
    std::span<double> output = ctx.output();
 
    const int nPars = _origList.size();
    std::vector<std::span<const double>> inputSpans(nPars);
+   int iActual = 0;
    for (int i = 0; i < nPars; i++) {
-      std::span<const double> rhs = ctx.at(static_cast<const RooAbsReal *>(&_origList[i]));
-      inputSpans[i] = rhs;
+      if(_varIsUsed[i]) {
+         std::span<const double> rhs = ctx.at(static_cast<const RooAbsReal *>(&actualVars[iActual]));
+         inputSpans[i] = rhs;
+         ++iActual;
+      }
    }
 
    std::vector<double> pars(nPars);
@@ -448,50 +488,6 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*
   indent.Append("  ");
   os << indent << "Servers: " << _origList << "\n";
   os << indent << "In use : " << actualDependents() << std::endl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print value of formula
-
-void RooFormula::printValue(ostream& os) const
-{
-  os << const_cast<RooFormula*>(this)->eval(nullptr) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print name of formula
-
-void RooFormula::printName(ostream& os) const
-{
-  os << GetName() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print title of formula
-
-void RooFormula::printTitle(ostream& os) const
-{
-  os << GetTitle() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print class name of formula
-
-void RooFormula::printClassName(ostream& os) const
-{
-  os << ClassName() ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print arguments of formula, i.e. dependents that are actually used
-
-void RooFormula::printArgs(ostream& os) const
-{
-  os << "[ actualVars=";
-  for (const auto arg : usedVariables()) {
-     os << " " << arg->GetName();
-  }
-  os << " ]";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

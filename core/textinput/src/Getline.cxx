@@ -38,7 +38,7 @@ namespace {
    class ROOTTabCompletion: public TabCompletion {
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
-      virtual ~ROOTTabCompletion() { delete []fLineBuf; }
+      ~ROOTTabCompletion() override { delete[] fLineBuf; }
 
       ROOTTabCompletion(const ROOTTabCompletion&) = delete;
       ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;

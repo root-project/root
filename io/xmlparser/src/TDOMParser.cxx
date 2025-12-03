@@ -29,7 +29,6 @@ The parser returns a tree built during the document analysis.
 #include <libxml/parserInternals.h>
 
 
-ClassImp(TDOMParser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TDOMParser constructor.

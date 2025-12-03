@@ -180,6 +180,7 @@ public:
    static  void        AddDirectory(Bool_t add=kTRUE);
    static  Bool_t      AddDirectoryStatus();
    virtual void        Append(TObject *obj, Bool_t replace = kFALSE);
+   /// Append object to this directory. \see Append(TObject*, Bool_t)
    virtual void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
            void        Browse(TBrowser *b) override;

@@ -1,0 +1,48 @@
+<lcgdict>
+
+
+  <class pattern="LArConditionsContainer<LArOnlCalibData>"  />
+  <class pattern="LArConditionsContainerDB<LArOnlCalibData>"  />
+  <class pattern="LArConditionsContainerDB<LArOnlCalibData>::const_iterator"  />
+
+  <class name="LArOnlCalibData" />
+  <class name="LArOnlCalibDataContainer" />
+  <class name="LArConditionsSubset<LArOnlCalibData>" id="ACCA25C3-8C9B-47F8-9E87-FA43FDA9C926">
+    <field name="m_subsetMap" transient="true" />
+  </class>
+
+  <class pattern="std::pair<unsigned*LArOnlCalibData*"/>
+  <class pattern="std::vector<LArOnlCalibData>"/>
+  <class pattern="std::vector<std::pair<unsigned int, LArOnlCalibData> >"/>
+  <class pattern="std::vector<std::pair<unsigned int, std::vector<LArOnlCalibData> > >"/>
+  <class pattern="vector<LArConditionsSubset<LArOnlCalibData>*>"/>
+
+
+  <class pattern="LArConditionsContainer<LArOnlEnergyData>"  />
+  <class pattern="LArConditionsContainerDB<LArOnlEnergyData>"  />
+  <class pattern="LArConditionsContainerDB<LArOnlEnergyData>::const_iterator"  />
+
+  <class name="LArOnlEnergyData" />
+  <class name="LArOnlEnergyDataContainer" />
+  <class name="LArConditionsSubset<LArOnlEnergyData>" id="ACCA25C3-8C9B-47F8-9E87-FA43FDA9C926">
+    <field name="m_subsetMap" transient="true" />
+  </class>
+
+  <class pattern="std::pair<unsigned*LArOnlEnergyData*"/>
+  <class pattern="std::vector<LArOnlEnergybData>"/>
+  <class pattern="std::vector<std::pair<unsigned int, LArOnlEnergyData> >"/>
+  <class pattern="std::vector<std::pair<unsigned int, std::vector<LArOnlEnergyData> > >"/>
+  <class pattern="vector<LArConditionsSubset<LArOnlEnergyData>*>"/>
+
+  <class pattern="*iterator<const*LArOnlCalibData*>"/> 
+
+  <!--<class name="PyGate<LArOnlCalibDataContainer>" />-->
+  <class name="ILArOnlDbPrepTool" />
+  <class name="LArOnlDbPrepTool" />
+
+
+</lcgdict>
+
+
+
+

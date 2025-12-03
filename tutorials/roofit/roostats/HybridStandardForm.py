@@ -366,7 +366,7 @@ p2.Draw()
 quit()  # so standard tutorial runs faster
 
 # ---------------------------------------------
-# OUTPUT W/O PROOF (2.66 GHz Intel Core i7)
+# OUTPUT (2.66 GHz Intel Core i7)
 # ============================================
 
 # -----------------------------------------
@@ -385,21 +385,6 @@ quit()  # so standard tutorial runs faster
 # - CL_s+b: 0.495 +/- 0.0158106
 # - CL_s: 0.495512 +/- 0.0158272
 # Real time 0:04:43, CP time 283.780
-
-# With PROOF
-# -----------------------------------------
-# Part 5
-
-# Results HybridCalculator_result:
-# - Null p-value = 0.00105 +/- 0.000206022
-# - Significance = 3.07571 sigma
-# - Number of S+B toys: 1000
-# - Number of B toys: 20000
-# - Test statistic evaluated on data: 10.8198
-# - CL_b: 0.99895 +/- 0.000229008
-# - CL_s+b: 0.491 +/- 0.0158088
-# - CL_s: 0.491516 +/- 0.0158258
-# Real time 0:02:22, CP time 0.990
 
 # -------------------------------------------------------
 # Comparison

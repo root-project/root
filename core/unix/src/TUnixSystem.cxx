@@ -46,7 +46,7 @@
 //#define G__OLDEXPAND
 
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__AIX) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
@@ -94,15 +94,15 @@
 #include <utime.h>
 #include <syslog.h>
 #include <sys/stat.h>
-#include <setjmp.h>
-#include <signal.h>
+#include <csetjmp>
+#include <csignal>
 #include <sys/param.h>
 #include <pwd.h>
 #include <grp.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/file.h>
 #include <sys/socket.h>
@@ -218,7 +218,7 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fenv.h>
+#include <cfenv>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
 
@@ -229,11 +229,11 @@ extern "C" {
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
    !defined(__arm64__)
-#include <fenv.h>
-#include <signal.h>
+#include <cfenv>
+#include <csignal>
 #include <ucontext.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <mach/thread_status.h>
 
 #define fegetenvd(x) asm volatile("mffs %0" : "=f" (x));
@@ -251,7 +251,7 @@ enum {
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
     (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
-#include <fenv.h>
+#include <cfenv>
 #endif
 // End FPE handling includes
 
@@ -568,7 +568,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 }
 #endif
 
-ClassImp(TUnixSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -704,7 +703,7 @@ void TUnixSystem::SetDisplay()
          }
       }
 #ifndef R__HAS_COCOA
-      if (!gROOT->IsBatch() && !getenv("DISPLAY")) {
+      if (!gROOT->IsBatch() && !std::getenv("DISPLAY")) {
          Error("SetDisplay", "Can't figure out DISPLAY, set it manually\n"
             "In case you run a remote ssh session, restart your ssh session with:\n"
             "=========>  ssh -Y");
@@ -788,11 +787,11 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
       int fd = h->GetFd();
       if (h->HasReadInterest()) {
          fReadmask->Set(fd);
-         fMaxrfd = TMath::Max(fMaxrfd, fd);
+         fMaxrfd = std::max(fMaxrfd, fd);
       }
       if (h->HasWriteInterest()) {
          fWritemask->Set(fd);
-         fMaxwfd = TMath::Max(fMaxwfd, fd);
+         fMaxwfd = std::max(fMaxwfd, fd);
       }
    }
 }
@@ -819,11 +818,11 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
          int fd = th->GetFd();
          if (th->HasReadInterest()) {
             fReadmask->Set(fd);
-            fMaxrfd = TMath::Max(fMaxrfd, fd);
+            fMaxrfd = std::max(fMaxrfd, fd);
          }
          if (th->HasWriteInterest()) {
             fWritemask->Set(fd);
-            fMaxwfd = TMath::Max(fMaxwfd, fd);
+            fMaxwfd = std::max(fMaxwfd, fd);
          }
       }
    }
@@ -1145,7 +1144,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
+      int mxfd = std::max(fMaxrfd, fMaxwfd);
       mxfd++;
 
       // if nothing to select (socket or timer) return
@@ -1212,11 +1211,11 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
       if (fd > -1) {
          if (h->HasReadInterest()) {
             rd.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          if (h->HasWriteInterest()) {
             wr.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          h->ResetReadyMask();
       }
@@ -1522,13 +1521,11 @@ const char *TUnixSystem::TempDirectory() const
 
 FILE *TUnixSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
-   char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
-   base = b;
+   PrependPathName(dir ? dir : TempDirectory(), base);
    base += "XXXXXX";
    const bool hasSuffix = suffix && *suffix;
    if (hasSuffix)
       base.Append(suffix);
-   delete [] b;
 
    char *arg = StrDup(base);
    int fd = hasSuffix ? mkstemps(arg, strlen(suffix)) : mkstemp(arg);
@@ -1923,6 +1920,9 @@ int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 /// The search path is specified as a : separated list of directories.
 /// Return value is pointing to wfile for compatibility with
 /// Which(const char*,const char*,EAccessMode) version.
+/// \note This function does not support finding files in directories containing
+/// colons in their name. For that specific use case and if you know the filename,
+/// deploy instead TSystem::AccessPathName(dirName+fileName, kReadPermission)
 
 const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode mode)
 {
@@ -2136,7 +2136,7 @@ void TUnixSystem::Setenv(const char *name, const char *value)
 
 const char *TUnixSystem::Getenv(const char *name)
 {
-   return ::getenv(name);
+   return std::getenv(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4597,6 +4597,12 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get shared library search path. Static utility function.
+///
+/// The runtime cost (syscalls) of this function can be shortened by injecting
+/// a pre-calculated result for the system library search path in form of
+/// `export ROOT_LDSYSPATH=$(LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search
+/// path" | sed 's/.*=//g' | awk '//{print $1}')` This might be useful in scenarios, where ROOT is instantiated many
+/// times.
 
 static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE)
 {
@@ -4644,7 +4650,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
    if (reset || !initialized) {
 
       dynpath_envpart = gSystem->Getenv("ROOT_LIBRARY_PATH");
-      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      TString rdynpath = gEnv->GetValue("Root.DynamicPath", nullptr);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
@@ -4682,23 +4688,34 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       dynpath_syspart = "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
       dynpath_syspart += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
    #else
-      // trick to get the system search path
-      std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
-      FILE *pf = popen(cmd.c_str (), "r");
-      std::string result = "";
-      char buffer[128];
-      while (!feof(pf)) {
-         if (fgets(buffer, 128, pf) != NULL)
-            result += buffer;
-      }
-      pclose(pf);
-      std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
-      std::size_t to = result.find("(system search path)");
-      if (from != std::string::npos && to != std::string::npos) {
-         from += 12;
-         std::string sys_path = result.substr(from, to-from);
-         sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
-         dynpath_syspart = sys_path.c_str();
+      // Obtain the system search path ...
+
+      // First of all, let's see if an outside entity gave us the system path.
+      // This is a power-user feature for users bringing up many executables with ROOT linked in.
+      // In this case, the system path could be cached in an environment variable ROOT_LDSYSPATH and prevent
+      // repeated sys-calls (popen) and to having to search through potentially long LD_LIBRARY_PATH strings.
+      const auto ldsyspath = std::getenv("ROOT_LDSYSPATH");
+      if (ldsyspath != nullptr) {
+         dynpath_syspart = ldsyspath;
+      } else {
+         // trick to get the system search path at runtime (default case)
+         std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
+         FILE *pf = popen(cmd.c_str(), "r");
+         std::string result = "";
+         char buffer[128];
+         while (!feof(pf)) {
+            if (fgets(buffer, 128, pf) != nullptr)
+               result += buffer;
+         }
+         pclose(pf);
+         std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
+         std::size_t to = result.find("(system search path)");
+         if (from != std::string::npos && to != std::string::npos) {
+            from += 12;
+            std::string sys_path = result.substr(from, to - from);
+            sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
+            dynpath_syspart = sys_path.c_str();
+         }
       }
       dynpath_envpart.ReplaceAll("::", ":");
       dynpath_syspart.ReplaceAll("::", ":");
@@ -5108,6 +5125,19 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 #endif
 
 #if defined(R__LINUX)
+
+namespace {
+bool parseLine(TString &s, const char *prefix, Int_t &field)
+{
+   if (s.BeginsWith(prefix)) {
+      TPRegexp{"^.+: *([^ ]+).*"}.Substitute(s, "$1");
+      field = (s.Atoi() / 1024);
+      return true;
+   }
+   return false;
+};
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get system info for Linux. Only fBusSpeed is not set.
 
@@ -5121,17 +5151,9 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
             TPRegexp("^.+: *(.*$)").Substitute(s, "$1");
             sysinfo->fModel = s;
          }
-         if (s.BeginsWith("cpu MHz")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fCpuSpeed = s.Atoi();
-         }
-         if (s.BeginsWith("cache size")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fL2Cache = s.Atoi();
-         }
-         if (s.BeginsWith("processor")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fCpus = s.Atoi();
+         parseLine(s, "cpu MHz", sysinfo->fCpuSpeed);
+         parseLine(s, "cache size", sysinfo->fL2Cache);
+         if (parseLine(s, "processor", sysinfo->fCpus)) {
             sysinfo->fCpus++;
          }
       }
@@ -5141,9 +5163,7 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
    f = fopen("/proc/meminfo", "r");
    if (f) {
       while (s.Gets(f)) {
-         if (s.BeginsWith("MemTotal")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fPhysRam = (s.Atoi() / 1024);
+         if (parseLine(s, "MemTotal", sysinfo->fPhysRam)) {
             break;
          }
       }
@@ -5222,49 +5242,20 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
 {
    TString s;
    FILE *f = fopen("/proc/meminfo", "r");
-   if (!f) return;
+   if (!f)
+      return;
+
    while (s.Gets(f)) {
-      if (s.BeginsWith("MemTotal")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemTotal = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("MemFree")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemFree = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("MemAvailable")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemAvailable = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Cached")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemCached = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Buffers")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemBuffer = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Shmem")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemShared = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapTotal")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapTotal = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapFree")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapFree = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapCached")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapCached = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SReclaimable")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSReclaimable = (s.Atoi() / 1024);
-      }
-      
+      parseLine(s, "MemTotal", meminfo->fMemTotal);
+      parseLine(s, "MemFree", meminfo->fMemFree);
+      parseLine(s, "MemAvailable", meminfo->fMemAvailable);
+      parseLine(s, "Cached", meminfo->fMemCached);
+      parseLine(s, "Buffers", meminfo->fMemBuffer);
+      parseLine(s, "Shmem", meminfo->fMemShared);
+      parseLine(s, "SwapTotal", meminfo->fSwapTotal);
+      parseLine(s, "SwapFree", meminfo->fSwapFree);
+      parseLine(s, "SwapCached", meminfo->fSwapCached);
+      parseLine(s, "SReclaimable", meminfo->fSReclaimable);
    }
    fclose(f);
 

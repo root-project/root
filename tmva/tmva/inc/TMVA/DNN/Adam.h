@@ -63,10 +63,10 @@ protected:
                                                             /// bias gradients associated with the deep net.
 
    /*! Update the weights, given the current weight gradients. */
-   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
+   void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients) override;
 
    /*! Update the biases, given the current bias gradients. */
-   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients);
+   void UpdateBiases(size_t layerIndex, std::vector<Matrix_t> &biases, const std::vector<Matrix_t> &biasGradients) override;
 
 public:
    /*! Constructor. */

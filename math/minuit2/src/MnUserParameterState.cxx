@@ -20,15 +20,11 @@ namespace Minuit2 {
 // construct from user parameters (before minimization)
 //
 MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> err)
-   : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(MnUserParameters(par, err)),
-     fIntParameters(par.begin(), par.end())
+   : fValid(true), fCovStatus(-1), fParameters(MnUserParameters(par, err)), fIntParameters(par.begin(), par.end())
 {
 }
 
-MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
-   : fValid(true), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
-     fParameters(par)
+MnUserParameterState::MnUserParameterState(const MnUserParameters &par) : fValid(true), fCovStatus(-1), fParameters(par)
 {
    // construct from user parameters (before minimization)
 
@@ -46,13 +42,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
 // construct from user parameters + errors (before minimization)
 //
 MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> cov, unsigned int nrow)
-   : fValid(true),
-     fGCCValid(false),
-     fCovStatus(-1),
-     fFVal(0.),
-     fEDM(0.),
-     fNFcn(0),
-     fIntParameters(par.begin(), par.end())
+   : fValid(true), fCovStatus(-1), fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an
    // std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
@@ -68,13 +58,7 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, std::spa
 }
 
 MnUserParameterState::MnUserParameterState(std::span<const double> par, const MnUserCovariance &cov)
-   : fValid(true),
-     fGCCValid(false),
-     fCovStatus(-1),
-     fFVal(0.),
-     fEDM(0.),
-     fNFcn(0),
-     fIntParameters(par.begin(), par.end())
+   : fValid(true), fCovStatus(-1), fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance
    // class
@@ -90,7 +74,7 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, const Mn
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const MnUserCovariance &cov)
-   : fValid(true), fGCCValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par)
+   : fValid(true), fCovStatus(-1), fParameters(par)
 {
    // construct from user parameters + errors (before minimization) using
    // MnUserParameters and MnUserCovariance objects
@@ -110,8 +94,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const Mn
 //
 //
 MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, const MnUserTransformation &trafo)
-   : fValid(st.IsValid()), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()),
-     fNFcn(st.NFcn())
+   : fValid(st.IsValid()), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()), fNFcn(st.NFcn())
 {
    //
    // construct from internal parameters (after minimization)
@@ -165,8 +148,6 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
       fIntCovariance =
          MnUserCovariance({st.Error().InvHessian().Data(), st.Error().InvHessian().size()}, st.Error().InvHessian().Nrow());
       fCovariance.Scale(2. * up);
-      fGlobalCC = MnGlobalCorrelationCoeff(st.Error().InvHessian());
-      fGCCValid = fGlobalCC.IsValid();
 
       assert(fCovariance.Nrow() == VariableParameters());
 
@@ -237,7 +218,6 @@ void MnUserParameterState::Add(const std::string &name, double val, double err)
    if (fParameters.Add(name, val, err)) {
       fIntParameters.push_back(val);
       fCovarianceValid = false;
-      fGCCValid = false;
       fValid = true;
    } else {
       // redefine an existing parameter
@@ -262,7 +242,6 @@ void MnUserParameterState::Add(const std::string &name, double val, double err, 
    if (fParameters.Add(name, val, err, low, up)) {
       fCovarianceValid = false;
       fIntParameters.push_back(Ext2int(Index(name), val));
-      fGCCValid = false;
       fValid = true;
    } else { // Parameter already exist - just set values
       int i = Index(name);
@@ -335,7 +314,6 @@ void MnUserParameterState::Fix(unsigned int e)
       fIntParameters.erase(fIntParameters.begin() + i, fIntParameters.begin() + i + 1);
    }
    fParameters.Fix(e);
-   fGCCValid = false;
 }
 
 void MnUserParameterState::Release(unsigned int e)
@@ -346,7 +324,6 @@ void MnUserParameterState::Release(unsigned int e)
       return;
    fParameters.Release(e);
    fCovarianceValid = false;
-   fGCCValid = false;
    unsigned int i = IntOfExt(e);
    if (Parameter(e).HasLimits())
       fIntParameters.insert(fIntParameters.begin() + i, Ext2int(e, Parameter(e).Value()));
@@ -378,7 +355,6 @@ void MnUserParameterState::SetLimits(unsigned int e, double low, double up)
    // set limits for parameter e (external index)
    fParameters.SetLimits(e, low, up);
    fCovarianceValid = false;
-   fGCCValid = false;
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (low < fIntParameters[i] && fIntParameters[i] < up)
@@ -395,7 +371,6 @@ void MnUserParameterState::SetUpperLimit(unsigned int e, double up)
    // set upper limit for parameter e (external index)
    fParameters.SetUpperLimit(e, up);
    fCovarianceValid = false;
-   fGCCValid = false;
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (fIntParameters[i] < up)
@@ -410,7 +385,6 @@ void MnUserParameterState::SetLowerLimit(unsigned int e, double low)
    // set lower limit for parameter e (external index)
    fParameters.SetLowerLimit(e, low);
    fCovarianceValid = false;
-   fGCCValid = false;
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst()) {
       unsigned int i = IntOfExt(e);
       if (low < fIntParameters[i])
@@ -425,7 +399,6 @@ void MnUserParameterState::RemoveLimits(unsigned int e)
    // remove limit for parameter e (external index)
    fParameters.RemoveLimits(e);
    fCovarianceValid = false;
-   fGCCValid = false;
    if (!Parameter(e).IsFixed() && !Parameter(e).IsConst())
       fIntParameters[IntOfExt(e)] = Value(e);
 }
@@ -547,6 +520,21 @@ void MnUserParameterState::SetPrecision(double eps)
 {
    // set global parameter precision
    fParameters.SetPrecision(eps);
+}
+
+MnGlobalCorrelationCoeff MnUserParameterState::GlobalCC() const
+{
+   if (!fCovarianceValid) {
+      return MnGlobalCorrelationCoeff{}; // invalidate
+   }
+   int n = fIntCovariance.Nrow();
+   MnAlgebraicSymMatrix invHessian{static_cast<unsigned int>(n)};
+   for (int i = 0; i < n; ++i) {
+      for (int j = 0; j <= i; ++j) {
+         invHessian(i, j) = fIntCovariance(i, j);
+      }
+   }
+   return MnGlobalCorrelationCoeff{invHessian};
 }
 
 } // namespace Minuit2

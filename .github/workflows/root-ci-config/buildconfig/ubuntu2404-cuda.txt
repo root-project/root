@@ -1,13 +1,12 @@
 CMAKE_BUILD_TYPE=RelWithDebInfo
-pythia8=OFF
 cuda=ON
-ccache=ON
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
 tmva=ON
 tmva-cpu=ON
 tmva-gpu=ON
 tmva-cudnn=ON
-tmva-pymva=ON
-fortran=OFF
+tmva-pymva=OFF
 gdml=OFF
 spectrum=OFF
 sqlite=OFF

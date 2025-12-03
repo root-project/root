@@ -1,7 +1,9 @@
 #include "Utils.h"
 
+#include "CppInterOp/CppInterOp.h"
+
 #include "clang/AST/ASTContext.h"
-#include "clang/Interpreter/CppInterOp.h"
+#include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
@@ -76,7 +78,8 @@ TEST(TypeReflectionTest, GetSizeOfType) {
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[1])), 1);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[2])), 4);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[3])), 8);
-  EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[4])), 16);
+  struct B {int a; double b;};
+  EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[4])), sizeof(B));
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetTypeFromScope(Decls[5])), 0);
   EXPECT_EQ(Cpp::GetSizeOfType(Cpp::GetVariableType(Decls[6])),
             sizeof(intptr_t));
@@ -548,9 +551,15 @@ TEST(TypeReflectionTest, IsPODType) {
 }
 
 TEST(TypeReflectionTest, IsSmartPtrType) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
-  Cpp::CreateInterpreter();
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(R"(
     #include <memory>
@@ -588,7 +597,8 @@ TEST(TypeReflectionTest, IsSmartPtrType) {
 }
 
 TEST(TypeReflectionTest, IsFunctionPointerType) {
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(R"(
     typedef int (*int_func)(int, int);
@@ -601,4 +611,78 @@ TEST(TypeReflectionTest, IsFunctionPointerType) {
       Cpp::IsFunctionPointerType(Cpp::GetVariableType(Cpp::GetNamed("f"))));
   EXPECT_FALSE(
       Cpp::IsFunctionPointerType(Cpp::GetVariableType(Cpp::GetNamed("i"))));
+}
+
+TEST(TypeReflectionTest, OperatorSpelling) {
+  EXPECT_EQ(Cpp::GetSpellingFromOperator(Cpp::OP_Less), "<");
+  EXPECT_EQ(Cpp::GetSpellingFromOperator(Cpp::OP_Plus), "+");
+  EXPECT_EQ(Cpp::GetOperatorFromSpelling("->"), Cpp::OP_Arrow);
+  EXPECT_EQ(Cpp::GetOperatorFromSpelling("()"), Cpp::OP_Call);
+  EXPECT_EQ(Cpp::GetOperatorFromSpelling("invalid"), Cpp::OP_None);
+}
+
+TEST(TypeReflectionTest, TypeQualifiers) {
+  Cpp::CreateInterpreter();
+  Cpp::Declare(R"(
+    int *a;
+    int *__restrict__ b;
+    int *const c = 0;
+    int *volatile d;
+    int *const volatile e = nullptr;
+    int *__restrict__ const f = nullptr;
+    int *__restrict__ volatile g;
+    int *__restrict__ const volatile h = nullptr;
+  )");
+
+  Cpp::TCppType_t a = Cpp::GetVariableType(Cpp::GetNamed("a"));
+  Cpp::TCppType_t b = Cpp::GetVariableType(Cpp::GetNamed("b"));
+  Cpp::TCppType_t c = Cpp::GetVariableType(Cpp::GetNamed("c"));
+  Cpp::TCppType_t d = Cpp::GetVariableType(Cpp::GetNamed("d"));
+  Cpp::TCppType_t e = Cpp::GetVariableType(Cpp::GetNamed("e"));
+  Cpp::TCppType_t f = Cpp::GetVariableType(Cpp::GetNamed("f"));
+  Cpp::TCppType_t g = Cpp::GetVariableType(Cpp::GetNamed("g"));
+  Cpp::TCppType_t h = Cpp::GetVariableType(Cpp::GetNamed("h"));
+
+  EXPECT_FALSE(Cpp::HasTypeQualifier(nullptr, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::RemoveTypeQualifier(nullptr, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::AddTypeQualifier(nullptr, Cpp::QualKind::Const));
+
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Volatile));
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(b, Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(c, Cpp::QualKind::Const));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(d, Cpp::QualKind::Volatile));
+  EXPECT_TRUE(
+      Cpp::HasTypeQualifier(e, Cpp::QualKind::Const | Cpp::QualKind::Volatile));
+  EXPECT_TRUE(
+      Cpp::HasTypeQualifier(f, Cpp::QualKind::Const | Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(g, Cpp::QualKind::Volatile |
+                                           Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(h, Cpp::QualKind::Const |
+                                           Cpp::QualKind::Volatile |
+                                           Cpp::QualKind::Restrict));
+
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(b, Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(c, Cpp::QualKind::Const));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(d, Cpp::QualKind::Volatile));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(e, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(f, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(g, Cpp::QualKind::Volatile |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(e, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Restrict));
+  EXPECT_EQ(b, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile));
+
+  EXPECT_EQ(c, Cpp::AddTypeQualifier(a, Cpp::QualKind::Const));
+  EXPECT_EQ(d, Cpp::AddTypeQualifier(a, Cpp::QualKind::Volatile));
+  EXPECT_EQ(b, Cpp::AddTypeQualifier(a, Cpp::QualKind::Restrict));
+  EXPECT_EQ(h, Cpp::AddTypeQualifier(a, Cpp::QualKind::Const |
+                                            Cpp::QualKind::Volatile |
+                                            Cpp::QualKind::Restrict));
 }

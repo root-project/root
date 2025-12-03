@@ -1,0 +1,128 @@
+
+Processing relationsRun.C...
+relations' write
+byte written for entry   #0: 62
+values written for entry #0: 0, 0.000000, 0, 0.000000, 0, 0.000000
+byte written for entry   #1: 62
+values written for entry #1: 10, 1.000000, 22, 7.333333, 44, 14.666667
+byte written for entry   #2: 62
+values written for entry #2: 20, 2.000000, 44, 14.666667, 88, 29.333334
+byte written for entry   #3: 62
+values written for entry #3: 30, 3.000000, 66, 22.000000, 132, 44.000000
+byte written for entry   #4: 62
+values written for entry #4: 40, 4.000000, 88, 29.333334, 176, 58.666668
+byte written for entry   #5: 62
+values written for entry #5: 50, 5.000000, 110, 36.666668, 220, 73.333336
+byte written for entry   #6: 62
+values written for entry #6: 60, 6.000000, 132, 44.000000, 264, 88.000000
+byte written for entry   #7: 62
+values written for entry #7: 70, 7.000000, 154, 51.333332, 308, 102.666664
+byte written for entry   #8: 62
+values written for entry #8: 80, 8.000000, 176, 58.666668, 352, 117.333336
+byte written for entry   #9: 62
+values written for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
+******************************************************************************
+*Tree    :T         : An example of a ROOT tree                              *
+*Entries :       10 : Total =           12686 bytes  
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Branch  :B                                                                  *
+*Entries :       10 : BranchElement (see below)                              *
+*............................................................................*
+*Br    0 :DataObject :                                                       *
+*Entries :       10 : Total  Size=        642 bytes  File Size  =        222 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    1 :m_direct.m_entries : Int_t m_direct.m_entries_                     *
+*Entries :       10 : Total  Size=       2574 bytes  File Size  =        170 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :m_direct.m_entries.first : Int_t first[m_direct.m_entries_]        *
+*Entries :       10 : Total  Size=        851 bytes  File Size  =        176 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :m_direct.m_entries.second : Float_t second[m_direct.m_entries_]    *
+*Entries :       10 : Total  Size=        856 bytes  File Size  =        177 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    4 :m_direct.m_tentries : Int_t m_direct.m_tentries_                   *
+*Entries :       10 : Total  Size=       3775 bytes  File Size  =        123 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :m_direct.m_tentries.fUniqueID :                                    *
+*         | UInt_t fUniqueID[m_direct.m_tentries_]                           *
+*Entries :       10 : Total  Size=        878 bytes  File Size  =        181 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    6 :m_direct.m_tentries.fBits : UInt_t fBits[m_direct.m_tentries_]     *
+*Entries :       10 : Total  Size=        858 bytes  File Size  =        177 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    7 :m_direct.m_tentries.i : Int_t i[m_direct.m_tentries_]              *
+*Entries :       10 : Total  Size=        838 bytes  File Size  =        173 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    8 :m_direct.m_tentries.j : Float_t j[m_direct.m_tentries_]            *
+*Entries :       10 : Total  Size=        838 bytes  File Size  =        173 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    9 :m_direct.m_ptentries : Int_t m_direct.m_ptentries_                 *
+*Entries :       10 : Total  Size=       3798 bytes  File Size  =        124 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   10 :m_direct.m_ptentries.fUniqueID :                                   *
+*         | UInt_t fUniqueID[m_direct.m_ptentries_]                          *
+*Entries :       10 : Total  Size=        885 bytes  File Size  =        182 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   11 :m_direct.m_ptentries.fBits : UInt_t fBits[m_direct.m_ptentries_]   *
+*Entries :       10 : Total  Size=        865 bytes  File Size  =        178 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   12 :m_direct.m_ptentries.i : Int_t i[m_direct.m_ptentries_]            *
+*Entries :       10 : Total  Size=        845 bytes  File Size  =        174 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br   13 :m_direct.m_ptentries.j : Float_t j[m_direct.m_ptentries_]          *
+*Entries :       10 : Total  Size=        845 bytes  File Size  =        174 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+***********************************************************
+*    Row   * Instance * m_direct. * m_direct. * m_direct. *
+***********************************************************
+*        0 *        0 *         0 *         0 *         0 *
+*        1 *        0 *        10 *        22 *        44 *
+*        2 *        0 *        20 *        44 *        88 *
+*        3 *        0 *        30 *        66 *       132 *
+*        4 *        0 *        40 *        88 *       176 *
+*        5 *        0 *        50 *       110 *       220 *
+*        6 *        0 *        60 *       132 *       264 *
+*        7 *        0 *        70 *       154 *       308 *
+*        8 *        0 *        80 *       176 *       352 *
+*        9 *        0 *        90 *       198 *       396 *
+***********************************************************
+relations' read
+values read for entry #0: 0, 0.000000, 0, 0.000000, 0, 0.000000
+values read for entry #1: 10, 1.000000, 22, 7.333333, 44, 14.666667
+values read for entry #2: 20, 2.000000, 44, 14.666667, 88, 29.333334
+values read for entry #3: 30, 3.000000, 66, 22.000000, 132, 44.000000
+values read for entry #4: 40, 4.000000, 88, 29.333334, 176, 58.666668
+values read for entry #5: 50, 5.000000, 110, 36.666668, 220, 73.333336
+values read for entry #6: 60, 6.000000, 132, 44.000000, 264, 88.000000
+values read for entry #7: 70, 7.000000, 154, 51.333332, 308, 102.666664
+values read for entry #8: 80, 8.000000, 176, 58.666668, 352, 117.333336
+values read for entry #9: 90, 9.000000, 198, 66.000000, 396, 132.000000
+***********************************************************
+*    Row   * Instance * m_direct. * m_direct. * m_direct. *
+***********************************************************
+*        0 *        0 *         0 *         0 *         0 *
+*        1 *        0 *        10 *        22 *        44 *
+*        2 *        0 *        20 *        44 *        88 *
+*        3 *        0 *        30 *        66 *       132 *
+*        4 *        0 *        40 *        88 *       176 *
+*        5 *        0 *        50 *       110 *       220 *
+*        6 *        0 *        60 *       132 *       264 *
+*        7 *        0 *        70 *       154 *       308 *
+*        8 *        0 *        80 *       176 *       352 *
+*        9 *        0 *        90 *       198 *       396 *
+***********************************************************

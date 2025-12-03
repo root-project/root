@@ -21,7 +21,6 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-ClassImp(TBox);
 
 /** \class TBox
 \ingroup BasicGraphics
@@ -713,7 +712,7 @@ void TBox::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "box", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out, "box", 0, 1001);
+   SaveFillAttributes(out, "box", -1, -1);
    SaveLineAttributes(out, "box", 1, 1, 1);
 
    SavePrimitiveDraw(out, "box", option);

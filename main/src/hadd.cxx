@@ -45,8 +45,12 @@
   \param -experimental-io-features <FEATURES> Enables the corresponding experimental feature for output trees.
                                               \see ROOT::Experimental::EIOFeatures
   \param -f            Force overwriting of output file.
-  \param -f[0-9]       Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 101
-                       (kDefaultZLIB). You can also specify the full compression algorithm, e.g. -f505.
+  \param -f[0-9]       Set target compression algorithm `i` and level `j` passing the number `i*100 + j`, e.g. `-f505`.
+                       The last digit (`j`) can be set from 0 = uncompressed to 9 = highly compressed.
+                       The first digit (`i`) is 1 for ZLIB, 2 for LZMA, 4 for LZ4 and 5 for ZSTD.
+                       Recommended numbers are 101 (ZLIB), 207 (LZMA), 404 (LZ4), 505 (ZSTD),
+                       The default value for this flag is 101 (kDefaultZLIB).
+                       See ROOT::RCompressionSetting and TFile::TFile documentation for more details.
   \param -fk           Sets the target file to contain the baskets with the same compression as the input files
                        (unless -O is specified). Compresses the meta data using the compression level specified
                        in the first input or the compression setting after fk (for example 505 when using -fk505)
@@ -59,14 +63,21 @@
                        whitespaces or '/'. You can also pass TDirectory names, which apply to the entire directory
                        content. Lines beginning with '#' are ignored. If this flag is passed, "-Ltype" MUST be
                        passed as well.
-  \param -Ltype <SkipListed|OnlyListed> Sets the type of operation performed on the objects listed in FILE given with the
+  \param -Ltype <SkipListed|OnlyListed> Sets the type of operation performed on the objects listed in FILE given with
+  the
                        "-L" flag. "SkipListed" will skip all the listed objects; "OnlyListed" will only merge those
                        objects. If this flag is passed, "-L" must be passed as well.
   \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum - which is also
-                       the default)
+                       the default). This number includes both the input reading files as well as the output file.
+                       Thus, if set to 1, it will be automatically replaced to a minimum of 2. If set to a too large
+  value, it will be clipped to the system maximum.
   \param -O            Re-optimize basket size when merging TTree
   \param -T            Do not merge Trees
-  \param -v [LEVEL]    Explicitly set the verbosity level: 0 request no output, 99 is the default
+  \param -v [LEVEL]    Explicitly set the verbosity level:
+                            <= 0 = only output errors;
+                            1 = only output errors and warnings;
+                            2 = output minimal informative messages, errors and warnings (default);
+                            >= 3 = output all messages.
   \return hadd returns a status code: 0 if OK, 1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
@@ -140,6 +151,7 @@
 #include <ROOT/TIOFeatures.hxx>
 
 #include "haddCommandLineOptionsHelp.h"
+#include "logging.hxx"
 
 #include <climits>
 #include <cstdlib>
@@ -149,6 +161,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <streambuf>
 
 #ifndef R__WIN32
 #include "ROOT/TProcessExecutor.hxx"
@@ -156,23 +169,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline std::ostream &Err()
-{
-   std::cerr << "Error in <hadd>: ";
-   return std::cerr;
-}
-
-inline std::ostream &Warn()
-{
-   std::cerr << "Warning in <hadd>: ";
-   return std::cerr;
-}
-
-inline std::ostream &Info()
-{
-   std::cerr << "Info in <hadd>: ";
-   return std::cerr;
-}
+// NOTE: TFileMerger will use PrintLevel = GetLogVerbosity() - 1. If PrintLevel is < 1, it will print nothing, otherwise
+// it will print everything. To give some granularity to hadd, we do the following:
+// LogVerbosity = 0: only print hadd errors
+// LogVerbosity = 1: only print hadd errors + warnings
+// LogVerbosity = 2: print hadd errors + warnings and TFileMerger messages
+// LogVerbosity > 2: print all hadd and TFileMerger messages.
+static constexpr int kDefaultHaddVerbosity = 2;
 
 using IntFlag_t = uint32_t;
 
@@ -185,6 +188,7 @@ struct HAddArgs {
    bool fDebug;
    bool fKeepCompressionAsIs;
    bool fUseFirstInputCompression;
+   bool fHelp;
 
    std::optional<std::string> fWorkingDir;
    std::optional<IntFlag_t> fNProcesses;
@@ -520,6 +524,10 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "k", args.fSkipErrors);
          PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
+         // Accept --help, -help and -h as "help"
+         PARSE_FLAG(FlagToggle, arg, "-help", args.fHelp);
+         PARSE_FLAG(FlagToggle, arg, "help", args.fHelp);
+         PARSE_FLAG(FlagToggle, arg, "h", args.fHelp);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0});
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "Ltype", args.fObjectFilterType, {}, ConvertFilterType);
@@ -527,7 +535,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, {99});
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, {kDefaultHaddVerbosity});
          PARSE_FLAG(FlagF, arg, args);
 
 #undef PARSE_FLAG
@@ -592,7 +600,7 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
       }
 
       if (nObjects) {
-         Info() << "added " << nObjects << " object from filter file '" << *filterFileName << "'\n";
+         Info(2) << "added " << nObjects << " object from filter file '" << *filterFileName << "'\n";
          fileMerger.AddObjectNames(filteredObjects);
       } else {
          Warn() << "no objects were added from filter file '" << *filterFileName << "'\n";
@@ -608,19 +616,21 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
 
 int main(int argc, char **argv)
 {
-   if (argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1])) {
-      fprintf(stderr, kCommandLineOptionsHelp);
-      return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
-   }
+   InitLog("hadd", kDefaultHaddVerbosity);
 
    const auto argsOpt = ParseArgs(argc, argv);
    if (!argsOpt)
       return 1;
    const HAddArgs &args = *argsOpt;
 
+   if (args.fHelp) {
+      fputs(kCommandLineOptionsHelp, stderr);
+      return 0;
+   }
+
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
-   Int_t verbosity = args.fVerbosity.value_or(99);
+   SetLogVerbosity(args.fVerbosity.value_or(kDefaultHaddVerbosity));
    Int_t newcomp = args.fCompressionSettings.value_or(-1);
    TString cacheSize = args.fCacheSize.value_or("");
 
@@ -638,7 +648,7 @@ int main(int argc, char **argv)
       nProcesses = s.fCpus;
    }
    if (multiproc)
-      Info() << "parallelizing  with " << nProcesses << " processes.\n";
+      Info(2) << "parallelizing  with " << nProcesses << " processes.\n";
 
    // If the user specified a workingDir, use that. Otherwise, default to the system temp dir.
    std::string workingDir;
@@ -660,19 +670,20 @@ int main(int argc, char **argv)
    const char *targetname = 0;
    if (!args.fOutputArgIdx) {
       Err() << "missing output file.\n";
+      fputs(kCommandLineShortHelp, stderr);
       return 1;
    }
    if (!args.fFirstInputIdx) {
       Err() << "missing input file.\n";
+      fputs(kCommandLineShortHelp, stderr);
       return 1;
    }
    targetname = argv[args.fOutputArgIdx];
 
-   if (verbosity > 1)
-      Info() << "target file: " << targetname << "\n";
+   Info(2) << "target file: " << targetname << "\n";
 
    if (args.fCacheSize)
-      Info() << "Using " << cacheSize << "\n";
+      Info(2) << "Using " << cacheSize << "\n";
 
    ////////////////////////////// end flags processing /////////////////////////////////
 
@@ -680,7 +691,7 @@ int main(int argc, char **argv)
 
    TFileMerger fileMerger(kFALSE, kFALSE);
    fileMerger.SetMsgPrefix("hadd");
-   fileMerger.SetPrintLevel(verbosity - 1);
+   fileMerger.SetPrintLevel(GetLogVerbosity() - 1);
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
@@ -752,21 +763,22 @@ int main(int argc, char **argv)
          fileMerger.SetMergeOptions(TString("DefaultCompression"));
       }
    }
-   if (verbosity > 1) {
-      if (args.fKeepCompressionAsIs && !args.fReoptimize)
-         Info() << "compression setting for meta data: " << newcomp << '\n';
-      else
-         Info() << "compression setting for all output: " << newcomp << '\n';
-   }
+   if (args.fKeepCompressionAsIs && !args.fReoptimize)
+      Info(2) << "compression setting for meta data: " << newcomp << '\n';
+   else
+      Info(2) << "compression setting for all output: " << newcomp << '\n';
+
    if (args.fAppend) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
          Err() << "error opening target file for update :" << targetname << ".\n";
          return 2;
       }
    } else if (!fileMerger.OutputFile(targetname, args.fForce, newcomp)) {
-      Err() << "error opening target file (does " << targetname << " exist?).\n";
+      std::stringstream ss;
+      ss << "error opening target file (does " << targetname << " exist?).\n";
       if (!args.fForce)
-         Info() << "pass \"-f\" argument to force re-creation of output file.\n";
+         ss << "pass \"-f\" argument to force re-creation of output file.\n";
+      Err() << ss.str();
       return 1;
    }
 
@@ -775,9 +787,9 @@ int main(int argc, char **argv)
       // At least 3 files per process
       step = 3;
       nProcesses = (allSubfiles.size() + step - 1) / step;
-      Info() << "each process should handle at least 3 files for efficiency."
-                " Setting the number of processes to: "
-             << nProcesses << std::endl;
+      Info(2) << "each process should handle at least 3 files for efficiency."
+                 " Setting the number of processes to: "
+              << nProcesses << std::endl;
    }
    if (nProcesses == 1)
       multiproc = kFALSE;
@@ -811,6 +823,8 @@ int main(int argc, char **argv)
       }
       merger.SetNotrees(args.fNoTrees);
       merger.SetMergeOptions(TString(merger.GetMergeOptions()) + " " + cacheSize);
+      merger.SetErrorBehavior(args.fSkipErrors ? TFileMerger::EErrorBehavior::kSkipOnError
+                                               : TFileMerger::EErrorBehavior::kFailOnError);
       merger.SetIOFeatures(features);
       Int_t fileMergerFlags = TFileMerger::kAll;
       Int_t extraFlags = ParseFilterFile(args.fObjectFilterFile, args.fObjectFilterType, merger);
@@ -842,11 +856,11 @@ int main(int argc, char **argv)
    auto parallelMerge = [&](int start) {
       TFileMerger mergerP(kFALSE, kFALSE);
       mergerP.SetMsgPrefix("hadd");
-      mergerP.SetPrintLevel(verbosity - 1);
+      mergerP.SetPrintLevel(GetLogVerbosity() - 1);
       if (maxopenedfiles > 0) {
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
-      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), newcomp)) {
+      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), args.fForce, newcomp)) {
          Err() << "error opening target partial file\n";
          exit(1);
       }
@@ -885,16 +899,12 @@ int main(int argc, char **argv)
 #endif
 
    if (status) {
-      if (verbosity == 1) {
-         Info() << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
-                << ") input (partial) files into " << targetname << ".\n";
-      }
+      Info(3) << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+              << ") input (partial) files into " << targetname << "\n";
       return 0;
    } else {
-      if (verbosity == 1) {
-         Err() << "failure during the merge of " << allSubfiles.size() << " ("
-               << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
-      }
+      Err() << "failure during the merge of " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+            << ") input (partial) files into " << targetname << "\n";
       return 1;
    }
 }

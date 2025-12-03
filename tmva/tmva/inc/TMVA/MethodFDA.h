@@ -72,41 +72,41 @@ namespace TMVA {
 
       virtual ~MethodFDA( void );
 
-      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
-      void AddWeightsXMLTo      ( void* parent     ) const;
+      void AddWeightsXMLTo      ( void* parent     ) const override;
 
-      void ReadWeightsFromStream( std::istream & i );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream & i ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
-      virtual const std::vector<Float_t>& GetRegressionValues();
-      virtual const std::vector<Float_t>& GetMulticlassValues();
+      const std::vector<Float_t>& GetRegressionValues() override;
+      const std::vector<Float_t>& GetMulticlassValues() override;
 
-      void Init( void );
+      void Init( void ) override;
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return nullptr; }
+      const Ranking* CreateRanking() override { return nullptr; }
 
-      Double_t EstimatorFunction( std::vector<Double_t>& );
+      Double_t EstimatorFunction( std::vector<Double_t>& ) override;
 
       // no check of options at this place
-      void CheckSetup() {}
+      void CheckSetup() override {}
 
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
@@ -125,8 +125,8 @@ namespace TMVA {
       void PrintResults( const TString&, std::vector<Double_t>&, const Double_t ) const;
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       TString                fFormulaStringP;     ///< string with function
       TString                fParRangeStringP;    ///< string with ranges of parameters
@@ -151,7 +151,7 @@ namespace TMVA {
       //
       Int_t                  fOutputDimensions;   ///< number of output values
 
-      ClassDef(MethodFDA,0);  // Function Discriminant Analysis
+      ClassDefOverride(MethodFDA,0);  // Function Discriminant Analysis
    };
 
 } // namespace TMVA

@@ -1,0 +1,56 @@
+Running sequentially.
+Parallelism check
+Simple filtering
+Count ok 16000
+Count ko 0
+
+Adding branch and filter
+Count filter on added branch 8000
+
+Getting the mean, min and the max
+Mean of b2 8.53253e+07
+Min of b2 0
+Max of b2 2.55968e+08
+
+Add branch, filter, getting the min and the max
+After filter, min of b1 0
+After filter, max of b1 15999
+Histo1D
+Histo1D b1 entries and mean 16000 7999.5
+Histo1D with filter and new branch
+Histo1D tracks number entries and mean 1321 3.3081
+Histo1D track Pts entries and mean 1321 12.5923
+
+Getting a column as list
+Get: size of list<double> 16000
+
+Getting a column as vector
+Get: size of list<double> 16000
+***** Parallelism enabled. Running with 4!
+Parallelism check
+Simple filtering
+Count ok 16000
+Count ko 0
+
+Adding branch and filter
+Count filter on added branch 8000
+
+Getting the mean, min and the max
+Mean of b2 8.53253e+07
+Min of b2 0
+Max of b2 2.55968e+08
+
+Add branch, filter, getting the min and the max
+After filter, min of b1 0
+After filter, max of b1 15999
+Histo1D
+Histo1D b1 entries and mean 16000 7999.5
+Histo1D with filter and new branch
+Histo1D tracks number entries and mean 1321 3.3081
+Histo1D track Pts entries and mean 1321 12.5923
+
+Getting a column as list
+Get: size of list<double> 16000
+
+Getting a column as vector
+Get: size of list<double> 16000

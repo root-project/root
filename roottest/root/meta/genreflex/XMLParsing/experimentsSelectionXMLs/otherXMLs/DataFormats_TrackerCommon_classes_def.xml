@@ -1,0 +1,8 @@
+<lcgdict>
+ <class name="ClusterSummary">
+   <field name="userContent" transient="true"/>
+   <field name="genericVariablesTmp_" transient="true"/>
+ </class>
+ <class name="edm::Wrapper<ClusterSummary>"/>
+</lcgdict>
+

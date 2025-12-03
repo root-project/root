@@ -96,13 +96,34 @@ Note that this functionality requires the Python packages `numba` and `cffi` to 
 
 Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
 with Python libraries. For this purpose, we provide the `AsNumpy()` function, which returns the columns
-of your RDataFrame as a dictionary of NumPy arrays. See a simple example below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
+of your RDataFrame as a dictionary of NumPy arrays. See a few simple examples below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
 
+\anchor asnumpy_scalar_columns
+##### Scalar columns
+If your column contains scalar values of fundamental types (e.g., integers, floats), `AsNumpy()` produces NumPy arrays with the appropriate `dtype`:
 ~~~{.py}
-df = ROOT.RDataFrame("myTree", "myFile.root")
-cols = df.Filter("x > 10").AsNumpy(["x", "y"]) # retrieve columns "x" and "y" as NumPy arrays
-print(cols["x"], cols["y"]) # the values of the cols dictionary are NumPy arrays
+rdf = ROOT.RDataFrame(10).Define("int_col", "1").Define("float_col", "2.3")
+print(rdf.AsNumpy(["int_col", "float_col"]))
+# Output: {'int_col': array([...], dtype=int32), 'float_col': array([...], dtype=float64)}
 ~~~
+
+Columns containing non-fundamental types (e.g., objects, strings) will result in NumPy arrays with `dtype=object`.
+
+##### Collection Columns
+If your column contains collections of fundamental types (e.g., std::vector<int>), `AsNumpy()` produces a NumPy array with `dtype=object` where each 
+element is a NumPy array representing the collection for its corresponding entry in the column.
+
+If the collection at a certain entry contains values of fundamental types, or if it is a regularly shaped multi-dimensional array of a fundamental type, 
+then the numpy array representing the collection for that entry will have the `dtype` associated with the value type of the collection, for example:
+~~~{.py}
+rdf = rdf.Define("v_col", "std::vector<int>{{1, 2, 3}}")
+print(rdf.AsNumpy(["v_col", "int_col", "float_col"]))
+# Output: {'v_col': array([array([1, 2, 3], dtype=int32), ...], dtype=object), ...}
+~~~
+
+If the collection at a certain entry contains values of a non-fundamental type, `AsNumpy()` will fallback on the [default behavior](\ref asnumpy_scalar_columns) and produce a NumPy array with `dtype=object` for that collection.
+
+For more complex collection types in your entries, e.g. when every entry has a jagged array value, refer to the section on [interoperability with AwkwardArray](\ref awkward_interop).
 
 #### Processing data stored in NumPy arrays
 
@@ -124,6 +145,8 @@ df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 df.Define("z", "x + y").Snapshot("tree", "file.root")
 ~~~
 
+
+\anchor awkward_interop
 ### Interoperability with [AwkwardArray](https://awkward-array.org/doc/main/user-guide/how-to-convert-rdataframe.html)
 
 The function for RDataFrame to Awkward conversion is ak.from_rdataframe(). The argument to this function accepts a tuple of strings that are the RDataFrame column names. By default this function returns ak.Array type.
@@ -203,12 +226,21 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 
 \endpythondoc
 '''
-import sys
+
+from __future__ import annotations
+
+from typing import Iterable, Optional
+
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
 
-def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
+def RDataFrameAsNumpy(
+    df: ROOT.RDataFrame,  # noqa: F821
+    columns: Optional[Iterable[str]] = None,
+    exclude: Optional[Iterable[str]] = None,
+    lazy: bool = False,
+):
     """Read-out the RDataFrame as a collection of numpy arrays.
 
     The values of the dataframe are read out as numpy array of the respective type
@@ -226,6 +258,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     event-loop.
 
     Parameters:
+        df: The RDataFrame to read out.
         columns: If None return all branches as columns, otherwise specify names in iterable.
         exclude: Exclude branches from selection.
         lazy: Determines whether this action is instant (False, default) or lazy (True).
@@ -240,14 +273,14 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
 
     # Sanitize input arguments
     if isinstance(columns, str):
-        raise TypeError("The columns argument requires a list of strings")
+        raise TypeError("The columns argument requires an iterable of strings")
     if isinstance(exclude, str):
-        raise TypeError("The exclude argument requires a list of strings")
+        raise TypeError("The exclude argument requires an iterable of strings")
 
     # Early check for numpy
     try:
-        import numpy
-    except:
+        import numpy  # noqa: F401
+    except ImportError:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
@@ -255,18 +288,14 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         columns = [str(c) for c in df.GetColumnNames()]
 
     # Exclude the specified columns
-    if exclude == None:
+    if exclude is None:
         exclude = []
-    columns = [col for col in columns if not col in exclude]
+    columns = [col for col in columns if col not in exclude]
 
     # Register Take action for each column
     result_ptrs = {}
     for column in columns:
         column_type = df.GetColumnType(column)
-        # bool columns should be taken as unsigned chars, because NumPy stores
-        # bools in bytes - different from the std::vector<bool> returned by the
-        # action, which might do some space optimization
-        column_type = "unsigned char" if column_type == "bool" else column_type
 
         # If the column type is a class, make sure cling knows about it
         tclass = ROOT.TClass.GetClass(column_type)
@@ -274,8 +303,10 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
             raise RuntimeError(
                 f'The column named "{column}" is of type "{column_type}", which is not known to the ROOT interpreter. Please load the corresponding header files or dictionaries.'
             )
-
-        result_ptrs[column] = df.Take[column_type](column)
+        # We take the values via ROOT::RVec to avoid having to deal with std::vector<bool>
+        # This uses one single data structure for all array types, which exposes the array interface
+        # allowing zero-copy conversion to numpy array
+        result_ptrs[column] = df.Take[f"{column_type}, ROOT::RVec<{column_type}>"](column)
 
     result = AsNumpyResult(result_ptrs, columns)
 
@@ -310,7 +341,7 @@ class AsNumpyResult(object):
         self._columns = columns
         self._py_arrays = None
 
-    def GetValue(self):
+    def GetValue(self) -> dict:
         """Triggers, if necessary, the event loop to run the Take actions for
         the requested columns and produce the NumPy arrays as result.
 
@@ -321,6 +352,7 @@ class AsNumpyResult(object):
 
         if self._py_arrays is None:
             import numpy
+
             from ROOT._pythonization._rdf_utils import ndarray
 
             # Convert the C++ vectors to numpy arrays
@@ -333,7 +365,11 @@ class AsNumpyResult(object):
                 else:
                     tmp = numpy.empty(len(cpp_reference), dtype=object)
                     for i, x in enumerate(cpp_reference):
-                        tmp[i] = x  # This creates only the wrapping of the objects and does not copy.
+                        if hasattr(x, "__array_interface__"):
+                            tmp[i] = numpy.asarray(x)
+                        else:
+                            tmp[i] = x
+
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
 
         return self._py_arrays
@@ -474,7 +510,7 @@ def pythonize_rdataframe(klass):
 
     klass._OriginalFilter = klass.Filter
     klass._OriginalDefine = klass.Define
-    from ._rdf_pyz import _PyFilter, _PyDefine
+    from ._rdf_pyz import _PyDefine, _PyFilter
 
     klass.Filter = _PyFilter
     klass.Define = _PyDefine
@@ -487,18 +523,19 @@ def _make_name_rvec_pair(key, value):
     if not isinstance(key, str):
         raise RuntimeError("Object not convertible: Dictionary key is not convertible to a string.")
 
-    # Convert value to RVec and attach to dictionary
-    pyvec = ROOT.VecOps.AsRVec(value)
-    if not pyvec:
-        raise RuntimeError("Object not convertible: Dictionary entry " + key + " is not convertible with AsRVec.")
+    try:
+        # Convert value to RVec and attach to dictionary
+        pyvec = ROOT.VecOps.AsRVec(value)
+    except TypeError as e:
+        if "Cannot create an RVec from a numpy array of data type object" in str(e):
+            raise RuntimeError(
+                f"Failure in creating column '{key}' for RDataFrame: the input column type is 'object', which is not supported. Make sure your column type is supported."
+            ) from e
+        else:
+            raise
 
     # Add pairs of column name and associated RVec to signature
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
-
-
-# For references to keep alive the NumPy arrays that are read by
-# MakeNumpyDataFrame.
-_numpy_data = {}
 
 
 def _MakeNumpyDataFrame(np_dict):
@@ -523,23 +560,40 @@ def _MakeNumpyDataFrame(np_dict):
 
     # How we keep the NumPy arrays around as long as the RDataSource is alive:
     #
-    #  1. Cache a container with references to the NumPy arrays in a global
-    #     dictionary. Note that we use a copy of the original dict as the
-    #     container, because otherwise the caller of _MakeNumpyDataFrame can
-    #     invalidate our cache by mutating the np_dict after the call.
+    # 1. Create a new dict with references to the NumPy arrays and take
+    #    ownership of it on the C++ side (Py_INCREF). We use a copy of the
+    #    original dict, because otherwise the caller of _MakeNumpyDataFrame
+    #    can invalidate our cache by mutating the np_dict after the call.
     #
-    # 2. Together with the array data, store a deleter function to delete the
-    #    cache element in the cache itself.
-    #
-    # 3. The C++ side gets a reference to the deleter function via
-    #    std::function. Note that the C++ side can only get a non-owning
-    #    reference to the Python function, which is the reason why we have to
-    #    keep the deleter alive in the cache itself.
-    #
-    # 4. The RDataSource calls the deleter in its destructor.
+    # 2. The C++ side gets a deleter std::function, calling Py_DECREF when the
+    #    RDataSource is destroyed.
+
+    def _ensure_deleter_declared():
+        # If the function is already known to ROOT, skip declaring again
+        try:
+            ROOT.__ROOT_Internal.MakePyDeleter
+            return
+        except AttributeError:
+            pass
+
+        ROOT.gInterpreter.Declare(
+            r"""
+    #include <Python.h>
+
+    namespace __ROOT_Internal {
+
+    inline std::function<void()> MakePyDeleter(std::uintptr_t ptr) {
+        PyObject *obj = reinterpret_cast<PyObject*>(ptr);
+        Py_INCREF(obj);
+        return [obj](){ Py_DECREF(obj); };
+    }
+
+    } // namespace __ROOT_Internal
+    """
+        )
+
+    _ensure_deleter_declared()
 
     np_dict_copy = dict(**np_dict)
     key = id(np_dict_copy)
-    _numpy_data[key] = (lambda: _numpy_data.pop(key), np_dict_copy)
-    deleter = ROOT.std.function["void()"](_numpy_data[key][0])
-    return ROOT.Internal.RDF.MakeRVecDataFrame(deleter, *args)
+    return ROOT.Internal.RDF.MakeRVecDataFrame(ROOT.__ROOT_Internal.MakePyDeleter(key), *args)

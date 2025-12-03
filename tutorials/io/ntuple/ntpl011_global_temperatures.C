@@ -13,8 +13,6 @@
 /// \date 2021-02-26
 /// \author John Yoon
 
-// NOTE: The RNTuple classes are experimental at this point.
-// Functionality and interface are still subject to changes.
 // During ROOT setup, configure the following flags:
 // `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 // When running, make sure the ROOT web-based canvas is enabled,
@@ -46,7 +44,8 @@
 
 using Clock = std::chrono::high_resolution_clock;
 using RRawFile = ROOT::Internal::RRawFile;
-using namespace ROOT::Experimental;
+using ROOT::Experimental::RCanvas;
+using ROOT::Experimental::TObjectDrawable;
 
 // Helper function to handle histogram pointer ownership.
 std::shared_ptr<TH1D> GetDrawableHist(ROOT::RDF::RResultPtr<TH1D> &h)
@@ -72,7 +71,7 @@ void Ingest()
    auto t1 = Clock::now();
 
    // Create a unique pointer to an empty data model.
-   auto model = RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::Create();
    // To define the data model, create fields with a given C++ type and name.  Fields are roughly TTree branches.
    // MakeField returns a shared pointer to a memory location to fill the ntuple with data.
    auto fieldYear = model->MakeField<std::uint32_t>("Year");
@@ -87,7 +86,7 @@ void Ingest()
 
    // Hand-over the data model to a newly created ntuple of name "globalTempData", stored in kNTupleFileName.
    // In return, get a unique pointer to a fillable ntuple (first compress the file).
-   auto writer = RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "GlobalTempData", kNTupleFileName);
 
    // Download data in 4MB blocks
    RRawFile::ROptions options;

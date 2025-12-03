@@ -64,7 +64,7 @@ public:
       fGC = gc; fXftFont = (XftFont *)font;
    }
 
-   ~TXftFontData()
+   ~TXftFontData() override
    {
       if (References() == 1) {
          if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
@@ -144,7 +144,6 @@ public:
 static TTFX11Init gTTFX11Init;
 
 
-ClassImp(TGX11TTF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create copy of TGX11 but now use TrueType fonts.

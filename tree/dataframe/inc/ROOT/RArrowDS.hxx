@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RARROWTDS
-#define ROOT_RARROWTDS
+#ifndef ROOT_RARROWDS
+#define ROOT_RARROWDS
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"

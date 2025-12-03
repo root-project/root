@@ -31,7 +31,7 @@ class RooStepFunction : public RooAbsReal {
         RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, bool interpolate=false) ;
 
   RooStepFunction(const RooStepFunction& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooStepFunction(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooStepFunction(*this, newname); }
 
   const RooArgList& coefficients() { return _coefList; }
   const RooArgList& boundaries() { return _boundaryList; }

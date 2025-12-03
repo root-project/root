@@ -275,9 +275,6 @@ bool Fitter::FitFCN()
       MATH_ERROR_MSG("Fitter::FitFCN", "Objective function has not been set");
       return false;
    }
-   // look if FCN is of a known type and we can get retrieve the  model function and data objects
-   if (!fFunc || !fData)
-      ExamineFCN();
    // init the minimizer
    if (!DoInitMinimizer())
       return false;
@@ -972,24 +969,6 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    fObjFunction.swap( objFunc );
 
    return true;
-}
-
-
-
-void Fitter::ExamineFCN()  {
-   // return a pointer to the binned data used in the fit
-   // works only for chi2 or binned likelihood fits
-   // thus when the objective function stored is a Chi2Func or a PoissonLikelihood
-   // This also set the model function correctly if it has not been set
-
-   if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParamMultiFunction, BinData> >() ) return;
-   if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParamMultiFunction, UnBinData> >() ) return;
-
-   if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGradFunction, ROOT::Math::IParamMultiFunction, BinData> >() ) return;
-   if ( GetDataFromFCN<BasicFCN<ROOT::Math::IMultiGradFunction, ROOT::Math::IParamMultiFunction, UnBinData> >() ) return;
-
-   //MATH_INFO_MSG("Fitter::ExamineFCN","Objective function is not of a known type - FitData and ModelFunction objects are not available");
-   return;
 }
 
    } // end namespace Fit

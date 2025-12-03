@@ -75,7 +75,6 @@
 #pragma link C++ class RooStats::HypoTestInverter+;
 #pragma link C++ class RooStats::HypoTestInverterResult+;
 #pragma link C++ class RooStats::HypoTestInverterPlot+;
-#pragma link C++ class RooStats::HLFactory+;
 
 // in progress
 #pragma link C++ class RooStats::ConfidenceBelt+;

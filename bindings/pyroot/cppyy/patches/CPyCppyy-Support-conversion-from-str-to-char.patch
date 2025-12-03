@@ -1,20 +1,18 @@
-From 7d741bcd61fe523b67e29e9086f4b297c41d2588 Mon Sep 17 00:00:00 2001
+From efba5304cbe6e24fc00f6a20289be15b1dbe6a9e Mon Sep 17 00:00:00 2001
 From: Jonas Rembser <jonas.rembser@cern.ch>
-Date: Wed, 18 Dec 2024 02:53:11 +0100
-Subject: [PATCH] Support conversion from `str` to `char[]`
+Date: Tue, 29 Jul 2025 17:49:38 +0200
+Subject: [PATCH] [CPyCppyy] Support conversion from `str` to `char[]`
 
-This is for the ROOT usecase, where `char[]` is sometimes used as column
-types in TTrees to contain fixed-sized string labels.
 ---
  .../pyroot/cppyy/CPyCppyy/src/Converters.cxx  | 74 ++++++++++++-------
  .../cppyy/CPyCppyy/src/DeclareConverters.h    |  1 +
  2 files changed, 50 insertions(+), 25 deletions(-)
 
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-index fa62c04f47..c127604a6e 100644
+index a9461eba659..e38b34085c7 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
-@@ -1617,6 +1617,42 @@ bool CPyCppyy::VoidArrayConverter::ToMemory(PyObject* value, void* address, PyOb
+@@ -1645,6 +1645,42 @@ bool CPyCppyy::VoidArrayConverter::ToMemory(PyObject* value, void* address, PyOb
      return true;
  }
  
@@ -57,7 +55,7 @@ index fa62c04f47..c127604a6e 100644
  
  //----------------------------------------------------------------------------
  #define CPPYY_IMPL_ARRAY_CONVERTER(name, ctype, type, code, suffix)          \
-@@ -1697,31 +1733,7 @@ bool CPyCppyy::name##ArrayConverter::ToMemory(                               \
+@@ -1725,31 +1761,7 @@ bool CPyCppyy::name##ArrayConverter::ToMemory(                               \
      if (fShape.ndim() <= 1 || fIsFixed) {                                    \
          void* buf = nullptr;                                                 \
          Py_ssize_t buflen = Utility::GetBuffer(value, code, sizeof(type), buf);\
@@ -90,7 +88,7 @@ index fa62c04f47..c127604a6e 100644
      } else { /* multi-dim, non-flat array; assume structure matches */       \
          void* buf = nullptr; /* TODO: GetBuffer() assumes flat? */           \
          Py_ssize_t buflen = Utility::GetBuffer(value, code, sizeof(void*), buf);\
-@@ -1820,6 +1832,18 @@ PyObject* CPyCppyy::CStringArrayConverter::FromMemory(void* address)
+@@ -1852,6 +1864,18 @@ PyObject* CPyCppyy::CStringArrayConverter::FromMemory(void* address)
      return CreateLowLevelViewString(*(const char***)address, fShape);
  }
  
@@ -110,17 +108,17 @@ index fa62c04f47..c127604a6e 100644
  PyObject* CPyCppyy::NonConstCStringArrayConverter::FromMemory(void* address)
  {
 diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
-index 82a0e5d23b..5d26c9e569 100644
+index 5ca1c26cd78..16edf28b831 100644
 --- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 +++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
-@@ -237,6 +237,7 @@ public:
+@@ -249,6 +249,7 @@ public:
      using SCharArrayConverter::SCharArrayConverter;
-     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
-     virtual PyObject* FromMemory(void* address);
-+    virtual bool ToMemory(PyObject*, void*, PyObject* = nullptr);
+     bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
+     PyObject* FromMemory(void* address) override;
++    bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;
  
  private:
      std::vector<const char*> fBuffer;
 -- 
-2.47.0
+2.50.1
 

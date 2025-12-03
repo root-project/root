@@ -1,13 +1,10 @@
-import py, os
+import py, os, pytest
 from pytest import raises, skip, mark
-from .support import setup_make, pylong, IS_MAC_ARM
+from support import setup_make, pylong, IS_MAC_ARM
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("crossinheritanceDict"))
-
-def setup_module(mod):
-    setup_make("crossinheritance")
+currpath = os.getcwd()
+test_dct = currpath + "/libcrossinheritanceDict"
 
 
 class TestCROSSINHERITANCE:
@@ -230,6 +227,8 @@ class TestCROSSINHERITANCE:
         p1 = TPyDerived1()
         assert p1.get_value() == 13
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test08_error_handling(self):
         """Python errors should propagate through wrapper"""
 
@@ -272,6 +271,8 @@ class TestCROSSINHERITANCE:
         assert 'ValueError' in res
         assert os.path.basename(__file__) in res
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test09_interface_checking(self):
         """Conversion errors should be Python exceptions"""
 
@@ -1818,3 +1819,25 @@ class TestCROSSINHERITANCE:
         assert derived.s == "Hello"
         assert derived.t == "World"
 
+    def test39_returning_multi_keyword_types(self):
+        """Supporting dispatcher for functions that return multi-keyword types like `unsigned int`"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+              class MyUIntBaseClass {
+              public:
+                 virtual ~MyUIntBaseClass() = default;
+                 virtual unsigned int give_unsigned_int() const = 0;
+              };
+
+        """)
+
+        # Compiling the dispatcher for the overridden member function used to
+        # fail because of the `unsigned int` type, whose name has two keywords.
+        class MyUIntDerivedClass( cppyy.gbl.MyUIntBaseClass ):
+            def give_unsigned_int( self ):
+                return 1
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-ra', __file__]))

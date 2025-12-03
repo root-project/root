@@ -23,7 +23,7 @@ endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
 
 include(CheckLanguage)
-#---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
+#---Enable FORTRAN (unfortunately is not not possible in all cases)-------------------------------
 if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
@@ -42,10 +42,13 @@ if(fortran)
       # in a separate process, the result might not be compatible with
       # the C++ compiler, so reset the variable, ...
       unset(CMAKE_Fortran_COMPILER CACHE)
-      # ..., and enable Fortran again, this time prefering compilers
+      # ..., and enable Fortran again, this time preferring compilers
       # compatible to the C++ compiler
       enable_language(Fortran)
     endif()
+  endif()
+  if(NOT CMAKE_Fortran_COMPILER AND fail-on-missing)
+    message(FATAL_ERROR "No Fortran compiler found. Please make sure it's installed, or disable ROOT's Fortran features with '-Dfortran=OFF' (or set '-Dfail-on-missing=OFF' to automatically disable features with missing requirements)")
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -62,7 +65,7 @@ endif()
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  exec_program(${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info ERROR_VARIABLE _clang_version_info OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(REGEX REPLACE "^.*[ ]version[ ]([0-9]+)\\.[0-9]+.*" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
 
@@ -118,13 +121,52 @@ endif()
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 
+#---AR option for deterministic libraries---------------------------------------------
+# This matches the code in HandleLLVMOptions.cmake, in order to ensure consistency,
+# it must be set before any calls to add_library (in particular the plugins and Cling)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  # RHEL7 has ar and ranlib being non-deterministic by default. The D flag forces determinism,
+  # however only GNU version of ar and ranlib (2.27) have this option.
+  # RHEL DTS7 is also affected by this, which uses GNU binutils 2.28
+  execute_process(COMMAND ${CMAKE_AR} rD t.a
+                  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                  RESULT_VARIABLE AR_RESULT
+                  OUTPUT_QUIET
+                  ERROR_QUIET
+                  )
+  if(${AR_RESULT} EQUAL 0)
+    execute_process(COMMAND ${CMAKE_RANLIB} -D t.a
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    RESULT_VARIABLE RANLIB_RESULT
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+                    )
+    if(${RANLIB_RESULT} EQUAL 0)
+      set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>"
+          CACHE STRING "archive create command")
+      set(CMAKE_C_ARCHIVE_APPEND "<CMAKE_AR> Dq  <TARGET> <LINK_FLAGS> <OBJECTS>")
+      set(CMAKE_C_ARCHIVE_FINISH "<CMAKE_RANLIB> -D <TARGET>" CACHE STRING "ranlib command")
+
+      set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Dqc <TARGET> <LINK_FLAGS> <OBJECTS>"
+          CACHE STRING "archive create command")
+      set(CMAKE_CXX_ARCHIVE_APPEND "<CMAKE_AR> Dq  <TARGET> <LINK_FLAGS> <OBJECTS>")
+      set(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -D <TARGET>" CACHE STRING "ranlib command")
+    endif()
+    file(REMOVE ${CMAKE_BINARY_DIR}/t.a)
+  endif()
+endif()
+
 #---C++ standard----------------------------------------------------------------------
 
 # We want to set the default value of CMAKE_CXX_STANDARD to the compiler default,
 # so we check the value of __cplusplus.
 # This default value can be overridden by specifying one at the prompt.
 if (MSVC)
-   set(CXX_STANDARD_STRING "201703L")
+   if(MSVC_VERSION GREATER_EQUAL 1950)
+     set(CXX_STANDARD_STRING "202002L")
+   else()
+     set(CXX_STANDARD_STRING "201703L")
+   endif()
 else()
    execute_process(COMMAND echo __cplusplus
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
@@ -149,7 +191,9 @@ endif()
 # https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros
 # but note that compilers might denote partial implementations of new standards (e.g. c++1z)
 # with other non-standard values.
-if (${CXX_STANDARD_STRING} STRGREATER "201703L")
+if (${CXX_STANDARD_STRING} STRGREATER "202002L")
+   set(CXX_STANDARD_STRING 23 CACHE STRING "")
+elseif (${CXX_STANDARD_STRING} STRGREATER "201703L")
    set(CXX_STANDARD_STRING 20 CACHE STRING "")
 elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
    set(CXX_STANDARD_STRING 17 CACHE STRING "")
@@ -161,8 +205,8 @@ set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
 
-if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
-  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20.")
+if(NOT CMAKE_CXX_STANDARD MATCHES "17|20|23")
+  message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20, 23.")
 endif()
 
 #---Check for libcxx option------------------------------------------------------------

@@ -36,7 +36,7 @@ MA  02110-1301  USA
 
 #include "rsadef.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 rsa_NUMBER rsa_genprim(int, int);
 int    rsa_genrsa(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);

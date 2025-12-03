@@ -1,0 +1,26 @@
+
+Processing runPyClassTest.C...
+creating class MyPyClass ... 
+in MyPyClass.__init__
+string   (aap): aap
+string  (noot): noot
+long     (123): 123
+float  (0.456): 0.456
+double (0.789): 0.789
+creating class MyOtherPyClass ...
+in MyPyClass.__init__
+string (jet) : zus
+in MyOtherPyClass.__init__
+hop
+quack
+instance count: 1
+in MyOtherPyClass.__init__
+instance count: 2
+in MyOtherPyClass.__del__
+instance count: 1
+in MyOtherPyClass.__del__
+loading MyModule.py ...
+in MyPyClass.__init__
+Derived1 (42):  42
+in MyModule.MyPyClass.__init__
+Derived2 (5.0): 5

@@ -20,7 +20,6 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MinuitParameter.h"
 #include "Minuit2/MnLineSearch.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnStrategy.h"
@@ -69,7 +68,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    // the line search.
    auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>([&print](std::string const &s) { print.Info(s); },
                                                                       "Evaluated function and gradient in");
-   MinimumParameters pa(x, fcn(x));
+   MinimumParameters pa(x, MnFcnCaller{fcn}(x));
    FunctionGradient dgrad = gc(pa);
    timingScope.reset();
 
@@ -107,7 +106,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
       }
    }
 
-   if (stra.Strategy() == 2 && !st.HasCovariance()) {
+   if (stra.ComputeInitialHessian() && !st.HasCovariance()) {
       // calculate full 2nd derivative
 
       print.Debug("calling MnHesse");
@@ -155,10 +154,8 @@ MnSeedGenerator::CallWithAnalyticalGradientCalculator(const MnFcn &fcn, const An
    const MnMachinePrecision &prec = st.Precision();
 
    // initial starting values
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
+   MnAlgebraicVector x(st.IntParameters());
+   double fcnmin = MnFcnCaller{fcn}(x);
    MinimumParameters pa(x, fcnmin);
 
    // compute function gradient
@@ -237,7 +234,7 @@ MnSeedGenerator::CallWithAnalyticalGradientCalculator(const MnFcn &fcn, const An
    }
 
    // compute Hessian above will not have posdef check as it is done if we call MnHesse
-   if (stra.Strategy() == 2 && !st.HasCovariance() && !computedHessian) {
+   if (stra.ComputeInitialHessian() && !st.HasCovariance() && !computedHessian) {
       // can calculate full 2nd derivative
       MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
       print.Info("Compute full Hessian: Initial seeding state is ",tmpState);

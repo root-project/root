@@ -1,0 +1,19 @@
+Test class enum access and values ... ok
+Test global enums access and values ... ok
+Test copy constructor ... ok
+Test object validity checking ... ok
+Test access to elements in matrix and array objects. ... ok
+Test call to static function. ... ok
+Test access to namespaces and inner classes ... ok
+Test passing of variants of void pointer arguments ... ok
+Test access to cpp macro's ... ok
+Test passing around of opaque pointers ... ok
+Verify object and pointer comparisons ... ok
+Test recognition of '_' as part of a valid class name ... ok
+Check that constructor with default argument is found in namespace ... ok
+Templated data members need to retain namespaces of arguments ... ok
+Identity of templated classes with and w/o std:: should match ... ok
+
+----------------------------------------------------------------------
+
+OK

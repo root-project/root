@@ -1,0 +1,61 @@
+<lcgdict>
+  <class name="edm::AssociationMap<edm::OneToValue<reco::CaloJetCollection,reco::L2TauIsolationInfo, unsigned int> >">
+      <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToValue<reco::CaloJetCollection, reco::L2TauIsolationInfo, unsigned int > > >" />
+  <class name="std::map<unsigned int,reco::L2TauIsolationInfo>"/>
+  <class name="reco::L2TauIsolationInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="3469208847"/>
+  </class>
+
+
+  <class name="reco::BaseTauTagInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="2717397101"/>
+  </class>
+  <class name="std::vector<reco::BaseTauTagInfo>"/>
+  <class name="edm::Wrapper<std::vector<reco::BaseTauTagInfo> >"/>
+  <class name="edm::Ref<std::vector<reco::BaseTauTagInfo>,reco::BaseTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::BaseTauTagInfo>,reco::BaseTauTagInfo> >"/>
+  <class name="edm::RefProd<std::vector<reco::BaseTauTagInfo> >"/>
+  <class name="edm::RefVector<std::vector<reco::BaseTauTagInfo>,reco::BaseTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::BaseTauTagInfo>,reco::BaseTauTagInfo> >"/>
+  
+  <class name="reco::CaloTauTagInfo" ClassVersion="11">
+   <version ClassVersion="10" checksum="3077166108"/>
+   <version ClassVersion="11" checksum="442155907"/>
+  </class>
+  <class name="std::vector<reco::CaloTauTagInfo>"/>
+  <class name="edm::Wrapper<std::vector<reco::CaloTauTagInfo> >"/>
+  <class name="edm::Ref<std::vector<reco::CaloTauTagInfo>,reco::CaloTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloTauTagInfo>,reco::CaloTauTagInfo> >"/>
+  <class name="edm::RefProd<std::vector<reco::CaloTauTagInfo> >"/>
+  <class name="edm::RefVector<std::vector<reco::CaloTauTagInfo>,reco::CaloTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloTauTagInfo>,reco::CaloTauTagInfo> >"/>
+
+  <class name="reco::PFTauTagInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="2791906466"/>
+  </class>
+  <class name="std::vector<reco::PFTauTagInfo>"/>
+  <class name="edm::Wrapper<std::vector<reco::PFTauTagInfo> >"/>
+  <class name="edm::Ref<std::vector<reco::PFTauTagInfo>,reco::PFTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTauTagInfo>,reco::PFTauTagInfo> >"/>
+  <class name="edm::RefProd<std::vector<reco::PFTauTagInfo> >"/>
+  <class name="edm::RefVector<std::vector<reco::PFTauTagInfo>,reco::PFTauTagInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::PFTauTagInfo>,reco::PFTauTagInfo> >"/>
+  
+  <class name="reco::BaseTau" ClassVersion="10">
+   <version ClassVersion="10" checksum="3887454152"/>
+  </class>
+  <class name="std::vector<reco::BaseTau>"/>
+  <class name="edm::Wrapper<std::vector<reco::BaseTau> >"/>
+  <class name="edm::Ref<std::vector<reco::BaseTau>,reco::BaseTau,edm::refhelper::FindUsingAdvance<std::vector<reco::BaseTau>,reco::BaseTau> >"/>
+  <class name="edm::RefProd<std::vector<reco::BaseTau> >"/>
+  <class name="edm::RefVector<std::vector<reco::BaseTau>,reco::BaseTau,edm::refhelper::FindUsingAdvance<std::vector<reco::BaseTau>,reco::BaseTau> >"/>
+  <class name="edm::reftobase::Holder<reco::Candidate, edm::Ref<std::vector<reco::BaseTau>,reco::BaseTau,edm::refhelper::FindUsingAdvance<std::vector<reco::BaseTau>,reco::BaseTau> > >" />
+  
+  <class name="reco::CaloTau" ClassVersion="10">
+   <version ClassVersion="10" checksum="1329876375"/>
+  </class>
+  <class name="std::vector<reco::CaloTau>"/>
+  <class name="edm::Wrapper<std::vector<reco::CaloTau> >"/>
+  <class name="edm::Ref<std::vector<reco::CaloTau>,reco::CaloTau,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloTau>,reco::CaloTau> >"/>
+  <class name="edm::RefProd<std::vector<reco::CaloTau> >"/>
+  <class name="edm::RefVector<std::vector<reco::CaloTau>,reco::CaloTau,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloTau>,reco::CaloTau> >"/>
+  <class name="edm::reftobase::Holder<reco::BaseTau, edm::Ref<std::vector<reco::CaloTau>,reco::CaloTau,edm::refhelper::FindUsingAdvance<std::vector<reco::CaloTau>,reco::CaloTau> > >" />
+  
+
+</lcgdict>

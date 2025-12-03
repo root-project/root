@@ -15,7 +15,6 @@ wmax defines weight range (1,wmax), it is adjusted "manually"
 #include "TH1.h"
 #include "TFoamMaxwt.h"
 
-ClassImp(TFoamMaxwt);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for streamer
@@ -151,7 +150,7 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
          sumWt += bin1;
       }
       aveWt1 = sumWt/sum;
-      if( TMath::Abs(1.0-aveWt1/aveWt) > eps ) break;
+      if( std::abs(1.0-aveWt1/aveWt) > eps ) break;
    }
    /////////////////////////////////////////////////////////////////////////////
 

@@ -1,0 +1,55 @@
+ 
+<lcgdict>
+
+  <!--
+  <class name="ALFA_HitCollection_tlp1" id="9DCEE6AD-60A1-46C1-8770-A3BCFCEA875D" />
+  -->
+  
+  <class name="ALFA_Hit_p1" /> 
+  <class name="std::vector<ALFA_Hit_p1>" /> 
+  <class name="ALFA_HitCollection_p1" id="96320556-17C7-4E8D-9D15-DF955193F002" /> 
+  
+  <!--
+  <class name="std::vector<HepMcParticleLink_p1>" />  
+  -->
+  <class name="ALFA_Digit_p1" /> 
+  <class name="std::vector<ALFA_Digit_p1>" /> 
+  <class name="ALFA_DigitCollection_p1" id="0F21F6BB-6719-41D3-8219-3ABF523826CD" />
+  
+  <class name="ALFA_ODHit_p1" /> 
+  <class name="std::vector<ALFA_ODHit_p1>" /> 
+  <class name="ALFA_ODHitCollection_p1" id="11D7B0C9-54FF-44BF-A673-E9691004488B" /> 
+  
+  <class name="ALFA_ODDigit_p1" /> 
+  <class name="std::vector<ALFA_ODDigit_p1>" /> 
+  <class name="ALFA_ODDigitCollection_p1" id="26807BD7-E90A-4FDF-B1BF-0A7F821C5970" />  
+  
+  <class name="ALFA_RawData_p1" />
+  <class name="ALFA_RawDataCollection_p1" />
+  <class name="std::vector<ALFA_RawData_p1>" /> 
+  <class name="std::vector<ALFA_RawDataCollection_p1>" /> 
+  <class name="ALFA_RawDataContainer_p1" id="0C023583-E3D4-4C7D-9B20-B6B2A1018D2F" />
+  
+  <class name="ALFA_LocRecEvent_p1" /> 
+  <class name="std::vector<ALFA_LocRecEvent_p1>" /> 
+  <class name="ALFA_LocRecEvCollection_p1" id="C392157A-4519-44B5-A472-16D1F74F4CAD" />
+  
+  <class name="ALFA_LocRecODEvent_p1" /> 
+  <class name="std::vector<ALFA_LocRecODEvent_p1>" /> 
+  <class name="ALFA_LocRecODEvCollection_p1" id="D6688847-9903-4FDE-B709-879B0E470073" />
+  
+  <class name="ALFA_LocRecCorrEvent_p1" /> 
+  <class name="std::vector<ALFA_LocRecCorrEvent_p1>" /> 
+  <class name="ALFA_LocRecCorrEvCollection_p1" id="E6C77BF6-011B-4A7F-847A-E34A0B402976" />
+  
+  <class name="ALFA_LocRecCorrODEvent_p1" /> 
+  <class name="std::vector<ALFA_LocRecCorrODEvent_p1>" /> 
+  <class name="ALFA_LocRecCorrODEvCollection_p1" id="5EB65543-BEC9-4920-B545-F1C6AB88C289" />
+  
+  <class name="ALFA_GloRecEvent_p1" />
+  <class name="std::vector<ALFA_GloRecEvent_p1>" />
+  <class name="ALFA_GloRecEvCollection_p1" id="210D255A-F94F-4009-9A9B-2122597330D5" />
+  
+  <class name="ALFA_CLinkEvent_p1" id="D8FCB0A1-3B3E-4536-B590-1A48347B6E1A"/> 
+
+</lcgdict>  

@@ -194,75 +194,80 @@ private:
    // value of fPersistentRef is set to zero, leading the TClassRef to call
    // TClass::GetClass which is also locked by the replacement.   At the end
    // of the replacement, fPersistentRef points to the new TClass object.
-   std::atomic<TClass**> fPersistentRef;//!Persistent address of pointer to this TClass object and its successors.
+   std::atomic<TClass**> fPersistentRef = nullptr;//!Persistent address of pointer to this TClass object and its successors.
 
    typedef std::atomic<std::map<std::string, TObjArray*>*> ConvSIMap_t;
 
-   mutable TObjArray  *fStreamerInfo;           //Array of TVirtualStreamerInfo
-   mutable ConvSIMap_t fConversionStreamerInfo; //Array of the streamer infos derived from another class.
-   TList              *fRealData;        //linked list for persistent members including base classes
-   std::atomic<TList*> fBase;            //linked list for base classes
-   std::atomic<TListOfDataMembers*> fData;            //linked list for data members; non-owning.
-   std::atomic<TListOfDataMembers*> fUsingData;//linked list for data members pulled in through using decls.
+   mutable TObjArray  *fStreamerInfo = nullptr;           //Array of TVirtualStreamerInfo
+   mutable ConvSIMap_t fConversionStreamerInfo = nullptr; //Array of the streamer infos derived from another class.
+   TList              *fRealData = nullptr;               //linked list for persistent members including base classes
+   std::atomic<TList*> fBase = nullptr;                   //linked list for base classes
+   std::atomic<TListOfDataMembers*> fData = nullptr;      //linked list for data members; non-owning.
+   std::atomic<TListOfDataMembers*> fUsingData = nullptr; //linked list for data members pulled in through using decls.
 
-   std::atomic<TListOfEnums*> fEnums;        //linked list for the enums
-   TListOfFunctionTemplates  *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
-   std::atomic<TListOfFunctions*> fMethod;   //linked list for methods
+   std::atomic<TListOfEnums*> fEnums = nullptr;        //linked list for the enums
+   TListOfFunctionTemplates  *fFuncTemplate = nullptr; //linked list for function templates
+                                                       //[Not public until implemented as active list]
+   std::atomic<TListOfFunctions*> fMethod = nullptr;   //linked list for methods
 
-   TViewPubDataMembers*fAllPubData;     //all public data members (including from base classes)
-   TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
-   mutable TList     *fClassMenuList;   //list of class menu items
+   TViewPubDataMembers *fAllPubData = nullptr;     //all public data members (including from base classes)
+   TViewPubFunctions   *fAllPubMethod = nullptr;   //all public methods (including from base classes)
+   mutable TList       *fClassMenuList = nullptr;  //list of class menu items
 
-   const char        *fDeclFileName;    //name of class declaration file
-   const char        *fImplFileName;    //name of class implementation file
-   Short_t            fDeclFileLine;    //line of class declaration
-   Short_t            fImplFileLine;    //line of class implementation
-   UInt_t             fInstanceCount;   //number of instances of this class
-   UInt_t             fOnHeap;          //number of instances on heap
-   mutable std::atomic<UInt_t>  fCheckSum;        //checksum of data members and base classes
-   TVirtualCollectionProxy *fCollectionProxy; //Collection interface
-   Version_t          fClassVersion;    //Class version Identifier
-   ClassInfo_t       *fClassInfo;       //pointer to CINT class info class
-   TString            fContextMenuTitle;//context menu title
-   const std::type_info *fTypeInfo;        //pointer to the C++ type information.
-   ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
-   TClassStreamer    *fStreamer;        //pointer to streamer function
+   const char        *fDeclFileName = ""; //name of class declaration file
+   const char        *fImplFileName = ""; //name of class implementation file
+   Short_t            fDeclFileLine = 0;  //line of class declaration
+   Short_t            fImplFileLine = 0;  //line of class implementation
+   UInt_t             fInstanceCount = 0; //number of instances of this class
+   UInt_t             fOnHeap = 0;        //number of instances on heap
+   mutable std::atomic<UInt_t>  fCheckSum = 0; //checksum of data members and base classes
+   TVirtualCollectionProxy *fCollectionProxy = nullptr; //Collection interface
+   Version_t          fClassVersion = 0;    //Class version Identifier
+   ClassInfo_t       *fClassInfo = nullptr; //pointer to CINT class info class
+   TString            fContextMenuTitle; //context menu title
+   const std::type_info *fTypeInfo = nullptr; //pointer to the C++ type information.
+   ShowMembersFunc_t  fShowMembers = nullptr; //pointer to the class's ShowMembers function
+   TClassStreamer    *fStreamer = nullptr;    //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 
-   TVirtualIsAProxy  *fIsA;             //!pointer to the class's IsA proxy.
-   IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
-   mutable std::atomic<TMethodCall*> fIsAMethod;       //!saved info to call a IsA member function
+   TVirtualIsAProxy  *fIsA = nullptr;                      //!pointer to the class's IsA proxy.
+   IsAGlobalFunc_t    fGlobalIsA = nullptr;                //pointer to a global IsA function.
+   mutable std::atomic<TMethodCall*> fIsAMethod = nullptr; //!saved info to call a IsA member function
 
-   ROOT::MergeFunc_t   fMerge;          //pointer to a function implementing Merging objects of this class.
-   ROOT::ResetAfterMergeFunc_t fResetAfterMerge; //pointer to a function implementing Merging objects of this class.
-   ROOT::NewFunc_t     fNew;            //pointer to a function newing one object.
-   ROOT::NewArrFunc_t  fNewArray;       //pointer to a function newing an array of objects.
-   ROOT::DelFunc_t     fDelete;         //pointer to a function deleting one object.
-   ROOT::DelArrFunc_t  fDeleteArray;    //pointer to a function deleting an array of objects.
-   ROOT::DesFunc_t     fDestructor;     //pointer to a function call an object's destructor.
-   ROOT::DirAutoAdd_t  fDirAutoAdd;     //pointer which implements the Directory Auto Add feature for this class.']'
-   ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
-   ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
-   Int_t               fSizeof;         //Sizeof the class.
+   ROOT::BrowseFunc_t  fBrowse = nullptr;       //pointer to a function implementing the TBrowser Browse() call.
+   ROOT::MergeFunc_t   fMerge = nullptr;        //pointer to a function implementing Merging objects of this class.
+   //pointer to a function implementing Merging objects of this class.
+   ROOT::ResetAfterMergeFunc_t fResetAfterMerge = nullptr;
+   ROOT::NewFunc_t     fNew = nullptr;          //pointer to a function newing one object.
+   ROOT::NewArrFunc_t  fNewArray = nullptr;     //pointer to a function newing an array of objects.
+   ROOT::DelFunc_t     fDelete = nullptr;       //pointer to a function deleting one object.
+   ROOT::DelArrFunc_t  fDeleteArray = nullptr;  //pointer to a function deleting an array of objects.
+   ROOT::DesFunc_t     fDestructor = nullptr;   //pointer to a function call an object's destructor.
+   ROOT::DirAutoAdd_t  fDirAutoAdd = nullptr;   //pointer which implements the Directory Auto Add feature for this class.']'
+   ClassStreamerFunc_t fStreamerFunc = nullptr; //Wrapper around this class custom Streamer member function.
+   //Wrapper around this class custom conversion Streamer member function.
+   ClassConvStreamerFunc_t fConvStreamerFunc = nullptr;
+   Int_t               fSizeof = -1;            //Sizeof the class.
 
-   std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
+   std::atomic<Char_t> fCanSplit = -1; //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
    // Bit field
    /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
    /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
    Bool_t fIsSyntheticPair : 1;  //!
 
-   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based)
+   /// automatic streamer.
    Bool_t fHasCustomStreamerMember : 1; //!
 
-   mutable std::atomic<Long_t> fProperty; //!Property See TClass::Property() for details
-   mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
+   mutable std::atomic<Long_t> fProperty = 0;       //!Property See TClass::Property() for details
+   mutable Long_t              fClassProperty = 0;  //!C++ Property of the class (is abstract, has virtual table, etc.)
 
            // fHasRootPcmInfo needs to be atomic as long as GetListOfBases needs to modify it.
-           std::atomic<Bool_t> fHasRootPcmInfo;      //!Whether info was loaded from a root pcm.
-   mutable std::atomic<Bool_t> fCanLoadClassInfo;    //!Indicates whether the ClassInfo is supposed to be available.
-   mutable std::atomic<Bool_t> fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
-   mutable std::atomic<Bool_t> fVersionUsed;         //!Indicates whether GetClassVersion has been called
+           std::atomic<Bool_t> fHasRootPcmInfo = false;      //!Whether info was loaded from a root pcm.
+   mutable std::atomic<Bool_t> fCanLoadClassInfo = false;    //!Indicates whether the ClassInfo is supposed to be available.
+   mutable std::atomic<Bool_t> fIsOffsetStreamerSet = false; //!saved remember if fOffsetStreamer has been set.
+   mutable std::atomic<Bool_t> fVersionUsed = false;         //!Indicates whether GetClassVersion has been called
 
    enum class ERuntimeProperties : UChar_t {
       kNotInitialized = 0,
@@ -273,21 +278,21 @@ private:
    friend bool operator&(UChar_t l, ERuntimeProperties r) {
       return l & static_cast<UChar_t>(r);
    }
-   mutable std::atomic<UChar_t> fRuntimeProperties;    //! Properties that can only be evaluated at run-time
+   mutable std::atomic<UChar_t> fRuntimeProperties = 0;    //! Properties that can only be evaluated at run-time
 
-   mutable Longptr_t  fOffsetStreamer;  //!saved info to call Streamer
-   Int_t              fStreamerType;    //!cached of the streaming method to use
-   EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
-   mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
-   mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
-   TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
-   ROOT::Detail::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
+   mutable Longptr_t  fOffsetStreamer = 0;      //!saved info to call Streamer
+   Int_t              fStreamerType = kDefault; //!cached of the streaming method to use
+   EState             fState = kNoInfo;         //!Current 'state' of the class (Emulated,Interpreted,Loaded)
+   mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo = nullptr;   //!cached current streamer info.
+   mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo = nullptr;  //!cached streamer info used in the last read.
+   TVirtualRefProxy  *fRefProxy = nullptr;      //!Pointer to reference proxy if this class represents a reference
+   ROOT::Detail::TSchemaRuleSet *fSchemaRules = nullptr; //! Schema evolution rules
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER
-   mutable StreamerImpl_t fStreamerImpl; //! Pointer to the function implementing streaming for this class
+   mutable StreamerImpl_t fStreamerImpl = StreamerDefault; //! Pointer to the function implementing streaming for this class
 #else
-   mutable std::atomic<StreamerImpl_t> fStreamerImpl; //! Pointer to the function implementing streaming for this class
+   mutable std::atomic<StreamerImpl_t> fStreamerImpl = StreamerDefault; //! Pointer to the function implementing streaming for this class
 #endif
 
    Bool_t             CanSplitBaseAllow();
@@ -480,6 +485,7 @@ public:
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
+   ROOT::BrowseFunc_t GetBrowse() const;
    ROOT::MergeFunc_t  GetMerge() const;
    ROOT::ResetAfterMergeFunc_t  GetResetAfterMerge() const;
    ROOT::NewFunc_t    GetNew() const;
@@ -567,6 +573,7 @@ public:
    void               SetDirectoryAutoAdd(ROOT::DirAutoAdd_t dirAutoAddFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);
    void               SetImplFileName(const char *implFileName) { fImplFileName = implFileName; }
+   void               SetBrowse(ROOT::BrowseFunc_t browseFunc);
    void               SetMerge(ROOT::MergeFunc_t mergeFunc);
    void               SetResetAfterMerge(ROOT::ResetAfterMergeFunc_t resetFunc);
    void               SetNew(ROOT::NewFunc_t newFunc);

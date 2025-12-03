@@ -169,12 +169,15 @@ TEST(RooDataSet, ReducingData)
 
    for (int i = 0; i < 3; ++i) {
       // Check with root:
-      TH1F test_hist(Form("h%i", i), "histo", 10, massmin, massmax);
+      TH1F test_hist(("h" + std::to_string(i)).c_str(), "histo", 10, massmin, massmax);
       chi2cutval += 0.5;
 
-      TCut chi2_test_cut = Form("max(track0_chi2,track1_chi2)<%f", chi2cutval);
+      std::stringstream cutString;
+      cutString << "max(track0_chi2,track1_chi2)<" << chi2cutval;
+      TCut chi2_test_cut = cutString.str().c_str();
 
-      Long64_t drawnEvents = mytree.Draw(Form("mass>>h%i", i), chi2_test_cut /*&& mass_cut*/);
+      std::string drawString = std::string{"mass>>"} + test_hist.GetName();
+      Long64_t drawnEvents = mytree.Draw(drawString.c_str(), chi2_test_cut /*&& mass_cut*/);
       ASSERT_NE(drawnEvents, 0l);
       ASSERT_EQ(test_hist.Integral(), drawnEvents);
 
@@ -391,8 +394,8 @@ TEST(RooDataSet, SplitDataSetWithWeightErrors)
 
    data1.add({x, cat}, 2.0, 0.3);
 
-   std::unique_ptr<TList> dataList{data1.split(cat, true)};
-   auto &data2 = static_cast<RooDataSet &>(*dataList->At(0));
+   std::vector<std::unique_ptr<RooAbsData>> dataList{data1.split(cat, true)};
+   RooAbsData &data2 = *dataList[0];
 
    data1.Print();
 

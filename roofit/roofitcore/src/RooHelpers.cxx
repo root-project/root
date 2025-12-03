@@ -17,10 +17,13 @@
 #include <RooAbsPdf.h>
 #include <RooAbsRealLValue.h>
 #include <RooArgList.h>
+#include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooMultiPdf.h>
 #include <RooProdPdf.h>
 #include <RooRealSumPdf.h>
+#include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
 #include <ROOT/StringUtils.hxx>
@@ -146,6 +149,23 @@ void checkRangeOfParameters(const RooAbsReal *callingClass, std::initializer_lis
             << (!extraMessage.empty() ? "\n" : "") << extraMessage << std::endl;
       }
    }
+}
+
+bool setAllConstant(const RooAbsCollection &coll, bool constant)
+{
+   bool changed = false;
+   for (RooAbsArg *a : coll) {
+      RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+      RooCategory *cv = dynamic_cast<RooCategory *>(a);
+      if (v && (v->isConstant() != constant)) {
+         changed = true;
+         v->setConstant(constant);
+      } else if (cv && (cv->isConstant() != constant)) {
+         changed = true;
+         cv->setConstant(constant);
+      }
+   }
+   return changed;
 }
 
 } // namespace RooHelpers

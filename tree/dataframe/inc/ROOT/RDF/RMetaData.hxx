@@ -15,6 +15,11 @@
 #include <memory>
 
 namespace ROOT {
+namespace RDF {
+namespace Experimental {
+class RMetaData;
+}
+} // namespace RDF
 
 namespace Internal {
 namespace RDF {
@@ -22,6 +27,8 @@ namespace RDF {
 // we should not forward declare nlohmann::json directly, since its declaration
 // might change (it is currently a typedef). With this wrapper type, we are
 // completely decoupled on nlohmann::json in the RMetaData interface.
+void ImportJSON(ROOT::RDF::Experimental::RMetaData &metadata, const std::string &jsonString);
+std::string ExportJSON(ROOT::RDF::Experimental::RMetaData &metadata);
 struct RMetaDataJson;
 }
 }
@@ -44,10 +51,13 @@ namespace Experimental {
 
  The RMetaData object is passed to an RSample object which represents a single dataset sample.
 
- A dataframe built with the RMetaData object can be accessed with the \ref ROOT::RDF::RInterface< Proxied,
-DS_t>::DefinePerSample "DefinePerSample()" method.
+ A dataframe built with the RMetaData object can be accessed with the
+ \ref ROOT::RDF::RInterface<Proxied>::DefinePerSample "DefinePerSample()" method.
 **/
 class RMetaData {
+   friend void ROOT::Internal::RDF::ImportJSON(ROOT::RDF::Experimental::RMetaData &, const std::string &jsonString);
+   friend std::string ROOT::Internal::RDF::ExportJSON(ROOT::RDF::Experimental::RMetaData &);
+
 public:
 
    RMetaData();

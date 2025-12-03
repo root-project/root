@@ -39,7 +39,7 @@ async function iterate_issues() {
   const { search: { nodes: issues } } = await graphql(
     `
       {
-        search(query: "repo:root-project/root is:issue is:closed no:project", type: ISSUE, first: 100) {
+        search(query: "repo:root-project/root is:issue is:closed no:project reason:completed", type: ISSUE, first: 100) {
           nodes {
             ... on Issue {
               number

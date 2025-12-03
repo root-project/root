@@ -30,6 +30,7 @@ public:
    void Paint(Option_t *option="") override;
    void PaintAnnotation(Double_t x, Double_t y, Double_t z, Double_t angle, Double_t size, const Char_t *text);
    void Print(Option_t *option="") const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    void SetZ(double z) { fZ = z; } // *MENU*
    double GetZ() const { return fZ; }

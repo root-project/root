@@ -31,7 +31,6 @@ Rendering of TH2 and derived classes.
 Interface to plot-painters also used for gl-in-pad.
 */
 
-ClassImp(TH2GL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

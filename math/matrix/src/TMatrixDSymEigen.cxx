@@ -26,7 +26,6 @@
 #include "TMatrixDSymEigen.h"
 #include "TMath.h"
 
-ClassImp(TMatrixDSymEigen);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for eigen-problem of symmetric matrix A .

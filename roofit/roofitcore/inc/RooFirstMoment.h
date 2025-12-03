@@ -31,7 +31,7 @@ public:
   RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool intNSet=false) ;
 
   RooFirstMoment(const RooFirstMoment& other, const char* name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooFirstMoment(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooFirstMoment(*this, newname); }
 
   const RooAbsReal& xF() { return _xf.arg() ; }
   const RooAbsReal& ixF() { return _ixf.arg() ; }

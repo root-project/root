@@ -31,7 +31,7 @@ MA  02110-1301  USA
 *                                                                              *
 *******************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 
 #ifndef ROOT_rsafun
 #define ROOT_rsafun

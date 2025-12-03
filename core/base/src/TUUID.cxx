@@ -124,8 +124,8 @@ system clock catches up.
 #include "Bytes.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 #ifdef R__WIN32
 #include "Windows4Root.h"
 #include <Iphlpapi.h>
@@ -145,7 +145,6 @@ system clock catches up.
 #endif
 #include <chrono>
 
-ClassImp(TUUID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a UUID.

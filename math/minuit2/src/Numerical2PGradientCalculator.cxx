@@ -18,7 +18,6 @@
 #include "Minuit2/MnPrint.h"
 
 #include "./MPIProcess.h"
-#include "./MnFcnCaller.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -36,8 +35,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 {
    // calculate gradient using Initial gradient calculator and from MinimumParameters object
 
-   InitialGradientCalculator gc(fFcn, fTransformation);
-   FunctionGradient gra = gc(par);
+   FunctionGradient gra = calculateInitialGradient(par, fTransformation, fFcn.ErrorDef());
 
    return (*this)(par, gra);
 }
@@ -48,20 +46,20 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    // calculate numerical gradient from MinimumParameters object
    // the algorithm takes correctly care when the gradient is approximately zero
 
+   MnUserTransformation const &trafo = fTransformation;
+
    //    std::cout<<"########### Numerical2PDerivative"<<std::endl;
    //    std::cout<<"initial grd: "<<Gradient.Grad()<<std::endl;
    //    std::cout<<"position: "<<par.Vec()<<std::endl;
    MnPrint print("Numerical2PGradientCalculator");
-
-   MnFcnCaller mfcnCaller{fFcn};
 
    assert(par.IsValid());
 
    double fcnmin = par.Fval();
    //   std::cout<<"fval: "<<fcnmin<<std::endl;
 
-   double eps2 = Precision().Eps2();
-   double eps = Precision().Eps();
+   double eps2 = trafo.Precision().Eps2();
+   double eps = trafo.Precision().Eps();
 
    //print.Trace("Assumed precision eps", eps, "eps2", eps2);
 
@@ -73,7 +71,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    //    std::cout << " ncycle " << Ncycle() << std::endl;
 
    unsigned int n = (par.Vec()).size();
-   unsigned int ncycle = Ncycle();
+   unsigned int ncycle = fStrategy.GradientNCycles();
    //   MnAlgebraicVector vgrd(n), vgrd2(n), vgstp(n);
    MnAlgebraicVector grd = Gradient.Grad();
    MnAlgebraicVector g2 = Gradient.G2();
@@ -87,6 +85,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    // for serial execution this can be outside the loop
    MnAlgebraicVector x = par.Vec();
+   MnFcnCaller mfcnCaller{fFcn};
 
    unsigned int startElementIndex = mpiproc.StartElementIndex();
    unsigned int endElementIndex = mpiproc.EndElementIndex();
@@ -97,10 +96,11 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    // parallelize this loop using OpenMP
 //#define N_PARALLEL_PAR 5
-#pragma omp parallel
-#pragma omp for
+#pragma omp parallel for if (fDoParallelOMP)
    //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
+   // Note: the MSVC compiler enforces that the index variable in OpenMP 'for'
+   // statements must have signed int type!
    for (int i = 0; i < int(n); i++) {
 
 #endif
@@ -108,6 +108,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 #ifdef _OPENMP
       // create in loop since each thread will use its own copy
       MnAlgebraicVector x = par.Vec();
+      MnFcnCaller mfcnCaller{fFcn};
 #endif
 
       double xtf = x(i);
@@ -117,7 +118,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          double optstp = std::sqrt(dfmin / (std::fabs(g2(i)) + epspri));
          double step = std::max(optstp, std::fabs(0.1 * gstep(i)));
          //       std::cout<<"step: "<<step;
-         if (Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
+         if (trafo.Parameter(trafo.ExtOfInt(i)).HasLimits()) {
             if (step > 0.5)
                step = 0.5;
          }
@@ -130,7 +131,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
             step = stpmin;
          //       std::cout<<" "<<step<<std::endl;
          //       std::cout<<"step: "<<step<<std::endl;
-         if (std::fabs((step - stepb4) / step) < StepTolerance()) {
+         if (std::fabs((step - stepb4) / step) < fStrategy.GradientStepTolerance()) {
             //    std::cout<<"(step-stepb4)/step"<<std::endl;
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
@@ -138,10 +139,6 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          }
          gstep(i) = step;
          stepb4 = step;
-         //       MnAlgebraicVector pstep(n);
-         //       pstep(i) = step;
-         //       double fs1 = mfcnCaller(pstate + pstep);
-         //       double fs2 = mfcnCaller(pstate - pstep);
 
          x(i) = xtf + step;
          double fs1 = mfcnCaller(x);
@@ -178,14 +175,14 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
             print.Trace([&](std::ostream &os) {
 #endif
                const int pr = os.precision(13);
-               const int iext = Trafo().ExtOfInt(i);
-               os << std::setw(10) << Trafo().Name(iext) << std::setw(5) << j << "  " << x(i) << " " << step << " "
+               const int iext = trafo.ExtOfInt(i);
+               os << std::setw(10) << trafo.Name(iext) << std::setw(5) << j << "  " << x(i) << " " << step << " "
                   << fs1 << " " << fs2 << " " << grd(i) << " " << g2(i) << std::endl;
                os.precision(pr);
             });
          }
 
-         if (std::fabs(grdb4 - grd(i)) / (std::fabs(grd(i)) + dfmin / step) < GradTolerance()) {
+         if (std::fabs(grdb4 - grd(i)) / (std::fabs(grd(i)) + dfmin / step) < fStrategy.GradientTolerance()) {
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
             //    std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
@@ -212,37 +209,13 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
       os << std::setw(14) << "Parameter" << std::setw(14) << "Gradient" << std::setw(14) << "g2 " << std::setw(14)
          << "step" << std::endl;
       for (int i = 0; i < int(n); i++) {
-         const int iext = Trafo().ExtOfInt(i);
-         os << std::setw(14) << Trafo().Name(iext) << " " << grd(i) << " " << g2(i) << " " << gstep(i) << std::endl;
+         const int iext = trafo.ExtOfInt(i);
+         os << std::setw(14) << trafo.Name(iext) << " " << grd(i) << " " << g2(i) << " " << gstep(i) << std::endl;
       }
       os.precision(pr);
    });
 
    return FunctionGradient(grd, g2, gstep);
-}
-
-const MnMachinePrecision &Numerical2PGradientCalculator::Precision() const
-{
-   // return global precision (set in transformation)
-   return fTransformation.Precision();
-}
-
-unsigned int Numerical2PGradientCalculator::Ncycle() const
-{
-   // return number of cycles for gradient calculation (set in strategy object)
-   return Strategy().GradientNCycles();
-}
-
-double Numerical2PGradientCalculator::StepTolerance() const
-{
-   // return gradient step tolerance (set in strategy object)
-   return Strategy().GradientStepTolerance();
-}
-
-double Numerical2PGradientCalculator::GradTolerance() const
-{
-   // return gradient tolerance (set in strategy object)
-   return Strategy().GradientTolerance();
 }
 
 } // namespace Minuit2

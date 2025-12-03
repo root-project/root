@@ -112,8 +112,6 @@ TGMyFrame::~TGMyFrame()
 #include <iostream>
 
 
-ClassImp(TGXYLayout);
-ClassImp(TGXYLayoutHints);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. The x, y, w and h define the position of the widget in

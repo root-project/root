@@ -88,6 +88,8 @@ void checkRangeOfParameters(const RooAbsReal *callingClass, std::initializer_lis
                             double max = std::numeric_limits<double>::max(), bool limitsInAllowedRange = false,
                             std::string const &extraMessage = "");
 
+/// set all RooRealVars to constants. return true if at least one changed status
+bool setAllConstant(const RooAbsCollection &coll, bool constant = true);
 
 } // namespace RooHelpers
 

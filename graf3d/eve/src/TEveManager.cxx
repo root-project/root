@@ -52,7 +52,6 @@ Central application manager for Eve.
 Manages elements, GUI, GL scenes and GL viewers.
 */
 
-ClassImp(TEveManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -790,7 +789,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       gGeoManager->GetTopVolume()->VisibleDaughters(true);
 
       // Import colors exported by Gled, if they exist.
-      {
+      if (exp_filename.EndsWith(".root")) {
          TFile f(exp_filename, "READ");
          TObjArray* collist = (TObjArray*) f.Get("ColorList");
          f.Close();
@@ -930,7 +929,6 @@ void TEveManager::Terminate()
 Exception handler for Eve exceptions.
 */
 
-ClassImp(TEveManager::TExceptionHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle exceptions deriving from TEveException.

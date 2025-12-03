@@ -104,7 +104,7 @@ public:
    /*
       clone the function
     */
-   virtual BaseFunction * Clone() const {
+   BaseFunction * Clone() const override {
       return new Chi2FCN(*this);
    }
 
@@ -114,13 +114,13 @@ public:
 
 
    /// i-th chi-square residual
-   virtual double DataElement(const double *x, unsigned int i, double *g, double * h = nullptr, bool fullHessian = false) const {
+   double DataElement(const double *x, unsigned int i, double *g, double * h = nullptr, bool fullHessian = false) const override {
       if (i==0) this->UpdateNCalls();
       return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
    // need to be virtual to be instantiated
-   virtual void Gradient(const double *x, double *g) const {
+   void Gradient(const double *x, double *g) const override {
       // evaluate the chi2 gradient
       FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
                                              fExecutionPolicy);
@@ -128,7 +128,7 @@ public:
 
 
    /// get type of fit method function
-   virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }
+   typename BaseObjFunction::Type_t Type() const override { return BaseObjFunction::kLeastSquare; }
 
 
 protected:
@@ -141,7 +141,7 @@ private:
    /**
       Evaluation of the  function (required by interface)
     */
-   virtual double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
       this->UpdateNCalls();
       if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
          return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
@@ -150,7 +150,7 @@ private:
    }
 
    // for derivatives
-   virtual double  DoDerivative(const double * x, unsigned int icoord ) const {
+   double DoDerivative(const double * x, unsigned int icoord) const override {
       Gradient(x, fGrad.data());
       return fGrad[icoord];
    }

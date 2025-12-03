@@ -137,8 +137,8 @@ R__EXTERN const char *kCheckMsg;
          ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
-R__EXTERN Int_t  gErrorIgnoreLevel;
-R__EXTERN Int_t  gErrorAbortLevel;
-R__EXTERN Bool_t gPrintViaErrorHandler;
+R__EXTERN Int_t  gErrorIgnoreLevel;    ///< errors with level below this value will be ignored. Default is `kUnset`.
+R__EXTERN Int_t  gErrorAbortLevel;     ///< non-ignored errors with level equal or above this value will call abort(). Default is `kSysError+1`.
+R__EXTERN Bool_t gPrintViaErrorHandler;///< If true, ROOT's `Printf` will print via the currently active ROOT error handler; if false (default), it will use the standard `printf`.
 
 #endif

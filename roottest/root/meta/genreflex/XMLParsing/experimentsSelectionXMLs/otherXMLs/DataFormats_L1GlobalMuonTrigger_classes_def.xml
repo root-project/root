@@ -1,0 +1,27 @@
+<lcgdict>
+ <class name="L1MuRegionalCand" ClassVersion="10">
+  <version ClassVersion="10" checksum="362725807"/>
+ </class>
+ <class name="std::vector<L1MuRegionalCand>"/>
+ <class name="edm::Wrapper<std::vector<L1MuRegionalCand> >" splitLevel="0"/>
+ <class name="L1MuGMTCand" ClassVersion="10">
+  <version ClassVersion="10" checksum="727951624"/>
+ </class>
+ <class name="std::vector<L1MuGMTCand>"/>
+ <class name="edm::Ref<std::vector<L1MuGMTCand>,L1MuGMTCand,edm::refhelper::FindUsingAdvance<std::vector<L1MuGMTCand>,L1MuGMTCand>>"/>
+ <class name="edm::Wrapper<std::vector<L1MuGMTCand> >" splitLevel="0"/>
+ <class name="L1MuGMTExtendedCand" ClassVersion="10">
+  <version ClassVersion="10" checksum="2092543389"/>
+ </class>
+ <class name="std::vector<L1MuGMTExtendedCand>"/>
+ <class name="L1MuGMTReadoutRecord" ClassVersion="10">
+  <version ClassVersion="10" checksum="2492432397"/>
+ </class>
+ <class name="std::vector<L1MuGMTReadoutRecord>"/>
+ <class name="L1MuGMTReadoutCollection" ClassVersion="10">
+  <version ClassVersion="10" checksum="3757645496"/>
+ </class>
+ <class name="edm::Wrapper<L1MuGMTReadoutCollection>" splitLevel="0"/>
+ <class name="edm::RefProd<L1MuGMTReadoutCollection>"/>
+
+</lcgdict>

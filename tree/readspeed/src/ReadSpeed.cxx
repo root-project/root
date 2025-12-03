@@ -29,6 +29,7 @@
 #include <memory>
 #include <numeric> // std::accumulate
 #include <stdexcept>
+#include <exception>
 #include <set>
 #include <iostream>
 

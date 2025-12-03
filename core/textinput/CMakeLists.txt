@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/textinout package
+# CMakeLists.txt file for building ROOT core/textinput package
 ############################################################################
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS Getline.h)

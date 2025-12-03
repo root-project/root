@@ -45,7 +45,6 @@ TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kD
 // Hence there is no good reason to limit it too much
 Double_t TTreeCacheUnzip::fgRelBuffSize = .5;
 
-ClassImp(TTreeCacheUnzip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear all baskets' state arrays.
@@ -175,7 +174,7 @@ TTreeCacheUnzip::TTreeCacheUnzip() : TTreeCache(),
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tree,buffersize),
+TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t bufsize) : TTreeCache(tree,bufsize),
    fAsyncReading(false),
    fEmpty(true),
    fCycle(0),

@@ -26,6 +26,14 @@ add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.
 
 ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
 
+# This sets RUNPATH for libCore, which enables it to dlopen any ROOT library in its directory.
+# If omitted, Core might try to load libraries from a ROOT that's installed in the system.
+if(APPLE)
+  set_property(TARGET Core APPEND PROPERTY BUILD_RPATH @loader_path)
+elseif(NOT WIN32)
+  set_property(TARGET Core APPEND PROPERTY BUILD_RPATH $ORIGIN)
+endif()
+
 generateHeader(Core
   ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
   ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
@@ -47,6 +55,9 @@ endif()
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
 )
+
+# This is used by rootcling_stage1 and dictgen.
+CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
 
 # Must be first because it defines ROOTStaticSanitizerConfig which needs
 # to be linked into rootcling_stage1 (via ROOT_EXECUTABLE).

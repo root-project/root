@@ -1,0 +1,18 @@
+<lcgdict>
+
+  <!-- RootCnv internal dictionary classes    -->
+
+  <class name="Gaudi::RootRef"/>
+  <class name="Gaudi::RootObjectRefs"/>
+  <class name="Gaudi::RootNTupleDescriptor"/>
+  <class name="std::vector<Gaudi::RootRef>"/>
+
+  <!-- POOL interface dictionary classes      -->
+  <class name="UCharDbArray"/>
+  <class name="pool::Token"/>
+  <class name="std::vector<pool::Token*>"/>
+  <class name="PoolDbLinkManager"/>
+  <class name="PoolDbTokenWrap"/>
+  <class name="PoolDbNTupleDescriptor"/>
+
+</lcgdict>

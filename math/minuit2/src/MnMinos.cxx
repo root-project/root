@@ -91,13 +91,14 @@ MinosError MnMinos::Minos(unsigned int par, unsigned int maxcalls, double toler)
    return MinosError(par, fMinimum.UserState().Value(par), lo, up);
 }
 
+/// Get crossing value in the parameter direction
+/// \param direction 1 upper value, -1 lower value
+/// \param par parameter index
+/// \param maxcalls maximum number of function calls, if 0, it will be replaced by 
+/// `2 * (nvar + 1) * (200 + 100 * nvar + 5 * nvar * nvar` where `nvar` is number of variable parameters
+/// \param toler tolerance used for Migrad minimizations
 MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int maxcalls, double toler) const
 {
-   // get crossing value in the parameter direction :
-   // direction = + 1 upper value
-   // direction = -1 lower value
-   // pass now tolerance used for Migrad minimizations
-
    assert(direction == 1 || direction == -1);
 
    MnPrint print("MnMinos");

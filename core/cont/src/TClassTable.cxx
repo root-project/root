@@ -14,7 +14,7 @@
 This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is
-initialized when the program starts (see the ClassImp macro).
+initialized when the program starts (see the ClassDef macro).
 
 All functions in TClassTable are thread-safe.
 */
@@ -41,6 +41,7 @@ All functions in TClassTable are thread-safe.
 #include <cstdlib>
 #include <string>
 #include <mutex>
+#include <unordered_map>
 
 using namespace ROOT;
 
@@ -55,7 +56,6 @@ Bool_t                TClassTable::fgSorted;
 UInt_t                TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
-ClassImp(TClassTable);
 
 static std::mutex &GetClassTableMutex()
 {
@@ -258,6 +258,12 @@ namespace ROOT {
    }
 }
 
+std::unordered_map<ROOT::TClassRec *, std::vector<ROOT::TClassAlt *>> &GetClassRecToAltMap()
+{
+   static std::unordered_map<ROOT::TClassRec *, std::vector<ROOT::TClassAlt *>> classRecToAltMap;
+   return classRecToAltMap;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TClassTable is a singleton (i.e. only one can exist per application).
 
@@ -270,7 +276,7 @@ TClassTable::TClassTable()
    fgAlternate = new TClassAlt* [fgSize];
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize * sizeof(TClassRec*));
-   memset(fgAlternate, 0, fgSize * sizeof(TClassAlt*));
+   memset(fgAlternate, 0, fgSize * sizeof(TClassAlt *));
    gClassTable = this;
 
    for (auto &&r : GetDelayedAddClass()) {
@@ -454,6 +460,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a class to the class table (this is a static function).
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TClassTable::Add(TProtoClass *proto)
 {
@@ -527,6 +534,17 @@ ROOT::TClassAlt* TClassTable::AddAlternate(const char *normName, const char *alt
    }
 
    fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+
+   UInt_t slotNorm = ROOT::ClassTableHash(normName, fgSize);
+   if (fgTable[slotNorm]) {
+      auto &classToAlt = GetClassRecToAltMap();
+      // Let others connect a class record to its class alternative names
+      if (auto it = classToAlt.find(fgTable[slotNorm]); it == classToAlt.end())
+         classToAlt[fgTable[slotNorm]] = std::vector<ROOT::TClassAlt *>{fgAlternate[slot]};
+      else
+         classToAlt[fgTable[slotNorm]].push_back(fgAlternate[slot]);
+   }
+
    return fgAlternate[slot];
 }
 
@@ -891,7 +909,7 @@ void TClassTable::Terminate()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the ctor of a class's init class
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
 
 void ROOT::AddClass(const char *cname, Version_t id,
                     const std::type_info& info,
@@ -913,7 +931,7 @@ void ROOT::AddClass(const char *cname, Version_t id,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by GenerateInitInstance.
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
 
 ROOT::TClassAlt* ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
@@ -977,10 +995,10 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the dtor of a class's init class
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
+/// The caller of this function should be holding the ROOT Write lock.
 
 void ROOT::RemoveClass(const char *cname, TClass *oldcl)
 {
@@ -1028,4 +1046,25 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
       reg->SetUniqueID(line);
    }
    return reg;
+}
+
+std::vector<std::string> TClassTable::GetClassAlternativeNames(const char *cname)
+{
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
+   if (!fgTable[slot])
+      return {};
+   const auto &classRecToAltMap = GetClassRecToAltMap();
+   if (auto it = classRecToAltMap.find(fgTable[slot]); it == classRecToAltMap.end())
+      return {};
+
+   const auto &classAlts = classRecToAltMap.at(fgTable[slot]);
+   std::vector<std::string> ret;
+   ret.reserve(classAlts.size());
+   for (const auto *classAlt : classAlts) {
+      ret.push_back(classAlt->fName);
+   }
+
+   return ret;
 }

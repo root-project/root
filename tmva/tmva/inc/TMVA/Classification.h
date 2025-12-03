@@ -153,7 +153,7 @@ public:
    TGraph *GetROCGraph(UInt_t iClass = 0, TMVA::Types::ETreeType type = TMVA::Types::kTesting);
    ClassificationResult &operator=(const ClassificationResult &r);
 
-   ClassDef(ClassificationResult, 3);
+   ClassDefOverride(ClassificationResult, 3);
 };
 
 class Classification : public Envelope {
@@ -175,7 +175,7 @@ public:
    virtual void TestMethod(TString methodname, TString methodtitle);
    virtual void TestMethod(Types::EMVA method, TString methodtitle);
 
-   virtual void Evaluate();
+   void Evaluate() override;
 
    std::vector<ClassificationResult> &GetResults();
 
@@ -196,7 +196,7 @@ protected:
    void CopyFrom(TDirectory *src, TFile *file);
    void MergeFiles();
 
-   ClassDef(Classification, 0);
+   ClassDefOverride(Classification, 0);
 };
 } // namespace Experimental
 } // namespace TMVA

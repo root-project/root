@@ -83,17 +83,17 @@ namespace RooStats {
 /// We use nullptr to mean not set, so we don't want to fill
 /// with empty RooArgSets.
 
-void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig)
+void ModelConfig::GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig)
 {
 
    // observables
    if (!GetObservables()) {
-      SetObservables(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
+      SetObservables(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(obsSet)});
    }
    // global observables
    if (!GetGlobalObservables()) {
       RooArgSet co(*GetObservables());
-      co.remove(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
+      co.remove(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(obsSet)});
       removeConstantParameters(co);
       if (!co.empty())
          SetGlobalObservables(co);
@@ -112,7 +112,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
    //   }
    if (!GetNuisanceParameters()) {
       RooArgSet params;
-      GetPdf()->getParameters(data.get(), params);
+      GetPdf()->getParameters(&obsSet, params);
       RooArgSet p(params);
       p.remove(*GetParametersOfInterest());
       removeConstantParameters(p);
@@ -191,33 +191,27 @@ void ModelConfig::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If a workspace already exists in this ModelConfig, RooWorkspace::merge(ws) will be called
-/// on the existing workspace.
+/// If a workspace already exists in this ModelConfig, this function will do nothing.
 
 void ModelConfig::SetWS(RooWorkspace &ws)
 {
-   if (!fRefWS.GetObject()) {
+   if (!fRefWS) {
       fRefWS = &ws;
-      fWSName = ws.GetName();
    } else {
-      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-      GetWS()->merge(ws);
-      RooMsgService::instance().setGlobalKillBelow(level);
+      coutE(ObjectHandling) << "ModelConfig::SetWS(): workspace already set, not doing anything" << std::endl;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get from TRef
+/// Get workspace.
 
 RooWorkspace *ModelConfig::GetWS() const
 {
-   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject());
-   if (!ws) {
+   if (!fRefWS) {
       coutE(ObjectHandling) << "workspace not set" << std::endl;
       return nullptr;
    }
-   return ws;
+   return fRefWS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

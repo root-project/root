@@ -1,0 +1,31 @@
+
+Processing execAtlasTest2.C...
+Members of class Atlas::ClassA<Atlas::ClassB>
+  - Atlas::ClassB* m_variable; // persistent = Yes
+  - float m_trait; // persistent = No
+  - int m_pers; // persistent = Yes
+Members of class Atlas::ClassA<Atlas::ClassC>
+  - Atlas::ClassC* m_variable; // persistent = Yes
+  - int m_trait; // persistent = No
+  - int m_pers; // persistent = Yes
+Members of class vector<Atlas::ClassA<Atlas::ClassB> >
+Members of class vector<Atlas::ClassA<Atlas::ClassC> >
+Members of class Atlas::ClassD<Atlas::ClassB>
+Members of class Atlas::ClassD<Atlas::ClassC>
+  - vector<Atlas::ClassC*> m_vec; // persistent = No
+Members of class Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> >
+  - Atlas::ClassD<Atlas::ClassB>* m_variable; // persistent = Yes
+  - int m_trait; // persistent = No
+  - int m_pers; // persistent = Yes
+Members of class Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> >
+  - Atlas::ClassD<Atlas::ClassC>* m_variable; // persistent = Yes
+  - int m_trait; // persistent = No
+  - int m_pers; // persistent = Yes
+Members of class vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> > >
+Members of class vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> > >
+Members of class MyClass
+Members of class MyClass2
+Members of class MyDataVector<float>
+  - MyClass m_isMostDerived; // persistent = No
+  - MyClass2 m_isNonSplit; // persistent = Yes
+(int) 0

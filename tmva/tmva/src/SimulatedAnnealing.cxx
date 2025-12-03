@@ -42,7 +42,6 @@ Base implementation of simulated annealing fitting procedure.
 #include "TRandom3.h"
 #include "TMath.h"
 
-ClassImp(TMVA::SimulatedAnnealing);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

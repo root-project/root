@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "TString.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -10,6 +8,8 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/PyMethodBase.h"
 
+#include <cmath>
+#include <iostream>
 
 int testPyTorchRegression(){
    // Get data file

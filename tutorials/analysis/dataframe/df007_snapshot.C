@@ -89,7 +89,7 @@ int df007_snapshot()
    // analysis chain from it. The default columns are the ones selected.
    // Notice also how we can decide to be more explicit with the types of the
    // columns.
-   auto snapshot_df = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
+   auto snapshot_df = d2.Snapshot(treeName, outFileName, {"b1_square"});
    auto h = snapshot_df->Histo1D();
    auto c = new TCanvas();
    h->DrawClone();

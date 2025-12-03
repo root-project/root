@@ -17,7 +17,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TButton);
 
 /** \class TButton
 \ingroup gpad
@@ -67,7 +66,7 @@ void but() {
    but3->Draw();
 
 // Create last button with no name. Instead a graph is draw inside the button
-// Clicking on this button will invoke the macro $ROOTSYS/tutorials/visualisation/graphs/gr001_simple.C
+// Clicking on this button will invoke the macro gr001_simple.C
    button = new TButton("",".x tutorials/visualisation/graphs/gr001_simple.C",0.15,0.15,0.85,0.38);
    button->SetFillColor(42);
    button->Draw();
@@ -289,7 +288,7 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
                                             TString(GetMethod()).ReplaceSpecialCppChars().Data(), fXlowNDC, fYlowNDC,
                                             fXlowNDC + fWNDC, fYlowNDC + fHNDC));
 
-   SaveFillAttributes(out, "button", 0, 1001);
+   SaveFillAttributes(out, "button", -1, -1);
    SaveLineAttributes(out, "button", 1, 1, 1);
    SaveTextAttributes(out, "button", 22, 0, 1, 61, .65);
 

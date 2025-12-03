@@ -1,0 +1,100 @@
+
+Processing runLHCb.C...
+Warning in <TClass::Init>: no dictionary for class PoolDbLinkManager is available
+Warning in <TClass::Init>: no dictionary for class LHCb::GenHeader is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::GenCollision> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::GenCollision> is available
+Warning in <TClass::Init>: no dictionary for class SmartRefBase is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class ObjectContainerBase is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class LHCb::MCHeader is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::MCVertex> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::MCVertex> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::GenCollision is available
+Warning in <TClass::Init>: no dictionary for class KeyedObject<int> is available
+Warning in <TClass::Init>: no dictionary for class ContainedObject is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::HepMCEvent> is available
+Warning in <TClass::Init>: no dictionary for class LinkManager::Link is available
+Warning in <TClass::Init>: no dictionary for class LHCb::HepMCEvent is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenEvent is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenVertex is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::HepLorentzVector is available
+Warning in <TClass::Init>: no dictionary for class CLHEP::Hep3Vector is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::GenParticle is available
+Warning in <TClass::TClass>: no dictionary for class HepMC::Flow is available
+Warning in <TClass::Init>: no dictionary for class HepMC::Polarization is available
+Warning in <TClass::Init>: no dictionary for class HepMC::WeightContainer is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::MCParticle> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RichSmartID is available
+Warning in <TClass::Init>: no dictionary for class LHCb::PackedMCParticles is available
+Warning in <TClass::Init>: no dictionary for class LHCb::PackedMCParticle is available
+Warning in <TClass::Init>: no dictionary for class LHCb::PackedMCVertices is available
+Warning in <TClass::Init>: no dictionary for class LHCb::PackedMCVertex is available
+Warning in <TClass::Init>: no dictionary for class ObjectVector<LHCb::MCRichDigitSummary> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::IntLink is available
+Warning in <TClass::Init>: no dictionary for class LHCb::LinksByKey is available
+Warning in <TClass::Init>: no dictionary for class LHCb::LinkReference is available
+Warning in <TClass::Init>: no dictionary for class LHCb::MCProperty is available
+Warning in <TClass::Init>: no dictionary for class LHCb::MCRichDigitSummary is available
+Warning in <TClass::Init>: no dictionary for class LHCb::MCRichDigitHistoryCode is available
+Warning in <TClass::Init>: no dictionary for class LHCb::ProcessHeader is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RecHeader is available
+Warning in <TClass::Init>: no dictionary for class LHCb::ProcStatus is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::Track,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::CaloHypo,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::ProtoParticle,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::RecVertex,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class KeyedContainer<LHCb::RichSummaryTrack,Containers::KeyedObjectManager<Containers::hashmap> > is available
+Warning in <TClass::Init>: no dictionary for class LHCb::CaloHypo is available
+Warning in <TClass::Init>: no dictionary for class LHCb::CaloPosition is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::CaloDigit> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::CaloDigit> is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::CaloCluster> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::CaloCluster> is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::CaloHypo> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::CaloHypo> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::ProtoParticle is available
+Warning in <TClass::Init>: no dictionary for class GaudiUtils::VectorMap<int,double,less<const int>,allocator<pair<int,double> > > is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::Track> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::RichPID> is available
+Warning in <TClass::Init>: no dictionary for class SmartRef<LHCb::MuonPID> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RichSummaryTrack is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RichSummaryRadSegment is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RichSummaryPhoton is available
+Warning in <TClass::Init>: no dictionary for class LHCb::Track is available
+Warning in <TClass::Init>: no dictionary for class LHCb::LHCbID is available
+Warning in <TClass::Init>: no dictionary for class LHCb::State is available
+Warning in <TClass::Init>: no dictionary for class SmartRefVector<LHCb::Track> is available
+Warning in <TClass::Init>: no dictionary for class LHCb::RecVertex is available
+Warning in <TClass::Init>: no dictionary for class LHCb::VertexBase is available
+
+StreamerInfo for class: LHCb::ODIN, checksum=0x1f05423c
+  DataObject     BASE            offset=na type= 0
+  unsigned int   m_runNumber     offset=na type=13 Run number
+  unsigned int   m_eventType     offset=na type=13 Event type
+  unsigned int   m_orbitNumber   offset=na type=13 Orbit ID
+  ULong64_t      m_eventNumber   offset=na type=17 L0 Event ID
+  ULong64_t      m_gpsTime       offset=na type=17 GPS Time (microseconds)
+  ULong64_t      m_detectorStatus offset=na type=17 Detector Status
+  unsigned int   m_errorBits     offset=na type=13 Error Bits
+  unsigned int   m_bunchId       offset=na type=13 Bunch ID
+  unsigned int   m_triggerType   offset=na type=13 Trigger Type
+  int            m_readoutType   offset=na type= 3 Readout Type (@see enum LHCb::ODIN::ReadoutTypes)
+  bool           m_forceBit      offset=na type=18 Force Bit
+  int            m_bunchCrossingType offset=na type= 3 Bunch Crossing Type (BXType, @see enum LHCb::ODIN::BXTypes)
+  unsigned int   m_bunchCurrent  offset=na type=13 Bunch Current
+   i= 0, DataObject      type=  0, offset=na, len=1, method=0
+   i= 1, m_runNumber     type= 13, offset=na, len=1, method=0
+   i= 2, m_eventType     type= 13, offset=na, len=1, method=0
+   i= 3, m_orbitNumber   type= 13, offset=na, len=1, method=0
+   i= 4, m_eventNumber   type= 17, offset=na, len=1, method=0
+   i= 5, m_gpsTime       type= 17, offset=na, len=1, method=0
+   i= 6, m_detectorStatus type= 17, offset=na, len=1, method=0
+   i= 7, m_errorBits     type= 13, offset=na, len=1, method=0
+   i= 8, m_bunchId       type= 13, offset=na, len=1, method=0
+   i= 9, m_triggerType   type= 13, offset=na, len=1, method=0
+   i=10, m_readoutType   type=  3, offset=na, len=1, method=0
+   i=11, m_forceBit      type= 18, offset=na, len=1, method=0
+   i=12, m_bunchCrossingType type=  3, offset=na, len=1, method=0
+   i=13, m_bunchCurrent  type= 13, offset=na, len=1, method=0

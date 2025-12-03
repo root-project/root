@@ -19,10 +19,11 @@
 #define ROOT_Math_GenVector_LorentzVector  1
 
 #include "Math/GenVector/PxPyPzE4D.h"
-
 #include "Math/GenVector/DisplacementVector3D.h"
-
 #include "Math/GenVector/GenVectorIO.h"
+#include "Math/Vector2D.h"
+
+#include "TMath.h"
 
 #include <cmath>
 #include <string>
@@ -41,18 +42,19 @@ In the case of LorentzVector we don't distinguish the concepts
 of points and displacement vectors as in the 3D case,
 since the main use case for 4D Vectors is to describe the kinematics of
 relativistic particles. A LorentzVector behaves like a
-DisplacementVector in 4D.  The Minkowski components could be viewed as
+DisplacementVector in 4D. The Minkowski components could be viewed as
 v and t, or for kinematic 4-vectors, as p and E.
 
-ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVector template:
+ROOT provides specialisations (and aliases to them) of the ROOT::Math::LorentzVector template:
 - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
 - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
-- ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
-- ROOT::Math::PxPyPzEVector based on px,py,pz and E (energy) coordinates in double precision
+- ROOT::Math::PxPyPzMVector based on px,py,pz and M coordinates in double precision
+- ROOT::Math::PxPyPzEVector based on px,py,pz and E coordinates in double precision
 - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
 - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
+Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity. M is mass, E is energy, p is momentum.
 
-@sa Overview of the @ref GenVector "physics vector library"
+@see GenVector
 */
 
     template< class CoordSystem >
@@ -201,6 +203,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
        /**
           get internal data into 4 Scalar numbers
+          \note Alternatively, you may use structured bindings: `auto const [a, b, c, d] = v`.
        */
        void GetCoordinates( Scalar& a, Scalar& b, Scalar& c, Scalar & d ) const
        { fCoordinates.GetCoordinates(a, b, c, d);  }
@@ -363,6 +366,29 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           \f[ \eta = - \ln { \tan { \frac { \theta} {2} } } \f]
        */
        Scalar Eta() const { return fCoordinates.Eta(); }
+
+       /**
+          deltaRapidity between this and vector v
+          \f[ \Delta R = \sqrt { \Delta \eta ^2 + \Delta \phi ^2 } \f]
+          \param useRapidity true to use Rapidity(), false to use Eta()
+       */
+       template <class OtherLorentzVector>
+       Scalar DeltaR(const OtherLorentzVector &v, const bool useRapidity = false) const
+       {
+          const double delta = useRapidity ? Rapidity() - v.Rapidity() : Eta() - v.Eta();
+          double dphi = Phi() - v.Phi();
+          // convert dphi angle to the interval (-PI,PI]
+          if (dphi > TMath::Pi() || dphi <= -TMath::Pi()) {
+             if (dphi > 0) {
+                int n = static_cast<int>(dphi / TMath::TwoPi() + 0.5);
+                dphi -= TMath::TwoPi() * n;
+             } else {
+                int n = static_cast<int>(0.5 - dphi / TMath::TwoPi());
+                dphi += TMath::TwoPi() * n;
+             }
+          }
+          return std::sqrt(delta * delta + dphi * dphi);
+       }
 
        /**
           get the spatial components of the Vector in a
@@ -602,12 +628,14 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
                 // to avoid Nan
                 return 0;
              else {
-                GenVector::Throw ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
+                GenVector_Throw(
+                   "LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
                 return 1./E();
              }
           }
           if ( M2() <= 0 ) {
-             GenVector::Throw ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
+             GenVector_Throw("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is "
+                             "physically meaningless");
           }
           return P() / E();
        }
@@ -621,16 +649,16 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
              if ( P2() == 0) {
                 return 1;
              } else {
-                GenVector::Throw ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
-
+                GenVector_Throw(
+                   "LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
              }
           }
           if ( t2 < v2 ) {
-             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
+             GenVector_Throw("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
              return 0;
           }
           else if ( t2 == v2 ) {
-             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
+             GenVector_Throw("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
           using std::sqrt;
           return Scalar(1) / sqrt(Scalar(1) - v2 / t2);
@@ -691,19 +719,87 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
   // global methods
 
-  /**
-     Scale of a LorentzVector with a scalar quantity a
-     \param a  scalar quantity of type a
-     \param v  mathcore::LorentzVector based on any coordinate system
-     \return a new mathcoreLorentzVector q = v * a same type as v
-   */
-    template< class CoordSystem >
-    inline LorentzVector<CoordSystem> operator *
-    ( const typename  LorentzVector<CoordSystem>::Scalar & a,
-      const LorentzVector<CoordSystem>& v) {
+    /**
+       Scale of a LorentzVector with a scalar quantity a
+       \param a  scalar quantity of type a
+       \param v  LorentzVector based on any coordinate system
+       \return a new mathcoreLorentzVector q = v * a same type as v
+     */
+    template <class CoordSystem>
+    inline LorentzVector<CoordSystem>
+    operator*(const typename LorentzVector<CoordSystem>::Scalar &a, const LorentzVector<CoordSystem> &v)
+    {
        LorentzVector<CoordSystem> tmp(v);
        tmp *= a;
        return tmp;
+    }
+
+    /**
+       pair (p+ p-) acoplanarity `alpha = 1 - |phi+ - phi-|/pi`.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301
+     */
+    template <class CoordSystem>
+    typename LorentzVector<CoordSystem>::Scalar
+    Acoplanarity(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
+    {
+       auto dphi = pp.Phi() - pm.Phi();
+       // convert dphi angle to the interval (-PI,PI]
+       if (dphi > TMath::Pi() || dphi <= -TMath::Pi()) {
+          if (dphi > 0) {
+             int n = static_cast<int>(dphi / TMath::TwoPi() + 0.5);
+             dphi -= TMath::TwoPi() * n;
+          } else {
+             int n = static_cast<int>(0.5 - dphi / TMath::TwoPi());
+             dphi += TMath::TwoPi() * n;
+          }
+       }
+       return 1 - std::abs(dphi) / TMath::Pi();
+    }
+
+    /**
+       pair (p+ p-) vectorial asymmetry `Av = |Pt+ - Pt-|/|Pt+ + Pt-|`.
+       In an experimental setting, it reflects a convolution of the experimental resolutions
+       of particle energy and azimuthal angle measurement.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar. Returns -1 if both momenta are exactly mirrored.
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+     */
+    template <class CoordSystem>
+    typename LorentzVector<CoordSystem>::Scalar
+    AsymmetryVectorial(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
+    {
+       ROOT::Math::XYVector vp(pp.Px(), pp.Py());
+       ROOT::Math::XYVector vm(pm.Px(), pm.Py());
+       auto denom = (vp + vm).R();
+       if (denom == 0.)
+          return -1;
+       return (vp - vm).R() / denom;
+    }
+
+    /**
+       pair (p+ p-) scalar asymmetry `As = ||Pt+| - |Pt-|/||Pt+| + |Pt-||`.
+       Measures the relative difference in transverse momentum of the pair, e.g. two photons,
+       and would be ideally zero for two back-to-back photons.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar. Returns 0 if both transverse momenta are zero
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+     */
+    template< class CoordSystem >
+    typename LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
+    {
+       auto ptp = pp.Pt();
+       auto ptm = pm.Pt();
+       if (ptp == 0 && ptm == 0)
+          return 0;
+       return std::abs(ptp - ptm) / (ptp + ptm);
     }
 
     // ------------- I/O to/from streams -------------
@@ -766,11 +862,37 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 
      }  // op>> <>()
 
-
+    // Structured bindings
+    template <std::size_t I, class CoordSystem>
+    typename CoordSystem::Scalar get(LorentzVector<CoordSystem> const& p)
+    {
+       static_assert(I < 4);
+       if constexpr (I == 0) {
+          return p.X();
+       } else if constexpr (I == 1) {
+          return p.Y();
+       } else if constexpr (I == 2) {
+          return p.Z();
+       } else {
+          return p.E();
+       }
+    }
 
   } // end namespace Math
 
 } // end namespace ROOT
+
+// Structured bindings
+#include <tuple>
+namespace std {
+   template <class CoordSystem>
+   struct tuple_size<ROOT::Math::LorentzVector<CoordSystem>> : integral_constant<size_t, 4> {};
+   template <size_t I, class CoordSystem>
+   struct tuple_element<I, ROOT::Math::LorentzVector<CoordSystem>> {
+      static_assert(I < 4);
+      using type = typename CoordSystem::Scalar;
+   };
+}
 
 #include <sstream>
 namespace cling

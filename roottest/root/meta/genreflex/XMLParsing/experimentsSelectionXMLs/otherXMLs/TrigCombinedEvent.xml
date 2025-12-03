@@ -1,0 +1,8 @@
+<lcgdict>
+
+<class name="DataVector<TrigComposite>" id="43C0D9C2-8642-44BE-BA7C-F7A4AB53B436"/>
+<class name="std::vector<TrigComposite*>" />
+<class name="std::vector<const TrigComposite*>" />
+<class name="TrigCompositeContainer" id="3EFA9B3A-8001-430C-B292-163F15356062" />
+<class name="TrigComposite" id="3662901B-1571-4B9A-A428-6F5C517D88BA"/>
+</lcgdict>

@@ -8,22 +8,24 @@ function proivdeEvalPar(obj, check_save) {
    obj.$math = jsroot_math;
 
    let _func = obj.fTitle, isformula = false, pprefix = '[';
-   if (_func === 'gaus') _func = 'gaus(0)';
+   if (_func === 'gaus')
+      _func = 'gaus(0)';
    if (isStr(obj.fFormula?.fFormula)) {
-     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
-        isformula = true; pprefix = 'p[';
-        _func = obj.fFormula.fFormula.slice(21);
-     } else {
-        _func = obj.fFormula.fFormula;
-        pprefix = '[p';
-     }
+      if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') === 0) {
+         isformula = true;
+         pprefix = 'p[';
+         _func = obj.fFormula.fFormula.slice(21);
+      } else {
+         _func = obj.fFormula.fFormula;
+         pprefix = '[p';
+      }
 
-     if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
-        obj.fFormula.fParams.forEach(pair => {
-           const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
-               parvalue = obj.fFormula.fClingParameters[pair.second];
-           _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
-        });
+      if (obj.fFormula.fClingParameters && obj.fFormula.fParams) {
+         obj.fFormula.fParams.forEach(pair => {
+            const regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
+                  parvalue = obj.fFormula.fClingParameters[pair.second];
+            _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
+         });
       }
    }
 
@@ -65,11 +67,11 @@ function proivdeEvalPar(obj, check_save) {
    if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
       _func = '[0]';
       for (let k = 1; k < obj.fNpar; ++k)
-         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+         _func += ` + [${k}] * ` + ((k === 1) ? 'x' : `Math.pow(x,${k})`);
    }
 
    if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
-      _func = `this.$math.ChebyshevN(${obj.fNpar-1}, x, `;
+      _func = `this.$math.ChebyshevN(${obj.fNpar - 1}, x, `;
       for (let k = 0; k < obj.fNpar; ++k)
          _func += (k === 0 ? '[' : ', ') + `[${k}]`;
       _func += '])';
@@ -109,28 +111,32 @@ function proivdeEvalPar(obj, check_save) {
 function _getTF1Save(func, x) {
    const np = func.fSave.length - 3,
          xmin = func.fSave[np + 1],
-        xmax = func.fSave[np + 2],
-        dx = (xmax - xmin) / np;
-    if (x < xmin)
-       return func.fSave[0];
-    if (x > xmax)
-       return func.fSave[np];
+         xmax = func.fSave[np + 2],
+         dx = (xmax - xmin) / np;
+   if (x < xmin)
+      return func.fSave[0];
+   if (x > xmax)
+      return func.fSave[np];
 
-    const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
-    let xlow = xmin + bin * dx,
-        xup = xlow + dx,
-        ylow = func.fSave[bin],
-        yup = func.fSave[bin + 1];
+   const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
+   let xlow = xmin + bin * dx,
+       xup = xlow + dx,
+       ylow = func.fSave[bin],
+       yup = func.fSave[bin + 1];
 
-    if (!Number.isFinite(ylow) && (bin < np - 1)) {
-       xlow += dx; xup += dx;
-       ylow = yup; yup = func.fSave[bin + 2];
-    } else if (!Number.isFinite(yup) && (bin > 0)) {
-       xup -= dx; xlow -= dx;
-       yup = ylow; ylow = func.fSave[bin - 1];
-    }
+   if (!Number.isFinite(ylow) && (bin < np - 1)) {
+      xlow += dx;
+      xup += dx;
+      ylow = yup;
+      yup = func.fSave[bin + 2];
+   } else if (!Number.isFinite(yup) && (bin > 0)) {
+      xup -= dx;
+      xlow -= dx;
+      yup = ylow;
+      ylow = func.fSave[bin - 1];
+   }
 
-    return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
+   return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
 }
 
 /** @summary Provide TF1 value

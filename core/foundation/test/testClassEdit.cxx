@@ -1,5 +1,6 @@
 #include "TClassEdit.h"
 #include "TInterpreter.h"
+#include "TStreamerInfo.h"
 
 #include "gtest/gtest.h"
 
@@ -271,6 +272,9 @@ TEST(TClassEdit, ResolveTypedef)
    gInterpreter->Declare("typedef const int cmytype_t;");
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
+   // #18833
+   const char* type_18833 = "pair<TAttMarker*,TGraph*(  *  )(const std::string&,const std::string&,TH1F*) >";
+   EXPECT_STREQ(type_18833, TClassEdit::ResolveTypedef(type_18833).c_str());
 }
 
 // ROOT-11000
@@ -279,16 +283,73 @@ TEST(TClassEdit, DefComp)
    EXPECT_FALSE(TClassEdit::IsDefComp("std::less<>", "std::string"));
 }
 
-// https://github.com/root-project/root/issues/6607
 TEST(TClassEdit, DefAlloc)
 {
+   // https://github.com/root-project/root/issues/6607
    EXPECT_TRUE(TClassEdit::IsDefAlloc("class std::allocator<float>", "float"));
+
+   // Space handling issues (part of https://github.com/root-project/root/issues/18654)
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<std::pair<K,V>>", "K", "V"));
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<   std::pair<K,V>  >", "K", "V"));
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("std::allocator<std::pair<K,V>  const  >", "K", "V"));
 }
 
-// https://github.com/root-project/root/issues/6607
+
 TEST(TClassEdit, GetNormalizedName)
 {
    std::string n;
+   
+   // https://github.com/root-project/root/issues/6607
    TClassEdit::GetNormalizedName(n, "std::vector<float, class std::allocator<float>>");
    EXPECT_STREQ("vector<float>", n.c_str());
+
+   // https://github.com/root-project/root/issues/18643
+   n.clear();
+   TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*)");
+   EXPECT_STREQ("_Atomic(map<string,TObjArray*>*)", n.c_str());
+
+   n.clear();
+   EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
+
+}
+
+// https://github.com/root-project/root/issues/18654
+TEST(TClassEdit, UnorderedMapNameNormalization)
+{
+   // These two should normalise to map<string,char>.
+   // When this did not work, df104_CSVDataSource-py crashed while querying the classes
+   std::string in_cxx11{
+      "std::unordered_map<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, char, "
+      "std::hash<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+      "std::equal_to<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+      "std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, "
+      "char> > >"};
+   std::string in{"std::unordered_map<std::basic_string<char, std::char_traits<char>, std::allocator<char> >, char, "
+                  "std::hash<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+                  "std::equal_to<std::basic_string<char, std::char_traits<char>, std::allocator<char> > >, "
+                  "std::allocator<std::pair<std::basic_string<char, std::char_traits<char>, std::allocator<char> > "
+                  "const, char> > >"};
+   const auto target = "unordered_map<string,char>";
+
+   std::string out;
+   TClassEdit::GetNormalizedName(out, in);
+   EXPECT_STREQ(target, out.c_str());
+
+   TClassEdit::GetNormalizedName(out, in_cxx11);
+   EXPECT_STREQ(target, out.c_str());
+}
+
+TEST(TClassEdit, SplitType)
+{
+   // https://github.com/root-project/root/issues/16119
+   TClassEdit::TSplitType t1("std::conditional<(1 < 32), int, float>");
+   EXPECT_STREQ("std::conditional", t1.fElements[0].c_str());
+   EXPECT_STREQ("(1<32)", t1.fElements[1].c_str());
+   EXPECT_STREQ("int", t1.fElements[2].c_str());
+   EXPECT_STREQ("float", t1.fElements[3].c_str());
+
+   gInterpreter->ProcessLine(".L file_16199.C+");
+   auto c = TClass::GetClass("o2::dataformats::AbstractRef<25,5,2>");
+   auto si = (TStreamerInfo*) c->GetStreamerInfo();
+   si->ls("noaddr");
 }

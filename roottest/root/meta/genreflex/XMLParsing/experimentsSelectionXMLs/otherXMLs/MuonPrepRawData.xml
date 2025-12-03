@@ -1,0 +1,144 @@
+<lcgdict>  
+
+  <!-- CSC -->
+  <!--class name="DataVector<Trk::PrepRawData>" / -->
+  <class name="Muon::CscPrepData" >
+    <field name="m_detEl" transient="true" />
+  </class>
+  <class name="DataVector<Muon::CscPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::CscPrepData> >" />
+  <class name="std::vector<Muon::CscPrepData*>" />
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::CscPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::CscPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::CscPrepData> >" id="C48250B1-7575-DFA1-1313-01AAAF759AEA"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::CscPrepData>*>" />
+
+  <class name="Muon::CscStripPrepData" >
+    <field name="m_detEl" transient="true" />
+  </class>
+  <class name="DataVector<Muon::CscStripPrepData>" />
+  <class name="std::vector<Muon::CscStripPrepData*>" />
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::CscStripPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::CscStripPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::CscStripPrepData> >" id="A41C9D99-F977-43B5-8DFC-819F057A9136"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::CscStripPrepData>*>" />
+
+
+  <!-- RPC -->
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::RpcPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >" id="CCD4055C-2A39-CAFF-3F82-5A9116ADAFCB"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::RpcPrepData>*>" />
+  <class name="Muon::RpcPrepData" > 
+    <field name="m_detEl" transient="true" />
+  </class>
+
+  <class name="DataVector<Muon::RpcPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >" />
+  <class name="std::vector<Muon::RpcPrepData*>" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >::DataHolder" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >::Entry" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >::iterator" />
+
+  <class name="std::vector<DataLinkVector<Muon::MuonPrepDataCollection<Muon::RpcPrepData> >::Entry>" />
+
+
+  <!-- TGC -->
+
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::TgcPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >" id="04E7158E-416B-8E31-D370-616631B8617E"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::TgcPrepData>*>" />
+  <class name="Muon::TgcPrepData" > 
+    <field name="m_detEl" transient="true" />
+  </class>
+  <class name="DataVector<Muon::TgcPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >" />
+  <class name="std::vector<Muon::TgcPrepData*>" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >::DataHolder" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >::Entry" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >::iterator" />
+
+  <class name="std::vector<DataLinkVector<Muon::MuonPrepDataCollection<Muon::TgcPrepData> >::Entry>" />
+
+
+  <!-- MDT -->
+
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::MdtPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >" id="7479AE0B-3E99-4344-E6A5-3DDF78E1A363"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::MdtPrepData>*>" />
+  <class name="Muon::MdtPrepData" > 
+    <field name="m_detEl" transient="true" />
+  </class>
+  <class name="DataVector<Muon::MdtPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >" />
+
+  <class name="std::vector<Muon::MdtPrepData*>" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >::DataHolder" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >::Entry" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >::iterator" />
+
+  <class name="std::vector<DataLinkVector<Muon::MuonPrepDataCollection<Muon::MdtPrepData> >::Entry>" />
+
+
+  <!-- sTGC -->
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::sTgcPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >" id="CCD4055C-2A39-CAFF-3F82-5A9116AAFCB"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData>*>" />
+  <class name="Muon::sTgcPrepData" > 
+    <field name="m_detEl" transient="true" />
+  </class>
+
+  <class name="DataVector<Muon::sTgcPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >" />
+  <class name="std::vector<Muon::sTgcPrepData*>" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >::DataHolder" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >::Entry" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >::iterator" />
+
+  <class name="std::vector<DataLinkVector<Muon::MuonPrepDataCollection<Muon::sTgcPrepData> >::Entry>" />
+
+  <!-- MM -->
+  <class name="Muon::MuonPrepDataContainer<Muon::MuonPrepDataCollection<Muon::MMPrepData> >" />
+  <class name="Muon::MuonPrepDataCollection<Muon::MMPrepData>" />
+  <class name="DataVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >" id="CCD4055C-2A39-CAFF-3F82-5A9116ADFCB"/>
+  <class name="std::vector<Muon::MuonPrepDataCollection<Muon::MMPrepData>*>" />
+  <class name="Muon::MMPrepData" > 
+    <field name="m_detEl" transient="true" />
+  </class>
+
+  <class name="DataVector<Muon::MMPrepData>" />
+  <class name="IdentifiableContainer<Muon::MuonPrepDataCollection<Muon::MMPrepData> >" />
+  <class name="std::vector<Muon::MMPrepData*>" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >::DataHolder" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >::Entry" />
+  <class name="DataLinkVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >::iterator" />
+
+  <class name="std::vector<DataLinkVector<Muon::MuonPrepDataCollection<Muon::MMPrepData> >::Entry>" />
+
+
+
+</lcgdict>

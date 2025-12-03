@@ -1,12 +1,9 @@
-# XGBoost has to be imported before ROOT to avoid crashes because of clashing
-# std::regexp symbols that are exported by cppyy.
-# See also: https://github.com/wlav/cppyy/issues/227
-import xgboost
-
 import unittest
-import ROOT
+
 import numpy as np
-import json
+import pandas
+import ROOT
+import xgboost
 
 np.random.seed(1234)
 
@@ -41,9 +38,18 @@ def _test_XGBRegression(label):
     """
     Compare response of XGB regressor and TMVA tree inference system.
     """
-    x, y = create_dataset(1000, 10, 1)
+    n_samples = 1000
+    n_features = 10
+    x, y = create_dataset(n_samples, n_features, 1)
+    # Other than in the XGBBinary test, we're passing the training features via
+    # a pandas DataFrame this time. In that case, XGBoost will define custom
+    # feature names according to the column names in the dataframe, and we can
+    # test the case where the feature names in the .txt dump are not the
+    # default "f0", "f1", "f2", etc.
+    df_x = pandas.DataFrame({f"myfeature_{i}": x[:, i] for i in range(n_features)})
+    assert len(x) == len(df_x)
     xgb = xgboost.XGBRegressor(n_estimators=1, max_depth=3)
-    xgb.fit(x, y)
+    xgb.fit(df_x, y)
     ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBRegression{}.root".format(label), num_inputs=10)
     bdt = ROOT.TMVA.Experimental.RBDT("myModel", "testXGBRegression{}.root".format(label))
 
@@ -82,6 +88,8 @@ class RBDT(unittest.TestCase):
         """
         Test model trained with multiclass XGBClassifier.
         """
+        if xgboost.__version__ >= "3.1.0":
+            self.skipTest("We don't support multiclassification with xgboost>=3.1.0 yet")
         _test_XGBMulticlass("default")
 
     def test_XGBRegression_default(self):

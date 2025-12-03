@@ -21,7 +21,6 @@ Optionally used by classes that use direct OpenGL rendering
 via `<Class>GL class`.
 */
 
-ClassImp(TAttBBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocate and prepare for incremental filling.

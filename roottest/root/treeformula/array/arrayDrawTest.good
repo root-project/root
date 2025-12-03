@@ -1,0 +1,7 @@
+
+Processing runArrayTest.C...
+We expect an error about the dimension size:
+Error in <TTreeFormula::TTreeFormula>: Index 40 for dimension #1 in ns[40].adc[2] is too high (max is 2)
+Info in <TSelectorDraw::AbortProcess>: Variable compilation failed: {ns[40].adc[2],}
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+TH1.Print Name  = h2, Entries= 100, Total sum= 100

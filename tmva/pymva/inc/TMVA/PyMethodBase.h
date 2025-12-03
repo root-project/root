@@ -15,13 +15,6 @@
 #ifndef ROOT_TMVA_PyMethodBase
 #define ROOT_TMVA_PyMethodBase
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// PyMethodBase                                                               //
-//                                                                            //
-// Virtual base class for all TMVA method based on Python                     //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
 
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
@@ -58,6 +51,7 @@ namespace TMVA {
    /// If "Python3" is installed, return "python3"
    TString Python_Executable();
 
+   /// Virtual base class for all TMVA method based on Python
    class PyMethodBase : public MethodBase {
 
       friend class Factory;
@@ -87,28 +81,28 @@ namespace TMVA {
       static void Serialize(TString file,PyObject *classifier);
       static Int_t UnSerialize(TString file,PyObject** obj);
 
-      virtual void     Train() = 0;
+      void     Train() override = 0;
       // options treatment
-      virtual void     Init()           = 0;
-      virtual void     DeclareOptions() = 0;
-      virtual void     ProcessOptions() = 0;
+      void     Init() override           = 0;
+      void     DeclareOptions() override = 0;
+      void     ProcessOptions() override = 0;
       // create ranking
-      virtual const Ranking *CreateRanking() = 0;
+      const Ranking *CreateRanking() override = 0;
 
-      virtual Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) = 0;
+      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) override = 0;
 
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) = 0;
+      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) override = 0;
    protected:
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void *parent) const = 0;
-      virtual void ReadWeightsFromXML(void *wghtnode) = 0;
-      virtual void ReadWeightsFromStream(std::istream &) = 0; // backward compatibility
-      virtual void ReadWeightsFromStream(TFile &) {} // backward compatibility
+      void AddWeightsXMLTo(void *parent) const override = 0;
+      void ReadWeightsFromXML(void *wghtnode) override = 0;
+      void ReadWeightsFromStream(std::istream &) override = 0; // backward compatibility
+      void ReadWeightsFromStream(TFile &) override {} // backward compatibility
 
       virtual void ReadModelFromFile() = 0;
 
       // signal/background classification response for all current set of data
-      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) = 0;
+      std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) override = 0;
 
    protected:
       PyObject *fModule; // Module to load
@@ -139,7 +133,7 @@ namespace TMVA {
       static std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);  // Function casts Python Tuple object into vector of size_t
       static std::vector<size_t> GetDataFromList(PyObject *listObject);    // Function casts Python List object into vector of size_t
       static PyObject* GetValueFromDict(PyObject* dict, const char* key);  // Function to check for a key in dict and return the associated value if present
-      ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
+      ClassDefOverride(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };
 

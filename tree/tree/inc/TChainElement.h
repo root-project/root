@@ -46,6 +46,7 @@ protected:
    char         *fPackets;           ///<! Packet descriptor string
    TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
    Int_t         fLoadResult;        ///<! Return value of TChain::LoadTree(); 0 means success
+   bool          fIsDelayed{false};  ///<! Postpone detection of missing branch in certain contexts (e.g. TTree::SetBranchStatus)
 
 public:
    TChainElement();
@@ -78,6 +79,8 @@ public:
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}
    virtual void        SetPacketSize(Int_t size = 100);
    virtual void        SetStatus(Int_t status) {fStatus = status;}
+           void        IsDelayed(bool isDelayed) { fIsDelayed = isDelayed; }
+           bool        IsDelayed() const { return fIsDelayed; }
 
    ClassDefOverride(TChainElement,2);  //A chain element
 };

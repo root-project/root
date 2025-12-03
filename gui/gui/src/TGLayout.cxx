@@ -28,16 +28,6 @@
 #include <iostream>
 
 
-ClassImp(TGLayoutHints);
-ClassImp(TGLayoutManager);
-ClassImp(TGVerticalLayout);
-ClassImp(TGHorizontalLayout);
-ClassImp(TGRowLayout);
-ClassImp(TGColumnLayout);
-ClassImp(TGMatrixLayout);
-ClassImp(TGTileLayout);
-ClassImp(TGListLayout);
-ClassImp(TGListDetailsLayout);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,7 +212,7 @@ void TGVerticalLayout::Layout()
             nb_expand++;
             exp += size.fHeight;
             if (hints & kLHintsExpandY) exp_max = 0;
-            else exp_max = TMath::Max(exp_max, (Int_t)size.fHeight);
+            else exp_max = std::max(exp_max, (Int_t)size.fHeight);
          } else {
             remain -= size.fHeight;
             if (remain < 0)
@@ -330,7 +320,7 @@ TGDimension TGVerticalLayout::GetDefaultSize() const
    while ((ptr = (TGFrameElement *) next())) {
       if (ptr->fState & kIsVisible) {
          csize = ptr->fFrame->GetDefaultSize();
-         size.fWidth = TMath::Max(size.fWidth, csize.fWidth + ptr->fLayout->GetPadLeft() +
+         size.fWidth = std::max(size.fWidth, csize.fWidth + ptr->fLayout->GetPadLeft() +
                                   ptr->fLayout->GetPadRight());
          size.fHeight += csize.fHeight + ptr->fLayout->GetPadTop() +
                          ptr->fLayout->GetPadBottom();
@@ -384,7 +374,7 @@ void TGHorizontalLayout::Layout()
             nb_expand++;
             exp += size.fWidth;
             if (hints & kLHintsExpandX) exp_max = 0;
-            else exp_max = TMath::Max(exp_max, (Int_t)size.fWidth);
+            else exp_max = std::max(exp_max, (Int_t)size.fWidth);
          } else {
             remain -= size.fWidth;
             if (remain < 0)
@@ -490,7 +480,7 @@ TGDimension TGHorizontalLayout::GetDefaultSize() const
          size.fWidth += csize.fWidth + ptr->fLayout->GetPadLeft() +
                         ptr->fLayout->GetPadRight();
 
-         size.fHeight = TMath::Max(size.fHeight, csize.fHeight + ptr->fLayout->GetPadTop() +
+         size.fHeight = std::max(size.fHeight, csize.fHeight + ptr->fLayout->GetPadTop() +
                                    ptr->fLayout->GetPadBottom());
       }
    }
@@ -545,7 +535,7 @@ TGDimension TGRowLayout::GetDefaultSize() const
    while ((ptr = (TGFrameElement *) next())) {
       if (ptr->fState & kIsVisible) {
          dsize   = ptr->fFrame->GetDefaultSize();
-         size.fHeight  = TMath::Max(size.fHeight, dsize.fHeight);
+         size.fHeight  = std::max(size.fHeight, dsize.fHeight);
          size.fWidth  += dsize.fWidth + fSep;
       }
    }
@@ -601,7 +591,7 @@ TGDimension TGColumnLayout::GetDefaultSize() const
       if (ptr->fState & kIsVisible) {
          dsize   = ptr->fFrame->GetDefaultSize();
          size.fHeight += dsize.fHeight + fSep;
-         size.fWidth   = TMath::Max(size.fWidth, dsize.fWidth);
+         size.fWidth   = std::max(size.fWidth, dsize.fWidth);
       }
    }
 
@@ -644,8 +634,8 @@ void TGMatrixLayout::Layout()
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
-      maxsize.fWidth  = TMath::Max(maxsize.fWidth, csize.fWidth);
-      maxsize.fHeight = TMath::Max(maxsize.fHeight, csize.fHeight);
+      maxsize.fWidth  = std::max(maxsize.fWidth, csize.fWidth);
+      maxsize.fHeight = std::max(maxsize.fHeight, csize.fHeight);
    }
 
    next.Reset();
@@ -699,8 +689,8 @@ TGDimension TGMatrixLayout::GetDefaultSize() const
    while ((ptr = (TGFrameElement *) next())) {
       count++;
       csize = ptr->fFrame->GetDefaultSize();
-      maxsize.fWidth  = TMath::Max(maxsize.fWidth, csize.fWidth);
-      maxsize.fHeight = TMath::Max(maxsize.fHeight, csize.fHeight);
+      maxsize.fWidth  = std::max(maxsize.fWidth, csize.fWidth);
+      maxsize.fHeight = std::max(maxsize.fHeight, csize.fHeight);
    }
 
    if (fRows == 0) {
@@ -744,11 +734,11 @@ void TGTileLayout::Layout()
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
-      max_osize.fWidth  = TMath::Max(max_osize.fWidth, csize.fWidth);
-      max_osize.fHeight = TMath::Max(max_osize.fHeight, csize.fHeight);
+      max_osize.fWidth  = std::max(max_osize.fWidth, csize.fWidth);
+      max_osize.fHeight = std::max(max_osize.fHeight, csize.fHeight);
    }
 
-   max_width = TMath::Max(msize.fWidth, max_osize.fWidth + (fSep << 1));
+   max_width = std::max(msize.fWidth, max_osize.fWidth + (fSep << 1));
    x = fSep; y = fSep << 1;
 
    next.Reset();
@@ -796,11 +786,11 @@ TGDimension TGTileLayout::GetDefaultSize() const
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       max_size = ptr->fFrame->GetDefaultSize();
-      max_osize.fWidth  = TMath::Max(max_osize.fWidth, max_size.fWidth);
-      max_osize.fHeight = TMath::Max(max_osize.fHeight, max_size.fHeight);
+      max_osize.fWidth  = std::max(max_osize.fWidth, max_size.fWidth);
+      max_osize.fHeight = std::max(max_osize.fHeight, max_size.fHeight);
    }
 
-   max_size.fWidth = TMath::Max(msize.fWidth, max_osize.fWidth + (fSep << 1));
+   max_size.fWidth = std::max(msize.fWidth, max_osize.fWidth + (fSep << 1));
 
    x = fSep; y = fSep << 1;
 
@@ -814,7 +804,7 @@ TGDimension TGTileLayout::GetDefaultSize() const
       }
    }
    if (x != fSep) y += max_osize.fHeight + fSep;
-   max_size.fHeight = TMath::Max(y, (Int_t)msize.fHeight);
+   max_size.fHeight = std::max(y, (Int_t)msize.fHeight);
 
    return max_size;
 }
@@ -835,11 +825,11 @@ void TGListLayout::Layout()
    // coverity[returned_pointer]
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
-      max_osize.fWidth  = TMath::Max(max_osize.fWidth, csize.fWidth);
-      max_osize.fHeight = TMath::Max(max_osize.fHeight, csize.fHeight);
+      max_osize.fWidth  = std::max(max_osize.fWidth, csize.fWidth);
+      max_osize.fHeight = std::max(max_osize.fHeight, csize.fHeight);
    }
 
-   max_height = TMath::Max(msize.fHeight, max_osize.fHeight + (fSep << 1));
+   max_height = std::max(msize.fHeight, max_osize.fHeight + (fSep << 1));
 
    x = fSep; y = fSep << 1;
 
@@ -889,11 +879,11 @@ TGDimension TGListLayout::GetDefaultSize() const
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       max_size = ptr->fFrame->GetDefaultSize();
-      max_osize.fWidth  = TMath::Max(max_osize.fWidth, max_size.fWidth);
-      max_osize.fHeight = TMath::Max(max_osize.fHeight, max_size.fHeight);
+      max_osize.fWidth  = std::max(max_osize.fWidth, max_size.fWidth);
+      max_osize.fHeight = std::max(max_osize.fHeight, max_size.fHeight);
    }
 
-   max_size.fHeight = TMath::Max(msize.fHeight, max_osize.fHeight + (fSep << 1));
+   max_size.fHeight = std::max(msize.fHeight, max_osize.fHeight + (fSep << 1));
 
    x = fSep; y = fSep << 1;
 
@@ -906,7 +896,7 @@ TGDimension TGListLayout::GetDefaultSize() const
       }
    }
    if (y != (fSep << 1)) x += (Int_t)max_osize.fWidth + fSep;
-   max_size.fWidth = TMath::Max(x, (Int_t)msize.fWidth);
+   max_size.fWidth = std::max(x, (Int_t)msize.fWidth);
 
    return max_size;
 }
@@ -924,7 +914,7 @@ void TGListDetailsLayout::Layout()
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
-      max_oh = TMath::Max(max_oh, (Int_t)csize.fHeight);
+      max_oh = std::max(max_oh, (Int_t)csize.fHeight);
    }
 
    next.Reset();
@@ -955,8 +945,8 @@ TGDimension TGListDetailsLayout::GetDefaultSize() const
    TIter next(fList);
    while ((ptr = (TGFrameElement *) next())) {
       csize = ptr->fFrame->GetDefaultSize();
-      max_osize.fWidth  = TMath::Max(max_osize.fWidth, csize.fWidth);
-      max_osize.fHeight = TMath::Max(max_osize.fHeight, csize.fHeight);
+      max_osize.fWidth  = std::max(max_osize.fWidth, csize.fWidth);
+      max_osize.fHeight = std::max(max_osize.fHeight, csize.fHeight);
    }
 
    next.Reset();

@@ -22,9 +22,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
 if(builtin_vdt OR vdt)
   target_link_libraries(ROOTVecOps PUBLIC VDT::VDT)
 endif()
-if(builtin_vdt)
-  add_dependencies(ROOTVecOps VDT)
-endif()
 
 include(CheckCXXSymbolExists)
 check_symbol_exists(m __sqrt_finite HAVE_FINITE_MATH)

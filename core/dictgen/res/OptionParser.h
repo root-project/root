@@ -51,8 +51,8 @@ Bugs Fixed 8-7-12:
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 /**
  * @file
@@ -1379,7 +1379,7 @@ struct Parser::Action
    * options if they have a Descriptor whose Descriptor::check_arg does not return
    * @ref ARG_ILLEGAL.
    *
-   * Returns @c false iff a fatal error has occured and the parse should be aborted.
+   * Returns @c false iff a fatal error has occurred and the parse should be aborted.
    */
   virtual bool perform(Option&)
   {

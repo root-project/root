@@ -102,7 +102,7 @@ public:
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny) { return TH1::GetBinErrorUp( GetBin(binx, biny) ); }
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
    virtual Double_t GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
-   virtual void     GetRandom2(Double_t &x, Double_t &y, TRandom * rng = nullptr);
+   virtual void     GetRandom2(Double_t &x, Double_t &y, TRandom * rng = nullptr, Option_t *option = "");
            void     GetStats(Double_t *stats) const override;
            Double_t Integral(Option_t *option="") const override;
    //virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
@@ -130,9 +130,9 @@ public:
    virtual void     SetShowProjectionX(Int_t nbins=1);  // *MENU*
    virtual void     SetShowProjectionY(Int_t nbins=1);  // *MENU*
    virtual void     SetShowProjectionXY(Int_t nbinsY=1, Int_t nbinsX=1);  // *MENU*
-           TH1     *ShowBackground(Int_t niter=20, Option_t *option="same") override;
-           Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05) override; // *MENU*
-           void     Smooth(Int_t ntimes=1, Option_t *option="") override; // *MENU*
+   virtual TH1     *ShowBackground2D(Int_t nIterX = 20, Int_t nIterY = 20, Option_t *option = "same");
+   Int_t            ShowPeaks(Double_t sigma = 2, Option_t *option = "", Double_t threshold = 0.05) override; // *MENU*
+   void             Smooth(Int_t ntimes = 1, Option_t *option = "") override;                                 // *MENU*
 
    ClassDefOverride(TH2,5)  //2-Dim histogram base class
 };
@@ -166,7 +166,7 @@ public:
 
            TH2C&    operator=(const TH2C &h1);
    friend  TH2C     operator*(Float_t c1, TH2C const &h1);
-   friend  TH2C     operator*(TH2C const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend TH2C operator*(TH2C const &h1, Float_t c1);
    friend  TH2C     operator+(TH2C const &h1, TH2C const &h2);
    friend  TH2C     operator-(TH2C const &h1, TH2C const &h2);
    friend  TH2C     operator*(TH2C const &h1, TH2C const &h2);
@@ -179,6 +179,15 @@ protected:
    ClassDefOverride(TH2C,4)  //2-Dim histograms (one char per channel)
 };
 
+TH2C operator*(Float_t c1, TH2C const &h1);
+inline TH2C operator*(TH2C const &h1, Float_t c1)
+{
+   return operator*(c1, h1);
+}
+TH2C operator+(TH2C const &h1, TH2C const &h2);
+TH2C operator-(TH2C const &h1, TH2C const &h2);
+TH2C operator*(TH2C const &h1, TH2C const &h2);
+TH2C operator/(TH2C const &h1, TH2C const &h2);
 
 //______________________________________________________________________________
 
@@ -208,7 +217,7 @@ public:
 
            TH2S&    operator=(const TH2S &h1);
    friend  TH2S     operator*(Float_t c1, TH2S const &h1);
-   friend  TH2S     operator*(TH2S const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend TH2S operator*(TH2S const &h1, Float_t c1);
    friend  TH2S     operator+(TH2S const &h1, TH2S const &h2);
    friend  TH2S     operator-(TH2S const &h1, TH2S const &h2);
    friend  TH2S     operator*(TH2S const &h1, TH2S const &h2);
@@ -221,6 +230,15 @@ protected:
    ClassDefOverride(TH2S,4)  //2-Dim histograms (one short per channel)
 };
 
+TH2S operator*(Float_t c1, TH2S const &h1);
+inline TH2S operator*(TH2S const &h1, Float_t c1)
+{
+   return operator*(c1, h1);
+}
+TH2S operator+(TH2S const &h1, TH2S const &h2);
+TH2S operator-(TH2S const &h1, TH2S const &h2);
+TH2S operator*(TH2S const &h1, TH2S const &h2);
+TH2S operator/(TH2S const &h1, TH2S const &h2);
 
 //______________________________________________________________________________
 
@@ -250,7 +268,7 @@ public:
 
            TH2I&    operator=(const TH2I &h1);
    friend  TH2I     operator*(Float_t c1, TH2I const &h1);
-   friend  TH2I     operator*(TH2I const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend TH2I operator*(TH2I const &h1, Float_t c1);
    friend  TH2I     operator+(TH2I const &h1, TH2I const &h2);
    friend  TH2I     operator-(TH2I const &h1, TH2I const &h2);
    friend  TH2I     operator*(TH2I const &h1, TH2I const &h2);
@@ -262,6 +280,16 @@ protected:
 
    ClassDefOverride(TH2I,4)  //2-Dim histograms (one 32 bit integer per channel)
 };
+
+TH2I operator*(Float_t c1, TH2I const &h1);
+inline TH2I operator*(TH2I const &h1, Float_t c1)
+{
+   return operator*(c1, h1);
+}
+TH2I operator+(TH2I const &h1, TH2I const &h2);
+TH2I operator-(TH2I const &h1, TH2I const &h2);
+TH2I operator*(TH2I const &h1, TH2I const &h2);
+TH2I operator/(TH2I const &h1, TH2I const &h2);
 
 //______________________________________________________________________________
 
@@ -289,7 +317,7 @@ public:
    void     SetBinsLength(Int_t n=-1) override;
            TH2L&    operator=(const TH2L &h1);
    friend  TH2L     operator*(Float_t c1, TH2L const &h1);
-   friend  TH2L     operator*(TH2L const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend TH2L operator*(TH2L const &h1, Float_t c1);
    friend  TH2L     operator+(TH2L const &h1, TH2L const &h2);
    friend  TH2L     operator-(TH2L const &h1, TH2L const &h2);
    friend  TH2L     operator*(TH2L const &h1, TH2L const &h2);
@@ -297,10 +325,20 @@ public:
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Long64_t (content); }
 
    ClassDefOverride(TH2L,0)  //2-Dim histograms (one 64 bit integer per channel)
 };
+
+TH2L operator*(Float_t c1, TH2L const &h1);
+inline TH2L operator*(TH2L const &h1, Float_t c1)
+{
+   return operator*(c1, h1);
+}
+TH2L operator+(TH2L const &h1, TH2L const &h2);
+TH2L operator-(TH2L const &h1, TH2L const &h2);
+TH2L operator*(TH2L const &h1, TH2L const &h2);
+TH2L operator/(TH2L const &h1, TH2L const &h2);
 
 //______________________________________________________________________________
 
@@ -350,6 +388,12 @@ protected:
    ClassDefOverride(TH2F,4)  //2-Dim histograms (one float per channel)
 };
 
+TH2F operator*(Float_t c1, TH2F const &h1);
+TH2F operator*(TH2F const &h1, Float_t c1);
+TH2F operator+(TH2F const &h1, TH2F const &h2);
+TH2F operator-(TH2F const &h1, TH2F const &h2);
+TH2F operator*(TH2F const &h1, TH2F const &h2);
+TH2F operator/(TH2F const &h1, TH2F const &h2);
 
 //______________________________________________________________________________
 
@@ -385,7 +429,7 @@ public:
 
            TH2D&    operator=(const TH2D &h1);
    friend  TH2D     operator*(Float_t c1, TH2D const &h1);
-   friend  TH2D     operator*(TH2D const &h1, Float_t c1) {return operator*(c1,h1);}
+   friend TH2D operator*(TH2D const &h1, Float_t c1);
    friend  TH2D     operator+(TH2D const &h1, TH2D const &h2);
    friend  TH2D     operator-(TH2D const &h1, TH2D const &h2);
    friend  TH2D     operator*(TH2D const &h1, TH2D const &h2);
@@ -397,5 +441,15 @@ protected:
 
    ClassDefOverride(TH2D,4)  //2-Dim histograms (one double per channel)
 };
+
+TH2D operator*(Float_t c1, TH2D const &h1);
+inline TH2D operator*(TH2D const &h1, Float_t c1)
+{
+   return operator*(c1, h1);
+}
+TH2D operator+(TH2D const &h1, TH2D const &h2);
+TH2D operator-(TH2D const &h1, TH2D const &h2);
+TH2D operator*(TH2D const &h1, TH2D const &h2);
+TH2D operator/(TH2D const &h1, TH2D const &h2);
 
 #endif

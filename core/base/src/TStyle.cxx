@@ -30,7 +30,6 @@
 TStyle  *gStyle;
 const UInt_t kTakeStyle = BIT(17);
 
-ClassImp(TStyle);
 
 /** \class TStyle
 \ingroup Base

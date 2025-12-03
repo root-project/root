@@ -32,7 +32,6 @@
 #include "TGuiBldDragManager.h"
 #include "TGMsgBox.h"
 
-ClassImp(TGuiBldNameFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

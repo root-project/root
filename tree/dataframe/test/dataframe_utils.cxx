@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <TBranch.h>
+
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...
@@ -24,10 +26,9 @@ TEST(RDataFrameUtils, DeduceAllPODsFromDefines)
                .Define("Long64_t_tmp", []() { return Long64_t(0ll); })
                .Define("ULong64_t_tmp", []() { return ULong64_t(0ull); })
                .Define("bool_tmp", []() { return bool(false); });
-   auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
-                       ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
-                                        {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
-                                         "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
+   auto c = d.Snapshot("t", "dataframe_interfaceAndUtils_1.root",
+                       {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp", "double_tmp",
+                        "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
 TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
@@ -136,11 +137,11 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 2u);
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
@@ -151,12 +152,13 @@ TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
    int i;
    TTree t("t", "t");
    t.Branch("a", &i);
+   t.Branch("c", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {"c"});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
@@ -172,9 +174,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsNestedNames)
    DummyStruct s{1, 2};
    t.Branch("s", &s, "a/I:b/I");
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::GetBranchNames(t),
-                                                 RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
+   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::RColumnRegister{&lm},
+                                                 lm.GetDataSource()->GetColumnNames());
    const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
@@ -201,9 +203,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
    t1.AddFriend(&t2);
    t1.AddFriend(&t4);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto ncols =
-      RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t1, {}};
+   auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::RColumnRegister{&lm},
+                                           lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }
 
@@ -231,8 +233,7 @@ TEST(RDataFrameUtils, TypeName2TypeID)
 {
    EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
    EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
+   EXPECT_EQ(typeid(std::vector<std::vector<float>>), RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"));
    EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
    EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
-   // TODO(jblomer): Ideally, we would want the next one not to throw an exception
-   EXPECT_THROW(RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"), std::runtime_error);
 }

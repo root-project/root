@@ -1,0 +1,157 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/io/stdarray/aclic01.C+...
+Class edm1::A state is kHasTClassInit
+List of data members of edm1::A
+Name: a0
+Type Name: array<int,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a1
+Type Name: int
+Array Dim: 1
+Max Index [0]: 3
+Array Index: 
+Is Pointer: 0
+Is Basic: 1
+---------
+Name: a2
+Type Name: array<array<int,3>,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a3
+Type Name: int
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Array Index: 
+Is Pointer: 0
+Is Basic: 1
+---------
+Name: a4
+Type Name: array<edm1::B,42>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a5
+Type Name: edm1::B
+Array Dim: 1
+Max Index [0]: 42
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a6
+Type Name: array<float,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a7
+Type Name: float
+Array Dim: 1
+Max Index [0]: 3
+Array Index: 
+Is Pointer: 0
+Is Basic: 1
+---------
+Name: a8
+Type Name: array<array<float,3>,3>
+Array Dim: 0
+Array Index: 
+Is Pointer: 0
+Is Basic: 0
+---------
+Name: a9
+Type Name: float
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Array Index: 
+Is Pointer: 0
+Is Basic: 1
+---------
+List of streamer elements of edm1::A
+Name: a0
+Type Name: int
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 23
+---------
+Name: a1
+Type Name: int
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 23
+---------
+Name: a2
+Type Name: int
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Is Pointer: 0
+Is Basic: 23
+---------
+Name: a3
+Type Name: int
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Is Pointer: 0
+Is Basic: 23
+---------
+Name: a4
+Type Name: edm1::B
+Array Dim: 1
+Max Index [0]: 42
+Is Pointer: 0
+Is Basic: 82
+---------
+Name: a5
+Type Name: edm1::B
+Array Dim: 1
+Max Index [0]: 42
+Is Pointer: 0
+Is Basic: 82
+---------
+Name: a6
+Type Name: float
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 25
+---------
+Name: a7
+Type Name: float
+Array Dim: 1
+Max Index [0]: 3
+Is Pointer: 0
+Is Basic: 25
+---------
+Name: a8
+Type Name: float
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Is Pointer: 0
+Is Basic: 25
+---------
+Name: a9
+Type Name: float
+Array Dim: 2
+Max Index [0]: 3
+Max Index [1]: 3
+Is Pointer: 0
+Is Basic: 25
+---------
+(int) 0

@@ -17,8 +17,6 @@
 // Authors: Justin Salmon, Lukasz Janyst                                      //
 //          CERN, 2013                                                        //
 //                                                                            //
-// Enables access to XRootD filesystem interface using the new client.        //
-//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TSystem.h"
@@ -33,6 +31,7 @@ namespace XrdCl {
    class DirectoryList;
 }
 
+/// Enables access to XRootD filesystem interface using the new client.
 class TNetXNGSystem: public TSystem {
 
 private:

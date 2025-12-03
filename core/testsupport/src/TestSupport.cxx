@@ -13,6 +13,8 @@
 
 #include "ROOT/TestSupport.hxx"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <cstring>
 #include <iostream>
@@ -74,6 +76,18 @@ static struct ForbidDiagnostics {
 	  && strcmp(msg, "Fast recovery from undefined function values only implemented for little-endian machines. If necessary, request an extension of functionality on https://root.cern") == 0) {
         std::cerr << "Warning in " << location << " " << msg << std::endl;
         return;
+      }
+
+      if (level == kWarning && strcmp(location, "RIoUring") == 0 &&
+          strstr(msg, "io_uring is unexpectedly not available because:") != nullptr) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
+      }
+
+      if (level == kWarning && strcmp(location, "RRawFileUnix") == 0 &&
+          strcmp(msg, "io_uring setup failed, falling back to blocking I/O in ReadV") == 0) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
       }
 
       FAIL() << "Received unexpected diagnostic of severity "

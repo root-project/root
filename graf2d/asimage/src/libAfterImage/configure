@@ -2854,10 +2854,10 @@ test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL}'
 test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 
 		currdir=`pwd`
-	INSTALL=`echo $INSTALL|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
-	INSTALL_PROGRAM=`echo $INSTALL_PROGRAM|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
-	INSTALL_DATA=`echo $INSTALL_DATA|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
-	INSTALL_LIB=`echo $INSTALL_LIB|sed -e "s@\^\.\.@${currdir}@" -e "s@^autoconf@${currdir}/autoconf@"`
+	INSTALL=`echo $INSTALL|sed -e "s|\^\.\.|${currdir}|" -e "s|^autoconf|${currdir}/autoconf|"`
+	INSTALL_PROGRAM=`echo $INSTALL_PROGRAM|sed -e "s|\^\.\.|${currdir}|" -e "s|^autoconf|${currdir}/autoconf|"`
+	INSTALL_DATA=`echo $INSTALL_DATA|sed -e "s|\^\.\.|${currdir}|" -e "s|^autoconf|${currdir}/autoconf|"`
+	INSTALL_LIB=`echo $INSTALL_LIB|sed -e "s|\^\.\.|${currdir}|" -e "s|^autoconf|${currdir}/autoconf|"`
 
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.

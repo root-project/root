@@ -1,0 +1,25 @@
+<rootdict>
+   <class name="std::forward_list<TH1F>" />
+   <class name="std::forward_list<forward_list<TH1F>>" />
+   <class name="std::list<TH1F>" />
+   <class name="std::list<list<TH1F>>" />
+   <class name="std::vector<TH1F>" />
+   <class name="std::vector<vector<TH1F>>" />
+   <class name="std::deque<TH1F>" />
+   <class name="std::deque<deque<TH1F>>" />
+<!--    Here the veco of conts and conts of vec -->
+   <class name="std::vector<forward_list<TH1F>>" />
+   <class name="std::vector<list<TH1F>>" />
+   <class name="std::vector<deque<TH1F>>" />
+
+   <class name="std::forward_list<vector<TH1F>>" />
+   <class name="std::list<vector<TH1F>>" />
+   <class name="std::deque<vector<TH1F>>" />
+
+<!-- Why not stressing pattern selection with complex -->
+   <class pattern="std::vector<std::complex<*> >" />
+   <class pattern="std::list<std::complex<*> >" />
+   <class pattern="std::forward_list<std::complex<*> >" />
+   <class pattern="std::deque<std::complex<*> >" />
+
+</rootdict>

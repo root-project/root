@@ -1,10 +1,10 @@
 #include "Utils.h"
 
-#include "clang/Interpreter/CppInterOp.h"
+#include "CppInterOp/CppInterOp.h"
 #include "clang-c/CXCppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
-#include "clang/Interpreter/CppInterOp.h"
+#include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
@@ -158,17 +158,25 @@ TEST(ScopeReflectionTest, SizeOf) {
   EXPECT_EQ(Cpp::SizeOf(Decls[4]), (size_t)0);
   EXPECT_EQ(Cpp::SizeOf(Decls[5]), (size_t)1);
   EXPECT_EQ(Cpp::SizeOf(Decls[6]), (size_t)4);
-  EXPECT_EQ(Cpp::SizeOf(Decls[7]), (size_t)16);
+  struct B {short a; double b;};
+  EXPECT_EQ(Cpp::SizeOf(Decls[7]), sizeof(B));
 }
 
 
 TEST(ScopeReflectionTest, IsBuiltin) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
+
   // static std::set<std::string> g_builtins =
   // {"bool", "char", "signed char", "unsigned char", "wchar_t", "short", "unsigned short",
   //  "int", "unsigned int", "long", "unsigned long", "long long", "unsigned long long",
   //  "float", "double", "long double", "void"}
 
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = { "-include", "new" };
+
+  Cpp::CreateInterpreter(interpreter_args);
   ASTContext &C = Interp->getCI()->getASTContext();
   EXPECT_TRUE(Cpp::IsBuiltin(C.BoolTy.getAsOpaquePtr()));
   EXPECT_TRUE(Cpp::IsBuiltin(C.CharTy.getAsOpaquePtr()));
@@ -183,7 +191,6 @@ TEST(ScopeReflectionTest, IsBuiltin) {
   EXPECT_TRUE(Cpp::IsBuiltin(C.getComplexType(C.Float128Ty).getAsOpaquePtr()));
 
   // std::complex
-  std::vector<Decl*> Decls;
   Interp->declare("#include <complex>");
   Sema &S = Interp->getCI()->getSema();
   auto lookup = S.getStdNamespace()->lookup(&C.Idents.get("complex"));
@@ -326,6 +333,9 @@ TEST(ScopeReflectionTest, GetCompleteName) {
                         A<int> a;
 
                         enum { enum1 };
+
+                        template<typename T1, typename T2>
+                        void fn(T1 t1, T2 t2) {}
                        )";
   GetAllTopLevelDecls(code, Decls);
 
@@ -342,7 +352,15 @@ TEST(ScopeReflectionTest, GetCompleteName) {
                                              Cpp::GetVariableType(
                                                      Decls[9]))), "A<int>");
   EXPECT_EQ(Cpp::GetCompleteName(Decls[10]), "(unnamed)");
+  EXPECT_EQ(Cpp::GetCompleteName(Decls[11]), "fn");
   EXPECT_EQ(Cpp::GetCompleteName(nullptr), "<unnamed>");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  Cpp::TemplateArgInfo template_args[2] = {C.IntTy.getAsOpaquePtr(),
+                                           C.DoubleTy.getAsOpaquePtr()};
+  Cpp::TCppScope_t fn = Cpp::InstantiateTemplate(Decls[11], template_args, 2);
+  EXPECT_TRUE(fn);
+  EXPECT_EQ(Cpp::GetCompleteName(fn), "fn<int, double>");
 }
 
 TEST(ScopeReflectionTest, GetQualifiedName) {
@@ -493,6 +511,10 @@ TEST(ScopeReflectionTest, GetScopefromCompleteName) {
 }
 
 TEST(ScopeReflectionTest, GetNamed) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   std::string code = R"(namespace N1 {
                         namespace N2 {
                           class C {
@@ -503,7 +525,10 @@ TEST(ScopeReflectionTest, GetNamed) {
                         }
                         }
                        )";
-  Cpp::CreateInterpreter();
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+
+  Cpp::CreateInterpreter(interpreter_args);
 
   Interp->declare(code);
   Cpp::TCppScope_t ns_N1 = Cpp::GetNamed("N1", nullptr);
@@ -615,6 +640,13 @@ TEST(ScopeReflectionTest, GetNumBases) {
     class D : public B, public C {};
     class E : public D {};
     class NoDef;
+
+    template<typename T, int N>
+    struct Klass : public A {
+        T t{N};
+    };
+
+    typedef Klass<int, 1> TKlass;
   )";
 
   GetAllTopLevelDecls(code, Decls);
@@ -627,6 +659,7 @@ TEST(ScopeReflectionTest, GetNumBases) {
   // FIXME: Perhaps we should have a special number or error out as this
   // operation is not well defined if a class has no definition.
   EXPECT_EQ(Cpp::GetNumBases(Decls[5]), 0);
+  EXPECT_EQ(Cpp::GetNumBases(Cpp::GetUnderlyingScope(Decls[7])), 1);
 }
 
 TEST(ScopeReflectionTest, GetBaseClass) {
@@ -775,7 +808,10 @@ TEST(ScopeReflectionTest, GetAllCppNames) {
     }
   )";
 
-  GetAllTopLevelDecls(code, Decls);
+  std::vector<const char*> interpreter_args = {"-Wno-inaccessible-base"};
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      interpreter_args);
 
   auto test_get_all_cpp_names =
       [](Decl* D, const std::vector<std::string>& truth_names) {
@@ -845,14 +881,10 @@ template<class T> constexpr T pi = T(3.1415926535897932385L);
   auto* VD = cast<VarTemplateSpecializationDecl>((Decl*)Instance1);
   VarTemplateDecl* VDTD1 = VD->getSpecializedTemplate();
   EXPECT_TRUE(VDTD1->isThisDeclarationADefinition());
-#if CLANG_VERSION_MAJOR > 13
-#if CLANG_VERSION_MAJOR <= 18
+#if CLANG_VERSION_MAJOR == 18
   TemplateArgument TA1 = (*VD->getTemplateArgsInfo())[0].getArgument();
 #else
   TemplateArgument TA1 = (*VD->getTemplateArgsAsWritten())[0].getArgument();
-#endif // CLANG_VERSION_MAJOR
-#else
-  TemplateArgument TA1 = VD->getTemplateArgsInfo()[0].getArgument();
 #endif // CLANG_VERSION_MAJOR
   EXPECT_TRUE(TA1.getAsType()->isIntegerType());
 }
@@ -878,9 +910,14 @@ template<typename T> T TrivialFnTemplate() { return T(); }
 }
 
 TEST(ScopeReflectionTest, InstantiateTemplateFunctionFromString) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
     GTEST_SKIP() << "XFAIL due to Valgrind report";
-  Cpp::CreateInterpreter();
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
   std::string code = R"(#include <memory>)";
   Interp->process(code);
   const char* str = "std::make_unique<int,int>";
@@ -1018,12 +1055,18 @@ TEST(ScopeReflectionTest, GetClassTemplateInstantiationArgs) {
 
 
 TEST(ScopeReflectionTest, IncludeVector) {
+#if CLANG_VERSION_MAJOR == 18 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32) && (defined(_M_ARM) || defined(_M_ARM64))
+  GTEST_SKIP() << "Test fails with Cling on Windows on ARM";
+#endif
   if (llvm::sys::RunningOnValgrind())
       GTEST_SKIP() << "XFAIL due to Valgrind report";
   std::string code = R"(
     #include <vector>
     #include <iostream>
   )";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  Cpp::CreateInterpreter(interpreter_args);
   Interp->declare(code);
 }
 
@@ -1099,4 +1142,30 @@ TEST(ScopeReflectionTest, GetOperator) {
   Cpp::GetOperator(Cpp::GetScope("extra_ops"), Cpp::Operator::OP_Tilde, ops,
                    Cpp::OperatorArity::kBinary);
   EXPECT_EQ(ops.size(), 0);
+
+  std::string inheritance_code = R"(
+  struct Parent {
+    int x;
+    Parent(int x) : x(x) {}
+    Parent operator+(const Parent& other) {
+      return Parent(x + other.x);
+    }
+  };
+
+  struct Child : Parent {
+    Child(int x) : Parent(x) {}
+    Child operator-(const Child& other) {
+      return Child(x - other.x);
+    }
+  };
+  )";
+  Cpp::Declare(inheritance_code.c_str());
+
+  ops.clear();
+  Cpp::GetOperator(Cpp::GetScope("Child"), Cpp::Operator::OP_Plus, ops);
+  EXPECT_EQ(ops.size(), 1);
+
+  ops.clear();
+  Cpp::GetOperator(Cpp::GetScope("Child"), Cpp::Operator::OP_Minus, ops);
+  EXPECT_EQ(ops.size(), 1);
 }

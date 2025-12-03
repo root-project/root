@@ -14,12 +14,7 @@ histogramming, fitting and minimization algorithms) and visualization\n\
 tools. The user interacts with ROOT via a graphical user interface, the\n\
 command line or batch scripts. The command and scripting language\n\
 is C++ (using the interpreter) and large scripts can be compiled and\n\
-dynamically linked in. Using the PROOF (Parallel ROOT Facility)\n\
-extension large databases can be analysed in parallel on MPP's,\n\
-SMP's or loosely coupled workstation/PC clusters. ROOT also\n\
-contains a C++ to HTML documentation generation system using\n\
-the interpreter's dictionaries (the reference manual on\n\
-the web is generated that way) and a rich set of interprocess\n\
+dynamically linked in. ROOT also provides a rich set of interprocess\n\
 communication classes allowing the transfer of complete objects\n\
 from one process to another.\n\
 ";

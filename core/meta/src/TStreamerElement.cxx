@@ -9,12 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TROOT.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -189,7 +183,6 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    if (xmin >= xmax && nbits <15) xmin = nbits+0.1;
 }
 
-ClassImp(TStreamerElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -290,7 +283,7 @@ Bool_t TStreamerElement::CannotSplit() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a pointer to the TClass of this element.
+/// Returns a pointer to the TClass of this element and updates fClassObject
 
 TClass *TStreamerElement::GetClassPointer() const
 {
@@ -308,8 +301,15 @@ TClass *TStreamerElement::GetClassPointer() const
 
 Int_t TStreamerElement::GetExecID() const
 {
-   //check if element is a TRef or TRefArray
-   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
+   TString typeName = fTypeName;
+   if (typeName != "TRef" && typeName != "TRefArray") {
+      // It's not a ROOT standard TRef or TRefArray class, but it could be a user class
+      // inheriting from it (see ROOT-7052)
+      const TString clName = ExtractClassName(fTypeName);
+      const auto cl = TClass::GetClass(clName, kFALSE, kTRUE);
+      if (!cl || (nullptr == cl->GetBaseClass("TRef") && nullptr == cl->GetBaseClass("TRefArray")))
+         return 0;
+   }
 
    //if the UniqueID of this element has already been set, we assume
    //that it contains the exec id of a TRef object.
@@ -609,7 +609,6 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -907,7 +906,6 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1020,7 +1018,6 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerLoop);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1124,7 +1121,6 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicType);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1224,7 +1220,6 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1325,7 +1320,6 @@ void TStreamerObject::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAny);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1423,7 +1417,6 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1527,7 +1520,6 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAnyPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1622,7 +1614,6 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1692,7 +1683,6 @@ void TStreamerString::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -2067,7 +2057,6 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTLstring);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -2153,7 +2142,6 @@ void TStreamerSTLstring::Streamer(TBuffer &R__b)
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTLstring);
 
 void TStreamerArtificial::Streamer(TBuffer& /* R__b */)
 {

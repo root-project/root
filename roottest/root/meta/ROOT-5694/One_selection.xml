@@ -1,0 +1,5 @@
+<lcgdict>
+   <class pattern="std::vector<int*" />
+   <class name="A" />
+   <class pattern="std::pair<int*" />
+<lcgdict>

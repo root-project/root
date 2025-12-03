@@ -1,0 +1,31 @@
+{
+TNamed n;
+TMethod *m = (TMethod*)TNamed::Class()->GetListOfMethods()->FindObject("Sizeof");
+n.Execute(m,0,0);
+TObjArray arr;
+n.Execute(m,&arr,0);
+TH1F *h = new TH1F("test", "test", 10, 10, 10);
+m = h->IsA()->GetMethodAny("Reset");
+h->Execute(m, 0);
+h->Execute(m, &arr);
+arr.Add(new TObjString("abc"));
+h->Execute(m, &arr);
+m = (TMethod*)TNamed::Class()->GetListOfMethods()->FindObject("Sizeof");
+n.Execute(m,&arr,0);
+m = h->IsA()->GetMethodAny("Reset");
+h->Execute(m,&arr,0);
+arr.Add(new TObjString("abc"));
+h->Execute(m,&arr,0);
+m = (TMethod*)TNamed::Class()->GetListOfMethods()->FindObject("SetName");
+n.Execute(m,&arr,0);
+arr.Clear();
+n.Execute(m,&arr,0);
+m = h->IsA()->GetMethodAny("Divide");
+h->Execute(m,&arr);
+m = TH1::Class()->GetMethodAny("Divide");
+h->Execute(m,&arr);
+TMethodCall mc(h->IsA(), "Class_Name", "");
+char *txt = nullptr;
+mc.Execute(&txt);
+R__ASSERT(strcmp(txt, "TH1F") == 0);
+}

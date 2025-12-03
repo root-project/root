@@ -1,0 +1,18 @@
+<lcgdict>
+  <class name="ClassAIns2" ClassVersion="2" />
+  <class name="ClassABase2" ClassVersion="2" />
+  <class name="ClassA2" ClassVersion="2" />
+  <class name="ClassB" ClassVersion="3" />
+  <class name="ClassC" ClassVersion="3" />
+  <class name="ClassD" ClassVersion="3" />
+  <class name="std::vector<float>" />
+  <class name="std::pair<int,float>" />
+  <class name="std::vector<ClassA2>" />
+  <class name="std::vector<std::pair<int,float> >" />
+  <class name="std::vector<ClassA2*>" />
+  <read sourceClass="ClassA" version="[2]" targetClass="ClassA2" source="ClassABase" target="ClassABase2" />
+  <read sourceClass="ClassAIns" version="[2]" targetClass="ClassAIns2" />
+  <read sourceClass="ClassABase" version="[2]" targetClass="ClassABase2" />
+  <read sourceClass="ClassC" version="[2]" targetClass="ClassC" source="ClassABase" target="ClassABase2" />
+  <read sourceClass="ClassB" version="[2]" targetClass="ClassB" source="ClassA" target="ClassA2" />
+</lcgdict>

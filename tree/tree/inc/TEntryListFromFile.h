@@ -35,6 +35,8 @@
 
 #include "TEntryList.h"
 
+#include <limits>
+
 class TFile;
 
 class TEntryListFromFile: public TEntryList

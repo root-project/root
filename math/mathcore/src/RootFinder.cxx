@@ -41,11 +41,15 @@ RootFinder::RootFinder(RootFinder::EType type) :
    fSolver(nullptr)
 {
    // constructor passing type (default is kBRENT)
-   SetMethod(type);
+   const bool success = SetMethod(type);
+   if (!success)
+      throw std::runtime_error("ROOT::Math::RootFinder: ROOT was built without the requested algorithm");
 }
 
 bool RootFinder::SetMethod(RootFinder::EType type)
 {
+   fSolver = nullptr;
+
    // set method - Use the plug-in manager if method is implemented in MathMore
    if ( type == RootFinder::kBRENT )
    {
@@ -125,15 +129,15 @@ bool RootFinder::SetMethod(RootFinder::EType type)
          return false;
       }
 
-      fSolver = reinterpret_cast<ROOT::Math::IRootFinderMethod *>( h->ExecPlugin(0) );
-      assert(fSolver != nullptr);
-   }
-   else {
-      MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
-      return false;
+      fSolver = reinterpret_cast<ROOT::Math::IRootFinderMethod *>(h->ExecPlugin(0));
    }
 
 #endif
+
+   if (!fSolver) {
+      MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
+      return false;
+   }
 
    return true;
 }

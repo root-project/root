@@ -37,7 +37,7 @@ public:
 
   void addTerm(RooAbsArg* term);
 
-  TObject* clone(const char* newname) const override { return new RooProduct(*this, newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooProduct(*this, newname); }
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,

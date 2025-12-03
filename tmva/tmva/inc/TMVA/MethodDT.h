@@ -58,31 +58,31 @@ namespace TMVA {
 
       virtual ~MethodDT( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+      void AddWeightsXMLTo( void* parent ) const override;
 
       // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream& istr ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
-      void DeclareCompatibilityOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
+      void DeclareCompatibilityOptions() override;
 
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       Double_t PruneTree( );
 
@@ -98,7 +98,7 @@ namespace TMVA {
 
    private:
       // Init used in the various constructors
-      void Init( void );
+      void Init( void ) override;
 
    private:
 
@@ -136,7 +136,7 @@ namespace TMVA {
 
       Bool_t fPruneBeforeBoost; ///< ancient variable, only needed for "CompatibilityOptions"
 
-      ClassDef(MethodDT,0);  // Analysis of Decision Trees
+      ClassDefOverride(MethodDT,0);  // Analysis of Decision Trees
 
    };
 }

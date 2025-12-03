@@ -149,13 +149,13 @@ namespace TMVA {
       ~HuberLossFunction();
 
       // The LossFunction methods
-      Double_t CalculateLoss(LossFunctionEventInfo& e);
-      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
-      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateLoss(LossFunctionEventInfo& e) override;
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs) override;
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs) override;
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("Huber"); };
-      Int_t Id(){ return 0; } ;
+      TString Name() override{ return TString("Huber"); };
+      Int_t Id() override{ return 0; } ;
 
       // Functions needed beyond the interface
       void Init(std::vector<LossFunctionEventInfo>& evs);
@@ -184,10 +184,10 @@ namespace TMVA {
       ~HuberLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
-      Double_t Target(LossFunctionEventInfo& e);
-      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) override;
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) override;
+      Double_t Target(LossFunctionEventInfo& e) override;
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs) override;
 
    private:
       // some data fields
@@ -204,13 +204,13 @@ namespace TMVA {
       ~LeastSquaresLossFunction(){};
 
       // The LossFunction methods
-      Double_t CalculateLoss(LossFunctionEventInfo& e);
-      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
-      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateLoss(LossFunctionEventInfo& e) override;
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs) override;
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs) override;
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("LeastSquares"); };
-      Int_t Id(){ return 1; } ;
+      TString Name() override{ return TString("LeastSquares"); };
+      Int_t Id() override{ return 1; } ;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,10 +226,10 @@ namespace TMVA {
       ~LeastSquaresLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
-      Double_t Target(LossFunctionEventInfo& e);
-      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) override;
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) override;
+      Double_t Target(LossFunctionEventInfo& e) override;
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs) override;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,13 +243,13 @@ namespace TMVA {
       ~AbsoluteDeviationLossFunction(){};
 
       // The LossFunction methods
-      Double_t CalculateLoss(LossFunctionEventInfo& e);
-      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs);
-      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs);
+      Double_t CalculateLoss(LossFunctionEventInfo& e) override;
+      Double_t CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs) override;
+      Double_t CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs) override;
 
       // We go ahead and implement the simple ones
-      TString Name(){ return TString("AbsoluteDeviation"); };
-      Int_t Id(){ return 2; } ;
+      TString Name() override{ return TString("AbsoluteDeviation"); };
+      Int_t Id() override{ return 2; } ;
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -265,10 +265,10 @@ namespace TMVA {
       ~AbsoluteDeviationLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
-      Double_t Target(LossFunctionEventInfo& e);
-      Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
+      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) override;
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) override;
+      Double_t Target(LossFunctionEventInfo& e) override;
+      Double_t Fit(std::vector<LossFunctionEventInfo>& evs) override;
    };
 }
 

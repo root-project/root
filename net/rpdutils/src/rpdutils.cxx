@@ -13,7 +13,7 @@
 //                                                                      //
 // rpdutils                                                             //
 //                                                                      //
-// Set of utilities for rootd/proofd daemon authentication.             //
+// Set of utilities for rootd daemon authentication.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -22,22 +22,22 @@
 #include <ROOT/RConfig.hxx>
 #include "strlcpy.h"
 
-#include <ctype.h>
+#include <cctype>
 #include <fcntl.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
+#include <cerrno>
 #include <netdb.h>
-#include <math.h>
+#include <cmath>
 #include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
@@ -53,7 +53,7 @@
     defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 #endif
 
 #ifdef _AIX
@@ -221,7 +221,7 @@ ErrorHandler_t gErrSys   = 0;
 ErrorHandler_t gErrFatal = 0;
 ErrorHandler_t gErr      = 0;
 bool gSysLog = 0;
-std::string gServName[3] = { "sockd", "rootd", "proofd" };
+std::string gServName[3] = { "sockd", "rootd" };
 
 //
 // Local global consts
@@ -493,41 +493,6 @@ void RpdSetMethInitFlag(int methinit)
    if (gDebug > 2)
       ErrorInfo("RpdSetMethInitFlag: gMethInit set to %d", gMethInit);
 }
-////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to the root string for key files
-/// Used by proofd.
-
-const char *RpdGetKeyRoot()
-{
-   return (const char *)gRpdKeyRoot.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return protocol version run by the client.
-/// Used by proofd.
-
-int RpdGetClientProtocol()
-{
-   return gClientProtocol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return authentication protocol used for the handshake.
-/// Used by proofd.
-
-int RpdGetAuthProtocol()
-{
-   return gAuthProtocol;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return offset in the authtab file.
-/// Used by proofd.
-
-int RpdGetOffSet()
-{
-   return gOffSet;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -796,7 +761,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       retval = lseek(itab, 0, SEEK_END);
 
       // Save first RSA public key into file for later use by the
-      // same or other rootd/proofd; we will update the tab file
+      // same or other rootd; we will update the tab file
       // only if this operation is successful
       int ntry = 10;
       int rs = 0;
@@ -1544,8 +1509,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
    std::string theDaemonRc;
 
    // Check if a non-standard file has been requested
-   if (getenv("ROOTDAEMONRC"))
-      theDaemonRc = getenv("ROOTDAEMONRC");
+   if (std::getenv("ROOTDAEMONRC"))
+      theDaemonRc = std::getenv("ROOTDAEMONRC");
 
    if (theDaemonRc.length() <= 0) {
       if (getuid()) {
@@ -1555,16 +1520,16 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             theDaemonRc = std::string(pw->pw_dir).append("/");
             theDaemonRc.append(gDaemonRc);
          } else {
-            if (getenv("ROOTETCDIR")) {
-               theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+            if (std::getenv("ROOTETCDIR")) {
+               theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
                theDaemonRc.append(gDaemonRc);
             } else
                theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
          }
       } else {
          // If running as super-user, check system file only
-         if (getenv("ROOTETCDIR")) {
-            theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+         if (std::getenv("ROOTETCDIR")) {
+            theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
             theDaemonRc.append(gDaemonRc);
          } else
             theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
@@ -2401,7 +2366,7 @@ int RpdPass(const char *pass, int errheq)
 
          SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
                  gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-         if (!afs_auth || gService == kPROOFD)
+         if (!afs_auth)
             offset = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
             ErrorInfo("RpdPass: got offset %d", offset);
@@ -2603,8 +2568,7 @@ int RpdCheckDaemon(const char *daemon)
             cmd[i++] = ch;
          } else {
             cmd[i] = '\0';
-            if (strstr(cmd, "grep") == 0 && strstr(cmd, "rootd") == 0
-                && strstr(cmd, "proofd") == 0) {
+            if (strstr(cmd, "grep") == 0 && strstr(cmd, "rootd") == 0) {
                cnt++;
             }
             i = 0;
@@ -3196,7 +3160,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save RSA public key into file for later use by other rootd/proofd.
+/// Save RSA public key into file for later use by other rootd.
 /// Return: 0 if ok
 ///         1 if not ok
 ///         2 if not ok because file already exists and cannot be
@@ -3246,7 +3210,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
       }
    }
 
-   // Write the key if no error occured
+   // Write the key if no error occurred
    if (retval == 0) {
       while (write(ipuk, PubKey, gPubKeyLen) < 0 && GetErrno() == EINTR)
          ResetErrno();
@@ -3802,7 +3766,7 @@ int RpdAuthenticate()
          }
       }
 
-      // Guess the client procotol if not received via Rootd/ProofdProtocol
+      // Guess the client procotol if not received via Rootd
       if (gClientProtocol == 0)
          gClientProtocol = RpdGuessClientProt(buf, kind);
 
@@ -3906,7 +3870,7 @@ void RpdFreeKeys()
 ////////////////////////////////////////////////////////////////////////////////
 /// Receives client protocol and returns daemon protocol.
 /// Returns:  0 if ok
-///          -1 if any error occured
+///          -1 if any error occurred
 ///          -2 if special action (e.g. cleanup): no need to continue
 
 int RpdProtocol(int ServType)
@@ -4219,7 +4183,7 @@ int RpdInitSession(int servtype, std::string &user,
 ///   - Inquire protocol
 ///   - authenticate the client
 ///   - login the client
-/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns 0 in presence of a server.
 /// Returns logged-in user, the remote client procotol cproto, the
 /// client kind of user anon and, if anonymous user, the client passwd.
 /// If TServerSocket (servtype==kSOCKD), the protocol number is returned
@@ -4239,21 +4203,6 @@ int RpdInitSession(int servtype, std::string &user,
 
    // Get Host name
    NetGetRemoteHost(gOpenHost);
-
-   if (servtype == kPROOFD) {
-
-      // find out if we are supposed to be a master or a slave server
-      char  msg[80];
-      if (NetRecv(msg, sizeof(msg)) < 0) {
-         ErrorInfo("RpdInitSession: Cannot receive master/slave status");
-         return -1;
-      }
-
-      retval = !strcmp(msg, "master") ? 1 : 0;
-
-      if (gDebug > 0)
-         ErrorInfo("RpdInitSession: PROOF master/slave = %s", msg);
-   }
 
    // Get protocol first
    // Failure typically indicate special actions like cleanup
@@ -4284,7 +4233,7 @@ int RpdInitSession(int servtype, std::string &user,
       auth = RpdNoAuth(servtype);
    }
 
-   // Login the user (if in rootd/proofd environment)
+   // Login the user (if in rootd environment)
    if (gDoLogin > 0) {
       if (RpdLogin(servtype,auth) != 0) {
          ErrorInfo("RpdInitSession: unsuccessful login attempt");
@@ -4323,7 +4272,7 @@ int RpdInitSession(int servtype, std::string &user,
 ///   - Inquire protocol
 ///   - authenticate the client
 ///   - login the client
-/// Returns 1 for a PROOF master server, 0 otherwise
+/// Returns 0 in presence of a master server.
 /// Returns logged-in user and remote process id in rid
 /// Called just after opening the connection
 
@@ -4351,7 +4300,7 @@ int RpdNoAuth(int servtype)
    int auth = 0;
 
    // Receive target username
-   if (servtype == kROOTD || servtype == kPROOFD) {
+   if (servtype == kROOTD) {
 
       char buf[kMAXPATHLEN];
       EMessageTypes kind;

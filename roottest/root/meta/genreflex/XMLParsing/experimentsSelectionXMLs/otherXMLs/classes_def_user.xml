@@ -1,0 +1,28 @@
+<lcgdict>
+ <selection>
+
+  <!-- UserData: Core -->
+  <class name="pat::UserData"  ClassVersion="10">
+   <version ClassVersion="10" checksum="85383148"/>
+  </class>
+  <class name="std::vector<pat::UserData *>" />
+  <class name="pat::UserDataCollection" />
+  <!-- UserData: Standalone UserData in the event. Needed? -->
+  <class name="edm::Wrapper<pat::UserDataCollection>" />
+  <class name="edm::Ptr<pat::UserData>" />
+  <class name="std::vector<edm::Ptr<pat::UserData> >" />
+  <class name="edm::ValueMap<edm::Ptr<pat::UserData> >" />
+  <class name="edm::Wrapper<edm::ValueMap<edm::Ptr<pat::UserData> > >" />
+  <!-- UserData: a few holders -->
+  <class pattern="pat::UserHolder<*>" />
+
+  </selection>
+ <exclusion>
+
+   <class name="edm::OwnVector<pat::UserData, edm::ClonePolicy<pat::UserData> >">
+   <method name="sort" />
+  </class>
+
+</exclusion>
+</lcgdict>
+

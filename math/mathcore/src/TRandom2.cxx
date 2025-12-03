@@ -27,7 +27,6 @@ The publications are available online at
 #include "TUUID.h"
 
 
-ClassImp(TRandom2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -50,7 +49,7 @@ TRandom2::~TRandom2()
 ///  TausWorth generator from L'Ecuyer, uses as seed 3x32bits integers
 ///  Use a mask of 0xffffffffUL to make in work on 64 bit machines
 ///  Periodicity of about  10**26
-///  Generate number in interval (0,1)  : 0 and 1 are not included in the interval
+///  Generate number in interval (0,1): 0 and 1 are not included in the interval
 
 Double_t TRandom2::Rndm()
 {
@@ -69,7 +68,7 @@ Double_t TRandom2::Rndm()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+/// Return an array of n random numbers uniformly distributed in ]0, 1[
 
 void TRandom2::RndmArray(Int_t n, Float_t *array)
 {
@@ -89,7 +88,7 @@ void TRandom2::RndmArray(Int_t n, Float_t *array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+/// Return an array of n random numbers uniformly distributed in ]0, 1[
 
 void TRandom2::RndmArray(Int_t n, Double_t *array)
 {

@@ -45,7 +45,6 @@ for quick non-persistent lookup.
 
 TRefTable *TRefTable::fgRefTable = nullptr;
 
-ClassImp(TRefTable);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for I/O.
 

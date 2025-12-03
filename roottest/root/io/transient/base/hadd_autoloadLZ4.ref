@@ -1,0 +1,5 @@
+Info in <hadd>: target file: data_merge.root
+Info in <hadd>: compression setting for all output: 4
+hadd Source file 1: data1.root
+hadd Source file 2: data2.root
+Info in <hadd>: target path: data_merge.root:/

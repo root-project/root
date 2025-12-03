@@ -40,47 +40,19 @@
 #include <thread>
 
 class THttpTimer : public TTimer {
-   Long_t fNormalTmout{0};
-   Bool_t fSlow{kFALSE};
-   Int_t fSlowCnt{0};
 
 public:
    THttpServer &fServer; ///!< server processing requests
 
    /// constructor
-   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer &serv) : TTimer(milliSec, mode), fNormalTmout(milliSec), fServer(serv) {}
+   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer &serv) : TTimer(milliSec, mode), fServer(serv) {}
 
-   void SetSlow(Bool_t flag)
-   {
-      fSlow = flag;
-      fSlowCnt = 0;
-      Long_t ms = fNormalTmout;
-      if (fSlow) {
-         if (ms < 100)
-            ms = 500;
-         else if (ms < 500)
-            ms = 3000;
-         else
-            ms = 10000;
-      }
-
-      SetTime(ms);
-   }
-   Bool_t IsSlow() const { return fSlow; }
 
    /// timeout handler
    /// used to process http requests in main ROOT thread
    void Timeout() override
    {
-      Int_t nprocess = fServer.ProcessRequests();
-
-      if (nprocess > 0) {
-         fSlowCnt = 0;
-         if (IsSlow())
-            SetSlow(kFALSE);
-      } else if (!IsSlow() && (fSlowCnt++ > 10)) {
-           SetSlow(kTRUE);
-      }
+      fServer.ProcessRequests();
    }
 };
 
@@ -124,7 +96,6 @@ will be regularly updated.
 More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html
 */
 
-ClassImp(THttpServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -657,11 +628,9 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
       return kTRUE;
    }
 
-   if (fTimer && fTimer->IsSlow())
-      fTimer->SetSlow(kFALSE);
-
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);
+   arg->fNotifyFlag = kFALSE;
    fArgs.push(arg);
    // and now wait until request is processed
    arg->fCond.wait(lk);
@@ -1233,8 +1202,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    // potentially add cors headers
    if (IsCors())
       arg->AddHeader("Access-Control-Allow-Origin", GetCors());
-   if (IsCorsCredentials())
+   if (IsCorsCredentials()) {
       arg->AddHeader("Access-Control-Allow-Credentials", GetCorsCredentials());
+      arg->AddHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Date");
+      arg->AddHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1313,9 +1285,6 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
       handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
    if (external_thrd && (!handler || !handler->AllowMTProcess())) {
-
-      if (fTimer && fTimer->IsSlow())
-         fTimer->SetSlow(kFALSE);
 
       std::unique_lock<std::mutex> lk(fMutex);
       fArgs.push(arg);

@@ -1,0 +1,129 @@
+
+Processing runreadGeo.C...
+Info in <TGeoManager::Import>: Reading geometry from file: aleph.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ALEF. Master volume is ALEF
+Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 9, max placements = 73
+Info in <TGeoManager::CloseGeometry>: 8177 nodes/ 226 volume UID's in aleph.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: alice.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ALIC. Master volume is ALIC
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 11, max placements = 1920
+Info in <TGeoManager::CloseGeometry>: 1872000 nodes/ 2177 volume UID's in default geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: ams.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is AMSG. Master volume is AMSG
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 6, max placements = 795
+Info in <TGeoManager::CloseGeometry>: 112777 nodes/ 1002 volume UID's in ams.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: atlas.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is ATLS. Master volume is ATLS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 12, max placements = 1024
+Info in <TGeoManager::CloseGeometry>: 29046966 nodes/ 7143 volume UID's in atlas.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: babar.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is BFAC. Master volume is BFAC
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 9, max placements = 2701
+Info in <TGeoManager::CloseGeometry>: 58110 nodes/ 607 volume UID's in babar.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: brahms.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 7, max placements = 669
+Info in <TGeoManager::CloseGeometry>: 2649 nodes/ 278 volume UID's in brahms.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: btev.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is C0WA. Master volume is C0WA
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 10, max placements = 6420
+Info in <TGeoManager::CloseGeometry>: 295310 nodes/ 1988 volume UID's in btev.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: cdf.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CDF. Master volume is CDF
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 7, max placements = 4822
+Info in <TGeoManager::CloseGeometry>: 28525 nodes/ 1153 volume UID's in cdf.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: cms.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is OCMS. Master volume is OCMS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 13, max placements = 4335
+Info in <TGeoManager::CloseGeometry>: 1166318 nodes/ 1537 volume UID's in cms.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: d0.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is D0. Master volume is D0
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 14, max placements = 732
+Info in <TGeoManager::CloseGeometry>: 2048146 nodes/ 1354 volume UID's in d0.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: e907.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 7, max placements = 128
+Info in <TGeoManager::CloseGeometry>: 16722 nodes/ 360 volume UID's in e907.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: gem.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is GEMH. Master volume is GEMH
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 8, max placements = 241
+Info in <TGeoManager::CloseGeometry>: 145340 nodes/ 339 volume UID's in gem.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: hades.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 7, max placements = 40
+Info in <TGeoManager::CloseGeometry>: 2238 nodes/ 372 volume UID's in CBM geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: lhcbfull.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is World. Master volume is World
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 8, max placements = 277
+Info in <TGeoManager::CloseGeometry>: 18491756 nodes/ 709 volume UID's in default geometry
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: phenix.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 4, max placements = 265
+Info in <TGeoManager::CloseGeometry>: 6130066 nodes/ 181 volume UID's in phenix.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: phobos.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is OUTS. Master volume is OUTS
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 3, max placements = 270
+Info in <TGeoManager::CloseGeometry>: 749 nodes/ 350 volume UID's in phobos.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: star.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is HALL. Master volume is HALL
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 11, max placements = 288
+Info in <TGeoManager::CloseGeometry>: 68776 nodes/ 2316 volume UID's in star.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+Info in <TGeoManager::Import>: Reading geometry from file: tesla.root
+Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+Info in <TGeoManager::SetTopVolume>: Top volume is CAVE. Master volume is CAVE
+Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+Info in <TGeoManager::CountLevels>: max level = 5, max placements = 3564
+Info in <TGeoManager::CloseGeometry>: 15370 nodes/ 565 volume UID's in tesla.C
+Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------

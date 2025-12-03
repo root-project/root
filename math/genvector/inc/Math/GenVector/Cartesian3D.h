@@ -12,7 +12,7 @@
 // Header file for class Cartesian3D
 //
 // Created by: Lorenzo Moneta  at Mon May 30 11:16:56 2005
-// Major revamp:  M. FIschler  at Wed Jun  8 2005
+// Major revamp:  M. Fischler  at Wed Jun  8 2005
 //
 // Last update: $ID: $
 //
@@ -39,7 +39,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
   */
 
 template <class T = double>
@@ -54,12 +54,12 @@ public :
    /**
       Default constructor  with x=y=z=0
    */
-   Cartesian3D() : fX(0.0), fY(0.0), fZ(0.0) {  }
+   constexpr Cartesian3D() noexcept = default;
 
    /**
       Constructor from x,y,z coordinates
    */
-   Cartesian3D(Scalar xx, Scalar yy, Scalar zz) : fX(xx), fY(yy), fZ(zz) {  }
+   constexpr Cartesian3D(Scalar xx, Scalar yy, Scalar zz) noexcept : fX(xx), fY(yy), fZ(zz) {}
 
    /**
       Construct from any Vector or coordinate system implementing
@@ -68,24 +68,6 @@ public :
    template <class CoordSystem>
    explicit constexpr Cartesian3D(const CoordSystem & v)
       : fX(v.X()), fY(v.Y()), fZ(v.Z()) {  }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-   /**
-      copy constructor
-    */
-   Cartesian3D(const Cartesian3D & v) :
-      fX(v.X()), fY(v.Y()), fZ(v.Z()) {  }
-
-   /**
-      assignment operator
-    */
-   Cartesian3D & operator= (const Cartesian3D & v) {
-      fX = v.x();
-      fY = v.y();
-      fZ = v.z();
-      return *this;
-   }
 
    /**
       Set internal data based on an array of 3 Scalar numbers
@@ -221,7 +203,7 @@ public :
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -239,10 +221,9 @@ public :
 
 
 private:
-
-   T fX;  // x coordinate
-   T fY;  // y coordinate
-   T fZ;  // z coordinate
+   T fX = 0; // x coordinate
+   T fY = 0; // y coordinate
+   T fZ = 0; // z coordinate
 };
 
 
@@ -251,7 +232,7 @@ private:
 } // end namespace ROOT
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 // need to put here setter methods to resolve nasty cyclical dependencies
 // I need to include other coordinate systems only when Cartesian is already defined
 // since they depend on it

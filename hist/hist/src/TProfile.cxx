@@ -23,7 +23,6 @@
 
 Bool_t TProfile::fgApproximate = kFALSE;
 
-ClassImp(TProfile);
 
 /** \class TProfile
     \ingroup Histograms
@@ -415,6 +414,34 @@ Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
    fBuffer[3*nbentries+3] = y;
    fBuffer[0] += 1;
    return -2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Run a Chi2Test between a TProfileD and another histogram.
+/// If the argument is also a TProfileD, this calls TH1::Chi2Test() with the option "WW".
+/// \see TH1::Chi2Test()
+
+Double_t TProfile::Chi2Test(const TH1 *h2, Option_t *option, Double_t *res) const
+{
+   TString opt = option;
+   opt.ToUpper();
+
+   if (auto other = dynamic_cast<const TProfile *>(h2); other) {
+      if (fErrorMode != kERRORMEAN || other->fErrorMode != kERRORMEAN) {
+         Error("Chi2Test", "Chi2 tests need TProfiles in 'error of mean' mode.");
+         return 0;
+      }
+
+      opt += "WW";
+      opt.ReplaceAll("UU", "WW");
+      opt.ReplaceAll("UW", "WW");
+   } else if (!opt.Contains("WW")) {
+      Error("Chi2Test", "TProfiles need to be tested with the 'W' option. Either use option 'WW' or use "
+                        "histogram.Chi2Test(<profile>, 'UW')");
+      return 0;
+   }
+
+   return TH1::Chi2Test(h2, opt, res);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1279,6 +1306,7 @@ Bool_t TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t
 ///      filling directly a TH1D using the 2-nd value as a weight.
 ///      This makes sense only for profile filled with weights =1. If not, the error of the
 ///       projected histogram obtained with this option will not be correct.
+///  - option "width" does not exist for this method. If needed, call TH1::Normalize on the result.
 
 TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 {
@@ -1624,7 +1652,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
       sxaxis = SavePrimitiveVector(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
 
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
       out << sxaxis << ".data()";
@@ -1742,19 +1770,19 @@ void TProfile::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the buffer size in units of 8 bytes (double).
 
-void TProfile::SetBuffer(Int_t buffersize, Option_t *)
+void TProfile::SetBuffer(Int_t bufsize, Option_t *)
 {
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
       fBuffer = nullptr;
    }
-   if (buffersize <= 0) {
+   if (bufsize <= 0) {
       fBufferSize = 0;
       return;
    }
-   if (buffersize < 100) buffersize = 100;
-   fBufferSize = 1 + 3*buffersize;
+   if (bufsize < 100) bufsize = 100;
+   fBufferSize = 1 + 3*bufsize;
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }

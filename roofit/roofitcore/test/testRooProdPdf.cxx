@@ -29,7 +29,7 @@ public:
 private:
    void SetUp() override
    {
-      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
       datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
       a.setConstant(true);
@@ -56,7 +56,7 @@ protected:
 
 TEST_P(TestProdPdf, CachingOpt)
 {
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    using namespace RooFit;
    prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), _evalBackend);
@@ -76,20 +76,20 @@ INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
 TEST(RooProdPdf, TestGetPartIntList)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::ERROR, 0u, RooFit::InputArguments, true};
-   RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    // This test checks if RooProdPdf::getPartIntList factorizes the integrals
    // as expected, for the example of a three dimensional RooProdPdf.
 
    RooWorkspace ws;
 
-   double a = 10.;
-   double b = 4.;
-   double c = 2.5;
+   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 0, 10.]"));
+   auto &y = static_cast<RooRealVar &>(*ws.factory("y[0, 0, 4.]"));
+   auto &z = static_cast<RooRealVar &>(*ws.factory("z[0, 0, 2.5]"));
 
-   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 0, " + std::to_string(a) + "]"));
-   auto &y = static_cast<RooRealVar &>(*ws.factory("y[0, 0, " + std::to_string(b) + "]"));
-   auto &z = static_cast<RooRealVar &>(*ws.factory("z[0, 0, " + std::to_string(c) + "]"));
+   double a = x.getMax();
+   double b = y.getMax();
+   double c = z.getMax();
 
    // Factorize the product in one 1D and one 2D pdf to get a more complicated
    // and complete test case.

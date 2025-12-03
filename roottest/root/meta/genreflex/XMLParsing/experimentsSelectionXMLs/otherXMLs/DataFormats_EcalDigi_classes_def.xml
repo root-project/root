@@ -1,0 +1,92 @@
+<lcgdict>
+   <class name="EcalMGPASample" ClassVersion="10">
+    <version ClassVersion="10" checksum="2111905010"/>
+   </class>
+   <class name="EcalFEMSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="3890213705"/>
+   </class>
+   <class name="ESSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="2475091057"/>
+   </class>
+   <class name="EcalDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="259364627"/>
+   </class>
+   <class name="ESDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="2345603108"/>
+   </class>
+   <class name="EcalTriggerPrimitiveSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="251958438"/>
+   </class>
+   <class name="EcalTriggerPrimitiveDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3058718200"/>
+   </class>
+   <class name="EcalPseudoStripInputSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="2913557465"/>
+   </class>
+   <class name="EcalPseudoStripInputDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="496286787"/>
+   </class>
+   <class name="EcalSrFlag" ClassVersion="10">
+    <version ClassVersion="10" checksum="1550304158"/>
+   </class>
+   <class name="EBSrFlag" ClassVersion="10">
+    <version ClassVersion="10" checksum="3132891638"/>
+   </class>
+   <class name="EESrFlag" ClassVersion="10">
+    <version ClassVersion="10" checksum="1563581240"/>
+   </class>
+   <class name="EcalPnDiodeDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3691846555"/>
+   </class>
+   <class name="EcalMatacqDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="804498184"/>
+   </class>
+   <class name="std::vector<EcalMGPASample>"/>
+   <class name="std::vector<EcalFEMSample>"/>
+   <class name="std::vector<ESSample>"/>
+   <class name="std::vector<EcalTriggerPrimitiveSample>"/>
+   <class name="std::vector<EcalPseudoStripInputSample>"/>
+   <class name="std::vector<ESDataFrame>"/>
+   <class name="std::vector<EBSrFlag>"/>
+   <class name="std::vector<EESrFlag>"/>
+   <class name="std::vector<EcalTriggerPrimitiveDigi>"/>
+   <class name="std::vector<EcalPseudoStripInputDigi>"/>
+   <class name="std::vector<EcalPnDiodeDigi>"/>
+   <class name="std::vector<EcalMatacqDigi>"/>
+
+   <class name="EcalDigiCollection" ClassVersion="10">
+    <version ClassVersion="10" checksum="1942146754"/>
+   </class>
+   <class name="EBDigiCollection" ClassVersion="10">
+    <version ClassVersion="10" checksum="3650703276"/>
+   </class>
+   <class name="EEDigiCollection" ClassVersion="10">
+    <version ClassVersion="10" checksum="2146700079"/>
+   </class>
+   <class name="ESDigiCollection" ClassVersion="10">
+    <version ClassVersion="10" checksum="3717953085"/>
+   </class>
+   <class name="EcalTrigPrimCompactColl" ClassVersion="10">
+    <version ClassVersion="10" checksum="4163430797"/>
+   </class>
+   <class name="edm::Wrapper<EcalDigiCollection>" splitLevel="0"/>
+   <class name="edm::Wrapper<EBDigiCollection>" />
+   <class name="edm::Wrapper<EEDigiCollection>" />
+   <class name="edm::Wrapper<ESDigiCollection>" splitLevel="0"/>
+   <class name="edm::Wrapper<EcalTrigPrimCompactColl>" splitLevel="0"/>   
+   
+   <class name="edm::SortedCollection<ESDataFrame,edm::StrictWeakOrdering<ESDataFrame> >"/>
+   <class name="edm::SortedCollection<EcalTriggerPrimitiveDigi,edm::StrictWeakOrdering<EcalTriggerPrimitiveDigi> >"/>
+   <class name="edm::SortedCollection<EcalPseudoStripInputDigi,edm::StrictWeakOrdering<EcalPseudoStripInputDigi> >"/>
+   <class name="edm::SortedCollection<EBSrFlag,edm::StrictWeakOrdering<EBSrFlag> >"/>
+   <class name="edm::SortedCollection<EESrFlag,edm::StrictWeakOrdering<EESrFlag> >"/>
+   <class name="edm::SortedCollection<EcalPnDiodeDigi,edm::StrictWeakOrdering<EcalPnDiodeDigi> >"/>
+   <class name="edm::SortedCollection<EcalMatacqDigi,edm::StrictWeakOrdering<EcalMatacqDigi> >"/>
+   <class name="edm::Wrapper<edm::SortedCollection<ESDataFrame,edm::StrictWeakOrdering<ESDataFrame> > >" splitLevel="0" id="C3D41492-2914-2291-7C22-BBE6D77043F7"/>
+   <class name="edm::Wrapper<edm::SortedCollection<EcalTriggerPrimitiveDigi,edm::StrictWeakOrdering<EcalTriggerPrimitiveDigi> > > " splitLevel="0" id="D932A444-CBDD-A27C-4D85-BFED25EFBCF8"/>
+   <class name="edm::Wrapper<edm::SortedCollection<EcalPseudoStripInputDigi,edm::StrictWeakOrdering<EcalPseudoStripInputDigi> > > " splitLevel="0" id=""/>
+   <class name="edm::Wrapper<edm::SortedCollection<EBSrFlag,edm::StrictWeakOrdering<EBSrFlag> > >" splitLevel="0" id="C0D3A113-A36C-40F1-A388-28ECE47DCBA5"/>
+   <class name="edm::Wrapper<edm::SortedCollection<EESrFlag,edm::StrictWeakOrdering<EESrFlag> > >" splitLevel="0" id="CE18D35E-E4F5-4685-8D9A-213D9ACB0606"/>
+   <class name="edm::Wrapper<edm::SortedCollection<EcalPnDiodeDigi,edm::StrictWeakOrdering<EcalPnDiodeDigi> > > " id="8104DEE4-28BC-284A-8397-7EF8F5DBA1B1"/>
+   <class name="edm::Wrapper<edm::SortedCollection<EcalMatacqDigi,edm::StrictWeakOrdering<EcalMatacqDigi> > > " id="09B54EAE-7A1A-B892-117A-EFE5E32AF982"/>
+</lcgdict>

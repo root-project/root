@@ -1,0 +1,65 @@
+<lcgdict>
+  <class name="testORA::MixingInputConfig"/>
+  <class name="std::vector<testORA::MixingInputConfig>"/>
+  <class name="testORA::MixingModuleConfigV"/>
+  <class name="testORA::MixingModuleConfigA"/>
+  <class name="testORA::MixingModuleConfigIA"/>
+  <class name="std::vector<testORA::SimpleMember>"/>
+  <class name="std::vector<testORA::OtherMember>"/>
+  <class name="std::vector<std::vector<testORA::OtherMember> >"/>
+  <class name="testORA::BObj"/>
+  <class name="testORA::BaseClass"/>
+  <class name="testORA::SimpleMember"/>
+  <class name="testORA::OtherMember"/>
+  <class name="testORA::SimpleClass"/>
+  <class name="testORA::ArrayClass"/>
+  <class name="testORA::MultiArrayClass"/>
+  <class name="testORA::MultiArrayClass2"/>
+  <class name="testORA::SM"/>
+  <class name="testORA::SA"/>
+  <class name="testORA::SimpleStruct"/>
+  <class name="testORA::MultiArrayClass2::Inner"/>
+  <class name="testORA::Metadata"/>
+  <class name="testORA::Entry">
+     <field name="m_histogram" mapping="blob"/>
+  </class>
+  <class name="std::vector<testORA::Entry>"/>
+  <class name="testORA::SB">
+     <field name="m_arrayData" mapping="blob"/>
+  </class>
+  <class name="testORA::SiStripNoises::DetRegistry"/>
+  <class name="std::vector<testORA::SiStripNoises::DetRegistry>"/>
+  <class name="testORA::SiStripNoises">
+     <field name="v_noises" mapping="blob"/>
+  </class>
+  <class name="ora::Reference"/>
+  <class name="testORA::RefBase">
+  </class>
+  <class name="testORA::Ref<testORA::SimpleClass>"/>
+  <class name="std::vector<testORA::Ref<testORA::SimpleClass> >"/>
+  <class name="testORA::SC"/>
+  <class name="ora::Ptr<testORA::SimpleClass>"/>
+  <class name="ora::Ptr<testORA::SimpleMember>"/>
+  <class name="std::vector<ora::Ptr<testORA::SimpleMember> >"/>
+  <class name="testORA::SD"/>
+  <class name="std::vector<testORA::SM>"/>
+  <class name="ora::PVector<testORA::SM>"/>
+  <class name="testORA::SE"/>
+  <class name="std::pair<size_t,testORA::SM>"/>
+  <class name="std::vector<std::pair<size_t, testORA::SM> >"/>
+  <class name="ora::QueryableVector<testORA::SM>"/>
+  <class name="testORA::SF"/>
+  <class name="testORA::IBase"/>
+  <class name="testORA::D0"/>
+  <class name="testORA::D1"/>
+  <class name="ora::UniqueRef<testORA::IBase>"/>
+  <class name="testORA::SG"/>
+  <class name="testORA::D2"/>
+  <class pattern="std::vector<*>::iterator" rootmap="false"/> 
+  <class name="std::vector<ora::OId>"/>
+  <class name="ora::PVector<ora::OId>"/>
+  <class name="testORA::IOV"/>
+  <class name="testORA::SH"/>
+  <class name="ora::NamedReference"/>
+  <class name="ora::NamedRef<testORA::SimpleClass>"/>
+</lcgdict>

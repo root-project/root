@@ -473,8 +473,8 @@ TEST(TTreeReaderBasic, DisappearingBranch)
                                            "There was an error while notifying the proxies."};
 
    auto createFile = [](const char *fileName, int ncols) {
-      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});
-      // r->Define("col1",[](){return 0;}).Snapshot<int,int>("t","f0.root",{"col0","col1"});
+      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot("t","f1.root",{"col0"});
+      // r->Define("col1",[](){return 0;}).Snapshot("t","f0.root",{"col0","col1"});
       TFile f(fileName, "RECREATE");
       TTree t("t", "t");
       int i = 42;
@@ -533,4 +533,40 @@ TEST(TTreeReaderBasic, ZeroEntriesTree)
    auto b_copy(b);
    EXPECT_TRUE(b++ == e);
    EXPECT_TRUE(++b_copy == e);
+}
+
+TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
+{
+   // Regression test for https://github.com/root-project/root/issues/18955
+   struct Dataset {
+      Dataset()
+      {
+         auto f = std::make_unique<TFile>("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root", "recreate");
+         auto t = std::make_unique<TTree>("t", "t");
+         std::vector<int> b1;
+         t->Branch("b1", &b1);
+         f->Write();
+      }
+      ~Dataset() { std::remove("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root"); }
+   } dataset;
+
+   // Test with TTree
+   {
+      auto f = std::make_unique<TFile>("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root");
+      auto t = f->Get<TTree>("t");
+      TTreeReader tr{t};
+      TTreeReaderValue<std::vector<int>> v1{tr, "b1"};
+      tr.Next();
+      EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
+   }
+
+   // Test with TChain
+   {
+      TChain c{"t"};
+      c.Add("TTreeReaderBasicZeroEntriesTreeCheckValueStatus.root");
+      TTreeReader tr{&c};
+      TTreeReaderValue<std::vector<int>> v1{tr, "b1"};
+      tr.Next();
+      EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
+   }
 }

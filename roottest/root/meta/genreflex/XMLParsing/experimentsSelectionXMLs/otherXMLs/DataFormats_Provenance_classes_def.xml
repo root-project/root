@@ -1,0 +1,235 @@
+<lcgdict>
+ <class name="edm::ProductID" ClassVersion="10">
+  <version ClassVersion="10" checksum="1501211476"/>
+ </class>
+ <class name="edm::BranchID" ClassVersion="10">
+  <version ClassVersion="10" checksum="21214741"/>
+ </class>
+ <class name="edm::EventID" ClassVersion="10">
+  <version ClassVersion="10" checksum="1903450811"/>
+ </class>
+ <class name="edm::LuminosityBlockID" ClassVersion="10">
+  <version ClassVersion="10" checksum="918278812"/>
+ </class>
+ <class name="edm::LuminosityBlockRange" ClassVersion="10">
+  <version ClassVersion="10" checksum="3048716462"/>
+ </class>
+ <class name="edm::EventRange" ClassVersion="10">
+  <version ClassVersion="10" checksum="3006383254"/>
+ </class>
+ <class name="edm::RunID" ClassVersion="10">
+  <version ClassVersion="10" checksum="1831898368"/>
+ </class>
+ <class name="edm::FileID" ClassVersion="10">
+  <version ClassVersion="10" checksum="2668472004"/>
+ </class>
+ <class name="edm::Timestamp" ClassVersion="10">
+  <version ClassVersion="10" checksum="959162848"/>
+ </class>
+ <class name="edm::EventAuxiliary" ClassVersion="10">
+  <version ClassVersion="10" checksum="580036702"/>
+ </class>
+ <class name="edm::History" ClassVersion="10">
+  <version ClassVersion="10" checksum="1454435212"/>
+ </class>
+ <class name="edm::LuminosityBlockAuxiliary" ClassVersion="10">
+  <version ClassVersion="10" checksum="2062229246"/>
+ </class>
+ <class name="edm::RunAuxiliary" ClassVersion="10">
+  <version ClassVersion="10" checksum="2799925914"/>
+ </class>
+ <class name="edm::ProductRegistry" ClassVersion="11">
+  <version ClassVersion="11" checksum="3792450677"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="1206383924"/>
+ </class>
+ <class name="edm::ProductRegistry::Transients" ClassVersion="0"/>
+ <class name="std::map<edm::BranchKey,edm::BranchDescription>"/>
+ <class name="std::pair<edm::BranchKey,edm::BranchDescription>"/>
+ <class name="edm::BranchKey" ClassVersion="10">
+  <version ClassVersion="10" checksum="3014148246"/>
+ </class>
+ <class name="std::set<edm::BranchID>"/>
+ <class name="std::map<edm::BranchID, std::set<edm::BranchID> >"/>
+ <class name="std::pair<edm::BranchID, std::set<edm::BranchID> >"/>
+ <class name="std::vector<edm::BranchID>"/>
+ <class name="std::vector<edm::ProductID>"/>
+ <class name="std::pair<edm::ProductID, unsigned int>" />
+ <class name="std::vector<std::pair<edm::ProductID, unsigned int> >" />
+ <class name="std::vector<edm::EventID>"/>
+ <class name="std::vector<std::vector<edm::EventID> >"/>
+ <class name="std::vector<std::vector<std::vector<edm::EventID> > > "/>
+ <class name="edm::BranchChildren" ClassVersion="10">
+  <version ClassVersion="10" checksum="137742168"/>
+ </class>
+ <class name="edm::ProductProvenance" ClassVersion="11">
+  <version ClassVersion="11" checksum="3594205707"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="3685381930"/>
+ </class>
+ <class name="edm::ProductProvenance::Transients" ClassVersion="0"/>
+ <class name="std::vector<edm::ProductProvenance>"/>
+ <class name="edm::StoredProductProvenance" ClassVersion="3">
+   <version ClassVersion="3" checksum="1175457242"/>
+ </class>
+ <class name="std::vector<edm::StoredProductProvenance>"/>
+ <class name="edm::BranchDescription" ClassVersion="12">
+  <version ClassVersion="12" checksum="1833963582"/>
+  <version ClassVersion="11" checksum="1571703000"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="1486343707"/>
+ </class>
+ <class name="edm::BranchDescription::Transients" ClassVersion="0">
+  <field name="wrappedType_" transient="true"/>
+  <field name="unwrappedType_" transient="true"/>
+ </class>
+ <class name="edm::ParameterSetBlob" ClassVersion="10">
+  <version ClassVersion="10" checksum="474063030"/>
+ </class>
+ <class name="edm::ProcessConfiguration" ClassVersion="11">
+  <version ClassVersion="11" checksum="4233199054"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="2299978496"/>
+ </class>
+ <class name="edm::ProcessConfiguration::Transients" ClassVersion="0"/>
+ <class name="std::vector<edm::ProcessConfiguration>"/>
+ <class name="edm::ProcessHistory" ClassVersion="11">
+  <version ClassVersion="11" checksum="3777891716"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="1389462568"/>
+ </class>
+ <class name="edm::ProcessHistory::Transients" ClassVersion="0"/>
+ <class name="edm::FileFormatVersion" ClassVersion="10">
+  <version ClassVersion="10" checksum="2078548510"/>
+ </class>
+ <class name="edm::FileIndex::Element" ClassVersion="10">
+  <version ClassVersion="10" checksum="1310120368"/>
+ </class>
+ <class name="std::vector<edm::FileIndex::Element>"/>
+ <class name="edm::FileIndex" ClassVersion="11">
+  <version ClassVersion="11" checksum="3791749420"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="1256606919"/>
+ </class>
+ <class name="edm::FileIndex::Transients" ClassVersion="0"/>
+ <class name="edm::IndexIntoFile::RunOrLumiEntry" ClassVersion="10">
+  <version ClassVersion="10" checksum="447201247"/>
+ </class>
+ <class name="std::vector<edm::IndexIntoFile::RunOrLumiEntry>"/>
+ <class name="edm::IndexIntoFile" ClassVersion="11">
+  <version ClassVersion="11" checksum="676493977"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="262935904"/>
+ </class>
+ <class name="edm::IndexIntoFile::Transients" ClassVersion="0"/>
+ <class name="edm::ProcessHistoryID"/>
+ <class name="std::set<edm::ProcessHistoryID >"/>
+ <class name="std::vector<edm::ProcessHistory>"/>
+ <class name="std::vector<edm::ProcessHistoryID>"/>
+ <class name="edm::ParameterSetID"/>
+ <class name="std::vector<edm::ParameterSetID >"/>
+ <class name="std::vector<std::vector<edm::ParameterSetID > >"/>
+ <class name="std::map<edm::ParameterSetID,edm::ParameterSetBlob>"/>
+ <class name="std::pair<edm::ParameterSetID,edm::ParameterSetBlob>"/>
+ <class name="edm::ProcessConfigurationID"/>
+ <class name="std::vector<edm::ProcessConfigurationID>"/>
+ <class name="edm::ParentageID"/>
+ <class name="edm::Parentage" ClassVersion="11">
+  <version ClassVersion="11" checksum="3091321815"/>
+  <field name="transient_" transient="true"/>
+  <version ClassVersion="10" checksum="226206765"/>
+ </class>
+ <class name="edm::Parentage::Transients" ClassVersion="0"/>
+
+ <class name="std::map<edm::ProcessHistoryID,edm::ProcessHistory>"/>
+ <class name="std::pair<edm::ProcessHistoryID,edm::ProcessHistory>"/>
+ <class name="edm::EventAux" ClassVersion="10">
+  <version ClassVersion="10" checksum="549403294"/>
+ </class>
+ <class name="edm::LuminosityBlockAux" ClassVersion="10">
+  <version ClassVersion="10" checksum="2742465224"/>
+ </class>
+ <class name="edm::RunAux" ClassVersion="10">
+  <version ClassVersion="10" checksum="2689473100"/>
+ </class>
+ <class name="edm::EventEntryInfo" ClassVersion="10">
+  <version ClassVersion="10" checksum="199135386"/>
+ </class>
+ <class name="edm::RunLumiEntryInfo" ClassVersion="10">
+  <version ClassVersion="10" checksum="3108851943"/>
+ </class>
+ <class name="std::vector<edm::EventEntryInfo>"/>
+ <class name="std::vector<edm::RunLumiEntryInfo>"/>
+ <class name="edm::EntryDescriptionID"/>
+ <class name="edm::EventEntryDescription" ClassVersion="10">
+  <version ClassVersion="10" checksum="2543392650"/>
+ </class>
+ <class name="edm::EventProcessHistoryID" ClassVersion="10">
+  <version ClassVersion="10" checksum="2047538258"/>
+ </class>
+ <class name="std::vector<edm::EventProcessHistoryID>"/>
+ <class name="edm::ModuleDescriptionID"/>
+
+ <class name="std::map<edm::ProcessConfigurationID,std::string>"/>
+ <class name="std::pair<edm::ProcessConfigurationID,std::string>"/>
+ <class name="std::map<edm::ProcessConfigurationID,edm::ParameterSetID>"/>
+ <class name="std::pair<edm::ProcessConfigurationID,edm::ParameterSetID>"/>
+
+ <class name="edm::ModuleDescription" ClassVersion="10">
+  <version ClassVersion="10" checksum="2128621099"/>
+   <field name="processConfigurationPtr_" transient="true"/>
+ </class>
+ <class name="std::pair<edm::ModuleDescriptionID,edm::ModuleDescription>"/>
+
+ <class name="edm::ESRecordAuxiliary" ClassVersion="10">
+  <version ClassVersion="10" checksum="2903606143"/>
+ </class>
+
+ <class name="ROOT::TSchemaHelper" ClassVersion="10">
+  <version ClassVersion="10" checksum="3064700282"/>
+ </class>
+ <class name="std::vector<ROOT::TSchemaHelper>"/>
+ <class name="std::vector<TFormula*>"/>
+ 
+ <ioread sourceClass="edm::ProductProvenance" targetClass="edm::ProductProvenance" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::ProductRegistry" targetClass="edm::ProductRegistry" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::BranchDescription" targetClass="edm::BranchDescription" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::ProcessConfiguration" targetClass="edm::ProcessConfiguration" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::ProcessHistory" targetClass="edm::ProcessHistory" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::IndexIntoFile" targetClass="edm::IndexIntoFile" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::FileIndex" targetClass="edm::FileIndex" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ <ioread sourceClass="edm::Parentage" targetClass="edm::Parentage" version="[1-]" source="" target="transient_">
+ <![CDATA[
+	newObj->initializeTransients();
+ ]]>
+ </ioread>
+ 
+</lcgdict>

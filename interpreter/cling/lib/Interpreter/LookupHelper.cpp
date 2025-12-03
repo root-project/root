@@ -16,12 +16,13 @@
 #include "cling/Utils/ParserStateRAII.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/LocInfoType.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Parse/RAIIObjectsForParser.h"
-#include "clang/Sema/Scope.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Overload.h"
+#include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
@@ -479,7 +480,7 @@ namespace cling {
     // the ResolvedTypedef code paths.  Through that code path nothing is
     // taking the ROOT/Interpreter lock and since this code can modify the
     // interpreter, we do need to take lock.
-    LockCompilationDuringUserCodeExecutionRAII LCDUCER(*m_Interpreter);
+    InterpreterAccessRAII LockAccess(*m_Interpreter);
 
     // Could trigger deserialization of decls.
     Interpreter::PushTransactionRAII RAII(m_Interpreter);
@@ -698,13 +699,6 @@ namespace cling {
                   TagDecl* TD = TagTy->getDecl();
                   if (TD) {
                     TheDecl = TD->getDefinition();
-                    // NOTE: if (TheDecl) ... check for theDecl->isInvalidDecl()
-                    if (TD && TD->isInvalidDecl()) {
-                      printf("Warning: FindScope got an invalid tag decl\n");
-                    }
-                    if (TheDecl && TheDecl->isInvalidDecl()) {
-                      printf("ERROR: FindScope about to return an invalid decl\n");
-                    }
                     if (!TheDecl && instantiateTemplate) {
 
                       // Make sure it is not just forward declared, and
@@ -1483,7 +1477,7 @@ namespace cling {
     DeclarationName FuncName = FuncNameInfo.getName();
     SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
     LookupResult Result(S, FuncName, FuncNameLoc, Sema::LookupMemberName,
-                        Sema::NotForRedeclaration);
+                        RedeclarationKind::NotForRedeclaration);
     Result.suppressDiagnostics();
 
     bool LookupSuccess = true;
@@ -1507,10 +1501,8 @@ namespace cling {
       CXXScopeSpec SS;
       if (scopeNNS)
         SS.MakeTrivial(Context, scopeNNS, scopeSrcRange);
-      bool MemberOfUnknownSpecialization;
       S.LookupTemplateName(Result, P.getCurScope(), SS, QualType(),
-                           /*EnteringContext*/false,
-                           MemberOfUnknownSpecialization);
+                           /*EnteringContext*/false);
       // "Translation" of the TemplateDecl to the specialization is done
       // in findAnyFunctionSelector() given the ExplicitTemplateArgs.
       if (Result.empty())
@@ -1698,7 +1690,9 @@ namespace cling {
         clang::QualType QT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
         QT = QT.getCanonicalType();
         {
-          ExprValueKind VK = VK_PRValue;
+          // XValue is an object that can be "moved" whereas PRValue is temporary value
+          // This enables overloads that require the object to be moved
+          ExprValueKind VK = VK_XValue;
           if (QT->getAs<LValueReferenceType>()) {
             VK = VK_LValue;
           }
@@ -1817,12 +1811,12 @@ namespace cling {
         SourceLocation loc;
         sema::TemplateDeductionInfo Info(loc);
         FunctionDecl *fdecl = 0;
-        Sema::TemplateDeductionResult TemplDedResult
+        clang::TemplateDeductionResult TemplDedResult
           = S.DeduceTemplateArguments(MethodTmpl,
                     const_cast<TemplateArgumentListInfo*>(ExplicitTemplateArgs),
                                       fdecl,
                                       Info);
-        if (TemplDedResult != Sema::TDK_Success) {
+        if (TemplDedResult != clang::TemplateDeductionResult::Success) {
           // Deduction failure.
           return 0;
         } else {

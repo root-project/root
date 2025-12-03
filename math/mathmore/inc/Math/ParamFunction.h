@@ -93,13 +93,13 @@ public:
    /**
       Access the parameter values
    */
-   virtual const double * Parameters() const { return &fParams.front(); }
+   const double * Parameters() const override { return &fParams.front(); }
 
    /**
       Set the parameter values
       @param p vector of doubles containing the parameter values.
    */
-   virtual void SetParameters(const double * p)
+   void SetParameters(const double * p) override
    {
       //fParams = std::vector<double>(p,p+fNpar);
       assert(fParams.size() == fNpar);
@@ -109,7 +109,7 @@ public:
    /**
       Return the number of parameters
    */
-   unsigned int NPar() const { return fNpar; }
+   unsigned int NPar() const override { return fNpar; }
 
 
    //using BaseFunc::operator();

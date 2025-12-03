@@ -184,7 +184,7 @@ void TMVA::plot_efficiencies(TString dataset, TFile* /*file*/, Int_t type , TDir
       legend->SetY1( y0H - dyH );
    }
    else {
-      dyH *= (Float_t(TMath::Min(10,nmva) - 3.0)/4.0);
+      dyH *= (Float_t(std::min(10,nmva) - 3.0)/4.0);
       legend->SetY2( y0H + dyH);
    }
 

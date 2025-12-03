@@ -1,0 +1,26 @@
+<lcgdict>
+
+  <class name    = "IMuonTimeCor"               />
+  <class name    = "IMuonFastHWTool"             />
+  <class name    = "IMuonClusterTool"     />
+  <class name = "IMuonHitDecode"/>
+  <class name = "IMuonPadRec"/>
+  <class name = "IMuonClusterRec"/>
+  <class name = "IMuonTrackRec"/>
+  <class name = "IMuonTrackMomRec"/>
+  <class name="MuonLogHit"/>
+  <class name="MuonLogPad"/>
+  <class name="MuonHit"/>
+  <class name="MuonTrack"/>
+  <class name="MuonNeuron"/>
+  <class name="std::vector<MuonLogHit*>"/>
+  <class name="std::vector<MuonLogPad*>"/>
+  <class name="std::vector<MuonHit*>"/>
+  <class name="std::vector<MuonTrack*>"/>
+  <class name="std::vector<MuonNeuron*>"/>
+
+</lcgdict>
+
+
+
+

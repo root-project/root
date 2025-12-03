@@ -1,0 +1,16 @@
+
+Processing runreducedSpill.C...
+Warning in <TClass::Init>: no dictionary for class CNtEventHeader is available
+Warning in <TClass::Init>: no dictionary for class CNtEventSummary is available
+Warning in <TClass::Init>: no dictionary for class CNtVertex is available
+Warning in <TClass::Init>: no dictionary for class CNtSpillSummary is available
+Warning in <TClass::Init>: no dictionary for class CNtMCTruth is available
+Warning in <TClass::Init>: no dictionary for class CNtMCParticle is available
+Warning in <TClass::Init>: no dictionary for class CNtBeamInfo is available
+Warning in <TClass::Init>: no dictionary for class CNtTrack is available
+Warning in <TClass::Init>: no dictionary for class CNtFiducial is available
+Warning in <TClass::Init>: no dictionary for class CNtShower is available
+Warning in <TClass::Init>: no dictionary for class CNtStrip is available
+Warning in <TClass::Init>: no dictionary for class CNtStdHep is available
+Warning in <TClass::Init>: no dictionary for class CADNtpSREventCut is available
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1

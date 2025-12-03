@@ -32,6 +32,8 @@
 #include "Math/SpecFuncMathMore.h"
 #endif
 
+#include <stdexcept>
+
 namespace clad {
 namespace custom_derivatives {
 namespace TMath {
@@ -149,48 +151,8 @@ ValueAndPushforward<T, T> Log2_pushforward(T x, T d_x)
    return {::TMath::Log2(x), (1.0 / (x * ::TMath::Log(2.0))) * d_x};
 }
 
-template <typename T>
-ValueAndPushforward<T, T> Max_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x >= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Max(x, y), derivative};
-}
-
 template <typename T, typename U>
-void Max_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a >= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
-ValueAndPushforward<T, T> Min_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x <= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Min(x, y), derivative};
-}
-
-template <typename T, typename U>
-void Min_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a <= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
-ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
+ValueAndPushforward<T, T> Power_pushforward(T x, U y, T d_x, U d_y)
 {
    T pushforward = y * ::TMath::Power(x, y - 1) * d_x;
    if (d_y) {
@@ -199,8 +161,8 @@ ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
    return {::TMath::Power(x, y), pushforward};
 }
 
-template <typename T, typename U>
-void Power_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+template <typename T, typename U, typename V>
+void Power_pullback(T x, U y, V p, clad::array_ref<T> d_x, clad::array_ref<U> d_y)
 {
    auto t = pow_pushforward(x, y, 1, 0);
    *d_x += t.pushforward * p;
@@ -712,7 +674,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -789,7 +753,9 @@ inline void inc_gamma_pullback(double a, double x, double _d_y, double *_d_a, do
    }
    {
       *_d_x += (a * _d_ax / x) - _d_ax;
-      *_d_a += _d_ax * (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -856,7 +822,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    ax = a * _t1 - x - ::std::lgamma(a);
    if (ax < -kMAXLOG) {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
       return;
    }
@@ -1117,7 +1085,9 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
    {
       *_d_x += a * _d_ax / x - _d_ax;
-      *_d_a += _d_ax * (_t1 -::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
+      *_d_a +=
+         _d_ax *
+         (_t1 - ::ROOT::Math::digamma(a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
 }
@@ -1129,5 +1099,50 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
 
 } // namespace custom_derivatives
 } // namespace clad
+
+// Forward declare BLAS functions.
+extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                       const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                       const float *beta, float *C, const int *ldc);
+
+namespace clad::custom_derivatives {
+
+namespace TMVA::Experimental::SOFIE {
+
+inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
+                               const float *A, const float *B, float beta, const float *C, float *_d_output, bool *,
+                               bool *, int *, int *, int *, float *_d_alpha, float *_d_A, float *_d_B, float *_d_beta,
+                               float *_d_C)
+{
+   // TODO:
+   //    - handle transa and transb cases correctly
+   if (transa || transb) {
+      return;
+   }
+
+   char ct = 't';
+   char cn = 'n';
+
+   // beta needs to be one because we want to add to _d_A and _d_B instead of
+   // overwriting it.
+   float one = 1.;
+
+   // _d_A, _d_B
+   // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
+   ::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
+   ::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
+
+   // _d_alpha, _d_beta, _d_C
+   int sizeC = n * m;
+   for (int i = 0; i < sizeC; ++i) {
+      *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
+      *_d_beta += _d_output[i] * C[i];
+      _d_C[i] += _d_output[i] * beta;
+   }
+}
+
+} // namespace TMVA::Experimental::SOFIE
+
+} // namespace clad::custom_derivatives
 
 #endif // CLAD_DERIVATOR

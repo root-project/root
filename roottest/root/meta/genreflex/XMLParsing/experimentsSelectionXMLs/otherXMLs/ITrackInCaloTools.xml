@@ -1,0 +1,8 @@
+<lcgdict>
+  
+  <class name="ITrackInCaloTools" />
+  <class name="ITrackExtrapolatorToCalo" />
+  <class name="ITrackDirectionTool" />
+  <enum pattern="TICT::*"/>
+
+</lcgdict>

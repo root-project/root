@@ -30,7 +30,6 @@
 Bool_t TMessage::fgEvolution = kFALSE;
 
 
-ClassImp(TMessage);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TMessage object for storing objects. The "what" integer
@@ -43,8 +42,8 @@ ClassImp(TMessage);
 /// the message will be compressed in TSocket using the zip algorithm
 /// (only if message is > 256 bytes).
 
-TMessage::TMessage(UInt_t what, Int_t bufsiz) :
-   TBufferFile(TBuffer::kWrite, bufsiz + 2*sizeof(UInt_t)),
+TMessage::TMessage(UInt_t what, Int_t bufsize) :
+   TBufferFile(TBuffer::kWrite, bufsize + 2*sizeof(UInt_t)),
    fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    // space at the beginning of the message reserved for the message length

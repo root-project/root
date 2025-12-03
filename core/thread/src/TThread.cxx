@@ -47,7 +47,7 @@ TThread        *TThread::fgMain = nullptr;
 TMutex         *TThread::fgMainMutex;
 std::atomic<char *> volatile TThread::fgXAct{nullptr};
 TMutex         *TThread::fgXActMutex = nullptr;
-TCondition     *TThread::fgXActCondi = 0;
+TCondition *TThread::fgXActCondi = nullptr;
 void **volatile TThread::fgXArr = nullptr;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
@@ -81,10 +81,10 @@ public:
 
       fgIsTearDown = kTRUE;
       TVirtualMutex *m = gGlobalMutex;
-      gGlobalMutex = 0;
+      gGlobalMutex = nullptr;
       delete m;
       TThreadImp *imp = TThread::fgThreadImp;
-      TThread::fgThreadImp = 0;
+      TThread::fgThreadImp = nullptr;
       delete imp;
    }
 };
@@ -146,9 +146,9 @@ void* TJoinHelper::JoinFunc(void *p)
    jp->fC->Signal();
    jp->fM->UnLock();
 
-   TThread::Exit(0);
+   TThread::Exit(nullptr);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ Int_t TJoinHelper::Join()
 
    // And wait for the help to finish to avoid the risk that it is still
    // running when the main tread is finished (and the thread library unloaded!)
-   TThread::fgThreadImp->Join(fH, 0);
+   TThread::fgThreadImp->Join(fH, nullptr);
 
    return fRc;
 }
@@ -197,7 +197,6 @@ Int_t TJoinHelper::Join()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TThread);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,7 +208,7 @@ TThread::TThread(VoidRtnFunc_t fn, void *arg, EPriority pri)
    : TNamed("<anon>", "")
 {
    fDetached  = kFALSE;
-   fFcnVoid   = 0;
+   fFcnVoid = nullptr;
    fFcnRetn   = fn;
    fPriority  = pri;
    fThreadArg = arg;
@@ -226,7 +225,7 @@ TThread::TThread(VoidFunc_t fn, void *arg, EPriority pri)
    : TNamed("<anon>", "")
 {
    fDetached  = kTRUE;
-   fFcnRetn   = 0;
+   fFcnRetn = nullptr;
    fFcnVoid   = fn;
    fPriority  = pri;
    fThreadArg = arg;
@@ -243,7 +242,7 @@ TThread::TThread(const char *thname, VoidRtnFunc_t fn, void *arg,
                  EPriority pri) : TNamed(thname, "")
 {
    fDetached  = kFALSE;
-   fFcnVoid   = 0;
+   fFcnVoid = nullptr;
    fFcnRetn   = fn;
    fPriority  = pri;
    fThreadArg = arg;
@@ -260,7 +259,7 @@ TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
                  EPriority pri) : TNamed(thname, "")
 {
    fDetached  = kTRUE;
-   fFcnRetn   = 0;
+   fFcnRetn = nullptr;
    fFcnVoid   = fn;
    fPriority  = pri;
    fThreadArg = arg;
@@ -274,10 +273,10 @@ TThread::TThread(const char *thname, VoidFunc_t fn, void *arg,
 TThread::TThread(Long_t id)
 {
    fDetached  = kTRUE;
-   fFcnRetn   = 0;
-   fFcnVoid   = 0;
+   fFcnRetn = nullptr;
+   fFcnVoid = nullptr;
    fPriority  = kNormalPriority;
-   fThreadArg = 0;
+   fThreadArg = nullptr;
    Constructor();
 
    // Changing the id must be protected as it will be look at by multiple
@@ -347,7 +346,7 @@ void TThread::Init()
      if (!ROOT::gCoreMutex) {
         // To avoid dead locks, caused by shared library opening and/or static initialization
         // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
-#ifdef R__HAS_TBB
+#ifdef ROOT_CORE_THREAD_TBB
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #else
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
@@ -363,8 +362,8 @@ void TThread::Init()
 
 void TThread::Constructor()
 {
-   fHolder = 0;
-   fClean  = 0;
+   fHolder = nullptr;
+   fClean = nullptr;
    fState  = kNewState;
 
    fId = -1;
@@ -376,7 +375,9 @@ void TThread::Constructor()
    SetComment("Constructor: MainInternalMutex Locked");
 
    if (fgMain) fgMain->fPrev = this;
-   fNext = fgMain; fPrev = 0; fgMain = this;
+   fNext = fgMain;
+   fPrev = nullptr;
+   fgMain = this;
 
    ThreadInternalUnLock();
    SetComment();
@@ -404,7 +405,8 @@ TThread::~TThread()
 
    ThreadInternalUnLock();
    SetComment();
-   if (fHolder) *fHolder = 0;
+   if (fHolder)
+      *fHolder = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -494,10 +496,11 @@ TThread *TThread::GetThread(const char *name)
 
 TThread *TThread::Self()
 {
-   TTHREAD_TLS(TThread*) self = 0;
+   TTHREAD_TLS(TThread *) self = nullptr;
 
    if (!self || fgIsTearDown) {
-      if (fgIsTearDown) self = 0;
+      if (fgIsTearDown)
+         self = nullptr;
       self = GetThread(SelfId());
    }
    return self;
@@ -819,7 +822,7 @@ void *TThread::Function(void *ptr)
    if (th->fDetached) {
       //Detached, non joinable thread
       (th->fFcnVoid)(arg);
-      ret = 0;
+      ret = nullptr;
       th->fState = kFinishedState;
    } else {
       //UnDetached, joinable thread
@@ -937,7 +940,7 @@ again:
 
    void *arr[2];
    arr[1] = (void*) buf;
-   if (XARequest("PRTF", 2, arr, 0)) {
+   if (XARequest("PRTF", 2, arr, nullptr)) {
       delete [] buf;
       return;
    }
@@ -982,7 +985,8 @@ again:
    arr[1] = (void*) Longptr_t(level);
    arr[2] = (void*) location;
    arr[3] = (void*) bp;
-   if (XARequest("ERRO", 4, arr, 0)) return;
+   if (XARequest("ERRO", 4, arr, nullptr))
+      return;
 
    if (level != kFatal)
       ::GetErrorHandler()(level, level >= gErrorAbortLevel, location, bp);
@@ -1000,7 +1004,7 @@ again:
 void TThread::DoError(int level, const char *location, const char *fmt,
                       va_list va) const
 {
-   char *loc = 0;
+   char *loc = nullptr;
 
    if (location) {
       const std::size_t bufferSize = strlen(location) + strlen(GetName()) + 32;
@@ -1176,7 +1180,7 @@ void TThread::XAction()
          ::Error("TThread::XAction", "wrong case");
    }
 
-   fgXAct = 0;
+   fgXAct = nullptr;
    if (condimp) condimp->Signal();
    condmutex->UnLock();
 }

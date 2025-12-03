@@ -1,0 +1,86 @@
+<lcgdict>
+  <class name="TtGenEvent"  ClassVersion="11">
+   <version ClassVersion="11" checksum="3979818069"/>
+   <version ClassVersion="10" checksum="2353612425"/>
+  </class>
+  <class name="StGenEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3161795320"/>
+  </class>
+  <class name="TopGenEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="4112324732"/>
+  </class>
+  <class name="TtEvent"  ClassVersion="11">
+   <version ClassVersion="11" checksum="1688727696"/>
+  </class>
+  <class name="TtFullLeptonicEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1854988496"/>
+  </class>
+  <class name="TtSemiLeptonicEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="4150310883"/>
+  </class>
+  <class name="TtFullHadronicEvent"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3848919223"/>
+  </class>
+  <class name="edm::Wrapper<TtGenEvent>" />
+  <class name="edm::Wrapper<StGenEvent>" />
+  <class name="edm::Wrapper<TopGenEvent>" />
+  <class name="edm::Wrapper<TtFullLeptonicEvent>" />
+  <class name="edm::Wrapper<TtSemiLeptonicEvent>" />
+  <class name="edm::Wrapper<TtFullHadronicEvent>" />
+  <class name="edm::Wrapper<reco::CompositeCandidate>" />
+
+  <class name="edm::RefProd<TtGenEvent>" />
+  <class name="edm::RefProd<StGenEvent>" />
+  <class name="edm::RefProd<TopGenEvent>" />
+  <class name="edm::RefProd<TtFullLeptonicEvent>" />
+  <class name="edm::RefProd<TtSemiLeptonicEvent>" />
+  <class name="edm::RefProd<TtFullHadronicEvent>" />
+
+  <class name="std::pair<WDecay::LeptonType, WDecay::LeptonType>" />
+  <class name="std::pair<reco::CompositeCandidate, std::vector<int> >" />
+  <class name="std::vector<std::pair<reco::CompositeCandidate, std::vector<int> > >" />
+  <class name="edm::Wrapper<std::vector<std::pair<reco::CompositeCandidate, std::vector<int> > > >" />
+
+  <class name="std::map<TtEvent::HypoClassKey, int>" />
+  <class name="std::map<TtEvent::HypoClassKey, std::vector<std::pair<reco::CompositeCandidate, std::vector<int> > > >" />
+
+  <class name="TtDilepEvtSolution"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3903965368"/>
+  </class>
+  <class name="TtSemiEvtSolution"  ClassVersion="10">
+   <version ClassVersion="10" checksum="702702553"/>
+  </class>
+  <class name="TtHadEvtSolution"  ClassVersion="10">
+   <version ClassVersion="10" checksum="4003976374"/>
+  </class>
+  <class name="StEvtSolution"  ClassVersion="10">
+   <version ClassVersion="10" checksum="520926643"/>
+  </class>
+  <class name="std::vector<TtDilepEvtSolution>" />
+  <class name="std::vector<TtSemiEvtSolution>" />
+  <class name="std::vector<TtHadEvtSolution>" />
+  <class name="std::vector<StEvtSolution>" />
+  <class name="edm::Wrapper<std::vector<TtDilepEvtSolution> >" />
+  <class name="edm::Wrapper<std::vector<TtSemiEvtSolution> >" />
+  <class name="edm::Wrapper<std::vector<TtHadEvtSolution> >" />
+  <class name="edm::Wrapper<std::vector<StEvtSolution> >" />
+
+  <class name="reco::CATopJetProperties" ClassVersion="10">
+   <version ClassVersion="10" checksum="4096516518"/>
+  </class>
+  <class name="std::pair<edm::RefToBase<reco::Jet>, reco::CATopJetProperties>"/>
+ 
+  <class name="reco::CATopJetTagInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="3059833435"/>
+  </class>
+  <class name="reco::CATopJetTagInfoCollection"/>
+  <class name="reco::CATopJetTagInfoRef"/>
+  <class name="reco::CATopJetTagInfoRefProd"/>
+  <class name="reco::CATopJetTagInfoRefVector"/>
+  <class name="edm::Wrapper<reco::CATopJetTagInfoCollection>"/>
+  <class name="edm::reftobase::Holder<reco::BaseTagInfo, reco::CATopJetTagInfoRef>" />
+  <class name="edm::reftobase::RefHolder<reco::CATopJetTagInfoRef>" />
+
+
+</lcgdict>
+

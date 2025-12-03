@@ -1,0 +1,10 @@
+
+Processing runboolUpdate.C...
+TFile**		boolUpdate.root	
+ TFile*		boolUpdate.root	
+  KEY: MyClass	myobject;6	 [current cycle]
+  KEY: MyClass	myobject;5	object title [backup cycle]
+  KEY: MyClass	myobject;4	object title [backup cycle]
+  KEY: MyClass	myobject;3	object title [backup cycle]
+  KEY: MyClass	myobject;2	object title [backup cycle]
+  KEY: MyClass	myobject;1	object title [backup cycle]

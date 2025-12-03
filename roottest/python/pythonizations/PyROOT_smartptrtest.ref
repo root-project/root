@@ -1,0 +1,4 @@
+. PyROOT_smartptrtest.py::TestClassSMARTPTRS::()::test01_transparency
+. PyROOT_smartptrtest.py::TestClassSMARTPTRS::()::test02_converters
+. PyROOT_smartptrtest.py::TestClassSMARTPTRS::()::test03_executors
+

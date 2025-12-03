@@ -16,6 +16,7 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
 endif()
 
 set(BASE_HEADERS
+  ROOT/RFloat16.hxx
   ROOT/TErrorDefaultHandler.hxx
   ROOT/TExecutorCRTP.hxx
   ROOT/TSequentialExecutor.hxx
@@ -197,22 +198,45 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-if(root7)
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-  list(APPEND BASE_HEADERS
-      ROOT/RFloat16.hxx
-      ROOT/RIndexIter.hxx)
-endif()
+set(RELATIVE_BASE_INC_HEADERS ${BASE_HEADERS})
+list(TRANSFORM RELATIVE_BASE_INC_HEADERS PREPEND inc/)
 
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
 target_sources(Core PRIVATE ${BASE_SOURCES})
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0") # https://discourse.cmake.org/t/file-set-xyz-is-listed-in-interface-file-sets-of-w-but-has-not-been-exported/9131/3
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          ${RELATIVE_BASE_INC_HEADERS}
+          src/TListOfTypes.h
+  )
+endif()
+
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
+
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(Core PRIVATE stdc++fs)
+endif()
+
+# This code about the LIB_CORE_NAME define is important for TROOT::GetLibDir()
+get_target_property(core_prefix Core PREFIX)
+get_target_property(core_suffix Core SUFFIX)
+get_target_property(core_soversion Core SOVERSION)
+if(core_soversion)
+    set(full_core_filename "${core_prefix}Core${core_suffix}.${core_soversion}")
+else()
+    set(full_core_filename "${core_prefix}Core${core_suffix}")
+endif()
+target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename})
 
 if(PCRE2_FOUND)
   target_link_libraries(Core PRIVATE PCRE2::PCRE2)
@@ -234,11 +258,9 @@ generateManual(haddMan ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BIN
 generateManual(rootclingMan ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/man/rootcling.1)
 
 #---addRootPyCmdMan---------------------------------------------------------------------------
-#generateManual(rootbrowseMan ${CMAKE_SOURCE_DIR}/main/python/rootbrowse.py ${CMAKE_BINARY_DIR}/man/rootbrowse.1)
 #generateManual(rootcpMan ${CMAKE_SOURCE_DIR}/main/python/rootcp.py ${CMAKE_BINARY_DIR}/man/rootcp.1)
 #generateManual(rootdrawtreeMan ${CMAKE_SOURCE_DIR}/main/python/rootdrawtree.py ${CMAKE_BINARY_DIR}/man/rootdrawtree.1)
 #generateManual(rooteventselectorMan ${CMAKE_SOURCE_DIR}/main/python/rooteventselector.py ${CMAKE_BINARY_DIR}/man/rooteventselector.1)
-#generateManual(rootlsMan ${CMAKE_SOURCE_DIR}/main/python/rootls.py ${CMAKE_BINARY_DIR}/man/rootls.1)
 #generateManual(rootmkdirMan ${CMAKE_SOURCE_DIR}/main/python/rootmkdir.py ${CMAKE_BINARY_DIR}/man/rootmkdir.1)
 #generateManual(rootmvMan ${CMAKE_SOURCE_DIR}/main/python/rootmv.py ${CMAKE_BINARY_DIR}/man/rootmv.1)
 #generateManual(rootprintMan ${CMAKE_SOURCE_DIR}/main/python/rootprint.py ${CMAKE_BINARY_DIR}/man/rootprint.1)

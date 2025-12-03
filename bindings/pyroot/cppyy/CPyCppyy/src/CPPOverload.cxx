@@ -54,18 +54,24 @@ public:
         fCallable = callable;
     }
 
-    virtual ~TPythonCallback() {
+    ~TPythonCallback() override {
         Py_DECREF(fCallable);
         fCallable = nullptr;
     }
 
-    virtual PyObject* GetSignature(bool /*show_formalargs*/ = true) {
+    PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("*args, **kwargs");
     }
-    virtual PyObject* GetPrototype(bool /*show_formalargs*/ = true) {
+    PyObject* GetSignatureNames() override {
+        return PyTuple_New(0);
+    }
+    PyObject* GetSignatureTypes() override {
+        return PyTuple_New(0);
+    }
+    PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
         return CPyCppyy_PyText_FromString("<callback>");
     }
-    virtual PyObject* GetDocString() {
+    PyObject* GetDocString() override {
         if (PyObject_HasAttrString(fCallable, "__doc__")) {
             return PyObject_GetAttrString(fCallable, "__doc__");
         } else {
@@ -73,29 +79,29 @@ public:
         }
     }
 
-    virtual int GetPriority() { return 100; };
-    virtual bool IsGreedy() { return false; };
+    int GetPriority() override { return 100; };
+    bool IsGreedy() override { return false; };
 
-    virtual int GetMaxArgs() { return 100; };
-    virtual PyObject* GetCoVarNames() { // TODO: pick these up from the callable
+    int GetMaxArgs() override { return 100; };
+    PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
         Py_RETURN_NONE;
     }
-    virtual PyObject* GetArgDefault(int /* iarg */, bool /* silent */ =true) {
+    PyObject* GetArgDefault(int /* iarg */, bool /* silent */ =true) override {
         Py_RETURN_NONE;      // TODO: pick these up from the callable
     }
 
-    virtual PyObject* GetScopeProxy() { // should this be the module ??
+    PyObject* GetScopeProxy() override { // should this be the module ??
         Py_RETURN_NONE;
     }
 
-    virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() {
+    Cppyy::TCppFuncAddr_t GetFunctionAddress() override {
         return (Cppyy::TCppFuncAddr_t)nullptr;
     }
 
-    virtual PyCallable* Clone() { return new TPythonCallback(*this); }
+    PyCallable* Clone() override { return new TPythonCallback(*this); }
 
-    virtual PyObject* Call(CPPInstance*& self,
-            CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) {
+    PyObject* Call(CPPInstance*& self,
+            CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* /* ctxt = 0 */) override {
 
 #if PY_VERSION_HEX >= 0x03080000
         if (self) {
@@ -283,6 +289,54 @@ static int mp_doc_set(CPPOverload* pymeth, PyObject *val, void *)
     Py_INCREF(val);
     pymeth->fMethodInfo->fDoc = val;
     return 0;
+}
+
+/**
+ * @brief Returns a dictionary with the input parameter names for all overloads.
+ *
+ * This dictionary may look like:
+ *
+ * {'double ::foo(int a, float b, double c)': ('a', 'b', 'c'),
+ *  'float ::foo(float b)': ('b',),
+ *  'int ::foo(int a)': ('a',),
+ *  'int ::foo(int a, float b)': ('a', 'b')}
+ */
+static PyObject *mp_func_overloads_names(CPPOverload *pymeth)
+{
+
+   const CPPOverload::Methods_t &methods = pymeth->fMethodInfo->fMethods;
+
+   PyObject *overloads_names_dict = PyDict_New();
+
+   for (PyCallable *method : methods) {
+      PyDict_SetItem(overloads_names_dict, method->GetPrototype(), method->GetSignatureNames());
+   }
+
+   return overloads_names_dict;
+}
+
+/**
+ * @brief Returns a dictionary with the types of all overloads.
+ *
+ * This dictionary may look like:
+ *
+ * {'double ::foo(int a, float b, double c)': {'input_types': ('int', 'float', 'double'), 'return_type': 'double'},
+ *  'float ::foo(float b)': {'input_types': ('float',), 'return_type': 'float'},
+ *  'int ::foo(int a)': {'input_types': ('int',), 'return_type': 'int'},
+ *  'int ::foo(int a, float b)': {'input_types': ('int', 'float'), 'return_type': 'int'}}
+ */
+static PyObject *mp_func_overloads_types(CPPOverload *pymeth)
+{
+
+   const CPPOverload::Methods_t &methods = pymeth->fMethodInfo->fMethods;
+
+   PyObject *overloads_types_dict = PyDict_New();
+
+   for (PyCallable *method : methods) {
+      PyDict_SetItem(overloads_types_dict, method->GetPrototype(), method->GetSignatureTypes());
+   }
+
+   return overloads_types_dict;
 }
 
 //----------------------------------------------------------------------------
@@ -495,39 +549,24 @@ static int mp_setcreates(CPPOverload* pymeth, PyObject* value, void*)
     return set_flag(pymeth, value, CallContext::kIsCreator, "__creates__");
 }
 
+constexpr const char *mempolicy_error_message =
+   "The __mempolicy__ attribute can't be used, because in the past it was reserved to manage the local memory policy. "
+   "If you want to do that now, please implement a pythonization for your class that uses SetOwnership() to manage the "
+   "ownership of arguments according to your needs.";
+
 //----------------------------------------------------------------------------
-static PyObject* mp_getmempolicy(CPPOverload* pymeth, void*)
+static PyObject* mp_getmempolicy(CPPOverload*, void*)
 {
-// Get '_mempolicy' enum, which determines ownership of call arguments.
-    if (pymeth->fMethodInfo->fFlags & CallContext::kUseHeuristics)
-        return PyInt_FromLong(CallContext::kUseHeuristics);
-
-    if (pymeth->fMethodInfo->fFlags & CallContext::kUseStrict)
-        return PyInt_FromLong(CallContext::kUseStrict);
-
-    return PyInt_FromLong(-1);
+    PyErr_SetString(PyExc_RuntimeError, mempolicy_error_message);
+    return nullptr;
 }
 
 //----------------------------------------------------------------------------
-static int mp_setmempolicy(CPPOverload* pymeth, PyObject* value, void*)
+static int mp_setmempolicy(CPPOverload*, PyObject*, void*)
 {
-// Set '_mempolicy' enum, which determines ownership of call arguments.
-    long mempolicy = PyLong_AsLong(value);
-    if (mempolicy == CallContext::kUseHeuristics) {
-        pymeth->fMethodInfo->fFlags |= CallContext::kUseHeuristics;
-        pymeth->fMethodInfo->fFlags &= ~CallContext::kUseStrict;
-    } else if (mempolicy == CallContext::kUseStrict) {
-        pymeth->fMethodInfo->fFlags |= CallContext::kUseStrict;
-        pymeth->fMethodInfo->fFlags &= ~CallContext::kUseHeuristics;
-    } else {
-        PyErr_SetString(PyExc_ValueError,
-            "expected kMemoryStrict or kMemoryHeuristics as value for __mempolicy__");
-        return -1;
-    }
-
-    return 0;
+    PyErr_SetString(PyExc_RuntimeError, mempolicy_error_message);
+    return -1;
 }
-
 
 //----------------------------------------------------------------------------
 #define CPPYY_BOOLEAN_PROPERTY(name, flag, label)                            \
@@ -582,13 +621,15 @@ static PyGetSetDef mp_getset[] = {
     {(char*)"func_globals",  (getter)mp_func_globals,  nullptr, nullptr, nullptr},
     {(char*)"func_doc",      (getter)mp_doc,           (setter)mp_doc_set, nullptr, nullptr},
     {(char*)"func_name",     (getter)mp_name,          nullptr, nullptr, nullptr},
+    {(char*)"func_overloads_types",    (getter)mp_func_overloads_types,    nullptr, nullptr, nullptr},
+    {(char*)"func_overloads_names",    (getter)mp_func_overloads_names,    nullptr, nullptr, nullptr},
 
 
 // flags to control behavior
     {(char*)"__creates__",         (getter)mp_getcreates, (setter)mp_setcreates,
       (char*)"For ownership rules of result: if true, objects are python-owned", nullptr},
-    {(char*)"__mempolicy__",       (getter)mp_getmempolicy, (setter)mp_setmempolicy,
-      (char*)"For argument ownership rules: like global, either heuristic or strict", nullptr},
+    {(char*)"__mempolicy__", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
+      (char*)"Unused", nullptr},
     {(char*)"__set_lifeline__",    (getter)mp_getlifeline, (setter)mp_setlifeline,
       (char*)"If true, set a lifeline from the return value onto self", nullptr},
     {(char*)"__release_gil__",     (getter)mp_getthreaded, (setter)mp_setthreaded,
@@ -630,8 +671,6 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
     CallContext ctxt{};
     const auto mflags = pymeth->fMethodInfo->fFlags;
-    const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
-    ctxt.fFlags |= mempolicy ? mempolicy : (uint64_t)CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
     ctxt.fFlags |= (mflags & CallContext::kProtected);
     if (IsConstructor(pymeth->fMethodInfo->fFlags)) ctxt.fFlags |= CallContext::kIsConstructor;
@@ -884,7 +923,11 @@ static Py_ssize_t mp_hash(CPPOverload* pymeth)
 {
 // Hash of method proxy object for insertion into dictionaries; with actual
 // method (fMethodInfo) shared, its address is best suited.
+#if PY_VERSION_HEX >= 0x030d0000
+    return Py_HashPointer(pymeth->fMethodInfo);
+#else
     return _Py_HashPointer(pymeth->fMethodInfo);
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1072,10 +1115,19 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
     if (name == "__init__")
         fMethodInfo->fFlags |= (CallContext::kIsCreator | CallContext::kIsConstructor);
 
-// special case, in heuristics mode also tag *Clone* methods as creators
-    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics && \
-            name.find("Clone") != std::string::npos)
-        fMethodInfo->fFlags |= CallContext::kIsCreator;
+// special case, in heuristics mode also tag *Clone* methods as creators. Only
+// check that Clone is present in the method name, not in the template argument
+// list.
+    if (CallContext::GlobalPolicyFlags() & CallContext::kUseHeuristics) {
+        std::string_view name_maybe_template = name;
+        auto begin_template = name_maybe_template.find_first_of('<');
+        if (begin_template <= name_maybe_template.size()) {
+            name_maybe_template = name_maybe_template.substr(0, begin_template);
+        }
+        if (name_maybe_template.find("Clone") != std::string_view::npos) {
+            fMethodInfo->fFlags |= CallContext::kIsCreator;
+        }
+    }
 
 #if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)mp_vectorcall;

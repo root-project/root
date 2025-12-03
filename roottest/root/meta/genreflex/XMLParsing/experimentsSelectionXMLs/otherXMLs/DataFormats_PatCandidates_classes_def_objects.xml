@@ -1,0 +1,270 @@
+<lcgdict>
+ <selection>
+  <!-- PAT Base Templates -->
+  <class name="pat::PATObject<reco::GsfElectron>" />
+  <class name="pat::PATObject<reco::Muon>" />
+  <class name="pat::PATObject<reco::BaseTau>" />
+  <class name="pat::PATObject<reco::Photon>" />
+  <class name="pat::PATObject<reco::Jet>" />
+  <class name="pat::PATObject<reco::MET>" />
+  <class name="pat::PATObject<reco::LeafCandidate>" />
+  <class name="pat::PATObject<reco::CompositeCandidate>" />
+  <class name="pat::PATObject<reco::PFCandidate>" />
+  <class name="pat::PATObject<reco::RecoCandidate>" />
+  <class name="pat::Lepton<reco::GsfElectron>" />
+  <class name="pat::Lepton<reco::Muon>" />
+  <class name="pat::Lepton<reco::BaseTau>" />
+
+  <!-- PAT Objects, and embedded data  -->
+  <class name="pat::Electron"  ClassVersion="22">
+   <version ClassVersion="22" checksum="4113394532"/>
+   <version ClassVersion="21" checksum="366535823"/>
+   <version ClassVersion="20" checksum="4220542719"/>
+   <version ClassVersion="19" checksum="839477640"/>
+   <version ClassVersion="18" checksum="191995725"/>
+   <version ClassVersion="17" checksum="1230088720"/>
+   <version ClassVersion="15" checksum="990589145"/>
+   <version ClassVersion="10" checksum="1662079993"/>
+  </class>
+  <class name="pat::Muon"  ClassVersion="12">
+   <version ClassVersion="12" checksum="462627330"/>
+   <version ClassVersion="11" checksum="489577659"/>
+   <version ClassVersion="10" checksum="2367573922"/>
+  </class>
+  <class name="pat::Tau"  ClassVersion="12">
+   <field name="isolationTracksTransientRefVector_" transient="true"/>
+   <field name="isolationTracksTransientRefVectorFixed_" transient="true"/>
+   <field name="signalTracksTransientRefVector_" transient="true"/>
+   <field name="signalTracksTransientRefVectorFixed_" transient="true"/>
+   <field name="signalPFCandsTransientRefVector_" transient="true"/>
+   <field name="signalPFCandsRefVectorFixed_" transient="true"/>
+   <field name="signalPFChargedHadrCandsTransientRefVector_" transient="true"/>
+   <field name="signalPFChargedHadrCandsRefVectorFixed_" transient="true"/>
+   <field name="signalPFNeutralHadrCandsTransientRefVector_" transient="true"/>
+   <field name="signalPFNeutralHadrCandsRefVectorFixed_" transient="true"/>
+   <field name="signalPFGammaCandsTransientRefVector_" transient="true"/>
+   <field name="signalPFGammaCandsRefVectorFixed_" transient="true"/>
+   <field name="isolationPFCandsTransientRefVector_" transient="true"/>
+   <field name="isolationPFCandsRefVectorFixed_" transient="true"/>
+   <field name="isolationPFChargedHadrCandsTransientRefVector_" transient="true"/>
+   <field name="isolationPFChargedHadrCandsRefVectorFixed_" transient="true"/>
+   <field name="isolationPFNeutralHadrCandsTransientRefVector_" transient="true"/>
+   <field name="isolationPFNeutralHadrCandsRefVectorFixed_" transient="true"/>
+   <field name="isolationPFGammaCandsTransientRefVector_" transient="true"/>
+   <field name="isolationPFGammaCandsRefVectorFixed_" transient="true"/>
+   <version ClassVersion="12" checksum="2900944238"/>
+   <version ClassVersion="11" checksum="3100353428"/>
+   <version ClassVersion="10" checksum="2244564938"/>
+  </class>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="isolationTracksTransientRefVectorFixed_">
+  <![CDATA[isolationTracksTransientRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="signalTracksTransientRefVectorFixed_">
+  <![CDATA[signalTracksTransientRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="signalPFCandsRefVectorFixed_">
+  <![CDATA[signalPFCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="signalPFChargedHadrCandsRefVectorFixed_">
+  <![CDATA[signalPFChargedHadrCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="signalPFNeutralHadrCandsRefVectorFixed_">
+  <![CDATA[signalPFNeutralHadrCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="signalPFGammaCandsRefVectorFixed_">
+  <![CDATA[signalPFGammaCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="isolationPFCandsRefVectorFixed_">
+  <![CDATA[isolationPFCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="isolationPFChargedHadrCandsRefVectorFixed_">
+  <![CDATA[isolationPFChargedHadrCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="isolationPFNeutralHadrCandsRefVectorFixed_">
+  <![CDATA[isolationPFNeutralHadrCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <ioread sourceClass="pat::Tau" targetClass="pat::Tau" version="[1-]" source="" target="isolationPFGammaCandsRefVectorFixed_">
+  <![CDATA[isolationPFGammaCandsRefVectorFixed_=false;]]>
+  </ioread>
+  <class name="pat::tau::TauPFSpecific"  ClassVersion="12">
+   <version ClassVersion="12" checksum="941745608"/>
+   <version ClassVersion="11" checksum="3975939304"/>
+   <version ClassVersion="10" checksum="2617942038"/>
+  </class>
+  <class name="std::vector<pat::tau::TauPFSpecific>" />
+  <class name="pat::tau::TauCaloSpecific"  ClassVersion="11">
+   <version ClassVersion="11" checksum="943826557"/>
+   <version ClassVersion="10" checksum="2692173055"/>
+  </class>
+  <class name="std::vector<pat::tau::TauCaloSpecific>" />
+  <class name="pat::Photon"  ClassVersion="10">
+   <version ClassVersion="10" checksum="865744757"/>
+  </class>
+  <class name="pat::Jet"  ClassVersion="11">
+   <field name="caloTowersTemp_" transient="true"/>
+   <field name="isCaloTowerCached_" transient="true"/>
+   <field name="pfCandidatesTemp_" transient="true"/>
+   <field name="isPFCandidateCached_" transient="true"/>
+   <version ClassVersion="11" checksum="4153489469"/>
+   <version ClassVersion="10" checksum="3393361159"/>
+  </class>
+  <class name="pat::MET"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1136648776"/>
+    <field name="uncorInfo_" transient="true"/>
+    <field name="nCorrections_" transient="true"/>
+    <field name="oldPt_" transient="true"/>
+  </class>
+  <class name="pat::MHT"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2696169357"/>
+  </class>
+  <class name="pat::Particle"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1421351288"/>
+  </class>
+  <class name="pat::CompositeCandidate"  ClassVersion="10">
+   <version ClassVersion="10" checksum="417284221"/>
+  </class>
+  <class name="pat::PFParticle"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2240381542"/>
+  </class>
+  <class name="pat::GenericParticle"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3438694352"/>
+  </class>
+  <class name="pat::Hemisphere"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2908192056"/>
+  </class>
+  <class name="pat::Conversion"  ClassVersion="11">
+   <version ClassVersion="11" checksum="1239840459"/>
+  </class>
+
+  <!-- PAT Object Ptrs  -->
+  <class name="edm::Ptr<pat::Electron>" />
+  <class name="edm::Ptr<pat::Muon>" />
+  <class name="edm::Ptr<pat::Tau>" />
+  <class name="edm::Ptr<pat::Jet>" />
+  <class name="edm::Ptr<pat::MET>" />
+  <class name="edm::Ptr<pat::Conversion>" />
+
+  <!-- PAT Object Collections -->
+  <class name="std::vector<pat::Electron>" />
+  <class name="std::vector<pat::Muon>" />
+  <class name="std::vector<pat::Tau>" />
+  <class name="std::vector<pat::Photon>" />
+  <class name="std::vector<pat::Jet>" />
+  <class name="std::vector<pat::MET>" />
+  <class name="std::vector<pat::MHT>" />
+  <class name="std::vector<pat::Particle>" />
+  <class name="std::vector<pat::CompositeCandidate>" />
+  <class name="std::vector<pat::PFParticle>" />
+  <class name="std::vector<pat::GenericParticle>" />
+  <class name="std::vector<pat::Hemisphere>" />
+  <class name="std::vector<pat::Conversion>" />
+
+  <!-- PAT Object Collection Iterators -->
+  <class name="std::vector<pat::Electron>::const_iterator" />
+  <class name="std::vector<pat::Muon>::const_iterator" />
+  <class name="std::vector<pat::Tau>::const_iterator" />
+  <class name="std::vector<pat::Photon>::const_iterator" />
+  <class name="std::vector<pat::Jet>::const_iterator" />
+  <class name="std::vector<pat::MET>::const_iterator" />
+  <class name="std::vector<pat::MHT>::const_iterator" />
+  <class name="std::vector<pat::Particle>::const_iterator" />
+  <class name="std::vector<pat::CompositeCandidate>::const_iterator" />
+  <class name="std::vector<pat::PFParticle>::const_iterator" />
+  <class name="std::vector<pat::GenericParticle>::const_iterator" />
+  <class name="std::vector<pat::Hemisphere>::const_iterator" />
+  <class name="std::vector<pat::Conversion>::const_iterator" />
+
+  <!-- PAT Object Collection Wrappers -->
+  <class name="edm::Wrapper<std::vector<pat::Electron> >" />
+  <class name="edm::Wrapper<std::vector<pat::Muon> >" />
+  <class name="edm::Wrapper<std::vector<pat::Tau> >" />
+  <class name="edm::Wrapper<std::vector<pat::Photon> >" />
+  <class name="edm::Wrapper<std::vector<pat::Jet> >" />
+  <class name="edm::Wrapper<std::vector<pat::MET> >" />
+  <class name="edm::Wrapper<std::vector<pat::MHT> >" />
+  <class name="edm::Wrapper<std::vector<pat::Particle> >" />
+  <class name="edm::Wrapper<std::vector<pat::CompositeCandidate> >" />
+  <class name="edm::Wrapper<std::vector<pat::PFParticle> >" />
+  <class name="edm::Wrapper<std::vector<pat::GenericParticle> >" />
+  <class name="edm::Wrapper<std::vector<pat::Hemisphere> >" />
+  <class name="edm::Wrapper<std::vector<pat::Conversion> >" />
+
+  <!-- PAT Object References -->
+  <class name="pat::ElectronRef" />
+  <class name="pat::MuonRef" />
+  <class name="pat::TauRef" />
+  <class name="pat::PhotonRef" />
+  <class name="pat::JetRef" />
+  <class name="pat::METRef" />
+<!-- no ref needed for pat::MHT as it is filled from PAT objects -->
+  <class name="pat::ParticleRef" />
+  <class name="pat::CompositeCandidateRef" />
+  <class name="pat::PFParticleRef" />
+  <class name="pat::GenericParticleRef" />
+  <class name="pat::HemisphereRef" />
+  <class name="pat::ConversionRef" />
+
+  <!-- PAT Object Ref Vectors -->
+  <class name="pat::ElectronRefVector" />
+  <class name="pat::MuonRefVector" />
+  <class name="pat::TauRefVector" />
+  <class name="pat::PhotonRefVector" />
+  <class name="pat::JetRefVector" />
+  <class name="pat::METRefVector" />
+  <class name="pat::ParticleRefVector" />
+  <class name="pat::CompositeCandidateRefVector" />
+  <class name="pat::PFParticleRefVector" />
+  <class name="pat::GenericParticleRefVector" />
+  <class name="pat::HemisphereRefVector" />
+  <class name="pat::ConversionRefVector" />
+
+  <!-- PAT Object Ref Vector Wrappers -->
+  <class name="edm::Wrapper<pat::ElectronRefVector>" />
+  <class name="edm::Wrapper<pat::MuonRefVector>" />
+  <class name="edm::Wrapper<pat::TauRefVector>" />
+  <class name="edm::Wrapper<pat::PhotonRefVector>" />
+  <class name="edm::Wrapper<pat::JetRefVector>" />
+  <class name="edm::Wrapper<pat::METRefVector>" />
+  <class name="edm::Wrapper<pat::ParticleRefVector>" />
+  <class name="edm::Wrapper<pat::CompositeCandidateRefVector>" />
+  <class name="edm::Wrapper<pat::PFParticleRefVector>" />
+  <class name="edm::Wrapper<pat::GenericParticleRefVector>" />
+  <class name="edm::Wrapper<pat::HemisphereRefVector>" />
+  <class name="edm::Wrapper<pat::ConversionRefVector>" />
+
+  <!-- RefToBase<Candidate> from PATObjects -->
+    <!-- With direct Holder -->
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::ElectronRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::MuonRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::TauRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::PhotonRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::JetRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::METRef>" />
+<!-- no reftobase needed for pat::MHT as it is filled from PAT objects -->
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::ParticleRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::CompositeCandidateRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::PFParticleRef>" />
+  <class name="edm::reftobase::Holder<reco::Candidate, pat::GenericParticleRef>" />
+    <!-- With indirect holder (RefHolder) -->
+  <class name="edm::reftobase::RefHolder<pat::ElectronRef>" />
+  <class name="edm::reftobase::RefHolder<pat::MuonRef>" />
+  <class name="edm::reftobase::RefHolder<pat::TauRef>" />
+  <class name="edm::reftobase::RefHolder<pat::PhotonRef>" />
+  <class name="edm::reftobase::RefHolder<pat::JetRef>" />
+  <class name="edm::reftobase::RefHolder<pat::METRef>" />
+<!-- no reftobase needed for pat::MHT as it is filled from PAT objects -->
+  <class name="edm::reftobase::RefHolder<pat::ParticleRef>" />
+  <class name="edm::reftobase::RefHolder<pat::CompositeCandidateRef>" />
+  <class name="edm::reftobase::RefHolder<pat::PFParticleRef>" />
+  <class name="edm::reftobase::RefHolder<pat::GenericParticleRef>" />
+
+
+ <!-- RefToBaseVector<Candidate> from PATObjetcs  -->
+  <class name="edm::reftobase::RefVectorHolder<pat::CompositeCandidateRefVector>" />
+  <class name="edm::reftobase::VectorHolder<reco::Candidate, pat::CompositeCandidateRefVector>" />
+
+  </selection>
+ <exclusion>
+ </exclusion>
+</lcgdict>
+

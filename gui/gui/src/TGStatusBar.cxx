@@ -91,7 +91,6 @@ void TGStatusBarPart::DoRedraw()
 }
 
 
-ClassImp(TGStatusBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a status bar widget. By default it consist of one part.
@@ -366,7 +365,7 @@ TGDimension TGStatusBar::GetDefaultSize() const
    UInt_t h = fHeight;
 
    for (int i = 0; i < fNpart; i++) {
-      h = TMath::Max(h,fStatusPart[i]->GetDefaultHeight()+1);
+      h = std::max(h,fStatusPart[i]->GetDefaultHeight()+1);
    }
    return TGDimension(fWidth, h);
 }

@@ -38,7 +38,7 @@ public:
          const RooResolutionModel& model,
          DecayType type);
   RooBDecay(const RooBDecay& other, const char* name=nullptr);
-  TObject* clone(const char* newname) const override
+  TObject* clone(const char* newname=nullptr) const override
   {
     return new RooBDecay(*this,newname);
   }

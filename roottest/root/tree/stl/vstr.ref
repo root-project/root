@@ -1,0 +1,16 @@
+Automatic building of dictionaries now off
+
+Processing runvstr.C+...
+two
+Printing vector
+0:two	1:123	
+Printing vector
+
+Printing vector
+0:two	1:123	
+***********************************
+*    Row   * Instance * RProcess. *
+***********************************
+*        0 *        0 *       two *
+*        0 *        1 *       123 *
+***********************************

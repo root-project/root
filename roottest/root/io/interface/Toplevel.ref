@@ -1,0 +1,7 @@
+
+Processing runToplevel.C...
+Good: Did properly load myclass with value 33
+Good: Did properly load TH1F with 11 entries.
+Good: Did properly load myclass with value 33
+Good: Did properly load TH1F with 11 entries.
+(bool) false

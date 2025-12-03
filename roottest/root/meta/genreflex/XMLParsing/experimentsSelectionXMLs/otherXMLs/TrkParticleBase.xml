@@ -1,0 +1,8 @@
+<lcgdict>
+  <class name="Trk::TrackParticleBase">
+    <field name="m_trackSummary" transient="true"/>
+  </class>
+  <class name="DataVector<Trk::TrackParticleBase>" id="D5BAC038-658B-4178-BF45-D9B910DD2800" />
+  <class name="std::vector<Trk::TrackParticleBase*>" />
+  <class name="Trk::LinkToTrackParticleBase" />
+</lcgdict>

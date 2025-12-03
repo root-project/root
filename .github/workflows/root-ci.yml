@@ -8,11 +8,16 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
+      - 'README/ReleaseNotes/**'
 
   push:
     branches:
       - 'master'
       - 'v*-*-*-patches'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+      - 'README/**'
 
   # Allows nightly builds to trigger one run for each branch easily, by
   # providing the relevant branch as "default" value here:
@@ -71,6 +76,7 @@ env:
   OS_IDENTITY_API_VERSION: 3
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
+  GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -82,7 +88,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -95,18 +105,17 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
             arch: X64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-          - platform: mac-beta
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac26
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac-beta
+            is_special: true
+            arch: ARM64
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -135,7 +144,7 @@ jobs:
 
           echo '' >> "$CONFIGFILE"
 
-          for ENTRY in $OVERRIDES; do
+          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
 
               # Add entry to file if not exists, otherwise replace
@@ -155,13 +164,15 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-
+        
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
-          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          HOME: /Users/sftnight
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -173,8 +184,9 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
-        run: ".github/workflows/root-ci-config/build_root.py
+        shell: bash -leo pipefail {0}
+        if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -184,8 +196,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Nightly build
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -194,8 +207,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -224,7 +238,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -345,7 +363,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -359,24 +381,24 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora41
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: fedora42
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: fedora43
           - image: alma8
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          - image: alma10
           - image: ubuntu22
-            overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2410
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2504
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: ubuntu2510
           - image: debian125
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "dev=ON"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          - image: debian13
+            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
           - image: alma9
             is_special: true
@@ -385,16 +407,22 @@ jobs:
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
-          - image: alma9-clang
+          - image: alma10
             is_special: true
-            property: clang
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            property: "clang Ninja"
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            cmake_generator: Ninja
+          # Fedora Rawhide with Python debug build
+          - image: rawhide
+            is_special: true
+            property: "Fedora pydebug"
+            overrides: ["CMAKE_CXX_STANDARD=23"]
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -417,16 +445,13 @@ jobs:
       volumes:
         - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-        OS_AUTH_TYPE: 'v3applicationcredential'
-        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-        OS_IDENTITY_API_VERSION: 3
-        OS_INTERFACE: 'public'
-        OS_REGION_NAME: 'cern'
-        PYTHONUNBUFFERED: true
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
+
+    env:
+      BUILD_DIR: /github/home/ROOT-CI/build
+      INSTALL_DIR: /github/home/ROOT-CI/install
+      POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
 
     steps:
       - name: Configure large ccache
@@ -482,7 +507,7 @@ jobs:
 
           echo '' >> "$CONFIGFILE"
 
-          for ENTRY in $OVERRIDES; do
+          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
 
               # Add entry to file if not exists, otherwise replace
@@ -505,6 +530,7 @@ jobs:
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
@@ -570,6 +596,18 @@ jobs:
       - name: ccache info (post)
         run: |
           ccache -s || true
+
+      - name: Install
+        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+
+      - name: Build post-install test project
+        run: |
+          cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
+          cmake --build ${{ env.POST_INSTALL_DIR }};
+
+      - name: CTest in post-install test project
+        working-directory: ${{ env.POST_INSTALL_DIR }}
+        run: ctest --output-on-failure -j $(nproc)
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI

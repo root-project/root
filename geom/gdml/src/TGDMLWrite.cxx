@@ -156,15 +156,16 @@ See that function for details.
 #include "TGeoElement.h"
 #include "TGeoShape.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoExtension.h"
 #include "TGeoOpticalSurface.h"
+#include "TMap.h"
+#include "TObjString.h"
 #include <cstdlib>
 #include <string>
 #include <map>
 #include <set>
 #include <ctime>
 #include <sstream>
-
-ClassImp(TGDMLWrite);
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = nullptr;
 
@@ -758,6 +759,40 @@ void TGDMLWrite::ExtractVolumes(TGeoNode *node)
       // create division node
       childN = CreateDivisionN(offset, width, ndiv, axis.Data(), unit.Data(), nodeVolNameBak.Data());
       fGdmlE->AddChild(volumeN, childN);
+   }
+
+   // export auxiliary user-data if present (TMap of TObjString->TObjString)
+   {
+      TGeoRCExtension *rcext = (TGeoRCExtension *)volume->GetUserExtension();
+      if (rcext) {
+         TObject *userObj = rcext->GetUserObject();
+         if (userObj && userObj->InheritsFrom("TMap")) {
+            TMap *auxmap = (TMap *)userObj;
+            TIterator *it = auxmap->MakeIterator();
+            TObject *k = nullptr;
+            while ((k = it->Next())) {
+               TObject *valobj = auxmap->GetValue(k);
+               if (!valobj || !k->InheritsFrom("TObjString") || !valobj->InheritsFrom("TObjString"))
+                  continue;
+               TObjString *key = (TObjString *)k;
+               TObjString *val = (TObjString *)valobj;
+               TString auxtype = key->GetString();
+               TString auxvalue = val->GetString();
+               TString auxunit = "";
+               Int_t pos = auxvalue.Index('*');
+               if (pos >= 0) {
+                  auxunit = auxvalue(pos + 1, auxvalue.Length());
+                  auxvalue = auxvalue(0, pos);
+               }
+               XMLNodePointer_t auxN = fGdmlE->NewChild(nullptr, nullptr, "auxiliary", nullptr);
+               fGdmlE->NewAttr(auxN, nullptr, "auxtype", auxtype.Data());
+               fGdmlE->NewAttr(auxN, nullptr, "auxvalue", auxvalue.Data());
+               if (!auxunit.IsNull())
+                  fGdmlE->NewAttr(auxN, nullptr, "auxunit", auxunit.Data());
+               fGdmlE->AddChild(volumeN, auxN);
+            }
+         }
+      }
    }
 
    fVolCnt++;
@@ -1944,6 +1979,14 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface *geoSurf)
       while ((property = (TNamed *)next()))
          fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
+   // Write CONST properties
+   TList const &const_properties = geoSurf->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
+      TNamed *property;
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
    return mainN;
 }
 
@@ -2033,9 +2076,10 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", matrix->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "coldim", TString::Format("%zu", cols));
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    for (size_t i = 0; i < rows; ++i) {
       for (size_t j = 0; j < cols; ++j) {
-         vals << matrix->Get(i, j);
+         vals << TString::Format(fltPrecision.Data(), matrix->Get(i, j));
          if (j < cols - 1)
             vals << ' ';
       }

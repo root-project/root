@@ -1,0 +1,25 @@
+<lcgdict>
+ <class name="runinfo_test::RunNumber::Item"/>
+ <class name="std::vector<runinfo_test::RunNumber::Item>"/>
+ <class name="runinfo_test::RunNumber" class_version="0"/>
+
+ <class name="RunSummary" class_version="0"/>
+ 
+ <class name="RunInfo" class_version="0"/>
+ 
+ <class name="L1TriggerScaler::Lumi"/>
+ <class name="std::vector<L1TriggerScaler::Lumi>"/>
+ <class name="L1TriggerScaler" class_version="0"/>
+ <class name="MixingModuleConfig" class_version="0">
+            <field name="configs_" mapping="blob" />
+     </class>
+    
+ <class name="MixingInputConfig" class_version="0"/>
+ <class name="std::vector<MixingInputConfig>"/> 
+ 
+ <class name="std::bitset<3565>"/> 
+ <class name="FillInfo" class_version="0">
+   <field name="m_bunchConfiguration1" mapping="blob"/>
+   <field name="m_bunchConfiguration2" mapping="blob"/>
+ </class>  
+</lcgdict>  

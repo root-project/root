@@ -59,7 +59,6 @@ TChainIndex::TChainIndexEntry::TChainIndexEntry(const TChainIndex::TChainIndexEn
    fTreeIndex = (other.fTreeIndex ? static_cast<TVirtualIndex *>(other.fTreeIndex->Clone()) : nullptr);
 }
 
-ClassImp(TChainIndex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for TChainIndex
@@ -79,8 +78,13 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 /// If any of those requirements isn't met the object becomes a zombie.
 /// If some subtrees don't have indices the indices are created and stored inside this
 /// TChainIndex.
+/// In some cases, a warning is printed about unsorted indices in the TChain files. Note
+/// that unsorted indices lead to a significant performance degradation, not only when building the index itself,
+/// but also later on when performing the joining with other datasets. Thus, in general, it is not recommended to
+/// ignore this warning except for special cases with prior knowledge that sorting the files and/or entries is actually
+/// more expensive, or just not possible.
 
-TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
+TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
            : TVirtualIndex()
 {
    fTree = nullptr;
@@ -99,7 +103,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
    fMinorName          = minorname;
    Int_t i = 0;
 
-   // Go through all the trees and check if they have indeces. If not then build them.
+   // Go through all the trees and check if they have indices. If not then build them.
    for (i = 0; i < chain->GetNtrees(); i++) {
       chain->LoadTree((chain->GetTreeOffset())[i]);
       TVirtualIndex *index = chain->GetTree()->GetTreeIndex();
@@ -117,7 +121,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          }
       }
       if (!index) {
-         chain->GetTree()->BuildIndex(majorname, minorname);
+         chain->GetTree()->BuildIndex(majorname, minorname, long64major, long64minor);
          index = chain->GetTree()->GetTreeIndex();
          chain->GetTree()->SetTreeIndex(nullptr);
          entry.fTreeIndex = index;
@@ -145,7 +149,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
       if( fEntries[i].GetMaxIndexValPair() > fEntries[i+1].GetMinIndexValPair() ) {
          DeleteIndices();
          MakeZombie();
-         Error("TChainIndex", "The indices in files of this chain aren't sorted.");
+         Warning("TChainIndex", "The indices in files of this chain aren't sorted.");
       }
    }
 }

@@ -1,12 +1,10 @@
-import py
+import py, pytest, os
 from pytest import raises, skip
-from .support import setup_make, pylong, ispypy
+from support import setup_make, pylong, ispypy
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("example01Dict"))
 
-def setup_module(mod):
-    setup_make("example01")
+currpath = os.getcwd()
+test_dct = currpath + "/libexample01Dict"
 
 
 class TestPYTHONIFY:
@@ -590,3 +588,7 @@ class TestPYTHONIFY_UI:
         assert proxy.__get__(proxy, None) == 3
 
         cppyy.gbl.ns_example01.gMyGlobalInt = oldval
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

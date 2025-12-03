@@ -1,0 +1,87 @@
+
+Processing execTemplate.C...
+Looking at UserClass.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+As expected, can not find getA without an instantiation.
+Found getA<int> while searching for getA<int>.
+Found getA<int> while searching for getA.
+As expected, can not find setA without an instantiation.
+Found setA<int> while searching for setA<int>.
+Found setA<int> while searching for setA.
+As expected, can not find getB without an instantiation.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB<int,float>.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	getA<int>	 : 0
+      int UserClass::getA<int>()
+ OBJ: TMethod	setA<int>	 : 0
+      void UserClass::setA<int>(int)
+ OBJ: TMethod	getB<int, float>	 : 0
+      int UserClass::getB<int, float>()
+
+Looking at UserSpace.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+As expected, can not find getA without an instantiation.
+Found getA<int> while searching for getA<int>.
+Found getA<int> while searching for getA.
+As expected, can not find setA without an instantiation.
+Found setA<int> while searching for setA<int>.
+Found setA<int> while searching for setA.
+As expected, can not find getB without an instantiation.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB<int,float>.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	getA<int>	 : 0
+      int UserSpace::getA<int>()
+ OBJ: TMethod	setA<int>	 : 0
+      void UserSpace::setA<int>(int)
+ OBJ: TMethod	getB<int, float>	 : 0
+      int UserSpace::getB<int, float>()
+
+Looking for function template in UserClass.
+As expected, can not find setB without an instantiation.
+Found setB function template while searching for setB.
+Looking for function template in UserSpace.
+As expected, can not find setB without an instantiation.
+Found setB function template while searching for setB.
+Looking fo function template in global scope.
+As expected, can not find globalSet without an instantiation.
+Found globalSet function template while searching for globalSet.
+Found Mean function template while searching for TMath::Mean.
+As expected did not find a function template for  TMath::Maen.
+As expected, can not find TMath::Mean without an instantiation.
+As expected, can not find TMath::Maen which does not exist.
+As expected, can not find TMath::Mean without an instantiation.
+As expected, can not find TMath::Maen which does not exist.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	Outer<int>	 : 0
+      Outer<int> Outer<int>::Outer<int>()
+ OBJ: TMethod	AFunction<int, void>	 : 0
+      void Outer<int>::AFunction<int, void>(float)
+ OBJ: TMethod	AFunction<int, void>	 : 0
+      void Outer<int>::AFunction<int, void>(int)
+ OBJ: TMethod	AFunction	 : 0
+      void Outer<int>::AFunction(double)
+ OBJ: TMethod	Outer<int>	 : 0
+      Outer<int> Outer<int>::Outer<int>(const Outer<int>&)
+ OBJ: TMethod	operator=	 : 0
+      Outer<int>& Outer<int>::operator=(const Outer<int>&)
+ OBJ: TMethod	Outer<int>	 : 0
+      Outer<int> Outer<int>::Outer<int>(Outer<int>&&)
+ OBJ: TMethod	operator=	 : 0
+      Outer<int>& Outer<int>::operator=(Outer<int>&&)
+ OBJ: TMethod	~Outer<int>	 : 0
+      void Outer<int>::~Outer<int>()
+TClass::New() on Outer<int> does create an object
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	Wrapper<int&>	 : 0
+      Wrapper<int&> Wrapper<int&>::Wrapper<int&>(const Wrapper<int&>&)
+ OBJ: TMethod	Wrapper<int&>	 : 0
+      Wrapper<int&> Wrapper<int&>::Wrapper<int&>(Wrapper<int&>&&)
+ OBJ: TMethod	~Wrapper<int&>	 : 0
+      void Wrapper<int&>::~Wrapper<int&>()

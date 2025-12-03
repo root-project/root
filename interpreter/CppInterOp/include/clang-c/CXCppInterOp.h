@@ -332,7 +332,8 @@ CINDEX_LINKAGE void clang_deallocate(CXObject address);
  * Creates an object of class \c scope and calls its default constructor. If \c
  * arena is set it uses placement new.
  */
-CINDEX_LINKAGE CXObject clang_construct(CXScope scope, void* arena);
+CINDEX_LINKAGE CXObject clang_construct(CXScope scope, void* arena,
+                                        size_t count = 1UL);
 
 /**
  * Creates a trampoline function and makes a call to a generic function or
@@ -360,8 +361,11 @@ CINDEX_LINKAGE void clang_invoke(CXScope func, void* result, void** args,
  * \param type The type of the object.
  *
  * \param withFree Whether to call operator delete/free or not.
+ *
+ * \returns true if wrapper generation and invocation succeeded.
  */
-CINDEX_LINKAGE void clang_destruct(CXObject This, CXScope S, bool withFree);
+CINDEX_LINKAGE bool clang_destruct(CXObject This, CXScope S,
+                                   bool withFree = true, size_t nary = 0UL);
 
 /**
  * @}

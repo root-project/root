@@ -33,8 +33,6 @@ public:
    // user defined strategy (0, 1, 2, >=3)
    explicit MnStrategy(unsigned int);
 
-   unsigned int Strategy() const { return fStrategy; }
-
    unsigned int GradientNCycles() const { return fGradNCyc; }
    double GradientStepTolerance() const { return fGradTlrStp; }
    double GradientTolerance() const { return fGradTlr; }
@@ -48,15 +46,11 @@ public:
 
    int StorageLevel() const { return fStoreLevel; }
 
-   bool IsLow() const { return fStrategy == 0; }
-   bool IsMedium() const { return fStrategy == 1; }
-   bool IsHigh() const { return fStrategy == 2; }
-   bool IsVeryHigh() const { return fStrategy >= 3; }
+   bool RefineGradientInHessian() const { return fStrategy > 0; }
 
-   void SetLowStrategy();
-   void SetMediumStrategy();
-   void SetHighStrategy();
-   void SetVeryHighStrategy();
+   bool ComputeInitialHessian() const { return fStrategy == 2; }
+
+   double HessianRecomputeThreshold() const;
 
    void SetGradientNCycles(unsigned int n) { fGradNCyc = n; }
    void SetGradientStepTolerance(double stp) { fGradTlrStp = stp; }
@@ -80,6 +74,15 @@ public:
    void SetStorageLevel(unsigned int level) { fStoreLevel = level; }
 
 private:
+   friend class MnFunctionCross;
+   friend class MnContours;
+   MnStrategy NextLower() const;
+
+   void SetLowStrategy();
+   void SetMediumStrategy();
+   void SetHighStrategy();
+   void SetVeryHighStrategy();
+
    unsigned int fStrategy;
 
    unsigned int fGradNCyc;

@@ -20,7 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <errno.h>
+#include <cerrno>
 #include <random>
 
 #include "TApplicationRemote.h"
@@ -56,7 +56,6 @@ Bool_t TARInterruptHandler::Notify()
 }
 
 
-ClassImp(TApplicationRemote);
 
 static const char *gScript = "roots";
 static const char *gScriptCmd = "\\\"%s %d localhost:%d/%s -d=%d\\\"";
@@ -169,7 +168,7 @@ TApplicationRemote::TApplicationRemote(const char *url, Int_t debug,
    if (gDebug > 0)
       Info("TApplicationRemote", "executing: %s", cmd.Data());
    if (gSystem->Exec(cmd) != 0) {
-      Info("TApplicationRemote", "an error occured during SSH connection");
+      Info("TApplicationRemote", "an error occurred during SSH connection");
       mon->DeActivateAll();
       delete mon;
       delete ss;
@@ -357,7 +356,7 @@ Int_t TApplicationRemote::Collect(Long_t timeout)
                Info("Collect","deactivating %p", s);
          }
 
-         // Update counter (if no error occured)
+         // Update counter (if no error occurred)
          if (rc >= 0)
             cnt++;
 

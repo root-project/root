@@ -1,0 +1,15 @@
+<lcgdict>
+
+  <class name = "std::pair< const Trk::TrackParameters*, double >" />
+  <class name = "Trk::ComponentParameters" />
+
+  <class name = "std::list< Trk::ComponentParameters >" /> 
+  <class name = "Trk::MultiComponentState" />
+
+  <class name = "Trk::MultiComponentStateOnSurface" >
+  <field name = "m_multiComponentState" transient="false" />
+  <field name = "m_mixtureModeQoverP" transient="false" />
+  </class>
+
+</lcgdict>
+

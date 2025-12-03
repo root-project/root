@@ -35,9 +35,17 @@ endif()
 ROOT_ADD_GTEST(testTChainSaveAsCxx TChainSaveAsCxx.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTChainRegressions TChainRegressions.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTTreeTruncatedDatatypes TTreeTruncatedDatatypes.cxx LIBRARIES RIO Tree)
-ROOT_ADD_GTEST(testTTreeRegressions TTreeRegressions.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(testTTreeRegressions TTreeRegressions.cxx LIBRARIES RIO Tree Hist)
 ROOT_ADD_GTEST(entrylist_addsublist entrylist_addsublist.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(chain_setentrylist chain_setentrylist.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(entrylist_enter entrylist_enter.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(entrylist_enterrange entrylist_enterrange.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(friendinfo friendinfo.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(testTTreeCompression TTreeCompression.cxx LIBRARIES RIO Tree MathCore)
+ROOT_ADD_GTEST(evolution evolution.cxx LIBRARIES RIO Tree)
+ROOT_GENERATE_DICTIONARY(EvolutionStruct ${CMAKE_CURRENT_SOURCE_DIR}/EvolutionStruct.hxx
+                         MODULE evolution
+                         LINKDEF EvolutionStructLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO)
+

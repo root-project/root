@@ -1,0 +1,7 @@
+<rootdict>
+  <class name="bug::Classy" ClassVersion="42">
+    <field name="x_" transient="true"/>
+    <field name="y_" transient="true"/>
+  </class>
+</rootdict>
+

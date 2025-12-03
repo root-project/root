@@ -19,7 +19,6 @@
 
 #include <sqlite3.h>
 
-ClassImp(TSQLiteServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to an SQLite DB server. The db arguments should be

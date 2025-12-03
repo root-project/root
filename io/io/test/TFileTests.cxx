@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <array>
 
 #include "gtest/gtest.h"
 
@@ -16,59 +17,59 @@
 
 TEST(TFile, WriteObjectTObject)
 {
-    auto filename{"tfile_writeobject_tobject.root"};
-    auto tnamed_name{"mytnamed_name"};
-    auto tnamed_title{"mytnamed_title"};
+   auto filename{"tfile_writeobject_tobject.root"};
+   auto tnamed_name{"mytnamed_name"};
+   auto tnamed_title{"mytnamed_title"};
 
-    {
-        TNamed mytnamed{tnamed_name, tnamed_title};
-        TFile f{filename, "recreate"};
-        f.WriteObject(&mytnamed, mytnamed.GetName());
-        f.Close();
-    }
+   {
+      TNamed mytnamed{tnamed_name, tnamed_title};
+      TFile f{filename, "recreate"};
+      f.WriteObject(&mytnamed, mytnamed.GetName());
+      f.Close();
+   }
 
-    TFile input{filename};
-    auto named = input.Get<TNamed>(tnamed_name);
-    auto keyptr = static_cast<TKey *>(input.GetListOfKeys()->At(0));
+   TFile input{filename};
+   auto named = input.Get<TNamed>(tnamed_name);
+   auto keyptr = static_cast<TKey *>(input.GetListOfKeys()->At(0));
 
-    EXPECT_STREQ(named->GetName(), tnamed_name);
-    EXPECT_STREQ(named->GetTitle(), tnamed_title);
-    EXPECT_STREQ(keyptr->GetName(), tnamed_name);
-    EXPECT_STREQ(keyptr->GetTitle(), tnamed_title);
+   EXPECT_STREQ(named->GetName(), tnamed_name);
+   EXPECT_STREQ(named->GetTitle(), tnamed_title);
+   EXPECT_STREQ(keyptr->GetName(), tnamed_name);
+   EXPECT_STREQ(keyptr->GetTitle(), tnamed_title);
 
-    input.Close();
-    gSystem->Unlink(filename);
+   input.Close();
+   gSystem->Unlink(filename);
 }
 
 TEST(TFile, WriteObjectVector)
 {
-    auto filename{"tfile_writeobject_vector.root"};
-    auto vec_name{"object name"}; // Decided arbitrarily
+   auto filename{"tfile_writeobject_vector.root"};
+   auto vec_name{"object name"}; // Decided arbitrarily
 
-    {
-        std::vector<int> myvec{1,2,3,4,5};
-        TFile f{filename, "recreate"};
-        f.WriteObject(&myvec, vec_name);
-        f.Close();
-    }
+   {
+      std::vector<int> myvec{1, 2, 3, 4, 5};
+      TFile f{filename, "recreate"};
+      f.WriteObject(&myvec, vec_name);
+      f.Close();
+   }
 
-    TFile input{filename};
-    auto retvecptr = input.Get<std::vector<int>>(vec_name);
-    const auto &retvec = *retvecptr;
-    auto retkey = static_cast<TKey *>(input.GetListOfKeys()->At(0));
+   TFile input{filename};
+   auto retvecptr = input.Get<std::vector<int>>(vec_name);
+   const auto &retvec = *retvecptr;
+   auto retkey = static_cast<TKey *>(input.GetListOfKeys()->At(0));
 
-    std::vector<int> expected{1,2,3,4,5};
+   std::vector<int> expected{1, 2, 3, 4, 5};
 
-    ASSERT_EQ(retvec.size(), expected.size());
-    for (std::size_t i = 0; i < retvec.size(); ++i) {
-        EXPECT_EQ(retvec[i], expected[i]);
-    }
+   ASSERT_EQ(retvec.size(), expected.size());
+   for (std::size_t i = 0; i < retvec.size(); ++i) {
+      EXPECT_EQ(retvec[i], expected[i]);
+   }
 
-    EXPECT_STREQ(retkey->GetName(), vec_name);
-    EXPECT_STREQ(retkey->GetTitle(), ""); // Objects that don't derive from TObject have no title
+   EXPECT_STREQ(retkey->GetName(), vec_name);
+   EXPECT_STREQ(retkey->GetTitle(), ""); // Objects that don't derive from TObject have no title
 
-    input.Close();
-    gSystem->Unlink(filename);
+   input.Close();
+   gSystem->Unlink(filename);
 }
 
 // Tests ROOT-9857
@@ -130,6 +131,7 @@ void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
 // https://github.com/root-project/root/issues/10742
 #ifndef R__WIN32
 // We prefer not to read remotely files from Windows, if possible
+#ifdef R__HAS_DAVIX
 TEST(TFile, ReadWithoutGlobalRegistrationWeb)
 {
    const auto webFile = "http://root.cern/files/h1/dstarmb.root";
@@ -140,7 +142,17 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
    const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
 }
-#endif 
+TEST(TFile, ReadWithCacheWithoutGlobalRegistration)
+{
+   const auto webFile = "http://root.cern/files/h1/dstarmb.root";
+   TFile::SetCacheFileDir(".");
+   delete TFile::Open(webFile, "READ_WITHOUT_GLOBALREGISTRATION");
+   EXPECT_TRUE(gSystem->AccessPathName("./files/h1/dstarmb.root"));
+   TFile::SetCacheFileDir("");
+   gSystem->Unlink("./files");
+}
+#endif
+#endif
 
 // https://github.com/root-project/root/issues/16189
 TEST(TFile, k630forwardCompatibility)
@@ -148,14 +160,14 @@ TEST(TFile, k630forwardCompatibility)
    gEnv->SetValue("TFile.v630forwardCompatibility", 1);
    const std::string filename{"filek30.root"};
    // Testing that the flag is also set when creating the file from scratch (as opposed to "UPDATE")
-   TFile filec{filename.c_str(),"RECREATE"};
-   ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
+   TFile filec{filename.c_str(), "RECREATE"};
+   ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);
    filec.Close();
-   TFile filer{filename.c_str(),"READ"};
-   ASSERT_EQ(filer.TestBit(TFile::k630forwardCompatibility), true);  
+   TFile filer{filename.c_str(), "READ"};
+   ASSERT_EQ(filer.TestBit(TFile::k630forwardCompatibility), true);
    filer.Close();
-   TFile fileu{filename.c_str(),"UPDATE"};
-   ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
+   TFile fileu{filename.c_str(), "UPDATE"};
+   ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);
    fileu.Close();
    gSystem->Unlink(filename.c_str());
 }
@@ -201,3 +213,96 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetName()), "c");
 }
+
+TEST(TFile, WalkTKeys)
+{
+   struct FileRaii {
+      std::string fFilename;
+      FileRaii(std::string_view fname) : fFilename(fname) {}
+      ~FileRaii() { gSystem->Unlink(fFilename.c_str()); }
+   } fileGuard("tfile_walk_tkeys.root");
+
+   TFile outFile(fileGuard.fFilename.c_str(), "RECREATE");
+
+   std::string foo = "foo";
+   outFile.WriteObject(&foo, "foo");
+
+   // Write an object with an extremely long name (> 128 chars but < 256)
+   static const char kLongKey[] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   static_assert(std::size(kLongKey) > 128);
+   static_assert(std::size(kLongKey) < 256);
+   outFile.WriteObject(&foo, kLongKey);
+
+   // Write an object with an even longer name (> 256 chars)
+   static const char kLongerKey[] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+   static_assert(std::size(kLongerKey) > 256);
+   outFile.WriteObject(&foo, kLongerKey);
+   outFile.Close();
+
+   TFile inFile(fileGuard.fFilename.c_str(), "READ");
+   auto keys = inFile.WalkTKeys();
+   auto it = keys.begin();
+   EXPECT_EQ(it->fKeyName, "tfile_walk_tkeys.root");
+   EXPECT_EQ(it->fClassName, "TFile");
+   ++it;
+   EXPECT_EQ(it->fKeyName, "foo");
+   EXPECT_EQ(it->fClassName, "string");
+   ++it;
+   EXPECT_EQ(it->fKeyName, kLongKey);
+   EXPECT_EQ(it->fClassName, "string");
+   ++it;
+   EXPECT_EQ(it->fKeyName, kLongerKey);
+   EXPECT_EQ(it->fClassName, "string");
+}
+
+// https://its.cern.ch/jira/browse/ROOT-10352
+TEST(TDirectoryFile, SeekParent)
+{
+   // create test file
+   TMemFile f("subdirTest10352.root", "RECREATE");
+   auto dir1 = f.mkdir("dir-1");
+   dir1->cd();
+   auto dir11 = dir1->mkdir("dir-11");
+   dir11->cd();
+   f.Write();
+   dir1 = static_cast<TDirectory*>(f.Get("dir-1"));
+   EXPECT_EQ(dir1->GetSeekDir(), 239);
+   EXPECT_EQ(dir1->GetSeekParent(), 100);
+   dir11 = static_cast<TDirectory*>(dir1->Get("dir-11"));
+   EXPECT_EQ(dir11->GetSeekDir(), 348);
+   EXPECT_EQ(dir11->GetSeekParent(), 239);
+}
+
+// https://its.cern.ch/jira/browse/ROOT-10581
+TEST(TFile, PersistTObjectStdArray)
+{
+   auto filename = "foo10581.root";
+   {
+      std::array<TObject *, 2> arr;
+      arr[0] = new TObject();
+      arr[0]->SetUniqueID(123);
+      arr[1] = new TObject();
+      arr[1]->SetUniqueID(456);
+      TFile f(filename, "RECREATE");
+      f.WriteObject(&arr, "array");
+      f.Close();
+      delete arr[0];
+      delete arr[1];
+   }
+   {
+      TFile ff(filename, "READ");
+      std::array<TObject *, 2> *arr2 = nullptr;
+      ff.GetObject("array", arr2);
+      EXPECT_EQ((*arr2)[0]->GetUniqueID(), 123);
+      EXPECT_EQ((*arr2)[1]->GetUniqueID(), 456);
+   }
+   gSystem->Unlink(filename);
+}
+

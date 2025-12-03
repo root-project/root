@@ -23,6 +23,8 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooFormulaVar.h>
+#include <RooStats/ModelConfig.h>
 
 #include <TROOT.h>
 
@@ -31,7 +33,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
+const bool writeJsonFiles = true;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -41,18 +43,23 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
+   ws1.Print();
+
    const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
+   }
+
    RooJSONFactoryWSTool{ws2}.importJSONfromString(json1);
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
+   }
 
    // Export the re-imported workspace back to JSON, and compare the first JSON
    // with the second one. They should be identical.
    const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
    EXPECT_EQ(json2, json1) << argName;
-
-   if (writeJsonFiles) {
-      RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
-      RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
-   }
 
    // It would be nice to do a similar closure check for the original and for
    // the re-imported workspace. However, there is no way to compare workspaces
@@ -69,32 +76,49 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
       EXPECT_STREQ(comps1[i]->GetName(), comps2[i]->GetName());
    }
 
-   RooRealVar &x1 = *ws1.var("x");
-   RooRealVar &x2 = *ws2.var("x");
+   RooRealVar *x1 = ws1.var("x");
+   RooRealVar *x2 = ws2.var("x");
 
-   RooAbsReal &arg1 = *ws1.function(argName);
-   RooAbsReal &arg2 = *ws2.function(argName);
+   if (!x1 || !x2)
+      return 1;
 
-   RooArgSet nset1{x1};
-   RooArgSet nset2{x2};
+   TObject *arg1 = ws1.obj(argName);
+   TObject *arg2 = ws2.obj(argName);
 
-   bool allGood = true;
-   for (int i = 0; i < x1.numBins(); ++i) {
-      x1.setBin(i);
-      x2.setBin(i);
-      const double val1 = arg1.getVal(nset1);
-      const double val2 = arg2.getVal(nset2);
-      allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
+   if (!arg1 || !arg2)
+      return 1;
+
+   RooArgSet nset1{*x1};
+   RooArgSet nset2{*x2};
+
+   RooAbsReal *r1 = dynamic_cast<RooAbsReal *>(arg1);
+   RooAbsReal *r2 = dynamic_cast<RooAbsReal *>(arg2);
+
+   if (r1 && !r2)
+      return 1;
+
+   if (r1 && r2) {
+      bool allGood = true;
+      for (int i = 0; i < x1->numBins(); ++i) {
+         x1->setBin(i);
+         x2->setBin(i);
+         const double val1 = r1->getVal(nset1);
+         const double val2 = r1->getVal(nset2);
+         allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
+      }
+
+      return allGood ? 0 : 1;
    }
 
-   return allGood ? 0 : 1;
+   return 0;
 }
 
 int validate(std::vector<std::string> const &expressions, bool exact = true)
 {
    RooWorkspace ws;
    for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
-      ws.factory(expressions[iExpr]);
+      std::cout << expressions[iExpr] << std::endl;
+      ws.factory(expressions[iExpr])->Print();
    }
    const std::string argName = ws.factory(expressions.back())->GetName();
    return validate(ws, argName, exact);
@@ -402,5 +426,110 @@ TEST(RooFitHS3, SimultaneousGaussians)
    simPdf.addPdf(model_ctl, "control");
 
    int status = validate(simPdf);
+   EXPECT_EQ(status, 0);
+}
+
+// https://github.com/root-project/root/issues/14637
+TEST(RooFitHS3, ScientificNotation)
+{
+   RooRealVar v1("v1","v1",1.0);
+   RooRealVar v2("v2","v2",1.0);
+
+   // make a formula that is some parameters times some numbers
+   auto thestring = "@0*0.2e-6 + @1*0.1";
+   RooArgList arglist;
+   arglist.add(v1);
+   arglist.add(v2);
+
+   RooFormulaVar fvBad("fvBad", "fvBad", thestring, arglist);
+
+   // make gaussian with mean as that formula
+   RooRealVar x("x","x",0.0,-5.0,5.0);
+   RooGaussian g("g","g",x, fvBad, 1.0);
+
+   RooWorkspace ws("ws");
+   ws.import(g);
+   //std::cout << (fvBad.expression()) << std::endl;
+
+   // export to json
+   RooJSONFactoryWSTool t(ws);
+   auto jsonStr = t.exportJSONtoString();
+
+   // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading the exponential char
+   RooWorkspace newws("newws");
+   RooJSONFactoryWSTool t2(newws);
+   ASSERT_TRUE(t2.importJSONfromString(jsonStr));
+}
+
+// Workspace with ONLY a dataset (here: RooDataHist to avoid extra includes).
+// -----------------------------------------------------------------------------
+TEST(RooFitHS3, WorkspaceOnlyDataset_RooDataHist)
+{
+   RooWorkspace ws1{"ws_dataset_only"};
+
+   // Observable with explicit binning
+   RooRealVar x{"x", "x", 0.0, 1.0};
+   x.setBins(3);
+   // Build a tiny RooDataHist
+   RooDataHist dh{"dh", "dataset-only (hist)", RooArgList{x}};
+   // Fill deterministic contents
+   x.setVal(0.1666667);
+   dh.set(0, 10.0, 0.0); // bin 0
+   x.setVal(0.5000000);
+   dh.set(1, 20.0, 0.0); // bin 1
+   x.setVal(0.8333333);
+   dh.set(2, 15.0, 0.0); // bin 2
+
+   ws1.import(dh, RooFit::Silence());
+
+   // Round-trip and strict checks (no numeric comparison needed here)
+   // Use the dataset name for object tracking
+   const int status = validate(ws1, "dh");
+   EXPECT_EQ(status, 0);
+}
+
+// -----------------------------------------------------------------------------
+// Workspace with ONLY a function (no dataset, no pdfs).
+// -----------------------------------------------------------------------------
+TEST(RooFitHS3, WorkspaceOnlyFunction)
+{
+   int status = validate({std::string("x[-3, 3]"), std::string("RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)")});
+   EXPECT_EQ(status, 0);
+}
+
+// -----------------------------------------------------------------------------
+// Workspace with a ModelConfig that points to a multivariate Gaussian pdf.
+// -----------------------------------------------------------------------------
+TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
+{
+   using RooFit::RooConst;
+
+   // Observables
+   RooRealVar x{"x", "x", -5.0, 5.0};
+   RooRealVar y{"y", "y", -5.0, 5.0};
+
+   // Means
+   RooRealVar mx{"mx", "mx", 0.5};
+   RooRealVar my{"my", "my", -0.3};
+
+   // Covariance
+   TMatrixDSym cov{2};
+   cov(0, 0) = 1.2;
+   cov(0, 1) = 0.25;
+   cov(1, 0) = 0.25;
+   cov(1, 1) = 0.9;
+
+   RooMultiVarGaussian mv{"mvgauss", "mvgauss", RooArgList{x, y}, RooArgList{mx, my}, cov};
+
+   RooWorkspace ws1{"ws_mc"};
+   ws1.import(mv, RooFit::Silence(), RooFit::RecycleConflictNodes());
+
+   // Build a ModelConfig referencing the pdf and its observables
+   RooStats::ModelConfig mc{"mc", &ws1};
+   mc.SetPdf(*ws1.pdf("mvgauss"));
+   mc.SetObservables("x,y");
+   ws1.import(mc);
+
+   int status = validate(ws1, "mc");
    EXPECT_EQ(status, 0);
 }

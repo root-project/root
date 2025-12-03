@@ -1,0 +1,5 @@
+
+Processing ClassConvReadOther.cxx...
+Warning in <TClass::Init>: no dictionary for class MyLib::Inside is available
+Warning in <TClass::Init>: no dictionary for class MyLib::Typedefed is available
+TopLevel value is 44

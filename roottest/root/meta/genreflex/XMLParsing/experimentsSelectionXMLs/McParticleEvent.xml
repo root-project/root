@@ -1,0 +1,36 @@
+<lcgdict>
+
+
+  <class name="TruthParticleContainer" id="20FF7533-4D02-4DAE-AABB-8C62260D4E75" >
+    <field name="m_particles" transient="true"/>
+  </class>
+  <class name="DataVector<TruthParticle>" />
+
+  <class name="std::vector<TruthParticle*>" />
+  <class name="TruthParticle" />
+  <class name="DataVector<ParticleImpl<TruthParticleNavigation,TruthParticleMomentum,TruthParticleBase> >"/>
+  <class name="ParticleImpl<TruthParticleNavigation,TruthParticleMomentum,TruthParticleBase>">
+  <field name="m_nav" transient="true"/>
+  <field name="m_mom" transient="true"/>
+  <field name="m_part" transient="true"/>
+  </class>
+  <exclusion>
+    <class pattern="ParticleImpl*">
+      <method name="set4Mom"/>
+      <method name="set_origin"/>
+      <method name="set_pdgId"/>
+      <method name="set_dataType"/>
+      <method name="set_charge"/>
+    </class>
+  </exclusion>
+
+  <class name="TruthEtIsolationsContainer" id = "003AE8C0-B033-4470-9F3D-869724F34E48" />
+  <class name="DataVector<TruthEtIsolations>" />
+  <class name="std::vector<TruthEtIsolations*>" />
+  <class name="TruthEtIsolations" />
+  <class name="TruthEtIsolations::EtIsolMap_t" />
+  <class name="PileUpClassification" />
+
+  
+
+</lcgdict>

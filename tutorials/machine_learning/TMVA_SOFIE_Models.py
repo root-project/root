@@ -1,5 +1,5 @@
 ### \file
-### \ingroup tutorial_tmva
+### \ingroup tutorial_ml
 ### \notebook -nodraw
 ### Example of inference with SOFIE using a set of models trained with Keras.
 ### This tutorial shows how to store several models in a single header file and
@@ -13,20 +13,17 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
+import os
+
+import numpy as np
 import ROOT
-from os.path import exists
-
-ROOT.TMVA.PyMethodBase.PyInitialize()
-
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam
 
 ## generate and train Keras models with different architectures
 
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
-
-from sklearn.model_selection import train_test_split
 
 def CreateModel(nlayers = 4, nunits = 64):
    model = Sequential()
@@ -41,7 +38,7 @@ def CreateModel(nlayers = 4, nunits = 64):
 
 def PrepareData() :
    #get the input data
-   inputFile = str(ROOT.gROOT.GetTutorialDir()) + "machine_learning/data/Higgs_data.root"
+   inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
 
    df1 = ROOT.RDataFrame("sig_tree", inputFile)
    sigData = df1.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])
@@ -103,7 +100,6 @@ def GenerateModelCode(modelFile, generatedHeaderFile):
 
 generatedHeaderFile = "Higgs_Model.hxx"
 #need to remove existing header file since we are appending on same one
-import os
 if (os.path.exists(generatedHeaderFile)):
    weightFile = "Higgs_Model.root"
    print("removing existing files", generatedHeaderFile,weightFile)

@@ -132,7 +132,6 @@ operator of the TLorentzVector class.:
 
 #include "TLorentzRotation.h"
 
-ClassImp(TLorentzRotation);
 
 TLorentzRotation::TLorentzRotation()
   : fxx(1.0), fxy(0.0), fxz(0.0), fxt(0.0),
@@ -146,7 +145,7 @@ TLorentzRotation::TLorentzRotation(const TRotation & r)
     fzx(r.ZX()), fzy(r.ZY()), fzz(r.ZZ()), fzt(0.0),
     ftx(0.0),    fty(0.0),    ftz(0.0),    ftt(1.0) {}
 
-TLorentzRotation::TLorentzRotation(const TLorentzRotation & r) : TObject(r),
+TLorentzRotation::TLorentzRotation(const TLorentzRotation & r) noexcept : TObject(r),
     fxx(r.fxx), fxy(r.fxy), fxz(r.fxz), fxt(r.fxt),
     fyx(r.fyx), fyy(r.fyy), fyz(r.fyz), fyt(r.fyt),
     fzx(r.fzx), fzy(r.fzy), fzz(r.fzz), fzt(r.fzt),

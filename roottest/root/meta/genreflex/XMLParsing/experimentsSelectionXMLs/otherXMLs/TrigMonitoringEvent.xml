@@ -1,0 +1,47 @@
+
+<lcgdict>
+
+<class name="TrigConfAlg"    id="6819D9FD-3CAA-447D-89DC-C68EC3CA5FEB"/>
+<class name="TrigConfChain"  id="B32545D2-B849-4EC7-B41F-5E3CAFFEADBE"/>
+<class name="TrigConfSeq"    id="A8C4319C-1D1A-407F-BF59-44961CE5B6F8"/>
+<class name="TrigConfSig"    id="4BF1C995-6DC6-46DE-8B0D-55111BCC81CA"/>
+<class name="TrigConfVar"    id="52401888-C2E4-4730-AFCE-1CB0BCBA8B5F"/>
+
+<class name="TrigMonAlg"     id="18EFE857-17A5-44CB-8D45-AA2004CA5D68"/>
+<class name="TrigMonChain"   id="B5255DEB-B93F-4D36-80D1-2E8D47262FFC"/>
+<class name="TrigMonConfig"  id="4DDDE2A8-A4DB-4220-9CA7-3C5BF2C2E069"/>
+<class name="TrigMonEvent"   id="D3F65B5E-44D8-4CA7-905B-BA8689FA9D9A"/>
+<class name="TrigMonL1Item"  id="E9F3B266-2747-4BD9-A679-38BA3F268F30"/>
+<class name="TrigMonROBData" id="0CD554AF-21BD-4FF9-8F36-1697B2A980DD"/>
+<class name="TrigMonROBSum"  id="F4B579FF-8374-4817-AD2A-FA528D3A454F"/>
+<class name="TrigMonROB"     id="3CAC9D85-A9B3-4D53-A19C-2405414F3774"/>
+<class name="TrigMonRoi"     id="FA6DB5BB-1937-484E-8DCB-97870210010C"/>
+<class name="TrigMonSeq"     id="87C67065-411E-4ECA-8A9F-16056C4BDAD0"/>
+<class name="TrigMonTE"      id="432B5B54-8CA2-4AC8-8F1E-E6741BFAFF35"/>
+<class name="TrigMonTimer"   id="1621539F-EFF8-47C0-A684-CF9A763BB64F"/>
+<class name="TrigMonVar"     id="FC5983FE-82A6-458E-9496-D4811C51CE6A"/>
+
+<class name="std::vector<TrigConfAlg>"    id="16593F9F-6E2E-4F16-B86E-BA1A8A4E2DFE"/>
+<class name="std::vector<TrigConfChain>"  id="A80AB4FD-C91D-4821-9C82-95AF94A5E29A"/>
+<class name="std::vector<TrigConfSeq>"    id="D35A5183-18C8-4AA9-82B7-03E0F0FEC95D"/>
+<class name="std::vector<TrigConfSig>"    id="CF65370E-51A0-430D-ACAE-47BF88DE46D2"/>
+<class name="std::vector<TrigConfVar>"    id="805C5F4D-BED6-4BFF-9616-D8B14E14FFAA"/>
+
+<class name="std::vector<TrigMonAlg>"     id="F7080D63-D796-4333-A197-6875E0B08A13"/>
+<class name="std::vector<TrigMonChain>"   id="123D7F7B-2764-44B4-BBF9-E5D4B32927A4"/>
+<class name="std::vector<TrigMonConfig>"  id="69C20A76-426E-4379-8F05-9727BD70FC21"/>
+<class name="std::vector<TrigMonEvent>"   id="9741B9B9-EE7B-42B9-A7AD-BDCE98EF014B"/>
+<class name="std::vector<TrigMonL1Item>"  id="15621F6E-9EA7-4864-A763-5763E9677383"/>
+<class name="std::vector<TrigMonROBData>" id="BA713E8F-46E8-4FCE-BD2E-7734C8F730C7"/>
+<class name="std::vector<TrigMonROBSum>"  id="2330813A-33DD-4FB1-86E9-B4AAA92FBD15"/>
+<class name="std::vector<TrigMonROB>"     id="CEA546C1-1B72-44BB-B064-356E5955B9F8"/>
+<class name="std::vector<TrigMonRoi>"     id="E75F70EF-809C-42DF-B711-B13C10FAEF54"/>
+<class name="std::vector<TrigMonSeq>"     id="1D888252-9699-4E8A-96E9-17498FEF5E46"/>
+<class name="std::vector<TrigMonTE>"      id="57665F8A-3631-4479-891E-92C1D4B38164"/>
+<class name="std::vector<TrigMonTimer>"   id="098C527E-349D-4BC2-A92E-A8AE8CEF8486"/>
+<class name="std::vector<TrigMonVar>"     id="A937FF95-8761-4127-86E6-345EECF346DD"/>
+
+<class name="TrigMonConfigCollection"     id="B1108C73-67DD-4D6D-8CE6-89AD6CCF7261"/>
+<class name="TrigMonEventCollection"      id="2A618C5A-B6E5-47D3-AA97-8678A4F477FF"/>
+
+</lcgdict>

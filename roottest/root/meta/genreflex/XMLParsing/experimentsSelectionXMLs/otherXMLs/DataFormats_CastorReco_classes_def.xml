@@ -1,0 +1,59 @@
+<lcgdict>
+  
+  <class name="reco::CastorCell" ClassVersion="10">
+   <version ClassVersion="10" checksum="925395310"/>
+  </class>
+  <class name="std::vector<reco::CastorCell>"/>
+  <class name="edm::Wrapper<std::vector<reco::CastorCell> >"/>
+  <class name="edm::Ref<std::vector<reco::CastorCell>,reco::CastorCell,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCell>,reco::CastorCell> >"/>
+  <class name="edm::RefProd<std::vector<reco::CastorCell> >"/>
+  <class name="edm::RefVector<std::vector<reco::CastorCell>,reco::CastorCell,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCell>,reco::CastorCell> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::CastorCell>,reco::CastorCell,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCell>,reco::CastorCell> > >"/>
+  <!--<class name="edm::RefVectorIterator<std::vector<reco::CastorCell>,reco::CastorCell,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCell>,reco::CastorCell> >"/>
+  <class name="edm::auto_ptr<edm::Ref<std::vector<reco::CastorCell>,reco::CastorCell,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCell>,reco::CastorCell> > >"/>-->
+
+
+  <class name="reco::CastorTower" ClassVersion="10">
+   <version ClassVersion="10" checksum="3103051284"/>
+  </class>
+  <class name="std::vector<reco::CastorTower>"/>
+  <class name="edm::Wrapper<std::vector<reco::CastorTower> >"/>
+  <class name="edm::Ref<std::vector<reco::CastorTower>,reco::CastorTower,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorTower>,reco::CastorTower> >"/>
+  <class name="edm::RefProd<std::vector<reco::CastorTower> >"/>
+  <class name="edm::RefVector<std::vector<reco::CastorTower>,reco::CastorTower,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorTower>,reco::CastorTower> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::CastorTower>,reco::CastorTower,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorTower>,reco::CastorTower> > >"/>
+  <!--<class name="edm::RefVectorIterator<std::vector<reco::CastorTower>,reco::CastorTower,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorTower>,reco::CastorTower> >"/>-->
+
+  <class name="reco::CastorCluster" ClassVersion="10">
+   <version ClassVersion="10" checksum="2861195490"/>
+  </class>
+  <class name="std::vector<reco::CastorCluster>"/>
+  <class name="edm::Wrapper<std::vector<reco::CastorCluster> >"/>
+  <class name="edm::Ref<std::vector<reco::CastorCluster>,reco::CastorCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCluster>,reco::CastorCluster> >"/>
+  <class name="edm::RefProd<std::vector<reco::CastorCluster> >"/>
+  <class name="edm::RefVector<std::vector<reco::CastorCluster>,reco::CastorCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCluster>,reco::CastorCluster> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::CastorCluster>,reco::CastorCluster,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorCluster>,reco::CastorCluster> > >"/>
+
+  <class name="reco::CastorEgamma" ClassVersion="10">
+   <version ClassVersion="10" checksum="3872613361"/>
+  </class>
+  <class name="std::vector<reco::CastorEgamma>"/>
+  <class name="edm::Wrapper<std::vector<reco::CastorEgamma> >"/>
+  <class name="edm::Ref<std::vector<reco::CastorEgamma>,reco::CastorEgamma,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorEgamma>,reco::CastorEgamma> >"/>
+  <class name="edm::RefProd<std::vector<reco::CastorEgamma> >"/>
+  <class name="edm::RefVector<std::vector<reco::CastorEgamma>,reco::CastorEgamma,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorEgamma>,reco::CastorEgamma> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::CastorEgamma>,reco::CastorEgamma,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorEgamma>,reco::CastorEgamma> > >"/>
+
+ <class name="reco::CastorJet" ClassVersion="10">
+  <version ClassVersion="10" checksum="1872825180"/>
+ </class>
+  <class name="std::vector<reco::CastorJet>"/>
+  <class name="edm::Wrapper<std::vector<reco::CastorJet> >"/>
+  <class name="edm::Ref<std::vector<reco::CastorJet>,reco::CastorJet,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorJet>,reco::CastorJet> >"/>
+  <class name="edm::RefProd<std::vector<reco::CastorJet> >"/>
+  <class name="edm::RefVector<std::vector<reco::CastorJet>,reco::CastorJet,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorJet>,reco::CastorJet> >"/>
+  <class name="edm::Wrapper<edm::RefVector<std::vector<reco::CastorJet>,reco::CastorJet,edm::refhelper::FindUsingAdvance<std::vector<reco::CastorJet>,reco::CastorJet> > >"/>
+
+
+</lcgdict>
+

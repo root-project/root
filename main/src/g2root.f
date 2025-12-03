@@ -317,7 +317,7 @@ C
      +'//  utility g2root from an interactive version of GEANT',/,
      +'//   (see ROOT class TGeoManager for an example of use)',/,
      +'//',/,
-     +'gSystem->Load("libGeom");',/,
+     +'R__ASSERT(gSystem->Load("libGeom") >= 0);',/,
      +'TGeoRotation *rot;',/,
      +'TGeoNode *Node, *Node1;')
 

@@ -1,0 +1,15 @@
+<lcgdict>
+  <class name="LArConditionsSubset_p1" />
+  <class name="LArAutoCorrSubset_p1" id="FA16A69D-241E-40F3-B710-77A95937E394" />
+  <class name="LArOFCSubset_p1" id="0A1DE2E2-90E4-4A24-BC6E-2092EDC9FDF6" />
+  <class name="LArPedestalMC_p1" id="3891D5E0-82D1-45AB-97B1-CE4CF25D6E16" />
+  <class name="LArRampSubset_p1" id="BB629283-BDF5-4FA8-93F4-5D8C2F201364" />
+  <class name="LArShapeSubset_p2" id="5139AF4A-5947-421A-A775-B2D1134145C7" />
+  <class name="LArMphysOverMcalSubset_p1" id="60FB956A-0B7F-450E-BF6A-2A0B8ED55204" />
+  <class name="LArSingleFloatSubset_p1" id="85C3E380-4F5C-4F2B-81F0-D7C08A446800" />
+  <class name="LArSingleIntSubset_p1" id="E7E2E993-4AF2-4782-9B8B-7668434CBAEC" />
+  <class name="LArCaliWaveSubset_p2" id="6CF01BBF-85A9-45FA-B321-6A98B0D719FB" />
+  <class name="LArPhysWaveSubset_p1" id="87E436E2-6FF4-42D3-BC70-6650C076E589" />
+  <class name="LArDSPThresholdsSubset_p1" id="09607438-09CC-4E40-A1E2-23F0B021DF3D" />
+  <class name="LArPedestalSubset_p2" id="8BD3FE69-A3C4-418C-ACB9-E362CE524353" />
+</lcgdict>

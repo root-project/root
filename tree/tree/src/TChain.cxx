@@ -64,14 +64,15 @@ the trees in the chain.
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TChain);
+#include <string_view>
+#include "ROOT/StringUtils.hxx"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
 TChain::TChain(Mode mode)
    : TTree(), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(nullptr), fCanDeleteRefs(false), fTree(nullptr),
-     fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fProofChain(nullptr), fGlobalRegistration(mode == kWithGlobalRegistration)
+     fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
@@ -82,10 +83,6 @@ TChain::TChain(Mode mode)
    }
    fFile = nullptr;
    fDirectory = nullptr;
-
-   // Reset PROOF-related bits
-   ResetBit(kProofUptodate);
-   ResetBit(kProofLite);
 
    if (fGlobalRegistration) {
       // Add to the global list
@@ -139,7 +136,7 @@ TChain::TChain(Mode mode)
 
 TChain::TChain(const char *name, const char *title, Mode mode)
    : TTree(name, title, /*splitlevel*/ 99, nullptr), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(nullptr),
-     fCanDeleteRefs(false), fTree(nullptr), fFile(nullptr), fFiles(nullptr), fStatus(nullptr), fProofChain(nullptr),
+     fCanDeleteRefs(false), fTree(nullptr), fFile(nullptr), fFiles(nullptr), fStatus(nullptr),
      fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    //
@@ -150,10 +147,6 @@ TChain::TChain(const char *name, const char *title, Mode mode)
    fStatus = new TList();
    fTreeOffset[0]  = 0;
    fFile = nullptr;
-
-   // Reset PROOF-related bits
-   ResetBit(kProofUptodate);
-   ResetBit(kProofLite);
 
    if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
@@ -179,7 +172,6 @@ TChain::~TChain()
       gROOT->GetListOfCleanups()->Remove(this);
    }
 
-   SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
    fStatus = nullptr;
@@ -249,9 +241,6 @@ Int_t TChain::Add(TChain* chain)
       fFiles->Add(newelement);
       nf++;
    }
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
 
    return nf;
 }
@@ -370,7 +359,7 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
    // Special case: ? used for query string AND as wildcard in the filename.
    // In this case, everything after the first ? is parsed as query/suffix
    // string in ParseTreeFilename. We assume that everything until the last
-   // occurence of .root should be part of the basename so we remove it
+   // occurrence of .root should be part of the basename so we remove it
    // from the suffix and add it back to the basename.
    // See: https://github.com/root-project/root/issues/10239
    static const char *dotr = ".root";
@@ -421,10 +410,6 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
          nf += AddFile(TString::Format("%s%s", path.c_str(), suffix.Data()), nentries);
       }
    }
-
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
 
    return nf;
 }
@@ -577,9 +562,6 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
    }
 
    delete [] filename;
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
 
    return 1;
 }
@@ -623,10 +605,6 @@ Int_t TChain::AddFileInfoList(TCollection* filelist, Long64_t nfiles /* = TTree:
       AddFile(url);
       if (cnt >= nfiles)
          break;
-   }
-   if (fProofChain) {
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
    }
 
    return 1;
@@ -690,10 +668,6 @@ TFriendElement* TChain::AddFriend(const char* chain, const char* dummy /* = "" *
 
    fFriends->Add(fe);
 
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
-
    // We need to invalidate the loading of the current tree because its list
    // of real friends is now obsolete.  It is repairable only from LoadTree.
    InvalidateCurrentTree();
@@ -717,10 +691,6 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 
    fFriends->Add(fe);
 
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
-
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
    InvalidateCurrentTree();
@@ -743,10 +713,6 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, bool /* warn 
    R__ASSERT(fe);
 
    fFriends->Add(fe);
-
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
 
    // We need to invalidate the loading of the current tree because its list
    // of real friend is now obsolete.  It is repairable only from LoadTree
@@ -819,15 +785,6 @@ void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
 Long64_t TChain::Draw(const char* varexp, const TCut& selection,
                       Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   if (fProofChain) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      fProofChain->SetEventList(fEventList);
-      fProofChain->SetEntryList(fEntryList);
-      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
-   }
-
    return TChain::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
@@ -839,14 +796,6 @@ Long64_t TChain::Draw(const char* varexp, const TCut& selection,
 Long64_t TChain::Draw(const char* varexp, const char* selection,
                       Option_t* option,Long64_t nentries, Long64_t firstentry)
 {
-   if (fProofChain) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      fProofChain->SetEventList(fEventList);
-      fProofChain->SetEntryList(fEntryList);
-      return fProofChain->Draw(varexp, selection, option, nentries, firstentry);
-   }
    GetPlayer();
    if (LoadTree(firstentry) < 0) return 0;
    return TTree::Draw(varexp,selection,option,nentries,firstentry);
@@ -855,22 +804,35 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTree::GetReadEntry().
 
-TBranch* TChain::FindBranch(const char* branchname)
+TBranch *TChain::FindBranch(const char *branchname)
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->FindBranch(branchname);
+   auto findBranchImpl = [this](const char *resolvedBranchName) -> TBranch * {
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindBranch
+   std::string_view branchNameView{branchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // We're only removing characters from the beginning of the view so we
+         // don't need to worry about missing null-termination character
+         return findBranchImpl(branchNameView.data());
+      }
    }
-   if (fTree) {
-      return fTree->FindBranch(branchname);
-   }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindBranch(branchname);
-   }
-   return nullptr;
+
+   return findBranchImpl(branchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -878,20 +840,33 @@ TBranch* TChain::FindBranch(const char* branchname)
 
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->FindLeaf(searchname);
+   auto findLeafImpl = [this](const char *resolvedBranchName) -> TLeaf * {
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindLeaf
+   std::string_view branchNameView{searchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // We're only removing characters from the beginning of the view so we
+         // don't need to worry about missing null-termination character
+         return findLeafImpl(branchNameView.data());
+      }
    }
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
-   }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
-   }
-   return nullptr;
+
+   return findLeafImpl(searchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -918,12 +893,6 @@ const char* TChain::GetAlias(const char* aliasName) const
 
 TBranch* TChain::GetBranch(const char* name)
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->GetBranch(name);
-   }
    if (fTree) {
       return fTree->GetBranch(name);
    }
@@ -939,13 +908,6 @@ TBranch* TChain::GetBranch(const char* name)
 
 bool TChain::GetBranchStatus(const char* branchname) const
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
-                                    " run TChain::SetProof(true, true) first");
-      return fProofChain->GetBranchStatus(branchname);
-   }
    return TTree::GetBranchStatus(branchname);
 }
 
@@ -977,26 +939,29 @@ Long64_t TChain::GetChainEntryNumber(Long64_t entry) const
 
 Long64_t TChain::GetEntries() const
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         Warning("GetEntries", "PROOF proxy not up-to-date:"
-                               " run TChain::SetProof(true, true) first");
-      return fProofChain->GetEntries();
-   }
    if (fEntries == TTree::kMaxEntries) {
       // If the following is true, we are within a recursion about friend,
       // and `LoadTree` will be no-op.
       if (kLoadTree & fFriendLockStatus)
          return fEntries;
-      const auto readEntry = fReadEntry;
-      auto *thisChain = const_cast<TChain *>(this);
-      thisChain->LoadTree(TTree::kMaxEntries - 1);
-      thisChain->InvalidateCurrentTree();
-      if (readEntry >= 0)
-         thisChain->LoadTree(readEntry);
-      else
-         thisChain->fReadEntry = readEntry;
+      Long64_t totalEntries{};
+      for (auto chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(fFiles)) {
+         if (chainEl->GetEntries() != TTree::kMaxEntries) {
+            totalEntries += chainEl->GetEntries();
+            continue;
+         }
+         TDirectory::TContext ctxt;
+         std::unique_ptr<TFile> curFile{TFile::Open(chainEl->GetTitle(), "READ_WITHOUT_GLOBALREGISTRATION")};
+         if (!curFile || curFile->IsZombie()) {
+            continue;
+         }
+         std::unique_ptr<TTree> curTree{curFile->Get<TTree>(chainEl->GetName())};
+         if (!curTree) {
+            continue;
+         }
+         totalEntries += curTree->GetEntries();
+      }
+      const_cast<TChain *>(this)->fEntries = totalEntries;
    }
    return fEntries;
 }
@@ -1056,13 +1021,14 @@ Long64_t TChain::GetEntryNumber(Long64_t entry) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return entry corresponding to major and minor number.
 ///
-/// The function returns the total number of bytes read.
+/// The function returns the total number of bytes read; -1 if entry not found.
 /// If the Tree has friend trees, the corresponding entry with
 /// the index values (major,minor) is read. Note that the master Tree
 /// and its friend may have different entry serial numbers corresponding
 /// to (major,minor).
+/// \note See TTreeIndex::GetEntryNumberWithIndex for information about the maximum values accepted for major and minor
 
-Int_t TChain::GetEntryWithIndex(Int_t major, Int_t minor)
+Int_t TChain::GetEntryWithIndex(Long64_t major, Long64_t minor)
 {
    Long64_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
@@ -1088,12 +1054,6 @@ TFile* TChain::GetFile() const
 
 TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->GetLeaf(branchname, leafname);
-   }
    if (fTree) {
       return fTree->GetLeaf(branchname, leafname);
    }
@@ -1109,12 +1069,6 @@ TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 
 TLeaf* TChain::GetLeaf(const char* name)
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->GetLeaf(name);
-   }
    if (fTree) {
       return fTree->GetLeaf(name);
    }
@@ -1135,12 +1089,6 @@ TLeaf* TChain::GetLeaf(const char* name)
 
 TObjArray* TChain::GetListOfBranches()
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->GetListOfBranches();
-   }
    if (fTree) {
       return fTree->GetListOfBranches();
    }
@@ -1158,12 +1106,6 @@ TObjArray* TChain::GetListOfBranches()
 
 TObjArray* TChain::GetListOfLeaves()
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      return fProofChain->GetListOfLeaves();
-   }
    if (fTree) {
       return fTree->GetListOfLeaves();
    }
@@ -1266,13 +1208,6 @@ Int_t TChain::GetNbranches()
 
 Long64_t TChain::GetReadEntry() const
 {
-   if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         Warning("GetBranchStatus", "PROOF proxy not up-to-date:"
-                                    " run TChain::SetProof(true, true) first");
-      return fProofChain->GetReadEntry();
-   }
    return TTree::GetReadEntry();
 }
 
@@ -1347,6 +1282,98 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Refresh branch/leaf addresses of friend trees
+///
+/// The method acts only on the current tree in the chain (fTree), but it may
+/// be called in two different scenarios: when there are friends of the chain
+/// or when there are friends of fTree itself.
+Long64_t TChain::RefreshFriendAddresses()
+{
+   assert(fTree != nullptr);
+
+   bool needUpdate = false;
+   if (auto *innerFriendList = fTree->GetListOfFriends()) {
+      // If the current tree has friends, check if they were mark for update
+      // when switching to the following tree, detect it so that we later we
+      // actually refresh the addresses of the friends.
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*innerFriendList)) {
+         if (frEl->IsUpdated()) {
+            needUpdate = true;
+            frEl->ResetUpdated();
+         }
+         if (frEl->IsUpdatedForChain()) {
+            needUpdate = true;
+            frEl->ResetUpdatedForChain();
+         }
+      }
+   }
+
+   if (!needUpdate)
+      return 0;
+
+   // Update the branch/leaf addresses and the list of leaves in all
+   // TTreeFormula of the TTreePlayer (if any).
+   for (auto *chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(*fStatus)) {
+      // Set the branch status of all the chain elements, which may include also
+      // branches that are available in friends. Only set the branch status
+      // if it has a value provided by the user
+      Int_t status = chainEl->GetStatus();
+      if (status != -1)
+         fTree->SetBranchStatus(chainEl->GetName(), status);
+
+      // Set the branch addresses for the newly opened file.
+      void *addr = chainEl->GetBaddress();
+      if (!addr)
+         continue;
+
+      TBranch *br = fTree->GetBranch(chainEl->GetName());
+      TBranch **pp = chainEl->GetBranchPtr();
+      if (pp) {
+         // FIXME: What if br is zero here?
+         *pp = br;
+      }
+      if (!br)
+         continue;
+
+      if (!chainEl->GetCheckedType()) {
+         Int_t res = CheckBranchAddressType(br, TClass::GetClass(chainEl->GetBaddressClassName()),
+                                            (EDataType)chainEl->GetBaddressType(), chainEl->GetBaddressIsPtr());
+         if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
+            br->SetMakeClass(true);
+         }
+         chainEl->SetDecomposedObj(br->GetMakeClass());
+         chainEl->SetCheckedType(true);
+      }
+      // FIXME: We may have to tell the branch it should
+      //        not be an owner of the object pointed at.
+      br->SetAddress(addr);
+      if (TestBit(kAutoDelete)) {
+         br->SetAutoDelete(true);
+      }
+   }
+
+   // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+   // updated were supposed to be connected to one of the TChainElement of this chain
+   // or possibly to another TChainElement belonging to another chain that has befriended
+   // this chain (i.e., one of the "external friends"). Thus, we forward the notification
+   // that one or more friend trees were updated to the friends of this chain.
+   if (fExternalFriends)
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         external_fe->MarkUpdated();
+
+   if (fPlayer) {
+      fPlayer->UpdateFormulaLeaves();
+   }
+   // Notify user if requested.
+   if (fNotify) {
+      if (!fNotify->Notify())
+         return -6;
+   }
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Find the tree which contains entry, and set it as the current tree.
 ///
 /// Returns the entry number in that tree.
@@ -1409,90 +1436,34 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // If entry belongs to the current tree return entry.
    if (fTree && treenum == fTreeNumber) {
-      // First set the entry the tree on its owns friends
-      // (the friends of the chain will be updated in the
-      // next loop).
+      // First load entry on the current tree, this will set the cursor also
+      // on its friend trees. Their branch addresses cannot be updated yet,
+      // as the required branch names are only available via `fStatus`, i.e.
+      // only the chain knows about them. This is taken care of in the following
+      // RefreshFriendAddresses call
       fTree->LoadTree(treeReadEntry);
 
-      if (fFriends) {
-         // The current tree has not changed but some of its friends might.
-         //
-         TIter next(fFriends);
+      if (fFriends || fTree->GetListOfFriends()) {
          TFriendLock lock(this, kLoadTree);
-         TFriendElement* fe = nullptr;
-         while ((fe = (TFriendElement*) next())) {
-            TTree* at = fe->GetTree();
-            // If the tree is a
-            // direct friend of the chain, it should be scanned
-            // used the chain entry number and NOT the tree entry
-            // number (treeReadEntry) hence we do:
-            at->LoadTreeFriend(entry, this);
-         }
-         bool needUpdate = false;
-         if (fTree->GetListOfFriends()) {
-            for(auto fetree : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fTree->GetListOfFriends())) {
-               if (fetree->IsUpdated()) {
-                  needUpdate = true;
-                  fetree->ResetUpdated();
-               }
+         if (fFriends) {
+            // Make sure we load friends of the chain aligned to the current global entry number
+            for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends)) {
+               auto *frTree = frEl->GetTree();
+               frTree->LoadTreeFriend(entry, this);
             }
          }
-         if (needUpdate) {
-            // Update the branch/leaf addresses and
-            // the list of leaves in all TTreeFormula of the TTreePlayer (if any).
 
-            // Set the branch statuses for the newly opened file.
-            TChainElement *frelement;
-            TIter fnext(fStatus);
-            while ((frelement = (TChainElement*) fnext())) {
-               Int_t status = frelement->GetStatus();
-               fTree->SetBranchStatus(frelement->GetName(), status);
-            }
-
-            // Set the branch addresses for the newly opened file.
-            fnext.Reset();
-            while ((frelement = (TChainElement*) fnext())) {
-               void* addr = frelement->GetBaddress();
-               if (addr) {
-                  TBranch* br = fTree->GetBranch(frelement->GetName());
-                  TBranch** pp = frelement->GetBranchPtr();
-                  if (pp) {
-                     // FIXME: What if br is zero here?
-                     *pp = br;
-                  }
-                  if (br) {
-                     if (!frelement->GetCheckedType()) {
-                        Int_t res = CheckBranchAddressType(br, TClass::GetClass(frelement->GetBaddressClassName()),
-                                                         (EDataType) frelement->GetBaddressType(), frelement->GetBaddressIsPtr());
-                        if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
-                           br->SetMakeClass(true);
-                        }
-                        frelement->SetDecomposedObj(br->GetMakeClass());
-                        frelement->SetCheckedType(true);
-                     }
-                     // FIXME: We may have to tell the branch it should
-                     //        not be an owner of the object pointed at.
-                     br->SetAddress(addr);
-                     if (TestBit(kAutoDelete)) {
-                        br->SetAutoDelete(true);
-                     }
-                  }
-               }
-            }
-            if (fPlayer) {
-               fPlayer->UpdateFormulaLeaves();
-            }
-            // Notify user if requested.
-            if (fNotify) {
-               if(!fNotify->Notify()) return -6;
-            }
-         }
+         // Now refresh branch addresses of friend trees. This acts on the current tree of the chain, whether the
+         // friends are friends of the chain or friends of the tree itself.
+         if (auto refreshFriendAddressesRet = RefreshFriendAddresses(); refreshFriendAddressesRet == -6)
+            return refreshFriendAddressesRet;
       }
+
       return treeReadEntry;
    }
 
    if (fExternalFriends) {
-      for(auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
          external_fe->MarkUpdated();
       }
    }
@@ -1743,7 +1714,19 @@ Long64_t TChain::LoadTree(Long64_t entry)
    TIter next(fStatus);
    while ((element = (TChainElement*) next())) {
       Int_t status = element->GetStatus();
-      fTree->SetBranchStatus(element->GetName(), status);
+      if (element->IsDelayed()) {
+         // In case we don't want spurious error message about missing branch in this tree
+         UInt_t dummyFound = std::numeric_limits<UInt_t>::max();
+         // Only set the branch status if it has a value provided
+         // by the user
+         if (status != -1)
+            fTree->SetBranchStatus(element->GetName(), status, &dummyFound);
+      } else {
+         // Only set the branch status if it has a value provided
+         // by the user
+         if (status != -1)
+            fTree->SetBranchStatus(element->GetName(), status);
+      }
    }
 
    // Set the branch addresses for the newly opened file.
@@ -1869,50 +1852,6 @@ void TChain::Lookup(bool force)
       printf("\n");
    fflush(stdout);
    SafeDelete(stg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Loop on nentries of this chain starting at firstentry.  (NOT IMPLEMENTED)
-
-void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
-{
-   Error("Loop", "Function not yet implemented");
-
-   if (option || nentries || firstentry) { }  // keep warnings away
-
-#if 0
-   if (LoadTree(firstentry) < 0) return;
-
-   if (firstentry < 0) firstentry = 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fEntries-1) {
-      lastentry = fEntries -1;
-   }
-
-   GetPlayer();
-   GetSelector();
-   fSelector->Start(option);
-
-   Long64_t entry = firstentry;
-   Int_t tree,e0,en;
-   for (tree=0;tree<fNtrees;tree++) {
-      e0 = fTreeOffset[tree];
-      en = fTreeOffset[tree+1] - 1;
-      if (en > lastentry) en = lastentry;
-      if (entry > en) continue;
-
-      LoadTree(entry);
-      fSelector->BeginFile();
-
-      while (entry <= en) {
-         fSelector->Execute(fTree, entry - e0);
-         entry++;
-      }
-      fSelector->EndFile();
-   }
-
-   fSelector->Finish(option);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2311,15 +2250,6 @@ void TChain::Print(Option_t *option) const
 
 Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-   if (fProofChain) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      fProofChain->SetEventList(fEventList);
-      fProofChain->SetEntryList(fEntryList);
-      return fProofChain->Process(filename, option, nentries, firstentry);
-   }
-
    if (LoadTree(firstentry) < 0) {
       return 0;
    }
@@ -2333,15 +2263,6 @@ Long64_t TChain::Process(const char *filename, Option_t *option, Long64_t nentri
 
 Long64_t TChain::Process(TSelector* selector, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
-   if (fProofChain) {
-      // Make sure the element list is up to date
-      if (!TestBit(kProofUptodate))
-         SetProof(true, true);
-      fProofChain->SetEventList(fEventList);
-      fProofChain->SetEntryList(fEntryList);
-      return fProofChain->Process(selector, option, nentries, firstentry);
-   }
-
    return TTree::Process(selector, option, nentries, firstentry);
 }
 
@@ -2378,10 +2299,6 @@ void TChain::RemoveFriend(TTree* oldFriend)
    }
 
    TTree::RemoveFriend(oldFriend);
-
-   if (fProofChain)
-      // This updates the proxy chain when we will really use PROOF
-      ResetBit(kProofUptodate);
 
    // We need to invalidate the loading of the current tree because its list
    // of real friends is now obsolete.  It is repairable only from LoadTree.
@@ -2606,6 +2523,21 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    }
    element->SetBaddress(add);
    element->SetBranchPtr(ptr);
+
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+      // Something went wrong when loading the first tree (possibly there are no
+      // files connected to this chain), let the user know.
+      if (!fTree && fReadEntry == -1 && fTreeNumber == -1)
+         Warning("SetBranchAddress",
+                 "Could not load the first tree in chain \"%s\", no dataset schema available. Thus, it is not possible "
+                 "to know whether the branch name \"%s\" corresponds to an available branch or not. This could happen "
+                 "if the chain has no files connected yet, make sure to add files to the chain before calling "
+                 "'TChain::SetBranchAddress'.",
+                 GetName(), bname);
+   }
+
    // Also set address in current tree.
    // FIXME: What about the chain clones?
    if (fTreeNumber >= 0) {
@@ -2637,7 +2569,8 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 
          branch->SetAddress(add);
       } else {
-         Error("SetBranchAddress", "unknown branch -> %s", bname);
+         if (!element->IsDelayed())
+            Error("SetBranchAddress", "unknown branch -> %s", bname);
          return kMissingBranch;
       }
    } else {
@@ -2680,6 +2613,7 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
    element->SetBaddressType((UInt_t) datatype);
    element->SetBaddressIsPtr(isptr);
    element->SetBranchPtr(ptr);
+
    return SetBranchAddress(bname, add, ptr);
 }
 
@@ -2785,13 +2719,6 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
       fEventList = nullptr;
    }
    if (elist->GetN() == 0){
-      fEntryList = elist;
-      return;
-   }
-   if (fProofChain){
-      //for processing on proof, event list and entry list can't be
-      //set at the same time.
-      fEventList = nullptr;
       fEntryList = elist;
       return;
    }
@@ -2971,23 +2898,6 @@ void TChain::SetEventList(TEventList *evlist)
       return;
    }
 
-   if(fProofChain) {
-      //on proof, fEventList and fEntryList shouldn't be set at the same time
-      if (fEntryList){
-         //check, if the chain is the owner of the previous entry list
-         //(it happens, if the previous entry list was created from a user-defined
-         //TEventList in SetEventList() function)
-         if (fEntryList->TestBit(kCanDelete)){
-            TEntryList *tmp = fEntryList;
-            fEntryList = nullptr; // Avoid problem with RecursiveRemove.
-            delete tmp;
-         } else {
-            fEntryList = nullptr;
-         }
-      }
-      return;
-   }
-
    char enlistname[100];
    snprintf(enlistname,100, "%s_%s", evlist->GetName(), "entrylist");
    TEntryList *enlist = new TEntryList(enlistname, evlist->GetTitle());
@@ -3056,45 +2966,6 @@ void TChain::SetPacketSize(Int_t size)
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
       element->SetPacketSize(size);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Enable/Disable PROOF processing on the current default Proof (gProof).
-///
-/// "Draw" and "Processed" commands will be handled by PROOF.
-/// The refresh and gettreeheader are meaningful only if on == true.
-/// If refresh is true the underlying fProofChain (chain proxy) is always
-/// rebuilt (even if already existing).
-/// If gettreeheader is true the header of the tree will be read from the
-/// PROOF cluster: this is only needed for browsing and should be used with
-/// care because it may take a long time to execute.
-
-void TChain::SetProof(bool on, bool refresh, bool gettreeheader)
-{
-   if (!on) {
-      // Disable
-      SafeDelete(fProofChain);
-      // Reset related bit
-      ResetBit(kProofUptodate);
-   } else {
-      if (fProofChain && !refresh &&
-         (!gettreeheader || (gettreeheader && fProofChain->GetTree()))) {
-         return;
-      }
-      SafeDelete(fProofChain);
-      ResetBit(kProofUptodate);
-
-      // Make instance of TChainProof via the plugin manager
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TChain", "proof"))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         if (!(fProofChain = reinterpret_cast<TChain *>(h->ExecPlugin(2, this, gettreeheader))))
-            Error("SetProof", "creation of TProofChain failed");
-         // Set related bits
-         SetBit(kProofUptodate);
-      }
    }
 }
 
@@ -3175,4 +3046,16 @@ void TChain::Streamer(TBuffer& b)
 
 void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 {
+}
+
+Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                               bool isptr, bool suppressMissingBranchError)
+{
+   if (!fStatus->FindObject(bname)) {
+      auto *element = new TChainElement(bname, "");
+      element->IsDelayed(suppressMissingBranchError);
+      fStatus->Add(element);
+   }
+
+   return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
 }

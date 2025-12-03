@@ -1,0 +1,18 @@
+
+Processing /Users/danilopiparo/RootDevel/Root6/head/roottest/root/dataframe/test_stringfiltercolumn.C+...
+Info in <TMacOSXSystem::ACLiC>: creating shared library /Users/danilopiparo/RootDevel/Root6/head/buildNinja/roottest/root/dataframe/test_stringfiltercolumn_C.so
+c1 20
+c2 20
+c3 9
+ok        : pass=20         all=20         -- eff=100.00 % cumulative eff=100.00 %
+c4 9
+ok        : pass=20         all=20         -- eff=100.00 % cumulative eff=100.00 %
+All Filters: pass=9          all=20         -- eff=45.00 % cumulative eff=45.00 %
+c1 20
+c2 20
+c3 9
+ok        : pass=20         all=20         -- eff=100.00 % cumulative eff=100.00 %
+c4 9
+ok        : pass=20         all=20         -- eff=100.00 % cumulative eff=100.00 %
+All Filters: pass=9          all=20         -- eff=45.00 % cumulative eff=45.00 %
+(int) 0

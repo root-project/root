@@ -12,8 +12,6 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
-#include "RConversionRuleParser.h"
-
 #include <functional>
 #include <set>
 #include <string>
@@ -160,25 +158,26 @@ public:
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
 public:
    typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+   typedef bool (*CheckInClassTable_t)(const std::string &tname, std::string &result);
    typedef bool (*AutoParse_t)(const char *name);
 
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
+   CheckInClassTable_t fCheckInClassTable;
    AutoParse_t         fAutoParse;
    bool               *fInterpreterIsShuttingDownPtr;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
 public:
-   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
-                      ExistingTypeCheck_t existingTypeCheck,
-                      AutoParse_t autoParse,
-                      bool *shuttingDownPtr,
+   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt, ExistingTypeCheck_t existingTypeCheck,
+                      CheckInClassTable_t CheckInClassTable, AutoParse_t autoParse, bool *shuttingDownPtr,
                       const int *pgDebug = nullptr);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
+   bool CheckInClassTable(const std::string &tname, std::string &result) override;
    bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
    void GetPartiallyDesugaredName(std::string &nameLong) override;
    bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong) override;
@@ -844,7 +843,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 }
 
 //______________________________________________________________________________
-// Use this function in case an error occured.
+// Use this function in case an error occurred.
 inline void Error(const char *location, const char *va_(fmt), ...)
 {
    va_list ap;
@@ -854,7 +853,7 @@ inline void Error(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-// Use this function in case a system (OS or GUI) related error occured.
+// Use this function in case a system (OS or GUI) related error occurred.
 inline void SysError(const char *location, const char *va_(fmt), ...)
 {
    va_list ap;

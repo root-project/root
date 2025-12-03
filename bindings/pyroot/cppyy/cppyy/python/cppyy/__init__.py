@@ -56,20 +56,6 @@ import sys
 import sysconfig
 import warnings
 
-if not 'CLING_STANDARD_PCH' in os.environ:
-    def _set_pch():
-        try:
-            import cppyy_backend as cpb
-            local_pch = os.path.join(
-                    os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
-            if os.path.exists(local_pch):
-                os.putenv('CLING_STANDARD_PCH', local_pch)
-                os.environ['CLING_STANDARD_PCH'] = local_pch
-        except (ImportError, AttributeError):
-            pass
-    _set_pch()
-    del _set_pch
-
 try:
     import __pypy__
     del __pypy__
@@ -353,10 +339,20 @@ if not ispypy:
 
         apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import glob, libcppyy
-            ape = os.path.dirname(libcppyy.__file__)
-          # a "normal" structure finds the include directory up to 3 levels up,
-          # ie. dropping lib/pythonx.y[md]/site-packages
+            import glob
+            import platform
+
+            if platform.system() == "Windows":
+                # Install locations are handled differently on Windows
+                import libcppyy
+
+                ape = os.path.dirname(libcppyy.__file__)
+            else:
+                import cppyy.libcppyy as libcppyy
+
+                ape = os.path.dirname(libcppyy.__file__)
+            # a "normal" structure finds the include directory up to 3 levels up,
+            # ie. dropping lib/pythonx.y[md]/site-packages
             for i in range(3):
                 if os.path.exists(os.path.join(ape, 'include')):
                     break

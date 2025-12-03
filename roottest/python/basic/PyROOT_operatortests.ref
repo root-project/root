@@ -1,0 +1,11 @@
+Test overloading of math operators ... ok
+Test overloading of unary math operators ... ok
+Test overloading of comparison operators ... ok
+Test implementation of operator bool ... ok
+Test converter operators of exact types ... ok
+Test converter operators of approximate types ... ok
+Templated method operator+/- ... ok
+
+----------------------------------------------------------------------
+
+OK

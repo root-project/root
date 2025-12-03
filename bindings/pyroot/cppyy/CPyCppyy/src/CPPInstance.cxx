@@ -274,7 +274,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.
@@ -400,6 +400,21 @@ static PySequenceMethods op_as_sequence = {
     0,                             // sq_inplace_repeat
 };
 
+std::function<PyObject *(PyObject *)> &CPPInstance::ReduceMethod() {
+   static std::function<PyObject *(PyObject *)> reducer;
+   return reducer;
+}
+
+PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
+{
+   auto &reducer = CPPInstance::ReduceMethod();
+   if (!reducer) {
+      PyErr_SetString(PyExc_NotImplementedError, "");
+      return nullptr;
+   }
+   return reducer(self);
+}
+
 
 //----------------------------------------------------------------------------
 static PyMethodDef op_methods[] = {
@@ -409,6 +424,8 @@ static PyMethodDef op_methods[] = {
       (char*)"dispatch to selected overload"},
     {(char*)"__smartptr__", (PyCFunction)op_get_smartptr, METH_NOARGS,
       (char*)"get associated smart pointer, if any"},
+    {(char*)"__reduce__",  (PyCFunction)op_reduce, METH_NOARGS,
+        (char*)"reduce method for serialization"},
     {(char*)"__reshape__",  (PyCFunction)op_reshape, METH_O,
         (char*)"cast pointer to 1D array type"},
     {(char*)nullptr, nullptr, 0, nullptr}
@@ -556,8 +573,17 @@ static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
     if (op == Py_EQ || op == Py_NE) {
     // special case for None to compare True to a null-pointer
         if ((PyObject*)other == Py_None && !self->fObject) {
-            if (op == Py_EQ) { Py_RETURN_TRUE; }
-            Py_RETURN_FALSE;
+            const char *msg =
+                "\nComparison of C++ nullptr objects with `None` is no longer supported."
+                "\n\nPreviously, `None` was treated as equivalent to a null C++ pointer, "
+                "but this led to confusing behavior where `x == None` could be True even though `x is None` was False."
+                "\n\nTo test whether a C++ object is null or not, check its truth value instead:"
+                "\n    if not x: ..."
+                "\nor use `x is None` to explicitly check for Python None."
+                "\n";
+
+            PyErr_SetString(PyExc_TypeError, msg);
+            return NULL;  // stop execution, raise TypeError
         }
 
     // use C++-side operators if available

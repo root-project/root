@@ -39,7 +39,7 @@ public:
   void setAnaIntZ(double z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=nullptr) ;
-  TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
+  TObject* clone(const char* newname=nullptr) const override { return new RooMultiVarGaussian(*this,newname); }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

@@ -1,0 +1,40 @@
+
+Processing runAddVersion.cxx(2, "6")...
+Loading myclass1.root
+Warning in <TClass::Init>: no dictionary for class MyClass is available
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+Loading myclass2.root
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5
+
+Loading library lib6
+Warning in <TClass::PostLoadCheck>:
+   The StreamerInfo version 1 for the class MyClass which was read
+   from a file previously opened has the same version as the active class
+   but a different checksum. You should update the version to ClassDef(MyClass,3).
+   Do not try to write objects with the current class definition,
+   the files will not be readable.
+
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the on-file layout version 1 of class 'MyClass' differs from
+the in-memory layout version 1:
+   int a; //
+vs
+   Long64_t a; //
+OBJ: TObjArray	TObjArray	An array of objects : 0
+
+StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
+  int            a               offset=na type= 3 newtype=16
+   i= 0, a               type=203, offset=na, len=1, method=0
+
+StreamerInfo for class: MyClass, version=2, checksum=0x423a847
+  float          a               offset=na type= 5
+(int) 0

@@ -1,0 +1,9 @@
+<lcgdict>
+<class name="DTDigiSimLink" ClassVersion="10">
+ <version ClassVersion="10" checksum="1414990067"/>
+</class>
+<class name="std::vector<DTDigiSimLink>"/>
+<class name="std::map<DTLayerId,std::vector<DTDigiSimLink> >"/>
+<class name="MuonDigiCollection<DTLayerId,DTDigiSimLink>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<DTLayerId,DTDigiSimLink>>" splitLevel="0"/> 
+</lcgdict>

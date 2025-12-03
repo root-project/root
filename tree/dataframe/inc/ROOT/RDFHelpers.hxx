@@ -161,15 +161,19 @@ RNode AsRNode(NodeType node)
 }
 
 // clang-format off
-/// Trigger the event loop of multiple RDataFrames concurrently
-/// \param[in] handles A vector of RResultHandles
-/// \return The number of distinct computation graphs that have been processed
+/// Run the event loops of multiple RDataFrames concurrently.
+/// \param[in] handles A vector of RResultHandles whose event loops should be run.
+/// \return The number of distinct computation graphs that have been processed.
 ///
 /// This function triggers the event loop of all computation graphs which relate to the
 /// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
 /// RResultPtr is that the event loops will run concurrently. Therefore, the overall
-/// computation of all results is generally more efficient.
+/// computation of all results can be scheduled more efficiently.
 /// It should be noted that user-defined operations (e.g., Filters and Defines) of the different RDataFrame graphs are assumed to be safe to call concurrently.
+/// RDataFrame will pass slot numbers in the range [0, NThread-1] to all helpers used in nodes such as DefineSlot. NThread is the number of threads ROOT was
+/// configured with in EnableImplicitMT().
+/// Slot numbers are unique across all graphs, so no two tasks with the same slot number will run concurrently. Note that it is not guaranteed that each slot
+/// number will be reached in every graph.
 ///
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df1("tree1", "file1.root");
@@ -218,6 +222,10 @@ namespace Experimental {
 template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 {
+   using SnapshotResult_t = ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager>;
+   static_assert(!std::is_same_v<T, SnapshotResult_t>,
+                 "Snapshot with variations can only be enabled via RSnapshotOptions.");
+
    R__ASSERT(resPtr != nullptr && "Calling VariationsFor on an empty RResultPtr");
 
    // populate parts of the computation graph for which we only have "empty shells", e.g. RJittedActions and
@@ -244,7 +252,7 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
             // Get the current variation name
             std::string variationName = variations[i];
             // Replace the colon with an underscore
-            std::replace(variationName.begin(), variationName.end(), ':', '_'); 
+            std::replace(variationName.begin(), variationName.end(), ':', '_');
             // Get a pointer to the corresponding varied result
             auto &variedResult = variedResults.back();
             // Set the varied result's name to NOMINALNAME_VARIATIONAME
@@ -265,9 +273,6 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    return RDFInternal::MakeResultMap<T>(resPtr.fObjPtr, std::move(variedResults), std::move(variations),
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
-
-using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
-SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 
 /// \brief Add ProgressBar to a ROOT::RDF::RNode
 /// \param[in] df RDataFrame node at which ProgressBar is called.
@@ -296,6 +301,14 @@ void AddProgressBar(ROOT::RDF::RNode df);
 /// ~~~
 /// For more details see ROOT::RDF::Experimental::ProgressHelper Class.
 void AddProgressBar(ROOT::RDataFrame df);
+
+/// @brief Set the number of threads sharing one TH3 in RDataFrame.
+/// When RDF runs multi-threaded, each thread typically clones every histogram in the computation graph.
+/// If this consumes too much memory, N threads can share one clone.
+/// Higher values might slow down RDF because they lead to higher contention on the TH3Ds, but save memory.
+/// Lower values run faster with less contention at the cost of higher memory usage.
+/// @param nThread Number of threads that share a TH3D.
+void ThreadsPerTH3(unsigned int nThread = 1);
 
 class ProgressBarAction;
 

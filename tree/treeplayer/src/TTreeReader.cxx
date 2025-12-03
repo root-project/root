@@ -31,15 +31,11 @@
 
  Example code can be found in
   - tutorials/io/tree/hsimpleReader.C
-  - tutorials/io/tree/h1analysisTreeReader.C
-  - <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">This example</a>
+  - tutorials/analysis/tree/h1analysisTreeReader.C
+  - An example in roottest showing the full power <a href="https://github.com/root-project/root/tree/master/roottest/root/tree/reader">here</a>.
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
  for all of a tree's branches using `TTree::MakeSelector()`.
-
- Roottest contains an
- <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">example</a>
- showing the full power.
 
 A simpler analysis example can be found below: it histograms a function of the px and py branches.
 
@@ -178,7 +174,6 @@ bool analyze(TFile* file) {
 */
 // clang-format on
 
-ClassImp(TTreeReader);
 
 using namespace ROOT::Internal;
 
@@ -570,12 +565,20 @@ void TTreeReader::Restart()
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
    fEntry = -1;
-   if (const auto curFile = fTree->GetCurrentFile()) {
-      if (auto tc = fTree->GetTree()->GetReadCache(curFile, true)) {
-         tc->DropBranch("*", true);
-         tc->ResetCache();
-      }
-   }
+   // Find if there is an active TTreeCache and reset it if so
+   if (!fTree)
+      return;
+   const auto curFile = fTree->GetCurrentFile();
+   if (!curFile)
+      return;
+   auto curTree = fTree->GetTree();
+   if (!curTree)
+      return;
+   auto tc = curTree->GetReadCache(curFile, true);
+   if (!tc)
+      return;
+   tc->DropBranch("*", true);
+   tc->ResetCache();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

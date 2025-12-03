@@ -1,0 +1,11 @@
+<lcgdict>	
+  <class name="std::pair<unsigned char, unsigned int>" />
+  <class name="std::vector<std::pair<unsigned char, unsigned int>*>" />
+  <class name="TRT_BSErrContainer"  id="9DEEFC74-1772-4A81-B83D-3D4A123603B8" />
+
+  <class name="std::pair<unsigned int, unsigned char>" />
+  <class name="std::pair<unsigned char, std::pair<unsigned int, unsigned char> >" />
+  <class name="std::vector<std::pair<unsigned char, std::pair<unsigned int, unsigned char> >*>" />
+
+  <class name="TRT_BSIdErrContainer"  id="60735BF7-1781-4023-AC1E-5A6456E66423" />
+</lcgdict>

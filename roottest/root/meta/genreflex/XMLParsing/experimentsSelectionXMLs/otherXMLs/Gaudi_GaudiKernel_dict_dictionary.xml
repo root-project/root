@@ -1,0 +1,287 @@
+<lcgdict>
+  <selection>
+  <!-- Base classes in GaudiKernel -->
+  <class name="IssueSeverity"/>
+  <class name="StatusCode"/>
+  <class name="Property">
+    <field name="m_typeinfo" transient="true"/>
+  </class>
+  <class name="Gaudi::Time"/>
+  <!--class name="FactoryTable"/-->
+  <class name="Algorithm"/>
+  <class name="Service"  />
+  <class name="AlgTool"  />
+  <class name="GenericAddress"/>
+  <class pattern="Rndm::*"/>
+  <class name="GaudiHandleInfo"/>
+  <class name="GaudiHandleBase"/>
+  <class name="GaudiHandleArrayBase"/>
+
+  <class name="LinkManager"/>
+  <class name="LinkManager::Link">
+    <field name="m_pObject" transient="true"/>
+  </class>
+  <class name="std::vector&lt;LinkManager::Link*&gt;"/>
+
+  <!-- IInterface templated helpers -->
+  <class pattern="extend_interfaces*&lt;*&gt;"/>
+  <class pattern="extends*&lt;*&gt;"/>
+  <class pattern="implements*&lt;*&gt;"/>
+
+  <!-- Interfaces in GaudiKernel -->
+  <class name="IAddressCreator"/>
+  <!-- <class name="IAIDATupleSvc"/> -->
+  <class name="IAlgContextSvc"/>
+  <!--class name="IAlgFactory"/-->
+  <class name="IAlgManager"/>
+  <class name="IAlgorithm"/>
+  <class name="IAlgTool"/>
+  <class name="IAppMgrUI"/>
+  <!--class name="IAuditorFactory"/-->
+  <class name="IAuditor"/>
+  <class name="IAuditorSvc"/>
+  <class name="IChronoSvc"/>
+  <class name="IStatSvc"/>
+  <class name="IChronoStatSvc"/>
+  <class name="IClassInfo"/>
+  <class name="IClassManager"/>
+  <!--class name="ICnvFactory"/-->
+  <!--class name="ICnvManager"/-->
+  <class name="IConversionSvc"/>
+  <class name="IConverter"/>
+  <class name="ICounterSummarySvc"/>
+  <class name="ICounterSvc"/>
+  <class name="IDataManagerSvc"/>
+  <class name="IDataProviderSvc"/>
+  <class name="IDataSelector"/>
+  <class name="IDataSourceMgr"/>
+  <class name="IDataStoreAgent"/>
+  <class name="IDataStoreLeaves"/>
+  <class name="IDataStoreLeaves::LeavesList" />
+  <class name="IDataStreamTool"/>
+  <class name="IDetDataSvc"/>
+  <class name="IEventProcessor"/>
+  <class name="IEventTimeDecoder"/>
+  <class name="IEvtSelector"/>
+  <class name="IExceptionSvc"/>
+  <!--class name="IFactory"/-->
+  <class name="IHistogramSvc"/>
+  <class name="IHistorySvc"/>
+  <class name="IIncidentListener"/>
+  <class name="IIncidentSvc"/>
+  <class name="IInspectable"/>
+  <class name="IInspector"/>
+  <class name="IInterface"/>
+  <class name="IIssueLogger"/>
+  <class name="IJobOptionsSvc"/>
+  <class name="IMagneticFieldSvc"/>
+  <class name="IMessageSvc"/>
+  <class name="IMonitorSvc"/>
+  <class name="INamedInterface"/>
+  <class name="Incident"/>
+  <class name="INTuple"/>
+  <class name="INTupleSvc"/>
+  <!--class name="IObjManager"/-->
+  <class name="IOpaqueAddress"/>
+  <class name="IParticlePropertySvc"/>
+  <class name="IPartPropSvc"/>
+  <class name="IPartitionControl"/>
+  <class name="IPersistencySvc"/>
+  <class name="IProperty"/>
+  <class name="IRegistry"/>
+  <class name="IRndmEngine"/>
+  <!--class name="IRndmGenFactory"/-->
+  <class name="IRndmGen"/>
+  <class name="IRndmGen::Param" />
+  <class name="IRndmGenSvc"/>
+  <class name="IRunable"/>
+  <class name="ISelectStatement"/>
+  <class name="ISerialize"/>
+  <class name="IService"/>
+  <class name="IStagerSvc"/>
+  <class name="IStateful"/>
+  <class name="IStatusCodeSvc"/>
+  <!--class name="ISvcFactory"/-->
+  <class name="ISvcLocator"/>
+  <class name="ISvcManager"/>
+  <class name="ITHistSvc"/>
+  <!--class name="IToolFactory"/-->
+  <class name="IToolSvc"/>
+  <class name="IUpdateable"/>
+  <class name="IUpdateManagerSvc"/>
+  <class name="IUpdateManagerSvc::PythonHelper"/>
+  <class name="IValidity"/>
+
+  <!-- Gaudi data store classes  -->
+  <class name="ContainedObject"         id="000000BE-0000-0000-0000-000000000000">
+    <field name="m_parent" transient="true"/>
+  </class>
+  <class name="DataObject"              id="00000001-0000-0000-0000-000000000000">
+    <field name="m_refCount"  transient="true"/>
+    <field name="m_pRegistry" transient="true"/>
+    <field name="m_pLinkMgr"  transient="true"/>
+  </class>
+  <class name="ObjectContainerBase"/>
+  <class name="std::vector<const ContainedObject*>" />
+  <class name="std::vector<ContainedObject*>" />
+
+  <!-- SmartRef classes              -->
+  <class pattern="SmartData*"/>
+
+  <class name="SmartRefBase">
+    <field name="m_data"  transient="true"/>
+    <field name="m_contd" transient="true"/>
+    <field name="m_type"  transient="true"/>
+  </class>
+  <!-- SmartRefs for ContainedObject  -->
+  <class name="SmartRef<ContainedObject>">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<ContainedObject>">
+    <field name="m_data" transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<ContainedObject> >"/>
+
+  <!-- SmartRefs for DataObject  -->
+  <class name="SmartRef<DataObject>">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<DataObject>">
+    <field name="m_data" transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<DataObject> >"/>
+
+  <!-- SmartRefs for ObjectContainerBase  -->
+  <class name="SmartRef<ObjectContainerBase>">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<ObjectContainerBase>">
+    <field name="m_data" transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<ObjectContainerBase> >"/>
+
+  <class name="KeyedObject<int>">
+    <field name="m_refCount" transient="true"/>
+    <field name="m_hasKey" transient="true"/>
+   </class>
+  <class name="SmartRef<KeyedObject<int> >">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<KeyedObject<int> >">
+    <field name="m_data" transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<KeyedObject<int> > >"/>
+
+  <class name="KeyedObject<unsigned int>">
+    <field name="m_refCount" transient="true"/>
+    <field name="m_hasKey" transient="true"/>
+  </class>
+  <class name="SmartRef<KeyedObject<unsigned int> >">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<KeyedObject<unsigned int> >">
+    <field name="m_data"  transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<KeyedObject<unsigned int> > >"/>
+
+  <class name="KeyedObject<long>">
+    <field name="m_refCount" transient="true"/>
+    <field name="m_hasKey" transient="true"/>
+  </class>
+  <class name="SmartRef<KeyedObject<long> >">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<KeyedObject<long> >">
+    <field name="m_data"  transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<KeyedObject<long> > >"/>
+
+  <class name="KeyedObject<unsigned long>">
+    <field name="m_refCount" transient="true"/>
+    <field name="m_hasKey" transient="true"/>
+  </class>
+  <class name="SmartRef<KeyedObject<unsigned long> >">
+    <field name="m_target" transient="true"/>
+  </class>
+  <class name="SmartRefVector<KeyedObject<unsigned long> >">
+    <field name="m_data"  transient="true"/>
+    <field name="m_contd" transient="true"/>
+  </class>
+  <class name="std::vector<SmartRef<KeyedObject<unsigned long> > >"/>
+
+  <!--class name="std::vector<std::basic_string<char> >"/-->
+
+  <!-- Gaudi N-tuples -->
+  <class name="NTuple::ColumnWiseTuple" id="0000002B-0000-0000-0000-000000000000"/>
+  <class name="NTuple::RowWiseTuple"    id="0000002A-0000-0000-0000-000000000000"/>
+  <class name="NTuple::Directory"       id="00000029-0000-0000-0000-000000000000"/>
+  <class name="NTuple::File"            id="00000028-0000-0000-0000-000000000000">
+    <field name="m_name"      transient="true"/>
+    <field name="m_logName"   transient="true"/>
+    <field name="m_type"      transient="true"/>
+    <field name="m_isOpen"    transient="true"/>
+  </class>
+  <class pattern="NTuple::Item<*>"/>
+  <class pattern="NTuple::Array<*>"/>
+  <class pattern="NTuple::Matrix<*>"/>
+
+  <function pattern="System::*"/>
+  <function pattern="Gaudi::*"/>
+
+  <enum name="Gaudi::StateMachine::State"/>
+  <enum name="Gaudi::StateMachine::Transition"/>
+
+  <enum name="Gaudi::CounterSummary::SaveType"/>
+
+  <enum name="MSG::Level"/>
+  <enum name="MSG::Color"/>
+
+  <class pattern="SmartIF&lt;*&gt;"/>
+  <class pattern="SmartIFBase&lt;*&gt;"/>
+
+  <!-- Temporary work-around for ROOT bug #44916 -->
+  <class name="std::string"/>
+
+  </selection>
+
+  <exclusion>
+    <!-- Marco Cl.: This is needed because with ROOT >= 5.16 we get some dictionaries that we do not need. -->
+    <class name="NTuple::Item&lt;IOpaqueAddress*&gt;"/>
+
+    <class pattern="NTuple::Item&lt;bool&gt;">
+      <method pattern="=*"/>
+    </class>
+    <class pattern="NTuple::*&lt;*&gt;">
+      <method name="="/>
+    </class>
+    <class pattern="NTuple::_Acc*::_Acc*">
+      <method name="="/>
+    </class>
+    <class pattern="Rndm::*">
+      <method name="="/>
+    </class>
+    <class name="IRndmGen::Param">
+      <method name="="/>
+    </class>
+    <class pattern="*AlgTool*">
+      <method name="="/>
+    </class>
+
+    <!-- @FIXME Marco Cl.: work-around for ROOT bug #34282. -->
+    <!-- Temporary commented out because it does not work and the feature in
+         ROOT has been disabled.
+    <class name="Gaudi::Time">
+      <field name="SECS_PER_DAY"/>
+      <field name="SECS_PER_HOUR"/>
+      <field name="SEC_NSECS"/>
+    </class>
+    -->
+  </exclusion>
+</lcgdict>
+

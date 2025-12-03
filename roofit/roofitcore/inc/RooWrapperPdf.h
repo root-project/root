@@ -46,7 +46,7 @@ public:
     _func("inputFunction", this, other._func),
     _selfNormalized{other._selfNormalized} { }
 
-  TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname=nullptr) const override {
     return new RooWrapperPdf(*this, newname);
   }
 
@@ -107,7 +107,7 @@ public:
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 
-
+  RooAbsReal const &function() const { return *_func; }
 
 private:
   RooRealProxy _func;

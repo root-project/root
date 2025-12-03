@@ -24,8 +24,8 @@ Implement TBuffer for a SQL backend.
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 
-ClassImp(TBufferSQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -41,9 +41,9 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsize, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r) :
-   TBufferFile(mode,bufsiz),
+   TBufferFile(mode,bufsize),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
    fIter = fColumnVec->begin();
@@ -52,10 +52,10 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsize, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r,
                        void *buf, bool adopt) :
-   TBufferFile(mode,bufsiz,buf,adopt),
+   TBufferFile(mode,bufsize,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
    fIter = fColumnVec->begin();
@@ -940,39 +940,3 @@ void TBufferSQL::ResetOffset()
 {
    fIter = fColumnVec->begin();
 }
-
-#if 0
-////////////////////////////////////////////////////////////////////////////////
-
-void TBufferSQL::insert_test(const char* dsn, const char* usr,
-                             const char* pwd, const TString& tblname)
-{
-   TString str;
-   TString select = "select * from ";
-   TString sql;
-   TSQLStatement* stmt;
-   sql = select + "ins";
-
-   con = gSQLDriverManager->GetConnection(dsn,usr,pwd);
-
-   if(!con)
-      printf("\n\n\nConnection NOT Successful\n\n\n");
-   else
-      printf("\n\n\nConnection Sucessful\n\n\n");
-
-   stmt = con->CreateStatement(0, odbc::ResultSet::CONCUR_READ_ONLY);
-
-   ptr = stmt->ExecuteQuery(sql.Data());
-   if(!ptr) printf("No recorSet found!");
-
-   ptr->Next();
-   ptr->MoveToInsertRow();
-   std::cerr << "IsAfterLast(): " << ptr->IsAfterLast() << std::endl;
-   ptr->UpdateInt(1, 5555);
-   ptr->InsertRow();
-   con->Commit();
-
-   ptr1 = stmt->ExecuteQuery(sql.Data());
-
-}
-#endif

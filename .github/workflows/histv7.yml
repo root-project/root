@@ -1,0 +1,25 @@
+name: 'Standalone histv7'
+
+on:
+  pull_request:
+    paths:
+      - 'hist/histv7/**'
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libbenchmark-dev libgtest-dev
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=install -Dhistv7_benchmark=ON hist/histv7
+      - name: Build
+        run: cmake --build build
+      - name: Install
+        run: cmake --install build
+      - name: Test
+        run: ctest --test-dir build --verbose

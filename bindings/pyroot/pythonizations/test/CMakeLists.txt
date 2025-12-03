@@ -21,6 +21,11 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(uhi_plotting uhi_plotting.py GENERIC PYTHON_DEPS uhi numpy)
+ROOT_ADD_PYUNITTEST(uhi_indexing uhi_indexing.py GENERIC PYTHON_DEPS uhi numpy)
+if(Python3_VERSION VERSION_GREATER_EQUAL 3.9)
+    # Enable uhi testing helper for Python 3.9+
+    ROOT_ADD_PYUNITTEST(uhi_test_suite uhi_test_suite.py GENERIC PYTHON_DEPS uhi numpy)
+endif()
 
 # STL containers pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
@@ -50,10 +55,14 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
+# TColor-related pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
+
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_fillN th1_fillN.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_th3 th3.py)
 
 # TGraph, TGraph2D and error subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)
@@ -104,13 +113,9 @@ endif()
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
-    endif()
-    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
-    endif()
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
 endif()
 
 # RDFDescription pythonization
@@ -122,20 +127,16 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_FIND_PYTHON_MODULE(sonnet)
-        ROOT_FIND_PYTHON_MODULE(graph_nets)
-        if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
-            ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
-        endif()
+    ROOT_FIND_PYTHON_MODULE(sonnet)
+    ROOT_FIND_PYTHON_MODULE(graph_nets)
+    if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
     endif()
 endif()
 
 # RTensor pythonizations
 if (tmva AND dataframe)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
-    endif()
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
 endif()
 
 # Passing Python callables to ROOT.TF
@@ -143,6 +144,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py PYTHON_DEPS nump
 
 if(roofit)
 
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
@@ -151,23 +153,11 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
-
-  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
-  endif()
-
-  if(NOT MSVC OR win_broken_tests)
-    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
-
-    # Other pythonizations that fail on Windows for unknown reasons
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
-
-    # RooWorkspace pythonization that fails on Windows
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
-  endif()
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
 
 endif()
 
@@ -189,8 +179,15 @@ ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
 # rbatchgenerator tests
-# TODO: We currently do not support TensorFlow for Python >= 3.12 (see requirements.txt)
-# Update here once that is fixed.
-if (NOT MSVC AND tmva)
+if (tmva)
   ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
+endif()
+
+ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
+
+if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
+    # Test the conversion and low level views of interpreter-defined C++ arrays to NumPy
+    # We do not run this test on Windows x86 due to an interpreter issue with arrays:
+    # https://github.com/root-project/root/issues/9809
+    ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
 endif()

@@ -1,0 +1,10 @@
+<lcgdict>
+   <class name="ExampleHitContainer" id="12BD9F58-4A0A-4DD6-89E3-15DB01180BD9"/>
+   <class name="ExampleHit"/>
+   <class name="DataVector<ExampleHit>"/>
+   <class name="std::vector<ExampleHit*>"/>
+   <class name="ExampleTrackContainer" id="1390A48F-C87C-4382-B772-2DA5B055FBC6"/>
+   <class name="ExampleTrack"/>
+   <class name="DataVector<ExampleTrack>"/>
+   <class name="std::vector<ExampleTrack*>"/>
+</lcgdict>

@@ -20,7 +20,6 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 
 #include "RooBatchCompute.h"
 #include "RooNaNPacker.h"
-#include "RooVDTHeaders.h"
 #include "Batches.h"
 
 #include <ROOT/RConfig.hxx>
@@ -275,14 +274,12 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
 
    ROOT::Math::KahanSum<double> nllSum;
 
-   for (std::size_t i = 0; i < probas.size(); ++i) {
+   for (std::size_t i = 0; i < weights.size(); ++i) {
 
-      const double eventWeight = weights.size() > 1 ? weights[i] : weights[0];
-
-      if (0. == eventWeight)
+      if (0. == weights[i])
          continue;
 
-      std::pair<double, double> logOut = getLog(probas[i], out);
+      std::pair<double, double> logOut = getLog(probas.size() == 1 ? probas[0] : probas[i], out);
       double term = logOut.first;
       badness += logOut.second;
 
@@ -290,7 +287,7 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
          term -= std::log(offsetProbas[i]);
       }
 
-      term *= -eventWeight;
+      term *= -weights[i];
 
       nllSum.Add(term);
    }

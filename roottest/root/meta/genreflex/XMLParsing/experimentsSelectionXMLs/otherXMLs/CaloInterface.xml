@@ -1,0 +1,12 @@
+<lcgdict>
+<class name="ICaloCellSelector" />     
+<class name="ICaloNoiseTool" />
+<class name="ICaloCellMakerTool" />   
+<class name="ICaloCompactCellTool" />  
+<class name="ICalorimeterNoiseTool" />
+<class name="ICaloMBAverageTool" />
+<class name="ICaloCellNormalizedQualityTool" />
+<class name="ICaloParticleIDTool" />
+<class name="ICaloAffectedTool" />
+</lcgdict>
+

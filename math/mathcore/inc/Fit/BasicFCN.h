@@ -81,7 +81,7 @@ public:
    std::shared_ptr<IModelFunction> ModelFunctionPtr() const { return fFunc; }
 
    /// flag to indicate if can compute Hessian
-   virtual bool HasHessian() const {
+   bool HasHessian() const override {
       if (!BaseObjFunction::IsAGradFCN()) return false;
       auto gfunc = dynamic_cast<const IGradModelFunction *>( fFunc.get());
       if (!gfunc) return false;

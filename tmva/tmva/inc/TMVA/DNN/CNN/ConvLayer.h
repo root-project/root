@@ -158,23 +158,23 @@ public:
    * different events in the batch. Computes activations as well as
    * the first partial derivative of the activation function at those
    * activations. */
-   void Forward(Tensor_t &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false) override;
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
-   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward) override;
    ////              Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Prints the info about the layer. */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
    /*! Getters */
    size_t GetFilterDepth() const { return fFilterDepth; }

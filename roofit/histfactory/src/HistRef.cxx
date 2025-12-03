@@ -15,8 +15,10 @@
  * HistFactory class
  */
 
-#include "TH1.h"
 #include "RooStats/HistFactory/HistRef.h"
+
+#include "TH1.h"
+#include "TDirectory.h"
 
 namespace RooStats{
 namespace HistFactory {
@@ -25,6 +27,8 @@ namespace HistFactory {
       // implementation of method copying the contained pointer
       // (just use Clone)
       if (!h) return nullptr;
+
+      TDirectory::TContext ctx{nullptr}; // Don't associate histogram with currently open file
       return static_cast<TH1*>(h->Clone());
    }
 }

@@ -1,0 +1,123 @@
+name: 'ROOT Python wheels'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch for which the Python wheel has to be generated'
+        type: string
+        required: true
+        default: "master"
+  schedule:
+    - cron: '01 1 * * *'
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-wheels:
+    if: |
+      (github.repository_owner == 'root-project' &&
+       (github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch')) ||
+      contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
+    name: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/cibuildwheel-impl
+        with:
+          build-tag: ${{ matrix.target }}
+
+  test-wheels:
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: test-wheel-cp${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: wheels
+          merge-multiple: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install produced wheel
+        run: |
+          ls -R wheels
+          PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          WHEEL=$(ls wheels/*${PY_VER}*.whl | head -n 1)
+          echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
+          pip install "$WHEEL"
+
+      - name: Install tutorials dependencies
+        run: |
+          python -m pip install --no-cache-dir -r test/wheels/requirements-ci.txt
+
+      - name: Run tutorials
+        run: |
+          pytest -vv --verbosity="4" -rF test/wheels
+
+  create-and-upload-wheel-registry:
+      if: github.event_name != 'pull_request' # The secrets are not available in PR
+      needs: build-wheels
+      runs-on: ubuntu-latest
+      steps:
+
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Install required system packages
+        run: sudo apt-get install -y krb5-user xrootd-client
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+
+      - name: Create PEP503-compliant wheel registry
+        run: |
+          mkdir -p wheelhouse
+          mv *.whl wheelhouse
+          python -m pip install --upgrade pip
+          python -m pip install --user simple503
+          simple503 wheelhouse
+
+      - name: Compute number of files to upload
+        id: nfiles
+        run: echo "NFILES=$(find wheelhouse -maxdepth 1 | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload wheels to EOS
+        env:
+          RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+          KT_FILE_NAME: /tmp/decoded.keytab
+          EOS_PATH: /eos/project/r/root-eos/www/experimental-python-wheels
+          EOS_ENDPOINT: root://eosproject-r.cern.ch
+          KRB5CCNAME: /tmp/krb5cc
+          NFILES: ${{ steps.nfiles.outputs.NFILES }}
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Content
+          ls
+          echo +++ Retrieving the secret
+          echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+          echo +++ Creating the token
+          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+          echo +++ Running the copy
+          xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/

@@ -17,26 +17,24 @@ import argparse
 import datetime
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
 import tarfile
 import time
 
+import build_utils
 import openstack
-
 from build_utils import (
+    calc_options_hash,
     die,
     github_log_group,
+    is_macos,
     load_config,
-    calc_options_hash,
-    subprocess_with_log,
     subprocess_with_capture,
+    subprocess_with_log,
     upload_file,
-    is_macos
 )
-import build_utils
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -100,6 +98,8 @@ def main():
     platform_machine = platform.machine()
 
     obj_prefix = f'{args.platform}/{macos_version_prefix}{args.base_ref}/{args.buildtype}_{platform_machine}/{options_hash}'
+    if args.coverage:
+        obj_prefix = obj_prefix + "-coverage"
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -123,28 +123,14 @@ def main():
 
       rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
 
-    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
-
-    if testing:
-      # Where to put the roottest directory
-      if os.path.exists(os.path.join(WORKDIR, "src", "roottest", ".git")):
-         roottest_dir = "src/roottest"
-      else:
-         roottest_dir = "roottest"
-
-      # Where to find the target branch
-      roottest_origin_repository = re.sub( "/root(.git)*$", "/roottest.git", args.repository)
-
-      # Where to find the incoming branch
-      roottest_repository, roottest_head_ref = relatedrepo_GetClosestMatch("roottest", args.pull_repository, args.repository)
-
-      git_pull(roottest_dir, roottest_origin_repository, args.base_ref)
-
-      if pull_request:
-        rebase(roottest_dir, roottest_repository, args.base_ref, roottest_head_ref, roottest_head_ref)
+    testing: bool = options_dict['testing'].lower() == "on"
 
     if not WINDOWS:
         show_node_state()
+
+    if args.coverage and args.incremental:
+        # Delete all the .gcda files produces by an artefact.
+        build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
     build(options, args.buildtype)
 
@@ -152,7 +138,7 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and not args.coverage:
+    if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
@@ -243,8 +229,7 @@ def cleanup_previous_build():
     else:
         # mac/linux/POSIX
         result = subprocess_with_log(f"""
-            rm -rf {WORKDIR}
-            mkdir -p {WORKDIR}
+            rm -rf {WORKDIR}/*
         """)
 
     if result != 0:
@@ -360,6 +345,12 @@ def archive_and_upload(archive_name, prefix):
 def cmake_configure(options, buildtype):
     srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
+
+    # Add a private option to make the CI build faster by not changing the
+    # BUILD_NODE line of compiledata.h (which leads to all the dictionary
+    # being rebuild when re-using a previous build on a different node)
+    options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
     """)
@@ -510,69 +501,21 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
 
   return ""
 
-@github_log_group("Pull/clone roottest branch")
-def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
-  """
-  relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
-                              FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
-  Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
-  current head name.
-
-  See relatedrepo_GetClosestMatch in toplevel CMakeLists.txt
-  """
-
-  # Alternatively, we could use: re.sub( "/root(.git)*$", "", varname)
-  origin_prefix = origin[:origin.rfind('/')]
-  upstream_prefix = upstream[:upstream.rfind('/')]
-
-  fetch_url = upstream_prefix + "/" + repo_name
-
-  gitdir = os.path.join(WORKDIR, "src", ".git")
-  current_head = get_stdout_subprocess(f"""
-      git --git-dir={gitdir} rev-parse --abbrev-ref HEAD
-      """, "Failed capture of current branch name")
-
-  # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
-  # upstream as the fork repository may be out-of-sync
-  branch_regex = re.compile("^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$")
-  known_head = branch_regex.match(current_head)
-
-  if known_head:
-    if current_head == "latest-stable":
-      # Resolve the 'latest-stable' branch to the latest merged head/tag
-      current_head = get_stdout_subprocess(f"""
-           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\\(refname:short\\)
-           """, "Failed capture of lastest-stable underlying branch name")
-      return fetch_url, current_head
-
-  # Otherwise, try to use a branch that matches `current_head` in the fork repository
-  matching_refs = get_stdout_subprocess(f"""
-       git ls-remote --heads --tags {origin_prefix}/{repo_name} {current_head}
-       """, "")
-  if matching_refs != "":
-    fetch_url = origin_prefix + "/" + repo_name
-    return fetch_url, current_head
-
-  # Finally, try upstream using the closest head/tag below the parent commit of the current head
-  closest_ref = get_stdout_subprocess(f"""
-       git --git-dir={gitdir} describe --all --abbrev=0 HEAD^
-       """, "") # Empty error means, ignore errors.
-  candidate_head = re.sub("^(heads|tags)/", "", closest_ref)
-
-  matching_refs = get_stdout_subprocess(f"""
-       git ls-remote --heads --tags {upstream_prefix}/{repo_name} {candidate_head}
-       """, "")
-  if matching_refs != "":
-    return fetch_url, candidate_head
-  return "", ""
-
-
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
     builddir = os.path.join(WORKDIR, "build")
+    ignore_directories = "runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
+    ignore_subpattern = "externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs"
+    ignore_subpattern += "|llvm-project|interpreter"
+    ignore_subpattern += "|graf3d|asimage|sql"
+    ignore_subpattern += "|runtutorials|roottest|test"
+    ignore_errors = "--gcov-suspicious-hits-threshold=20000000000  --gcov-ignore-errors=source_not_found --gcov-ignore-errors=no_working_dir_found"
+    exclude_dictionaries = "--exclude='.*/G__.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*'"
+    # The output of -v is huge (several 10s of MB at least), we could filter
+    # the output of -v to keep just the line with ` Processing file:`
     result = subprocess_with_log(f"""
         cd '{builddir}'
-        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
+        gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty {ignore_errors} --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/({ignore_subpattern})/.*' {exclude_dictionaries} -r ../src ../build
     """)
 
     if result != 0:

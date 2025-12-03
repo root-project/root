@@ -35,7 +35,6 @@ The property editor
 #include "TGSplitter.h"
 #include "TGTableLayout.h"
 
-ClassImp(TGuiBldEditor);
 
 
 ////////////////////////////////////////////////////////////////////////////////

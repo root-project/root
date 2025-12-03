@@ -146,7 +146,11 @@ static PyTypeObject PyNullPtr_t_Type = {
     nullptr_repr,        // tp_repr
     &nullptr_as_number,  // tp_as_number
     0, 0,
+#if PY_VERSION_HEX >= 0x030d0000
+    (hashfunc)Py_HashPointer, // tp_hash
+#else
     (hashfunc)_Py_HashPointer, // tp_hash
+#endif
     0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
@@ -189,7 +193,11 @@ static PyTypeObject PyDefault_t_Type = {
     0, 0, 0, 0,
     default_repr,        // tp_repr
     0, 0, 0,
+#if PY_VERSION_HEX >= 0x030d0000
+    (hashfunc)Py_HashPointer, // tp_hash
+#else
     (hashfunc)_Py_HashPointer, // tp_hash
+#endif
     0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
@@ -888,41 +896,23 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args)
     Py_RETURN_NONE;
 }
 
-//----------------------------------------------------------------------------
-static PyObject* SetMemoryPolicy(PyObject*, PyObject* args)
-{
-// Set the global memory policy, which affects object ownership when objects
-// are passed as function arguments.
-    PyObject* policy = nullptr;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
-        return nullptr;
-
-    long old = (long)CallContext::sMemoryPolicy;
-
-    long l = PyInt_AS_LONG(policy);
-    if (CallContext::SetMemoryPolicy((CallContext::ECallFlags)l)) {
-        return PyInt_FromLong(old);
-    }
-
-    PyErr_Format(PyExc_ValueError, "Unknown policy %ld", l);
-    return nullptr;
+#define DEFINE_CALL_POLICY_TOGGLE(name, flagname) \
+static PyObject* name(PyObject*, PyObject* args) \
+{ \
+    PyObject* enabled = 0; \
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled)) \
+        return nullptr; \
+ \
+    if (CallContext::SetGlobalPolicy(CallContext::flagname, PyObject_IsTrue(enabled))) { \
+        Py_RETURN_TRUE; \
+    } \
+ \
+    Py_RETURN_FALSE; \
 }
 
-//----------------------------------------------------------------------------
-static PyObject* SetGlobalSignalPolicy(PyObject*, PyObject* args)
-{
-// Set the global signal policy, which determines whether a jmp address
-// should be saved to return to after a C++ segfault.
-    PyObject* setProtected = 0;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &setProtected))
-        return nullptr;
-
-    if (CallContext::SetGlobalSignalPolicy(PyObject_IsTrue(setProtected))) {
-        Py_RETURN_TRUE;
-    }
-
-    Py_RETURN_FALSE;
-}
+DEFINE_CALL_POLICY_TOGGLE(SetHeuristicMemoryPolicy, kUseHeuristics);
+DEFINE_CALL_POLICY_TOGGLE(SetImplicitSmartPointerConversion, kImplicitSmartPtrConversion);
+DEFINE_CALL_POLICY_TOGGLE(SetGlobalSignalPolicy, kProtected);
 
 //----------------------------------------------------------------------------
 static PyObject* SetOwnership(PyObject*, PyObject* args)
@@ -1009,10 +999,13 @@ static PyMethodDef gCPyCppyyMethods[] = {
       METH_O, (char*)"Install a type pinning."},
     {(char*) "_add_type_reducer", (PyCFunction)AddTypeReducer,
       METH_VARARGS, (char*)"Add a type reducer."},
-    {(char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
-      METH_VARARGS, (char*)"Determines object ownership model."},
-    {(char*) "SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy,
-      METH_VARARGS, (char*)"Trap signals in safe mode to prevent interpreter abort."},
+    {(char*) "SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
+      METH_VARARGS, (char*)"Set the global memory policy, which affects object ownership when objects are passed as function arguments."},
+    {(char*) "SetImplicitSmartPointerConversion", (PyCFunction)SetImplicitSmartPointerConversion,
+      METH_VARARGS, (char*)"Enable or disable the implicit conversion to smart pointers in function calls (on by default)."},
+    {(char *)"SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy, METH_VARARGS,
+     (char *)"Set the global signal policy, which determines whether a jmp address should be saved to return to after a "
+             "C++ segfault. In practical terms: trap signals in safe mode to prevent interpreter abort."},
     {(char*) "SetOwnership", (PyCFunction)SetOwnership,
       METH_VARARGS, (char*)"Modify held C++ object ownership."},
     {(char*) "AddSmartPtrType", (PyCFunction)AddSmartPtrType,
@@ -1056,21 +1049,18 @@ static struct PyModuleDef moduledef = {
     cpycppyymodule_clear,
     nullptr
 };
+#endif
 
+namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
-#define CPYCPPYY_INIT_ERROR return nullptr
-extern "C" PyObject* PyInit_libcppyy()
-#else
-#define CPYCPPYY_INIT_ERROR return
-extern "C" void initlibcppyy()
-#endif
+PyObject* Init()
 {
 // Initialization of extension module libcppyy.
 
 // load commonly used python strings
     if (!CPyCppyy::CreatePyStrings())
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // setup interpreter
 #if PY_VERSION_HEX < 0x03090000
@@ -1099,7 +1089,7 @@ extern "C" void initlibcppyy()
     gThisModule = Py_InitModule(const_cast<char*>("libcppyy"), gCPyCppyyMethods);
 #endif
     if (!gThisModule)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // keep gThisModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
@@ -1113,58 +1103,58 @@ extern "C" void initlibcppyy()
 
 // inject meta type
     if (!Utility::InitProxy(gThisModule, &CPPScope_Type, "CPPScope"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPInstance_Type, "CPPInstance"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject exception object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPExcInstance_Type, "CPPExcInstance"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject method proxy type
     if (!Utility::InitProxy(gThisModule, &CPPOverload_Type, "CPPOverload"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject template proxy type
     if (!Utility::InitProxy(gThisModule, &TemplateProxy_Type, "TemplateProxy"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject property proxy type
     if (!Utility::InitProxy(gThisModule, &CPPDataMember_Type, "CPPDataMember"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject custom data types
 #if PY_VERSION_HEX < 0x03000000
     if (!Utility::InitProxy(gThisModule, &RefFloat_Type, "Double"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &RefInt_Type, "Long"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 #endif
 
     if (!Utility::InitProxy(gThisModule, &CustomInstanceMethod_Type, "InstanceMethod"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &TupleOfInstances_Type, "InstanceArray"))
-       CPYCPPYY_INIT_ERROR;
+       return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &LowLevelView_Type, "LowLevelView"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &PyNullPtr_t_Type, "nullptr_t"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // custom iterators
     if (PyType_Ready(&InstanceArrayIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (PyType_Ready(&IndexIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (PyType_Ready(&VectorIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject identifiable nullptr and default
     gNullPtrObject = (PyObject*)&_CPyCppyy_NullPtrStruct;
@@ -1188,12 +1178,6 @@ extern "C" void initlibcppyy()
     gAbrtException = PyErr_NewException((char*)"cppyy.ll.AbortSignal", cppfatal, nullptr);
     PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
 
-// policy labels
-    PyModule_AddObject(gThisModule, (char*)"kMemoryHeuristics",
-        PyInt_FromLong((int)CallContext::kUseHeuristics));
-    PyModule_AddObject(gThisModule, (char*)"kMemoryStrict",
-        PyInt_FromLong((int)CallContext::kUseStrict));
-
 // gbl namespace is injected in cppyy.py
 
 // create the memory regulator
@@ -1201,6 +1185,8 @@ extern "C" void initlibcppyy()
 
 #if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);
-    return gThisModule;
 #endif
+    return gThisModule;
 }
+
+} // namespace CPyCppyy

@@ -1,0 +1,35 @@
+<lcgdict>
+  <class name="CaloDetDescrManager_Base"/>
+  <class name="CaloDetDescrManager"/>
+  <class name="CaloSuperCellDetDescrManager"/>
+  <class name="CaloDetDescrElement"/>
+  <class name="EMBDetectorElement"/>
+  <class name="EMECDetectorElement"/>
+  <class name="HECDetectorElement"/>
+  <class name="FCALDetectorElement"/>
+  <class name="TileDetectorElement"/>
+  <class name="DummyDetDescrElement"/>
+  <class name="CaloDetDescriptor"/>
+  <class name="CaloDepthTool"/>
+  <class name="CaloAlignTool"/>
+  <class name="EMBDescriptor"/>
+  <class name="EMECDescriptor"/>
+  <class name="FCALDescriptor"/>
+  <class name="HECDescriptor"/>
+  <class name="CaloPhiRange"/>
+  <class name="CaloSubdetNames"/>
+  <enum name="CaloSubdetNames::ALIGNVOL"/>
+  <class name="ICaloCoordinateTool"/>
+  <class name="ICaloRecoMaterialTool"/>
+  <class name="ICaloRecoSimpleGeomTool"/>
+
+  <class name="boost::iterator_range<std::vector<CaloDetDescriptor*>::const_iterator>"/>
+  <class name="std::vector<CaloDetDescriptor*>::const_iterator"/>
+//  <function proto_pattern="*operator==*CaloDetDescriptor*"/>
+//  <function proto_pattern="*operator!=*CaloDetDescriptor*"/>
+
+  <class name="boost::iterator_range<std::vector<CaloDetDescrElement*>::const_iterator>"/>
+  <class name="std::vector<CaloDetDescrElement*>::const_iterator"/>
+//  <function proto_pattern="*operator==*CaloDetDescrElement*"/>
+//  <function proto_pattern="*operator!=*CaloDetDescrElement*"/>
+</lcgdict>

@@ -21,7 +21,6 @@ A TLeaf for a 64 bit floating point data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafD.
@@ -88,8 +87,11 @@ void TLeafD::Import(TClonesArray *list, Int_t n)
    char *clone;
    for (Int_t i=0;i<n;i++) {
       clone = (char*)list->UncheckedAt(i);
-      if (clone) memcpy(&fValue[j],clone + fOffset, 8*fLen);
-      else       memcpy(&fValue[j],&kDoubleUndefined,  8*fLen);
+      if (clone)
+         memcpy(&fValue[j],clone + fOffset, 8*fLen);
+      else       
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kDoubleUndefined;
       j += fLen;
    }
 }

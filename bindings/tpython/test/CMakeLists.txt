@@ -10,12 +10,10 @@
 # because we are using PyROOT from C++. This environment mimics the one used in
 # ROOT_ADD_PYUNITTEST.
 if(MSVC)
-  set(tpython_gtest_env ROOTSYS=${ROOTSYS}
+  set(tpython_gtest_env
       PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
 else()
-  set(tpython_gtest_env ROOTSYS=${ROOTSYS}
-      PATH=${ROOTSYS}/bin:$ENV{PATH}
-      LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+  set(tpython_gtest_env
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
 endif()
 

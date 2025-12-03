@@ -21,7 +21,6 @@ equidistant or placed with value monotonically increasing from lower left corner
 of bounding box.
 */
 
-ClassImp(TEveProjectionAxes);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

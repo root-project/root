@@ -101,7 +101,6 @@ Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has be
 #include "TError.h"
 #include "TBits.h"
 
-ClassImp(TRefArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -342,13 +341,13 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
       return;
    }
    if (idx-fLowerBound >= fSize)
-      Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
+      Expand(std::max(idx-fLowerBound+1, GrowBy(fSize)));
 
    // Check if the object can belong here
    Int_t uid;
    if (GetObjectUID(uid, obj, "AddAtAndExpand")) {
       fUIDs[idx-fLowerBound] = uid;   // NOLINT
-      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      fLast = std::max(idx-fLowerBound, GetAbsLast());
       Changed();
    }
 }
@@ -366,7 +365,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
    Int_t uid;
    if (GetObjectUID(uid, obj, "AddAt")) {
       fUIDs[idx-fLowerBound] = uid;
-      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      fLast = std::max(idx-fLowerBound, GetAbsLast());
       Changed();
    }
 }
@@ -386,7 +385,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
             Int_t uid;
             if (GetObjectUID(uid, obj, "AddAtFree")) {
                fUIDs[i] = uid;    // NOLINT
-               fLast = TMath::Max(i, GetAbsLast());
+               fLast = std::max(i, GetAbsLast());
                Changed();
                return i+fLowerBound;
             }
@@ -845,7 +844,6 @@ Int_t TRefArray::BinarySearch(TObject *, Int_t)
 Iterator of object array.
 */
 
-ClassImp(TRefArrayIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create array iterator. By default the iteration direction

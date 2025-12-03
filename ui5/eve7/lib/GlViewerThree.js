@@ -326,6 +326,9 @@ sap.ui.define([
 
             this.controls.screenSpacePanning = true;
 
+            this.camera.far = extR * 5;
+            this.camera.near = extR > 1000 ? 1 : extR * 0.001;
+
             // console.log("resetThreejsRenderer 3D scene bbox ", sbbox, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
          else {
@@ -352,6 +355,9 @@ sap.ui.define([
             this.camera.right = ex;
             this.camera.top = ey;
             this.camera.bottom = -ey;
+
+            this.camera.far = extR * 5;
+            this.camera.near = extR > 1000 ? 1 : extR * 0.001;
 
             if (typeof this.controls.resetOrthoPanZoom == 'function')
                this.controls.resetOrthoPanZoom();

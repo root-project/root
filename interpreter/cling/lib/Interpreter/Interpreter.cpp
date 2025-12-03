@@ -14,6 +14,7 @@
 #endif
 #include "ClingUtils.h"
 
+#include "DeclCollector.h"
 #include "DynamicLookup.h"
 #include "EnterUserCodeRAII.h"
 #include "ExternalInterpreterSource.h"
@@ -41,6 +42,7 @@
 #include "cling/Utils/Output.h"
 #include "cling/Utils/SourceNormalization.h"
 
+#include "cling/Interpreter/CIFactory.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/Basic/SourceManager.h"
@@ -455,8 +457,17 @@ namespace cling {
     const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
 #else
     const char* LinkageCxx = Linkage;
+#ifdef __FreeBSD__
+// atexit-like commands need 'throw()' specifier on FreeBSD 15
+#if __FreeBSD_cc_version >= 1500000
+    const char* Attr = " throw () ";
+#else
     const char* Attr = "";
 #endif
+#else
+    const char* Attr = "";
+#endif // __FreeBSD__
+#endif // __GLIBC__
 
 #if defined(__GLIBCXX__)
     const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
@@ -1017,7 +1028,6 @@ namespace cling {
   Interpreter::codeComplete(const std::string& line, size_t& cursor,
                             std::vector<std::string>& completions) const {
 
-    const char * const argV = "cling";
     std::string resourceDir = this->getCI()->getHeaderSearchOpts().ResourceDir;
     // Remove the extra 3 directory names "/lib/clang/3.9.0"
     StringRef parentResourceDir = llvm::sys::path::parent_path(
@@ -1025,44 +1035,18 @@ namespace cling {
                                   llvm::sys::path::parent_path(resourceDir)));
     std::string llvmDir = parentResourceDir.str();
 
-    Interpreter childInterpreter(*this, 1, &argV, llvmDir.c_str());
-    if (!childInterpreter.isValid())
-      return kFailure;
+    // arguments for constructing CI
+    auto declCollector = std::make_unique<cling::DeclCollector>();
+    const ModuleFileExtensions& moduleExtensions = {};
 
-    auto childCI = childInterpreter.getCI();
-    clang::Sema &childSemaRef = childCI->getSema();
+    auto InterpCI = std::unique_ptr<clang::CompilerInstance>(
+        CIFactory::createCI("\n", getOptions(), llvmDir.c_str(),
+                            std::move(declCollector), moduleExtensions,
+                            /*AutoComplete=*/true));
 
-    // Create the CodeCompleteConsumer with InterpreterCallbacks
-    // from the parent interpreter and set the consumer for the child
-    // interpreter.
-    ClingCodeCompleteConsumer* consumer = new ClingCodeCompleteConsumer(
-                getCI()->getFrontendOpts().CodeCompleteOpts, completions);
-    // Child interpreter CI will own consumer!
-    childCI->setCodeCompletionConsumer(consumer);
-    childSemaRef.CodeCompleter = consumer;
-
-    // Ignore diagnostics when we tab complete.
-    // This is because we get redefinition errors due to the import of the decls.
-    clang::IgnoringDiagConsumer* ignoringDiagConsumer =
-                                            new clang::IgnoringDiagConsumer();
-    childSemaRef.getDiagnostics().setClient(ignoringDiagConsumer, true);
-    DiagnosticsEngine& parentDiagnostics = this->getCI()->getSema().getDiagnostics();
-
-    std::unique_ptr<DiagnosticConsumer> ownerDiagConsumer =
-                                                parentDiagnostics.takeClient();
-    auto clientDiagConsumer = parentDiagnostics.getClient();
-    parentDiagnostics.setClient(ignoringDiagConsumer, /*owns*/ false);
-
-    // The child will desirialize decls from *this. We need a transaction RAII.
-    PushTransactionRAII RAII(this);
-
-    // Triger the code completion.
-    childInterpreter.CodeCompleteInternal(line, cursor);
-
-    // Restore the original diagnostics client for parent interpreter.
-    parentDiagnostics.setClient(clientDiagConsumer,
-                                ownerDiagConsumer.release() != nullptr);
-    parentDiagnostics.Reset(/*soft=*/true);
+    auto CC = ClingCodeCompleter();
+    CC.codeComplete(InterpCI.get(), line, 1U, cursor + 1, this->getCI(),
+                    completions);
 
     return kSuccess;
   }

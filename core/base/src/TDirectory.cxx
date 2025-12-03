@@ -29,6 +29,9 @@
 
 #include "TSpinLockGuard.h"
 
+#include <algorithm>
+#include <limits>
+
 Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
@@ -45,7 +48,6 @@ static std::atomic_flag *GetCurrentDirectoryLock()
 Describe directory structure in memory.
 */
 
-ClassImp(TDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.

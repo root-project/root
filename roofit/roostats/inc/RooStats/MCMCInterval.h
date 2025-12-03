@@ -89,8 +89,9 @@ namespace RooStats {
       /// and change other internal data members accordingly
       virtual void SetParameters(const RooArgSet& parameters);
 
-      /// Set the MarkovChain that this interval is based on
-      virtual void SetChain(MarkovChain& chain) { fChain = &chain; }
+      /// Set the MarkovChain that this interval is based on.
+      /// \note The MCMCInterval object takes ownership of the passed MarkovChain.
+      virtual void SetChain(MarkovChain& chain) { fChain.reset(&chain); }
 
       /// Set which parameters go on which axis.  The first list element
       /// goes on the x axis, second (if it exists) on y, third (if it
@@ -195,7 +196,7 @@ namespace RooStats {
 
       /// Get the markov chain on which this interval is based
       /// You do not own the returned MarkovChain*
-      virtual const MarkovChain* GetChain() { return fChain; }
+      virtual const MarkovChain* GetChain() { return fChain.get(); }
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
@@ -280,19 +281,19 @@ namespace RooStats {
 
    protected:
       RooArgSet fParameters;         ///< parameters of interest for this interval
-      MarkovChain *fChain = nullptr; ///< the markov chain
+      std::unique_ptr<MarkovChain> fChain; ///< the markov chain
       double fConfidenceLevel = 0.0; ///< Requested confidence level (eg. 0.95 for 95% CL)
 
-      RooDataHist *fDataHist = nullptr; ///< the binned Markov Chain data
-      THnSparse *fSparseHist = nullptr; ///< the binned Markov Chain data
+      std::unique_ptr<RooDataHist> fDataHist; ///< the binned Markov Chain data
+      std::unique_ptr<THnSparse> fSparseHist; ///< the binned Markov Chain data
       double fHistConfLevel = 0.0;      ///< the actual conf level determined by hist
       double fHistCutoff = -1;          ///< cutoff bin size to be in interval
 
-      RooNDKeysPdf *fKeysPdf = nullptr;     ///< the kernel estimation pdf
-      RooProduct *fProduct = nullptr;       ///< the (keysPdf * heaviside) product
-      Heaviside *fHeaviside = nullptr;      ///< the Heaviside function
-      RooDataHist *fKeysDataHist = nullptr; ///< data hist representing product
-      RooRealVar *fCutoffVar = nullptr;     ///< cutoff variable to use for integrating keys pdf
+      std::unique_ptr<RooNDKeysPdf> fKeysPdf;     ///< the kernel estimation pdf
+      std::unique_ptr<RooProduct> fProduct;       ///< the (keysPdf * heaviside) product
+      std::unique_ptr<Heaviside> fHeaviside;      ///< the Heaviside function
+      std::unique_ptr<RooDataHist> fKeysDataHist; ///< data hist representing product
+      std::unique_ptr<RooRealVar> fCutoffVar;     ///< cutoff variable to use for integrating keys pdf
       double fKeysConfLevel = 0.0;          ///< the actual conf level determined by keys
       double fKeysCutoff = -1;              ///< cutoff keys pdf value to be in interval
       double fFull = 0.0;                   ///< Value of intergral of fProduct
@@ -304,7 +305,7 @@ namespace RooStats {
       double fTFLower;            ///< lower limit of the tail-fraction interval
       double fTFUpper;            ///< upper limit of the tail-fraction interval
 
-      TH1 *fHist = nullptr; ///< the binned Markov Chain data
+      std::unique_ptr<TH1> fHist; ///< the binned Markov Chain data
 
       bool fUseKeys = false;        ///< whether to use kernel estimation
       bool fUseSparseHist = false;  ///< whether to use sparse hist (vs. RooDataHist)
@@ -315,7 +316,7 @@ namespace RooStats {
       Int_t fDimension = 1;         ///< number of variables
       Int_t fNumBurnInSteps = 0;    ///< number of steps to discard as burn in, starting
                                     ///< from the first
-      RooRealVar **fAxes = nullptr; ///< array of pointers to RooRealVars representing
+      std::vector<RooRealVar*> fAxes; ///< array of pointers to RooRealVars representing
                                     ///< the axes of the histogram
                                     ///< fAxes[0] represents x-axis, [1] y, [2] z, etc
 
@@ -344,7 +345,7 @@ namespace RooStats {
       virtual void CreateVector(RooRealVar* param);
       inline virtual double CalcConfLevel(double cutoff, double full);
 
-      ClassDefOverride(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
+      ClassDefOverride(MCMCInterval,2)  // Concrete implementation of a ConfInterval based on MCMC calculation
 
    };
 }

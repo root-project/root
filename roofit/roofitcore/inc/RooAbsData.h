@@ -195,10 +195,10 @@ public:
   } ;
 
   // Split a dataset by a category
-  virtual RooFit::OwningPtr<TList> split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const ;
+  std::vector<std::unique_ptr<RooAbsData>> split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const;
 
   // Split a dataset by categories of a RooSimultaneous
-  virtual RooFit::OwningPtr<TList> split(const RooSimultaneous& simpdf, bool createEmptyDataSets=false) const ;
+  std::vector<std::unique_ptr<RooAbsData>> split(const RooSimultaneous& simpdf, bool createEmptyDataSets=false) const;
 
   // Fast splitting for SimMaster setData
   bool canSplitFast() const ;
@@ -236,6 +236,9 @@ public:
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
+  /// Print the contents of the dataset to the specified output stream.
+  virtual void printContents(std::ostream& os = std::cout) const = 0;
+  
   void setDirtyProp(bool flag) ;
 
   double moment(const RooRealVar& var, double order, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;

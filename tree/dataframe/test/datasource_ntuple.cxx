@@ -15,9 +15,11 @@
 
 #include <limits>
 
+#include <TFile.h>
+
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
-using ROOT::Experimental::Internal::RPageSource;
+using ROOT::Internal::RPageSource;
 using ROOT::RDF::RNTupleDS;
 
 namespace {
@@ -453,7 +455,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 
    auto multipleAlternativeTypes =
       df.Define("nJets", [](const std::vector<float> &jets) { return jets.size(); }, {"jets"})
-         .Define("smallestJet", [](const std::set<float> &jets) { return *(jets.begin()); }, {"jets"})
+         .Define("smallestJet", [](const std::multiset<float> &jets) { return *(jets.begin()); }, {"jets"})
          .Min<float>("smallestJet")
          .GetValue();
    EXPECT_FLOAT_EQ(1.f, multipleAlternativeTypes);
@@ -806,4 +808,23 @@ TEST(RNTupleDS, TDirectory)
    RNTupleDS ds("a/b/ntuple", fileGuard.GetPath());
    EXPECT_EQ(1ull, ds.GetNFiles());
    EXPECT_EQ(std::vector<std::string>{"x"}, ds.GetColumnNames());
+}
+
+TEST(RNTupleDS, Int8)
+{
+   FileRAII fileGuard("test_rntupleds_int8.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int8_t>("x");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+      }
+   }
+
+   ROOT::RDataFrame df("ntuple", fileGuard.GetPath());
+   std::vector<std::int8_t> expected{0, 1, 2, 3, 4};
+   EXPECT_EQ(expected, df.Take<std::int8_t>("x").GetValue());
 }

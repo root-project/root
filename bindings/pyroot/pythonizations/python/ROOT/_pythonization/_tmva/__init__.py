@@ -22,32 +22,40 @@ from ._crossvalidation import CrossValidation
 
 from ._rbdt import Compute, pythonize_rbdt
 
-from ._batchgenerator import (
-    CreateNumPyGenerators,
-    CreateTFDatasets,
-    CreatePyTorchGenerators,
-)
-
-python_batchgenerator_functions = [
-    CreateNumPyGenerators,
-    CreateTFDatasets,
-    CreatePyTorchGenerators,
-]
 
 def inject_rbatchgenerator(ns):
+    from ._batchgenerator import (
+        CreateNumPyGenerators,
+        CreateTFDatasets,
+        CreatePyTorchGenerators,
+    )
+
+    python_batchgenerator_functions = [
+        CreateNumPyGenerators,
+        CreateTFDatasets,
+        CreatePyTorchGenerators,
+    ]
+
     for python_func in python_batchgenerator_functions:
         func_name = python_func.__name__
         setattr(ns.Experimental, func_name, python_func)
 
     return ns
 
+
 from ._gnn import RModel_GNN, RModel_GraphIndependent
 
 hasRDF = "dataframe" in cppyy.gbl.ROOT.GetROOT().GetConfigFeatures()
 if hasRDF:
-    from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor, _AsRTensor
+    from ._rtensor import (
+        get_array_interface,
+        add_array_interface_property,
+        RTensorGetitem,
+        pythonize_rtensor,
+        _AsRTensor,
+    )
 
-#this should be available only when xgboost is there ?
+# this should be available only when xgboost is there ?
 # We probably don't need a protection here since the code is run only when there is xgboost
 from ._tree_inference import SaveXGBoost
 
@@ -67,7 +75,15 @@ def get_defined_attributes(klass, consider_base_classes=False):
     any of its base classes (except for `object`).
     """
 
-    blacklist = ["__dict__", "__doc__", "__hash__", "__module__", "__weakref__", "__firstlineno__", "__static_attributes__"]
+    blacklist = [
+        "__dict__",
+        "__doc__",
+        "__hash__",
+        "__module__",
+        "__weakref__",
+        "__firstlineno__",
+        "__static_attributes__",
+    ]
 
     if not consider_base_classes:
         return sorted([attr for attr in klass.__dict__.keys() if attr not in blacklist])

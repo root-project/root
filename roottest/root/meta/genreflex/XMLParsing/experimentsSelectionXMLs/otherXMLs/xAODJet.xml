@@ -1,0 +1,50 @@
+<!-- $Id: selection.xml 591872 2014-04-08 09:15:01Z krasznaa $ -->
+<lcgdict>
+
+  <!-- Jet_v1 dictionaries: -->
+  <class name="xAOD::Jet_v1" >
+    <field name="m_pxpypze" transient="true" />
+    <field name="m_pxpypzeCached" transient="true" />
+    <field name="m_momentum" transient="true" />
+    <field name="m_momentumCached" transient="true" />
+    <field name="m_assoParticleCache" transient="true" />
+    <field name="m_fastJetLink" transient="true" />
+  </class>
+  <read sourceClass="xAOD::Jet_v1" version="[1-]"
+        targetClass="xAOD::Jet_v1" source="" target="m_pxpypzeCached" >
+    <![CDATA[
+       m_pxpypzeCached = false;
+       newObj->reset();
+    ]]>
+  </read>
+
+<!--  <class name="std::vector< xAOD::JetFourMom_t >" /> -->
+
+  <class name="xAOD::JetContainer_v1"
+         id="646342DF-D1E1-422A-975D-EA6DBF13CB6D" />
+  <class name="xAOD::JetAuxContainer_v1"
+         id="17E48A73-2219-44A0-8913-D59DB61F4B15" />
+  <class name="xAOD::JetTrigAuxContainer_v1"
+         id="89AE2C6B-A862-499C-8BDA-11D24FAC83F1" />
+
+  <!-- Smart pointers to Jet_v1: -->
+  <class name="DataLink<xAOD::JetContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::JetContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::JetContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::JetContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::JetContainer_v1> > >" />
+
+  <class name="ElementLinkVector<xAOD::JetContainer_v1>" />
+  <class name="std::vector<ElementLinkVector<xAOD::JetContainer_v1> >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class pattern="ElementLink<DataVector<xAOD::IParticle*" />
+  </exclusion>
+
+</lcgdict>

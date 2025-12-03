@@ -1514,8 +1514,11 @@ namespace TStreamerInfoActions
    template<typename Looper>
    struct CollectionLooper {
 
+      /// \param loopConfig pointer ownership stays at the caller, a copy is performed and transferred to the
+      /// TActionSequence class (stored as public fLoopConfig internally, will be deleted in destructor) \return unique
+      /// pointer of type TActionSequence
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateReadActionSquence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
+      CreateReadActionSequence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
       {
          TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
          std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
@@ -1523,8 +1526,11 @@ namespace TStreamerInfoActions
          return actions;
       }
 
+      /// \param loopConfig pointer ownership stays at the caller, a copy is performed and transferred to the
+      /// TActionSequence class (stored as public fLoopConfig internally, will be deleted in destructor) \return unique
+      /// pointer of type TActionSequence
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateWriteActionSquence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
+      CreateWriteActionSequence(TStreamerInfo &info, TLoopConfiguration *loopConfig)
       {
          TLoopConfiguration *localLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
          std::unique_ptr<TStreamerInfoActions::TActionSequence> actions(
@@ -2474,14 +2480,14 @@ namespace TStreamerInfoActions
       using WriteStreamerLoop = CollectionLooper<VectorPtrLooper>::WriteStreamerLoop<kIsText, const void *>;
 
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateReadActionSquence(TStreamerInfo &info, TLoopConfiguration *)
+      CreateReadActionSequence(TStreamerInfo &info, TLoopConfiguration *)
       {
          using unique_ptr = std::unique_ptr<TStreamerInfoActions::TActionSequence>;
          return unique_ptr(info.GetReadMemberWiseActions(kTRUE)->CreateCopy());
       }
 
       static std::unique_ptr<TStreamerInfoActions::TActionSequence>
-         CreateWriteActionSquence(TStreamerInfo &info, TLoopConfiguration *)
+      CreateWriteActionSequence(TStreamerInfo &info, TLoopConfiguration *)
       {
          using unique_ptr = std::unique_ptr<TStreamerInfoActions::TActionSequence>;
          return unique_ptr(info.GetWriteMemberWiseActions(kTRUE)->CreateCopy());
@@ -3706,8 +3712,7 @@ GetCollectionReadAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopConf
          if (baseEl) {
             auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
             assert(baseinfo);
-            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
-            auto baseActions = Looper::CreateReadActionSquence(*baseinfo, baseLoopConfig);
+            auto baseActions = Looper::CreateReadActionSequence(*baseinfo, loopConfig);
             baseActions->AddToOffset(baseEl->GetOffset());
             return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
@@ -4026,8 +4031,7 @@ GetCollectionWriteAction(TVirtualStreamerInfo *info, TLoopConfiguration *loopCon
          if (baseEl) {
             auto baseinfo = (TStreamerInfo *)baseEl->GetBaseStreamerInfo();
             assert(baseinfo);
-            TLoopConfiguration *baseLoopConfig = loopConfig ? loopConfig->Copy() : nullptr;
-            auto baseActions = Looper::CreateWriteActionSquence(*baseinfo, baseLoopConfig);
+            auto baseActions = Looper::CreateWriteActionSequence(*baseinfo, loopConfig);
             baseActions->AddToOffset(baseEl->GetOffset());
             return TConfiguredAction( Looper::SubSequenceAction, new TConfSubSequence(info, i, compinfo, 0, std::move(baseActions)));
 
@@ -5309,7 +5313,10 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the collection described by 'proxy'
+/// Create the bundle of the actions necessary for the streaming memberwise of the content described by 'info' into the
+/// collection described by 'proxy' \param loopConfig pointer ownership is taken from the caller and transferred to the
+/// TActionSequence class (stored as public fLoopConfig internally, will be deleted in destructor) \return new
+/// `sequence` pointer of type TActionSequence, the memory ownership is transferred to caller, must delete it later
 
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig)
 {

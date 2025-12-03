@@ -1,0 +1,170 @@
+From fbaa6490ceb3d7370f94116e6de01756426ddd87 Mon Sep 17 00:00:00 2001
+From: Vipul Cariappa <vipulcariappa@gmail.com>
+Date: Tue, 22 Jul 2025 17:15:35 +0200
+Subject: [PATCH] [CPyCppyy] fix usage of Python GIL to support threading
+
+---
+ .../pyroot/cppyy/CPyCppyy/src/DispatchPtr.cxx | 27 +++++++++++++------
+ .../pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx  | 14 +++++++---
+ 2 files changed, 30 insertions(+), 11 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DispatchPtr.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/DispatchPtr.cxx
+index 5affdd21203..cf766225a08 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/DispatchPtr.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/DispatchPtr.cxx
+@@ -10,23 +10,25 @@
+ //-----------------------------------------------------------------------------
+ PyObject* CPyCppyy::DispatchPtr::Get(bool borrowed) const
+ {
++    PyGILState_STATE state = PyGILState_Ensure();
++    PyObject* result = nullptr;
+     if (fPyHardRef) {
+         if (!borrowed) Py_INCREF(fPyHardRef);
+-        return fPyHardRef;
+-    }
+-    if (fPyWeakRef) {
+-        PyObject* disp = CPyCppyy_GetWeakRef(fPyWeakRef);
+-        if (disp) {               // dispatcher object disappeared?
+-            if (borrowed) Py_DECREF(disp);
+-            return disp;
++        result = fPyHardRef;
++    } else if (fPyWeakRef) {
++        result = CPyCppyy_GetWeakRef(fPyWeakRef);
++        if (result) {               // dispatcher object disappeared?
++            if (borrowed) Py_DECREF(result);
+         }
+     }
+-    return nullptr;
++    PyGILState_Release(state);
++    return result;
+ }
+ 
+ //-----------------------------------------------------------------------------
+ CPyCppyy::DispatchPtr::DispatchPtr(PyObject* pyobj, bool strong) : fPyHardRef(nullptr)
+ {
++    PyGILState_STATE state = PyGILState_Ensure();
+     if (strong) {
+         Py_INCREF(pyobj);
+         fPyHardRef = pyobj;
+@@ -36,15 +38,18 @@ CPyCppyy::DispatchPtr::DispatchPtr(PyObject* pyobj, bool strong) : fPyHardRef(nu
+         fPyWeakRef = PyWeakref_NewRef(pyobj, nullptr);
+     }
+     ((CPPInstance*)pyobj)->SetDispatchPtr(this);
++    PyGILState_Release(state);
+ }
+ 
+ //-----------------------------------------------------------------------------
+ CPyCppyy::DispatchPtr::DispatchPtr(const DispatchPtr& other, void* cppinst) : fPyWeakRef(nullptr)
+ {
++    PyGILState_STATE state = PyGILState_Ensure();
+     PyObject* pyobj = other.Get(false /* not borrowed */);
+     fPyHardRef = pyobj ? (PyObject*)((CPPInstance*)pyobj)->Copy(cppinst) : nullptr;
+     if (fPyHardRef) ((CPPInstance*)fPyHardRef)->SetDispatchPtr(this);
+     Py_XDECREF(pyobj);
++    PyGILState_Release(state);
+ }
+ 
+ //-----------------------------------------------------------------------------
+@@ -53,6 +58,7 @@ CPyCppyy::DispatchPtr::~DispatchPtr() {
+ // of a dispatcher intermediate, then this delete is from the C++ side, and Python
+ // is "notified" by nulling out the reference and an exception will be raised on
+ // continued access
++    PyGILState_STATE state = PyGILState_Ensure();
+     if (fPyWeakRef) {
+         PyObject* pyobj = CPyCppyy_GetWeakRef(fPyWeakRef);
+         if (pyobj && ((CPPScope*)Py_TYPE(pyobj))->fFlags & CPPScope::kIsPython)
+@@ -63,11 +69,13 @@ CPyCppyy::DispatchPtr::~DispatchPtr() {
+         ((CPPInstance*)fPyHardRef)->GetObjectRaw() = nullptr;
+         Py_DECREF(fPyHardRef);
+     }
++    PyGILState_Release(state);
+ }
+ 
+ //-----------------------------------------------------------------------------
+ CPyCppyy::DispatchPtr& CPyCppyy::DispatchPtr::assign(const DispatchPtr& other, void* cppinst)
+ {
++    PyGILState_STATE state = PyGILState_Ensure();
+     if (this != &other) {
+         Py_XDECREF(fPyWeakRef); fPyWeakRef = nullptr;
+         Py_XDECREF(fPyHardRef);
+@@ -76,6 +84,7 @@ CPyCppyy::DispatchPtr& CPyCppyy::DispatchPtr::assign(const DispatchPtr& other, v
+         if (fPyHardRef) ((CPPInstance*)fPyHardRef)->SetDispatchPtr(this);
+         Py_XDECREF(pyobj);
+     }
++    PyGILState_Release(state);
+     return *this;
+ }
+ 
+@@ -93,8 +102,10 @@ void CPyCppyy::DispatchPtr::PythonOwns()
+ void CPyCppyy::DispatchPtr::CppOwns()
+ {
+ // C++ maintains the hardref, keeping the PyObject alive w/o outstanding ref
++    PyGILState_STATE state = PyGILState_Ensure();
+     if (fPyWeakRef) {
+         fPyHardRef = CPyCppyy_GetWeakRef(fPyWeakRef);
+         Py_DECREF(fPyWeakRef); fPyWeakRef = nullptr;
+     }
++    PyGILState_Release(state);
+ }
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+index 06731d6d85d..b5f8eb38aed 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+@@ -41,7 +41,9 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
+ // possible crash
+     code << "    PyObject* iself = (PyObject*)_internal_self;\n"
+             "    if (!iself || iself == Py_None) {\n"
++            "      PyGILState_STATE state = PyGILState_Ensure();\n"
+             "      PyErr_Warn(PyExc_RuntimeWarning, (char*)\"Call attempted on deleted python-side proxy\");\n"
++            "      PyGILState_Release(state);\n"
+             "      return";
+     if (retType != "void") {
+         if (retType.back() != '*')
+@@ -50,12 +52,13 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
+             code << " nullptr";
+     }
+     code << ";\n"
+-            "    }\n"
+-            "    Py_INCREF(iself);\n";
++            "    }\n";
+ 
+ // start actual function body
+     Utility::ConstructCallbackPreamble(retType, argtypes, code);
+ 
++    code << "    Py_INCREF(iself);\n";
++
+ // perform actual method call
+ #if PY_VERSION_HEX < 0x03000000
+     code << "    PyObject* mtPyName = PyString_FromString(\"" << mtCppName << "\");\n" // TODO: intern?
+@@ -238,6 +241,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
+ // object goes before the C++ one, only __del__ is called)
+     if (PyMapping_HasKeyString(dct, (char*)"__destruct__")) {
+         code << "  virtual ~" << derivedName << "() {\n"
++                "PyGILState_STATE state = PyGILState_Ensure();\n"
+                 "    PyObject* iself = (PyObject*)_internal_self;\n"
+                 "    if (!iself || iself == Py_None)\n"
+                 "      return;\n"      // safe, as destructor always returns void
+@@ -250,6 +254,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
+     // magic C++ exception ...
+         code << "      if (!pyresult) PyErr_Print();\n"
+                 "      else { Py_DECREF(pyresult); }\n"
++                "      PyGILState_Release(state);\n"
+                 "  }\n";
+     } else
+         code << "  virtual ~" << derivedName << "() {}\n";
+@@ -450,8 +455,11 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
+ 
+ // provide an accessor to re-initialize after round-tripping from C++ (internal)
+     code << "\n  static PyObject* _get_dispatch(" << derivedName << "* inst) {\n"
++            "    PyGILState_STATE state = PyGILState_Ensure();\n"
+             "    PyObject* res = (PyObject*)inst->_internal_self;\n"
+-            "    Py_XINCREF(res); return res;\n  }";
++            "    Py_XINCREF(res);\n"
++            "    PyGILState_Release(state);\n"
++            "    return res;\n  }";
+ 
+ // finish class declaration
+     code << "};\n}";
+-- 
+2.50.1
+

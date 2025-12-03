@@ -26,8 +26,8 @@ use THashList instead.
 #include "TList.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TMathBase.h"
 
-ClassImp(THashTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashTable object. Capacity is the initial hashtable capacity
@@ -48,7 +48,7 @@ THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
    } else if (capacity == 0)
       capacity = TCollection::kInitHashTableCapacity;
 
-   fSize = (Int_t)TMath::NextPrime(TMath::Max(capacity,(int)TCollection::kInitHashTableCapacity));
+   fSize = (Int_t)TMath::NextPrime(std::max(capacity,(int)TCollection::kInitHashTableCapacity));
    fCont = new TList* [fSize];
    memset(fCont, 0, fSize*sizeof(TList*));
 
@@ -464,7 +464,6 @@ TObject *THashTable::RemoveSlow(TObject *obj)
 Iterator of hash table.
 */
 
-ClassImp(THashTableIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a hashtable iterator. By default the iteration direction

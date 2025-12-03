@@ -39,7 +39,6 @@ TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
 TVirtualX*   (*gPtr2VirtualX)() = nullptr; // returns pointer to global object
 
 
-ClassImp(TVirtualX);
 
 
 ////////////////////////////////////////////////////////////////////////////////

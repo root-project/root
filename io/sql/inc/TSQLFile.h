@@ -13,7 +13,7 @@
 #define ROOT_TSQLFile
 
 #include "TFile.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 class TList;
 class TStreamerElement;
@@ -205,7 +205,7 @@ public:
    void StopLogFile();                   // *MENU*
 
    void Close(Option_t *option = "") final; // *MENU*
-   TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t bufsize)  final;
+   TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t bufsize) final;
    TKey *CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t bufsize) final;
    void DrawMap(const char * = "*", Option_t * = "") final {}
    void FillBuffer(char *&) final {}

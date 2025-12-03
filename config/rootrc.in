@@ -218,7 +218,7 @@ Gui.MimeTypeFile:            $(HOME)/.root.mimes
 Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
 # F: File browser E: Text Editor H: HTML browser
-# C: Canvas I: I/O redirection P: Proof G: GL viewer
+# C: Canvas I: I/O redirection G: GL viewer
 Browser.Options:             FCEI
 # Can be either small, big, list, details
 Browser.IconStyle:           small
@@ -242,6 +242,9 @@ GeomPainter.Name:            @root_geompainter_type@
 # THttpServer specific settings
 # location of JavaScript ROOT sources
 #HttpServ.JSRootPath:        @jsrootdir@
+# Default setting for enabling or disabling JSROOT.
+# This can be toggled in the notebook using the `%jsroot on/off` command.
+Jupyter.JSRoot:               @root_jupyter_jsroot@
 
 # WebGui specific settings (defaults are shown)
 # fixed http port number for server, 0 - not fixed, -1 - disabled completely
@@ -380,35 +383,6 @@ ACLiC.Linkdef:          _linkdef
 # Add extra options to rootcling invocation by ACLiC
 #ACLiC.ExtraRootclingFlags:      [-optA ... -optZ]
 
-# PROOF related variables
-#
-# PROOF debug options.
-# Proof.DebugLevel:     0
-# Proof.DebugMask:      -1
-#
-# PROOF GDB hooks
-# allows a debugger to be attached early in the startup phase of proofserv
-#  0 - don't wait
-#  1 - master proofserv enters wait loop
-#  2 - slave proofserv enters wait loop
-#  3 - any proofserv enters wait loop
-#
-# Proof.GdbHook: 0
-#
-# To control the number of processes in PROOF-Lite (0 disables PROOF-Lite).
-# This setting cannot be overwritten in the user rootrc files.
-# ProofLite.MaxWorkers: -1
-#
-# On the master enable parallel startup of workers using threads
-# Proof.ParallelStartup: no
-#
-# Proof.StatsHist:       no
-# Proof.StatsTrace:      no
-# Proof.SlaveStatsTrace: no
-#
-# Proof.CondorHome:     /opt/condor
-# Proof.CondorConfig:   /opt/condor/etc/condor_config
-
 # Connection is shutdown at timeout expiration. Timeout is in seconds.
 # Negotiation cannot be attempted at low level (i.e. inside
 # TAuthenticate::Authenticate()) because of synchronization
@@ -478,6 +452,9 @@ RSA.KeyType:  1
 
 # Control the usage of asynchronous prefetching capabilities irrespective
 # of the TFile implementation. By default it is disabled.
+# In conjunction with a TFileCacheRead (for example the TTreeCache), it
+# will asynchronously grab early the compressed data of the 'next' cluster
+# while the current cluster is being processed (ie is subject of GetEntry)
 #TFile.AsyncPrefetching:   no
 
 # Enable cross-protocol redirects
@@ -504,12 +481,6 @@ TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 # Extend in private .rootrc with a +Url.Special line.
 Url.Special:         file: hpss: dcache:
 +Url.Special:        /alien/-
-
-# PROOF XRD client variables
-# Debug level (<0 : errors, 0 : minimal, 1 : low, 2 : medium, 3 : high) [-1]
-# XProof.Debug:  0
-# Socket read timeout [in secs: default 10 secs]
-# XProof.ReadTimeout: 10
 
 # XNet.Debug            - log verbosity level (default 0)
 #                         (0 = nothing,

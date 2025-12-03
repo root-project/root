@@ -39,14 +39,11 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 // clang-format off
 /**
- * \class ROOT::Internal::RDF::RInterfaceBase
+ * \class ROOT::RDF::RInterfaceBase
  * \ingroup dataframe
- * \brief The public interface to the RDataFrame federation of classes.
- * \tparam Proxied One of the "node" base types (e.g. RLoopManager, RFilterBase). The user never specifies this type manually.
- * \tparam DataSource The type of the RDataSource which is providing the data to the data frame. There is no source by default.
+ * \brief The base public interface to the RDataFrame federation of classes.
  *
- * The documentation of each method features a one liner illustrating how to use the method, for example showing how
- * the majority of the template parameters are automatically deduced requiring no or very little effort by the user.
+ * This class contains common methods for all RInterface instantiations.
  */
 // clang-format on
 class RInterfaceBase {
@@ -74,7 +71,7 @@ protected:
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {
-         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister,
                                          GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
@@ -148,6 +145,13 @@ protected:
          RDFInternal::AddDSColumns(validCols, *fLoopManager, *dataSource, typeList, fColRegister);
    }
 
+   void CheckAndFillDSColumns(const std::vector<std::string> &colNames,
+                              const std::vector<const std::type_info *> &colTypeIDs)
+   {
+      if (auto dataSource = GetDataSource())
+         RDFInternal::AddDSColumns(colNames, *fLoopManager, *dataSource, colTypeIDs, fColRegister);
+   }
+
    /// Create RAction object, return RResultPtr for the action
    /// Overload for the case in which all column types were specified (no jitting).
    /// For most actions, `r` and `helperArg` will refer to the same object, because the only argument to forward to
@@ -189,7 +193,6 @@ protected:
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
-      auto *tree = fLoopManager->GetTree();
       auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(proxiedPtr));
@@ -199,7 +202,7 @@ protected:
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
       auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
-                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
+                                               typeid(ActionTag), helperArgOnHeap, nullptr, nSlots, fColRegister,
                                                GetDataSource(), jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));

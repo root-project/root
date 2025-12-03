@@ -9,7 +9,6 @@
 
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnUserParameterState.h"
-#include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/HessianGradientCalculator.h"
@@ -23,7 +22,7 @@
 #include "Minuit2/MnPrint.h"
 
 #include "./MPIProcess.h"
-#include "./MnFcnCaller.h"
+#include "Minuit2/MnFcn.h"
 
 #include "Math/Util.h"
 
@@ -50,11 +49,9 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    // interface from MnUserParameterState
    // create a new Minimum state and use that interface
    unsigned int n = state.VariableParameters();
-   MnUserFcn mfcn(fcn, state.Trafo(), state.NFcn());
-   MnAlgebraicVector x(n);
-   for (unsigned int i = 0; i < n; i++)
-      x(i) = state.IntParameters()[i];
-   double amin = mfcn(x);
+   MnFcn mfcn{fcn, state.Trafo(), static_cast<int>(state.NFcn())};
+   MnAlgebraicVector x(state.IntParameters());
+   double amin = MnFcnCaller{mfcn}(x);
    MinimumParameters par(x, amin);
    // check if we can use analytical gradient
    if (fcn.HasGradient()) {
@@ -79,7 +76,7 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
    // interface from FunctionMinimum to be used after minimization
    // use last state from the minimization without the need to re-create a new state
    // do not reset function calls and keep updating them
-   MnUserFcn mfcn(fcn, min.UserState().Trafo(), min.NFcn());
+   MnFcn mfcn{fcn, min.UserState().Trafo(), min.NFcn()};
    MinimumState st = (*this)(mfcn, min.State(), min.UserState().Trafo(), maxcalls);
    min.Add(st);
 }
@@ -313,7 +310,7 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
 
    print.Debug("Second derivatives", g2);
 
-   if (strat.Strategy() > 0) {
+   if (strat.RefineGradientInHessian()) {
       // refine first derivative
       HessianGradientCalculator hgc(mfcn, trafo, strat);
       FunctionGradient gr = hgc(st.Parameters(), FunctionGradient(grd, g2, gst));
