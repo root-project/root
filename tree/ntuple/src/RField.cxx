@@ -565,14 +565,15 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::string_view ty
 {
 }
 
-void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields)
+void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields, bool useNumberedFields)
 {
    fTraits |= kTraitTrivialType;
-   for (auto &item : itemFields) {
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
-      fTraits &= item->GetTraits();
-      Attach(std::move(item));
+   const auto N = itemFields.size();
+   for (std::size_t i = 0; i < N; ++i) {
+      fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
+      fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
+      fTraits &= itemFields[i]->GetTraits();
+      Attach(std::move(itemFields[i]), useNumberedFields ? ("_" + std::to_string(i)) : "");
    }
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
    // requirements of the type with strictest alignment
@@ -845,7 +846,7 @@ ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::stri
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = typePrefix + "<" + itemField->GetTypeAlias() + ">";
 
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RNullableField::GetColumnRepresentations() const
@@ -1190,7 +1191,7 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFi
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "std::atomic<" + itemField->GetTypeAlias() + ">";
 
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view newName) const
