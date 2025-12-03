@@ -401,7 +401,7 @@ public:
       for (auto &item : itemFields) {
          fOffsets.push_back(GetItemPadding(fSize, item->GetAlignment()));
       }
-      AttachItemFields(std::move(itemFields));
+      AttachItemFields(std::move(itemFields), false /* useNumberedFields */);
    }
 };
 } // namespace ROOT::Experimental::Internal
