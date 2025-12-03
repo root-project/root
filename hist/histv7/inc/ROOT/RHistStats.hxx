@@ -366,8 +366,13 @@ private:
    template <std::size_t I, typename... A>
    void FillImpl(const std::tuple<A...> &args)
    {
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
       if (fDimensionStats[I].fEnabled) {
-         fDimensionStats[I].Add(std::get<I>(args));
+         if constexpr (std::is_convertible_v<ArgumentType, double>) {
+            fDimensionStats[I].Add(std::get<I>(args));
+         } else {
+            throw std::invalid_argument("invalid type of argument in RHistStats");
+         }
       }
       if constexpr (I + 1 < sizeof...(A)) {
          FillImpl<I + 1>(args);
@@ -377,8 +382,15 @@ private:
    template <std::size_t I, std::size_t N, typename... A>
    void FillImpl(const std::tuple<A...> &args, double w)
    {
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
       if (fDimensionStats[I].fEnabled) {
-         fDimensionStats[I].Add(std::get<I>(args), w);
+         if constexpr (std::is_convertible_v<ArgumentType, double>) {
+            fDimensionStats[I].Add(std::get<I>(args), w);
+         } else {
+            // Avoid compiler warning about unused parameter...
+            (void)w;
+            throw std::invalid_argument("invalid type of argument in RHistStats");
+         }
       }
       if constexpr (I + 1 < N) {
          FillImpl<I + 1, N>(args, w);
