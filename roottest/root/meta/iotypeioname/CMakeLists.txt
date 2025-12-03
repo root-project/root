@@ -1,6 +1,7 @@
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes
                                     classes.h
                                     SELECTION classes_selection.xml
+                                    LIBRARIES GenVector
                                     FIXTURES_SETUP root-meta-iotypeioname-dict-fixture)
 
 ROOTTEST_ADD_TEST(ionameiotype

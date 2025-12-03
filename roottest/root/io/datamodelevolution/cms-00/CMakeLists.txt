@@ -27,6 +27,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(libDataModelV1_dictrflx
                   SELECTION DataModelV1_selection.xml
                   LIBNAME libDataModelV1_dictrflx
                   NO_ROOTMAP
+                  LIBRARIES Smatrix
                   FIXTURES_SETUP root-io-datamodelevolution-cms-00-libDataModelV1_dictrflx-fixture)
 
 ROOTTEST_GENERATE_DICTIONARY(libDataModelV2_dictcint
@@ -40,6 +41,7 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(libDataModelV2_dictrflx
                   SELECTION DataModelV2_selection.xml
                   LIBNAME libDataModelV2_dictrflx
                   NO_ROOTMAP
+                  LIBRARIES Smatrix
                   FIXTURES_SETUP root-io-datamodelevolution-cms-00-libDataModelV2_dictrflx-fixture)
 
 ROOTTEST_COMPILE_MACRO(test1.cxx
