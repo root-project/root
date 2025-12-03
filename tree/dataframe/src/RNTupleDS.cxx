@@ -58,9 +58,9 @@ namespace ROOT::Internal::RDF {
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
 class RRDFCardinalityField final : public ROOT::RFieldBase {
 protected:
-   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view /* newName */) const final
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RRDFCardinalityField>();
+      return std::make_unique<RRDFCardinalityField>(newName);
    }
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
@@ -68,7 +68,10 @@ protected:
    void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
 public:
-   RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */) {}
+   RRDFCardinalityField(std::string_view name)
+      : ROOT::RFieldBase(name, "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */)
+   {
+   }
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() override = default;
@@ -121,9 +124,9 @@ class RArraySizeField final : public ROOT::RFieldBase {
 private:
    std::size_t fArrayLength;
 
-   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view) const final
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RArraySizeField>(fArrayLength);
+      return std::make_unique<RArraySizeField>(newName, fArrayLength);
    }
    void GenerateColumns() final { throw RException(R__FAIL("RArraySizeField fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final {}
@@ -140,8 +143,8 @@ private:
    void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
 public:
-   RArraySizeField(std::size_t arrayLength)
-      : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */),
+   RArraySizeField(std::string_view name, std::size_t arrayLength)
+      : ROOT::RFieldBase(name, "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */),
         fArrayLength(arrayLength)
    {
    }
@@ -330,10 +333,11 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!fieldInfos.empty()) {
       const auto &info = fieldInfos.back();
+      const std::string name = "R_rdf_sizeof_" + desc.GetFieldDescriptor(info.fFieldId).GetFieldName();
       if (info.fNRepetitions > 0) {
-         cardinalityField = std::make_unique<ROOT::Internal::RDF::RArraySizeField>(info.fNRepetitions);
+         cardinalityField = std::make_unique<ROOT::Internal::RDF::RArraySizeField>(name, info.fNRepetitions);
       } else {
-         cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField>();
+         cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField>(name);
       }
       cardinalityField->SetOnDiskId(info.fFieldId);
    }
@@ -341,17 +345,20 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
    for (auto i = fieldInfos.rbegin(); i != fieldInfos.rend(); ++i) {
       const auto &fieldInfo = *i;
 
+      const auto valueFieldName = valueField->GetFieldName();
+
       if (fieldInfo.fNRepetitions > 0) {
          // Fixed-size array, read it as ROOT::RVec in memory
-         valueField = std::make_unique<ROOT::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
+         valueField =
+            std::make_unique<ROOT::RArrayAsRVecField>(valueFieldName, valueField->Clone("_0"), fieldInfo.fNRepetitions);
       } else {
          // Actual collection. A std::vector or ROOT::RVec gets added as a ROOT::RVec. All other collection types keep
          // their original type.
          if (convertToRVec) {
-            valueField = std::make_unique<ROOT::RRVecField>("", std::move(valueField));
+            valueField = std::make_unique<ROOT::RRVecField>(valueFieldName, valueField->Clone("_0"));
          } else {
             auto outerFieldType = desc.GetFieldDescriptor(fieldInfo.fFieldId).GetTypeName();
-            valueField = ROOT::RFieldBase::Create("", outerFieldType).Unwrap();
+            valueField = ROOT::RFieldBase::Create(valueFieldName, outerFieldType).Unwrap();
          }
       }
 
@@ -360,13 +367,14 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
       // Skip the inner-most collection level to construct the cardinality column
       // It's taken care of by the `if (!fieldInfos.empty())` scope above
       if (i != fieldInfos.rbegin()) {
+         const auto cardinalityFieldName = cardinalityField->GetFieldName();
          if (fieldInfo.fNRepetitions > 0) {
             // This collection level refers to a fixed-size array
-            cardinalityField =
-               std::make_unique<ROOT::RArrayAsRVecField>("", std::move(cardinalityField), fieldInfo.fNRepetitions);
+            cardinalityField = std::make_unique<ROOT::RArrayAsRVecField>(
+               cardinalityFieldName, cardinalityField->Clone("_0"), fieldInfo.fNRepetitions);
          } else {
             // This collection level refers to an RVec
-            cardinalityField = std::make_unique<ROOT::RRVecField>("", std::move(cardinalityField));
+            cardinalityField = std::make_unique<ROOT::RRVecField>(cardinalityFieldName, cardinalityField->Clone("_0"));
          }
 
          cardinalityField->SetOnDiskId(fieldInfo.fFieldId);
