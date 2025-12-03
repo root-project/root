@@ -842,6 +842,9 @@ ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::stri
    : ROOT::RFieldBase(fieldName, typePrefix + "<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
                       false /* isSimple */)
 {
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = typePrefix + "<" + itemField->GetTypeAlias() + ">";
+
    Attach(std::move(itemField));
 }
 
@@ -1183,6 +1186,10 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFi
       fTraits |= kTraitTriviallyConstructible;
    if (itemField->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
+
+   if (!itemField->GetTypeAlias().empty())
+      fTypeAlias = "std::atomic<" + itemField->GetTypeAlias() + ">";
+
    Attach(std::move(itemField));
 }
 
