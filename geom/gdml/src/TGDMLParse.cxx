@@ -2242,7 +2242,9 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          if (!auxmap) {
             // printf("Auxiliary values for volume %s\n",vol->GetName());
             auxmap = new TMap();
-            vol->SetUserExtension(new TGeoRCExtension(auxmap));
+            auto ext = new TGeoRCExtension(auxmap);
+            vol->SetUserExtension(ext); // grabs a copy
+            ext->Release();
          }
          attr = gdml->GetFirstAttr(child);
          while (attr) {
