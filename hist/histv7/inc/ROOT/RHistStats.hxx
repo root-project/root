@@ -8,6 +8,7 @@
 #include "RHistUtils.hxx"
 #include "RWeight.hxx"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -41,6 +42,7 @@ class RHistStats final {
 public:
    /// Statistics for one dimension.
    struct RDimensionStats final {
+      bool fEnabled = true;
       double fSumWX = 0.0;
       double fSumWX2 = 0.0;
       double fSumWX3 = 0.0;
@@ -48,6 +50,7 @@ public:
 
       void Add(double x)
       {
+         assert(fEnabled);
          fSumWX += x;
          fSumWX2 += x * x;
          fSumWX3 += x * x * x;
@@ -56,6 +59,7 @@ public:
 
       void Add(double x, double w)
       {
+         assert(fEnabled);
          fSumWX += w * x;
          fSumWX2 += w * x * x;
          fSumWX3 += w * x * x * x;
@@ -64,6 +68,7 @@ public:
 
       void Add(const RDimensionStats &other)
       {
+         assert(fEnabled);
          fSumWX += other.fSumWX;
          fSumWX2 += other.fSumWX2;
          fSumWX3 += other.fSumWX3;
@@ -75,6 +80,7 @@ public:
       /// \param[in] other another statistics object that must not be modified during the operation
       void AddAtomic(const RDimensionStats &other)
       {
+         assert(fEnabled);
          Internal::AtomicAdd(&fSumWX, other.fSumWX);
          Internal::AtomicAdd(&fSumWX2, other.fSumWX2);
          Internal::AtomicAdd(&fSumWX3, other.fSumWX3);
@@ -91,6 +97,7 @@ public:
 
       void Scale(double factor)
       {
+         assert(fEnabled);
          fSumWX *= factor;
          fSumWX2 *= factor;
          fSumWX3 *= factor;
@@ -126,7 +133,29 @@ public:
    double GetSumW() const { return fSumW; }
    double GetSumW2() const { return fSumW2; }
 
-   const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const { return fDimensionStats.at(dim); }
+   /// Get the statistics object for one dimension.
+   ///
+   /// Throws an exception if the dimension is disabled.
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the statistics object
+   const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const
+   {
+      const RDimensionStats &stats = fDimensionStats.at(dim);
+      if (!stats.fEnabled) {
+         throw std::invalid_argument("dimension is disabled");
+      }
+      return stats;
+   }
+
+   /// Disable one dimension of this statistics object.
+   ///
+   /// All future calls to Fill will ignore the corresponding argument. Once disabled, a dimension cannot be reenabled.
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   void DisableDimension(std::size_t dim) { fDimensionStats.at(dim).fEnabled = false; }
+
+   bool IsEnabled(std::size_t dim) const { return fDimensionStats.at(dim).fEnabled; }
 
    /// Add all entries from another statistics object.
    ///
@@ -142,7 +171,12 @@ public:
       fSumW += other.fSumW;
       fSumW2 += other.fSumW2;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Add(other.fDimensionStats[i]);
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
+         }
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].Add(other.fDimensionStats[i]);
+         }
       }
    }
 
@@ -160,7 +194,12 @@ public:
       Internal::AtomicAdd(&fSumW, other.fSumW);
       Internal::AtomicAdd(&fSumW2, other.fSumW2);
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
+         }
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
+         }
       }
    }
 
@@ -327,7 +366,9 @@ private:
    template <std::size_t I, typename... A>
    void FillImpl(const std::tuple<A...> &args)
    {
-      fDimensionStats[I].Add(std::get<I>(args));
+      if (fDimensionStats[I].fEnabled) {
+         fDimensionStats[I].Add(std::get<I>(args));
+      }
       if constexpr (I + 1 < sizeof...(A)) {
          FillImpl<I + 1>(args);
       }
@@ -336,7 +377,9 @@ private:
    template <std::size_t I, std::size_t N, typename... A>
    void FillImpl(const std::tuple<A...> &args, double w)
    {
-      fDimensionStats[I].Add(std::get<I>(args), w);
+      if (fDimensionStats[I].fEnabled) {
+         fDimensionStats[I].Add(std::get<I>(args), w);
+      }
       if constexpr (I + 1 < N) {
          FillImpl<I + 1, N>(args, w);
       }
@@ -443,7 +486,9 @@ public:
       fSumW *= factor;
       fSumW2 *= factor * factor;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Scale(factor);
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].Scale(factor);
+         }
       }
    }
 
