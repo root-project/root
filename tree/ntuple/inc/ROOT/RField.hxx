@@ -69,6 +69,8 @@ class RFieldZero final : public RFieldBase {
    /// This flag is reset on Clone().
    bool fAllowFieldSubstitutions = false;
 
+   std::unordered_set<std::string> fSubFieldNames; ///< Efficient detection of duplicate field names
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
@@ -76,7 +78,9 @@ protected:
 public:
    RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */) {}
 
-   using RFieldBase::Attach;
+   /// A public version of the Attach method that allows piece-wise construction of the zero field.
+   /// Will throw on duplicate subfield names.
+   void Attach(std::unique_ptr<RFieldBase> child);
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 

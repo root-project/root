@@ -38,11 +38,22 @@ void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val)
    fieldZero.fAllowFieldSubstitutions = val;
 }
 
+void ROOT::RFieldZero::Attach(std::unique_ptr<RFieldBase> child)
+{
+   const std::string childName = child->GetFieldName();
+   if (fSubFieldNames.count(childName) > 0)
+      throw RException(R__FAIL("duplicate field name: " + childName));
+   RFieldBase::Attach(std::move(child), "");
+   fSubFieldNames.insert(childName);
+}
+
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
-   for (auto &f : fSubfields)
+   for (auto &f : fSubfields) {
       result->Attach(f->Clone(f->GetFieldName()));
+      result->fSubFieldNames.insert(f->GetFieldName());
+   }
    return result;
 }
 
@@ -603,7 +614,12 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::un
 {
    fTraits |= kTraitTrivialType;
    fOffsets.reserve(itemFields.size());
+   std::unordered_set<std::string_view> fieldNames;
    for (auto &item : itemFields) {
+      const auto &itemName = item->GetFieldName();
+      if (!fieldNames.insert(itemName).second) {
+         throw RException(R__FAIL("duplicate field name: " + itemName));
+      }
       fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());

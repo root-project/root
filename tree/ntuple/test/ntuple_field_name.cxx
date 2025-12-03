@@ -92,3 +92,20 @@ TEST(RNTuple, SubFieldName)
       EXPECT_THAT(e.what(), testing::HasSubstr("invalid subfield name"));
    }
 }
+
+TEST(RNTuple, FieldNameCollision)
+{
+   ROOT::RFieldZero zero;
+   zero.Attach(std::make_unique<RField<char>>("x"));
+   EXPECT_THROW(zero.Attach(std::make_unique<RField<char>>("x")), ROOT::RException);
+
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> items;
+   items.emplace_back(std::make_unique<RField<char>>("x"));
+   items.emplace_back(std::make_unique<RField<char>>("x"));
+   try {
+      ROOT::RRecordField("f", std::move(items));
+      FAIL() << "duplicate field names should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("duplicate field name"));
+   }
+}
