@@ -66,6 +66,7 @@
 #include <chrono>
 #include <thread>
 #include <cstdio>
+#include <psapi.h>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -5583,19 +5584,6 @@ typedef struct
    DWORD    dwSpare[76];
 } SYSTEM_PERFORMANCE_INFORMATION;
 
-typedef struct _PROCESS_MEMORY_COUNTERS {
-   DWORD cb;
-   DWORD PageFaultCount;
-   SIZE_T PeakWorkingSetSize;
-   SIZE_T WorkingSetSize;
-   SIZE_T QuotaPeakPagedPoolUsage;
-   SIZE_T QuotaPagedPoolUsage;
-   SIZE_T QuotaPeakNonPagedPoolUsage;
-   SIZE_T QuotaNonPagedPoolUsage;
-   SIZE_T PagefileUsage;
-   SIZE_T PeakPagefileUsage;
-} PROCESS_MEMORY_COUNTERS, *PPROCESS_MEMORY_COUNTERS;
-
 typedef LONG (WINAPI *PROCNTQSI) (UINT, PVOID, ULONG, PULONG);
 
 #define Li2Double(x) ((double)((x).HighPart) * 4.294967296E9 + (double)((x).LowPart))
@@ -6046,28 +6034,37 @@ again:
 
 static void GetWinNTMemInfo(MemInfo_t *meminfo)
 {
-   Long64_t total, used, free, swap_total, swap_used, swap_avail;
+   Long64_t total, used, free, swap_total, swap_used, swap_avail, sys_cache;
    MEMORYSTATUSEX statex;
+   PERFORMANCE_INFORMATION statex2;
    statex.dwLength = sizeof(statex);
+   statex2.cb = sizeof(statex2);
    if (!GlobalMemoryStatusEx(&statex)) {
       ::Error("GetWinNTMemInfo", "Error on GlobalMemoryStatusEx()");
       return;
    }
-   used  = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
-   free  = (Long64_t) statex.ullAvailPhys;
-   total = (Long64_t) statex.ullTotalPhys;
+   if (!GetPerformanceInfo(&statex2, statex2.cb)) {
+      ::Error("GetWinNTMemInfo", "Error on GetPerformanceInfo()");
+      return;
+   }
+   used = (Long64_t)(statex.ullTotalPhys - statex.ullAvailPhys);
+   free = (Long64_t)statex.ullAvailPhys;
+   total = (Long64_t)statex.ullTotalPhys;
+   sys_cache = (Long64_t)(statex2.SystemCache * statex2.PageSize);
 
-   meminfo->fMemTotal  = (Int_t) (total >> 20); // divide by 1024 * 1024
-   meminfo->fMemUsed   = (Int_t) (used >> 20);
-   meminfo->fMemFree   = (Int_t) (free >> 20);
+   meminfo->fMemTotal = (Int_t)(total >> 20); // divide by 1024 * 1024
+   meminfo->fMemUsed = (Int_t)(used >> 20);
+   meminfo->fMemFree = (Int_t)(free >> 20);
+   meminfo->fMemAvailable = meminfo->fMemFree;
+   meminfo->fMemCached = (Int_t)(sys_cache >> 20);
 
    swap_total = (Long64_t)(statex.ullTotalPageFile - statex.ullTotalPhys);
    swap_avail = (Long64_t)(statex.ullAvailPageFile - statex.ullAvailPhys);
-   swap_used  = swap_total - swap_avail;
+   swap_used = swap_total - swap_avail;
 
-   meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
-   meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
-   meminfo->fSwapFree  = (Int_t) (swap_avail >> 20);
+   meminfo->fSwapTotal = (Int_t)(swap_total >> 20);
+   meminfo->fSwapUsed = (Int_t)(swap_used >> 20);
+   meminfo->fSwapFree = (Int_t)(swap_avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6076,35 +6073,15 @@ static void GetWinNTMemInfo(MemInfo_t *meminfo)
 static void GetWinNTProcInfo(ProcInfo_t *procinfo)
 {
    PROCESS_MEMORY_COUNTERS pmc;
-   FILETIME    starttime, exittime, kerneltime, usertime;
-   timeval     ru_stime, ru_utime;
+   FILETIME starttime, exittime, kerneltime, usertime;
+   timeval ru_stime, ru_utime;
    ULARGE_INTEGER li;
 
-   typedef BOOL (__stdcall *GetProcessMemoryInfoProc)( HANDLE Process,
-                 PPROCESS_MEMORY_COUNTERS ppsmemCounters, DWORD cb );
-   static GetProcessMemoryInfoProc pGetProcessMemoryInfo = 0;
-
-   HMODULE hModImagehlp = LoadLibrary( "Psapi.dll" );
-   if (!hModImagehlp) {
-      ::Error("GetWinNTProcInfo", "Error on LoadLibrary(Psapi.dll)");
-      return;
-   }
-
-   pGetProcessMemoryInfo = (GetProcessMemoryInfoProc) GetProcAddress(
-                            hModImagehlp, "GetProcessMemoryInfo" );
-   if (!pGetProcessMemoryInfo) {
-      ::Error("GetWinNTProcInfo",
-              "Error on GetProcAddress(GetProcessMemoryInfo)");
-      return;
-   }
-
-   if ( pGetProcessMemoryInfo( GetCurrentProcess(), &pmc, sizeof(pmc)) ) {
+   if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
       procinfo->fMemResident = pmc.WorkingSetSize / 1024;
       procinfo->fMemVirtual  = pmc.PagefileUsage / 1024;
    }
-   if ( GetProcessTimes(GetCurrentProcess(), &starttime, &exittime,
-      &kerneltime, &usertime)) {
-
+   if (GetProcessTimes(GetCurrentProcess(), &starttime, &exittime, &kerneltime, &usertime)) {
       /* Convert FILETIMEs (0.1 us) to struct timeval */
       memcpy(&li, &kerneltime, sizeof(FILETIME));
       li.QuadPart /= 10L;         /* Convert to microseconds */
