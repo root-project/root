@@ -16,8 +16,7 @@
 #include <RooAbsPdf.h>
 #include <RooRealProxy.h>
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 class RooNormalizedPdf : public RooAbsPdf {
 public:
@@ -51,16 +50,15 @@ public:
 
    bool forceAnalyticalInt(const RooAbsArg & /*dep*/) const override { return true; }
    /// Forward determination of analytical integration capabilities to input p.d.f
-   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet * /*normSet*/,
+   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
                                  const char *rangeName = nullptr) const override
    {
-      return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
+      return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet ? normSet : &_normSet, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
-   double
-   analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = nullptr) const override
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override
    {
-      return _pdf->analyticalIntegralWN(code, &_normSet, rangeName);
+      return _pdf->analyticalIntegralWN(code, normSet ? normSet : &_normSet, rangeName);
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
@@ -97,7 +95,6 @@ private:
    ClassDefOverride(RooFit::Detail::RooNormalizedPdf, 0);
 };
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
 
 #endif
