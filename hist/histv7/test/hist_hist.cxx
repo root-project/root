@@ -16,7 +16,9 @@ TEST(RHist, Constructor)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis regularAxis(Bins, {0, Bins});
 
-   RHist<int> hist({regularAxis, regularAxis});
+   // The most generic constructor takes a vector of axis objects.
+   const std::vector<RAxisVariant> axes = {regularAxis, regularAxis};
+   RHist<int> hist(axes);
    EXPECT_EQ(hist.GetNDimensions(), 2);
    const auto &engine = hist.GetEngine();
    EXPECT_EQ(engine.GetNDimensions(), 2);
@@ -26,6 +28,7 @@ TEST(RHist, Constructor)
    // Both axes include underflow and overflow bins.
    EXPECT_EQ(hist.GetTotalNBins(), (Bins + 2) * (Bins + 2));
 
+   // Test other constructors, including move-assignment.
    hist = RHist<int>(Bins, {0, Bins});
    ASSERT_EQ(hist.GetNDimensions(), 1);
    auto *regular = std::get_if<RRegularAxis>(&hist.GetAxes()[0]);
@@ -33,6 +36,15 @@ TEST(RHist, Constructor)
    EXPECT_EQ(regular->GetNNormalBins(), Bins);
    EXPECT_EQ(regular->GetLow(), 0);
    EXPECT_EQ(regular->GetHigh(), Bins);
+   // std::make_pair will take the types of the arguments, std::size_t in this case.
+   hist = RHist<int>(Bins, std::make_pair(0, Bins));
+   EXPECT_EQ(hist.GetNDimensions(), 1);
+
+   // Brace-enclosed initializer list
+   hist = RHist<int>({regularAxis});
+   EXPECT_EQ(hist.GetNDimensions(), 1);
+   hist = RHist<int>({regularAxis, regularAxis});
+   EXPECT_EQ(hist.GetNDimensions(), 2);
 }
 
 TEST(RHist, Add)
