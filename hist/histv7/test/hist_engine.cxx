@@ -59,6 +59,14 @@ TEST(RHistEngine, Constructor)
    EXPECT_EQ(engine.GetNDimensions(), 1);
    engine = RHistEngine<int>({variableBinAxis, categoricalAxis});
    EXPECT_EQ(engine.GetNDimensions(), 2);
+
+   // Templated constructors
+   engine = RHistEngine<int>(variableBinAxis);
+   EXPECT_EQ(engine.GetNDimensions(), 1);
+   engine = RHistEngine<int>(variableBinAxis, categoricalAxis);
+   EXPECT_EQ(engine.GetNDimensions(), 2);
+   engine = RHistEngine<int>(variableBinAxis, categoricalAxis, regularAxis);
+   EXPECT_EQ(engine.GetNDimensions(), 3);
 }
 
 TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
