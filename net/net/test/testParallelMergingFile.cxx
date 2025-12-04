@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <memory>
+#include <mutex>
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -19,6 +20,9 @@ enum EStatusKind {
    kProtocolVersion = 1,
    kProtocol = 1,
 };
+
+static std::mutex gMutex;
+static std::atomic_int gNReceived;
 
 static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile)
 {
@@ -63,6 +67,8 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
          msg->ReadTString(filename);
          msg->ReadLong64(length);
 
+         // XXX: this lock is here to work around https://github.com/root-project/root/issues/20641
+         std::scoped_lock<std::mutex> lock(gMutex);
          auto input = std::make_unique<TMemFile>((std::string("server_") + filename), msg->Buffer() + msg->Length(),
                                                  length, "READ");
 
@@ -73,6 +79,7 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
          merger.AddFile(input.get());
          bool mergeOk = merger.PartialMerge(TFileMerger::kAllIncremental | TFileMerger::kKeepCompression);
          EXPECT_TRUE(mergeOk);
+         ++gNReceived;
 
       } break;
 
@@ -122,17 +129,32 @@ TEST(TParallelMergingFile, UploadAndResetNonTObject)
       auto entry = writer->CreateEntry();
       auto px = entry->GetPtr<float>("px");
       auto py = entry->GetPtr<float>("py");
+      int nSent = 0;
       for (int i = 0; i < kNEntries; ++i) {
          *px = i;
          *py = 2 * i;
          writer->Fill(*entry);
          if (i > 0 && (i % (kNEntries / kNUploads)) == 0) {
-            // Force UploadAndReset() by destroying the RNTupleWriter, which in turn will call CommitDataset()
-            // which ultimately calls file->Write().
-            // IMPORTANT: writer.reset() must be called explicitly, since we must not create the new RNTuple
-            // before destroying the old one (otherwise the header will get a stale address and end up corrupted).
-            writer.reset();
-            writer = ROOT::RNTupleWriter::Append(model->Clone(), "ntpl", *file);
+            {
+               // XXX: this lock is here to work around https://github.com/root-project/root/issues/20641
+               std::scoped_lock<std::mutex> lock(gMutex);
+               // Force UploadAndReset() by destroying the RNTupleWriter, which in turn will call CommitDataset()
+               // which ultimately calls file->Write().
+               // IMPORTANT: writer.reset() must be called explicitly, since we must not create the new RNTuple
+               // before destroying the old one (otherwise the header will get a stale address and end up corrupted).
+               writer.reset();
+               ++nSent;
+            }
+
+            while (gNReceived < nSent) {
+               // Wait for the server to process the reset.
+               std::this_thread::yield();
+            }
+
+            {
+               std::scoped_lock<std::mutex> lock(gMutex);
+               writer = ROOT::RNTupleWriter::Append(model->Clone(), "ntpl", *file);
+            }
             entry = writer->CreateEntry();
             px = entry->GetPtr<float>("px");
             py = entry->GetPtr<float>("py");
