@@ -126,7 +126,7 @@ ValueAndPushforward<T, T> Hypot_pushforward(T x, T y, T d_x, T d_y)
 }
 
 template <typename T, typename U>
-void Hypot_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+void Hypot_pullback(T x, T y, U p, T *d_x, T *d_y)
 {
    T h = ::TMath::Hypot(x, y);
    *d_x += x / h * p;
@@ -162,7 +162,7 @@ ValueAndPushforward<T, T> Power_pushforward(T x, U y, T d_x, U d_y)
 }
 
 template <typename T, typename U, typename V>
-void Power_pullback(T x, U y, V p, clad::array_ref<T> d_x, clad::array_ref<U> d_y)
+void Power_pullback(T x, U y, V p, T *d_x, U *d_y)
 {
    auto t = pow_pushforward(x, y, 1, 0);
    *d_x += t.pushforward * p;
