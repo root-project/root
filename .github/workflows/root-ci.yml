@@ -391,7 +391,9 @@ jobs:
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            is_special: true
+            property: ASAN
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "asan=ON"]
           - image: ubuntu2504
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: ubuntu2510
