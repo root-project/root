@@ -164,7 +164,8 @@ bool ROOT::Internal::RPageSource::REntryRange::IntersectsWith(const ROOT::RClust
 ROOT::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
    : RPageStorage(name),
      fOptions(options),
-     fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))
+     fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions)),
+     fPagePool(*this)
 {
 }
 

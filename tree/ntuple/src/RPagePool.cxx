@@ -12,6 +12,7 @@
  *************************************************************************/
 
 #include <ROOT/RPagePool.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RColumn.hxx>
 
 #include <TError.h>
