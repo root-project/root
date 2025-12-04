@@ -84,6 +84,27 @@ public:
       fBinContents.resize(fAxes.ComputeTotalNBins());
    }
 
+   /// Construct a histogram engine.
+   ///
+   /// Note that there is no perfect forwarding of the axis objects. If that is needed, use the
+   /// \ref RHistEngine(std::vector<RAxisVariant> axes) "overload accepting a std::vector".
+   ///
+   /// \param[in] axes the axis objects, must have size > 0
+   explicit RHistEngine(std::initializer_list<RAxisVariant> axes) : RHistEngine(std::vector(axes)) {}
+
+   /// Construct a histogram engine.
+   ///
+   /// Note that there is no perfect forwarding of the axis objects. If that is needed, use the
+   /// \ref RHistEngine(std::vector<RAxisVariant> axes) "overload accepting a std::vector".
+   ///
+   /// \param[in] axis1 the first axis object
+   /// \param[in] axes the remaining axis objects
+   template <typename... Axes>
+   explicit RHistEngine(const RAxisVariant &axis1, const Axes &...axes)
+      : RHistEngine(std::vector<RAxisVariant>{axis1, axes...})
+   {
+   }
+
    /// Construct a one-dimensional histogram engine with a regular axis.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
@@ -92,7 +113,7 @@ public:
    /// the \ref RRegularAxis::RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool
    /// enableFlowBins) "constructor of RRegularAxis"
    RHistEngine(std::uint64_t nNormalBins, std::pair<double, double> interval)
-      : RHistEngine({RRegularAxis(nNormalBins, interval)})
+      : RHistEngine(std::vector<RAxisVariant>{RRegularAxis(nNormalBins, interval)})
    {
    }
 
