@@ -58,7 +58,7 @@ void ROOT::Internal::RPagePool::PreloadPage(RPage page, RKey key)
    std::lock_guard<std::mutex> lockGuard(fLock);
    const auto &entry = AddPage(std::move(page), key, 0);
    if (entry.fRefCounter == 0)
-      fUnusedPages[entry.fPage.GetClusterInfo().GetId()].emplace(entry.fPage.GetBuffer());
+      AddToUnusedPages(entry.fPage);
 }
 
 void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr)
@@ -99,6 +99,11 @@ void ROOT::Internal::RPagePool::ReleasePage(const RPage &page)
    if (--fEntries[idx].fRefCounter == 0) {
       ErasePage(idx, itrLookup);
    }
+}
+
+void ROOT::Internal::RPagePool::AddToUnusedPages(const RPage &page)
+{
+   fUnusedPages[page.GetClusterInfo().GetId()].emplace(page.GetBuffer());
 }
 
 void ROOT::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)

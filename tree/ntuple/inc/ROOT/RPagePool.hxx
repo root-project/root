@@ -140,6 +140,8 @@ private:
    /// during registration. Called by the RPageRef destructor.
    void ReleasePage(const RPage &page);
 
+   /// Called by PreloadPage() if the page at hand is new and thus added with ref counter 0
+   void AddToUnusedPages(const RPage &page);
    /// Called by GetPage(), when the reference counter increases from zero to one
    void RemoveFromUnusedPages(const RPage &page);
 
