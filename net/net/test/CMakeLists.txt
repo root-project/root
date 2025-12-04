@@ -5,4 +5,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(nettests nettests.cxx LIBRARIES Net)
-ROOT_ADD_GTEST(testParallelMergingFile testParallelMergingFile.cxx LIBRARIES Net ROOTNTuple)
+
+if(NOT MSVC)
+  # This test currently relies on unix sockets and doesn't work as-is on windows.
+  ROOT_ADD_GTEST(testParallelMergingFile testParallelMergingFile.cxx LIBRARIES Net ROOTNTuple)
+endif()
