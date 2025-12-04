@@ -124,7 +124,7 @@ jobs:
       - ${{ matrix.platform }}
 
     name: |
-      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ matrix.platform }} ${{ matrix.arch }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
@@ -164,7 +164,7 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-        
+
       - name: Pull Request Build
         shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
@@ -172,7 +172,7 @@ jobs:
           HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -186,7 +186,7 @@ jobs:
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -198,7 +198,7 @@ jobs:
       - name: Nightly build
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -209,7 +209,7 @@ jobs:
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -388,6 +388,10 @@ jobs:
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
+          # Minimal build
+          - image: alma10
+            minimal: true
+            property: "Minimal build"
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -423,7 +427,7 @@ jobs:
             is_special: true
             property: "Fedora pydebug"
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          # Disable GPU builds until the DNS problem is solved  
+          # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
           #   property: gpu
@@ -495,6 +499,19 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
+      - name: Apply option minimal request from matrix for this job
+        if: ${{ matrix.minimal == true }}
+        env:
+          GLOBAL_CONFIG_DIR: '.github/workflows/root-ci-config/buildconfig'
+          CONFIGFILE_STEM: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}'
+        run: |
+          echo "Applying minimal request options"
+          # Add commands to apply minimal request options here
+          set -x
+          cp "$GLOBAL_CONFIG_DIR/global-minimal.txt" "$GLOBAL_CONFIG_DIR/global.txt"
+          if [ -f "${CONFIGFILE_STEM}-minimal.txt" ]; then
+            cp "${CONFIGFILE_STEM}-minimal.txt" "${CONFIGFILE_STEM}.txt"
+          fi
 
       - name: Apply option overrides from matrix for this job for all builds except non-special nightlies and releases
         if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
