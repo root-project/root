@@ -86,7 +86,7 @@
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"
 #include "TMath.h"
-#include "Math/DistFunc.h"
+#include "Math/PdfFuncMathCore.h"
 
 #include "TUnuran.h"
 #include "TUnuranMultiContDist.h"
