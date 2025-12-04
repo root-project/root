@@ -3,6 +3,7 @@
 #include <array>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -23,20 +24,25 @@ TEST(RHistEngine, Constructor)
    const std::vector<std::string> categories = {"a", "b", "c"};
    const RCategoricalAxis categoricalAxis(categories);
 
-   RHistEngine<int> engine({regularAxis, variableBinAxis, categoricalAxis});
+   // The most generic constructor takes a vector of axis objects.
+   const std::vector<RAxisVariant> axes = {regularAxis, variableBinAxis, categoricalAxis};
+   RHistEngine<int> engine(axes);
    EXPECT_EQ(engine.GetNDimensions(), 3);
-   const auto &axes = engine.GetAxes();
-   ASSERT_EQ(axes.size(), 3);
-   EXPECT_EQ(axes[0].index(), 0);
-   EXPECT_EQ(axes[1].index(), 1);
-   EXPECT_EQ(axes[2].index(), 2);
-   EXPECT_TRUE(std::get_if<RRegularAxis>(&axes[0]) != nullptr);
-   EXPECT_TRUE(std::get_if<RVariableBinAxis>(&axes[1]) != nullptr);
-   EXPECT_TRUE(std::get_if<RCategoricalAxis>(&axes[2]) != nullptr);
+   {
+      const auto &engineAxes = engine.GetAxes();
+      ASSERT_EQ(engineAxes.size(), 3);
+      EXPECT_EQ(engineAxes[0].index(), 0);
+      EXPECT_EQ(engineAxes[1].index(), 1);
+      EXPECT_EQ(engineAxes[2].index(), 2);
+      EXPECT_TRUE(std::get_if<RRegularAxis>(&engineAxes[0]) != nullptr);
+      EXPECT_TRUE(std::get_if<RVariableBinAxis>(&engineAxes[1]) != nullptr);
+      EXPECT_TRUE(std::get_if<RCategoricalAxis>(&engineAxes[2]) != nullptr);
+   }
 
-   // Both axes include underflow and overflow bins.
+   // All axes include underflow and overflow bins.
    EXPECT_EQ(engine.GetTotalNBins(), (BinsX + 2) * (BinsY + 2) * (categories.size() + 1));
 
+   // Test other constructors, including move-assignment.
    engine = RHistEngine<int>(BinsX, {0, BinsX});
    ASSERT_EQ(engine.GetNDimensions(), 1);
    auto *regular = std::get_if<RRegularAxis>(&engine.GetAxes()[0]);
@@ -44,6 +50,15 @@ TEST(RHistEngine, Constructor)
    EXPECT_EQ(regular->GetNNormalBins(), BinsX);
    EXPECT_EQ(regular->GetLow(), 0);
    EXPECT_EQ(regular->GetHigh(), BinsX);
+   // std::make_pair will take the types of the arguments, std::size_t in this case.
+   engine = RHistEngine<int>(BinsX, std::make_pair(0, BinsX));
+   EXPECT_EQ(engine.GetNDimensions(), 1);
+
+   // Brace-enclosed initializer list
+   engine = RHistEngine<int>({variableBinAxis});
+   EXPECT_EQ(engine.GetNDimensions(), 1);
+   engine = RHistEngine<int>({variableBinAxis, categoricalAxis});
+   EXPECT_EQ(engine.GetNDimensions(), 2);
 }
 
 TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
