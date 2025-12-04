@@ -181,7 +181,7 @@ ROOTTEST_ADD_TEST(test_callables
 
 ROOTTEST_GENERATE_EXECUTABLE(testIMT
                              testIMT.cxx
-                             LIBRARIES ${DFLIBRARIES}
+                             LIBRARIES ${DFLIBRARIES} GenVector
                              FIXTURES_SETUP root-dataframe-testIMT-fixture)
 
 ROOTTEST_ADD_TEST(testIMT
@@ -217,7 +217,7 @@ ROOTTEST_ADD_TEST(typeguessing
 
 ROOTTEST_GENERATE_EXECUTABLE(misc
                              test_misc.cxx
-                             LIBRARIES ${DFLIBRARIES}
+                             LIBRARIES ${DFLIBRARIES} GenVector
                              FIXTURES_SETUP root-dataframe-misc-fixture)
 
 ROOTTEST_ADD_TEST(misc
