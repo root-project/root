@@ -13,7 +13,13 @@ Please note that the RNTupleMerger is currently experimental and the content of 
     * **L3 Merge** (*reseal* merge): merge a page by resealing/repacking it (implies decompressing/recompressing, may change the encoding)
     * **L4 Merge** (*slow* merge): merge a page by re-reading and re-writing all values, potentially changing the pages' boundaries and clustering (implies resealing and recompressing)
 
-(*NOTE: currently there is no guarantee for the user about which mode will be used to generate the merged RNTuple. At the moment, L0 and L4 are never used; L1 is used when possible, otherwise L3 is used. Note that we currently don't use L2 because in general when recompressing we might need to change encoding. Improvements on this front are possible and in principle we should be able to use L2 when the encoding doesn't need to change.*)
+Currently there is no guarantee for the user about which mode will be used to generate the merged RNTuple.
+At the moment, this is how it works:
+- if both compression and encoding of the target column match those of the source column, L1 is used;
+- otherwise, if compression matches but encoding doesn't, L2 is used;
+- otherwise L3 is used.
+
+Note that L0 and L4 are currently never used.
 
 ## Goal
 The goal of the RNTuple merging process is producing one output RNTuple from *N* input RNTuples that can be used as if it were produced directly in the merged state. This means that:
