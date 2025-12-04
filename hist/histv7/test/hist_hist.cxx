@@ -45,6 +45,14 @@ TEST(RHist, Constructor)
    EXPECT_EQ(hist.GetNDimensions(), 1);
    hist = RHist<int>({regularAxis, regularAxis});
    EXPECT_EQ(hist.GetNDimensions(), 2);
+
+   // Templated constructors
+   hist = RHist<int>(regularAxis);
+   EXPECT_EQ(hist.GetNDimensions(), 1);
+   hist = RHist<int>(regularAxis, regularAxis);
+   EXPECT_EQ(hist.GetNDimensions(), 2);
+   hist = RHist<int>(regularAxis, regularAxis, regularAxis);
+   EXPECT_EQ(hist.GetNDimensions(), 3);
 }
 
 TEST(RHist, Add)

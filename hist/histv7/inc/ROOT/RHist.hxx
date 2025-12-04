@@ -76,14 +76,35 @@ public:
    /// \param[in] axes the axis objects, must have size > 0
    explicit RHist(std::vector<RAxisVariant> axes) : fEngine(std::move(axes)), fStats(fEngine.GetNDimensions()) {}
 
-   /// Construct a one-dimensional histogram engine with a regular axis.
+   /// Construct a histogram.
+   ///
+   /// Note that there is no perfect forwarding of the axis objects. If that is needed, use the
+   /// \ref RHist(std::vector<RAxisVariant> axes) "overload accepting a std::vector".
+   ///
+   /// \param[in] axes the axis objects, must have size > 0
+   explicit RHist(std::initializer_list<RAxisVariant> axes) : RHist(std::vector(axes)) {}
+
+   /// Construct a histogram.
+   ///
+   /// Note that there is no perfect forwarding of the axis objects. If that is needed, use the
+   /// \ref RHist(std::vector<RAxisVariant> axes) "overload accepting a std::vector".
+   ///
+   /// \param[in] axis1 the first axis object
+   /// \param[in] axes the remaining axis objects
+   template <typename... Axes>
+   explicit RHist(const RAxisVariant &axis1, const Axes &...axes) : RHist(std::vector<RAxisVariant>{axis1, axes...})
+   {
+   }
+
+   /// Construct a one-dimensional histogram with a regular axis.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
    /// the \ref RRegularAxis::RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool
    /// enableFlowBins) "constructor of RRegularAxis"
-   RHist(std::uint64_t nNormalBins, std::pair<double, double> interval) : RHist({RRegularAxis(nNormalBins, interval)})
+   RHist(std::uint64_t nNormalBins, std::pair<double, double> interval)
+      : RHist(std::vector<RAxisVariant>{RRegularAxis(nNormalBins, interval)})
    {
    }
 
