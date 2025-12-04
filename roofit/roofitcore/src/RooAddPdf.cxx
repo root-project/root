@@ -759,9 +759,19 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
   if (cache.doProjection()) {
 
     for (std::size_t i = 0; i < _pdfList.size(); ++i) {
-      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(nset)
+      // There are two cases covered here:
+      //   1. The expected events is the sum of expectedEvents() for each pdf
+      //   2. Get the expected events from the coeffiecients
+      // For case #2, multiplying with coefProjectionFactor(i) gives the right
+      // coefs for this RooAddPdf to be normalized over nset, while the coefs
+      // where determined with the components normalized over _refCoefNorm. To
+      // reuse the same projection factor also in the first case, we evaluate
+      // the individual expected events for _refCoefNorm as well. This is done
+      // to avoid confusion about different projection factors extracted from
+      // cache, as like this we only need one factor for each pdf.
+      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(_refCoefNorm)
                                     : static_cast<RooAbsReal&>(_coefList[i]).getVal(nset);
-      expectedTotal += cache.rangeProjScaleFactor(i) * ncomp ;
+      expectedTotal += cache.coefProjectionFactor(i) * ncomp ;
 
     }
 

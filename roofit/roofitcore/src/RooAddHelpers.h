@@ -32,6 +32,13 @@ public:
 
    inline bool doProjection() const { return !_projList.empty(); }
 
+   inline double coefProjectionFactor(std::size_t idx) {
+         return projVal(idx) / projSuppNormVal(idx) * rangeProjScaleFactor(idx);
+   }
+
+   void print() const;
+
+private:
    inline double projVal(std::size_t idx) const { return _projList[idx] ? _projList[idx]->getVal() : 1.0; }
 
    inline double projSuppNormVal(std::size_t idx) const
@@ -44,9 +51,6 @@ public:
       return _rangeProjList[idx] ? _rangeProjList[idx]->getVal() : 1.0;
    }
 
-   void print() const;
-
-private:
    using OwningArgVector = std::vector<std::unique_ptr<RooAbsReal>>;
 
    OwningArgVector _suppNormList; ///< Supplemental normalization list
