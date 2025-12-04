@@ -979,6 +979,7 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
       fEntryBuffer->SetBufferOffset(objectStart);
       *fEntryBuffer >> tag;
       if (tag & kByteCountMask) {
+         // Ignore byte count.
          *fEntryBuffer >> tag;
       }
       if (tag == kNewClassTag) {
@@ -1457,7 +1458,7 @@ bool TBranch::SupportsBulkRead() const {
 /// the number of elements corresponding to each entries.
 ///
 /// For each entry the number of elements is the multiplication of
-/// 
+///
 /// ~~~{.cpp}
 /// TLeaf *leaf = static_cast<TLeaf*>(branch->GetListOfLeaves()->At(0));
 /// auto len = leaf->GetLen();
