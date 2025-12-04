@@ -286,3 +286,34 @@ TEST(RNTuple, ContextDependentTypeNames)
       }
    }
 }
+
+TEST(RNTuple, NeedsMetaNameAsAlias)
+{
+   using ROOT::Internal::NeedsMetaNameAsAlias;
+
+   std::string renormalizedAlias;
+   EXPECT_FALSE(NeedsMetaNameAsAlias("bool", renormalizedAlias));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::vector<long>", renormalizedAlias));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::vector<Long64_t>", renormalizedAlias));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("::MyClass<Long64_t>", renormalizedAlias));
+   EXPECT_EQ("MyClass<Long64_t>", renormalizedAlias);
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<ULong64_t>", renormalizedAlias));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("std::vector<MyClass<Long64_t> >", renormalizedAlias));
+   EXPECT_EQ("std::vector<MyClass<Long64_t>>", renormalizedAlias);
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<ROOT::RVec<Long64_t>>", renormalizedAlias));
+   EXPECT_EQ("MyClass<ROOT::VecOps::RVec<Long64_t>>", renormalizedAlias);
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<vector<Long64_t>>", renormalizedAlias));
+   EXPECT_EQ("MyClass<std::vector<Long64_t>>", renormalizedAlias);
+
+   EXPECT_TRUE(NeedsMetaNameAsAlias("::CL::TP<Long64_t>::CL2", renormalizedAlias));
+   EXPECT_EQ("CL::TP<Long64_t>::CL2", renormalizedAlias);
+   EXPECT_TRUE(NeedsMetaNameAsAlias("::CL::CL2::TP<ULong64_t>", renormalizedAlias));
+   EXPECT_EQ("CL::CL2::TP<ULong64_t>", renormalizedAlias);
+
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::map<Long64_t, ULong64_t>", renormalizedAlias));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::map<Long64_t, MyClass>", renormalizedAlias));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("std::map<Long64_t, MyClass<Long64_t>>", renormalizedAlias));
+   EXPECT_EQ("std::map<std::int64_t,MyClass<Long64_t>>", renormalizedAlias);
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<std::map<Long64_t, ULong64_t>>", renormalizedAlias));
+   EXPECT_EQ("MyClass<std::map<Long64_t,ULong64_t>>", renormalizedAlias);
+}

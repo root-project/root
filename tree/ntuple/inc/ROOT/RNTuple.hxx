@@ -76,7 +76,7 @@ public:
    static constexpr std::uint16_t kVersionEpoch = 1;
    static constexpr std::uint16_t kVersionMajor = 0;
    static constexpr std::uint16_t kVersionMinor = 0;
-   static constexpr std::uint16_t kVersionPatch = 1;
+   static constexpr std::uint16_t kVersionPatch = 2;
 
 private:
    /// Version of the RNTuple binary format that the writer supports (see specification).
@@ -88,7 +88,7 @@ private:
    std::uint16_t fVersionMajor = kVersionMajor;
    /// Changing the minor version indicates new optional fields added to the RNTuple metadata
    std::uint16_t fVersionMinor = kVersionMinor;
-   /// Changing the patch version indicates new backported features from newer binary format versions
+   /// Changing the patch version indicates clarifications or new backported features from newer binary format versions
    std::uint16_t fVersionPatch = kVersionPatch;
    /// The file offset of the header excluding the TKey part
    std::uint64_t fSeekHeader = 0;
