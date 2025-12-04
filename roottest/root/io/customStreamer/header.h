@@ -2,7 +2,9 @@
 #include "TClass.h"
 class Hard2Stream {
 private:
+#ifndef __CLING__
    double val;
+#endif
 public:
    Hard2Stream() : val(-1) {};
    Hard2Stream(double v) : val(v) {};
