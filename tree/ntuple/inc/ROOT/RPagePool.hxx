@@ -30,6 +30,8 @@
 namespace ROOT {
 namespace Internal {
 
+class RPageSource;
+
 // clang-format off
 /**
 \class ROOT::Internal::RPagePool
@@ -112,6 +114,9 @@ private:
       explicit RPagePosition(RNTupleLocalIndex localIndex) : fClusterFirstElement(localIndex) {}
    };
 
+   /// Every page pool is associated to exactly one page source. The page source is queried for pinned cluster
+   /// when pages are released.
+   RPageSource &fPageSource;
    std::vector<REntry> fEntries; ///< All cached pages in the page pool
    /// Used in ReleasePage() to find the page index in fPages
    std::unordered_map<void *, std::size_t> fLookupByBuffer;
@@ -142,7 +147,7 @@ private:
    void ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr);
 
 public:
-   RPagePool() = default;
+   explicit RPagePool(RPageSource &pageSource) : fPageSource(pageSource) {}
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;

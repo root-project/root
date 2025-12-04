@@ -1,5 +1,30 @@
 #include "ntuple_test.hxx"
 
+namespace {
+
+using ROOT::Internal::RCluster;
+using ROOT::Internal::RPageRef;
+
+/// Used to keep track of pinned clusters
+class RPageSourceMock : public RPageSource {
+protected:
+   void LoadStructureImpl() final {}
+   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
+   std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
+   void LoadStreamerInfo() final {}
+
+public:
+   RPageSourceMock() : RPageSource("test", RNTupleReadOptions()) {}
+   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final
+   {
+      return std::vector<std::unique_ptr<RCluster>>();
+   }
+};
+
+} // anonymous namespace
+
 TEST(Pages, Allocation)
 {
    RPageAllocatorHeap allocator;
@@ -13,8 +38,9 @@ TEST(Pages, Allocation)
 
 TEST(Pages, Pool)
 {
+   RPageSourceMock pageSource;
    RPageAllocatorHeap allocator;
-   RPagePool pool;
+   RPagePool pool(pageSource);
 
    {
       auto pageRef = pool.GetPage(RPagePool::RKey{0, std::type_index(typeid(void))}, 0);
@@ -67,8 +93,9 @@ TEST(Pages, Pool)
 
 TEST(Pages, EvictBasics)
 {
+   RPageSourceMock pageSource;
    RPageAllocatorHeap allocator;
-   RPagePool pool;
+   RPagePool pool(pageSource);
 
    RPage::RClusterInfo clusterInfo(2, 40);
    auto page = allocator.NewPage(1, 10);
