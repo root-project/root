@@ -3096,9 +3096,6 @@ void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa
       return;
    }
    const Int_t BLOCK = (M >= 192 && N >= 192 && P >= 192) ? 48 : 32;
-#ifdef _OPENMP
-#pragma omp parallel for collapse(2) if (M * P > 10000)
-#endif
    for (Int_t i0 = 0; i0 < M; i0 += BLOCK) {
       for (Int_t j0 = 0; j0 < P; j0 += BLOCK) {
          const Int_t i1 = (i0 + BLOCK < M) ? i0 + BLOCK : M;
