@@ -130,7 +130,7 @@ jobs:
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
-        shell: bash
+        shell: bash -leo pipefail {0}
         run: |
           set -x
 
@@ -465,7 +465,7 @@ jobs:
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
-        shell: bash
+        shell: bash -leo pipefail {0}
         run: |
           set -x
 
