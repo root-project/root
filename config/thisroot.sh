@@ -73,6 +73,11 @@ clean_environment()
          drop_from_path "$JUPYTER_CONFIG_DIR" "${old_rootsys}/etc/notebook"
          JUPYTER_CONFIG_DIR=$newpath
       fi
+      # Potential leftovers from future ROOT > v6.34
+      if [ -n "${JUPYTER_CONFIG_PATH-}" ]; then
+         drop_from_path "$JUPYTER_CONFIG_PATH" "${old_rootsys}/etc/notebook"
+         JUPYTER_CONFIG_PATH=$newpath
+      fi
    fi
    if [ -z "${MANPATH-}" ]; then
       # Grab the default man path before setting the path to avoid duplicates
