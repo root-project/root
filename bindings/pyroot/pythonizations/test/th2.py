@@ -10,9 +10,9 @@ class TH2UsingDecls(unittest.TestCase):
 
     # Tests
     def test_GetBinError(self):
-        h = ROOT.TH2F("h", "h", 1, 1, 0, 1, 0, 1)
+        h = ROOT.TH2F("h", "h", 1, 0, 1, 1, 0, 1)
         for _ in range(4):
-            h.Fill(1, 1, 1)
+            h.Fill(0.5, 0.5, 1)
         self.assertEqual(h.GetBinErrorUp(1, 1), 2)
         self.assertEqual(h.GetBinErrorLow(1, 1), 2)
 
