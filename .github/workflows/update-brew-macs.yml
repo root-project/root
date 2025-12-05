@@ -15,9 +15,6 @@ on:
     paths:
       - '.github/workflow/update-brew-macs.yml'
 
-  pull_request:
-    branches:
-      - 'master'
 env:
   VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
 
