@@ -1,7 +1,7 @@
 // @(#)root/mathcore:$Id$
 // Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -669,7 +669,7 @@
 #pragma link C++ typedef ROOT::Math::RhoZPhiVector;
 #pragma link C++ typedef ROOT::Math::PxPyPzEVector;
 
-// tyoedef for floating types
+// typedef for floating types
 
 #pragma link C++ typedef ROOT::Math::XYVectorF;
 #pragma link C++ typedef ROOT::Math::Polar2DVectorF;

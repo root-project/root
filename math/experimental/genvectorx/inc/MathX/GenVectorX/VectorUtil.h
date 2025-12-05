@@ -281,7 +281,7 @@ inline typename Vector1::Scalar InvariantMass2(const Vector1 &v1, const Vector2 
 
 // rotation and transformations
 
-#ifndef __CINT__
+#ifndef __CLING__
 /**
  rotation along X axis for a generic vector by an Angle alpha
  returning a new vector.
