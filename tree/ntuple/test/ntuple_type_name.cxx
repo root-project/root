@@ -411,3 +411,139 @@ TEST(RNTuple, NeedsMetaNameAsAlias)
    EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<std::map<Long64_t, ULong64_t>>", renormalizedAlias));
    EXPECT_EQ("MyClass<std::map<Long64_t,ULong64_t>>", renormalizedAlias);
 }
+
+TEST(RNTuple, PropagateTypeAlias)
+{
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::vector<Double32_t>").Unwrap();
+      EXPECT_EQ("std::vector<double>", f->GetTypeName());
+      EXPECT_EQ("std::vector<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "ROOT::RVec<Double32_t>").Unwrap();
+      EXPECT_EQ("ROOT::VecOps::RVec<double>", f->GetTypeName());
+      EXPECT_EQ("ROOT::VecOps::RVec<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::array<Double32_t, 2>").Unwrap();
+      EXPECT_EQ("std::array<double,2>", f->GetTypeName());
+      EXPECT_EQ("std::array<Double32_t,2>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::variant<Double32_t, int>").Unwrap();
+      EXPECT_EQ("std::variant<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::variant<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::pair<Double32_t, int>").Unwrap();
+      EXPECT_EQ("std::pair<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::pair<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::tuple<Double32_t, int>").Unwrap();
+      EXPECT_EQ("std::tuple<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::tuple<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::optional<Double32_t>").Unwrap();
+      EXPECT_EQ("std::optional<double>", f->GetTypeName());
+      EXPECT_EQ("std::optional<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::multiset<Double32_t>").Unwrap();
+      EXPECT_EQ("std::multiset<double>", f->GetTypeName());
+      EXPECT_EQ("std::multiset<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::multimap<Double32_t, int>").Unwrap();
+      EXPECT_EQ("std::multimap<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::multimap<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = ROOT::RFieldBase::Create("f", "std::atomic<Double32_t>").Unwrap();
+      EXPECT_EQ("std::atomic<double>", f->GetTypeName());
+      EXPECT_EQ("std::atomic<Double32_t>", f->GetTypeAlias());
+   }
+
+   auto GetDouble32Item = []() {
+      auto item = std::make_unique<ROOT::RField<double>>("_0");
+      item->SetDouble32();
+      return item;
+   };
+
+   {
+      auto f = std::make_unique<ROOT::RVectorField>("f", GetDouble32Item());
+      EXPECT_EQ("std::vector<double>", f->GetTypeName());
+      EXPECT_EQ("std::vector<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = std::make_unique<ROOT::RRVecField>("f", GetDouble32Item());
+      EXPECT_EQ("ROOT::VecOps::RVec<double>", f->GetTypeName());
+      EXPECT_EQ("ROOT::VecOps::RVec<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = std::make_unique<ROOT::RArrayField>("f", GetDouble32Item(), 2);
+      EXPECT_EQ("std::array<double,2>", f->GetTypeName());
+      EXPECT_EQ("std::array<Double32_t,2>", f->GetTypeAlias());
+   }
+
+   {
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      items.emplace_back(GetDouble32Item());
+      items.emplace_back(std::make_unique<RField<int>>("f"));
+      auto f = std::make_unique<ROOT::RVariantField>("f", std::move(items));
+      EXPECT_EQ("std::variant<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::variant<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      std::array<std::unique_ptr<RFieldBase>, 2> items;
+      items[0] = GetDouble32Item();
+      items[1] = std::make_unique<RField<int>>("f");
+      auto f = std::make_unique<ROOT::RPairField>("f", std::move(items));
+      EXPECT_EQ("std::pair<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::pair<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      items.emplace_back(GetDouble32Item());
+      items.emplace_back(std::make_unique<RField<int>>("f"));
+      auto f = std::make_unique<ROOT::RTupleField>("f", std::move(items));
+      EXPECT_EQ("std::tuple<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::tuple<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = std::make_unique<ROOT::ROptionalField>("f", GetDouble32Item());
+      EXPECT_EQ("std::optional<double>", f->GetTypeName());
+      EXPECT_EQ("std::optional<Double32_t>", f->GetTypeAlias());
+   }
+
+   {
+      std::array<std::unique_ptr<RFieldBase>, 2> items;
+      items[0] = GetDouble32Item();
+      items[1] = std::make_unique<RField<int>>("f");
+      auto f = std::make_unique<ROOT::RMapField>("f", ROOT::RMapField::EMapType::kMultiMap,
+                                                 std::make_unique<ROOT::RPairField>("f", std::move(items)));
+      EXPECT_EQ("std::multimap<double,std::int32_t>", f->GetTypeName());
+      EXPECT_EQ("std::multimap<Double32_t,std::int32_t>", f->GetTypeAlias());
+   }
+
+   {
+      auto f = std::make_unique<ROOT::RAtomicField>("f", GetDouble32Item());
+      EXPECT_EQ("std::atomic<double>", f->GetTypeName());
+      EXPECT_EQ("std::atomic<Double32_t>", f->GetTypeAlias());
+   }
+}

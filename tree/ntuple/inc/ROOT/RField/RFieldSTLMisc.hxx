@@ -404,7 +404,6 @@ private:
    size_t fVariantOffset = 0;
    std::vector<ROOT::Internal::RColumnIndex::ValueType> fNWritten;
 
-   static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
    /// Extracts the index from an `std::variant` and transforms it into the 1-based index used for the switch column
    /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
    /// having the exception caused empty state encoded by the max tag value,

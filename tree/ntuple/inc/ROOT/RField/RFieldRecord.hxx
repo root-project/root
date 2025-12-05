@@ -134,9 +134,6 @@ public:
 
 /// The generic field for `std::pair<T1, T2>` types
 class RPairField : public RRecordField {
-private:
-   static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
-
 protected:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
               const std::array<std::size_t, 2> &offsets);
@@ -188,9 +185,6 @@ public:
 
 /// The generic field for `std::tuple<Ts...>` types
 class RTupleField : public RRecordField {
-private:
-   static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
-
 protected:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                const std::vector<std::size_t> &offsets);
