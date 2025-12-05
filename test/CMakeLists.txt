@@ -65,6 +65,7 @@ if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   endif()
 endif()
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
+ROOT_SET_OUTPUT_DIRECTORIES(eventexe)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---guitest------------------------------------------------------------------------------------
