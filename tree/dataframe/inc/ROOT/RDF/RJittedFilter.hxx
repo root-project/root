@@ -38,9 +38,11 @@ namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 /// at a later time, from jitted code.
 class RJittedFilter final : public RFilterBase {
    std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
+   std::shared_ptr<RNodeBase> fPrevNode;
 
 public:
-   RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations);
+   RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations,
+                 std::shared_ptr<ROOT::Detail::RDF::RNodeBase> prevNode = nullptr);
 
    // Rule of five
 
@@ -68,6 +70,7 @@ public:
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final;
    std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final;
+   std::shared_ptr<RNodeBase> MoveOutPrevNode();
 };
 
 } // ns RDF

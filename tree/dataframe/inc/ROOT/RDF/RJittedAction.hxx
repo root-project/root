@@ -23,6 +23,7 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RMergeableValueBase;
+class RNodeBase;
 } // namespace RDF
 } // namespace Detail
 } // namespace ROOT
@@ -39,10 +40,12 @@ class GraphNode;
 class RJittedAction : public RActionBase {
 private:
    std::unique_ptr<RActionBase> fConcreteAction;
+   std::shared_ptr<ROOT::Detail::RDF::RNodeBase> fPrevNode;
 
 public:
    RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns, const RColumnRegister &colRegister,
-                 const std::vector<std::string> &prevVariations);
+                 const std::vector<std::string> &prevVariations,
+                 std::shared_ptr<ROOT::Detail::RDF::RNodeBase> prevNode = nullptr);
    ~RJittedAction();
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
@@ -67,6 +70,7 @@ public:
 
    std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final;
    std::unique_ptr<ROOT::Internal::RDF::RActionBase> CloneAction(void *newResult) final;
+   std::shared_ptr<ROOT::Detail::RDF::RNodeBase> MoveOutPrevNode();
 };
 
 } // ns RDF

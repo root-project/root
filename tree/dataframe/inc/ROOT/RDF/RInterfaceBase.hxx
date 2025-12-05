@@ -193,18 +193,14 @@ protected:
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
-      auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
+      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(
+         *fLoopManager, validColumnNames, fColRegister, proxiedPtr->GetVariations(), proxiedPtr);
 
-      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(proxiedPtr));
-
-      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager, validColumnNames,
-                                                                             fColRegister, proxiedPtr->GetVariations());
-      auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
-
-      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
-                                               typeid(ActionTag), helperArgOnHeap, nullptr, nSlots, fColRegister,
-                                               GetDataSource(), jittedActionOnHeap, vector2RVec);
-      fLoopManager->ToJitExec(toJit);
+      auto funcBody = RDFInternal::JitBuildAction(validColumnNames, typeid(HelperArgType), typeid(ActionTag), nullptr,
+                                                  nSlots, fColRegister, GetDataSource(), vector2RVec);
+      fLoopManager->RegisterJitHelperCall(funcBody,
+                                          std::make_unique<ROOT::Internal::RDF::RColumnRegister>(fColRegister),
+                                          validColumnNames, jittedAction, helperArg);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
 
