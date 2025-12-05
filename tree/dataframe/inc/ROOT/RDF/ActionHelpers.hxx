@@ -32,6 +32,12 @@
 #include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
 
+#include "RConfigure.h" // for R__HAS_ROOT7
+#ifdef R__HAS_ROOT7
+#include <ROOT/RHist.hxx>
+#include <ROOT/RHistConcurrentFiller.hxx>
+#endif
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -468,6 +474,52 @@ public:
       return FillHelper(result, fObjects.size());
    }
 };
+
+#ifdef R__HAS_ROOT7
+template <typename BinContentType>
+class R__CLING_PTRCHECK(off) RHistFillHelper : public ROOT::Detail::RDF::RActionImpl<RHistFillHelper<BinContentType>> {
+public:
+   using Result_t = ROOT::Experimental::RHist<BinContentType>;
+
+private:
+   std::unique_ptr<ROOT::Experimental::RHistConcurrentFiller<BinContentType>> fFiller;
+   std::vector<std::shared_ptr<ROOT::Experimental::RHistFillContext<BinContentType>>> fContexts;
+
+public:
+   RHistFillHelper(std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> h, unsigned int nSlots)
+      : fFiller(new ROOT::Experimental::RHistConcurrentFiller<BinContentType>(h)), fContexts(nSlots)
+   {
+      for (unsigned int i = 0; i < nSlots; i++) {
+         fContexts[i] = fFiller->CreateFillContext();
+      }
+   }
+   RHistFillHelper(const RHistFillHelper &) = delete;
+   RHistFillHelper(RHistFillHelper &&) = default;
+   RHistFillHelper &operator=(const RHistFillHelper &) = delete;
+   RHistFillHelper &operator=(RHistFillHelper &&) = default;
+   ~RHistFillHelper() = default;
+
+   std::shared_ptr<Result_t> GetResultPtr() const { return fFiller.GetHist(); }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   template <typename... ColumnTypes>
+   void Exec(unsigned int slot, const ColumnTypes &...columnValues)
+   {
+      fContexts[slot]->Fill(columnValues...);
+   }
+
+   void Finalize()
+   {
+      for (auto &&context : fContexts) {
+         context->Flush();
+      }
+   }
+
+   std::string GetActionName() { return "Hist"; }
+};
+#endif
 
 class R__CLING_PTRCHECK(off) FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
 public:

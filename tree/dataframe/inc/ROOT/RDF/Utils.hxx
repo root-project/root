@@ -65,6 +65,9 @@ struct RInferredType {
 namespace Internal {
 namespace RDF {
 
+/// Warn once about experimental filling of RHist.
+void WarnHist();
+
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;

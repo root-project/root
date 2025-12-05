@@ -28,6 +28,7 @@
 #include <string_view>
 #include <ROOT/RDF/RVariation.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include <RConfigure.h> // for R__HAS_ROOT7
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
 #include <TROOT.h> // IsImplicitMTEnabled
@@ -90,6 +91,7 @@ struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
 struct HistoNSparseD{};
+struct Hist{};
 struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
@@ -170,6 +172,20 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
       return std::make_unique<Action_t>(Helper_t(h, histoSlots), bl, std::move(prevNode), colRegister);
    }
 }
+
+#ifdef R__HAS_ROOT7
+// Action for RHist using RHistConcurrentFiller without weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> &h,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Hist,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistFillHelper<BinContentType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
+}
+#endif
 
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
