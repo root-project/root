@@ -190,9 +190,15 @@ private:
 /// checks whether they point to valid shared libraries.
 class DylibPathValidator {
 public:
-  DylibPathValidator(PathResolver &PR) : LibPathResolver(PR) {}
+  DylibPathValidator(PathResolver &PR, LibraryPathCache &LC)
+      : LibPathResolver(PR), LibPathCache(LC) {}
 
   static bool isSharedLibrary(StringRef Path);
+  bool isSharedLibraryCached(StringRef Path) const {
+    if (LibPathCache.hasSeen(Path))
+      return true;
+    return isSharedLibrary(Path);
+  }
 
   std::optional<std::string> normalize(StringRef Path) const {
     std::error_code ec;
@@ -205,11 +211,13 @@ public:
 
   /// Validate the given path as a shared library.
   std::optional<std::string> validate(StringRef Path) const {
+    if (LibPathCache.hasSeen(Path))
+      return Path.str();
     auto realOpt = normalize(Path);
     if (!realOpt)
       return std::nullopt;
 
-    if (!isSharedLibrary(*realOpt))
+    if (!isSharedLibraryCached(*realOpt))
       return std::nullopt;
 
     return realOpt;
@@ -217,6 +225,7 @@ public:
 
 private:
   PathResolver &LibPathResolver;
+  LibraryPathCache &LibPathCache;
 };
 
 enum class SearchPathType {
@@ -235,6 +244,7 @@ public:
   SearchPathResolver(const SearchPathConfig &Cfg,
                      StringRef PlaceholderPrefix = "")
       : Kind(Cfg.type), PlaceholderPrefix(PlaceholderPrefix) {
+    Paths.reserve(Cfg.Paths.size());
     for (auto &path : Cfg.Paths)
       Paths.emplace_back(path.str());
   }
@@ -341,14 +351,14 @@ public:
   addBasePath(const std::string &P,
               PathType Kind =
                   PathType::Unknown); // Add a canonical directory for scanning
-  std::vector<std::shared_ptr<LibrarySearchPath>>
-  getNextBatch(PathType Kind, size_t batchSize);
+  std::vector<const LibrarySearchPath *> getNextBatch(PathType Kind,
+                                                      size_t batchSize);
 
   bool leftToScan(PathType K) const;
   void resetToScan();
 
   bool isTrackedBasePath(StringRef P) const;
-  std::vector<std::shared_ptr<LibrarySearchPath>> getAllUnits() const;
+  std::vector<const LibrarySearchPath *> getAllUnits() const;
 
   SmallVector<StringRef> getSearchPaths() const {
     SmallVector<StringRef> SearchPaths;
@@ -377,7 +387,7 @@ private:
   std::shared_ptr<LibraryPathCache> LibPathCache;
   std::shared_ptr<PathResolver> LibPathResolver;
 
-  StringMap<std::shared_ptr<LibrarySearchPath>>
+  StringMap<std::unique_ptr<LibrarySearchPath>>
       LibSearchPaths; // key: canonical path
   std::deque<StringRef> UnscannedUsr;
   std::deque<StringRef> UnscannedSys;
@@ -459,12 +469,12 @@ private:
   LibraryManager &LibMgr;
   ShouldScanFn ShouldScanCall;
 
-  std::optional<std::string> shouldScan(StringRef FilePath);
+  bool shouldScan(StringRef FilePath, bool IsResolvingDep = false);
   Expected<LibraryDepsInfo> extractDeps(StringRef FilePath);
 
-  void handleLibrary(StringRef P, PathType K, int level = 1);
+  void handleLibrary(StringRef FilePath, PathType K, int level = 0);
 
-  void scanBaseDir(std::shared_ptr<LibrarySearchPath> U);
+  void scanBaseDir(LibrarySearchPath *U);
 };
 
 using LibraryDepsInfo = LibraryScanner::LibraryDepsInfo;

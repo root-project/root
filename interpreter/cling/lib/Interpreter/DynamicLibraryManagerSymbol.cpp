@@ -1385,16 +1385,14 @@ namespace cling {
     std::vector<std::string> sym;
     sym.push_back(mangledName.str());
     llvm::orc::SearchConfig config;
-    config.Policy = {{{llvm::orc::LibraryManager::LibState::Queried,
-                       llvm::orc::PathType::User},
-                      {llvm::orc::LibraryManager::LibState::Unloaded,
-                       llvm::orc::PathType::User},
-                      {llvm::orc::LibraryManager::LibState::Queried,
-                       llvm::orc::PathType::System},
-                      {llvm::orc::LibraryManager::LibState::Unloaded,
-                       llvm::orc::PathType::System}}};
+    config.Policy = {
+        {{llvm::orc::LibState::Queried, llvm::orc::PathType::User},
+         {llvm::orc::LibState::Unloaded, llvm::orc::PathType::User},
+         {llvm::orc::LibState::Queried, llvm::orc::PathType::System},
+         {llvm::orc::LibState::Unloaded, llvm::orc::PathType::System}}};
     config.Options.FilterFlags =
         llvm::orc::SymbolEnumeratorOptions::IgnoreUndefined;
+
     m_DyldController->resolveSymbols(
         sym,
         [&](llvm::orc::LibraryResolver::SymbolQuery& Q) {
@@ -1402,6 +1400,7 @@ namespace cling {
             res = *s;
         },
         config);
+
     return res;
     // return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
   }
