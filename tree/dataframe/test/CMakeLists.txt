@@ -139,6 +139,10 @@ if (imt)
    ROOT_ADD_GTEST(dataframe_concurrency dataframe_concurrency.cxx LIBRARIES ROOTDataFrame)
 endif()
 
+if (root7)
+   ROOT_ADD_GTEST(dataframe_hist dataframe_hist.cxx LIBRARIES ROOTDataFrame ROOTHist)
+endif()
+
 if(ARROW_FOUND)
   ROOT_ADD_GTEST(datasource_arrow datasource_arrow.cxx LIBRARIES ROOTDataFrame ${ARROW_SHARED_LIB})
   target_include_directories(datasource_arrow BEFORE PRIVATE ${ARROW_INCLUDE_DIR})

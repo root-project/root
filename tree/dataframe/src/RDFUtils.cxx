@@ -29,6 +29,7 @@
 #include "TTree.h"
 
 #include <fstream>
+#include <mutex>
 #include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <stdexcept>
 #include <string>
@@ -43,6 +44,18 @@ ROOT::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
 {
    static RLogChannel c("ROOT.RDF");
    return c;
+}
+
+// A static function, not in an anonymous namespace, because the function name is included in the user-visible message.
+static void WarnHist()
+{
+   R__LOG_WARNING(RDFLogChannel()) << "Filling RHist is experimental and still under development.";
+}
+
+void ROOT::Internal::RDF::WarnHist()
+{
+   static std::once_flag once;
+   std::call_once(once, ::WarnHist);
 }
 
 namespace {
