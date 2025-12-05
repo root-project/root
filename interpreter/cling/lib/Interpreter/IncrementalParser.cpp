@@ -974,7 +974,7 @@ namespace cling {
       }
     }
 
-    // If never entered the while block, there's a chance an error occured
+    // If never entered the while block, there's a chance an error occurred
     if (Diags.hasErrorOccurred()) {
       m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
       // Diags.Reset(/*soft=*/true);
