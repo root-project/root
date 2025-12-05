@@ -27,6 +27,7 @@
 #include "snprintf.h"
 
 #include <iostream>
+#include <cmath>
 #include <ctime>
 #include <cassert>
 
@@ -779,10 +780,18 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize axis with fix bins
+///
+/// An error is printed if xup or xlow are infinite/nan
+/// (due to resulting undefined fixed bin width)
+///
+/// Set xup <= xlow to force the axis range and number of bins to be automatically
+/// deduced after buffer is full or BufferEmpty is called
 
 void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 {
    fNbins   = nbins;
+   if (!std::isfinite(xlow) || !std::isfinite(xup))
+      Error("TAxis::Set", "Axis limits need to be finite numbers");
    fXmin    = xlow;
    fXmax    = xup;
    if (!fParent) SetDefaults();
@@ -791,17 +800,24 @@ void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize axis with variable bins
+///
+/// An error is printed if bin edges are not in strictly increasing order
+/// or if any of them is infinite or nan
 
 void TAxis::Set(Int_t nbins, const Float_t *xbins)
 {
    Int_t bin;
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
-   for (bin=0; bin<= fNbins; bin++)
+   for (bin = 0; bin <= fNbins; bin++) {
+      if (!std::isfinite(xbins[bin])) {
+         Error("TAxis::Set", "Bin edges need to be finite numbers. Use a large number instead.");
+      }
       fXbins.fArray[bin] = xbins[bin];
+   }
    for (bin=1; bin<= fNbins; bin++)
       if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
-         Error("TAxis::Set", "bins must be in increasing order");
+         Error("TAxis::Set", "bin edges must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
    if (!fParent) SetDefaults();
@@ -819,7 +835,7 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
       if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
-         Error("TAxis::Set", "bins must be in increasing order");
+         Error("TAxis::Set", "bin edges must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
    if (!fParent) SetDefaults();
