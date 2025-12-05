@@ -126,7 +126,7 @@ TEST(RNtuplePrint, ArrayAsRVec)
    testField.AcceptVisitor(visitor);
    std::string expected{std::string("") +
                         "$ Field 1       : arrayasrvecfield (ROOT::VecOps::RVec<float>)                 $\n" +
-                        "$   Field 1.1   : myfloat (float)                                              $\n"};
+                        "$   Field 1.1   : _0 (float)                                                   $\n"};
    EXPECT_EQ(expected, os.str());
 }
 

@@ -38,11 +38,22 @@ void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val)
    fieldZero.fAllowFieldSubstitutions = val;
 }
 
+void ROOT::RFieldZero::Attach(std::unique_ptr<RFieldBase> child)
+{
+   const std::string childName = child->GetFieldName();
+   if (fSubFieldNames.count(childName) > 0)
+      throw RException(R__FAIL("duplicate field name: " + childName));
+   RFieldBase::Attach(std::move(child), "");
+   fSubFieldNames.insert(childName);
+}
+
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
-   for (auto &f : fSubfields)
+   for (auto &f : fSubfields) {
       result->Attach(f->Clone(f->GetFieldName()));
+      result->fSubFieldNames.insert(f->GetFieldName());
+   }
    return result;
 }
 
@@ -565,14 +576,15 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::string_view ty
 {
 }
 
-void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields)
+void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields, bool useNumberedFields)
 {
    fTraits |= kTraitTrivialType;
-   for (auto &item : itemFields) {
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
-      fTraits &= item->GetTraits();
-      Attach(std::move(item));
+   const auto N = itemFields.size();
+   for (std::size_t i = 0; i < N; ++i) {
+      fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
+      fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
+      fTraits &= itemFields[i]->GetTraits();
+      Attach(std::move(itemFields[i]), useNumberedFields ? ("_" + std::to_string(i)) : "");
    }
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
    // requirements of the type with strictest alignment
@@ -602,13 +614,19 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::un
 {
    fTraits |= kTraitTrivialType;
    fOffsets.reserve(itemFields.size());
+   std::unordered_set<std::string> fieldNames;
    for (auto &item : itemFields) {
+      const auto itemName = item->GetFieldName();
+      if (fieldNames.count(itemName) > 0) {
+         throw RException(R__FAIL("duplicate field name: " + itemName));
+      }
       fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += item->GetValueSize();
       fTraits &= item->GetTraits();
       Attach(std::move(item));
+      fieldNames.insert(itemName);
    }
    fTraits |= !emulatedFromType.empty() * kTraitEmulatedField;
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
@@ -842,7 +860,7 @@ ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::stri
    : ROOT::RFieldBase(fieldName, typePrefix + "<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
                       false /* isSimple */)
 {
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RNullableField::GetColumnRepresentations() const
@@ -1183,7 +1201,7 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFi
       fTraits |= kTraitTriviallyConstructible;
    if (itemField->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view newName) const

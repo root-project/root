@@ -508,8 +508,9 @@ protected:
    // on the data that's written, e.g. for polymorphic types in the streamer field.
    virtual ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return ROOT::RExtraTypeInfoDescriptor(); }
 
-   /// Add a new subfield to the list of nested fields
-   void Attach(std::unique_ptr<RFieldBase> child);
+   /// Add a new subfield to the list of nested fields. If childName is non-empty and the passed field has a different
+   /// name, the field will be cloned to enforce the given name.
+   void Attach(std::unique_ptr<RFieldBase> child, std::string_view childName = "");
 
    /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
    /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
