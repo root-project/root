@@ -91,6 +91,7 @@ private:
 }
 
 class TBranch : public TNamed, public TAttFill {
+public:
    using TIOFeatures = ROOT::TIOFeatures;
 
 protected:
