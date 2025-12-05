@@ -180,7 +180,7 @@ namespace ROOT {
             f = new TRInternalFunction(fun);
          }
 
-         ClassDef(TRFunctionExport, 0) //
+         ClassDefOverride(TRFunctionExport, 0) //
       };
    }
 }

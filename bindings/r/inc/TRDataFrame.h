@@ -434,7 +434,7 @@ namespace ROOT {
                print(df[label]);
             }
          }
-         ClassDef(TRDataFrame, 0) //
+         ClassDefOverride(TRDataFrame, 0) //
       };
    }
 }

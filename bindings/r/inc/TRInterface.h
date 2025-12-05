@@ -317,7 +317,7 @@ namespace ROOT {
          */
          static TRInterface *InstancePtr();
 
-         ClassDef(TRInterface, 0)
+         ClassDefOverride(TRInterface, 0)
       };
    }
 }
