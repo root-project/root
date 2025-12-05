@@ -55,7 +55,7 @@ public:
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
 
 private:
-           Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
+   Long64_t FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
    ClassDefOverride(TBranchRef,1);  //to support referenced objects on other branches
 };

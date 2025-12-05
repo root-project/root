@@ -46,10 +46,12 @@ TBranchSTL::TBranchSTL():
 
 TBranchSTL::TBranchSTL(TTree *tree, const char *name,
                        TVirtualCollectionProxy *collProxy,
-                       Int_t bufsize, Int_t splitlevel )
+                       Long64_t bufsize, Int_t splitlevel )
 {
    fTree         = tree;
    fCollProxy    = collProxy;
+   if (bufsize > kMaxInt)
+      Fatal("TBranchSTL", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
    fBasketSize   = bufsize;
    fSplitLevel   = splitlevel;
    fContName     = collProxy->GetCollectionClass()->GetName();
@@ -88,11 +90,13 @@ TBranchSTL::TBranchSTL(TTree *tree, const char *name,
 
 TBranchSTL::TBranchSTL(TBranch* parent, const char* name,
                        TVirtualCollectionProxy* collProxy,
-                       Int_t bufsize, Int_t splitlevel,
+                       Long64_t bufsize, Int_t splitlevel,
                        TStreamerInfo* info, Int_t id )
 {
    fTree         = parent->GetTree();
    fCollProxy    = collProxy;
+   if (bufsize > kMaxInt)
+      Fatal("TBranchSTL", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
    fBasketSize   = bufsize;
    fSplitLevel   = splitlevel;
    fContName     = collProxy->GetCollectionClass()->GetName();
@@ -159,7 +163,7 @@ void TBranchSTL::Browse( TBrowser *b )
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill an STL branch.
 
-Int_t TBranchSTL::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+Long64_t TBranchSTL::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    //---------------------------------------------------------------------------
    // Cleanup after previous fill
@@ -342,7 +346,7 @@ Int_t TBranchSTL::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get entry.
 
-Int_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
+Long64_t TBranchSTL::GetEntry( Long64_t entry, Int_t getall )
 {
    //---------------------------------------------------------------------------
    // Check if we should be doing this at all

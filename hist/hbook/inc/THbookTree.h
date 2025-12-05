@@ -40,15 +40,15 @@ public:
    THbookTree();
    THbookTree(const char *name, Int_t id);
    ~THbookTree() override;
-   Int_t     GetEntry(Long64_t entry=0, Int_t getall=0) override;
+   Long64_t          GetEntry(Long64_t entry=0, Int_t getall=0) override;
    THbookFile       *GetHbookFile() {return fFile;}
    virtual Int_t     GetID() {return fID;}
    virtual Int_t     GetType() {return fType;}
            Float_t  *GetX() {return (Float_t*)fX;}
    virtual void      InitBranches(Long64_t entry);
            char     *MakeX(Int_t nvars) {fX = new char[nvars]; return fX;}
-   void      Print(Option_t *option="") const override;
-   Long64_t  SetEntries(Long64_t n=-1) override;
+   void              Print(Option_t *option="") const override;
+   Long64_t          SetEntries(Long64_t n=-1) override;
    virtual void      SetHbookFile(THbookFile *file) {fFile = file;}
    virtual void      SetType(Int_t atype) {fType = atype;}
 

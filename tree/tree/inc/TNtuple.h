@@ -31,7 +31,7 @@ protected:
    Int_t       fNvar;            ///<  Number of columns
    Float_t    *fArgs;            ///<! [fNvar] Array of variables
 
-   Int_t  Fill() override;
+   Long64_t Fill() override;
 
 private:
    TNtuple(const TNtuple&) = delete;
@@ -39,7 +39,7 @@ private:
 
 public:
    TNtuple();
-   TNtuple(const char *name,const char *title, const char *varlist, Int_t bufsize=32000);
+   TNtuple(const char *name,const char *title, const char *varlist, Long64_t bufsize=32000);
    ~TNtuple() override;
 
            void      Browse(TBrowser *b) override;

@@ -78,7 +78,7 @@ private:
 
 public:
    TFileCacheRead();
-   TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree = nullptr);
+   TFileCacheRead(TFile *file, Long64_t bufsize, TObject *tree = nullptr);
    ~TFileCacheRead() override;
    virtual Int_t       AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual Int_t       AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
@@ -94,7 +94,7 @@ public:
            Int_t       GetNtot() const { return fNtot; }   // Return the total size of the prefetched blocks.
    virtual Int_t       GetReadCalls() const { return fReadCalls; }
    virtual Int_t       GetNoCacheReadCalls() const { return fNoCacheReadCalls; }
-   virtual Int_t       GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Int_t /*len*/, Bool_t * /*free*/) { return -1; }
+   virtual Long64_t    GetUnzipBuffer(char ** /*buf*/, Long64_t /*pos*/, Long64_t /*len*/, Bool_t * /*free*/) { return -1; }
            Long64_t    GetPrefetchedBlocks() const { return fPrefetchedBlocks; }
    virtual Bool_t      IsAsyncReading() const { return fAsyncReading; };
    virtual void        SetEnablePrefetching(Bool_t setPrefetching = kFALSE);
@@ -107,7 +107,7 @@ public:
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t       SetBufferSize(Long64_t buffersize);
+   virtual Int_t       SetBufferSize(Long64_t bufsize);
    virtual void        SetFile(TFile *file, TFile::ECacheAction action = TFile::kDisconnect);
    virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();

@@ -796,19 +796,19 @@ Bool_t TDavixFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TDavixFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t TDavixFile::WriteBuffer(const char *buf, Long64_t bufsiz)
 {
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
 
-   Long64_t ret = DavixWriteBuffer(fd, buf, len);
+   Long64_t ret = DavixWriteBuffer(fd, buf, bufsiz);
    if (ret < 0)
       return kTRUE;
 
    if (gDebug > 1)
       Info("WriteBuffer", "%lld bytes of data write"
-           " %d requested", ret, len);
+           " %lld requested", ret, bufsiz);
    return kFALSE;
 }
 

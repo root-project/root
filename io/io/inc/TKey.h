@@ -51,21 +51,21 @@ protected:
    UShort_t    fPidOffset;   ///<!Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
    TDirectory *fMotherDir;   ///<!pointer to mother directory
 
-           Int_t    Read(const char *name) override { return TObject::Read(name); }
-   virtual void     Create(Int_t nbytes, TFile* f = nullptr);
+           Long64_t Read(const char *name) override { return TObject::Read(name); }
+   virtual void     Create(Long64_t nbytes, TFile* f = nullptr);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
            void     Reset(); // Currently only for the use of TBasket.
-   virtual Int_t    WriteFileKeepBuffer(TFile *f = nullptr);
+   virtual Long64_t WriteFileKeepBuffer(TFile *f = nullptr);
 
  public:
    TKey();
    TKey(TDirectory* motherDir);
    TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset);
-   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = nullptr);
+   TKey(const char *name, const char *title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir);
+   TKey(const TString &name, const TString &title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir);
+   TKey(const TObject *obj, const char *name, Long64_t bufsize, TDirectory* motherDir);
+   TKey(const void *obj, const TClass *cl, const char *name, Long64_t bufsize, TDirectory* motherDir);
+   TKey(Long64_t pointer, Long64_t nbytes, TDirectory* motherDir = nullptr);
    ~TKey() override;
 
            void        Browse(TBrowser *b) override;
@@ -83,8 +83,8 @@ protected:
            Short_t     GetKeep() const;
            Int_t       GetKeylen() const   {return fKeylen;}
            TDirectory* GetMotherDir() const { return fMotherDir; }
-           Int_t       GetNbytes() const   {return fNbytes;}
-           Int_t       GetObjlen() const   {return fObjlen;}
+           Long64_t    GetNbytes() const   {return fNbytes;}
+           Long64_t    GetObjlen() const   {return fObjlen;}
            Int_t       GetVersion() const  {return fVersion;}
    virtual Long64_t    GetSeekKey() const  {return fSeekKey;}
    virtual Long64_t    GetSeekPdir() const {return fSeekPdir;}
@@ -110,7 +110,7 @@ protected:
    virtual void        SetBuffer() { DeleteBuffer(); fBuffer = new char[fNbytes];}
    virtual void        SetParent(const TObject *parent);
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
-           Int_t       Sizeof() const override;
+           Long64_t    Sizeof() const override;
    virtual Int_t       WriteFile(Int_t cycle = 1, TFile* f = nullptr);
 
    ClassDefOverride(TKey,4); //Header description of a logical record on file.

@@ -123,7 +123,7 @@ void TFree::FillBuffer(char *&buffer)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the best free segment where to store nbytes.
 
-TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
+TFree *TFree::GetBestFree(TList *lfree, Long64_t nbytes)
 {
    TFree *idcur = this;
    if (idcur == 0) return 0;
