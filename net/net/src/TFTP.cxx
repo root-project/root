@@ -593,7 +593,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    delete [] buf; delete [] buf2;
 
 #ifndef R__WIN32
-   fchmod(fd, 0644);
+   fchmod(fd, 0666);
 #endif
 
    close(fd);
