@@ -184,7 +184,7 @@ public:
 
    // (none)
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -207,7 +207,7 @@ private:
 
 #include "MathX/GenVectorX/Cartesian2D.h"
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #include "MathX/GenVectorX/GenVector_exception.h"
 #endif
 
@@ -221,7 +221,7 @@ void Polar2D<T>::SetXY(Scalar a, Scalar b)
    *this = Cartesian2D<Scalar>(a, b);
 }
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
 
 // ====== Set member functions for coordinates in other systems =======

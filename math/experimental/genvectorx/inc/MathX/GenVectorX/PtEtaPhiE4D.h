@@ -358,7 +358,7 @@ public:
    Scalar z() const { return Z(); }
    Scalar t() const { return E(); }
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -384,7 +384,7 @@ private:
 
 // move implementations here to avoid circle dependencies
 #include "MathX/GenVectorX/PxPyPzE4D.h"
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #include "MathX/GenVectorX/PtEtaPhiM4D.h"
 #endif
 
@@ -398,7 +398,7 @@ inline void PtEtaPhiE4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
    *this = PxPyPzE4D<Scalar>(px, py, pz, e);
 }
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
 
 // ====== Set member functions for coordinates in other systems =======
@@ -440,7 +440,7 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m)
    *this = PtEtaPhiE4D<Scalar>(v);
 }
 
-#endif // endif __MAKE__CINT || G__DICTIONARY
+#endif // endif __ROOTCLING__ || G__DICTIONARY
 #endif
 
 } // end namespace ROOT_MATH_ARCH
