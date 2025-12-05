@@ -152,6 +152,11 @@ public:
    void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+
+   std::unique_ptr<RPageSink> DeriveFor(std::string_view newName, const ROOT::RNTupleWriteOptions &opts) const final
+   {
+      return std::make_unique<RPageSinkBuf>(fInnerSink->DeriveFor(newName, opts));
+   }
 }; // RPageSinkBuf
 
 } // namespace Internal
