@@ -168,6 +168,14 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/etc/notebook:;;g"   \
                                  -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
+   # Potential leftovers from ROOT < v6.36
+   if ($?JUPYTER_CONFIG_DIR) then
+      setenv JUPYTER_CONFIG_DIR `set DOLLAR='$'; echo $JUPYTER_CONFIG_DIR | \
+                             sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
+                                 -e "s;:$old_rootsys/etc/notebook${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook:;;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
+   endif
 
    if ($?ROOT_INCLUDE_PATH) then
       setenv ROOT_INCLUDE_PATH `set DOLLAR='$'; echo $ROOT_INCLUDE_PATH | \
