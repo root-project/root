@@ -214,7 +214,7 @@ public:
 
    // (none)
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -244,7 +244,7 @@ private:
 
 #include "MathX/GenVectorX/Cartesian3D.h"
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #include "MathX/GenVectorX/GenVector_exception.h"
 #include "MathX/GenVectorX/CylindricalEta3D.h"
 #endif
@@ -259,7 +259,7 @@ void Polar3D<T>::SetXYZ(Scalar xx, Scalar yy, Scalar zz)
    *this = Cartesian3D<Scalar>(xx, yy, zz);
 }
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
 // ====== Set member functions for coordinates in other systems =======
 

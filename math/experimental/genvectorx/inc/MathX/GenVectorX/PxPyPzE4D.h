@@ -319,7 +319,7 @@ public:
    Scalar z() const { return fZ; }
    Scalar t() const { return fT; }
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -347,7 +347,7 @@ private:
 } // end namespace ROOT_MATH_ARCH
 } // end namespace ROOT
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
 // move implementations here to avoid circle dependencies
 
@@ -403,7 +403,7 @@ void PxPyPzE4D<ScalarType>::SetM(Scalar m)
 
 } // end namespace ROOT
 
-#endif // endif __MAKE__CINT || G__DICTIONARY
+#endif // endif __ROOTCLING__ || G__DICTIONARY
 #endif
 
 #endif // ROOT_MathX_GenVectorX_PxPyPzE4D
