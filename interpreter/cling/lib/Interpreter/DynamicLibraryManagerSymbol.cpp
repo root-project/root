@@ -1335,29 +1335,75 @@ namespace cling {
   }
 
   DynamicLibraryManager::~DynamicLibraryManager() {
-    static_assert(sizeof(Dyld) > 0, "Incomplete type");
-    delete m_Dyld;
+    // static_assert(sizeof(Dyld) > 0, "Incomplete type");
+    // delete m_Dyld;
   }
 
   void DynamicLibraryManager::initializeDyld(
                  std::function<bool(llvm::StringRef)> shouldPermanentlyIgnore) {
-     //assert(!m_Dyld && "Already initialized!");
-    if (m_Dyld)
-      delete m_Dyld;
+    //  assert(!m_Dyld && "Already initialized!");
+    // if (m_Dyld)
+    //   delete m_Dyld;
+    if (m_DyldController)
+      m_DyldController.reset();
 
-    std::string exeP = GetExecutablePath();
-    auto ObjF =
-      cantFail(llvm::object::ObjectFile::createObjectFile(exeP));
+    llvm::orc::LibraryResolver::Setup S =
+        llvm::orc::LibraryResolver::Setup::create({});
+    S.ShouldScanCall = [&,
+                        shouldPermanentlyIgnore](llvm::StringRef lib) -> bool {
+      if (shouldPermanentlyIgnore) {
+        return !shouldPermanentlyIgnore(lib) || !isLibraryLoaded(lib);
+      }
+      // fallback behavior if no callback provided
+      return !isLibraryLoaded(lib);
+    };
+    m_DyldController = llvm::orc::LibraryResolutionDriver::create(S);
 
-    m_Dyld = new Dyld(*this, shouldPermanentlyIgnore,
-                      ObjF.getBinary()->getFileFormatName());
+    for (const auto& info : m_SearchPaths) {
+      m_DyldController->addScanPath(info.Path,
+                                    info.IsUser ? llvm::orc::PathType::User
+                                                : llvm::orc::PathType::System);
+    }
+
+    for (const auto& lib : m_LoadedLibraries) {
+      m_DyldController->markLibraryLoaded(lib.first());
+    }
+
+    // std::string exeP = GetExecutablePath();
+    // auto ObjF =
+    //   cantFail(llvm::object::ObjectFile::createObjectFile(exeP));
+
+    // m_Dyld = new Dyld(*this, shouldPermanentlyIgnore,
+    //                   ObjF.getBinary()->getFileFormatName());
   }
 
   std::string
   DynamicLibraryManager::searchLibrariesForSymbol(StringRef mangledName,
                                            bool searchSystem/* = true*/) const {
-    assert(m_Dyld && "Must call initialize dyld before!");
-    return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
+    assert(m_DyldController && "Must call initialize dyld before!");
+    std::string res = "";
+    std::vector<std::string> sym;
+    sym.push_back(mangledName.str());
+    llvm::orc::SearchConfig config;
+    config.Policy = {{{llvm::orc::LibraryManager::LibState::Queried,
+                       llvm::orc::PathType::User},
+                      {llvm::orc::LibraryManager::LibState::Unloaded,
+                       llvm::orc::PathType::User},
+                      {llvm::orc::LibraryManager::LibState::Queried,
+                       llvm::orc::PathType::System},
+                      {llvm::orc::LibraryManager::LibState::Unloaded,
+                       llvm::orc::PathType::System}}};
+    config.Options.FilterFlags =
+        llvm::orc::SymbolEnumeratorOptions::IgnoreUndefined;
+    m_DyldController->resolveSymbols(
+        sym,
+        [&](llvm::orc::LibraryResolver::SymbolQuery& Q) {
+          if (auto s = Q.getResolvedLib(mangledName))
+            res = *s;
+        },
+        config);
+    return res;
+    // return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
   }
 
   std::string DynamicLibraryManager::getSymbolLocation(void *func) {
