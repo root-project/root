@@ -26,6 +26,10 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+if (root7)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTHist)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)

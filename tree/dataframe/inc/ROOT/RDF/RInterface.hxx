@@ -45,6 +45,11 @@
 #include "TProfile2D.h"
 #include "TStatistic.h"
 
+#include "RConfigure.h" // for R__HAS_ROOT7
+#ifdef R__HAS_ROOT7
+#include <ROOT/RHist.hxx>
+#endif
+
 #include <algorithm>
 #include <cstddef>
 #include <initializer_list>
@@ -2356,6 +2361,71 @@ public:
       return CreateAction<RDFInternal::ActionTags::HistoNSparseD, RDFDetail::RInferredType>(
          columnList, h, h, fProxiedPtr, columnList.size());
    }
+
+#ifdef R__HAS_ROOT7
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return an RHist (*lazy action*).
+   /// \tparam BinContentType The bin content type of the returned RHist.
+   /// \param[in] axes The returned histogram will be constructed using these axes.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
+   /// auto myHist = myDf.Hist({axis}, {"col0"});
+   /// ~~~
+   template <typename BinContentType = double, typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList)
+   {
+      if (axes.size() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the specified number of histogram axes: ";
+         msg += "expected " + std::to_string(axes.size()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      std::shared_ptr h = std::make_shared<ROOT::Experimental::RHist<BinContentType>>(std::move(axes));
+
+      return Hist<ColumnType, ColumnTypes...>(h, columnList);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the provided RHist (*lazy action*).
+   /// \param[in] h The histogram that should be filled.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// During execution of the computation graph, the passed histogram must only be accessed with methods that are
+   /// allowed during concurrent filling.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto h = std::make_shared<ROOT::Experimental::RHist<double>>(10, {5.0, 15.0});
+   /// auto myHist = myDf.Hist(h, {"col0"});
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes, typename BinContentType>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> h, const ColumnNames_t &columnList)
+   {
+      RDFInternal::WarnHist();
+
+      if (h->GetNDimensions() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the passed histogram: ";
+         msg += "expected " + std::to_string(h->GetNDimensions()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      return CreateAction<RDFInternal::ActionTags::Hist, ColumnType, ColumnTypes...>(columnList, h, h, fProxiedPtr,
+                                                                                     columnList.size());
+   }
+#endif
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a TGraph object (*lazy action*).
