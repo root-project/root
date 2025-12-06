@@ -134,6 +134,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          ref: ${{ inputs.ref_name }}
           path: "src/"
 
       - uses: root-project/gcc-problem-matcher-improved@main
@@ -276,6 +277,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -468,6 +471,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
