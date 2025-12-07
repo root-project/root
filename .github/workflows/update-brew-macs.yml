@@ -24,6 +24,11 @@ on:
 env:
   VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+
 jobs:
   update-macos:
     if: github.repository_owner == 'root-project'
