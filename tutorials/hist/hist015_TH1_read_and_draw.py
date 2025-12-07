@@ -22,14 +22,10 @@ pad1.Draw()
 pad2.Draw()
 pad3.Draw()
 #
-# We connect the ROOT file generated in a previous tutorial
+# We connect the ROOT file generated in the hsimple.py tutorial
 #
-File = "py-hsimple.root"
-if (ROOT.gSystem.AccessPathName(File)) :
-    ROOT.Info("hist015_TH1_read_and_draw.py", File+" does not exist")
-    exit()
 
-example = TFile(File)
+example = TFile("py-hsimple.root")
 example.ls()
 
 # Draw a global picture title
