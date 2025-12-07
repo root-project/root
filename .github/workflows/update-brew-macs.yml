@@ -86,6 +86,7 @@ jobs:
           $(brew --prefix "${PYTHON_PACKAGE_BREW}")/bin/${PYTHON_EXECUTABLE} -m venv "${VENV_DIR}"
           source "${VENV_DIR}"/bin/activate
           pip3 install --upgrade pip
+          pip3 install openstacksdk
           while read -r PACKAGE; do
             PACKAGE="${PACKAGE%%#*}" # Skip comments
             if [ -n "${PACKAGE}" ]; then
