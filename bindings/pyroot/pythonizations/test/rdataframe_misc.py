@@ -132,7 +132,7 @@ class RDataFrameMisc(unittest.TestCase):
             return
         out_path = "dataframe_misc_regression_gh20291.root"
         try:
-            x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+            x, y = numpy.array([1, 2, 3], dtype='int64'), numpy.array([4, 5, 6], dtype='int64')
             df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 
             df.Snapshot("tree", out_path)
