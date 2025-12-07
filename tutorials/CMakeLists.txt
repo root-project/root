@@ -219,6 +219,7 @@ if(NOT xrootd)
                   roofit/roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   visualisation/rcanvas/df104.py
                   visualisation/rcanvas/df105.py
+                  io/tree/imt_parTreeProcessing.C
                   )
 endif()
 
@@ -284,8 +285,6 @@ endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
   set(imt_veto ${imt_veto} analysis/parallel/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/parallel/mtbb_parallelHistoFill.C)
-  #---XRootD is not supported on Windows
-  set(imt_veto ${imt_veto} io/tree/imt_parTreeProcessing.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
@@ -864,6 +863,7 @@ if(ROOT_pyroot_FOUND)
                                 tutorial-legacy-g3d-na49view-py
                                 tutorial-hist-hist015_TH1_read_and_draw-py
                                 tutorial-io-tree-ntuple1-py)
+  set(hist-hist015_TH1_read_and_draw_uhi-depends tutorial-hsimple-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(legacy-g3d-na49view-depends tutorial-legacy-g3d-geometry-py)
   set(roofit-roofit-rf503_wspaceread-depends tutorial-roofit-roofit-rf502_wspacewrite-py)
@@ -882,6 +882,9 @@ if(ROOT_pyroot_FOUND)
   # To add a new requirement, add a glob expression that's named requires_<packageName>,
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      hsimple.py
+      io/tree/ntuple1.py # indirect dependency from hsimple.py
+      hist/hist015_TH1_read_and_draw.py # indirect dependency from hsimple.py
       analysis/dataframe/df017_vecOpsHEP.py
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df032_RDFFromNumpy.py
