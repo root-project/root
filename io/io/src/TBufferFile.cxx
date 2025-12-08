@@ -115,6 +115,16 @@ TBufferFile::~TBufferFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset buffer maps and clear byte-count tracking structures.
+
+void TBufferFile::ResetMap()
+{
+   TBufferIO::ResetMap();
+   fByteCountStack.clear();
+   fByteCounts.clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Increment level.
 
 void TBufferFile::IncrementLevel(TVirtualStreamerInfo* info)
