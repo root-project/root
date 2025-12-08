@@ -203,6 +203,12 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
       // User gave a destination which is an existing directory
       destDirPath = dest.fPath;
       destFullPath = std::string(destDirPath) + "/" + node.fName;
+      destBaseName = node.fName;
+   }
+
+   if (src.fFileName == dest.fFname && srcFullPath == destFullPath) {
+      Err() << src.fFileName << ":" << srcFullPath << ": source and destination cannot be the same\n";
+      return;
    }
 
    Info(2) << "cp " << src.fFileName << ":" << srcFullPath << " -> " << dest.fFname << ":" << destFullPath << "\n";
