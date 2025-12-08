@@ -17,6 +17,7 @@
 #define ROOT_RClusterPool
 
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <condition_variable>
@@ -103,6 +104,9 @@ private:
    /// main threads.
    std::thread fThreadIo;
 
+   /// The cluster pool counters are observed by the page source
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecReadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
@@ -136,6 +140,8 @@ public:
 
    /// Used by the unit tests to drain the queue of clusters to be preloaded
    void WaitForInFlightClusters();
+
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 }; // class RClusterPool
 
 } // namespace Internal

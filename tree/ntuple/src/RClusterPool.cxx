@@ -49,7 +49,7 @@ bool ROOT::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCl
 }
 
 ROOT::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource, unsigned int clusterBunchSize)
-   : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize)
+   : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize), fMetrics("RClusterPool")
 {
    R__ASSERT(clusterBunchSize > 0);
 }
