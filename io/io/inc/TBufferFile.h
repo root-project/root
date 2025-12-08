@@ -120,6 +120,8 @@ public:
    const ByteCountFinder_t& GetByteCounts() const { return fByteCounts; }
    void SetByteCounts(ByteCountFinder_t &&byteCounts) { fByteCounts = std::move(byteCounts); }
 
+   void ResetMap() override;
+
    using TBufferIO::CheckObject;
 
    // basic types and arrays of basic types
