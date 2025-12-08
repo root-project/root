@@ -42,3 +42,7 @@ ROOT_ADD_GTEST(ZipHeader ZipHeader.cxx LIBRARIES RIO Tree ROOTNTuple)
 #  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
 #  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
 #endif()
+
+ROOTTEST_ADD_TEST(testLargeByteCounts
+                  MACRO testByteCount.C
+                  OUTREF testByteCount.ref)
