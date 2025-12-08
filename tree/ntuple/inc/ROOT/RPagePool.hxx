@@ -137,7 +137,8 @@ private:
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
-   /// during registration. Called by the RPageRef destructor.
+   /// during registration. Pages of pinned clusters are given back to the "unused pages" pool and are not immedately
+   /// evicted. Called by the RPageRef destructor.
    void ReleasePage(const RPage &page);
 
    /// Called by PreloadPage() if the page at hand is new and thus added with ref counter 0
