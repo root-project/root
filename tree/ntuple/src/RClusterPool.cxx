@@ -52,6 +52,10 @@ ROOT::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSour
    : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize), fMetrics("RClusterPool")
 {
    R__ASSERT(clusterBunchSize > 0);
+
+   using ROOT::Experimental::Detail::RNTupleAtomicCounter;
+   fCounters = std::make_unique<RCounters>(
+      RCounters{*fMetrics.MakeCounter<RNTupleAtomicCounter *>("nCluster", "", "number of currently cached clusters")});
 }
 
 ROOT::Internal::RClusterPool::~RClusterPool()
@@ -232,6 +236,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
          continue;
       }
       itr = fPool.erase(itr);
+      fCounters->fNCluster.Dec();
    }
 
    // Move clusters that meanwhile arrived into cache pool
@@ -273,6 +278,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
          } else {
             const auto cid = cptr->GetId();
             fPool.emplace(cid, std::move(cptr));
+            fCounters->fNCluster.Inc();
          }
          itr = fInFlightClusters.erase(itr);
       }
@@ -370,6 +376,7 @@ ROOT::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId, const RClu
       } else {
          const auto cid = cptr->GetId();
          fPool.emplace(cid, std::move(cptr));
+         fCounters->fNCluster.Inc();
       }
 
       std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
