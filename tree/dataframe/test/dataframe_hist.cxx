@@ -3,6 +3,7 @@
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDFHelpers.hxx>
+#include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RRegularAxis.hxx>
 #include <ROOT/RVariableBinAxis.hxx>
@@ -14,6 +15,7 @@
 #include <vector>
 
 using ROOT::RDataFrame;
+using ROOT::Experimental::RBinWithError;
 using ROOT::Experimental::RHist;
 using ROOT::Experimental::RRegularAxis;
 using ROOT::Experimental::RVariableBinAxis;
@@ -178,6 +180,91 @@ TEST_P(RDFHist, InvalidNumberOfArgumentsJit)
 
    auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
    EXPECT_THROW(dfX.Hist(hist, {"x", "x"}), std::invalid_argument);
+}
+
+TEST_P(RDFHist, Weight)
+{
+   RDataFrame df(10);
+   const RRegularAxis axis(10, {5.0, 15.0});
+   auto hist = df.Define("x", [](ULong64_t e) { return e + 5.5; }, {"rdfentry_"})
+                  .Define("w", [](ULong64_t e) { return 0.1 + e * 0.03; }, {"rdfentry_"})
+                  .Hist</*BinContentType=*/RBinWithError, double, double>({axis}, {"x"}, "w");
+   EXPECT_EQ(hist->GetNEntries(), 10);
+   for (auto index : axis.GetNormalRange()) {
+      auto &bin = hist->GetBinContent(index);
+      double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(bin.fSum, weight);
+      EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
+   }
+}
+
+TEST_P(RDFHist, WeightJit)
+{
+   RDataFrame df(10);
+   const RRegularAxis axis(10, {5.0, 15.0});
+   auto hist = df.Define("x", "rdfentry_ + 5.5").Define("w", "0.1 + rdfentry_ * 0.03").Hist({axis}, {"x"}, "w");
+   EXPECT_EQ(hist->GetNEntries(), 10);
+   for (auto index : axis.GetNormalRange()) {
+      auto &bin = hist->GetBinContent(index);
+      double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(bin.fSum, weight);
+      EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
+   }
+}
+
+TEST_P(RDFHist, PtrWeight)
+{
+   RDataFrame df(10);
+   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto resPtr = df.Define("x", [](ULong64_t e) { return e + 5.5; }, {"rdfentry_"})
+                    .Define("w", [](ULong64_t e) { return 0.1 + e * 0.03; }, {"rdfentry_"})
+                    .Hist<double, double>(hist, {"x"}, "w");
+   EXPECT_EQ(hist, resPtr.GetSharedPtr());
+   EXPECT_EQ(hist->GetNEntries(), 10);
+}
+
+TEST_P(RDFHist, PtrWeightJit)
+{
+   RDataFrame df(10);
+   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   auto resPtr = df.Define("x", "rdfentry_ + 5.5").Define("w", "0.1 + rdfentry_ * 0.03").Hist(hist, {"x"}, "w");
+   EXPECT_EQ(hist, resPtr.GetSharedPtr());
+   EXPECT_EQ(hist->GetNEntries(), 10);
+}
+
+TEST_P(RDFHist, WeightInvalidNumberOfArguments)
+{
+   RDataFrame df(10);
+   const RRegularAxis axis(10, {5.0, 15.0});
+   auto dfXW = df.Define("x", [](ULong64_t e) { return e + 5.5; }, {"rdfentry_"})
+                  .Define("w", [](ULong64_t e) { return 0.1 + e * 0.03; }, {"rdfentry_"});
+   try {
+      // Cannot use EXPECT_THROW because of template arguments...
+      dfXW.Hist</*BinContentType=*/double, double, double, double>({axis}, {"x", "x"}, "w");
+      FAIL() << "expected std::invalid_argument";
+   } catch (const std::invalid_argument &e) {
+      // expected
+   }
+
+   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   try {
+      // Cannot use EXPECT_THROW because of template arguments...
+      dfXW.Hist<double, double, double>(hist, {"x", "x"}, "w");
+      FAIL() << "expected std::invalid_argument";
+   } catch (const std::invalid_argument &e) {
+      // expected
+   }
+}
+
+TEST_P(RDFHist, WeightInvalidNumberOfArgumentsJit)
+{
+   RDataFrame df(10);
+   const RRegularAxis axis(10, {5.0, 15.0});
+   auto dfXW = df.Define("x", "rdfentry_ + 5.5").Define("w", "0.1 + rdfentry_ * 0.03");
+   EXPECT_THROW(dfXW.Hist({axis}, {"x", "x"}, "w"), std::invalid_argument);
+
+   auto hist = std::make_shared<RHist<double>>(10, std::make_pair(5.0, 15.0));
+   EXPECT_THROW(dfXW.Hist(hist, {"x", "x"}, "w"), std::invalid_argument);
 }
 
 INSTANTIATE_TEST_SUITE_P(Seq, RDFHist, ::testing::Values(false));
