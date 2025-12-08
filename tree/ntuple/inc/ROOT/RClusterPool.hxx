@@ -79,6 +79,12 @@ private:
       bool operator <(const RInFlightCluster &other) const;
    };
 
+   /// Performance counters that get registered in fMetrics
+   struct RCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNCluster;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
    /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    ROOT::Internal::RPageSource &fPageSource;
