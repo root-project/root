@@ -21,6 +21,13 @@
 #include <cstdlib>
 #include <utility>
 
+ROOT::Internal::RPagePool::RPagePool(RPageSource &pageSource) : fPageSource(pageSource), fMetrics("RPagePool")
+{
+   using ROOT::Experimental::Detail::RNTupleAtomicCounter;
+   fCounters = std::make_unique<RCounters>(
+      RCounters{*fMetrics.MakeCounter<RNTupleAtomicCounter *>("nPage", "", "number of currently cached pages")});
+}
+
 ROOT::Internal::RPagePool::REntry &
 ROOT::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
 {
@@ -44,6 +51,7 @@ ROOT::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t ini
 
    fLookupByBuffer[page.GetBuffer()] = entryIndex;
 
+   fCounters->fNPage.Inc();
    return fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
 }
 
@@ -83,6 +91,7 @@ void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookup
       fEntries[entryIdx] = std::move(fEntries[N - 1]);
    }
 
+   fCounters->fNPage.Dec();
    fEntries.resize(N - 1);
 }
 
