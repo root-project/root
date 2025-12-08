@@ -16,6 +16,7 @@
 
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
@@ -132,6 +133,9 @@ private:
    std::unordered_map<ROOT::DescriptorId_t, std::unordered_set<void *>> fUnusedPages;
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
+   /// The page pool counters are observed by the page source
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+
    /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
    REntry &AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter);
 
@@ -150,7 +154,7 @@ private:
    void ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr);
 
 public:
-   explicit RPagePool(RPageSource &pageSource) : fPageSource(pageSource) {}
+   explicit RPagePool(RPageSource &pageSource) : fPageSource(pageSource), fMetrics("RPagePool") {}
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;
@@ -168,6 +172,8 @@ public:
    /// counter is increased
    RPageRef GetPage(RKey key, ROOT::NTupleSize_t globalIndex);
    RPageRef GetPage(RKey key, RNTupleLocalIndex localIndex);
+
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 };
 
 // clang-format off
