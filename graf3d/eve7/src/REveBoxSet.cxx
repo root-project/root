@@ -238,7 +238,7 @@ void REveBoxSet::AddHex(const REveVector& pos, Float_t r, Float_t angle, Float_t
    REveTrans t; // AMT do we need to reuse ???
    t.SetPos(pos.fX, pos.fY, pos.fZ);
    t.SetScale(r,r,depth);
-   t.RotatePF(1, 2, angle);
+   t.RotateLF(1, 2, angle * TMath::DegToRad());
    for(Int_t i=0; i<16; ++i)
    hex->fMat[i] = t[i];
 }
