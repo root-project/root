@@ -470,6 +470,7 @@ void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix
 {
    fMetrics = RNTupleMetrics(prefix);
    fMetrics.ObserveMetrics(fClusterPool.GetMetrics());
+   fMetrics.ObserveMetrics(fPagePool.GetMetrics());
    fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nRead", "", "number of byte ranges read"),
