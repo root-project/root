@@ -115,6 +115,12 @@ private:
       explicit RPagePosition(RNTupleLocalIndex localIndex) : fClusterFirstElement(localIndex) {}
    };
 
+   /// Performance counters that get registered in fMetrics
+   struct RCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPage;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
    /// Every page pool is associated to exactly one page source. The page source is queried for pinned cluster
    /// when pages are released.
    RPageSource &fPageSource;
@@ -154,7 +160,7 @@ private:
    void ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr);
 
 public:
-   explicit RPagePool(RPageSource &pageSource) : fPageSource(pageSource), fMetrics("RPagePool") {}
+   explicit RPagePool(RPageSource &pageSource);
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;
