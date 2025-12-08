@@ -91,6 +91,44 @@ TEST(Pages, Pool)
    EXPECT_TRUE(pageRef.Get().IsNull());
 }
 
+TEST(Pages, ReleasePinned)
+{
+   RPageSourceMock pageSource;
+   RPageAllocatorHeap allocator;
+   RPagePool pool(pageSource);
+
+   constexpr ROOT::DescriptorId_t columnId = 7;
+   constexpr ROOT::NTupleSize_t nElements = 10;
+   constexpr ROOT::NTupleSize_t elementSize = 1;
+   constexpr ROOT::DescriptorId_t clusterId1 = 10;
+   constexpr ROOT::DescriptorId_t clusterId2 = 20;
+   constexpr ROOT::NTupleSize_t firstElementIndex1 = 100;
+   constexpr ROOT::NTupleSize_t firstElementIndex2 = 200;
+
+   auto page1 = allocator.NewPage(elementSize, nElements);
+   page1.GrowUnchecked(nElements);
+   page1.SetWindow(firstElementIndex1, RPage::RClusterInfo(clusterId1, firstElementIndex1));
+
+   auto page2 = allocator.NewPage(elementSize, nElements);
+   page2.GrowUnchecked(nElements);
+   page2.SetWindow(firstElementIndex2, RPage::RClusterInfo(clusterId2, firstElementIndex2));
+
+   pageSource.PinCluster(clusterId1);
+
+   {
+      auto pageRef1 = pool.RegisterPage(std::move(page1), RPagePool::RKey{columnId, std::type_index(typeid(void))});
+      auto pageRef2 = pool.RegisterPage(std::move(page2), RPagePool::RKey{columnId, std::type_index(typeid(void))});
+   }
+
+   auto pageRef = pool.GetPage(RPagePool::RKey{columnId, std::type_index(typeid(void))}, firstElementIndex1);
+   EXPECT_FALSE(pageRef.Get().IsNull());
+   EXPECT_EQ(firstElementIndex1, pageRef.Get().GetGlobalRangeFirst());
+   EXPECT_EQ(firstElementIndex1 + nElements - 1, pageRef.Get().GetGlobalRangeLast());
+
+   pageRef = pool.GetPage(RPagePool::RKey{columnId, std::type_index(typeid(void))}, firstElementIndex2);
+   EXPECT_TRUE(pageRef.Get().IsNull());
+}
+
 TEST(Pages, EvictBasics)
 {
    RPageSourceMock pageSource;
