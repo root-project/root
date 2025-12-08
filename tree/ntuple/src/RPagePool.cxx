@@ -97,7 +97,11 @@ void ROOT::Internal::RPagePool::ReleasePage(const RPage &page)
 
    assert(fEntries[idx].fRefCounter >= 1);
    if (--fEntries[idx].fRefCounter == 0) {
-      ErasePage(idx, itrLookup);
+      if (fPageSource.GetPinnedClusters().count(page.GetClusterInfo().GetId()) > 0) {
+         AddToUnusedPages(page);
+      } else {
+         ErasePage(idx, itrLookup);
+      }
    }
 }
 
