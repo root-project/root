@@ -92,6 +92,7 @@ struct Histo3D{};
 struct HistoND{};
 struct HistoNSparseD{};
 struct Hist{};
+struct HistWithWeight{};
 struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
@@ -182,6 +183,18 @@ BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experim
             const RColumnRegister &colRegister)
 {
    using Helper_t = RHistFillHelper<BinContentType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RHist using RHistConcurrentFiller with weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> &h,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::HistWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistFillHelper<BinContentType, true>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
 }

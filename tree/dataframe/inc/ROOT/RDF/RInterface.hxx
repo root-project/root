@@ -47,7 +47,9 @@
 
 #include "RConfigure.h" // for R__HAS_ROOT7
 #ifdef R__HAS_ROOT7
+#include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHist.hxx>
+#include <ROOT/RHistEngine.hxx>
 #endif
 
 #include <algorithm>
@@ -2424,6 +2426,87 @@ public:
 
       return CreateAction<RDFInternal::ActionTags::Hist, ColumnType, ColumnTypes...>(columnList, h, h, fProxiedPtr,
                                                                                      columnList.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return an RHist with weights (*lazy action*).
+   /// \tparam BinContentType The bin content type of the returned RHist.
+   /// \param[in] axes The returned histogram will be constructed using these axes.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// This overload is not available for integral bin content types (see \ref RHistEngine::SupportsWeightedFilling).
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
+   /// auto myHist = myDf.Hist({axis}, {"col0"}, "colW");
+   /// ~~~
+   template <typename BinContentType = ROOT::Experimental::RBinWithError,
+             typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList, std::string_view wName)
+   {
+      static_assert(ROOT::Experimental::RHistEngine<BinContentType>::SupportsWeightedFilling,
+                    "weighted filling is not supported for integral bin content types");
+
+      if (axes.size() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the specified number of histogram axes: ";
+         msg += "expected " + std::to_string(axes.size()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      std::shared_ptr h = std::make_shared<ROOT::Experimental::RHist<BinContentType>>(std::move(axes));
+
+      return Hist<ColumnType, ColumnTypes...>(h, columnList, wName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the provided RHist with weights (*lazy action*).
+   /// \param[in] h The histogram that should be filled.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// This overload is not available for integral bin content types (see \ref RHistEngine::SupportsWeightedFilling).
+   ///
+   /// During execution of the computation graph, the passed histogram must only be accessed with methods that are
+   /// allowed during concurrent filling.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto h = std::make_shared<ROOT::Experimental::RHist<double>>(10, {5.0, 15.0});
+   /// auto myHist = myDf.Hist(h, {"col0"}, "colW");
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes, typename BinContentType>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::shared_ptr<ROOT::Experimental::RHist<BinContentType>> h, const ColumnNames_t &columnList,
+        std::string_view wName)
+   {
+      static_assert(ROOT::Experimental::RHistEngine<BinContentType>::SupportsWeightedFilling,
+                    "weighted filling is not supported for integral bin content types");
+
+      RDFInternal::WarnHist();
+
+      if (h->GetNDimensions() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the passed histogram: ";
+         msg += "expected " + std::to_string(h->GetNDimensions()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      // Add the weight column to the list of argument columns to pass it through the infrastructure.
+      ColumnNames_t columnListWithWeights(columnList);
+      columnListWithWeights.push_back(std::string(wName));
+
+      return CreateAction<RDFInternal::ActionTags::HistWithWeight, ColumnType, ColumnTypes...>(
+         columnListWithWeights, h, h, fProxiedPtr, columnListWithWeights.size());
    }
 #endif
 
