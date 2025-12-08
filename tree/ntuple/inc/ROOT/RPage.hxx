@@ -59,8 +59,8 @@ public:
 
    public:
       RClusterInfo() = default;
-      RClusterInfo(ROOT::NTupleSize_t id, ROOT::NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
-      ROOT::NTupleSize_t GetId() const { return fId; }
+      RClusterInfo(ROOT::DescriptorId_t id, ROOT::NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
+      ROOT::DescriptorId_t GetId() const { return fId; }
       ROOT::NTupleSize_t GetIndexOffset() const { return fIndexOffset; }
    };
 
