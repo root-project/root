@@ -161,6 +161,14 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/etc/notebook:;;g"   \
                                  -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
+   # Potential leftovers from future ROOT > v6.34
+   if ($?JUPYTER_CONFIG_PATH) then
+      setenv JUPYTER_CONFIG_PATH `set DOLLAR='$'; echo $JUPYTER_CONFIG_PATH | \
+                             sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
+                                 -e "s;:$old_rootsys/etc/notebook${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook:;;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
+   endif
 
 endif
 
