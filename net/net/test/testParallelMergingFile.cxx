@@ -68,6 +68,8 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
          msg->ReadLong64(length);
 
          // XXX: this lock is here to work around https://github.com/root-project/root/issues/20641
+         // Note that we don't care about minimizing its scope since we are not testing multithreaded scaling here
+         // and it's fine if the client's and server's operations get serialized by the mutexes.
          std::scoped_lock<std::mutex> lock(gMutex);
          auto input = std::make_unique<TMemFile>((std::string("server_") + filename), msg->Buffer() + msg->Length(),
                                                  length, "READ");
