@@ -153,6 +153,7 @@ jobs:
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
 
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
