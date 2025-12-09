@@ -67,7 +67,7 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
          msg->ReadTString(filename);
          msg->ReadLong64(length);
 
-         // XXX: this lock is here to work around https://github.com/root-project/root/issues/20641
+         // NOTE: this lock is here to work around https://github.com/root-project/root/issues/20641
          // Note that we don't care about minimizing its scope since we are not testing multithreaded scaling here
          // and it's fine if the client's and server's operations get serialized by the mutexes.
          std::scoped_lock<std::mutex> lock(gMutex);
@@ -94,18 +94,25 @@ static void Server(std::unique_ptr<TServerSocket> ss, const std::string &outFile
 
 TEST(TParallelMergingFile, UploadAndResetNonTObject)
 {
-   constexpr auto sockPath = "/tmp/parallelMergeTest.sock";
+   TString sockPath = "parallelMergeTest";
+   FILE *dummy = gSystem->TempFileName(sockPath);
+   if (!dummy) {
+      Error("fastMergeServer", "Cannot create temporary file for socket\n");
+      return;
+   }
+   std::string socketPath(sockPath.View());
+   gSystem->Unlink(socketPath.c_str());
+   fclose(dummy);
 
    // Start server
-   gSystem->Unlink(sockPath);
-   auto ss = std::make_unique<TServerSocket>(sockPath);
+   auto ss = std::make_unique<TServerSocket>(socketPath.c_str());
    ASSERT_TRUE(ss->IsValid());
 
    struct Cleanup {
       const char *fSockPath;
       Cleanup(const char *sockPath) : fSockPath(sockPath) {}
       ~Cleanup() { gSystem->Unlink(fSockPath); }
-   } cleanup(sockPath);
+   } cleanup(socketPath.c_str());
 
    ROOT::TestSupport::FileRaii fileGuardMerged("parallelFileMerged.root");
 
@@ -113,9 +120,8 @@ TEST(TParallelMergingFile, UploadAndResetNonTObject)
 
    // Create "client-side" file
    auto *file = dynamic_cast<TParallelMergingFile *>(
-      TFile::Open((std::string("parallelMergeTest.root?pmerge=") + sockPath).c_str(), "RECREATE"));
+      TFile::Open((std::string("parallelMergeTest.root?pmerge=") + socketPath).c_str(), "RECREATE"));
    ASSERT_NE(file, nullptr);
-   file->SetCacheWrite(nullptr);
 
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kWarning, "TParallelMergingFile::ResetObjects", "can not be ResetAfterMerge", false);
@@ -168,16 +174,14 @@ TEST(TParallelMergingFile, UploadAndResetNonTObject)
 
    serverThread.join();
 
-   {
-      auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuardMerged.GetPath());
-      EXPECT_EQ(reader->GetNEntries(), kNEntries);
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuardMerged.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), kNEntries);
 
-      auto px = reader->GetModel().GetDefaultEntry().GetPtr<float>("px");
-      auto py = reader->GetModel().GetDefaultEntry().GetPtr<float>("py");
-      for (auto idx : reader->GetEntryRange()) {
-         reader->LoadEntry(idx);
-         EXPECT_FLOAT_EQ(*px, idx);
-         EXPECT_FLOAT_EQ(*py, 2 * idx);
-      }
+   auto px = reader->GetModel().GetDefaultEntry().GetPtr<float>("px");
+   auto py = reader->GetModel().GetDefaultEntry().GetPtr<float>("py");
+   for (auto idx : reader->GetEntryRange()) {
+      reader->LoadEntry(idx);
+      EXPECT_FLOAT_EQ(*px, idx);
+      EXPECT_FLOAT_EQ(*py, 2 * idx);
    }
 }
