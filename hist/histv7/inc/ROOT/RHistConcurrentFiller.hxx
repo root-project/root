@@ -6,9 +6,7 @@
 #define ROOT_RHistConcurrentFiller
 
 #include "RHist.hxx"
-#include "RHistEngine.hxx"
 #include "RHistFillContext.hxx"
-#include "RWeight.hxx"
 
 #include <exception>
 #include <memory>

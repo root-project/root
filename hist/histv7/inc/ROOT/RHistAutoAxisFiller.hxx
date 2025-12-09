@@ -10,12 +10,14 @@
 #include "RWeight.hxx"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <type_traits> // for std::conditional_t
 #include <utility>
 #include <vector>
 
