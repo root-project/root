@@ -27,7 +27,6 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 
 #include "RooLognormal.h"
 #include "RooRandom.h"
-#include "RooMath.h"
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"
 
@@ -104,9 +103,11 @@ double RooLognormal::analyticalIntegral(Int_t /*code*/, const char *rangeName) c
    static const double root2 = std::sqrt(2.);
 
    double ln_k = std::abs(_useStandardParametrization ? k : std::log(k));
-   double scaledMin = _useStandardParametrization ? std::log(x.min(rangeName)) - m0 : std::log(x.min(rangeName) / m0);
-   double scaledMax = _useStandardParametrization ? std::log(x.max(rangeName)) - m0 : std::log(x.max(rangeName) / m0);
-   return 0.5 * (RooMath::erf(scaledMax / (root2 * ln_k)) - RooMath::erf(scaledMin / (root2 * ln_k)));
+   const double xMin = std::max(x.min(rangeName), 0.);
+   const double xMax = x.max(rangeName);
+   double scaledMax = _useStandardParametrization ? std::log(xMax) - m0 : std::log(xMax / m0);
+   double scaledMin = _useStandardParametrization ? std::log(xMin) - m0 : std::log(xMin / m0);
+   return 0.5 * (std::erf(scaledMax / (root2 * ln_k)) - std::erf(scaledMin / (root2 * ln_k)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
