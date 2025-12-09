@@ -54,10 +54,10 @@ public:
       }
    }
 
-   RHistConcurrentFiller(const RHistConcurrentFiller<BinContentType> &) = delete;
-   RHistConcurrentFiller(RHistConcurrentFiller<BinContentType> &&) = delete;
-   RHistConcurrentFiller<BinContentType> &operator=(const RHistConcurrentFiller<BinContentType> &) = delete;
-   RHistConcurrentFiller<BinContentType> &operator=(RHistConcurrentFiller<BinContentType> &&) = delete;
+   RHistConcurrentFiller(const RHistConcurrentFiller &) = delete;
+   RHistConcurrentFiller(RHistConcurrentFiller &&) = delete;
+   RHistConcurrentFiller &operator=(const RHistConcurrentFiller &) = delete;
+   RHistConcurrentFiller &operator=(RHistConcurrentFiller &&) = delete;
 
    ~RHistConcurrentFiller()
    {
