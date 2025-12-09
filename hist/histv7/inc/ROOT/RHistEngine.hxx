@@ -100,21 +100,21 @@ public:
    ///
    /// Copying all bin contents can be an expensive operation, depending on the number of bins. If required, users can
    /// explicitly call Clone().
-   RHistEngine(const RHistEngine<BinContentType> &) = delete;
+   RHistEngine(const RHistEngine &) = delete;
    /// Efficiently move construct a histogram engine.
    ///
    /// After this operation, the moved-from object is invalid.
-   RHistEngine(RHistEngine<BinContentType> &&) = default;
+   RHistEngine(RHistEngine &&) = default;
 
    /// The copy assignment operator is deleted.
    ///
    /// Copying all bin contents can be an expensive operation, depending on the number of bins. If required, users can
    /// explicitly call Clone().
-   RHistEngine<BinContentType> &operator=(const RHistEngine<BinContentType> &) = delete;
+   RHistEngine &operator=(const RHistEngine &) = delete;
    /// Efficiently move a histogram engine.
    ///
    /// After this operation, the moved-from object is invalid.
-   RHistEngine<BinContentType> &operator=(RHistEngine<BinContentType> &&) = default;
+   RHistEngine &operator=(RHistEngine &&) = default;
 
    ~RHistEngine() = default;
 
@@ -187,7 +187,7 @@ public:
    /// Throws an exception if the axes configurations are not identical.
    ///
    /// \param[in] other another histogram
-   void Add(const RHistEngine<BinContentType> &other)
+   void Add(const RHistEngine &other)
    {
       if (fAxes != other.fAxes) {
          throw std::invalid_argument("axes configurations not identical in Add");
@@ -202,7 +202,7 @@ public:
    /// Throws an exception if the axes configurations are not identical.
    ///
    /// \param[in] other another histogram that must not be modified during the operation
-   void AddAtomic(const RHistEngine<BinContentType> &other)
+   void AddAtomic(const RHistEngine &other)
    {
       if (fAxes != other.fAxes) {
          throw std::invalid_argument("axes configurations not identical in AddAtomic");
@@ -225,9 +225,9 @@ public:
    /// Copying all bin contents can be an expensive operation, depending on the number of bins.
    ///
    /// \return the cloned object
-   RHistEngine<BinContentType> Clone() const
+   RHistEngine Clone() const
    {
-      RHistEngine<BinContentType> h(fAxes.Get());
+      RHistEngine h(fAxes.Get());
       for (std::size_t i = 0; i < fBinContents.size(); i++) {
          h.fBinContents[i] = fBinContents[i];
       }
