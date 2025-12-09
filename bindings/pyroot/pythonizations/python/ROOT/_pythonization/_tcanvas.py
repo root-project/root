@@ -16,7 +16,6 @@ graphics in the python scripts. If extra block parameter is True, script executi
 will be suspended until <space> key pressed by user. Simple example:
 
 \code{.py}
-\endcode
 import ROOT
 
 c = ROOT.TCanvas()
@@ -29,6 +28,7 @@ c.Update(True)
 
 # continues after <space> is pressed
 c.SaveAs("canvas.root")
+\endcode
 \endpythondoc
 '''
 
