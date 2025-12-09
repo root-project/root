@@ -8,6 +8,9 @@
 #include "RHist.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
+#include "RWeight.hxx"
+
+#include <tuple>
 
 namespace ROOT {
 namespace Experimental {

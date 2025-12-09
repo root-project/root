@@ -8,6 +8,7 @@
 #include "RBinIndex.hxx"
 
 #include <cassert>
+#include <cstddef> // for std::ptrdiff_t
 #include <cstdint>
 #include <iterator>
 
