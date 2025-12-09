@@ -5,13 +5,14 @@
 #ifndef ROOT_RHist
 #define ROOT_RHist
 
+#include "RAxes.hxx" // for RAxisVariant
 #include "RBinIndex.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
+#include "RRegularAxis.hxx"
 #include "RWeight.hxx"
 
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>

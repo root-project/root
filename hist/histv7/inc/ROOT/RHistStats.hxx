@@ -6,7 +6,6 @@
 #define ROOT_RHistStats
 
 #include "RHistUtils.hxx"
-#include "RLinearizedIndex.hxx"
 #include "RWeight.hxx"
 
 #include <cmath>
@@ -14,6 +13,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 class TBuffer;
