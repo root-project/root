@@ -285,6 +285,8 @@ def download_artifacts(obj_prefix: str):
 @github_log_group("Node state")
 def show_node_state() -> None:
     result = subprocess_with_log("""
+        echo $SHELL
+        echo $PATH
         which cmake
         cmake --version
         which c++ || true
