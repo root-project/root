@@ -558,7 +558,7 @@ class TestClassDATATYPES:
             setattr(gbl, 'g_'+name, adat)
             assert getattr(gbl, 'g_'+name)   == adat
             assert getattr(gbl, 'g_c_'+name) == cdat
-            raises(TypeError, setattr, 'g_c_'+name, acdat)
+            raises(TypeError, setattr, gbl, 'g_c_'+name, acdat)
             testcount += 1
         assert testcount == len(testdata)
 
