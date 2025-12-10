@@ -30,6 +30,19 @@ TEST(RVariableBinAxis, Constructor)
    EXPECT_THROW(RVariableBinAxis({0, 1, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, 1, 1}), std::invalid_argument);
 
+   // Construction works with infinite bin edges (which make most sense with disabling builtin flow bins).
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   axis = RVariableBinAxis({NegativeInfinity, 0}, /*enableFlowBins=*/false);
+   axis = RVariableBinAxis({NegativeInfinity, PositiveInfinity}, /*enableFlowBins=*/false);
+   axis = RVariableBinAxis({0, PositiveInfinity}, /*enableFlowBins=*/false);
+
+   EXPECT_THROW(RVariableBinAxis({NegativeInfinity, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, NegativeInfinity}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({PositiveInfinity, PositiveInfinity}), std::invalid_argument);
+
    static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
    EXPECT_THROW(RVariableBinAxis({NaN, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, NaN}), std::invalid_argument);
@@ -140,6 +153,40 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
       EXPECT_EQ(linIndex.fIndex, Bins + 1);
       EXPECT_FALSE(linIndex.fValid);
    }
+}
+
+TEST(RVariableBinAxis, ComputeLinearizedIndexInfinity)
+{
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   const RVariableBinAxis axis({NegativeInfinity, 0, 1, PositiveInfinity}, /*enableFlowBins=*/false);
+
+   auto linIndex = axis.ComputeLinearizedIndex(NegativeInfinity);
+   EXPECT_EQ(linIndex.fIndex, 0);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(-100);
+   EXPECT_EQ(linIndex.fIndex, 0);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(0);
+   EXPECT_EQ(linIndex.fIndex, 1);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(0.5);
+   EXPECT_EQ(linIndex.fIndex, 1);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(1);
+   EXPECT_EQ(linIndex.fIndex, 2);
+   EXPECT_TRUE(linIndex.fValid);
+   linIndex = axis.ComputeLinearizedIndex(100);
+   EXPECT_EQ(linIndex.fIndex, 2);
+   EXPECT_TRUE(linIndex.fValid);
+   // The upper bin edges are exclusive, so positive infinity falls into the builtin overflow bin, which is disabled
+   linIndex = axis.ComputeLinearizedIndex(PositiveInfinity);
+   EXPECT_FALSE(linIndex.fValid);
+
+   // NaN will be silently discard because the builtin overflow bin is disabled
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   linIndex = axis.ComputeLinearizedIndex(NaN);
+   EXPECT_FALSE(linIndex.fValid);
 }
 
 TEST(RVariableBinAxis, GetLinearizedIndex)
