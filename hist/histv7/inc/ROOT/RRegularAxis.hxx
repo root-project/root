@@ -10,6 +10,7 @@
 #include "RLinearizedIndex.hxx"
 
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -54,7 +55,7 @@ public:
    /// Construct a regular axis object.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
-   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
+   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive), must be finite
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
    RRegularAxis(std::uint64_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins = true)
       : fNNormalBins(nNormalBins), fLow(interval.first), fHigh(interval.second), fEnableFlowBins(enableFlowBins)
@@ -62,11 +63,18 @@ public:
       if (nNormalBins == 0) {
          throw std::invalid_argument("nNormalBins must be > 0");
       }
+      if (!std::isfinite(fLow)) {
+         throw std::invalid_argument("low must be a finite value, but is " + std::to_string(fLow));
+      }
+      if (!std::isfinite(fHigh)) {
+         throw std::invalid_argument("high must be a finite value, but is " + std::to_string(fHigh));
+      }
       if (fLow >= fHigh) {
          std::string msg = "high must be > low, but " + std::to_string(fLow) + " >= " + std::to_string(fHigh);
          throw std::invalid_argument(msg);
       }
       fInvBinWidth = nNormalBins / (fHigh - fLow);
+      assert(std::isfinite(fInvBinWidth));
    }
 
    std::uint64_t GetNNormalBins() const { return fNNormalBins; }
