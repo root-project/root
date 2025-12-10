@@ -938,6 +938,7 @@ if(ROOT_pyroot_FOUND)
   )
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/RBatchGenerator_TensorFlow.py
+      machine_learning/TMVA_CNN_Classification.py
   )
   set(fixtureLists
       requires_keras
