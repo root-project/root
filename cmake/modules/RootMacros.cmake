@@ -627,7 +627,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
     set(command $<TARGET_FILE:rootcling_stage1>)
-    set(ROOTCINTDEP rconfigure)
+    set(ROOTCLINGDEP rconfigure)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -636,7 +636,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       else()
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
         # Modules need RConfigure.h copied into include/.
-        set(ROOTCINTDEP rootcling rconfigure)
+        set(ROOTCLINGDEP rootcling rconfigure)
       endif()
     elseif(TARGET ROOT::rootcling)
       set(command $<TARGET_FILE:ROOT::rootcling>)
@@ -694,7 +694,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
-  #---call rootcint------------------------------------------
+  #---call rootcling------------------------------------------
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
     COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
@@ -709,7 +709,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
     IMPLICIT_DEPENDS ${_implicitdeps}
-    DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
+    DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
             ${runtime_cxxmodule_dependencies}

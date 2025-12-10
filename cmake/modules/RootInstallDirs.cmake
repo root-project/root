@@ -14,7 +14,6 @@
 #  DATADIR          - read-only architecture-independent data (DATAROOTDIR/root)
 #  MANDIR           - man documentation (DATAROOTDIR/man)
 #  MACRODIR         - ROOT macros (DATAROOTDIR/macros)
-#  CINTINCDIR       - CINT include files (LIBDIR/cint)
 #  ICONDIR          - icons (DATAROOTDIR/icons)
 #  SRCDIR           - sources (DATAROOTDIR/src)
 #  FONTDIR          - fonts (DATAROOTDIR/fonts)
@@ -92,15 +91,6 @@ endif()
 # Values whose defaults are relative to DATAROOTDIR.  Store empty values in
 # the cache and store the defaults in local variables if the cache values are
 # not set explicitly.  This auto-updates the defaults as DATAROOTDIR changes.
-
-if(NOT CMAKE_INSTALL_CINTINCDIR)
-  if(gnuinstall)
-    set(CMAKE_INSTALL_CINTINCDIR "" CACHE PATH "cint includes and libraries libraries  (LIBDIR/cint)")
-    set(CMAKE_INSTALL_CINTINCDIR "${CMAKE_INSTALL_LIBDIR}/cint")
-  else()
-    set(CMAKE_INSTALL_CINTINCDIR "cint" CACHE PATH "cint includes and libraries libraries (cint)")
-  endif()
-endif()
 
 if(NOT CMAKE_INSTALL_DATADIR)
   set(CMAKE_INSTALL_DATADIR "" CACHE PATH "read-only architecture-independent data (DATAROOTDIR)/root")
@@ -213,7 +203,6 @@ mark_as_advanced(
   CMAKE_INSTALL_DATAROOTDIR
   CMAKE_INSTALL_DATADIR
   CMAKE_INSTALL_MACRODIR
-  CMAKE_INSTALL_CINTINCDIR
   CMAKE_INSTALL_ICONDIR
   CMAKE_INSTALL_FONTDIR
   CMAKE_INSTALL_SRCDIR
@@ -233,7 +222,6 @@ foreach(dir BINDIR
             DATAROOTDIR
             DATADIR
             MACRODIR
-            CINTINCDIR
             ICONDIR
             FONTDIR
             SRCDIR
