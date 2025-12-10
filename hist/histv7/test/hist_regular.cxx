@@ -21,6 +21,15 @@ TEST(RRegularAxis, Constructor)
 
    EXPECT_THROW(RRegularAxis(0, {0, Bins}), std::invalid_argument);
    EXPECT_THROW(RRegularAxis(Bins, {1, 1}), std::invalid_argument);
+
+   static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
+   static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   EXPECT_THROW(RRegularAxis(Bins, {NegativeInfinity, 0}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {NegativeInfinity, PositiveInfinity}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {0, PositiveInfinity}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {NaN, 0}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {0, NaN}), std::invalid_argument);
 }
 
 TEST(RRegularAxis, Equality)
