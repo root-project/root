@@ -48,5 +48,5 @@ Mid 2018, version 1.0 was released.
 .. _`boost.python`: https://wiki.python.org/moin/boost.python/GettingStarted
 .. _`sprint at CERN`: https://morepypy.blogspot.com/2010/07/cern-sprint-report-wrapping-c-libraries.html
 .. _`PyPy`: https://www.pypy.org/
-.. _`Cling`: https://github.com/vgvassilev/cling
+.. _`Cling`: https://github.com/root-project/cling
 .. _`PyPI`: https://pypi.org/

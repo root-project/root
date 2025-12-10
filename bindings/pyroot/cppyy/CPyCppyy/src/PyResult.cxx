@@ -143,7 +143,7 @@ CPyCppyy::PyResult::operator double() const
 CPyCppyy::PyResult::operator void*() const
 {
 // Cast python return value to C++ object with dictionary (may fail; note that
-// you have to use the void* converter, as CINT will not call any other).
+// you have to use the void* converter, as Cling will not call any other).
     if (fPyObject == Py_None)
         return nullptr;
 
