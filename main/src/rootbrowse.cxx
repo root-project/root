@@ -6,7 +6,7 @@
 /// \date 2025-08-21
 #include <ROOT/RLogger.hxx>
 
-#include <TApplication.h>
+#include <TRint.h>
 #include <TBrowser.h>
 #include <TError.h>
 #include <TFile.h>
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 
    // NOTE: we need to instantiate TApplication ourselves, otherwise TBrowser
    // will create a batch application that cannot show graphics.
-   TApplication app("rootbrowse", nullptr, nullptr);
+   TRint app("rootbrowse", nullptr, nullptr);
 
    if (!args.fWeb.empty())
       gROOT->SetWebDisplay(std::string(args.fWeb).c_str());
@@ -157,11 +157,11 @@ int main(int argc, char **argv)
    // For classic graphics: ensure rootbrowse quits when the window is closed
    if (auto imp = browser->GetBrowserImp()) {
       if (auto mainframe = imp->GetMainFrame()) {        
-         mainframe->Connect("CloseWindow()", "TApplication", &app, "Terminate()");
+         mainframe->Connect("CloseWindow()", "TRint", &app, "Terminate()");
       }
    }
 
-   std::cout << "Press ctrl+c to exit.\n";
+   std::cout << ".q to exit.\n";
    while (!gROOT->IsInterrupted() && !gSystem->ProcessEvents()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
    }
