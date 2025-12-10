@@ -53,7 +53,6 @@
 #include "HFMsgService.h"
 
 #include "TH1.h"
-#include "TStopwatch.h"
 
 // specific to this package
 #include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
@@ -754,9 +753,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     vector<string> systToFix = measurement.GetConstantParams();
     bool doRatio=false;
 
-    // to time the macro
-    TStopwatch t;
-    t.Start();
     //ES// string channel_name=summary[0].channel;
     string channel_name = channel.GetName();
 
