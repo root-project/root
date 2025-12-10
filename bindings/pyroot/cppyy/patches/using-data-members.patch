@@ -74,7 +74,7 @@ index ae52fbe635..d2faa2472c 100644
      if (cr.GetClass()) {
 -        TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At((int)idata);
 +        TDataMember* m = GetDataMemberByIndex(cr, (int)idata);
-     // CLING WORKAROUND: the following causes templates to be instantiated first within the proper
+     // Cling WORKAROUND: the following causes templates to be instantiated first within the proper
      // scope, making the lookup succeed and preventing spurious duplicate instantiations later. Also,
      // if the variable is not yet loaded, pull it in through gInterpreter.
 @@ -1944,6 +1963,10 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex(TCppScope_t scope, const std::strin

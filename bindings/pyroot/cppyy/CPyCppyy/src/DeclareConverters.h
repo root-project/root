@@ -334,13 +334,13 @@ private:
 };
 
 
-// CLING WORKAROUND -- classes for STL iterators are completely undefined in that
+// Cling WORKAROUND -- classes for STL iterators are completely undefined in that
 // they come in a bazillion different guises, so just do whatever
 class STLIteratorConverter : public Converter {
 public:
     bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
 };
-// -- END CLING WORKAROUND
+// -- END Cling WORKAROUND
 
 
 class VoidPtrRefConverter : public Converter {

@@ -26,7 +26,7 @@
 //                         ==========================
 //
 // The TPyDispatcher class acts as a functor that can be used for TFn's and GUIs
-// to install callbacks from CINT.
+// to install callbacks from Cling.
 
 //- constructors/destructor --------------------------------------------------
 TPyDispatcher::TPyDispatcher(PyObject *callable) : fCallable(0)
