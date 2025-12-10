@@ -31,6 +31,13 @@
     \ingroup gpad
 Class for displaying ratios, differences and fit residuals.
 
+RatioPlot is a helper class designed to draw ratios; it is not meant to be a persistent
+object on its own. Therefore, saving a TRatioPlot in a ROOT file (or exporting it directly
+as a PDF or PNG) does not make sense, because it is not a self-contained entity like a TH1
+or a TGraph. TRatioPlot is specifically designed to arrange pads, which becomes evident
+when inspecting the pad contents (using gPad->ls()): multiple pads and axes are created.
+To save its visual output, you should print the entire canvas in formats such as PDF, SVG, or PNG.
+
 TRatioPlot has two constructors, one which accepts two histograms, and is responsible
 for setting up the calculation of ratios and differences. This calculation is in part
 delegated to `TEfficiency`. A single option can be given as a parameter, that is
