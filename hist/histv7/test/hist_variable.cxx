@@ -29,6 +29,10 @@ TEST(RVariableBinAxis, Constructor)
    EXPECT_THROW(RVariableBinAxis({0, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, 1, 0}), std::invalid_argument);
    EXPECT_THROW(RVariableBinAxis({0, 1, 1}), std::invalid_argument);
+
+   static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+   EXPECT_THROW(RVariableBinAxis({NaN, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, NaN}), std::invalid_argument);
 }
 
 TEST(RVariableBinAxis, Equality)

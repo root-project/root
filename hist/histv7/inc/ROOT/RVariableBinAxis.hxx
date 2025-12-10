@@ -10,6 +10,7 @@
 #include "RLinearizedIndex.hxx"
 
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
@@ -58,7 +59,13 @@ public:
       if (fBinEdges.size() < 2) {
          throw std::invalid_argument("must have >= 2 bin edges");
       }
+      if (std::isnan(fBinEdges[0])) {
+         throw std::invalid_argument("bin egde 0 is NaN");
+      }
       for (std::size_t i = 1; i < fBinEdges.size(); i++) {
+         if (std::isnan(fBinEdges[i])) {
+            throw std::invalid_argument("bin egde " + std::to_string(i) + " is NaN");
+         }
          if (fBinEdges[i - 1] >= fBinEdges[i]) {
             std::string msg = "binEdges must be sorted, but for bin " + std::to_string(i - 1) + ": ";
             msg += std::to_string(fBinEdges[i - 1]) + " >= " + std::to_string(fBinEdges[i]);
