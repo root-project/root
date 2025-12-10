@@ -53,6 +53,8 @@ elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
 endif()
 
 if(NOT _32BIT)
+  ROOT_ADD_GTEST(TBufferFileInnerReferences InnerReferencesTests.cxx LIBRARIES RIO)
+
   ROOTTEST_COMPILE_MACRO(testByteCount.cxx
                         FIXTURES_SETUP io-io-tobj-fixture)
 
