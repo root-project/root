@@ -16,7 +16,6 @@
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
 #include "RooRealProxy.h"
-#include "TStopwatch.h"
 #include "Math/Util.h"
 
 #include <string>
