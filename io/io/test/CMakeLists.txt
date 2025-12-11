@@ -10,6 +10,7 @@ ROOT_ADD_GTEST(TBufferFile TBufferFileTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TBufferMerger TBufferMerger.cxx LIBRARIES RIO Imt Tree)
 ROOT_ADD_GTEST(TBufferJSON TBufferJSONTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TFileMerger TFileMergerTests.cxx LIBRARIES RIO Tree Hist)
+ROOT_ADD_GTEST(TBufferFileInnerReferences InnerReferencesTests.cxx LIBRARIES RIO)
 if(ROOT_NEED_STDCXXFS)
   target_link_libraries(TFileMerger PUBLIC stdc++fs)
 endif()
@@ -28,3 +29,7 @@ endif()
 #  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
 #  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
 #endif()
+
+ROOTTEST_ADD_TEST(testLargeByteCounts
+                  MACRO testByteCount.C
+                  OUTREF testByteCount.ref)
