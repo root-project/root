@@ -27,7 +27,26 @@
 
 /** \class TF3
     \ingroup Functions
-A 3-Dim function with parameters
+TF3 defines a 3D Function with Parameters.
+
+3D implicit functions can be visualized as iso-surfaces. An implicit surface is defined 
+by the equation f(x,y,z) = 0 and is rendered in Cartesian coordinates.
+
+In the example below, the drawing options "FB" and "BB" are used to remove the 
+front box and back box of the 3D frame keeping only the three axes.
+
+Begin_Macro(source)
+{
+   auto C = new TCanvas("C","C",500,500);
+   auto f3 = new TF3("gyroid",
+      "sin(x)*cos(y) + sin(y)*cos(z) + sin(z)*cos(x)",
+      -4, 4, -4, 4, -4, 4);
+   f3->SetFillColor(50);
+   f3->SetLineColor(15);
+   f3->Draw("FBBB");
+}
+End_Macro
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +207,7 @@ Int_t TF3::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this function with its current attributes
+/// Draw this function with iso-surfaces.
 
 void TF3::Draw(Option_t *option)
 {
