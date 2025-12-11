@@ -471,7 +471,7 @@ class  MyFunction {
 {
     ....
    MyFunction *fptr = new MyFunction(....);  // create the user function class
-   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
+   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar);   // create TF1 class.
 
    .....
 }

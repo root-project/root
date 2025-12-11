@@ -352,15 +352,6 @@ public:
       ROOT::Internal::TF1Builder<Func>::Build(this, f);
    }
 
-   /// backward compatible interface
-   template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
-   {
-      ROOT::Internal::TF1Builder<Func>::Build(this, f);
-   }
-
-
    /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    /// MemFn.
    /// The member function must have the signature of  (double * , double *) and returning a double.
@@ -372,12 +363,6 @@ public:
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
-   {}
-
-   /// backward compatible interface
-   template <class PtrObj, typename MemFn>
-   TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, const char *, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
    {}
 
    TF1(const TF1 &f1);
