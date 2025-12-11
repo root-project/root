@@ -1108,7 +1108,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
                // match in the 'current' in memory TStreamerInfo for
                // a non foreign class (we can not get here if this is
                // a foreign class so we do not need to test it),
-               // we need to add this one more test since the CINT behaviour
+               // we need to add this one more test since the interpreter behaviour
                // with enums changed over time, so verify the checksum ignoring
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.
@@ -1158,7 +1158,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
                // match in the 'current' in memory TStreamerInfo for
                // a non foreign class (we can not get here if this is
                // a foreign class so we do not need to test it),
-               // we need to add this one more test since the CINT behaviour
+               // we need to add this one more test since the interpreter behaviour
                // with enums changed over time, so verify the checksum ignoring
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.

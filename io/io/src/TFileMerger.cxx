@@ -58,10 +58,10 @@ TClassRef R__TTree_Class("TTree");
 TClassRef R__RNTuple_Class("ROOT::RNTuple");
 
 static const Int_t kCpProgress = BIT(14);
-static const Int_t kCintFileNumber = 100;
+static const Int_t kClingFileNumber = 100;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the maximum number of allowed opened files minus some wiggle room
-/// for CINT or at least of the standard library (stdio).
+/// for Cling or at least of the standard library (stdio).
 
 static Int_t R__GetSystemMaxOpenedFiles()
 {
@@ -77,8 +77,8 @@ static Int_t R__GetSystemMaxOpenedFiles()
       maxfiles = 512;
    }
 #endif
-   if (maxfiles > kCintFileNumber) {
-      return maxfiles - kCintFileNumber;
+   if (maxfiles > kClingFileNumber) {
+      return maxfiles - kClingFileNumber;
    } else if (maxfiles > 5) {
       return maxfiles - 5;
    } else {
