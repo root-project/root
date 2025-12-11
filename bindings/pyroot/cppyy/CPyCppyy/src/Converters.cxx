@@ -2655,7 +2655,7 @@ static PyMethodDef gWrapperCacheEraserMethodDef = {
 };
 
 static void* PyFunction_AsCPointer(PyObject* pyobject,
-    const std::string& rettype, const std::string& signature)
+    const std::string& rettype, const std::string& signature, bool allowCppInstance)
 {
 // Convert a bound C++ function pointer or callable python object to a C-style
 // function pointer. The former is direct, the latter involves a JIT-ed wrapper.
@@ -2702,8 +2702,12 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
         return fptr;
     }
 
-    if (PyCallable_Check(pyobject)) {
+
+    if (PyCallable_Check(pyobject) && (allowCppInstance || !CPPInstance_Check(pyobject))) {
     // generic python callable: create a C++ wrapper function
+    // Sometimes we don't want to take this branch if the object is a C++
+    // instance, because C++ doesn't allow converting functor objects to
+    // function pointers, but only to std::function.
         void* wpraddress = nullptr;
 
     // re-use existing wrapper if possible
@@ -2808,7 +2812,7 @@ bool CPyCppyy::FunctionPointerConverter::SetArg(
     }
 
 // normal case, get a function pointer
-    void* fptr = PyFunction_AsCPointer(pyobject, fRetType, fSignature);
+    void* fptr = PyFunction_AsCPointer(pyobject, fRetType, fSignature, fAllowCppInstance);
     if (fptr) {
         SetLifeLine(ctxt->fPyContext, pyobject, (intptr_t)this);
         para.fValue.fVoidp = fptr;
@@ -2840,7 +2844,7 @@ bool CPyCppyy::FunctionPointerConverter::ToMemory(
     }
 
 // normal case, get a function pointer
-    void* fptr = PyFunction_AsCPointer(pyobject, fRetType, fSignature);
+    void* fptr = PyFunction_AsCPointer(pyobject, fRetType, fSignature, fAllowCppInstance);
     if (fptr) {
         SetLifeLine(ctxt, pyobject, (intptr_t)address);
         *((void**)address) = fptr;
