@@ -623,22 +623,6 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
   RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
-  // Make final check list of conflicting nodes
-  RooArgSet conflictNodes2 ;
-  RooArgSet branchSet2 ;
-  for (const auto branch2 : branchSet2) {
-    if (_allOwnedNodes.find(branch2->GetName())) {
-      conflictNodes2.add(*branch2) ;
-    }
-  }
-
-  // Terminate here if there are conflicts and no resolution protocol
-  if (!conflictNodes2.empty()) {
-    coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) "
-        << conflictNodes2 << " cause naming conflict after conflict resolution protocol was executed" << std::endl ;
-    return true ;
-  }
-
   // Perform any auxiliary imports at this point
   for (const auto node : cloneSet2) {
     if (node->importWorkspaceHook(*this)) {
