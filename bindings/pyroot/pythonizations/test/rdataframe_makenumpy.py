@@ -76,7 +76,7 @@ class DataFrameFromNumpy(unittest.TestCase):
         """
         Check refcounts of associated PyObjects
 
-        In case of Python <=3.14, we expect a refcount of 2 for the data dict,
+        In case of Python < 3.14, we expect a refcount of 2 for the data dict,
         because the call to sys.getrefcount creates a second reference by
         itself. Starting from Python 3.14, we expect a refcount of 1 because
         there were changes to the interpreter to avoid some unnecessary ref
