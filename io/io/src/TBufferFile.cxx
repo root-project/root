@@ -340,7 +340,7 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    // which uses the stack to get the position and call the new one.
    // This (of course) also requires that we do the 'same' to the WriteVersion
    // routines.
-   R__ASSERT( !fByteCountStack.empty() );
+   R__ASSERT(!fByteCountStack.empty());
    if (cntpos == kMaxInt) {
       cntpos = fByteCountStack.back();
    }
@@ -441,7 +441,8 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       if ( ((char *)endpos) > fBufMax ) {
          offset = fBufMax-fBufCur;
          Error("CheckByteCount",
-               "Byte count probably corrupted around buffer position %llu:\n\tByte count is %llu while the buffer size is %lld",
+               "Byte count probably corrupted around buffer position %llu:\n\tByte count is %llu while the buffer size "
+               "is %lld",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
 
