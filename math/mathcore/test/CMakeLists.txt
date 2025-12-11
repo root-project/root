@@ -96,6 +96,8 @@ ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
+ROOT_ADD_GTEST(test_basic_math test_basic_math.cxx LIBRARIES MathCore)
+
 
 if(clad)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
