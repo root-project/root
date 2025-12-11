@@ -21,10 +21,17 @@ class NumbaDeclareSimple(unittest.TestCase):
     def test_refcount_decorator(self):
         """
         Test refcount of decorator
+
+        In case of Python < 3.14, we expect a refcount of 2, because the call
+        to sys.getrefcount can create an additional reference itself. Starting
+        from Python 3.14, we expect a refcount of 1 because there were changes
+        to the interpreter to avoid some unnecessary ref counts. See also:
+        https://docs.python.org/3.14/whatsnew/3.14.html#whatsnew314-refcount
         """
         x = ROOT.Numba.Declare(["float"], "float")
         gc.collect()
-        self.assertEqual(sys.getrefcount(x), 2)
+        extra_ref_count = int(sys.version_info < (3, 14))
+        self.assertEqual(sys.getrefcount(x), 1 + extra_ref_count)
 
     def test_refcount_pycallable(self):
         """
