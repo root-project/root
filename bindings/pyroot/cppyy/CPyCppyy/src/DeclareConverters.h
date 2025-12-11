@@ -408,13 +408,16 @@ public:
 protected:
     std::string fRetType;
     std::string fSignature;
+    bool fAllowCppInstance = false;
 };
 
 // std::function
 class StdFunctionConverter : public FunctionPointerConverter {
 public:
     StdFunctionConverter(Converter* cnv, const std::string& ret, const std::string& sig) :
-        FunctionPointerConverter(ret, sig), fConverter(cnv) {}
+        FunctionPointerConverter(ret, sig), fConverter(cnv) {
+        fAllowCppInstance = true;
+    }
     StdFunctionConverter(const StdFunctionConverter&) = delete;
     StdFunctionConverter& operator=(const StdFunctionConverter&) = delete;
     virtual ~StdFunctionConverter() { delete fConverter; }
