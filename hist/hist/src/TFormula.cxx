@@ -3619,8 +3619,8 @@ void TFormula::ReInitializeEvalMethod() {
 /// Return the expression formula.
 ///
 ///  - If option = "P" replace the parameter names with their values
-///  - If option = "CLING" return the actual expression used to build the function  passed to cling
-///  - If option = "CLINGP" replace in the CLING expression the parameter with their values
+///  - If option = "CLING" return the actual expression used to build the function passed to Cling
+///  - If option = "CLINGP" replace in the Cling expression the parameter with their values
 
 TString TFormula::GetExpFormula(Option_t *option) const
 {

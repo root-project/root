@@ -212,7 +212,7 @@ void TVirtualFitter::SetFitter(TVirtualFitter *fitter, Int_t maxpar)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// To set the address of the minimization objective function
-/// called by the native compiler (see function below when called by CINT)
+/// called by the native compiler (see function below when called by Cling)
 
 void TVirtualFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))
 {
