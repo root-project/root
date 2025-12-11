@@ -463,7 +463,7 @@ Specialization of TRootBrowser for Eve.
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add "Export to CINT" into context-menu for class cl.
+/// Add "Export to CINT" (now Cling) into context-menu for class cl.
 
 void TEveBrowser::SetupCintExport(TClass* cl)
 {
