@@ -123,7 +123,7 @@ class AsRVec(unittest.TestCase):
         """
         Test reference count of returned RVec
 
-        In case of Python <=3.14, we expect a refcount of 2 for the RVec
+        In case of Python < 3.14, we expect a refcount of 2 for the RVec
         because the call to sys.getrefcount creates a second reference by
         itself. Starting from Python 3.14, we expect a refcount of 1 because
         there were changes to the interpreter to avoid some unnecessary ref
