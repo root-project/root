@@ -117,7 +117,7 @@ public:
 
    TObject   *ReadObject(const TClass *cl) override;
 
-   const ByteCountFinder_t& GetByteCounts() const { return fByteCounts; }
+   const ByteCountFinder_t &GetByteCounts() const { return fByteCounts; }
    void SetByteCounts(ByteCountFinder_t &&byteCounts) { fByteCounts = std::move(byteCounts); }
 
    void ResetMap() override;
