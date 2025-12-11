@@ -374,6 +374,7 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
       tobuf(buf, cnt | kByteCountMask);
 
    if (cnt >= kMaxMapCount) {
+      // NOTE: This should now be unreachable.
       Error("WriteByteCount", "bytecount too large (more than %d)", kMaxMapCount);
       // exception
    }
@@ -3327,7 +3328,11 @@ void TBufferFile::StreamObject(TObject *obj)
 
 void TBufferFile::CheckCount(UInt_t offset)
 {
-   if (IsWriting()) {
+   // FIXME:
+   // We could continue to issue the error for cases where we don't want to
+   // support storing more than 1GB in a single TBufferFile.
+   const bool bufferLimitedToMaxMapCount = false;
+   if (bufferLimitedToMaxMapCount && IsWriting()) {
       if (offset >= kMaxMapCount) {
          Error("CheckCount", "buffer offset too large (larger than %d)", kMaxMapCount);
          // exception
