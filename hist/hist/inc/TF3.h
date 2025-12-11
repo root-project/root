@@ -53,27 +53,11 @@ public:
       fZmin(zmin), fZmax(zmax), fNpz(30)
    {   }
 
-   /// Backward compatible ctor
-   template <class PtrObj, typename MemFn>
-   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
-       const char * , const char *  ) :
-      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,3),
-      fZmin(zmin), fZmax(zmax), fNpz(30)
-   {   }
-
    /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
        Int_t ndim = 3, EAddToList addToGlobList = EAddToList::kDefault) :
       TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim,addToGlobList),
-      fZmin(zmin), fZmax(zmax), fNpz(30)
-   { }
-
-   /// Backward compatible ctor
-   template <typename Func>
-   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,
-       const char *  ) :
-      TF2(name,f,xmin,xmax,ymin,ymax,npar,3),
       fZmin(zmin), fZmax(zmax), fNpz(30)
    { }
 

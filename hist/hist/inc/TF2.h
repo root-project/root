@@ -53,15 +53,6 @@ public:
       fNpx = 30;
    }
 
-   /// Backward compatible ctor
-   template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
-      TF1(name,p,memFn,xmin,xmax,npar,2),
-   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
-   {
-      fNpx = 30;
-   }
-
    /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault) :
@@ -70,16 +61,6 @@ public:
    {
       fNpx = 30;
    }
-
-   /// Backward compatible ctor
-   template <typename Func>
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) :
-      TF1(name,f,xmin,xmax,npar,2),
-   fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
-   {
-      fNpx = 30;
-   }
-
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
