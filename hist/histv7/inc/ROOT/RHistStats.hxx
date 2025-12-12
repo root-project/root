@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -184,7 +185,7 @@ public:
    double ComputeNEffectiveEntries() const
    {
       if (fSumW2 == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       return fSumW * fSumW / fSumW2;
    }
@@ -202,7 +203,7 @@ public:
       // First get the statistics, which includes checking the argument.
       auto &stats = fDimensionStats.at(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       return stats.fSumWX / fSumW;
    }
@@ -228,7 +229,7 @@ public:
       // First get the statistics, which includes checking the argument.
       auto &stats = fDimensionStats.at(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       return stats.fSumWX2 / fSumW - mean * mean;
@@ -272,12 +273,12 @@ public:
       // First get the statistics, which includes checking the argument.
       auto &stats = fDimensionStats.at(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
       if (var == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double EWX3 = stats.fSumWX3 / fSumW;
       double EWX2 = stats.fSumWX2 / fSumW;
@@ -309,12 +310,12 @@ public:
       // First get the statistics, which includes checking the argument.
       auto &stats = fDimensionStats.at(dim);
       if (fSumW == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
       if (var == 0) {
-         return 0;
+         return std::numeric_limits<double>::signaling_NaN();
       }
       double EWX4 = stats.fSumWX4 / fSumW;
       double EWX3 = stats.fSumWX3 / fSumW;
