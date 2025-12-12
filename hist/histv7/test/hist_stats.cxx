@@ -222,7 +222,7 @@ TEST(RHistStats, ComputeNEffectiveEntries)
 {
    RHistStats stats(1);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeNEffectiveEntries(), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeNEffectiveEntries()));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -239,7 +239,7 @@ TEST(RHistStats, ComputeNEffectiveEntriesWeighted)
 {
    RHistStats stats(1);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeNEffectiveEntries(), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeNEffectiveEntries()));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -257,9 +257,9 @@ TEST(RHistStats, ComputeMean)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeMean(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeMean(1), 0);
-   EXPECT_EQ(stats.ComputeMean(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -276,9 +276,9 @@ TEST(RHistStats, ComputeMeanWeighted)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeMean(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeMean(1), 0);
-   EXPECT_EQ(stats.ComputeMean(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeMean(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -296,9 +296,9 @@ TEST(RHistStats, ComputeVariance)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeVariance(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeVariance(1), 0);
-   EXPECT_EQ(stats.ComputeVariance(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -315,9 +315,9 @@ TEST(RHistStats, ComputeVarianceWeighted)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeVariance(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeVariance(1), 0);
-   EXPECT_EQ(stats.ComputeVariance(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -335,9 +335,9 @@ TEST(RHistStats, ComputeStdDev)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeStdDev(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeStdDev(1), 0);
-   EXPECT_EQ(stats.ComputeStdDev(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -354,9 +354,9 @@ TEST(RHistStats, ComputeStdDevWeighted)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeStdDev(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeStdDev(1), 0);
-   EXPECT_EQ(stats.ComputeStdDev(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 0; i < Entries; i++) {
@@ -374,16 +374,16 @@ TEST(RHistStats, ComputeSkewness)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeSkewness(1), 0);
-   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(2)));
 
    stats.Fill(0, 0, 0);
    ASSERT_EQ(stats.GetNEntries(), 1);
-   // With one entry, the variance is 0 and we define skewness to be 0 as well.
-   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeSkewness(1), 0);
-   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+   // With one entry, the variance is 0 and we define skewness to be NaN.
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 1; i < Entries; i++) {
@@ -401,16 +401,16 @@ TEST(RHistStats, ComputeSkewnessWeighted)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeSkewness(1), 0);
-   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(2)));
 
    stats.Fill(0, 0, 0, RWeight(0.1));
    ASSERT_EQ(stats.GetNEntries(), 1);
-   // With one entry, the variance is 0 and we define skewness to be 0 as well.
-   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeSkewness(1), 0);
-   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+   // With one entry, the variance is 0 and we define skewness to be NaN.
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 1; i < Entries; i++) {
@@ -428,16 +428,16 @@ TEST(RHistStats, ComputeKurtosis)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(2)));
 
    stats.Fill(0, 0, 0);
    ASSERT_EQ(stats.GetNEntries(), 1);
-   // With one entry, the variance is 0 and we define kurtosis to be 0 as well.
-   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+   // With one entry, the variance is 0 and we define kurtosis to be NaN.
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 1; i < Entries; i++) {
@@ -455,16 +455,16 @@ TEST(RHistStats, ComputeKurtosisWeighted)
 {
    RHistStats stats(3);
    ASSERT_EQ(stats.GetNEntries(), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(2)));
 
    stats.Fill(0, 0, 0, RWeight(0.1));
    ASSERT_EQ(stats.GetNEntries(), 1);
-   // With one entry, the variance is 0 and we define kurtosis to be 0 as well.
-   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+   // With one entry, the variance is 0 and we define kurtosis to be NaN.
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(/*=0*/)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(1)));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis(2)));
 
    static constexpr std::size_t Entries = 20;
    for (std::size_t i = 1; i < Entries; i++) {
@@ -484,8 +484,8 @@ TEST(RHistStats, ComputeSkewnessKurtosisVar0)
    stats.Fill(1, RWeight(0.1));
    ASSERT_EQ(stats.GetNEntries(), 1);
    EXPECT_EQ(stats.ComputeVariance(), 0);
-   EXPECT_EQ(stats.ComputeSkewness(), 0);
-   EXPECT_EQ(stats.ComputeKurtosis(), 0);
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness()));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis()));
 }
 
 TEST(RHistStats, FillInvalidNumberOfArguments)
