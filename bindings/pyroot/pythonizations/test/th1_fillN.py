@@ -56,6 +56,14 @@ class FillWithArrayLike(unittest.TestCase):
             with self.subTest(input_type=type(input_data).__name__):
                 self._run_fill_test(input_data)
 
+    # Test filling with a string argument
+    def test_fill_string_argument(self):
+        h = ROOT.TH1D("h", "h", 5, 0, 5)
+        try:
+            h.Fill("a", 1)
+        except Exception:
+            self.fail()
+
 
 if __name__ == "__main__":
     unittest.main()
