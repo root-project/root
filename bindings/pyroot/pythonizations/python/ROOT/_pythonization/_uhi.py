@@ -154,11 +154,11 @@ def _get_axis(self, axis):
     return getattr(self, f"Get{['X', 'Y', 'Z'][axis]}axis")()
 
 
-def _get_axis_len(self, axis, include_flow_bins=False):
-    return _get_axis(self, axis).GetNbins() + (2 if include_flow_bins else 0)
+def _get_axis_len(self, axis, flow=False):
+    return _get_axis(self, axis).GetNbins() + (2 if flow else 0)
 
 
-def _process_index_for_axis(self, index, axis, include_flow_bins=False, is_slice_stop=False):
+def _process_index_for_axis(self, index, axis, flow=False, is_slice_stop=False):
     """Process an index for a histogram axis handling callables and index shifting."""
     if callable(index):
         # If the index is a `loc`, `underflow`, `overflow`, or `len`
@@ -180,7 +180,7 @@ def _process_index_for_axis(self, index, axis, include_flow_bins=False, is_slice
     raise index
 
 
-def _compute_uhi_index(self, index, axis, include_flow_bins=True):
+def _compute_uhi_index(self, index, axis, flow=True):
     """Convert tag functors to valid bin indices."""
     if isinstance(index, _rebin) or index is _sum:
         index = slice(None, None, index)
@@ -189,13 +189,13 @@ def _compute_uhi_index(self, index, axis, include_flow_bins=True):
         return _process_index_for_axis(self, index, axis)
 
     if isinstance(index, slice):
-        start, stop = _resolve_slice_indices(self, index, axis, include_flow_bins)
+        start, stop = _resolve_slice_indices(self, index, axis, flow)
         return slice(start, stop, index.step)
 
     raise TypeError(f"Unsupported index type: {type(index).__name__}")
 
 
-def _compute_common_index(self, index, include_flow_bins=True):
+def _compute_common_index(self, index, flow=True):
     """Normalize and expand the index to match the histogram dimension."""
     dim = self.GetDimension()
     if isinstance(index, dict):
@@ -217,7 +217,7 @@ def _compute_common_index(self, index, include_flow_bins=True):
     if len(index) != dim:
         raise IndexError(f"Expected {dim} indices, got {len(index)}")
 
-    return [_compute_uhi_index(self, idx, axis, include_flow_bins) for axis, idx in enumerate(index)]
+    return [_compute_uhi_index(self, idx, axis, flow) for axis, idx in enumerate(index)]
 
 
 def _setbin(self, index, value):
@@ -225,18 +225,18 @@ def _setbin(self, index, value):
     self.SetBinContent(index, value)
 
 
-def _resolve_slice_indices(self, index, axis, include_flow_bins=True):
+def _resolve_slice_indices(self, index, axis, flow=True):
     """Resolve slice start and stop indices for a given axis"""
     start, stop = index.start, index.stop
     start = (
-        _process_index_for_axis(self, start, axis, include_flow_bins)
+        _process_index_for_axis(self, start, axis, flow)
         if start is not None
-        else _underflow(self, axis) + (0 if include_flow_bins else 1)
+        else _underflow(self, axis) + (0 if flow else 1)
     )
     stop = (
-        _process_index_for_axis(self, stop, axis, include_flow_bins, is_slice_stop=True)
+        _process_index_for_axis(self, stop, axis, flow, is_slice_stop=True)
         if stop is not None
-        else _overflow(self, axis) + (1 if include_flow_bins else 0)
+        else _overflow(self, axis) + (1 if flow else 0)
     )
     if start < _underflow(self, axis) or stop > (_overflow(self, axis) + 1) or start > stop:
         raise IndexError(
@@ -330,14 +330,14 @@ def _slice_set(self, index, unprocessed_index, value):
     # Depending on the shape of the array provided, we can set or not the flow bins
     # Setting with a scalar does not set the flow bins
     # broadcasting an array to the shape of the slice does not set the flow bins neither
-    include_flow_bins = False
+    flow = False
     if isinstance(value, np.ndarray):
         processed_slices, _ = _get_processed_slices(self, index)
         slice_shape = tuple(stop - start for start, stop in processed_slices)
-        include_flow_bins = value.size == np.prod(slice_shape)
+        flow = value.size == np.prod(slice_shape)
 
-    if not include_flow_bins:
-        index = _compute_common_index(self, unprocessed_index, include_flow_bins=False)
+    if not flow:
+        index = _compute_common_index(self, unprocessed_index, flow=False)
 
     processed_slices, actions = _get_processed_slices(self, index)
     slice_shape = tuple(stop - start for start, stop in processed_slices)
@@ -377,7 +377,7 @@ def _setitem(self, index, value):
 
 
 def _iter(self):
-    array = _values_by_copy(self, include_flow_bins=True)
+    array = _values_by_copy(self, flow=True)
     for val in array.flat:
         yield val.item()
 
@@ -474,8 +474,8 @@ def _hasWeights(hist: Any) -> bool:
     return bool(hist.GetSumw2() and hist.GetSumw2N())
 
 
-def _shape(hist: Any, include_flow_bins: bool = True) -> Tuple[int, ...]:
-    return tuple(_get_axis_len(hist, i, include_flow_bins) for i in range(hist.GetDimension()))
+def _shape(hist: Any, flow: bool = True) -> Tuple[int, ...]:
+    return tuple(_get_axis_len(hist, i, flow) for i in range(hist.GetDimension()))
 
 
 def _axes(self) -> Tuple[Union[PlottableAxisContinuous, PlottableAxisDiscrete], ...]:
@@ -489,44 +489,48 @@ def _kind(self) -> Kind:
     return Kind.COUNT
 
 
-def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
+def _values_default(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
     llv = self.GetArray()
     ret = np.frombuffer(llv, dtype=llv.typecode, count=self.GetSize())
-    return ret.reshape(_shape(self), order="F")[tuple([slice(1, -1)] * len(_shape(self)))]
+    reshaped = ret.reshape(_shape(self), order="F")
+
+    if flow:
+        # include all bins
+        slices = tuple([slice(None)] * len(_shape(self)))
+    else:
+        # exclude underflow/overflow
+        slices = tuple([slice(1, -1)] * len(_shape(self)))
+
+    return reshaped[slices]
 
 
 # Special case for TH*C and TProfile*
-def _values_by_copy(self, include_flow_bins=False) -> np.typing.NDArray[Any]:  # noqa: F821
+def _values_by_copy(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     from itertools import product
 
     import numpy as np
 
-    offset = 0 if include_flow_bins else 1
-    dimensions = [
-        range(offset, _get_axis_len(self, axis, include_flow_bins=include_flow_bins) + offset)
-        for axis in range(self.GetDimension())
-    ]
+    offset = 0 if flow else 1
+    dimensions = [range(offset, _get_axis_len(self, axis, flow=flow) + offset) for axis in range(self.GetDimension())]
     bin_combinations = product(*dimensions)
 
-    return np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(
-        _shape(self, include_flow_bins=include_flow_bins)
-    )
+    return np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(_shape(self, flow=flow))
 
 
-def _variances(self) -> np.typing.NDArray[Any]:  # noqa: F821
+def _variances(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
-    sum_of_weights = self.values()
+    sum_of_weights = self.values(flow=flow)
 
     if not _hasWeights(self) and _kind(self) == Kind.COUNT:
         return sum_of_weights
 
-    sum_of_weights_squared = _get_sum_of_weights_squared(self)
+    sum_of_weights_squared = _get_sum_of_weights_squared(self, flow=flow)
 
     if _kind(self) == Kind.MEAN:
-        counts = self.counts()
+        counts = self.counts(flow=flow)
         variances = sum_of_weights_squared.copy()
         variances[counts <= 1] = np.nan
         return variances
@@ -534,15 +538,15 @@ def _variances(self) -> np.typing.NDArray[Any]:  # noqa: F821
     return sum_of_weights_squared
 
 
-def _counts(self) -> np.typing.NDArray[Any]:  # noqa: F821
+def _counts(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
-    sum_of_weights = self.values()
+    sum_of_weights = self.values(flow=flow)
 
     if not _hasWeights(self):
         return sum_of_weights
 
-    sum_of_weights_squared = _get_sum_of_weights_squared(self)
+    sum_of_weights_squared = _get_sum_of_weights_squared(self, flow=flow)
 
     return np.divide(
         sum_of_weights**2,
@@ -552,16 +556,23 @@ def _counts(self) -> np.typing.NDArray[Any]:  # noqa: F821
     )
 
 
-def _get_sum_of_weights_squared(self) -> np.typing.NDArray[Any]:  # noqa: F821
+def _get_sum_of_weights_squared(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
-    shape = _shape(self, include_flow_bins=False)
     sumw2_arr = np.frombuffer(
         self.GetSumw2().GetArray(),
         dtype=self.GetSumw2().GetArray().typecode,
         count=self.GetSumw2().GetSize(),
     )
-    return sumw2_arr[tuple([slice(1, -1)] * len(shape))].reshape(shape, order="F") if sumw2_arr.size > 0 else sumw2_arr
+
+    reshaped = sumw2_arr.reshape(_shape(self, flow=True), order="F")
+
+    if flow:
+        slices = tuple(slice(None) for _ in range(self.GetDimension()))
+    else:
+        slices = tuple(slice(1, -1) for _ in range(self.GetDimension()))
+
+    return reshaped[slices]
 
 
 values_func_dict: dict[str, Callable] = {
