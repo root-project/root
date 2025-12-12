@@ -2753,6 +2753,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          UInt_t objIdx = UInt_t(idx);
 
          // save index of already stored object
+         // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
          *this << objIdx;
 
       } else {
@@ -2816,6 +2817,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       return cl;
    }
    UInt_t bcnt, tag, startpos = 0;
+   // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
       tag  = bcnt;
@@ -2909,6 +2911,9 @@ void TBufferFile::WriteClass(const TClass *cl)
       UInt_t clIdx = UInt_t(idx);
 
       // save index of already stored class
+      // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
+      // FIXME/INCORRECTNESS: if clIdx > 0x3FFFFFFF the control bit (2nd highest bit) will be wrong
+      // FIXME/INCORRECTNESS: similarly if clIdx > kClassMask (2GB) the code will be wrong
       *this << (clIdx | kClassMask);
 
    } else {
