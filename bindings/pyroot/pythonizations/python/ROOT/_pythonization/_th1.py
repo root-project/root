@@ -206,17 +206,16 @@ def _FillWithArrayTH1(self, *args):
     Raises:
     - ValueError: If weights length doesn't match data length
     """
-    import collections.abc
-
-    # If the first argument has no len() method, we don't even need to consider
-    # the array code path.
-    if not isinstance(args[0], collections.abc.Sized):
-        return self._Fill(*args)
-
     import numpy as np
 
-    data = np.asanyarray(args[0], dtype=np.float64)
-    n = len(data)
+    # Try to convert the first argument to a numpy array
+    # if it fails, we call the original Fill
+    try:
+        data = np.asanyarray(args[0], dtype=np.float64)
+        n = len(data)
+    except Exception:
+        # Not convertible
+        return self._Fill(*args)
 
     if len(args) >= 2 and args[1] is not None:
         weights = np.asanyarray(args[1], dtype=np.float64)
