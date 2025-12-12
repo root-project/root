@@ -32,25 +32,23 @@ def _FillWithArrayTH2(self, *args):
     Raises:
     - ValueError: If x, y, and/or weights do not have matching lengths
     """
-    import collections.abc
-
-    # If the first argument has no len() method, we don't even need to consider
-    # the array code path.
-    if not isinstance(args[0], collections.abc.Sized):
-        return self._Fill(*args)
-
+    # If there are less than 2 arguments, cannot do vectorized Fill
     if len(args) < 2:
-        raise ValueError("TH2.Fill requires at least x and y array-like arguments")
+        return self._Fill(*args)
 
     import numpy as np
 
-    x = np.asanyarray(args[0], dtype=np.float64)
-    y = np.asanyarray(args[1], dtype=np.float64)
+    try:
+        x = np.asanyarray(args[0], dtype=np.float64)
+        y = np.asanyarray(args[1], dtype=np.float64)
 
-    if len(x) != len(y):
-        raise ValueError(f"Length mismatch: x length ({len(x)}) != y length ({len(y)})")
+        if len(x) != len(y):
+            raise ValueError(f"Length mismatch: x length ({len(x)}) != y length ({len(y)})")
 
-    n = len(x)
+        n = len(x)
+    except Exception:
+        # Not convertible
+        return self._Fill(*args)
 
     if len(args) >= 3 and args[2] is not None:
         weights = np.asanyarray(args[2], dtype=np.float64)
