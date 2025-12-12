@@ -8,12 +8,13 @@ from ROOT._pythonization._uhi import _shape
 from uhi.typing.plottable import PlottableHistogram
 
 
-def _iterate_bins(hist):
-    dim = hist.GetDimension()
-    for i in range(1, hist.GetNbinsX() + 1):
-        for j in range(1, hist.GetNbinsY() + 1) if dim > 1 else [None]:
-            for k in range(1, hist.GetNbinsZ() + 1) if dim > 2 else [None]:
-                yield tuple(filter(None, (i, j, k)))
+def _iterate_bins(hist, flow=False):
+    ranges = [
+        range(0 if flow else 1, hist.GetNbinsX() + (2 if flow else 1)),
+        range(0 if flow else 1, hist.GetNbinsY() + (2 if flow else 1)) if hist.GetDimension() > 1 else [0],
+        range(0 if flow else 1, hist.GetNbinsZ() + (2 if flow else 1)) if hist.GetDimension() > 2 else [0],
+    ]
+    yield from ((i, j, k)[: hist.GetDimension()] for i in ranges[0] for j in ranges[1] for k in ranges[2])
 
 
 class TestTH1Plotting:
@@ -23,8 +24,14 @@ class TestTH1Plotting:
     def test_histogram_values(self, hist_setup):
         values = np.array(
             [hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup)]
-        ).reshape(_shape(hist_setup, include_flow_bins=False))
+        ).reshape(_shape(hist_setup, flow=False))
         assert np.array_equal(hist_setup.values(), values)
+
+    def test_histogram_values_flow(self, hist_setup):
+        values_flow = np.array(
+            [hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup, flow=True)]
+        ).reshape(_shape(hist_setup, flow=True))
+        assert np.array_equal(hist_setup.values(flow=True), values_flow)
 
 
 if __name__ == "__main__":
