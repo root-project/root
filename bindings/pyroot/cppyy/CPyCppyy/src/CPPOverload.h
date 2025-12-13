@@ -5,6 +5,7 @@
 #include "PyCallable.h"
 
 // Standard
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>
@@ -14,6 +15,10 @@
 namespace CPyCppyy {
 
 // signature hashes are also used by TemplateProxy
+// Forward declare for use in HashSignature before class definition
+CPYCPPYY_IMPORT PyTypeObject CPPOverload_Type;
+CPYCPPYY_IMPORT PyTypeObject TemplateProxy_Type;
+
 inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
 {
 // Build a hash from the types of the given python function arguments.
@@ -21,15 +26,23 @@ inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
 
     Py_ssize_t nargs = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
     for (Py_ssize_t i = 0; i < nargs; ++i) {
-    // TODO: hashing in the ref-count is for moves; resolve this together with the
-    // improved overloads for implicit conversions
         PyObject* pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
-        hash += (uint64_t)Py_TYPE(pyobj);
+        
+        // For CPPOverload and TemplateProxy, mix in object identity (pointer address)
+        // to distinguish different C++ callables with same Python type
+        if (Py_TYPE(pyobj) == &CPPOverload_Type || Py_TYPE(pyobj) == &TemplateProxy_Type) {
+            // Use golden ratio mixing: shift by 3 (pointers are 8-byte aligned),
+            // then apply proper bit mixing with golden ratio constant
+            hash ^= ((uint64_t)(uintptr_t)pyobj >> 3) + 0x9e3779b9ULL + (hash << 6) + (hash >> 2);
+        } else {
+            // Standard type-based hashing for other objects
+            hash += (uint64_t)Py_TYPE(pyobj);
 #if PY_VERSION_HEX >= 0x030e0000
-        hash += (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1 : 0);
+            hash += (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1 : 0);
 #else
-        hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
+            hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
 #endif
+        }
         hash += (hash << 10); hash ^= (hash >> 6);
     }
 
