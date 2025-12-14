@@ -35,6 +35,7 @@
 #@hasmathmore@ R__HAS_MATHMORE   /**/
 #@haspthread@ R__HAS_PTHREAD    /**/
 #@hasxft@ R__HAS_XFT    /**/
+#@hasclad@ R__HAS_CLAD    /**/
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvc@ R__HAS_VC    /**/
 #@hasvdt@ R__HAS_VDT    /**/
