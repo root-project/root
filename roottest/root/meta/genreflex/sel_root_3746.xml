@@ -1,0 +1,4 @@
+<lcgdict>
+  <class name="ClassAIns2" ClassVersion="2" />
+  <read sourceClass="ClassAIns" version="[2]" targetClass="ClassAIns2FOO" />
+</lcgdict>
