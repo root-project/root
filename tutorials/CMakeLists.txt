@@ -423,6 +423,12 @@ else()
   list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
+#---These do not run with minimal
+if(minimal)
+  set(minimal_veto visualisation/graphics/formula1.C)  # relies on unstable ROOT::Detail::HasBeenDeleted
+endif()
+
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   legacy/benchmarks.C
@@ -514,6 +520,7 @@ set(all_veto hsimple.C
              ${spectrum_veto}
              ${dataframe_veto}
              ${davix_veto}
+             ${minimal_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
