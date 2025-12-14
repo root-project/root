@@ -19,7 +19,7 @@ int check(TDataMember *d, UInt_t i, const char *name, Long_t expected) {
    }
 }
 
-int execOptionList() {
+int optionList() {
    gSystem->Setenv("DISPLAY",""); // Avoid spurrious warning when libGui is loaded.
 
    auto c = TClass::GetClass("TGTextEntry");
