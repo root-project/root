@@ -1156,8 +1156,30 @@ class TestTEMPLATES:
         assert type(ns.stringify("Alice")) == cppyy.gbl.std.string
         assert ns.stringify("Alice", "Bob")                          == "Alice Bob "
         assert ns.stringify(1, 2, 3)                                 == "1 2 3 "
-        assert ns.stringify["const char*"]("Aap")                    == "Aap "
+        assert ns.stringify[\"const char*\"](\"Aap\")                    == \"Aap \"
         assert ns.stringify(ctypes.c_char_p(bytes("Noot", "ascii"))) == "Noot "
+
+    def test35_issue_20526_hash_collision(self):
+        """Fix #20526: Ensure distinct global functions have distinct hashes"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            namespace Issue20526 {
+                int funcA() { return 101; }
+                int funcB() { return 202; }
+                template<typename T> int call_it(T f) { return f(); }
+            }
+        """)
+
+        ns = cppyy.gbl.Issue20526
+
+        # If hashes collide, the cache returns the wrong instantiation
+        resA = ns.call_it(ns.funcA)
+        resB = ns.call_it(ns.funcB)
+
+        assert resA == 101
+        assert resB == 202
 
 
 class TestTEMPLATED_TYPEDEFS:
