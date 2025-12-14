@@ -16,10 +16,10 @@
 
 using std::vector, std::cout, std::cerr, std::endl;
 
-const int npass0 = 200000;
+const int npass0 = 40000;
 const int maxint = 100;//20;
 const int minsize = 10;//20;
-const int maxsize = 1000000;//500;
+const int maxsize = 1000;//500;
 const int increment = 10;  // increment factor (multiplicative)
 const int arraysize = int(std::log10(double(maxsize/minsize)))+1;
 
