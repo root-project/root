@@ -20,6 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
     TRotation.h
     TVector2.h
     TVector3.h
+    TFANG.h
   SOURCES
     src/TFeldmanCousins.cxx
     src/TGenPhaseSpace.cxx
@@ -31,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
     src/TRotation.cxx
     src/TVector2.cxx
     src/TVector3.cxx
+    src/TFANG.cxx
   DEPENDENCIES
     Matrix
     MathCore
