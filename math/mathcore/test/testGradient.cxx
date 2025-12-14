@@ -125,7 +125,7 @@ struct Model1D : public Model<T> {
          delete oldTH1;
 
       // Create TH1 and fill it with values from model function
-      fNumPoints = 12801;
+      fNumPoints = 6801;
       //fNumPoints = 11;
       fHistogram = new TH1D(nameTH1.c_str(), "Test random numbers", fNumPoints, 100, 200);
       gRandom->SetSeed(1);
@@ -187,7 +187,7 @@ struct Model2D : public Model<T> {
          delete oldTH2;
 
       // Create TH1 and fill it with values from model function
-      fNumPoints = 801;
+      fNumPoints = 201;
       fHistogram = new TH2D(nameTH2.c_str(), "Test random numbers", fNumPoints, -5, 5, fNumPoints, -5, 5);
       gRandom->SetSeed(1);
       fHistogram->FillRandom(nameTF2.c_str(), 1000);
