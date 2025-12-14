@@ -25,7 +25,7 @@ bool showGraphics = false;
 
 void TestBuild(const Int_t npoints = 1000000, const Int_t bsize = 100);
 void TestConstr(const Int_t npoints = 1000000, const Int_t bsize = 100);
-void TestSpeed(Int_t npower2 = 20, Int_t bsize = 10);
+void TestSpeed(Int_t npower2 = 14, Int_t bsize = 10);
 
 //void TestkdtreeIF(Int_t npoints=1000, Int_t bsize=9, Int_t nloop=1000, Int_t mode = 2);
 //void TestSizeIF(Int_t nsec=36, Int_t nrows=159, Int_t npoints=1000,  Int_t bsize=10, Int_t mode=1);
