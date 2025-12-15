@@ -1,7 +1,8 @@
-import py, pytest, os
-from pytest import mark, raises
-from support import setup_make, pylong
+import os
 
+import pytest
+from pytest import mark, raises
+from support import pylong
 
 currpath = os.getcwd()
 test_dct = currpath + "/libtemplatesDict"
@@ -25,8 +26,9 @@ class TestTEMPLATES:
     def test01_template_member_functions(self):
         """Template member functions lookup and calls"""
 
-        import cppyy
         import sys
+
+        import cppyy
 
         m = cppyy.gbl.MyTemplatedMethodClass()
 
@@ -42,7 +44,7 @@ class TestTEMPLATES:
         if sys.hexversion >= 0x3000000:
             targ = "long"
         else:
-            targ = long
+            targ = pylong
         assert m.get_size[targ]() == m.get_long_size()
 
         import ctypes
@@ -108,19 +110,19 @@ class TestTEMPLATES:
 
         # float in, float out
         ggsr = cppyy.gbl.global_get_some_result["std::vector<float>"]
-        assert type(ggsr(vector["float"]([0.5])).m_retval) == float
+        assert type(ggsr(vector["float"]([0.5])).m_retval) is float
         assert ggsr(vector["float"]([0.5])).m_retval == 0.5
         # int in, float out
         ggsr = cppyy.gbl.global_get_some_result["std::vector<int>"]
-        assert type(ggsr(vector["int"]([5])).m_retval) == float
+        assert type(ggsr(vector["int"]([5])).m_retval) is float
         assert ggsr(vector["int"]([5])).m_retval == 5.0
         # float in, int out
         ggsr = cppyy.gbl.global_get_some_result["std::vector<float>, int"]
-        assert type(ggsr(vector["float"]([0.3])).m_retval) == int
+        assert type(ggsr(vector["float"]([0.3])).m_retval) is int
         assert ggsr(vector["float"]([0.3])).m_retval == 0
         # int in, int out
         ggsr = cppyy.gbl.global_get_some_result["std::vector<int>, int"]
-        assert type(ggsr(vector["int"]([5])).m_retval) == int
+        assert type(ggsr(vector["int"]([5])).m_retval) is int
         assert ggsr(vector["int"]([5])).m_retval == 5
 
     def test04_variadic_function(self):
@@ -148,10 +150,10 @@ class TestTEMPLATES:
 
         import cppyy
 
-        assert cppyy.gbl.isSomeInt(3.0) == False
-        assert cppyy.gbl.isSomeInt(1) == True
-        assert cppyy.gbl.isSomeInt() == False
-        assert cppyy.gbl.isSomeInt(1, 2, 3) == False
+        assert not cppyy.gbl.isSomeInt(3.0)
+        assert cppyy.gbl.isSomeInt(1)
+        assert not cppyy.gbl.isSomeInt()
+        assert not cppyy.gbl.isSomeInt(1, 2, 3)
 
     @mark.xfail(
         run=False,
@@ -163,7 +165,7 @@ class TestTEMPLATES:
         import cppyy
 
         cppyy.gbl.AttrTesting  # load
-        from cppyy.gbl.AttrTesting import Obj1, Obj2, has_var1, call_has_var1
+        from cppyy.gbl.AttrTesting import Obj1, Obj2, call_has_var1, has_var1
         from cppyy.gbl.std import move
 
         assert has_var1(Obj1()) == hasattr(Obj1(), "var1")
@@ -171,8 +173,8 @@ class TestTEMPLATES:
         assert has_var1(3) == hasattr(3, "var1")
         assert has_var1("aap") == hasattr("aap", "var1")
 
-        assert call_has_var1(move(Obj1())) == True
-        assert call_has_var1(move(Obj2())) == False
+        assert call_has_var1(move(Obj1()))
+        assert not call_has_var1(move(Obj2()))
 
     def test07_type_deduction(self):
         """Traits/type deduction"""
@@ -180,7 +182,7 @@ class TestTEMPLATES:
         import cppyy
 
         cppyy.gbl.AttrTesting  # load
-        from cppyy.gbl.AttrTesting import select_template_arg, Obj1, Obj2
+        from cppyy.gbl.AttrTesting import Obj1, Obj2, select_template_arg
 
         assert select_template_arg[0, Obj1, Obj2].argument == Obj1
         assert select_template_arg[1, Obj1, Obj2].argument == Obj2
@@ -320,21 +322,21 @@ class TestTEMPLATES:
         import cppyy
 
         b = cppyy.gbl.using_problem.Base[int]()
-        assert type(b.get3()) == int
+        assert type(b.get3()) is int
         assert b.get3() == 5
-        assert type(b.get3["double"](5)) == float
+        assert type(b.get3["double"](5)) is float
         assert b.get3["double"](5) == 10.0
 
         d = cppyy.gbl.using_problem.Derived[int]()
-        # assert type(d.get1['double'](5)) == float
+        # assert type(d.get1['double'](5)) is float
         # assert d.get1['double'](5) == 10.
 
-        assert type(d.get2()) == int
+        assert type(d.get2()) is int
         assert d.get2() == 5
 
-        assert type(d.get3["double"](5)) == float
+        assert type(d.get3["double"](5)) is float
         assert d.get3["double"](5) == 10.0
-        assert type(d.get3()) == int
+        assert type(d.get3()) is int
         assert d.get3() == 5
 
     @mark.xfail()
@@ -359,7 +361,7 @@ class TestTEMPLATES:
             return RTTest_SomeNamespace::RTTest_TemplatedList2<T...>{};
         } """)
 
-        from cppyy.gbl import rttest_make_tlist, rttest_make_tlist2, RTTest_SomeNamespace, RTTest_SomeStruct1
+        from cppyy.gbl import RTTest_SomeNamespace, RTTest_SomeStruct1, rttest_make_tlist, rttest_make_tlist2
 
         assert rttest_make_tlist(RTTest_SomeStruct1())
         assert rttest_make_tlist(RTTest_SomeNamespace.RTTest_SomeStruct2())
@@ -796,7 +798,9 @@ class TestTEMPLATES:
     def test29_function_ptr_as_template_arg(self):
         """Function pointers as template arguments"""
 
-        import cppyy, sys
+        import sys
+
+        import cppyy
 
         # different templates used to prevent memoization caches resolving calls
         cppyy.cppdef("""\
@@ -1100,7 +1104,6 @@ class TestTEMPLATES:
         }}"""
 
         n = 0
-        results = {}
         types = ["fi", "fv", "fii", "fiv", "fvi", "fvv", "fiii", "fivi", "fvii", "fvvi", "fiiv", "fivv", "fviv", "fvvv"]
 
         for v in [
@@ -1154,8 +1157,9 @@ class TestTEMPLATES:
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
 
-        import cppyy
         import ctypes
+
+        import cppyy
 
         cppyy.cppdef(r"""\
         namespace CStringTemplateArg {
@@ -1168,7 +1172,7 @@ class TestTEMPLATES:
 
         ns = cppyy.gbl.CStringTemplateArg
 
-        assert type(ns.stringify("Alice")) == cppyy.gbl.std.string
+        assert type(ns.stringify("Alice")) is cppyy.gbl.std.string
         assert ns.stringify("Alice", "Bob") == "Alice Bob "
         assert ns.stringify(1, 2, 3) == "1 2 3 "
         assert ns.stringify["const char*"]("Aap") == "Aap "
@@ -1295,8 +1299,9 @@ class TestTEMPLATED_TYPEDEFS:
     def test05_type_deduction_and_extern(self):
         """Usage of type reducer with extern template"""
 
-        import cppyy
         import sys
+
+        import cppyy
 
         cppyy.cppdef("""\
         namespace FailedTypeDeducer {
@@ -1366,7 +1371,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
 
         cppyy.py.add_type_reducer("TypeReduction::BinaryExpr<int>", "TypeReduction::Expr<int>")
 
-        assert type(e1 + e2) == cppyy.gbl.TypeReduction.Expr[int]
+        assert type(e1 + e2) is cppyy.gbl.TypeReduction.Expr[int]
 
 
 class TestTEMPLATED_CALLBACK:
