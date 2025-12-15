@@ -240,9 +240,7 @@ ROOTTEST_ADD_TEST(attributesCheck
                   FIXTURES_REQUIRED root-meta-genreflex-attributesCheck-fixture)
 
 # ROOT-3746
-if(NOT MSVC OR win_broken_tests) # "Error: At line 4. Bad tag: />" there is no error and no such substring at line 4...
 ROOTTEST_ADD_TEST(unusedReadRule
                   COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes_root_3746.h
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/sel_root_3746.xml
                   ERRREF root_3746.eref)
-endif()
