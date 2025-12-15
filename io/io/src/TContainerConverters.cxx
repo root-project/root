@@ -105,7 +105,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          UInt_t startpos = b.Length();
 
          // attempt to load next object as TClass clCast
-         UInt_t tag;       // either tag or byte count
+         ULong64_t tag;       // either tag or byte count
          TClass *clRef = b.ReadClass(TClonesArray::Class(), &tag);
 
          if (clRef==0) {
@@ -122,7 +122,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
             b.GetMappedObject( tag, objptr, clRef);
             if ( objptr == (void*)-1 ) {
                Error("TConvertClonesArrayToProxy",
-                  "Object can not be found in the buffer's map (at %d)",tag);
+                  "Object can not be found in the buffer's map (at %llu)", tag);
                continue;
             }
             if ( objptr == 0 ) {

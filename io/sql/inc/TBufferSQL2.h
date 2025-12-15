@@ -139,7 +139,7 @@ public:
 
    // suppress class writing/reading
 
-   TClass *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) final;
+   TClass *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) final;
    void WriteClass(const TClass *cl) final;
 
    // redefined virtual functions of TBuffer
