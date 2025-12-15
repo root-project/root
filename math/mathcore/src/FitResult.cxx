@@ -79,19 +79,19 @@ FitResult::FitResult(const FitConfig & fconfig) :
 
    // get parameter values and errors (step sizes)
    unsigned int npar = fconfig.NPar();
+   fParamBounds.resize(npar);
+   fFixedParams.resize(npar);
+   fBoundParams.resize(npar);
    for (unsigned int i = 0; i < npar; ++i ) {
       const ParameterSettings & par = fconfig.ParSettings(i);
       fParams[i]   =  par.Value();
       fErrors[i]   =  par.StepSize();
       fParNames[i] =  par.Name();
-      if (par.IsFixed() ) fFixedParams[i] = true;
-      else fNFree++;
-      if (par.IsBound() ) {
-         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
-         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
-         fBoundParams[i] = fParamBounds.size();
-         fParamBounds.push_back(std::make_pair(lower,upper));
-      }
+      fFixedParams[i] = par.IsFixed();
+      if (!par.IsFixed() ) fNFree++;
+      double lower = par.HasLowerLimit() ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+      double upper = par.HasUpperLimit() ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+      fParamBounds.emplace_back(lower,upper);
    }
    std::cout << "create fit result from config - nfree " << fNFree << std::endl;
 }
@@ -155,17 +155,17 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // check for fixed or limited parameters
    unsigned int nfree = 0;
-   if (!fParamBounds.empty()) fParamBounds.clear();
+   fParamBounds.resize(npar);
+   fFixedParams.resize(npar);
+   fBoundParams.resize(npar);
    for (unsigned int ipar = 0; ipar < npar; ++ipar) {
       const ParameterSettings & par = fconfig.ParSettings(ipar);
-      if (par.IsFixed() ) fFixedParams[ipar] = true;
-      else nfree++;
-      if (par.IsBound() ) {
-         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
-         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
-         fBoundParams[ipar] = fParamBounds.size();
-         fParamBounds.push_back(std::make_pair(lower,upper));
-      }
+      fFixedParams[ipar] = par.IsFixed();
+      fBoundParams[ipar] = par.IsBound();
+      if (!par.IsFixed() ) nfree++;
+      double lower = par.HasLowerLimit() ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+      double upper = par.HasUpperLimit() ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+      fParamBounds.emplace_back(lower,upper);
    }
    // check if nfree (from FitConfig) and fNFree (from minimizer) are consistent
    if (nfree != fNFree ) {
@@ -343,25 +343,24 @@ int FitResult::Index(const std::string & name) const {
    return -1; // case name is not found
 }
 
-bool FitResult::IsParameterBound(unsigned int ipar) const {
-   return fBoundParams.find(ipar) != fBoundParams.end();
+bool FitResult::IsParameterBound(unsigned int ipar) const
+{
+   return ipar < fBoundParams.size() ? fBoundParams[ipar] : false;
 }
 
-bool FitResult::IsParameterFixed(unsigned int ipar) const {
-   return fFixedParams.find(ipar) != fFixedParams.end();
+bool FitResult::IsParameterFixed(unsigned int ipar) const
+{
+   return ipar < fFixedParams.size() ? fFixedParams[ipar] : false;
 }
 
-bool FitResult::ParameterBounds(unsigned int ipar, double & lower, double & upper) const {
-   std::map<unsigned int, unsigned int>::const_iterator itr =  fBoundParams.find(ipar);
-   if (itr ==  fBoundParams.end() ) {
-      lower =  -std::numeric_limits<Double_t>::infinity();
-      upper =  std::numeric_limits<Double_t>::infinity();
-      return false;
+bool FitResult::ParameterBounds(unsigned int ipar, double &lower, double &upper) const
+{
+   constexpr double inf = std::numeric_limits<double>::infinity();
+   if (ipar < fParamBounds.size()) {
+      lower = fParamBounds[ipar].first;
+      upper = fParamBounds[ipar].second;
    }
-   assert(itr->second < fParamBounds.size() );
-   lower = fParamBounds[itr->second].first;
-   upper = fParamBounds[itr->second].second;
-   return true;
+   return lower != -inf || upper != inf;
 }
 
 std::string FitResult::ParName(unsigned int ipar) const {
