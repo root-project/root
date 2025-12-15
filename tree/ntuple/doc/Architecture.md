@@ -251,6 +251,11 @@ Data is populated to an explicit `REntry` or the model's default entry through `
 The reader can create `RNTupleView` objects for the independent reading of individual fields.
 The reader can create `RBulkValues` objects for bulk reading of individual fields.
 
+By default, the caches for compressed and uncompressed data used by the reader will assume sequential access
+(or at least a read pattern that is monotonic in the entry number).
+The reader can, however, create "active entry tokens" that are used keep data of past entries pinned in the cache.
+This can be useful to implement multi-stream reading where multiple threads share a single reader.
+
 Additionally, the reader provides access to a cached copy of the descriptor.
 It can display individual entries (`RNTupleReader::Show()`) and summary information (`RNTupleReader::PrintInfo()`).
 
@@ -424,6 +429,8 @@ That means that RDataFrame uses a separate data source for every thread, each of
 
 ### Concurrent Readers
 Multiple readers can read the same RNTuple concurrently as long as access to every individual reader is sequential.
+The reader support efficient multi-stream access (multiple threads/streams sharing the same reader)
+as long as reader access is locked and every stream uses an active entry token.
 
 ### Parallel REntry Preparation
 Multiple `REntry` object can be concurrently prepared by multiple threads.
