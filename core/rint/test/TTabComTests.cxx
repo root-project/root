@@ -95,8 +95,13 @@ TEST(TTabComTests, CompleteTProfile)
 
 TEST(TTabComTests, CompleteTObj)
 {
+   #ifdef R__USE_CXXMODULES
    std::string expected = "TObjArray TObjArrayIter TObjLink TObjLinkPtr_t TObjOptLink"
       " TObjString TObject TObjectRefSpy TObjectSpy TObjectTable";
+   #else
+   std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink"
+      " TObjString TObject TObjectRefSpy TObjectSpy TObjectTable";
+   #endif
    // FIXME: See ROOT-10989
    ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
                                                  /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder",
