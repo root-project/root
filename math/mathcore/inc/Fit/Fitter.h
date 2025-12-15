@@ -8,8 +8,6 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class Fitter
-
 #ifndef ROOT_Fit_Fitter
 #define ROOT_Fit_Fitter
 
@@ -25,34 +23,35 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 */
 
 #include "Fit/BinData.h"
-#include "Fit/UnBinData.h"
 #include "Fit/FitConfig.h"
-#include "ROOT/EExecutionPolicy.hxx"
 #include "Fit/FitResult.h"
+#include "Fit/UnBinData.h"
 #include "Math/IParamFunction.h"
+#include "Math/WrappedFunction.h"
+#include "ROOT/EExecutionPolicy.hxx"
+
 #include <memory>
 
-namespace ROOT {
+namespace ROOT::Math {
 
+class Minimizer;
 
-   namespace Math {
-      class Minimizer;
+// should maybe put this in a FitMethodFunctionfwd file
+template <class FunctionType>
+class BasicFitMethodFunction;
 
-      // should maybe put this in a FitMethodFunctionfwd file
-      template<class FunctionType> class BasicFitMethodFunction;
+// define the normal and gradient function
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction> FitMethodFunction;
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
 
-      // define the normal and gradient function
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
-
-   }
+} // namespace ROOT::Math
 
    /**
       Namespace for the fitting classes
       @ingroup Fit
     */
 
-   namespace Fit {
+namespace ROOT::Fit {
 
 /**
    @defgroup FitMain User Fitting classes
@@ -265,7 +264,9 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0);
+   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0) {
+      return DoSetFCN(false, ROOT::Math::WrappedMultiFunction<Function &>{fcn, npar}, params, dataSize, fitType) ? FitFCN() : false;
+   }
 
    /**
       Set a generic FCN function as a C++ callable object implementing
@@ -274,7 +275,9 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0);
+   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, int fitType = 0) {
+      return DoSetFCN(false, ROOT::Math::WrappedMultiFunction<Function &>{fcn, npar}, params, dataSize, fitType);
+   }
 
    /**
       Fit using the given FCN function represented by a multi-dimensional function interface
@@ -527,14 +530,20 @@ protected:
    /// Set the input data for the fit (Copying the given data object)
    template <class Data>
    void SetData(const Data & data) {
-      auto dataClone = std::make_shared<Data>(data);
-      SetData(dataClone);
+      SetData(std::make_shared<Data>(data));
    }
 
    /// internal functions to get data set and model function from FCN
    /// useful for fits done with customized FCN classes
    template <class ObjFuncType>
-   bool GetDataFromFCN();
+   bool GetDataFromFCN() {
+      if (const ObjFuncType *objfunc = dynamic_cast<const ObjFuncType *>(ObjFunction())) {
+         fFunc = objfunc->ModelFunctionPtr();
+         fData = objfunc->DataPtr();
+         return true;
+      }
+      return false;
+   }
 
    /// Return pointer to the used objective function for fitting.
    /// If using an external function (e.g. given in SetFCN), return the cached pointer,
@@ -542,54 +551,27 @@ protected:
    const ROOT::Math::IBaseFunctionMultiDimTempl<double> * ObjFunction() const {
       // need to specify here full return type since when using the typedef (IMultiGenFunction)
       // there is an error when using the class in Python (see issue #12391)
-      return (fExtObjFunction) ? fExtObjFunction : fObjFunction.get();
+      return fExtObjFunction ? fExtObjFunction : fObjFunction.get();
    }
 
 private:
 
-   bool fUseGradient = false;  ///< flag to indicate if using gradient or not
-
-   bool fBinFit = false;    ///< flag to indicate if fit is binned
-                            ///< in case of false the fit is unbinned or undefined)
-                            ///< flag it is used to compute chi2 for binned likelihood fit
-
-   int fFitType = 0;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood, 3 binned likelihood)
-
-   int fDataSize = 0;  ///< size of data sets (need for Fumili or LM fitters)
-
-   FitConfig fConfig;       ///< fitter configuration (options and parameter settings)
-
-   std::shared_ptr<IModelFunction_v> fFunc_v;  ///<! copy of the fitted  function containing on output the fit result
-
-   std::shared_ptr<IModelFunction> fFunc;  ///<! copy of the fitted  function containing on output the fit result
-
-   std::shared_ptr<ROOT::Fit::FitResult>  fResult;  ///<! pointer to the object containing the result of the fit
-
-   std::shared_ptr<ROOT::Math::Minimizer>  fMinimizer;  ///<! pointer to used minimizer
-
-   std::shared_ptr<ROOT::Fit::FitData>  fData;  ///<! pointer to the fit data (binned or unbinned data)
-
-   std::shared_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  ///<! pointer to used objective function
-
-   const ROOT::Math::IMultiGenFunction * fExtObjFunction = nullptr;     ///<! pointer to an external FCN
-
+   bool fUseGradient = false; ///< flag to indicate if using gradient or not
+   bool fBinFit = false;      ///< flag to indicate if fit is binned
+                              ///< in case of false the fit is unbinned or undefined)
+                              ///< flag it is used to compute chi2 for binned likelihood fit
+   int fFitType = 0;          ///< type of fit   (0 undefined, 1 least square, 2 likelihood, 3 binned likelihood)
+   int fDataSize = 0;         ///< size of data sets (need for Fumili or LM fitters)
+   FitConfig fConfig;         ///< fitter configuration (options and parameter settings)
+   std::shared_ptr<IModelFunction_v> fFunc_v;     ///<! copy of the fitted  function containing on output the fit result
+   std::shared_ptr<IModelFunction> fFunc;         ///<! copy of the fitted  function containing on output the fit result
+   std::shared_ptr<ROOT::Fit::FitResult> fResult; ///<! pointer to the object containing the result of the fit
+   std::shared_ptr<ROOT::Math::Minimizer> fMinimizer;           ///<! pointer to used minimizer
+   std::shared_ptr<ROOT::Fit::FitData> fData;                   ///<! pointer to the fit data (binned or unbinned data)
+   std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunction; ///<! pointer to used objective function
+   const ROOT::Math::IMultiGenFunction *fExtObjFunction = nullptr; ///<! pointer to an external FCN
 };
 
-
-// internal functions to get data set and model function from FCN
-// useful for fits done with customized FCN classes
-template <class ObjFuncType>
-bool Fitter::GetDataFromFCN()  {
-   const ObjFuncType * objfunc = dynamic_cast<const ObjFuncType*>(ObjFunction());
-   if (objfunc) {
-      fFunc = objfunc->ModelFunctionPtr();
-      fData = objfunc->DataPtr();
-      return true;
-   }
-   else {
-      return false;
-   }
-}
 
 #ifdef R__HAS_VECCORE
 template <class NotCompileIfScalarBackend>
@@ -633,30 +615,6 @@ void Fitter::SetFunction(const IGradModelFunction_v &func, bool useGradient)
 }
 #endif
 
-   } // end namespace Fit
-
-} // end namespace ROOT
-
-// implementation of inline methods
-
-
-
-#include "Math/WrappedFunction.h"
-
-template<class Function>
-bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,int fitType) {
-   ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   if (!DoSetFCN(false, wf, par, datasize, fitType))
-      return false;
-   return FitFCN();
-}
-template<class Function>
-bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,int fitType) {
-   ROOT::Math::WrappedMultiFunction<Function &> wf(f,npar);
-   return DoSetFCN(false, wf, par, datasize, fitType);
-}
-
-
-
+} // namespace ROOT::Fit
 
 #endif /* ROOT_Fit_Fitter */
