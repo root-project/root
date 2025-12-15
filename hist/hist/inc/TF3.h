@@ -97,6 +97,7 @@ public:
    Double_t GetSave(const Double_t *x) override;
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
+   static void InitStandardFunctions();
    using TF2::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel=1.e-6);
    Bool_t   IsInside(const Double_t *x) const override;

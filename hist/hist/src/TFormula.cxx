@@ -2552,7 +2552,7 @@ void TFormula::FillParametrizedFunctions(map<pair<TString, Int_t>, pair<TString,
    // 3-dimensional function
    functions.insert(
       make_pair(make_pair("gaus", 3), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2 - 0.5*(({V2}-[5])/[6])^2)", "")));
-   // gaussian with correlations
+   // 2-d gaussian with correlations
    functions.insert(
       make_pair(make_pair("bigaus", 2), make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])",
                                                   "[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])")));

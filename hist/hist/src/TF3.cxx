@@ -480,6 +480,19 @@ Double_t TF3::GetSave(const Double_t *xx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the basic function objects
+
+void TF3::InitStandardFunctions()
+{
+   TF3 *f3;
+   R__LOCKGUARD(gROOTMutex);
+   if (!gROOT->GetListOfFunctions()->FindObject("xyzgaus")) {
+      f3 = new TF3("xyzgaus", "xyzgaus", -1, 1, -1, 1, -1, 1);
+      f3->SetParameters(1, 0, 1, 0, 1, 0, 1);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
 /// with a desired relative accuracy.
 

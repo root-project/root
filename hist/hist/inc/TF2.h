@@ -111,6 +111,7 @@ public:
    virtual Double_t GetMaximum(Double_t *x ) const;
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}
+   static void InitStandardFunctions();
    using TF1::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6);
    Bool_t   IsInside(const Double_t *x) const override;
