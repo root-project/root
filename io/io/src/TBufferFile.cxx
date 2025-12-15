@@ -2901,7 +2901,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 
    // in case tag is object tag return tag
    if (!(tag & kClassMask)) {
-      if (objTag) *objTag = tag;
+      if (objTag)
+         *objTag = tag;
       return 0;
    }
 
@@ -2960,7 +2961,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    }
 
    // case of unknown class
-   if (!cl) cl = (TClass*)-1;
+   if (!cl)
+      cl = (TClass*)-1;
 
    return cl;
 }
