@@ -1268,7 +1268,7 @@ void TBufferXML::BeforeIOoperation()
 ////////////////////////////////////////////////////////////////////////////////
 /// Function to read class from buffer, used in old-style streamers
 
-TClass *TBufferXML::ReadClass(const TClass *, UInt_t *)
+TClass *TBufferXML::ReadClass(const TClass *, ULong64_t *)
 {
    const char *clname = nullptr;
 

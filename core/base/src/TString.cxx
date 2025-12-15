@@ -1450,7 +1450,7 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
    // Before reading object save start position
    UInt_t startpos = UInt_t(b.Length());
 
-   UInt_t tag;
+   ULong64_t tag;
    TClass *clRef = b.ReadClass(clReq, &tag);
 
    TString *a;
