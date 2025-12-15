@@ -2533,7 +2533,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
 ////////////////////////////////////////////////////////////////////////////////
 /// suppressed function of TBuffer
 
-TClass *TBufferJSON::ReadClass(const TClass *, UInt_t *)
+TClass *TBufferJSON::ReadClass(const TClass *, ULong64_t *)
 {
    return nullptr;
 }

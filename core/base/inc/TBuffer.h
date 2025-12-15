@@ -150,7 +150,7 @@ public:
    virtual TVirtualArray *PopDataCache();
    virtual void           PushDataCache(TVirtualArray *);
 
-   virtual TClass    *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) = 0;
+   virtual TClass    *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
 
    virtual TObject   *ReadObject(const TClass *cl) = 0;

@@ -112,7 +112,7 @@ public:
    char      *ReadString(char *s, Long64_t max) override;
    void       WriteString(const char *s) override;
 
-   TClass    *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) override;
+   TClass    *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) override;
    void       WriteClass(const TClass *cl) override;
 
    TObject   *ReadObject(const TClass *cl) override;

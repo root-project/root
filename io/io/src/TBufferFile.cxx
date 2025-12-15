@@ -2600,7 +2600,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    ULong64_t cntpos = startpos <= kMaxCountPosition ? startpos : kOverflowPosition;
 
    // attempt to load next object as TClass clCast
-   UInt_t tag;       // either tag or byte count
+   ULong64_t tag;       // either tag or byte count
    TClass *clRef = ReadClass(clCast, &tag);
    TClass *clOnfile = nullptr;
    Int_t baseOffset = 0;
@@ -2808,7 +2808,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 /// \param[in] clReq Can be used to cross check if the actually read object is of the requested class.
 /// \param[in] objTag Set in case the object is a reference to an already read object.
 
-TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
+TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
 {
    R__ASSERT(IsReading());
 
@@ -2852,16 +2852,26 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       if (R__likely(shortRange)) {
          UInt_t tag;
          *this >> tag;
+         isNewClassTag = (tag == kNewClassTag);
          tag64 = tag;
       } else {
-         *this >> tag64;
+         UInt_t high32, low32;
+         *this >> high32;
+         if (high32 == kNewClassTag) {
+            isNewClassTag = true;
+            tag64 = 0;
+         } else {
+            // continue reading low 32-bits
+            *this >> low32;
+            tag64 = (static_cast<ULong64_t>(high32) << 32) | low32;
+         }
       }
    }
 
    const bool isClassTag = shortRange ? (tag64 & kClassMask) : (tag64 & kLongRangeClassMask);
 
    // in case tag is object tag return tag
-   if (!isClassTag) {
+   if (!isClassTag && !isNewClassTag) {
       // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
       if (objTag)
          *objTag = tag64;
