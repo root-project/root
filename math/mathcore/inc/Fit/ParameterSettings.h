@@ -8,17 +8,12 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class ParameterSettings
-
 #ifndef ROOT_Fit_ParameterSettings
 #define ROOT_Fit_ParameterSettings
 
 #include <string>
 
-namespace ROOT {
-
-   namespace Fit {
-
+namespace ROOT::Fit {
 
 //___________________________________________________________________________________
 /**
@@ -155,12 +150,8 @@ private:
    bool fHasUpperLimit = false;  ///< flag to control upper parameter limit
 
    std::string fName;    ///< parameter name
-
 };
 
-   } // end namespace Fit
-
-} // end namespace ROOT
-
+} // namespace ROOT::Fit
 
 #endif /* ROOT_Fit_ParameterSettings */

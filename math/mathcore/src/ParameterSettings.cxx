@@ -8,15 +8,11 @@
  *                                                                    *
  **********************************************************************/
 
-// Implementation file for class ParameterSettings
-
 #include <Fit/ParameterSettings.h>
 
 #include <Math/Error.h>
 
-namespace ROOT {
-
-namespace Fit {
+namespace ROOT::Fit {
 
 /// set a double side limit,
 /// if low == up the parameter is fixed  if low > up the limits are removed
@@ -44,6 +40,4 @@ void ParameterSettings::SetLimits(double low, double up)
    fHasUpperLimit = true;
 }
 
-} // end namespace Fit
-
-} // end namespace ROOT
+} // namespace ROOT::Fit

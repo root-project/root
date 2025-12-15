@@ -8,9 +8,6 @@
  *                                                                    *
  **********************************************************************/
 
-// Implementation file for class Fitter
-
-
 #include "Fit/Fitter.h"
 #include "Fit/Chi2FCN.h"
 #include "Fit/PoissonLikelihoodFCN.h"
@@ -32,20 +29,13 @@
 
 #include "Math/MultiDimParamFunctionAdapter.h"
 
-// #include "TMatrixDSym.h"
-// for debugging
-//#include "TMatrixD.h"
-// #include <iomanip>
-
-namespace ROOT {
-
-   namespace Fit {
+namespace ROOT::Fit {
 
 // use a static variable to get default minimizer options for error def
 // to see if user has changed it later on. If it has not been changed we set
 // for the likelihood method an error def of 0.5
 // t.b.d : multiply likelihood by 2 so have same error def definition as chi2
-      double gDefaultErrorDef = ROOT::Math::MinimizerOptions::DefaultErrorDef();
+double gDefaultErrorDef = ROOT::Math::MinimizerOptions::DefaultErrorDef();
 
 
 Fitter::Fitter(const std::shared_ptr<FitResult> & result) :
@@ -61,7 +51,7 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
 
    fUseGradient = useGradient;
    if (fUseGradient) {
-      const IGradModelFunction * gradFunc = dynamic_cast<const IGradModelFunction*>(&func);
+      auto *gradFunc = dynamic_cast<const IGradModelFunction*>(&func);
       if (gradFunc) {
          SetFunction(*gradFunc, true);
          return;
@@ -75,7 +65,7 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
    //  set the fit model function (clone the given one and keep a copy )
    //std::cout << "set a non-grad function" << std::endl;
 
-   fFunc = std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone() ) );
+   fFunc = std::unique_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone() ) );
    assert(fFunc);
 
    // creates the parameter  settings
@@ -87,7 +77,7 @@ void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
    fUseGradient = useGradient;
    if (fUseGradient) {
-      const IGradModel1DFunction * gradFunc = dynamic_cast<const IGradModel1DFunction*>(&func);
+      auto *gradFunc = dynamic_cast<const IGradModel1DFunction*>(&func);
       if (gradFunc) {
          SetFunction(*gradFunc, true);
          return;
@@ -112,7 +102,7 @@ void Fitter::SetFunction(const IGradModelFunction & func, bool useGradient)
    fUseGradient = useGradient;
    //std::cout << "set a grad function" << std::endl;
    //  set the fit model function (clone the given one and keep a copy )
-   fFunc = std::shared_ptr<IModelFunction>( dynamic_cast<IGradModelFunction *> ( func.Clone() ) );
+   fFunc = std::unique_ptr<IModelFunction>( dynamic_cast<IGradModelFunction *> ( func.Clone() ) );
    assert(fFunc);
 
    // creates the parameter  settings
@@ -621,7 +611,7 @@ bool Fitter::CalculateMinosErrors() {
 
 
    const std::vector<unsigned int> & ipars = fConfig.MinosParams();
-   unsigned int n = (!ipars.empty()) ? ipars.size() : fResult->Parameters().size();
+   unsigned int n = !ipars.empty() ? ipars.size() : fResult->Parameters().size();
    bool ok = false;
 
    int iparNewMin = 0;
@@ -712,7 +702,7 @@ bool Fitter::DoInitMinimizer() {
 
    // in case of gradient function one needs to downcast the pointer
    if (fUseGradient) {
-      const ROOT::Math::IMultiGradFunction * gradfcn = dynamic_cast<const ROOT::Math::IMultiGradFunction *> (objFunction );
+      auto* gradfcn = dynamic_cast<const ROOT::Math::IMultiGradFunction *> (objFunction );
       if (!gradfcn) {
          MATH_ERROR_MSG("Fitter::DoInitMinimizer","wrong type of function - it does not provide gradient");
          return false;
@@ -720,8 +710,7 @@ bool Fitter::DoInitMinimizer() {
       fMinimizer->SetFunction( *gradfcn);
       // set also Hessian if available
       if (Config().MinimizerType() == "Minuit2") {
-         const ROOT::Math::FitMethodGradFunction *fitGradFcn =
-            dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
+         auto *fitGradFcn = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
          if (fitGradFcn && fitGradFcn->HasHessian()) {
             auto hessFcn = [=](std::span<const double> x, double *hess) {
                unsigned int ndim = x.size();
@@ -835,8 +824,7 @@ bool Fitter::DoMinimization(std::unique_ptr<ObjFunc_t>  objFunc, const ROOT::Mat
    fFitType = objFunc->Type();
    fExtObjFunction = nullptr;
    fObjFunction = std::move(objFunc);
-   if (!DoInitMinimizer()) return false;
-   return DoMinimization(chi2func);
+   return DoInitMinimizer() ? DoMinimization(chi2func): false;
 }
 template<class ObjFunc_t>
 bool Fitter::DoWeightMinimization(std::unique_ptr<ObjFunc_t> objFunc, const ROOT::Math::IMultiGenFunction * chi2func) {
@@ -864,19 +852,16 @@ void Fitter::DoUpdateFitConfig() {
    }
 }
 
-int Fitter::GetNCallsFromFCN() {
+int Fitter::GetNCallsFromFCN()
+{
    // retrieve ncalls from the fit method functions
    // this function is called when minimizer does not provide a way of returning the number of function calls
-   int ncalls = 0;
    if (!fUseGradient) {
-      const ROOT::Math::FitMethodFunction * fcn = dynamic_cast<const ROOT::Math::FitMethodFunction *>(fObjFunction.get());
-      if (fcn) ncalls = fcn->NCalls();
-   }
-   else {
-      const ROOT::Math::FitMethodGradFunction * fcn = dynamic_cast<const ROOT::Math::FitMethodGradFunction*>(fObjFunction.get());
-      if (fcn) ncalls = fcn->NCalls();
-   }
-   return ncalls;
+      if (auto *fcn = dynamic_cast<const ROOT::Math::FitMethodFunction *>(fObjFunction.get()))
+         return fcn->NCalls();
+   } else if (auto *fcn = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(fObjFunction.get()))
+      return fcn->NCalls();
+   return 0;
 }
 
 
@@ -896,7 +881,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    unsigned int n = loglw2.NDim();
    // correct errors for weight squared
    std::vector<double> cov(n*n);
-   bool ret = fMinimizer->GetCovMatrix(&cov[0] );
+   bool ret = fMinimizer->GetCovMatrix(cov.data());
    if (!ret) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Previous fit has no valid Covariance matrix");
       return false;
@@ -932,7 +917,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
 
    // get Hessian matrix from weight-square likelihood
    std::vector<double> hes(n*n);
-   ret = fMinimizer->GetHessianMatrix(&hes[0] );
+   ret = fMinimizer->GetHessianMatrix(hes.data());
    if (!ret) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Error retrieving Hesse on weight2 likelihood - cannot compute errors");
       return false;
@@ -971,6 +956,4 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    return true;
 }
 
-   } // end namespace Fit
-
-} // end namespace ROOT
+} // namespace ROOT::Fit

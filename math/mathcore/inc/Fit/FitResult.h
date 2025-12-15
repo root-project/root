@@ -22,18 +22,15 @@
 #include <cmath>
 #include <memory>
 
-namespace ROOT {
+namespace ROOT::Math {
+class Minimizer;
+}
 
-   namespace Math {
-      class Minimizer;
-   }
+namespace ROOT::Fit {
 
-
-   namespace Fit {
-
-      class FitConfig;
-      class FitData;
-      class BinData;
+class FitConfig;
+class FitData;
+class BinData;
 
 //___________________________________________________________________________________
 /**
@@ -53,7 +50,7 @@ public:
    /**
       Default constructor for an empty (non valid) fit result
    */
-   FitResult ();
+   FitResult() = default;
 
    /**
       Constructor from a fit-config for a dummy fit
@@ -63,9 +60,6 @@ public:
 
    // default copy constructor and assignment can be used
 
-   /**
-      Destructor
-   */
    virtual ~FitResult () {}
 
 
@@ -340,16 +334,16 @@ protected:
    friend class Fitter;
 
 
-   bool fValid;             ///< flag for indicating valid fit
-   bool fNormalized;        ///< flag for indicating is errors are normalized
-   unsigned int fNFree;     ///< number of fit free parameters (total parameters are in size of parameter vector)
-   unsigned int fNdf;       ///< number of degree of freedom
-   unsigned int fNCalls;    ///< number of function calls
-   int fStatus;             ///< minimizer status code
-   int fCovStatus;          ///< covariance matrix status code
-   double fVal;             ///< minimum function value
-   double fEdm;             ///< expected distance from minimum
-   double fChi2;            ///< fit chi2 value (different than fval in case of chi2 fits)
+   bool fValid = false;      ///< flag for indicating valid fit
+   bool fNormalized = false; ///< flag for indicating is errors are normalized
+   unsigned int fNFree = 0;  ///< number of fit free parameters (total parameters are in size of parameter vector)
+   unsigned int fNdf = 0;    ///< number of degree of freedom
+   unsigned int fNCalls = 0; ///< number of function calls
+   int fStatus = -1;         ///< minimizer status code
+   int fCovStatus = 0;       ///< covariance matrix status code
+   double fVal = 0;          ///< minimum function value
+   double fEdm = -1;         ///< expected distance from minimum
+   double fChi2 = -1;        ///< fit chi2 value (different than fval in case of chi2 fits)
    std::shared_ptr<ROOT::Math::Minimizer> fMinimizer;       ///<! minimizer object used for fitting
    std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; ///<! objective function used for fitting
    std::shared_ptr<IModelFunction> fFitFunc;                ///<! model function resulting  from the fit.
@@ -367,13 +361,6 @@ protected:
 
 };
 
-
-   } // end namespace Fit
-
-} // end namespace ROOT
-
-
-
-
+} // namespace ROOT::Fit
 
 #endif /* ROOT_Fit_FitResult */
