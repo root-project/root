@@ -354,8 +354,8 @@ protected:
    std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; ///<! objective function used for fitting
    std::shared_ptr<IModelFunction> fFitFunc;                ///<! model function resulting  from the fit.
    std::shared_ptr<FitData>    fFitData;                    ///<! data set used in the fit
-   std::map<unsigned int, bool>           fFixedParams;     ///< list of fixed parameters
-   std::map<unsigned int, unsigned int>   fBoundParams;     ///< list of limited parameters
+   std::vector<bool>           fFixedParams;                ///< if parameters are fixed
+   std::vector<unsigned int>   fBoundParams;                ///< if parameters are limited
    std::vector<std::pair<double,double> >  fParamBounds;    ///< parameter bounds
    std::vector<double>         fParams;    ///< parameter values. Size is total number of parameters
    std::vector<double>         fErrors;    ///< errors
