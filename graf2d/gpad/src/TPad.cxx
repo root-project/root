@@ -398,7 +398,7 @@ TPad::~TPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add an object to list of primitives with speicified draw option
+/// Add an object to list of primitives with specified draw option
 /// When \par modified set to kTRUE (default) pad will be marked as modified
 /// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
 ///
@@ -430,7 +430,7 @@ void TPad::Add(TObject *obj, Option_t *opt, Bool_t modified)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add an object as first in list of primitives with speicified draw option
+/// Add an object as first in list of primitives with specified draw option
 /// When \par modified set to kTRUE (default) pad will be marked as modified
 /// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
 
