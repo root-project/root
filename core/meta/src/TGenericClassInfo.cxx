@@ -281,7 +281,11 @@ namespace Internal {
          fClass->SetConvStreamerFunc(fConvStreamerFunc);
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
-         fClass->AdoptStreamer(fStreamer); fStreamer = nullptr;
+         fClass->AdoptStreamer(fStreamer);
+         fStreamer = nullptr;
+         for (const auto &[name, strm] : fAdoptedMemberStreamers)
+            fClass->AdoptMemberStreamer(name.c_str(), strm);
+         fAdoptedMemberStreamers.clear();
          // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
@@ -432,6 +436,21 @@ namespace Internal {
    void TGenericClassInfo::AdoptAlternate(ROOT::TClassAlt *alt)
    {
       fAlternate.push_back(alt);
+   }
+
+   void TGenericClassInfo::AdoptMemberStreamer(const char *name, TMemberStreamer *strm)
+   {
+      if (fClass) {
+         assert(fAdoptedMemberStreamers.empty());
+         fClass->AdoptMemberStreamer(name, strm);
+         return;
+      }
+
+      auto [it, inserted] = fAdoptedMemberStreamers.emplace(name, strm);
+      if (!inserted) {
+         delete it->second;
+         it->second = strm;
+      }
    }
 
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)

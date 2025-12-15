@@ -21,6 +21,7 @@
 #include "TSchemaHelper.h"
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 // Forward declarations
 class TVirtualIsAProxy;
@@ -72,6 +73,7 @@ namespace ROOT {
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
       std::vector<ROOT::TClassAlt*>               fAlternate;
+      std::unordered_map<std::string, TMemberStreamer *> fAdoptedMemberStreamers;
 
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -118,6 +120,7 @@ namespace ROOT {
       TClass                           *IsA(const void *obj);
 
       void                              AdoptAlternate(ROOT::TClassAlt *alt);
+      void                              AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
       void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
