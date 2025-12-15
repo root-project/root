@@ -1607,7 +1607,7 @@ TObject *TROOT::GetFunction(const char *name) const
    // and restart after this thread has finished the initialization (i.e. a rare case),
    // the only penalty we pay is a spurious 2nd lookup for an unknown function.
    [[maybe_unused]] static const auto _res = []() {
-      gROOT->ProcessLine("TF1::InitStandardFunctions();");
+      gROOT->ProcessLine("TF1::InitStandardFunctions(); TF2::InitStandardFunctions(); TF3::InitStandardFunctions();");
       isInited = true;
       return true;
    }();

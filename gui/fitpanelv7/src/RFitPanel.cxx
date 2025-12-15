@@ -284,6 +284,8 @@ void RFitPanel::UpdateFunctionsList()
                     {"cheb0"}, {"cheb1"}, {"cheb2"}, {"cheb3"}, {"cheb4"}, {"cheb5"}, {"cheb6"}, {"cheb7"}, {"cheb8"}, {"cheb9"} };
    } else if (m.fDim == 2) {
       m.fFuncList = { {"xygaus"}, {"bigaus"}, {"xyexpo"}, {"xylandau"}, {"xylandaun"} };
+   } else if (m.fDim == 3) {
+      m.fFuncList = {{"xyzgaus"}};
    }
 
    for (auto &func : fSystemFuncs) {
