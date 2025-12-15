@@ -100,3 +100,5 @@ ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
 if(clad)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
 endif()
+
+ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore)
