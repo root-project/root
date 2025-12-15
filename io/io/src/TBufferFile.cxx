@@ -74,6 +74,9 @@ constexpr Version_t kByteCountVMask  = 0x4000;       // OR the version byte coun
 constexpr Version_t kMaxVersion      = 0x3FFF;       // highest possible version number
 constexpr Int_t  kMapOffset          = 2;   // first 2 map entries are taken by null obj and self obj
 
+// constexpr ULong64_t kMaxLongRange = 0x0FFFFFFFFFFFFFFE; // We reserve the 4 highest bits for flags, currently only 2 are in use.
+constexpr ULong64_t kLongRangeClassMask = 0x8000000000000000; // OR the class index with this
+// constexpr ULong64_t kLongRangeByteCountMask = 0x4000000000000000; // OR the byte count with this
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
@@ -2816,11 +2819,28 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       cl = (TClass*)-1;
       return cl;
    }
-   UInt_t bcnt, tag, startpos = 0;
+   UInt_t bcnt;
+   Long64_t tag64, startpos = 0;
+   const bool shortRange = (fBufCur - fBuffer) <= kMaxMapCount;
+   bool isNewClassTag = false;
+
    // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
    *this >> bcnt;
-   if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
-      tag  = bcnt;
+   if (bcnt == kNewClassTag) {
+      isNewClassTag = true;
+      tag64 = 0;
+      bcnt = 0;
+   } else if (!(bcnt & kByteCountMask)) {
+      if (R__likely(shortRange)) {
+         tag64 = bcnt;
+      } else {
+         // Two implementation choices:
+         // 1) rewind and read full 64-bit value
+         // 2) use the already read 32-bits, read the rest and combine
+         UInt_t low32;
+         *this >> low32;
+         tag64 = (static_cast<ULong64_t>(bcnt) << 32) | low32;
+      }
       bcnt = 0;
    } else {
       fVersion = 1;
@@ -2828,18 +2848,27 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       // count and will not (can not) call CheckByteCount.
       if (objTag)
          fByteCountStack.push_back(fBufCur - fBuffer);
-      startpos = UInt_t(fBufCur-fBuffer);
-      *this >> tag;
+      startpos = static_cast<Long64_t>(fBufCur - fBuffer);
+      if (R__likely(shortRange)) {
+         UInt_t tag;
+         *this >> tag;
+         tag64 = tag;
+      } else {
+         *this >> tag64;
+      }
    }
 
+   const bool isClassTag = shortRange ? (tag64 & kClassMask) : (tag64 & kLongRangeClassMask);
+
    // in case tag is object tag return tag
-   if (!(tag & kClassMask)) {
+   if (!isClassTag) {
+      // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
       if (objTag)
-         *objTag = tag;
+         *objTag = tag64;
       return 0;
    }
 
-   if (tag == kNewClassTag) {
+   if (isNewClassTag) {
 
       // got a new class description followed by a new object
       // (class can be 0 if class dictionary is not found, in that
@@ -2858,14 +2887,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    } else {
 
       // got a tag to an already seen class
-      UInt_t clTag = (tag & ~kClassMask);
+      ULong64_t clTag = shortRange ? (tag64 & ~kClassMask) : (tag64 & ~kLongRangeClassMask);
 
       if (fVersion > 0) {
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
       } else {
          if (clTag == 0 || clTag > (UInt_t)fMap->GetSize()) {
-            Error("ReadClass", "illegal class tag=%d (0<tag<=%d), I/O buffer corrupted",
+            Error("ReadClass", "illegal class tag=%lld (0<tag<=%d), I/O buffer corrupted",
                   clTag, fMap->GetSize());
             // exception
          }
@@ -2907,22 +2936,29 @@ void TBufferFile::WriteClass(const TClass *cl)
    ULong_t hash = Void_Hash(cl);
    UInt_t slot;
 
-   if ((idx = (ULongptr_t)fMap->GetValue(hash, (Longptr_t)cl,slot)) != 0) {
+   if ((idx = (ULongptr_t)fMap->GetValue(hash, (Longptr_t)cl, slot)) != 0) {
+      const bool shortRange = (fBufCur - fBuffer) <= kMaxMapCount;
+      if (R__likely(shortRange)) {
+         // truncation is OK the value we did put in the map is an 30-bit offset
+         // and not a pointer
+         UInt_t clIdx = UInt_t(idx);
 
-      // truncation is OK the value we did put in the map is an 30-bit offset
-      // and not a pointer
-      UInt_t clIdx = UInt_t(idx);
-
-      // save index of already stored class
-      // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
-      // FIXME/INCORRECTNESS: if clIdx > 0x3FFFFFFF the control bit (2nd highest bit) will be wrong
-      // FIXME/INCORRECTNESS: similarly if clIdx > kClassMask (2GB) the code will be wrong
-      *this << (clIdx | kClassMask);
-
+         // save index of already stored class
+         // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
+         // FIXME/INCORRECTNESS: if clIdx > 0x3FFFFFFF the control bit (2nd highest bit) will be wrong
+         // FIXME/INCORRECTNESS: similarly if clIdx > kClassMask (2GB) the code will be wrong
+         *this << (clIdx | kClassMask);
+      } else {
+         // The 64-bit value is stored highest bytes first in the buffer,
+         // so when reading just the first 32-bits we get the control bits in place.
+         // This is needed so that the reader can distinguish between references,
+         // bytecounts, and new class definitions.
+         ULong64_t clIdx = static_cast<ULong64_t>(idx);
+         *this << (clIdx | kLongRangeClassMask);
+      }
    } else {
-
       // offset in buffer where class info is written
-      UInt_t offset = UInt_t(fBufCur-fBuffer);
+      Long64_t offset = (static_cast<Long64_t>(fBufCur-fBuffer));
 
       // save new class tag
       *this << kNewClassTag;
@@ -3398,7 +3434,7 @@ void TBufferFile::CheckCount(UInt_t offset)
 /// object is -1 then it really does not exist and we return 0. If the object
 /// exists just return the offset.
 
-UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
+UInt_t TBufferFile::CheckObject(ULong64_t offset, const TClass *cl, Bool_t readClass)
 {
    // in position 0 we always have the reference to the null object
    if (!offset) return offset;
@@ -3451,8 +3487,8 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
             // mark object as really not available
             fMap->Remove(offset);
             fMap->Add(offset, -1);
-            Warning("CheckObject", "reference to object of unavailable class %s, offset=%d"
-                    " pointer will be 0", cl ? cl->GetName() : "TObject",offset);
+            Warning("CheckObject", "reference to object of unavailable class %s, offset=%llu"
+                    " pointer will be 0", cl ? cl->GetName() : "TObject", offset);
             offset = 0;
          }
 
