@@ -1664,11 +1664,21 @@ void TFitEditor::FillFunctionList(Int_t)
 
       // Select Gaus2D by default
       fFuncList->Select(kFP_XYGAUS);
+   } else if (fTypeFit->GetSelected() == kFP_PRED3D && fDim == 3) {
+      fFuncList->AddEntry("xyzgaus", kFP_XYZGAUS);
+
+      // Need to be setted this way, otherwise when the functions
+      // are removed, the list doesn't show them.x
+      TGListBox *lb = fFuncList->GetListBox();
+      lb->Resize(lb->GetWidth(), 200);
+
+      // Select Gaus3D by default
+      fFuncList->Select(kFP_XYZGAUS);
    }
    // Case for user defined functions. References to these functions
    // are kept by the fitpanel, so the information is gathered from
    // there.
-   else if ( fTypeFit->GetSelected() == kFP_UFUNC ) {
+   else if (fTypeFit->GetSelected() == kFP_UFUNC) {
       Int_t newid = kFP_ALTFUNC;
 
       // Add system functions
@@ -1701,7 +1711,7 @@ void TFitEditor::FillFunctionList(Int_t)
       }
    }
    // Case for previously used functions.
-   else if ( fTypeFit->GetSelected() == kFP_PREVFIT ) {
+   else if (fTypeFit->GetSelected() == kFP_PREVFIT) {
       Int_t newid = kFP_ALTFUNC;
 
       // Look only for those functions used in the selected object

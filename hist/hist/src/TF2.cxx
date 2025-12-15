@@ -664,6 +664,27 @@ Double_t TF2::GetSave(const Double_t *xx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create the basic function objects
+
+void TF2::InitStandardFunctions()
+{
+   TF2 *f2;
+   R__LOCKGUARD(gROOTMutex);
+   if (!gROOT->GetListOfFunctions()->FindObject("xygaus")) {
+      f2 = new TF2("xygaus", "xygaus", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 0, 1);
+      f2 = new TF2("bigaus", "bigaus", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 0, 1, 0);
+      f2 = new TF2("xyexpo", "xyexpo", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+      f2 = new TF2("xylandau", "xylandau", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+      f2 = new TF2("xylandaun", "xylandaun", -1, 1, -1, 1);
+      f2->SetParameters(1, 0, 1, 1, 0, 1);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 2d function in range [ax,bx],[ay,by]
 /// with desired relative accuracy (defined by eps)
 
