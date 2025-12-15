@@ -454,7 +454,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
 {
 
-   std::ifstream file(fileName);
+   std::ifstream file(fileName, std::ios::binary);
 
    PopulateMap();
 
