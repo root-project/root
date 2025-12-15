@@ -245,3 +245,14 @@ ROOTTEST_ADD_TEST(test_hadd_args_quieter
                   COMMAND ${ROOT_hadd_CMD} hadd_args_quieter.root hadd_args_in.root -v1
                   OUTREF hadd_args_quieter.ref
 )
+
+################################################################
+#                 regression tests                             #
+################################################################
+configure_file(file1_20706.root . COPYONLY)
+configure_file(file2_20706.root . COPYONLY)
+
+ROOTTEST_ADD_TEST(test_hadd_regr_20706
+                  PRECMD ${CMAKE_COMMAND} -E rm -f merged_20706.root
+                  COMMAND ${ROOT_hadd_CMD} -f merged_20706.root file1_20706.root file2_20706.root
+)
