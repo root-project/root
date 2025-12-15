@@ -1032,13 +1032,18 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               }
 
               // Create the Parameters
-              std::string funcParams = "gamma_" + shapeFactor.GetName();
-
-              // GHL: Again, we are putting hard ranges on the gamma's
-              //      We should change this to range from 0 to /inf
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(proto,
-                  funcParams,
-                  theObservables, defaultGammaMin, defaultShapeFactorGammaMax);
+                  "gamma_" + shapeFactor.GetName(),
+                  theObservables);
+              for (auto *comp : shapeFactorParams) {
+                // If the gamma is subject to a preprocess function, it is a RooAbsReal and
+                // we don't need to set the initial value.
+                if(auto var = dynamic_cast<RooRealVar*>(comp)) {
+                  var->setVal(shapeFactor.GetVal());
+                  var->setMin(shapeFactor.GetMin());
+                  var->setMax(shapeFactor.GetMax());
+                }
+              }
 
               // Create the Function
               ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
