@@ -784,7 +784,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement *elem, Int_t /* comp_type */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Suppressed function of TBuffer
 
-TClass *TBufferSQL2::ReadClass(const TClass *, UInt_t *)
+TClass *TBufferSQL2::ReadClass(const TClass *, ULong64_t *)
 {
    return nullptr;
 }
