@@ -5,6 +5,7 @@
 #include "PyCallable.h"
 
 // Standard
+#include <cstdint>
 #include <map>
 #include <string>
 #include <utility>
@@ -13,30 +14,8 @@
 
 namespace CPyCppyy {
 
-// signature hashes are also used by TemplateProxy
-inline uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
-{
-// Build a hash from the types of the given python function arguments.
-    uint64_t hash = 0;
-
-    Py_ssize_t nargs = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
-    for (Py_ssize_t i = 0; i < nargs; ++i) {
-    // TODO: hashing in the ref-count is for moves; resolve this together with the
-    // improved overloads for implicit conversions
-        PyObject* pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
-        hash += (uint64_t)Py_TYPE(pyobj);
-#if PY_VERSION_HEX >= 0x030e0000
-        hash += (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1 : 0);
-#else
-        hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
-#endif
-        hash += (hash << 10); hash ^= (hash >> 6);
-    }
-
-    hash += (hash << 3); hash ^= (hash >> 11); hash += (hash << 15);
-
-    return hash;
-}
+// Signature hashing for memoization (implementation in CPPOverload.cxx)
+uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf);
 
 class CPPOverload {
 public:
