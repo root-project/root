@@ -281,7 +281,8 @@ Int_t TH2::BufferEmpty(Int_t action)
          }
       }
       if (xbinAuto || ybinAuto) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax, ymin, ymax, xbinAuto ? 0 : fXaxis.GetNbins(), ybinAuto ? 0 : fYaxis.GetNbins());
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(
+            this, xmin, xmax, ymin, ymax, xbinAuto ? 0 : fXaxis.GetNbins(), ybinAuto ? 0 : fYaxis.GetNbins());
       } else {
          fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;

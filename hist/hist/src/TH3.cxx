@@ -270,7 +270,9 @@ Int_t TH3::BufferEmpty(Int_t action)
             }
          }
          if (xbinAuto || ybinAuto || zbinAuto) {
-            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax, ymin, ymax, zmin, zmax, xbinAuto ? 0 : fXaxis.GetNbins(), ybinAuto ? 0 : fYaxis.GetNbins(), zbinAuto ? 0 : fZaxis.GetNbins());
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(
+               this, xmin, xmax, ymin, ymax, zmin, zmax, xbinAuto ? 0 : fXaxis.GetNbins(),
+               ybinAuto ? 0 : fYaxis.GetNbins(), zbinAuto ? 0 : fZaxis.GetNbins());
          } else {
             fBuffer = nullptr;
             Int_t keep = fBufferSize; fBufferSize = 0;

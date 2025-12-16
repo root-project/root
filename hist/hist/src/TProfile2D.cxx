@@ -316,7 +316,7 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
          if (y > ymax) ymax = y;
       }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(this, xmin, xmax, ymin, ymax);
       } else {
          fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;

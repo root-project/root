@@ -77,8 +77,8 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
 /// If the bit kIsInteger is set, the number of channels is also recomputed.
 /// The axis parameters are replaced by the optimized parameters
 
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t newbinsx,
-                                     Int_t newbinsy)
+Int_t THLimitsFinder::FindGoodLimitsXY(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+                                       Int_t newbinsx, Int_t newbinsy)
 {
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
@@ -115,8 +115,8 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
 /// If the bit kIsInteger is set, the number of channels is also recomputed.
 /// The axis parameters are replaced by the optimized parameters
 
-Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin,
-                                     Double_t zmax, Int_t newbinsx, Int_t newbinsy, Int_t newbinsz)
+Int_t THLimitsFinder::FindGoodLimitsXYZ(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+                                        Double_t zmin, Double_t zmax, Int_t newbinsx, Int_t newbinsy, Int_t newbinsz)
 {
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
@@ -171,8 +171,8 @@ THLimitsFinder *THLimitsFinder::GetLimitsFinder()
 ////////////////////////////////////////////////////////////////////////////////
 /// This static function can be used to specify a finder derived from THLimitsFinder.
 ///
-/// The finder may redefine the functions FindGoodLimits.
-/// Note that the redefined functions may call THLimitsFinder::FindGoodLimits.
+/// The finder may redefine the functions FindGoodLimits*.
+/// Note that the redefined functions may call THLimitsFinder::FindGoodLimits*.
 
 void THLimitsFinder::SetLimitsFinder(THLimitsFinder *finder)
 {
