@@ -409,7 +409,7 @@ inline void PxPyPzM4D<ScalarType>::SetE(ScalarType energy) {
 }
 
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __ROOTCLING__ || G__DICTIONARY
 
 } // end namespace Math
 

@@ -379,7 +379,7 @@ void PxPyPzE4D<ScalarType>::SetM(Scalar m) {
 
 } // end namespace ROOT
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __ROOTCLING__ || G__DICTIONARY
 
 
 #endif // ROOT_Math_GenVector_PxPyPzE4D
