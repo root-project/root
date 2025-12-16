@@ -3877,6 +3877,7 @@ TObject *TH1::FindObject(const TObject *obj) const
 /// For printing the list of all available functions do:
 ///
 ///       TF1::InitStandardFunctions();   // not needed if `gROOT->GetFunction` is called before
+///       TF2::InitStandardFunctions(); TF3::InitStandardFunctions(); // For 2D or 3D
 ///       gROOT->GetListOfFunctions()->ls()
 ///
 /// `fname` can also be a formula that is accepted by the linear fitter containing the special operator `++`,
