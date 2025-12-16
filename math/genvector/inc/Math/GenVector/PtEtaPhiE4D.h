@@ -400,7 +400,7 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
    *this = PtEtaPhiE4D<Scalar>(v);
 }
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __ROOTCLING__ || G__DICTIONARY
 
 } // end namespace Math
 
