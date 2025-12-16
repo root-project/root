@@ -24,20 +24,19 @@
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Error.h"
 
+// #include <algorithm>
 #include <mutex>
-#include <thread>
 
 #define DEBUG_TYPE "orc-resolver"
 
 namespace llvm::orc {
 
 LibraryResolver::LibraryResolver(const LibraryResolver::Setup &S)
-    : LibPathCache(S.Cache ? S.Cache : std::make_shared<LibraryPathCache>()),
-      LibPathResolver(S.PResolver
-                          ? S.PResolver
-                          : std::make_shared<PathResolver>(LibPathCache)),
+    : LibMgr(LibraryManager()),
+      LibPathCache(std::make_shared<LibraryPathCache>()),
+      LibPathResolver(std::make_shared<PathResolver>(LibPathCache)),
       ScanHelper(S.BasePaths, LibPathCache, LibPathResolver),
-      FB(S.FilterBuilder), LibMgr(),
+      FB(S.FilterBuilder),
       ShouldScanCall(S.ShouldScanCall ? S.ShouldScanCall
                                       : [](StringRef) -> bool { return true; }),
       scanBatchSize(S.ScanBatchSize) {
@@ -86,6 +85,15 @@ static bool shouldIgnoreSymbol(const object::SymbolRef &Sym,
   using Filter = SymbolEnumeratorOptions;
   if ((IgnoreFlags & Filter::IgnoreUndefined) &&
       (Flags & object::SymbolRef::SF_Undefined))
+    return true;
+  if ((IgnoreFlags & Filter::IgnoreNonExported) &&
+      !(Flags & object::SymbolRef::SF_Exported))
+    return true;
+  if ((IgnoreFlags & Filter::IgnoreNonGlobal) &&
+      !(Flags & object::SymbolRef::SF_Global))
+    return true;
+  if ((IgnoreFlags & Filter::IgnoreHidden) &&
+      (Flags & object::SymbolRef::SF_Hidden))
     return true;
   if ((IgnoreFlags & Filter::IgnoreIndirect) &&
       (Flags & object::SymbolRef::SF_Indirect))
@@ -207,26 +215,30 @@ void LibraryResolver::resolveSymbolsInLibrary(
   const auto &Unresolved = UnresolvedSymbols.getUnresolvedSymbols();
   LLVM_DEBUG(dbgs() << "Total unresolved symbols : " << Unresolved.size()
                     << "\n";);
-  DenseSet<StringRef> CandidateSet;
-  CandidateSet.reserve(Unresolved.size());
+
+  // Build candidate vector
+  SmallVector<StringRef, 24> CandidateVec;
+  CandidateVec.reserve(Unresolved.size());
   for (const auto &Sym : Unresolved) {
-    LLVM_DEBUG(dbgs() << "Checking symbol '" << Sym
-                      << "' in filter: " << Lib->getFullPath() << "\n";);
     if (!Lib->hasFilter() || Lib->mayContain(Sym))
-      CandidateSet.insert(Sym);
+      CandidateVec.push_back(Sym);
   }
 
-  if (CandidateSet.empty()) {
+  if (CandidateVec.empty()) {
     LLVM_DEBUG(dbgs() << "No symbol Exist "
                          " in library: "
                       << Lib->getFullPath() << "\n";);
     return;
   }
 
+  // Sort + unique to enable binary_search and stable erase via lower_bound
+  // llvm::sort(CandidateVec.begin(), CandidateVec.end());
+  // CandidateVec.erase(std::unique(CandidateVec.begin(), CandidateVec.end()),
+  //                    CandidateVec.end());
+
   bool BuildingFilter = !Lib->hasFilter();
 
   ObjectFileLoader ObjLoader(Lib->getFullPath());
-
   auto ObjOrErr = ObjLoader.getObjectFile();
   if (!ObjOrErr) {
     std::string ErrMsg;
@@ -239,29 +251,48 @@ void LibraryResolver::resolveSymbolsInLibrary(
 
   object::ObjectFile *Obj = &ObjOrErr.get();
 
-  SmallVector<StringRef, 512> SymbolVec;
+  /*if (BuildingFilter && Obj->isELF()) {
+
+  erase_if(CandidateVec, [&](StringRef C) {
+    return !MayExistInElfObjectFile(Obj, C);
+  });
+    if (CandidateVec.empty())
+      return;
+  }*/
+
+  SmallVector<StringRef, 256> SymbolVec;
 
   LLVM_DEBUG(dbgs() << "Enumerating symbols in library: " << Lib->getFullPath()
                     << "\n";);
+
   SymbolEnumerator::enumerateSymbols(
       Obj,
       [&](StringRef S) {
-        // If buildingFilter, collect for filter construction.
-        if (BuildingFilter) {
+        // Collect symbols if we're building a filter
+        if (BuildingFilter)
           SymbolVec.push_back(S);
-        }
-        auto It = CandidateSet.find(S);
-        if (It != CandidateSet.end()) {
-          // Resolve symbol and remove from remaining set
+
+        // auto It = std::lower_bound(CandidateVec.begin(),
+        // CandidateVec.end(), S);
+        auto It = std::find(CandidateVec.begin(), CandidateVec.end(), S);
+        if (It != CandidateVec.end() && *It == S) {
+          // Resolve and remove from CandidateVec
           LLVM_DEBUG(dbgs() << "Symbol '" << S << "' resolved in library: "
                             << Lib->getFullPath() << "\n";);
-          UnresolvedSymbols.resolve(*It, Lib->getFullPath());
+          UnresolvedSymbols.resolve(S, Lib->getFullPath());
           HadAnySym = true;
 
-          // EARLY STOP — everything matched
+          CandidateVec.erase(It);
+
+          // EARLY STOP — if nothing remains, stop enumeration
+          if (!BuildingFilter && CandidateVec.empty()) {
+            return EnumerateResult::Stop;
+          }
+          // Also stop if UnresolvedSymbols has no more unresolved symbols
           if (!BuildingFilter && !UnresolvedSymbols.hasUnresolved())
             return EnumerateResult::Stop;
         }
+
         return EnumerateResult::Continue;
       },
       Opts);
@@ -275,7 +306,7 @@ void LibraryResolver::resolveSymbolsInLibrary(
       return;
     }
 
-    Lib->ensureFilterBuilt(FB, SymbolVec);
+    Lib->ensureFilterBuilt(this->FB, SymbolVec);
     LLVM_DEBUG({
       dbgs() << "DiscoveredSymbols : " << SymbolVec.size() << "\n";
       for (const auto &S : SymbolVec)

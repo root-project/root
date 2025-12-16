@@ -218,7 +218,7 @@ bool isSharedLibraryObject(object::ObjectFile &Obj) {
   return false;
 }
 
-bool DylibPathValidator::isSharedLibrary(StringRef Path) {
+bool DylibPathValidator::isSharedLibrary(StringRef Path) const {
   LLVM_DEBUG(dbgs() << "Checking if path is a shared library: " << Path
                     << "\n";);
 
@@ -236,25 +236,13 @@ bool DylibPathValidator::isSharedLibrary(StringRef Path) {
   if (MagicCode == file_magic::archive)
     return false;
 
-  // Universal binary handling.
-#if defined(__APPLE__)
-  if (MagicCode == file_magic::macho_universal_binary) {
-    ObjectFileLoader ObjLoader(Path);
-    auto ObjOrErr = ObjLoader.getObjectFile();
-    if (!ObjOrErr) {
-      consumeError(ObjOrErr.takeError());
-      return false;
-    }
-    return isSharedLibraryObject(ObjOrErr.get());
-  }
-#endif
-
   // Object file inspection for PE/COFF, ELF, and Mach-O
   bool NeedsObjectInspection =
 #if defined(_WIN32)
       (MagicCode == file_magic::pecoff_executable);
 #elif defined(__APPLE__)
-      (MagicCode == file_magic::macho_fixed_virtual_memory_shared_lib ||
+      (MagicCode == file_magic::macho_universal_binary ||
+       MagicCode == file_magic::macho_fixed_virtual_memory_shared_lib ||
        MagicCode == file_magic::macho_dynamically_linked_shared_lib ||
        MagicCode == file_magic::macho_dynamically_linked_shared_lib_stub);
 #elif defined(LLVM_ON_UNIX)
@@ -267,20 +255,25 @@ bool DylibPathValidator::isSharedLibrary(StringRef Path) {
 #error "Unsupported platform."
 #endif
 
-  if (NeedsObjectInspection) {
-    ObjectFileLoader ObjLoader(Path);
-    auto ObjOrErr = ObjLoader.getObjectFile();
-    if (!ObjOrErr) {
-      consumeError(ObjOrErr.takeError());
-      return false;
-    }
-
-    return isSharedLibraryObject(ObjOrErr.get());
+  if (!NeedsObjectInspection) {
+    LLVM_DEBUG(dbgs() << "Path is not identified as a shared library: " << Path
+                      << "\n";);
+    return false;
   }
 
-  LLVM_DEBUG(dbgs() << "Path is not identified as a shared library: " << Path
-                    << "\n";);
-  return false;
+  ObjectFileLoader ObjLoader(Path);
+  auto ObjOrErr = ObjLoader.getObjectFile();
+  if (!ObjOrErr) {
+    consumeError(ObjOrErr.takeError());
+    return false;
+  }
+
+  bool IsShared = isSharedLibraryObject(ObjOrErr.get());
+
+  if (IsShared && ObjCache)
+    ObjCache->insert(Path, std::move(ObjLoader));
+
+  return IsShared;
 }
 
 void DylibSubstitutor::configure(StringRef LoaderPath) {
@@ -297,10 +290,10 @@ void DylibSubstitutor::configure(StringRef LoaderPath) {
   }
 
 #ifdef __APPLE__
-  Placeholders["@loader_path"] = std::string(LoaderDir);
-  Placeholders["@executable_path"] = std::string(ExecPath);
-#else
-  Placeholders["$origin"] = std::string(LoaderDir);
+  Placeholders.push_back({"@loader_path", std::string(LoaderDir)});
+  Placeholders.push_back({"@executable_path", std::string(ExecPath)});
+  #else
+  Placeholders.push_back({"$origin", std::string(LoaderDir)});
 #endif
 }
 
@@ -424,7 +417,6 @@ DylibResolverImpl::resolve(StringRef LibStem, bool VariateLibStem) const {
     if (auto Norm = tryWithExtensions(LibStem)) {
       LLVM_DEBUG(dbgs() << "  -> Resolved via tryWithExtensions: " << *Norm
                         << "\n";);
-
       return Norm;
     }
   }
@@ -923,18 +915,8 @@ Expected<LibraryDepsInfo> parseELFDeps(const object::ELFObjectFileBase &Obj) {
   return createStringError(std::errc::not_supported, "Unknown ELF format");
 }
 
-Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef FilePath) {
-  LLVM_DEBUG(dbgs() << "extractDeps: Attempting to open file " << FilePath
-                    << "\n";);
-
-  ObjectFileLoader ObjLoader(FilePath);
-  auto ObjOrErr = ObjLoader.getObjectFile();
-  if (!ObjOrErr) {
-    LLVM_DEBUG(dbgs() << "extractDeps: Failed to open " << FilePath << "\n";);
-    return ObjOrErr.takeError();
-  }
-
-  object::ObjectFile *Obj = &ObjOrErr.get();
+Expected<LibraryDepsInfo> parseDependencies(StringRef FilePath,
+                                            object::ObjectFile *Obj) {
 
   if (auto *elfObj = dyn_cast<object::ELFObjectFileBase>(Obj)) {
     LLVM_DEBUG(dbgs() << "extractDeps: File " << FilePath
@@ -961,6 +943,28 @@ Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef FilePath) {
                            FilePath.str().c_str());
 }
 
+Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef FilePath) {
+  LLVM_DEBUG(dbgs() << "extractDeps: Attempting to open file " << FilePath
+                    << "\n";);
+  //  check cache first
+  if (auto Cached = ObjCache.take(FilePath)) {
+    auto ObjOrErr = Cached->getObjectFile();
+    if (!ObjOrErr)
+      return ObjOrErr.takeError();
+    return parseDependencies(FilePath, &*ObjOrErr);
+  }
+
+  // fall back to normal loading
+  ObjectFileLoader ObjLoader(FilePath);
+  auto ObjOrErr = ObjLoader.getObjectFile();
+  if (!ObjOrErr) {
+    LLVM_DEBUG(dbgs() << "extractDeps: Failed to open " << FilePath << "\n";);
+    return ObjOrErr.takeError();
+  }
+
+  return parseDependencies(FilePath, &*ObjOrErr);
+}
+
 bool LibraryScanner::shouldScan(StringRef FilePath, bool IsResolvingDep) {
   LLVM_DEBUG(dbgs() << "[shouldScan] Checking: " << FilePath << "\n";);
 
@@ -978,7 +982,7 @@ bool LibraryScanner::shouldScan(StringRef FilePath, bool IsResolvingDep) {
   }*/
 
   // [3] Skip if it's not a shared library.
-  if (!IsResolvingDep && !DylibPathValidator::isSharedLibrary(FilePath)) {
+  if (!IsResolvingDep && !Validator.isSharedLibrary(FilePath)) {
     LLVM_DEBUG(dbgs() << "  -> Skipped: not a shared library.\n";);
     return false;
   }
@@ -1064,8 +1068,6 @@ void LibraryScanner::handleLibrary(StringRef FilePath, PathType K, int level) {
     return;
   }
 
-  DylibPathValidator Validator(ScanHelper.getPathResolver(),
-                               ScanHelper.getCache());
   DylibResolver Resolver(Validator);
   Resolver.configure(FilePath,
                      {{Deps.rpath, SearchPathType::RPath},

@@ -88,6 +88,10 @@ private:
   mutable std::shared_mutex Mtx;
 };
 
+// The LibraryCursor iterates through a list of LibraryInfo pointers,
+// returning only those libraries that match a specified LibState. LibraryIndex
+// provides these lists based on PathType, and the cursor filters them as it
+// iterates.
 class LibraryCursor {
 public:
   LibraryCursor(const std::vector<const LibraryInfo *> &L, LibState S)
@@ -111,6 +115,8 @@ private:
   size_t Pos = 0; // cursor position
 };
 
+// LibraryIndex keeps libraries grouped by PathType and lets you
+// get a cursor to walk through libraries of a specific type/state.
 class LibraryIndex {
   friend LibraryManager;
 
@@ -346,13 +352,14 @@ struct SymbolEnumeratorOptions {
     IgnoreUndefined = 1 << 0,
     IgnoreWeak = 1 << 1,
     IgnoreIndirect = 1 << 2,
-    IgnoreHidden = 1 << 3,
-    IgnoreNonGlobal = 1 << 4
+    IgnoreNonGlobal = 1 << 3,
+    IgnoreHidden = 1 << 4,
+    IgnoreNonExported = 1 << 5
   };
 
   static SymbolEnumeratorOptions defaultOptions() {
-    return {Filter::IgnoreUndefined | Filter::IgnoreWeak |
-            Filter::IgnoreIndirect};
+    return {Filter::IgnoreUndefined | Filter::IgnoreHidden |
+            Filter::IgnoreNonGlobal};
   }
   uint32_t FilterFlags = Filter::None;
 };
@@ -395,79 +402,88 @@ public:
   class SymbolQuery {
   public:
     /// Holds the result for a single symbol.
-    struct Result {
+    struct Entry {
       std::string Name;
       std::string ResolvedLibPath;
     };
 
   private:
     mutable std::shared_mutex Mtx;
-    StringMap<Result> Results;
+    SmallVector<Entry, 24> Entries;
     std::atomic<size_t> ResolvedCount = 0;
 
   public:
     explicit SymbolQuery(const std::vector<std::string> &Symbols) {
-      for (const auto &s : Symbols) {
-        if (!Results.contains(s))
-          Results.insert({s, Result{s, ""}});
+      for (const auto &S : Symbols) {
+        if (!contains(S))
+          Entries.push_back({S, ""});
       }
+    }
+
+    bool contains(StringRef Name) const {
+      return llvm::any_of(Entries,
+                          [&](const Entry &E) { return E.Name == Name; });
     }
 
     SmallVector<StringRef> getUnresolvedSymbols() const {
       SmallVector<StringRef> Unresolved;
       std::shared_lock<std::shared_mutex> Lock(Mtx);
-      for (const auto &[name, res] : Results) {
-        if (res.ResolvedLibPath.empty())
-          Unresolved.push_back(name);
+      for (const auto &E : Entries) {
+        if (E.ResolvedLibPath.empty())
+          Unresolved.push_back(E.Name);
       }
       return Unresolved;
     }
 
     void resolve(StringRef Sym, const std::string &LibPath) {
-      std::unique_lock<std::shared_mutex> Lock(Mtx);
-      auto It = Results.find(Sym);
-      if (It != Results.end() && It->second.ResolvedLibPath.empty()) {
-        It->second.ResolvedLibPath = LibPath;
-        ResolvedCount.fetch_add(1, std::memory_order_relaxed);
+      std::unique_lock Lock(Mtx);
+      for (auto &E : Entries) {
+        if (E.Name == Sym && E.ResolvedLibPath.empty()) {
+          E.ResolvedLibPath = LibPath;
+          ResolvedCount.fetch_add(1, std::memory_order_relaxed);
+          return;
+        }
       }
     }
 
     bool allResolved() const {
-      return ResolvedCount.load(std::memory_order_relaxed) == Results.size();
+      return ResolvedCount.load(std::memory_order_relaxed) == Entries.size();
     }
 
     bool hasUnresolved() const {
-      return ResolvedCount.load(std::memory_order_relaxed) < Results.size();
+      return ResolvedCount.load(std::memory_order_relaxed) < Entries.size();
     }
 
     std::optional<StringRef> getResolvedLib(StringRef Sym) const {
-      std::shared_lock<std::shared_mutex> Lock(Mtx);
-      auto It = Results.find(Sym);
-      if (It != Results.end() && !It->second.ResolvedLibPath.empty())
-        return StringRef(It->second.ResolvedLibPath);
+      std::shared_lock Lock(Mtx);
+      for (const auto &E : Entries)
+        if (E.Name == Sym && !E.ResolvedLibPath.empty())
+          return E.ResolvedLibPath;
       return std::nullopt;
     }
 
     bool isResolved(StringRef Sym) const {
-      std::shared_lock<std::shared_mutex> Lock(Mtx);
-      auto It = Results.find(Sym.str());
-      return It != Results.end() && !It->second.ResolvedLibPath.empty();
+      std::shared_lock Lock(Mtx);
+      for (const auto &E : Entries)
+        if (E.Name == Sym && !E.ResolvedLibPath.empty())
+          return true;
+      return false;
     }
 
-    std::vector<const Result *> getAllResults() const {
+    std::vector<const Entry *> getAllResults() const {
       std::shared_lock<std::shared_mutex> Lock(Mtx);
-      std::vector<const Result *> Out;
-      Out.reserve(Results.size());
-      for (const auto &[_, res] : Results)
-        Out.push_back(&res);
+      std::vector<const Entry *> Out;
+      Out.reserve(Entries.size());
+      for (const auto &E : Entries)
+        Out.push_back(&E);
       return Out;
     }
   };
 
   struct Setup {
     std::vector<std::string> BasePaths;
-    std::shared_ptr<LibraryPathCache> Cache;
-    std::shared_ptr<PathResolver> PResolver;
+    // std::shared_ptr<LibraryPathCache> Cache;
+    // std::shared_ptr<PathResolver> PResolver;
 
     size_t ScanBatchSize = 0;
 
@@ -479,17 +495,19 @@ public:
 
     static Setup
     create(std::vector<std::string> BasePaths,
-           std::shared_ptr<LibraryPathCache> existingCache = nullptr,
-           std::shared_ptr<PathResolver> existingResolver = nullptr,
+           //  std::shared_ptr<LibraryPathCache> existingCache = nullptr,
+           //  std::shared_ptr<PathResolver> existingResolver = nullptr,
            LibraryScanner::ShouldScanFn customShouldScan = nullptr) {
       Setup S;
       S.BasePaths = std::move(BasePaths);
 
-      S.Cache =
-          existingCache ? existingCache : std::make_shared<LibraryPathCache>();
+      // S.Cache =
+      //     existingCache ? existingCache :
+      //     std::make_shared<LibraryPathCache>();
 
-      S.PResolver = existingResolver ? existingResolver
-                                     : std::make_shared<PathResolver>(S.Cache);
+      // S.PResolver = existingResolver ? existingResolver
+      //                                :
+      //                                std::make_shared<PathResolver>(S.Cache);
 
       if (customShouldScan)
         S.ShouldScanCall = std::move(customShouldScan);
@@ -527,11 +545,11 @@ private:
   void resolveSymbolsInLibrary(LibraryInfo *Lib, SymbolQuery &Q,
                                const SymbolEnumeratorOptions &Opts);
 
+  LibraryManager LibMgr;
   std::shared_ptr<LibraryPathCache> LibPathCache;
   std::shared_ptr<PathResolver> LibPathResolver;
   LibraryScanHelper ScanHelper;
   BloomFilterBuilder FB;
-  LibraryManager LibMgr;
   LibraryScanner::ShouldScanFn ShouldScanCall;
   size_t scanBatchSize;
 };
