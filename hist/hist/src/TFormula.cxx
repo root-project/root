@@ -1205,15 +1205,17 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
    // replace old names xygaus -> gaus[x,y]
    formula.ReplaceAll("xyzgaus","gaus[x,y,z]");
+   formula.ReplaceAll("xygausn","gausn[x,y]");
    formula.ReplaceAll("xygaus","gaus[x,y]");
    formula.ReplaceAll("xgaus","gaus[x]");
    formula.ReplaceAll("ygaus","gaus[y]");
    formula.ReplaceAll("zgaus","gaus[z]");
+   formula.ReplaceAll("xyexpo","expo[x,y]");
    formula.ReplaceAll("xexpo","expo[x]");
    formula.ReplaceAll("yexpo","expo[y]");
    formula.ReplaceAll("zexpo","expo[z]");
+   formula.ReplaceAll("xylandaun","landaun[x,y]");
    formula.ReplaceAll("xylandau","landau[x,y]");
-   formula.ReplaceAll("xyexpo","expo[x,y]");
    // at the moment pre-defined functions have no more than 3 dimensions
    const char * defaultVariableNames[] = { "x","y","z"};
 
@@ -2543,8 +2545,10 @@ void TFormula::FillParametrizedFunctions(map<pair<TString, Int_t>, pair<TString,
       make_pair(make_pair("gaus", 2), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)", "")));
    functions.insert(
       make_pair(make_pair("landau", 2),
-                make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "")));
-   functions.insert(make_pair(make_pair("expo", 2), make_pair("exp([0]+[1]*{V0})", "exp([0]+[1]*{V0}+[2]*{V1})")));
+                make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "TMath::Landau({V0},[0],[1],true)*TMath::Landau({V1},[2],[3],true)")));
+   functions.insert(
+      make_pair(make_pair("expo", 2),
+                make_pair("exp([0]+[1]*{V0}+[2]*{V1})", "")));
    // 3-dimensional function
    functions.insert(
       make_pair(make_pair("gaus", 3), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2 - 0.5*(({V2}-[5])/[6])^2)", "")));

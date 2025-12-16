@@ -13,6 +13,16 @@ TEST(TFormula, Interp)
   TFormula f("func", "TGeoBBox::DeclFileLine()");
 }
 
+TEST(TFormula, 2dFunctions)
+{
+   TFormula xyexpo("f2xyexpo", "xyexpo");
+   EXPECT_EQ(xyexpo.GetExpFormula(), TString("exp([p0]+[p1]*x+[p2]*y)"));
+   TFormula xylandau("f2xylandau", "xylandau");
+   EXPECT_EQ(xylandau.GetExpFormula(), TString("[p0]*TMath::Landau(x,[p1],[p2],false)*TMath::Landau(y,[p3],[p4],false)"));
+   TFormula xylandaun("f2xylandaun", "xylandaun");
+   EXPECT_EQ(xylandaun.GetExpFormula(), TString("TMath::Landau(x,[p0],[p1],true)*TMath::Landau(y,[p2],[p3],true)"));
+}
+
 // Test for TFormula Extended syntax support
 TEST(TFormulaPolTest, BasicPolynomialConstruction)
 {
