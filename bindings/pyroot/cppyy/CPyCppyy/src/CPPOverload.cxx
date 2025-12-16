@@ -30,21 +30,11 @@
 namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
-// Hash function arguments for memoization in method/template dispatch.
-// For CPPOverload and TemplateProxy objects, hash the stable method/template
-// name plus structural info instead of volatile pointer addresses.
-// Uses boost::hash_combine pattern for proper bit mixing.
-//
-// Note: Hash relies on name + overload count. Functions with same name and
-// overload count in different namespaces may collide; this is acceptable as
-// they likely share the same function pointer type for template instantiation.
+// Combine name hash and method count for stable identity
 
 namespace {
-// Golden ratio constant for hash mixing (floor(2^64 / phi))
 constexpr uint64_t kGoldenRatioHash = 0x9e3779b9ULL;
 
-// boost::hash_combine equivalent for proper hash mixing
-// The shift values (6, 2) maximize avalanche effect for typical inputs
 inline void hash_combine(uint64_t &seed, uint64_t value)
 {
    seed ^= value + kGoldenRatioHash + (seed << 6) + (seed >> 2);
