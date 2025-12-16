@@ -74,9 +74,10 @@ constexpr Version_t kByteCountVMask  = 0x4000;       // OR the version byte coun
 constexpr Version_t kMaxVersion      = 0x3FFF;       // highest possible version number
 constexpr Int_t  kMapOffset          = 2;   // first 2 map entries are taken by null obj and self obj
 
-// constexpr ULong64_t kMaxLongRange = 0x0FFFFFFFFFFFFFFE; // We reserve the 4 highest bits for flags, currently only 2 are in use.
+constexpr ULong64_t kMaxLongRange = 0x0FFFFFFFFFFFFFFE; // We reserve the 4 highest bits for flags, currently only 2 are in use.
 constexpr ULong64_t kLongRangeClassMask = 0x8000000000000000; // OR the class index with this
 // constexpr ULong64_t kLongRangeByteCountMask = 0x4000000000000000; // OR the byte count with this
+constexpr ULong64_t kLongRangeRefMask    = 0x2000000000000000; // OR the reference index with this
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
@@ -2750,14 +2751,25 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
       ULong_t hash = Void_Hash(actualObjectStart);
 
       if ((idx = (ULongptr_t)fMap->GetValue(hash, (Longptr_t)actualObjectStart, slot)) != 0) {
-
-         // truncation is OK the value we did put in the map is an 30-bit offset
-         // and not a pointer
-         UInt_t objIdx = UInt_t(idx);
+         const bool shortRange = (fBufCur - fBuffer) <= kMaxMapCount;
 
          // save index of already stored object
          // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
-         *this << objIdx;
+         if (R__likely(shortRange)) {
+            // truncation is OK the value we did put in the map is an 30-bit offset
+            // and not a pointer
+            UInt_t objIdx = UInt_t(idx);
+            *this << objIdx;
+         } else {
+            // The 64-bit value is stored highest bytes first in the buffer,
+            // so when reading just the first 32-bits we get the control bits in place.
+            // This is needed so that the reader can distinguish between references,
+            // bytecounts, and new class definitions.
+            ULong64_t objIdx = static_cast<ULong64_t>(idx);
+            // FIXME: verify that objIdx is guaranteed to fit in 60-bits, i.e. objIdx <= kMaxLongRange
+            assert(objIdx <= kMaxLongRange);
+            *this << (objIdx | kLongRangeRefMask);
+         }
 
       } else {
 
@@ -2833,13 +2845,17 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    } else if (!(bcnt & kByteCountMask)) {
       if (R__likely(shortRange)) {
          tag64 = bcnt;
-      } else {
+      } else if (bcnt & ((kLongRangeRefMask|kLongRangeClassMask) >> 32)) {
          // Two implementation choices:
          // 1) rewind and read full 64-bit value
          // 2) use the already read 32-bits, read the rest and combine
          UInt_t low32;
          *this >> low32;
          tag64 = (static_cast<ULong64_t>(bcnt) << 32) | low32;
+         tag64 &= ~kLongRangeRefMask;
+      } else {
+         R__ASSERT(bcnt == 0); // isn't it? If true we could return 0 early with (*objTag=0)
+         tag64 = bcnt;
       }
       bcnt = 0;
    } else {
@@ -2860,10 +2876,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
          if (high32 == kNewClassTag) {
             isNewClassTag = true;
             tag64 = 0;
-         } else {
+         } else if (high32 & ((kLongRangeRefMask|kLongRangeClassMask) >> 32)) {
             // continue reading low 32-bits
             *this >> low32;
             tag64 = (static_cast<ULong64_t>(high32) << 32) | low32;
+            tag64 &= ~kLongRangeRefMask;
+         } else {
+            R__ASSERT(high32 == 0); // isn't it? If true we could return 0 early with (*objTag=0)
+            tag64 = high32;
          }
       }
    }
@@ -2871,6 +2891,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    const bool isClassTag = shortRange ? (tag64 & kClassMask) : (tag64 & kLongRangeClassMask);
 
    // in case tag is object tag return tag
+   // NOTE: if we return early for reference for longRange, this would be only for shortRange
    if (!isClassTag && !isNewClassTag) {
       // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
       if (objTag)
@@ -2964,6 +2985,8 @@ void TBufferFile::WriteClass(const TClass *cl)
          // This is needed so that the reader can distinguish between references,
          // bytecounts, and new class definitions.
          ULong64_t clIdx = static_cast<ULong64_t>(idx);
+         // FIXME: verify that clIdx is guaranteed to fit in 60-bits, i.e. clIdx <= kMaxLongRange
+         assert(clIdx <= kMaxLongRange);
          *this << (clIdx | kLongRangeClassMask);
       }
    } else {
