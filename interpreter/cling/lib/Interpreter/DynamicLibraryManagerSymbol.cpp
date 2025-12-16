@@ -1392,7 +1392,6 @@ namespace cling {
          {llvm::orc::LibState::Unloaded, llvm::orc::PathType::System}}};
     config.Options.FilterFlags =
         llvm::orc::SymbolEnumeratorOptions::IgnoreUndefined;
-
     m_DyldController->resolveSymbols(
         sym,
         [&](llvm::orc::LibraryResolver::SymbolQuery& Q) {
@@ -1400,7 +1399,6 @@ namespace cling {
             res = *s;
         },
         config);
-
     return res;
     // return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
   }
