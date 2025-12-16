@@ -1402,7 +1402,7 @@ void TSelectorDraw::TakeAction()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
       }
       TGraph *pm = new TGraph(fNfill, fVal[1], fVal[0]);
       pm->SetEditable(false);
@@ -1588,7 +1588,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
       }
       for (i = 0; i < fNfill; i++) h2->Fill(fVal[1][i], fVal[0][i], fW[i]);
    //__________________________Profile histogram_______________________
@@ -1614,7 +1614,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[1] > fVal[1][i]) fVmin[1] = fVal[1][i];
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
          // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
          // the data set (which should be >0) to avoid data cut when plotting in log scale.
          TAxis *aX = h2->GetXaxis();
@@ -1701,7 +1701,7 @@ void TSelectorDraw::TakeEstimate()
                if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
             }
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
          // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
          // the data set (which should be >0) to avoid data cut when plotting in log scale.
          TAxis *aX = h2->GetXaxis();
@@ -1731,7 +1731,8 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
             if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0],
+                                                              fVmax[0]);
       }
       if (fAction == 3) {
          for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
@@ -1783,7 +1784,7 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
             if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hp, fVmin[2], fVmax[2], fVmin[1], fVmax[1]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXY(hp, fVmin[2], fVmax[2], fVmin[1], fVmax[1]);
       }
       for (i = 0; i < fNfill; i++) hp->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
    //__________________________4D scatter plot_______________________
@@ -1804,7 +1805,8 @@ void TSelectorDraw::TakeEstimate()
             if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];
             if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
          }
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0],
+                                                              fVmax[0]);
       } else {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];
