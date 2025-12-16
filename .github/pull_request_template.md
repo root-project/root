@@ -1,12 +1,14 @@
-# This Pull request:
-
-## Changes or fixes:
+## Changes:
 
 
-## Checklist:
 
+This PR fixes # 
+
+### Checklist:
+
+- [ ] I disclose that this PR was co-developed with AI (if applicable)
 - [ ] tested changes locally
 - [ ] updated the docs (if necessary)
 
-This PR fixes # 
+
 
