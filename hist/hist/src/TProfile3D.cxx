@@ -276,7 +276,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
          if (z > zmax) zmax = z;
      }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(this, xmin, xmax, ymin, ymax, zmin, zmax);
       } else {
          fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
