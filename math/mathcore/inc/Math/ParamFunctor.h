@@ -143,7 +143,7 @@ private :
 
 
 #if defined(__ROOTCLING__) || defined(G__DICTIONARY)
-// needed since CINT initialize it with TRootIOCtor
+// needed since Cling initialize it with TRootIOCtor
 //class TRootIOCtor;
 template<class ParentFunctor>
 class ParamFunctorHandler<ParentFunctor,TRootIOCtor *> : public ParentFunctor::Impl

@@ -418,7 +418,7 @@ void PtEtaPhiM4D<ScalarType>::SetE(Scalar energy) {
    PxPyPzE4D<Scalar> v(*this); v.SetE(energy);   *this = PtEtaPhiM4D<Scalar>(v);
 }
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __ROOTCLING__ || G__DICTIONARY
 
 } // end namespace Math
 
