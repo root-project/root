@@ -271,8 +271,8 @@ public:
 
     std::unique_ptr<RooFactoryWSTool> _factory; ///<! Factory tool associated with workspace
 
-    bool _doExport;          ///<! Export contents of workspace to CINT?
-    std::string _exportNSName; ///<! Name of CINT namespace to which contents are exported
+    bool _doExport;          ///<! Export contents of workspace to Cling?
+    std::string _exportNSName; ///<! Name of Cling namespace to which contents are exported
 
     bool _openTrans = false; ///<! Is there a transaction open?
     RooArgSet _sandboxNodes; ///<! Sandbox for incoming objects in a transaction
