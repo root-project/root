@@ -382,6 +382,33 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    }
 }
 
+/// Core of uncompressing the key payload. Returns number of bytes uncompressed.
+Int_t TKey::UnzipObject(char *targetBuffer, const char *compressedBuffer) const
+{
+   auto objbuf = reinterpret_cast<unsigned char *>(targetBuffer) + fKeylen;
+   auto bufcur = reinterpret_cast<const unsigned char *>(&compressedBuffer[fKeylen]);
+   Int_t nin, nout = 0, nbuf;
+   Int_t noutot = 0;
+   Int_t nbytesRemain = fNbytes - fKeylen;
+   Int_t objlenRemain = fObjlen;
+   while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
+      Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
+      if ((hc != 0) || (nin > nbytesRemain) || (nbuf > objlenRemain))
+         return 0;
+      R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+      if (!nout)
+         return 0;
+      noutot += nout;
+      if (noutot >= fObjlen)
+         break;
+      bufcur += nin;
+      objbuf += nout;
+      nbytesRemain -= nin;
+      objlenRemain -= nout;
+   }
+   return nout;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Method used in all TKey constructor to initialize basic data fields.
 ///
@@ -825,20 +852,7 @@ TObject *TKey::ReadObj()
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipObject(bufferRef.Buffer(), compressedBuffer.get());
       compressedBuffer.reset(nullptr);
       if (nout) {
          tobj->Streamer(bufferRef); //does not work with example 2 above
@@ -950,20 +964,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&bufferRead[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipObject(bufferRef.Buffer(), bufferRead);
       if (nout) {
          tobj->Streamer(bufferRef); //does not work with example 2 above
       } else {
@@ -1096,20 +1097,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
+      Int_t nout = UnzipObject(bufferRef.Buffer(), compressedBuffer.get());
       if (nout) {
          cl->Streamer((void*)pobj, bufferRef, clOnfile);    //read object
       } else {
@@ -1184,21 +1172,9 @@ Int_t TKey::Read(TObject *obj)
 
    bufferRef.SetBufferOffset(fKeylen);
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = bufferRef.Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
-      Int_t nin, nout = 0, nbuf;
-      Int_t noutot = 0;
-      while (1) {
-         Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
-         if (!nout) break;
-         noutot += nout;
-         if (noutot >= fObjlen) break;
-         bufcur += nin;
-         objbuf += nout;
-      }
-      if (nout) obj->Streamer(bufferRef);
+      Int_t nout = UnzipObject(bufferRef.Buffer(), compressedBuffer.get());
+      if (nout)
+         obj->Streamer(bufferRef);
    } else {
       obj->Streamer(bufferRef);
    }
