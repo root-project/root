@@ -35,6 +35,8 @@ if(pyroot)
   ROOT_ADD_PYUNITTEST(rfile_py rfile.py)
 endif()
 
+ROOT_ADD_GTEST(ZipHeader ZipHeader.cxx LIBRARIES RIO Tree ROOTNTuple)
+
 # Temporarily disabled.  Test routinely fails on MacOS and some Linuxes.
 #if(NOT WIN32 AND (NOT MACOS_VERSION OR NOT MACOSX_VERSION VERSION_LESS 13.00))
 #  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)
