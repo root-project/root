@@ -153,7 +153,6 @@ int testGSLRootFinder() {
 
 
 
-  // the following two examples won't work when interpreted Cling
   //const FP funcPtr = &myfunc;
   ROOT::Math::GSLRootFinder::GSLFuncPointer funcPtr = &myfunc_gsl;
   void * ptr1 = nullptr;
