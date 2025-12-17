@@ -102,3 +102,4 @@ if(clad)
 endif()
 
 ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testLFSR testLFSR.cxx LIBRARIES Core MathCore)
