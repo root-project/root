@@ -490,8 +490,7 @@ still more optimal, but not by a whole lot. And that's right,
 class MakeHilbert is declared *within* a function and local to
 that function. It means one can define another MakeHilbert class
 (within another function or outside of any function, that is, in
-the global scope), and it still will be OK. Note, this currently
-is not yet supported by the interpreter Cling.
+the global scope), and it still will be OK.
 
 Another example is applying of a simple function to each matrix element:
 

@@ -110,7 +110,7 @@ TMVA::Factory* factory
 \caption[.]{\optionCaptionSize 
      Configuration options reference for class: {\em Factory}.  
      Coloured output is switched on by default, except when running ROOT in batch
-     mode (\ie, when the '\code{-b}' option of the Cling interpreter is invoked). 
+     mode (\ie, when the '\code{-b}' option of the interpreter is invoked).
      The list of transformations contains a default set of data preprocessing steps 
      for test and visualisation purposes only. The usage of preprocessing transformations
      in conjunction with MVA methods must be configured when booking the methods.
@@ -958,15 +958,15 @@ can be modified as follows:
 \begin{codeexample}
 \begin{tmvacode}
 // Modify settings for the variable plotting
-(TMVA::gConfig().GetVariablePlotting()).fTimesRMS = 8.0;
-(TMVA::gConfig().GetVariablePlotting()).fNbins1D  = 60.0;
-(TMVA::gConfig().GetVariablePlotting()).fNbins2D  = 300.0;
+TMVA::gConfig().GetVariablePlotting().fTimesRMS = 8.0;
+TMVA::gConfig().GetVariablePlotting().fNbins1D  = 60.0;
+TMVA::gConfig().GetVariablePlotting().fNbins2D  = 300.0;
 
 // Modify the binning in the ROC curve (for classification only)
-(TMVA::gConfig().GetVariablePlotting()).fNbinsXOfROCCurve = 100;
+TMVA::gConfig().GetVariablePlotting().fNbinsXOfROCCurve = 100;
 
 // For file name settings, modify the struct TMVA::Config::IONames
-(TMVA::gConfig().GetIONames()).fWeightFileDir = "myWeightFileDir";
+TMVA::gConfig().GetIONames().fWeightFileDir = "myWeightFileDir";
 \end{tmvacode}
 \caption[.]{\codeexampleCaptionSize Modifying global parameter
   settings for the plotting of the discriminating input variables. The
@@ -975,8 +975,7 @@ can be modified as follows:
   and
   \href{http://tmva.svn.sourceforge.net/viewvc/tmva/trunk/TMVA/src/Config.cxx?view=markup}{Config.cxx}
   for all available global configuration variables and their default
-  settings, respectively.  Note that the additional parentheses are
-  mandatory when used in Cling.}
+  settings, respectively.}
 \label{ce:gconfig}
 \end{codeexample}
 \begin{table}[p]
