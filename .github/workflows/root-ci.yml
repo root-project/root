@@ -398,20 +398,20 @@ jobs:
           - image: alma9
             is_special: true
             property: modules_off
-            overrides: ["runtime_cxxmodules=Off"]
+            overrides: ["runtime_cxxmodules=Off", "CMAKE_CXX_STANDARD=20"]
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
           - image: alma10
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
             architecture: ARM64
           - image: alma10
             is_special: true
             property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20"]
             cmake_generator: Ninja
           # Fedora Rawhide with Python debug build
           - image: rawhide
@@ -423,6 +423,7 @@ jobs:
             is_special: true
             minimal: true
             property: "minimal build"
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
