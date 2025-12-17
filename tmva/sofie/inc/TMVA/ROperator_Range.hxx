@@ -108,11 +108,6 @@ public:
          model.AddConstantTensor(fNOutput,shape, output.data());
          fShape = ConvertShapeToDim(shape);
 
-          // set the input tensor not writable
-         model.SetNotWritableInitializedTensor(fNStart);
-         model.SetNotWritableInitializedTensor(fNDelta);
-         model.SetNotWritableInitializedTensor(fNLimit);
-
       } else { // case of a shape tensor
          std::string start = (res1 == 1) ? std::to_string(start_value) : start_dim.GetVal();
          std::string limit = (res2 == 1) ? std::to_string(limit_value) : limit_dim.GetVal();
@@ -164,22 +159,20 @@ public:
          throw std::runtime_error("TMVA SOFIE Range operator called to Generate without being initialized first");
       }
 
-      std::string sizeName = fShape[0].param;
-      if (sizeName.find("range_size") != std::string::npos)
-         sizeName = "static_cast<size_t>(std::max(std::ceil((static_cast<float>(*tensor_" + fNLimit +
+      std::string outputSizeVar;
+      std::string outputSize = fShape[0].param;
+      if (outputSize.find("range_size") != std::string::npos) {
+         outputSizeVar = outputSize;
+         outputSize = "static_cast<size_t>(std::max(std::ceil((static_cast<float>(*tensor_" + fNLimit +
                 ") - static_cast<float>(*tensor_" + fNStart + ")) / static_cast<float>(*tensor_" + fNDelta + ")), 0.0f))";
-      out << SP << "{\n";
-      out << SP << SP << "size_t range" << " = " << sizeName << ";\n";
-      if (sizeName != fShape[0].param) {
-         out << SP << SP << "if ( range > " << "fTensor_" << fNOutput << ".size() ){\n";
-         // we should probably resize the tensor here
-         out << SP << SP << SP << "throw std::runtime_error(\"wrong size allocated for output of range\");\n";
-         out << SP << SP << "}\n";
+      } else {
+         outputSizeVar = "range_" + opName;
       }
-      out << SP << SP << "for (size_t i = 0; i < range; i++) {\n";
-      out << SP << SP << SP << "tensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
-      out << SP << SP << "}\n";
+      out << SP << "size_t " << outputSizeVar <<  " = " << outputSize << ";\n";
+      out << SP << "for (size_t i = 0; i < " << outputSizeVar << "; i++) {\n";
+      out << SP << SP << "tensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
       out << SP << "}\n";
+
       return out.str();
    }
 };
