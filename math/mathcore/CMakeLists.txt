@@ -57,6 +57,7 @@ set(HEADERS
   Math/IntegratorOptions.h
   Math/KDTree.h
   Math/LCGEngine.h
+  Math/LFSR.h
   Math/Math.h
   Math/MersenneTwisterEngine.h
   Math/MinimTransformFunction.h

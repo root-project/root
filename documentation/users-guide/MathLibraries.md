@@ -34,15 +34,15 @@ which are provided in the `ROOT::Math` namespace are:
    for evaluating one-dimensional  (`ROOT::Math::IBaseFunctiononeDim`) and  multi-dimensional functions
     (`ROOT::Math::IBaseFunctionMultiDim`) and parametric function interfaces for evaluating functions with parameters in one
     (`ROOT::Math::IParametricFunctionOneDim`) or multi dimensions (`ROOT::Math::IParametricFunctionMultiDim`).
-	A set of user convenient wrapper classes, such as `ROOT::Math::Functor` is provided for wrapping user-classes in the needed interface,
-	required to use the algorithms of the `ROOT` Mathematical libraries.
+    A set of user convenient wrapper classes, such as `ROOT::Math::Functor` is provided for wrapping user-classes in the needed interface,
+    required to use the algorithms of the `ROOT` Mathematical libraries.
 
 - Numerical algorithms interfaces and in same cases default implementations for:
     -  numerical integration;
     -  numerical differentiation;
-	-  one dimensional root-finding;
-	-  one-dimensional minimization;
-	- multi-dimensional minimization (only the `ROOT::Math::Minimizer` interface)
+    -  one dimensional root-finding;
+    -  one-dimensional minimization;
+    - multi-dimensional minimization (only the `ROOT::Math::Minimizer` interface)
 
 - Fitting classes: set of classes for fitting generic data sets. These classes are provided in the namespace `ROOT::Fit`.
    They are describing separately in the Fitting chapter.
@@ -268,6 +268,7 @@ classes. 4 different types exist: **`TRandom`**, **`TRandom1`**,
 of random generators. **`TRandom`** is the base class used by others. It
 implements methods for generating random numbers according to
 pre-defined distributions, such as Gaussian or Poisson.
+For random bit sequence generators, see **`ROOT::Math::LFSR`**.
 
 ### TRandom
 
@@ -592,6 +593,11 @@ Here are the CPU times obtained using the four random classes on an
 | `UNURAN`           |               |                |                |                |
 +--------------------+---------------+----------------+----------------+----------------+
 
+### ROOT::Math::LFSR
+
+This namespace contains free functions to generate pseudo-random binary sequences,
+to match those often implemented in electronic chips, based on linear feedback shift
+registers (LFSR). A usage example can be found in $ROOTSYS/tutorials/math/PRBS.C.
 
 ## Mathematical Functions
 
@@ -1469,10 +1475,10 @@ iteration the subinterval with the largest estimated error is bisected. It is po
      *  `Integration::kGAUSS41` : 41 points Gauss-Konrod rule (value = 4)
      *  `Integration::kGAUSS51` : 51 points Gauss-Konrod rule (value = 5)
      *  `Integration::kGAUSS61` : 61 points Gauss-Konrod rule (value = 6)
-	 The higher-order rules give better accuracy for smooth functions, while lower-order rules save time when the function contains local difficulties, such as discontinuities. If no integration rule
-	 is passed, the 31 points rule is used as default.
+     The higher-order rules give better accuracy for smooth functions, while lower-order rules save time when the function contains local difficulties, such as discontinuities. If no integration rule
+     is passed, the 31 points rule is used as default.
 
-* 	 `ROOT::Math::Integration::kADAPTIVESINGULAR`: based on `gsl_integration_qags`. It is an integration type which can be used in the case of the presence of singularities.It uses the
+*    `ROOT::Math::Integration::kADAPTIVESINGULAR`: based on `gsl_integration_qags`. It is an integration type which can be used in the case of the presence of singularities.It uses the
        Gauss-Kronrod 21-point integration rule. This is the default algorithm
 
 Note that when using the common `ROOT::Math::IntegratorOneDIm` class the enumeration type defining the algorithm must be defined in the namespace `ROOT::Math::IntegrationOneDim` (to distinguish from
