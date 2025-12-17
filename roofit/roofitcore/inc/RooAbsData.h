@@ -32,26 +32,25 @@
 #include <map>
 #include <string>
 
-class RooAbsReal ;
-class RooRealVar;
-class RooAbsRealLValue;
+class Roo1DTable;
+class Roo1DTable;
+class RooAbsBinning;
 class RooAbsCategoryLValue;
-class Roo1DTable ;
-class RooPlot;
+class RooAbsDataStore;
+class RooAbsReal;
+class RooAbsRealLValue;
 class RooArgList;
+class RooFormulaVar;
+class RooHist;
+class RooPlot;
+class RooRealVar;
 class RooSimultaneous;
 class TH1;
 class TH2F;
-class RooAbsBinning ;
-class Roo1DTable ;
-class RooAbsDataStore ;
-class RooFormulaVar;
-namespace RooFit {
-namespace TestStatistics {
+namespace RooFit::TestStatistics {
 class RooAbsL;
 struct ConstantTermsOptimizer;
-}
-}
+} // namespace RooFit::TestStatistics
 
 
 class RooAbsData : public TNamed, public RooPrintable {
@@ -175,24 +174,6 @@ public:
            const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
   virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
-
-  // WVE --- This needs to be public to avoid Cling problems
-  struct PlotOpt {
-   const char* cuts = "";
-   Option_t* drawOptions = "P";
-   RooAbsBinning* bins = nullptr;
-   RooAbsData::ErrorType etype = RooAbsData::Poisson;
-   const char* cutRange = nullptr;
-   const char* histName = nullptr;
-   bool histInvisible = false;
-   const char* addToHistName = nullptr;
-   double addToWgtSelf = 1.0;
-   double addToWgtOther = 1.0;
-   double xErrorSize = 1.0;
-   bool refreshFrameNorm = false;
-   bool correctForBinWidth = true;
-   double scaleFactor = 1.0;
-  } ;
 
   // Split a dataset by a category
   std::vector<std::unique_ptr<RooAbsData>> split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const;
@@ -326,6 +307,27 @@ protected:
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
   bool allClientsCached(RooAbsArg*, const RooArgSet&) ;
 
+  struct PlotOpt {
+   const char* cuts = "";
+   Option_t* drawOptions = "P";
+   RooAbsBinning* bins = nullptr;
+   RooAbsData::ErrorType etype = RooAbsData::Poisson;
+   const char* cutRange = nullptr;
+   const char* histName = nullptr;
+   bool histInvisible = false;
+   const char* addToHistName = nullptr;
+   double addToWgtSelf = 1.0;
+   double addToWgtOther = 1.0;
+   double xErrorSize = 1.0;
+   bool refreshFrameNorm = false;
+   bool correctForBinWidth = true;
+   double scaleFactor = 1.0;
+  } ;
+
+  // implementation detail
+  static RooHist *createAndFillRooHist(RooAbsData const &absData, RooPlot const &frame, RooAbsRealLValue const &var,
+                                       std::string cuts1, std::string cuts2, RooAbsData::PlotOpt opt, bool efficiency,
+                                       double scaleFactor);
 
  // PlotOn implementation
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const ;
