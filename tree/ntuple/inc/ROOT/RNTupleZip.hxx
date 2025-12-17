@@ -57,7 +57,7 @@ public:
 
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
-      char *source = const_cast<char *>(static_cast<const char *>(from));
+      const char *source = static_cast<const char *>(from);
       int szTarget = nbytes;
       char *target = reinterpret_cast<char *>(to);
       int szOutBlock = 0;
@@ -111,7 +111,7 @@ public:
       }
       R__ASSERT(dataLen > nbytes);
 
-      unsigned char *source = const_cast<unsigned char *>(static_cast<const unsigned char *>(from));
+      const unsigned char *source = static_cast<const unsigned char *>(from);
       unsigned char *target = static_cast<unsigned char *>(to);
       int szRemaining = dataLen;
       do {
