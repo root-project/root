@@ -1967,9 +1967,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   return frame;
 }
 
-namespace {
-
-RooHist *createAndFillRooHist(RooAbsData const &absData, RooPlot const &frame, RooAbsRealLValue const &var,
+RooHist *RooAbsData::createAndFillRooHist(RooAbsData const &absData, RooPlot const &frame, RooAbsRealLValue const &var,
                               std::string cuts1, std::string cuts2, RooAbsData::PlotOpt opt, bool efficiency,
                               double scaleFactor)
 {
@@ -2002,8 +2000,6 @@ RooHist *createAndFillRooHist(RooAbsData const &absData, RooPlot const &frame, R
    // convert this histogram to a RooHist object on the heap
    return new RooHist(*hist1, *hist2, 0, 1, opt.etype, opt.xErrorSize, efficiency, scaleFactor);
 }
-
-} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
