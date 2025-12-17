@@ -39,14 +39,6 @@ class RooDataHistPlotOn(unittest.TestCase):
     def test_overload1(self):
         dh, yframe = self.create_hist_and_frame()
 
-        # Overload in RooDataHist
-        # RooPlot* RooDataHist::plotOn(RooPlot* frame, RooAbsData::PlotOpt o)
-        res = dh.plotOn(yframe, ROOT.RooAbsData.PlotOpt())
-        self.assertEqual(type(res), ROOT.RooPlot)
-
-    def test_overload2(self):
-        dh, yframe = self.create_hist_and_frame()
-
         # Overload taken from RooAbsData
         # RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1 = {},
         # const RooCmdArg& arg2 = {}, const RooCmdArg& arg3 = {},
@@ -56,7 +48,7 @@ class RooDataHistPlotOn(unittest.TestCase):
         res = dh.plotOn(yframe)
         self.assertEqual(type(res), ROOT.RooPlot)
 
-    def test_overload3(self):
+    def test_overload2(self):
         dh, yframe = self.create_hist_and_frame()
 
         # Overload taken from RooAbsData
