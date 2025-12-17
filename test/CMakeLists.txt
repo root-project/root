@@ -307,25 +307,6 @@ if(MSVC)
 endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
-#--Vc basic test-----------------------------------------------------------------------------------
-if(vc)
-  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
-endif()
-
-#--VecCore basic test------------------------------------------------------------------------------
-if(veccore)
-  ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_include_directories(test-veccore BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
-  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
-  if(veccore AND vc)
-    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
-  else()
-    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Scalar")
-  endif()
-endif()
-
 #--std::simd GenVector test-----------------------------------------------------------------------------------
 # We don't support std::simd on Windows, Apple, or Linux with GCC < 9
 # Sync check with the one about disabling VecCore in RootBuildOptions.cmake

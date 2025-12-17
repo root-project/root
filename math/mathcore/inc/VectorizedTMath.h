@@ -5,7 +5,7 @@
 #include "Math/Types.h"
 #include "TMath.h"
 
-#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
+#ifdef ROOT_VECTORIZED_TMATH
 
 namespace TMath {
 ::ROOT::Double_v Log2(::ROOT::Double_v &x);
@@ -28,6 +28,6 @@ namespace TMath {
 ::ROOT::Double_v BesselJ1(::ROOT::Double_v &x);
 } // namespace TMath
 
-#endif // VECCORE and VC exist check
+#endif // ROOT_VECTORIZED_TMATH
 
 #endif

@@ -3,6 +3,8 @@
 #include "VectorizedTMath.h"
 #include <gtest/gtest.h>
 
+#ifdef ROOT_VECTORIZED_TMATH
+
 #define N 16384
 
 Double_t uniform_random(Double_t a, Double_t b)
@@ -98,6 +100,8 @@ TEST_VECTORIZED_TMATH_FUNCTION(BesselI1, FLT_MIN, FLT_MAX_10_EXP);
 
 TEST_VECTORIZED_TMATH_FUNCTION_FLT_BESSEL(BesselJ0);
 TEST_VECTORIZED_TMATH_FUNCTION_FLT_BESSEL(BesselJ1);
+
+#endif // ROOT_VECTORIZED_TMATH
 
 int main(int argc, char *argv[])
 {

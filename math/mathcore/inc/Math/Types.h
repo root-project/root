@@ -5,37 +5,37 @@
 
 #ifdef R__HAS_VECCORE
 
-#if defined(R__HAS_VC)
+// We always try to use std::simd as the VecCore backend.
+//
+// If std::simd is not available, for example of AlmaLinux 8 with GCC 8.5, ROOT
+// will just refuse to build with veccore=ON and give clear warnings at
+// configuration time. We're sorry for the users who are affected by this, but
+// the user base of the VecCore features in ROOT is small, and there are not
+// many users sill on AlmaLinux 8 at this point. So this is acceptable
+// collateral damage for the benefit of not having to test and support
+// different VecCore backend types, e.g. also the old Vc.
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#if (__cplusplus >= 202002L) // only for C++20
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#endif
+#define ROOT_VECTORIZED_TMATH
 
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconditional-uninitialized"
-#pragma clang diagnostic ignored "-Wdeprecated-copy"
-#endif
-
-#include <Vc/Vc>
-#pragma GCC diagnostic pop
-#endif
-
+#define VECCORE_ENABLE_STD_SIMD
 #include <VecCore/VecCore>
+#undef VECCORE_ENABLE_STD_SIMD
 
 namespace ROOT {
 
 namespace Internal {
-   using ScalarBackend = vecCore::backend::Scalar;
-#ifdef VECCORE_ENABLE_VC
-   using VectorBackend = vecCore::backend::VcVector;
+
+using ScalarBackend = vecCore::backend::Scalar;
+#ifdef ROOT_VECTORIZED_TMATH
+// We can't use SIMDNative here, because we need ABI compatible types between
+// the context of the interpreter and compiled code, for usage in the TFormula.
+using VectorBackend = vecCore::backend::SIMD<std::experimental::simd_abi::compatible<double>>;
 #else
-   using VectorBackend = vecCore::backend::Scalar;
+using VectorBackend = vecCore::backend::Scalar;
 #endif
-}
+
+} // namespace Internal
+
    using Float_v  = typename Internal::VectorBackend::Float_v;
    using Double_v = typename Internal::VectorBackend::Double_v;
    using Int_v    = typename Internal::VectorBackend::Int_v;

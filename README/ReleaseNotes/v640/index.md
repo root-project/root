@@ -71,6 +71,20 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ## Math
 
+### Migration from Vc to `std::simd`
+
+ROOT has migrated its internal SIMD usage from **Vc** to `std::simd` where applicable.
+
+This change affects:
+  * The vectorized backend of **TFormula** and **TMath** interfaces that are available via VecCore when building ROOT with `veccore=ON`.
+  * Users who instantiate the GenVector classes with Vc SIMD types like `Vc::double_v`. If you rely on these types, your code must be update to use `std::simd` instead.
+
+* On **Windows and Apple silicon platforms**, this change has no practical impact: Vc-based SIMD via VecCore was not supported by ROOT on these platforms, and ROOT will also not try to use `std::simd` now on these platforms.
+
+* TFormula and TMath attempt to use `std::simd` when compiled with **Clang** (any supported version) or **GCC ≥ 9**. On other compilers or configurations, SIMD support is disabled. This affects in particular the default compiler on RHEL/AlmaLinux 8 (GCC 8.5).
+
+* As a consequence of this migration, the build options **vc** and **builtin_vc** are now deprecated and ignored. Their usage will cause CMake configuration errors starting from ROOT 6.42.
+
 ## RooFit
 
 ## RDataFrame

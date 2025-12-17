@@ -1,6 +1,6 @@
 #include "VectorizedTMath.h"
 
-#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
+#ifdef ROOT_VECTORIZED_TMATH
 
 namespace TMath {
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ namespace TMath {
 
    ::ROOT::Double_v v = vecCore::math::Abs(x) / w2;
 
-   ::ROOT::Double_v result;
+   ::ROOT::Double_v result{};
 
    vecCore::Mask<::ROOT::Double_v> mask1 = v < ::ROOT::Double_v(0.5);
    vecCore::Mask<::ROOT::Double_v> mask2 = !mask1 && v < ::ROOT::Double_v(4.0);
@@ -247,4 +247,4 @@ namespace TMath {
 
 } // namespace TMath
 
-#endif
+#endif // ROOT_VECTORIZED_TMATH

@@ -79,7 +79,8 @@ private:
    inline T EvalLog(T x) {
       static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
 #ifdef R__HAS_VECCORE
-      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - T(1.0), std::log(x));
+      T logval =
+         vecCore::Blend<T>(x <= epsilon, x / epsilon + vecCore::math::Log(epsilon) - T(1.0), vecCore::math::Log(x));
 #else
       T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
 #endif

@@ -105,14 +105,6 @@ if(runtime_cxxmodules)
   # 'abs' shadow declaration (from stl math.h) is broken.
   # FIXME: Revise after a llvm upgrade or reproduce it outside rootcling.
   list(REMOVE_ITEM HEADERS "Math/Math.h")
-
-  if(vc)
-    # We do not link against libVc.a thus it makes no sense to check for
-    # version compatibility between libraries and header files. This fixes
-    # ROOT-11002 where upon building the modules.idx we run the static ctor
-    # runLibraryAbiCheck which fails to find the corresponding symbol.
-    set(dictoptions "-m" "Vc" "-mByproduct" "Vc" "-D" "Vc_NO_VERSION_CHECK")
-  endif(vc)
 endif()
 
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning
@@ -203,10 +195,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_BUILTINS}
 )
 
-target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
 target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
 
-list(APPEND math_incl ${Vc_INCLUDE_DIR})
 list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
 
 foreach(incl ${math_incl})
