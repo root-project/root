@@ -17,6 +17,12 @@
 #ifndef ROOT_RZip
 #define ROOT_RZip
 
+namespace ROOT::Internal {
+
+constexpr int kZipHeaderSize = 9; ///< Number of bytes of the ROOT compression block header
+
+} // namespace ROOT::Internal
+
 extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
 
 extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, const char *src, unsigned long srcsize);
