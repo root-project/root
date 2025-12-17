@@ -337,6 +337,8 @@ namespace SOFIE{
          auto m = (fAttrTransA ? fShapeA[dimA-1].GetVal() : fShapeA[dimA-2].GetVal());
          auto n = (fAttrTransB ? fShapeB[dimB-2].GetVal() : fShapeB[dimB-1].GetVal());
          auto k = (fAttrTransA ? fShapeA[dimA-2].GetVal() : fShapeA[dimA-1].GetVal());
+         // size of A: if (trasposeA) is m*k else k*m
+         // size of B  n*k
          std::vector<Dim> sY = {fShapeY[dimY-2], fShapeY[dimY-1]};
          // extra dimensions in case of stacked MatMul
          std::vector<Dim> sA;
@@ -371,9 +373,32 @@ namespace SOFIE{
          // include MatMul case where we stack the Gemm operations
          // exclude case where we have only 1's in the additional dims
          bool doStackMul = dimY > 2 && ( fIsDynamic  || std::stoi(lengthExtra) > 1);
+         // compute input offset for stack multiplications
+         std::string lengthExtra_A;
+         std::string lengthExtra_B;
+         std::string increment_A;
+         std::string increment_B;
+
          if (doStackMul) {
-            out << SP << "size_t " << opName << "_yoffset = 0;\n"; // needed if we stack the gemm operations
-            out << SP << "for (int i = 0; i < " << lengthExtra << "; i++){\n";
+            std::vector<Dim> sA(fShapeA.begin(), fShapeA.begin()+dimA-2);
+            std::vector<Dim> sB(fShapeB.begin(), fShapeB.begin()+dimB-2);
+            std::vector<Dim> mA = {fShapeA[dimA-2], fShapeA[dimA-1]};
+            std::vector<Dim> mB = {fShapeA[dimB-2], fShapeB[dimB-1]};
+            lengthExtra_A = ConvertDimShapeToLength(sA);
+            lengthExtra_B = ConvertDimShapeToLength(sB);
+            // size of A performing matmul is m*k and n*k for B
+            increment_A = ConvertDimShapeToLength(mA);
+            increment_B = ConvertDimShapeToLength(mB);
+         }
+         bool extraA = (doStackMul && lengthExtra_A != "1");
+         bool extraB = (doStackMul && lengthExtra_B != "1");
+         if (doStackMul) {
+            out << SP << "size_t " << opName << "_y_offset = 0;\n"; // needed if we stack the gemm operations
+            if (extraA)
+               out << SP << "size_t " << opName << "_A_offset = 0;\n";
+            if (extraB)
+               out << SP << "size_t " << opName << "_B_offset = 0;\n";
+            out << SP << "for (size_t i = 0; i < " << lengthExtra << "; i++){\n";
             out << SP;
          }
 
@@ -381,14 +406,16 @@ namespace SOFIE{
 
             out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
              << "tensor_" << fNY;
-             if (doStackMul) out << " + " << opName << "_yoffset";
+             if (doStackMul) out << " + " << opName << "_y_offset";
             out <<   ", "
              << (fAttrTransB ? "true, " : "false, ")
              << (fAttrTransA ? "true, " : "false, ")
              << n << ", " << m << ", " << k << ", ";
-            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ",";
-            out << "tensor_" << fNB << ", " << "tensor_" << fNA << ", ";
-            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
+            out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ", tensor_" << fNB;
+            if (extraB) out << " + " << opName << "_B_offset";
+            out << ", tensor_" << fNA;
+            if (extraA) out << " + " << opName << "_A_offset";
+            out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
             // in the case of bias
              if (!fNC.empty())
                out << "tensor_" << fNC;
@@ -404,7 +431,12 @@ namespace SOFIE{
          }
 
          if (doStackMul) {
-            out << SP << SP <<  opName << "_yoffset += " << lengthGemm << ";\n";
+            out << SP << SP <<  opName << "_y_offset += " << lengthGemm << ";\n";
+            if (lengthExtra_A != "1")
+               out << SP << SP << opName << "_A_offset += " << increment_A << ";\n";
+            if (lengthExtra_B != "1")
+               out << SP << SP << opName << "_B_offset += " << increment_B << ";\n";
+
             out << "}\n"; // end of loop on the stacked multiplications
          }
 

@@ -323,6 +323,8 @@
 
 #include "ScatterElements_FromONNX.hxx"
 
+#include "MatMul_Stacked_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2856,7 +2858,7 @@ TEST(ONNX, RangeFloat) {
    float start = 1.;
    float limit = 10.;
    float delta = 2.;
-   TMVA_SOFIE_RangeFloat::Session s("RangeFloat_FromONNX.dat");
+   TMVA_SOFIE_RangeFloat::Session s("RangeFloat_FromONNX.dat",5);
    std::vector<float> output(s.infer(&start, &limit, &delta));
 
    // Checking the output size
@@ -2875,7 +2877,7 @@ TEST(ONNX, RangeInt) {
    int64_t start = 1;
    int64_t limit = 10;
    int64_t delta = 2;
-   TMVA_SOFIE_RangeInt::Session s("RangeInt_FromONNX.dat");
+   TMVA_SOFIE_RangeInt::Session s("RangeInt_FromONNX.dat",5);
    std::vector<int64_t> output(s.infer(&start, &limit, &delta));
 
    // Checking the output size
@@ -2947,7 +2949,7 @@ TEST(ONNX, Where) {
    // test also the broadcast of boolean tensors
    std::vector<float> input1 = {1,2};
    std::vector<float> input2 = {3,4,5,6};
-   bool cond[] = {true, false, true}; // need to pass arrays for booleans
+   uint8_t cond[] = {true, false, true}; // need to pass arrays for booleans
    std::vector<float> correct = {1,2,5,6,1,2};
    TMVA_SOFIE_Where::Session s("Where_FromONNX.dat");
    std::vector<float> output(s.infer(input1.data(), input2.data(), cond));
@@ -3206,6 +3208,27 @@ TEST(ONNX, ScatterElements)
    TMVA_SOFIE_ScatterElements::Session s("ScatterElements_FromONNX.dat");
 
    auto output = s.infer(input.data(), indices.data(), updates.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, MatMul_Stacked)
+{
+   // test scatter elements (similar test as in ONNX doc)
+   std::vector<float> input1 = {1,2,3,4,5,6,7,8};    // input tensor shape is (2,2,2)
+   std::vector<float> input2 = {2,3};                // shape is (2,1)
+
+   std::vector<float> correct_output = {8,18, 28,38};
+
+   // model is dynamic , use N = 2
+   TMVA_SOFIE_MatMul_Stacked::Session s("MatMul_Stacked_FromONNX.dat", 2);
+
+   auto output = s.infer(2, input1.data(), input2.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());

@@ -72,8 +72,6 @@ public:
           // empty shape Indices is a scalar value for the indices
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
          int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
-         //flag index tensor as not writable (not sure this is needed since index tensor might be used in generated code)
-         model.SetNotWritableInitializedTensor(fNIndices);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
             // move this at generation time?
