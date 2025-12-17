@@ -131,8 +131,7 @@ public:
     return (lo+hi)/2 ;
   }
 
-  using RooAbsData::plotOn ;
-  RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
+  RooPlot *plotOnImpl(RooPlot *frame, PlotOpt o) const override;
 
   void reset() override;
 

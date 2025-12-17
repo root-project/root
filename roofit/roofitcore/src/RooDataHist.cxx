@@ -1095,11 +1095,11 @@ std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast
 /// frame in mode specified by plot options 'o'. The main purpose of
 /// this function is to match the specified binning on 'o' to the
 /// internal binning of the plot observable in this RooDataHist.
-/// \note see RooAbsData::plotOn() for plotting options.
-RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
+/// \note see RooAbsData::plotOnImpl() for plotting options.
+RooPlot *RooDataHist::plotOnImpl(RooPlot *frame, PlotOpt o) const
 {
   checkInit() ;
-  if (o.bins) return RooAbsData::plotOn(frame,o) ;
+  if (o.bins) return RooAbsData::plotOnImpl(frame,o) ;
 
   if(!frame) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << std::endl;
@@ -1120,7 +1120,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   o.bins = &dataVar->getBinning() ;
-  return RooAbsData::plotOn(frame,o) ;
+  return RooAbsData::plotOnImpl(frame,o) ;
 }
 
 
