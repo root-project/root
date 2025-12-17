@@ -5,8 +5,13 @@
 #include <ROOT/RNTupleZip.hxx>
 
 #include <RZip.h>
+#include <TKey.h>
+#include <TMemFile.h>
+#include <TNamed.h>
 
 #include <cstring>
+#include <memory>
+#include <string>
 
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
@@ -100,4 +105,59 @@ TEST(RZip, CorruptHeaderRNTuple)
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("failed to unzip buffer header"));
    }
+}
+
+TEST(RZip, CorruptHeaderTKey)
+{
+   TMemFile writableFile("memfile.root", "RECREATE");
+   writableFile.SetCompressionSettings(101);
+
+   std::string stdstring(1000, 'x');
+   TNamed tnamed;
+   tnamed.SetName(stdstring.c_str());
+   writableFile.WriteObject(&stdstring, "stdstring");
+   writableFile.WriteObject(&tnamed, "tnamed");
+
+   auto keysInfo = writableFile.WalkTKeys();
+   std::size_t posZipStdString = 0;
+   std::size_t posZipTNamed = 0;
+   for (const auto &ki : keysInfo) {
+      if (ki.fKeyName == "stdstring") {
+         EXPECT_LT(ki.fLen, ki.fObjLen); // ensure it's compressed
+         posZipStdString = ki.fSeekKey + ki.fKeyLen;
+      } else if (ki.fKeyName == "tnamed") {
+         EXPECT_LT(ki.fLen, ki.fObjLen); // ensure it's compressed
+         posZipTNamed = ki.fSeekKey + ki.fKeyLen;
+      }
+   }
+   EXPECT_GT(posZipStdString, 0);
+   EXPECT_GT(posZipTNamed, 0);
+
+   writableFile.Close();
+
+   auto buffer = std::make_unique<char[]>(writableFile.GetSize());
+   writableFile.CopyTo(buffer.get(), writableFile.GetSize());
+
+   TMemFile verifyFile("memfile.root", TMemFile::ZeroCopyView_t(buffer.get(), writableFile.GetSize()));
+
+   buffer[posZipStdString + 3]++;
+   EXPECT_FALSE(verifyFile.Get<std::string>("stdstring"));
+   buffer[posZipStdString + 3]--;
+   buffer[posZipStdString + 6]++;
+   EXPECT_FALSE(verifyFile.Get<std::string>("stdstring"));
+   buffer[posZipStdString + 6]--;
+
+   auto k = verifyFile.GetKey("tnamed");
+   EXPECT_TRUE(k);
+   EXPECT_TRUE(dynamic_cast<TNamed *>(k->ReadObj()));
+
+   buffer[posZipTNamed + 3]++;
+   EXPECT_FALSE(dynamic_cast<TNamed *>(k->ReadObj()));
+   buffer[posZipTNamed + 3]--;
+   buffer[posZipTNamed + 6]++;
+   EXPECT_FALSE(dynamic_cast<TNamed *>(k->ReadObj()));
+   buffer[posZipTNamed + 6]--;
+
+   EXPECT_TRUE(verifyFile.Get<std::string>("stdstring"));
+   EXPECT_TRUE(verifyFile.Get<TNamed>("tnamed"));
 }
