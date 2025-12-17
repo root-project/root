@@ -62,7 +62,18 @@ def main():
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
-    if not pull_request:
+    if pull_request:
+        # We check whether the PR is done from a branch that has the same name of
+        # the target branch in the ROOT repository using base_ref and head_ref:
+        # - The base_ref is e.g. "master" or "v6-38-00-patches" 
+        # - The head_ref for PRs is formatted as <PR branch>:<Fork branch> e.g. "refs/pull/20742/head:cppyy_fixup"
+        if not ":" in args.head_ref:
+            build_utils.print_error(f"This has been identified as a PR build. However, the head-ref is {args.head_ref}.")
+        branch_in_fork = args.head_ref.split(":")[-1]
+        if branch_in_fork == args.base_ref:
+            build_utils.print_error(f"The branch name in the fork and the base-ref are both called {branch_in_fork}. This is not supported. Please change the name of the branch in the forked repository.")
+            sys.exit(1)
+    else:
         build_utils.print_info("head_ref same as base_ref, assuming non-PR build")
 
     cleanup_previous_build()
