@@ -577,19 +577,6 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       PrintDynamicTensors();
    }
 
-   // check if there are initialized tensors to write in a weight file
-   // support for the time being only weight of FLOAT type
-   if (fUseWeightFile) {
-      bool modelHasWeights = false;
-      for (auto &i : fInitializedTensors) {
-         if (i.second.IsWeightTensor()) {
-            modelHasWeights = true;
-            break;
-         }
-      }
-      if (!modelHasWeights)
-         fUseWeightFile = false;
-   }
    // Go through model and initialize each operator
    int i = 0;
 
@@ -619,6 +606,20 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    for (auto &it : fInitializedTensors) {
       if (it.second.IsWeightTensor() && it.second.type() !=  ETensorType::FLOAT)
          it.second.SetConstant();
+   }
+
+   // check if there are initialized tensors to write in a weight file
+   // support for the time being only weight of FLOAT type
+   if (fUseWeightFile) {
+      bool modelHasWeights = false;
+      for (auto &i : fInitializedTensors) {
+         if (i.second.IsWeightTensor()) {
+            modelHasWeights = true;
+            break;
+         }
+      }
+      if (!modelHasWeights)
+         fUseWeightFile = false;
    }
 
    fIsInitialized = true;
@@ -698,7 +699,7 @@ void RModel::GenerateInitializedTensorInfo()
    // here are constant tensor or initialized ones which are not weights (e.g. int64_t tensors )
    for (auto &i : fInitializedTensors) {
       if (i.second.IsNotWritable())  continue;
-      if (!fUseWeightFile || i.second.IsConstantTensor()) {
+      if (!fUseWeightFile || i.second.IsConstantTensor() || !i.second.IsWeightTensor() ) {
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += GenerateConstantTensorCode<float>(i);
             fConstantTensorSize += ConvertShapeToLength(i.second.shape()) * 4;
@@ -1203,7 +1204,9 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
 void RModel::ReadInitializedTensorsFromFile(long pos) {
     // generate the code to read initialized tensors from a text data file
     if (fWeightFile == WeightFileType::Text) {
-        if (fInitializedTensors.empty()) return;
+        // check if there are tensors to write
+
+        if (!fUseWeightFile) return;
 
         fGC += "   std::ifstream f;\n";
         fGC += "   f.open(filename);\n";
