@@ -47,12 +47,6 @@ class RooDataHist(object):
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         self._init(*args, **kwargs)
 
-    def plotOn(self, *args, **kwargs):
-        # Redefinition of `RooDataHist.plotOn` for keyword arguments.
-        # The keywords must correspond to the CmdArg of the `plotOn` function.
-        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._plotOn(*args, **kwargs)
-
     @property
     def shape(self):
         shape = []

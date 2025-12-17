@@ -330,7 +330,7 @@ protected:
                                        double scaleFactor);
 
  // PlotOn implementation
-  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const ;
+  virtual RooPlot *plotOnImpl(RooPlot *frame, PlotOpt o) const ;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
   virtual RooPlot *plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCat, PlotOpt o) const ;
 
