@@ -35,9 +35,8 @@
 #pragma link C++ function TMath::Limits<Int_t>::Max();
 #pragma link C++ function TMath::Limits<Int_t>::Min();
 
-// exclude these since they do not work in Cling
-//#pragma link C++ function TMath::Limits<Long64_t>::Max();
-//#pragma link C++ function TMath::Limits<Long64_t>::Min();
+#pragma link C++ function TMath::Limits<Long64_t>::Max();
+#pragma link C++ function TMath::Limits<Long64_t>::Min();
 
 #pragma link C++ function TMath::MinElement(Long64_t, const Short_t*);
 #pragma link C++ function TMath::MinElement(Long64_t, const Int_t*);
