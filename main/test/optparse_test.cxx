@@ -493,3 +493,99 @@ TEST(OptParse, UnexpectedFlagComplex)
 
    EXPECT_EQ(opts.GetErrors(), std::vector<std::string>({"Unknown flag: -vvv"}));
 }
+
+TEST(OptParse, MultipleSwitches1)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-v"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-vvv"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetSwitch("v"), 3);
+}
+
+TEST(OptParse, MultipleSwitches2)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-v"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-v", "-v", "-vv"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetSwitch("v"), 4);
+}
+
+TEST(OptParse, MultipleSwitches3)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-v"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"-a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+
+   const char *args[] = {"somename", "-vav"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetSwitch("v"), 2);
+   EXPECT_TRUE(opts.GetSwitch("a"));
+}
+
+TEST(OptParse, MultipleFlags)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-m", "--module"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "",
+                ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-m", "foo", "--module", "bar", "-m", "baz"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   auto values = opts.GetFlagValues("m");
+   ASSERT_EQ(values.size(), 3);
+   EXPECT_EQ(values[0], "foo");
+   EXPECT_EQ(values[1], "bar");
+   EXPECT_EQ(values[2], "baz");
+}
+
+TEST(OptParse, MultipleFlagsMissingArg)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-m", "--module"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "",
+                ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-m", "foo", "--module", "bar", "-m"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_EQ(opts.GetErrors(), std::vector<std::string>{"Missing argument for flag -m"});
+   auto values = opts.GetFlagValues("m");
+   ASSERT_EQ(values.size(), 2);
+}
+
+TEST(OptParse, MultipleFlagsAsInt)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-a"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-a", "1", "-a", "42"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   auto values = opts.GetFlagValuesAs<int>("a");
+   ASSERT_EQ(values.size(), 2);
+   EXPECT_EQ(values[0], 1);
+   EXPECT_EQ(values[1], 42);
+}
+
+TEST(OptParse, MultipleFlagsAsIntError)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-a"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "-a", "1", "-a", "42a"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_THROW(opts.GetFlagValuesAs<int>("a"), std::invalid_argument);
+}
