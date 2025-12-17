@@ -18,6 +18,7 @@ A TTreeCache which exploits parallelized decompression of its own content.
 
 */
 
+#include "RZip.h"
 #include "TTreeCacheUnzip.h"
 #include "TBranch.h"
 #include "TChain.h"
@@ -34,9 +35,6 @@ A TTreeCache which exploits parallelized decompression of its own content.
 #endif
 
 #include <memory>
-
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
 
 TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kDisable;
 
@@ -911,7 +909,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
             return uzlen;
          }
 
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         R__unzip(&nin, bufcur, &nbuf, reinterpret_cast<unsigned char *>(objbuf), &nout);
 
          if (gDebug > 2)
             Info("UnzipBuffer", "R__unzip nin:%d, bufcur:%p, nbuf:%d, objbuf:%p, nout:%d",

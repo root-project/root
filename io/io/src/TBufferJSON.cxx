@@ -563,7 +563,8 @@ TString TBufferJSON::zipJSON(const char *json)
 
    int nout = 0;
 
-   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, (char *)json, &tgtsize, (char *) buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
+   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, json, &tgtsize,
+                           (char *)buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
 
    return TBase64::Encode(buf.data(), nout);
 }
