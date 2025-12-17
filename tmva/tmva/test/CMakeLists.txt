@@ -17,6 +17,10 @@ ROOT_ADD_GTEST(TestOptimizeConfigParameters
                TestOptimizeConfigParameters.cxx
                LIBRARIES TMVA)
 
+ROOT_ADD_GTEST(TestUseOffsetOrNotReadingRegression
+               TestUseOffsetOrNotReadingRegression.cxx
+               LIBRARIES TMVA)
+
 if(dataframe)
     # RTensor
     ROOT_ADD_GTEST(rtensor rtensor.cxx LIBRARIES ROOTVecOps TMVA)
