@@ -17,62 +17,15 @@
 #include "CPPInstance.h"
 #include "CallContext.h"
 #include "PyStrings.h"
-#include "TemplateProxy.h"
 #include "Utility.h"
 
 // Standard
 #include <algorithm>
-#include <functional>
 #include <sstream>
 #include <vector>
 
 
 namespace CPyCppyy {
-
-//----------------------------------------------------------------------------
-// Combine name hash and method count for stable identity
-
-namespace {
-constexpr uint64_t kGoldenRatioHash = 0x9e3779b9ULL;
-
-inline void hash_combine(uint64_t &seed, uint64_t value)
-{
-   seed ^= value + kGoldenRatioHash + (seed << 6) + (seed >> 2);
-}
-} // anonymous namespace
-
-uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
-{
-   uint64_t hash = 0;
-   std::hash<std::string> str_hash;
-
-   Py_ssize_t nargs = CPyCppyy_PyArgs_GET_SIZE(args, nargsf);
-   for (Py_ssize_t i = 0; i < nargs; ++i) {
-      PyObject *pyobj = CPyCppyy_PyArgs_GET_ITEM(args, i);
-
-      if (CPPOverload_Check(pyobj)) {
-         // Hash the method name and overload count for uniqueness
-         // All O(1) access - no RTTI, no string construction
-         auto *ol = static_cast<CPPOverload *>(pyobj);
-         hash_combine(hash, str_hash(ol->fMethodInfo->fName));
-         hash_combine(hash, static_cast<uint64_t>(ol->fMethodInfo->fMethods.size()));
-      } else if (TemplateProxy_Check(pyobj)) {
-         // Hash the stable template name (fCppName includes scope for templates)
-         auto *tp = static_cast<TemplateProxy *>(pyobj);
-         hash_combine(hash, str_hash(tp->fTI->fCppName));
-      } else {
-         // Standard type-based hashing for other objects
-         hash_combine(hash, reinterpret_cast<uint64_t>(Py_TYPE(pyobj)));
-#if PY_VERSION_HEX >= 0x030e0000
-         hash_combine(hash, PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1ULL : 0ULL);
-#else
-         hash_combine(hash, Py_REFCNT(pyobj) == 1 ? 1ULL : 0ULL);
-#endif
-      }
-   }
-
-   return hash;
-}
 
 namespace {
 
