@@ -53,12 +53,12 @@ uint64_t HashSignature(CPyCppyy_PyArgs_t args, size_t nargsf)
       if (CPPOverload_Check(pyobj)) {
          // Hash the method name and overload count for uniqueness
          // All O(1) access - no RTTI, no string construction
-         auto *ol = static_cast<CPPOverload *>(pyobj);
+         auto *ol = reinterpret_cast<CPPOverload *>(pyobj);
          hash_combine(hash, str_hash(ol->fMethodInfo->fName));
          hash_combine(hash, static_cast<uint64_t>(ol->fMethodInfo->fMethods.size()));
       } else if (TemplateProxy_Check(pyobj)) {
          // Hash the stable template name (fCppName includes scope for templates)
-         auto *tp = static_cast<TemplateProxy *>(pyobj);
+         auto *tp = reinterpret_cast<TemplateProxy *>(pyobj);
          hash_combine(hash, str_hash(tp->fTI->fCppName));
       } else {
          // Standard type-based hashing for other objects
