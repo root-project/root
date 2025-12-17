@@ -41,7 +41,13 @@
 /// grouped flags like "-abc" as equivalent to "-a -b -c". The last flag in the group may also accept an argument, in
 /// which case "-abc foo" will count as "-a -b -c foo" where "foo" is the argument to "-c".
 ///
-/// Multiple repeated flags, like `-vvv` are not supported.
+/// Multiple repeated flags, like `-vvv`, are supported but must explicitly be marked as such:
+/// ~~~{.cpp}
+/// opts.AddFlag({"-v"}, RCmdLineOpts::EFlagType::kSwitch, "", RCmdLineOpts::kFlagAllowMultiple);
+/// ~~~
+/// This works both for switches and flags with arguments. `GetSwitch` returns the number of times a specific flag
+/// appeared; for flags with arguments `GetFlagValues` and `GetFlagValuesAs<T>` can be used to access the values as
+/// vectors.
 ///
 /// The string "--" is treated as the positional argument separator: all strings after it will be treated as positional
 /// arguments even if they start with "-".
@@ -55,6 +61,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cstring>
+#include <cstdint>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -79,11 +86,18 @@ public:
       std::string fHelp;
    };
 
+   // Technically these are bit flags, but EFlagFlag is confusing, so let's call them opts.
+   enum EFlagOpt {
+      /// Flag is allowed to appear multiple times (default: it's an error to see the same flag twice)
+      kFlagAllowMultiple = 1 << 0,
+   };
+
 private:
    std::vector<RFlag> fFlags;
    std::vector<std::string> fArgs;
    // If true, many short flags may be grouped: "-abc" == "-a -b -c".
    // This is automatically true if all short flags given are 1 character long, otherwise it's false.
+   // (a short flag is a flag with a single `-` as its prefix).
    bool fAllowFlagGrouping = true;
 
    struct RExpectedFlag {
@@ -93,6 +107,7 @@ private:
       // If >= 0, this flag is an alias of the RExpectedFlag at index fAlias.
       int fAlias = -1;
       bool fShort = false;
+      std::uint32_t fOpts = 0;
 
       std::string AsStr() const { return std::string(fShort ? "-" : "--") + fName; }
    };
@@ -109,8 +124,11 @@ private:
    }
 
 public:
+   /// Returns all parsing errors
    const std::vector<std::string> &GetErrors() const { return fErrors; }
+   /// Retrieves all positional arguments
    const std::vector<std::string> &GetArgs() const { return fArgs; }
+   /// Retrieves all parsed flags
    const std::vector<RFlag> &GetFlags() const { return fFlags; }
 
    /// Conveniency method to print any errors to `stream`.
@@ -122,15 +140,20 @@ public:
       return !fErrors.empty();
    }
 
-   /// Defines a new flag (either a switch or a flag with argument). The flag may be referred to as any of the
-   /// values inside `aliases` (e.g. { "-h", "--help" }). All strings inside `aliases` must start with `-` or `--`
-   /// and be at least 1 character long (aside the dashes).
+   /// Defines a new flag (either a switch or a flag with argument).
+   /// The flag may be referred to as any of the values inside `aliases` (e.g. { "-h", "--help" }).
+   /// All strings inside `aliases` must start with `-` or `--` and be at least 1 character long (aside the dashes).
    /// Flags starting with a single `-` are considered "short", regardless of their actual length.
    /// If all short flags are 1 character long, they may be collapsed into one and parsed as individual flags
    /// (meaning a string like "-fgk" will be parsed as "-f -g -k") and the final flag may have a following argument.
    /// This does NOT happen if any short flag is longer than 1 character, to avoid ambiguity.
+   ///
+   /// \param aliases All the equivalent names of this flag
+   /// \param type What kind of flag is this: with arguments or not
+   /// \param help Help string for the flag
+   /// \param flagOpts Bitmask of EFlagOpt for additional options
    void AddFlag(std::initializer_list<std::string_view> aliases, EFlagType type = EFlagType::kSwitch,
-                std::string_view help = "")
+                std::string_view help = "", std::uint32_t flagOpts = 0)
    {
       int aliasIdx = -1;
       for (auto f : aliases) {
@@ -149,15 +172,17 @@ public:
          expected.fHelp = help;
          expected.fAlias = aliasIdx;
          expected.fShort = prefixLen == 1;
+         expected.fOpts = flagOpts;
          fExpectedFlags.push_back(expected);
          if (aliasIdx < 0)
             aliasIdx = fExpectedFlags.size() - 1;
       }
    }
 
-   /// If `name` refers to a previously-defined switch (i.e. a boolean flag), gets its value.
+   /// If `name` refers to a previously-defined switch (i.e. a boolean flag), returns how many times
+   /// the flag appeared (this will never be more than 1 unless the flag is allowed to appear multiple times).
    /// \throws std::invalid_argument if the flag was undefined or defined as a flag with arguments
-   bool GetSwitch(std::string_view name) const
+   int GetSwitch(std::string_view name) const
    {
       const auto *exp = GetExpectedFlag(name);
       if (!exp)
@@ -169,16 +194,25 @@ public:
       if (exp->fAlias >= 0)
          lookedUpName = fExpectedFlags[exp->fAlias].fName;
 
+      int n = 0;
       for (const auto &f : fFlags) {
-         if (f.fName == lookedUpName)
-            return true;
+         n += f.fName == lookedUpName;
       }
-      return false;
+      return n;
    }
 
    /// If `name` refers to a previously-defined non-switch flag, gets its value.
    /// \throws std::invalid_argument if the flag was undefined or defined as a switch flag
    std::string_view GetFlagValue(std::string_view name) const
+   {
+      auto values = GetFlagValues(name);
+      return values.empty() ? "" : values[0];
+   }
+
+   /// If `name` refers to a previously-defined non-switch flag, gets its values.
+   /// This will never return more than 1 value unless the flag is allowed to appear multiple times.
+   /// \throws std::invalid_argument if the flag was undefined or defined as a switch flag
+   std::vector<std::string_view> GetFlagValues(std::string_view name) const
    {
       const auto *exp = GetExpectedFlag(name);
       if (!exp)
@@ -191,11 +225,12 @@ public:
       if (exp->fAlias >= 0)
          lookedUpName = fExpectedFlags[exp->fAlias].fName;
 
+      std::vector<std::string_view> values;
       for (const auto &f : fFlags) {
          if (f.fName == lookedUpName)
-            return f.fValue;
+            values.push_back(f.fValue);
       }
-      return "";
+      return values;
    }
 
    // Tries to retrieve the flag value as a type T.
@@ -206,9 +241,21 @@ public:
    template <typename T>
    std::optional<T> GetFlagValueAs(std::string_view name) const
    {
+      auto values = GetFlagValuesAs<T>(name);
+      return values.empty() ? std::nullopt : std::make_optional(values[0]);
+   }
+
+   // Tries to retrieve the flag values as a type T.
+   // The only supported types are integral and floating point types.
+   // \return An array of values of type T if the flag is present and all its values are convertible to T
+   // \throws std::invalid_argument if the flag has values but any of them are not convertible.
+   template <typename T>
+   std::vector<T> GetFlagValuesAs(std::string_view name) const
+   {
       static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
-      if (auto val = GetFlagValue(name); !val.empty()) {
+      std::vector<T> values;
+      for (auto val : GetFlagValues(name)) {
          // NOTE: on paper std::from_chars is supported since C++17, however some compilers don't properly support it
          // (e.g. it's not available at all on MacOS < 26 and only the integer overload is available in AlmaLinux 8).
          // There is also no compiler define that we can use to determine the availability, so we just use it only
@@ -217,7 +264,7 @@ public:
          T converted;
          auto res = std::from_chars(val.data(), val.data() + val.size(), converted);
          if (res.ptr == val.data() + val.size() && res.ec == std::errc{}) {
-            return converted;
+            values.push_back(converted);
          } else {
             std::stringstream err;
             err << "Failed to parse flag `" << name << "` with value `" << val << "`";
@@ -255,10 +302,10 @@ public:
                throw std::invalid_argument(err.str());
          }
 
-         return converted;
+         values.push_back(converted);
 #endif
       }
-      return std::nullopt;
+      return values;
    }
 
    void Parse(const char **args, std::size_t nArgs)
@@ -341,14 +388,16 @@ public:
                   flag.fName = fExpectedFlags[exp->fAlias].fName;
 
                // Check for duplicate flags
-               auto existingIt =
-                  std::find_if(fFlags.begin(), fFlags.end(), [&flag](const auto &f) { return f.fName == flag.fName; });
-               if (existingIt != fFlags.end()) {
-                  std::string err = std::string("Flag ") + exp->AsStr() + " appeared more than once";
-                  if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg)
-                     err += " with the value: " + existingIt->fValue;
-                  fErrors.push_back(err);
-                  break;
+               if (!(exp->fOpts & kFlagAllowMultiple)) {
+                  auto existingIt = std::find_if(fFlags.begin(), fFlags.end(),
+                                                 [&flag](const auto &f) { return f.fName == flag.fName; });
+                  if (existingIt != fFlags.end()) {
+                     std::string err = std::string("Flag ") + exp->AsStr() + " appeared more than once";
+                     if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg)
+                        err += " with the value: " + existingIt->fValue;
+                     fErrors.push_back(err);
+                     break;
+                  }
                }
 
                // Check that arguments are what we expect.
