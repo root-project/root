@@ -377,13 +377,17 @@ void TMVA::VariableNormalizeTransform::AttachXMLTo(void* parent)
 
 void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 {
-   TString UseOffsetOrNot;
+   fNoOffset = kFALSE;
+   if (gTools().HasAttr(trfnode, "UseOffsetOrNot")) {
+      TString UseOffsetOrNot;
 
-   gTools().ReadAttr(trfnode, "UseOffsetOrNot", UseOffsetOrNot );
+      gTools().ReadAttr(trfnode, "UseOffsetOrNot", UseOffsetOrNot);
 
-   if (UseOffsetOrNot == "NoOffset") fNoOffset = kTRUE;
-   else                              fNoOffset = kFALSE;
-
+      if (UseOffsetOrNot == "NoOffset")
+         fNoOffset = kTRUE;
+      else
+         fNoOffset = kFALSE;
+   }
    Bool_t newFormat = kFALSE;
 
    void* inpnode = NULL;
