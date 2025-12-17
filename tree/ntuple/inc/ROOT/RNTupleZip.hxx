@@ -113,28 +113,37 @@ public:
 
       const unsigned char *source = static_cast<const unsigned char *>(from);
       unsigned char *target = static_cast<unsigned char *>(to);
-      int szRemaining = dataLen;
+      size_t szRemainingLen = dataLen;
+      size_t szRemainingNbytes = nbytes;
       do {
+         if (R__unlikely(szRemainingNbytes < ROOT::Internal::kZipHeaderSize)) {
+            throw ROOT::RException(R__FAIL("zip buffer too short"));
+         }
          int szSource;
          int szTarget;
          int retval = R__unzip_header(&szSource, source, &szTarget);
          if (R__unlikely(!((retval == 0) && (szSource > 0) && (szTarget > szSource) &&
-                           (static_cast<unsigned int>(szSource) <= nbytes) &&
-                           (static_cast<unsigned int>(szTarget) <= dataLen)))) {
+                           (static_cast<unsigned int>(szSource) <= szRemainingNbytes) &&
+                           (static_cast<unsigned int>(szTarget) <= szRemainingLen)))) {
             throw ROOT::RException(R__FAIL("failed to unzip buffer header"));
          }
 
          int unzipBytes = 0;
          R__unzip(&szSource, source, &szTarget, target, &unzipBytes);
-         if (R__unlikely(unzipBytes != szTarget))
+         if (R__unlikely(unzipBytes != szTarget)) {
             throw ROOT::RException(R__FAIL(std::string("unexpected length after unzipping the buffer (wanted: ") +
                                            std::to_string(szTarget) + ", got: " + std::to_string(unzipBytes) + ")"));
+         }
 
          target += szTarget;
          source += szSource;
-         szRemaining -= unzipBytes;
-      } while (szRemaining > 0);
-      R__ASSERT(szRemaining == 0);
+         szRemainingNbytes -= szSource;
+         szRemainingLen -= unzipBytes;
+      } while (szRemainingLen > 0);
+      R__ASSERT(szRemainingLen == 0);
+      if (szRemainingNbytes > 0) {
+         throw ROOT::RException(R__FAIL(std::string("unexpected trailing bytes in zip buffer")));
+      }
    }
 };
 
