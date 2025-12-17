@@ -50,23 +50,16 @@ void handleError(Error Err, StringRef context = "") {
   }));
 }
 
-static std::string getHostFileFormatName() {
-  static const std::string HostFormat = []() -> std::string {
-    auto ObjOrErr = object::ObjectFile::createObjectFile(
-        sys::fs::getMainExecutable(nullptr, nullptr));
-
-    if (!ObjOrErr) {
-      return "Unknown";
-    }
-
-    return (*ObjOrErr).getBinary()->getFileFormatName().str();
-  }();
-
-  return HostFormat;
-}
-
 bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
-  return Obj.getFileFormatName() == getHostFileFormatName();
+  static const llvm::Triple HostTriple(llvm::sys::getProcessTriple());
+  Obj.getTripleObjectFormat();
+  if (HostTriple.getArch() != Obj.getArch())
+    return false;
+
+  if (Obj.getTripleObjectFormat() != HostTriple.getObjectFormat())
+    return false;
+
+  return true;
 }
 
 Expected<object::OwningBinary<object::ObjectFile>>
