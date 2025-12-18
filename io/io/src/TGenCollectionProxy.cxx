@@ -360,7 +360,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
       // In the case where we have an emulated class,
       // if the class is nested (in a class or a namespace),
       // calling G__TypeInfo ti(inside.c_str());
-      // might fail because CINT does not known the nesting
+      // might fail because Cling does not know the nesting
       // scope, so let's first look for an emulated class:
 
       fType = TClass::GetClass(intype.c_str(),kTRUE,silent, hint_pair_offset, hint_pair_size);

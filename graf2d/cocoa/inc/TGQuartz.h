@@ -96,7 +96,7 @@ private:
    void AlignTTFString();
    Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void RenderTTFString(Int_t x, Int_t y, ETextMode mode);
-   //I have to use void * instead of QuartzPixmap * because of CINT :(
+   //TODO: move internal headers like TGQuartz.h out of the public ROOT user interface. Then we can also use XQuartz types like QuartzPixmap* instead of void * in functions like these
    void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();

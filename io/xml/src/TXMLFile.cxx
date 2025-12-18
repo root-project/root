@@ -24,7 +24,7 @@
 // The XML file is built in memory before being dumped to disk.
 //
 // Like for normal ROOT files, XML files use the same I/O mechanism
-// exploiting the ROOT/CINT dictionary. Any class having a dictionary
+// exploiting the I/O dictionary. Any class having a dictionary
 // can be saved in XML format.
 //
 // This first implementation does not support subdirectories

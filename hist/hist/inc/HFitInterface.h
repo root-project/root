@@ -11,8 +11,6 @@
 // Header file for class HFitInterface
 // set of free functions used to couple the ROOT data object with the fitting classes
 
-// avoid including this file when running CINT since free functions cannot be re-defined
-
 #ifndef ROOT_HFitInterface
 #define ROOT_HFitInterface
 

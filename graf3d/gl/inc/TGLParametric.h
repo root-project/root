@@ -49,8 +49,6 @@ private:
    Bool_t               fModified;
 
    typedef std::unique_ptr<TGLHistPainter> Painter_t;
-   //C++ compiler do not need TGLhistPainter definition here, but I'm not sure about CINT,
-   //so I've included TGLHistPainter definition.
    Painter_t            fPainter;
 
 public:

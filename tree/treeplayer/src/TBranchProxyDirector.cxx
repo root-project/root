@@ -57,7 +57,7 @@ namespace Internal {
    /// Simple constructor
 
    TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Int_t i) :
-      // cint has a problem casting int to long long
+      // Historical: CINT had a problem casting int to long long
       fTree(tree),
       fEntry(i)
    {

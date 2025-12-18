@@ -3433,7 +3433,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer() functions in
-/// rootcint-generated dictionaries.
+/// rootcling-generated dictionaries.
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
@@ -3535,7 +3535,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
 /// Deserialize information from a buffer into an object.
 ///
 /// Note: This function is called by the xxx::Streamer()
-/// functions in rootcint-generated dictionaries.
+/// functions in rootcling-generated dictionaries.
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)

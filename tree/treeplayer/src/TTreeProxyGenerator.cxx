@@ -29,9 +29,9 @@
 
   When using in interpreted mode understand why the reloading reloads the calling script and then crashes :(
 
-  CINT does not properly call the custom operators when doing return fNtrack.
+  TODO check now with Cling: CINT did not properly call the custom operators when doing return fNtrack.
 
-  CINT does not handle fMatrix[2][1] well.
+  TODO check with Cling: CINT did not handle fMatrix[2][1] well.
 
   The user's function in script.h are not exposed by ACLiC.
 

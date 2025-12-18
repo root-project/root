@@ -282,7 +282,7 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### Case 3: inline expression using a user defined CLING function by name
+#### Case 3: inline expression using a user defined Cling function by name
 
 ~~~~{.cpp}
 Double_t myFunc(double x) { return x+sin(x); }

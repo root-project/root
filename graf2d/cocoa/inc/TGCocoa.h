@@ -469,7 +469,7 @@ public:
    static Atom_t fgDeleteWindowAtom;
 
 private:
-   //I'd prefer to use = delete syntax from C++0x11, but this file is processed by CINT.
+   //TODO: use instead = delete syntax from C++0x11
    TGCocoa(const TGCocoa &rhs);
    TGCocoa &operator = (const TGCocoa &rhs);
 

@@ -402,9 +402,9 @@ command line.\n\n\
 You can interrupt a running macro by selecting the Tools menu / \n\
 Interrupt; by clicking on the corresponding toolbar button, or by \n\
 using Shift+F5 accelerator keys.\n\n\
-      Interface to CINT Interpreter\n\n\
+      Interface to Cling Interpreter\n\n\
 Any command entered in the 'Command' combo box will be passed to the\n\
-CINT interpreter. This combo box will keep the commands history and \n\
+Cling interpreter. This combo box will keep the commands history and \n\
 will allow you to re-execute the same commands during an editor session.\n\n"
 "      Keyboard Bindings\n\n\
 The following table lists the keyboard shortcuts and accelerator keys.\n\n\

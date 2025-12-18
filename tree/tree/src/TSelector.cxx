@@ -136,14 +136,14 @@ TSelector *TSelector::GetSelector(const char *filename)
    TString localname;
    bool fromFile = false;
    if (strchr(filename, '.') != nullptr) {
-      //Interpret/compile filename via CINT
+      //Interpret/compile filename via Cling
       localname  = ".L ";
       localname += filename;
       gROOT->ProcessLine(localname);
       fromFile = true;
    }
 
-   //loop on all classes known to CINT to find the class on filename
+   //loop on all classes known to Cling to find the class on filename
    //that derives from TSelector
    const char *basename = gSystem->BaseName(filename);
    if (!basename) {
@@ -158,7 +158,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    // if a file was not specified, try to load the class via the interpreter;
    // this returns 0 (== failure) in the case the class is already in memory
    // but does not have a dictionary, so we just raise a flag for better
-   // diagnostic in the case the class is not found in the CINT ClassInfo table.
+   // diagnostic in the case the class is not found in the Cling ClassInfo table.
    bool autoloaderr = false;
    if (!fromFile && gCling->AutoLoad(localname) != 1)
       autoloaderr = true;

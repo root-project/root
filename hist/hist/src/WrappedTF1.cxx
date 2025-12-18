@@ -47,7 +47,7 @@ namespace ROOT {
       {
          // constructor from a TF1 function pointer.
 
-         // init the pointers for CINT
+         // init the pointers for Cling
          //if (fFunc->GetMethodCall() )  fFunc->InitArgs(fX, &fParams.front() );
          if (fFunc->GetMethodCall())  fFunc->InitArgs(fX, nullptr);
          // distinguish case of polynomial functions and linear functions
