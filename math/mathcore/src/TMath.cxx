@@ -3276,19 +3276,3 @@ void TMath::KNNDensity(std::span<const double> observations, std::span<const dou
       result[i] = factor == 0.0 ? 0.0 : factor * k_actual / ff;
    }
 }
-
-//explicitly instantiate template functions from VecCore
-#ifdef R__HAS_VECCORE
-#include <Math/Types.h>
-template ROOT::Double_v vecCore::math::Sin(const ROOT::Double_v & x);
-template ROOT::Double_v vecCore::math::Cos(const ROOT::Double_v & x);
-template ROOT::Double_v vecCore::math::ASin(const ROOT::Double_v & x);
-template ROOT::Double_v vecCore::math::ATan(const ROOT::Double_v & x);
-template ROOT::Double_v vecCore::math::ATan2(const ROOT::Double_v & x,const ROOT::Double_v & y);
-// missing in veccore
-// template ROOT::Double_v vecCore::math::ACos(const ROOT::Double_v & x);
-// template ROOT::Double_v vecCore::math::Sinh(const ROOT::Double_v & x);
-// template ROOT::Double_v vecCore::math::Cosh(const ROOT::Double_v & x);
-// template ROOT::Double_v vecCore::math::Tanh(const ROOT::Double_v & x);
-// template ROOT::Double_v vecCore::math::Cbrt(const ROOT::Double_v & x);
-#endif

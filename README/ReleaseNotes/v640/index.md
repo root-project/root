@@ -71,6 +71,33 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ## Math
 
+### Migration from VecCore/Vc to `std::experimental::simd` for Vectorization
+
+We have migrated the vectorized backends of **TMath** and **TFormula** from **VecCore/Vc** to `std::experimental::simd`, where available.
+
+On Linux, `std::experimental::simd` is assumed to be available when ROOT is compiled with C++20 or later, which in practice corresponds to sufficiently recent GCC and Clang compilers. To keep the build system simple and robust, ROOT does not explicitly check compiler versions: users opting into C++20 are expected to use modern toolchains.
+
+**Impact on Linux users**
+
+ROOT builds with C++17 on Linux no longer provide vectorized TMath and TFormula.
+This is an intentional and accepted trade-off of the migration. These vectorized features were rarely used, while maintaining them significantly complicated the codebase and build configuration.
+
+Users who rely on vectorized **TMath** or the vectorized **TFormula** backend are encouraged to build ROOT with C++20.
+Doing so restores vectorization through `std::experimental::simd`, providing a more robust and future-proof implementation.
+
+**Windows and Apple silicon users are unaffected**
+
+VecCore/Vc did not work on Windows previously, and Vc never provided production-ready support for ARM/Neon, so Apple silicon did not benefit from vectorization before this change.
+
+**Build system changes**
+
+As part of this migration, the following build options are deprecated. From ROOT 6.42, setting them will result in configuration errors.
+
+  * `vc`
+  * `veccore`
+  * `builtin_vc`
+  * `builtin_veccore`
+
 ## RooFit
 
 ## RDataFrame

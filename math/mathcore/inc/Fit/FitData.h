@@ -350,7 +350,7 @@ namespace ROOT {
             fWrapped = false;
          }
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
          /**
           * Compute the number that should be added to dataSize in order to have a
           * multiple of SIMD vector size.
@@ -358,14 +358,14 @@ namespace ROOT {
          static unsigned VectorPadding(unsigned dataSize)
          {
             unsigned padding = 0;
-            unsigned modP = (dataSize) % vecCore::VectorSize<ROOT::Double_v>();
+            unsigned modP = (dataSize) % ROOT::Double_v::size();
             if (modP > 0)
-               padding = vecCore::VectorSize<ROOT::Double_v>() - modP;
+               padding = ROOT::Double_v::size() - modP;
             return padding;
          }
 #else
          /**
-          * If VecCore is not defined, there is no vectorization available and the SIMD vector
+          * If std::experimental::simd is not available, there is no vectorization available and the SIMD vector
           * size will always be one. Then, as every number is a multiple of SIMD vector size, the
           * padding will always be zero.
           */
