@@ -30,11 +30,13 @@ ROOTTEST_ADD_TEST(runTTestClass
                   DEPENDS ${GENERATE_DICTIONARY_TEST}
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(semicolon
-                  MACRO semicolon.C
-                  MACROARG \"abc;xyz\"
-                  OUTREF semicolon.ref
-                  LABELS roottest regression cling)
+if(NOT MSVC) # See #20738
+    ROOTTEST_ADD_TEST(thesemicolon
+                    COPY_TO_BUILDDIR semicolon.C ./thesemicolon.sh
+                    COMMAND ./thesemicolon.sh
+                    OUTREF semicolon.ref
+                    LABELS roottest regression cling)
+endif()
 
 ROOTTEST_ADD_TEST(assertManipulators
                   MACRO assertManipulators.C
