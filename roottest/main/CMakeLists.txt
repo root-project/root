@@ -389,7 +389,6 @@ ROOTTEST_ADD_TEST(RootcpReplaceRecursiveCheckOutput
 ROOTTEST_ADD_TEST(RootcpReplaceRecursiveClean
                   COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_replace_recursive.root
                   FIXTURES_REQUIRED main-RootcpReplaceRecursiveCheckOutput-fixture)
-                  FIXTURES_SETUP main-SimpleRootmv1PrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(SimpleRootmv1
                   COMMAND ${PY_TOOLS_PREFIX}/rootmv${pyext} move1.root:hpx move1.root:histo
