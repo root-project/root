@@ -239,7 +239,8 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/ROOT
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
-        COMPONENT libraries)
+        COMPONENT libraries
+        PATTERN *.so EXCLUDE)
 
 # Install headers required by pythonizations
 install(FILES ${PYROOT_EXTRA_HEADERS}
