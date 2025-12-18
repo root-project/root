@@ -336,14 +336,14 @@ public:
    // Constructors using functors (compiled mode only)
    TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
-   // and returning a double.
-   // The class name is not needed when using compile code, while it is required when using
-   // interpreted code via the specialized constructor with void *.
-   // An instance of the C++ function class or its pointer can both be used. The former is reccomended when using
-   // C++ compiled code, but if CINT compatibility is needed, then a pointer to the function class must be used.
-   // xmin and xmax specify the plotting range,  npar is the number of parameters.
-   // See the tutorial math/exampleFunctor.C for an example of using this constructor
+   /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
+   /// and returning a double.
+   /// The class name is not needed when using compile code, while it is required when using
+   /// interpreted code via the specialized constructor with void *.
+   /// An instance of the C++ function class or its pointer can both be used. The former is recommended when using
+   /// C++ compiled code, but if CINT-compatibility is needed, then a pointer to the function class must be used.
+   /// xmin and xmax specify the plotting range,  npar is the number of parameters.
+   /// See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList)
@@ -352,7 +352,7 @@ public:
       ROOT::Internal::TF1Builder<Func>::Build(this, f);
    }
 
-   // backward compatible interface
+   /// backward compatible interface
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
@@ -361,20 +361,20 @@ public:
    }
 
 
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
-   // MemFn.
-   // The member function must have the signature of  (double * , double *) and returning a double.
-   // The class name and the method name are not needed when using compile code
-   // (the member function pointer is used in this case), while they are required when using interpreted
-   // code via the specialized constructor with void *.
-   // xmin and xmax specify the plotting range,  npar is the number of parameters.
-   // See the tutorial math/exampleFunctor.C for an example of using this constructor
+   /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
+   /// MemFn.
+   /// The member function must have the signature of  (double * , double *) and returning a double.
+   /// The class name and the method name are not needed when using compile code
+   /// (the member function pointer is used in this case), while they are required when using interpreted
+   /// code via the specialized constructor with void *.
+   /// xmin and xmax specify the plotting range,  npar is the number of parameters.
+   /// See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
    {}
 
-   // backward compatible interface
+   /// backward compatible interface
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, const char *, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))

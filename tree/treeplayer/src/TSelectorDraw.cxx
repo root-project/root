@@ -1527,7 +1527,7 @@ void TSelectorDraw::TakeAction()
    else if (fAction == 6 || fAction == 7) {
       TakeEstimate();
       bool candle = (fAction == 7);
-      // Using CINT to avoid a dependency in TParallelCoord
+      // Using Interpreter to avoid a dependency in TParallelCoord
       if (!fOption.Contains("goff"))
          gROOT->ProcessLine(TString::Format("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%zx,0x%zx)",
                                 (size_t)this, (size_t)candle));
