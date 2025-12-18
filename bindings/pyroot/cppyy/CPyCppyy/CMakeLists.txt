@@ -73,7 +73,7 @@ endif()
 add_library(cppyy SHARED src/CPyCppyyPyModule.cxx)
 
 # Set the suffix to '.so' and the prefix to 'lib'
-set_target_properties(cppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES}
+set_target_properties(cppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
   LIBRARY_OUTPUT_DIRECTORY ${localruntimedir}/cppyy)
 if(MSVC)
   target_link_libraries(cppyy PRIVATE CPyCppyy)
