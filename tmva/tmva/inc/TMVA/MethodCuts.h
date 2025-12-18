@@ -70,9 +70,6 @@ namespace TMVA {
       MethodCuts( DataSetInfo& theData,
                   const TString& theWeightFile);
 
-      // TODO: remove this is a workaround which was necessary when CINT was not capable of handling dynamic casts
-      static MethodCuts* DynamicCast( IMethod* method ) { return dynamic_cast<MethodCuts*>(method); }
-
       virtual ~MethodCuts( void );
 
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;

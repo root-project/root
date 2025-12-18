@@ -468,10 +468,10 @@ private:
 public:
    static Atom_t fgDeleteWindowAtom;
 
-private:
-   //TODO: use instead = delete syntax from C++0x11
-   TGCocoa(const TGCocoa &rhs);
-   TGCocoa &operator = (const TGCocoa &rhs);
+   TGCocoa(const TGCocoa &rhs) = delete;
+   TGCocoa &operator = (const TGCocoa &rhs) = delete;
+   TGCocoa(TGCocoa &&rhs) = delete;
+   TGCocoa &operator = (TGCocoa &&rhs) = delete;
 
    ClassDefOverride(TGCocoa, 0); //TVirtualX for MacOS X.
 };
