@@ -326,11 +326,12 @@ if(veccore)
   endif()
 endif()
 
-#--Vc GenVector test-----------------------------------------------------------------------------------
-if(vc)
-  ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
+#--std::simd GenVector test-----------------------------------------------------------------------------------
+# We don't support std::simd on Windows, Apple, or Linux with GCC < 9
+# Sync check with the one about disabling VecCore in RootBuildOptions.cmake
+if(NOT APPLE AND NOT MSVC AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9))
+  ROOT_EXECUTABLE(testGenVectorSimd testGenVectorSimd.cxx LIBRARIES Physics GenVector)
+  ROOT_ADD_TEST(test-GenVector-Simd COMMAND testGenVectorSimd FAILREGEX "FAILED|Error in")
 endif()
 
 #--g2root------------------------------------------------------------------------------------------

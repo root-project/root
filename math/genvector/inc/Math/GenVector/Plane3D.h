@@ -30,6 +30,40 @@ namespace Math {
 
 namespace Impl {
 
+// Helpers for PrintValue
+template <typename T>
+inline constexpr bool is_scalar_numeric_v = std::is_arithmetic_v<T>;
+
+template <typename T, typename = void>
+struct is_vector_numeric : std::false_type {};
+
+template <typename T>
+struct is_vector_numeric<T,
+                         std::void_t<decltype(T::size()),           // static size()
+                                     decltype(std::declval<T>()[0]) // element access
+                                     >> : std::true_type {};
+
+template <typename T>
+inline constexpr bool is_simd_like_v = !is_scalar_numeric_v<T> && is_vector_numeric<T>::value;
+
+template <typename T>
+void PrintValue(std::ostream &os, const T &v)
+{
+   if constexpr (is_scalar_numeric_v<T>) {
+      os << v;
+   } else if constexpr (is_simd_like_v<T>) {
+      os << "[";
+      for (std::size_t i = 0; i < T::size(); ++i) {
+         if (i)
+            os << ", ";
+         os << v[i];
+      }
+      os << "]";
+   } else {
+      static_assert(is_scalar_numeric_v<T>, "PrintValue: unsupported scalar type");
+   }
+}
+
 //_______________________________________________________________________________
 /**
    Class describing a geometrical plane in 3 dimensions.
@@ -244,8 +278,8 @@ protected:
       // what to do if s = 0 ?
       const auto m = (s == SCALAR(0));
       // set zero entries to 1 in the vector to avoid /0 later on
-      s(m)           = SCALAR(1);
-      fD(m)          = SCALAR(0);
+      where(m, s) = SCALAR(1);
+      where(m, fD) = SCALAR(0);
       const SCALAR w = SCALAR(1) / s;
       fA *= w;
       fB *= w;
@@ -295,8 +329,17 @@ private:
    template <typename T>
    std::ostream &operator<<(std::ostream &os, const Plane3D<T> &p)
    {
-      os << "\n"
-         << p.Normal().X() << "  " << p.Normal().Y() << "  " << p.Normal().Z() << "  " << p.HesseDistance() << "\n";
+      os << "\n";
+
+      PrintValue(os, p.Normal().X());
+      os << "  ";
+      PrintValue(os, p.Normal().Y());
+      os << "  ";
+      PrintValue(os, p.Normal().Z());
+      os << "  ";
+      PrintValue(os, p.HesseDistance());
+
+      os << "\n";
       return os;
    }
 
