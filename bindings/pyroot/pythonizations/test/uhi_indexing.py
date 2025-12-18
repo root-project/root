@@ -5,6 +5,7 @@ Tests to verify that TH1 and derived histograms conform to the UHI Indexing inte
 import numpy as np
 import pytest
 import ROOT
+from conftest import _iterate_bins
 from ROOT._pythonization._uhi.indexing import _get_processed_slices
 from ROOT._pythonization._uhi.plotting import _shape
 from ROOT._pythonization._uhi.tags import _get_axis, _overflow, _underflow
@@ -20,14 +21,6 @@ def _special_setting(hist):
 
 def _get_index_for_dimension(hist, index):
     return (index,) * hist.GetDimension()
-
-
-def _iterate_bins(hist):
-    dim = hist.GetDimension()
-    for i in range(1, hist.GetNbinsX() + 1):
-        for j in range(1, hist.GetNbinsY() + 1) if dim > 1 else [None]:
-            for k in range(1, hist.GetNbinsZ() + 1) if dim > 2 else [None]:
-                yield tuple(filter(None, (i, j, k)))
 
 
 def _get_slice_indices(slices):
