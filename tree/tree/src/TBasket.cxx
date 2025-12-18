@@ -601,11 +601,16 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, fKeylen);
       char *rawUncompressedObjectBuffer = rawUncompressedBuffer+fKeylen;
       UChar_t *rawCompressedObjectBuffer = (UChar_t*)rawCompressedBuffer+fKeylen;
-      Int_t nin, nbuf;
+
+      // TODO(jblomer): factor out and combine with UnzipObject() in TKey
+      Int_t nin = 0, nbuf = 0;
       Int_t nout = 0, noutot = 0, nintot = 0;
 
+      Int_t nbytesRemain = fNbytes - fKeylen;
+      Int_t objlenRemain = fObjlen;
+
       // Unzip all the compressed objects in the compressed object buffer.
-      while (true) {
+      while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
          // Check the header for errors.
          if (R__unlikely(R__unzip_header(&nin, rawCompressedObjectBuffer, &nbuf) != 0)) {
             Error("ReadBasketBuffers", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
@@ -616,6 +621,9 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             memcpy(rawUncompressedBuffer+fKeylen, rawCompressedObjectBuffer+fKeylen, fObjlen);
             goto AfterBuffer;
          }
+         if (R__unlikely((nin > nbytesRemain) || (nbuf > objlenRemain))) {
+            break;
+         }
 
          R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
          if (!nout) break;
@@ -624,6 +632,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          if (noutot >= fObjlen) break;
          rawCompressedObjectBuffer += nin;
          rawUncompressedObjectBuffer += nout;
+         nbytesRemain -= nin;
+         objlenRemain -= nout;
       }
 
       // Make sure the uncompressed numbers are consistent with header.
