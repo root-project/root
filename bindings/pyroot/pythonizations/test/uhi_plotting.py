@@ -4,17 +4,9 @@ Tests to verify that th1 1D histograms conform to the UHI PlottableHistogram pro
 
 import numpy as np
 import pytest
+from conftest import _iterate_bins
 from ROOT._pythonization._uhi.plotting import _shape
 from uhi.typing.plottable import PlottableHistogram
-
-
-def _iterate_bins(hist, flow=False):
-    ranges = [
-        range(0 if flow else 1, hist.GetNbinsX() + (2 if flow else 1)),
-        range(0 if flow else 1, hist.GetNbinsY() + (2 if flow else 1)) if hist.GetDimension() > 1 else [0],
-        range(0 if flow else 1, hist.GetNbinsZ() + (2 if flow else 1)) if hist.GetDimension() > 2 else [0],
-    ]
-    yield from ((i, j, k)[: hist.GetDimension()] for i in ranges[0] for j in ranges[1] for k in ranges[2])
 
 
 class TestTH1Plotting:
