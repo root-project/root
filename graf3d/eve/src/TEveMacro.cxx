@@ -75,7 +75,7 @@ Longptr_t TEveMacro::Exec(const char* params, Int_t* error)
       TString fname = "/tmp/";
       {
          //the current implementation uses a file in the current directory.
-         //should be replaced by a direct execution from memory by CINT
+         //should be replaced by a direct execution from memory by Cling
          fname += GetName();
          fname += ".C";
          SaveSource(fname);
