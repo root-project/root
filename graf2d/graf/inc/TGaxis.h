@@ -47,6 +47,7 @@ protected:
    TF1       *fFunction;            ///<! Pointer to function computing axis values
    TAxis     *fAxis;                ///<! Pointer to original TAxis axis (if any)
    TList     *fModLabs;             ///<  List of modified labels.
+   Float_t    fRefLength;           ///<! Reference length for automatic scaling (not saved to file)
 
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
@@ -136,6 +137,9 @@ public:
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
 
    void SetLabelColor(TColorNumber lcolor);
+
+   void SetRefLength(Float_t len) { fRefLength = len; }
+   Float_t GetRefLength() const { return fRefLength; }
 
    ClassDefOverride(TGaxis,6)  //Graphics axis
 };

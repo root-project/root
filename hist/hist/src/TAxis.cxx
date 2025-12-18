@@ -56,6 +56,7 @@ TAxis::TAxis()
    fLast    = 0;
    fBits2   = 0;
    fTimeDisplay = false;
+   fRefLength = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +104,7 @@ TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
    fParent  = nullptr;
    fLabels  = nullptr;
    fModLabs = nullptr;
+   fRefLength = 0;
 
    axis.TAxis::Copy(*this);
 }
@@ -116,6 +118,21 @@ TAxis& TAxis::operator=(const TAxis &axis)
       axis.TAxis::Copy(*this);
    return *this;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the reference pad for automatic axis sizing.
+/// The axis will store the absolute pixel height of this pad and use it
+/// to scale its attributes when drawn in other pads.
+
+void TAxis::SetRefPad(TVirtualPad *pad)
+{
+   if (!pad) {
+      fRefLength = 0;
+      return;
+   }
+   fRefLength = pad->GetWh() * pad->GetAbsHNDC();
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +240,7 @@ void TAxis::Copy(TObject &obj) const
    axis.fTimeFormat   = fTimeFormat;
    axis.fTimeDisplay  = fTimeDisplay;
    axis.fParent       = fParent;
+   axis.fRefLength    = fRefLength;
    if (axis.fLabels) {
       axis.fLabels->Delete();
       delete axis.fLabels;

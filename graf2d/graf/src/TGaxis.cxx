@@ -690,7 +690,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGaxis default constructor.
 
-TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
+TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040), fRefLength(0)
 {
 
    fGridLength  = 0.;
@@ -721,7 +721,7 @@ TGaxis::TGaxis(): TLine(), TAttText(11,0,1,62,0.040)
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
-       : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
+       : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040), fRefLength(0)
 {
 
    fWmin        = wmin;
@@ -758,7 +758,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                const char *funcname, Int_t ndiv,   Option_t *chopt,
                Double_t gridlength)
-       : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040)
+       : TLine(xmin,ymin,xmax,ymax), TAttText(11,0,1,62,0.040), fRefLength(0)
 {
 
    fFunction = (TF1*)gROOT->GetFunction(funcname);
@@ -795,6 +795,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 TGaxis::TGaxis(const TGaxis& ax) :
   TLine(ax),
   TAttText(ax),
+  fRefLength(ax.fRefLength),
   fWmin(ax.fWmin),
   fWmax(ax.fWmax),
   fGridLength(ax.fGridLength),
@@ -830,6 +831,7 @@ TGaxis& TGaxis::operator=(const TGaxis& ax)
    if(this!=&ax) {
       TLine::operator=(ax);
       TAttText::operator=(ax);
+      fRefLength = ax.fRefLength;
       fWmin=ax.fWmin;
       fWmax=ax.fWmax;
       fGridLength=ax.fGridLength;
@@ -977,6 +979,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
    if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2
    SetTimeFormat(axis->GetTimeFormat());
+   SetRefLength(axis->GetRefLength());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1082,6 +1085,42 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    Double_t rwmi = wmin;
    Double_t rwma = wmax;
+
+   struct AttributeRestorer {
+      TGaxis *fAxis;
+      Float_t fLabelSize, fTitleSize, fTickSize, fLabelOffset, fTitleOffset;
+      AttributeRestorer(TGaxis *ax) : fAxis(ax), 
+         fLabelSize(ax->GetLabelSize()), fTitleSize(ax->GetTitleSize()),
+         fTickSize(ax->GetTickSize()), fLabelOffset(ax->GetLabelOffset()),
+         fTitleOffset(ax->GetTitleOffset()) {}
+      ~AttributeRestorer() {
+         fAxis->SetLabelSize(fLabelSize);
+         fAxis->SetTitleSize(fTitleSize);
+         fAxis->SetTickSize(fTickSize);
+         fAxis->SetLabelOffset(fLabelOffset);
+         fAxis->SetTitleOffset(fTitleOffset);
+      }
+   };
+   AttributeRestorer restorer(this);
+
+   Double_t scale = 1.0;
+   
+   if (fRefLength > 0 && gPad) {
+      Double_t curH = gPad->GetWh() * gPad->GetAbsHNDC();
+      if (curH > 0) scale = fRefLength / curH;
+   }
+
+   if (scale != 1.0) {
+      // Only scale if precision is 2 (relative sizing). Precision 3 (pixels) ignores this.
+      if (GetLabelFont()%10 < 3) fLabelSize *= scale;
+      if (GetTextFont()%10 < 3)  fTitleSize *= scale;
+      
+      fTickSize    *= scale;
+      fLabelOffset *= scale;
+   }
+
+
+
    chtemp = &kchtemp[0];
    label  = &chlabel[0];
 

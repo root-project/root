@@ -26,6 +26,7 @@
 #include "TArrayD.h"
 #include <vector>
 
+class TVirtualPad;
 class THashList;
 class TAxisModLab;
 
@@ -44,6 +45,7 @@ private:
    TObject     *fParent = nullptr;  ///<! Object owning this axis
    THashList   *fLabels = nullptr;  ///<  List of labels
    TList       *fModLabs = nullptr; ///<  List of modified labels
+   Float_t      fRefLength = 0;     ///<! Reference length for automatic scaling (not saved to file)
 
    /// TAxis extra status bits (stored in fBits2)
    enum {
@@ -175,6 +177,9 @@ public:
    virtual void       SetTimeOffset(Double_t toffset, Option_t *option="local");
    virtual void       UnZoom();  // *MENU*
    virtual void       ZoomOut(Double_t factor=0, Double_t offset=0);  // *MENU*
+
+   void               SetRefPad(TVirtualPad *pad);
+   Float_t            GetRefLength() const { return fRefLength; }
 
    ClassDefOverride(TAxis,10)  //Axis class
 };
