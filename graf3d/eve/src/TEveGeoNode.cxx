@@ -70,7 +70,7 @@ TEveGeoNode::TEveGeoNode(TGeoNode* node) :
    TObject(),
    fNode(node)
 {
-   // Hack!! Should use cint to retrieve TAttLine::fLineColor offset.
+   // Hack!! Should use Cling to retrieve TAttLine::fLineColor offset.
    char* l = (char*) dynamic_cast<TAttLine*>(node->GetVolume());
    SetMainColorPtr((Color_t*)(l + sizeof(void*)));
    SetMainTransparency(fNode->GetVolume()->GetTransparency());
