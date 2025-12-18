@@ -123,7 +123,6 @@ private:
    static Bool_t   IsDefaultVariableName(const TString &name);
    void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
    void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
-   void FillVecFunctionsShurtCuts();
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
       return std::string(GetUniqueFuncName().Data()) + "_grad_1";
@@ -168,7 +167,7 @@ protected:
    void   SetPredefinedParamNames();
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    ROOT::Double_v DoEvalVec(const ROOT::Double_v *x, const Double_t *p = nullptr) const;
 #endif
 
@@ -199,6 +198,10 @@ public:
    template <typename... Args>
    Double_t       Eval(Args... args) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params = nullptr) const;
+   Double_t EvalPar(std::nullptr_t, const Double_t *params = nullptr) const
+   {
+      return EvalPar(static_cast<double const *>(nullptr), params);
+   }
 
    /// Generate gradient computation routine with respect to the parameters.
    /// \returns true if a gradient was generated and GradientPar can be called.
@@ -239,13 +242,11 @@ public:
 
    static Bool_t IsScientificNotation(const TString & formula, int ipos);
 
-   // template <class T>
-   // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
-   template <class T>
-   T EvalPar(const T *x, const Double_t *params = nullptr) const {
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
+   ROOT::Double_v EvalPar(const ROOT::Double_v *x, const Double_t *params = nullptr) const
+   {
       return  EvalParVec(x, params);
    }
-#ifdef R__HAS_VECCORE
    ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = nullptr) const;
 #endif
    TString        GetExpFormula(Option_t *option = "") const;

@@ -37,9 +37,8 @@
 #@hasxft@ R__HAS_XFT    /**/
 #@hasclad@ R__HAS_CLAD    /**/
 #@hascocoa@ R__HAS_COCOA    /**/
-#@hasvc@ R__HAS_VC    /**/
 #@hasvdt@ R__HAS_VDT    /**/
-#@hasveccore@ R__HAS_VECCORE    /**/
+#@hasstdexperimentalsimd@ R__HAS_STD_EXPERIMENTAL_SIMD    /**/
 #@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
@@ -53,12 +52,6 @@
 #@hasroot7@ R__HAS_ROOT7 /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #define R__HARDWARE_INTERFERENCE_SIZE @hardwareinterferencesize@ /*Determined at CMake configure to be stable across all TUs*/
-
-#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
-#ifndef VECCORE_ENABLE_VC
-#define VECCORE_ENABLE_VC
-#endif
-#endif
 
 #@uselz4@ R__HAS_DEFAULT_LZ4  /**/
 #@usezlib@ R__HAS_DEFAULT_ZLIB  /**/

@@ -107,7 +107,7 @@ using ScalarBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::BinData, Lik
 using ScalarUnBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::UnBinData, LikelihoodFitType>;
 
 // Typedefs of GradientTestTraits for vectorial (binned and unbinned) data
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 using VectorialChi2 = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::BinData, Chi2FitType>;
 using VectorialBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::BinData, LikelihoodFitType>;
 using VectorialUnBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::UnBinData, LikelihoodFitType>;
@@ -260,7 +260,7 @@ protected:
 };
 
 // Types used by Google Test to instantiate the tests.
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 typedef ::testing::Types<ScalarChi2, ScalarBinned, ScalarUnBinned, VectorialChi2, VectorialBinned, VectorialUnBinned> TestTypes;
 
 //typedef ::testing::Types<ScalarBinned,VectorialBinned> TestTypes;

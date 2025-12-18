@@ -307,30 +307,10 @@ if(MSVC)
 endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
-#--Vc basic test-----------------------------------------------------------------------------------
-if(vc)
-  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
-endif()
-
-#--VecCore basic test------------------------------------------------------------------------------
-if(veccore)
-  ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_include_directories(test-veccore BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
-  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
-  if(veccore AND vc)
-    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
-  else()
-    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Scalar")
-  endif()
-endif()
-
-#--Vc GenVector test-----------------------------------------------------------------------------------
-if(vc)
-  ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
+#--std::simd GenVector test-----------------------------------------------------------------------------------
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  ROOT_EXECUTABLE(testGenVectorSimd testGenVectorSimd.cxx LIBRARIES Physics GenVector)
+  ROOT_ADD_TEST(test-GenVector-Simd COMMAND testGenVectorSimd FAILREGEX "FAILED|Error in")
 endif()
 
 #--g2root------------------------------------------------------------------------------------------

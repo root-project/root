@@ -1,17 +1,9 @@
-// ROOT
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
 #include "TStopwatch.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <Vc/Vc>
-#pragma GCC diagnostic pop
-
-// STL
 #include <random>
 #include <vector>
 #include <iostream>
@@ -19,8 +11,25 @@
 #include <typeinfo>
 #include <cmath>
 #include <type_traits>
+#include <experimental/simd>
 
-template<typename T>
+#define std_simd std::experimental::simd
+
+template <typename Simd>
+std::string simd_to_string(const Simd &v)
+{
+   std::stringstream os{};
+   os << "[";
+   for (std::size_t i = 0; i < Simd::size(); ++i) {
+      if (i)
+         os << ", ";
+      os << v[i];
+   }
+   os << "]";
+   return os.str();
+}
+
+template <typename T>
 T relativeError(const T &x, const T &y)
 {
    if (x == y)
@@ -40,12 +49,12 @@ int compare(double x, double y, double tolerance = 1.0e-12)
 
    if (error > tolerance) {
       int pr = std::cerr.precision(16);
-      std::cerr << "Error above tolerance:"         << std::endl
-                << "  expected = " << x             << std::endl
-                << "true value = " << y             << std::endl
-                << "abs. error = " << std::abs(x-y) << std::endl
-                << "rel. error = " << error         << std::endl
-                << "tolerance  = " << tolerance     << std::endl;
+      std::cerr << "Error above tolerance:" << std::endl
+                << "  expected = " << x << std::endl
+                << "true value = " << y << std::endl
+                << "abs. error = " << std::abs(x - y) << std::endl
+                << "rel. error = " << error << std::endl
+                << "tolerance  = " << tolerance << std::endl;
       std::cerr.precision(pr);
       return 1;
    }
@@ -65,26 +74,31 @@ static std::uniform_real_distribution<double> p0(-0.002, 0.002), p1(-0.2, 0.2), 
 template <typename POINT, typename VECTOR, typename PLANE, typename FTYPE>
 class Data {
 public:
-   typedef std::vector<Data, Vc::Allocator<Data>> Vector;
+   typedef std::vector<Data> Vector;
 
 public:
-   POINT  position;
+   POINT position;
    VECTOR direction;
-   POINT  CoC;
-   PLANE  plane;
-   FTYPE  radius{0};
+   POINT CoC;
+   PLANE plane;
+   FTYPE radius{0};
 
 public:
    template <typename INDATA>
    Data(const INDATA &ind)
       : position(ind.position.x(), ind.position.y(), ind.position.z()),
-        direction(ind.direction.x(), ind.direction.y(), ind.direction.z()), CoC(ind.CoC.x(), ind.CoC.y(), ind.CoC.z()),
-        plane(ind.plane.A(), ind.plane.B(), ind.plane.C(), ind.plane.D()), radius(ind.radius)
+        direction(ind.direction.x(), ind.direction.y(), ind.direction.z()),
+        CoC(ind.CoC.x(), ind.CoC.y(), ind.CoC.z()),
+        plane(ind.plane.A(), ind.plane.B(), ind.plane.C(), ind.plane.D()),
+        radius(ind.radius)
    {
    }
    Data()
-      : position(p_x(gen), p_y(gen), p_z(gen)), direction(d_x(gen), d_y(gen), d_z(gen)),
-        CoC(c_x(gen), c_y(gen), c_z(gen)), plane(p0(gen), p1(gen), p2(gen), p3(gen)), radius(r_rad(gen))
+      : position(p_x(gen), p_y(gen), p_z(gen)),
+        direction(d_x(gen), d_y(gen), d_z(gen)),
+        CoC(c_x(gen), c_y(gen), c_z(gen)),
+        plane(p0(gen), p1(gen), p2(gen), p3(gen)),
+        radius(r_rad(gen))
    {
    }
 };
@@ -106,12 +120,12 @@ template <typename POINT, typename VECTOR, typename FTYPE,
 inline bool reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC, const FTYPE radius)
 {
    constexpr FTYPE zero(0), two(2.0), four(4.0), half(0.5);
-   const FTYPE     a     = direction.Mag2();
-   const VECTOR    delta = position - CoC;
-   const FTYPE     b     = two * direction.Dot(delta);
-   const FTYPE     c     = delta.Mag2() - radius * radius;
-   const FTYPE     discr = b * b - four * a * c;
-   const bool      OK    = discr > zero;
+   const FTYPE a = direction.Mag2();
+   const VECTOR delta = position - CoC;
+   const FTYPE b = two * direction.Dot(delta);
+   const FTYPE c = delta.Mag2() - radius * radius;
+   const FTYPE discr = b * b - four * a * c;
+   const bool OK = discr > zero;
    if (OK) {
       const FTYPE dist = half * (std::sqrt(discr) - b) / a;
       // change position to the intersection point
@@ -128,19 +142,19 @@ template <typename POINT, typename VECTOR, typename FTYPE,
           typename = typename std::enable_if<!std::is_arithmetic<typename POINT::Scalar>::value &&
                                              !std::is_arithmetic<typename VECTOR::Scalar>::value &&
                                              !std::is_arithmetic<FTYPE>::value>::type>
-inline typename FTYPE::mask_type reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC,
-                                                  const FTYPE radius)
+inline typename FTYPE::mask_type
+reflectSpherical(POINT &position, VECTOR &direction, const POINT &CoC, const FTYPE radius)
 {
-   const FTYPE               two(2.0), four(4.0), half(0.5);
-   const FTYPE               a     = direction.Mag2();
-   const VECTOR              delta = position - CoC;
-   const FTYPE               b     = two * direction.Dot(delta);
-   const FTYPE               c     = delta.Mag2() - radius * radius;
-   FTYPE                     discr = b * b - four * a * c;
-   typename FTYPE::mask_type OK    = discr > FTYPE::Zero();
+   const FTYPE two(2.0), four(4.0), half(0.5);
+   const FTYPE a = direction.Mag2();
+   const VECTOR delta = position - CoC;
+   const FTYPE b = two * direction.Dot(delta);
+   const FTYPE c = delta.Mag2() - radius * radius;
+   FTYPE discr = b * b - four * a * c;
+   typename FTYPE::mask_type OK = discr > FTYPE(0);
    if (any_of(OK)) {
       // Zero out the negative values in discr, to prevent sqrt(-ve)
-      discr(!OK) = FTYPE::Zero();
+      where(!OK, discr) = FTYPE(0);
       // compute the distance
       const FTYPE dist = half * (sqrt(discr) - b) / a;
       // change position to the intersection point
@@ -160,11 +174,11 @@ template <typename POINT, typename VECTOR, typename PLANE,
 inline bool reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
 {
    constexpr typename POINT::Scalar two(2.0);
-   const bool                       OK = true;
+   const bool OK = true;
    // Plane normal
    const auto &normal = plane.Normal();
    // compute distance to the plane
-   const auto scalar   = direction.Dot(normal);
+   const auto scalar = direction.Dot(normal);
    const auto distance = -(plane.Distance(position)) / scalar;
    // change position to reflection point and update direction
    position += distance * direction;
@@ -177,12 +191,12 @@ template <typename POINT, typename VECTOR, typename PLANE, typename FTYPE = type
                                              !std::is_arithmetic<typename VECTOR::Scalar>::value>::type>
 inline typename FTYPE::mask_type reflectPlane(POINT &position, VECTOR &direction, const PLANE &plane)
 {
-   const typename POINT::Scalar    two(2.0);
+   const typename POINT::Scalar two(2.0);
    const typename FTYPE::mask_type OK(true);
    // Plane normal
    const VECTOR normal = plane.Normal();
    // compute distance to the plane
-   const FTYPE scalar   = direction.Dot(normal);
+   const FTYPE scalar = direction.Dot(normal);
    const FTYPE distance = -(plane.Distance(position)) / scalar;
    // change position to reflection point and update direction
    position += distance * direction;
@@ -209,11 +223,12 @@ int main(int /*argc*/, char ** /*argv*/)
       // Scalar Types
       Data<PositionVector<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
 
-      // Vc Types
-      Data<PositionVector<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data;
+      // std::simd Types
+      Data<PositionVector<std_simd<double>>, Vector<std_simd<double>>, Plane<std_simd<double>>,
+           std_simd<double>>::Vector vc_data;
       // Clone the exact random values from the Scalar vector
       // Note we are making the same number of entries in the container, but each entry is a vector entry
-      // with Vc::double_t::Size entries.
+      // with std::simd<double>::size() entries.
       fill(scalar_data, vc_data);
 
       // Loop over the two containers and compare
@@ -232,7 +247,7 @@ int main(int /*argc*/, char ** /*argv*/)
          std::cout << "Position  " << sc.position << " " << vc.position << std::endl;
          std::cout << "Direction " << sc.direction << " " << vc.direction << std::endl;
 
-         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+         for (std::size_t j = 0; j < std_simd<double>::size(); ++j) {
             ret |= compare(sc.position.x(), vc.position.x()[j]);
             ret |= compare(sc.position.y(), vc.position.y()[j]);
             ret |= compare(sc.position.z(), vc.position.z()[j]);
@@ -255,19 +270,19 @@ int main(int /*argc*/, char ** /*argv*/)
          PositionVector<double> sp4(p_x(gen), p_y(gen), p_z(gen));
          PositionVector<double> sp5(p_x(gen), p_y(gen), p_z(gen));
          PositionVector<double> sp6(p_x(gen), p_y(gen), p_z(gen));
-         // clone to Vc versions
-         PositionVector<Vc::double_v> vp1(sp1.x(), sp1.y(), sp1.z());
-         PositionVector<Vc::double_v> vp2(sp2.x(), sp2.y(), sp2.z());
-         PositionVector<Vc::double_v> vp3(sp3.x(), sp3.y(), sp3.z());
-         PositionVector<Vc::double_v> vp4(sp4.x(), sp4.y(), sp4.z());
-         PositionVector<Vc::double_v> vp5(sp5.x(), sp5.y(), sp5.z());
-         PositionVector<Vc::double_v> vp6(sp6.x(), sp6.y(), sp6.z());
+         // clone to std::simd versions
+         PositionVector<std_simd<double>> vp1(sp1.x(), sp1.y(), sp1.z());
+         PositionVector<std_simd<double>> vp2(sp2.x(), sp2.y(), sp2.z());
+         PositionVector<std_simd<double>> vp3(sp3.x(), sp3.y(), sp3.z());
+         PositionVector<std_simd<double>> vp4(sp4.x(), sp4.y(), sp4.z());
+         PositionVector<std_simd<double>> vp5(sp5.x(), sp5.y(), sp5.z());
+         PositionVector<std_simd<double>> vp6(sp6.x(), sp6.y(), sp6.z());
 
          // Make transformations from points
          // note warnings about axis not having the same angles expected here...
          // point is to check scalar and vector versions do the same thing
          const ROOT::Math::Impl::Transform3D<double> st(sp1, sp2, sp3, sp4, sp5, sp6);
-         const ROOT::Math::Impl::Transform3D<Vc::double_v> vt(vp1, vp2, vp3, vp4, vp5, vp6);
+         const ROOT::Math::Impl::Transform3D<std_simd<double>> vt(vp1, vp2, vp3, vp4, vp5, vp6);
 
          // transform the vectors
          const auto sv = st * sc.direction;
@@ -283,7 +298,7 @@ int main(int /*argc*/, char ** /*argv*/)
          const auto vv_i = vt_i * vv;
          std::cout << "Transformed Back Direction " << sc.direction << " " << sv_i << " " << vv_i << std::endl;
 
-         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+         for (std::size_t j = 0; j < std_simd<double>::size(); ++j) {
             ret |= compare(sv.x(), vv.x()[j]);
             ret |= compare(sv.y(), vv.y()[j]);
             ret |= compare(sv.z(), vv.z()[j]);
@@ -300,19 +315,21 @@ int main(int /*argc*/, char ** /*argv*/)
          const double a(p0(gen)), b(p1(gen)), c(p2(gen)), d(p3(gen));
          Plane<double> sc_plane(a, b, c, d);
          // make a vector plane
-         Plane<Vc::double_v> vc_plane(a, b, c, d);
+         Plane<std_simd<double>> vc_plane(a, b, c, d);
 
          // transform the planes
-         const auto new_sc_plane = st * sc_plane;
-         const auto new_vc_plane = vt * vc_plane;
-         std::cout << "Transformed plane " << new_sc_plane << " " << new_vc_plane << std::endl;
+         const Plane<double> new_sc_plane = st * sc_plane;
+         const Plane<std_simd<double>> new_vc_plane = vt * vc_plane;
+         // Commented-out debug output, because std_simd types don't provide any streaming operator.
+         // std::cout << "Transformed plane " << new_sc_plane << " " << new_vc_plane << std::endl;
 
          // now transform the planes back
-         const auto sc_plane_i = st_i * new_sc_plane;
-         const auto vc_plane_i = vt_i * new_vc_plane;
-         std::cout << "Transformed Back plane " << sc_plane_i << " " << vc_plane_i << std::endl;
+         const Plane<double> sc_plane_i = st_i * new_sc_plane;
+         const Plane<std_simd<double>> vc_plane_i = vt_i * new_vc_plane;
+         // Commented-out debug output, because std_simd types don't provide any streaming operator.
+         // std::cout << "Transformed Back plane " << sc_plane_i << " " << vc_plane_i << std::endl;
 
-         for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
+         for (std::size_t j = 0; j < std_simd<double>::size(); ++j) {
             ret |= compare(vc_plane.A()[j], vc_plane_i.A()[j]);
             ret |= compare(vc_plane.B()[j], vc_plane_i.B()[j]);
             ret |= compare(vc_plane.C()[j], vc_plane_i.C()[j]);
@@ -334,8 +351,8 @@ int main(int /*argc*/, char ** /*argv*/)
       // scalar data
       Data<PositionVector<double>, Vector<double>, Plane<double>, double>::Vector scalar_data(nPhotons);
       // vector data with total equal number of photons (including vectorised size)
-      Data<PositionVector<Vc::double_v>, Vector<Vc::double_v>, Plane<Vc::double_v>, Vc::double_v>::Vector vc_data(
-         nPhotons / Vc::double_v::Size);
+      Data<PositionVector<std_simd<double>>, Vector<std_simd<double>>, Plane<std_simd<double>>,
+           std_simd<double>>::Vector vc_data(nPhotons / std_simd<double>::size());
 
       TStopwatch t;
 
@@ -355,7 +372,7 @@ int main(int /*argc*/, char ** /*argv*/)
          }
       }
 
-      // time the Vc implementation
+      // time the std::simd implementation
       for (unsigned int i = 0; i < nTests; ++i) {
          t.Start();
          for (auto &vc : vc_data) {
@@ -370,13 +387,13 @@ int main(int /*argc*/, char ** /*argv*/)
       }
 
       std::cout << "Scalar best time        = " << best_time_scalar << std::endl;
-      std::cout << "Vectorised Vc best time = " << best_time_vector << std::endl;
-      std::cout << "Vectorised Vc SIMD size = " << Vc::double_v::Size << std::endl;
-      std::cout << "Vectorised Vc speedup   = " << best_time_scalar / best_time_vector << std::endl;
+      std::cout << "Vectorised std::simd best time = " << best_time_vector << std::endl;
+      std::cout << "Vectorised std::simd SIMD size = " << std_simd<double>::size() << std::endl;
+      std::cout << "Vectorised std::simd speedup   = " << best_time_scalar / best_time_vector << std::endl;
 
-      // assert that the vector time is roughly Vc::double_v::Size times smaller than the scalar time
+      // assert that the vector time is roughly std_simd<double>::size() times smaller than the scalar time
       // allow 25% for 'safety'
-      // if (std::fabs((best_time_vector * Vc::double_v::Size) - best_time_scalar) > 0.25 * best_time_scalar) {
+      // if (std::fabs((best_time_vector * std_simd<double>::size()) - best_time_scalar) > 0.25 * best_time_scalar) {
       //   ++ret;
       // }
    }

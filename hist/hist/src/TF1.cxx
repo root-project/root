@@ -1453,6 +1453,29 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
+
+// Internal to TF1. Evaluates Vectorized TF1 on data of type Double_v
+// The compiler should be able to inline this.
+double TF1::EvalParVec(const Double_t *data, const Double_t *params)
+{
+   assert(fType == EFType::kTemplVec);
+   std::vector<ROOT::Double_v> d(fNdim);
+   ROOT::Double_v res;
+
+   for (auto i = 0; i < fNdim; i++) {
+      d[i] = ROOT::Double_v(data[i]);
+   }
+
+   if (fFunctor) {
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *)fFunctor.get())->fImpl(d.data(), params);
+   } else {
+      //    res = GetSave(x);
+      return TMath::SignalingNaN();
+   }
+   return res[0];
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate function with given coordinates and parameters.
@@ -1508,7 +1531,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    if (fType == EFType::kTemplVec) {
       if (fFunctor) {
          if (params) result =  EvalParVec(x, params);

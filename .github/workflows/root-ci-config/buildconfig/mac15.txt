@@ -16,7 +16,6 @@ builtin_pcre=ON
 builtin_tbb=ON
 builtin_unuran=ON
 builtin_vdt=ON
-builtin_veccore=ON
 builtin_xrootd=ON
 builtin_xxhash=ON
 builtin_zeromq=ON

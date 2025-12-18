@@ -116,9 +116,6 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
-  if(vc)
-    set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
-  endif()
 
   # We need to override the default modulemap because instead of producing a
   # single std.pcm, produces hundreds of pcms. This changed with MacOSX14.4.sdk

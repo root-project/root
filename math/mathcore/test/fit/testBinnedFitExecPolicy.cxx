@@ -114,7 +114,7 @@ int main()
    benchmarkFit(f, h1f, "S L", fit, models[EModel::kPoisson]);
 
 #endif
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    TF1 *fvecCore = new TF1("fvCore", func<ROOT::Double_v>, 100, 200, 4);
 
    fit = "Vectorized";
