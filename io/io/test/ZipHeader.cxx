@@ -3,11 +3,13 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleZip.hxx>
+#include <ROOT/TestSupport.hxx>
 
 #include <RZip.h>
 #include <TKey.h>
 #include <TMemFile.h>
 #include <TNamed.h>
+#include <TTree.h>
 
 #include <cstring>
 #include <memory>
@@ -160,4 +162,55 @@ TEST(RZip, CorruptHeaderTKey)
 
    EXPECT_TRUE(verifyFile.Get<std::string>("stdstring"));
    EXPECT_TRUE(verifyFile.Get<TNamed>("tnamed"));
+}
+
+TEST(RZip, CorruptHeaderTBasket)
+{
+   TMemFile writableFile("memfile.root", "RECREATE");
+   writableFile.SetCompressionSettings(101);
+   auto tree = new TTree("t", "");
+   int val = 137;
+   tree->Branch("val", &val);
+   for (int i = 0; i < 1000; ++i)
+      tree->Fill();
+   tree->Write();
+
+   auto keysInfo = writableFile.WalkTKeys();
+   std::size_t posTBasket = 0;
+   for (const auto &ki : keysInfo) {
+      if (ki.fClassName != "TBasket")
+         continue;
+
+      EXPECT_EQ(0u, posTBasket);      // We expect only one basket
+      EXPECT_LT(ki.fLen, ki.fObjLen); // ensure it's compressed
+      posTBasket = ki.fSeekKey + ki.fKeyLen;
+   }
+   EXPECT_GT(posTBasket, 0);
+
+   writableFile.Close();
+
+   auto buffer = std::make_unique<char[]>(writableFile.GetSize());
+   writableFile.CopyTo(buffer.get(), writableFile.GetSize());
+
+   for (int headerOffset : {3, 6}) {
+      TMemFile verifyFile("memfile.root", TMemFile::ZeroCopyView_t(buffer.get(), writableFile.GetSize()));
+
+      tree = verifyFile.Get<TTree>("t");
+
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kError, "TBasket::ReadBasketBuffers", "fNbytes", /* matchFullMessage= */ false);
+      checkDiag.requiredDiag(kError, "TBranch::GetBasket", "File: memfile.root", /* matchFullMessage= */ false);
+
+      buffer[posTBasket + headerOffset]++;
+      EXPECT_EQ(-1, tree->GetEntry(0));
+      buffer[posTBasket + headerOffset]--;
+   }
+
+   TMemFile verifyFile("memfile.root", TMemFile::ZeroCopyView_t(buffer.get(), writableFile.GetSize()));
+   tree = verifyFile.Get<TTree>("t");
+   tree->SetBranchAddress("val", &val);
+   val = 0;
+
+   EXPECT_EQ(sizeof(int), tree->GetEntry(0));
+   EXPECT_EQ(137, val);
 }
