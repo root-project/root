@@ -75,31 +75,23 @@ ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cx
         stress/TestHelper.cxx
         LIBRARIES Core MathCore Hist RIO Tree GenVector)
 
-ROOT_ADD_GTEST(GradientUnit testGradient.cxx LIBRARIES Core MathCore Hist )
-
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx LIBRARIES Core MathCore Hist)
-
-ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
+ROOT_ADD_GTEST(GradientUnit testGradient.cxx LIBRARIES Core MathCore Hist )
 ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
+ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
 ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
-
-ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
-        LIBRARIES Core MathCore)
-
-if(veccore AND vc)
-  ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
-        LIBRARIES Core MathCore)
-endif()
-
+ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
+ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testLFSR testLFSR.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 
-ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testKNNDensity testKNNDensity.cxx LIBRARIES Core MathCore Hist)
+if(ROOT_HAVE_EXPERIMENTAL_SIMD)
+  ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx LIBRARIES Core MathCore)
+endif()
 
 if(clad)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
 endif()
-
-ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore)
-ROOT_ADD_GTEST(testLFSR testLFSR.cxx LIBRARIES Core MathCore)

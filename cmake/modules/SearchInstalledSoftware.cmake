@@ -1365,194 +1365,6 @@ if(builtin_tbb)
   set(TBB_TARGET TBB)
 endif()
 
-#---Check for Vc---------------------------------------------------------------------
-if(builtin_vc)
-  unset(Vc_FOUND)
-  unset(Vc_FOUND CACHE)
-  set(vc ON CACHE BOOL "Enabled because builtin_vc requested (${vc_description})" FORCE)
-elseif(vc)
-  if(fail-on-missing)
-    find_package(Vc 1.4.4 CONFIG QUIET REQUIRED)
-  else()
-    find_package(Vc 1.4.4 CONFIG QUIET)
-    if(NOT Vc_FOUND)
-      message(STATUS "Vc library not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
-      set(vc OFF CACHE BOOL "Disabled because Vc not found (${vc_description})" FORCE)
-    endif()
-  endif()
-  if(Vc_FOUND)
-    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
-    BUILD_ROOT_INCLUDE_PATH("${Vc_INCLUDE_DIR}")
-  endif()
-endif()
-
-if(vc AND NOT Vc_FOUND)
-  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("vc")
-endif()
-
-if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.4")
-  set(Vc_PROJECT "Vc-${Vc_VERSION}")
-  set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
-  set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-  set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
-
-  ExternalProject_Add(VC
-    URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3
-    BUILD_IN_SOURCE 0
-    BUILD_BYPRODUCTS ${Vc_LIBRARY}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
-    TIMEOUT 600
-  )
-
-  set(VC_TARGET Vc)
-  set(Vc_LIBRARIES Vc)
-  set(Vc_INCLUDE_DIR ${Vc_ROOTDIR}/include)
-  set(Vc_CMAKE_MODULES_DIR ${Vc_ROOTDIR}/lib/cmake/Vc)
-
-  add_library(VcExt STATIC IMPORTED)
-  set_property(TARGET VcExt PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(VcExt VC)
-
-  add_library(Vc INTERFACE)
-  target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
-  target_link_libraries(Vc INTERFACE VcExt)
-
-  find_package_handle_standard_args(Vc
-    FOUND_VAR Vc_FOUND
-    REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
-    VERSION_VAR Vc_VERSION)
-
-  # FIXME: This is a workaround to let ROOT find the headers at runtime if
-  # they are in the build directory. This is necessary until we decide how to
-  # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/Vc)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
-  endif()
-  # end of workaround
-
-  install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
-endif()
-
-if(Vc_FOUND)
-  # Missing from VcConfig.cmake
-  set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
-endif()
-
-#---Check for VecCore--------------------------------------------------------------------
-if(builtin_veccore)
-  unset(VecCore_FOUND)
-  unset(VecCore_FOUND CACHE)
-  set(veccore ON CACHE BOOL "Enabled because builtin_veccore requested (${veccore_description})" FORCE)
-elseif(veccore)
-  if(vc)
-    set(VecCore_COMPONENTS Vc)
-  endif()
-  if(fail-on-missing)
-    find_package(VecCore 0.4.2 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
-  else()
-    find_package(VecCore 0.4.2 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
-    if(NOT VecCore_FOUND)
-      ROOT_CHECK_CONNECTION("veccore=OFF")
-      if(NO_CONNECTION)
-        message(STATUS "VecCore not found and no internet connection, disabling the 'veccore' option")
-        set(veccore OFF CACHE BOOL "Disabled because not found and No internet connection" FORCE)
-      else()
-        message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
-        set(builtin_veccore ON CACHE BOOL "Enabled because veccore requested and not found externally (${builtin_veccore_description})" FORCE)
-      endif()
-    endif()
-  endif()
-  if(VecCore_FOUND)
-      set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_INCLUDE_DIRS})
-  endif()
-endif()
-
-if(builtin_veccore)
-  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_veccore")
-endif()
-
-if(builtin_veccore)
-  set(VecCore_VERSION "0.8.2")
-  set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
-  set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
-  set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-
-  ExternalProject_Add(VECCORE
-    URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=1268bca92acf00acd9775f1e79a2da7b1d902733d17e283e0dd5e02c41ac9666
-    BUILD_IN_SOURCE 0
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DBUILD_TESTING=OFF
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
-    TIMEOUT 600
-  )
-
-  set(VECCORE_TARGET VecCore)
-  set(VecCore_LIBRARIES VecCore)
-  list(APPEND VecCore_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
-
-  add_library(VecCore INTERFACE)
-  target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
-  add_dependencies(VecCore VECCORE)
-
-  if (Vc_FOUND)
-    set(VecCore_Vc_FOUND True)
-    set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
-    set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
-    set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
-
-    set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
-    list(APPEND VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR})
-    set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
-    target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
-  endif()
-
-  find_package_handle_standard_args(VecCore
-    FOUND_VAR VecCore_FOUND
-    REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
-    VERSION_VAR VecCore_VERSION)
-
-  # FIXME: This is a workaround to let ROOT find the headers at runtime if
-  # they are in the build directory. This is necessary until we decide how to
-  # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
-  endif()
-  # end of workaround
-
-  install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
-endif()
-
 if(builtin_vdt)
   ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_vdt")
 endif()
@@ -1626,12 +1438,6 @@ endif()
 if (vecgeom)
   message(STATUS "Looking for VecGeom")
   find_package(VecGeom 1.2 CONFIG)
-  if(builtin_veccore)
-    message(WARNING "ROOT must be built against the VecCore installation that was used to build VecGeom; builtin_veccore cannot be used. Option VecGeom will be disabled.")
-    set(vecgeom OFF CACHE BOOL "Disabled because non-builtin VecGeom specified but its VecCore cannot be found" FORCE)
-  elseif(builtin_veccore AND fail-on-missing)
-    message(SEND_ERROR "ROOT must be built against the VecCore installation that was used to build VecGeom; builtin_veccore cannot be used. Ensure that builtin_veccore option is OFF.")
-  endif()
   if(NOT VecGeom_FOUND )
     if(fail-on-missing)
       message(SEND_ERROR "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
@@ -2224,6 +2030,22 @@ if(NOT ROOT_HAVE_NATIVE_CXX_FILESYSTEM)
   if(NOT ROOT_NEED_STDCXXFS)
     message(FATAL_ERROR "Could not determine how to use C++17 <filesystem>")
   endif()
+endif()
+
+#------------------------------------------------------------------------------------
+# Check if std::experimental::simd is available for vectorized TFormula and
+# TMath features.
+if(WIN32 OR APPLE OR CMAKE_CXX_STANDARD LESS 20)
+  # Missing value means not available.
+  set(ROOT_HAVE_EXPERIMENTAL_SIMD CACHE INTERNAL "Test ROOT_HAVE_EXPERIMENTAL_SIMD")
+else()
+  check_cxx_source_compiles("
+      #include <experimental/simd>
+      int main() {
+          std::experimental::native_simd<int> v;
+          return 0;
+      }
+  " ROOT_HAVE_EXPERIMENTAL_SIMD)
 endif()
 
 #------------------------------------------------------------------------------------

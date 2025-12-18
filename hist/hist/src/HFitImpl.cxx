@@ -239,7 +239,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // if option grad is specified use gradient
    if ( (linear || fitOption.Gradient) )
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
-#ifdef R__HAS_VECCORE
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
    else if(f1->IsVectorized())
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif

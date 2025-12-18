@@ -22,9 +22,8 @@
 #include <sstream>
 #include <string>
 
-
 // This can be protected against by defining ROOT_Math_VecTypes
-// This is only used for the R__HAS_VECCORE define
+// This is only used for the R__HAS_STD_EXPERIMENTAL_SIMD define
 // and a single VecCore function in EvalLog
 #ifndef ROOT_Math_VecTypes
 #include "Types.h"
@@ -78,12 +77,17 @@ private:
    template<class T>
    inline T EvalLog(T x) {
       static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
-#ifdef R__HAS_VECCORE
-      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - T(1.0), std::log(x));
-#else
-      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
-#endif
-      return logval;
+
+      if constexpr (std::is_arithmetic_v<T>) {
+         return x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
+      } else {
+         // assume std::simd for non-arithmetic types
+         T logval{};
+         auto mask = x <= epsilon;
+         where(mask, logval) = x / epsilon + log(epsilon) - T(1.0);
+         where(!mask, logval) = log(x);
+         return logval;
+      }
    }
 
    } // end namespace Util

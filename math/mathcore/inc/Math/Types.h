@@ -3,61 +3,31 @@
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_VECCORE
+#include "RtypesCore.h"
 
-#if defined(R__HAS_VC)
+#ifdef R__HAS_STD_EXPERIMENTAL_SIMD
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#if (__cplusplus >= 202002L) // only for C++20
-#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
-#endif
-
-#ifdef __clang__
-#pragma clang diagnostic ignored "-Wconditional-uninitialized"
-#pragma clang diagnostic ignored "-Wdeprecated-copy"
-#endif
-
-#include <Vc/Vc>
-#pragma GCC diagnostic pop
-#endif
-
-#include <VecCore/VecCore>
+#include <experimental/simd>
 
 namespace ROOT {
 
 namespace Internal {
-   using ScalarBackend = vecCore::backend::Scalar;
-#ifdef VECCORE_ENABLE_VC
-   using VectorBackend = vecCore::backend::VcVector;
-#else
-   using VectorBackend = vecCore::backend::Scalar;
-#endif
-}
-   using Float_v  = typename Internal::VectorBackend::Float_v;
-   using Double_v = typename Internal::VectorBackend::Double_v;
-   using Int_v    = typename Internal::VectorBackend::Int_v;
-   using Int32_v  = typename Internal::VectorBackend::Int32_v;
-   using UInt_v   = typename Internal::VectorBackend::UInt_v;
-   using UInt32_v = typename Internal::VectorBackend::UInt32_v;
-}
 
-#else // R__HAS_VECCORE
+template <typename T>
+using SIMDTag = std::experimental::simd_abi::native<T>;
 
-// We do not have explicit vectorisation support enabled. Fall back to regular ROOT types.
+} // namespace Internal
 
-#include "RtypesCore.h"
+// FIXME: Should we introduce Int32_t and UInt32_t in RtypesCore.h?
+using Float_v = std::experimental::simd<Float_t, Internal::SIMDTag<Float_t>>;
+using Double_v = std::experimental::simd<Double_t, Internal::SIMDTag<Double_t>>;
+using Int_v = std::experimental::simd<Int_t, Internal::SIMDTag<Int_t>>;
+using Int32_v = std::experimental::simd<Int_t, Internal::SIMDTag<Int_t>>;
+using UInt_v = std::experimental::simd<UInt_t, Internal::SIMDTag<UInt_t>>;
+using UInt32_v = std::experimental::simd<UInt_t, Internal::SIMDTag<UInt_t>>;
 
-namespace ROOT {
-   using Float_v  = Float_t;
-   using Double_v = Double_t;
-   using Int_v    = Int_t;
-   using Int32_v  = Int_t; // FIXME: Should we introduce Int32_t in RtypesCore.h?
-   using UInt_v   = UInt_t;
-   using UInt32_v = UInt_t; // FIXME: Should we introduce UInt32_t in RtypesCore.h?
-}
+} // namespace ROOT
+
 #endif
 
 #endif // ROOT_Math_VecTypes

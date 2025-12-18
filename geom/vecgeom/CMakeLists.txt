@@ -10,9 +10,6 @@
 ############################################################################
 
 include_directories(AFTER SYSTEM ${VECGEOM_INCLUDE_DIRS})
-if ( Vc_FOUND )
-   include_directories( AFTER SYSTEM ${Vc_INCLUDE_DIRS})
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG
   HEADERS
