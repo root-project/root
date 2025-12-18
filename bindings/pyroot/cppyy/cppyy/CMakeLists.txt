@@ -31,7 +31,8 @@ endforeach()
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/cppyy
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
-        COMPONENT libraries)
+        COMPONENT libraries
+        PATTERN *.so EXCLUDE)
 
 if(NOT MSVC)
   ROOT_ADD_TEST_SUBDIRECTORY(test)
