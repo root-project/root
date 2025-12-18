@@ -22,6 +22,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(uhi_plotting uhi_plotting.py GENERIC PYTHON_DEPS uhi numpy)
 ROOT_ADD_PYUNITTEST(uhi_indexing uhi_indexing.py GENERIC PYTHON_DEPS uhi numpy)
+ROOT_ADD_PYUNITTEST(uhi_serialization_json uhi_serialization_json.py GENERIC PYTHON_DEPS uhi numpy)
 if(Python3_VERSION VERSION_GREATER_EQUAL 3.9)
     # Enable uhi testing helper for Python 3.9+
     ROOT_ADD_PYUNITTEST(uhi_test_suite uhi_test_suite.py GENERIC PYTHON_DEPS uhi numpy)
