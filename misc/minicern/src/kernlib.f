@@ -195,8 +195,8 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE UCTOH (MS,MT,NPW,NCH)
-      CHARACTER    MS*99
-      DIMENSION    MT(99)
+      CHARACTER    MS*(*)
+      DIMENSION    MT(NPW)
       PARAMETER   (NBITPW=32)
       PARAMETER   (NCHAPW=4)
       CHARACTER    CHWORD*(NCHAPW)
@@ -310,14 +310,15 @@
       SUBROUTINE UCOPYI (IA,IB,N)
       DIMENSION IA(*),IB(*)
       IF (N.EQ.0) RETURN
-         DO 21 I=1,N
-   21 IB(I)=IA(I)
+      DO 21 I=1,N
+   21   IB(I) = IA(I)
       END
+
       SUBROUTINE UCOPY (A,B,N)
       DIMENSION A(*),B(*)
       IF (N.EQ.0) RETURN
-         DO 21 I=1,N
-   21 B(I)=A(I)
+      DO 21 I=1,N
+   21   B(I) = A(I)
       END
 
 *-------------------------------------------------------------------------------
