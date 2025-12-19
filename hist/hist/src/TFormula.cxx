@@ -931,17 +931,8 @@ void TFormula::FillDefaults()
    // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
    //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
    //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
-   const pair<TString,TString> funShortcuts[] =
-      { {"sin","TMath::Sin" },
-        {"cos","TMath::Cos" }, {"exp","TMath::Exp"}, {"log","TMath::Log"}, {"log10","TMath::Log10"},
-        {"tan","TMath::Tan"}, {"sinh","TMath::SinH"}, {"cosh","TMath::CosH"},
-        {"tanh","TMath::TanH"}, {"asin","TMath::ASin"}, {"acos","TMath::ACos"},
-        {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
-        {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
-        {"binomial","TMath::Binomial"},{"abs","TMath::Abs"},
-        {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
-        {"sq","TMath::Sq"}
-      };
+   const std::pair<TString, TString> funShortcuts[] = {
+      {"sign", "TMath::Sign"}, {"binomial", "TMath::Binomial"}, {"sq", "TMath::Sq"}};
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
