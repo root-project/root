@@ -36,22 +36,9 @@
 
 //#define DEBUG_FITUTIL
 
-#ifdef R__HAS_VECCORE
-namespace vecCore {
-template <class T>
-vecCore::Mask<T> Int2Mask(unsigned i)
-{
-   T x;
-   for (unsigned j = 0; j < vecCore::VectorSize<T>(); j++)
-      vecCore::Set<T>(x, j, j);
-   return vecCore::Mask<T>(x < T(i));
-}
-}
-#endif
-
 namespace ROOT {
 
-   namespace Fit {
+namespace Fit {
 
 /**
    namespace defining utility free functions using in Fit for evaluating the various fit method
@@ -60,6 +47,46 @@ namespace ROOT {
    @ingroup FitMain
 */
 namespace FitUtil {
+
+namespace Detail {
+
+#ifdef R__HAS_VECCORE
+template <class T>
+vecCore::Mask<T> Int2Mask(unsigned i)
+{
+   T x;
+   for (unsigned j = 0; j < T::size(); j++) {
+      x[j] = j;
+   }
+   return vecCore::Mask<T>(x < T(i));
+}
+
+template <class T>
+auto NumericMax()
+{
+   return vecCore::NumericLimits<T>::Max();
+}
+
+#endif
+
+template <typename V, typename S>
+void Load(V &v, S const *ptr)
+{
+   for (size_t i = 0; i < V::size(); ++i)
+      v[i] = ptr[i];
+}
+
+template <typename T>
+auto ReduceAdd(const T &v)
+{
+   typename T::value_type result(0);
+   for (size_t i = 0; i < T::size(); ++i) {
+      result += v[i];
+   }
+   return result;
+}
+
+} // namespace Detail
 
   typedef  ROOT::Math::IParamMultiFunction IModelFunction;
   typedef  ROOT::Math::IParamMultiGradFunction IGradModelFunction;
@@ -235,23 +262,15 @@ namespace FitUtil {
 
      inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const
      {
-        // Figure out the size of the SIMD vectors.
-        constexpr static int vecSize = sizeof(ROOT::Double_v) / sizeof(double);
-        double xBuffer[vecSize];
         ROOT::Double_v xx[fDim];
         for (unsigned int i = 0; i < fDim; ++i) {
-           // The Load() function reads multiple values from the pointed-to
-           // memory into xx. This is why we have to copy the input values from
-           // the x array into a zero-padded buffer to read from. Otherwise,
-           // Load() would access the x array out of bounds.
-           *xBuffer = x[i];
-           for(int j = 1; j < vecSize; ++j) {
-              xBuffer[j] = 0.0;
+           xx[i][0] = x[i];
+           for (std::size_t j = 1; j < ROOT::Double_v::size(); ++j) {
+              xx[j] = 0.0;
            }
-           vecCore::Load<ROOT::Double_v>(xx[i], xBuffer);
         }
         auto res = (*f)(xx, p);
-        return vecCore::Get<ROOT::Double_v>(res, 0);
+        return res[0];
      }
 
 #if __clang_major__ > 16
@@ -404,16 +423,16 @@ namespace FitUtil {
 
          double maxResValue = std::numeric_limits<double>::max() / n;
          std::vector<double> ones{1., 1., 1., 1.};
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
 
          auto mapFunction = [&](unsigned int i) {
             // in case of no error in y invError=1 is returned
             T x1, y, invErrorVec;
-            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
-            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            Detail::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            Detail::Load<T>(y, data.ValuePtr(i * vecSize));
             const auto invError = data.ErrorPtr(i * vecSize);
             auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
-            vecCore::Load<T>(invErrorVec, invErrorptr);
+            Detail::Load<T>(invErrorVec, invErrorptr);
 
             const T *x;
             std::vector<T> xc;
@@ -421,7 +440,7 @@ namespace FitUtil {
                xc.resize(data.NDim());
                xc[0] = x1;
                for (unsigned int j = 1; j < data.NDim(); ++j)
-                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
                x = xc.data();
             } else {
                x = &x1;
@@ -440,9 +459,7 @@ namespace FitUtil {
 
 
             // avoid infinity or nan in chi2 values due to wrong function values
-            auto m = vecCore::Mask_v<T>(chi2 > maxResValue);
-
-            vecCore::MaskedAssign<T>(chi2, m, maxResValue);
+            where(chi2 > maxResValue, chi2) = maxResValue;
 
             return chi2;
          };
@@ -478,10 +495,9 @@ namespace FitUtil {
 
          // Last SIMD vector of elements (if padding needed)
          if (data.Size() % vecSize != 0)
-            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                                  res + mapFunction(data.Size() / vecSize));
+            where(Detail::Int2Mask<T>(data.Size() % vecSize), res) = res + mapFunction(data.Size() / vecSize);
 
-         return vecCore::ReduceAdd(res);
+         return Detail::ReduceAdd(res);
       }
 
       static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData &data, const double *const p,
@@ -506,13 +522,13 @@ namespace FitUtil {
          if (!normalizeFunc) {
             if (data.NDim() == 1) {
                T x;
-               vecCore::Load<T>(x, data.GetCoordComponent(0, 0));
+               Detail::Load<T>(x, data.GetCoordComponent(0, 0));
                func( &x, p);
             }
             else {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  vecCore::Load<T>(x[j], data.GetCoordComponent(0, j));
+                  Detail::Load<T>(x[j], data.GetCoordComponent(0, j));
                func( x.data(), p);
             }
          }
@@ -537,9 +553,9 @@ namespace FitUtil {
                data.Range().GetRange(&xmin[0], &xmax[0]);
                // check if function is zero at +- inf
                T xmin_v, xmax_v;
-               vecCore::Load<T>(xmin_v, xmin.data());
-               vecCore::Load<T>(xmax_v, xmax.data());
-               if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
+               Detail::Load<T>(xmin_v, xmin.data());
+               Detail::Load<T>(xmax_v, xmax.data());
+               if (Detail::ReduceAdd(func(&xmin_v, p)) != 0 || Detail::ReduceAdd(func(&xmax_v, p)) != 0) {
                   MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                   return 0;
                }
@@ -549,7 +565,7 @@ namespace FitUtil {
 
          // needed to compute effective global weight in case of extended likelihood
 
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
          unsigned int numVectors = n / vecSize;
 
          auto mapFunction = [ &, p](const unsigned i) {
@@ -560,7 +576,7 @@ namespace FitUtil {
             (void)p; /* avoid unused lambda capture warning if PARAMCACHE is disabled */
 
             T x1;
-            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            Detail::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
             const T *x = nullptr;
             unsigned int ndim = data.NDim();
             std::vector<T> xc;
@@ -568,7 +584,7 @@ namespace FitUtil {
                xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
-                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
                x = xc.data();
             } else {
                x = &x1;
@@ -596,7 +612,7 @@ namespace FitUtil {
                if (data.WeightsPtr(i) == nullptr)
                   weight = 1;
                else
-                  vecCore::Load<T>(weight, data.WeightsPtr(i*vecSize));
+                  Detail::Load<T>(weight, data.WeightsPtr(i * vecSize));
                logval *= weight;
                if (iWeight == 2) {
                   logval *= weight; // use square of weights in likelihood
@@ -660,17 +676,17 @@ namespace FitUtil {
          if (remainingPoints > 0) {
             auto remainingPointsContribution = mapFunction(numVectors);
             // Add the contribution from the valid remaining points and store the result in the output variable
-            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
-            vecCore::MaskedAssign(logl_v, remainingMask, logl_v + remainingPointsContribution.logvalue);
-            vecCore::MaskedAssign(sumW_v, remainingMask, sumW_v + remainingPointsContribution.weight);
-            vecCore::MaskedAssign(sumW2_v, remainingMask, sumW2_v + remainingPointsContribution.weight2);
+            auto remainingMask = Detail::Int2Mask<T>(remainingPoints);
+            where(remainingMask, logl_v) = logl_v + remainingPointsContribution.logvalue;
+            where(remainingMask, sumW_v) = sumW_v + remainingPointsContribution.weight;
+            where(remainingMask, sumW2_v) = sumW2_v + remainingPointsContribution.weight2;
          }
 
 
          //reduce vector type to double.
-         double logl  = vecCore::ReduceAdd(logl_v);
-         double sumW  = vecCore::ReduceAdd(sumW_v);
-         double sumW2 = vecCore::ReduceAdd(sumW2_v);
+         double logl = Detail::ReduceAdd(logl_v);
+         double sumW = Detail::ReduceAdd(sumW_v);
+         double sumW2 = Detail::ReduceAdd(sumW2_v);
 
          if (extended) {
             // add Poisson extended term
@@ -695,9 +711,9 @@ namespace FitUtil {
                   data.Range().GetRange(&xmin[0], &xmax[0]);
                   // check if function is zero at +- inf
                   T xmin_v, xmax_v;
-                  vecCore::Load<T>(xmin_v, xmin.data());
-                  vecCore::Load<T>(xmax_v, xmax.data());
-                  if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
+                  Detail::Load<T>(xmin_v, xmin.data());
+                  Detail::Load<T>(xmax_v, xmax.data());
+                  if (Detail::ReduceAdd(func(&xmin_v, p)) != 0 || Detail::ReduceAdd(func(&xmax_v, p)) != 0) {
                      MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                      return 0;
                   }
@@ -756,7 +772,7 @@ namespace FitUtil {
 #ifdef USE_PARAMCACHE
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 #endif
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
          // get fit option and check case of using integral of bins
          const DataOptions &fitOpt = data.Opt();
          if (fitOpt.fExpErrors || fitOpt.fIntegral)
@@ -766,13 +782,13 @@ namespace FitUtil {
 
          auto mapFunction = [&](unsigned int i) {
             T y;
-            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            Detail::Load<T>(y, data.ValuePtr(i * vecSize));
             T fval{};
 
             if (data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  vecCore::Load<T>(x[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(x[j], data.GetCoordComponent(i * vecSize, j));
 #ifdef USE_PARAMCACHE
                fval = func(x.data());
 #else
@@ -781,7 +797,7 @@ namespace FitUtil {
                // one -dim case
             } else {
                T x;
-               vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
+               Detail::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
 #ifdef USE_PARAMCACHE
                fval = func(&x);
 #else
@@ -791,7 +807,7 @@ namespace FitUtil {
 
             // EvalLog protects against 0 values of fval but don't want to add in the -log sum
             // negative values of fval
-            vecCore::MaskedAssign<T>(fval, fval < 0.0, 0.0);
+            where(fval < 0.0, fval) = 0.0;
 
             T nloglike{}; // negative loglikelihood
 
@@ -803,14 +819,15 @@ namespace FitUtil {
                // the saturated model)
                assert (data.GetErrorType() != ROOT::Fit::BinData::ErrorType::kNoError);
                T error = 0.0;
-               vecCore::Load<T>(error, data.ErrorPtr(i * vecSize));
+               Detail::Load<T>(error, data.ErrorPtr(i * vecSize));
                // for empty bin use the average weight  computed from the total data weight
                auto m = vecCore::Mask_v<T>(y != 0.0);
                auto weight = vecCore::Blend(m,(error * error) / y, T(data.SumOfError2()/ data.SumOfContent()) );
                if (extended) {
                   nloglike =  weight * ( fval - y);
                }
-               vecCore::MaskedAssign<T>(nloglike, y != 0, nloglike + weight * y *( ROOT::Math::Util::EvalLog(y) -  ROOT::Math::Util::EvalLog(fval)) );
+               where(y != 0, nloglike) =
+                  nloglike + weight * y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
 
             } else {
                // standard case no weights or iWeight=1
@@ -819,8 +836,7 @@ namespace FitUtil {
                // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
                if (extended) nloglike = fval - y;
 
-               vecCore::MaskedAssign<T>(
-                  nloglike, y > 0, nloglike + y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval)));
+               where(y > 0, nloglike) = nloglike + y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
             }
 
             return nloglike;
@@ -859,10 +875,9 @@ namespace FitUtil {
 
          // Last padded SIMD vector of elements
          if (data.Size() % vecSize != 0)
-            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                                  res + mapFunction(data.Size() / vecSize));
+            where(Detail::Int2Mask<T>(data.Size() % vecSize), res) = res + mapFunction(data.Size() / vecSize);
 
-         return vecCore::ReduceAdd(res);
+         return Detail::ReduceAdd(res);
       }
 
       static double EvalChi2Effective(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int &)
@@ -876,13 +891,13 @@ namespace FitUtil {
       // maximum finite values (preserving the original sign).
       static vecCore::Mask<T> CheckInfNaNValues(T &rval)
       {
-         auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
+         auto mask = rval > -Detail::NumericMax<T>() && rval < Detail::NumericMax<T>();
 
          // Case +inf or nan
-         vecCore::MaskedAssign(rval, !mask, +vecCore::NumericLimits<T>::Max());
+         where(!mask, rval) = +Detail::NumericMax<T>();
 
          // Case -inf
-         vecCore::MaskedAssign(rval, !mask && rval < 0, -vecCore::NumericLimits<T>::Max());
+         where(!mask && rval < 0, rval) = -Detail::NumericMax<T>();
 
          return mask;
       }
@@ -915,7 +930,7 @@ namespace FitUtil {
                                                    "BinVolume or ExpErrors\n. Aborting operation.");
 
          unsigned int npar = func.NPar();
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
          unsigned initialNPoints = data.Size();
          unsigned numVectors = initialNPoints / vecSize;
 
@@ -929,14 +944,14 @@ namespace FitUtil {
 
             T x1, y, invError;
 
-            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
-            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            Detail::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            Detail::Load<T>(y, data.ValuePtr(i * vecSize));
             const auto invErrorPtr = data.ErrorPtr(i * vecSize);
 
             if (invErrorPtr == nullptr)
                invError = 1;
             else
-               vecCore::Load<T>(invError, invErrorPtr);
+               Detail::Load<T>(invError, invErrorPtr);
 
             // TODO: Check error options and invert if needed
 
@@ -952,7 +967,7 @@ namespace FitUtil {
                xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
-                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
                x = xc.data();
             } else {
                x = &x1;
@@ -978,8 +993,8 @@ namespace FitUtil {
                }
 
                // calculate derivative point contribution (only for valid points)
-               vecCore::MaskedAssign(pointContributionVec[ipar], validPointsMasks[i],
-                                     -2.0 * (y - fval) * invError * invError * gradFunc[ipar]);
+               where(validPointsMasks[i], pointContributionVec[ipar]) =
+                  -2.0 * (y - fval) * invError * invError * gradFunc[ipar];
             }
 
             return pointContributionVec;
@@ -1035,14 +1050,14 @@ namespace FitUtil {
          if (remainingPoints > 0) {
             auto remainingPointsContribution = mapFunction(numVectors);
             // Add the contribution from the valid remaining points and store the result in the output variable
-            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
+            auto remainingMask = Detail::Int2Mask<T>(remainingPoints);
             for (unsigned int param = 0; param < npar; param++) {
-               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+               where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
             }
          }
          // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            grad[param] = vecCore::ReduceAdd(gVec[param]);
+            grad[param] = Detail::ReduceAdd(gVec[param]);
          }
 
          // correct the number of points
@@ -1054,7 +1069,7 @@ namespace FitUtil {
 
             for (const auto &mask : validPointsMasks) {
                for (unsigned int i = 0; i < vecSize; i++) {
-                  nRejected += !vecCore::Get(mask, i);
+                  nRejected += !mask[i];
                }
             }
 
@@ -1086,15 +1101,16 @@ namespace FitUtil {
          return -1.;
       }
 
-      //template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
-      // static double EvalPdf(const IModelFunctionTempl<ROOT::Double_v> &func, const UnBinData &data, const double *p, unsigned int i, double *, double *, bool, bool) {
-      // // evaluate the pdf contribution to the generic logl function in case of bin data
-      // // return actually the log of the pdf and its derivatives
-      // // func.SetParameters(p);
-      // const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i, 0));
-      // auto fval = func(&x, p);
-      // auto logPdf = ROOT::Math::Util::EvalLog(fval);
-      // return vecCore::Get<ROOT::Double_v>(logPdf, 0);
+      // template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
+      //  static double EvalPdf(const IModelFunctionTempl<ROOT::Double_v> &func, const UnBinData &data, const double *p,
+      //  unsigned int i, double *, double *, bool, bool) {
+      //  // evaluate the pdf contribution to the generic logl function in case of bin data
+      //  // return actually the log of the pdf and its derivatives
+      //  // func.SetParameters(p);
+      //  const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i, 0));
+      //  auto fval = func(&x, p);
+      //  auto logPdf = ROOT::Math::Util::EvalLog(fval);
+      //  return logPdf[0];
 
       static void
       EvalPoissonLogLGradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
@@ -1118,7 +1134,7 @@ namespace FitUtil {
                                                           "BinVolume or ExpErrors\n. Aborting operation.");
 
          unsigned int npar = func.NPar();
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
          unsigned initialNPoints = data.Size();
          unsigned numVectors = initialNPoints / vecSize;
 
@@ -1129,8 +1145,8 @@ namespace FitUtil {
 
             T x1, y;
 
-            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
-            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            Detail::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            Detail::Load<T>(y, data.ValuePtr(i * vecSize));
 
             T fval = 0;
 
@@ -1142,7 +1158,7 @@ namespace FitUtil {
                xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
-                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
                x = xc.data();
             } else {
                x = &x1;
@@ -1156,13 +1172,13 @@ namespace FitUtil {
                vecCore::Mask<T> positiveValuesMask = fval > 0;
 
                // df/dp * (1.  - y/f )
-               vecCore::MaskedAssign(pointContributionVec[ipar], positiveValuesMask, gradFunc[ipar] * (1. - y / fval));
+               where(positiveValuesMask, pointContributionVec[ipar]) = gradFunc[ipar] * (1. - y / fval);
 
                vecCore::Mask<T> validNegativeValuesMask = !positiveValuesMask && gradFunc[ipar] != 0;
 
                if (!vecCore::MaskEmpty(validNegativeValuesMask)) {
-                  const T kdmax1 = sqrt(vecCore::NumericLimits<T>::Max());
-                  const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
+                  const T kdmax1 = sqrt(Detail::NumericMax<T>());
+                  const T kdmax2 = Detail::NumericMax<T>() / (4 * initialNPoints);
                   T gg = kdmax1 * gradFunc[ipar];
                   pointContributionVec[ipar] = -vecCore::Blend(gg > 0, min(gg, kdmax2), max(gg, -kdmax2));
                }
@@ -1234,14 +1250,14 @@ namespace FitUtil {
          if (remainingPoints > 0) {
             auto remainingPointsContribution = mapFunction(numVectors);
             // Add the contribution from the valid remaining points and store the result in the output variable
-            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
+            auto remainingMask = Detail::Int2Mask<T>(remainingPoints);
             for (unsigned int param = 0; param < npar; param++) {
-               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+               where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
             }
          }
          // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            grad[param] = vecCore::ReduceAdd(gVec[param]);
+            grad[param] = Detail::ReduceAdd(gVec[param]);
          }
 
 #ifdef DEBUG_FITUTIL
@@ -1266,7 +1282,7 @@ namespace FitUtil {
 
 
          unsigned int npar = func.NPar();
-         auto vecSize = vecCore::VectorSize<T>();
+         auto vecSize = T::size();
          unsigned initialNPoints = data.Size();
          unsigned numVectors = initialNPoints / vecSize;
 
@@ -1279,15 +1295,15 @@ namespace FitUtil {
 
          (const_cast<IGradModelFunctionTempl<T> &>(func)).SetParameters(p);
 
-         const T kdmax1 = sqrt(vecCore::NumericLimits<T>::Max());
-         const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
+         const T kdmax1 = sqrt(Detail::NumericMax<T>());
+         const T kdmax2 = Detail::NumericMax<T>() / (4 * initialNPoints);
 
          auto mapFunction = [&](const unsigned int i) {
             std::vector<T> gradFunc(npar);
             std::vector<T> pointContributionVec(npar);
 
             T x1;
-            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            Detail::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
 
             const T *x = nullptr;
 
@@ -1297,7 +1313,7 @@ namespace FitUtil {
                xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
-                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                  Detail::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
                x = xc.data();
             } else {
                x = &x1;
@@ -1317,8 +1333,9 @@ namespace FitUtil {
             vecCore::Mask<T> positiveValues = fval > 0;
 
             for (unsigned int kpar = 0; kpar < npar; ++kpar) {
-               if (!vecCore::MaskEmpty(positiveValues))
-                  vecCore::MaskedAssign<T>(pointContributionVec[kpar], positiveValues, -1. / fval * gradFunc[kpar]);
+               if (!vecCore::MaskEmpty(positiveValues)) {
+                  where(positiveValues, pointContributionVec[kpar]) = -1. / fval * gradFunc[kpar];
+               }
 
                vecCore::Mask<T> nonZeroGradientValues = !positiveValues && gradFunc[kpar] != 0;
                if (!vecCore::MaskEmpty(nonZeroGradientValues)) {
@@ -1382,14 +1399,14 @@ namespace FitUtil {
          if (remainingPoints > 0) {
             auto remainingPointsContribution = mapFunction(numVectors);
             // Add the contribution from the valid remaining points and store the result in the output variable
-            auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+            auto remainingMask = Detail::Int2Mask<T>(initialNPoints % vecSize);
             for (unsigned int param = 0; param < npar; param++) {
-               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+               where(remainingMask, gVec[param]) = gVec[param] + remainingPointsContribution[param];
             }
          }
          // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            grad[param] = vecCore::ReduceAdd(gVec[param]);
+            grad[param] = Detail::ReduceAdd(gVec[param]);
          }
 
 #ifdef DEBUG_FITUTIL
@@ -1480,10 +1497,10 @@ namespace FitUtil {
       }
    };
 
-} // end namespace FitUtil
+   } // end namespace FitUtil
 
    } // end namespace Fit
 
-} // end namespace ROOT
+   } // end namespace ROOT
 
 #endif /* ROOT_Fit_FitUtil */

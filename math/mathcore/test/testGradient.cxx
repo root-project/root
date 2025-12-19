@@ -202,13 +202,18 @@ struct Model2D : public Model<T> {
       T arg = (x - mean) / sigma;
 
       // for |arg| > 39  result is zero in double precision
-      vecCore::Mask_v<T> mask = !(arg < -39.0 || arg > 39.0);
+      auto mask = !(arg < -39.0 || arg > 39.0);
 
       // Initialize the result to 0.0
       T res(0.0);
 
       // Compute the function only when the arg meets the criteria, using the mask computed before
-      vecCore::MaskedAssign<T>(res, mask, exp(-0.5 * arg * arg));
+      if constexpr (std::is_same_v<T, double>)
+         res = mask ? exp(-0.5 * arg * arg) : 0.0;
+      else if constexpr (std::is_same_v<T, ROOT::Double_v>)
+         where(mask, res) = exp(-0.5 * arg * arg);
+      else
+         static_assert(false, "T is expected to be either double or ROOT::Double_v");
 
       if (!norm)
          return res;

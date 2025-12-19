@@ -841,7 +841,7 @@ inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
       //    res = GetSave(x);
       return TMath::SignalingNaN();
    }
-   return vecCore::Get<ROOT::Double_v>(res, 0);
+   return res[0];
 }
 #endif
 

@@ -78,12 +78,18 @@ private:
    template<class T>
    inline T EvalLog(T x) {
       static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
-#ifdef R__HAS_VECCORE
-      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + log(epsilon) - T(1.0), log(x));
-#else
-      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
-#endif
-      return logval;
+
+      if constexpr (std::is_same_v<T, double>) {
+         return x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
+      } else if constexpr (std::is_same_v<T, ROOT::Double_v>) {
+         T logval;
+         auto mask = x <= epsilon;
+         where(mask, logval) = x / epsilon + log(epsilon) - T(1.0);
+         where(!mask, logval) = log(x);
+         return logval;
+      } else {
+         static_assert(false, "T is expected to be either double or ROOT::Double_v");
+      }
    }
 
    } // end namespace Util

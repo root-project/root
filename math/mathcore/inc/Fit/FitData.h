@@ -358,9 +358,9 @@ namespace ROOT {
          static unsigned VectorPadding(unsigned dataSize)
          {
             unsigned padding = 0;
-            unsigned modP = (dataSize) % vecCore::VectorSize<ROOT::Double_v>();
+            unsigned modP = (dataSize) % ROOT::Double_v::size();
             if (modP > 0)
-               padding = vecCore::VectorSize<ROOT::Double_v>() - modP;
+               padding = ROOT::Double_v::size() - modP;
             return padding;
          }
 #else
