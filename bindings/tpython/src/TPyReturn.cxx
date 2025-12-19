@@ -201,7 +201,7 @@ TPyReturn::operator Double_t() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cast python return value to ROOT object with dictionary (may fail; note that
-/// you have to use the void* converter, as CINT will not call any other).
+/// you have to use the void* converter, as Cling will not call any other).
 
 TPyReturn::operator void *() const
 {
