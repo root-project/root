@@ -108,7 +108,6 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
 }
 
 // typedef for a free function like gamma(double x, double a, double b)
-// (dont have blank spaces between for not confusing CINT parser)
 typedef double (*FreeFunc3)(double, double, double );
 typedef double (*FreeFunc4)(double, double, double, double );
 
