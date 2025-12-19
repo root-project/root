@@ -1,12 +1,14 @@
 #include "VectorizedTMath.h"
 
+#include <cmath>
+
 #ifdef ROOT_VECTORIZED_TMATH
 
 namespace TMath {
 ////////////////////////////////////////////////////////////////////////////////
 ::ROOT::Double_v Log2(::ROOT::Double_v &x)
 {
-   return vecCore::math::Log2(x);
+   return log2(x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,9 +31,8 @@ namespace TMath {
    ::ROOT::Double_v arg = (x - ::ROOT::Double_v(mean)) * inv_sigma;
 
    // For those entries of |arg| > 39 result is zero in double precision
-   ::ROOT::Double_v out =
-      vecCore::Blend<::ROOT::Double_v>(vecCore::math::Abs(arg) < ::ROOT::Double_v(39.0),
-                                       vecCore::math::Exp(::ROOT::Double_v(-0.5) * arg * arg), ::ROOT::Double_v(0.0));
+   ::ROOT::Double_v out = vecCore::Blend<::ROOT::Double_v>(
+      abs(arg) < ::ROOT::Double_v(39.0), exp(::ROOT::Double_v(-0.5) * arg * arg), ::ROOT::Double_v(0.0));
    if (norm)
       out *= 0.3989422804014327 * inv_sigma; // 1/sqrt(2*Pi)=0.3989422804014327
    return out;
@@ -47,7 +48,7 @@ namespace TMath {
 ::ROOT::Double_v LaplaceDist(::ROOT::Double_v &x, Double_t alpha, Double_t beta)
 {
    ::ROOT::Double_v beta_v_inv = ::ROOT::Double_v(1.0) / ::ROOT::Double_v(beta);
-   ::ROOT::Double_v out = vecCore::math::Exp(-vecCore::math::Abs((x - ::ROOT::Double_v(alpha)) * beta_v_inv));
+   ::ROOT::Double_v out = exp(-abs((x - ::ROOT::Double_v(alpha)) * beta_v_inv));
    out *= ::ROOT::Double_v(0.5) * beta_v_inv;
    return out;
 }
@@ -63,9 +64,8 @@ namespace TMath {
 {
    ::ROOT::Double_v alpha_v = ::ROOT::Double_v(alpha);
    ::ROOT::Double_v beta_v_inv = ::ROOT::Double_v(1.0) / ::ROOT::Double_v(beta);
-   return vecCore::Blend<::ROOT::Double_v>(
-      x <= alpha_v, 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) * beta_v_inv)),
-      1 - 0.5 * vecCore::math::Exp(-vecCore::math::Abs((x - alpha_v) * beta_v_inv)));
+   return vecCore::Blend<::ROOT::Double_v>(x <= alpha_v, 0.5 * exp(-abs((x - alpha_v) * beta_v_inv)),
+                                           1 - 0.5 * exp(-abs((x - alpha_v) * beta_v_inv)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ namespace TMath {
             q31 = 1.91308926107829841e-1, p32 = -2.26956593539686930e-1, q32 = 1.05167510706793207e+0,
             p33 = -2.78661308609647788e-1, q33 = 1.98733201817135256e+0, p34 = -2.23192459734184686e-2, q34 = 1;
 
-   ::ROOT::Double_v v = vecCore::math::Abs(x) / w2;
+   ::ROOT::Double_v v = abs(x) / w2;
 
    ::ROOT::Double_v result{};
 
@@ -114,12 +114,12 @@ namespace TMath {
       result, mask2,
       ::ROOT::Double_v(1.0) -
          (p20 + p21 * v + p22 * v2 + p23 * v3 + p24 * v4 + p25 * v5 + p26 * v6 + p27 * v7) /
-            (vecCore::math::Exp(v2) * (q20 + q21 * v + q22 * v2 + q23 * v3 + q24 * v4 + q25 * v5 + q26 * v6 + v7)));
+            (exp(v2) * (q20 + q21 * v + q22 * v2 + q23 * v3 + q24 * v4 + q25 * v5 + q26 * v6 + v7)));
    vecCore::MaskedAssign<::ROOT::Double_v>(result, mask3,
                                            ::ROOT::Double_v(1.0) -
                                               (c1 + (p30 * v8 + p31 * v6 + p32 * v4 + p33 * v2 + p34) /
                                                        ((q30 * v8 + q31 * v6 + q32 * v4 + q33 * v2 + q34) * v2)) /
-                                                 (v * vecCore::math::Exp(v2)));
+                                                 (v * exp(v2)));
 
    return vecCore::Blend<::ROOT::Double_v>(x > 0, ::ROOT::Double_v(0.5) + ::ROOT::Double_v(0.5) * result,
                                            ::ROOT::Double_v(0.5) * (::ROOT::Double_v(1) - result));
@@ -130,7 +130,7 @@ namespace TMath {
 ::ROOT::Double_v BesselI0_Split_More(::ROOT::Double_v &ax)
 {
    ::ROOT::Double_v y = 3.75 / ax;
-   return (vecCore::math::Exp(ax) / vecCore::math::Sqrt(ax)) *
+   return (exp(ax) / sqrt(ax)) *
           (0.39894228 +
            y * (1.328592e-2 +
                 y * (2.25319e-3 +
@@ -149,7 +149,7 @@ namespace TMath {
 
 ::ROOT::Double_v BesselI0(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v ax = vecCore::math::Abs(x);
+   ::ROOT::Double_v ax = abs(x);
 
    return vecCore::Blend<::ROOT::Double_v>(ax <= 3.75, BesselI0_Split_Less(x), BesselI0_Split_More(ax));
 }
@@ -160,7 +160,7 @@ namespace TMath {
 {
    ::ROOT::Double_v y = 3.75 / ax;
    ::ROOT::Double_v result =
-      (vecCore::math::Exp(ax) / vecCore::math::Sqrt(ax)) *
+      (exp(ax) / sqrt(ax)) *
       (0.39894228 + y * (-3.988024e-2 +
                          y * (-3.62018e-3 +
                               y * (1.63801e-3 + y * (-1.031555e-2 +
@@ -179,7 +179,7 @@ namespace TMath {
 
 ::ROOT::Double_v BesselI1(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v ax = vecCore::math::Abs(x);
+   ::ROOT::Double_v ax = abs(x);
 
    return vecCore::Blend<::ROOT::Double_v>(ax <= 3.75, BesselI1_Split_Less(x), BesselI1_Split_More(ax, x));
 }
@@ -195,8 +195,7 @@ namespace TMath {
       1 + y * (-0.1098628627e-2 + y * (0.2734510407e-4 + y * (-0.2073370639e-5 + y * 0.2093887211e-6)));
    ::ROOT::Double_v result2 =
       -0.1562499995e-1 + y * (0.1430488765e-3 + y * (-0.6911147651e-5 + y * (0.7621095161e-6 - y * 0.934935152e-7)));
-   return vecCore::math::Sqrt(0.636619772 / ax) *
-          (vecCore::math::Cos(xx) * result1 - z * vecCore::math::Sin(xx) * result2);
+   return sqrt(0.636619772 / ax) * (cos(xx) * result1 - z * sin(xx) * result2);
 }
 
 ::ROOT::Double_v BesselJ0_Split1_Less(::ROOT::Double_v &x)
@@ -209,7 +208,7 @@ namespace TMath {
 
 ::ROOT::Double_v BesselJ0(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v ax = vecCore::math::Abs(x);
+   ::ROOT::Double_v ax = abs(x);
    return vecCore::Blend<::ROOT::Double_v>(ax < 8, BesselJ0_Split1_Less(x), BesselJ0_Split1_More(ax));
 }
 
@@ -224,8 +223,7 @@ namespace TMath {
       1 + y * (0.183105e-2 + y * (-0.3516396496e-4 + y * (0.2457520174e-5 + y * -0.240337019e-6)));
    ::ROOT::Double_v result2 =
       0.04687499995 + y * (-0.2002690873e-3 + y * (0.8449199096e-5 + y * (-0.88228987e-6 - y * 0.105787412e-6)));
-   ::ROOT::Double_v result =
-      vecCore::math::Sqrt(0.636619772 / ax) * (vecCore::math::Cos(xx) * result1 - z * vecCore::math::Sin(xx) * result2);
+   ::ROOT::Double_v result = sqrt(0.636619772 / ax) * (cos(xx) * result1 - z * sin(xx) * result2);
    vecCore::MaskedAssign<::ROOT::Double_v>(result, x < 0, -result);
    return result;
 }
@@ -241,7 +239,7 @@ namespace TMath {
 
 ::ROOT::Double_v BesselJ1(::ROOT::Double_v &x)
 {
-   ::ROOT::Double_v ax = vecCore::math::Abs(x);
+   ::ROOT::Double_v ax = abs(x);
    return vecCore::Blend<::ROOT::Double_v>(ax < 8, BesselJ1_Split1_Less(x), BesselJ1_Split1_More(ax, x));
 }
 

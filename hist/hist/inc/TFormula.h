@@ -123,7 +123,6 @@ private:
    static Bool_t   IsDefaultVariableName(const TString &name);
    void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
    void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
-   void FillVecFunctionsShurtCuts();
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
       return std::string(GetUniqueFuncName().Data()) + "_grad_1";

@@ -208,7 +208,7 @@ struct Model2D : public Model<T> {
       T res(0.0);
 
       // Compute the function only when the arg meets the criteria, using the mask computed before
-      vecCore::MaskedAssign<T>(res, mask, vecCore::math::Exp(-0.5 * arg * arg));
+      vecCore::MaskedAssign<T>(res, mask, exp(-0.5 * arg * arg));
 
       if (!norm)
          return res;

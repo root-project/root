@@ -1161,10 +1161,10 @@ namespace FitUtil {
                vecCore::Mask<T> validNegativeValuesMask = !positiveValuesMask && gradFunc[ipar] != 0;
 
                if (!vecCore::MaskEmpty(validNegativeValuesMask)) {
-                  const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
+                  const T kdmax1 = sqrt(vecCore::NumericLimits<T>::Max());
                   const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
                   T gg = kdmax1 * gradFunc[ipar];
-                  pointContributionVec[ipar] = -vecCore::Blend(gg > 0, vecCore::math::Min(gg, kdmax2), vecCore::math::Max(gg, -kdmax2));
+                  pointContributionVec[ipar] = -vecCore::Blend(gg > 0, min(gg, kdmax2), max(gg, -kdmax2));
                }
             }
 
@@ -1279,7 +1279,7 @@ namespace FitUtil {
 
          (const_cast<IGradModelFunctionTempl<T> &>(func)).SetParameters(p);
 
-         const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
+         const T kdmax1 = sqrt(vecCore::NumericLimits<T>::Max());
          const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
 
          auto mapFunction = [&](const unsigned int i) {
@@ -1324,8 +1324,7 @@ namespace FitUtil {
                if (!vecCore::MaskEmpty(nonZeroGradientValues)) {
                   T gg = kdmax1 * gradFunc[kpar];
                   pointContributionVec[kpar] =
-                     vecCore::Blend(nonZeroGradientValues && gg > 0, -vecCore::math::Min(gg, kdmax2),
-                                    -vecCore::math::Max(gg, -kdmax2));
+                     vecCore::Blend(nonZeroGradientValues && gg > 0, -min(gg, kdmax2), -max(gg, -kdmax2));
                }
                // if func derivative is zero term is also zero so do not add in g[kpar]
             }

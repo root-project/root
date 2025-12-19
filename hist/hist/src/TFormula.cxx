@@ -955,42 +955,9 @@ void TFormula::FillDefaults()
    for (auto con : defconsts) {
       fConsts[con.first] = con.second;
    }
-   if (fVectorized) {
-      FillVecFunctionsShurtCuts();
-   } else {
-      for (auto fun : funShortcuts) {
-         fFunctionsShortcuts[fun.first] = fun.second;
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///    Fill the shortcuts for vectorized functions
-///    We will replace for example sin with vecCore::Mat::Sin
-///
-
-void TFormula::FillVecFunctionsShurtCuts() {
-#ifdef R__HAS_VECCORE
-   const pair<TString,TString> vecFunShortcuts[] =
-      { {"sin","vecCore::math::Sin" },
-        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
-        {"tan","vecCore::math::Tan"},
-        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
-        {"asin","vecCore::math::ASin"},
-        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
-        {"atan","vecCore::math::ATan"},
-        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
-        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
-        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
-        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
-        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
-      };
-   // replace in the data member maps fFunctionsShortcuts
-   for (auto fun : vecFunShortcuts) {
+   for (auto fun : funShortcuts) {
       fFunctionsShortcuts[fun.first] = fun.second;
    }
-#endif
-   // do nothing in case Veccore is not enabled
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3148,7 +3115,6 @@ void TFormula::SetVectorized(Bool_t vectorized)
 
       fMethod.reset();
 
-      FillVecFunctionsShurtCuts();   // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
       PreProcessFormula(fFormula);
       PrepareFormula(fFormula);
    }
