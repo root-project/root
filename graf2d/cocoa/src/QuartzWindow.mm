@@ -2613,6 +2613,18 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (void)didAddSubview:(NSView *)subview
+{
+    self.clipsToBounds = YES;
+}
+
+//______________________________________________________________________________
+- (void)willRemoveSubview:(NSView *)subview
+{
+    self.clipsToBounds = self.subviews.count > 1;
+}
+
+//______________________________________________________________________________
 - (void) addChild : (NSView<X11Window> *) child
 {
    assert(child != nil && "-addChild:, parameter 'child' is nil");
