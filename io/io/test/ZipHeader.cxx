@@ -10,6 +10,7 @@
 #include <TMemFile.h>
 #include <TNamed.h>
 #include <TTree.h>
+#include <TTreeCacheUnzip.h>
 
 #include <cstring>
 #include <memory>
@@ -164,7 +165,7 @@ TEST(RZip, CorruptHeaderTKey)
    EXPECT_TRUE(verifyFile.Get<TNamed>("tnamed"));
 }
 
-TEST(RZip, CorruptHeaderTBasket)
+TEST(RZip, CorruptHeaderTTree)
 {
    TMemFile writableFile("memfile.root", "RECREATE");
    writableFile.SetCompressionSettings(101);
@@ -177,6 +178,7 @@ TEST(RZip, CorruptHeaderTBasket)
 
    auto keysInfo = writableFile.WalkTKeys();
    std::size_t posTBasket = 0;
+   std::size_t keylenTBasket = 0;
    for (const auto &ki : keysInfo) {
       if (ki.fClassName != "TBasket")
          continue;
@@ -184,6 +186,7 @@ TEST(RZip, CorruptHeaderTBasket)
       EXPECT_EQ(0u, posTBasket);      // We expect only one basket
       EXPECT_LT(ki.fLen, ki.fObjLen); // ensure it's compressed
       posTBasket = ki.fSeekKey + ki.fKeyLen;
+      keylenTBasket = ki.fKeyLen;
    }
    EXPECT_GT(posTBasket, 0);
 
@@ -204,6 +207,27 @@ TEST(RZip, CorruptHeaderTBasket)
       buffer[posTBasket + headerOffset]++;
       EXPECT_EQ(-1, tree->GetEntry(0));
       buffer[posTBasket + headerOffset]--;
+   }
+
+   {
+      TMemFile verifyFile("memfile.root", TMemFile::ZeroCopyView_t(buffer.get(), writableFile.GetSize()));
+
+      tree = verifyFile.Get<TTree>("t");
+
+      TTreeCacheUnzip cache(tree);
+      char *dest = nullptr;
+
+      for (int headerOffset : {3, 6}) {
+         ROOT::TestSupport::CheckDiagsRAII checkDiag;
+         checkDiag.requiredDiag(kError, "TTreeCacheUnzip::UnzipBuffer", "nbytes", /* matchFullMessage= */ false);
+
+         buffer[posTBasket + headerOffset]++;
+         EXPECT_EQ(-1, cache.UnzipBuffer(&dest, &buffer[posTBasket - keylenTBasket]));
+         buffer[posTBasket + headerOffset]--;
+      }
+
+      EXPECT_GT(cache.UnzipBuffer(&dest, &buffer[posTBasket - keylenTBasket]), 0);
+      delete[] dest;
    }
 
    TMemFile verifyFile("memfile.root", TMemFile::ZeroCopyView_t(buffer.get(), writableFile.GetSize()));
