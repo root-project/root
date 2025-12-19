@@ -208,7 +208,7 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
             }
             break;
          case 'D':
-            if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0" && args[iPcmArg] != "-DG__NOCINTDLL") {
+            if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0" && args[iPcmArg] != "-DG__NOCINTDLL") { // TODO maybe remove CINT part
                fCompD.push_back(SplitPPDefine(args[iPcmArg].c_str() + 2));
             }
             break;

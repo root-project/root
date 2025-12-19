@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGlobal
-Global variables class (global variables are obtained from CINT).
+Global variables class (global variables are obtained from Cling).
 This class describes the attributes of a global variable.
 The TROOT class contains a list of all currently defined global
 variables (accessible via TROOT::GetListOfGlobals()).
@@ -67,7 +67,7 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGlobal dtor deletes adopted CINT DataMemberInfo object.
+/// TGlobal dtor deletes adopted Cling DataMemberInfo object.
 
 TGlobal::~TGlobal()
 {

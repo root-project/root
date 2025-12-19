@@ -2567,7 +2567,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    cling::Interpreter::CompilationResult compRes = cling::Interpreter::kSuccess;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
-      // If there was a trailing "+", then CINT compiled the code above,
+      // If there was a trailing "+", then historical CINT compiled the code above,
       // and we will need to strip the "+" before passing the line to cling.
       TString mod_line(sLine);
       TString aclicMode;
@@ -3221,7 +3221,7 @@ Bool_t TCling::HasPCMForLibrary(const char *libname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if the file has already been loaded by cint.
+/// Return true if the file has already been loaded by Cling.
 /// We will try in this order:
 ///   actual filename
 ///   filename as a path relative to
@@ -4180,7 +4180,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    }
    if (!info->IsLoaded()) {
       if (info->Property() & (kIsNamespace)) {
-         // Namespaces can have info but no corresponding CINT dictionary
+         // Namespaces can have info but no corresponding ROOT dictionary
          // because they are auto-created if one of their contained
          // classes has a dictionary.
          zombieCandidate = kTRUE;
@@ -5276,7 +5276,7 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
       return;
    }
    // Well well well, for backward compatibility we need to act a bit too
-   // much like CINT.
+   // much like historical CINT.
    TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
    splitname.ShortType(output, TClassEdit::kDropStd );
 
@@ -5286,7 +5286,7 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a global function with arguments params.
 ///
-/// FIXME: The cint-based version of this code does not check if the
+/// FIXME: The CINT-based version of this code does not check if the
 ///        SetFunc() call works, and does not do any real checking
 ///        for errors from the Exec() call.  It did fetch the most
 ///        recent cint security error and return that in error, but
@@ -5310,7 +5310,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute a method from class cl with arguments params.
 ///
-/// FIXME: The cint-based version of this code does not check if the
+/// FIXME: The CINT-based version of this code does not check if the
 ///        SetFunc() call works, and does not do any real checking
 ///        for errors from the Exec() call.  It did fetch the most
 ///        recent cint security error and return that in error, but
@@ -7470,7 +7470,7 @@ const char* TCling::GetIncludePath()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the directory containing CINT's stl cintdlls.
+/// \deprecated Returned the directory containing historical CINT's stl cintdlls. \return ""
 
 const char* TCling::GetSTLIncludePath() const
 {

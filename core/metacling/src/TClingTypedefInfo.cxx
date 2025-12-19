@@ -10,13 +10,13 @@
  *************************************************************************/
 
 /** \class TClingTypedefInfo
-Emulation of the CINT TypedefInfo class.
+Emulation of the historical CINT TypedefInfo class.
 
-The CINT C++ interpreter provides an interface to metadata about
+The CINT C++ interpreter provided an interface to metadata about
 a typedef through the TypedefInfo class.  This class provides the
 same functionality, using an interface as close as possible to
 TypedefInfo but the typedef metadata comes from the Clang C++
-compiler, not CINT.
+compiler, not historical CINT.
 */
 
 #include "TClingTypedefInfo.h"
@@ -122,7 +122,7 @@ int TClingTypedefInfo::InternalNext()
       // Advance to next usable decl, or return if
       // there is no next usable decl.
       if (fFirstTime) {
-         // The cint semantics are strange.
+         // The historical CINT Next() semantics were strange.
          fFirstTime = false;
       }
       else {
@@ -221,7 +221,7 @@ int TClingTypedefInfo::Size() const
    // Note: This is an int64_t.
    clang::CharUnits::QuantityType quantity =
       context.getTypeSizeInChars(qt).getQuantity();
-   // Truncate cast to fit the CINT interface.
+   // Truncate cast to fit the CINT interface. TODO: check with Cling
    return static_cast<int>(quantity);
 }
 

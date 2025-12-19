@@ -1500,7 +1500,7 @@ static void CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::MembersTypeM
    for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
        field_iter != end;
        ++field_iter){
-      // The CINT based code was filtering away static variables (they are not part of
+      // The historical CINT based code was filtering away static variables (they are not part of
       // the list starting with field_begin in clang), and const enums (which should
       // also not be part of this list).
       // It was also filtering out the 'G__virtualinfo' artificial member.
@@ -3237,7 +3237,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
 /// If errnum is not null, *errnum updated with the error number:
-///   Cint::G__DataMemberInfo::G__VALID     : valid array index
+///   Cint::G__DataMemberInfo::G__VALID     : valid array index       @todo: adapt docu for Cling
 ///   Cint::G__DataMemberInfo::G__NOT_INT   : array index is not an int
 ///   Cint::G__DataMemberInfo::G__NOT_DEF   : index not defined before array
 ///                                          (this IS an error for streaming to disk)

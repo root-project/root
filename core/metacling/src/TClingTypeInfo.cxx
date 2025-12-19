@@ -10,12 +10,12 @@
  *************************************************************************/
 
 /** \class TClingTypeInfo
-Emulation of the CINT TypeInfo class.
+Emulation of the historical CINT TypeInfo class.
 
-The CINT C++ interpreter provides an interface to metadata about
+The CINT C++ interpreter provided an interface to metadata about
 a type through the TypeInfo class.  This class provides the same
 functionality, using an interface as close as possible to TypeInfo
-but the type metadata comes from the Clang C++ compiler, not CINT.
+but the type metadata comes from the Clang C++ compiler, not historical CINT.
 */
 
 #include "TClingTypeInfo.h"
