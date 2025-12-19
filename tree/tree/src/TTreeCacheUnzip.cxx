@@ -858,11 +858,16 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
    Int_t nbytes = 0, objlen = 0, keylen = 0;
    GetRecordHeader(src, hlen, nbytes, objlen, keylen);
 
+   Int_t nbytesRemain = nbytes - keylen;
+   Int_t objlenRemain = objlen;
+
    if (!(*dest)) {
       /* early consistency check */
       UChar_t *bufcur = (UChar_t *) (src + keylen);
-      Int_t nin, nbuf;
-      if(objlen > nbytes - keylen && R__unzip_header(&nin, bufcur, &nbuf) != 0) {
+      Int_t nin = 0;
+      Int_t nbuf = 0;
+      if ((objlen > nbytes - keylen) &&
+          ((nbytesRemain < ROOT::Internal::kZipHeaderSize) || (R__unzip_header(&nin, bufcur, &nbuf) != 0))) {
          Error("UnzipBuffer", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
          uzlen = -1;
          return uzlen;
@@ -889,13 +894,15 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
 
       char *objbuf = *dest + keylen;
       UChar_t *bufcur = (UChar_t *) (src + keylen);
-      Int_t nin, nbuf;
+      Int_t nin = 0;
+      Int_t nbuf = 0;
       Int_t nout = 0;
       Int_t noutot = 0;
 
-      while (true) {
+      while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-         if (hc != 0) break;
+         if ((hc != 0) || (nin > nbytesRemain) || (nbuf > objlenRemain))
+            break;
          if (gDebug > 2)
             Info("UnzipBuffer", " nin:%d, nbuf:%d, bufcur[3] :%d, bufcur[4] :%d, bufcur[5] :%d ",
                  nin, nbuf, bufcur[3], bufcur[4], bufcur[5]);
@@ -920,6 +927,8 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
          if (noutot >= objlen) break;
          bufcur += nin;
          objbuf += nout;
+         nbytesRemain -= nin;
+         objlenRemain -= nout;
       }
 
       if (noutot != objlen) {
