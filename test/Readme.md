@@ -12,8 +12,8 @@ MainEvent.cxx      - Simple test program that creates a ROOT Tree object and
                      histograms. This program uses the files Event.cxx,
                      EventCint.cxx and Event.h. An example of a procedure to
                      link this program is in bind_Event. Note that the Makefile
-                     invokes the rootcint utility to generate the CINT interface
-                     EventCint.cxx.
+                     invokes the rootcling utility to generate the interface
+                     EventCint.cxx (ROOT dictionary).
 
 Event.cxx          - Implementation for classes Event and Track.
 
