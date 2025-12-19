@@ -2147,34 +2147,53 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       }
    }
 
+   return compileToFixedProdPdf(normSet, nullptr, nullptr, ctx, true);
+}
+
+std::unique_ptr<RooAbsArg> RooProdPdf::compileToFixedProdPdf(RooArgSet const &normSet, RooArgSet const *intSet,
+                                                             const char *rangeName, RooFit::Detail::CompileContext &ctx,
+                                                             bool compileServers) const
+{
    std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
    ctx.markAsCompiled(*prodPdfClone);
 
-   for (const auto server : prodPdfClone->servers()) {
-      auto nsetForServer = fillNormSetForServer(normSet, *server);
-      RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
+   if (compileServers)
+      for (const auto server : prodPdfClone->servers()) {
+         auto nsetForServer = fillNormSetForServer(normSet, *server);
+         RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
 
-      RooArgSet depList;
-      server->getObservables(&nset, depList);
+         RooArgSet depList;
+         server->getObservables(&nset, depList);
 
-      ctx.compileServer(*server, *prodPdfClone, depList);
-   }
+         ctx.compileServer(*server, *prodPdfClone, depList);
+      }
 
-   auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet);
-   ctx.markAsCompiled(*fixedProdPdf);
+   auto fixedProdPdf =
+      std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet, intSet, rangeName);
+   if (compileServers)
+      ctx.markAsCompiled(*fixedProdPdf);
+   else
+      ctx.compileServers(*fixedProdPdf, normSet);
 
    return fixedProdPdf;
 }
 
 namespace RooFit::Detail {
 
-RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
+RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet,
+                                 RooArgSet const *intSet, const char *rangeName)
    : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()),
      _normSet{normSet},
      _servers("!servers", "List of servers", this),
-     _prodPdf{std::move(prodPdf)}
+     _prodPdf{std::move(prodPdf)},
+     _rangeName{rangeName ? rangeName : ""}
 {
-   auto cache = _prodPdf->createCacheElem(&_normSet, nullptr);
+   if (intSet) {
+      _intSet.add(*intSet);
+   }
+
+   RooArgSet const *iset = _intSet.empty() ? nullptr : &_intSet;
+   auto cache = _prodPdf->createCacheElem(&_normSet, iset, _rangeName.empty() ? nullptr : _rangeName.c_str());
    _isRearranged = cache->_isRearranged;
 
    // The actual servers for a given normalization set depend on whether the
@@ -2190,25 +2209,27 @@ RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSe
    // We don't want to carry the full cache object around, so we let it go out
    // of scope and transfer the ownership of the args that we actually need.
    cache->_ownedList.releaseOwnership();
-   std::vector<std::unique_ptr<RooAbsArg>> owned;
-   for (RooAbsArg *arg : cache->_ownedList) {
-      owned.emplace_back(arg);
-   }
+   // std::vector<std::unique_ptr<RooAbsArg>> owned;
+   // for (RooAbsArg *arg : cache->_ownedList) {
+   // owned.emplace_back(arg);
+   //}
    for (RooAbsArg *arg : cache->_partList) {
       _servers.add(*arg);
-      auto found = std::find_if(owned.begin(), owned.end(), [&](auto const &ptr) { return arg == ptr.get(); });
-      if (found != owned.end()) {
-         addOwnedComponents(std::move(owned[std::distance(owned.begin(), found)]));
-      }
+      // auto found = std::find_if(owned.begin(), owned.end(), [&](auto const &ptr) { return arg == ptr.get(); });
+      // if (found != owned.end()) {
+      // addOwnedComponents(std::move(owned[std::distance(owned.begin(), found)]));
+      //}
    }
 }
 
 RooFixedProdPdf::RooFixedProdPdf(const RooFixedProdPdf &other, const char *name)
    : RooAbsPdf(other, name),
+     _intSet{other._intSet},
      _normSet{other._normSet},
      _servers("!servers", this, other._servers),
      _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())},
-     _isRearranged{other._isRearranged}
+     _isRearranged{other._isRearranged},
+     _rangeName{other._rangeName}
 {
 }
 

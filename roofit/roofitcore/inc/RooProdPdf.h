@@ -102,6 +102,10 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+  std::unique_ptr<RooAbsArg> compileToFixedProdPdf(RooArgSet const &normSet, RooArgSet const *intSet,
+                                                   const char *rangeName, RooFit::Detail::CompileContext &ctx,
+                                                   bool compileServers) const;
+
   // The cache object. Internal, do not use.
   class CacheElem final : public RooAbsCacheElement {
   public:
@@ -211,7 +215,8 @@ namespace RooFit::Detail {
 /// normalization set.
 class RooFixedProdPdf : public RooAbsPdf {
 public:
-   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet);
+   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet, RooArgSet const *intSet,
+                   const char *rangeName);
    RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr);
 
    inline TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }
@@ -269,10 +274,12 @@ public:
 private:
    double evaluate() const override;
 
+   RooArgSet _intSet;
    RooArgSet _normSet;
    RooSetProxy _servers;
    std::unique_ptr<RooProdPdf> _prodPdf;
    bool _isRearranged = false;
+   std::string _rangeName;
 
    ClassDefOverride(RooFit::Detail::RooFixedProdPdf, 0);
 };

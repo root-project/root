@@ -40,6 +40,7 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooNameReg.h>
 #include <RooNumIntConfig.h>
 #include <RooNumIntFactory.h>
+#include <RooProdPdf.h>
 #include <RooRealBinding.h>
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
@@ -1114,6 +1115,13 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 std::unique_ptr<RooAbsArg>
 RooRealIntegral::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
+   if (auto *prodPdf = dynamic_cast<RooProdPdf *>(&*_function)) {
+      getVal();
+      auto out = prodPdf->compileToFixedProdPdf(_funcNormSet ? *_funcNormSet : normSet, &_anaList,
+                                                RooNameReg::str(_rangeName), ctx, false);
+      out->SetName(GetName());
+      return out;
+   }
    return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : normSet, ctx);
 }
 
