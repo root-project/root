@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 //
 // This test program is automatically created by $ROOTSYS/test/Makefile.
 // To run it in batch, execute stressGeom.
-// To run this test with interactive CINT, do
+// To run this test with interactive interpreter, do
 // root > .x stressShapes.cxx++
 // or
 // root > .x stressShapes.cxx
