@@ -26,7 +26,7 @@ def filter(lines, ignoreWhiteSpace = False):
         continue
       if ' -nologo -TP -c -nologo -I' in line:
         continue
-      if 'rootcint -v1 -f ' in line:
+      if 'rootcling -v1 -f ' in line:
         continue
       if 'No precompiled header available' in line:
         continue
