@@ -2158,7 +2158,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
    if (opt.IsNull() || opt.First('D') != kNPOS)
       libs += gInterpreter->GetSharedLibs();
 
-   // Cint currently register all libraries that
+   // Cling currently register all libraries that
    // are loaded and have a dictionary in them, this
    // includes all the libraries that are included
    // in the list of (hard) linked libraries.

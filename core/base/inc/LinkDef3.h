@@ -184,7 +184,7 @@
 #pragma link C++ class TBase64;
 
 // Insure the creation of the TClass object for pairs that might be
-// inside the cintdlls.
+// inside the cintdlls. TODO: recheck with Cling
 #pragma extra_include "string";
 // insure using namespace std and declaration of std::pair
 #pragma extra_include "Rpair.h";

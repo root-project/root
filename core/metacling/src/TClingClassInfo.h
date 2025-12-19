@@ -16,12 +16,12 @@
 //                                                                      //
 // TClingClassInfo                                                      //
 //                                                                      //
-// Emulation of the CINT ClassInfo class.                               //
+// Emulation of the historical CINT ClassInfo class.                    //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CINT C++ interpreter provided an interface to metadata about     //
 // a class through the ClassInfo class.  This class provides the same   //
 // functionality, using an interface as close as possible to ClassInfo  //
-// but the class metadata comes from the Clang C++ compiler, not CINT.  //
+// but the class metadata comes from the Clang C++ compiler, not historical CINT.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

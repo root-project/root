@@ -679,11 +679,10 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    if (obj) {
 
 #if defined(R__MUST_REVISIT)
-#if R__MUST_REVISIT(6,2)
+#if R__MUST_REVISIT(6,2) //TODO: recheck with Cling
       // Register the address in TCling::fgSetOfSpecials
       // to speed-up the execution of TCling::RecursiveRemove when
       // the object is not a special.
-      // See http://root.cern.ch/viewvc/trunk/core/meta/src/TCint.cxx?view=log#rev18109
       if (!fgSetOfSpecials) {
          fgSetOfSpecials = new std::set<TObject*>;
       }
