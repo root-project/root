@@ -205,8 +205,8 @@ public:
    void ReadInitializedTensorsFromFile(long);
    long WriteInitializedTensorsToFile(std::string filename = "");
 
-   void PrintIntermediateTensors();
-   void PrintOutputTensors();
+   void PrintIntermediateTensors() const;
+   void PrintOutputTensors() const;
    void OutputGenerated(std::string filename = "", bool append = false);
    std::vector<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
    void SetFilename(std::string filename) { fName = filename; }
@@ -224,9 +224,9 @@ public:
       }
    */
 
-   void PrintRequiredInputTensors();
-   void PrintInitializedTensors();
-   void PrintDynamicTensors();
+   void PrintRequiredInputTensors() const;
+   void PrintInitializedTensors() const;
+   void PrintDynamicTensors() const;
    void HeadInitializedTensors(std::string name, int n_print = 50);
 
    bool UseSession() const { return fUseSession; }
