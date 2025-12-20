@@ -93,25 +93,40 @@ bool testVecFormula() {
 
    bool ok = true;
 
+   // Note that we have to disable several tests when using the Vc backend
+   // because of linker errors. This is because Vc is always built as a static
+   // library, and linked in MathCore, but the interpreter cannot lookup
+   // missing symbols for Vc math functions if the formula requires them and
+   // they are not already linked into MathCore by chance.
+   // See also:
+   // https://its.cern.ch/jira/browse/ROOT-10614
+   // https://github.com/root-project/root/pull/20769
+
    ok &= testVec1D("3+[0]",constant_function, 3.333);
    ok &= testVec1D("3",constant_function, 3.333);
+#ifndef R__HAS_VC
    ok &= testVec1D("sin(x)",std::sin,1);
    ok &= testVec1D("cos(x)",std::cos,1);
+#endif
    ok &= testVec1D("exp(x)",std::exp,1);
    ok &= testVec1D("log(x)",std::log,2);
    ok &= testVec1D("log10(x)",TMath::Log10,2);
+#ifndef R__HAS_VC
    ok &= testVec1D("tan(x)",std::tan,1);
-   //ok &= testVec1D("sinh(x)",std::sinh,1);
-   //ok &= testVec1D("cosh(x)",std::cosh,1);
-   //ok &= testVec1D("tanh(x)",std::tanh,1);
+   ok &= testVec1D("sinh(x)",std::sinh,1);
+   ok &= testVec1D("cosh(x)",std::cosh,1);
+   ok &= testVec1D("tanh(x)",std::tanh,1);
    ok &= testVec1D("asin(x)",std::asin,.1);
    ok &= testVec1D("acos(x)",std::acos,.1);
+#endif
    ok &= testVec1D("atan(x)",std::atan,.1);
    ok &= testVec1D("sqrt(x)",std::sqrt,2);
    ok &= testVec1D("abs(x)",std::abs,-1);
    ok &= testVec2D("pow(x,y)",std::pow,2,3);
+#ifndef R__HAS_VC
    ok &= testVec2D("min(x,y)",TMath::Min,2,3);
    ok &= testVec2D("max(x,y)",TMath::Max,2,3);
+#endif
    ok &= testVec2D("atan2(x,y)",TMath::ATan2,2,3);
 
    return ok; 
