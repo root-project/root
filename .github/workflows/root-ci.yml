@@ -385,10 +385,6 @@ jobs:
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
-          # Minimal build
-          - image: alma10
-            minimal: true
-            property: "minimal build"
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -422,6 +418,11 @@ jobs:
             is_special: true
             property: "Fedora pydebug"
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          # Minimal build
+          - image: alma10
+            is_special: true
+            minimal: true
+            property: "minimal build"
           # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
