@@ -32,7 +32,7 @@ public:
 
 class RFunction_Update: public RFunction {
 protected:
-    std::shared_ptr<RModel> function_block;
+    std::shared_ptr<RModel> fFunction_block;
     FunctionTarget fTarget;
     GraphType fGraphType;
     std::vector<std::string> fInputTensors;
@@ -50,9 +50,9 @@ public:
     void AddInputTensors(const std::vector<std::vector<std::size_t>>& inputShapes);
     void AddInputTensors(const std::vector<std::vector<Dim>>& inputShapes);
     std::shared_ptr<RModel> GetFunctionBlock() {
-        return function_block;
+        return fFunction_block;
     }
-    std::string GenerateModel(const std::string& filename, long read_pos = 0, long block_size = -1);
+    std::string GenerateModel(const std::string& filename, long read_pos = 0, long block_size = -1, bool verbose = false);
     std::string Generate(const std::vector<std::string>& inputPtrs);
     FunctionTarget GetFunctionTarget() {
         return fTarget;
