@@ -49,6 +49,22 @@ std::string doubleToString(double val)
    return ss.str();
 }
 
+// In the interpreter, we must match the SIMD width used by compiled ROOT.
+// ROOT::Double_v aliases the best available native SIMD type, which may differ
+// between compiled and interpreted contexts (e.g. with -march=native).
+// Therefore, we explicitly select the fixed-size SIMD type corresponding to
+// the native SIMD width used in compiled ROOT.
+std::string vectorizedArgType()
+{
+#ifdef VECCORE_ENABLE_VC
+   auto n = ROOT::Double_v::size();
+   return "Vc::fixed_size_simd<double, " + std::to_string(n) + ">";
+#else
+   // For other possible VecCore backends, we assume using the same type is fine.
+   return "ROOT::Double_v";
+#endif
+}
+
 } // namespace
 
 /** \class TFormula  TFormula.h "inc/TFormula.h"
@@ -815,7 +831,7 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
       if (IsVectorized)
-         prototypeArguments.Append("ROOT::Double_v const*");
+         prototypeArguments.Append(vectorizedArgType() + " const*");
       else
          prototypeArguments.Append("Double_t const*");
    }
@@ -2387,7 +2403,7 @@ void TFormula::ProcessFormula(TString &formula)
          if (fVectorized)
             inputFormulaVecFlag += " (vectorized)";
 
-         TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
+         TString argType = fVectorized ? vectorizedArgType() : "Double_t";
 
          // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
          TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " const *x").Data() : ""),
