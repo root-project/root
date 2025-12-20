@@ -164,6 +164,7 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
         fOperators.insert(fOperators.begin() + order_execution, std::move(op));
     } else {
         fOperators.push_back(std::move(op));
+        order_execution = fOperators.size()-1;
     }
 
     // storing the last usage of tensors which are input to
@@ -812,6 +813,11 @@ void RModel::GenerateDynamicTensorInfo()
    if (fDynamicTensorInfos.empty())
       return;
 
+   if (fVerbose) {
+      std::cout << "generating code for dynamic tensor management" << std::endl;
+      PrintDynamicTensors();
+   }
+
    std::stringstream out;
    out << "//  dynamic tensor memory management\n";
    out << SP << "std::vector<TMVA::Experimental::SOFIE::TensorLifeInfo> dynamicTensorInfos;\n";
@@ -1387,7 +1393,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     }
 }
 
-void RModel::PrintRequiredInputTensors() {
+void RModel::PrintRequiredInputTensors() const {
     std::cout << "Model requires following inputs:\n";
     for (auto& inputInfo: fInputTensorInfos) {
         std::cout << "Parametrised Tensor name: " << inputInfo.first << "\t";
@@ -1417,7 +1423,7 @@ void RModel::PrintRequiredInputTensors() {
     std::cout << "\n";
 }
 
-void RModel::PrintInitializedTensors() {
+void RModel::PrintInitializedTensors() const {
     std::cout << "Model initialized the following tensors:\n";
     for (auto& it: fInitializedTensors) {
         std::cout << "Tensor name: \"" << it.first << "\"\t";
@@ -1435,7 +1441,7 @@ void RModel::PrintInitializedTensors() {
     std::cout << "\n";
 }
 
-void RModel::PrintIntermediateTensors() {
+void RModel::PrintIntermediateTensors() const {
     std::cout << "Model specify the following intermediate tensors:\n";
     for (auto& it: fIntermediateTensorInfos) {
         std::cout << "Tensor name: \"" << it.first << "\"\t";
@@ -1450,7 +1456,7 @@ void RModel::PrintIntermediateTensors() {
     std::cout << "\n";
 }
 
-void RModel::PrintDynamicTensors() {
+void RModel::PrintDynamicTensors() const {
     std::cout << "Model specify the following dynamic tensors:\n";
     for (auto& it: fDynamicTensorInfos) {
         std::cout << "Tensor name: \"" << it.first << "\"\t";
@@ -1465,14 +1471,16 @@ void RModel::PrintDynamicTensors() {
     std::cout << "\n";
 }
 
-void RModel::PrintOutputTensors() {
+void RModel::PrintOutputTensors() const {
     std::cout << "Model specify the following output tensors:\n";
     for (auto& it: fOutputTensorNames) {
         std::cout << "Tensor name: \"" << it << "\"\t";
-        if (!IsDynamicTensor(it))
-           std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
-        else
-          std::cout << "shape: " << ConvertShapeToString(GetDynamicTensorShape(it)) << std::endl;
+        try {
+         auto shape = GetDimTensorShape(it);
+         std::cout << "with shape: " << ConvertShapeToString(shape) << std::endl;
+        } catch (...) {
+          std::cout << "with shape not yet defined" << std::endl;
+        }
     }
     std::cout << "\n";
 }
