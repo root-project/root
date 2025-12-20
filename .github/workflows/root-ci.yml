@@ -385,6 +385,10 @@ jobs:
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
+          # Minimal build
+          - image: alma10
+            minimal: true
+            property: "minimal build"
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -490,6 +494,19 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
+      - name: Apply option minimal request from matrix for this job
+        if: ${{ matrix.minimal == true }}
+        env:
+          GLOBAL_CONFIG_DIR: '.github/workflows/root-ci-config/buildconfig'
+          CONFIGFILE_STEM: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}'
+        run: |
+          echo "Applying minimal request options"
+          # Add commands to apply minimal request options here
+          set -x
+          cp "$GLOBAL_CONFIG_DIR/global-minimal.txt" "$GLOBAL_CONFIG_DIR/global.txt"
+          if [ -f "${CONFIGFILE_STEM}-minimal.txt" ]; then
+            cp "${CONFIGFILE_STEM}-minimal.txt" "${CONFIGFILE_STEM}.txt"
+          fi
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
