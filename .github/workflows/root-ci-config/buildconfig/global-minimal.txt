@@ -1,0 +1,5 @@
+ccache=ON
+fail-on-missing=ON
+minimal=ON
+roottest=ON
+testing=ON
