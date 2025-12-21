@@ -2,23 +2,26 @@
 // Authors: Stephan Hageboeck, CERN 04/2020
 //          Jonas Rembser, CERN 04/2021
 
-#include <RooAddition.h>
 #include <RooAddPdf.h>
+#include <RooAddition.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooParametricStepFunction.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
+#include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
-#include <RooRandom.h>
 
+#include <TArrayD.h>
 #include <TClass.h>
 #include <TRandom.h>
 
@@ -373,6 +376,42 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
 
    simPdf.fitTo(*data, PrintLevel(-1), _evalBackend);
+}
+
+// This test covers a usecase by an ATLAS collaborator. The unnormalized shape
+// of a RooFit pdf is used as a function inside a RooFormulaVar, which is used
+// for the bins of a RooParametricStep function. This case is potentially
+// fragile, because it requires that the top-level normalization set is ignored
+// for the inner pdfs that don't depend on the observable, as normalizing over
+// a non-dependent is a corner case where the variable should be dropped.
+TEST_P(FitTest, PdfAsFunctionInFormulaVar)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 0., 1.};
+
+   const double arg = std::sqrt(-8 * std::log(0.5));
+   RooGaussian gauss1{"gauss1", "", 10 - arg, 10, 2};
+
+   RooFormulaVar func1{"func1", "x[0]", {gauss1}};
+
+   // The parametric step function doesn't make any attempt at self
+   // normalization, so the pdf value in the first bin is just the value of the
+   // unnormalized Gaussian. And the first bin is the almost the whole domain.
+   TArrayD limits(3);
+   limits[0] = 0.;
+   limits[1] = 1 - 1e-9;
+   limits[2] = 1.;
+   RooParametricStepFunction pdf("pdf", "pdf", x, {func1}, limits, limits.size() - 1);
+
+   int nEvents = 10000;
+   std::unique_ptr<RooAbsData> data{pdf.generateBinned(x, nEvents)};
+
+   std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*data, _evalBackend)};
+
+   // The test is designed to have an analytical reference value
+   double ref = nEvents * -std::log(0.5);
+   EXPECT_FLOAT_EQ(nll->getVal(), ref);
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization

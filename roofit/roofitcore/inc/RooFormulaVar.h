@@ -77,6 +77,9 @@ public:
 
   std::string getUniqueFuncName() const;
 
+  std::unique_ptr<RooAbsArg>
+  compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
+
   protected:
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
