@@ -532,7 +532,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   }
 
   // Destroy old normalization & create new
-  if (selfNormalized() || !dependsOn(depList)) {
+  if (selfNormalized() || depList.empty()) {
     auto ntitle = std::string(GetTitle()) + " Unit Normalization";
     auto nname = std::string(GetName()) + "_UnitNorm";
     _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
