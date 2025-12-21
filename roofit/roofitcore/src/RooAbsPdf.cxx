@@ -487,103 +487,107 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
 /// For functions that declare to be self-normalized by overloading the
 /// selfNormalized() function, a unit normalization is always constructed.
 
-bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) const
+bool RooAbsPdf::syncNormalization(const RooArgSet *nset, bool adjustProxies) const
 {
-  setActiveNormSet(nset);
+   setActiveNormSet(nset);
 
-  // Check if data sets are identical
-  CacheElem* cache = static_cast<CacheElem*>(_normMgr.getObj(nset)) ;
-  if (cache) {
+   // Check if data sets are identical
+   CacheElem *cache = static_cast<CacheElem *>(_normMgr.getObj(nset));
+   if (cache) {
 
-    bool nintChanged = (_norm!=cache->_norm.get()) ;
-    _norm = cache->_norm.get();
+      bool nintChanged = (_norm != cache->_norm.get());
+      _norm = cache->_norm.get();
 
-    // In the past, this condition read `if (nintChanged && adjustProxies)`.
-    // However, the cache checks if the nset was already cached **by content**,
-    // and not by RooArgSet instance! So it can happen that the normalization
-    // set object is different, but the integral object is the same, in which
-    // case it would be wrong to not adjust the proxies. They always have to be
-    // adjusted when the nset changed, which is always the case when
-    // `syncNormalization()` is called.
-    if (adjustProxies) {
-      // Update dataset pointers of proxies
-      const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
-    }
-
-    return nintChanged ;
-  }
-
-  // Update dataset pointers of proxies
-  if (adjustProxies) {
-    const_cast<RooAbsPdf*>(this)->setProxyNormSet(nset) ;
-  }
-
-  RooArgSet depList;
-  getObservables(nset, depList);
-
-  if (_verboseEval>0) {
-    if (!selfNormalized()) {
-      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName()
-      << ") recreating normalization integral " << std::endl ;
-      depList.printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
-    } else {
-      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << std::endl;
-    }
-  }
-
-  // Destroy old normalization & create new
-  if (selfNormalized() || depList.empty()) {
-    auto ntitle = std::string(GetTitle()) + " Unit Normalization";
-    auto nname = std::string(GetName()) + "_UnitNorm";
-    _norm = new RooRealVar(nname.c_str(),ntitle.c_str(),1) ;
-  } else {
-    const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : nullptr)) ;
-
-//     std::cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << std::endl ;
-    RooAbsReal* normInt;
-    {
-      // Normalization is always over all pdf components. Overriding the global
-      // component selection temporarily makes all RooRealIntegrals created during
-      // that time always include all components.
-      GlobalSelectComponentRAII selCompRAII(true);
-      normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
-    }
-    static_cast<RooRealIntegral*>(normInt)->setAllowComponentSelection(false);
-    normInt->getVal() ;
-//     std::cout << "resulting normInt = " << normInt->GetName() << std::endl ;
-
-    const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
-    if (cacheParamsStr && strlen(cacheParamsStr)) {
-
-      std::unique_ptr<RooArgSet> intParams{normInt->getVariables()} ;
-
-      RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
-
-      if (!cacheParams.empty()) {
-   cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
-          << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  std::endl ;
-   std::string name = normInt->GetName() + ("_CACHE_[" + cacheParams.contentsString()) + "]";
-   RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
-   cachedIntegral->setInterpolationOrder(2) ;
-   cachedIntegral->addOwnedComponents(*normInt) ;
-   cachedIntegral->setCacheSource(true) ;
-   if (normInt->operMode()==ADirty) {
-     cachedIntegral->setOperMode(ADirty) ;
-   }
-   normInt= cachedIntegral ;
+      // In the past, this condition read `if (nintChanged && adjustProxies)`.
+      // However, the cache checks if the nset was already cached **by content**,
+      // and not by RooArgSet instance! So it can happen that the normalization
+      // set object is different, but the integral object is the same, in which
+      // case it would be wrong to not adjust the proxies. They always have to be
+      // adjusted when the nset changed, which is always the case when
+      // `syncNormalization()` is called.
+      if (adjustProxies) {
+         // Update dataset pointers of proxies
+         const_cast<RooAbsPdf *>(this)->setProxyNormSet(nset);
       }
 
-    }
-    _norm = normInt ;
-  }
+      return nintChanged;
+   }
 
-  // Register new normalization with manager (takes ownership)
-  cache = new CacheElem(*_norm) ;
-  _normMgr.setObj(nset,cache) ;
+   // Update dataset pointers of proxies
+   if (adjustProxies) {
+      const_cast<RooAbsPdf *>(this)->setProxyNormSet(nset);
+   }
 
-//   std::cout << "making new object " << _norm->GetName() << std::endl ;
+   RooArgSet depList;
+   getObservables(nset, depList);
 
-  return true ;
+   if (_verboseEval > 0) {
+      if (!selfNormalized()) {
+         cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName()
+                          << ") recreating normalization integral " << std::endl;
+         depList.printStream(ccoutD(Tracing), kName | kValue | kArgs, kSingleLine);
+      } else {
+         cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName()
+                          << ") selfNormalized, creating unit norm" << std::endl;
+      }
+   }
+
+   // Destroy old normalization & create new
+   if (selfNormalized() || depList.empty()) {
+      auto ntitle = std::string(GetTitle()) + " Unit Normalization";
+      auto nname = std::string(GetName()) + "_UnitNorm";
+      _norm = new RooRealVar(nname.c_str(), ntitle.c_str(), 1);
+   } else {
+      const char *nr = (_normRangeOverride.Length() > 0 ? _normRangeOverride.Data()
+                                                        : (_normRange.Length() > 0 ? _normRange.Data() : nullptr));
+
+      //     std::cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " <<
+      //     (nr?nr:"<null>") << std::endl ;
+      RooAbsReal *normInt;
+      {
+         // Normalization is always over all pdf components. Overriding the global
+         // component selection temporarily makes all RooRealIntegrals created during
+         // that time always include all components.
+         GlobalSelectComponentRAII selCompRAII(true);
+         normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList, *getIntegratorConfig(), nr)}.release();
+      }
+      static_cast<RooRealIntegral *>(normInt)->setAllowComponentSelection(false);
+      normInt->getVal();
+      //     std::cout << "resulting normInt = " << normInt->GetName() << std::endl ;
+
+      const char *cacheParamsStr = getStringAttribute("CACHEPARAMINT");
+      if (cacheParamsStr && strlen(cacheParamsStr)) {
+
+         std::unique_ptr<RooArgSet> intParams{normInt->getVariables()};
+
+         RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
+
+         if (!cacheParams.empty()) {
+            cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing "
+                             << cacheParams.size() << "-dim value cache for integral over " << depList
+                             << " as a function of " << cacheParams << " in range " << (nr ? nr : "<default>")
+                             << std::endl;
+            std::string name = normInt->GetName() + ("_CACHE_[" + cacheParams.contentsString()) + "]";
+            RooCachedReal *cachedIntegral = new RooCachedReal(name.c_str(), name.c_str(), *normInt, cacheParams);
+            cachedIntegral->setInterpolationOrder(2);
+            cachedIntegral->addOwnedComponents(*normInt);
+            cachedIntegral->setCacheSource(true);
+            if (normInt->operMode() == ADirty) {
+               cachedIntegral->setOperMode(ADirty);
+            }
+            normInt = cachedIntegral;
+         }
+      }
+      _norm = normInt;
+   }
+
+   // Register new normalization with manager (takes ownership)
+   cache = new CacheElem(*_norm);
+   _normMgr.setObj(nset, cache);
+
+   //   std::cout << "making new object " << _norm->GetName() << std::endl ;
+
+   return true;
 }
 
 
