@@ -41,29 +41,6 @@ uncertainty or the functional form of constraints on nuisance parameters.
 
 namespace RooStats::HistFactory {
 
-/// Standard constructor
-Measurement::Measurement() : fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1) {}
-
-/*
-Measurement::Measurement(const Measurement& other) :
-  POI( other.POI ), Lumi( other.Lumi ), LumiRelErr( other.LumiRelErr ),
-  BinLow( other.BinLow ), BinHigh( other.BinHigh ), ExportOnly( other.ExportOnly ),
-  channels( other.channels ), OutputFilePrefix( other.outputFilePrefix ),
-  constantParams( other.constantParams ), { ; }
-*/
-
-/// Standard constructor specifying name and title of measurement
-Measurement::Measurement(const char *Name, const char *Title)
-   : TNamed(Name, Title), fLumi(1.0), fLumiRelErr(.10), fBinLow(0), fBinHigh(1)
-{
-}
-
-/// add a completely configured channel
-void Measurement::AddChannel(Channel chan)
-{
-   fChannels.push_back(chan);
-}
-
 /// Set a parameter in the model to be constant.
 /// the parameter does not have to exist yet, the information will be used when
 /// the model is actually created.
@@ -183,13 +160,6 @@ Channel &Measurement::GetChannel(std::string ChanName)
    // return BadChannel;
 }
 
-/*
-  void Measurement::Print( Option_t* option ) const {
-  Measurement::Print( std::cout );
-  return;
-  }
-*/
-
 /// Print information about measurement object in tree-like structure to given stream
 void Measurement::PrintTree(std::ostream &stream)
 {
@@ -270,14 +240,7 @@ void Measurement::PrintXML(std::string directory, std::string newOutputPrefix)
    // Add the time
    xml << "<!--" << std::endl;
    xml << "This xml file created automatically on: " << std::endl;
-   /*
-     time_t t = time(0);   // get time now
-     struct tm * now = localtime( &t );
-     xml << (now->tm_year + 1900) << '-'
-         << (now->tm_mon + 1) << '-'
-         << now->tm_mday
-         << std::endl;
-   */
+
    // LM: use TTimeStamp
    TTimeStamp t;
    UInt_t year = 0;
@@ -301,12 +264,6 @@ void Measurement::PrintXML(std::string directory, std::string newOutputPrefix)
    for (unsigned int i = 0; i < fFunctionObjects.size(); ++i) {
       PreprocessFunction func = fFunctionObjects.at(i);
       func.PrintXML(xml);
-      /*
-      xml << "<Function Name=\"" << func.GetName() << "\" "
-     << "Expression=\""     << func.GetExpression() << "\" "
-     << "Dependents=\""     << func.GetDependents() << "\" "
-     << "/>" << std::endl;
-      */
    }
 
    xml << std::endl;
@@ -418,15 +375,13 @@ void Measurement::writeToFile(TFile *file)
    // Collect all histograms from file:
    // HistCollector collector;
 
-   for (unsigned int chanItr = 0; chanItr < outMeas.fChannels.size(); ++chanItr) {
-
+   for (Channel &channel : fChannels) {
       // Go to the main directory
       // in the file
       file->cd();
       file->Flush();
 
       // Get the name of the channel:
-      Channel &channel = outMeas.fChannels.at(chanItr);
       std::string chanName = channel.GetName();
 
       if (!channel.CheckHistograms()) {
@@ -461,39 +416,21 @@ void Measurement::writeToFile(TFile *file)
 
       channel.fData.writeToFile(OutputFileName, GetDirPath(dataDir));
 
-      /*
-      // Write the data file to this directory
-      TH1* hData = channel.data.GetHisto();
-      hData->Write();
-
-      // Set the location of the data
-      // in the output measurement
-
-      channel.data.InputFile = OutputFileName;
-      channel.data.HistoName = hData->GetName();
-      channel.data.HistoPath = GetDirPath( dataDir );
-      */
-
       // Loop over samples:
-
-      for (unsigned int sampItr = 0; sampItr < channel.GetSamples().size(); ++sampItr) {
-
-         Sample &sample = channel.GetSamples().at(sampItr);
-         std::string sampName = sample.GetName();
-
-         cxcoutPHF << "Writing sample: " << sampName << std::endl;
+      for (Sample &sample : channel.GetSamples()) {
+         cxcoutPHF << "Writing sample: " << sample.GetName() << std::endl;
 
          file->cd();
          chanDir->cd();
-         TDirectory *sampleDir = chanDir->mkdir(sampName.c_str());
+         TDirectory *sampleDir = chanDir->mkdir(sample.GetName().c_str());
          if (sampleDir == nullptr) {
-            cxcoutEHF << "Error: Directory " << sampName << " not created properly" << std::endl;
+            cxcoutEHF << "Error: Directory " << sample.GetName() << " not created properly" << std::endl;
             throw hf_exc();
          }
          std::string sampleDirPath = GetDirPath(sampleDir);
 
          if (!sampleDir) {
-            cxcoutEHF << "Error making directory: " << sampName << " in directory: " << chanName << std::endl;
+            cxcoutEHF << "Error making directory: " << sample.GetName() << " in directory: " << chanName << std::endl;
             throw hf_exc();
          }
 
@@ -501,59 +438,6 @@ void Measurement::writeToFile(TFile *file)
          sampleDir->cd();
 
          sample.writeToFile(OutputFileName, sampleDirPath);
-         /*
-         TH1* hSample = sample.GetHisto();
-         if( ! hSample ) {
-      std::cout << "Error getting histogram for sample: "
-           << sampName << std::endl;
-      throw -1;
-         }
-         sampleDir->cd();
-         hSample->Write();
-
-         sample.InputFile = OutputFileName;
-         sample.HistoName = hSample->GetName();
-         sample.HistoPath = sampleDirPath;
-         */
-
-         // Write the histograms associated with
-         // systematics
-
-         /*  THIS IS WHAT I"M COMMENTING
-         sample.GetStatError().writeToFile( OutputFileName, sampleDirPath );
-
-         // Must write all systematics that contain internal histograms
-         // (This is not all systematics)
-
-         for( unsigned int i = 0; i < sample.GetHistoSysList().size(); ++i ) {
-      sample.GetHistoSysList().at(i).writeToFile( OutputFileName, sampleDirPath );
-         }
-         for( unsigned int i = 0; i < sample.GetHistoFactorList().size(); ++i ) {
-      sample.GetHistoFactorList().at(i).writeToFile( OutputFileName, sampleDirPath );
-         }
-         for( unsigned int i = 0; i < sample.GetShapeSysList().size(); ++i ) {
-      sample.GetShapeSysList().at(i).writeToFile( OutputFileName, sampleDirPath );
-         }
-         END COMMENT  */
-         /*
-         sample.statError.writeToFile( OutputFileName, sampleDirPath );
-
-         // Now, get the Stat config histograms
-         if( sample.statError.HistoName != "" ) {
-      TH1* hStatError = sample.statError.GetErrorHist();
-      if( ! hStatError ) {
-        std::cout << "Error getting stat error histogram for sample: "
-             << sampName << std::endl;
-        throw -1;
-      }
-      hStatError->Write();
-
-      sample.statError.InputFile = OutputFileName;
-      sample.statError.HistoName = hStatError->GetName();
-      sample.statError.HistoPath = sampleDirPath;
-
-         }
-         */
       }
    }
 
@@ -571,7 +455,6 @@ void Measurement::writeToFile(TFile *file)
 /// stripped of unnecessary prefixes
 std::string Measurement::GetDirPath(TDirectory *dir)
 {
-
    std::string path = dir->GetPath();
 
    if (path.find(':') != std::string::npos) {
@@ -579,18 +462,7 @@ std::string Measurement::GetDirPath(TDirectory *dir)
       path.replace(0, index + 1, "");
    }
 
-   path = path + "/";
-
-   return path;
-
-   /*
-       if( path.find(":") != std::string::npos ) {
-    size_t index = path.find(":");
-    SampleName.replace( 0, index, "" );
-       }
-
-       // Remove the file:
-       */
+   return path + "/";
 }
 
 /// The most common way to add histograms to channels is to have them
@@ -603,11 +475,7 @@ std::string Measurement::GetDirPath(TDirectory *dir)
 /// save all necessary histograms.
 void Measurement::CollectHistograms()
 {
-
-   for (unsigned int chanItr = 0; chanItr < fChannels.size(); ++chanItr) {
-
-      Channel &chan = fChannels.at(chanItr);
-
+   for (Channel &chan : fChannels) {
       chan.CollectHistograms();
    }
 }
@@ -727,8 +595,6 @@ void Sample::writeToFile(std::string OutputFileName, std::string DirName)
    for (unsigned int i = 0; i < GetShapeFactorList().size(); ++i) {
       GetShapeFactorList().at(i).writeToFile(OutputFileName, DirName);
    }
-
-   return;
 }
 
 void Sample::SetValue(double val)
@@ -1200,10 +1066,7 @@ void Channel::CollectHistograms()
    }
 
    // Get the histograms for the samples:
-   for (unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr) {
-
-      Sample &sample = fSamples.at(sampItr);
-
+   for (Sample &sample : fSamples) {
       // Get the nominal histogram:
       cxcoutDHF << "Collecting Nominal Histogram" << std::endl;
       TH1 *Nominal = GetHistogram(sample.GetInputFile(), sample.GetHistoPath(), sample.GetHistoName(), fileHandles);
@@ -1218,10 +1081,7 @@ void Channel::CollectHistograms()
       }
 
       // Get the HistoSys Variations:
-      for (unsigned int histoSysItr = 0; histoSysItr < sample.GetHistoSysList().size(); ++histoSysItr) {
-
-         HistoSys &histoSys = sample.GetHistoSysList().at(histoSysItr);
-
+      for (HistoSys &histoSys : sample.GetHistoSysList()) {
          histoSys.SetHistoLow(GetHistogram(histoSys.GetInputFileLow(), histoSys.GetHistoPathLow(),
                                            histoSys.GetHistoNameLow(), fileHandles));
 
@@ -1230,10 +1090,7 @@ void Channel::CollectHistograms()
       } // End Loop over HistoSys
 
       // Get the HistoFactor Variations:
-      for (unsigned int histoFactorItr = 0; histoFactorItr < sample.GetHistoFactorList().size(); ++histoFactorItr) {
-
-         HistoFactor &histoFactor = sample.GetHistoFactorList().at(histoFactorItr);
-
+      for (HistoFactor &histoFactor : sample.GetHistoFactorList()) {
          histoFactor.SetHistoLow(GetHistogram(histoFactor.GetInputFileLow(), histoFactor.GetHistoPathLow(),
                                               histoFactor.GetHistoNameLow(), fileHandles));
 
@@ -1242,19 +1099,13 @@ void Channel::CollectHistograms()
       } // End Loop over HistoFactor
 
       // Get the ShapeSys Variations:
-      for (unsigned int shapeSysItr = 0; shapeSysItr < sample.GetShapeSysList().size(); ++shapeSysItr) {
-
-         ShapeSys &shapeSys = sample.GetShapeSysList().at(shapeSysItr);
-
+      for (ShapeSys &shapeSys : sample.GetShapeSysList()) {
          shapeSys.SetErrorHist(
             GetHistogram(shapeSys.GetInputFile(), shapeSys.GetHistoPath(), shapeSys.GetHistoName(), fileHandles));
       } // End Loop over ShapeSys
 
       // Get any initial shape for a ShapeFactor
-      for (unsigned int shapeFactorItr = 0; shapeFactorItr < sample.GetShapeFactorList().size(); ++shapeFactorItr) {
-
-         ShapeFactor &shapeFactor = sample.GetShapeFactorList().at(shapeFactorItr);
-
+      for (ShapeFactor &shapeFactor : sample.GetShapeFactorList()) {
          // Check if we need an InitialShape
          if (shapeFactor.HasInitialShape()) {
             TH1 *hist = GetHistogram(shapeFactor.GetInputFile(), shapeFactor.GetHistoPath(), shapeFactor.GetHistoName(),
@@ -1279,10 +1130,7 @@ bool Channel::CheckHistograms() const
    }
 
    // Get the histograms for the samples:
-   for (unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr) {
-
-      const Sample &sample = fSamples.at(sampItr);
-
+   for (Sample const &sample : fSamples) {
       // Get the nominal histogram:
       if (sample.GetHisto() == nullptr) {
          cxcoutEHF << "Error: Nominal Histogram for sample " << sample.GetName() << " is nullptr." << std::endl;
@@ -1322,9 +1170,7 @@ bool Channel::CheckHistograms() const
       }
 
       // Get the HistoSys Variations:
-      for (unsigned int histoSysItr = 0; histoSysItr < sample.GetHistoSysList().size(); ++histoSysItr) {
-
-         const HistoSys &histoSys = sample.GetHistoSysList().at(histoSysItr);
+      for (const HistoSys &histoSys : sample.GetHistoSysList()) {
 
          if (histoSys.GetHistoLow() == nullptr) {
             cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoSys.GetName() << " in sample "
@@ -1340,9 +1186,7 @@ bool Channel::CheckHistograms() const
       } // End Loop over HistoSys
 
       // Get the HistoFactor Variations:
-      for (unsigned int histoFactorItr = 0; histoFactorItr < sample.GetHistoFactorList().size(); ++histoFactorItr) {
-
-         const HistoFactor &histoFactor = sample.GetHistoFactorList().at(histoFactorItr);
+      for (const HistoFactor &histoFactor : sample.GetHistoFactorList()) {
 
          if (histoFactor.GetHistoLow() == nullptr) {
             cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoFactor.GetName() << " in sample "
@@ -1358,16 +1202,12 @@ bool Channel::CheckHistograms() const
       } // End Loop over HistoFactor
 
       // Get the ShapeSys Variations:
-      for (unsigned int shapeSysItr = 0; shapeSysItr < sample.GetShapeSysList().size(); ++shapeSysItr) {
-
-         const ShapeSys &shapeSys = sample.GetShapeSysList().at(shapeSysItr);
-
+      for (const ShapeSys &shapeSys : sample.GetShapeSysList()) {
          if (shapeSys.GetErrorHist() == nullptr) {
             cxcoutEHF << "Error: HistoSyst High for Systematic " << shapeSys.GetName() << " in sample "
                       << sample.GetName() << " is nullptr." << std::endl;
             return false;
          }
-
       } // End Loop over ShapeSys
 
    } // End Loop over Samples
@@ -1614,10 +1454,7 @@ void Asimov::ConfigureWorkspace(RooWorkspace *wspace)
    // Then, we set any variables to constant
    //
 
-   for (std::map<std::string, bool>::iterator itr = fParamsToFix.begin(); itr != fParamsToFix.end(); ++itr) {
-
-      std::string param = itr->first;
-      bool isConstant = itr->second;
+   for (auto &[param, isConstant] : fParamsToFix) {
 
       // Try to get the variable in the workspace
       RooRealVar *var = wspace->var(param);
@@ -1630,8 +1467,6 @@ void Asimov::ConfigureWorkspace(RooWorkspace *wspace)
       std::cout << "Configuring Asimov Dataset: Setting " << param << " to constant " << std::endl;
       var->setConstant(isConstant);
    }
-
-   return;
 }
 
 /** \class RooStats::HistFactory::HistRef
@@ -1737,8 +1572,6 @@ Constraint::Type Constraint::GetType(const std::string &Name)
    }
 }
 
-// Norm Factor
-
 void NormFactor::Print(std::ostream &stream) const
 {
    stream << "\t \t Name: " << fName << "\t Val: " << fVal << "\t Low: " << fLow << "\t High: " << fHigh << std::endl;
@@ -1753,7 +1586,6 @@ void NormFactor::PrintXML(std::ostream &xml) const
        << "  /> " << std::endl;
 }
 
-// Overall Sys
 void OverallSys::Print(std::ostream &stream) const
 {
    stream << "\t \t Name: " << fName << "\t Low: " << fLow << "\t High: " << fHigh << std::endl;
@@ -1814,8 +1646,6 @@ void HistogramUncertaintyBase::writeToFile(const std::string &FileName, const st
    fInputFileHigh = FileName;
    fHistoPathHigh = DirName;
    fHistoNameHigh = histHigh->GetName();
-
-   return;
 }
 
 void HistoSys::PrintXML(std::ostream &xml) const
@@ -1830,8 +1660,6 @@ void HistoSys::PrintXML(std::ostream &xml) const
        << " HistoPathHigh=\"" << GetHistoPathHigh() << "\" "
        << "  /> " << std::endl;
 }
-
-// Shape Sys
 
 void ShapeSys::SetErrorHist(TH1 *hError)
 {
@@ -1856,7 +1684,6 @@ void ShapeSys::PrintXML(std::ostream &xml) const
 
 void ShapeSys::writeToFile(const std::string &FileName, const std::string &DirName)
 {
-
    auto histError = GetErrorHist();
    if (histError == nullptr) {
       std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " ErrorHist is nullptr"
@@ -1867,11 +1694,7 @@ void ShapeSys::writeToFile(const std::string &FileName, const std::string &DirNa
    fInputFileHigh = FileName;
    fHistoPathHigh = DirName;
    fHistoNameHigh = histError->GetName();
-
-   return;
 }
-
-// HistoFactor
 
 void HistoFactor::PrintXML(std::ostream &xml) const
 {
@@ -1886,8 +1709,6 @@ void HistoFactor::PrintXML(std::ostream &xml) const
        << " HistoPathHigh=\"" << GetHistoPathHigh() << "\" "
        << "  /> " << std::endl;
 }
-
-// Shape Factor
 
 void ShapeFactor::SetInitialShape(TH1 *shape)
 {
@@ -1925,8 +1746,6 @@ void ShapeFactor::writeToFile(const std::string &FileName, const std::string &Di
       fHistoPathHigh = DirName;
       fHistoNameHigh = histInitialShape->GetName();
    }
-
-   return;
 }
 
 void ShapeFactor::PrintXML(std::ostream &xml) const
@@ -1945,7 +1764,6 @@ void StatError::SetErrorHist(TH1 *Error)
    fhHigh.reset(Error);
 }
 
-// Stat Error Config
 void StatErrorConfig::Print(std::ostream &stream) const
 {
    stream << "\t \t RelErrorThreshold: " << fRelErrorThreshold
@@ -1960,7 +1778,6 @@ void StatErrorConfig::PrintXML(std::ostream &xml) const
        << std::endl;
 }
 
-// Stat Error
 void StatError::Print(std::ostream &stream) const
 {
    stream << "\t \t Activate: " << fActivate << "\t InputFile: " << fInputFileHigh << "\t HistoName: " << fHistoNameHigh
@@ -1997,8 +1814,6 @@ void StatError::writeToFile(const std::string &OutputFileName, const std::string
       fHistoNameHigh = statErrorHistName;
       fHistoPathHigh = DirName;
    }
-
-   return;
 }
 
 HistogramUncertaintyBase::HistogramUncertaintyBase(const HistogramUncertaintyBase &oth)
