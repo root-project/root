@@ -650,9 +650,9 @@ extern Channel BadChannel;
 class Measurement : public TNamed {
 
 public:
-   Measurement();
-   ///  Measurement( const Measurement& other ); // Copy
-   Measurement(const char *Name, const char *Title = "");
+   Measurement() = default;
+   /// Constructor specifying name and title of measurement
+   Measurement(const char *Name, const char *Title = "") : TNamed(Name, Title) {}
 
    ///  set output prefix
    void SetOutputFilePrefix(const std::string &prefix) { fOutputFilePrefix = prefix; }
@@ -724,7 +724,8 @@ public:
    std::vector<RooStats::HistFactory::Channel> &GetChannels() { return fChannels; }
    const std::vector<RooStats::HistFactory::Channel> &GetChannels() const { return fChannels; }
    RooStats::HistFactory::Channel &GetChannel(std::string);
-   void AddChannel(RooStats::HistFactory::Channel chan);
+   /// Add a completely configured channel.
+   void AddChannel(RooStats::HistFactory::Channel chan) { fChannels.push_back(chan); }
 
    bool HasChannel(std::string);
    void writeToFile(TFile *file);
@@ -752,10 +753,10 @@ private:
    /// Configurables of this measurement
    std::string fOutputFilePrefix;
    std::vector<std::string> fPOI;
-   double fLumi;
-   double fLumiRelErr;
-   int fBinLow;
-   int fBinHigh;
+   double fLumi = 1.0;
+   double fLumiRelErr = 0.1;
+   int fBinLow = 0;
+   int fBinHigh = 1;
    bool fExportOnly = true;
    std::string fInterpolationScheme;
 
