@@ -430,12 +430,6 @@ ROOTTEST_ADD_TEST(SimpleRootmv2CheckOutput
                   FIXTURES_REQUIRED main-SimpleRootmv2-fixture
                   FIXTURES_SETUP main-SimpleRootmv2CheckOutput-fixture
                   ENVIRONMENT ${test_env})
-#########################################################################
-############################# ROOTMV TESTS ############################
-ROOTTEST_ADD_TEST(SimpleRootmv1PrepareInput
-                  COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move1.root
-                  FIXTURES_SETUP main-SimpleRootmv1PrepareInput-fixture)
-
 
 ROOTTEST_ADD_TEST(SimpleRootmv2Clean
                   COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move2.root
