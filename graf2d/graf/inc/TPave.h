@@ -16,8 +16,6 @@
 #include "TBox.h"
 #include "TString.h"
 
-class TVirtualPad;
-
 class TPave : public TBox {
 
 protected:
@@ -31,7 +29,6 @@ protected:
    Double_t     fCornerRadius;  ///< Corner radius in case of option arc
    TString      fOption;        ///< Pave style
    TString      fName;          ///< Pave name
-   Float_t      fRefLength{0};  ///< Reference length for scaling (e.g. ref pad height)
 
    TString GetSavePaveArgs(const char *extra_arg = nullptr, Bool_t save_option = kTRUE);
 
@@ -65,7 +62,6 @@ public:
    Double_t       GetX2NDC() const {return fX2NDC;}
    Double_t       GetY1NDC() const {return fY1NDC;}
    Double_t       GetY2NDC() const {return fY2NDC;}
-   Float_t        GetRefLength() const { return fRefLength; }
    ULong_t        Hash() const override { return fName.Hash(); }
    Bool_t         IsSortable() const override { return kTRUE; }
    void           ls(Option_t *option="") const override;
@@ -85,7 +81,6 @@ public:
    virtual void   SetName(const char *name="") {fName = name;} // *MENU*
    virtual void   SetOption(Option_t *option="br") {fOption = option;}
    virtual void   SetShadowColor(Int_t color) {fShadowColor=color;} // *MENU*
-   virtual void   SetRefPad(TVirtualPad *pad);
    virtual void   SetX1NDC(Double_t x1) {fX1NDC=x1;}
    virtual void   SetX2NDC(Double_t x2) {fX2NDC=x2;}
    virtual void   SetY1NDC(Double_t y1) {fY1NDC=y1;}
@@ -95,7 +90,7 @@ public:
    void   SetY1(Double_t y1) override;
    void   SetY2(Double_t y2) override;
 
-   ClassDefOverride(TPave,4)  //Pave. A box with shadowing
+   ClassDefOverride(TPave,3)  //Pave. A box with shadowing
 };
 
 #endif

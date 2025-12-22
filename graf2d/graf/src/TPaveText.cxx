@@ -431,20 +431,6 @@ void TPaveText::PaintPrimitives(Int_t mode)
    Double_t dx = fX2 - fX1;
    Double_t dy = fY2 - fY1;
    Double_t textsize = GetTextSize();
-   // Save original text size for restoration at the end
-   Double_t textsave = textsize;
-
-   // Apply scaling if reference pad is set
-   Double_t scale = 1.0;
-   if (fRefLength > 0 && gPad) {
-      Double_t curH = gPad->GetWh() * gPad->GetAbsHNDC();
-      if (curH > 0) scale = fRefLength / curH;
-   }
-   if (textsize > 0) {
-      textsize *= scale;
-      SetTextSize(textsize); // Temporarily set member so individual lines pick it up
-   }
-
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
 
@@ -455,7 +441,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
    y2       = gPad->GetY2();
    Float_t margin  = fMargin*dx;
    Double_t yspace = dy/Double_t(nlines);
-   // Double_t textsave = textsize; // Removed, already defined above
+   Double_t textsave = textsize;
    TObject *line;
    TText *linet;
    TLatex *latex;

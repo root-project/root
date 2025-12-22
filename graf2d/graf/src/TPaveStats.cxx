@@ -357,45 +357,6 @@ void TPaveStats::Paint(Option_t *option)
    Double_t dy    = std::abs(fY2 - fY1);
    Double_t titlesize=0;
    Double_t textsize = GetTextSize();
-   
-   // Save original attributes for restoration
-   Double_t textsave = textsize; // This is the Original (unscaled) size
-   Double_t x1save = fX1, x2save = fX2, y1save = fY1, y2save = fY2;
-
-   // Apply scaling if reference pad is set
-   Double_t scale = 1.0;
-   if (fRefLength > 0 && gPad) {
-      Double_t curH = gPad->GetWh() * gPad->GetAbsHNDC();
-      if (curH > 0) scale = fRefLength / curH;
-   }
-   
-   if (scale > 1.0001 || scale < 0.9999) {
-      // Scale Text
-      if (textsize > 0) {
-         textsize *= scale;
-         SetTextSize(textsize);
-      }
-      
-      // Scale Box Coordinates (centering on anchor points)
-      // Determine width/height in pad coordinates
-      Double_t w_box = fX2 - fX1;
-      Double_t h_box = fY2 - fY1;
-      Double_t w_new = w_box * scale;
-      Double_t h_new = h_box * scale;
-      
-      // Simple anchor logic: keep corner closest to edge fixed
-      Double_t midX = (fX1NDC + fX2NDC) * 0.5;
-      Double_t midY = (fY1NDC + fY2NDC) * 0.5;
-      
-      // X Axis
-      if (midX > 0.5) fX1 = fX2 - w_new; // Anchor Right
-      else            fX2 = fX1 + w_new; // Anchor Left
-      
-      // Y Axis
-      if (midY > 0.5) fY1 = fY2 - h_new; // Anchor Top
-      else            fY2 = fY1 + h_new; // Anchor Bottom
-   }
-
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
    Int_t print_name = fOptStat%10;
@@ -405,7 +366,7 @@ void TPaveStats::Paint(Option_t *option)
    Double_t y2       = gPad->GetY2();
    Float_t margin    = fMargin*dx;
    Double_t yspace   = dy/Double_t(nlines);
-   // Double_t textsave = textsize; // Removed, already defined above
+   Double_t textsave = textsize;
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
@@ -542,9 +503,6 @@ void TPaveStats::Paint(Option_t *option)
       }
    }
    SetTextSize(textsave);
-   if (scale > 1.0001 || scale < 0.9999) {
-      fX1 = x1save; fX2 = x2save; fY1 = y1save; fY2 = y2save;
-   }
 
    // if a label create & paint a pavetext title
    if (fLabel.Length() > 0) {
