@@ -181,7 +181,7 @@ public:
    void               SetRefPad(TVirtualPad *pad);
    Float_t            GetRefLength() const { return fRefLength; }
 
-   ClassDefOverride(TAxis,11)  //Axis class
+   ClassDefOverride(TAxis,10)  //Axis class
 };
 
 ////////////////////////////////////////////////////////////////////////////////

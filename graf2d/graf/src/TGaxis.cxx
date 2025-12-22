@@ -1117,6 +1117,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       
       fTickSize    *= scale;
       fLabelOffset *= scale;
+      // fTitleOffset *= scale; // REVERTED: Causes quadratic scaling, pushing title off pad
    }
 
 

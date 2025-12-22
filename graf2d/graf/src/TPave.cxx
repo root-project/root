@@ -741,3 +741,16 @@ void TPave::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TPave::Class(),this);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the reference pad to scale attributes (e.g. text size)
+/// This allows consistent sizing across pads of different sizes.
+
+void TPave::SetRefPad(TVirtualPad *pad)
+{
+   if (!pad) {
+      fRefLength = 0;
+      return;
+   }
+   fRefLength = pad->GetWh() * pad->GetAbsHNDC();
+}

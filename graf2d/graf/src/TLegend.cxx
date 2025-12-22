@@ -639,6 +639,17 @@ void TLegend::PaintPrimitives()
       SetTextSize(gStyle->GetLegendTextSize());
       textsize = GetTextSize();
    }
+
+   // Apply scaling if reference pad is set
+   Double_t scale = 1.0;
+   if (fRefLength > 0 && gPad) {
+      Double_t curH = gPad->GetWh() * gPad->GetAbsHNDC();
+      if (curH > 0) scale = fRefLength / curH;
+   }
+   if (textsize > 0) {
+      textsize *= scale;
+      SetTextSize(textsize); // Set scaled size
+   }
    Bool_t autosize = kFALSE;
    std::vector<Double_t> columnWidths(fNColumns, 0.);
 
