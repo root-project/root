@@ -390,6 +390,13 @@ ROOTTEST_ADD_TEST(RootcpReplaceRecursiveClean
                   COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_replace_recursive.root
                   FIXTURES_REQUIRED main-RootcpReplaceRecursiveCheckOutput-fixture)
 
+#########################################################################
+
+############################# ROOTMV TESTS ############################
+ROOTTEST_ADD_TEST(SimpleRootmv1PrepareInput
+                  COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root move1.root
+                  FIXTURES_SETUP main-SimpleRootmv1PrepareInput-fixture)
+
 ROOTTEST_ADD_TEST(SimpleRootmv1
                   COMMAND ${PY_TOOLS_PREFIX}/rootmv${pyext} move1.root:hpx move1.root:histo
                   FIXTURES_REQUIRED main-SimpleRootmv1PrepareInput-fixture
