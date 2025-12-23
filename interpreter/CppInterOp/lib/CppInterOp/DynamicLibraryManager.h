@@ -17,7 +17,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Path.h"
 
-namespace Cpp {
+namespace CppInternal {
 class Dyld;
 class InterpreterCallbacks;
 
@@ -219,6 +219,6 @@ public:
   static bool isSharedLibrary(llvm::StringRef libFullPath,
                               bool* exists = nullptr);
 };
-} // end namespace Cpp
+} // end namespace CppInternal
 
 #endif // CPPINTEROP_DYNAMIC_LIBRARY_MANAGER_H

@@ -5,8 +5,8 @@ add_llvm_library(TestSharedLib
   TestSharedLib.cpp)
 # Put TestSharedLib next to the unit test executable.
 set_output_directory(TestSharedLib
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/unittests/bin/$<CONFIG>/
-  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/unittests/bin/$<CONFIG>/
+  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../bin/$<CONFIG>/
+  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/../bin/$<CONFIG>/
   )
 
 
@@ -14,9 +14,14 @@ if (EMSCRIPTEN)
   set_target_properties(TestSharedLib
     PROPERTIES NO_SONAME 1
   )
+  target_compile_options(TestSharedLib
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
+  )
+
   target_link_options(TestSharedLib
     PRIVATE "SHELL: -s WASM_BIGINT"
     PRIVATE "SHELL: -s SIDE_MODULE=1"
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
 endif()
 

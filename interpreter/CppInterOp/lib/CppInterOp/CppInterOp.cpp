@@ -13,6 +13,7 @@
 
 #include "clang/AST/Attrs.inc"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Comment.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclAccessPair.h"
 #include "clang/AST/DeclBase.h"
@@ -24,6 +25,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/QualTypeNames.h"
+#include "clang/AST/RawCommentList.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
@@ -31,6 +33,7 @@
 #include "clang/Basic/Linkage.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -48,6 +51,11 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Demangle/Demangle.h"
+#if CLANG_VERSION_MAJOR >= 20
+#include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
+#include "llvm/ExecutionEngine/Orc/CoreContainers.h"
+#endif
+#include "llvm/ExecutionEngine/Orc/Core.h"
 #include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/Support/Casting.h"
@@ -57,11 +65,17 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/TargetParser/Host.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <cstdio>
 #include <deque>
+#include <filesystem>
+#include <iostream>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -69,13 +83,17 @@
 #include <sstream>
 #include <stack>
 #include <string>
-#include <utility>
+#include <sys/types.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 // Stream redirect.
 #ifdef _WIN32
 #include <io.h>
 #ifndef STDOUT_FILENO
 #define STDOUT_FILENO 1
+#define STDERR_FILENO 2
 // For exec().
 #include <stdio.h>
 #define popen(x, y) (_popen(x, y))
@@ -86,7 +104,34 @@
 #include <unistd.h>
 #endif // WIN32
 
-namespace Cpp {
+//  Runtime symbols required if the library using JIT (Cpp::Evaluate) does
+//  not link to llvm
+#if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
+struct __clang_Interpreter_NewTag {
+} __ci_newtag;
+#if CLANG_VERSION_MAJOR > 21
+extern "C" void* __clang_Interpreter_SetValueWithAlloc(void* This, void* OutVal,
+                                                       void* OpaqueType);
+#else
+void* __clang_Interpreter_SetValueWithAlloc(void* This, void* OutVal,
+                                            void* OpaqueType);
+#endif
+
+#if CLANG_VERSION_MAJOR > 18
+extern "C" void __clang_Interpreter_SetValueNoAlloc(void* This, void* OutVal,
+                                                    void* OpaqueType, ...);
+#else
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*);
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, void*);
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, float);
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, double);
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, long double);
+void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*,
+                                         unsigned long long);
+#endif
+#endif // CPPINTEROP_USE_CLING
+
+namespace CppImpl {
 
 using namespace clang;
 using namespace llvm;
@@ -633,6 +678,28 @@ std::string GetQualifiedCompleteName(TCppType_t klass) {
   return "<unnamed>";
 }
 
+std::string GetDoxygenComment(TCppScope_t scope, bool strip_comment_markers) {
+  auto* D = static_cast<Decl*>(scope);
+  if (!D)
+    return "";
+
+  D = D->getCanonicalDecl();
+  ASTContext& C = D->getASTContext();
+
+  const RawComment* RC = C.getRawCommentForAnyRedecl(D);
+  if (!RC)
+    return "";
+
+  (void)C.getCommentForDecl(D, /*PP=*/nullptr);
+
+  const SourceManager& SM = C.getSourceManager();
+
+  if (!strip_comment_markers)
+    return RC->getRawText(SM).str();
+
+  return RC->getFormattedText(SM, C.getDiagnostics());
+}
+
 std::vector<TCppScope_t> GetUsingNamespaces(TCppScope_t scope) {
   auto* D = (clang::Decl*)scope;
 
@@ -729,8 +796,12 @@ TCppScope_t GetNamed(const std::string& name,
     D = GetUnderlyingScope(D);
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
-
-  auto* ND = Cpp_utils::Lookup::Named(&getSema(), name, Within);
+#ifdef CPPINTEROP_USE_CLING
+  if (Within)
+    Within->getPrimaryContext()->buildLookup();
+  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
+#endif
+  auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     return (TCppScope_t)(ND->getCanonicalDecl());
   }
@@ -986,7 +1057,7 @@ std::vector<TCppFunction_t> GetFunctionsUsingName(TCppScope_t scope,
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         For_Visible_Redeclaration);
 
-  Cpp_utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
+  CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
 
   if (R.empty())
     return funcs;
@@ -1130,7 +1201,7 @@ bool ExistsFunctionTemplate(const std::string& name, TCppScope_t parent) {
     Within = llvm::dyn_cast<DeclContext>(D);
   }
 
-  auto* ND = Cpp_utils::Lookup::Named(&getSema(), name, Within);
+  auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
 
   if ((intptr_t)ND == (intptr_t)0)
     return false;
@@ -1175,18 +1246,18 @@ bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         For_Visible_Redeclaration);
   auto* DC = clang::Decl::castToDeclContext(D);
-  Cpp_utils::Lookup::Named(&S, R, DC);
+  CppInternal::utils::Lookup::Named(&S, R, DC);
 
-  if (R.getResultKind() == clang::LookupResult::NotFound && funcs.empty())
+  if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
     return false;
 
   // Distinct match, single Decl
-  else if (R.getResultKind() == clang::LookupResult::Found) {
+  else if (R.getResultKind() == clang_LookupResult_Found) {
     if (IsTemplatedFunction(R.getFoundDecl()))
       funcs.push_back(R.getFoundDecl());
   }
   // Loop over overload set
-  else if (R.getResultKind() == clang::LookupResult::FoundOverloaded) {
+  else if (R.getResultKind() == clang_LookupResult_Found_Overloaded) {
     for (auto* Found : R)
       if (IsTemplatedFunction(Found))
         funcs.push_back(Found);
@@ -1228,7 +1299,9 @@ BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
   size_t idx = 0;
   for (auto i : arg_types) {
     QualType Type = QualType::getFromOpaquePtr(i.m_Type);
-    ExprValueKind ExprKind = ExprValueKind::VK_PRValue;
+    // XValue is an object that can be "moved" whereas PRValue is temporary
+    // value. This enables overloads that require the object to be moved
+    ExprValueKind ExprKind = ExprValueKind::VK_XValue;
     if (Type->isLValueReferenceType())
       ExprKind = ExprValueKind::VK_LValue;
 
@@ -1332,6 +1405,27 @@ bool IsStaticMethod(TCppConstFunction_t method) {
   if (auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return CXXMD->isStatic();
   }
+
+  return false;
+}
+
+bool IsExplicit(TCppConstFunction_t method) {
+  if (!method)
+    return false;
+
+  const auto* D = static_cast<const Decl*>(method);
+
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+
+  if (const auto* CD = llvm::dyn_cast_or_null<CXXConstructorDecl>(D))
+    return CD->isExplicit();
+
+  if (const auto* CD = llvm::dyn_cast_or_null<CXXConversionDecl>(D))
+    return CD->isExplicit();
+
+  if (const auto* DGD = llvm::dyn_cast_or_null<CXXDeductionGuideDecl>(D))
+    return DGD->isExplicit();
 
   return false;
 }
@@ -1467,7 +1561,7 @@ TCppScope_t LookupDatamember(const std::string& name, TCppScope_t parent) {
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 
-  auto* ND = Cpp_utils::Lookup::Named(&getSema(), name, Within);
+  auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
       return (TCppScope_t)ND;
@@ -1691,14 +1785,13 @@ bool IsReferenceType(TCppType_t type) {
   return QT->isReferenceType();
 }
 
-bool IsLValueReferenceType(TCppType_t type) {
+ValueKind GetValueKind(TCppType_t type) {
   QualType QT = QualType::getFromOpaquePtr(type);
-  return QT->isLValueReferenceType();
-}
-
-bool IsRValueReferenceType(TCppType_t type) {
-  QualType QT = QualType::getFromOpaquePtr(type);
-  return QT->isRValueReferenceType();
+  if (QT->isRValueReferenceType())
+    return ValueKind::RValue;
+  if (QT->isLValueReferenceType())
+    return ValueKind::LValue;
+  return ValueKind::None;
 }
 
 TCppType_t GetPointerType(TCppType_t type) {
@@ -1954,7 +2047,7 @@ static void GetDeclName(const clang::Decl* D, ASTContext& Context,
   PrintingPolicy Policy(Context.getPrintingPolicy());
   Policy.SuppressTagKeyword = true;
   Policy.SuppressUnwrittenScope = true;
-  Policy.PrintCanonicalTypes = true;
+  Policy.Print_Canonical_Types = true;
   if (const TypeDecl* TD = dyn_cast<TypeDecl>(D)) {
     // This is a class, struct, or union member.
     QualType QT;
@@ -3169,6 +3262,29 @@ CPPINTEROP_API JitCall MakeFunctionCallable(TCppConstFunction_t func) {
 }
 
 namespace {
+#if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
+bool DefineAbsoluteSymbol(compat::Interpreter& I,
+                          const char* linker_mangled_name, uint64_t address) {
+  using namespace llvm;
+  using namespace llvm::orc;
+
+  llvm::orc::LLJIT& Jit = *compat::getExecutionEngine(I);
+  llvm::orc::ExecutionSession& ES = Jit.getExecutionSession();
+  JITDylib& DyLib = *Jit.getProcessSymbolsJITDylib().get();
+
+  llvm::orc::SymbolMap InjectedSymbols{
+      {ES.intern(linker_mangled_name),
+       ExecutorSymbolDef(ExecutorAddr(address), JITSymbolFlags::Exported)}};
+
+  if (Error Err = DyLib.define(absoluteSymbols(InjectedSymbols))) {
+    logAllUnhandledErrors(std::move(Err), errs(),
+                          "DefineAbsoluteSymbol error: ");
+    return true;
+  }
+  return false;
+}
+#endif
+
 static std::string MakeResourcesPath() {
   StringRef Dir;
 #ifdef LLVM_BINARY_DIR
@@ -3192,12 +3308,40 @@ static std::string MakeResourcesPath() {
                           CLANG_VERSION_MAJOR_STRING);
   return std::string(P.str());
 }
+
+void AddLibrarySearchPaths(const std::string& ResourceDir,
+                           compat::Interpreter* I) {
+  // the resource-dir can be of the form
+  // /prefix/lib/clang/XX or /prefix/lib/llvm-XX/lib/clang/XX
+  // where XX represents version
+  // the corresponing path we want to add are
+  // /prefix/lib/clang/XX/lib, /prefix/lib/, and
+  // /prefix/lib/llvm-XX/lib/clang/XX/lib, /prefix/lib/llvm-XX/lib/,
+  // /prefix/lib/
+  std::string path1 = ResourceDir + "/lib";
+  I->getDynamicLibraryManager()->addSearchPath(path1, false, false);
+  size_t pos = ResourceDir.rfind("/llvm-");
+  if (pos != std::string::npos) {
+    I->getDynamicLibraryManager()->addSearchPath(ResourceDir.substr(0, pos),
+                                                 false, false);
+  }
+  pos = ResourceDir.rfind("/clang");
+  if (pos != std::string::npos) {
+    I->getDynamicLibraryManager()->addSearchPath(ResourceDir.substr(0, pos),
+                                                 false, false);
+  }
+}
 } // namespace
 
 TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
                             const std::vector<const char*>& GpuArgs /*={}*/) {
   std::string MainExecutableName = sys::fs::getMainExecutable(nullptr, nullptr);
   std::string ResourceDir = MakeResourcesPath();
+  llvm::Triple T(llvm::sys::getProcessTriple());
+  namespace fs = std::filesystem;
+  if ((!fs::is_directory(ResourceDir)) && (T.isOSDarwin() || T.isOSLinux()))
+    ResourceDir = DetectResourceDir();
+
   std::vector<const char*> ClingArgv = {"-resource-dir", ResourceDir.c_str(),
                                         "-std=c++14"};
   ClingArgv.insert(ClingArgv.begin(), MainExecutableName.c_str());
@@ -3238,8 +3382,9 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
 #ifdef CPPINTEROP_USE_CLING
   auto I = new compat::Interpreter(ClingArgv.size(), &ClingArgv[0]);
 #else
-  auto Interp = compat::Interpreter::create(static_cast<int>(ClingArgv.size()),
-                                            ClingArgv.data());
+  auto Interp =
+      compat::Interpreter::create(static_cast<int>(ClingArgv.size()),
+                                  ClingArgv.data(), nullptr, {}, nullptr, true);
   if (!Interp)
     return nullptr;
   auto* I = Interp.release();
@@ -3260,6 +3405,9 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
     llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
   }
 
+  if (!T.isWasm())
+    AddLibrarySearchPaths(ResourceDir, I);
+
   I->declare(R"(
     namespace __internal_CppInterOp {
     template <typename Signature>
@@ -3273,6 +3421,88 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
 
   sInterpreters->emplace_back(I, /*Owned=*/true);
 
+// Define runtime symbols in the JIT dylib for clang-repl
+#if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
+  DefineAbsoluteSymbol(*I, "__ci_newtag",
+                       reinterpret_cast<uint64_t>(&__ci_newtag));
+// llvm >= 21 has this defined as a C symbol that does not require mangling
+#if CLANG_VERSION_MAJOR >= 21
+  DefineAbsoluteSymbol(
+      *I, "__clang_Interpreter_SetValueWithAlloc",
+      reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
+#else
+  // obtain mangled name
+  auto* D = static_cast<clang::Decl*>(
+      Cpp::GetNamed("__clang_Interpreter_SetValueWithAlloc"));
+  if (auto* FD = llvm::dyn_cast<FunctionDecl>(D)) {
+    auto GD = GlobalDecl(FD);
+    std::string mangledName;
+    compat::maybeMangleDeclName(GD, mangledName);
+    DefineAbsoluteSymbol(
+        *I, mangledName.c_str(),
+        reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
+  }
+#endif
+// llvm < 19 has multiple overloads of __clang_Interpreter_SetValueNoAlloc
+#if CLANG_VERSION_MAJOR < 19
+  // obtain all 6 candidates, and obtain the correct Decl for each overload
+  // using BestOverloadFunctionMatch. We then map the decl to the correct
+  // function pointer (force the compiler to find the right declarion by casting
+  // to the corresponding function pointer signature) and then register it.
+  const std::vector<TCppFunction_t> Methods = Cpp::GetFunctionsUsingName(
+      Cpp::GetGlobalScope(), "__clang_Interpreter_SetValueNoAlloc");
+  std::string mangledName;
+  ASTContext& Ctxt = I->getSema().getASTContext();
+  auto* TAI = Ctxt.VoidPtrTy.getAsOpaquePtr();
+
+  // possible parameter lists for __clang_Interpreter_SetValueNoAlloc overloads
+  // in LLVM 18
+  const std::vector<std::vector<Cpp::TemplateArgInfo>> a_params = {
+      {TAI, TAI, TAI},
+      {TAI, TAI, TAI, TAI},
+      {TAI, TAI, TAI, Ctxt.FloatTy.getAsOpaquePtr()},
+      {TAI, TAI, TAI, Ctxt.DoubleTy.getAsOpaquePtr()},
+      {TAI, TAI, TAI, Ctxt.LongDoubleTy.getAsOpaquePtr()},
+      {TAI, TAI, TAI, Ctxt.UnsignedLongLongTy.getAsOpaquePtr()}};
+
+  using FP0 = void (*)(void*, void*, void*);
+  using FP1 = void (*)(void*, void*, void*, void*);
+  using FP2 = void (*)(void*, void*, void*, float);
+  using FP3 = void (*)(void*, void*, void*, double);
+  using FP4 = void (*)(void*, void*, void*, long double);
+  using FP5 = void (*)(void*, void*, void*, unsigned long long);
+
+  const std::vector<void*> func_pointers = {
+      reinterpret_cast<void*>(
+          static_cast<FP0>(&__clang_Interpreter_SetValueNoAlloc)),
+      reinterpret_cast<void*>(
+          static_cast<FP1>(&__clang_Interpreter_SetValueNoAlloc)),
+      reinterpret_cast<void*>(
+          static_cast<FP2>(&__clang_Interpreter_SetValueNoAlloc)),
+      reinterpret_cast<void*>(
+          static_cast<FP3>(&__clang_Interpreter_SetValueNoAlloc)),
+      reinterpret_cast<void*>(
+          static_cast<FP4>(&__clang_Interpreter_SetValueNoAlloc)),
+      reinterpret_cast<void*>(
+          static_cast<FP5>(&__clang_Interpreter_SetValueNoAlloc))};
+
+  // these symbols are not externed, so we need to mangle their names
+  for (size_t i = 0; i < a_params.size(); ++i) {
+    auto* decl = static_cast<clang::Decl*>(
+        Cpp::BestOverloadFunctionMatch(Methods, {}, a_params[i]));
+    if (auto* fd = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
+      auto gd = clang::GlobalDecl(fd);
+      compat::maybeMangleDeclName(gd, mangledName);
+      DefineAbsoluteSymbol(*I, mangledName.c_str(),
+                           reinterpret_cast<uint64_t>(func_pointers[i]));
+    }
+  }
+#else
+  DefineAbsoluteSymbol(
+      *I, "__clang_Interpreter_SetValueNoAlloc",
+      reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueNoAlloc));
+#endif
+#endif
   return I;
 }
 
@@ -3704,6 +3934,10 @@ void GetAllCppNames(TCppScope_t scope, std::set<std::string>& names) {
   clang::DeclContext* DC;
   clang::DeclContext::decl_iterator decl;
 
+#ifdef CPPINTEROP_USE_CLING
+  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
+#endif
+
   if (auto* TD = dyn_cast_or_null<TagDecl>(D)) {
     DC = clang::TagDecl::castToDeclContext(TD);
     decl = DC->decls_begin();
@@ -3970,12 +4204,10 @@ bool Destruct(TCppObject_t This, TCppConstScope_t scope,
 }
 
 class StreamCaptureInfo {
-  struct file_deleter {
-    void operator()(FILE* fp) { pclose(fp); }
-  };
-  std::unique_ptr<FILE, file_deleter> m_TempFile;
+  FILE* m_TempFile = nullptr;
   int m_FD = -1;
   int m_DupFD = -1;
+  bool m_OwnsFile = true;
 
 public:
 #ifdef _MSC_VER
@@ -3990,8 +4222,32 @@ public:
         }()},
         m_FD(FD) {
 #else
-  StreamCaptureInfo(int FD) : m_TempFile{tmpfile()}, m_FD(FD) {
+  StreamCaptureInfo(int FD) : m_FD(FD) {
+#if !defined(CPPINTEROP_USE_CLING) && !defined(_WIN32)
+    auto& I = getInterp();
+    if (I.isOutOfProcess()) {
+      // Use interpreter-managed redirection file for out-of-process
+      // redirection. Since, we are using custom pipes instead of stdout, sterr,
+      // it is kind of necessary to have this complication in StreamCaptureInfo.
+
+      // TODO(issues/733): Refactor the stream redirection
+      FILE* redirected = I.getRedirectionFileForOutOfProcess(FD);
+      if (redirected) {
+        m_TempFile = redirected;
+        m_OwnsFile = false;
+        if (ftruncate(fileno(m_TempFile), 0) != 0)
+          perror("ftruncate");
+        if (lseek(fileno(m_TempFile), 0, SEEK_SET) == -1)
+          perror("lseek");
+      }
+    } else {
+      m_TempFile = tmpfile();
+    }
+#else
+    m_TempFile = tmpfile();
 #endif
+#endif
+
     if (!m_TempFile) {
       perror("StreamCaptureInfo: Unable to create temp file");
       return;
@@ -4003,7 +4259,7 @@ public:
     // This seems only necessary when piping stdout or stderr, but do it
     // for ttys to avoid over complicated code for minimal benefit.
     ::fflush(FD == STDOUT_FILENO ? stdout : stderr);
-    if (dup2(fileno(m_TempFile.get()), FD) < 0)
+    if (dup2(fileno(m_TempFile), FD) < 0)
       perror("StreamCaptureInfo:");
   }
   StreamCaptureInfo(const StreamCaptureInfo&) = delete;
@@ -4011,7 +4267,12 @@ public:
   StreamCaptureInfo(StreamCaptureInfo&&) = delete;
   StreamCaptureInfo& operator=(StreamCaptureInfo&&) = delete;
 
-  ~StreamCaptureInfo() { assert(m_DupFD == -1 && "Captured output not used?"); }
+  ~StreamCaptureInfo() {
+    assert(m_DupFD == -1 && "Captured output not used?");
+    // Only close the temp file if we own it
+    if (m_OwnsFile && m_TempFile)
+      fclose(m_TempFile);
+  }
 
   std::string GetCapturedString() {
     assert(m_DupFD != -1 && "Multiple calls to GetCapturedString");
@@ -4020,25 +4281,28 @@ public:
     if (dup2(m_DupFD, m_FD) < 0)
       perror("StreamCaptureInfo:");
     // Go to the end of the file.
-    if (fseek(m_TempFile.get(), 0L, SEEK_END) != 0)
+    if (fseek(m_TempFile, 0L, SEEK_END) != 0)
       perror("StreamCaptureInfo:");
 
     // Get the size of the file.
-    long bufsize = ftell(m_TempFile.get());
-    if (bufsize == -1)
+    long bufsize = ftell(m_TempFile);
+    if (bufsize == -1) {
       perror("StreamCaptureInfo:");
+      close(m_DupFD);
+      m_DupFD = -1;
+      return "";
+    }
 
     // Allocate our buffer to that size.
     std::unique_ptr<char[]> content(new char[bufsize + 1]);
 
     // Go back to the start of the file.
-    if (fseek(m_TempFile.get(), 0L, SEEK_SET) != 0)
+    if (fseek(m_TempFile, 0L, SEEK_SET) != 0)
       perror("StreamCaptureInfo:");
 
     // Read the entire file into memory.
-    size_t newLen =
-        fread(content.get(), sizeof(char), bufsize, m_TempFile.get());
-    if (ferror(m_TempFile.get()) != 0)
+    size_t newLen = fread(content.get(), sizeof(char), bufsize, m_TempFile);
+    if (ferror(m_TempFile) != 0)
       fputs("Error reading file", stderr);
     else
       content[newLen++] = '\0'; // Just to be safe.
@@ -4046,6 +4310,16 @@ public:
     std::string result = content.get();
     close(m_DupFD);
     m_DupFD = -1;
+#if !defined(_WIN32) && !defined(CPPINTEROP_USE_CLING)
+    auto& I = getInterp();
+    if (I.isOutOfProcess()) {
+      int fd = fileno(m_TempFile);
+      if (ftruncate(fd, 0) != 0)
+        perror("ftruncate");
+      if (lseek(fd, 0, SEEK_SET) == -1)
+        perror("lseek");
+    }
+#endif
     return result;
   }
 };
@@ -4085,4 +4359,15 @@ int Undo(unsigned N) {
 #endif
 }
 
-} // end namespace Cpp
+#ifndef _WIN32
+pid_t GetExecutorPID() {
+#ifdef LLVM_BUILT_WITH_OOP_JIT
+  auto& I = getInterp();
+  return I.getOutOfProcessExecutorPID();
+#endif
+  return getpid();
+}
+
+#endif
+
+} // namespace CppImpl

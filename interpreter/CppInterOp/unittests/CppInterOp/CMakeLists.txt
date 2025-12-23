@@ -8,10 +8,11 @@ if (EMSCRIPTEN)
 else()
   # Do not need main.cpp for native builds, but we do have GPU support for native builds
   set(EXTRA_TEST_SOURCE_FILES CUDATest.cpp)
-  set(EXTRA_PATH_TEST_BINARIES /CppInterOpTests/unittests/bin/$<CONFIG>/)
 endif()
 
 add_cppinterop_unittest(CppInterOpTests
+  ENABLE_DISPATCH
+  CommentReflectionTest.cpp
   EnumReflectionTest.cpp
   FunctionReflectionTest.cpp
   InterpreterTest.cpp
@@ -21,6 +22,16 @@ add_cppinterop_unittest(CppInterOpTests
   Utils.cpp
   VariableReflectionTest.cpp
   ${EXTRA_TEST_SOURCE_FILES}
+)
+
+if(NOT WIN32)
+  set_source_files_properties(VariableReflectionTest.cpp PROPERTIES COMPILE_FLAGS
+    "-Wno-pedantic"
+)
+endif ()
+
+set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
+  "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
 )
 
 if(EMSCRIPTEN)
@@ -49,8 +60,11 @@ if(EMSCRIPTEN)
   # --emrun
   # Makes it so that we run the html file created by this target, that we can capture the standard output
   # and output to the terminal
+  target_compile_options(CppInterOpTests
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
+  )
   target_link_options(CppInterOpTests
-    PUBLIC "SHELL: -fexceptions"
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
     PUBLIC "SHELL: -s MAIN_MODULE=1"
     PUBLIC "SHELL: -s WASM_BIGINT"
     PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
@@ -61,46 +75,27 @@ if(EMSCRIPTEN)
   )
 endif()
 
-target_link_libraries(CppInterOpTests
-  PRIVATE
-  clangCppInterOp
-)
-
-set_output_directory(CppInterOpTests
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-)
-
-if(NOT WIN32)
-  set_source_files_properties(VariableReflectionTest.cpp PROPERTIES COMPILE_FLAGS
-    "-Wno-pedantic"
-)
-endif()
-
-set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
-  "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
-)
-export_executable_symbols(CppInterOpTests)
-
 unset(LLVM_LINK_COMPONENTS)
 
 if (NOT EMSCRIPTEN)
   set(EXTRA_TEST_SOURCE_FILES "")
-  set(EXTRA_PATH_TEST_BINARIES /TestSharedLib/unittests/bin/$<CONFIG>/)
 endif()
 
-add_cppinterop_unittest(DynamicLibraryManagerTests DynamicLibraryManagerTest.cpp ${EXTRA_TEST_SOURCE_FILES})
-
-target_link_libraries(DynamicLibraryManagerTests
-  PRIVATE
-  clangCppInterOp
+add_cppinterop_unittest(DynamicLibraryManagerTests 
+  DynamicLibraryManagerTest.cpp 
+  Utils.cpp 
+  ${EXTRA_TEST_SOURCE_FILES}
 )
 
 if(EMSCRIPTEN)
-  set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/TestSharedLib/unittests/bin/$<CONFIG>/")
+  set(TEST_SHARED_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/")
   string(REPLACE "@" "@@" ESCAPED_TEST_SHARED_LIBRARY_PATH "${TEST_SHARED_LIBRARY_PATH}")
   # Check explanation of Emscripten-specific link flags for CppInterOpTests above for DynamicLibraryManagerTests as well.
+  target_compile_options(DynamicLibraryManagerTests
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
+  )
   target_link_options(DynamicLibraryManagerTests
+    PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
     PUBLIC "SHELL: -s MAIN_MODULE=1"
     PUBLIC "SHELL: -s WASM_BIGINT"
     PUBLIC "SHELL: -s ALLOW_MEMORY_GROWTH=1"
@@ -112,22 +107,8 @@ if(EMSCRIPTEN)
   )
 endif()
 
-if (EMSCRIPTEN)
-  if (BUILD_SHARED_LIBS)
-    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
-    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
-  else()
-    target_compile_definitions(CppInterOpTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
-    target_compile_definitions(DynamicLibraryManagerTests PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
-  endif()
-endif()
-
-set_output_directory(DynamicLibraryManagerTests
-  BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-  LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
-)
-
 add_dependencies(DynamicLibraryManagerTests TestSharedLib)
 
 #export_executable_symbols_for_plugins(TestSharedLib)
 add_subdirectory(TestSharedLib)
+

@@ -1,0 +1,100 @@
+diff --git a/clang/include/clang/Frontend/CompilerInstance.h b/clang/include/clang/Frontend/CompilerInstance.h
+index 0ae490f0e807..7a1b5875a590 100644
+--- a/clang/include/clang/Frontend/CompilerInstance.h
++++ b/clang/include/clang/Frontend/CompilerInstance.h
+@@ -249,6 +249,11 @@ public:
+   /// Load the list of plugins requested in the \c FrontendOptions.
+   void LoadRequestedPlugins();
+ 
++  /// Parse and apply LLVM command line arguments from FrontendOptions.
++  /// This processes the LLVMArgs option that comes from -mllvm flags.
++  /// This should be called after plugins are loaded and before ExecuteAction.
++  void parseLLVMArgs();
++
+   /// @}
+   /// @name Compiler Invocation and Options
+   /// @{
+diff --git a/clang/lib/Frontend/CompilerInstance.cpp b/clang/lib/Frontend/CompilerInstance.cpp
+index 6f8cc01eeed8..3336be5b60ed 100644
+--- a/clang/lib/Frontend/CompilerInstance.cpp
++++ b/clang/lib/Frontend/CompilerInstance.cpp
+@@ -1138,6 +1138,18 @@ void CompilerInstance::LoadRequestedPlugins() {
+   }
+ }
+ 
++void CompilerInstance::parseLLVMArgs() {
++  if (!getFrontendOpts().LLVMArgs.empty()) {
++    unsigned NumArgs = getFrontendOpts().LLVMArgs.size();
++    auto Args = std::make_unique<const char *[]>(NumArgs + 2);
++    Args[0] = "clang (LLVM option parsing)";
++    for (unsigned i = 0; i != NumArgs; ++i)
++      Args[i + 1] = getFrontendOpts().LLVMArgs[i].c_str();
++    Args[NumArgs + 1] = nullptr;
++    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
++  }
++}
++
+ /// Determine the appropriate source input kind based on language
+ /// options.
+ static Language getLanguageFromOptions(const LangOptions &LangOpts) {
+diff --git a/clang/lib/FrontendTool/ExecuteCompilerInvocation.cpp b/clang/lib/FrontendTool/ExecuteCompilerInvocation.cpp
+index 443eb4f1a29b..1d69654ce666 100644
+--- a/clang/lib/FrontendTool/ExecuteCompilerInvocation.cpp
++++ b/clang/lib/FrontendTool/ExecuteCompilerInvocation.cpp
+@@ -231,15 +231,7 @@ bool ExecuteCompilerInvocation(CompilerInstance *Clang) {
+   //
+   // FIXME: Remove this, one day.
+   // This should happen AFTER plugins have been loaded!
+-  if (!Clang->getFrontendOpts().LLVMArgs.empty()) {
+-    unsigned NumArgs = Clang->getFrontendOpts().LLVMArgs.size();
+-    auto Args = std::make_unique<const char*[]>(NumArgs + 2);
+-    Args[0] = "clang (LLVM option parsing)";
+-    for (unsigned i = 0; i != NumArgs; ++i)
+-      Args[i + 1] = Clang->getFrontendOpts().LLVMArgs[i].c_str();
+-    Args[NumArgs + 1] = nullptr;
+-    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
+-  }
++  Clang->parseLLVMArgs();
+ 
+ #if CLANG_ENABLE_STATIC_ANALYZER
+   // These should happen AFTER plugins have been loaded!
+diff --git a/clang/lib/Interpreter/Interpreter.cpp b/clang/lib/Interpreter/Interpreter.cpp
+index ed3bae59a144..98cd255cce5d 100644
+--- a/clang/lib/Interpreter/Interpreter.cpp
++++ b/clang/lib/Interpreter/Interpreter.cpp
+@@ -374,6 +374,9 @@ Interpreter::Interpreter(std::unique_ptr<CompilerInstance> Instance,
+   auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
+   TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
+ 
++  // Honor -mllvm options (this was missing in clang-repl path)
++  CI->parseLLVMArgs();
++
+   Act = TSCtx->withContextDo([&](llvm::LLVMContext *Ctx) {
+     return std::make_unique<IncrementalAction>(*CI, *Ctx, ErrOut, *this,
+                                                std::move(Consumer));
+@@ -601,6 +604,12 @@ Interpreter::Parse(llvm::StringRef Code) {
+       return std::move(Err);
+   }
+ 
++  // Re-apply stored -mllvm options; wasm builds reset LLVM opts in wasm-ld.
++  // llvm::Triple Triple(getCompilerInstance()->getTargetOpts().Triple);
++  // if (Triple.isWasm()) {
++  //   getCompilerInstance()->parseLLVMArgs();
++  // }
++
+   // Tell the interpreter sliently ignore unused expressions since value
+   // printing could cause it.
+   getCompilerInstance()->getDiagnostics().setSeverity(
+diff --git a/lld/wasm/Driver.cpp b/lld/wasm/Driver.cpp
+index 1c5d21c06f5a..2f39d77cca60 100644
+--- a/lld/wasm/Driver.cpp
++++ b/lld/wasm/Driver.cpp
+@@ -1307,7 +1307,7 @@ void LinkerDriver::linkerMain(ArrayRef<const char *> argsArr) {
+   v.push_back("wasm-ld (LLVM option parsing)");
+   for (auto *arg : args.filtered(OPT_mllvm))
+     v.push_back(arg->getValue());
+-  cl::ResetAllOptionOccurrences();
++  // cl::ResetAllOptionOccurrences();
+   cl::ParseCommandLineOptions(v.size(), v.data());
+ 
+   readConfigs(args);
