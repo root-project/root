@@ -24,7 +24,7 @@ class HeaderSearchOptions;
 class FileManager;
 } // namespace clang
 
-namespace Cpp {
+namespace CppInternal {
 namespace utils {
 
 namespace platform {
@@ -80,7 +80,7 @@ enum SplitMode {
 bool SplitPaths(llvm::StringRef PathStr,
                 llvm::SmallVectorImpl<llvm::StringRef>& Paths,
                 SplitMode Mode = kPruneNonExistent,
-                llvm::StringRef Delim = Cpp::utils::platform::kEnvDelim,
+                llvm::StringRef Delim = CppInternal::utils::platform::kEnvDelim,
                 bool Verbose = false);
 
 ///\brief Adds multiple include paths separated by a delimiter into the
@@ -92,8 +92,9 @@ bool SplitPaths(llvm::StringRef PathStr,
 ///\param[in] Opts - HeaderSearchOptions to add paths into
 ///\param[in] Delim - Delimiter to separate paths or NULL if a single path
 ///
-void AddIncludePaths(llvm::StringRef PathStr, clang::HeaderSearchOptions& HOpts,
-                     const char* Delim = Cpp::utils::platform::kEnvDelim);
+void AddIncludePaths(
+    llvm::StringRef PathStr, clang::HeaderSearchOptions& HOpts,
+    const char* Delim = CppInternal::utils::platform::kEnvDelim);
 
 ///\brief Write to cling::errs that directory does not exist in a format
 /// matching what 'clang -v' would do
@@ -117,6 +118,6 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
                       bool WithSystem, bool WithFlags);
 
 } // namespace utils
-} // namespace Cpp
+} // namespace CppInternal
 
 #endif // CPPINTEROP_UTILS_PATHS_H
