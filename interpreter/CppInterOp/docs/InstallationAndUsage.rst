@@ -41,6 +41,15 @@ Clone the 20.x release of the LLVM project repository.
    git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
    cd llvm-project
 
+If you want to have out-of-process JIT execution enabled in CppInterOp, then apply this patch on Linux-x86_64 and MacOS arm64 environment.
+.. note::
+
+   This patch will not work for Windows because out-of-process JIT execution is currently implemented for Linux and MacOS only.
+
+.. code:: bash
+
+   git apply -v ../CppInterOp/patches/llvm/clang20-1-out-of-process.patch
+
 ******************
  Build Clang-REPL
 ******************
@@ -98,6 +107,34 @@ On Windows you execute the following
    cd ..\
    $env:LLVM_DIR= $PWD.Path
    cd ..\
+
+***************************************************
+Build Clang-REPL with Out-of-Process JIT Execution
+***************************************************
+
+To have `Out-of-Process JIT Execution` enabled, run following commands to build clang and clang-repl to support this feature:
+
+.. note::
+
+   Only for Linux x86_64 and MacOS arm64
+
+.. code:: bash
+   mkdir build 
+   cd build 
+   cmake -DLLVM_ENABLE_PROJECTS="clang;compiler-rt"                   \
+                  -DLLVM_TARGETS_TO_BUILD="host;NVPTX"                \
+                  -DCMAKE_BUILD_TYPE=Release                          \
+                  -DLLVM_ENABLE_ASSERTIONS=ON                         \
+                  -DCLANG_ENABLE_STATIC_ANALYZER=OFF                  \
+                  -DCLANG_ENABLE_ARCMT=OFF                            \
+                  -DCLANG_ENABLE_FORMAT=OFF                           \
+                  -DCLANG_ENABLE_BOOTSTRAP=OFF                        \
+                  ../llvm
+   
+   # For Linux x86_64
+   cmake --build . --target clang clang-repl llvm-jitlink-executor orc_rt-x86_64 --parallel $(nproc --all)
+   # For MacOS arm64
+   cmake --build . --target clang clang-repl llvm-jitlink-executor orc_rt_osx --parallel $(sysctl -n hw.ncpu)
 
 **************************************
  Build Cling and related dependencies
@@ -262,6 +299,10 @@ commands on Linux and MacOS
 
    cmake -DBUILD_SHARED_LIBS=ON -DLLVM_DIR=$LLVM_DIR/build/lib/cmake/llvm -DClang_DIR=$LLVM_DIR/build/lib/cmake/clang -DCMAKE_INSTALL_PREFIX=$CPPINTEROP_DIR ..
    cmake --build . --target install --parallel $(nproc --all)
+
+.. note::
+
+   Do make sure to pass ``DLLVM_BUILT_WITH_OOP_JIT=ON``, if you want to have out-of-process JIT execution feature enabled.
 
 and
 

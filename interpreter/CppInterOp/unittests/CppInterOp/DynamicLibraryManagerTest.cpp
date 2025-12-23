@@ -1,3 +1,4 @@
+#include "Utils.h"
 #include "CppInterOp/CppInterOp.h"
 
 #include "clang/Basic/Version.h"
@@ -19,7 +20,7 @@ std::string GetExecutablePath(const char* Argv0) {
   return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
 }
 
-TEST(DynamicLibraryManagerTest, Sanity) {
+TYPED_TEST(CppInterOpTest, DynamicLibraryManagerTestSanity) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
@@ -28,8 +29,10 @@ TEST(DynamicLibraryManagerTest, Sanity) {
     defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";
 #endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
 
-  EXPECT_TRUE(Cpp::CreateInterpreter());
+  EXPECT_TRUE(TestFixture::CreateInterpreter());
   EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
 
   std::string BinaryPath = GetExecutablePath(/*Argv0=*/nullptr);
@@ -66,7 +69,7 @@ TEST(DynamicLibraryManagerTest, Sanity) {
   // EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
 }
 
-TEST(DynamicLibraryManagerTest, BasicSymbolLookup) {
+TYPED_TEST(CppInterOpTest, DynamicLibraryManagerTestBasicSymbolLookup) {
 #ifndef EMSCRIPTEN
   GTEST_SKIP() << "This test is only intended for Emscripten builds.";
 #else
@@ -74,8 +77,10 @@ TEST(DynamicLibraryManagerTest, BasicSymbolLookup) {
     GTEST_SKIP() << "Support for loading shared libraries was added in LLVM 20.";
   #endif
 #endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
 
-  ASSERT_TRUE(Cpp::CreateInterpreter());
+  ASSERT_TRUE(TestFixture::CreateInterpreter());
   EXPECT_FALSE(Cpp::GetFunctionAddress("ret_zero"));
 
   // Load the library manually. Use known preload path (MEMFS path)

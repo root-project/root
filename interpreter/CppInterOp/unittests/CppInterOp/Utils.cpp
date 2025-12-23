@@ -6,8 +6,11 @@
 #include "clang/AST/DeclCXX.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Interpreter/PartialTranslationUnit.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+
+#include "llvm/TargetParser/Triple.h"
 
 #include <algorithm>
 #include <string>
@@ -15,6 +18,18 @@
 
 using namespace clang;
 using namespace llvm;
+
+namespace TestUtils {
+TestConfig current_config;
+std::vector<const char*> GetInterpreterArgs(
+    const std::vector<const char*>& base_args) {
+  auto args = base_args;
+  if (current_config.use_oop_jit) {
+    args.push_back("--use-oop-jit");
+  }
+  return args;
+}
+}
 
 void TestUtils::GetAllTopLevelDecls(
     const std::string& code, std::vector<Decl*>& Decls,
@@ -55,6 +70,15 @@ void TestUtils::GetAllSubDecls(Decl *D, std::vector<Decl*>& SubDecls,
       continue;
     SubDecls.push_back(Di);
   }
+}
+
+bool IsTargetX86() {
+#ifndef CPPINTEROP_USE_CLING
+  llvm::Triple triple(Interp->getCompilerInstance()->getTargetOpts().Triple);
+#else
+  llvm::Triple triple(Interp->getCI()->getTargetOpts().Triple);
+#endif
+  return triple.isX86();
 }
 
 const char* get_c_string(CXString string) {
