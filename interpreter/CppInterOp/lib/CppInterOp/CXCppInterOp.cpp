@@ -323,9 +323,9 @@ void clang_Interpreter_addIncludePath(CXInterpreter I, const char* dir) {
   getInterpreter(I)->AddIncludePath(dir);
 }
 
-namespace Cpp {
+namespace CppImpl {
 int Declare(compat::Interpreter& interp, const char* code, bool silent);
-} // namespace Cpp
+} // namespace CppImpl
 
 enum CXErrorCode clang_Interpreter_declare(CXInterpreter I, const char* code,
                                            bool silent) {
@@ -406,11 +406,11 @@ CXString clang_Interpreter_searchLibrariesForSymbol(CXInterpreter I,
           mangled_name, search_system));
 }
 
-namespace Cpp {
+namespace CppImpl {
 bool InsertOrReplaceJitSymbol(compat::Interpreter& I,
                               const char* linker_mangled_name,
                               uint64_t address);
-} // namespace Cpp
+} // namespace CppImpl
 
 bool clang_Interpreter_insertOrReplaceJitSymbol(CXInterpreter I,
                                                 const char* linker_mangled_name,
@@ -519,6 +519,15 @@ CXString clang_getFunctionSignature(CXScope func) {
   return makeCXString("");
 }
 
+CXString clang_getDoxygenComment(CXScope S, bool strip_comment_markers) {
+  if (isNull(S))
+    return makeCXString("");
+
+  auto* D = getDecl(S);
+  return makeCXString(Cpp::GetDoxygenComment(static_cast<Cpp::TCppScope_t>(D),
+                                             strip_comment_markers));
+}
+
 bool clang_isTemplatedFunction(CXScope func) {
   auto* D = getDecl(func);
   if (llvm::isa_and_nonnull<clang::FunctionTemplateDecl>(D))
@@ -543,7 +552,7 @@ bool clang_existsFunctionTemplate(const char* name, CXScope parent) {
   const auto* Within = llvm::dyn_cast<clang::DeclContext>(getDecl(parent));
 
   auto& S = getInterpreter(parent)->getSema();
-  auto* ND = Cpp::Cpp_utils::Lookup::Named(&S, name, Within);
+  auto* ND = CppInternal::utils::Lookup::Named(&S, name, Within);
 
   if (!ND)
     return false;
@@ -556,12 +565,12 @@ bool clang_existsFunctionTemplate(const char* name, CXScope parent) {
   return true;
 }
 
-namespace Cpp {
+namespace CppImpl {
 TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
                                 const TemplateArgInfo* template_args,
                                 size_t template_args_size,
                                 bool instantiate_body = false);
-} // namespace Cpp
+} // namespace CppImpl
 
 CXScope clang_instantiateTemplate(CXScope tmpl,
                                   CXTemplateArgInfo* template_args,
@@ -584,10 +593,10 @@ CXObject clang_allocate(unsigned int n) { return ::operator new(n); }
 
 void clang_deallocate(CXObject address) { ::operator delete(address); }
 
-namespace Cpp {
+namespace CppImpl {
 void* Construct(compat::Interpreter& interp, TCppScope_t scope,
                 void* arena /*=nullptr*/, TCppIndex_t count);
-} // namespace Cpp
+} // namespace CppImpl
 
 CXObject clang_construct(CXScope scope, void* arena, size_t count) {
   return Cpp::Construct(*getInterpreter(scope),
@@ -600,10 +609,10 @@ void clang_invoke(CXScope func, void* result, void** args, size_t n,
       .Invoke(result, {args, n}, self);
 }
 
-namespace Cpp {
+namespace CppImpl {
 bool Destruct(compat::Interpreter& interp, TCppObject_t This,
               const clang::Decl* Class, bool withFree, size_t nary);
-} // namespace Cpp
+} // namespace CppImpl
 
 bool clang_destruct(CXObject This, CXScope S, bool withFree, size_t nary) {
   return Cpp::Destruct(*getInterpreter(S), This, getDecl(S), withFree, nary);

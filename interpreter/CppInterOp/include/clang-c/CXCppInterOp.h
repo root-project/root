@@ -257,6 +257,13 @@ CINDEX_LINKAGE CXScope clang_getDestructor(CXScope S);
 CINDEX_LINKAGE CXString clang_getFunctionSignature(CXScope func);
 
 /**
+ * Returns the Doxygen documentation comment for a declaration, or an empty
+ * string if no documentation comment exists.
+ */
+CINDEX_LINKAGE CXString clang_getDoxygenComment(CXScope S,
+                                                bool strip_comment_markers);
+
+/**
  * Checks if a function is a templated function.
  */
 CINDEX_LINKAGE bool clang_isTemplatedFunction(CXScope func);

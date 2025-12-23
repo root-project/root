@@ -27,10 +27,9 @@
 #include <sys/stat.h>
 #include <system_error>
 
-namespace Cpp {
+namespace CppInternal {
 
-using namespace Cpp::utils::platform;
-using namespace Cpp::utils;
+using namespace utils;
 using namespace llvm;
 
 DynamicLibraryManager::DynamicLibraryManager() {
@@ -55,8 +54,8 @@ DynamicLibraryManager::DynamicLibraryManager() {
   for (const char* Var : kSysLibraryEnv) {
     if (const char* Env = GetEnv(Var)) {
       SmallVector<StringRef, 10> CurPaths;
-      SplitPaths(Env, CurPaths, utils::kPruneNonExistent,
-                 Cpp::utils::platform::kEnvDelim);
+      SplitPaths(Env, CurPaths, SplitMode::kPruneNonExistent,
+                 platform::kEnvDelim);
       for (const auto& Path : CurPaths)
         addSearchPath(Path);
     }
@@ -66,7 +65,7 @@ DynamicLibraryManager::DynamicLibraryManager() {
   addSearchPath(".");
 
   SmallVector<std::string, 64> SysPaths;
-  Cpp::utils::platform::GetSystemLibraryPaths(SysPaths);
+  platform::GetSystemLibraryPaths(SysPaths);
 
   for (const std::string& P : SysPaths)
     addSearchPath(P, /*IsUser*/ false);
@@ -506,4 +505,4 @@ bool DynamicLibraryManager::isSharedLibrary(StringRef libFullPath,
   return result;
 }
 
-} // end namespace Cpp
+} // end namespace CppInternal

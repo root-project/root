@@ -23,7 +23,7 @@
 #include <dlfcn.h>
 #endif
 
-namespace Cpp {
+namespace CppInternal {
 namespace utils {
 
 namespace platform {
@@ -158,7 +158,8 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
   /// User specified include entries.
   for (unsigned i = 0, e = Opts.UserEntries.size(); i != e; ++i) {
     const HeaderSearchOptions::Entry& E = Opts.UserEntries[i];
-    if (E.IsFramework && E.Group != frontend::Angled)
+    if (E.IsFramework && E.Group != frontend::Angled &&
+        E.Group != frontend::System)
       llvm::report_fatal_error("Invalid option set!");
     switch (E.Group) {
     case frontend::After:
@@ -361,7 +362,7 @@ bool SplitPaths(llvm::StringRef PathStr,
 
 void AddIncludePaths(
     llvm::StringRef PathStr, clang::HeaderSearchOptions& HOpts,
-    const char* Delim /* = Cpp::utils::platform::kEnvDelim */) {
+    const char* Delim /* = CppInternal::utils::platform::kEnvDelim */) {
 #define DEBUG_TYPE "AddIncludePaths"
 
   llvm::SmallVector<llvm::StringRef, 10> Paths;
@@ -399,4 +400,4 @@ void AddIncludePaths(
 }
 
 } // namespace utils
-} // namespace Cpp
+} // namespace CppInternal

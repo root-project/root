@@ -458,6 +458,8 @@ static bool MayExistInElfObjectFile(llvm::object::ObjectFile* soFile,
 
 } // namespace
 
+namespace CppInternal {
+
 // This function isn't referenced outside its translation unit, but it
 // can't use the "static" keyword because its address is used for
 // GetMainExecutable (since some platforms don't support taking the
@@ -466,10 +468,9 @@ static bool MayExistInElfObjectFile(llvm::object::ObjectFile* soFile,
 std::string GetExecutablePath() {
   // This just needs to be some symbol in the binary; C++ doesn't
   // allow taking the address of ::main however.
-  return Cpp::DynamicLibraryManager::getSymbolLocation(&GetExecutablePath);
+  return DynamicLibraryManager::getSymbolLocation(&GetExecutablePath);
 }
 
-namespace Cpp {
 class Dyld {
   struct BasePathHashFunction {
     size_t operator()(const BasePath& item) const {
@@ -508,7 +509,7 @@ class Dyld {
   bool m_UseBloomFilter = true;
   bool m_UseHashTable = true;
 
-  const Cpp::DynamicLibraryManager& m_DynamicLibraryManager;
+  const DynamicLibraryManager& m_DynamicLibraryManager;
 
   /// The basename of `/home/.../lib/libA.so`,
   /// m_BasePaths will contain `/home/.../lib/`
@@ -548,7 +549,7 @@ class Dyld {
   void dumpDebugInfo() const;
 
 public:
-  Dyld(const Cpp::DynamicLibraryManager& DLM,
+  Dyld(const DynamicLibraryManager& DLM,
        PermanentlyIgnoreCallbackProto shouldIgnore, StringRef execFormat)
       : m_DynamicLibraryManager(DLM),
         m_ShouldPermanentlyIgnoreCallback(shouldIgnore),
@@ -594,12 +595,14 @@ void HandleDynTab(const ELFFile<ELFT>* Elf, StringRef FileName,
       Deps.push_back(Data + Dyn.d_un.d_val);
       break;
     case ELF::DT_RPATH:
-      SplitPaths(Data + Dyn.d_un.d_val, RPath, utils::kAllowNonExistent,
-                 Cpp::utils::platform::kEnvDelim, false);
+      SplitPaths(Data + Dyn.d_un.d_val, RPath,
+                 utils::SplitMode::kAllowNonExistent,
+                 utils::platform::kEnvDelim, false);
       break;
     case ELF::DT_RUNPATH:
-      SplitPaths(Data + Dyn.d_un.d_val, RunPath, utils::kAllowNonExistent,
-                 Cpp::utils::platform::kEnvDelim, false);
+      SplitPaths(Data + Dyn.d_un.d_val, RunPath,
+                 utils::SplitMode::kAllowNonExistent,
+                 utils::platform::kEnvDelim, false);
       break;
     case ELF::DT_FLAGS_1:
       // Check if this is not a pie executable.
@@ -757,8 +760,8 @@ void Dyld::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
                 } else if (Command.C.cmd == MachO::LC_RPATH) {
                   MachO::rpath_command rpathCmd = Obj->getRpathCommand(Command);
                   SplitPaths(Command.Ptr + rpathCmd.path, RPath,
-                             utils::kAllowNonExistent,
-                             Cpp::utils::platform::kEnvDelim, false);
+                             utils::SplitMode::kAllowNonExistent,
+                             utils::platform::kEnvDelim, false);
                 }
               }
             } else if (BinObjF->isCOFF()) {
@@ -1112,7 +1115,7 @@ bool Dyld::ShouldPermanentlyIgnore(StringRef FileName) const {
 #define DEBUG_TYPE "Dyld:"
   assert(!m_ExecutableFormat.empty() && "Failed to find the object format!");
 
-  if (!Cpp::DynamicLibraryManager::isSharedLibrary(FileName))
+  if (!DynamicLibraryManager::isSharedLibrary(FileName))
     return true;
 
   // No need to check linked libraries, as this function is only invoked
@@ -1381,4 +1384,4 @@ std::string DynamicLibraryManager::getSymbolLocation(void* func) {
 #endif
 }
 
-} // namespace Cpp
+} // namespace CppInternal

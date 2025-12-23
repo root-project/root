@@ -6,20 +6,62 @@
 #include "clang-c/CXCppInterOp.h"
 #include "clang-c/CXString.h"
 
+#if defined(ENABLE_DISPATCH_TESTS)
+#include "CppInterOp/Dispatch.h"
+#define CPPINTEROP_TEST_MODE CppInterOpDispatchTest
+// Helper macros that conditionally pass default arguments in dispatch mode
+// tests
+#define DFLT_OP_ARITY , Cpp::OperatorArity::kBoth
+#define DFLT_NULLPTR , nullptr
+#define DFLT_FALSE , false
+#define DFLT_TRUE , true
+#define DFLT_0 , 0
+#define DFLT_1 , 1
+#else
+#include "CppInterOp/CppInterOp.h"
+#define CPPINTEROP_TEST_MODE CppInterOpTest
+#define DFLT_OP_ARITY
+#define DFLT_NULLPTR
+#define DFLT_FALSE
+#define DFLT_TRUE
+#define DFLT_0
+#define DFLT_1
+#endif
+
 #include "llvm/Support/Valgrind.h"
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
+#include "gtest/gtest.h"
 
 using namespace clang;
 using namespace llvm;
 
 namespace clang {
-  class Decl;
+class Decl;
 }
 #define Interp (static_cast<compat::Interpreter*>(Cpp::GetInterpreter()))
 namespace TestUtils {
+
+struct TestConfig {
+    std::string name;
+    bool use_oop_jit;
+
+    TestConfig(bool oop_jit, const std::string& n) 
+        : name(std::move(n)), use_oop_jit(oop_jit) {}
+
+    TestConfig() 
+        : name("InProcessJIT"), use_oop_jit(false) {}
+};
+
+extern TestConfig current_config;
+
+// Helper to get interpreter args with current config
+std::vector<const char*>
+GetInterpreterArgs(const std::vector<const char*>& base_args = {});
+
 void GetAllTopLevelDecls(const std::string& code,
                          std::vector<clang::Decl*>& Decls,
                          bool filter_implicitGenerated = false,
@@ -33,5 +75,56 @@ const char* get_c_string(CXString string);
 void dispose_string(CXString string);
 
 CXScope make_scope(const clang::Decl* D, const CXInterpreter I);
+
+bool IsTargetX86();
+
+// Define type tags for each configuration
+struct InProcessJITConfig {
+  static constexpr bool isOutOfProcess = false;
+  static constexpr const char* name = "InProcessJIT";
+};
+
+#ifdef LLVM_BUILT_WITH_OOP_JIT
+struct OutOfProcessJITConfig {
+  static constexpr bool isOutOfProcess = true;
+  static constexpr const char* name = "OutOfProcessJIT";
+};
+#endif
+
+// Define typed test fixture
+template <typename Config> class CPPINTEROP_TEST_MODE : public ::testing::Test {
+protected:
+  void SetUp() override {
+    TestUtils::current_config =
+        TestUtils::TestConfig{Config::isOutOfProcess, Config::name};
+  }
+
+public:
+  static TInterp_t CreateInterpreter(const std::vector<const char*>& Args = {},
+                              const std::vector<const char*>& GpuArgs = {}) {
+    auto mergedArgs = TestUtils::GetInterpreterArgs(Args);
+    return Cpp::CreateInterpreter(mergedArgs, GpuArgs);
+  }
+
+  bool IsOutOfProcess() {
+    return Config::isOutOfProcess;
+  }
+};
+
+struct JITConfigNameGenerator {
+  template <typename T>
+  static std::string GetName(int) {
+    return T::name;
+  }
+};
+
+#ifdef LLVM_BUILT_WITH_OOP_JIT
+using CppInterOpTestTypes = ::testing::Types<InProcessJITConfig, OutOfProcessJITConfig>;
+#else
+using CppInterOpTestTypes = ::testing::Types<InProcessJITConfig>;
+#endif
+
+TYPED_TEST_SUITE(CPPINTEROP_TEST_MODE, CppInterOpTestTypes,
+                 JITConfigNameGenerator);
 
 #endif // CPPINTEROP_UNITTESTS_LIBCPPINTEROP_UTILS_H

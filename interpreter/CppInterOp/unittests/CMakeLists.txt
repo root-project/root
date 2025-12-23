@@ -34,30 +34,58 @@ add_dependencies(CppInterOpUnitTests clangCppInterOp)
 
 set (TIMEOUT_VALUE 2400)
 function(add_cppinterop_unittest name)
-  add_executable(${name} EXCLUDE_FROM_ALL ${ARGN})
+  cmake_parse_arguments(ARG
+    "ENABLE_DISPATCH"
+    ""
+    ""
+    ${ARGN}
+  )
+  add_executable(${name} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
   add_dependencies(CppInterOpUnitTests ${name})
   target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
   set_property(TARGET ${name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-if(WIN32)
-  target_link_libraries(${name} PUBLIC ${ARG_LIBRARIES} ${gtest_libs})
-  set_property(TARGET ${name} APPEND_STRING PROPERTY LINK_FLAGS "${MSVC_EXPORTS}")
-else()
-  target_link_libraries(${name} PRIVATE ${ARG_LIBRARIES} ${gtest_libs} ${link_pthreads_lib})
-endif()
-if(EMSCRIPTEN)
-  # Without this cmake will try and get node to run the html file.
-  # This guarantees that it runs the js file, and uses emsdks node.
-  add_test(NAME cppinterop-${name} COMMAND $ENV{EMSDK_NODE} ${name}.js)
-else()
-  add_test(NAME cppinterop-${name} COMMAND ${name})
-endif()
+  export_executable_symbols(${name})
+
+  if(WIN32)
+    target_link_libraries(${name} PUBLIC ${ARG_LIBRARIES} ${gtest_libs})
+    set_property(TARGET ${name} APPEND_STRING PROPERTY LINK_FLAGS "${MSVC_EXPORTS}")
+  else()
+    target_link_libraries(${name} PRIVATE ${ARG_LIBRARIES} ${gtest_libs} ${link_pthreads_lib})
+  endif()
+  target_link_libraries(${name} PRIVATE clangCppInterOp)
+  if(EMSCRIPTEN)
+    if (BUILD_SHARED_LIBS)
+      target_compile_definitions(${name} PRIVATE "EMSCRIPTEN_SHARED_LIBRARY")
+    else()
+      target_compile_definitions(${name} PRIVATE "EMSCRIPTEN_STATIC_LIBRARY")
+    endif()
+    # Without this cmake will try and get node to run the html file.
+    # This guarantees that it runs the js file, and uses emsdks node.
+    add_test(NAME cppinterop-${name} COMMAND $ENV{EMSDK_NODE} ${name}.js)
+  else()
+    add_test(NAME cppinterop-${name} COMMAND ${name})
+    set(EXTRA_PATH_TEST_BINARIES /bin/$<CONFIG>/)
+  endif()
+  set_output_directory(${name}
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
+    LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${EXTRA_PATH_TEST_BINARIES}
+  )
+
   set_tests_properties(cppinterop-${name} PROPERTIES
-                       TIMEOUT "${TIMEOUT_VALUE}"
-                       ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc"
-                       LABELS
-                       DEPENDS)
-  # FIXME: Just call gtest_add_tests this function is available.
-  #gtest_add_tests(${name} "${Arguments}" AUTO)
+                        TIMEOUT "${TIMEOUT_VALUE}"
+                        ENVIRONMENT "CPLUS_INCLUDE_PATH=${CMAKE_BINARY_DIR}/etc"
+                        LABELS
+                        DEPENDS)
+  # Auto-generate the dispatch version if shared libs are built by recursively calling
+  # add_cppinterop_unittest with the necessary compile definitions
+  # FIXME: Enable for WASM builds
+  if (NOT EMSCRIPTEN AND ARG_ENABLE_DISPATCH AND BUILD_SHARED_LIBS)
+    add_cppinterop_unittest(${name}Dispatch ${ARG_UNPARSED_ARGUMENTS} DispatchTest.cpp)
+    target_compile_definitions(${name}Dispatch PRIVATE 
+      ENABLE_DISPATCH_TESTS
+      CPPINTEROP_LIB_PATH="${CMAKE_BINARY_DIR}/lib/libclangCppInterOp${CMAKE_SHARED_LIBRARY_SUFFIX}"
+    )
+  endif()
 endfunction()
 
 add_subdirectory(CppInterOp)
