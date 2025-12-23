@@ -349,9 +349,9 @@ else()
   # Keras tutorials. This mirrors the logic in tmva/sofie/test/CMakeLists.txt.
   # TODO: make sure we also support the newest Keras
   set(unsupported_keras_version "3.5.0")
-  if (NOT DEFINED ROOT_KERAS_VERSION)
+  if (ROOT_KERAS_FOUND AND NOT DEFINED ROOT_KERAS_VERSION)
     message(WARNING "Keras found, but version unknown — cannot verify compatibility.")
-  elseif (NOT ROOT_KERAS_VERSION VERSION_LESS ${unsupported_keras_version})
+  elseif (ROOT_KERAS_FOUND AND NOT ROOT_KERAS_VERSION VERSION_LESS ${unsupported_keras_version})
       message(WARNING "Keras version ${ROOT_KERAS_VERSION} is too new for the SOFIE Keras parser (only supports < ${unsupported_keras_version}). Corresponding tutorials will not be tested.")
     set(keras_unsupported TRUE)
   endif()
