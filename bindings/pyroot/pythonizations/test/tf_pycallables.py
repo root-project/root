@@ -116,11 +116,13 @@ class TF1(unittest.TestCase):
             [3.0, 10, 4.0]
         ])
 
-        params = np.array([
-            [1.0],       # Distance between charges r
-            [8.99e9],    # Coulomb constant k (in N·m²/C²)
-            [0.1]        # Additional factor for modulation
-        ])
+        params = np.array(
+            [
+                1.0,  # Distance between charges r
+                8.99e9,  # Coulomb constant k (in N·m²/C²)
+                0.1,  # Additional factor for modulation
+            ]
+        )
 
         # Slice to avoid the dummy column of 10's
         res = rtf1_coulomb.EvalPar(x[:, ::2], params)
