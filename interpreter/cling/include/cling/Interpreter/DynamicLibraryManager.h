@@ -196,6 +196,11 @@ namespace cling {
     std::string searchLibrariesForSymbol(llvm::StringRef mangledName,
                                          bool searchSystem = true) const;
 
+    void
+    searchLibrariesForSymbol(llvm::ArrayRef<llvm::StringRef> Symbols,
+                             llvm::orc::LibraryResolver::OnSearchComplete OnCompletion,
+                             bool searchSystem = true) const;
+
     void dump(llvm::raw_ostream* S = nullptr) const;
 
     /// On a success returns to full path to a shared object that holds the
