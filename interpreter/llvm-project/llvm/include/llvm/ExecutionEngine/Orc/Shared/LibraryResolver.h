@@ -413,10 +413,10 @@ public:
     std::atomic<size_t> ResolvedCount = 0;
 
   public:
-    explicit SymbolQuery(const std::vector<std::string> &Symbols) {
+    explicit SymbolQuery(ArrayRef<StringRef> Symbols) {
       for (const auto &S : Symbols) {
         if (!contains(S))
-          Entries.push_back({S, ""});
+          Entries.push_back({S.str(), ""});
       }
     }
 
@@ -535,7 +535,7 @@ public:
     });
   }
 
-  void searchSymbolsInLibraries(std::vector<std::string> &SymList,
+  void searchSymbolsInLibraries(ArrayRef<StringRef> SymList,
                                 OnSearchComplete OnComplete,
                                 const SearchConfig &Config = SearchConfig());
 
@@ -585,7 +585,7 @@ public:
     LR->scanLibrariesIfNeeded(PK, BatchSize);
   }
 
-  void resolveSymbols(std::vector<std::string> Symbols,
+  void resolveSymbols(ArrayRef<StringRef> Symbols,
                       LibraryResolver::OnSearchComplete OnCompletion,
                       const SearchConfig &Config = SearchConfig());
 

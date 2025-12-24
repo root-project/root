@@ -22,6 +22,7 @@
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/MachO.h"
 #include "llvm/Object/ObjectFile.h"
+#include "llvm/Support/DJB.h"
 #include "llvm/Support/Error.h"
 
 // #include <algorithm>
@@ -66,10 +67,9 @@ void LibraryResolutionDriver::markLibraryUnLoaded(StringRef Path) {
 }
 
 void LibraryResolutionDriver::resolveSymbols(
-    std::vector<std::string> Syms,
-    LibraryResolver::OnSearchComplete OnCompletion,
+    ArrayRef<StringRef> Symbols, LibraryResolver::OnSearchComplete OnCompletion,
     const SearchConfig &Config) {
-  LR->searchSymbolsInLibraries(Syms, std::move(OnCompletion), Config);
+  LR->searchSymbolsInLibraries(Symbols, std::move(OnCompletion), Config);
 }
 
 static bool shouldIgnoreSymbol(const object::SymbolRef &Sym,
@@ -181,22 +181,52 @@ bool SymbolEnumerator::enumerateSymbols(StringRef Path, OnEachSymbolFn OnEach,
   return SymbolEnumerator::enumerateSymbols(&ObjOrErr.get(), OnEach, Opts);
 }
 
-class SymbolSearchContext {
-public:
-  SymbolSearchContext(SymbolQuery &Q) : Q(Q) {}
+static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
+  for (auto S : file->sections()) {
+    StringRef name = llvm::cantFail(S.getName());
+    if (name == ".gnu.hash") {
+      return llvm::cantFail(S.getContents());
+    }
+  }
+  return "";
+}
 
-  bool hasSearched(const LibraryInfo *Lib) const { return Searched.count(Lib); }
+/// Bloom filter is a stochastic data structure which can tell us if a symbol
+/// name does not exist in a library with 100% certainty. If it tells us it
+/// exists this may not be true:
+/// https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
+///
+/// ELF has this optimization in the new linkers by default, It is stored in the
+/// gnu.hash section of the object file.
+///
+///\returns true if the symbol may be in the library.
+static bool MayExistInElfObjectFile(llvm::object::ObjectFile *soFile,
+                                    StringRef Sym) {
+  assert(soFile->isELF() && "Not ELF");
 
-  void markSearched(const LibraryInfo *Lib) { Searched.insert(Lib); }
+  uint32_t hash = djbHash(Sym);
+  // Compute the platform bitness -- either 64 or 32.
+  const unsigned bits = 8 * soFile->getBytesInAddress();
 
-  inline bool allResolved() const { return Q.allResolved(); }
+  StringRef contents = GetGnuHashSection(soFile);
+  if (contents.size() < 16)
+    // We need to search if the library doesn't have .gnu.hash section!
+    return true;
+  const char *hashContent = contents.data();
 
-  SymbolQuery &query() { return Q; }
+  // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash
+  // table layout.
+  uint32_t maskWords = *reinterpret_cast<const uint32_t *>(hashContent + 8);
+  uint32_t shift2 = *reinterpret_cast<const uint32_t *>(hashContent + 12);
+  uint32_t hash2 = hash >> shift2;
+  uint32_t n = (hash / bits) % maskWords;
 
-private:
-  SymbolQuery &Q;
-  DenseSet<const LibraryInfo *> Searched;
-};
+  const char *bloomfilter = hashContent + 16;
+  const char *hash_pos = bloomfilter + n * (bits / 8); // * (Bits / 8)
+  uint64_t word = *reinterpret_cast<const uint64_t *>(hash_pos);
+  uint64_t bitmask = ((1ULL << (hash % bits)) | (1ULL << (hash2 % bits)));
+  return (bitmask & word) == bitmask;
+}
 
 void LibraryResolver::resolveSymbolsInLibrary(
     LibraryInfo *Lib, SymbolQuery &UnresolvedSymbols,
@@ -231,11 +261,6 @@ void LibraryResolver::resolveSymbolsInLibrary(
     return;
   }
 
-  // Sort + unique to enable binary_search and stable erase via lower_bound
-  // llvm::sort(CandidateVec.begin(), CandidateVec.end());
-  // CandidateVec.erase(std::unique(CandidateVec.begin(), CandidateVec.end()),
-  //                    CandidateVec.end());
-
   bool BuildingFilter = !Lib->hasFilter();
 
   ObjectFileLoader ObjLoader(Lib->getFullPath());
@@ -250,15 +275,13 @@ void LibraryResolver::resolveSymbolsInLibrary(
   }
 
   object::ObjectFile *Obj = &ObjOrErr.get();
+  if (BuildingFilter && Obj->isELF()) {
 
-  /*if (BuildingFilter && Obj->isELF()) {
-
-  erase_if(CandidateVec, [&](StringRef C) {
-    return !MayExistInElfObjectFile(Obj, C);
-  });
+    erase_if(CandidateVec,
+             [&](StringRef C) { return !MayExistInElfObjectFile(Obj, C); });
     if (CandidateVec.empty())
       return;
-  }*/
+  }
 
   SmallVector<StringRef, 256> SymbolVec;
 
@@ -306,7 +329,7 @@ void LibraryResolver::resolveSymbolsInLibrary(
       return;
     }
 
-    Lib->ensureFilterBuilt(this->FB, SymbolVec);
+    Lib->ensureFilterBuilt(FB, SymbolVec);
     LLVM_DEBUG({
       dbgs() << "DiscoveredSymbols : " << SymbolVec.size() << "\n";
       for (const auto &S : SymbolVec)
@@ -318,9 +341,9 @@ void LibraryResolver::resolveSymbolsInLibrary(
     Lib->setState(LibState::Queried);
 }
 
-void LibraryResolver::searchSymbolsInLibraries(
-    std::vector<std::string> &SymbolList, OnSearchComplete OnComplete,
-    const SearchConfig &Config) {
+void LibraryResolver::searchSymbolsInLibraries(ArrayRef<StringRef> SymbolList,
+                                               OnSearchComplete OnComplete,
+                                               const SearchConfig &Config) {
   SymbolQuery Q(SymbolList);
 
   using LibraryType = PathType;
@@ -328,9 +351,8 @@ void LibraryResolver::searchSymbolsInLibraries(
     LLVM_DEBUG(dbgs() << "Trying resolve from state=" << static_cast<int>(S)
                       << " type=" << static_cast<int>(K) << "\n";);
 
-    SymbolSearchContext Ctx(Q);
     LibraryCursor Cur = LibMgr.getCursor(K, S);
-    while (!Ctx.allResolved()) {
+    while (!Q.allResolved()) {
       const LibraryInfo *Lib = Cur.nextValidLib();
       // Cursor not valid?
       if (!Lib) {
@@ -340,9 +362,9 @@ void LibraryResolver::searchSymbolsInLibraries(
       }
 
       // can use Async here?
-      resolveSymbolsInLibrary(const_cast<LibraryInfo *>(Lib), Ctx.query(),
+      resolveSymbolsInLibrary(const_cast<LibraryInfo *>(Lib), Q,
                               Config.Options);
-      if (Ctx.allResolved())
+      if (Q.allResolved())
         break;
     }
   };
