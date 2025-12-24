@@ -426,7 +426,7 @@ mode_t PathResolver::lstatCached(StringRef Path) {
     return *Cache;
 
   // Not cached: perform lstat and store
-  struct stat buf{};
+  struct stat buf {};
   mode_t st_mode = (lstat(Path.str().c_str(), &buf) == -1) ? 0 : buf.st_mode;
 
   LibPathCache->insert_lstat(Path, st_mode);
@@ -679,9 +679,9 @@ void LibraryScanHelper::addBasePath(const std::string &Path, PathType K) {
   }
 }
 
-std::vector<const LibrarySearchPath *>
+SmallVector<const LibrarySearchPath *>
 LibraryScanHelper::getNextBatch(PathType K, size_t BatchSize) {
-  std::vector<const LibrarySearchPath *> Result;
+  SmallVector<const LibrarySearchPath *> Result;
   auto &Queue = (K == PathType::User) ? UnscannedUsr : UnscannedSys;
 
   std::unique_lock<std::shared_mutex> Lock(Mtx);
@@ -737,9 +737,9 @@ void LibraryScanHelper::resetToScan() {
   }
 }
 
-std::vector<const LibrarySearchPath *> LibraryScanHelper::getAllUnits() const {
+SmallVector<const LibrarySearchPath *> LibraryScanHelper::getAllUnits() const {
   std::shared_lock<std::shared_mutex> Lock(Mtx);
-  std::vector<const LibrarySearchPath *> Result;
+  SmallVector<const LibrarySearchPath *> Result;
   Result.reserve(LibSearchPaths.size());
   for (const auto &[_, SP] : LibSearchPaths) {
     Result.push_back(SP.get());
