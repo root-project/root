@@ -838,7 +838,7 @@ public:
       const auto detZmask = (det == T(0));
       if (any_of(detZmask)) {
          std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
-         det(detZmask) = T(1);
+         where(detZmask, det) = T(1);
       }
       det = T(1) / det;
       detxx *= det;
@@ -852,15 +852,15 @@ public:
       T detzz = (fM[kXX] * fM[kYY] - fM[kXY] * fM[kYX]) * det;
       // Set det=0 cases to 0
       if (any_of(detZmask)) {
-         detxx(detZmask) = T(0);
-         detxy(detZmask) = T(0);
-         detxz(detZmask) = T(0);
-         detyx(detZmask) = T(0);
-         detyy(detZmask) = T(0);
-         detyz(detZmask) = T(0);
-         detzx(detZmask) = T(0);
-         detzy(detZmask) = T(0);
-         detzz(detZmask) = T(0);
+         where(detZmask, detxx) = T(0);
+         where(detZmask, detxy) = T(0);
+         where(detZmask, detxz) = T(0);
+         where(detZmask, detyx) = T(0);
+         where(detZmask, detyy) = T(0);
+         where(detZmask, detyz) = T(0);
+         where(detZmask, detzx) = T(0);
+         where(detZmask, detzy) = T(0);
+         where(detZmask, detzz) = T(0);
       }
       // set final components
       SetComponents(detxx, -detyx, detzx, -detxx * fM[kDX] + detyx * fM[kDY] - detzx * fM[kDZ], -detxy, detyy, -detzy,
@@ -984,18 +984,18 @@ protected:
    void SetIdentity(const typename SCALAR::mask_type m)
    {
       // set identity ( identity rotation and zero translation)
-      fM[kXX](m) = T(1);
-      fM[kXY](m) = T(0);
-      fM[kXZ](m) = T(0);
-      fM[kDX](m) = T(0);
-      fM[kYX](m) = T(0);
-      fM[kYY](m) = T(1);
-      fM[kYZ](m) = T(0);
-      fM[kDY](m) = T(0);
-      fM[kZX](m) = T(0);
-      fM[kZY](m) = T(0);
-      fM[kZZ](m) = T(1);
-      fM[kDZ](m) = T(0);
+      where(m, fM[kXX]) = T(1);
+      where(m, fM[kXY]) = T(0);
+      where(m, fM[kXZ]) = T(0);
+      where(m, fM[kDX]) = T(0);
+      where(m, fM[kYX]) = T(0);
+      where(m, fM[kYY]) = T(1);
+      where(m, fM[kYZ]) = T(0);
+      where(m, fM[kDY]) = T(0);
+      where(m, fM[kZX]) = T(0);
+      where(m, fM[kZY]) = T(0);
+      where(m, fM[kZZ]) = T(1);
+      where(m, fM[kDZ]) = T(0);
    }
 
 private:

@@ -345,7 +345,7 @@ namespace ROOT {
       DisplacementVector3D Unit() const
       {
          SCALAR tot            = R();
-         tot(tot == SCALAR(0)) = SCALAR(1);
+         where(tot == SCALAR(0), tot) = SCALAR(1);
          return DisplacementVector3D(*this) / tot;
       }
 
@@ -660,7 +660,7 @@ namespace ROOT {
     {
        if (os) {
           os << "{ ";
-          for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::Size; ++i) {
+          for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::size(); ++i) {
              os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
           }
           os << "}";
