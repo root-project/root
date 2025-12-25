@@ -646,7 +646,7 @@ operator<<(std::basic_ostream<char_t, traits_t> &os, PositionVector3D<T, U> cons
 {
    if (os) {
       os << "{ ";
-      for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::Size; ++i) {
+      for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::size(); ++i) {
          os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
       }
       os << "}";
