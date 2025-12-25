@@ -859,7 +859,7 @@ public:
       const auto detZmask = (det == T(0));
       if (any_of(detZmask)) {
          std::cerr << "Transform3D::inverse error: zero determinant" << std::endl;
-         det(detZmask) = T(1);
+         where(detZmask, det) = T(1);
       }
       det = T(1) / det;
       detxx *= det;
@@ -873,15 +873,15 @@ public:
       T detzz = (fM[kXX] * fM[kYY] - fM[kXY] * fM[kYX]) * det;
       // Set det=0 cases to 0
       if (any_of(detZmask)) {
-         detxx(detZmask) = T(0);
-         detxy(detZmask) = T(0);
-         detxz(detZmask) = T(0);
-         detyx(detZmask) = T(0);
-         detyy(detZmask) = T(0);
-         detyz(detZmask) = T(0);
-         detzx(detZmask) = T(0);
-         detzy(detZmask) = T(0);
-         detzz(detZmask) = T(0);
+         where(detZmask, detxx) = T(0);
+         where(detZmask, detxy) = T(0);
+         where(detZmask, detxz) = T(0);
+         where(detZmask, detyx) = T(0);
+         where(detZmask, detyy) = T(0);
+         where(detZmask, detyz) = T(0);
+         where(detZmask, detzx) = T(0);
+         where(detZmask, detzy) = T(0);
+         where(detZmask, detzz) = T(0);
       }
       // set final components
       SetComponents(detxx, -detyx, detzx, -detxx * fM[kDX] + detyx * fM[kDY] - detzx * fM[kDZ], -detxy, detyy, -detzy,
