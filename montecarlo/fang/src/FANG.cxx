@@ -10,7 +10,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \file TFANG.cxx
+/// \file FANG.cxx
 /// \ingroup Physics
 /// \brief Implementation of FANG (Focused Angular N-body event Generator)
 /// \authors Arik Kreisel, Itay Horin
@@ -21,13 +21,15 @@
 /// events in which selected final-state particles are constrained to fixed
 /// directions or finite angular regions in the laboratory frame.
 ///
-/// Reference: "Focused Angular N-Body Event Generator (FANG)" paper
-/// https://arxiv.org/abs/2509.11105 Published in JHEP
+/// Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
+/// J. High Energ. Phys. 2025, 137 (2025). 
+/// https://doi.org/10.1007/JHEP12(2025)13 
+/// https://arxiv.org/abs/2509.11105 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "TFANG.h"
+#include "FANG.h"
 
-#include "TRandom.h"
+#include "TRandom3.h"
 #include "TMath.h"
 #include "TError.h"
 #include "Math/GenVector/Rotation3D.h"
@@ -37,7 +39,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace TFANG {
+namespace FANG {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Node_t Implementation
@@ -230,16 +232,18 @@ Double_t CalcKMFactor(Double_t x, Double_t y)
 /// \param[in] m2 Mass of second decay product
 /// \param[out] p1 4-momentum of first decay product (lab frame)
 /// \param[out] p2 4-momentum of second decay product (lab frame)
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 ////////////////////////////////////////////////////////////////////////////////
 void TwoBody(const ROOT::Math::PxPyPzMVector &S,
              Double_t m1, Double_t m2,
              ROOT::Math::PxPyPzMVector &p1,
-             ROOT::Math::PxPyPzMVector &p2)
+             ROOT::Math::PxPyPzMVector &p2,
+             TRandom3 *rng)
 {
    // Generate random direction in CM frame
-   Double_t cst = gRandom->Uniform(-1.0, 1.0);
+   Double_t cst = rng->Uniform(-1.0, 1.0);
    Double_t snt = std::sqrt(1.0 - cst * cst);
-   Double_t phi = gRandom->Uniform(0.0, kTwoPi);
+   Double_t phi = rng->Uniform(0.0, kTwoPi);
 
    // Calculate energy and momentum in CM frame
    Double_t E1 = (S.M2() - m2 * m2 + m1 * m1) / (2.0 * S.M());
@@ -425,10 +429,12 @@ Bool_t TGenPointSpace(const ROOT::Math::PxPyPzMVector &S1,
 /// \param[in] Ratio Shape parameter determining generation mode
 /// \param[in] Vcenter Central direction vector
 /// \param[out] vPoint Generated direction vector
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 ////////////////////////////////////////////////////////////////////////////////
 void TGenVec(Double_t Omega, Double_t Ratio,
              ROOT::Math::XYZVector Vcenter,
-             ROOT::Math::XYZVector &vPoint)
+             ROOT::Math::XYZVector &vPoint,
+             TRandom3 *rng)
 {
    ROOT::Math::XYZVector newZ, newX, newY, Vz;
    ROOT::Math::Polar3DVector Vgen;
@@ -448,8 +454,8 @@ void TGenVec(Double_t Omega, Double_t Ratio,
 
    if (IsCircle(Ratio)) {
       // Circle generation: uniform within cone
-      cst = gRandom->Uniform(1.0 - Omega / kTwoPi, 1.0);
-      phi = gRandom->Uniform(0.0, kTwoPi);
+      cst = rng->Uniform(1.0 - Omega / kTwoPi, 1.0);
+      phi = rng->Uniform(0.0, kTwoPi);
 
       if (std::abs(Vcenter.X()) < kPositionTolerance &&
           std::abs(Vcenter.Y()) < kPositionTolerance) {
@@ -489,14 +495,14 @@ void TGenVec(Double_t Omega, Double_t Ratio,
          ::Warning("FANG::TGenVec", "Center moved to agree with Omega (near -1)");
       }
 
-      cst = gRandom->Uniform(cst0 - Dcos / 2.0, cst0 + Dcos / 2.0);
-      phi = gRandom->Uniform(phi0 - Dphi / 2.0, phi0 + Dphi / 2.0);
+      cst = rng->Uniform(cst0 - Dcos / 2.0, cst0 + Dcos / 2.0);
+      phi = rng->Uniform(phi0 - Dphi / 2.0, phi0 + Dphi / 2.0);
       Vgen.SetCoordinates(1.0, std::acos(cst), phi);
       vPoint = Vgen;
    } else if (IsRing(Ratio)) {
       // Ring generation: fixed polar angle, random azimuthal
       cst = 1.0 - Omega / kTwoPi;
-      phi = gRandom->Uniform(0.0, kTwoPi);
+      phi = rng->Uniform(0.0, kTwoPi);
 
       if (std::abs(Vcenter.X()) < kPositionTolerance &&
           std::abs(Vcenter.Y()) < kPositionTolerance) {
@@ -544,6 +550,7 @@ void TGenVec(Double_t Omega, Double_t Ratio,
 /// \param[in] V3Det Vector of direction vectors for constrained detectors
 /// \param[out] VecVecP Output: vector of 4-momenta vectors for each solution
 /// \param[out] vecWi Output: weight for each solution
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 /// \return 1 on success, 0 if no physical solution exists
 ////////////////////////////////////////////////////////////////////////////////
 Int_t GenFANG(Int_t nBody,
@@ -553,7 +560,8 @@ Int_t GenFANG(Int_t nBody,
               const Double_t *Ratio,
               std::vector<ROOT::Math::XYZVector> V3Det,
               std::vector<std::vector<ROOT::Math::PxPyPzMVector>> &VecVecP,
-              std::vector<Double_t> &vecWi)
+              std::vector<Double_t> &vecWi,
+              TRandom3 *rng)
 {
    Int_t nDet = static_cast<Int_t>(V3Det.size());
    Double_t mS = S.M();
@@ -584,8 +592,6 @@ Int_t GenFANG(Int_t nBody,
    vecWi.clear();
    pathsJ.clear();
 
-   gRandom->SetSeed(0);
-
    Bool_t Hit;
    ROOT::Math::XYZVector V3;
    ROOT::Math::PxPyPzMVector p1;
@@ -612,7 +618,7 @@ Int_t GenFANG(Int_t nBody,
          if (IsPoint(Ratio[0])) {
             V3 = V3Det[0].Unit();
          } else {
-            TGenVec(Om[0], Ratio[0], V3Det[0].Unit(), V3);
+            TGenVec(Om[0], Ratio[0], V3Det[0].Unit(), V3, rng);
          }
 
          Hit = TGenPointSpace(S, masses[0], masses[1], V3, solutions,
@@ -629,7 +635,7 @@ Int_t GenFANG(Int_t nBody,
          }
       } else {
          // Unconstrained two-body decay (nDet == 0)
-         TwoBody(S, masses[0], masses[1], p1, p2);
+         TwoBody(S, masses[0], masses[1], p1, p2, rng);
          vecP.push_back(p1);
          vecP.push_back(p2);
          wh = 1.0;
@@ -645,7 +651,7 @@ Int_t GenFANG(Int_t nBody,
    //==========================================================================
 
    // Generate virtual masses using M-generation algorithm
-   gRandom->RndmArray(nBody - 2, rrr.data());
+   rng->RndmArray(nBody - 2, rrr.data());
 
    // Sort random numbers in ascending order
    std::sort(rrr.begin(), rrr.end());
@@ -690,17 +696,17 @@ Int_t GenFANG(Int_t nBody,
    // No detector constraints
    //==========================================================================
    if (nDet == 0) {
-      TwoBody(S, masses[0], mV[0], p1, p2);
+      TwoBody(S, masses[0], mV[0], p1, p2, rng);
       vecP.push_back(p1);
       pV = p2;
 
       for (Int_t i = 0; i < nBody - 3; i++) {
-         TwoBody(pV, masses[i + 1], mV[i + 1], p1, p2);
+         TwoBody(pV, masses[i + 1], mV[i + 1], p1, p2, rng);
          vecP.push_back(p1);
          pV = p2;
       }
 
-      TwoBody(pV, masses[nBody - 2], masses[nBody - 1], p1, p2);
+      TwoBody(pV, masses[nBody - 2], masses[nBody - 1], p1, p2, rng);
       vecP.push_back(p1);
       vecP.push_back(p2);
 
@@ -728,7 +734,7 @@ Int_t GenFANG(Int_t nBody,
          if (IsPoint(Ratio[level])) {
             V3 = V3Det[level].Unit();
          } else {
-            TGenVec(Om[level], Ratio[level], V3Det[level].Unit(), V3);
+            TGenVec(Om[level], Ratio[level], V3Det[level].Unit(), V3, rng);
          }
 
          Hit = TGenPointSpace(pV, masses[level], mV[level], V3,
@@ -770,7 +776,7 @@ Int_t GenFANG(Int_t nBody,
          if (IsPoint(Ratio[level])) {
             V3 = V3Det[level].Unit();
          } else {
-            TGenVec(Om[level], Ratio[level], V3Det[level].Unit(), V3);
+            TGenVec(Om[level], Ratio[level], V3Det[level].Unit(), V3, rng);
          }
 
          Hit = TGenPointSpace(pV, masses[level], masses[level + 1], V3,
@@ -826,7 +832,7 @@ Int_t GenFANG(Int_t nBody,
       // Case 3: Unconstrained particle, not the last two-body decay
       if (level >= nDet && level < nBody - 2) {
          pV = cur->fPV;
-         TwoBody(pV, masses[level], mV[level], p1, p2);
+         TwoBody(pV, masses[level], mV[level], p1, p2, rng);
          CreateRight(cur, nullptr, p1, p2, 1.0);
          cur = cur->fRight;
          level++;
@@ -836,7 +842,7 @@ Int_t GenFANG(Int_t nBody,
       // Case 4: Unconstrained particle, last two-body decay
       if (level >= nDet && level == nBody - 2) {
          pV = cur->fPV;
-         TwoBody(pV, masses[level], masses[level + 1], p1, p2);
+         TwoBody(pV, masses[level], masses[level + 1], p1, p2, rng);
          CreateRight(cur, nullptr, p1, p2, 1.0);
          cur = cur->fRight;
          CreateRight(cur, nullptr, p2, S, 1.0);
@@ -901,4 +907,4 @@ Int_t GenFANG(Int_t nBody,
    return 1;
 }
 
-} // namespace TFANG
+} // namespace FANG

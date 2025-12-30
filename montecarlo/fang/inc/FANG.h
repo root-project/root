@@ -9,11 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TFANG_H   
-#define ROOT_TFANG_H
-
 ////////////////////////////////////////////////////////////////////////////////
-/// \file TFANG.h
+/// \file FANG.h
 /// \ingroup Physics
 /// \brief Focused Angular N-body event Generator (FANG)
 /// \authors Arik Kreisel, Itay Horin
@@ -24,9 +21,14 @@
 /// events in which selected final-state particles are constrained to fixed
 /// directions or finite angular regions in the laboratory frame.
 ///
-/// Reference: "Focused Angular N-Body Event Generator (FANG)" paper
-/// https://arxiv.org/abs/2509.11105 Published in JHEP
+/// Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
+/// J. High Energ. Phys. 2025, 137 (2025). 
+/// https://doi.org/10.1007/JHEP12(2025)13 
+/// https://arxiv.org/abs/2509.11105 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_FANG
+#define ROOT_FANG
 
 #include "Rtypes.h"
 #include "Math/Vector3D.h"
@@ -34,7 +36,9 @@
 
 #include <vector>
 
-namespace TFANG {
+class TRandom3;
+
+namespace FANG {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mathematical constants
@@ -194,10 +198,12 @@ Double_t CalcKMFactor(Double_t x, Double_t y);
 /// \param[in] m2 Mass of second decay product
 /// \param[out] p1 4-momentum of first decay product (lab frame)
 /// \param[out] p2 4-momentum of second decay product (lab frame)
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 void TwoBody(const ROOT::Math::PxPyPzMVector &S,
              Double_t m1, Double_t m2,
              ROOT::Math::PxPyPzMVector &p1,
-             ROOT::Math::PxPyPzMVector &p2);
+             ROOT::Math::PxPyPzMVector &p2,
+             TRandom3 *rng);
 
 /// \brief Calculate 4-momentum for particle constrained to a lab-frame direction
 ///
@@ -227,9 +233,11 @@ Bool_t TGenPointSpace(const ROOT::Math::PxPyPzMVector &S1,
 /// \param[in] Ratio Shape parameter determining generation mode
 /// \param[in] Vcenter Central direction vector
 /// \param[out] vPoint Generated direction vector
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 void TGenVec(Double_t Omega, Double_t Ratio,
              ROOT::Math::XYZVector Vcenter,
-             ROOT::Math::XYZVector &vPoint);
+             ROOT::Math::XYZVector &vPoint,
+             TRandom3 *rng);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main Generator Function
@@ -254,6 +262,7 @@ void TGenVec(Double_t Omega, Double_t Ratio,
 /// \param[in] V3Det Vector of direction vectors for constrained detectors
 /// \param[out] VecVecP Output: vector of 4-momenta vectors for each solution
 /// \param[out] vecWi Output: weight for each solution
+/// \param[in] rng Pointer to TRandom3 random number generator (thread-safe)
 /// \return 1 on success, 0 if no physical solution exists
 Int_t GenFANG(Int_t nBody,
               const ROOT::Math::PxPyPzMVector &S,
@@ -262,8 +271,9 @@ Int_t GenFANG(Int_t nBody,
               const Double_t *Ratio,
               std::vector<ROOT::Math::XYZVector> V3Det,
               std::vector<std::vector<ROOT::Math::PxPyPzMVector>> &VecVecP,
-              std::vector<Double_t> &vecWi);
+              std::vector<Double_t> &vecWi,
+              TRandom3 *rng);
 
-} // TFANG
+} // namespace FANG
 
-#endif // TFANG
+#endif // ROOT_FANG
