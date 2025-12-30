@@ -26,9 +26,5 @@ void formula1()
    c1->SetGridy();
    fun1->Draw();
    c1->Update();
-   //
-   // Before leaving this demo, we print the list of objects known to ROOT
-   //
-   if (gObjectTable)
-      gObjectTable->Print();
+
 }
