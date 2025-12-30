@@ -14,7 +14,7 @@
  *
  * Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
  * J. High Energ. Phys. 2025, 137 (2025). 
- * https://doi.org/10.1007/JHEP12(2025)13 
+ * https://doi.org/10.1007/JHEP12(2025)137 
  * https://arxiv.org/abs/2509.11105 
 * This file contains:
 * 1. Rosenbluth cross section function for elastic ep scattering
