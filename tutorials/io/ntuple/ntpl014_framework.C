@@ -36,6 +36,8 @@
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 
+#include <TFile.h>
+
 #include <cassert>
 #include <cstddef>    // for std::size_t
 #include <cstdint>    // for std::uint32_t
@@ -148,6 +150,8 @@ public:
          }
       }
    }
+   // Version 0 signals to ROOT's typesystem that this instances of this class will never be written
+   ClassDef(ParallelOutputter,0)
 };
 
 // A SerializingOutputter uses a sequential RNTupleWriter to append an RNTuple to a TFile and a std::mutex to
@@ -215,6 +219,8 @@ public:
          }
       }
    }
+   // Version 0 signals to ROOT's typesystem that this instances of this class will never be written
+   ClassDef(SerializingOutputter,0) 
 };
 
 // === END OF TUTORIAL FRAMEWORK CODE ===

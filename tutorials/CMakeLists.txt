@@ -705,6 +705,9 @@ set(analysis-dataframe-df015_LazyDataSource-depends tutorial-analysis-dataframe-
 # Download the input root file only once from a python tutorial, the C++ one depends on it
 set(hist-hist039_TH2Poly_usa-depends tutorial-hist-hist039_TH2Poly_usa-py)
 
+# Specify which tutorials should be run with ACLiC, e.g. because they contain classes instances of which are written
+set(io-ntuple-ntpl014_framework-aclic "+")
+
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
