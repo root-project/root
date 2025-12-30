@@ -159,3 +159,14 @@ TEST(TClass, TemplateTemplate)
    //                  "_gnu_cxx::__common_pool_policy<double32t_test__gnu_cxx::__pool,Double32_t> > >"),
    //           0);
 }
+
+// ROOT-10728
+TEST(TClass, CanSplitWithBaseWithCustomStreamer)
+{
+   gInterpreter->Declare("class CanSplitWithBaseWithCustomStreamer : public TH1D {\n"
+                         "int a = 0;\n"
+                         "ClassDef(CanSplitWithBaseWithCustomStreamer, 1)};");
+
+   auto c = TClass::GetClass("CanSplitWithBaseWithCustomStreamer");
+   EXPECT_FALSE(c->CanSplit());
+}
