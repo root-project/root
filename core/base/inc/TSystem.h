@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/base:$Id$
 // Author: Fons Rademakers   15/09/95
 
@@ -573,4 +577,8 @@ R__EXTERN TSystem *gSystem;
 R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
 
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

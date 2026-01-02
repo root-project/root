@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/meta:$Id$
 // Author: Rene Brun   07/01/95
 
@@ -693,3 +697,7 @@ template <typename T> TClass *GetClass(const T * /* dummy */) { return TClass::G
 }
 
 #endif // ROOT_TClass
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif

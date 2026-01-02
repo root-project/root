@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/base:$Id$
 // Author: Rene Brun   12/05/95
 
@@ -70,3 +74,7 @@ public:
 
 #endif
 
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif

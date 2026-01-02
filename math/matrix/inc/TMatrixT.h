@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
@@ -363,4 +367,8 @@ template <class Element> void AtMultB(const Element * const ap,Int_t ncolsa,
 template <class Element> void AMultBt(const Element * const ap,Int_t na,Int_t ncolsa,
                                       const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp);
 } // inline namespace TMatrixTAutoloadOps
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

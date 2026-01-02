@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
@@ -282,4 +286,8 @@ template <class Element> TMatrixTSym<Element> &Add        (TMatrixTSym<Element> 
 template <class Element> TMatrixTSym<Element> &ElementMult(TMatrixTSym<Element> &target,const TMatrixTSym<Element> &source);
 template <class Element> TMatrixTSym<Element> &ElementDiv (TMatrixTSym<Element> &target,const TMatrixTSym<Element> &source);
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

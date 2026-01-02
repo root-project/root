@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/io:$Id$
 // Author: Rene Brun   28/11/94
 
@@ -482,4 +486,8 @@ inline Int_t TFile::GetCompressionSettings() const
    return (fCompress < 0) ? -1 : fCompress;
 }
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

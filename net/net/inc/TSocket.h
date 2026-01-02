@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/net:$Id$
 // Author: Fons Rademakers   18/12/96
 
@@ -187,4 +191,8 @@ inline Int_t TSocket::GetCompressionSettings() const
    return (fCompress < 0) ? -1 : fCompress;
 }
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

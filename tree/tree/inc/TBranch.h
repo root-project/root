@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/tree:$Id$
 // Author: Rene Brun   12/01/96
 
@@ -327,4 +331,8 @@ inline bool   TBulkBranchRead::SupportsBulkRead() const { return fParent.Support
 }  // Experimental
 }  // ROOT
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

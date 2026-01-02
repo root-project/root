@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/base:$Id$
 // Author: Fons Rademakers   22/12/95
 
@@ -169,4 +173,8 @@ public:
 
 R__EXTERN TApplication *gApplication;
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

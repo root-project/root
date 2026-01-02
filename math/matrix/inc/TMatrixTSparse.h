@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
@@ -284,4 +288,8 @@ template <class Element> TMatrixTSparse<Element> &ElementDiv (TMatrixTSparse<Ele
 
 template <class Element> Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,const TMatrixTSparse<Element> &m2,Int_t verbose=0);
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif

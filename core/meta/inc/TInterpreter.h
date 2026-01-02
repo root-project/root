@@ -1,3 +1,7 @@
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 // @(#)root/meta:$Id$
 // Author: Fons Rademakers   01/03/96
 
@@ -583,4 +587,8 @@ inline ROOT::Internal::InterpreterMutexRegistrationRAII::~InterpreterMutexRegist
       ::gCling->ForgetMutexState();
 }
 
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
 #endif
