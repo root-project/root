@@ -52,110 +52,116 @@ def getGuardedStlInclude(headerName):
 
 #-------------------------------------------------------------------------------
 def getSTLIncludes():
-   """
-   Here we include the list of c++11 stl headers
-   From http://en.cppreference.com/w/cpp/header
-   valarray is removed because it causes lots of compilation at startup.
-   """
-   stlHeadersList = ("cstdlib",
-                     "csignal",
-                     "csetjmp",
-                     "cstdarg",
-                     "typeinfo",
-                     "typeindex",
-                     "type_traits",
-                     "bitset",
-                     "functional",
-                     "utility",
-                     "ctime",
-                     "chrono",
-                     "cstddef",
-                     "initializer_list",
-                     "tuple",
-                     "new",
-                     "memory",
-                     "scoped_allocator",
-                     "climits",
-                     "cfloat",
-                     "cstdint",
-                     "cinttypes",
-                     "limits",
-                     "exception",
-                     "stdexcept",
-                     "cassert",
-                     "system_error",
-                     "cerrno",
-                     "cctype",
-                     "cwctype",
-                     "cstring",
-                     "cwchar",
-                     "cuchar",
-                     "string",
-                     "array",
-                     "vector",
-                     "deque",
-                     "list",
-                     "forward_list",
-                     "set",
-                     "map",
-                     "unordered_set",
-                     "unordered_map",
-                     "stack",
-                     "queue",
-                     "algorithm",
-                     "iterator",
-                     "cmath",
-                     "complex",
-#                     "valarray",
-                     "random",
-                     "numeric",
-                     "ratio",
-                     "cfenv",
-                     "iosfwd",
-                     "ios",
-                     "istream",
-                     "ostream",
-                     "iostream",
-                     "fstream",
-                     "sstream",
-                     "iomanip",
-                     "streambuf",
-                     "cstdio",
-                     "locale",
-                     "clocale",
-                     "codecvt",
-                     "atomic",
-                     "thread",
-                     "mutex",
-                     "future",
-                     "condition_variable",
-                     "ciso646",
-                     "regex")
+    """
+    Here we include the list of c++11 stl headers
+    From http://en.cppreference.com/w/cpp/header
+    valarray is removed because it causes lots of compilation at startup.
+    """
+    stlHeadersList = (
+        "cstdlib",
+        "csignal",
+        "csetjmp",
+        "cstdarg",
+        "typeinfo",
+        "typeindex",
+        "type_traits",
+        "bitset",
+        "functional",
+        "utility",
+        "ctime",
+        "chrono",
+        "cstddef",
+        "initializer_list",
+        "tuple",
+        "new",
+        "memory",
+        "scoped_allocator",
+        "climits",
+        "cfloat",
+        "cstdint",
+        "cinttypes",
+        "limits",
+        "exception",
+        "stdexcept",
+        "cassert",
+        "system_error",
+        "cerrno",
+        "cctype",
+        "cwctype",
+        "cstring",
+        "cwchar",
+        "cuchar",
+        "string",
+        "array",
+        "vector",
+        "deque",
+        "list",
+        "forward_list",
+        "set",
+        "map",
+        "unordered_set",
+        "unordered_map",
+        "stack",
+        "queue",
+        "algorithm",
+        "iterator",
+        "cmath",
+        "complex",
+        # "valarray",
+        "random",
+        "numeric",
+        "ratio",
+        "cfenv",
+        "iosfwd",
+        "ios",
+        "istream",
+        "ostream",
+        "iostream",
+        "fstream",
+        "sstream",
+        "iomanip",
+        "streambuf",
+        "cstdio",
+        "locale",
+        "clocale",
+        "codecvt",
+        "atomic",
+        "thread",
+        "mutex",
+        "future",
+        "condition_variable",
+        "ciso646",
+        "regex",
+    )
 
-   allHeadersPartContent = "// STL headers\n"
+    allHeadersPartContent = "// STL headers\n"
 
-   for header in stlHeadersList:
-      allHeadersPartContent += getGuardedStlInclude(header)
+    for header in stlHeadersList:
+        allHeadersPartContent += getGuardedStlInclude(header)
 
-   # Special case for regex
-   allHeadersPartContent += '// treat regex separately\n' +\
-                            '#if __has_include("regex") && !defined __APPLE__\n' +\
-                            '#include <regex>\n' +\
-                            '#endif\n'
+    # Special case for regex
+    allHeadersPartContent += (
+        "// treat regex separately\n"
+        + '#if __has_include("regex") && !defined __APPLE__\n'
+        + "#include <regex>\n"
+        + "#endif\n"
+    )
 
-   # treat this deprecated headers in a special way
-   stlDeprecatedHeadersList=["strstream"]
-   allHeadersPartContent += '// STL Deprecated headers\n' +\
-                            '#define _BACKWARD_BACKWARD_WARNING_H\n' +\
-                            "#pragma clang diagnostic push\n" +\
-                            '#pragma GCC diagnostic ignored "-Wdeprecated"\n'
+    # treat this deprecated headers in a special way
+    stlDeprecatedHeadersList = ["strstream"]
+    allHeadersPartContent += (
+        "// STL Deprecated headers\n"
+        + "#define _BACKWARD_BACKWARD_WARNING_H\n"
+        + "#pragma clang diagnostic push\n"
+        + '#pragma GCC diagnostic ignored "-Wdeprecated"\n'
+    )
 
-   for header in stlDeprecatedHeadersList:
-      allHeadersPartContent += getGuardedStlInclude(header)
+    for header in stlDeprecatedHeadersList:
+        allHeadersPartContent += getGuardedStlInclude(header)
 
-   allHeadersPartContent += '#pragma clang diagnostic pop\n' +\
-                            '#undef _BACKWARD_BACKWARD_WARNING_H\n'
-   return allHeadersPartContent
+    allHeadersPartContent += "#pragma clang diagnostic pop\n" + "#undef _BACKWARD_BACKWARD_WARNING_H\n"
+    return allHeadersPartContent
+
 
 #-------------------------------------------------------------------------------
 def getExtraIncludes(headers):
