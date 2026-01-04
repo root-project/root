@@ -56,7 +56,14 @@ enum EAccessMode {
    kFileExists        = 0,
    kExecutePermission = 1,
    kWritePermission   = 2,
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    kReadPermission    = 4
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 };
 
 enum ELogOption {

@@ -60,7 +60,14 @@ class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:F
 const Int_t kDoNotProcess = BIT(10); // Active bit for branches
 const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
 const Int_t kBranchObject = BIT(12); // branch is a TObject*
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 const Int_t kBranchAny    = BIT(17); // branch is an object*
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 const Int_t kMapObject    = kBranchObject | kBranchAny;
 
 namespace ROOT {

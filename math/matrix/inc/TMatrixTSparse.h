@@ -81,7 +81,14 @@ protected:
 
 public:
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kAtA };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    enum EMatrixCreatorsOp2 { kMult,kMultTranspose,kPlus,kMinus };
 
    TMatrixTSparse() { fElements = nullptr; fRowIndex = nullptr; fColIndex = nullptr; }

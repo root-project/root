@@ -267,7 +267,14 @@ public:
       // Note that to avoid a circular dependency, this value is used
       // hard coded in TObject.cxx.
       k630forwardCompatibility = BIT(2),
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kRecovered     = BIT(10),
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
       kWriteError    = BIT(14),

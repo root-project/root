@@ -54,7 +54,14 @@ protected:
 public:
 
    enum {kWorkMax = 100}; // size of work array
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    enum EMatrixCreatorsOp2 { kPlus,kMinus };
 
    TMatrixTSym() { fElements = nullptr; }

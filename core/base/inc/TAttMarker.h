@@ -57,7 +57,14 @@ public:
    ClassDef(TAttMarker,3);  //Marker attributes
 };
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                       kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
                       kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                       kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,

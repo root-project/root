@@ -60,7 +60,14 @@ public:
 
 
    enum {kWorkMax = 100};
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
    TMatrixT(): fDataStack(), fElements(nullptr) { }
