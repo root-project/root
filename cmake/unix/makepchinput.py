@@ -130,10 +130,7 @@ def getSTLIncludes():
                      "future",
                      "condition_variable",
                      "ciso646",
-                     "ccomplex",
-                     "ctgmath",
-                     "regex",
-                     "cstdbool")
+                     "regex")
 
    allHeadersPartContent = "// STL headers\n"
 
