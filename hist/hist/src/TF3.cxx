@@ -59,9 +59,8 @@ TF3::TF3()
    fZmax = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a formula definition
+/// F3 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
@@ -76,6 +75,28 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    if (ndim < 3) fNdim = 3;
    if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
       Error("TF3","function: %s/%s has dimension %d instead of 3",name,formula,ndim);
+      MakeZombie();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// F3 constructor using a formula definition and explicit option args
+///
+/// See TFormula constructor for explanation of the formula syntax.
+
+TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Double_t zmin, Double_t zmax, EAddToList addToGlobList, bool vectorize)
+   : TF2(name, formula, xmin, xmax, ymax, ymin, addToGlobList, vectorize)
+{
+   fZmin = zmin;
+   fZmax = zmax;
+   fNpz = 30;
+   Int_t ndim = GetNdim();
+   // accept 1-d or 2-d formula
+   if (ndim < 3)
+      fNdim = 3;
+   if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
+      Error("TF3", "function: %s/%s has dimension %d instead of 3", name, formula, ndim);
       MakeZombie();
    }
 }

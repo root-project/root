@@ -36,7 +36,9 @@ protected:
 public:
    TF3();
    TF3(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
-       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Option_t * opt = nullptr);
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
+   TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin,
+       Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt);  // same as above but using a string for option 
    TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0, Int_t ndim = 3, EAddToList addToGlobList = EAddToList::kDefault);
    TF3(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
