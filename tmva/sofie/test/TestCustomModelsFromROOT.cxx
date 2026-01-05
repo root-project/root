@@ -891,7 +891,8 @@ TEST(ROOT, RangeFloat) {
    float start = 1.;
    float limit = 10.;
    float delta = 2.;
-   std::vector<float> output = TMVA_SOFIE_RangeFloat::infer(&start, &limit, &delta);
+   TMVA_SOFIE_RangeFloat::Session s("",5);
+   std::vector<float> output(s.infer(&start, &limit, &delta));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
@@ -909,7 +910,8 @@ TEST(ROOT, RangeInt) {
    int64_t start = 1;
    int64_t limit = 10;
    int64_t delta = 2;
-   std::vector<int64_t> output = TMVA_SOFIE_RangeInt::infer(&start, &limit, &delta);
+   TMVA_SOFIE_RangeInt::Session s("",5);
+   std::vector<int64_t> output(s.infer(&start, &limit, &delta));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));

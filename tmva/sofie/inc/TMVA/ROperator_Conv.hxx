@@ -350,8 +350,8 @@ public:
          out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
              << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "fTensor_" << fNB << ".resize(" << length << ");\n";
+         out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNB << ".begin());\n";
          out << SP << SP << "tensor_" << fNB << " = fTensor_" << fNB << ".data();\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNB << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
       }

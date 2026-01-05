@@ -613,8 +613,8 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    // support for the time being only weight of FLOAT type
    if (fUseWeightFile) {
       bool modelHasWeights = false;
-      for (auto &i : fInitializedTensors) {
-         if (i.second.IsWeightTensor()) {
+      for (auto &it : fInitializedTensors) {
+         if (it.second.IsWeightTensor()) {
             modelHasWeights = true;
             break;
          }
@@ -664,7 +664,8 @@ std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedT
    std::string type = ConvertTypeToString(t.second.type());
    size_t length = ConvertShapeToLength(t.second.shape());
    // avoid using stack sizes for constant tensors to reduce compilation time
-   bool allocateOnStack = (length > 100) ? false : true;
+   // also for weights which can be broadcasted do not use stack but allocate as a std::vector
+   bool allocateOnStack = (length > 100 || t.second.IsWeightTensor()) ? false : true;
 
    const T *data = t.second.data<T>();
 
@@ -687,7 +688,7 @@ std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedT
       else {
          strs << ConvertValuesToString(length, data) << ";\n";
       }
-      strs << "const " << type << " * tensor_" + t.first + " = fTensor_" + t.first + ".data();\n";
+      strs << type << " * tensor_" + t.first + " = fTensor_" + t.first + ".data();\n";
    }
    return strs.str();
 }
@@ -1180,6 +1181,13 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
 
    // initialize the model including all operators and sub-graphs
    Initialize(batchSize, verbose);
+
+   // if having dynamic tensor we need to have a Session
+   if (!fDynamicTensorInfos.empty()) {
+      fUseSession = true;
+      if (verbose)
+         std::cout << "Warning: Force having a Session since model has dynamic tensors " << std::endl;
+   }
 
    std::string hgname;
    if (!fIsGNNComponent && !fIsSubGraph) {
