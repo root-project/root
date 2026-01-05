@@ -2234,9 +2234,9 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    //THE TEST
    Int_t m = 0, n = 0;
-
    //Experiment - experiment comparison
    if (comparisonUU) {
+      Int_t resIndex = 0;
       Double_t sum = sum1 + sum2;
       for (Int_t i = i_start; i <= i_end; ++i) {
          for (Int_t j = j_start; j <= j_end; ++j) {
@@ -2266,15 +2266,15 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   Double_t nexp1 = cntsum * sum1 / sum;
                   //Double_t nexp2 = binsum*sum2/sum;
 
-                  if (res) res[i - i_start] = (cnt1 - nexp1) / TMath::Sqrt(nexp1);
+                  if (res) res[resIndex] = (cnt1 - nexp1) / TMath::Sqrt(nexp1);
 
                   if (cnt1 < 1) ++m;
                   if (cnt2 < 1) ++n;
 
                   //Habermann correction for residuals
                   Double_t correc = (1. - sum1 / sum) * (1. - cntsum / sum);
-                  if (res) res[i - i_start] /= TMath::Sqrt(correc);
-
+                  if (res) res[resIndex] /= TMath::Sqrt(correc);
+                  if (res) resIndex++;
                   Double_t delta = sum2 * cnt1 - sum1 * cnt2;
                   chi2 += delta * delta / cntsum;
                }
@@ -2302,6 +2302,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    // case of error = 0 and content not zero is treated without problems by excluding second chi2 sum
    // and can be considered as a data-theory comparison
    if ( comparisonUW ) {
+      Int_t resIndex = 0;
       for (Int_t i = i_start; i <= i_end; ++i) {
          for (Int_t j = j_start; j <= j_end; ++j) {
             for (Int_t k = k_start; k <= k_end; ++k) {
@@ -2384,10 +2385,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      Double_t temp2 = 1.0 + (sum1 * e2sq - sum2 * cnt2) / var2;
                      temp2 = temp1 * temp1 * sum1 * probb * (1.0 - probb) + temp2 * temp2 * e2sq / 4.0;
                      // invert sign here
-                     res[i - i_start] = - delta2 / TMath::Sqrt(temp2);
+                     res[resIndex] = - delta2 / TMath::Sqrt(temp2);
                   }
                   else
-                     res[i - i_start] = delta1 / TMath::Sqrt(nexp1);
+                     res[resIndex] = delta1 / TMath::Sqrt(nexp1);
+                  if (res) resIndex++;
                }
             }
          }
@@ -2409,6 +2411,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    // weighted - weighted  comparison
    if (comparisonWW) {
+      Int_t resIndex = 0;
       for (Int_t i = i_start; i <= i_end; ++i) {
          for (Int_t j = j_start; j <= j_end; ++j) {
             for (Int_t k = k_start; k <= k_end; ++k) {
@@ -2450,7 +2453,8 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      Double_t s2 = e2sq * ( 1. - e1sq * sum2 * sum2 / sigma );
                      z = -d2 / TMath::Sqrt(s2);
                   }
-                  res[i - i_start] = z;
+                  res[resIndex] = z;
+                  if (res) resIndex++;
                }
 
                if (e1sq > 0 && cnt1 * cnt1 / e1sq < 10) m++;
