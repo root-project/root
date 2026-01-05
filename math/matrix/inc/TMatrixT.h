@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
@@ -37,6 +33,17 @@
 
 #include <cassert>
 
+// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
+// legacy member variables shadowing local variables (PR #20793).
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
+
 template<class Element> class TMatrixTSym;
 template<class Element> class TMatrixTSparse;
 template<class Element> class TMatrixTLazy;
@@ -63,10 +70,15 @@ public:
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
    enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
@@ -378,4 +390,13 @@ template <class Element> void AMultBt(const Element * const ap,Int_t na,Int_t nc
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #endif

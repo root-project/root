@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/tree:$Id$
 // Author: Rene Brun   12/01/96
 
@@ -35,6 +31,17 @@
 #include "Compression.h"
 #include "ROOT/TIOFeatures.hxx"
 
+// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
+// legacy member variables shadowing local variables (PR #20793).
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
+
 class TTree;
 class TBasket;
 class TBranchElement;
@@ -63,10 +70,15 @@ const Int_t kBranchObject = BIT(12); // branch is a TObject*
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
 const Int_t kBranchAny    = BIT(17); // branch is an object*
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 const Int_t kMapObject    = kBranchObject | kBranchAny;
 
@@ -342,4 +354,13 @@ inline bool   TBulkBranchRead::SupportsBulkRead() const { return fParent.Support
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #endif

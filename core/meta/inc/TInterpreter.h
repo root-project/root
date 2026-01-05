@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/meta:$Id$
 // Author: Fons Rademakers   01/03/96
 
@@ -74,14 +70,7 @@ public:
    typedef class std::map<std::string, std::string> MembersMap_t;
 
    enum EErrorCode {
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
       kNoError     = 0,
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
       kRecoverable = 1,
       kDangerous   = 2,
       kFatal       = 3,
@@ -594,8 +583,4 @@ inline ROOT::Internal::InterpreterMutexRegistrationRAII::~InterpreterMutexRegist
       ::gCling->ForgetMutexState();
 }
 
-#endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
 #endif

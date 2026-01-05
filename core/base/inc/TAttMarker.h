@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/base:$Id$
 // Author: Rene Brun   12/05/95
 
@@ -18,6 +14,17 @@
 
 
 #include "Rtypes.h"
+
+// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
+// legacy member variables shadowing local variables (PR #20793).
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
 
 class TColorNumber;
 
@@ -60,10 +67,15 @@ public:
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
                       kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
                       kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
@@ -83,4 +95,13 @@ public:
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #endif

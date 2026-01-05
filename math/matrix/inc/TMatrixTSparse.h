@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/matrix:$Id$
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
@@ -23,6 +19,17 @@
 
 #ifdef CBLAS
 #include <vecLib/vBLAS.h>
+
+// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
+// legacy member variables shadowing local variables (PR #20793).
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
 //#include <cblas.h>
 #endif
 
@@ -84,10 +91,15 @@ public:
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kAtA };
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
    enum EMatrixCreatorsOp2 { kMult,kMultTranspose,kPlus,kMinus };
 
@@ -299,4 +311,13 @@ template <class Element> Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #endif

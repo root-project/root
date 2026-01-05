@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/base:$Id$
 // Author: Fons Rademakers   15/09/95
 
@@ -38,6 +34,17 @@
 #include "TTimer.h"
 #include <string>
 
+// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
+// legacy member variables shadowing local variables (PR #20793).
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
+
+
 class TSeqCollection;
 class TFdSet;
 class TVirtualMutex;
@@ -59,10 +66,15 @@ enum EAccessMode {
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
    kReadPermission    = 4
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 };
 
@@ -588,4 +600,13 @@ R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #endif
