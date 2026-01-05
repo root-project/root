@@ -708,7 +708,7 @@ endif()
 if(tmva-pymva OR tmva-sofie)
   list(APPEND python_components NumPy)
 endif()
-find_package(Python3 3.9 COMPONENTS ${python_components})
+find_package(Python3 3.10 COMPONENTS ${python_components})
 
 #---Check for OpenGL installation-------------------------------------------------------
 # OpenGL is required by various graf3d features that are enabled with opengl=ON,

@@ -106,6 +106,8 @@ As part of this migration, the following build options are deprecated. From ROOT
 
 ## Python Interface
 
+ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
+
 ## Command-line utilities
 
 ## JavaScript ROOT
