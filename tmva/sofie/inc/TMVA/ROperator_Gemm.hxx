@@ -107,6 +107,7 @@ namespace SOFIE{
          if (input[0].size() > 2 && input[1].size() == input[0].size()) {
             // in case of dim > 2 first dimensions are equal to the input ones not
             // equal to 1 (e.g. (1,2,3) * (2,3,4) -> (2,2,4))
+            // here could probably use the Broadcasting function  UTILITY::MultidirectionalBroadcastShape
             for (size_t i = 0; i < input[0].size()-2; i++) {
                Dim valueA = input[0][i];
                Dim valueB = input[1][i];
@@ -311,8 +312,8 @@ namespace SOFIE{
                 << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY) << ");\n";
 
             out << SP << SP << "fTensor_" << fNC << ".resize(" << length << ");\n";
+            out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNC << ".begin());\n";
             out << SP << SP << "tensor_" << fNC << " = fTensor_" << fNC << ".data();\n";
-            out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC << ");\n";
             out << SP << SP << "delete [] data;\n";
             out << SP << "}\n";
          }
@@ -341,12 +342,12 @@ namespace SOFIE{
          // size of B  n*k
          std::vector<Dim> sY = {fShapeY[dimY-2], fShapeY[dimY-1]};
          // extra dimensions in case of stacked MatMul
-         std::vector<Dim> sA;
+         std::vector<Dim> sExtraY;
          for (int64_t i = 0; i < dimY-2; i++) {
-            sA.push_back(fShapeY[i]);
+            sExtraY.push_back(fShapeY[i]);
          }
          auto lengthGemm = ConvertDimShapeToLength(sY); // size of the Gemm operation
-         auto lengthExtra = ConvertDimShapeToLength(sA); // extra length in case input tensors are of dim>2 (MatMul)
+         auto lengthExtra_Y = ConvertDimShapeToLength(sExtraY); // extra length in case input tensors are of dim>2 (MatMul)
 
          // case bias is present
          if (!fNC.empty()){
@@ -372,7 +373,7 @@ namespace SOFIE{
 
          // include MatMul case where we stack the Gemm operations
          // exclude case where we have only 1's in the additional dims
-         bool doStackMul = dimY > 2 && ( fIsDynamic  || std::stoi(lengthExtra) > 1);
+         bool doStackMul = dimY > 2 && ( fIsDynamic  || std::stoi(lengthExtra_Y) > 1);
          // compute input offset for stack multiplications
          std::string lengthExtra_A;
          std::string lengthExtra_B;
@@ -398,7 +399,7 @@ namespace SOFIE{
                out << SP << "size_t " << opName << "_A_offset = 0;\n";
             if (extraB)
                out << SP << "size_t " << opName << "_B_offset = 0;\n";
-            out << SP << "for (size_t i = 0; i < " << lengthExtra << "; i++){\n";
+            out << SP << "for (size_t i = 0; i < " << lengthExtra_Y << "; i++){\n";
             out << SP;
          }
 
