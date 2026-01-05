@@ -262,7 +262,15 @@ if [ -z "${SOURCE}" ]; then
    fi
 else
    thisrootdir=$(dirname $(realpath "${SOURCE}"))
-   export ROOTSYS=${thisrootdir%/*}
+   thisroot=${thisrootdir%/*}
+   
+   if [ ! -f "${thisroot}/bin/thisroot.sh" ]; then
+      echo "ERROR: Could not determine correct ROOT installation directory" >&2
+      echo "       thisroot.sh not found at ${thisroot}/bin/thisroot.sh" >&2
+      return 1 2>/dev/null || exit 1
+   fi
+   
+   export ROOTSYS=${thisroot}
 fi
 
 if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
