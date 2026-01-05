@@ -152,7 +152,8 @@ if(opengl AND TARGET TreeViewer)
   ROOT_ADD_TEST(test-stressgraphics-interpreted
                 COMMAND ${root_exe} -b --web=off -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in"
-                DEPENDS test-stressgraphics)
+                DEPENDS test-stressgraphics
+                LABELS longtest)
   ROOT_ADD_TEST(test-stressgraphics-svg
                 COMMAND stressGraphics -b --web=off -p=svg --svg=${CMAKE_CURRENT_SOURCE_DIR}/svg_ref/
                 FAILREGEX "FAILED|Error in"
