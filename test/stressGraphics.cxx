@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <fstream>
 #include <ctime>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -277,6 +278,7 @@ Int_t StatusPrint(const TString &filename, const TString &title, Int_t res, Int_
          std::cout << "         Result    = " << res << "\n";
          std::cout << "         Reference = " << ref << "\n";
          std::cout << "         Error     = " << TMath::Abs(res - ref) << " (was " << err << ")\n";
+         std::cout << "         File      = " << filename << "\n";
          gTestsFailed++;
          return 1;
       }
@@ -355,9 +357,19 @@ Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int te
       return 0;
    }
 
+   std::stringstream diffOld;
+   std::stringstream diffNew;
+   auto flushDiff = [&]() {
+      if (diffOld.tellp() != std::streampos(0)) {
+         std::cout << diffOld.str() << diffNew.str() << "\n";
+         diffOld.str("");
+         diffNew.str("");
+      }
+   };
+
    std::string line1, line2;
 
-   int cnt = 0, diffcnt = 0, finediffcnt = 0;
+   int cnt = 0, diffcnt = 0, finediffcnt = 0, lastError = -1;
 
    while (std::getline(f1, line1) && std::getline(f2, line2)) {
       ++cnt;
@@ -369,23 +381,22 @@ Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int te
       if (!gSvgCompact && (cnt == 8))
          continue;
 
-      // ignore difference in file name, only for debugging
-      // if (gSvgCompact && (cnt == 4))
-      //   continue;
+      if (lastError + 1 != cnt) {
+         flushDiff();
+         diffOld << "--- " << filename1 << "\n" << "+++ " << filename2 << "\n@@@ " << cnt << "\n";
+      }
+      lastError = cnt;
+      diffOld << "-  " << line1 << "\n";
+      diffNew << "+  " << line2 << "\n";
 
-      printf("Diff in line %d", cnt);
-      if (line1.length() != line2.length())
-         printf("  len1: %d len2: %d\n", (int) line1.length(), (int) line2.length());
-      else
-         printf("\n");
-      printf("Ref: %s\n", line1.substr(0, 200).c_str());
-      printf("New: %s\n", line2.substr(0, 200).c_str());
       if ((testsvg == kFineSvgTest) && SpecialCompareOfSVGLines(line1, line2)) {
          if (finediffcnt++ > 5)
             return 0;
       } else if (++diffcnt > 5)
-         return 0;
+         break;
    }
+
+   flushDiff();
 
    if (diffcnt > 0)
       return 0;
@@ -633,8 +644,8 @@ void print_reports()
       StatusPrint(e.pngfile, "PNG output", FileSize(e.pngfile), ref->pngref, ref->pngerr);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.ps2file, "C file result",
-                                    e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
+         Int_t ret_code = StatusPrint(e.ps2file, ".C -> .PS file result",
+                                      e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
 
 #ifndef __CLING__
          if (!gOptionK && !ret_code)
@@ -4704,7 +4715,7 @@ int main(int argc, char *argv[])
 
    stressGraphics(verbose, generate, keep);
 
-   return 0;
+   return gTestsFailed != 0;
 }
 #endif
 
