@@ -160,9 +160,6 @@ Bool_t TPython::Initialize()
       }
       PyConfig_Clear(&config);
 #endif
-#if PY_VERSION_HEX < 0x03090000
-      PyEval_InitThreads();
-#endif
 
       // try again to see if the interpreter is initialized
       if (!Py_IsInitialized()) {

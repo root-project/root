@@ -206,11 +206,6 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
-   // Initialize and acquire the GIL to allow for threading in ROOT
-#if PY_VERSION_HEX < 0x03090000
-   PyEval_InitThreads();
-#endif
-
    // Make sure the interpreter is initialized once gROOT has been initialized
    TInterpreter::Instance();
 
