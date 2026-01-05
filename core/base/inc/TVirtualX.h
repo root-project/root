@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/base:$Id$
 // Author: Fons Rademakers   3/12/95
 
@@ -342,8 +338,4 @@ public:
 R__EXTERN TVirtualX *(*gPtr2VirtualX)();
 R__EXTERN TVirtualX  *gGXBatch;
 
-#endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
 #endif

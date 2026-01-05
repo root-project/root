@@ -1,7 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/gui:$Id$
 // Author: Fons Rademakers   03/01/98
 
@@ -612,8 +608,4 @@ public:
 };
 
 
-#endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
 #endif
