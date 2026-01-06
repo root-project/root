@@ -15,6 +15,12 @@ ROOT_ADD_GTEST(CoreBaseTests
   TROOTTests.cxx
   LIBRARIES RIO Core)
 
+# For TROOTTests.cxx:
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(CoreBaseTests PRIVATE stdc++fs)
+endif()
+target_compile_options(CoreBaseTests PRIVATE -DEXPECTED_SHARED_LIBRARY_DIR="${localruntimedir}")
+
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
