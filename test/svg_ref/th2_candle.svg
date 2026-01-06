@@ -656,40 +656,6 @@ th2_candle.svg
 </text>
 <text xml:space="preserve" x="119" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="104" y="4.4" width="25" height="41" fill="#f2f2f2"/>
-<path d="M105,45v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M104,45v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="108" y="9.6" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candleh1
-</text>
-<path d="M104,11h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="105" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="119" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="105" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="117" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="116" y="23" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="115" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="105" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="117" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="115" y="29" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="115" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="105" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="119" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="105" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="119" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="7.2" y="4.4" width="74" height="8.5" fill="#f2f2f2"/>
 <path d="M6.3,5.8v 8.0h 73v -0.915h -73v -7.1z" fill="black"/>
 <path d="M7.2,13v -8.5h 74v 8.5h -74z" fill="none" stroke="black"/>
@@ -1379,40 +1345,6 @@ th2_candle.svg
 <text xml:space="preserve" x="152" y="39" fill="black" font-size="4.5" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="152" y="23" fill="black" font-size="4.5" font-family="Helvetica">4
-</text>
-<rect x="241" y="4.4" width="25" height="41" fill="#f2f2f2"/>
-<path d="M242,45v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M241,45v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="245" y="9.6" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candleh2
-</text>
-<path d="M241,11h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="242" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="256" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="242" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="254" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="252" y="23" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="252" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="242" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="253" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="252" y="29" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="252" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="242" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="256" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="242" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="256" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="241" y="4.4" width="25" height="41" fill="#f2f2f2"/>
 <path d="M242,45v 0.915h 25v -40h -0.915v 39z" fill="black"/>
@@ -2250,40 +2182,6 @@ th2_candle.svg
 </text>
 <text xml:space="preserve" x="393" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="378" y="4.4" width="25" height="41" fill="#f2f2f2"/>
-<path d="M379,45v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M378,45v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="381" y="9.6" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candleh3
-</text>
-<path d="M378,11h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="379" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="393" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="379" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="391" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="389" y="23" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="389" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="379" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="390" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="389" y="29" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="388" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="379" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="392" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="379" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="393" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="281" y="4.4" width="74" height="8.5" fill="#f2f2f2"/>
 <path d="M280,5.8v 8.0h 73v -0.915h -73v -7.1z" fill="black"/>
 <path d="M281,13v -8.5h 74v 8.5h -74z" fill="none" stroke="black"/>
@@ -3086,40 +2984,6 @@ th2_candle.svg
 </text>
 <text xml:space="preserve" x="530" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="514" y="4.4" width="25" height="41" fill="#f2f2f2"/>
-<path d="M516,45v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M514,45v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="518" y="9.6" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candleh4
-</text>
-<path d="M514,11h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="516" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="530" y="16" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="516" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="527" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="526" y="23" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="526" y="23" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="516" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="527" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="526" y="29" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="525" y="29" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="516" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="529" y="36" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="516" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="530" y="43" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="418" y="4.4" width="74" height="8.5" fill="#f2f2f2"/>
 <path d="M417,5.8v 8.0h 73v -0.915h -73v -7.1z" fill="black"/>
 <path d="M418,13v -8.5h 74v 8.5h -74z" fill="none" stroke="black"/>
@@ -3752,40 +3616,6 @@ th2_candle.svg
 <text xml:space="preserve" x="16" y="216" fill="black" font-size="4.5" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="16" y="199" fill="black" font-size="4.5" font-family="Helvetica">4
-</text>
-<rect x="104" y="181" width="25" height="41" fill="#f2f2f2"/>
-<path d="M105,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M104,222v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="108" y="186" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candlev1
-</text>
-<path d="M104,188h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="105" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="119" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="105" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="117" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="116" y="199" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="115" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="105" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="117" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="115" y="206" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="115" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="105" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="119" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="105" y="219" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="119" y="220" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="104" y="181" width="25" height="41" fill="#f2f2f2"/>
 <path d="M105,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
@@ -4507,40 +4337,6 @@ th2_candle.svg
 <text xml:space="preserve" x="152" y="216" fill="black" font-size="4.5" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="152" y="199" fill="black" font-size="4.5" font-family="Helvetica">4
-</text>
-<rect x="241" y="181" width="25" height="41" fill="#f2f2f2"/>
-<path d="M242,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M241,222v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="245" y="186" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candlev2
-</text>
-<path d="M241,188h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="242" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="256" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="242" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="254" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="252" y="199" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="252" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="242" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="253" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="252" y="206" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="252" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="242" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="256" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="242" y="219" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="256" y="220" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="241" y="181" width="25" height="41" fill="#f2f2f2"/>
 <path d="M242,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
@@ -5377,40 +5173,6 @@ th2_candle.svg
 </text>
 <text xml:space="preserve" x="393" y="220" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="378" y="181" width="25" height="41" fill="#f2f2f2"/>
-<path d="M379,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M378,222v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="381" y="186" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candlev3
-</text>
-<path d="M378,188h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="379" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="393" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="379" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="391" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="389" y="199" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="389" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="379" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="390" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="389" y="206" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="388" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="379" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="392" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="379" y="219" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="393" y="220" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="281" y="181" width="66" height="8.5" fill="#f2f2f2"/>
 <path d="M280,182v 8.0h 66v -0.915h -65v -7.1z" fill="black"/>
 <path d="M281,189v -8.5h 66v 8.5h -66z" fill="none" stroke="black"/>
@@ -6177,40 +5939,6 @@ th2_candle.svg
 <text xml:space="preserve" x="426" y="216" fill="black" font-size="4.5" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="426" y="199" fill="black" font-size="4.5" font-family="Helvetica">4
-</text>
-<rect x="514" y="181" width="25" height="41" fill="#f2f2f2"/>
-<path d="M516,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>
-<path d="M514,222v -41h 25v 41h -25z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="518" y="186" fill="black" font-size="4.7" font-family="Helvetica" font-weight="bold">candlev4
-</text>
-<path d="M514,188h 25" fill="none" stroke="black"/>
-<text xml:space="preserve" x="516" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="530" y="192" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="516" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="527" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="526" y="199" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="526" y="199" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="516" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="527" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="526" y="206" fill="black" font-size="3.0" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="525" y="206" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="516" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="529" y="213" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="516" y="219" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="530" y="220" fill="black" font-size="3.0" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="514" y="181" width="25" height="41" fill="#f2f2f2"/>
 <path d="M516,222v 0.915h 25v -40h -0.915v 39z" fill="black"/>

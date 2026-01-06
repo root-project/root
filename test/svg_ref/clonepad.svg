@@ -1048,7 +1048,7 @@ clonepad.svg
 <rect x="443" y="1.8" width="113" height="87" fill="#f2f2f2"/>
 <path d="M445,89v 1.6h 113v -86h -1.6v 85z" fill="black"/>
 <path d="M443,89v -87h 113v 87h -113z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="481" y="13" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">hpxpy
+<text xml:space="preserve" x="451" y="13" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">hpxpy_clonepad
 </text>
 <path d="M443,16h 113" fill="none" stroke="black"/>
 <text xml:space="preserve" x="448" y="28" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">Entries 
@@ -1082,7 +1082,7 @@ clonepad.svg
 <rect x="443" y="1.8" width="113" height="87" fill="#f2f2f2"/>
 <path d="M445,89v 1.6h 113v -86h -1.6v 85z" fill="black"/>
 <path d="M443,89v -87h 113v 87h -113z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="481" y="13" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">hpxpy
+<text xml:space="preserve" x="451" y="13" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">hpxpy_clonepad
 </text>
 <path d="M443,16h 113" fill="none" stroke="black"/>
 <text xml:space="preserve" x="448" y="28" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">Entries 

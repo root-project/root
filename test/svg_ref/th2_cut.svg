@@ -454,7 +454,7 @@ th2_cut.svg
 <rect x="443" y="2.7" width="113" height="131" fill="#f2f2f2"/>
 <path d="M446,133v 1.9h 112v -130h -1.9v 128z" fill="black"/>
 <path d="M443,133v -131h 113v 131h -113z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="471" y="19" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">hpxpy
+<text xml:space="preserve" x="466" y="20" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">th2_cut
 </text>
 <path d="M443,24h 113" fill="none" stroke="black"/>
 <text xml:space="preserve" x="448" y="40" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">Entries 
