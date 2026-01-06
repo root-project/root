@@ -145,7 +145,6 @@ if(opengl AND TARGET TreeViewer)
   configure_file(stressGraphics_web.ref stressGraphics_web.ref COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/visualisation/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics
-                ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                 COMMAND stressGraphics -b --web=off -k -p=sge
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
@@ -154,14 +153,12 @@ if(opengl AND TARGET TreeViewer)
                 FAILREGEX "FAILED|Error in"
                 DEPENDS test-stressgraphics)
   ROOT_ADD_TEST(test-stressgraphics-svg
-                ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                 COMMAND stressGraphics -b --web=off -p=svg --svg=${CMAKE_CURRENT_SOURCE_DIR}/svg_ref/
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
   if(webgui AND CHROME_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-chrome
                   RUN_SERIAL
-                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                   COMMAND stressGraphics -b -k -p=sgc --web=chrome
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
@@ -169,7 +166,6 @@ if(opengl AND TARGET TreeViewer)
   if(webgui AND FIREFOX_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-firefox-skip3d
                   RUN_SERIAL
-                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
                   COMMAND stressGraphics -b -k -p=sgf --web=firefox -skip3d
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
