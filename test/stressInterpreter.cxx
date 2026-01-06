@@ -224,8 +224,7 @@ bool InterpreterStress::stressSTLDict() {
       int res = 3;
       TInterpreter::EErrorCode interpError = TInterpreter::kNoError;
       TString cmd
-         = TString::Format("#include <vector>\n"
-                           "class MyClass;\n"
+         = TString::Format("class MyClass;\n"
                            "typedef MyClass* Klass%d_t;\n"
                            "std::vector<Klass%d_t> v%d;\n"
                            "void stressInterpreter_tmp%d() {\n"
