@@ -1267,14 +1267,17 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fit this graph with function with name `fname`.
+/// Fit this graph with the global function named `fname`.
 ///
-/// This is a different interface to TGraph fitting using TGraph::Fit(TF1 *f1,Option_t *, Option_t *, Axis_t, Axis_t)
-/// See there for the details about fitting a TGraph.
+/// This will retrieve the function with name `fname` from ROOT's global list of functions, and use it to
+/// fit the data in the TGraph.
+/// TF1 or TF2 functions that have been created in the same ROOT session can be accessed using `fname`.
+/// Predefined functions such as gaus, expo, poln, etc. are automatically created by ROOT.
+/// @see TF1::InitStandardFunctions, TF2::InitStandardFunctions, TF3::InitStandardFunctions
 ///
-/// The parameter `fname` is the name of an already predefined function created by TF1 or TF2
-/// Predefined functions such as gaus, expo and poln are automatically
-/// created by ROOT.
+/// Note that using a global function is not thread safe. In this case, use the overload
+/// TGraph::Fit(TF1 *f1,Option_t *, Option_t *, Axis_t, Axis_t) with a locally created function.
+/// For more details about fitting a TGraph, see the same overload.
 ///
 /// The parameter `fname` can also be a formula, accepted by the linear fitter (linear parts divided
 /// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"

@@ -799,11 +799,19 @@ TObject *TGraph2D::FindObject(const TObject *obj) const
    return fFunctions ? fFunctions->FindObject(obj) : nullptr;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Fits this graph with function with name fname
-/// Predefined functions such as gaus, expo and poln are automatically
-/// created by ROOT.
+/// Fit this graph with the global function named `fname`.
+///
+/// This will retrieve the function with name `fname` from ROOT's global list of functions, and use it to
+/// fit the data in the TGraph.
+/// TF1 or TF2 functions that have been created in the same ROOT session can be accessed using `fname`.
+/// Predefined functions such as gaus, expo and poln are automatically created by ROOT.
+///
+/// Note that using a global function is not thread safe. In this case, use the overload
+/// TGraph2D::Fit(TF2 *, Option_t *, Option_t *) with a locally created function.
+///
+/// For more details about fitting a TGraph, see TGraph::Fit().
+///
 /// fname can also be a formula, accepted by the linear fitter (linear parts divided
 /// by "++" sign), for example "x++sin(y)" for fitting "[0]*x+[1]*sin(y)"
 
