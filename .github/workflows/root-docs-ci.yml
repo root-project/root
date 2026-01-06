@@ -160,26 +160,6 @@ jobs:
         path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
         if-no-files-found: error
 
-    - name: Install AWS CLI
-      run: |
-        python -m pip install --upgrade pip
-        pip install awscli==1.36.40
-        aws configure set default.s3.max_concurrent_requests 128
-
-    - name: Sync documentation to S3
-      working-directory: ${{ env.DOC_LOCATION }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_ENDPOINT_URL: https://s3.cern.ch/
-
-      run: |
-        pwd
-        ls -l
-        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
-        aws s3 cp ${TAR_NAME}.gz s3://root/download/
-
     - name: Install Kerberos utilities
       run: dnf -y install krb5-workstation
 
