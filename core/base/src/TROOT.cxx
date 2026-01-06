@@ -686,7 +686,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    GetDocDir();
    GetMacroDir();
    GetTutorialDir();
-   GetSourceDir();
    GetIconPath();
    GetTTFFontDir();
 

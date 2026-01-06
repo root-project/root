@@ -47,7 +47,6 @@ const Int_t kIsBasic     = BIT(21);
 
 static Float_t gXsize, gYsize, gDx, gDy, gLabdx, gLabdy, gDxx, gCsize;
 
-
 /** \class TClassTree
 \ingroup gpad
 
@@ -140,8 +139,7 @@ in the list of data members.
  - References from code is shown by a full green line
 
 Use TClassTree::SetSourceDir to specify the search path for source files.
-By default the search path includes the `$ROOTSYS` directory, the current
-directory and the subdirectory `src`.
+By default the search path includes the current directory and the subdirectory `src`.
 
 The first time TClassTree::Draw is invoked, all the classes in the
 current application are processed, including the parsing of the code
@@ -180,7 +178,7 @@ TClassTree::TClassTree()
 {
    SetLabelDx();
    SetYoffset(0);
-   SetSourceDir(".:src:" + TROOT::GetSourceDir());
+   SetSourceDir(".:src");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +189,7 @@ TClassTree::TClassTree(const char *name, const char *classes)
 {
    SetLabelDx();
    SetYoffset(0);
-   SetSourceDir(".:src:" + TROOT::GetSourceDir());
+   SetSourceDir(".:src");
 
    // draw list of classes (if specified)
    if (classes && strlen(classes)) {
