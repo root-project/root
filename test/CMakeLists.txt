@@ -188,7 +188,7 @@ if(ROOT_opengl_FOUND AND TARGET TreeViewer)
                 COMMAND stressGraphics -b --web=off -p=svg --svg=${CMAKE_CURRENT_SOURCE_DIR}/svg_ref/
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
-  if(CHROME_EXECUTABLE)
+  if(webgui AND CHROME_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-chrome
                   RUN_SERIAL
                   ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
@@ -196,7 +196,7 @@ if(ROOT_opengl_FOUND AND TARGET TreeViewer)
                   FAILREGEX "FAILED|Error in"
                   LABELS longtest)
   endif()
-  if(FIREFOX_EXECUTABLE)
+  if(webgui AND FIREFOX_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-firefox-skip3d
                   RUN_SERIAL
                   ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
