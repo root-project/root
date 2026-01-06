@@ -404,7 +404,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Define a new column.
    /// \param[in] name The name of the defined column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the defined value. Returns the value that will be assigned to the defined column. This callable must be thread safe when used with multiple threads.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    /// \return the first node of the computation graph for which the new quantity is defined.
    ///
@@ -419,6 +419,7 @@ public:
    /// * extraction of quantities of interest from complex objects
    ///
    /// An exception is thrown if the name of the new column is already in use in this branch of the computation graph.
+   /// Note that the callable must be thread safe when called from multiple threads. Use DefineSlot() if needed.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
