@@ -2016,7 +2016,7 @@ void th2_cut()
    Float_t y[6] = { 2, 0, -2, -2,  0,  2 };
    TCutG *cut = new TCutG("cut", 6, x, y);
 
-   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
+   TH1 *hpxpy = (TH1 *)gHsimple->Get("hpxpy")->Clone("th2_cut");
 
    hpxpy->Draw("col [cut]");
    cut->Draw("l");
@@ -3828,7 +3828,7 @@ void clonepad()
 {
    TCanvas *C = StartTest(700,500);
 
-   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
+   TH1 *hpxpy = (TH1 *)gHsimple->Get("hpxpy")->Clone("hpxpy_clonepad");
    hpxpy->Draw();
    TCanvas *C2 = (TCanvas*)C->DrawClone();
 
