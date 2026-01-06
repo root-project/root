@@ -3864,7 +3864,7 @@ TObject *TH1::FindObject(const TObject *obj) const
 ///
 ///
 /// fname is the name of a function available in the global ROOT list of functions
-/// `gROOT->GetListOfFunctions`
+/// `gROOT->GetListOfFunctions`. Note that this is not thread safe.
 /// The list include any TF1 object created by the user plus some pre-defined functions
 /// which are automatically created by ROOT the first time a pre-defined function is requested from `gROOT`
 /// (i.e. when calling `gROOT->GetFunction(const char *name)`).
