@@ -1012,63 +1012,37 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
                                            TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp)
 {
    TGeoOverlap *nodeovlp = nullptr;
+
    if (vol1->IsAssembly() || vol2->IsAssembly())
       return nullptr;
    if (dynamic_cast<TGeoTessellated *>(vol1->GetShape()) || dynamic_cast<TGeoTessellated *>(vol2->GetShape()))
       return nullptr;
-   Int_t numPoints1 = fBuff1->NbPnts();
-   Int_t numSegs1 = fBuff1->NbSegs();
-   Int_t numPols1 = fBuff1->NbPols();
-   Int_t numPoints2 = fBuff2->NbPnts();
-   Int_t numSegs2 = fBuff2->NbSegs();
-   Int_t numPols2 = fBuff2->NbPols();
+
+   TGeoShape *shape1 = vol1->GetShape();
+   TGeoShape *shape2 = vol2->GetShape();
+
+   // Local scratch
    Int_t ip;
    Bool_t extrude, isextrusion, isoverlapping;
-   Double_t *points1 = fBuff1->fPnts;
-   Double_t *points2 = fBuff2->fPnts;
    Double_t local[3], local1[3];
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
-   Double_t tolerance = TGeoShape::Tolerance();
-   TGeoShape *shape1 = vol1->GetShape();
-   TGeoShape *shape2 = vol2->GetShape();
+   const Double_t tolerance = TGeoShape::Tolerance();
+
+   // Points buffers (may be reallocated by FillMeshPointsLegacy)
+   Double_t *points1 = fBuff1->fPnts;
+   Double_t *points2 = fBuff2->fPnts;
+
    OpProgress("refresh", 0, 0, nullptr, kFALSE, kTRUE);
-   shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
-   if (fBuff1->fID != (TObject *)shape1) {
-      // Fill first buffer.
-      fBuff1->SetRawSizes(TMath::Max(numPoints1, fNmeshPoints), 3 * TMath::Max(numPoints1, fNmeshPoints), 0, 0, 0, 0);
-      points1 = fBuff1->fPnts;
-      if (shape1->GetPointsOnSegments(fNmeshPoints, points1)) {
-         numPoints1 = fNmeshPoints;
-      } else {
-         shape1->SetPoints(points1);
-      }
-      //      if (shape1->InheritsFrom(TGeoPcon::Class())) {
-      //         CleanPoints(points1, numPoints1);
-      //         fBuff1->SetRawSizes(numPoints1, 3*numPoints1,0, 0, 0, 0);
-      //      }
-      fBuff1->fID = shape1;
-   }
-   shape2->GetMeshNumbers(numPoints2, numSegs2, numPols2);
-   if (fBuff2->fID != (TObject *)shape2) {
-      // Fill second buffer.
-      fBuff2->SetRawSizes(TMath::Max(numPoints2, fNmeshPoints), 3 * TMath::Max(numPoints2, fNmeshPoints), 0, 0, 0, 0);
-      points2 = fBuff2->fPnts;
-      if (shape2->GetPointsOnSegments(fNmeshPoints, points2)) {
-         numPoints2 = fNmeshPoints;
-      } else {
-         shape2->SetPoints(points2);
-      }
-      //      if (shape2->InheritsFrom(TGeoPcon::Class())) {
-      //         CleanPoints(points2, numPoints2);
-      //         fBuff1->SetRawSizes(numPoints2, 3*numPoints2,0,0,0,0);
-      //      }
-      fBuff2->fID = shape2;
-   }
+
+   // Fill/reuse mesh sample points deterministically for current fNmeshPoints
+   const Int_t numPoints1 = FillMeshPointsLegacy(*fBuff1, shape1, fLastShape1, fNumPoints1, fNmeshPoints, points1);
+   const Int_t numPoints2 = FillMeshPointsLegacy(*fBuff2, shape2, fLastShape2, fNumPoints2, fNmeshPoints, points2);
 
    if (!isovlp) {
-      // Extrusion case. Test vol2 extrude vol1.
+      // Extrusion case. Test vol2 extrudes vol1.
       isextrusion = kFALSE;
+
       // loop all points of the daughter
       for (ip = 0; ip < numPoints2; ip++) {
          memcpy(local, &points2[3 * ip], 3 * sizeof(Double_t));
@@ -1076,12 +1050,14 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
             continue;
          mat2->LocalToMaster(local, point);
          mat1->MasterToLocal(point, local);
+
          extrude = !shape1->Contains(local);
          if (extrude) {
             safety = shape1->Safety(local, kFALSE);
             if (safety < ovlp)
                extrude = kFALSE;
          }
+
          if (extrude) {
             if (!isextrusion) {
                isextrusion = kTRUE;
@@ -1095,13 +1071,16 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
             }
          }
       }
+
       // loop all points of the mother
       for (ip = 0; ip < numPoints1; ip++) {
          memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
          if (local[0] < 1e-10 && local[1] < 1e-10)
             continue;
+
          mat1->LocalToMaster(local, point);
          mat2->MasterToLocal(point, local1);
+
          extrude = shape2->Contains(local1);
          if (extrude) {
             // skip points on mother mesh that have no neighborhood outside mother
@@ -1114,6 +1093,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
                   extrude = kFALSE;
             }
          }
+
          if (extrude) {
             if (!isextrusion) {
                isextrusion = kTRUE;
@@ -1127,23 +1107,29 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
             }
          }
       }
+
       return nodeovlp;
    }
+
    // Check overlap
    isoverlapping = kFALSE;
+
    // loop all points of first candidate
    for (ip = 0; ip < numPoints1; ip++) {
       memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
       if (local[0] < 1e-10 && local[1] < 1e-10)
          continue;
+
       mat1->LocalToMaster(local, point);
       mat2->MasterToLocal(point, local); // now point in local reference of second
+
       Bool_t overlap = shape2->Contains(local);
       if (overlap) {
          safety = shape2->Safety(local, kTRUE);
          if (safety < ovlp)
             overlap = kFALSE;
       }
+
       if (overlap) {
          if (!isoverlapping) {
             isoverlapping = kTRUE;
@@ -1157,19 +1143,23 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
          }
       }
    }
+
    // loop all points of second candidate
    for (ip = 0; ip < numPoints2; ip++) {
       memcpy(local, &points2[3 * ip], 3 * sizeof(Double_t));
       if (local[0] < 1e-10 && local[1] < 1e-10)
          continue;
+
       mat2->LocalToMaster(local, point);
       mat1->MasterToLocal(point, local); // now point in local reference of first
+
       Bool_t overlap = shape1->Contains(local);
       if (overlap) {
          safety = shape1->Safety(local, kTRUE);
          if (safety < ovlp)
             overlap = kFALSE;
       }
+
       if (overlap) {
          if (!isoverlapping) {
             isoverlapping = kTRUE;
@@ -1183,6 +1173,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
          }
       }
    }
+
    return nodeovlp;
 }
 
@@ -1418,6 +1409,41 @@ Int_t TGeoChecker::NChecksPerVolume(TGeoVolume *vol)
    return nchecks;
 }
 
+Int_t TGeoChecker::FillMeshPointsLegacy(TBuffer3D &buff, const TGeoShape *shape, const TGeoShape *&lastShape,
+                                        Int_t &cachedN, Int_t nMeshPoints, Double_t *&points)
+{
+   // Cache hit: reuse what we filled last time for this shape
+   if (lastShape == shape && cachedN > 0) {
+      points = buff.fPnts;
+      return cachedN;
+   }
+
+   // Refill: compute mesh numbers only now (needed for SetRawSizes + SetPoints case)
+   Int_t meshN = buff.NbPnts();
+   Int_t meshS = buff.NbSegs();
+   Int_t meshP = buff.NbPols();
+   const_cast<TGeoShape *>(shape)->GetMeshNumbers(meshN, meshS, meshP);
+
+   const Int_t nraw = TMath::Max(meshN, nMeshPoints);
+   buff.SetRawSizes(nraw, 3 * nraw, 0, 0, 0, 0);
+   points = buff.fPnts;
+
+   // Prefer segment points if supported for this shape
+   const Bool_t useSeg = const_cast<TGeoShape *>(shape)->GetPointsOnSegments(nMeshPoints, points);
+
+   Int_t filledN = 0;
+   if (useSeg) {
+      filledN = nMeshPoints;
+   } else {
+      const_cast<TGeoShape *>(shape)->SetPoints(points);
+      filledN = meshN;
+   }
+
+   lastShape = shape;
+   cachedN = filledN;
+   return filledN;
+} 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check illegal overlaps for volume VOL within a limit OVLP.
 
@@ -1428,6 +1454,10 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    UInt_t nd = vol->GetNdaughters();
    if (!nd)
       return;
+   fLastShape1 = nullptr;
+   fLastShape2 = nullptr;
+   fNumPoints1 = 0;
+   fNumPoints2 = 0;
    TGeoShape::SetTransform(gGeoIdentity);
    fNchecks = NChecksPerVolume((TGeoVolume *)vol);
    Bool_t sampling = kFALSE;
