@@ -89,10 +89,6 @@ TEST(HistFactory, Read_ROOT6_16_Model)
 
    std::string filename = "./ref_6.16_example_UsingC_channel1_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
-   if (!file || !file->IsOpen()) {
-      filename = TROOT::GetRootSys() + "/roofit/histfactory/test/" + filename;
-      file.reset(TFile::Open(filename.c_str()));
-   }
 
    ASSERT_TRUE(file && file->IsOpen());
    RooWorkspace *ws;
@@ -118,10 +114,6 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
    std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
-   if (!file || !file->IsOpen()) {
-      filename = TROOT::GetRootSys() + "/roofit/histfactory/test/" + filename;
-      file.reset(TFile::Open(filename.c_str()));
-   }
 
    ASSERT_TRUE(file && file->IsOpen());
    RooWorkspace *ws;
@@ -143,7 +135,12 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
 /// What kind of model is set up. Use this to instantiate
 /// a test suite.
-enum class MakeModelMode { OverallSyst, HistoSyst, StatSyst, ShapeSyst };
+enum class MakeModelMode {
+   OverallSyst,
+   HistoSyst,
+   StatSyst,
+   ShapeSyst
+};
 
 using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
 
@@ -695,7 +692,7 @@ INSTANTIATE_TEST_SUITE_P(
    HistFactory, HFFixture,
    testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst, MakeModelMode::StatSyst,
                                     MakeModelMode::ShapeSyst),
-                    testing::Values(false, true),                    // non-uniform bins or not
+                    testing::Values(false, true),                 // non-uniform bins or not
                     testing::Values(RooFit::EvalBackend::Cpu())), // dummy because no NLL is created
    [](testing::TestParamInfo<HFFixture::ParamType> const &paramInfo) { return getName(paramInfo.param, true); });
 
