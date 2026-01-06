@@ -31,10 +31,14 @@ The following people have contributed to this new version:
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
 
-## Deprecation and Removal
+## Deprecations
+
+* The headers in `RooStats/HistFactory` for data classes related to the measurement definition were merged into the `RooStats/HistFactory/Measurement.h` header to simplify usage and development. For now, the whole set of header files is kept for backwards compatibility, but the empty headers will be removed in ROOT 7.
+* The `TROOT::GetSourceDir()` method is deprecated and will be removed in ROOT 6.42. It stopped making sense because the ROOT source is generally not shipped alongside ROOT in the `src/` subdirectory anymore.
+
+## Removals
 
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
-* The headers in `RooStats/HistFactory` for data classes related to the measurement definition were merged into the `RooStats/HistFactory/Measurement.h` header to simplify usage and development. For now, the whole set of header files is kept for backwards compatibility, but the empty headers will be removed in ROOT 7.
 * The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
 * Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
