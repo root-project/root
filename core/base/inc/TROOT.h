@@ -366,7 +366,10 @@ public:
    static const TString& GetDocDir();
    static const TString& GetMacroDir();
    static const TString& GetTutorialDir();
-   static const TString& GetSourceDir();
+   static const TString &GetSourceDir()
+      R__DEPRECATED(6, 42,
+                    "This function is removed because it made only sense in the corner case where the ROOT source is "
+                    "copied inside the ROOT installation, which is never the case unless the user does it by hand.");
    static const TString& GetIconPath();
    static const TString& GetTTFFontDir();
 
