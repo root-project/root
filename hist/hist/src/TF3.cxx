@@ -60,7 +60,7 @@ TF3::TF3()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a formula definition and string option args
+/// TF3 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
@@ -80,7 +80,7 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a formula definition and explicit option args
+/// TF3 constructor using a formula definition and explicit option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
@@ -102,7 +102,7 @@ TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function
+/// TF3 constructor using a pointer to real function
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -129,7 +129,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function---
+/// TF3 constructor using a pointer to real function---
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -156,7 +156,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a ParamFunctor
+/// TF3 constructor using a ParamFunctor
 ///
 /// a functor class implementing operator() (double *, double *)
 ///

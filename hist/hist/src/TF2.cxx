@@ -84,7 +84,7 @@ TF2::TF2(): fYmin(0),fYmax(0),fNpy(100)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a formula definition and string option args
+/// TF2 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
@@ -116,7 +116,7 @@ TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a formula definition and explicit option args
+/// TF2 constructor using a formula definition and explicit option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 ///
@@ -150,7 +150,7 @@ TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a pointer to a compiled function
+/// TF2 constructor using a pointer to a compiled function
 ///
 /// npar is the number of free parameters used by the function
 ///
@@ -181,7 +181,7 @@ TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a pointer to a compiled function
+/// TF2 constructor using a pointer to a compiled function
 ///
 /// npar is the number of free parameters used by the function
 ///
@@ -202,7 +202,7 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F2 constructor using a ParamFunctor,
+/// TF2 constructor using a ParamFunctor,
 ///          a functor class implementing operator() (double *, double *)
 ///
 /// npar is the number of free parameters used by the function
