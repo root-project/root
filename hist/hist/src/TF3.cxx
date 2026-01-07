@@ -65,7 +65,7 @@ TF3::TF3()
 /// See TFormula constructor for explanation of the formula syntax.
 
 TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt)
-   :TF2(name,formula,xmin,xmax,ymax,ymin,opt)
+   :TF2(name,formula,xmin,xmax,ymax,ymin,opt) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
 {
    fZmin   = zmin;
    fZmax   = zmax;
@@ -86,7 +86,7 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 
 TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
          Double_t zmin, Double_t zmax, EAddToList addToGlobList, bool vectorize)
-   : TF2(name, formula, xmin, xmax, ymax, ymin, addToGlobList, vectorize)
+   : TF2(name, formula, xmin, xmax, ymax, ymin, addToGlobList, vectorize) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
 {
    fZmin = zmin;
    fZmax = zmax;
