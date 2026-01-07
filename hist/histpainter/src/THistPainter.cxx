@@ -355,6 +355,7 @@ using `TH1::GetOption`:
 | "NOSTACK"  | Histograms in the stack are all paint in the same pad as if the option `SAME` had been specified.|
 | "NOSTACKB" | Histograms are  drawn next to each other as bar charts.|
 | "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of histograms in the stack and each histogram is paint into a separate pad.|
+| "PADSn"    | Like PADS but the current pad/canvas is subdivided into a `n` columns x `m` rows of pads where `n` is given and `m` is calculated.|
 | "PFC"      | Palette Fill Color: stack's fill color is taken in the current palette. |
 | "PLC"      | Palette Line Color: stack's line color is taken in the current palette. |
 | "PMC"      | Palette Marker Color: stack's marker color is taken in the current palette. |
@@ -2751,9 +2752,10 @@ the same pad as if the option `SAME` had been specified. This allows to
 compute X and Y scales common to all the histograms, like
 `TMultiGraph` does for graphs.
 
-If the option `PADS` is specified, the current pad/canvas is
-subdivided into a number of pads equal to the number of histograms and each
-histogram is paint into a separate pad.
+If the option `PADS` is specified, the current pad/canvas is subdivided into
+a number of pads equal to the number of histograms and each histogram is paint
+into a separate pad. With `PADSn`, the current pad/canvas is subdivided into
+`n` columns x `m` rows of pads where `n` is given and `m` is calculated.
 
 The following example shows various types of stacks (hist023_THStack_simple.C).
 
