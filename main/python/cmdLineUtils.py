@@ -700,7 +700,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
                 retcodeTemp = deleteObject(destFile, destPathSplit + [actualName])
                 if retcodeTemp:
                     retcode += retcodeTemp
-                    obj.Delete()
+                    obj.Delete()  # Clean up the read object since we cannot proceed
                     continue
 
             if issubclass(obj.__class__, ROOT.TCollection):
