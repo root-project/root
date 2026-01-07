@@ -1201,6 +1201,26 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Rebuild the voxel structures that are flagged as needing rebuild.
+
+void TGeoManager::RebuildVoxels()
+{
+   Int_t nvol = fVolumes->GetEntriesFast();
+   TGeoVolume *vol;
+   TGeoVoxelFinder *voxels;
+   for (Int_t i = 0; i < nvol; i++) {
+      vol = (TGeoVolume *)fVolumes->At(i);
+      if (!vol)
+         continue;
+      voxels = vol->GetVoxels();
+      if (voxels && voxels->NeedRebuild()) {
+         voxels->Voxelize();
+         vol->FindOverlaps(); // after voxelization, check overlaps again
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Transform all volumes named VNAME to assemblies. The volumes must be virtual.
 
 Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
@@ -3904,6 +3924,7 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t *option)
       Error("CheckOverlaps", "Top node not set");
       return;
    }
+   RebuildVoxels();
    fTopNode->CheckOverlaps(ovlp, option);
 }
 

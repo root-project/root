@@ -13,6 +13,7 @@
 #define ROOT_TGeoChecker
 
 #include "TVirtualGeoChecker.h"
+#include "TGeoOverlapWorkState.h"
 
 // forward declarations
 class TTree;
@@ -37,27 +38,21 @@ class TStopwatch;
 class TGeoChecker : public TVirtualGeoChecker {
 private:
    // data members
-   TGeoManager *fGeoManager;              // pointer to geometry manager
-   TGeoVolume *fVsafe;                    // volume to which a safety sphere node was added
-   TBuffer3D *fBuff1;                     // Buffer containing mesh vertices for first volume
-   TBuffer3D *fBuff2;                     // Buffer containing mesh vertices for second volume
-   Bool_t fFullCheck;                     // Full overlap checking
-   Double_t *fVal1;                       //! Array of number of crossings per volume.
-   Double_t *fVal2;                       //! Array of timing per volume.
-   Bool_t *fFlags;                        //! Array of flags per volume.
-   TStopwatch *fTimer;                    //! Timer
-   TGeoNode *fSelectedNode;               //! Selected node for overlap checking
-   Int_t fNchecks;                        //! Number of checks for current volume
-   Int_t fNmeshPoints;                    //! Number of points on mesh to be checked
-   Int_t fNumPoints1{0};                  //! valid points in fBuff1
-   Int_t fNumPoints2{0};                  //! valid points in fBuff2
-   const TGeoShape *fLastShape1{nullptr}; //! last shape used to fill fBuff1
-   const TGeoShape *fLastShape2{nullptr}; //! last shape used to fill fBuff2
+   TGeoManager *fGeoManager; // pointer to geometry manager
+   TGeoVolume *fVsafe;       // volume to which a safety sphere node was added
+   Bool_t fFullCheck;        // Full overlap checking
+   Double_t *fVal1;          //! Array of number of crossings per volume.
+   Double_t *fVal2;          //! Array of timing per volume.
+   Bool_t *fFlags;           //! Array of flags per volume.
+   TStopwatch *fTimer;       //! Timer
+   TGeoNode *fSelectedNode;  //! Selected node for overlap checking
+   Int_t fNchecks;           //! Number of checks for current volume
+   Int_t fNmeshPoints;       //! Number of points on mesh to be checked
 
    // methods
    void CleanPoints(Double_t *points, Int_t &numPoints) const;
-   Int_t FillMeshPointsLegacy(TBuffer3D &buff, const TGeoShape *shape, const TGeoShape *&lastShape, Int_t &cachedN,
-                              Int_t nMeshPoints, Double_t *&points);
+   Int_t FillMeshPoints(TBuffer3D &buff, const TGeoShape *shape, const TGeoShape *&lastShape, Int_t &cachedN,
+                        Int_t nMeshPoints, Double_t *&points) const;
    Int_t NChecksPerVolume(TGeoVolume *vol);
    Int_t PropagateInGeom(Double_t *, Double_t *);
    void Score(TGeoVolume *, Int_t, Double_t);
@@ -89,7 +84,7 @@ public:
    void RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol = nullptr,
                    Bool_t check_norm = kFALSE) override;
    TGeoOverlap *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1,
-                                 TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
+                                 TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp, TGeoOverlapWorkState &workState);
    void OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch = nullptr,
                    Bool_t last = kFALSE, Bool_t refresh = kFALSE, const char *msg = "") override;
    TGeoNode *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path) override;
