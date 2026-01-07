@@ -10,9 +10,6 @@
 
 from . import pythonization
 
-import sys
-
-
 # Item access
 
 def _check_type(idx, msg):
@@ -22,7 +19,7 @@ def _check_type(idx, msg):
     allowed_types = (int,)
 
     t = type(idx)
-    if not t in allowed_types:
+    if t not in allowed_types:
         raise TypeError(msg.format(t.__name__))
 
 def _check_index(self, idx):
@@ -223,10 +220,11 @@ def _sort_pyz(self, *args, **kwargs):
         self.Sort()
     else:
         # Sort in a Python list copy
-        l = list(self)
-        l.sort(*args, **kwargs)
+        pylist = list(self)
+        pylist.sort(*args, **kwargs)
         self.Clear()
-        self.extend(l)
+        self.extend(pylist)
+
 
 def _index_pyz(self, val):
     # Parameters:
