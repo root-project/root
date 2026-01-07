@@ -31,8 +31,7 @@ public:
 
    void Print() {
       for(size_t i = 0; i < fValues.size(); ++i) {
-         printf("values: %zu / %zu : %s\n",
-                i, fValues.size(), fValues[i].GetName());
+         printf("values: %zu / %zu : %s\n", i, fValues.size(), fValues[i].GetName());
       }
    }
 };
@@ -52,8 +51,7 @@ public:
 
    void Print() {
       for(size_t i = 0; i < fValues.size(); ++i) {
-         printf("values: %zu / %zu : %s\n",
-                i, fValues.size(), fValues[i].GetName());
+         printf("values: %zu / %zu : %s\n", i, fValues.size(), fValues[i].GetName());
       }
    }
 };
