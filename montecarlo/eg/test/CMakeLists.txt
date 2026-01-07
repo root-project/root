@@ -7,4 +7,8 @@
 # @author Danilo Piparo CERN
 
 #### C++ TESTS ####
-ROOT_ADD_GTEST(pdgdatabase pdg.cxx LIBRARIES EG)
+
+if(imt)
+  set(extra_libraries Imt)
+endif()
+ROOT_ADD_GTEST(pdgdatabase pdg.cxx LIBRARIES EG ${extra_libraries})
