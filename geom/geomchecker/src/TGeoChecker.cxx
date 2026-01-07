@@ -2563,7 +2563,8 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
       fGeoManager->SetCurrentPoint(point[0] - eps[0] + 2 * eps[0] * gRandom->Rndm(),
                                    point[1] - eps[1] + 2 * eps[1] * gRandom->Rndm(),
                                    point[2] - eps[2] + 2 * eps[2] * gRandom->Rndm());
-      // check if new node is different from the old one
+      node1 = fGeoManager->FindNode();
+      // check if new node1 is different from the old one
       if (node1 != node) {
          dist1 = TMath::Sqrt((point[0] - pointg[0]) * (point[0] - pointg[0]) +
                              (point[1] - pointg[1]) * (point[1] - pointg[1]) +
