@@ -18,7 +18,7 @@ else()
     set(TOOLS_PREFIX ${ROOTSYS}/bin)
 endif()
 
-############################## ROOLS TESTS ##############################
+############################## ROOTLS TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root
                   OUTREF SimpleRootls.ref
@@ -129,7 +129,7 @@ ROOTTEST_ADD_TEST(SimplePattern3
 #########################################################################
 
 
-############################## ROORM TESTS ##############################
+############################## ROOTRM TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
                   COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root victim1.root
                   FIXTURES_SETUP main-SimpleRootrm1PrepareInput-fixture)
@@ -195,7 +195,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm3Clean
                   FIXTURES_REQUIRED main-SimpleRootrm3CheckOutput-fixture)
 #########################################################################
 
-############################# ROOMKDIR TESTS ############################
+############################# ROOTMKDIR TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
                   COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root target1.root
                   FIXTURES_SETUP main-SimpleRootmkdir1PrepareInput-fixture)
@@ -261,7 +261,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
 #########################################################################
 
-############################# ROOCP TESTS ############################
+############################# ROOTCP TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootcp1PrepareInput
                   COMMAND ${PY_TOOLS_PREFIX}/rootcp${pyext} --recreate -r test.root copy1.root
                   FIXTURES_SETUP main-SimpleRootcp1PrepareInput-fixture)
