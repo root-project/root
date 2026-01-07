@@ -759,9 +759,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       lclear = kFALSE;
       opt.ReplaceAll("noclear","");
    }
-   if (opt.Contains("pads")) {
+   auto l = strstr(opt.Data(), "pads");
+   if (l) {
       if (!paint)
          return;
+
+      Int_t fnx = 0;
+      if (sscanf(&l[4], "%d", &fnx) > 0) {
+         opt.ReplaceAll(TString::Format("pads%d", fnx), "");
+      } else {
+         opt.ReplaceAll("pads", "");
+      }
 
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
@@ -773,12 +781,21 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
             nps++;
       }
       if (nps < npads) {
-         padsav->Clear();
-         Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
-         if (nx*nx < npads) nx++;
-         Int_t ny = nx;
-         if (((nx*ny)-nx) >= npads) ny--;
-         padsav->Divide(nx,ny);
+         if (fnx == 0) {
+            padsav->Clear();
+            Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
+            if (nx * nx < npads)
+               nx++;
+            Int_t ny = nx;
+            if (((nx * ny) - nx) >= npads)
+               ny--;
+            padsav->Divide(nx, ny);
+         } else {
+            Int_t ny = (Int_t)((Double_t)npads / fnx);
+            if (fnx * ny < npads)
+               ny++;
+            padsav->Divide(fnx, ny);
+         }
       }
 
       Int_t i = 1;
