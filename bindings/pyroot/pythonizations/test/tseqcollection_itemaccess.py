@@ -87,18 +87,18 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
     def test_setitem(self):
         sc = self.create_tseqcollection()
-        l = []
+        l1 = []
 
         # Set items
         for i in range(self.num_elems):
             o = ROOT.TObject()
             sc[i] = o
-            l.append(o)
+            l1.append(o)
 
         # Check previously set items
         it = ROOT.TIter(sc)
         for i in range(self.num_elems):
-            self.assertEqual(it.Next(), l[i])
+            self.assertEqual(it.Next(), l1[i])
 
         # Set items, negative indices
         l2 = []
@@ -135,16 +135,16 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Append items
         sc1 = self.create_tseqcollection()
-        l = [ elem for elem in sc1 ]
+        l1 = [elem for elem in sc1]
 
         sc1[self.num_elems:] = sc2
 
         self.assertEqual(sc1.GetEntries(), 2 * self.num_elems)
         i = 0
-        for elem in l: # first half
+        for elem in l1:  # first half
             self.assertEqual(sc1[i], elem)
             i += 1
-        for elem in sc2: # second half
+        for elem in sc2:  # second half
             self.assertEqual(sc1[i], elem)
             i += 1
 
