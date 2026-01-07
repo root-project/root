@@ -906,13 +906,13 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
          dy = array1[3 * ist1 + 4] - array1[3 * ist1 + 1];
          dz = array1[3 * ist1 + 5] - array1[3 * ist1 + 2];
          // distance to next point
-         dwmin = dx + dir[0] + dy * dir[1] + dz * dir[2];
+         dwmin = dx * dir[0] + dy * dir[1] + dz * dir[2];
          while (ist2 < nelem2) {
             ifound = 0;
             dx = array2[3 * ist2] - array1[3 * ist1];
             dy = array2[3 * ist2 + 1] - array1[3 * ist1 + 1];
             dz = array2[3 * ist2 + 2] - array1[3 * ist1 + 2];
-            dw = dx + dir[0] + dy * dir[1] + dz * dir[2];
+            dw = dx * dir[0] + dy * dir[1] + dz * dir[2];
             if (TMath::Abs(dw - dwmin) < 1E-4) {
                ist1++;
                ist2++;
