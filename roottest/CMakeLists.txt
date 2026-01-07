@@ -1,5 +1,3 @@
-find_package(ROOT REQUIRED CONFIG)
-
 if(MSVC)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
   set(CMAKE_SUPPRESS_REGENERATION TRUE)
@@ -53,12 +51,13 @@ else()
 
   # root-config --prefix helps to retrieve ROOTSYS env variable.
   # ROOT_BINDIR is set by ROOTConfig.cmake
-  find_program(ROOT_CONFIG_EXECUTABLE root-config PATHS ${ROOT_BINDIR})
-  if(NOT ROOT_CONFIG_EXECUTABLE)
-    message(ERROR "root-config is not found, please rerun configuration step.")
+  set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config)
+  if(NOT EXISTS ${ROOT_CONFIG_EXECUTABLE})
+    message(FATAL_ERROR "root-config was not found in ${ROOT_CONFIG_EXECUTABLE}.")
   endif()
-  execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
+  if(NOT IS_DIRECTORY ${ROOTSYS})
+    message(FATAL_ERROR "ROOTSYS should be set before configuring roottest.")
+  endif()
   execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
@@ -116,7 +115,7 @@ endif()
 set(CMAKE_ROOTTEST_DICT ON)
 
 # Set the CMake module path. Here are all the custom CMake modules.
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOT_SOURCE_DIR}/roottest/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${ROOT_SOURCE_DIR}/roottest/cmake/modules")
 
 #---Set flag for PyROOT tests that are expected to fail
 if(pyroot)
@@ -126,9 +125,10 @@ endif()
 # Find OpenGL
 find_library(OPENGL_gl_LIBRARY NAMES GL)
 
-# Setup standard includes / links.
-include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-link_directories(${ROOT_LIBRARY_DIR})
+# Set global include dirs and library dirs for roottest.
+# These are picked up in the old-style dictionary generation and when standard CMake targets are created.
+include_directories(${ROOTSYS}/include ${CMAKE_CURRENT_SOURCE_DIR})
+link_directories(${ROOTSYS}/lib)
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)
