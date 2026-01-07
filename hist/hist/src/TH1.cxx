@@ -2454,7 +2454,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                      z = -d2 / TMath::Sqrt(s2);
                   }
                   res[resIndex] = z;
-                  if (res) resIndex++;
+                  resIndex++;
                }
 
                if (e1sq > 0 && cnt1 * cnt1 / e1sq < 10) m++;
