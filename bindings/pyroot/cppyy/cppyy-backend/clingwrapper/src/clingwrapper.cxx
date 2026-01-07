@@ -2417,7 +2417,7 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
         if (m->Property() & kIsStatic) {
             if (strchr(cr->GetName(), '<'))
                 gInterpreter->ProcessLine(((std::string)cr->GetName()+"::"+m->GetName()+";").c_str());
-            offset = (intptr_t)m->GetOffsetCint();    // yes, Cling GetOffset() is both wrong (TODO: rename to GetOffsetCling?)
+            offset = (intptr_t)m->GetOffsetCint();    // yes, Cling (GetOffset() is both wrong
                                                       // and caches that wrong result!
             if (offset == (intptr_t)-1)
                 return (intptr_t)gInterpreter->ProcessLine((std::string("&")+cr->GetName()+"::"+m->GetName()+";").c_str());
