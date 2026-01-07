@@ -8,9 +8,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
 import cppyy
 
+from . import pythonization
 
 # Python-list-like methods
 
