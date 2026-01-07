@@ -22,24 +22,39 @@ void RModelProfiler::GenerateUtilityFunctions()
    auto &gc = fModel.fProfilerGC;
 
    // Generate PrintProfilingResults function
-   gc += "   void PrintProfilingResults() const {\n";
+   gc += "   // generate code for printing operator results. By default order according to time (from higher to lower)\n";
+   gc += "   void PrintProfilingResults(bool order = true) const {\n";
    gc += "      if (fProfilingResults.empty()) {\n";
    gc += "         std::cout << \"No profiling results to display.\" << std::endl;\n";
    gc += "         return;\n";
    gc += "      }\n";
    gc += "\n";
+   gc += "      // compute summary statistics of profiling results and sort them in decreasing time\n";
+   gc += "      std::vector<std::tuple<std::string, double, double, int>> averageResults;\n";
    gc += "      std::cout << \"\\n\" << std::string(50, '=') << std::endl;\n";
    gc += "      std::cout << \"         AVERAGE PROFILING RESULTS\" << std::endl;\n";
    gc += "      std::cout << std::string(50, '=') << std::endl;\n";
    gc += "      for (const auto& op : fProfilingResults) {\n";
    gc += "         double sum = 0.0;\n";
+   gc += "         double sum2 = 0.0;\n";
    gc += "         for (double time : op.second) {\n";
    gc += "            sum += time;\n";
+   gc += "            sum2 += time*time;\n";
    gc += "         }\n";
    gc += "         double average = sum / op.second.size();\n";
-   gc += "         std::cout << \"  \" << std::left << std::setw(20) << op.first\n";
-   gc += "                   << \": \" << std::fixed << std::setprecision(6) << average << \" us\"\n";
-   gc += "                   << \"  (over \" << op.second.size() << \" runs)\" << std::endl;\n";
+   gc += "         double stddev = std::sqrt(( sum2 - sum *average)/ (op.second.size()-1));\n";
+   gc += "         averageResults.push_back({op.first, average, stddev, op.second.size()});\n";
+   gc += "      }\n";
+   gc += "\n";
+   gc += "      // sort average results in decreasing time\n";
+   gc += "      std::sort(averageResults.begin(), averageResults.end(),\n";
+   gc += "          []( std::tuple<std::string,double,double,int> a, std::tuple<std::string,double,double,int> b) {return std::get<1>(a) > std::get<1>(b); });\n";
+   gc += "\n";
+   gc += "      for (const auto & r : averageResults) {\n";
+   gc += "         std::cout << \"  \" << std::left << std::setw(20) << std::get<0>(r)\n";
+   gc += "                   << \": \" << std::fixed << std::setprecision(6) << std::get<1>(r) << \" +/- \" \n";
+   gc += "                   << std::get<2>(r)/std::sqrt(std::get<3>(r)) << \" us\"\n";
+   gc += "                   << \"  (over \" << std::get<3>(r) << \" runs)\" << std::endl;\n";
    gc += "      }\n";
    gc += "      std::cout << std::string(50, '=') << \"\\n\" << std::endl;\n";
    gc += "   }\n";
@@ -71,7 +86,7 @@ void RModelProfiler::GenerateUtilityFunctions()
    gc += "   }\n";
    gc += "\n";
 
-   // Generate GetOpVariance function 
+   // Generate GetOpVariance function
    gc += "   std::map<std::string, double> GetOpVariance() const {\n";
    gc += "      if (fProfilingResults.empty()) {\n";
    gc += "         return {};\n";
@@ -129,10 +144,10 @@ void RModelProfiler::Generate()
       const auto& op = fModel.fOperators[op_idx];
       gc += "   // -- Profiling for operator " + op->name + " --\n";
       gc += "   tp_start = std::chrono::steady_clock::now();\n\n";
-      
+
       // Add the actual operator inference code
       gc += op->Generate(std::to_string(op_idx));
-      
+
       // Add the code to stop the timer and store the result
       gc += "\n   fProfilingResults[\"" + op->name + "\"].push_back(\n";
       gc += "      std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(\n";
