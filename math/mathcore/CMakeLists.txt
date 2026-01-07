@@ -112,7 +112,7 @@ ROOT_ADD_C_FLAG(_flags -Wno-maybe-uninitialized)  # Avoid what it seems a compil
 ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
 
 if(imt)
-  set(MATHCORE_DEPENDENCIES Imt)
+  set(MATHCORE_LIBRARIES Imt)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
@@ -182,7 +182,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${dictoptions}
   DEPENDENCIES
     Core
-    ${MATHCORE_DEPENDENCIES}
+  LIBRARIES
+    ${MATHCORE_LIBRARIES}
 )
 
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
