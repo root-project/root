@@ -1087,6 +1087,8 @@ void RModel::GenerateSessionCode()
       // add initialization of shape parameters
       // assume all parameters are of type size_t
       if (!fDimShapeNames.empty()) {
+         // sort first the shape parameters in alphabetical order to avoid a random order
+         std::sort(fDimShapeNames.begin(), fDimShapeNames.end() );
          for (auto &p : fDimShapeNames) {
             fGC += ",\n";
             fGC += "        size_t " + p + " = " + fShapeParams[p];
