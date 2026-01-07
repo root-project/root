@@ -1171,8 +1171,13 @@ void TMultiGraph::Paint(Option_t *choptin)
 
    l = strstr(chopt.Data(),"PADS");
    if (l) {
-      chopt.ReplaceAll("PADS","");
-      PaintPads(chopt.Data());
+      Int_t fnx = 0;
+      if (sscanf(&l[4], "%d", &fnx) > 0) {
+         chopt.ReplaceAll(TString::Format("PADS%d", fnx), "");
+      } else {
+         chopt.ReplaceAll("PADS", "");
+      }
+      PaintPads(chopt.Data(), fnx);
       return;
    }
 
@@ -1372,11 +1377,11 @@ void TMultiGraph::Paint(Option_t *choptin)
       gfit->PaintStats(fit);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Divides the active pad and draws all Graphs in the Multigraph separately.
+/// fnx parameter larger than 0 enforces number of columns for pad division
 
-void TMultiGraph::PaintPads(Option_t *option)
+void TMultiGraph::PaintPads(Option_t *option, Int_t fnx)
 {
    if (!gPad) return;
 
@@ -1392,11 +1397,20 @@ void TMultiGraph::PaintPads(Option_t *option)
    }
    if (existingPads < neededPads) {
       curPad->Clear();
-      Int_t nx = (Int_t)TMath::Sqrt((Double_t)neededPads);
-      if (nx*nx < neededPads) nx++;
-      Int_t ny = nx;
-      if (((nx*ny)-nx) >= neededPads) ny--;
-      curPad->Divide(nx,ny);
+      if (fnx == 0) {
+         Int_t nx = (Int_t)TMath::Sqrt((Double_t)neededPads);
+         if (nx * nx < neededPads)
+            nx++;
+         Int_t ny = nx;
+         if (((nx * ny) - nx) >= neededPads)
+            ny--;
+         curPad->Divide(nx, ny);
+      } else {
+         Int_t ny = (Int_t)((Double_t)neededPads / fnx);
+         if (fnx * ny < neededPads)
+            ny++;
+         curPad->Divide(fnx, ny);
+      }
    }
    Int_t i = 0;
 
