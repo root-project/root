@@ -192,7 +192,7 @@ public:
                dataY[i] = BinaryOperatorTrait<T, Op>::Func(dataA[i], dataB[i]);
             }
             model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
-            // flag tensors to not be written in the weight file
+            // flag tensors to not be written in the generated code or weight file
             model.SetNotWritableInitializedTensor(nameA);
             model.SetNotWritableInitializedTensor(nameB);
             fIsOutputConstant = true;
