@@ -30,6 +30,7 @@ private:
    std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
    std::unordered_map<std::string, std::pair<std::vector<Dim>, bool>> fShapeTensors; // constant tensors describing a shape
    std::unordered_map<std::string, std::string> fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
+   std::unordered_map<std::string, std::string> fAliasTensors;   // list of alias tensors
    std::vector<std::string> fDimShapeNames; // parameter names used to define the shapes
    std::vector<std::string> fOutputTensorNames;
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
@@ -82,6 +83,8 @@ public:
    void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
 
+   void AddAliasTensor(const std::string & tensor_name, const std::string & orig_tensor_name);
+
 
    template<class T>
    void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const T * data) {
@@ -130,6 +133,8 @@ public:
    bool IsReadyInputTensor(const std::string &name) const;
    /// check if a tensor is a shape tensor
    bool IsShapeTensor(const std::string & name) const;
+   /// check if a tensor is a alias tensor
+   bool IsAliasTensor(const std::string & name) const;
 
    // Add intermediate tensor
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<Dim> dim_shape);
