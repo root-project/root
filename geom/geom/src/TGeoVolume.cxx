@@ -599,33 +599,86 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
-/// Use option="s[number]" to force overlap checking by sampling volume with
-/// [number] points.
-///
-/// Ex:
-/// ~~~ {.cpp}
-///     myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
-///     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
-/// ~~~
 
-void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
+void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
+{
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) {
+      Info("CheckOverlaps", "Option 's' deprecated. Use CheckOverlapsBySampling() instead.");
+      return;
+   }
+
+   auto geom = fGeoManager;
+   geom->ClearOverlaps();
+   geom->SetCheckingOverlaps(kTRUE);
+
+   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", GetName(), ovlp);
+
+   auto checker = geom->GetGeomChecker();
+
+   // -------- Stage 1: enumerate candidates (main thread)
+   std::vector<TGeoOverlapCandidate> candidates;
+   candidates.reserve(2048);
+
+   checker->EnumerateOverlapCandidates(this, ovlp, option, candidates);
+
+   TGeoIterator next((TGeoVolume*)this);
+   TGeoNode *node = nullptr;
+   while ((node = next())) {
+      if (!node->GetVolume()->IsSelected()) {
+         node->GetVolume()->SelectVolume(kFALSE);
+         checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+      }
+   }
+   Info("CheckOverlaps", "Number of overlap candidates found : %zu\n", candidates.size());
+   SelectVolume(kTRUE);
+
+   // -------- Stage 2: compute (main thread for now)
+   TGeoOverlapWorkState ws(checker->GetNmeshPoints());
+   ws.Reset();
+
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+   for (const auto &c : candidates) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(c, ws, r))
+         results.emplace_back(std::move(r));
+   }
+
+   // -------- Stage 3: materialize overlaps (main thread)
+   for (const auto &r : results)
+      checker->MaterializeOverlap(r);
+
+   geom->SetCheckingOverlaps(kFALSE);
+   geom->SortOverlaps();
+
+   // Rename overlaps as before
+   TObjArray *overlaps = geom->GetListOfOverlaps();
+   const Int_t novlps = overlaps->GetEntriesFast();
+   for (Int_t i = 0; i < novlps; i++)
+      ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
+
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overlap by sampling legacy checking tool. Check for illegal overlaps within a limit OVLP.
+
+void TGeoVolume::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
 {
    if (!GetNdaughters() || fFinder)
       return;
-   Bool_t sampling = kFALSE;
-   TString opt(option);
-   opt.ToLower();
-   if (opt.Contains("s"))
-      sampling = kTRUE;
    auto checker = fGeoManager->GetGeomChecker();
-   if (!sampling)
-      fGeoManager->SetNsegments(80);
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->ClearOverlaps();
-      //      Info("CheckOverlaps", "=== Checking overlaps for volume %s ===\n", GetName());
+      Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for volume %s", npoints, GetName());
+      Info("CheckOverlaps", "=== NOTE: Many overlaps may be missed. Extrusions NOT checked with sampling option ! ===");
    }
-   checker->CheckOverlaps(this, ovlp, option);
-   //   if (sampling) return;
+
+   checker->CheckOverlapsBySampling(this, ovlp, npoints);
+
    if (!fGeoManager->IsCheckingOverlaps()) {
       fGeoManager->SortOverlaps();
       TObjArray *overlaps = fGeoManager->GetListOfOverlaps();
@@ -640,8 +693,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
             name = TString::Format("ov%06d", i);
          obj->SetName(name);
       }
-      if (novlps)
-         Info("CheckOverlaps", "Number of illegal overlaps/extrusions for volume %s: %d\n", GetName(), novlps);
+      Info("CheckOverlaps", "Number of illegal overlaps/extrusions sampled for volume %s: %d\n", GetName(), novlps);
    }
 }
 

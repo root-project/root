@@ -188,32 +188,21 @@ Int_t TGeoNode::CountDaughters(Bool_t unique_volumes)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check overlaps bigger than OVLP hierarchically, starting with this node.
+/// npoints are sampled in the volume(s)
 
-void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
+void TGeoNode::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
 {
    Int_t icheck = 0;
-   Int_t ncheck = 0;
-   TStopwatch *timer;
-   Int_t i;
-   Bool_t sampling = kFALSE;
-   TString opt(option);
-   opt.ToLower();
-   if (opt.Contains("s"))
-      sampling = kTRUE;
-
    TGeoManager *geom = fVolume->GetGeoManager();
-   ncheck = CountDaughters(kFALSE);
-   timer = new TStopwatch();
+   Int_t ncheck = CountDaughters(kFALSE);
    geom->ClearOverlaps();
    geom->SetCheckingOverlaps(kTRUE);
-   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(), ovlp);
-   if (sampling) {
-      Info("CheckOverlaps", "Checking overlaps by sampling <%s> for %s and daughters", option, fVolume->GetName());
-      Info("CheckOverlaps", "=== NOTE: Extrusions NOT checked with sampling option ! ===");
-   }
-   timer->Start();
-   geom->GetGeomChecker()->OpProgress(fVolume->GetName(), icheck, ncheck, timer, kFALSE);
-   fVolume->CheckOverlaps(ovlp, option);
+   Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for %s and daughters", npoints, fVolume->GetName());
+   Info("CheckOverlaps", "=== NOTE: Many overlaps may be missed. Extrusions NOT checked with sampling option ! ===");
+   TStopwatch timer;
+   timer.Start();
+   geom->GetGeomChecker()->OpProgress(fVolume->GetName(), icheck, ncheck, &timer, kFALSE);
+   fVolume->CheckOverlapsBySampling(ovlp, npoints);
    icheck++;
    TGeoIterator next(fVolume);
    TGeoNode *node;
@@ -226,9 +215,9 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       icheck++;
       if (!node->GetVolume()->IsSelected()) {
          msg = TString::Format("found %d overlaps", overlaps->GetEntriesFast());
-         geom->GetGeomChecker()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, timer, kFALSE, msg);
+         geom->GetGeomChecker()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, &timer, kFALSE, msg);
          node->GetVolume()->SelectVolume(kFALSE);
-         node->GetVolume()->CheckOverlaps(ovlp, option);
+         node->GetVolume()->CheckOverlapsBySampling(ovlp, npoints);
       }
    }
    fVolume->SelectVolume(kTRUE);
@@ -236,13 +225,83 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    geom->SortOverlaps();
    novlps = overlaps->GetEntriesFast();
    TNamed *obj;
-   for (i = 0; i < novlps; i++) {
+   for (auto i = 0; i < novlps; i++) {
       obj = (TNamed *)overlaps->At(i);
       obj->SetName(TString::Format("ov%05d", i));
    }
-   geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, timer, kTRUE);
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
-   delete timer;
+   geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, &timer, kTRUE);
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check overlaps bigger than OVLP hierarchically, starting with this node.
+
+void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
+{
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) {
+      Info("CheckOverlaps", "Option 's' deprecated. Use CheckOverlapsBySampling() instead.");
+      return;
+   }
+
+   TStopwatch timer;
+   timer.Start();
+   TGeoManager *geom = fVolume->GetGeoManager();
+   geom->ClearOverlaps();
+   // Voxels may be marked to be rebuilt
+   geom->RebuildVoxels();
+   geom->SetCheckingOverlaps(kTRUE);
+
+   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(), ovlp);
+
+   auto checker = geom->GetGeomChecker();
+
+   // -------- Stage 1: enumerate candidates (main thread)
+   std::vector<TGeoOverlapCandidate> candidates;
+   candidates.reserve(2048);
+
+   checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
+
+   TGeoIterator next(fVolume);
+   TGeoNode *node = nullptr;
+   while ((node = next())) {
+      if (!node->GetVolume()->IsSelected()) {
+         node->GetVolume()->SelectVolume(kFALSE);
+         checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+      }
+   }
+   Info("CheckOverlaps", "Checking %zu candidates ...", candidates.size());
+   fVolume->SelectVolume(kTRUE);
+
+   // -------- Stage 2: compute (main thread for now)
+   TGeoOverlapWorkState ws(checker->GetNmeshPoints());
+   ws.Reset();
+
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+   for (const auto &c : candidates) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(c, ws, r))
+         results.emplace_back(std::move(r));
+   }
+
+   // -------- Stage 3: materialize overlaps (main thread)
+   for (const auto &r : results)
+      checker->MaterializeOverlap(r);
+
+   geom->SetCheckingOverlaps(kFALSE);
+   geom->SortOverlaps();
+
+   // Rename overlaps as before
+   TObjArray *overlaps = geom->GetListOfOverlaps();
+   const Int_t novlps = overlaps->GetEntriesFast();
+   for (Int_t i = 0; i < novlps; i++)
+      ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

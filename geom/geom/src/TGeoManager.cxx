@@ -3924,8 +3924,19 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t *option)
       Error("CheckOverlaps", "Top node not set");
       return;
    }
-   RebuildVoxels();
    fTopNode->CheckOverlaps(ovlp, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check all geometry for illegal overlaps within a limit OVLP.
+
+void TGeoManager::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
+{
+   if (!fTopNode) {
+      Error("CheckOverlaps", "Top node not set");
+      return;
+   }
+   fTopNode->CheckOverlapsBySampling(ovlp, npoints);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

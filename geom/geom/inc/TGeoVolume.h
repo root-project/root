@@ -98,7 +98,8 @@ public:
    virtual TGeoVolume *CloneVolume() const;
    void CloneNodesAndConnect(TGeoVolume *newmother) const;
    void CheckGeometry(Int_t nrays = 1, Double_t startx = 0, Double_t starty = 0, Double_t startz = 0) const;
-   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "") const;         // *MENU*
+   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");         // *MENU*
+   void CheckOverlapsBySampling(Double_t ovlp = 0.1, Int_t npoints = 1000000); // *MENU*
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = ""); // *MENU*
    Int_t CountNodes(Int_t nlevels = 1000, Int_t option = 0);
    Bool_t Contains(const Double_t *point) const { return fShape->Contains(point); }
