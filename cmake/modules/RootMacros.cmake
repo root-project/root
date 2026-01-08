@@ -1909,9 +1909,15 @@ endfunction()
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
 #                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
 #                     [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
+#                     [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG
+      "WILLFAIL;GENERIC"
+      ""
+      "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PRECMD;POSTCMD"
+      ${ARGN}
+  )
   if(MSVC)
     set(ROOT_ENV
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
@@ -1924,12 +1930,22 @@ function(ROOT_ADD_PYUNITTEST name file)
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
 
+  # Execute a custom command before executing the test.
+  if(ARG_PRECMD)
+    set(precmd PRECMD ${ARG_PRECMD})
+  endif()
+
   if(ARG_COPY_TO_BUILDDIR)
     foreach(copy_file ${ARG_COPY_TO_BUILDDIR})
       get_filename_component(abs_path ${copy_file} ABSOLUTE)
       set(copy_files ${copy_files} ${abs_path})
     endforeach()
     set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
+  # Execute a custom command after executing the test.
+  if(ARG_POSTCMD)
+    set(postcmd POSTCMD ${ARG_POSTCMD})
   endif()
 
   if(ARG_WILLFAIL)
@@ -1957,6 +1973,8 @@ function(ROOT_ADD_PYUNITTEST name file)
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
+              ${precmd}
+              ${postcmd}
               PYTHON_DEPS ${ARG_PYTHON_DEPS})
 
   if (ARG_FIXTURES_SETUP)
