@@ -538,6 +538,40 @@ TEST(RDFSnapshotRNTuple, TDirectory)
    EXPECT_EQ(expected, sdf.GetColumnNames());
 }
 
+TEST(RDFSnapshotRNTuple, CardinalityColumns)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_cardinality_columns.root"};
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      model->MakeField<std::vector<Electron>>("electron");
+
+      auto cardinalityFld = std::make_unique<ROOT::RField<ROOT::RNTupleCardinality<std::uint32_t>>>("nElectrons");
+      model->AddProjectedField(std::move(cardinalityFld), [](const std::string &) { return "electron"; });
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto electron = writer->GetModel().GetDefaultEntry().GetPtr<std::vector<Electron>>("electron");
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *electron = {Electron{1.f * i}, Electron{2.f * i}, Electron{3.f * i}};
+         writer->Fill();
+      }
+   }
+
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fMode = "UPDATE";
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   ROOT::RDataFrame df("ntuple", fileGuard.GetPath());
+
+   ROOT_EXPECT_WARNING(df.Snapshot("ntuple_snap", fileGuard.GetPath(), "", opts), "Snapshot",
+                       "Column \"nElectrons\" is a read-only \"ROOT::RNTupleCardinality<std::uint32_t>\" column. It "
+                       "will be snapshot as its inner type \"std::uint32_t\" instead.");
+
+   ROOT::RDataFrame sdf("ntuple_snap", fileGuard.GetPath());
+   EXPECT_EQ("std::uint32_t", sdf.GetColumnType("nElectrons"));
+}
+
 class RDFSnapshotRNTupleFromTTreeTest : public ::testing::Test {
 protected:
    const std::string fFileName = "RDFSnapshotRNTuple_ttree_fixture.root";
