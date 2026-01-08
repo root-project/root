@@ -24,7 +24,7 @@ endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(testSetAddress
                              testSetAddress.cpp
-                             LIBRARIES Core MathCore RIO Tree GenVector Physics
+                             LIBRARIES Core MathCore RIO Tree TreePlayer GenVector Physics
                              FIXTURES_SETUP root-multicore-testSetAddress-fixture)
 
 if(MSVC)
