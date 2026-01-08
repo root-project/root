@@ -414,14 +414,15 @@ std::pair<int, std::vector<size_t>>  UTILITY::MultidirectionalBroadcastShape(std
             + " to a common shape.");
    }
 }
-// unidirectional broadcast- only B changes
+// unidirectional broadcast- of shape A to target B
 std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> & shapeA, std::vector<size_t> & shapeB)
 {
-   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeA, shapeB);
+   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeB, shapeA);
    if (ret.first > 1) {
-      std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
-            + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
-            + " to a common shape.");
+      throw
+         std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+            + ConvertShapeToString(shapeA) + " to  " + ConvertShapeToString(shapeB)
+            + " in a common shape.");
    }
    return ret.second;
 }

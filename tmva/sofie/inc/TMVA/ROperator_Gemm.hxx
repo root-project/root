@@ -219,7 +219,7 @@ namespace SOFIE{
             fShapeC = model.GetTensorShape(fNC);
             size_t lengthC = ConvertShapeToLength(fShapeC);
             size_t lengthY = ConvertShapeToLength(shapeY);
-            // for dynamic outputs broadcasting is always done
+            // for dynamic outputs broadcasting is always needed
             bool broadcast_needed = false;
             if (fIsDynamic && shapeY.empty())
                broadcast_needed = true;
@@ -229,34 +229,21 @@ namespace SOFIE{
 
             if (broadcast_needed) {
                fBroadcastBias = true;
-               if (!model.UseSession()) {
-                  // without session dynamic tensors not supported in Gemm
-                  if (fIsDynamic) {
-                      throw std::runtime_error("TMVA SOFIE Gemm Op:  dynamic tensors not supported without a session");
-                  }
-                  auto original_data = model.GetInitializedTensorData(fNC);
-                  auto targetShape = UTILITY::UnidirectionalBroadcastShape(fShapeC, shapeY);
-                  if (fType == "float") {
-                     std::shared_ptr<void> new_data_ptr(UTILITY::UnidirectionalBroadcast<float>(
-                        static_cast<float *>(original_data.get()), fShapeC, targetShape),
-                        std::default_delete<float[]>());
-
-                     model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), shapeY, new_data_ptr);
-                     fShapeC = shapeY;
-                  }
-               } else {
-                  // /d to add a new intermediate tensor for broadcasted bias tensor
-                  // fNC2 = fNC + "bcast";
-                  // if (!fIsDynamic) {
-                  //    model.AddIntermed/ In case of session add broadcasting code in Session constructor and in GenerateInitCode
-                  // // we neeiateTensor(fNC2, model.GetTensorType(fNC), shapeY);
-                  // }
-                  // else
-                  //    model.AddDynamicTensor(fNC2,model.GetTensorType(fNC), fShapeY);
-                  // // do not add to lists of input/output tensors since broadcasted tensors are special
-                  // // and we manage their memory separatly
-                  // //fInputTensorNames.emplace_back(fNC2);
-                  // //fOutputTensorNames.emplace_back(fNC2);
+               // check if broadcasting is compatible and note that prepend 1 to shapeC
+               auto shapeDimC = ConvertShapeToDim(fShapeC);
+               auto r = UTILITY::MultidirectionalBroadcastShape(fShapeY, shapeDimC);
+               // return flag must be equal to 1 since this is a unidirectional broadcast of C->Y
+               if (r.first > 1) {
+                  throw std::runtime_error("TMVA SOFIE Gemm Op - bias tensor of shape " + ConvertShapeToString(fShapeC) + " cannot be uni-directional broadcasted to " + ConvertDimShapeToString(fShapeY));
+               }
+               fShapeC = ConvertShapeToInt(shapeDimC);
+               if (fShapeC.empty()) {
+                  throw std::runtime_error("TMVA SOFIE Gemm Op - Error in bias tensor " + ConvertDimShapeToString(shapeDimC) );
+               }
+            } else {
+               // for the case lengthY == lengthC but shape is different (e.g. Y is (2,3) and  is (6))
+               if (shapeY  != fShapeC) {
+                  throw std::runtime_error("TMVA SOFIE Gemm Op:  invalid shape for bias tensor " + ConvertShapeToString(fShapeC));
                }
             }
          }
@@ -294,6 +281,7 @@ namespace SOFIE{
       std::string GenerateInitCode() override {
          std::stringstream out;
          // generate initialization code for broadcasting of bias tensor
+#if 0
          if (fShapeC.size() != fShapeY.size() && fBroadcastBias) {
             // we broadcast here always C in Y output, so target shape is the one of Y
             // no need to call UTILITY::UnidirectionalBroadcastShape.
@@ -317,6 +305,7 @@ namespace SOFIE{
             out << SP << SP << "delete [] data;\n";
             out << SP << "}\n";
          }
+#endif
          return out.str();
       }
 
@@ -403,6 +392,33 @@ namespace SOFIE{
             out << SP << "for (size_t i = 0; i < " << lengthExtra_Y << "; i++){\n";
             out << SP;
          }
+         // do the bias broadcasting
+         if (fBroadcastBias) {
+            out << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
+            out << SP << SP << "size_t y_index = ";
+            if (doStackMul) // add offset in caseof stack multiplications (not sure if bias is present in these cases)
+               out <<  opName << "_y_offset + ";
+            if (sY[1].GetVal() != "1")
+               out << sY[1] << " * j;\n";
+            else
+               out << "j;\n";
+
+            out << SP << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
+            std::string bias_index;
+            if (fShapeC[0] == 1 && fShapeC[1] == sY[1].dim)
+               bias_index = "k";
+            else if (fShapeC[1] == 1 && fShapeC[0] == sY[0].dim)
+               bias_index = "j";
+            else if (fShapeC[0] == 1 && fShapeC[1] == 1)   // scalar case
+               bias_index = "0";
+            else {
+               throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertShapeToString(fShapeC));
+            }
+
+            out << SP << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
+            out << SP << SP << "}\n";
+            out << SP << "}\n";
+         }
 
          if (fType == "float"){
 
@@ -418,12 +434,12 @@ namespace SOFIE{
             out << ", tensor_" << fNA;
             if (extraA) out << " + " << opName << "_A_offset";
             out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
-            // in the case of bias
-             if (!fNC.empty())
+            // in the case of bias and no broadcasting needed
+            if (!fNC.empty() && !fBroadcastBias)
                out << "tensor_" << fNC;
-             else
+            else
                out << "nullptr";
-             out << ");\n";
+            out << ");\n";
 
             if(fActivation == EActivationType::RELU){
                out << SP << "for (int id = 0; id < " << ConvertDimShapeToLength(fShapeY) << " ; id++){\n";
