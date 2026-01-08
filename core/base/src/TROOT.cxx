@@ -1993,9 +1993,7 @@ void TROOT::InitSystem()
       if (gSystem->Init())
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
 
-#define TO_LITERAL(string) _QUOTE_(string)
-
-      TString rootincludedir = TO_LITERAL(CMAKE_INSTALL_INCLUDEDIR);
+      TString rootincludedir = _R_QUOTEVAL_(CMAKE_INSTALL_INCLUDEDIR);
       gSystem->PrependPathName(GetRootSys(), rootincludedir);
       gSystem->SetIncludePath(("-I" + rootincludedir).Data());
 
@@ -3052,7 +3050,7 @@ const TString &TROOT::GetLibDir()
          continue;
 
       fs::path p(path);
-      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+      if (p.filename() == _R_QUOTEVAL_(LIB_CORE_NAME)) {
          rootlibdir = p.parent_path().c_str();
          break;
       }
@@ -3072,7 +3070,7 @@ const TString &TROOT::GetLibDir()
          return 0;
 
       fs::path p = info->dlpi_name;
-      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+      if (p.filename() == _R_QUOTEVAL_(LIB_CORE_NAME)) {
          libdir = p.parent_path().c_str();
          return 1; // stop iteration
       }

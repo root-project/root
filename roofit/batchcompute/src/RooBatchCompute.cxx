@@ -92,12 +92,7 @@ public:
    std::string architectureName() const override
    {
       // transform to lower case to match the original architecture name passed to the compiler
-#ifdef _QUOTEVAL_ // to quote the value of the preprocessor macro instead of the name
-#error "It's unexpected that _QUOTEVAL_ is defined at this point!"
-#endif
-#define _QUOTEVAL_(x) _QUOTE_(x)
-      std::string out = _QUOTEVAL_(RF_ARCH);
-#undef _QUOTEVAL_
+      std::string out = _R_QUOTEVAL_(RF_ARCH);
       std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
       return out;
    };

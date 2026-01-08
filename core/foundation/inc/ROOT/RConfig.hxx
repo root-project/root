@@ -447,6 +447,8 @@
 
 #endif
 
+#define _R_QUOTEVAL_(string) _QUOTE_(string)
+
 /* produce an identifier that is almost unique inside a file */
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__JOIN3_(F,X,Y) _NAME3_(F,X,Y)
