@@ -27,11 +27,11 @@ set(FREETYPE_INCLUDE_DIR "" CACHE PATH "Path to Freetype include dir")
 set(ZLIB_INCLUDE_DIR "" CACHE PATH "Path to zlib include dir")
 
 if(NOT EXISTS "${FREETYPE_INCLUDE_DIR}/ft2build.h")
-  message(ERROR "Can't find ft2build.h in ${FREETYPE_INCLUDE_DIR}")
+  message(SEND_ERROR "Can't find ft2build.h in ${FREETYPE_INCLUDE_DIR}")
 endif()
 
 if(NOT EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h")
-  message(ERROR "Can't find zlib.h in ${ZLIB_INCLUDE_DIR}")
+  message(SEND_ERROR "Can't find zlib.h in ${ZLIB_INCLUDE_DIR}")
 endif()
 
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
