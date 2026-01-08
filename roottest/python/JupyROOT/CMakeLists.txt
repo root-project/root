@@ -2,7 +2,7 @@
 if(NOT MSVC OR win_broken_tests)
 
 # Do not run with classic build or if tests are vetoed
-if (ROOT_pyroot_FOUND AND NOT ROOT_CLASSIC_BUILD)
+if (pyroot AND NOT ROOT_CLASSIC_BUILD)
 
 set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
@@ -38,7 +38,7 @@ foreach(NOTEBOOK ${NOTEBOOKS})
                     PYTHON_DEPS jupyter)
 endforeach()
 
-if(ROOT_imt_FOUND)
+if(imt)
   # No need to compare output here, just check it runs with no error
   set(IMT_NB Cpp_IMT_Canvas.ipynb)
   get_filename_component(NOTEBOOKBASE ${IMT_NB} NAME_WE)

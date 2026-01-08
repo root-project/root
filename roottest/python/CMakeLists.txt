@@ -1,10 +1,10 @@
-if(ROOT_pyroot_FOUND)
+if(pyroot)
 
-  if(ROOT_roofit_FOUND)
+  if(roofit)
     set(roofit True)
   else()
     set(roofit False)
-  endif(ROOT_roofit_FOUND)
+  endif(roofit)
 
   find_python_module(pytest OPTIONAL)
 

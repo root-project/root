@@ -1,4 +1,4 @@
-if(ROOT_pyroot_FOUND)
+if(pyroot)
   ROOTTEST_ADD_TEST(memory
                     MACRO PyROOT_memorytests.py
                     COPY_TO_BUILDDIR MemTester.C

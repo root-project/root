@@ -1,4 +1,4 @@
-if(ROOT_roofit_FOUND)
+if(roofit)
 
   ROOTTEST_ADD_TEST(RooDataSet_ASCII_in
                     MACRO ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out.C

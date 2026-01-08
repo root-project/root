@@ -1,4 +1,4 @@
-if(ROOT_pyroot_FOUND)
+if(pyroot)
   set(scott_file ScottCppyy.C) # Uses Cppyy header
 
 if(NOT MSVC OR win_broken_tests)

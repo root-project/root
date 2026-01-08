@@ -1,4 +1,4 @@
-if(ROOT_pyroot_FOUND)
+if(pyroot)
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(cpp
                     MACRO PyROOT_cpptests.py

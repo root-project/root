@@ -1,13 +1,13 @@
-if(NOT ROOT_test_distrdf_dask_FOUND AND NOT ROOT_test_distrdf_pyspark_FOUND)
+if(NOT test_distrdf_dask AND NOT test_distrdf_pyspark)
     return()
 endif()
 
-if(ROOT_test_distrdf_dask_FOUND)
+if(test_distrdf_dask)
     list(APPEND DISTRDF_BACKENDS_IN_USE "dask")
     list(APPEND DISTRDF_RESOURCE_LOCKS "dask_resource_lock")
 endif()
 
-if(ROOT_test_distrdf_pyspark_FOUND)
+if(test_distrdf_pyspark)
 
     # Define environment variables needed in all pyspark tests
     set(PYSPARK_ENV_VARS PYSPARK_PYTHON=${Python3_EXECUTABLE})
