@@ -643,7 +643,6 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> prevNode, std::string_view n
                     << "std::shared_ptr<void> *) {\n";
    filterInvocation << "   ROOT::Internal::RDF::JitFilterHelper(" << funcName << ", "
                     << "colNames, "
-                    << "\"" << name << "\", "
                     << "colRegister, "
                     << "lm, "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(jittedFilter)"
@@ -682,7 +681,6 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
    defineInvocation << "   ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>("
                     << funcName << ", "
                     << "colNames, "
-                    << "\"" << name << "\", "
                     << "colRegister, "
                     << "lm, "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedDefine *>(jittedDefine)"
@@ -716,7 +714,6 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
    defineInvocation << "   ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
                     << funcName << ", "
                     << "colNames, "
-                    << "\"" << name << "\", "
                     << "colRegister, "
                     << "lm, "
                     << "reinterpret_cast<ROOT::Detail::RDF::RJittedDefine *>(jittedDefine)"
@@ -768,7 +765,6 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
       << "   ROOT::Internal::RDF::JitVariationHelper<" << (isSingleColumn ? "true" : "false") << ">(" << funcName
       << ", "
       << "inputColNames, "
-      << "\"" << variationName << "\", "
       << "colRegister, "
       << "lm, "
       << "reinterpret_cast<ROOT::Internal::RDF::RJittedVariation *>(jittedVariation), "
