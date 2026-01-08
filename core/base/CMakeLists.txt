@@ -236,7 +236,9 @@ if(core_soversion)
 else()
     set(full_core_filename "${core_prefix}Core${core_suffix}")
 endif()
-target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename})
+target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename}
+                                    -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 if(PCRE2_FOUND)
   target_link_libraries(Core PRIVATE PCRE2::PCRE2)
