@@ -11,28 +11,28 @@ namespace SOFIE {
 /// \brief A helper class to generate profiled inference code for an RModel.
 ///
 /// This class instruments the generated C++ code to measure the execution
-/// time of each operator. It is invoked when the RModel::Generate is called
-/// with the Options::kProfile flag. 
+/// time of each operator. The functions are invoked when the RModel::Generate is called
+/// with the Options::kProfile flag.
 class RModelProfiler {
-private:
-   RModel &fModel;
-   
-   void GenerateUtilityFunctions();
 
 public:
-   // The profiler must be constructed with a model to work on.
+   static void AddNeededStdLibs(RModel &model);
+   static std::string GenerateUtilityFunctions();
+   static std::string GenerateSessionMembers();
+   static std::string GenerateBeginInferCode();
+   static std::string GenerateOperatorCode(ROperator &op, size_t op_idx);
+   static std::string GenerateEndInferCode();
+
+
    RModelProfiler() = delete;
-   RModelProfiler(RModel &model);
    ~RModelProfiler() = default;
-   
+
    // There is no point in copying or moving an RModelProfiler
    RModelProfiler(const RModelProfiler &other) = delete;
    RModelProfiler(RModelProfiler &&other) = delete;
    RModelProfiler &operator=(const RModelProfiler &other) = delete;
    RModelProfiler &operator=(RModelProfiler &&other) = delete;
-   
-   // Main function to generate the profiled code.
-   void Generate();
+
 };
 
 } // namespace SOFIE

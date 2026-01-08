@@ -720,6 +720,10 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       }
    }
 
+   if (fProfile) {
+      RModelProfiler::AddNeededStdLibs(*this);
+   }
+
    fIsInitialized = true;
 }
 
@@ -1321,7 +1325,10 @@ void RModel::GenerateSessionCode()
    GenerateIntermediateTensorInfo();
    // generate code for declarations of some specific operators
    GenerateOperatorDeclarations();
-
+   // generate code for profiling if enabled
+   if (fProfile) {
+      fGC += RModelProfiler::GenerateSessionMembers();
+   }
    // storing the parameters for future checking to avoid mismatches
    if (!fDimShapeNames.empty()) {
       fGC += "\n//   dynamic shape parameters\n";
@@ -1340,9 +1347,6 @@ void RModel::GenerateSessionCode()
 
    // Generate code for Session constructor
    if (fUseSession) {
-      std::string sessionName = "Session";
-      if (fIsSubGraph)
-         sessionName += "_" + fName;
       // add here specific operator code that needs to define session data members
       fGC += "\n";
       for (size_t id = 0; id < fOperators.size(); id++) {
@@ -1408,18 +1412,19 @@ void RModel::GenerateSessionCode()
    // generate the inference overload that returns an output struct
    GenerateOutput();
 
+   // generate profile printing utility functions
+   if (fProfile) {
+      fGC += RModelProfiler::GenerateUtilityFunctions();
+   }
+
    // end of session
    if (fUseSession && !fIsGNNComponent) {
       fGC += "};   // end of Session\n\n";
 
       GenerateRequiredInputTensorInfo();
+
    }
 
-   if (fProfile) {
-      RModelProfiler profiler(*this);
-      profiler.Generate();
-      fGC += fProfilerGC;
-   } else {
 
    fGC += doInferSignature + " {\n";
    fGC += "\n";
@@ -1431,53 +1436,27 @@ void RModel::GenerateSessionCode()
    if (fOutputTensorNames.size() == 0)
       throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
 
+   if (fProfile) {
+      fGC += RModelProfiler::GenerateBeginInferCode();
+   }
+
    std::string allOperatorCode;
 
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-      if (fVerbose)
+      if (fVerbose) {
          std::cout << "Generating code for operator .... " << op_idx << std::endl;
-      std::string operatorCode = fOperators[op_idx]->Generate(std::to_string(op_idx));
-      allOperatorCode += operatorCode;
+      }
+      if (fProfile) {
+         allOperatorCode += RModelProfiler::GenerateOperatorCode(*fOperators[op_idx], op_idx);
+      } else {
+         allOperatorCode += fOperators[op_idx]->Generate(std::to_string(op_idx));
+      }
    }
 
    // If the generated code users members of the session struct, use the
    // local variable name that we're using for the session:
    ReplaceAll(allOperatorCode, "this->", "session.");
 
-   }
-
-   //    fGC += doInferSignature + "{\n";
-   //    fGC += "\n";
-
-   //    // generate the inference code
-   //    if (fVerbose)
-   //       std::cout << "Generating main inference code for " << fName << std::endl;
-
-   //    if (fOutputTensorNames.size() == 0)
-   //       throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
-
-   //    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-   //       if (fVerbose)
-   //       std::cout << "Generating code for operator .... " << op_idx << std::endl;
-   //       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
-   //    }
-
-   //    fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
-
-   // for (std::string const &name : fOutputTensorNames) {
-   //    // need to check is size is the same (don't want to return a vector with
-   //    // larger size) in that case better to copy
-   //    bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
-   //    std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
-   //                                   : ConvertDimShapeToLength(GetDimTensorShape(name));
-   //    fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
-   // }
-
-   //    fGC += "}\n\n";
-   // }
-
-   // // generate the inference overload that returns an output struct
-   // GenerateOutput();
 
    // end of session
    if (fUseSession && !fIsGNNComponent) {
@@ -1490,6 +1469,10 @@ void RModel::GenerateSessionCode()
    }
 
    fGC += allOperatorCode;
+
+   if (fProfile) {
+      fGC += RModelProfiler::GenerateEndInferCode();
+   }
 
    for (auto const& name: fOutputTensorNames) {
       bool isDynamic = fDynamicTensorInfos.count(name) > 0;

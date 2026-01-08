@@ -27,8 +27,6 @@ private:
    size_t fWeightsTensorSize = 0;  // size  (in Bytes) of the allocated weight tensors
    size_t fOtherTensorSize = 0;    // size  (in Bytes) of intermediate tensors which are not managed by the memory pool
 
-   std::string fProfilerGC = "";
-
    OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
 
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?

@@ -40,8 +40,8 @@ public:
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
-   std::string name = "UnnamedOperator";
-   const std::string &GetOperatorName() { return name; };
+   std::string fName = "UnnamedOperator";
+   const std::string & Name() const { return fName; };
 
 protected:
 

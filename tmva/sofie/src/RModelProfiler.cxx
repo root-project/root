@@ -6,20 +6,20 @@ namespace Experimental {
 namespace SOFIE {
 
 // The constructor now just registers the necessary C++ libraries.
-RModelProfiler::RModelProfiler(RModel &model) : fModel(model)
+void RModelProfiler::AddNeededStdLibs(RModel &model)
 {
-   fModel.AddNeededStdLib("chrono");      // for timing operators
-   fModel.AddNeededStdLib("vector");      // for storing profiling results
-   fModel.AddNeededStdLib("string");      // for operator names
-   fModel.AddNeededStdLib("map");         // for the results map
-   fModel.AddNeededStdLib("iostream");    // for printing results
-   fModel.AddNeededStdLib("iomanip");     // for printing results
+   model.AddNeededStdLib("chrono");      // for timing operators
+   model.AddNeededStdLib("vector");      // for storing profiling results
+   model.AddNeededStdLib("string");      // for operator names
+   model.AddNeededStdLib("map");         // for the results map
+   model.AddNeededStdLib("iostream");    // for printing results
+   model.AddNeededStdLib("iomanip");     // for printing results
 }
 
 // This function generates the helper functions inside the Session struct.
-void RModelProfiler::GenerateUtilityFunctions()
+std::string RModelProfiler::GenerateUtilityFunctions()
 {
-   auto &gc = fModel.fProfilerGC;
+   std::string gc;
 
    // Generate PrintProfilingResults function
    gc += "   // generate code for printing operator results. By default order according to time (from higher to lower)\n";
@@ -107,68 +107,52 @@ void RModelProfiler::GenerateUtilityFunctions()
    gc += "\n";
    gc += "      return variance;\n";
    gc += "   }\n";
+
+   return gc;
 }
 
+// Generate code for adding session member
+
 // Main generation function for the profiler.
-void RModelProfiler::Generate()
+std::string RModelProfiler::GenerateSessionMembers()
 {
-   // Clear the profiler's code string to start fresh.
-   fModel.fProfilerGC.clear();
-   auto &gc = fModel.fProfilerGC;
-
-   // 1. Add the data member to the Session struct to store results.
-   gc += "public:\n";
-   gc += "   // Maps an operator name to a vector of its execution times (in microseconds).\n";
-   gc += "   std::map<std::string, std::vector<double>> fProfilingResults;\n\n";
-
-   // 2. Generate and add the utility functions like PrintProfilingResults.
-   GenerateUtilityFunctions();
-
-   // 3. Generate the signature for the profiled doInfer method.
-   std::string doInferSignature = fModel.GenerateInferSignature();
-   if (!doInferSignature.empty()) doInferSignature += ", ";
-   for (auto const &name : fModel.GetOutputTensorNames()) {
-      doInferSignature += " std::vector<" + ConvertTypeToString(fModel.GetTensorType(name)) + "> &output_tensor_" + name + ",";
-   }
-   if (!fModel.GetOutputTensorNames().empty()) {
-      doInferSignature.back() = ' ';
-   }
-   gc += "void doInfer(" + doInferSignature + ") {\n";
-
-   // 4. Generate the body of the doInfer method with timing instrumentation.
+   std::string gc;
+   gc += "// Maps an operator name to a vector of its execution times (in microseconds).\n";
+   // need to use mutable because we pass a const Session in the doInfer function
+   gc += "mutable std::map<std::string, std::vector<double>> fProfilingResults;\n\n";
+   return gc;
+}
+std::string RModelProfiler::GenerateBeginInferCode() {
+   std::string gc;
+   // 1. Add necessary code for instrumenting with timers
    gc += "   // Timer variable for profiling\n";
    gc += "   std::chrono::steady_clock::time_point tp_start, tp_overall_start;\n\n";
    gc += "   tp_overall_start = std::chrono::steady_clock::now();\n\n";
+   gc += "   auto & fProfilingResults = session.fProfilingResults;\n\n";
+   return gc;
+}
+std::string RModelProfiler::GenerateOperatorCode(ROperator &op, size_t op_idx) {
+   std::string gc;
+   gc += "   // -- Profiling for operator " + op.Name() + " --\n";
+   gc += "   tp_start = std::chrono::steady_clock::now();\n\n";
 
-   for (size_t op_idx = 0; op_idx < fModel.fOperators.size(); ++op_idx) {
-      const auto& op = fModel.fOperators[op_idx];
-      gc += "   // -- Profiling for operator " + op->name + " --\n";
-      gc += "   tp_start = std::chrono::steady_clock::now();\n\n";
+   // Add the actual operator inference code
+   gc += op.Generate(std::to_string(op_idx));
 
-      // Add the actual operator inference code
-      gc += op->Generate(std::to_string(op_idx));
+   // Add the code to stop the timer and store the result
+   gc += "\n   fProfilingResults[\"" + op.Name() + "\"].push_back(\n";
+   gc += "      std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(\n";
+   gc += "         std::chrono::steady_clock::now() - tp_start).count());\n\n";
+   return gc;
+}
 
-      // Add the code to stop the timer and store the result
-      gc += "\n   fProfilingResults[\"" + op->name + "\"].push_back(\n";
-      gc += "      std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(\n";
-      gc += "         std::chrono::steady_clock::now() - tp_start).count());\n\n";
-   }
-
-   // 5. Generate the code to fill the output tensors.
-   gc += "   using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
-   for (std::string const &name : fModel.GetOutputTensorNames()) {
-      bool isIntermediate = fModel.fIntermediateTensorInfos.count(name) > 0;
-      std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(fModel.GetTensorShape(name)))
-                                     : ConvertDynamicShapeToLength(fModel.GetDynamicTensorShape(name));
-      gc += "   FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
-   }
-
+std::string RModelProfiler::GenerateEndInferCode() {
+   std::string gc;
    gc += "\n   // -- Record overall inference time --\n";
    gc += "   fProfilingResults[\"Overall_Time\"].push_back(\n";
    gc += "      std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(\n";
    gc += "         std::chrono::steady_clock::now() - tp_overall_start).count());\n";
-
-   gc += "}\n\n"; // End of doInfer function
+   return gc;
 }
 
 } // namespace SOFIE
