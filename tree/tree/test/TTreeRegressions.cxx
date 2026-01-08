@@ -238,12 +238,11 @@ TEST(TTreeRegressions, EmptyLeafObject)
 #define MYCLASS struct MyClass { std::vector<MySubClass> sub; MySubClass *Get(int id) { for (size_t i = 0; i < sub.size(); ++i) if (sub[i].id == id) return &sub[i]; return nullptr; } };
 MYSUBCLASS
 MYCLASS
-#define TO_LITERAL(string) _QUOTE_(string)
 
 TEST(TTreeRegressions, TTreeFormulaMemberIndex)
 {
-   gInterpreter->Declare(TO_LITERAL(MYSUBCLASS));
-   gInterpreter->Declare(TO_LITERAL(MYCLASS));
+   gInterpreter->Declare(_R_QUOTEVAL_(MYSUBCLASS));
+   gInterpreter->Declare(_R_QUOTEVAL_(MYCLASS));
 
    TTree tree("tree", "tree");
    MyClass mc;
