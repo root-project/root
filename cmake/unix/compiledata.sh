@@ -19,8 +19,6 @@ ROOTLIBS=$9
 shift
 RINTLIBS=$9
 shift
-INCDIR=$9
-shift
 CUSTOMSHARED=$9
 shift
 CUSTOMEXE=$9
@@ -32,9 +30,6 @@ shift
 IGNORE_BUILD_NODE_CHANGES=$9
 shift
 
-if [ "$INCDIR" = "$ROOTSYS/include" ]; then
-   INCDIR=\$ROOTSYS/include
-fi
 if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
@@ -139,7 +134,6 @@ echo "#define CXXOPT \"$CXXOPT\"" >> "${COMPILEDATA}.tmp"
 echo "#define CXXDEBUG \"$CXXDEBUG\"" >> "${COMPILEDATA}.tmp"
 echo "#define ROOTBUILD \"$ROOTBUILD\"" >> "${COMPILEDATA}.tmp"
 echo "#define LINKEDLIBS \"-L$LIBDIR $ROOTLIBS $RINTLIBS \""  >> "${COMPILEDATA}.tmp"
-echo "#define INCLUDEPATH \"-I$INCDIR\"" >> "${COMPILEDATA}.tmp"
 echo "#define OBJEXT \"o\"" >> "${COMPILEDATA}.tmp"
 echo "#define SOEXT \"$SOEXT\"" >> "${COMPILEDATA}.tmp"
 

@@ -1993,6 +1993,12 @@ void TROOT::InitSystem()
       if (gSystem->Init())
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
 
+#define TO_LITERAL(string) _QUOTE_(string)
+
+      TString rootincludedir = TO_LITERAL(CMAKE_INSTALL_INCLUDEDIR);
+      gSystem->PrependPathName(GetRootSys(), rootincludedir);
+      gSystem->SetIncludePath(("-I" + rootincludedir).Data());
+
       if (!gSystem->HomeDirectory()) {
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: HOME directory not set\n");
          fprintf(stderr, "Fix this by defining the HOME shell variable\n");
@@ -3036,8 +3042,6 @@ const TString &TROOT::GetLibDir()
    haveLooked = true;
 
    namespace fs = std::filesystem;
-
-#define TO_LITERAL(string) _QUOTE_(string)
 
 #if defined(__APPLE__)
 

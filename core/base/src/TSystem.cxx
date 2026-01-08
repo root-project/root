@@ -200,7 +200,7 @@ Bool_t TSystem::Init()
    fBuildNode     = BUILD_NODE;
    fFlagsDebug    = CXXDEBUG;
    fFlagsOpt      = CXXOPT;
-   fIncludePath   = INCLUDEPATH;
+   // fIncludePath is set in TROOT::InitSystem()
    fLinkedLibs    = LINKEDLIBS;
    fSoExt         = SOEXT;
    fObjExt        = OBJEXT;

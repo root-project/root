@@ -54,11 +54,6 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
 else()
   set(libdir ${prefix}/${CMAKE_INSTALL_LIBDIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
-  set(incdir ${CMAKE_INSTALL_INCLUDEDIR})
-else()
-  set(incdir ${prefix}/${CMAKE_INSTALL_INCLUDEDIR})
-endif()
 if(IS_ABSOLUTE ${CMAKE_INSTALL_MANDIR})
   set(mandir ${CMAKE_INSTALL_MANDIR})
 else()
@@ -685,7 +680,7 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-tar
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
 if(prefix STREQUAL "$(ROOTSYS)")
-  foreach(d prefix bindir libdir incdir etcdir tutdir mandir)
+  foreach(d prefix bindir libdir etcdir tutdir mandir)
     string(REPLACE "$(ROOTSYS)" "$ROOTSYS"  ${d} ${${d}})
   endforeach()
 endif()
@@ -718,7 +713,7 @@ else()
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
+        "${libdir}" "-lCore" "-lRint" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
         "${local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES}")
 endif()
 
