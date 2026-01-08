@@ -1,4 +1,4 @@
-if(ROOT_pyroot_FOUND)
+if(pyroot)
   set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
   ROOTTEST_ADD_TEST(api
                     MACRO ${api_macro_file}

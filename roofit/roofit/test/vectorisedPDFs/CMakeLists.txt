@@ -48,7 +48,7 @@ ROOT_ADD_GTEST(testCBShape testCBShape.cxx
               LIBRARIES VectorisedPDFTests)
 ROOT_ADD_GTEST(testGamma testGamma.cxx
               LIBRARIES VectorisedPDFTests)
-if(ROOT_mathmore_FOUND)
+if(mathmore)
   ROOT_ADD_GTEST(testLegendre testLegendre.cxx
                 LIBRARIES VectorisedPDFTests ROOT::RooFitMore)
 endif()

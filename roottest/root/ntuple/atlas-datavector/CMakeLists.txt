@@ -78,7 +78,7 @@ ROOTTEST_ADD_TEST(read
 # instantiation done by the Python bindings was leading to a faulty behaviour:
 # the user-provided class template "AtlasLikeDataVector<CustomStruct>" does not
 # correspond to what the compiler sees, so we need to inject this information.
-if(ROOT_pyroot_FOUND)
+if(pyroot)
     ROOT_ADD_PYUNITTEST(
         rentry_getptr
         rentry_getptr.py

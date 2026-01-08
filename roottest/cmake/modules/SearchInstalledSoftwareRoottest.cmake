@@ -6,7 +6,7 @@ if(NOT MSVC)
 endif()
 
 #---Check for MPI---------------------------------------------------------------
-if(ROOT_mpi_FOUND)
+if(mpi)
   message(STATUS "Looking for MPI")
   find_package(MPI)
   if(NOT MPI_FOUND)
