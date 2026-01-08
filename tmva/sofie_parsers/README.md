@@ -59,11 +59,14 @@ SOFIE::RModel model = parser.Parse("model.onnx");
 
 ## ONNX Operator support
 
-ONNX operator support in TMVA SOFIE is determined by operators registered via `RegisterOperator(...)` in `root/tmva/sofie_parsers/RModelParser_ONNX.cxx` in the current ROOT source tree..
+ONNX operator support in TMVA SOFIE is determined by operators registered via `RegisterOperator(...)` in `root/tmva/sofie_parsers/RModelParser_ONNX.cxx` in the current ROOT source tree.
 
 Only tensor-based ONNX operators are considered; sequence-based ONNX operators are out of scope.
 
 ### Supported ONNX operators
+
+<details>
+<summary>Click to see full list</summary>
 
 - [x] Abs
 - [x] Add
@@ -135,6 +138,8 @@ Only tensor-based ONNX operators are considered; sequence-based ONNX operators a
 - [x] Transpose
 - [x] Unsqueeze
 - [x] Where
+
+</details>
 
 ## Limitations and Design Notes
 
