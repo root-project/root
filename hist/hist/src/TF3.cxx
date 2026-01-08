@@ -59,14 +59,15 @@ TF3::TF3()
    fZmax = 1;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a formula definition
+/// TF3 constructor using a formula definition and string option args
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
-TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt)
-   :TF2(name,formula,xmin,xmax,ymax,ymin,opt)
+TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Double_t zmin, Double_t zmax, Option_t *opt)
+   : TF2(name, formula, xmin, xmax, ymax, ymin,
+         opt) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
 {
    fZmin   = zmin;
    fZmax   = zmax;
@@ -81,7 +82,30 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function
+/// TF3 constructor using a formula definition and explicit option args
+///
+/// See TFormula constructor for explanation of the formula syntax.
+
+TF3::TF3(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+         Double_t zmin, Double_t zmax, EAddToList addToGlobList, bool vectorize)
+   : TF2(name, formula, xmin, xmax, ymax, ymin, addToGlobList,
+         vectorize) // purposely swapped ymax, ymin to signal that TFormula may be 1D or 2D or 3D
+{
+   fZmin = zmin;
+   fZmax = zmax;
+   fNpz = 30;
+   Int_t ndim = GetNdim();
+   // accept 1-d or 2-d formula
+   if (ndim < 3)
+      fNdim = 3;
+   if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
+      Error("TF3", "function: %s/%s has dimension %d instead of 3", name, formula, ndim);
+      MakeZombie();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TF3 constructor using a pointer to real function
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -108,7 +132,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a pointer to real function---
+/// TF3 constructor using a pointer to real function---
 ///
 /// \param[in] name object name
 /// \param[in] fcn pointer to real function
@@ -135,7 +159,7 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F3 constructor using a ParamFunctor
+/// TF3 constructor using a ParamFunctor
 ///
 /// a functor class implementing operator() (double *, double *)
 ///

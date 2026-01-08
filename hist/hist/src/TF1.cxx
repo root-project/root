@@ -699,7 +699,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// F1 constructor using name of an interpreted function.
+/// TF1 constructor using name of an interpreted function.
 ///
 ///  Creates a function of type C between xmin and xmax.
 ///  name is the name of an interpreted C++ function.
