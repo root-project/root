@@ -119,7 +119,7 @@ set(CMAKE_ROOTTEST_DICT ON)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOT_SOURCE_DIR}/roottest/cmake/modules")
 
 #---Set flag for PyROOT tests that are expected to fail
-if(ROOT_pyroot_FOUND)
+if(pyroot)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
 
