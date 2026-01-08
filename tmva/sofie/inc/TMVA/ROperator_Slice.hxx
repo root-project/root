@@ -25,6 +25,7 @@ private:
    bool fIsStartUndef = false;
    bool fIsEndUndef = false;
    bool fIsStepUndef = false;
+   bool fIdentitySlice = false;
    std::string fNData;        // input data tensor name
    std::string fNOutput;      // output data name
    std::vector<std::string> fNames;       // tensor names for meta(axis) information
@@ -332,10 +333,27 @@ public:
          }
       }
       else {
+         // check if Slice is just an Identity operator in case start = 0, end = input_shape and step=1
+         size_t ndim = fShapeInput.size();
+         fIdentitySlice = fShapeOutput.size() == ndim;
+         // check also if input data is not input to the model. In that case we copy the data since we cannot just copy from the input pointer
+         fIdentitySlice &= !model.IsReadyInputTensor(fNData);
+         for (size_t idim = 0; idim < ndim; idim++) {
+            if (!fIdentitySlice) break;
+            fIdentitySlice &= (fStart[idim].GetVal() == "0");
+            fIdentitySlice &= (fSteps[idim].GetVal() == "1");
+            fIdentitySlice &= (fEnd[idim].GetVal() == fShapeOutput[idim].GetVal());
+         }
+
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         if (fIdentitySlice)  model.AddAliasTensor(fNOutput, fNData);
+
          if (model.Verbose()) {
             std::cout << "Slice " << fNData << "  " << ConvertShapeToString(fShapeInput)
-                      << "---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+                      << "---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput);
+            if (fIdentitySlice) std::cout << " (using alias tensor since slice is an identity) ";
+            std::cout << std::endl;
+
          }
       }
    }
@@ -351,8 +369,16 @@ public:
       out << "///------- Slice operator " << opName << "---> " << fNOutput << " "
           << ConvertDimShapeToString(fShapeOutput) << "\n" << std::endl;
       if (fIsOutputConstant) return out.str();  //no op for constant tensors
-      // loop on the dimensions depending no the orders
+
       size_t ndim = fShapeInput.size();
+
+      if (fIdentitySlice) {
+         out << "/// Slice is just an identity (copy pointers) \n";
+         out << SP << "tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+         return out.str();
+      }
+
+      // loop on the dimensions depending no the orders
       auto strides = UTILITY::ComputeStrideFromShape(fShapeInput);
 
 

@@ -167,8 +167,8 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
         order_execution = fOperators.size()-1;
     }
 
-    // storing the last usage of tensors which are input to
-    // operators (but are not inputs to the model or they are not initialized)
+    // storing the last usage of tensors which are input to the operator
+    // (excluding tensors which are inputs to the model or the initialized (weights) tensors)
     // We call this function during parsing so we don't have yet initialized the operators
    for(size_t index = 0; index<op_input_tensors.size() &&
             fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() &&
@@ -208,8 +208,22 @@ void RModel::AddShapeTensor(const std::string & name, const std::vector<Dim> & s
    fShapeTensors[tensor_name] = std::make_pair(shape_values, scalar);
 }
 
+void RModel::AddAliasTensor(const std::string & name, const std::string & origin){
+   // add an alias tensor to origin
+   auto tensor_name = UTILITY::Clean_name(name);
+   auto origin_name = UTILITY::Clean_name(origin);
+   if (fAliasTensors.count(tensor_name) != 0) {
+      throw std::runtime_error("TMVA-SOFIE: alias tensor with name " + tensor_name + " already exists \n");
+   }
+   fAliasTensors[tensor_name] = origin_name;
+}
+
 bool RModel::IsShapeTensor(const std::string & tensor_name) const {
    return fShapeTensors.count(tensor_name) != 0;
+}
+
+bool RModel::IsAliasTensor(const std::string & tensor_name) const {
+   return fAliasTensors.count(tensor_name) != 0;
 }
 
 const std::vector<Dim> & RModel::GetShapeTensorValues(const std::string & tensor_name) const {
@@ -356,6 +370,11 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
           fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
          continue;
 
+      // case of alias tensor
+      if (IsAliasTensor(name)) {
+         continue;
+      }
+
       auto tensor_size = GetTypeSize(GetTensorType(name)) * ConvertShapeToLength(GetTensorShape(name));
       // important fill the pair in the ordered output tensors with the string view and not the string
       TensorMemoryInfo tmi = {it, tensor_size};
@@ -435,9 +454,14 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
         chunk != fIntermediateMemoryInfo.available_stack.end(); chunk++) {
       if (fVerbose) std::cout << "-- free chunk " << chunk->first <<  " size = " << chunk->second << std::endl;
    }
-   for (auto &it : op_input_tensors) {
+   for (auto &iv : op_input_tensors) {
       // last occurrence of the tensor is reached => flush it from memory
-      if (fVerbose) std::cout << ".. input tensors : " << it;
+      if (fVerbose) std::cout << ".. input tensors : " << iv;
+
+      // for alias tensors replace name with its alias
+      std::string it{iv};  // convert view to string
+      if (IsAliasTensor(it))
+         it = fAliasTensors[it];
       if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
          if (fVerbose) std::cout << "  flash condition is met - looping on chunks to find matching one \n";
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin();
@@ -623,6 +647,17 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          fUseWeightFile = false;
    }
 
+   // update fIntermediateTensorFrequencyLookup for alias tensors
+   for (auto & it : fAliasTensors) {
+      if (fIntermediateTensorFrequencyLookup.find(it.first) == fIntermediateTensorFrequencyLookup.end()) continue;
+      if (fIntermediateTensorFrequencyLookup.find(it.second) == fIntermediateTensorFrequencyLookup.end() )
+         fIntermediateTensorFrequencyLookup[it.second] = fIntermediateTensorFrequencyLookup[it.first];
+      else {
+         // take the largest one
+         fIntermediateTensorFrequencyLookup[it.second] = std::max(fIntermediateTensorFrequencyLookup[it.second],fIntermediateTensorFrequencyLookup[it.first] );
+      }
+   }
+
    fIsInitialized = true;
 }
 
@@ -737,7 +772,8 @@ void RModel::GenerateIntermediateTensorInfo() {
    if (!fIntermediateTensorInfos.empty()) {
       std::string tensor_declaration_block = "";
       for (auto &i : fIntermediateTensorInfos) {
-         if (i.second.type == ETensorType::BOOL) {
+         bool  is_alias = (IsAliasTensor(i.first));
+         if (i.second.type == ETensorType::BOOL && !is_alias) {
                tensor_declaration_block += "std::vector<std::uint8_t> fTensor_" + i.first + " = std::vector<std::uint8_t>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
                tensor_declaration_block += "std::uint8_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
                continue;
@@ -748,7 +784,7 @@ void RModel::GenerateIntermediateTensorInfo() {
          bool not_in_output_names =
             (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end());
 
-         if ((not_in_freq_map && not_in_output_names) || (!not_in_freq_map && !is_extended && not_in_output_names)) {
+         if (((not_in_freq_map && not_in_output_names) || (!not_in_freq_map && !is_extended && not_in_output_names) ) && !is_alias) {
             size_t length = ConvertShapeToLength(i.second.shape);
 
             if (i.second.type == ETensorType::FLOAT) {
@@ -767,6 +803,10 @@ void RModel::GenerateIntermediateTensorInfo() {
                fOtherTensorSize += 8 * length;
             }
          }
+         if (is_alias) {
+             tensor_declaration_block += ConvertTypeToString(i.second.type) + " * tensor_" + i.first + " = nullptr;\n";
+         }
+
       }
 
       if (tensor_declaration_block.length()) {
@@ -777,19 +817,7 @@ void RModel::GenerateIntermediateTensorInfo() {
    if (!fDynamicTensorInfos.empty()) {
       fGC += "//--- declare the dynamic tensors\n";
       for (auto &i : fDynamicTensorInfos) {
-         if (i.second.type == ETensorType::FLOAT) {
-            //fGC += "std::vector<float> fTensor_" + i.first + ";\n";
-            fGC += "float * tensor_" + i.first + " = nullptr;\n";
-         } else if (i.second.type == ETensorType::DOUBLE) {
-            //fGC += "std::vector<double> fTensor_" + i.first + ";\n";
-            fGC += "double * tensor_" + i.first + " = nullptr;\n";
-         } else if (i.second.type == ETensorType::INT64) {
-            //fGC += "std::vector<int64_t> fTensor_" + i.first + ";\n";
-            fGC += "int64_t * tensor_" + i.first + " = nullptr;\n";
-         } else if (i.second.type == ETensorType::BOOL) {
-            //fGC += "std::vector<uint8_t> fTensor_" + i.first + ";\n";
-            fGC += "uint8_t * tensor_" + i.first + " = nullptr;\n";
-         }
+         fGC += ConvertTypeToString(i.second.type) + " * tensor_" + i.first + " = nullptr;\n";
       }
       fGC += "//--- dynamic tensors pool\n";
       fGC += "std::vector<char> fDynamicMemoryPool;\n";
@@ -835,9 +863,9 @@ void RModel::GenerateDynamicTensorInfo()
             auto op_ptr = op.get();
             std::cout << "Looping on operator " << op_index << "   " << typeid(*op_ptr).name() << std::endl;
          }
-         // check if is a dynamic tensor
+         // check if is a dynamic tensor and not an alias tensor
          std::string name = std::string(it);
-         if ( fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end() ) {
+         if ( fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end() && !IsAliasTensor(name)) {
             auto tensor_size =  ConvertDimShapeToLength(GetDimTensorShape(name));
             auto type = GetTensorType(name);
             size_t type_size = GetTypeSize(type);
@@ -873,6 +901,7 @@ void RModel::GenerateDynamicTensorInfo()
    // check that all dynamic tensors are covered
    bool missingTensor = false;
    for (auto &i : fDynamicTensorInfos) {
+      if (IsAliasTensor(i.first)) continue;
       if (std::find(tensors.begin(), tensors.end(), std::pair<std::string,ETensorType>{i.first, i.second.type}) == tensors.end()) {
          std::cout << "Dynamic tensors " << i.first << " is not in list of operator input/output " << std::endl;
          missingTensor = true;

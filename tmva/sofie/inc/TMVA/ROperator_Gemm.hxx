@@ -217,14 +217,13 @@ namespace SOFIE{
                throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNC + " is dynamic and is not supported");
             }
             fShapeC = model.GetTensorShape(fNC);
-            size_t lengthC = ConvertShapeToLength(fShapeC);
-            size_t lengthY = ConvertShapeToLength(shapeY);
             // for dynamic outputs broadcasting is always needed
             bool broadcast_needed = false;
             if (fIsDynamic && shapeY.empty())
                broadcast_needed = true;
             else
-               broadcast_needed = lengthC != lengthY;
+               // consider broadcasting also if same length
+               broadcast_needed = (fShapeC != shapeY);
 
 
             if (broadcast_needed) {
@@ -239,11 +238,6 @@ namespace SOFIE{
                fShapeC = ConvertShapeToInt(shapeDimC);
                if (fShapeC.empty()) {
                   throw std::runtime_error("TMVA SOFIE Gemm Op - Error in bias tensor " + ConvertDimShapeToString(shapeDimC) );
-               }
-            } else {
-               // for the case lengthY == lengthC but shape is different (e.g. Y is (2,3) and  is (6))
-               if (shapeY  != fShapeC) {
-                  throw std::runtime_error("TMVA SOFIE Gemm Op:  invalid shape for bias tensor " + ConvertShapeToString(fShapeC));
                }
             }
          }

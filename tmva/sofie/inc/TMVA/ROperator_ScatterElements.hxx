@@ -136,6 +136,17 @@ public:
          return strst.str();
       };
 
+      auto tensorIndexOpt = [](const std::vector<std::string> & sdx, const std::vector<std::string> & idx) {
+         std::stringstream strst;
+         int dims = idx.size();
+         for (int i = 0; i < dims-1; i++) {
+            strst << sdx[i];
+            strst << " + ";
+         }
+         strst << idx[dims-1];
+         return strst.str();
+      };
+
 
       // copy first input in output (maybe can be avoided??)
       out << SP << "std::copy(tensor_" << fNX << ", tensor_" << fNX << " + " << length << ", tensor_" << fNY << ");\n";
@@ -143,14 +154,24 @@ public:
       // loop on tensor rank
       int dims = fShapeY.size();
       std::vector<std::string> idx(dims);
+      std::vector<std::string> sdx(dims);  // stride for indices
       for (int i = 0; i < dims; i++) {
          idx[i] = std::string("i") + std::to_string(i);
+         sdx[i] = std::string("s") + std::to_string(i);
          for (int j = 0; j <= i; j++) out << SP;
          out << "for (int " << idx[i] << " = 0; " << idx[i] << " < " << fShapeI[i] << "; " << idx[i] << "++) {\n";
+         if (i < dims-1) {
+            for (int j = 0; j <= i+1 ; j++) out << SP;
+            if (strideI[i].GetVal() != "1")
+               out << "int "<< sdx[i] << " = " << strideI[i] << " * " << idx[i] << ";\n";
+            else
+               out << "int "<< sdx[i] << " = " << idx[i] << ";\n";
+         }
       }
       // correct index for specific axis
       for (int j = 0; j <= dims; j++) out << SP;
-      out << "int updateIndex = " << tensorIndex(strideI,idx) << ";\n";
+      // can use optimised formula for indices since the loop above is on fShapeI
+      out << "int updateIndex = " << tensorIndexOpt(sdx,idx) << ";\n";
       for (int j = 0; j <= dims; j++) out << SP;
       out << "int iAxis = tensor_" << fNI << "[updateIndex];\n";
       for (int j = 0; j <= dims; j++) out << SP;

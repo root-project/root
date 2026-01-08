@@ -123,8 +123,12 @@ public:
          if (model.Verbose()) {
             std::cout << "adding constant tensor " << fNY << " with shape " << ConvertShapeToString(fShape)
             << " and values [";
-            for (auto v : fValues) std::cout << " " << v;
-            std::cout << "]" << std::endl;
+            if (!fIsConstantOfShape) {
+               for (auto v : fValues) std::cout << " " << v;
+               std::cout << "]" << std::endl;
+            } else {  // for constant of shape is enough to print one value
+               std::cout << "... " << fValues[0] << " ....]" << std::endl;
+            }
          }
       } else {
          model.AddIntermediateTensor(fNY, ConvertStringToType(TensorType<T>::Name()), fDimOutputShape);

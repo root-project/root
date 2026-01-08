@@ -132,7 +132,7 @@ std::string ConvertDimShapeToString(const std::vector<Dim> & shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
-      out << shape[i].GetVal();
+      out << shape[i];
       if (i < shape.size()-1) out << " , ";
    }
    out << " }";
