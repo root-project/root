@@ -51,6 +51,7 @@ __all__ = [
    'Regression16NestedNamespace',
    'Regression17MatrixD',
    'Regression18FailingDowncast',
+   "Cpp3TemplatedMathOperatorsTestCase",
 ]
 
 
@@ -913,6 +914,21 @@ class Regression27ImplicitSmartPtrOverload(MyTestCase):
 
         c = ROOT.regression27.Derived(123)
         self.assertEqual(ROOT.regression27.foo(ROOT.std.move(c)), 2)  # we expect the second overload
+
+
+### Templated math operators =================================================
+class Cpp3TemplatedMathOperatorsTestCase(MyTestCase):
+    def test01LorentzVector(self):
+        """Templated method operator+/-"""
+
+        v1 = ROOT.Math.LorentzVector("ROOT::Math::PxPyPzE4D<double>")(1, 2, 3, 4)
+        v2 = ROOT.Math.LorentzVector("ROOT::Math::PxPyPzE4D<double>")(4, 3, 2, 1)
+
+        v3 = v1.__add__(v2)
+        self.assertEqual(v3.X(), v1.X() + v2.X())
+        v4 = v1 + v2
+        self.assertEqual(v4.X(), v1.X() + v2.X())
+        self.assertEqual(v3, v4)
 
 
 ## actual test run
