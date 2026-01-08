@@ -216,10 +216,9 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
 // ROOT-8577 (JIRA)
 #define MYSTRUCT struct MyS { int x; };
 MYSTRUCT
-#define TO_LITERAL(string) _QUOTE_(string)
 TEST(TTreeFormulaRegressions, WrongName)
 {
-   gInterpreter->Declare(TO_LITERAL(MYSTRUCT));
+   gInterpreter->Declare(_R_QUOTEVAL_(MYSTRUCT));
    MyS s;
    TLorentzVector v(1, 2, 3, 4);
    TTree t("t", "t");
