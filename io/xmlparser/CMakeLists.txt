@@ -24,7 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
      src/TXMLDocument.cxx
      src/TXMLNode.cxx
      src/TXMLParser.cxx
-  DEPENDENCIES
+  LIBRARIES
     Core
 )
 
