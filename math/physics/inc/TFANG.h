@@ -10,16 +10,20 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \file FANG.h
-/// \ingroup Physics
-/// \brief Focused Angular N-body event Generator (FANG)
+/// \file TFANG.h
+///
+/// \brief TFANG - Focused Angular N-body event Generator
 /// \authors Arik Kreisel, Itay Horin
 ///
-/// FANG is a Monte Carlo tool for efficient event generation in restricted
+/// TFANG is a Monte Carlo tool for efficient event generation in restricted
 /// (or full) Lorentz-Invariant Phase Space (LIPS). Unlike conventional approaches
-/// that always sample the full 4pi solid angle, FANG can also directly generate
+/// that always sample the full 4pi solid angle, TFANG can also directly generate
 /// events in which selected final-state particles are constrained to fixed
 /// directions or finite angular regions in the laboratory frame.
+///
+/// This file contains:
+/// - namespace FANG: Core generator functions and utilities
+/// - class TFANG: User-friendly interface class
 ///
 /// Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
 /// J. High Energ. Phys. 2025, 137 (2025). 
@@ -27,8 +31,8 @@
 /// https://arxiv.org/abs/2509.11105 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_FANG
-#define ROOT_FANG
+#ifndef ROOT_TFANG
+#define ROOT_TFANG
 
 #include "Rtypes.h"
 #include "Math/Vector3D.h"
@@ -38,6 +42,9 @@
 
 class TRandom3;
 
+////////////////////////////////////////////////////////////////////////////////
+// FANG namespace - Core generator functions
+////////////////////////////////////////////////////////////////////////////////
 namespace FANG {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -276,4 +283,206 @@ Int_t GenFANG(Int_t nBody,
 
 } // namespace FANG
 
-#endif // ROOT_FANG
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFANG
+/// \brief User interface class for the FANG phase space generator
+///
+/// TFANG wraps the FANG namespace functions to provide an object-oriented
+/// interface for phase space event generation with optional angular constraints.
+///
+/// Example usage (unconstrained):
+/// ~~~{.cpp}
+/// // Create generator for 3-body decay
+/// TFANG gen;
+/// Double_t masses[3] = {0.139, 0.139, 0.139};  // pion masses
+/// ROOT::Math::PxPyPzMVector S(0, 0, 0, 1.0);   // parent at rest
+/// gen.SetDecay(S, 3, masses);
+///
+/// // Generate single event
+/// gen.Generate();
+/// auto p0 = gen.GetDecay(0);  // 4-momentum of first particle
+///
+/// // Calculate phase space integral
+/// Double_t ps, err;
+/// gen.GetPhaseSpace(1000000, ps, err);
+/// ~~~
+///
+/// Example usage (constrained):
+/// ~~~{.cpp}
+/// TFANG gen;
+/// Double_t masses[3] = {0.139, 0.139, 0.139};
+/// ROOT::Math::PxPyPzMVector S(0, 0, 0, 1.0);
+/// gen.SetDecay(S, 3, masses);
+///
+/// // Add detector constraint
+/// ROOT::Math::XYZVector detDir(0, 0, 1);
+/// Double_t omega = 0.01;  // solid angle
+/// Double_t ratio = 0.0;   // circle mode
+/// gen.AddConstraint(detDir, omega, ratio);
+///
+/// // Generate and loop over solutions
+/// if (gen.Generate() > 0) {
+///    for (Int_t i = 0; i < gen.GetNSolutions(); ++i) {
+///       Double_t w = gen.GetWeight(i);
+///       auto p0 = gen.GetDecay(i, 0);
+///    }
+/// }
+/// ~~~
+////////////////////////////////////////////////////////////////////////////////
+class TFANG {
+
+private:
+   Int_t                                  fNBody;      ///< Number of outgoing particles
+   ROOT::Math::PxPyPzMVector              fS;          ///< Total 4-momentum of system
+   std::vector<Double_t>                  fMasses;     ///< Particle masses
+   std::vector<Double_t>                  fOmega;      ///< Solid angles for constraints
+   std::vector<Double_t>                  fRatio;      ///< Shape parameters for constraints
+   std::vector<ROOT::Math::XYZVector>     fV3Det;      ///< Direction vectors for constraints
+
+   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> fVecVecP;  ///< Output 4-momenta for all solutions
+   std::vector<Double_t>                  fVecWi;      ///< Weights for each solution
+
+   TRandom3                              *fRng;        ///< Random number generator
+   Bool_t                                 fOwnRng;     ///< Whether we own the RNG
+
+public:
+   /// Default constructor
+   TFANG();
+
+   /// Constructor with external random number generator
+   /// \param[in] rng Pointer to external TRandom3 (ownership not transferred)
+   explicit TFANG(TRandom3 *rng);
+
+   /// Destructor
+   ~TFANG();
+
+   /// Prevent copying
+   TFANG(const TFANG &) = delete;
+   TFANG &operator=(const TFANG &) = delete;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Configuration methods
+   ////////////////////////////////////////////////////////////////////////////
+
+   /// \brief Set decay configuration
+   /// \param[in] S Total 4-momentum of the decaying system
+   /// \param[in] nBody Number of outgoing particles
+   /// \param[in] masses Array of particle masses, length nBody
+   /// \return kTRUE if configuration is valid
+   Bool_t SetDecay(const ROOT::Math::PxPyPzMVector &S, Int_t nBody, const Double_t *masses);
+
+   /// \brief Add angular constraint for a particle
+   /// \param[in] direction Direction vector for the constraint
+   /// \param[in] omega Solid angle in steradians
+   /// \param[in] ratio Shape parameter (2=point, 0=circle, 0<r<=1=strip, <0=ring)
+   void AddConstraint(const ROOT::Math::XYZVector &direction, Double_t omega, Double_t ratio);
+
+   /// \brief Clear all constraints (revert to unconstrained generation)
+   void ClearConstraints();
+
+   /// \brief Set random number generator seed
+   /// \param[in] seed Seed value
+   void SetSeed(UInt_t seed);
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Event generation methods
+   ////////////////////////////////////////////////////////////////////////////
+
+   /// \brief Generate a single phase space event
+   /// \return Number of solutions (0 if generation failed)
+   Int_t Generate();
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Accessors for generated event data
+   ////////////////////////////////////////////////////////////////////////////
+
+   /// \brief Get number of solutions from last generation
+   /// \return Number of kinematic solutions
+   Int_t GetNSolutions() const { return static_cast<Int_t>(fVecVecP.size()); }
+
+   /// \brief Get weight for a specific solution (unconstrained mode)
+   /// \return Weight for the single solution
+   Double_t GetWeight() const;
+
+   /// \brief Get weight for a specific solution (constrained mode)
+   /// \param[in] iSolution Solution index
+   /// \return Weight for the specified solution
+   Double_t GetWeight(Int_t iSolution) const;
+
+   /// \brief Get 4-momentum of particle (unconstrained mode, single solution)
+   /// \param[in] iParticle Particle index (0 to nBody-1)
+   /// \return 4-momentum of the particle
+   ROOT::Math::PxPyPzMVector GetDecay(Int_t iParticle) const;
+
+   /// \brief Get 4-momentum of particle for specific solution
+   /// \param[in] iSolution Solution index
+   /// \param[in] iParticle Particle index (0 to nBody-1)
+   /// \return 4-momentum of the particle
+   ROOT::Math::PxPyPzMVector GetDecay(Int_t iSolution, Int_t iParticle) const;
+
+   /// \brief Get all 4-momenta for a solution
+   /// \param[in] iSolution Solution index
+   /// \return Vector of 4-momenta
+   const std::vector<ROOT::Math::PxPyPzMVector> &GetDecays(Int_t iSolution) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Phase space integration methods
+   ////////////////////////////////////////////////////////////////////////////
+
+   /// \brief Calculate full (unconstrained) phase space integral with uncertainty
+   ///
+   /// Runs Monte Carlo integration to estimate the full phase space volume.
+   /// This method ignores any constraints and calculates the Lorentz-invariant
+   /// phase space for the decay.
+   ///
+   /// \param[in] nEvents Number of events for Monte Carlo integration (default 1E6)
+   /// \param[out] phaseSpace Estimated phase space value
+   /// \param[out] error Statistical uncertainty on phase space
+   /// \return kTRUE if calculation succeeded
+   Bool_t GetPhaseSpace(Long64_t nEvents, Double_t &phaseSpace, Double_t &error) const;
+
+   /// \brief Calculate full phase space with default 1E6 events
+   /// \param[out] phaseSpace Estimated phase space value
+   /// \param[out] error Statistical uncertainty on phase space
+   /// \return kTRUE if calculation succeeded
+   Bool_t GetPhaseSpace(Double_t &phaseSpace, Double_t &error) const;
+
+   /// \brief Calculate partial (constrained) phase space integral with uncertainty
+   ///
+   /// Runs Monte Carlo integration to estimate the partial phase space volume
+   /// when angular constraints are applied. The result is the phase space
+   /// restricted to the detector solid angles, multiplied by the product of
+   /// all omega values (total solid angle factor).
+   ///
+   /// Requires constraints to be set via AddConstraint() before calling.
+   ///
+   /// \param[in] nEvents Number of events for Monte Carlo integration (default 1E6)
+   /// \param[out] phaseSpace Estimated partial phase space value
+   /// \param[out] error Statistical uncertainty on phase space
+   /// \return kTRUE if calculation succeeded, kFALSE if no constraints set
+   Bool_t GetPartialPhaseSpace(Long64_t nEvents, Double_t &phaseSpace, Double_t &error) const;
+
+   /// \brief Calculate partial phase space with default 1E6 events
+   /// \param[out] phaseSpace Estimated partial phase space value
+   /// \param[out] error Statistical uncertainty on phase space
+   /// \return kTRUE if calculation succeeded, kFALSE if no constraints set
+   Bool_t GetPartialPhaseSpace(Double_t &phaseSpace, Double_t &error) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   // Utility methods
+   ////////////////////////////////////////////////////////////////////////////
+
+   /// \brief Check if generator is in constrained mode
+   /// \return kTRUE if constraints are set
+   Bool_t IsConstrained() const { return !fV3Det.empty(); }
+
+   /// \brief Get number of constraints
+   /// \return Number of detector constraints
+   Int_t GetNConstraints() const { return static_cast<Int_t>(fV3Det.size()); }
+
+   /// \brief Get number of particles in decay
+   /// \return Number of outgoing particles
+   Int_t GetNBody() const { return fNBody; }
+};
+
+#endif // ROOT_TFANG

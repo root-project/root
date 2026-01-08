@@ -2,32 +2,28 @@
 // Author: Arik Kreisel
 // Parallelized version using std::thread (no OpenMP required)
 
+////////////////////////////////////////////////////////////////////////////////
+/// \file runTFANG_parallel.C
+/// \ingroup Physics
+/// \brief Parallelized demonstration and validation of FANG using the TFANG class
+/// \author Arik Kreisel
+///
+/// This is the multi-threaded version of runTFANG.C using std::thread.
+/// All event generation loops are parallelized for improved performance.
+///
+/// TFANG is a Monte Carlo tool for efficient event generation in restricted
+/// (or full) Lorentz-Invariant Phase Space (LIPS).
+///
+/// Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
+/// J. High Energ. Phys. 2025, 137 (2025). 
+/// https://doi.org/10.1007/JHEP12(2025)137 
+/// https://arxiv.org/abs/2509.11105 
+///
+/// Features:
+/// - Comparison of TFANG constrained vs TFANG unconstrained with cuts
+////////////////////////////////////////////////////////////////////////////////
 
-/**
- * \file runParallelFANG.C
- * \brief Parallelized demonstration and validation of FANG 
- * \authors: Arik Kreisel and Itay Horin 
- *
- * FANG is a Monte Carlo tool for efficient event generation in restricted
- * (or full) Lorentz-Invariant Phase Space (LIPS). Unlike conventional approaches
- * that always sample the full 4pi solid angle, FANG can also directly generates 
- * events in which selected final-state particles are constrained to fixed 
- * directions or finite angular regions in the laboratory frame.
- *
- * Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
- * J. High Energ. Phys. 2025, 137 (2025). 
- * https://doi.org/10.1007/JHEP12(2025)137 
- * https://arxiv.org/abs/2509.11105 
-* This file contains:
-* 1. Rosenbluth cross section function for elastic ep scattering
-* 2. runFANG() - main demonstration function that validates FANG against:
-*    - Full phase space calculation
-*    - Partial phase space with detector constraints (vs FANG unconstrained with cuts)
-*    - Elastic ep differential cross section (vs Rosenbluth formula)
- */
-
-#include "FANG.h"
-
+#include "TFANG.h"
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TH1D.h"
@@ -38,6 +34,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TRandom3.h"
+#include "TROOT.h"
 
 // Threading includes
 #include <thread>
@@ -91,14 +88,24 @@ struct AccumulatorResult {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Structure to hold FANG unconstrained with cuts results
+// Structure to hold TFANG unconstrained with cuts results
 ////////////////////////////////////////////////////////////////////////////////
 
-struct FangCutsResult {
+struct TFangCutsResult {
    Int_t fNTotalGenerated;
    Int_t fNPassedCuts;
 
-   FangCutsResult() : fNTotalGenerated(0), fNPassedCuts(0) {}
+   TFangCutsResult() : fNTotalGenerated(0), fNPassedCuts(0) {}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Structure to hold point calculation results
+////////////////////////////////////////////////////////////////////////////////
+
+struct PointResult {
+   Double_t fCosTheta;
+   Double_t fSigma;
+   Double_t fSigmaErr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -194,30 +201,23 @@ void WorkerTest1(
 ) {
    using namespace FANG;
 
-   // Thread-local random number generator with unique seed
-   TRandom3 rng(12345 + threadId);
-
    AccumulatorResult localResult;
 
-   std::vector<ROOT::Math::XYZVector> v3Det;
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
-   Double_t omega0[1];
-   Double_t shape0[1];
-   Int_t eventStatus;
+   // Thread-local RNG with unique seed
+   TRandom3 rng(threadId + 100);
+   
+   // Thread-local TFANG instance with thread-local RNG
+   TFANG gen(&rng);
+   gen.SetDecay(pTotal, kNBody, masses);
+
    Double_t weight;
-
    Int_t workItem;
-   while (workQueue.Pop(workItem)) {
-      vecVecP.clear();
-      vecWi.clear();
-      eventStatus = GenFANG(kNBody, pTotal, masses, omega0, shape0, v3Det, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+   while (workQueue.Pop(workItem)) {
+      if (gen.Generate() == 0) continue;
+
+      for (Int_t i = 0; i < gen.GetNSolutions(); i++) {
+         weight = gen.GetWeight(i);
          localResult.fNEvents++;
          localResult.fSumW += weight;
          localResult.fSumW2 += weight * weight;
@@ -232,9 +232,9 @@ void WorkerTest1(
 }
 
 //------------------------------------------------------------------------------
-// Worker for Test 2: FANG with Detector Constraints
+// Worker for Test 2: TFANG with Detector Constraints
 //------------------------------------------------------------------------------
-void WorkerTest2FANG(
+void WorkerTest2TFANG(
    Int_t threadId,
    WorkQueue& workQueue,
    const Int_t kNBody,
@@ -253,36 +253,35 @@ void WorkerTest2FANG(
 ) {
    using namespace FANG;
 
-   // Thread-local random number generator with unique seed
-   TRandom3 rng(12345 + threadId);
-
    AccumulatorResult localResult;
 
-   std::vector<ROOT::Math::XYZVector> v3Det = v3DetConst;
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
-   Int_t eventStatus;
+   // Thread-local RNG with unique seed
+   TRandom3 rng(threadId + 200);
+   
+   // Thread-local TFANG instance
+   TFANG gen(&rng);
+   gen.SetDecay(pTotal, kNBody, masses);
+   for (Int_t i = 0; i < kNDet; i++) {
+      gen.AddConstraint(v3DetConst[i], omega[i], shape[i]);
+   }
+
    Double_t weight;
-
    Int_t workItem;
-   while (workQueue.Pop(workItem)) {
-      vecVecP.clear();
-      vecWi.clear();
-      eventStatus = GenFANG(kNBody, pTotal, masses, omega, shape, v3Det, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+   while (workQueue.Pop(workItem)) {
+      if (gen.Generate() == 0) continue;
+
+      for (Int_t i = 0; i < gen.GetNSolutions(); i++) {
+         weight = gen.GetWeight(i);
          localResult.fNEvents++;
          localResult.fSumW += weight;
          localResult.fSumW2 += weight * weight;
 
          for (Int_t j = 0; j < kNBody; j++) {
-            histsE[threadId * kNBody + j]->Fill(vecP[j].E() - masses[j], weight * totalOmega);
-            histsCos[threadId * kNBody + j]->Fill(TMath::Cos(vecP[j].Theta()), weight * totalOmega);
-            histsPhi[threadId * kNBody + j]->Fill(vecP[j].Phi(), weight * totalOmega);
+            ROOT::Math::PxPyPzMVector p = gen.GetDecay(i, j);
+            histsE[threadId * kNBody + j]->Fill(p.E() - masses[j], weight * totalOmega);
+            histsCos[threadId * kNBody + j]->Fill(TMath::Cos(p.Theta()), weight * totalOmega);
+            histsPhi[threadId * kNBody + j]->Fill(p.Phi(), weight * totalOmega);
          }
       }
    }
@@ -294,9 +293,9 @@ void WorkerTest2FANG(
 }
 
 //------------------------------------------------------------------------------
-// Worker for Test 2: FANG Unconstrained (nDet=0) with Cuts
+// Worker for Test 2: TFANG Unconstrained with Cuts
 //------------------------------------------------------------------------------
-void WorkerTest2FANGCuts(
+void WorkerTest2TFANGCuts(
    Int_t threadId,
    WorkQueue& workQueue,
    const Int_t kNBody,
@@ -310,53 +309,46 @@ void WorkerTest2FANGCuts(
    std::vector<TH1D*>& histsE,
    std::vector<TH1D*>& histsCos,
    std::vector<TH1D*>& histsPhi,
-   std::vector<FangCutsResult>& results,
+   std::vector<TFangCutsResult>& results,
    std::mutex& resultsMutex
 ) {
    using namespace FANG;
 
-   // Thread-local random number generator with unique seed
-   TRandom3 rng(12345 + threadId);
+   TFangCutsResult localResult;
 
-   FangCutsResult localResult;
+   // Thread-local RNG with unique seed
+   TRandom3 rng(threadId + 300);
+   
+   // Thread-local unconstrained TFANG instance
+   TFANG gen(&rng);
+   gen.SetDecay(pTotal, kNBody, masses);
+   // No constraints added for unconstrained generation
 
-   std::vector<ROOT::Math::XYZVector> v3DetEmpty;  // Empty for unconstrained
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
-   Double_t omega0[1];
-   Double_t shape0[1];
-   Int_t eventStatus;
    Double_t weight;
    Int_t outsideCut;
-
    Int_t workItem;
+
    while (workQueue.Pop(workItem)) {
-      vecVecP.clear();
-      vecWi.clear();
-      
-      // Generate unconstrained events (nDet=0)
-      eventStatus = GenFANG(kNBody, pTotal, masses, omega0, shape0, v3DetEmpty, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
+      if (gen.Generate() == 0) continue;
 
       localResult.fNTotalGenerated++;
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+      for (Int_t i = 0; i < gen.GetNSolutions(); i++) {
+         weight = gen.GetWeight(i);
          outsideCut = 0;
 
          // Apply geometric cuts
          for (Int_t j = 0; j < kNDet; j++) {
-            TVector3 pVec(vecP[j].Px(), vecP[j].Py(), vecP[j].Pz());
+            ROOT::Math::PxPyPzMVector p = gen.GetDecay(i, j);
+            TVector3 pVec(p.Px(), p.Py(), p.Pz());
             
             if (shape[j] == 0.0 &&
                 (1.0 - TMath::Cos(tv3[j].Angle(pVec))) > omega[j] / kTwoPi) {
                outsideCut = 1;
             }
             if (shape[j] > 0.0 &&
-                (TMath::Abs(tv3[j].Phi() - vecP[j].Phi()) > kPi * shape[j] ||
-                 TMath::Abs(TMath::Cos(tv3[j].Theta()) - TMath::Cos(vecP[j].Theta())) >
+                (TMath::Abs(tv3[j].Phi() - p.Phi()) > kPi * shape[j] ||
+                 TMath::Abs(TMath::Cos(tv3[j].Theta()) - TMath::Cos(p.Theta())) >
                  omega[j] / (4.0 * kPi * shape[j]))) {
                outsideCut = 1;
             }
@@ -367,9 +359,10 @@ void WorkerTest2FANGCuts(
          localResult.fNPassedCuts++;
 
          for (Int_t j = 0; j < kNBody; j++) {
-            histsE[threadId * kNBody + j]->Fill(vecP[j].E() - masses[j], weight / scaleFactor);
-            histsCos[threadId * kNBody + j]->Fill(TMath::Cos(vecP[j].Theta()), weight / scaleFactor);
-            histsPhi[threadId * kNBody + j]->Fill(vecP[j].Phi(), weight / scaleFactor);
+            ROOT::Math::PxPyPzMVector p = gen.GetDecay(i, j);
+            histsE[threadId * kNBody + j]->Fill(p.E() - masses[j], weight / scaleFactor);
+            histsCos[threadId * kNBody + j]->Fill(TMath::Cos(p.Theta()), weight / scaleFactor);
+            histsPhi[threadId * kNBody + j]->Fill(p.Phi(), weight / scaleFactor);
          }
       }
    }
@@ -383,12 +376,6 @@ void WorkerTest2FANGCuts(
 //------------------------------------------------------------------------------
 // Worker for Test 3: Point generation at specific angles
 //------------------------------------------------------------------------------
-struct PointResult {
-   Double_t fCosTheta;
-   Double_t fSigma;
-   Double_t fSigmaErr;
-};
-
 void WorkerTest3Point(
    Int_t threadId,
    WorkQueue& workQueue,
@@ -404,19 +391,13 @@ void WorkerTest3Point(
 ) {
    using namespace FANG;
 
-   // Thread-local random number generator with unique seed
-   TRandom3 rng(12345 + threadId);
-
    const Int_t kNBody2 = 2;
    Double_t masses2[kNBody2] = {massElectron, massProton};
-   Double_t omega2[1] = {0.0};
-   Double_t shape2[1] = {kModePoint};
    Double_t alphaQED = 1.0 / 137.0;
 
-   std::vector<ROOT::Math::XYZVector> v3Det;
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
+   // Thread-local RNG
+   TRandom3 rng(threadId + 500);
+
    ROOT::Math::XYZVector v3;
    ROOT::Math::PxPyPzMVector pElectronOut, pProtonOut, pMomTransfer;
    Double_t qSquared, formGE, formGM, tau, lambda, ampSquared, weight;
@@ -430,21 +411,20 @@ void WorkerTest3Point(
       Double_t cosTheta = -0.99 + angleIdx * 0.2;
       if (angleIdx == 10) cosTheta = 0.95;
 
-      v3Det.clear();
       v3.SetXYZ(TMath::Sqrt(1.0 - cosTheta * cosTheta), 0.0, cosTheta);
-      v3Det.push_back(v3);
+
+      // Thread-local TFANG instance with point constraint
+      TFANG gen(&rng);
+      gen.SetDecay(pTotal2, kNBody2, masses2);
+      gen.AddConstraint(v3, 1.0, kModePoint);
 
       for (Int_t k = 0; k < nLoop; k++) {
-         vecVecP.clear();
-         vecWi.clear();
-         Int_t eventStatus = GenFANG(kNBody2, pTotal2, masses2, omega2, shape2, v3Det, vecVecP, vecWi, &rng);
-         if (!eventStatus) continue;
+         if (gen.Generate() == 0) continue;
 
-         for (size_t i = 0; i < vecVecP.size(); i++) {
-            vecP = vecVecP[i];
-            weight = vecWi[i];
-            pElectronOut = vecP[0];
-            pProtonOut = vecP[1];
+         for (Int_t i = 0; i < gen.GetNSolutions(); i++) {
+            weight = gen.GetWeight(i);
+            pElectronOut = gen.GetDecay(i, 0);
+            pProtonOut = gen.GetDecay(i, 1);
             pMomTransfer = pElectronIn - pElectronOut;
             ROOT::Math::PxPyPzMVector pU = pTarget - pElectronOut;
             qSquared = -pMomTransfer.M2();
@@ -499,18 +479,16 @@ void WorkerTest3Angular(
    using namespace FANG;
 
    // Thread-local random generator for direction sampling
-   TRandom3 rng(threadId + 400);
+   TRandom3 rng(threadId + 600);
 
    const Int_t kNBody2 = 2;
    Double_t masses2[kNBody2] = {massElectron, massProton};
-   Double_t omega2[1] = {0.0};
-   Double_t shape2[1] = {kModePoint};
    Double_t alphaQED = 1.0 / 137.0;
 
-   std::vector<ROOT::Math::XYZVector> v3Det;
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
+   // Thread-local TFANG instance
+   TFANG gen(&rng);
+   gen.SetDecay(pTotal2, kNBody2, masses2);
+
    ROOT::Math::XYZVector v3;
    ROOT::Math::PxPyPzMVector pElectronOut, pProtonOut, pMomTransfer;
    Double_t qSquared, formGE, formGM, tau, lambda, ampSquared, weight;
@@ -524,20 +502,18 @@ void WorkerTest3Angular(
       sinTheta = TMath::Sqrt(1.0 - cosTheta * cosTheta);
       phi = rng.Uniform(0, kTwoPi);
 
-      v3Det.clear();
       v3.SetXYZ(sinTheta * TMath::Cos(phi), sinTheta * TMath::Sin(phi), cosTheta);
-      v3Det.push_back(v3);
 
-      vecVecP.clear();
-      vecWi.clear();
-      Int_t eventStatus = GenFANG(kNBody2, pTotal2, masses2, omega2, shape2, v3Det, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
+      // Update constraint for new direction
+      gen.ClearConstraints();
+      gen.AddConstraint(v3, 1.0, kModePoint);
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
-         pElectronOut = vecP[0];
-         pProtonOut = vecP[1];
+      if (gen.Generate() == 0) continue;
+
+      for (Int_t i = 0; i < gen.GetNSolutions(); i++) {
+         weight = gen.GetWeight(i);
+         pElectronOut = gen.GetDecay(i, 0);
+         pProtonOut = gen.GetDecay(i, 1);
          pMomTransfer = pElectronIn - pElectronOut;
          ROOT::Math::PxPyPzMVector pU = pTarget - pElectronOut;
          qSquared = -pMomTransfer.M2();
@@ -566,7 +542,7 @@ void WorkerTest3Angular(
 // Main Demonstration Function - Parallelized
 ////////////////////////////////////////////////////////////////////////////////
 
-void runParallelFANG()
+void runTFANG()
 {
    using namespace FANG;
 
@@ -592,10 +568,10 @@ void runParallelFANG()
    Double_t sumW2 = 0.0;
 
    //==========================================================================
-   // Test 1: FANG Full Phase Space Calculation (Parallelized)
+   // Test 1: TFANG Full Phase Space Calculation (Parallelized)
    //==========================================================================
    std::cout << "========================================" << std::endl;
-   std::cout << "Test 1: Full Phase Space Calculation (Parallel)" << std::endl;
+   std::cout << "Test 1: Full Phase Space Calculation (TFANG Parallel)" << std::endl;
    std::cout << "========================================" << std::endl;
 
    Int_t nLoop = 1000000;
@@ -629,17 +605,29 @@ void runParallelFANG()
          nEvents += r.fNEvents;
       }
    }
+   Double_t mean = sumW / nEvents;
+   Double_t variance = sumW2 / nEvents - mean * mean;
+
+   // Also get phase space using GetPhaseSpace for comparison
+   Double_t phaseSpace, phaseSpaceErr;
+   {
+      TFANG genFull;
+      genFull.SetDecay(pTotal, kNBody, masses);
+      genFull.GetPhaseSpace(static_cast<Long64_t>(nLoop), phaseSpace, phaseSpaceErr);
+   }
 
    std::cout << "nEvents = " << nEvents << std::endl;
-   std::cout << "Total Phase Space = " << sumW / nEvents
-             << " +/- " << TMath::Sqrt(sumW2) / nEvents << std::endl;
+   std::cout << "Total Phase Space from parallel loop = " << sumW / nEvents
+             << " +/- " << TMath::Sqrt(variance / nEvents) << std::endl;
+   std::cout << "Total Phase Space from GetPhaseSpace = " << phaseSpace
+             << " +/- " << phaseSpaceErr << std::endl;
 
    //==========================================================================
    // Test 2: Partial Phase Space with Detector Constraints (Parallelized)
    //==========================================================================
    std::cout << "\n========================================" << std::endl;
-   std::cout << "Test 2: Partial Phase Space (Parallel)" << std::endl;
-   std::cout << "  - FANG constrained vs FANG unconstrained with cuts" << std::endl;
+   std::cout << "Test 2: Partial Phase Space (TFANG Parallel)" << std::endl;
+   std::cout << "  - TFANG constrained vs TFANG unconstrained with cuts" << std::endl;
    std::cout << "========================================" << std::endl;
 
    const Int_t kNDet = 3;
@@ -682,7 +670,7 @@ void runParallelFANG()
       totalMass += masses[l];
    }
 
-   // Create per-thread histograms for FANG constrained
+   // Create per-thread histograms for TFANG constrained
    std::vector<TH1D*> hFangE_vec(nThreads * kNBody);
    std::vector<TH1D*> hFangCos_vec(nThreads * kNBody);
    std::vector<TH1D*> hFangPhi_vec(nThreads * kNBody);
@@ -699,8 +687,8 @@ void runParallelFANG()
       }
    }
 
-   // Run FANG with detector constraints (parallel)
-   nLoop = 10000000;
+   // Run TFANG constrained (parallel)
+   nLoop = 1000000;
    {
       WorkQueue workQueue;
       for (Int_t k = 0; k < nLoop; k++) {
@@ -712,9 +700,10 @@ void runParallelFANG()
       std::vector<std::thread> threads;
 
       for (Int_t t = 0; t < nThreads; t++) {
-         threads.emplace_back(WorkerTest2FANG,
-            t, std::ref(workQueue), kNBody, kNDet, std::cref(pTotal), masses,
-            omega, shape, std::cref(v3Det), totalOmega,
+         threads.emplace_back(WorkerTest2TFANG,
+            t, std::ref(workQueue), kNBody, kNDet,
+            std::cref(pTotal), masses, omega, shape, std::cref(v3Det),
+            totalOmega,
             std::ref(hFangE_vec), std::ref(hFangCos_vec), std::ref(hFangPhi_vec),
             std::ref(results), std::ref(resultsMutex));
       }
@@ -723,6 +712,7 @@ void runParallelFANG()
          t.join();
       }
 
+      // Aggregate results
       sumW = 0.0;
       sumW2 = 0.0;
       nEvents = 0;
@@ -733,25 +723,13 @@ void runParallelFANG()
       }
    }
 
-   // Merge per-thread histograms for FANG constrained
+   // Merge per-thread histograms for TFANG constrained
    TH1D *hFangE[kNBody];
    TH1D *hFangCos[kNBody];
    TH1D *hFangPhi[kNBody];
 
    for (Int_t i = 0; i < kNBody; i++) {
       hFangE[i] = new TH1D(Form("hFangE_%d", i), "", 100, 0, pTotal.E() - totalMass);
-      hFangCos[i] = new TH1D(Form("hFangCos_%d", i), "", 50, -1, 1);
-      hFangPhi[i] = new TH1D(Form("hFangPhi_%d", i), "", 50, -kPi, kPi);
-
-      for (Int_t t = 0; t < nThreads; t++) {
-         hFangE[i]->Add(hFangE_vec[t * kNBody + i]);
-         hFangCos[i]->Add(hFangCos_vec[t * kNBody + i]);
-         hFangPhi[i]->Add(hFangPhi_vec[t * kNBody + i]);
-         delete hFangE_vec[t * kNBody + i];
-         delete hFangCos_vec[t * kNBody + i];
-         delete hFangPhi_vec[t * kNBody + i];
-      }
-
       hFangE[i]->SetMarkerStyle(20);
       hFangE[i]->SetLineColor(6);
       hFangE[i]->SetMinimum(0);
@@ -764,6 +742,7 @@ void runParallelFANG()
       hFangE[i]->GetYaxis()->SetTitleOffset(0.5);
       hFangE[i]->GetXaxis()->SetTitleOffset(0.9);
 
+      hFangCos[i] = new TH1D(Form("hFangCos_%d", i), "", 50, -1, 1);
       hFangCos[i]->SetMarkerStyle(20);
       hFangCos[i]->SetLineColor(6);
       hFangCos[i]->SetMinimum(0);
@@ -777,6 +756,7 @@ void runParallelFANG()
       hFangCos[i]->GetYaxis()->SetLabelSize(0.05);
       hFangCos[i]->GetXaxis()->SetTitleOffset(0.9);
 
+      hFangPhi[i] = new TH1D(Form("hFangPhi_%d", i), "", 50, -kPi, kPi);
       hFangPhi[i]->SetMarkerStyle(20);
       hFangPhi[i]->SetLineColor(6);
       hFangPhi[i]->SetMinimum(0);
@@ -789,15 +769,38 @@ void runParallelFANG()
       hFangPhi[i]->GetXaxis()->SetLabelSize(0.06);
       hFangPhi[i]->GetYaxis()->SetLabelSize(0.05);
       hFangPhi[i]->GetXaxis()->SetTitleOffset(0.9);
+
+      for (Int_t t = 0; t < nThreads; t++) {
+         hFangE[i]->Add(hFangE_vec[t * kNBody + i]);
+         hFangCos[i]->Add(hFangCos_vec[t * kNBody + i]);
+         hFangPhi[i]->Add(hFangPhi_vec[t * kNBody + i]);
+         delete hFangE_vec[t * kNBody + i];
+         delete hFangCos_vec[t * kNBody + i];
+         delete hFangPhi_vec[t * kNBody + i];
+      }
    }
 
-   std::cout << "\nFANG Constrained Results:" << std::endl;
+   // Get partial phase space using GetPartialPhaseSpace for comparison
+   {
+      TFANG genConstrained;
+      genConstrained.SetDecay(pTotal, kNBody, masses);
+      for (Int_t i = 0; i < kNDet; i++) {
+         genConstrained.AddConstraint(v3Det[i], omega[i], shape[i]);
+      }
+      genConstrained.GetPartialPhaseSpace(static_cast<Long64_t>(nLoop), phaseSpace, phaseSpaceErr);
+   }
+   
+   mean = sumW / nEvents;
+   variance = sumW2 / nEvents - mean * mean;
+   std::cout << "\nTFANG Constrained Results:" << std::endl;
    std::cout << "  nEvents = " << nEvents << std::endl;
-   std::cout << "  Partial Phase Space = " << totalOmega * sumW / nEvents
-             << " +/- " << totalOmega * TMath::Sqrt(sumW2) / nEvents << std::endl;
+   std::cout << "  Partial Phase Space from parallel loop = " << totalOmega * sumW / nEvents
+             << " +/- " << totalOmega * TMath::Sqrt(variance / nEvents) << std::endl;
+   std::cout << "  Partial Phase Space from GetPartialPhaseSpace = " << phaseSpace
+             << " +/- " << phaseSpaceErr << std::endl;
    std::cout << "  hFangE[0]->Integral() = " << hFangE[0]->Integral() << std::endl;
 
-   // Draw FANG results
+   // Draw TFANG results
    TCanvas *c1 = new TCanvas("c1", "c1 En", 10, 10, 1800, 1500);
    c1->Divide(2, static_cast<Int_t>(TMath::Floor(kNBody / 2.0 + 0.6)));
    for (Int_t i = 0; i < kNBody; i++) {
@@ -823,19 +826,20 @@ void runParallelFANG()
    }
 
    //==========================================================================
-   // FANG Unconstrained (nDet=0) with Cuts Comparison - Parallelized
+   // TFANG Unconstrained with Cuts Comparison (Parallelized)
    //==========================================================================
-   std::cout << "\n--- FANG Unconstrained (nDet=0) with Cuts ---" << std::endl;
+   std::cout << "\n--- TFANG Unconstrained with Cuts (Parallel) ---" << std::endl;
 
+   // Direction vectors for cut comparison
    std::vector<TVector3> tv3(kNDet);
    for (Int_t i = 0; i < kNDet; i++) {
       tv3[i].SetXYZ(v3Det[i].X(), v3Det[i].Y(), v3Det[i].Z());
       tv3[i] = tv3[i].Unit();
    }
 
-   Double_t scaleFactor = 10.0;
+   Double_t scaleFactor = 100.0;
 
-   // Create per-thread histograms for FANG unconstrained with cuts
+   // Create per-thread histograms for TFANG unconstrained with cuts
    std::vector<TH1D*> hFangCutsE_vec(nThreads * kNBody);
    std::vector<TH1D*> hFangCutsCos_vec(nThreads * kNBody);
    std::vector<TH1D*> hFangCutsPhi_vec(nThreads * kNBody);
@@ -845,28 +849,26 @@ void runParallelFANG()
          hFangCutsE_vec[t * kNBody + i] = new TH1D(Form("hFangCutsE_%d_%d", t, i), "",
                                                     100, 0, pTotal.E() - totalMass);
          hFangCutsCos_vec[t * kNBody + i] = new TH1D(Form("hFangCutsCos_%d_%d", t, i), "", 50, -1, 1);
-         hFangCutsPhi_vec[t * kNBody + i] = new TH1D(Form("hFangCutsPhi_%d_%d", t, i), "",
-                                                      50, -kPi, kPi);
+         hFangCutsPhi_vec[t * kNBody + i] = new TH1D(Form("hFangCutsPhi_%d_%d", t, i), "", 50, -kPi, kPi);
          hFangCutsE_vec[t * kNBody + i]->SetDirectory(0);
          hFangCutsCos_vec[t * kNBody + i]->SetDirectory(0);
          hFangCutsPhi_vec[t * kNBody + i]->SetDirectory(0);
       }
    }
 
-   // Run FANG unconstrained with cuts (parallel)
-   Int_t nLoopFangCuts = static_cast<Int_t>(nLoop * scaleFactor);
+   // Run TFANG unconstrained with cuts (parallel)
    {
       WorkQueue workQueue;
-      for (Int_t k = 0; k < nLoopFangCuts; k++) {
+      for (Int_t k = 0; k < static_cast<Int_t>(nLoop * scaleFactor); k++) {
          workQueue.Push(k);
       }
 
-      std::vector<FangCutsResult> results;
+      std::vector<TFangCutsResult> results;
       std::mutex resultsMutex;
       std::vector<std::thread> threads;
 
       for (Int_t t = 0; t < nThreads; t++) {
-         threads.emplace_back(WorkerTest2FANGCuts,
+         threads.emplace_back(WorkerTest2TFANGCuts,
             t, std::ref(workQueue), kNBody, kNDet,
             std::cref(pTotal), masses, omega, shape, std::cref(tv3),
             scaleFactor,
@@ -893,7 +895,7 @@ void runParallelFANG()
       }
    }
 
-   // Merge FANG unconstrained with cuts histograms
+   // Merge per-thread histograms for TFANG unconstrained with cuts
    TH1D *hFangCutsE[kNBody];
    TH1D *hFangCutsCos[kNBody];
    TH1D *hFangCutsPhi[kNBody];
@@ -902,6 +904,12 @@ void runParallelFANG()
       hFangCutsE[i] = new TH1D(Form("hFangCutsE_%d", i), "", 100, 0, pTotal.E() - totalMass);
       hFangCutsCos[i] = new TH1D(Form("hFangCutsCos_%d", i), "", 50, -1, 1);
       hFangCutsPhi[i] = new TH1D(Form("hFangCutsPhi_%d", i), "", 50, -kPi, kPi);
+      hFangCutsE[i]->SetMarkerStyle(21);
+      hFangCutsE[i]->SetMarkerColor(kBlue);
+      hFangCutsCos[i]->SetMarkerStyle(21);
+      hFangCutsCos[i]->SetMarkerColor(kBlue);
+      hFangCutsPhi[i]->SetMarkerStyle(21);
+      hFangCutsPhi[i]->SetMarkerColor(kBlue);
 
       for (Int_t t = 0; t < nThreads; t++) {
          hFangCutsE[i]->Add(hFangCutsE_vec[t * kNBody + i]);
@@ -911,13 +919,6 @@ void runParallelFANG()
          delete hFangCutsCos_vec[t * kNBody + i];
          delete hFangCutsPhi_vec[t * kNBody + i];
       }
-
-      hFangCutsE[i]->SetMarkerStyle(21);
-      hFangCutsE[i]->SetMarkerColor(kBlue);
-      hFangCutsCos[i]->SetMarkerStyle(21);
-      hFangCutsCos[i]->SetMarkerColor(kBlue);
-      hFangCutsPhi[i]->SetMarkerStyle(21);
-      hFangCutsPhi[i]->SetMarkerColor(kBlue);
    }
 
    std::cout << "  hFangCutsE[0]->Integral() = " << hFangCutsE[0]->Integral() << std::endl;
@@ -928,6 +929,7 @@ void runParallelFANG()
       leg[i] = new TLegend(0.52, 0.62, 0.85, 0.88);
    }
 
+   // Adjust legend positions for some plots
    leg[10] = new TLegend(0.12, 0.12, 0.45, 0.38);
    leg[11] = new TLegend(0.56, 0.62, 0.89, 0.88);
    leg[12] = new TLegend(0.12, 0.62, 0.45, 0.88);
@@ -936,16 +938,17 @@ void runParallelFANG()
    }
 
    for (Int_t i = 0; i < kNBody; i++) {
-      leg[i]->AddEntry(hFangE[i], "FANG constrained", "l");
-      leg[i]->AddEntry(hFangCutsE[i], "FANG nDet=0 with cuts", "p");
+      leg[i]->AddEntry(hFangE[i], "TFANG constrained", "l");
+      leg[i]->AddEntry(hFangCutsE[i], "TFANG unconstrained with cuts", "p");
 
-      leg[i + kNBody]->AddEntry(hFangCos[i], "FANG constrained", "l");
-      leg[i + kNBody]->AddEntry(hFangCutsCos[i], "FANG nDet=0 with cuts", "p");
+      leg[i + kNBody]->AddEntry(hFangCos[i], "TFANG constrained", "l");
+      leg[i + kNBody]->AddEntry(hFangCutsCos[i], "TFANG unconstrained with cuts", "p");
 
-      leg[i + 2 * kNBody]->AddEntry(hFangPhi[i], "FANG constrained", "l");
-      leg[i + 2 * kNBody]->AddEntry(hFangCutsPhi[i], "FANG nDet=0 with cuts", "p");
+      leg[i + 2 * kNBody]->AddEntry(hFangPhi[i], "TFANG constrained", "l");
+      leg[i + 2 * kNBody]->AddEntry(hFangCutsPhi[i], "TFANG unconstrained with cuts", "p");
    }
 
+   // Overlay comparison results
    for (Int_t i = 0; i < kNBody; i++) {
       c1->cd(i + 1);
       hFangCutsE[i]->DrawCopy("ep same");
@@ -964,7 +967,7 @@ void runParallelFANG()
    // Test 3: Elastic ep Scattering Cross Section (Parallelized)
    //==========================================================================
    std::cout << "\n========================================" << std::endl;
-   std::cout << "Test 3: Elastic ep Differential Cross Section (Parallel)" << std::endl;
+   std::cout << "Test 3: Elastic ep Differential Cross Section (TFANG Parallel)" << std::endl;
    std::cout << "========================================" << std::endl;
 
    const Int_t kNBody2 = 2;
@@ -990,7 +993,7 @@ void runParallelFANG()
    fRosenbluth->SetParameters(parElastic);
 
    //==========================================================================
-   // FANG Point Generation: Differential Cross Section at Specific Angles
+   // TFANG Point Generation: Differential Cross Section at Specific Angles
    //==========================================================================
    Double_t sigmaArr[11];
    Double_t sigmaErrArr[11];
@@ -1035,7 +1038,7 @@ void runParallelFANG()
 
          std::cout << "  cos(theta) = " << cosThetaArr[l]
                    << ": dsigma/dOmega = " << sigmaArr[l] << " +/- " << sigmaErrArr[l]
-                   << " (FANG/Rosenbluth = " << sigmaArr[l] / fRosenbluth->Eval(cosThetaArr[l]) << ")"
+                   << " (TFANG/Rosenbluth = " << sigmaArr[l] / fRosenbluth->Eval(cosThetaArr[l]) << ")"
                    << std::endl;
       }
    }
@@ -1045,7 +1048,7 @@ void runParallelFANG()
    grElastic->SetMarkerSize(1.3);
 
    //==========================================================================
-   // FANG Event Generation: Full Angular Distribution (Parallelized)
+   // TFANG Event Generation: Full Angular Distribution (Parallelized)
    //==========================================================================
    std::cout << "\nGenerating full angular distribution..." << std::endl;
 
@@ -1143,8 +1146,8 @@ void runParallelFANG()
    grElastic->Draw("P");
    fRosenbluth->Draw("same");
 
-   legFinal->AddEntry(hXsec, "FANG event generation", "l");
-   legFinal->AddEntry(grElastic, "FANG point calculation", "p");
+   legFinal->AddEntry(hXsec, "TFANG event generation", "l");
+   legFinal->AddEntry(grElastic, "TFANG point calculation", "p");
    legFinal->AddEntry(fRosenbluth, "Rosenbluth cross section", "l");
    legFinal->Draw();
 
@@ -1160,7 +1163,8 @@ void runParallelFANG()
    hCount->Draw("hist");
 
    std::cout << "\n========================================" << std::endl;
-   std::cout << "runFANG() completed successfully (parallel version)" << std::endl;
-   std::cout << "J. High Energ. Phys. 2025, 137 (2025). https://doi.org/10.1007/JHEP12(2025)137" << std::endl;
+   std::cout << "runTFANG() completed successfully (parallel version)" << std::endl;
+   std::cout << "J. High Energ. Phys. 2025, 137 (2025)" << std::endl;
+   std::cout << "https://doi.org/10.1007/JHEP12(2025)137" << std::endl;
    std::cout << "========================================" << std::endl;
 }

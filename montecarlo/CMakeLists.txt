@@ -3,7 +3,6 @@
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
-add_subdirectory(fang)
 add_subdirectory(eg)
 if(pythia8)
   add_subdirectory(pythia8)

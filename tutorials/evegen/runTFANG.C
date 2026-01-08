@@ -1,33 +1,33 @@
 // @(#)root/fang:$Id$
 // Author: Arik Kreisel
 
-/**
- * \file runFANG.C
- * \brief Focused Angular N-body event Generator (FANG)
- * \authors: Arik Kreisel and Itay Horin 
- *
- * FANG is a Monte Carlo tool for efficient event generation in restricted
- * (or full) Lorentz-Invariant Phase Space (LIPS). Unlike conventional approaches
- * that always sample the full 4pi solid angle, FANG can also directly generates 
- * events in which selected final-state particles are constrained to fixed 
- * directions or finite angular regions in the laboratory frame.
- *
- * Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
- * J. High Energ. Phys. 2025, 137 (2025). 
- * https://doi.org/10.1007/JHEP12(2025)137 
- * https://arxiv.org/abs/2509.11105 
-* This file contains:
-* 1. Rosenbluth cross section function for elastic ep scattering
-* 2. runFANG() - main demonstration function that validates FANG against:
-*    - Full phase space calculation
-*    - Partial phase space with detector constraints (vs FANG unconstrained with cuts)
-*    - Partial phase space with detector constraints (vs TGenPhaseSpace) - optional
-*    - Elastic ep differential cross section (vs Rosenbluth formula)
+////////////////////////////////////////////////////////////////////////////////
+/// \file runTFANG.C
+/// \ingroup Physics
+/// \brief Demonstration and validation of FANG using the TFANG class interface
+/// \author Arik Kreisel
+///
+/// TFANG is a Monte Carlo tool for efficient event generation in restricted
+/// (or full) Lorentz-Invariant Phase Space (LIPS). Unlike conventional approaches
+/// that always sample the full 4pi solid angle, TFANG can also directly generate
+/// events in which selected final-state particles are constrained to fixed
+/// directions or finite angular regions in the laboratory frame.
+///
+/// Reference: Horin, I., Kreisel, A. & Alon, O. Focused angular N -body event generator (FANG).
+/// J. High Energ. Phys. 2025, 137 (2025). 
+/// https://doi.org/10.1007/JHEP12(2025)137 
+/// https://arxiv.org/abs/2509.11105 
+///
+/// This file contains:
+/// 1. Rosenbluth cross section function for elastic ep scattering
+/// 2. runTFANG() - main demonstration function that validates TFANG against:
+///    - Full phase space calculation
+///    - Partial phase space with detector constraints (vs TFANG unconstrained with cuts)
+///    - Partial phase space with detector constraints (vs TGenPhaseSpace) - optional
+///    - Elastic ep differential cross section (vs Rosenbluth formula)
+////////////////////////////////////////////////////////////////////////////////
 
- */
-
-#include "FANG.h"
-
+#include "TFANG.h"
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TH1D.h"
@@ -38,6 +38,7 @@
 #include "TGenPhaseSpace.h"
 #include "TLorentzVector.h"
 #include "TVector3.h"
+#include "TRandom3.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Configuration: Set to false to skip TGenPhaseSpace comparison
@@ -142,23 +143,20 @@ Double_t fElastic(Double_t *x, Double_t *par)
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Main demonstration and validation function for FANG
+/// \brief Main demonstration and validation function for TFANG
 ///
 /// Performs three validation tests:
 /// 1. Full phase space calculation for 5-body decay
 /// 2. Partial phase space with 3 detector constraints, compared to:
-///    - FANG unconstrained (nDet=0) with geometric cuts
+///    - TFANG unconstrained with geometric cuts
 ///    - TGenPhaseSpace with cuts (if kRunTGenPhaseSpace is true)
 /// 3. Elastic ep scattering differential cross section vs Rosenbluth formula
 ////////////////////////////////////////////////////////////////////////////////
-void runFANG()
+void runTFANG()
 {
    using namespace FANG;
 
    gStyle->SetOptStat(0);
-
-   // Create random number generator with reproducible seed
-   TRandom3 rng(12345);
 
    Int_t nEvents = 0;
 
@@ -169,54 +167,54 @@ void runFANG()
    Double_t masses[kNBody] = {1.0, 1.0, 1.0, 1.0, 1.0};  // outgoing masses
    ROOT::Math::PxPyPzMVector pTotal(0, 0, 5, 12);        // total 4-momentum
 
-   std::vector<ROOT::Math::XYZVector> v3Det;
-   std::vector<std::vector<ROOT::Math::PxPyPzMVector>> vecVecP;
-   std::vector<Double_t> vecWi;
-   std::vector<ROOT::Math::PxPyPzMVector> vecP;
-
    Double_t weight = 0.0;
    Double_t sumW = 0.0;
    Double_t sumW2 = 0.0;
-   Int_t eventStatus;
 
    //==========================================================================
-   // Test 1: FANG Full Phase Space Calculation
+   // Test 1: TFANG Full Phase Space Calculation
    //==========================================================================
    std::cout << "========================================" << std::endl;
-   std::cout << "Test 1: Full Phase Space Calculation" << std::endl;
+   std::cout << "Test 1: Full Phase Space Calculation (TFANG)" << std::endl;
    std::cout << "========================================" << std::endl;
 
-   Double_t nLoop = 1E6;
-   Double_t omega0[1];    // Empty arrays for no constraints
-   Double_t shape0[1];
+   Int_t nLoop = 1E6;
+
+   // Create TFANG generator for unconstrained phase space
+   TFANG genFull;
+   genFull.SetDecay(pTotal, kNBody, masses);
 
    for (Int_t k = 0; k < nLoop; k++) {
-      vecVecP.clear();
-      vecWi.clear();
-      eventStatus = GenFANG(kNBody, pTotal, masses, omega0, shape0, v3Det, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
+      if (genFull.Generate() == 0) continue;
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+      for (Int_t i = 0; i < genFull.GetNSolutions(); i++) {
+         weight = genFull.GetWeight(i);
          nEvents++;
          sumW += weight;
          sumW2 += weight * weight;
       }
    }
+   Double_t mean = sumW / nEvents;
+   Double_t variance = sumW2 / nEvents - mean * mean;
+
+   // Also get phase space using GetPhaseSpace for comparison
+    Double_t phaseSpace, phaseSpaceErr;
+   genFull.GetPhaseSpace(static_cast<Long64_t>(nLoop), phaseSpace, phaseSpaceErr);
 
    std::cout << "nEvents = " << nEvents << std::endl;
-   std::cout << "Total Phase Space = " << sumW / nEvents
-             << " +/- " << TMath::Sqrt(sumW2) / nEvents << std::endl;
+   std::cout << "Total Phase Space from user loop= " << mean
+             << " +/- " << TMath::Sqrt(variance / nEvents) << std::endl;
+   std::cout << "Total Phase Space from GetPhaseSpace = " << phaseSpace
+             << " +/- " << phaseSpaceErr << std::endl;
 
    //==========================================================================
    // Test 2: Partial Phase Space with Detector Constraints
    //==========================================================================
    std::cout << "\n========================================" << std::endl;
-   std::cout << "Test 2: Partial Phase Space" << std::endl;
-   std::cout << "  - FANG constrained vs FANG unconstrained with cuts" << std::endl;
+   std::cout << "Test 2: Partial Phase Space (TFANG)" << std::endl;
+   std::cout << "  - TFANG constrained vs TFANG unconstrained with cuts" << std::endl;
    if (kRunTGenPhaseSpace) {
-      std::cout << "  - FANG constrained vs TGenPhaseSpace with cuts" << std::endl;
+      std::cout << "  - TFANG constrained vs TGenPhaseSpace with cuts" << std::endl;
    }
    std::cout << "========================================" << std::endl;
 
@@ -231,6 +229,7 @@ void runFANG()
    Double_t detRadius[kNDet - 1] = {0.2, 0.3};
 
    ROOT::Math::XYZVector v3;
+   std::vector<ROOT::Math::XYZVector> v3Det;
    Double_t radius;
    Double_t totalOmega = 1.0;
 
@@ -263,7 +262,7 @@ void runFANG()
       totalMass += masses[l];
    }
 
-   // Create histograms for FANG results
+   // Create histograms for TFANG constrained results
    TH1D *hFangE[kNBody];
    TH1D *hFangCos[kNBody];
    TH1D *hFangPhi[kNBody];
@@ -318,7 +317,7 @@ void runFANG()
       hFullCos[i]->SetMarkerStyle(20);
    }
 
-   // Create histograms for FANG unconstrained with cuts comparison
+   // Create histograms for TFANG unconstrained with cuts comparison
    TH1D *hFangCutsE[kNBody];
    TH1D *hFangCutsCos[kNBody];
    TH1D *hFangCutsPhi[kNBody];
@@ -349,62 +348,53 @@ void runFANG()
       hGenbodPhi[i]->SetMarkerStyle(20);
    }
 
-   // Run FANG with detector constraints
+   // Create TFANG generator with detector constraints
+   TFANG genConstrained;
+   genConstrained.SetDecay(pTotal, kNBody, masses);
+   for (Int_t i = 0; i < kNDet; i++) {
+      genConstrained.AddConstraint(v3Det[i], omega[i], shape[i]);
+   }
+
+   // Run TFANG with detector constraints
    weight = 0.0;
    sumW = 0.0;
    sumW2 = 0.0;
    nEvents = 0;
-   nLoop = 1E5;
+   nLoop = 1E6;
 
    TH1D *hWeight = new TH1D("hWeight", "hWeight", 100, 0, 10);
 
    for (Int_t k = 0; k < nLoop; k++) {
-      vecVecP.clear();
-      vecWi.clear();
-/**
- * GenFANG
- * \param[in] nBody Number of outgoing particles
- * \param[in] S Total 4-momentum of the system
- * \param[in] masses Array of outgoing particle masses [GeV], length nBody
- * \param[in] Om Array of solid angles for constrained detectors [sr]
- * \param[in] Ratio Array of shape parameters for each detector:
- *                  - = 2: Point generation (fixed direction)
- *                  - = 0: Circle generation (uniform in cone)
- *                  - 0 < shape[] <= 1: Strip generation (rectangular region)
- *                              Dphi = shape[] * TwoPi;
- *                              Dcos = Omega / Dphi;
- *                  - < 0: Ring generation (fixed theta, uniform phi)
- * \param[in] V3Det Vector of direction vectors for constrained detectors
- * \param[out] VecVecP Output: vector of 4-momenta vectors for each solution
- * \param[out] vecWi Output: weight for each solution
- * \return 1 on success, 0 if no physical solution exists
- */
+      if (genConstrained.Generate() == 0) continue;
 
-       eventStatus = GenFANG(kNBody, pTotal, masses, omega, shape, v3Det, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
-
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+      for (Int_t i = 0; i < genConstrained.GetNSolutions(); i++) {
+         weight = genConstrained.GetWeight(i);
          nEvents++;
          sumW += weight;
          sumW2 += weight * weight;
 
-         for (size_t j = 0; j < vecP.size(); j++) {
-            hFangE[j]->Fill(vecP[j].E() - masses[j], weight * totalOmega);
-            hFangCos[j]->Fill(TMath::Cos(vecP[j].Theta()), weight * totalOmega);
-            hFangPhi[j]->Fill(vecP[j].Phi(), weight * totalOmega);
+         for (Int_t j = 0; j < kNBody; j++) {
+            ROOT::Math::PxPyPzMVector p = genConstrained.GetDecay(i, j);
+            hFangE[j]->Fill(p.E() - masses[j], weight * totalOmega);
+            hFangCos[j]->Fill(TMath::Cos(p.Theta()), weight * totalOmega);
+            hFangPhi[j]->Fill(p.Phi(), weight * totalOmega);
          }
       }
    }
 
-   std::cout << "\nFANG Constrained Results:" << std::endl;
+   // get partial phaseSpace with GetPartialPhaseSpace for comparison
+   genConstrained.GetPartialPhaseSpace(static_cast<Long64_t>(nLoop), phaseSpace, phaseSpaceErr);
+
+   std::cout << "\nTFANG Constrained Results:" << std::endl;
    std::cout << "  nEvents = " << nEvents << std::endl;
-   std::cout << "  Partial Phase Space = " << totalOmega * sumW / nEvents
-             << " +/- " << totalOmega * TMath::Sqrt(sumW2) / nEvents << std::endl;
+   mean = sumW / nEvents;
+   variance = sumW2 / nEvents - mean * mean;
+   std::cout << "  Partial Phase Space from user loop= " << totalOmega * mean
+             << " +/- " << totalOmega * TMath::Sqrt(variance / nEvents) << std::endl;
+   std::cout << "  Partial Phase Space from GetPartialPhaseSpace = " <<phaseSpace            << " +/- " <<  phaseSpaceErr << std::endl;
    std::cout << "  hFangE[0]->Integral() = " << hFangE[0]->Integral() << std::endl;
 
-   // Draw FANG results
+   // Draw TFANG results
    TCanvas *c1 = new TCanvas("c1", "c1 En", 10, 10, 1800, 1500);
    c1->Divide(2, static_cast<Int_t>(TMath::Floor(kNBody / 2.0 + 0.6)));
    for (Int_t i = 0; i < kNBody; i++) {
@@ -430,9 +420,9 @@ void runFANG()
    }
 
    //==========================================================================
-   // FANG Unconstrained (nDet=0) with Cuts Comparison
+   // TFANG Unconstrained with Cuts Comparison
    //==========================================================================
-   std::cout << "\n--- FANG Unconstrained (nDet=0) with Cuts ---" << std::endl;
+   std::cout << "\n--- TFANG Unconstrained with Cuts ---" << std::endl;
 
    // Direction vectors for cut comparison
    TVector3 tv3[kNDet];
@@ -441,40 +431,37 @@ void runFANG()
       tv3[i] = tv3[i].Unit();
    }
 
-   Double_t scaleFactor = 100.0;  // Need more events since most will be rejected by cuts
+   Double_t scaleFactor = 10.0;  // Need more events since most will be rejected by cuts
    Int_t outsideCut = 0;
    Int_t nPassedCuts = 0;
    Int_t nTotalGenerated = 0;
 
-   // Clear detector vectors for unconstrained generation
-   std::vector<ROOT::Math::XYZVector> v3DetEmpty;
+   // Create unconstrained TFANG generator
+   TFANG genUnconstrained;
+   genUnconstrained.SetDecay(pTotal, kNBody, masses);
 
    for (Int_t k = 0; k < nLoop * scaleFactor; k++) {
-      vecVecP.clear();
-      vecWi.clear();
-      
-      // Generate unconstrained events (nDet=0)
-      eventStatus = GenFANG(kNBody, pTotal, masses, omega0, shape0, v3DetEmpty, vecVecP, vecWi, &rng);
-      if (!eventStatus) continue;
+      // Generate unconstrained events
+      if (genUnconstrained.Generate() == 0) continue;
 
       nTotalGenerated++;
 
-      for (size_t i = 0; i < vecVecP.size(); i++) {
-         vecP = vecVecP[i];
-         weight = vecWi[i];
+      for (Int_t i = 0; i < genUnconstrained.GetNSolutions(); i++) {
+         weight = genUnconstrained.GetWeight(i)/scaleFactor;
          outsideCut = 0;
 
          // Apply geometric cuts (same as TGenPhaseSpace comparison)
          for (Int_t j = 0; j < kNDet; j++) {
-            TVector3 pVec(vecP[j].Px(), vecP[j].Py(), vecP[j].Pz());
+            ROOT::Math::PxPyPzMVector p = genUnconstrained.GetDecay(i, j);
+            TVector3 pVec(p.Px(), p.Py(), p.Pz());
             
             if (shape[j] == 0.0 &&
                 (1.0 - TMath::Cos(tv3[j].Angle(pVec))) > omega[j] / kTwoPi) {
                outsideCut = 1;
             }
             if (shape[j] > 0.0 &&
-                (TMath::Abs(tv3[j].Phi() - vecP[j].Phi()) > kPi * shape[j] ||
-                 TMath::Abs(TMath::Cos(tv3[j].Theta()) - TMath::Cos(vecP[j].Theta())) >
+                (TMath::Abs(tv3[j].Phi() - p.Phi()) > kPi * shape[j] ||
+                 TMath::Abs(TMath::Cos(tv3[j].Theta()) - TMath::Cos(p.Theta())) >
                  omega[j] / (4.0 * kPi * shape[j]))) {
                outsideCut = 1;
             }
@@ -485,9 +472,10 @@ void runFANG()
          nPassedCuts++;
 
          for (Int_t j = 0; j < kNBody; j++) {
-            hFangCutsE[j]->Fill(vecP[j].E() - masses[j], weight/scaleFactor);
-            hFangCutsCos[j]->Fill(TMath::Cos(vecP[j].Theta()), weight/scaleFactor);
-            hFangCutsPhi[j]->Fill(vecP[j].Phi(), weight/scaleFactor);
+            ROOT::Math::PxPyPzMVector p = genUnconstrained.GetDecay(i, j);
+            hFangCutsE[j]->Fill(p.E() - masses[j], weight);
+            hFangCutsCos[j]->Fill(TMath::Cos(p.Theta()), weight);
+            hFangCutsPhi[j]->Fill(p.Phi(), weight);
          }
       }
    }
@@ -504,11 +492,6 @@ void runFANG()
    //==========================================================================
    if (kRunTGenPhaseSpace) {
       std::cout << "\n--- TGenPhaseSpace (GENBOD) with Cuts ---" << std::endl;
-
-      // TGenPhaseSpace uses gRandom internally - set up dedicated RNG
-      TRandom3 genbodRng(54321);
-      TRandom* savedRandom = gRandom;
-      gRandom = &genbodRng;
 
       TLorentzVector pTotalCern;
       pTotalCern.SetPxPyPzE(0, 0, 5, 13);
@@ -545,9 +528,6 @@ void runFANG()
          }
       }
 
-      // Restore original gRandom
-      gRandom = savedRandom;
-
       std::cout << "  hGenbodE[0]->Integral() = " << hGenbodE[0]->Integral() << std::endl;
    }
 
@@ -566,20 +546,20 @@ void runFANG()
    }
 
    for (Int_t i = 0; i < kNBody; i++) {
-      leg[i]->AddEntry(hFangE[i], "FANG constrained", "l");
-      leg[i]->AddEntry(hFangCutsE[i], "FANG nDet=0 with cuts", "p");
+      leg[i]->AddEntry(hFangE[i], "TFANG constrained", "l");
+      leg[i]->AddEntry(hFangCutsE[i], "TFANG unconstrained with cuts", "p");
       if (kRunTGenPhaseSpace) {
          leg[i]->AddEntry(hGenbodE[i], "GENBOD with cuts", "p");
       }
 
-      leg[i + kNBody]->AddEntry(hFangCos[i], "FANG constrained", "l");
-      leg[i + kNBody]->AddEntry(hFangCutsCos[i], "FANG nDet=0 with cuts", "p");
+      leg[i + kNBody]->AddEntry(hFangCos[i], "TFANG constrained", "l");
+      leg[i + kNBody]->AddEntry(hFangCutsCos[i], "TFANG unconstrained with cuts", "p");
       if (kRunTGenPhaseSpace) {
          leg[i + kNBody]->AddEntry(hGenbodCos[i], "GENBOD with cuts", "p");
       }
 
-      leg[i + 2 * kNBody]->AddEntry(hFangPhi[i], "FANG constrained", "l");
-      leg[i + 2 * kNBody]->AddEntry(hFangCutsPhi[i], "FANG nDet=0 with cuts", "p");
+      leg[i + 2 * kNBody]->AddEntry(hFangPhi[i], "TFANG constrained", "l");
+      leg[i + 2 * kNBody]->AddEntry(hFangCutsPhi[i], "TFANG unconstrained with cuts", "p");
       if (kRunTGenPhaseSpace) {
          leg[i + 2 * kNBody]->AddEntry(hGenbodPhi[i], "GENBOD with cuts", "p");
       }
@@ -613,20 +593,15 @@ void runFANG()
    // Test 3: Elastic ep Scattering Cross Section
    //==========================================================================
    std::cout << "\n========================================" << std::endl;
-   std::cout << "Test 3: Elastic ep Differential Cross Section" << std::endl;
+   std::cout << "Test 3: Elastic ep Differential Cross Section (TFANG)" << std::endl;
    std::cout << "========================================" << std::endl;
 
    const Int_t kNBody2 = 2;
-   const Int_t kNDet2 = 1;
    nLoop = 1E5;
    nEvents = 0;
 
    Double_t massElectron = 0.000511;      // GeV
    Double_t massProton = 0.938272029;     // proton mass in GeV
-
-   Double_t omega2[kNDet2];
-   omega2[0] = 0.0;
-   Double_t shape2[kNDet2];
 
    // Setup kinematics
    ROOT::Math::PxPyPzMVector pTarget(0.0, 0.0, 0.0, massProton);
@@ -659,7 +634,7 @@ void runFANG()
    fRosenbluth->SetParameters(parElastic);
 
    //==========================================================================
-   // FANG Point Generation: Differential Cross Section at Specific Angles
+   // TFANG Point Generation: Differential Cross Section at Specific Angles
    //==========================================================================
    Double_t sigmaArr[11];
    Double_t sigmaErrArr[11];
@@ -675,7 +650,6 @@ void runFANG()
       sumW = 0.0;
       sumW2 = 0.0;
       nEvents = 0;
-      v3Det.clear();
 
       cosTheta = -0.99 + l * 0.2;
       if (l == 10) cosTheta = 0.95;
@@ -683,20 +657,19 @@ void runFANG()
       cosThetaErrArr[l] = 0.0;
 
       v3.SetXYZ(TMath::Sqrt(1.0 - cosTheta * cosTheta), 0.0, cosTheta);
-      v3Det.push_back(v3);
-      shape2[0] = kModePoint;  // Point generation
+
+      // Create TFANG generator with point constraint
+      TFANG genPoint;
+      genPoint.SetDecay(pTotal2, kNBody2, masses2);
+      genPoint.AddConstraint(v3, 1.0, kModePoint);
 
       for (Int_t k = 0; k < nLoop; k++) {
-         vecVecP.clear();
-         vecWi.clear();
-         eventStatus = GenFANG(kNBody2, pTotal2, masses2, omega2, shape2, v3Det, vecVecP, vecWi, &rng);
-         if (!eventStatus) continue;
+         if (genPoint.Generate() == 0) continue;
 
-         for (size_t i = 0; i < vecVecP.size(); i++) {
-            vecP = vecVecP[i];
-            weight = vecWi[i];
-            pElectronOut = vecP[0];
-            pProtonOut = vecP[1];
+         for (Int_t i = 0; i < genPoint.GetNSolutions(); i++) {
+            weight = genPoint.GetWeight(i);
+            pElectronOut = genPoint.GetDecay(i, 0);
+            pProtonOut = genPoint.GetDecay(i, 1);
             pMomTransfer = pElectronIn - pElectronOut;
             ROOT::Math::PxPyPzMVector pU = pTarget - pElectronOut;
             qSquared = -pMomTransfer.M2();
@@ -724,7 +697,7 @@ void runFANG()
 
       std::cout << "  cos(theta) = " << cosTheta
                 << ": dsigma/dOmega = " << sigmaArr[l] << " +/- " << sigmaErrArr[l]
-                << " (FANG/Rosenbluth = " << sigmaArr[l] / fRosenbluth->Eval(cosTheta) << ")"
+                << " (TFANG/Rosenbluth = " << sigmaArr[l] / fRosenbluth->Eval(cosTheta) << ")"
                 << std::endl;
    }
 
@@ -733,7 +706,7 @@ void runFANG()
    grElastic->SetMarkerSize(1.3);
 
    //==========================================================================
-   // FANG Event Generation: Full Angular Distribution
+   // TFANG Event Generation: Full Angular Distribution
    //==========================================================================
    std::cout << "\nGenerating full angular distribution..." << std::endl;
 
@@ -756,6 +729,10 @@ void runFANG()
    };
    Range_t ranges[4] = {{1.0, 2.0}, {0.4, 1.0}, {0.12, 0.4}, {0.01, 0.12}};
 
+   // Create TFANG generator once outside the loop
+   TFANG genAngular;
+   genAngular.SetDecay(pTotal2, kNBody2, masses2);
+
    for (Int_t rangeIdx = 0; rangeIdx < 4; rangeIdx++) {
       Double_t c1 = ranges[rangeIdx].fC1;
       Double_t c2 = ranges[rangeIdx].fC2;
@@ -765,25 +742,23 @@ void runFANG()
 
       for (Int_t k = 0; k < 1000000; k++) {
          // Generate r1 with 1/r^2 distribution
-         r1 = c1 * c1 * c2 / (c2 * c1 - rng.Uniform(0, 1) * c1 * (c2 - c1));
+         r1 = c1 * c1 * c2 / (c2 * c1 - gRandom->Uniform(0, 1) * c1 * (c2 - c1));
          cosTheta = 1.0 - r1;
          sinTheta = TMath::Sqrt(1.0 - cosTheta * cosTheta);
-         phi = rng.Uniform(0, kTwoPi);
+         phi = gRandom->Uniform(0, kTwoPi);
 
-         v3Det.clear();
          v3.SetXYZ(sinTheta * TMath::Cos(phi), sinTheta * TMath::Sin(phi), cosTheta);
-         v3Det.push_back(v3);
 
-         vecVecP.clear();
-         vecWi.clear();
-         eventStatus = GenFANG(kNBody2, pTotal2, masses2, omega2, shape2, v3Det, vecVecP, vecWi, &rng);
-         if (!eventStatus) continue;
+         // Update constraint for new direction
+         genAngular.ClearConstraints();
+         genAngular.AddConstraint(v3, 1.0, kModePoint);
 
-         for (size_t i = 0; i < vecVecP.size(); i++) {
-            vecP = vecVecP[i];
-            weight = vecWi[i];
-            pElectronOut = vecP[0];
-            pProtonOut = vecP[1];
+         if (genAngular.Generate() == 0) continue;
+
+         for (Int_t i = 0; i < genAngular.GetNSolutions(); i++) {
+            weight = genAngular.GetWeight(i);
+            pElectronOut = genAngular.GetDecay(i, 0);
+            pProtonOut = genAngular.GetDecay(i, 1);
             pMomTransfer = pElectronIn - pElectronOut;
             ROOT::Math::PxPyPzMVector pU = pTarget - pElectronOut;
             qSquared = -pMomTransfer.M2();
@@ -839,8 +814,8 @@ void runFANG()
    grElastic->Draw("P");
    fRosenbluth->Draw("same");
 
-   legFinal->AddEntry(hXsec, "FANG event generation", "l");
-   legFinal->AddEntry(grElastic, "FANG point calculation", "p");
+   legFinal->AddEntry(hXsec, "TFANG event generation", "l");
+   legFinal->AddEntry(grElastic, "TFANG point calculation", "p");
    legFinal->AddEntry(fRosenbluth, "Rosenbluth cross section", "l");
    legFinal->Draw();
 
@@ -857,7 +832,8 @@ void runFANG()
    hCount->Draw("hist");
 
    std::cout << "\n========================================" << std::endl;
-   std::cout << "runFANG() completed successfully" << std::endl;
-   std::cout << "J. High Energ. Phys. 2025, 137 (2025). https://doi.org/10.1007/JHEP12(2025)137" << std::endl;
-    std::cout << "========================================" << std::endl;
+   std::cout << "runTFANG() completed successfully" << std::endl;
+   std::cout << "J. High Energ. Phys. 2025, 137 (2025)" << std::endl;
+   std::cout << "https://doi.org/10.1007/JHEP12(2025)137" << std::endl;
+   std::cout << "========================================" << std::endl;
 }
