@@ -912,7 +912,18 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
                                ? ROOT::Internal::RDF::GetTypeNameWithOpts(*fInputLoopManager->GetDataSource(),
                                                                           fInputFieldNames[i], fOptions.fVector2RVec)
                                : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
-      model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+
+      // Cardinality fields are read-only, so instead we snapshot them as their inner type.
+      if (typeName.substr(0, 25) == "ROOT::RNTupleCardinality<") {
+         // Get "T" from "ROOT::RNTupleCardinality<T>".
+         std::string cardinalityType = typeName.substr(25, typeName.size() - 26);
+         Warning("Snapshot",
+                 "Column \"%s\" is a read-only \"%s\" column. It will be snapshot as its inner type \"%s\" instead.",
+                 fInputFieldNames[i].c_str(), typeName.c_str(), cardinalityType.c_str());
+         model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], cardinalityType).Unwrap());
+      } else {
+         model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+      }
       fFieldTokens[i] = model->GetToken(fOutputFieldNames[i]);
    }
    model->Freeze();
