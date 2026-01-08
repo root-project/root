@@ -33,7 +33,7 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma9
+      PLATFORM: alma10
       DOC_DIR: master
       DOC_LOCATION: /github/home
       BASE_REF: master
