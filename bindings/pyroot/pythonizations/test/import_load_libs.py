@@ -77,6 +77,7 @@ class ImportLoadLibs(unittest.TestCase):
         "ld.*",
         "libffi",
         "libgcc_s",
+        "libatomic",
         # AddressSanitizer runtime and ROOT configuration
         "libclang_rt.asan-.*",
         "libROOTSanitizerConfig",
