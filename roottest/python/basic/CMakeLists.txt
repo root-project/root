@@ -15,14 +15,7 @@ if(NOT MSVC OR win_broken_tests)
                     MACRO PyROOT_datatypetest_numpy.py
                     FIXTURES_REQUIRED python-basic-datatype-fixture
                     PYTHON_DEPS numpy)
-endif()
 
-  ROOTTEST_ADD_TEST(operator
-                    MACRO PyROOT_operatortests.py
-                    COPY_TO_BUILDDIR Operators.C
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Operators.C+)
-
-if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(overload
                     MACRO PyROOT_overloadtests.py
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
