@@ -1,6 +1,6 @@
 # TMVA SOFIE Parsers
 
-ROOT/TMVA Sofie_Parsers directory contains the parser implementations used by TMVA SOFIE to translate external machine learning model formats into SOFIE’s internal intermediate representation (`RModel`).
+The ROOT/TMVA `sofie_parsers` directory contains the parser implementations used by TMVA SOFIE to translate external machine learning model formats into SOFIE’s internal intermediate representation (`RModel`).
 
 The parsers are responsible for reading, validating, and translating model graphs, but do not perform code generation or runtime inference.
 
@@ -57,9 +57,9 @@ SOFIE::RModelParser_ONNX parser;
 SOFIE::RModel model = parser.Parse("model.onnx");
 ```
 
-## ONNX operator support
+## ONNX Operator support
 
-ONNX operator support in TMVA SOFIE is determined by operators registered via `RegisterOperator(...)` in `root/tmva/sofie_parsers/RModelParser_ONNX.cxx` in the current master branch.
+ONNX operator support in TMVA SOFIE is determined by operators registered via `RegisterOperator(...)` in `root/tmva/sofie_parsers/RModelParser_ONNX.cxx` in the current ROOT source tree..
 
 Only tensor-based ONNX operators are considered; sequence-based ONNX operators are out of scope.
 
@@ -144,7 +144,7 @@ Only tensor-based ONNX operators are considered; sequence-based ONNX operators a
 
 ## Model Validation and Diagnostics
 
-Model compatibility with SOFIE can be checked using the parser validation API:
+Model compatibility with SOFIE can be checked using the ONNX parser validation API:
 
 ```cpp
 using namespace TMVA::Experimental;
@@ -166,6 +166,17 @@ Each supported model format provides a dedicated parser responsible for:
 - Translating supported operators into SOFIE internal operators
 
 The resulting `RModel` object is subsequently consumed by the SOFIE components responsible for code generation and runtime inference.
+
+## Parser Responsibilities
+
+Each SOFIE parser is responsible for:
+
+- Loading the external model description
+- Performing structural and semantic validation
+- Resolving tensor shapes and data types
+- Constructing the internal `RModel` representation
+
+Parsers are intentionally kept independent of code generation and runtime execution logic.
 
 ## How Operator Support Works
 
