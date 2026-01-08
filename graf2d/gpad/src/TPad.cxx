@@ -7653,6 +7653,27 @@ Int_t TPad::YtoAbsPixel(Double_t y) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert a vertical distance [y1,y2] to pixel
+
+Int_t TPad::HtoAbsPixel(Double_t y1, Double_t y2) const
+{
+   double h1 = fYtoAbsPixelk + y1*fYtoPixel;
+   double h2 = fYtoAbsPixelk + y2*fYtoPixel;
+   return TMath::Nint(pixel_boundary(h1-h2));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a horizontal distance [x1,x2] to pixel
+
+Int_t TPad::WtoAbsPixel(Double_t x1, Double_t x2) const
+{
+   double w1 = fXtoAbsPixelk + x1*fXtoPixel;
+   double w2 = fXtoAbsPixelk + x2*fXtoPixel;
+   return TMath::Nint(pixel_boundary(w1-w2));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Convert Y coordinate to pixel
 
 Int_t TPad::YtoPixel(Double_t y) const

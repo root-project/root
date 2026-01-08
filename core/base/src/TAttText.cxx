@@ -311,10 +311,8 @@ Float_t TAttText::GetTextSizePercent(Float_t size)
 {
    Float_t rsize = size;
    if (fTextFont%10 > 2 && gPad) {
-      UInt_t w = std::abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                          gPad->XtoAbsPixel(gPad->GetX1()));
-      UInt_t h = std::abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                          gPad->YtoAbsPixel(gPad->GetY1()));
+      UInt_t w = std::abs(gPad->WtoAbsPixel(gPad->GetX1(), gPad->GetX2()));
+      UInt_t h = std::abs(gPad->HtoAbsPixel(gPad->GetY1(), gPad->GetY2()));
       if (w < h)
          rsize = rsize/w;
       else
