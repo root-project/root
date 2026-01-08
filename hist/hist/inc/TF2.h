@@ -36,8 +36,10 @@ protected:
 
 public:
    TF2();
-   TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
-   TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t * opt);  // same as above but using a string for option 
+   TF2(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0,
+       Double_t ymax = 1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
+   TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
+       Option_t *opt); // same as above but using a string for option
    TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
