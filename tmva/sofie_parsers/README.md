@@ -35,7 +35,7 @@ Each supported format is translated into a common internal representation (`RMod
 
 ## Model Format Compatibility
 
-Compatibility of external models with SOFIE is determined by operator support rather than by strict guarantees on model format or version.
+Compatibility of external models with SOFIE is determined primarily by operator support rather than by strict guarantees on model format or version.
 
 For ONNX models:
 - Compatibility depends on whether all operators used in the model are implemented and registered in the SOFIE ONNX parser.
@@ -57,7 +57,7 @@ SOFIE::RModelParser_ONNX parser;
 SOFIE::RModel model = parser.Parse("model.onnx");
 ```
 
-## ONNX Operator support
+## ONNX Operator Support
 
 ONNX operator support in TMVA SOFIE is determined by operators registered via `RegisterOperator(...)` in `root/tmva/sofie_parsers/RModelParser_ONNX.cxx` in the current ROOT source tree.
 
