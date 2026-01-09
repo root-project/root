@@ -44,8 +44,7 @@
 #include <utility> // std::index_sequence
 #include <vector>
 #include <numeric> // std::accumulate in MeanHelper
-#include <cmath>
-
+#include <cmath> // std::sqrt, std::pow
 class TCollection;
 class TStatistic;
 class TTreeReader;
@@ -1318,6 +1317,7 @@ public:
 };
 
 // Implements Welford's Online Algorithm for Skewness
+// Ref: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
 class R__CLING_PTRCHECK(off) SkewnessHelper : public RActionImpl<SkewnessHelper> {
    unsigned int fNSlots;
    std::shared_ptr<double> fResultSkewness;
@@ -1339,8 +1339,12 @@ public:
    {
    }
 
-   SkewnessHelper(SkewnessHelper &&) = default;
-   SkewnessHelper(const SkewnessHelper &) = delete;
+   // Rule of Five:
+   ~SkewnessHelper() = default;                                   // Destructor
+   SkewnessHelper(const SkewnessHelper &) = delete;               // Copy Ctor
+   SkewnessHelper &operator=(const SkewnessHelper &) = delete;    // Copy Assignment
+   SkewnessHelper(SkewnessHelper &&) = default;                   // Move Ctor
+   SkewnessHelper &operator=(SkewnessHelper &&) = default;        // Move Assignment
 
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -1404,10 +1408,14 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final { return nullptr; }
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final {
+      // TODO: Implement mergeable value to support distributed RDataFrame
+      return nullptr;
+   }
 };
 
 // Implements Welford's Online Algorithm for Kurtosis
+// Ref: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
 class R__CLING_PTRCHECK(off) KurtosisHelper : public RActionImpl<KurtosisHelper> {
    unsigned int fNSlots;
    std::shared_ptr<double> fResultKurtosis;
@@ -1431,8 +1439,12 @@ public:
    {
    }
 
-   KurtosisHelper(KurtosisHelper &&) = default;
-   KurtosisHelper(const KurtosisHelper &) = delete;
+   // Rule of Five:
+   ~KurtosisHelper() = default;                                   // 1. Destructor
+   KurtosisHelper(const KurtosisHelper &) = delete;               // 2. Copy Constructor
+   KurtosisHelper &operator=(const KurtosisHelper &) = delete;    // 3. Copy Assignment
+   KurtosisHelper(KurtosisHelper &&) = default;                   // 4. Move Constructor
+   KurtosisHelper &operator=(KurtosisHelper &&) = default;        // 5. Move Assignment
 
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -1502,8 +1514,11 @@ void Finalize()
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return KurtosisHelper(result, fCounts.size());
    }
-
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final { return nullptr; }
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final {
+      // TODO: Implement mergeable value to support distributed RDataFrame
+      return nullptr;
+   }
 };
 
 template <typename PrevNodeType>
