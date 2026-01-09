@@ -96,7 +96,6 @@ public:
       kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
 
       /* had kClassSaved  = BIT(12), */
-
       kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
