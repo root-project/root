@@ -294,8 +294,11 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      fEngine.Fill(args...);
-      fStats.Fill(args...);
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         fEngine.Fill(args...);
+         fStats.Fill(args...);
+      }
    }
 
    /// Scale all histogram bin contents and statistics.

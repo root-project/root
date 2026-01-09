@@ -365,21 +365,24 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      auto t = std::forward_as_tuple(args...);
-      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
-         static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
-         static constexpr std::size_t N = sizeof...(A) - 1;
-         if (N != fAxes.GetNDimensions()) {
-            throw std::invalid_argument("invalid number of arguments to Fill");
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         auto t = std::forward_as_tuple(args...);
+         if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+            static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
+            static constexpr std::size_t N = sizeof...(A) - 1;
+            if (N != fAxes.GetNDimensions()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            RWeight weight = std::get<N>(t);
+            RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
+            if (index.fValid) {
+               assert(index.fIndex < fBinContents.size());
+               fBinContents[index.fIndex] += weight.fValue;
+            }
+         } else {
+            Fill(t);
          }
-         RWeight weight = std::get<N>(t);
-         RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
-         if (index.fValid) {
-            assert(index.fIndex < fBinContents.size());
-            fBinContents[index.fIndex] += weight.fValue;
-         }
-      } else {
-         Fill(t);
       }
    }
 
@@ -458,21 +461,24 @@ public:
    template <typename... A>
    void FillAtomic(const A &...args)
    {
-      auto t = std::forward_as_tuple(args...);
-      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
-         static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
-         static constexpr std::size_t N = sizeof...(A) - 1;
-         if (N != fAxes.GetNDimensions()) {
-            throw std::invalid_argument("invalid number of arguments to Fill");
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         auto t = std::forward_as_tuple(args...);
+         if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+            static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
+            static constexpr std::size_t N = sizeof...(A) - 1;
+            if (N != fAxes.GetNDimensions()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            RWeight weight = std::get<N>(t);
+            RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
+            if (index.fValid) {
+               assert(index.fIndex < fBinContents.size());
+               Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+            }
+         } else {
+            FillAtomic(t);
          }
-         RWeight weight = std::get<N>(t);
-         RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
-         if (index.fValid) {
-            assert(index.fIndex < fBinContents.size());
-            Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
-         }
-      } else {
-         FillAtomic(t);
       }
    }
 

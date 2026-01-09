@@ -415,19 +415,22 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      auto t = std::forward_as_tuple(args...);
-      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
-         static constexpr std::size_t N = sizeof...(A) - 1;
-         if (N != fDimensionStats.size()) {
-            throw std::invalid_argument("invalid number of arguments to Fill");
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         auto t = std::forward_as_tuple(args...);
+         if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+            static constexpr std::size_t N = sizeof...(A) - 1;
+            if (N != fDimensionStats.size()) {
+               throw std::invalid_argument("invalid number of arguments to Fill");
+            }
+            fNEntries++;
+            double w = std::get<N>(t).fValue;
+            fSumW += w;
+            fSumW2 += w * w;
+            FillImpl<0, N>(t, w);
+         } else {
+            Fill(t);
          }
-         fNEntries++;
-         double w = std::get<N>(t).fValue;
-         fSumW += w;
-         fSumW2 += w * w;
-         FillImpl<0, N>(t, w);
-      } else {
-         Fill(t);
       }
    }
 

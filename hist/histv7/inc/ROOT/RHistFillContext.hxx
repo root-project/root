@@ -101,8 +101,11 @@ public:
    template <typename... A>
    void Fill(const A &...args)
    {
-      fHist->fEngine.FillAtomic(args...);
-      fStats.Fill(args...);
+      static_assert(sizeof...(A) >= 1, "need at least one argument to Fill");
+      if constexpr (sizeof...(A) >= 1) {
+         fHist->fEngine.FillAtomic(args...);
+         fStats.Fill(args...);
+      }
    }
 
    /// Flush locally accumulated entries to the histogram.
