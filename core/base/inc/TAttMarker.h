@@ -37,7 +37,7 @@ public:
    virtual void     SetMarkerAttributes();  // *MENU*
    virtual void     SetMarkerColor(Color_t tmarkerColor); ///< Set the marker color
    virtual void     SetMarkerColorAlpha(Color_t tmarkerColor, Float_t malpha);
-   virtual void     SetMarkerStyle(Style_t style);
+   virtual void     SetMarkerStyle(Style_t style); ///< Set the marker style
    virtual void     SetMarkerSize(Size_t msize);
 
    ClassDef(TAttMarker,2)  //Marker attributes
