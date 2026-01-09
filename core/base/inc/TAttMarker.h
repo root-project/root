@@ -38,6 +38,10 @@ public:
    virtual void     SetMarkerColor(Color_t tmarkerColor); ///< Set the marker color
    virtual void     SetMarkerColorAlpha(Color_t tmarkerColor, Float_t malpha);
    virtual void     SetMarkerStyle(Style_t style); ///< Set the marker style
+   /// Set the marker size.
+   /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
+   /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
+   /// therefore this method does not apply on them.
    virtual void     SetMarkerSize(Size_t msize);
 
    ClassDef(TAttMarker,2)  //Marker attributes
