@@ -5,7 +5,7 @@ int readNoLib(const char *fname = "vector.root")
    dirname.ReplaceAll("/","-");
 
    TString filename = fname;
-   gSystem->PrependFilePath(dirname, filename);
+   gSystem->PrependPathName(dirname, filename);
 
    auto file0 = TFile::Open(filename);
    if (!file0)
