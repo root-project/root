@@ -27,7 +27,7 @@ public:
    TAttMarker();
    TAttMarker(Color_t markerColor, Style_t style, Size_t msize);
    virtual ~TAttMarker();
-          void     Copy(TAttMarker &attmarker) const;
+           void     Copy(TAttMarker &attmarker) const;
    virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
    virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
    virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
