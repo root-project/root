@@ -58,6 +58,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install CA certificates for Davix
+        run: sudo apt-get install -y ca-certificates && sudo update-ca-certificates
+
       - name: Install produced wheel
         run: |
           ls -R wheels
