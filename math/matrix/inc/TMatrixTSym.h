@@ -29,17 +29,6 @@
 
 #include <cassert>
 
-// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
-// legacy member variables shadowing local variables (PR #20793).
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
-
 template<class Element>class TMatrixT;
 template<class Element>class TMatrixTSymLazy;
 template<class Element>class TVectorT;
