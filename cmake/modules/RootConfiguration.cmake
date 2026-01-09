@@ -548,6 +548,19 @@ endif()
 string(REGEX MATCH "__cplusplus[=| ]([0-9]+)" __cplusplus "${__cplusplus_PPout}")
 set(__cplusplus ${CMAKE_MATCH_1}L)
 
+# To mark the build tree. Important for automatic resolution of relative paths,
+# for example to the include directory. Use custom target to ensure re-creation
+# when someone deletes the marker.
+set(build_tree_marker "${localruntimedir}/root-build-tree-marker")
+add_custom_command(
+  OUTPUT "${build_tree_marker}"
+  COMMAND ${CMAKE_COMMAND} -E touch "${build_tree_marker}"
+  COMMENT "Ensuring that \"${build_tree_marker}\" exists"
+)
+add_custom_target(ensure_build_tree_marker ALL
+  DEPENDS "${build_tree_marker}"
+)
+
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 

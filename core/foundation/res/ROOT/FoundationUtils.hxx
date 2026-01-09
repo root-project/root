@@ -67,10 +67,6 @@ namespace FoundationUtils {
    ///
    const std::string& GetRootSys();
 
-   ///\ returns the include directory in the installation.
-   ///
-   const std::string& GetIncludeDir();
-
    ///\returns the sysconfig directory in the installation.
    const std::string& GetEtcDir();
 
