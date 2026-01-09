@@ -31,17 +31,6 @@
 #include "Compression.h"
 #include "ROOT/TIOFeatures.hxx"
 
-// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
-// legacy member variables shadowing local variables (PR #20793).
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
-
 class TTree;
 class TBasket;
 class TBranchElement;
