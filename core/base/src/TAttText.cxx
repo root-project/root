@@ -272,7 +272,6 @@ TAttText::TAttText()
 ///
 /// Text attributes are taken from the argument list.
 
-// FIXED: Renamed arguments to match header and avoid shadowing
 TAttText::TAttText(Int_t textAlign, Float_t textAngle, Color_t textColor, Style_t textFont, Float_t tsize)
 {
    fTextAlign = textAlign;
