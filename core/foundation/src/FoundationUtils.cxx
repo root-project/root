@@ -167,30 +167,16 @@ const std::string& GetRootSys() {
    if (rootsys.empty()) {
       if (const char* envValue = std::getenv("ROOTSYS")) {
          rootsys = envValue;
+#ifndef WIN32
          // We cannot use gSystem->UnixPathName.
          ConvertToUnixPath(rootsys);
+#endif
       }
    }
    // FIXME: Should this also call UnixPathName for consistency?
    if (rootsys.empty())
       rootsys = GetFallbackRootSys();
    return rootsys;
-}
-
-
-const std::string& GetIncludeDir() {
-#ifdef ROOTINCDIR
-   if (!IgnorePrefix()) {
-      const static std::string rootincdir = ROOTINCDIR;
-      return rootincdir;
-   }
-#endif
-   static std::string rootincdir;
-   if (rootincdir.empty()) {
-      const std::string& sep = GetPathSeparator();
-      rootincdir = GetRootSys() + sep + "include" + sep;
-   }
-   return rootincdir;
 }
 
 const std::string& GetEtcDir() {
