@@ -681,8 +681,8 @@ template <typename T> TClass *GetClass(const T * /* dummy */) { return TClass::G
 
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between T* and T**
-   template <typename T> TClass* GetClass(      T** /* dummy */) { return TClass::GetClass<T>(); }
-   template <typename T> TClass* GetClass(const T** /* dummy */) { return TClass::GetClass<T>(); }
+   template <typename T> TClass* GetClass(      T**       /* dummy */) { return TClass::GetClass<T>(); }
+   template <typename T> TClass* GetClass(const T**       /* dummy */) { return TClass::GetClass<T>(); }
    template <typename T> TClass* GetClass(      T* const* /* dummy */) { return TClass::GetClass<T>(); }
    template <typename T> TClass* GetClass(const T* const* /* dummy */) { return TClass::GetClass<T>(); }
 #endif
