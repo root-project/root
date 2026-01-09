@@ -376,16 +376,3 @@ template <class Element> void AMultBt(const Element * const ap,Int_t na,Int_t nc
                                       const Element * const bp,Int_t nb,Int_t ncolsb,Element *cp);
 } // inline namespace TMatrixTAutoloadOps
 #endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#endif
