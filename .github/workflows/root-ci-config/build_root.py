@@ -131,6 +131,10 @@ def main():
 
     git_pull("src", args.repository, args.base_ref)
 
+    benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'].lower() == "on"
+    if benchmark:
+        git_pull("rootbench", "https://github.com/root-project/rootbench", "master")
+
     if pull_request:
       base_head_sha = get_base_head_sha("src", args.repository, args.sha, args.head_sha)
 
@@ -161,11 +165,12 @@ def main():
         create_binaries(args.buildtype)
 
     if testing:
-        extra_ctest_flags = ""
+        extra_ctest_flags = ''
         if WINDOWS:
-            extra_ctest_flags += "--repeat until-pass:5 "
-            extra_ctest_flags += "--build-config " + args.buildtype
-
+            extra_ctest_flags += '--repeat until-pass:5 '
+            extra_ctest_flags += '--build-config ' + args.buildtype
+        if benchmark:
+            extra_ctest_flags = ' -R "^rootbench-" '
         ctest_returncode = run_ctest(extra_ctest_flags)
 
     if args.coverage:
@@ -332,8 +337,10 @@ def run_ctest(extra_ctest_flags: str) -> int:
     failures in main().
     """
     builddir = os.path.join(WORKDIR, "build")
+    setupROOTEnv = f""". '{builddir}/bin/thisroot.sh'""" if 'rootbench' in extra_ctest_flags else ''
     ctest_result = subprocess_with_log(f"""
         cd '{builddir}'
+        {setupROOTEnv}
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
