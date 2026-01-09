@@ -257,6 +257,8 @@ public:
    virtual Int_t    VtoPixel(Double_t v) const = 0;
    virtual Int_t    XtoAbsPixel(Double_t x) const = 0;
    virtual Int_t    YtoAbsPixel(Double_t y) const = 0;
+   virtual Int_t    HtoAbsPixel(Double_t y1, Double_t y2) const = 0;
+   virtual Int_t    WtoAbsPixel(Double_t x1, Double_t x2) const = 0;
    virtual void     XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
    virtual void     XYtoAbsPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
    virtual Double_t XtoPad(Double_t x) const = 0;
