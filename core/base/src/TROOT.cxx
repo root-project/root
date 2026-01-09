@@ -1993,9 +1993,7 @@ void TROOT::InitSystem()
       if (gSystem->Init())
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: can't init operating system layer\n");
 
-      TString rootincludedir = _R_QUOTEVAL_(CMAKE_INSTALL_INCLUDEDIR);
-      gSystem->PrependPathName(GetRootSys(), rootincludedir);
-      gSystem->SetIncludePath(("-I" + rootincludedir).Data());
+      gSystem->SetIncludePath(("-I" + GetIncludeDir()).Data());
 
       if (!gSystem->HomeDirectory()) {
          fprintf(stderr, "Fatal in <TROOT::InitSystem>: HOME directory not set\n");
@@ -3098,11 +3096,29 @@ const TString& TROOT::GetSharedLibDir() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the include directory in the installation. Static utility function.
 
-const TString& TROOT::GetIncludeDir() {
-   // Avoid returning a reference to a temporary because of the conversion
-   // between std::string and TString.
-   const static TString includedir = ROOT::FoundationUtils::GetIncludeDir();
-   return includedir;
+const TString &TROOT::GetIncludeDir()
+{
+   static TString rootincdir;
+
+   if (!rootincdir.IsNull())
+      return rootincdir;
+
+   const std::string &sep = ROOT::FoundationUtils::GetPathSeparator();
+
+   // Check if we are in the build tree using the build tree marker file
+   const bool isBuildTree = std::filesystem::exists((GetSharedLibDir() + sep + "root-build-tree-marker").Data());
+
+   if (isBuildTree) {
+      rootincdir = GetRootSys() + sep + "include";
+   } else {
+#if INSTALL_INCLUDEDIR_IS_ABSOLUTE
+      rootincdir = _R_QUOTEVAL_(INSTALL_INCLUDEDIR);
+#else
+      rootincdir = GetRootSys() + sep + _R_QUOTEVAL_(INSTALL_INCLUDEDIR);
+#endif
+   }
+
+   return rootincdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

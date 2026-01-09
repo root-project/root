@@ -236,9 +236,21 @@ if(core_soversion)
 else()
     set(full_core_filename "${core_prefix}Core${core_suffix}")
 endif()
+
+# Absolue CMAKE_INSTALL_<dir> paths are discouraged in CMake, but some
+# packagers use them anyway. So we support it.
+if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
+   set(install_includedir_is_absolute 1)
+else()
+   set(install_includedir_is_absolute 0)
+endif()
+file(TO_NATIVE_PATH "${CMAKE_INSTALL_INCLUDEDIR}" install_includedir_native)
+
 target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename}
-                                    -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}
+                                    -DINSTALL_INCLUDEDIR=${install_includedir_native}
+                                    -DINSTALL_INCLUDEDIR_IS_ABSOLUTE=${install_includedir_is_absolute}
 )
+add_dependencies(Core ensure_build_tree_marker)
 
 if(PCRE2_FOUND)
   target_link_libraries(Core PRIVATE PCRE2::PCRE2)

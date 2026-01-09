@@ -9,7 +9,6 @@
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"
 #define ROOTLIBDIR    "@libdir@"
-#define ROOTINCDIR    "@incdir@"
 #define ROOTETCDIR    "@etcdir@"
 #define ROOTDATADIR   "@datadir@"
 #define ROOTDOCDIR    "@docdir@"
