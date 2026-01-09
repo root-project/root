@@ -156,11 +156,11 @@ TAttLine::TAttLine()
 ///            defined using TStyle::SetLineStyleString.
 ///  - width : expressed in pixel units
 
-TAttLine::TAttLine(Color_t color, Style_t style, Width_t width)
+TAttLine::TAttLine(Color_t lineColor, Style_t lineStyle, Width_t lineWidth)
 {
-   fLineColor = color;
-   fLineWidth = width;
-   fLineStyle = style;
+   fLineColor = lineColor;
+   fLineWidth = lineWidth;
+   fLineStyle = lineStyle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
- *                                                                       *
+ * *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
@@ -272,12 +272,13 @@ TAttText::TAttText()
 ///
 /// Text attributes are taken from the argument list.
 
-TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
+// FIXED: Renamed arguments to match header and avoid shadowing
+TAttText::TAttText(Int_t textAlign, Float_t textAngle, Color_t textColor, Style_t textFont, Float_t tsize)
 {
-   fTextAlign = align;
-   fTextAngle = angle;
-   fTextColor = color;
-   fTextFont  = font;
+   fTextAlign = textAlign;
+   fTextAngle = textAngle;
+   fTextColor = textColor;
+   fTextFont  = textFont;
    fTextSize  = tsize;
 }
 

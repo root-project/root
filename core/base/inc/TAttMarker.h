@@ -4,7 +4,7 @@
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
- *                                                                       *
+ * *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
@@ -14,17 +14,6 @@
 
 
 #include "Rtypes.h"
-
-// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
-// legacy member variables shadowing local variables (PR #20793).
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
 
 class TColorNumber;
 
@@ -37,7 +26,7 @@ protected:
 
 public:
    TAttMarker();
-   TAttMarker(Color_t color, Style_t style, Size_t msize);
+   TAttMarker(Color_t markerColor, Style_t markerStyle, Size_t markerSize);
    virtual ~TAttMarker();
            void     Copy(TAttMarker &attmarker) const;
    virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
@@ -54,7 +43,8 @@ public:
    /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
    /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
    /// therefore this method does not apply on them.
-   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
+   // FIXED: Renamed argument to markerSize to match the body assignment
+   virtual void     SetMarkerSize(Size_t markerSize=1)    { fMarkerSize  = markerSize;}
 
    static Style_t GetMarkerStyleBase(Style_t style);
    static Width_t GetMarkerLineWidth(Style_t style);
@@ -64,44 +54,19 @@ public:
    ClassDef(TAttMarker,3);  //Marker attributes
 };
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-   enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-                      kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
-                      kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
-                      kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
-                      kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
-                      kFullStar=29, kOpenStar=30, kOpenTriangleDown=32,
-                      kFullDiamond=33, kFullCross=34, kOpenDiamondCross=35,
-                      kOpenSquareDiagonal=36, kOpenThreeTriangles=37,
-                      kOctagonCross=38, kFullThreeTriangles=39,
-                      kOpenFourTrianglesX=40, kFullFourTrianglesX=41,
-                      kOpenDoubleDiamond=42, kFullDoubleDiamond=43,
-                      kOpenFourTrianglesPlus=44, kFullFourTrianglesPlus=45,
-                      kOpenCrossX=46, kFullCrossX=47, kFourSquaresX=48,
-                      kFourSquaresPlus=49 };
-
-#endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
+                   kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
+                   kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
+                   kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
+                   kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
+                   kFullStar=29, kOpenStar=30, kOpenTriangleDown=32,
+                   kFullDiamond=33, kFullCross=34, kOpenDiamondCross=35,
+                   kOpenSquareDiagonal=36, kOpenThreeTriangles=37,
+                   kOctagonCross=38, kFullThreeTriangles=39,
+                   kOpenFourTrianglesX=40, kFullFourTrianglesX=41,
+                   kOpenDoubleDiamond=42, kFullDoubleDiamond=43,
+                   kOpenFourTrianglesPlus=44, kFullFourTrianglesPlus=45,
+                   kOpenCrossX=46, kFullCrossX=47, kFourSquaresX=48,
+                   kFourSquaresPlus=49 };
 
 #endif

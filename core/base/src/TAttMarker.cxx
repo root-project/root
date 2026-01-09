@@ -223,11 +223,11 @@ TAttMarker::TAttMarker()
 ///  - style : Marker style (from 1 to 30)
 ///  - size  : marker size (float)
 
-TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize)
+TAttMarker::TAttMarker(Color_t markerColor, Style_t markerStyle, Size_t markerSize)
 {
-   fMarkerColor = color;
-   fMarkerSize  = msize;
-   fMarkerStyle = style;
+   fMarkerColor = markerColor;
+   fMarkerSize  = markerSize;
+   fMarkerStyle = markerStyle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

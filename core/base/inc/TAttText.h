@@ -4,7 +4,7 @@
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
- *                                                                       *
+ * *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
@@ -28,7 +28,8 @@ protected:
 
 public:
    TAttText();
-   TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
+   // FIXED: Renamed arguments to avoid shadowing globals (align, angle, color, font)
+   TAttText(Int_t textAlign, Float_t textAngle, Color_t textColor, Style_t textFont, Float_t tsize);
    virtual ~TAttText();
            void     Copy(TAttText &atttext) const;
    virtual Short_t  GetTextAlign() const {return fTextAlign;} ///< Return the text alignment
@@ -41,7 +42,10 @@ public:
    virtual void     ResetAttText(Option_t *toption="");
    virtual void     SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
-   virtual void     SetTextAlign(Short_t align=11) { fTextAlign = align;}  ///< Set the text alignment
+   
+   // FIXED: Renamed argument 'align' to 'textAlign' to match the body and avoid shadowing
+   virtual void     SetTextAlign(Short_t textAlign=11) { fTextAlign = textAlign;}  ///< Set the text alignment
+   
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;} ///< Set the text angle
    virtual void     SetTextColor(Color_t tcolor=1) { fTextColor = tcolor;} ///< Set the text color
    virtual void     SetTextColorAlpha(Color_t tcolor, Float_t talpha);
@@ -58,4 +62,3 @@ public:
                     kVAlignBottom=1, kVAlignCenter=2, kVAlignTop=3};
 
 #endif
-
