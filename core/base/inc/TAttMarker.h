@@ -35,9 +35,9 @@ public:
    virtual void     ResetAttMarker(Option_t *option="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
    virtual void     SetMarkerAttributes();  // *MENU*
-   virtual void     SetMarkerColor(Color_t tmarkerColor); ///< Set the marker color
+   virtual void     SetMarkerColor(Color_t tmarkerColor)  { fMarkerColor = tmarkerColor;} ///< Set the marker color
    virtual void     SetMarkerColorAlpha(Color_t tmarkerColor, Float_t malpha);
-   virtual void     SetMarkerStyle(Style_t style); ///< Set the marker style
+   virtual void     SetMarkerStyle(Style_t style) { fMarkerStyle = style;} ///< Set the marker style
    /// Set the marker size.
    /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
    /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
