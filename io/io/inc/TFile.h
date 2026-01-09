@@ -502,9 +502,3 @@ inline Int_t TFile::GetCompressionSettings() const
 }
 
 #endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
