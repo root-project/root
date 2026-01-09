@@ -169,6 +169,7 @@ SOFIE::RModelParser_ONNX parser;
 parser.CheckModel("example_model.ONNX");
 ```
 
+For a tracker of missing operator coverage, see [ONNX Operator Support Status](ONNX_OPERATOR_STATUS.md).
 
 
 ## Additional Links
