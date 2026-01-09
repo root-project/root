@@ -42,7 +42,7 @@ public:
    /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
    /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
    /// therefore this method does not apply on them.
-   virtual void     SetMarkerSize(Size_t msize);
+   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
 
    static Style_t GetMarkerStyleBase(Style_t style);
    static Width_t GetMarkerLineWidth(Style_t style);
