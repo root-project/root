@@ -44,7 +44,12 @@ public:
    /// therefore this method does not apply on them.
    virtual void     SetMarkerSize(Size_t msize);
 
-   ClassDef(TAttMarker,2)  //Marker attributes
+   static Style_t GetMarkerStyleBase(Style_t style);
+   static Width_t GetMarkerLineWidth(Style_t style);
+
+   void SetMarkerColor(TColorNumber lcolor);
+
+   ClassDef(TAttMarker,3);  //Marker attributes
 };
 
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
