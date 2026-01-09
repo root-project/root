@@ -41,8 +41,7 @@ public:
    virtual void     ResetAttText(Option_t *toption="");
    virtual void     SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
-   
-   virtual void     SetTextAlign(Short_t textAlign=11) { fTextAlign = textAlign;}  ///< Set the text alignment
+   virtual void     SetTextAlign(Short_t textAlign = 11) { fTextAlign = textAlign; }  ///< Set the text alignment
    
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;} ///< Set the text angle
    virtual void     SetTextColor(Color_t tcolor=1) { fTextColor = tcolor;} ///< Set the text color
