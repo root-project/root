@@ -2416,6 +2416,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   # when using the scripts/build.C macro.
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
+  unset(RootMacroDirDefines)
   foreach(d ${DirDefs})
     if(d MATCHES "_WIN32" OR d MATCHES "_XKEYCHECK_H" OR d MATCHES "NOMINMAX")
       continue()
