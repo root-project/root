@@ -340,16 +340,3 @@ inline bool   TBulkBranchRead::SupportsBulkRead() const { return fParent.Support
 }  // ROOT
 
 #endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#endif
