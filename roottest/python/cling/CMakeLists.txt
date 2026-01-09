@@ -8,13 +8,11 @@ if(ROOT_pyroot_FOUND)
   # TPython::LoadMacro and TPython::Import are broken in the new Cppyy
   # https://bitbucket.org/wlav/cppyy/issues/65
   # For now, we rely on our own implementation of TPython
-  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR llvm13_broken_tests)
-    if(NOT MSVC OR "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32" OR win_broken_tests)
-      ROOTTEST_ADD_TEST(class MACRO
-                        runPyClassTest.C
-                        WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                        OUTREF PyClassTest.ref)
-    endif()
+  if(NOT MSVC OR win_broken_tests)
+    ROOTTEST_ADD_TEST(class MACRO
+                      runPyClassTest.C
+                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                      OUTREF PyClassTest.ref)
   endif()
 
   ROOTTEST_ADD_TEST(cling
