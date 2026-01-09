@@ -15,43 +15,32 @@
 
 #include "Rtypes.h"
 
-class TColorNumber;
 
 class TAttMarker {
 
 protected:
-   Color_t    fMarkerColor;       ///< Marker color
+   Color_t    fMarkerColor;       ///< Marker color index
    Style_t    fMarkerStyle;       ///< Marker style
    Size_t     fMarkerSize;        ///< Marker size
 
 public:
    TAttMarker();
-   TAttMarker(Color_t markerColor, Style_t markerStyle, Size_t markerSize);
+   TAttMarker(Color_t markerColor, Style_t style, Size_t msize);
    virtual ~TAttMarker();
-           void     Copy(TAttMarker &attmarker) const;
-   virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
-   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
-   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
+   void             Copy(TAttMarker &attmarker) const;
+   virtual Color_t  GetMarkerColor() const {return fMarkerColor;}
+   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;}
+   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}
    virtual void     Modify();
-   virtual void     ResetAttMarker(Option_t *toption="");
+   virtual void     ResetAttMarker(Option_t *option="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
    virtual void     SetMarkerAttributes();  // *MENU*
-   virtual void     SetMarkerColor(Color_t mcolor=1) { fMarkerColor = mcolor;} ///< Set the marker color
-   virtual void     SetMarkerColorAlpha(Color_t mcolor, Float_t malpha);
-   virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;} ///< Set the marker style
-   /// Set the marker size.
-   /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
-   /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
-   /// therefore this method does not apply on them.
-   // FIXED: Renamed argument to markerSize to match the body assignment
-   virtual void     SetMarkerSize(Size_t markerSize=1)    { fMarkerSize  = markerSize;}
+   virtual void     SetMarkerColor(Color_t tmarkerColor);
+   virtual void     SetMarkerColorAlpha(Color_t tmarkerColor, Float_t malpha);
+   virtual void     SetMarkerStyle(Style_t style);
+   virtual void     SetMarkerSize(Size_t msize);
 
-   static Style_t GetMarkerStyleBase(Style_t style);
-   static Width_t GetMarkerLineWidth(Style_t style);
-
-   void SetMarkerColor(TColorNumber lcolor);
-
-   ClassDef(TAttMarker,3);  //Marker attributes
+   ClassDef(TAttMarker,2)  //Marker attributes
 };
 
 enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
@@ -59,14 +48,10 @@ enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
                    kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                    kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
                    kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
-                   kFullStar=29, kOpenStar=30, kOpenTriangleDown=32,
-                   kFullDiamond=33, kFullCross=34, kOpenDiamondCross=35,
-                   kOpenSquareDiagonal=36, kOpenThreeTriangles=37,
-                   kOctagonCross=38, kFullThreeTriangles=39,
-                   kOpenFourTrianglesX=40, kFullFourTrianglesX=41,
-                   kOpenDoubleDiamond=42, kFullDoubleDiamond=43,
-                   kOpenFourTrianglesPlus=44, kFullFourTrianglesPlus=45,
-                   kOpenCrossX=46, kFullCrossX=47, kFourSquaresX=48,
+                   kOpenStar=29, kFullStar=30, kOpenTriangleDown=32,
+                   kFullDiamond=33, kFullCross=34, kOpenDiamondCross=41,
+                   kOpenCrossX=43, kFullThreeTriangles=45,
+                   kOpenThreeTriangles=47, kFourSquaresX=48,
                    kFourSquaresPlus=49 };
 
 #endif

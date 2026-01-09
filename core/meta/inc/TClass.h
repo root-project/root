@@ -4,7 +4,7 @@
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
- *                                                                       *
+ * *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
@@ -41,17 +41,6 @@ class TObjArray;
 #include <unordered_set>
 #include <vector>
 #include <atomic>
-
-// FIXME: Temporarily suppress -Wshadow file-wide to avoid warnings from 
-// legacy member variables shadowing local variables (PR #20793).
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
-
 
 class TBaseClass;
 class TBrowser;
@@ -106,19 +95,8 @@ public:
    enum EStatusBits {
       kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
       /* had kClassSaved  = BIT(12), */
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+
       kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
@@ -614,16 +592,16 @@ public:
 
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);
-   static void           AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl);
+   static void           AddClassToDeclIdMap(TDictionary::DeclId_t declId, TClass* cl);
    static void           RemoveClass(TClass *cl);
-   static void           RemoveClassDeclId(TDictionary::DeclId_t id);
+   static void           RemoveClassDeclId(TDictionary::DeclId_t declId);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const char *name, Bool_t load, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size);
    static TClass        *GetClass(const std::type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE, size_t hint_pair_offset = 0, size_t hint_pair_size = 0);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    template<typename T>
    static TClass        *GetClass(Bool_t load = kTRUE, Bool_t silent = kFALSE);
-   static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
+   static Bool_t         GetClass(DeclId_t declId, std::vector<TClass*> &classes);
    static DictFuncPtr_t  GetDict (const char *cname);
    static DictFuncPtr_t  GetDict (const std::type_info &info);
 
@@ -704,28 +682,15 @@ template <typename T> TClass *GetClass(const T * /* dummy */) { return TClass::G
 
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between T* and T**
-   template <typename T> TClass* GetClass(      T**       /* dummy */) { return TClass::GetClass<T>(); }
-   template <typename T> TClass* GetClass(const T**       /* dummy */) { return TClass::GetClass<T>(); }
+   template <typename T> TClass* GetClass(      T** /* dummy */) { return TClass::GetClass<T>(); }
+   template <typename T> TClass* GetClass(const T** /* dummy */) { return TClass::GetClass<T>(); }
    template <typename T> TClass* GetClass(      T* const* /* dummy */) { return TClass::GetClass<T>(); }
    template <typename T> TClass* GetClass(const T* const* /* dummy */) { return TClass::GetClass<T>(); }
 #endif
 
-   extern TClass *CreateClass(const char *cname, Version_t id,
+   extern TClass *CreateClass(const char *cname, Version_t cversion,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
 }
 
 #endif // ROOT_TClass
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#endif

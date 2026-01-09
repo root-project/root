@@ -28,7 +28,6 @@ protected:
 
 public:
    TAttText();
-   // FIXED: Renamed arguments to avoid shadowing globals (align, angle, color, font)
    TAttText(Int_t textAlign, Float_t textAngle, Color_t textColor, Style_t textFont, Float_t tsize);
    virtual ~TAttText();
            void     Copy(TAttText &atttext) const;
@@ -43,7 +42,6 @@ public:
    virtual void     SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
    
-   // FIXED: Renamed argument 'align' to 'textAlign' to match the body and avoid shadowing
    virtual void     SetTextAlign(Short_t textAlign=11) { fTextAlign = textAlign;}  ///< Set the text alignment
    
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;} ///< Set the text angle
