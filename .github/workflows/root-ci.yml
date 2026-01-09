@@ -424,6 +424,11 @@ jobs:
             minimal: true
             property: "minimal build"
             overrides: ["CMAKE_CXX_STANDARD=20"]
+          # Benchmark build
+          - image: alma10
+            is_special: true
+            property: "benchmark build"
+            overrides: ["CMAKE_CXX_STANDARD=20", "rootbench=ON"]
           # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
