@@ -1,10 +1,3 @@
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#endif
 // @(#)root/io:$Id$
 // Author: Rene Brun   28/11/94
 
