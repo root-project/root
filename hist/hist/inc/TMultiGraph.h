@@ -73,7 +73,7 @@ public:
    TAxis            *GetXaxis();
    TAxis            *GetYaxis();
    void              Paint(Option_t *chopt = "") override;
-   void              PaintPads(Option_t *chopt = "", Int_t fnx = 0);
+   void              PaintPads(Option_t *chopt = "", Int_t nColumn = 0);
    void              PaintPolyLine3D(Option_t *chopt = "");
    void              PaintReverse(Option_t *chopt = "");
    void              Print(Option_t *chopt="") const override;

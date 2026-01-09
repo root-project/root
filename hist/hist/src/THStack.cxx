@@ -781,7 +781,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
             nps++;
       }
       if (nps < npads) {
-         if (fnx == 0) {
+         if (fnx <= 0) {
             padsav->Clear();
             Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
             if (nx * nx < npads)
