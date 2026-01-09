@@ -586,16 +586,3 @@ R__EXTERN TFileHandler *gXDisplay;  // Display server (X11) input event handler
 
 
 #endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
-
-#endif
