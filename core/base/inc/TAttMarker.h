@@ -28,9 +28,9 @@ public:
    TAttMarker(Color_t markerColor, Style_t style, Size_t msize);
    virtual ~TAttMarker();
           void     Copy(TAttMarker &attmarker) const;
-   virtual Color_t  GetMarkerColor() const {return fMarkerColor;}
-   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;}
-   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}
+   virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
+   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
+   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
    virtual void     Modify();
    virtual void     ResetAttMarker(Option_t *option="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
