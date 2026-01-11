@@ -35,12 +35,12 @@
 #include <RooWorkspace.h>
 
 #include <ROOT/StringUtils.hxx>
-#include <TROOT.h>
-#include <TSystem.h>
 #include <TMath.h>
+#include <TROOT.h>
+#include <TRandom3.h>
+#include <TSystem.h>
 
 #include <functional>
-#include <random>
 
 #include "gtest_wrapper.h"
 
@@ -67,13 +67,13 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
 
 void randomizeParameters(const RooArgSet &parameters)
 {
+   TRandom3 rng(1337);
+
    double lowerBound = -0.1;
    double upperBound = 0.1;
-   std::uniform_real_distribution<double> unif(lowerBound, upperBound);
-   std::default_random_engine re;
 
    for (auto *param : parameters) {
-      double mul = unif(re);
+      double mul = rng.Uniform(lowerBound, upperBound);
 
       auto par = dynamic_cast<RooAbsRealLValue *>(param);
       if (!par)
