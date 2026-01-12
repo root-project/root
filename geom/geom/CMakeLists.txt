@@ -124,6 +124,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     RIO
     MathCore
     Hist
+    Physics
 )
 
 # GCC has bugs with -O3 or -Ofast that break Geom
