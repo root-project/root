@@ -27,8 +27,9 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
    ROOT::CmdLine::RootSource source;
    source.fFileName = fileName;
    auto &nodeTree = source.fObjectTree;
-   nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ"));
-   if (!nodeTree.fFile) {
+   nodeTree.fFile =
+      std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   if (!nodeTree.fFile || nodeTree.fFile->IsZombie()) {
       source.fErrors.push_back("Failed to open file");
       return source;
    }
@@ -114,33 +115,52 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
    return source;
 }
 
+ROOT::RResult<std::pair<std::string_view, std::string_view>>
+ROOT::CmdLine::SplitIntoFileNameAndPattern(std::string_view sourceRaw)
+{
+   auto prefixIdx = sourceRaw.find("://");
+   std::string_view::size_type separatorIdx = 0;
+   if (prefixIdx != std::string_view::npos) {
+      bool prefixFound = false;
+      // Handle known URI prefixes
+      static const char *const specialPrefixes[] = {"http", "https", "root", "gs", "s3"};
+      auto prefix = sourceRaw.substr(0, prefixIdx);
+      for (std::string_view knownPrefix : specialPrefixes) {
+         if (prefix == knownPrefix) {
+            prefixFound = true;
+            break;
+         }
+      }
+      if (!prefixFound) {
+         return R__FAIL("unknown file protocol");
+      }
+      separatorIdx = sourceRaw.substr(prefixIdx + 3).find_first_of(':');
+      if (separatorIdx != std::string_view::npos)
+         separatorIdx += prefixIdx + 3;
+   } else {
+      separatorIdx = sourceRaw.find_first_of(':');
+   }
+
+   if (separatorIdx != std::string_view::npos) {
+      return {{sourceRaw.substr(0, separatorIdx), sourceRaw.substr(separatorIdx + 1)}};
+   }
+   return {{sourceRaw, std::string_view{}}};
+}
+
 ROOT::CmdLine::RootSource ROOT::CmdLine::ParseRootSource(std::string_view sourceRaw, std::uint32_t flags)
 {
    ROOT::CmdLine::RootSource source;
-   const char *str = sourceRaw.data();
 
-   // Handle known URI prefixes
-   static const char *const specialPrefixes[] = {"http", "https", "root", "gs", "s3"};
-   for (const char *prefix : specialPrefixes) {
-      const auto prefixLen = strlen(prefix);
-      if (strncmp(str, prefix, prefixLen) == 0 && strncmp(str + prefixLen, "://", 3) == 0) {
-         source.fFileName = std::string(prefix) + "://";
-         str += prefixLen + 3;
-         break;
-      }
-   }
-
-   auto tokens = ROOT::Split(str, ":");
-   if (tokens.empty())
+   auto res = SplitIntoFileNameAndPattern(sourceRaw);
+   if (!res) {
+      source.fErrors.push_back(res.GetError()->GetReport());
       return source;
-
-   source.fFileName += tokens[0];
-   if (tokens.size() > 1) {
-      source = ROOT::CmdLine::GetMatchingPathsInFile(source.fFileName, tokens[1], flags);
-   } else {
-      source = ROOT::CmdLine::GetMatchingPathsInFile(source.fFileName, "", flags);
    }
 
+   auto [fileName, tokens] = res.Unwrap();
+   source = ROOT::CmdLine::GetMatchingPathsInFile(fileName, tokens, flags);
+
+   assert(source.fErrors.empty() == !!source.fObjectTree.fFile);
    return source;
 }
 
