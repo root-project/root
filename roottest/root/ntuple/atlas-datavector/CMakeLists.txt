@@ -75,5 +75,6 @@ if(ROOT_pyroot_FOUND)
         template_instantiation
         template_instantiation.py
         GENERIC
-        PYTHON_DEPS pytest)
+        PYTHON_DEPS pytest
+        FIXTURES_REQUIRED atlas_datavector_dict_setup)
 endif()
