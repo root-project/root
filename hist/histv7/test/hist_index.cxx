@@ -4,6 +4,10 @@
 #include <iterator>
 #include <vector>
 
+#ifndef TYPED_TEST_SUITE
+#define TYPED_TEST_SUITE TYPED_TEST_CASE
+#endif
+
 TEST(RBinIndex, Constructor)
 {
    const RBinIndex invalid;
@@ -150,6 +154,20 @@ TEST(RBinIndex, Relation)
    EXPECT_FALSE(underflow <= overflow);
    EXPECT_FALSE(underflow > overflow);
    EXPECT_FALSE(underflow >= overflow);
+}
+
+template <typename T>
+class RBinIndexConversion : public testing::Test {};
+
+using IntegerTypes = testing::Types<signed char, unsigned char, short, unsigned short, int, unsigned int, long,
+                                    unsigned long, long long, unsigned long long>;
+TYPED_TEST_SUITE(RBinIndexConversion, IntegerTypes);
+
+TYPED_TEST(RBinIndexConversion, Constructor)
+{
+   const TypeParam input = 1;
+   const RBinIndex index(input);
+   EXPECT_EQ(index.GetIndex(), 1);
 }
 
 using ROOT::Experimental::Internal::CreateBinIndexRange;
