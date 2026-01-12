@@ -465,10 +465,10 @@ if useKerasCNN:
     # model.add(Dropout(0.2))
     model.add(Dense(2, activation="sigmoid"))
     model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-    model.save("model_cnn.h5")
+    model.save("model_cnn.keras")
     model.summary()
 
-    if not os.path.exists("model_cnn.h5"):
+    if not os.path.exists("model_cnn.keras"):
         raise FileNotFoundError("Error creating Keras model file - skip using Keras")
     else:
         # book PyKeras method only if Keras model could be created
@@ -480,8 +480,8 @@ if useKerasCNN:
             H=True,
             V=False,
             VarTransform=None,
-            FilenameModel="model_cnn.h5",
-            FilenameTrainedModel="trained_model_cnn.h5",
+            FilenameModel="model_cnn.keras",
+            FilenameTrainedModel="trained_model_cnn.keras",
             NumEpochs=max_epochs,
             BatchSize=100,
             GpuOptions="allow_growth=True",

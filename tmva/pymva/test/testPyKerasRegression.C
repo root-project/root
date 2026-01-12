@@ -20,7 +20,7 @@ model = Sequential()\n\
 model.add(Dense(64, activation=\"tanh\", input_dim=2))\n\
 model.add(Dense(1, activation=\"linear\"))\n\
 model.compile(loss=\"mean_squared_error\", optimizer=SGD(learning_rate=0.01), weighted_metrics=[])\n\
-model.save(\"kerasModelRegression.h5\")\n";
+model.save(\"kerasModelRegression.keras\")\n";
 
 int testPyKerasRegression(){
    // Get data file
@@ -67,7 +67,7 @@ int testPyKerasRegression(){
    //to reduce number of events for training/test add     "nTrain_Regression=1000:nTest_Regression=200
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "PyKeras",
-      "!H:!V:VarTransform=D,G:FilenameModel=kerasModelRegression.h5:FilenameTrainedModel=trainedKerasModelRegression.h5:NumEpochs=10:BatchSize=25:SaveBestOnly=false:Verbose=0");
+      "!H:!V:VarTransform=D,G:FilenameModel=kerasModelRegression.keras:FilenameTrainedModel=trainedKerasModelRegression.keras:NumEpochs=10:BatchSize=25:SaveBestOnly=false:Verbose=0");
    std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 

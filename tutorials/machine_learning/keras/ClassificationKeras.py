@@ -31,7 +31,7 @@ def create_model():
                   optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy', ])
 
     # Store model to file
-    model.save('modelClassification.h5')
+    model.save('modelClassification.keras')
     model.summary()
 
 
@@ -56,7 +56,7 @@ def run():
         factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                            '!H:!V:Fisher:VarTransform=D,G')
         factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-                           'H:!V:VarTransform=D,G:FilenameModel=modelClassification.h5:FilenameTrainedModel=trainedModelClassification.h5:NumEpochs=20:BatchSize=32:LearningRateSchedule=10,0.01;20,0.005')
+                           'H:!V:VarTransform=D,G:FilenameModel=modelClassification.keras:FilenameTrainedModel=trainedModelClassification.keras:NumEpochs=20:BatchSize=32:LearningRateSchedule=10,0.01;20,0.005')
 
         # Run training, test and evaluation
         factory.TrainAllMethods()

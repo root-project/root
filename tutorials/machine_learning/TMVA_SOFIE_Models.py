@@ -69,7 +69,7 @@ def PrepareData() :
 
 def TrainModel(model, x, y, name) :
    model.fit(x,y,epochs=10,batch_size=50)
-   modelFile = name + '.h5'
+   modelFile = name + '.keras'
    model.save(modelFile)
    return modelFile
 
