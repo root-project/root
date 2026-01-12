@@ -44,7 +44,7 @@ jobs:
       contents: read
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready
+      image: registry.cern.ch/root-ci/alma10:buildready
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
