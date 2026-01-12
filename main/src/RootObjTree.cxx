@@ -35,9 +35,12 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
    }
 
    const auto patternSplits = pattern.empty() ? std::vector<std::string>{} : ROOT::Split(pattern, "/");
+   std::vector<bool> patternWasMatchedAtLeastOnce(patternSplits.size());
 
-   // Match all objects at all nesting levels down to the deepest nesting level of `pattern` (or all nesting levels
-   // if we have the "recursive listing" flag). The nodes are visited breadth-first.
+   /// Match all objects at all nesting levels down to the deepest nesting level of `pattern` (or all nesting levels
+   /// if we have the "recursive listing" flag). The nodes are visited breadth-first.
+
+   // Initialize the nodeTree with the root node and mark it as the first node to visit.
    {
       ROOT::CmdLine::RootObjNode rootNode = {};
       rootNode.fName = std::string(fileName);
@@ -57,7 +60,7 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
       ROOT::CmdLine::RootObjNode *cur = &nodeTree.fNodes[curIdx];
       assert(cur->fDir);
 
-      // Sort the keys by name
+      // Gather all keys under this directory and sort them by name.
       std::vector<TKey *> keys;
       keys.reserve(cur->fDir->GetListOfKeys()->GetEntries());
       for (TKey *key : ROOT::Detail::TRangeStaticCast<TKey>(cur->fDir->GetListOfKeys()))
@@ -68,10 +71,19 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
 
       namesFound.clear();
 
+      // Iterate the keys and find matches
       for (TKey *key : keys) {
-         // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
-         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
-            continue;
+         // NOTE: cur->fNesting can only be >= patternSplits.size() if we have `isRecursive == true` (see the code near
+         // the end of the outer do/while loop).
+         // In that case we don't care about matching patterns anymore because we are already beyond the nesting level
+         // where pattern filtering applies.
+         // In all other cases, we check if the key name matches the pattern and skip it if it doesn't.
+         if (cur->fNesting < patternSplits.size()) {
+            if (MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
+               patternWasMatchedAtLeastOnce[cur->fNesting] = true;
+            else
+               continue;
+         }
 
          if (namesFound.count(key->GetName()) > 0) {
             std::cerr << "WARNING: Several versions of '" << key->GetName() << "' are present in '" << fileName
@@ -94,7 +106,8 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
             newChild.fDir = cur->fDir->GetDirectory(key->GetName());
       }
 
-      // Only recurse into subdirectories that are up to the deepest level we ask for through `pattern`.
+      // Only recurse into subdirectories that are up to the deepest level we ask for through `pattern` (except in
+      // case of recursive listing).
       if (cur->fNesting < patternSplits.size() || isRecursive) {
          for (auto childIdx = cur->fFirstChild; childIdx < cur->fFirstChild + cur->fNChildren; ++childIdx) {
             auto &child = nodeTree.fNodes[childIdx];
@@ -111,6 +124,19 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
             nodeTree.fLeafList.push_back(curIdx);
       }
    } while (!nodesToVisit.empty());
+
+   if (!(flags & kIgnoreFailedMatches)) {
+      for (auto i = 0u; i < patternSplits.size(); ++i) {
+         // We don't append errors for '*' because its semantics imply "0 or more matches", so 0 matches is a valid
+         // case. For any other pattern we expect at least 1 match.
+         if (!patternWasMatchedAtLeastOnce[i] && !patternSplits[i].empty() && patternSplits[i] != "*") {
+            std::string err = "'" + std::string(fileName) + ":" +
+                              ROOT::Join("/", std::span<const std::string>{patternSplits.data(), i + 1}) +
+                              "' matches no objects.";
+            source.fErrors.push_back(err);
+         }
+      }
+   }
 
    return source;
 }

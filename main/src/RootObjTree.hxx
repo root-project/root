@@ -103,9 +103,12 @@ struct RootSource {
 enum EGetMatchingPathsFlags {
    /// Recurse into subdirectories when matching objects
    kRecursive = 1 << 0,
+   kIgnoreFailedMatches = 1 << 1,
 };
 
 /// Given a file and a "path pattern", returns a RootSource containing the tree of matched objects.
+/// If `pattern` is non-empty, not a single '*' and it doesn't match any object in `fileName`,
+/// an error will be appended to RootSource::fErrors unless `kIgnoreFailedMatches` is part of `flags`.
 ///
 /// \param fileName The name of the ROOT file to look into
 /// \param pattern A glob-like pattern (basically a `ls` pattern). May be empty to match anything.
