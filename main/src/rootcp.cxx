@@ -183,7 +183,7 @@ static void CopyNode(const RootSource &src, const RootCpDestination &dest, NodeI
    // Similarly, nodeIdx must be in range because it always comes from a RootObjTree.
    assert(nodeIdx < src.fObjectTree.fNodes.size());
    const RootObjNode &node = src.fObjectTree.fNodes[nodeIdx];
-   const std::string srcFullPath = NodeFullPath(src.fObjectTree, nodeIdx);
+   const std::string srcFullPath = NodeFullPath(src.fObjectTree, nodeIdx, ENodeFullPathOpt::kExcludeFilename);
    // Directory path, excluding trailing '/' and without the "file.root:" prefix.
    const std::string_view srcDirPath =
       (node.fParent == 0) ? std::string_view{}

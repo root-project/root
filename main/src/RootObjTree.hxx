@@ -69,8 +69,7 @@ enum class ENodeFullPathOpt {
    kIncludeFilename,
 };
 /// Given a node, returns its full path. If `opt == kIncludeFilename`, the path is prepended by "filename.root:"
-std::string
-NodeFullPath(const RootObjTree &tree, NodeIdx_t nodeIdx, ENodeFullPathOpt opt = ENodeFullPathOpt::kExcludeFilename);
+std::string NodeFullPath(const RootObjTree &tree, NodeIdx_t nodeIdx, ENodeFullPathOpt opt);
 
 struct RootSource {
    std::string fFileName;
