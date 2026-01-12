@@ -15,7 +15,7 @@ from os.path import exists
 import ROOT
 
 # check if the input file exists
-modelFile = "Higgs_trained_model.h5"
+modelFile = "Higgs_trained_model.keras"
 modelName = "Higgs_trained_model"
 
 if not exists(modelFile):

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ml
 /// \notebook -nodraw
-/// This macro provides a simple example for the parsing of Keras .h5 file
+/// This macro provides a simple example for the parsing of Keras .keras file
 /// into RModel object and further generating the .hxx header files for inference.
 ///
 /// \macro_code
@@ -34,22 +34,22 @@ y_train=randomGenerator.rand(4,4)\n\
 \n\
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))\n\
 model.fit(x_train, y_train, epochs=5, batch_size=4)\n\
-model.save('KerasModel.h5')\n";
+model.save('KerasModel.keras')\n";
 
 
 void TMVA_SOFIE_Keras(const char * modelFile = nullptr, bool printModelInfo = true){
 
-   // Running the Python script to generate Keras .h5 file
+   // Running the Python script to generate Keras .keras file
 
    if (modelFile == nullptr) {
       TMacro m;
       m.AddLine(pythonSrc);
       m.SaveSource("make_keras_model.py");
       gSystem->Exec("python3 make_keras_model.py");
-      modelFile = "KerasModel.h5";
+      modelFile = "KerasModel.keras";
    }
 
-    //Parsing the saved Keras .h5 file into RModel object
+    //Parsing the saved Keras .keras file into RModel object
     SOFIE::RModel model = SOFIE::PyKeras::Parse(modelFile);
 
 

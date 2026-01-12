@@ -37,7 +37,7 @@ namespace Experimental {
 
 
 /// TMVA::RSofieReader class for reading external Machine Learning models
-/// in ONNX files, Keras .h5 files or PyTorch .pt files
+/// in ONNX files, Keras .h5  or .keras files or PyTorch .pt files
 /// and performing the inference using SOFIE
 /// It is reccomended to use ONNX if possible since there is a larger support for
 /// model operators.
@@ -61,30 +61,25 @@ public:
       enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
       EModelType type = kNotDef;
 
-      auto pos1 = path.rfind("/");
-      auto pos2 = path.find(".onnx");
-      if (pos2 != std::string::npos) {
+      size_t pos2 = std::string::npos;
+      if ( (pos2 = path.find(".onnx")) != std::string::npos) {
+         if (verbose) std::cout << "input model type is ONNX" << std::endl;
          type = kONNX;
-      } else {
-         pos2 = path.find(".h5");
-         if (pos2 != std::string::npos) {
-             type = kKeras;
-         } else {
-            pos2 = path.find(".pt");
-            if (pos2 != std::string::npos) {
-               type = kPt;
-            }
-            else {
-               pos2 = path.find(".root");
-               if (pos2 != std::string::npos) {
-                  type = kROOT;
-               }
-            }
-         }
+      } else if ( (pos2 = path.find(".h5")) != std::string::npos || (pos2 = path.find(".keras")) != std::string::npos) {
+         if (verbose) std::cout << "input model type is Keras" << std::endl;
+         type = kKeras;
+      } else if ( (pos2 = path.find(".pt")) != std::string::npos) {
+         if (verbose) std::cout << "input model type is PyTorch" << std::endl;
+         type = kPt;
+      } else if ( (pos2 = path.find(".root")) != std::string::npos) {
+         if (verbose) std::cout << "input model type is ROOT" << std::endl;
+         type = kROOT;
       }
+
       if (type == kNotDef) {
          throw std::runtime_error("Input file is not an ONNX or Keras or PyTorch file");
       }
+      auto pos1 = path.rfind("/");
       if (pos1 == std::string::npos)
          pos1 = 0;
       else

@@ -47,7 +47,7 @@ model.add(Dense(num_output_nodes, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy',])
 
 # Save model
-model.save('model.h5')
+model.save('model.keras')
 
 # Additional information about the model
 # NOTE: This is not needed to run the model

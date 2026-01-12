@@ -327,10 +327,10 @@ if useKeras:
     model.add(Dense(64, activation="relu"))
     model.add(Dense(2, activation="sigmoid"))
     model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
-    model.save("model_higgs.h5")
+    model.save("model_higgs.keras")
     model.summary()
 
-    if not os.path.exists("model_higgs.h5"):
+    if not os.path.exists("model_higgs.keras"):
         raise FileNotFoundError("Error creating Keras model file - skip using Keras")
     else:
         # book PyKeras method only if Keras model could be created
@@ -342,8 +342,8 @@ if useKeras:
             H=True,
             V=False,
             VarTransform=None,
-            FilenameModel="model_higgs.h5",
-            FilenameTrainedModel="trained_model_higgs.h5",
+            FilenameModel="model_higgs.keras",
+            FilenameTrainedModel="trained_model_higgs.keras",
             NumEpochs=20,
             BatchSize=100,
         )

@@ -28,7 +28,7 @@ def create_model():
         learning_rate=0.01), weighted_metrics=['accuracy',])
 
     # Store model to file
-    model.save('modelMultiClass.h5')
+    model.save('modelMultiClass.keras')
     model.summary()
 
 
@@ -57,7 +57,7 @@ def run():
         factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                            '!H:!V:Fisher:VarTransform=D,G')
         factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-                           'H:!V:VarTransform=D,G:FilenameModel=modelMultiClass.h5:FilenameTrainedModel=trainedModelMultiClass.h5:NumEpochs=20:BatchSize=32')
+                           'H:!V:VarTransform=D,G:FilenameModel=modelMultiClass.keras:FilenameTrainedModel=trainedModelMultiClass.keras:NumEpochs=20:BatchSize=32')
 
         # Run TMVA
         factory.TrainAllMethods()

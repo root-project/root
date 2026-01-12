@@ -22,9 +22,9 @@ using namespace TMVA::Experimental;
 
 void TMVA_SOFIE_RSofieReader(){
 
-   RSofieReader model("Higgs_trained_model.h5");
+   RSofieReader model("Higgs_trained_model.keras");
    // for debugging
-   //RSofieReader model("Higgs_trained_model.h5", {}, true);
+   //RSofieReader model("Higgs_trained_model.keras", {}, true);
 
    // the input shape for this model is a tensor with shape (1,7)
 
