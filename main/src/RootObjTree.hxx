@@ -12,11 +12,14 @@
 #define ROOT_CMDLINE_OBJTREE
 
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include <TKey.h>
+
+#include <ROOT/RError.hxx>
 
 class TDirectory;
 class TFile;
@@ -50,7 +53,9 @@ inline RootObjNode NodeFromKey(TKey &key)
 struct RootObjTree {
    // 0th node is the root node
    std::vector<RootObjNode> fNodes;
+   // All nodes in fNodes that are dirs
    std::vector<NodeIdx_t> fDirList;
+   // All nodes in fNodes that are leaves (non-TDirectories)
    std::vector<NodeIdx_t> fLeafList;
    // The file must be kept alive in order to access the nodes' keys
    std::unique_ptr<TFile> fFile;
@@ -85,7 +90,15 @@ enum EGetMatchingPathsFlags {
 /// \param flags A bitmask of EGetMatchingPathsFlags
 RootSource GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern, std::uint32_t flags);
 
+/// Given a string like "root://file.root:a/b/c", splits it into { "root://file.root", "a/b/c" }.
+/// \return An error if the file prefix is unknown (e.g. "foo://file.root"), otherwise the result described above.
+ROOT::RResult<std::pair<std::string_view, std::string_view>> SplitIntoFileNameAndPattern(std::string_view sourceRaw);
+
 /// Given a string like "file.root:dir/obj", converts it to a RootSource.
+/// As a result of a successful call, a ROOT file is opened and may be accessed from RootSource::fObjectTree.fFile.
+/// Note that the file will _not_ be registered to the global list and doesn't have to be explicitly closed, being
+/// stored in a unique_ptr.
+///
 /// The string may start with one of the known file protocols: "http", "https", "root", "gs", "s3"
 /// (e.g. "https://file.root").
 ///
