@@ -530,7 +530,7 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
       for (NodeIdx_t rootIdx : source.fObjectTree.fDirList) {
          if (manySources) {
             PrintIndent(stream, outerIndent);
-            stream << NodeFullPath(source.fObjectTree, rootIdx) << " :\n";
+            stream << NodeFullPath(source.fObjectTree, rootIdx, ENodeFullPathOpt::kExcludeFilename) << " :\n";
          }
 
          if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing | RootLsArgs::kRNTupleListing))
