@@ -50,6 +50,29 @@ inline RootObjNode NodeFromKey(TKey &key)
    return node;
 }
 
+/// A representation of all objects involved in a rootls-style ROOT file listing. This listing is used in command
+/// line tools like rootls, rootcp etc. and it comes from a shell glob-style syntax like:
+///
+///   file.root:dir/*
+///
+/// In this case, a RootObjTree that represents the above query will contain the TFile relative to `file.root`,
+/// all nodes "visited" by the glob expression in `fNodes` and links to them in `fDirList` and `fLeafList`. This is
+/// basically a filtered view of a ROOT file.
+///
+/// Example: assume you have a ROOT file with the following structure:
+///
+/// file.root
+///   `--- a/
+///   |    `--- b
+///   |    `--- c
+///   `--- d
+///
+/// Then the RootObjTree representing the query `file.root:*` will contain:
+///
+///  fNodes: [a, b, c, d]
+///  fLeafList: [1, 2, 3]
+///  fDirList: [0]
+///
 struct RootObjTree {
    // 0th node is the root node
    std::vector<RootObjNode> fNodes;
