@@ -1,0 +1,9 @@
+CMAKE_C_COMPILER=clang
+CMAKE_CXX_COMPILER=clang++
+CMAKE_GENERATOR=Ninja
+builtin_vdt=ON
+builtin_zlib=ON
+builtin_zstd=ON
+pythia8=ON
+r=OFF
+tmva-sofie=ON

@@ -1,3 +1,4 @@
 builtin_vdt=ON
 builtin_zlib=ON
 builtin_zstd=ON
+minimal=ON

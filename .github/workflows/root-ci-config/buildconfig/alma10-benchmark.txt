@@ -1,0 +1,8 @@
+CMAKE_CXX_STANDARD=20
+builtin_vdt=ON
+builtin_zlib=ON
+builtin_zstd=ON
+pythia8=ON
+r=OFF
+rootbench=ON
+tmva-sofie=ON
