@@ -399,6 +399,12 @@ ROOTTEST_ADD_TEST(RootcpReplaceRecursiveCheckOutput
 ROOTTEST_ADD_TEST(RootcpReplaceRecursiveClean
                   COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_replace_recursive.root
                   FIXTURES_REQUIRED main-RootcpReplaceRecursiveCheckOutput-fixture)
+
+
+ROOTTEST_ADD_TEST(SimpleRootcpInexistent
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} test.root:does_not_exist test.root:
+                  PASSREGEX "Error in <rootcp>: 'test.root:does_not_exist' matches no objects.")
+
 #########################################################################
 
 ############################# ROOMV TESTS ############################

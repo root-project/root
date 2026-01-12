@@ -323,6 +323,7 @@ int main(int argc, char **argv)
    // a valid location.
    // First validate the destination syntax.
    const auto destFnameAndPattern = args.fSources.back();
+   args.fSources.pop_back();
    auto splitRes = SplitIntoFileNameAndPattern(destFnameAndPattern);
    if (!splitRes) {
       Err() << splitRes.GetError()->GetReport() << "\n";
@@ -330,9 +331,26 @@ int main(int argc, char **argv)
    }
    auto [destFname, destPath] = splitRes.Unwrap();
 
+   // Validate and split all input sources into filename + pattern
+   std::vector<std::pair<std::string_view, std::string_view>> sourcesFileAndPattern;
+   sourcesFileAndPattern.reserve(args.fSources.size());
+   bool srcIsSameAsDstFile = false;
+   for (const auto &src : args.fSources) {
+      auto res = SplitIntoFileNameAndPattern(src);
+      if (!res) {
+         Err() << res.GetError()->GetReport() << "\n";
+         return 1;
+      }
+      auto fNameAndPattern = res.Unwrap();
+      if (fNameAndPattern.first == destFname) {
+         srcIsSameAsDstFile = true;
+      }
+      sourcesFileAndPattern.push_back(fNameAndPattern);
+   }
+
    // Check if the operation is allowed.
-   args.fSources.pop_back();
-   if (args.fRecreate && std::find(args.fSources.begin(), args.fSources.end(), destFname) != args.fSources.end()) {
+
+   if (args.fRecreate && srcIsSameAsDstFile) {
       Err() << "cannot recreate destination file if this is also a source file\n";
       return 1;
    }
@@ -382,8 +400,8 @@ int main(int argc, char **argv)
 
    const std::uint32_t flags = args.fRecursive * EGetMatchingPathsFlags::kRecursive;
    bool errors = false;
-   for (const auto &srcFname : args.fSources) {
-      auto src = ROOT::CmdLine::ParseRootSource(srcFname, flags);
+   for (const auto &[srcFname, srcPattern] : sourcesFileAndPattern) {
+      auto src = ROOT::CmdLine::GetMatchingPathsInFile(srcFname, srcPattern, flags);
       if (!src.fErrors.empty()) {
          for (const auto &err : src.fErrors)
             Err() << err << "\n";
@@ -425,8 +443,8 @@ int main(int argc, char **argv)
       }
    }
 
-   if (errors) {
-      // Make sure we don't end up with a half-copied file in case of errors.
+   if (errors && !srcIsSameAsDstFile) {
+      // If the destination file was fresh, make sure we don't end up with a half-copied file in case of errors.
       gSystem->Unlink(std::string(destFname).c_str());
    }
 
