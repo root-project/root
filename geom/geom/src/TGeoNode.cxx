@@ -88,7 +88,6 @@ painting a node on a pad will take the corresponding volume attributes.
 
 // statics and globals
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -197,7 +196,8 @@ void TGeoNode::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
    Int_t ncheck = CountDaughters(kFALSE);
    geom->ClearOverlaps();
    geom->SetCheckingOverlaps(kTRUE);
-   Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for %s and daughters", npoints, fVolume->GetName());
+   Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for %s and daughters", npoints,
+        fVolume->GetName());
    Info("CheckOverlaps", "=== NOTE: Many overlaps may be missed. Extrusions NOT checked with sampling option ! ===");
    TStopwatch timer;
    timer.Start();
@@ -261,18 +261,19 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    // -------- Stage 1: enumerate candidates (main thread)
    std::vector<TGeoOverlapCandidate> candidates;
    candidates.reserve(2048);
+   Int_t ncand = 0;
 
-   checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
+   ncand += checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
 
    TGeoIterator next(fVolume);
    TGeoNode *node = nullptr;
    while ((node = next())) {
       if (!node->GetVolume()->IsSelected()) {
          node->GetVolume()->SelectVolume(kFALSE);
-         checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+         ncand += checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
       }
    }
-   Info("CheckOverlaps", "Checking %zu candidates ...", candidates.size());
+   Info("CheckOverlaps", "Checking %d candidates ...", ncand);
    fVolume->SelectVolume(kTRUE);
 
    // -------- Stage 2: compute (main thread for now)
@@ -558,7 +559,7 @@ void TGeoNode::SaveAttributes(std::ostream &out)
 
 void TGeoNode::SetUserExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fUserExtension;
+   TGeoExtension *tmp = fUserExtension;
    fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
@@ -576,7 +577,7 @@ void TGeoNode::SetUserExtension(TGeoExtension *ext)
 
 void TGeoNode::SetFWExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fFWExtension;
+   TGeoExtension *tmp = fFWExtension;
    fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
@@ -800,7 +801,6 @@ void TGeoNode::VisibleDaughters(Bool_t vis)
 A node containing local transformation.
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -895,7 +895,6 @@ void TGeoNodeMatrix::SetMatrix(const TGeoMatrix *matrix)
 \ingroup Geometry_classes
 Node containing an offset.
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -1038,7 +1037,6 @@ We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
 /** \class TGeoIteratorPlugin
 \ingroup Geometry_classes
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry iterator for a branch starting with a TOP node.

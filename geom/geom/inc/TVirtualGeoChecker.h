@@ -23,7 +23,7 @@ class TStopwatch;
 class TVirtualGeoChecker : public TObject {
 protected:
    static TVirtualGeoChecker *fgGeoChecker; // Pointer to checker instance
-   Int_t fNmeshPoints{1000};            // Number of mesh points per shape
+   Int_t fNmeshPoints{1000};                // Number of mesh points per shape
 public:
    TVirtualGeoChecker();
    ~TVirtualGeoChecker() override;
@@ -37,9 +37,10 @@ public:
                                   const Double_t *vertex = nullptr) = 0;
    virtual void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
    virtual void CheckOverlapsBySampling(const TGeoVolume *vol, Double_t ovlp = 0.1, Int_t npoints = 1000000) const = 0;
-   virtual Bool_t ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const = 0;
-   virtual void EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
-                                           std::vector<TGeoOverlapCandidate> &out) = 0;
+   virtual Bool_t
+   ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const = 0;
+   virtual Int_t EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
+                                            std::vector<TGeoOverlapCandidate> &out) = 0;
    Int_t GetNmeshPoints() const { return fNmeshPoints; }
    virtual TH2F *LegoPlot(Int_t ntheta = 60, Double_t themin = 0., Double_t themax = 180., Int_t nphi = 90,
                           Double_t phimin = 0., Double_t phimax = 360., Double_t rmin = 0., Double_t rmax = 9999999,

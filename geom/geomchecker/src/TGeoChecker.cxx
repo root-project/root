@@ -983,7 +983,8 @@ void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute overlap/extrusion for given candidate using mesh points of the shapes.
 
-Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const
+Bool_t
+TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const
 {
    out = TGeoOverlapResult{}; // reset
 
@@ -1156,7 +1157,7 @@ Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWor
    }
 
    return found;
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the 2 non-assembly volume candidates overlap/extrude. Returns overlap object.
@@ -1460,7 +1461,7 @@ void TGeoChecker::MaterializeOverlap(const TGeoOverlapResult &r)
       ov->SetNextPoint(p[0], p[1], p[2]);
 
    fGeoManager->AddOverlap(ov);
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute number of overlaps combinations to check per volume
@@ -1595,30 +1596,24 @@ Int_t TGeoChecker::FillMeshPoints(TBuffer3D &buff, const TGeoShape *shape, const
 ////////////////////////////////////////////////////////////////////////////////
 /// Stage1: Enumerate all overlap candidates for volume VOL within a limit OVLP.
 
-void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
-                                             std::vector<TGeoOverlapCandidate> &out)
+Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
+                                              std::vector<TGeoOverlapCandidate> &out)
 {
    if (vol->GetFinder())
-      return;
+      return 0;
    UInt_t nd = vol->GetNdaughters();
    if (!nd)
-      return;
-
-   TString opt(option);
-   opt.ToLower();
-   const Bool_t sampling = opt.Contains("s");
-   if (sampling) {
-      // Special case we will handle later: we do not enumerate sampling candidates
-      return;
-   }
+      return 0;
 
    const Bool_t is_assembly = vol->IsAssembly();
 
-   // keep same semantics
-   if (opt.Contains("f"))
-      fFullCheck = kTRUE;
-   else
-      fFullCheck = kFALSE;
+   TString opt(option);
+   opt.ToLower();
+   fFullCheck = opt.Contains("f");
+
+   Int_t ncand = 0;
+   Int_t nextr = 0;
+   // Bool_t conv = vol->GetShape()->IsConvex();
 
    // ---- EXTRUSIONS (only for daughters of a non-assembly volume)
    if (!is_assembly) {
@@ -1654,6 +1649,8 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
             }
 
             next1.GetPath(path);
+            ncand++;
+            nextr++;
             PushCandidate(out, TString::Format("%s extruded by: %s", vol->GetName(), path.Data()), (TGeoVolume *)vol,
                           node->GetVolume(), gGeoIdentity, next1.GetCurrentMatrix(), kFALSE, ovlp);
 
@@ -1662,14 +1659,17 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
       }
    }
 
+   //   if (nextr > 0)
+   //      printf("extrusion cand for %s : %d  (convex = %d)\n", vol->GetName(), nextr, conv);
+
    // ---- OVERLAPS between daughters
    if (nd < 2)
-      return;
+      return ncand;
 
    TGeoVoxelFinder *vox = vol->GetVoxels();
    if (!vox) {
       Warning("EnumerateOverlapCandidates", "Volume %s with %i daughters but not voxelized", vol->GetName(), nd);
-      return;
+      return ncand;
    }
 
    TGeoIterator next1((TGeoVolume *)vol);
@@ -1755,6 +1755,7 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
                            hmat2 = node02->GetMatrix();
                            hmat2 *= *next2.GetCurrentMatrix();
 
+                           ncand++;
                            PushCandidate(out,
                                          TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
                                                          vol->GetName(), path1.Data()),
@@ -1787,6 +1788,7 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
                         }
                      }
 
+                     ncand++;
                      PushCandidate(out,
                                    TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
                                                    vol->GetName(), path1.Data()),
@@ -1831,6 +1833,7 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
                      hmat2 = node02->GetMatrix();
                      hmat2 *= *next2.GetCurrentMatrix();
 
+                     ncand++;
                      PushCandidate(out,
                                    TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
                                                    vol->GetName(), path1.Data()),
@@ -1845,6 +1848,7 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
                if (fSelectedNode && (fSelectedNode != node01) && (fSelectedNode != node02))
                   continue;
 
+               ncand++;
                PushCandidate(
                   out,
                   TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(), vol->GetName(), path1.Data()),
@@ -1853,14 +1857,17 @@ void TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovl
          }
       }
    }
-} 
+   //   if ((ncand - nextr) > 0)
+   //      printf("overlap cand for %s : %d\n", vol->GetName(), ncand - nextr);
+   return ncand;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper to fill candidates list
 
 void TGeoChecker::PushCandidate(std::vector<TGeoOverlapCandidate> &out, const TString &name, TGeoVolume *vol1,
-                                       TGeoVolume *vol2, const TGeoMatrix *mat1, const TGeoMatrix *mat2, Bool_t isovlp,
-                                       Double_t ovlp) const
+                                TGeoVolume *vol2, const TGeoMatrix *mat1, const TGeoMatrix *mat2, Bool_t isovlp,
+                                Double_t ovlp) const
 {
    TGeoOverlapCandidate c;
    c.fName = name;

@@ -75,10 +75,10 @@ public:
    CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) override;
    void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) override;
    Double_t CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
-   Bool_t ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws,
-                           TGeoOverlapResult &out) const override;
-   void EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
-                                   std::vector<TGeoOverlapCandidate> &out) override;
+   Bool_t
+   ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const override;
+   Int_t EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
+                                    std::vector<TGeoOverlapCandidate> &out) override;
    TH2F *LegoPlot(Int_t ntheta = 60, Double_t themin = 0., Double_t themax = 180., Int_t nphi = 90,
                   Double_t phimin = 0., Double_t phimax = 360., Double_t rmin = 0., Double_t rmax = 9999999,
                   Option_t *option = "") override;
@@ -91,8 +91,9 @@ public:
                                  TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp, TGeoOverlapWorkState &workState);
    void OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch = nullptr,
                    Bool_t last = kFALSE, Bool_t refresh = kFALSE, const char *msg = "") override;
-   inline void PushCandidate(std::vector<TGeoOverlapCandidate> &out, const TString &name, TGeoVolume *vol1, TGeoVolume *vol2,
-                 const TGeoMatrix *mat1, const TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp) const;
+   inline void PushCandidate(std::vector<TGeoOverlapCandidate> &out, const TString &name, TGeoVolume *vol1,
+                             TGeoVolume *vol2, const TGeoMatrix *mat1, const TGeoMatrix *mat2, Bool_t isovlp,
+                             Double_t ovlp) const;
    TGeoNode *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path) override;
    void ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *option);
