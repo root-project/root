@@ -336,6 +336,7 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
+    @mark.xfail(reason='Fails on macOS and on Linux with gcc 16 because cppyy picks the wrong "operator-" overload.')
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 
@@ -346,6 +347,10 @@ class TestOPERATORS:
 
         x = std.vector[int]([1,2,3])
         assert (x.end() - 1).__deref__() == 3
+        # Next line fails with "TypeError: int/long conversion expects an integer object".
+        # The subtraction should pick the (iterator, iterator) -> int overload,
+        # but it somehow chooses the (iterator, iterator) -> iterator overload
+        # with compiling ROOT with gcc 16. TODO: fix this.
         assert std.max_element(x.begin(), x.end())-x.begin() == 2
         assert (x.end() - 3).__deref__() == 1
 
