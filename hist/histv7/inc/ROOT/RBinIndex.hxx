@@ -28,6 +28,9 @@ class RBinIndex final {
    // We use std::uint64_t instead of std::size_t for the index because for sparse histograms, not all bins have to be
    // allocated in memory. However, we require that the index has at least that size.
    static_assert(sizeof(std::uint64_t) >= sizeof(std::size_t), "index type not large enough to address all bins");
+   // During construction, we expect that any standard integer fits in std::uint64_t.
+   static_assert(sizeof(std::uint64_t) >= sizeof(unsigned long long),
+                 "index type not large enough to store any standard integer");
 
    std::uint64_t fIndex = kInvalidIndex;
 
@@ -36,7 +39,33 @@ public:
    RBinIndex() = default;
 
    /// Construct a bin index for a normal bin.
-   RBinIndex(std::uint64_t index) : fIndex(index) { assert(IsNormal()); }
+   RBinIndex(unsigned int index) : RBinIndex(static_cast<unsigned long long>(index)) {}
+
+   /// Construct a bin index for a normal bin.
+   RBinIndex(unsigned long index) : RBinIndex(static_cast<unsigned long long>(index)) {}
+
+   /// Construct a bin index for a normal bin.
+   RBinIndex(unsigned long long index) : fIndex(index) { assert(IsNormal()); }
+
+   /// Construct a bin index for a normal bin.
+   ///
+   /// \param[in] index signed integer that must not be negative
+   RBinIndex(int index) : RBinIndex(static_cast<long long>(index)) {}
+
+   /// Construct a bin index for a normal bin.
+   ///
+   /// \param[in] index signed integer that must not be negative
+   RBinIndex(long index) : RBinIndex(static_cast<long long>(index)) {}
+
+   /// Construct a bin index for a normal bin.
+   ///
+   /// \param[in] index signed integer that must not be negative
+   RBinIndex(long long index)
+   {
+      assert(index >= 0);
+      fIndex = static_cast<std::uint64_t>(index);
+      assert(IsNormal());
+   }
 
    /// Return the index for a normal bin.
    std::uint64_t GetIndex() const
