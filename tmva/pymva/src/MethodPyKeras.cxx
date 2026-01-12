@@ -168,8 +168,12 @@ UInt_t TMVA::MethodPyKeras::GetNumValidationSamples()
 void MethodPyKeras::ProcessOptions() {
 
    // Set default filename for trained model if option is not used
-   if (fFilenameTrainedModel.IsNull()) {
-      fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".h5";
+   if (fFilenameTrainedModel.IsNull()){
+      fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName();
+      if (fUseKeras3)
+         fFilenameTrainedModel += ".keras";
+      else
+         fFilenameTrainedModel += ".h5";
    }
 
    InitKeras();
@@ -327,8 +331,9 @@ void MethodPyKeras::InitKeras() {
          if (!fGpuOptions.IsNull()) {
             TObjArray *optlist = fGpuOptions.Tokenize(",");
             for (int item = 0; item < optlist->GetEntries(); ++item) {
-               if (TString(optlist->At(item)->GetName())=="allow_growth=True") {
-                  Log() << kINFO << "Applying GPU option:  allow_growth=True"  << Endl;
+               // this option will not work for Keras3
+               if (TString(optlist->At(item)->GetName())=="allow_growth=True" && !fUseKeras3) {
+                  Log() << kINFO << "Applying GPU option:  allow_growth=True "  << Endl;
                   // allow memory growth on t he first GPY
                   PyRunString("physical_devices = tf.config.list_physical_devices('GPU')");
                   PyRunString("tf.config.experimental.set_memory_growth(physical_devices[0], True)");
@@ -595,11 +600,11 @@ void MethodPyKeras::Train() {
       }
       // Set scheduler function as piecewise function with given steps
       TString epochsList = "epochs = [";
-      TString valuesList = "lrValues = ["; 
+      TString valuesList = "lrValues = [";
       for (size_t i = 0; i < scheduleSteps.size(); i++) {
          epochsList += TString(scheduleSteps[i].first.c_str());
          valuesList += TString(scheduleSteps[i].second.c_str());
-         if (i < scheduleSteps.size()-1) { 
+         if (i < scheduleSteps.size()-1) {
             epochsList += ", ";
             valuesList += ", ";
          }
@@ -615,7 +620,7 @@ void MethodPyKeras::Train() {
                                  "         return lrValues[i]\n"
                                  "      i+=1\n"
                                  "   return lr\n";
-      PyRunString( scheduleFunction, 
+      PyRunString( scheduleFunction,
          "Failed to setup scheduler function with string: " + fLearningRateSchedule, Py_file_input);
       // Setup callback
       PyRunString("callbacks.append(" + fKerasString + ".callbacks.LearningRateScheduler(schedule, verbose=True))",

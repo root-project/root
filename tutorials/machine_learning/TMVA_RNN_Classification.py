@@ -387,7 +387,7 @@ if useTMVA_DNN:
 if useKeras:
     for i in range(3):
         if use_rnn_type[i]:
-            modelName = "model_" + rnn_types[i] + ".h5"
+            modelName = "model_" + rnn_types[i] + ".keras"
             trainedModelName = "trained_" + modelName
             print("Building recurrent keras model using a", rnn_types[i], "layer")
             # create python script which can be executed
@@ -433,8 +433,7 @@ if useKeras:
                     FilenameModel=modelName,
                     FilenameTrainedModel="trained_" + modelName,
                     NumEpochs=maxepochs,
-                    BatchSize=batchSize,
-                    GpuOptions="allow_growth=True",
+                    BatchSize=batchSize
                 )
 
 

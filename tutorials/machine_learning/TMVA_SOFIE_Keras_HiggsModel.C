@@ -10,7 +10,7 @@
 using namespace TMVA::Experimental;
 
 
-void TMVA_SOFIE_Keras_HiggsModel(const char * modelFile = "Higgs_trained_model.h5"){
+void TMVA_SOFIE_Keras_HiggsModel(const char * modelFile = "Higgs_trained_model.keras"){
 
      // check if the input file exists
     if (gSystem->AccessPathName(modelFile)) {
@@ -22,7 +22,7 @@ void TMVA_SOFIE_Keras_HiggsModel(const char * modelFile = "Higgs_trained_model.h
     SOFIE::RModel model = SOFIE::PyKeras::Parse(modelFile);
 
     TString modelHeaderFile = modelFile;
-    modelHeaderFile.ReplaceAll(".h5",".hxx");
+    modelHeaderFile.ReplaceAll(".keras",".hxx");
     //Generating inference code
     model.Generate();
     model.OutputGenerated(std::string(modelHeaderFile));
