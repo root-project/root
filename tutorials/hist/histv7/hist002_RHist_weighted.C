@@ -62,8 +62,8 @@ void hist002_RHist_weighted()
    ROOT::Experimental::RRegularAxis axis(40, {0.0, 20.0});
 
    // Create two histograms, one of which will be filled with weighted entries.
-   ROOT::Experimental::RHist<double> hist1({axis});
-   ROOT::Experimental::RHist<double> hist2({axis});
+   ROOT::Experimental::RHist<double> hist1(axis);
+   ROOT::Experimental::RHist<double> hist2(axis);
 
    // Create a normal distribution with mean 10.0 and stddev 5.0.
    std::mt19937 gen;
@@ -86,7 +86,7 @@ void hist002_RHist_weighted()
 
    // Create and fill a third histogram with the special RBinWithError bin content type.
    // In addition to the sum of weights, it tracks the sum of weights squared to compute the bin errors.
-   ROOT::Experimental::RHist<ROOT::Experimental::RBinWithError> hist3({axis});
+   ROOT::Experimental::RHist<ROOT::Experimental::RBinWithError> hist3(axis);
    for (std::size_t i = 0; i < 25000; i++) {
       double value = normal(gen);
       double weight = 0.2 + 0.008 * value * value;
