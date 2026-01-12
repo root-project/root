@@ -74,19 +74,36 @@ def main():
 
     # Compute CMake build options:
     # - Get global options
-    # - Override with options from .github/workflows/root-ci-config/buildconfig/[platform].txt
+    # - Read options from .github/workflows/root-ci-config/buildconfig/[platform_config].txt
+    #   + If minimal is off, override the global options with the platform ones
+    #   + If minimal is on, ignore global options. The minimal options takes priority
     # - Apply overrides from command line if necessary
     options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
-    last_options = dict(options_dict)
+    last_options = dict(options_dict) # We need a copy
 
-    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"))
-    print(f"Build option overrides for {args.platform}:")
-    build_utils.print_options_diff(options_dict, last_options)
+    print(f"Loading configuration from file {args.platform_config}.txt")
+    platform_options = build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform_config}.txt")
+
+    print("Platform options")
+    for key, val in sorted(platform_options.items()):
+        print(f"\t{key: <30}{val}")
+
+    if "minimal" in platform_options and platform_options["minimal"] == "ON":
+        options_dict = platform_options
+        print(f"Minimal build detected in the platform options. Ignoring global configuration.")
+    else:
+        options_dict.update(platform_options)
+        print(f"Build option overrides for {args.platform_config}:")
+        build_utils.print_options_diff(options_dict, last_options)
 
     if args.overrides is not None:
         print("Build option overrides from command line:")
         last_options = dict(options_dict)
-        options_dict.update((arg.split("=", maxsplit=1) for arg in args.overrides))
+        def splitAndLowerCase(arg):
+            key, val = arg.split("=", maxsplit=1)
+            lowerVal = val.upper()
+            return (key, lowerVal if lowerVal in ["ON", "OFF"] else val)
+        options_dict.update(map(splitAndLowerCase , args.overrides))
         build_utils.print_options_diff(options_dict, last_options)
 
     options = build_utils.cmake_options_from_dict(options_dict)
@@ -131,7 +148,7 @@ def main():
 
     git_pull("src", args.repository, args.base_ref)
 
-    benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'].lower() == "on"
+    benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'] == "ON"
     if benchmark:
         git_pull("rootbench", "https://github.com/root-project/rootbench", "master")
 
@@ -143,7 +160,7 @@ def main():
 
       rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
 
-    testing: bool = options_dict['testing'].lower() == "on"
+    testing: bool = options_dict['testing'] == "ON"
 
     if not WINDOWS:
         show_node_state()
@@ -201,6 +218,7 @@ def parse_args():
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
+    parser.add_argument("--platform_config", default=None,      help="The configuration for the platform", nargs='?', const='')
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
@@ -225,6 +243,9 @@ def parse_args():
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
+
+    if not args.platform_config: # If nothing special, we take the standard platform configuration, called as the platform
+        args.platform_config = args.platform
 
     return args
 
@@ -381,7 +402,15 @@ def cmake_configure(options, buildtype):
     # Add a private option to make the CI build faster by not changing the
     # BUILD_NODE line of compiledata.h (which leads to all the dictionary
     # being rebuild when re-using a previous build on a different node)
-    options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+    private_option = "-DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
+    
+    # First we check if we specified the CMake generator, the last token
+    last_token = options.split(" ")[-1]
+    if last_token.startswith("-G"):
+        pos = options.find(f" {last_token}")
+        options = options[:pos] + f"{private_option} "+ options[pos:]
+    else:
+        options = f"{options} {private_option}"
 
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}

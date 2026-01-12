@@ -398,11 +398,13 @@ jobs:
           - image: alma9
             is_special: true
             property: modules_off
-            overrides: ["runtime_cxxmodules=Off", "CMAKE_CXX_STANDARD=20"]
+            platform_config: "alma9-modules_off"
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20", "builtin_vc=ON", "builtin_veccore=ON", "vc=ON", "veccore=ON"]
+            platform_config: "alma9-march_native"
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
           - image: alma10
             is_special: true
             property: arm64
@@ -411,8 +413,8 @@ jobs:
           - image: alma10
             is_special: true
             property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20"]
-            cmake_generator: Ninja
+            platform_config: "alma10-clang_ninja"
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           # Fedora Rawhide with Python debug build
           - image: rawhide
             is_special: true
@@ -421,14 +423,14 @@ jobs:
           # Minimal build
           - image: alma10
             is_special: true
-            minimal: true
+            platform_config: "alma10-minimal"
             property: "minimal build"
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Benchmark build
           - image: alma10
             is_special: true
+            platform_config: "alma10-benchmark"
             property: "benchmark build"
-            overrides: ["CMAKE_CXX_STANDARD=20", "rootbench=ON"]
           # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -501,19 +503,6 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
-      - name: Apply option minimal request from matrix for this job
-        if: ${{ matrix.minimal == true }}
-        env:
-          GLOBAL_CONFIG_DIR: '.github/workflows/root-ci-config/buildconfig'
-          CONFIGFILE_STEM: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}'
-        run: |
-          echo "Applying minimal request options"
-          # Add commands to apply minimal request options here
-          set -x
-          cp "$GLOBAL_CONFIG_DIR/global-minimal.txt" "$GLOBAL_CONFIG_DIR/global.txt"
-          if [ -f "${CONFIGFILE_STEM}-minimal.txt" ]; then
-            cp "${CONFIGFILE_STEM}-minimal.txt" "${CONFIGFILE_STEM}.txt"
-          fi
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
@@ -524,11 +513,11 @@ jobs:
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
                     --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -543,24 +532,26 @@ jobs:
       - name: Workflow dispatch
         if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ inputs.buildtype }}
-                    --platform       ${{ matrix.image }}
-                    --incremental    ${{ inputs.incremental }}
-                    --base_ref       ${{ inputs.base_ref }}
-                    --head_ref       ${{ inputs.head_ref }}
-                    --binaries       ${{ inputs.binaries }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --buildtype       ${{ inputs.buildtype }}
+                    --platform        ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
+                    --incremental     ${{ inputs.incremental }}
+                    --base_ref        ${{ inputs.base_ref }}
+                    --head_ref        ${{ inputs.head_ref }}
+                    --binaries        ${{ inputs.binaries }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Release
-                    --platform       ${{ matrix.image }}
-                    --incremental    false
-                    --binaries       true
-                    --base_ref       ${{ inputs.ref_name }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --buildtype       Release
+                    --platform        ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
+                    --incremental     false
+                    --binaries        true
+                    --base_ref        ${{ inputs.ref_name }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Update build cache after push to release branch
@@ -568,12 +559,13 @@ jobs:
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      RelWithDebInfo
-                    --platform       ${{ matrix.image }}
-                    --incremental    false
-                    --base_ref       ${{ github.ref_name }}
-                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
+                    --incremental     false
+                    --base_ref        ${{ github.ref_name }}
+                    --binaries        ${{ startsWith(github.ref, 'refs/tags/') }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
 
