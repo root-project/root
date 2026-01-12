@@ -349,7 +349,7 @@ int main(int argc, char **argv)
       return 1;
 
    // `destPath` is the part after the colon (the input is given as `destFname:destPath`). It may be empty, but
-   // if it's not, it must refer to either an existing TDirectory inside the file or to a non-existing object (it may
+   // if it's not it must refer to either an existing TDirectory inside the file or to a non-existing object (it may
    // also be an existing object if --replace was passed).
    TKey *destDirKey = nullptr;
    if (!destPath.empty()) {
@@ -368,6 +368,8 @@ int main(int argc, char **argv)
    }
 
    // If we are copying multiple objects the destination path must either be empty or a TDirectory.
+   // The same check is done in the loop over the sources below, but this is an early-out in case multiple
+   // files are given as input (as opposed to multiple objects in the same file, which is checked in the loop).
    const bool destIsNewObject = !destPath.empty() && !destDirKey;
    if (destIsNewObject && args.fSources.size() > 1) {
       Err() << "multiple sources were specified, but destination path \"" << destFname << ":" << destPath
@@ -379,13 +381,15 @@ int main(int argc, char **argv)
       destFile->SetCompressionSettings(*args.fCompression);
 
    const std::uint32_t flags = args.fRecursive * EGetMatchingPathsFlags::kRecursive;
-   // const bool oneFile = args.fSources.size() == 1;
+   bool errors = false;
    for (const auto &srcFname : args.fSources) {
       auto src = ROOT::CmdLine::ParseRootSource(srcFname, flags);
       if (!src.fErrors.empty()) {
          for (const auto &err : src.fErrors)
             Err() << err << "\n";
-         return 1;
+
+         errors = true;
+         break;
       }
 
       // We should never register files to the global list for performance reasons.
@@ -395,7 +399,9 @@ int main(int argc, char **argv)
       if (destIsNewObject && src.fObjectTree.fLeafList.size() + src.fObjectTree.fDirList.size() > 1) {
          Err() << "multiple sources were specified but destination path \"" << destFname << ":" << destPath
                << "\" is not a directory.\n";
-         return 1;
+
+         errors = true;
+         break;
       }
 
       // Iterate all objects we need to copy
@@ -419,5 +425,10 @@ int main(int argc, char **argv)
       }
    }
 
-   return 0;
+   if (errors) {
+      // Make sure we don't end up with a half-copied file in case of errors.
+      gSystem->Unlink(std::string(destFname).c_str());
+   }
+
+   return errors;
 }
