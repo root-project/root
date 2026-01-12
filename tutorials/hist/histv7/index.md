@@ -7,3 +7,4 @@ Examples demonstrating ROOT's histogram package.
 |---|---|
 | hist001_RHist_basics.C | Basics of RHist, including filling and adding them. |
 | hist002_RHist_weighted.C | Weighted filling of RHist and RBinWithError bin content type. |
+| hist003_RHist_multi.C | Multidimensional RHist with different axis types. |
