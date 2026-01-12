@@ -72,8 +72,9 @@ public:
    virtual Double_t GetRmin() const { return fRmin; }
    virtual Double_t GetRmax() const { return fRmax; }
    virtual Double_t GetDz() const { return fDz; }
-   Bool_t HasRmin() const { return (fRmin > 0) ? kTRUE : kFALSE; }
+   inline Bool_t HasRmin() const { return (fRmin > 0) ? kTRUE : kFALSE; }
    void InspectShape() const override;
+   Bool_t IsConvex() const override { return !HasRmin(); }
    Bool_t IsCylType() const override { return kTRUE; }
    TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
@@ -153,7 +154,9 @@ public:
    void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
    Double_t GetPhi1() const { return fPhi1; }
    Double_t GetPhi2() const { return fPhi2; }
+   inline Bool_t HasDphi() const { return (fPhi2 - fPhi1) < 360.; }
    void InspectShape() const override;
+   Bool_t IsConvex() const final { return !HasRmin() && !HasDphi(); }
    TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;

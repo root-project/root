@@ -77,8 +77,9 @@ public:
    virtual Double_t GetRmax1() const { return fRmax1; }
    virtual Double_t GetRmin2() const { return fRmin2; }
    virtual Double_t GetRmax2() const { return fRmax2; }
-
+   inline Bool_t HasRmin() const { return (fRmin1 > 0. || fRmin2 > 0.); }
    void InspectShape() const override;
+   Bool_t IsConvex() const override { return !HasRmin(); }
    Bool_t IsCylType() const override { return kTRUE; }
    TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
@@ -165,7 +166,9 @@ public:
    Bool_t GetPointsOnSegments(Int_t npoints, Double_t *array) const override;
    Double_t GetPhi1() const { return fPhi1; }
    Double_t GetPhi2() const { return fPhi2; }
+   inline Bool_t HasDphi() const { return (fPhi2 - fPhi1) < 360.; }
    void InspectShape() const override;
+   Bool_t IsConvex() const final { return !HasRmin() && !HasDphi(); }
    TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;

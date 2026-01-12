@@ -64,6 +64,7 @@ public:
    Bool_t GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const override { return kFALSE; }
    void InspectShape() const override;
    Bool_t IsComposite() const override { return kTRUE; }
+   Bool_t IsConvex() const final { return kFALSE; }
    Bool_t IsCylType() const override { return kFALSE; }
    void MakeNode(const char *expression);
    virtual Bool_t PaintComposite(Option_t *option = "") const;
