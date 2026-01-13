@@ -5,6 +5,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import numpy as np
 import tensorflow as tf
+tf.keras.utils.set_random_seed(0)
 from tensorflow.keras.models import Model,Sequential
 from tensorflow.keras.layers import Input,Dense,Activation,ReLU,LeakyReLU,BatchNormalization,Conv2D,Reshape,Concatenate,Add,Subtract,Multiply
 from tensorflow.keras.optimizers import SGD
@@ -118,9 +119,9 @@ def generateBinaryOpModel():
     model    = Model(inputs=[input1, input2], outputs=multiply)
 
     randomGenerator=np.random.RandomState(0)
-    x1_train = randomGenerator.rand(2,1)
-    x2_train = randomGenerator.rand(2,1)
-    y_train  = randomGenerator.rand(2,1)
+    x1_train = randomGenerator.rand(2,2)
+    x2_train = randomGenerator.rand(2,2)
+    y_train  = randomGenerator.rand(2,2)
 
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
     model.fit([x1_train,x2_train], y_train, epochs=10, verbose=0, batch_size=2)
