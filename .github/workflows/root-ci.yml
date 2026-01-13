@@ -396,22 +396,24 @@ jobs:
             overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
           - image: alma9
+            platform_config: alma9-modules_off
             is_special: true
             property: modules_off
-            overrides: ["runtime_cxxmodules=Off", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma9
+            platform_config: alma9-march_native
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20", "builtin_vc=ON", "builtin_veccore=ON", "vc=ON", "veccore=ON"]
           - image: alma10
             is_special: true
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
             architecture: ARM64
           - image: alma10
+            platform_config: alma10-clang_ninja
             is_special: true
             property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20", "CMAKE_GENERATOR=Ninja"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           # Fedora Rawhide with Python debug build
           - image: rawhide
             is_special: true
@@ -425,9 +427,10 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Benchmark build
           - image: alma10
+            platform_config: alma10-benchmark
             is_special: true
             property: "benchmark build"
-            overrides: ["CMAKE_CXX_STANDARD=20", "rootbench=ON"]
+            overrides: ["CMAKE_CXX_STANDARD=20"]
           # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -527,6 +530,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
                     --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -543,6 +547,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
@@ -555,6 +560,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
                     --platform       ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
                     --incremental    false
                     --binaries       true
                     --base_ref       ${{ inputs.ref_name }}
@@ -568,6 +574,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
+                    --platform_config ${{ matrix.platform_config }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
