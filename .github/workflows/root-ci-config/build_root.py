@@ -131,7 +131,7 @@ def main():
 
     git_pull("src", args.repository, args.base_ref)
 
-    benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'].lower() == "on"
+    benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'] == "ON"
     if benchmark:
         git_pull("rootbench", "https://github.com/root-project/rootbench", "master")
 
@@ -143,7 +143,7 @@ def main():
 
       rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
 
-    testing: bool = options_dict['testing'].lower() == "on"
+    testing: bool = options_dict['testing'] == "ON"
 
     if not WINDOWS:
         show_node_state()
