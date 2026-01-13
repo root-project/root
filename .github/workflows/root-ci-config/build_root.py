@@ -50,7 +50,7 @@ def main():
 
     args = parse_args()
 
-    build_utils.log = build_utils.Tracer(args.platform, args.dockeropts)
+    build_utils.log = build_utils.Tracer(args.platform_config, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
@@ -74,13 +74,13 @@ def main():
 
     # Compute CMake build options:
     # - Get global options
-    # - Override with options from .github/workflows/root-ci-config/buildconfig/[platform].txt
+    # - Override with options from .github/workflows/root-ci-config/buildconfig/[platform_config].txt
     # - Apply overrides from command line if necessary
     options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
     last_options = dict(options_dict)
 
-    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"))
-    print(f"Build option overrides for {args.platform}:")
+    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform_config}.txt"))
+    print(f"Build option overrides for {args.platform_config}:")
     build_utils.print_options_diff(options_dict, last_options)
 
     if args.overrides is not None:
@@ -201,6 +201,7 @@ def parse_args():
     # true/false for boolean arguments instead.
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform",                           help="Platform to build on")
+    parser.add_argument("--platform_config", default=None,      help="The configuration for the platform", nargs='?', const='')
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
@@ -225,6 +226,9 @@ def parse_args():
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
+
+    if not args.platform_config: # If nothing special, we take the standard platform configuration, called as the platform
+        args.platform_config = args.platform
 
     return args
 

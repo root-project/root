@@ -1,0 +1,12 @@
+CMAKE_CXX_FLAGS=-march=native
+CMAKE_C_FLAGS=-march=native
+CMAKE_CXX_STANDARD=20
+builtin_vc=ON
+builtin_vdt=ON
+builtin_veccore=ON
+builtin_zlib=ON
+builtin_zstd=ON
+pythia8=ON
+tmva-sofie=ON
+veccore=ON
+vc=ON
