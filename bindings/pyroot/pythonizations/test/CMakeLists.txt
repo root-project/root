@@ -136,10 +136,10 @@ if (tmva)
     endif()
 endif()
 
-# SOFIE Keras Parser 
+# SOFIE Keras Parser
 if (tmva)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_keras_parser sofie_keras_parser.py)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_keras_parser sofie_keras_parser.py PYTHON_DEPS keras tensorflow)
     endif()
 endif()
 

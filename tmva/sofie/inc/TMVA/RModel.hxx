@@ -210,10 +210,10 @@ public:
    void ReadInitializedTensorsFromFile(long);
    long WriteInitializedTensorsToFile(std::string filename = "");
 
+   void PrintSummary() const;
    void PrintIntermediateTensors() const;
    void PrintOutputTensors() const;
    void OutputGenerated(std::string filename = "", bool append = false);
-   std::vector<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
    void SetFilename(std::string filename) { fName = filename; }
 
    /*
