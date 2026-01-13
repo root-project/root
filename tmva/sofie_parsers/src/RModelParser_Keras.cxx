@@ -43,9 +43,7 @@ void PyRunString(TString code, PyObject *globalNS, PyObject *localNS)
 
 const char *PyStringAsString(PyObject *string)
 {
-   PyObject *encodedString = PyUnicode_AsUTF8String(string);
-   const char *cstring = PyBytes_AsString(encodedString);
-   return cstring;
+   return PyUnicode_AsUTF8(string);
 }
 
 std::vector<size_t> GetDataFromTuple(PyObject *tupleObject)
@@ -63,7 +61,10 @@ std::vector<size_t> GetDataFromTuple(PyObject *tupleObject)
 
 PyObject *GetValueFromDict(PyObject *dict, const char *key)
 {
-   return PyDict_GetItemWithError(dict, PyUnicode_FromString(key));
+   PyObject *pyKey = PyUnicode_FromString(key);
+   PyObject *val = PyDict_GetItemWithError(dict, pyKey);
+   Py_DECREF(pyKey);
+   return val;
 }
 
 } // namespace
@@ -666,10 +667,18 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
       std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fNX      = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fNY     = PyStringAsString(PyList_GetItem(fOutputs,0));
-      std::string fNScale  = PyStringAsString(PyObject_GetAttrString(fGamma,"name"));
-      std::string fNB  = PyStringAsString(PyObject_GetAttrString(fBeta,"name"));
-      std::string fNMean  = PyStringAsString(PyObject_GetAttrString(fMoving_Mean,"name"));
-      std::string fNVar  = PyStringAsString(PyObject_GetAttrString(fMoving_Var,"name"));
+      PyObject *gammaName = PyObject_GetAttrString(fGamma, "name");
+      PyObject *betaName  = PyObject_GetAttrString(fBeta, "name");
+      PyObject *meanName  = PyObject_GetAttrString(fMoving_Mean, "name");
+      PyObject *varName   = PyObject_GetAttrString(fMoving_Var, "name");
+      std::string fNScale = PyStringAsString(gammaName);
+      std::string fNB     = PyStringAsString(betaName);
+      std::string fNMean  = PyStringAsString(meanName);
+      std::string fNVar   = PyStringAsString(varName);
+      Py_DECREF(gammaName);
+      Py_DECREF(betaName);
+      Py_DECREF(meanName);
+      Py_DECREF(varName);
       float fEpsilon = (float)PyFloat_AsDouble(GetValueFromDict(fAttributes,"epsilon"));
       float fMomentum = (float)PyFloat_AsDouble(GetValueFromDict(fAttributes,"momentum"));
 
