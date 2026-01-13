@@ -121,6 +121,7 @@ jobs:
           - platform: mac-beta
             is_special: true
             arch: ARM64
+            overrides: ["CMAKE_CXX_FLAGS=-Wshadow"]
 
     runs-on:
       - self-hosted
