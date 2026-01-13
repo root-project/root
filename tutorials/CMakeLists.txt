@@ -39,7 +39,7 @@ endif()
 # used by NumPy and enabling batch mode.
 # See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
 # - For matplotlib, disable a blocking event loop on show() using a non-interactive backend
-set(TUTORIAL_ENV ${ROOT_environ} ROOT_BATCH=1 OMP_NUM_THREADS=1 
+set(TUTORIAL_ENV ${ROOT_environ} ROOT_BATCH=1 OMP_NUM_THREADS=1
                  OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=AGG)
 
 #---Copy the CTestCustom.cmake file into the build directory--------
@@ -361,27 +361,20 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
-  if (NOT tmva-sofie OR NOT ROOT_KERAS_FOUND OR keras_unsupported)
+  # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
+  if (NOT tmva-pymva OR NOT tmva-sofie OR NOT ROOT_KERAS_FOUND OR keras_unsupported)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
-  endif()
-  if (NOT tmva-pymva)
-    # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
   endif()
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
-  endif()
-  if (NOT tmva-sofie)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
