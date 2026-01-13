@@ -49,7 +49,6 @@ public:
    ~TMultiGraph() override;
 
    virtual void      Add(TGraph *graph, Option_t *chopt = "");
-   virtual void      Add(TMultiGraph *multigraph, Option_t *chopt = "");
    void              Browse(TBrowser *b) override;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;
    void              Draw(Option_t *chopt = "") override;
