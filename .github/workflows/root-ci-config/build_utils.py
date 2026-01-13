@@ -189,9 +189,6 @@ def load_config(filename) -> dict:
                key = split_line[0]
                val = split_line[1]+'='+split_line[2]
 
-            if val.lower() in ["on", "off"]:
-                val = val.lower()
-
             options[key] = val
 
     return options
@@ -217,6 +214,8 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
         if key == "CMAKE_GENERATOR":
             cmake_generator = value
         else:
+            value_upper = value.upper()
+            value = value_upper if value_upper in ["YES", "NO"] else value
             output.append(f'"-D{key}={value}"')
 
     output.sort()
