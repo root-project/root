@@ -411,8 +411,7 @@ jobs:
           - image: alma10
             is_special: true
             property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20"]
-            cmake_generator: Ninja
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20", "CMAKE_GENERATOR=Ninja"]
           # Fedora Rawhide with Python debug build
           - image: rawhide
             is_special: true
@@ -524,7 +523,6 @@ jobs:
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
