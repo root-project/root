@@ -70,6 +70,7 @@ public:
         fAttrAxes(attrAxes)
    {
       assert(fOpMode == Squeeze || fOpMode == Unsqueeze);
+      fInputTensorNames = { fNData };
       fOutputTensorNames = { fNOutput };
    }
 
@@ -199,14 +200,23 @@ public:
                }
             }
          } else {
-            auto &axes = fAttrAxes;
+            std::cout << "getting shape for Squeeze...from attribute\n";
+            auto axes = fAttrAxes;
             for (size_t i = 0; i < axes.size(); i++) {
+               std::cout << i << "  " << axes[i] << std::endl;
                if (axes[i] < 0)
                   axes[i] += input_shape.size();
                if (!(output_shape[axes[i]] == Dim{1}))
                   throw std::runtime_error("TMVA Squeeze Op : Invalid  axis value " + std::to_string(axes[i]) +
                                            " for " + ConvertShapeToString(output_shape));
-               output_shape.erase(output_shape.begin() + axes[i]);
+            }
+            // for calling vector::erase we must sort axes in decreasing order to avoid
+            std::sort(axes.begin(), axes.end(), std::greater<int>());
+            for (auto & axis : axes) {
+               std::cout << "erase give axis " << axis << "  -> ";
+               for (auto & o : output_shape) std::cout << o << " , ";
+               std::cout << std::endl;
+               output_shape.erase(output_shape.begin() + axis);
             }
          }
          ret.push_back(output_shape);

@@ -68,7 +68,7 @@ def PrepareData() :
    return x_train, y_train, x_test, y_test
 
 def TrainModel(model, x, y, name) :
-   model.fit(x,y,epochs=10,batch_size=50)
+   model.fit(x,y,epochs=5,batch_size=50)
    modelFile = name + '.keras'
    model.save(modelFile)
    return modelFile
@@ -101,9 +101,12 @@ def GenerateModelCode(modelFile, generatedHeaderFile):
 generatedHeaderFile = "Higgs_Model.hxx"
 #need to remove existing header file since we are appending on same one
 if (os.path.exists(generatedHeaderFile)):
-   weightFile = "Higgs_Model.root"
-   print("removing existing files", generatedHeaderFile,weightFile)
+   print("removing existing file", generatedHeaderFile)
    os.remove(generatedHeaderFile)
+
+weightFile = "Higgs_Model.root"
+if (os.path.exists(weightFile)):
+   print("removing existing file", weightFile)
    os.remove(weightFile)
 
 GenerateModelCode(model1, generatedHeaderFile)

@@ -15,9 +15,9 @@ def MakeKerasReshape(layer):
     Returns:
     ROperator_Reshape: A SOFIE framework operator representing the reshaping operation.
     """
-    
+
     keras_version = get_keras_version()
-    
+
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     attributes = layer['layerAttributes']
@@ -29,6 +29,6 @@ def MakeKerasReshape(layer):
     fLayerDType = layer['layerDType']
     fNameData = finput[0]
     fNameOutput = foutput[0]
-    fNameShape = flayername + "ReshapeAxes"
+    fNameShape = flayername + "_shape"
     op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Reshape(fOpMode, 0, fNameData, fNameShape, fNameOutput)
     return op

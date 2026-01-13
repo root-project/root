@@ -38,23 +38,15 @@ void CompileModelForRDF(const std::string & headerModelFile, unsigned int ninput
    return;
 }
 
-void TMVA_SOFIE_RDataFrame_JIT(std::string modelFile = "Higgs_trained_model.keras"){
+void TMVA_SOFIE_RDataFrame_JIT(std::string modelName = "HiggsModel"){
 
     // check if the input file exists
-    if (gSystem->AccessPathName(modelFile.c_str())) {
-        Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_Higgs_Classification.C to generate the Keras trained model");
+    std::string modelHeaderFile = modelName + ".hxx";
+    if (gSystem->AccessPathName(modelHeaderFile.c_str())) {
+        Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_SOFIE_Keras_Higgs_Model.py to generate the SOFIE header for the Keras trained model");
         return;
     }
 
-    // parse the input Keras model into RModel object
-    SOFIE::RModel model = SOFIE::PyKeras::Parse(modelFile);
-
-    std::string modelName = modelFile.substr(0,modelFile.find(".keras"));
-    std::string modelHeaderFile = modelName + std::string(".hxx");
-    //Generating inference code
-    model.Generate();
-    model.OutputGenerated(modelHeaderFile);
-    model.PrintGenerated();
     // check that also weigh file exists
     std::string modelWeightFile = modelName + std::string(".dat");
     if (gSystem->AccessPathName(modelWeightFile.c_str())) {

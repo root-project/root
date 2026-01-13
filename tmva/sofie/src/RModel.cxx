@@ -1470,6 +1470,21 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     }
 }
 
+void RModel::PrintSummary() const {
+   std::cout << "Summary of model " << GetName() << std::endl;
+   for(size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx){
+      auto& r = *fOperators[op_idx].get();
+      std::string raw_name =  typeid(r).name();
+      // look for ROperator_NAME
+      std::string name = raw_name.substr(raw_name.find("ROperator_")+10, raw_name.size());
+      std::cout <<  op_idx << "  " << name << "  :  ";
+      for (auto & t_in : r.GetOpInputTensors()) std::cout << t_in << "  ";
+      std::cout << " ----> ";
+      for (auto & t_out : r.GetOpOutputTensors()) std::cout << t_out << "  ";
+      std::cout << std::endl;
+   }
+}
+
 void RModel::PrintRequiredInputTensors() const {
     std::cout << "Model requires following inputs:\n";
     for (auto& inputInfo: fInputTensorInfos) {

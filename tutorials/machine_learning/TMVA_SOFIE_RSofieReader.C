@@ -22,7 +22,7 @@ using namespace TMVA::Experimental;
 
 void TMVA_SOFIE_RSofieReader(){
 
-   RSofieReader model("Higgs_trained_model.keras");
+   RSofieReader model("HiggsModel.keras", {}, true );
    // for debugging
    //RSofieReader model("Higgs_trained_model.keras", {}, true);
 

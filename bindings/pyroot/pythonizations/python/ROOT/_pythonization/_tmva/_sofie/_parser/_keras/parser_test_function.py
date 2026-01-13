@@ -3,32 +3,32 @@ import ROOT
 '''
 The test file contains two types of functions:
     is_accurate:
-        - This function checks whether the inference results from SOFIE and Keras are accurate within a specified 
-          tolerance. Since the inference result from Keras is not flattened, the function flattens both tensors before 
+        - This function checks whether the inference results from SOFIE and Keras are accurate within a specified
+          tolerance. Since the inference result from Keras is not flattened, the function flattens both tensors before
           performing the comparison.
-          
+
     generate_and_test_inference:
         - This function accepts the following inputs:
             - Model file path: Path to the input model.
-            - Destination directory for the generated header file: If set to None, the header file will be generated in 
+            - Destination directory for the generated header file: If set to None, the header file will be generated in
               the model's directory.
             - Batch size.
-        - After generating the inference code, we instantiate the session for inference. To validate the results from 
+        - After generating the inference code, we instantiate the session for inference. To validate the results from
           SOFIE, we compare the outputs from both SOFIE and Keras.
             - Load the Keras model.
             - Extract the input dimensions of the Keras model to avoid hardcoding.
             - For Sequential models or functional models with a single input:
-                - Extract the model's input specification and create a NumPy array of ones with the same shape as the 
+                - Extract the model's input specification and create a NumPy array of ones with the same shape as the
                   model's input specification, replacing None with the batch size. This becomes the input tensor.
             - For functional models with multiple inputs:
-            - Extract the dimensions for each input, set the batch size, create a NumPy array of ones for each input, 
+            - Extract the dimensions for each input, set the batch size, create a NumPy array of ones for each input,
               and append each tensor to the list of input tensors.
             - These input tensors are then fed to both the instantiated session object and the Keras model.
         - Verify the output tensor dimensions:
-          Since SOFIE always flattens the output tensors before returning them, we need to extract the output tensor 
+          Since SOFIE always flattens the output tensors before returning them, we need to extract the output tensor
           shape from the model object.
         - Convert the inference results to NumPy arrays:
-          The SOFIE result is of type vector<float>, and the Keras result is a TensorFlow tensor. Both are converted to 
+          The SOFIE result is of type vector<float>, and the Keras result is a TensorFlow tensor. Both are converted to
           NumPy arrays before being passed to the is_accurate function for comparison.
 
 '''
@@ -44,17 +44,17 @@ def is_accurate(tensor_a, tensor_b, tolerance=1e-3):
     return True
 
 def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
-    
+
     import tensorflow as tf
     import keras
     import numpy as np
-    
+
     print("Tensorflow version: ", tf.__version__)
     print("Keras version: ", keras.__version__)
     print("Numpy version:", np.__version__)
-    
-    model_name = model_file_path[model_file_path.rfind('/')+1:].removesuffix(".h5")
-    rmodel = ROOT.TMVA.Experimental.SOFIE.RModelParser_Keras.Parse(model_file_path, batch_size)
+
+    model_name = model_file_path[model_file_path.rfind('/')+1:].removesuffix(".keras")
+    rmodel = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(model_file_path, batch_size)
     if generated_header_file_dir is None:
         last_idx = model_file_path.rfind("/")
         if last_idx == -1:
@@ -93,4 +93,4 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     keras_inference_result = np.asarray(keras_inference_result)
     is_inference_accurate = is_accurate(sofie_inference_result, keras_inference_result)
     if not is_inference_accurate:
-        raise AssertionError("Inference results from SOFIE and Keras do not match")    
+        raise AssertionError("Inference results from SOFIE and Keras do not match")
