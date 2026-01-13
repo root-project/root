@@ -37,6 +37,7 @@ class TParameter : public TObject {
 public:
    // Defines options / status while merging:
    enum EStatusBits {
+// clang++ (-Wshadow) complains about shadowing TMatrixT::EMatrixCreatorsOp2. Let's silence warning:
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
