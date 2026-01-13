@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <functional>
 #include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator_GELU.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -220,6 +221,28 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Gather", ParseGather);
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
+   // GELU operator with inline lambda registration
+   RegisterOperator("Gelu", [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+      // Check for unsupported tanh approximation attribute 
+      for (int i = 0; i < nodeproto.attribute_size(); i++) {
+         if (nodeproto.attribute(i).name() == "approximate") {
+            if (nodeproto.attribute(i).s() == "tanh") {
+               throw std::runtime_error("TMVA::SOFIE GELU tanh approximation not implemented");
+            }
+         }
+      }
+      auto input_name = nodeproto.input(0);
+      if (!parser.IsRegisteredTensorType(input_name)) {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Gelu op has input tensor " +
+                                  input_name + " but its type is not yet registered");
+      }
+      std::string output_name = nodeproto.output(0);
+      auto op = std::make_unique<ROperator_GELU<float>>(input_name, output_name);
+      if (!parser.IsRegisteredTensorType(output_name)) {
+         parser.RegisterTensorType(output_name, parser.GetTensorType(input_name));
+      }
+      return op;
+   });
    RegisterOperator("EyeLike", ParseEyeLike);
    RegisterOperator("Range", ParseRange);
    RegisterOperator("TopK", ParseTopK);
