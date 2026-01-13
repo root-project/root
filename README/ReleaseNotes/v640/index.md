@@ -44,6 +44,15 @@ The following people have contributed to this new version:
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
 * The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that were installed when building ROOT with `builtin_glew=ON` are no longer installed. This is done because ROOT is moving away from GLEW for loading OpenGL extensions.
 * The `TF1`, `TF2`, and `TF3` constructors for CINT compatibility were removed. This concerns the templated constructors that additionally took the name of the used functor class and member function. With ROOT 6, these names can be omitted.
+* The `TMultiGraph::Add(TMultiGraph*, Option_t*)` overload that adds the graphs in another **TMultiGraph** to a **TMultiGraph** is removed without deprecation.
+  It was inconsistent from a memory ownership standpoint.
+  A **TMultiGraph** always owns all the added graphs, so adding the same graph instances to two **TMultiGraphs** forcibly led to double-deletes.
+  If you want to add all graphs from `otherMultiGraph` to `multiGraph`, please use a for-loop and clone the graphs instead:
+  ```c++
+  for (TObject *gr : *otherMultiGraph) {
+     multiGraph->Add(static_cast<TGraph*>(gr->Clone()));
+  }
+  ```
 
 ## Build System
 
