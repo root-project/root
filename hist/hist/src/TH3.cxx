@@ -429,7 +429,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    return bin;
 }
 
-#ifdef __cpp_lib_atomic_ref
+#ifdef TH3D_FILL_THREADSAFE
 ////////////////////////////////////////////////////////////////////////////////
 /// Atomically increment cell defined by x,y,z by a weight w.
 ///
