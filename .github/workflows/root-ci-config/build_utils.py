@@ -168,6 +168,8 @@ def die(code: int = 1, msg: str = "") -> None:
 def load_config(filename) -> dict:
     """Loads cmake options from a file to a dictionary"""
 
+    print(f"Loading configuration from file {filename}")
+
     options = {}
 
     try:
