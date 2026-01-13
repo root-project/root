@@ -1848,6 +1848,7 @@ function(ROOT_ADD_GTEST test_suite)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
+    ROOT_SET_OUTPUT_DIRECTORIES(${test_suite})
   endif()
 
   if(ARG_WILLFAIL)
@@ -2537,6 +2538,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
 
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
@@ -2576,16 +2578,6 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
-                                       ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.dll
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.lib
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.lib)
   endif()
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
@@ -2639,6 +2631,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -2693,18 +2686,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    if(ARG_LIBNAME)
-      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${ARG_LIBNAME}.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/${ARG_LIBNAME}.dll)
-    else()
-      add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${dictionary}_dictrflx.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${dictionary}_dictrflx.dll)
-    endif()
   endif()
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
@@ -3492,25 +3473,37 @@ function(find_python_module module)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
+# function ROOT_SET_OUTPUT_DIRECTORIES( <name> )
+#
+# this function simply sets the output directories from the standard outupt directory
+# (CMAKE_CURRENT_BINARY_DIR/$<CONFIG>) to its parent directory (CMAKE_CURRENT_BINARY_DIR) on Windows
+#
+#---------------------------------------------------------------------------------------------------
+function(ROOT_SET_OUTPUT_DIRECTORIES library)
+   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
+      foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+        string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+        set_target_properties(${library} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+        set_target_properties(${library} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+        set_target_properties(${library} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
+      endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
+   endif()
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
 # function ROOTTEST_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
 #                                   [NOINSTALL] LIBRARIES library1 library2 ...
 #                                   DEPENDENCIES dep1 dep2
 #                                   BUILTINS dep1 dep2)
 #
-# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and add a POST_BUILD custom
-# command to copy the .dll and .lib from the standard config directory (Debug/Release) to its
-# parent directory (CMAKE_CURRENT_BINARY_DIR) on Windows
+# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and sets the output directories
+# from the standard output directory (CMAKE_CURRENT_BINARY_DIR/$<CONFIG>) to its parent directory
+# (CMAKE_CURRENT_BINARY_DIR) on Windows
 #
 #---------------------------------------------------------------------------------------------------
 function(ROOTTEST_LINKER_LIBRARY library)
    ROOT_LINKER_LIBRARY(${ARGV})
-   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-      add_custom_command(TARGET ${library} POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.dll
-                                          ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.dll
-         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/lib${library}.lib
-                                           ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.lib)
-   endif()
+   ROOT_SET_OUTPUT_DIRECTORIES(${library})
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
