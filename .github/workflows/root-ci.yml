@@ -412,7 +412,7 @@ jobs:
           - image: alma10
             is_special: true
             property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "CMAKE_CXX_STANDARD=20", "CMAKE_CXX_FLAGS=-Wshadow"]
             cmake_generator: Ninja
           # Fedora Rawhide with Python debug build
           - image: rawhide
