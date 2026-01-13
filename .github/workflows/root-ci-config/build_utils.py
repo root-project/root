@@ -204,6 +204,7 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
        example: {"builtin_xrootd"="on", "alien"="on"}
                         ->
                  '"-Dalien=on" -Dbuiltin_xrootd=on"'
+       The key CMAKE_GENERATOR is used to set the CMake generator.
     """
 
     if not config:
@@ -211,12 +212,19 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
 
     output = []
 
+    cmake_generator = None
     for key, value in config.items():
-        output.append(f'"-D{key}={value}"')
+        if key == "CMAKE_GENERATOR":
+            cmake_generator = value
+        else:
+            output.append(f'"-D{key}={value}"')
 
     output.sort()
+    if cmake_generator:
+        output.append(f'"-G{cmake_generator}"')
+    cmake_options = ' '.join(output)
 
-    return ' '.join(output)
+    return cmake_options
 
 def calc_options_hash(options: str) -> str:
     """Calculate the hash of the options string. If "march=native" is in the
