@@ -14,7 +14,7 @@ TEST(TH3L, SetBinContent)
    EXPECT_EQ(h.GetBinContent(1, 1, 1), Large);
 }
 
-#ifdef __cpp_lib_atomic_ref
+#ifdef TH3D_FILL_THREADSAFE
 
 TEST(TH3D, FillThreadSafe)
 {
