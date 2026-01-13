@@ -74,14 +74,22 @@ def main():
 
     # Compute CMake build options:
     # - Get global options
-    # - Override with options from .github/workflows/root-ci-config/buildconfig/[platform_config].txt
+    # - Read options from .github/workflows/root-ci-config/buildconfig/[platform_config].txt
+    #   + If minimal is off, override the global options with the platform ones
+    #   + If minimal is on, ignore global options. The minimal options takes priority
     # - Apply overrides from command line if necessary
     options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
     last_options = dict(options_dict)
 
-    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform_config}.txt"))
-    print(f"Build option overrides for {args.platform_config}:")
-    build_utils.print_options_diff(options_dict, last_options)
+    platform_options = build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform_config}.txt")
+
+    if "minimal" in platform_options and platform_options["minimal"] == "ON":
+        options_dict = platform_options
+        print(f"Minimal build detected in the platform options. Ignoring global configuration.")
+    else:
+        options_dict.update(platform_options)
+        print(f"Build option overrides for {args.platform_config}:")
+        build_utils.print_options_diff(options_dict, last_options)
 
     if args.overrides is not None:
         print("Build option overrides from command line:")
