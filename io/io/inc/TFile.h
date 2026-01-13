@@ -37,7 +37,6 @@
 // #endif
 
 #ifdef R__USE_IMT
-#include "ROOT/TRWSpinLock.hxx"
 #include <mutex>
 #endif
 
