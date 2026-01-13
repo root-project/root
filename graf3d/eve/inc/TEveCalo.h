@@ -255,7 +255,17 @@ class TEveCaloLego : public TEveCaloViz
 public:
    enum EProjection_e { kAuto, k3D, k2D };
    enum E2DMode_e     { kValColor, kValSize, kValSizeOutline };
-   enum EBoxMode_e    { kNone, kFrontBack, kBack};
+   enum EBoxMode_e    {
+// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kNone,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kFrontBack, kBack};
 
 private:
    TEveCaloLego(const TEveCaloLego&) = delete;

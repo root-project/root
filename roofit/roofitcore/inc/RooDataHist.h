@@ -261,7 +261,17 @@ public:
   std::vector<std::unique_ptr<const RooAbsBinning>> _lvbins ; ///<! List of used binnings associated with lvalues
   mutable std::vector<std::vector<double> > _binbounds;     ///<! list of bin bounds per dimension
 
-  enum CacheSumState_t{kInvalid = 0, kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
+  enum CacheSumState_t{
+// clang++ (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kInvalid = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+     kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};
   mutable Int_t _cache_sum_valid{kInvalid}; ///<! Is cache sum valid? Needs to be Int_t instead of CacheSumState_t for subclasses.
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 

@@ -57,7 +57,17 @@ public:
 
    enum {kWorkMax = 100};
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
-   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
+   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,
+// clang++ (-Wshadow) complains about shadowing TAttMarker.h global enum EMarkerStyle. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kPlus,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kMinus };
 
    TMatrixT(): fDataStack(), fElements(nullptr) { }
    TMatrixT(Int_t nrows,Int_t ncols);

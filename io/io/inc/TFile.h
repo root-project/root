@@ -277,7 +277,17 @@ public:
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
    /// File type
-   enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
+   enum EFileType {
+// clang++ (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kDefault = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);

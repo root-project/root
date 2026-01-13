@@ -30,7 +30,15 @@ public:
    TGLTH3Composition();//I need it only because of explicit private copy ctor.
 
    enum ETH3BinShape {
+// clang++ (-Wshadow) complains about shadowing Buttons.h global enum EEditMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kBox,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kSphere
    };
 

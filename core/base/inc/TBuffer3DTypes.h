@@ -23,8 +23,16 @@ public:
                             //                     g3d              geom
    enum EType { kGeneric,   // TBuffer3D           Rest             Rest
                 kComposite, // TBuffer3D                            TGetCompositeShape
+// clang++ (-Wshadow) complains about shadowing Buttons.h global enum EEditMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
                 kLine,      // TBuffer3D           TPolyLine3D
                 kMarker,    // TBuffer3D           TPolyMarker3D
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                 kSphere,    // TBuffer3DSphere     TSPHE            TGeoSphere
                 kTube,      // TBuffer3DTube                        TGeoTube
                 kTubeSeg,   // TBuffer3DTubeSeg                     TGeoTubeSeg

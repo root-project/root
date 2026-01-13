@@ -327,7 +327,15 @@ protected:
 
    enum EDestruct
    {
+// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kNone,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kStandard,
       kAnnihilate
    };

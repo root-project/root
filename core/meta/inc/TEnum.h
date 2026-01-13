@@ -46,7 +46,16 @@ private:
 
 public:
 
-   enum ESearchAction {kNone                 = 0,
+   enum ESearchAction {
+// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+                       kNone                 = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                        kAutoload             = 1,
                        kInterpLookup         = 2,
                        kALoadAndInterpLookup = 3

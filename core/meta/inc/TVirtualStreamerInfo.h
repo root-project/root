@@ -74,7 +74,15 @@ public:
       kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
       kRecovered             = BIT(14),
       kNeedCheck             = BIT(15),
+// clang++ (-Wshadow) complains about shadowing TDictionary.h global enum EProperty. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kIsCompiled            = BIT(16),
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kBuildOldUsed          = BIT(17),
       kBuildRunning          = BIT(18)
    };
@@ -114,11 +122,29 @@ public:
    /// | kUnsupportedConversion | The member type onfile and in memory can not be converted |
    /// | kUnset      | default value |
    enum EReadWrite {
-      kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
+      kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
+// clang++ (-Wshadow) complains about shadowing TDataType.h global enum EDataType. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kCounter =  6, kCharStar = 7,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kDouble      =  8,  kDouble32=  9,
       kLegacyChar  = 10, /// Equal to TDataType's kchar
-      kUChar       = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,  kBits     = 15,
+      kUChar       = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
+// clang++ (-Wshadow) complains about shadowing TDataType.h global enum EDataType. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kBits     = 15,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kLong64      = 16,  kULong64 = 17,  kBool    = 18,  kFloat16 = 19,
       kObject      = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTString  = 65,
       kTObject     = 66,  kTNamed  = 67,  kAnyp    = 68,  kAnyP    = 69,  kAnyPnoVT = 70,
@@ -136,7 +162,15 @@ public:
       kMissing     = 99999,
       kNoType      = -1,   /// Type corresponding to a 'missing' data member (with kMissing offset)
       kUnsupportedConversion = -2,
+// clang++ (-Wshadow) complains about shadowing TError.h global variable kUnset. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kUnset       = -3
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    };
    // clang-format off
 

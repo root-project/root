@@ -19,7 +19,17 @@ class TVirtualPad;
 class TVirtualPadPainter {
 public:
    enum EBoxMode  {kHollow, kFilled};
-   enum ETextMode {kClear,  kOpaque};
+   enum ETextMode {
+// clang++ (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kClear,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kOpaque};
 
    virtual ~TVirtualPadPainter();
 

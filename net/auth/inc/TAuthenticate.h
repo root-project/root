@@ -56,7 +56,17 @@ friend class TRootSecContext;
 friend class TSocket;
 
 public:
-   enum ESecurity { kClear, kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
+   enum ESecurity {
+// clang++ (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kClear,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication
 
 private:
    TString      fDetails;     // logon details (method dependent ...)

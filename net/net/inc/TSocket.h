@@ -51,7 +51,15 @@ public:
 
 protected:
    enum ESocketErrors {
-     kInvalid = -1,
+// clang++ (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kInvalid = -1,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
      kInvalidStillInList = -2
    };
    TInetAddress  fAddress;        // remote internet address and port #

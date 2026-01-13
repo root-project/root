@@ -21,7 +21,17 @@ protected:
    TString  fAction;     ///< action to be executed
 
 public:
-   enum { kButton = 1, kDrawnButton, kSeparator };
+   enum {
+// clang++ (-Wshadow) complains about shadowing Buttons.h global enum EEditMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kButton = 1,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kDrawnButton, kSeparator };
 
    TControlBarButton();
    TControlBarButton(const char *label, const char *action="", const char *hint="", const char *type="button");

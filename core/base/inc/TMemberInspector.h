@@ -31,7 +31,15 @@ class TClass;
 class TMemberInspector {
 public:
    enum EObjectPointerState {
+// clang++ (-Wshadow) complains about shadowing TError.h global variable kUnset. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kUnset, // No Inspect() call has been seen yet.
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kNoObjectGiven, // No object was given to the initial Inspect() call.
       kValidObjectGiven // The address points to an actual object.
    };

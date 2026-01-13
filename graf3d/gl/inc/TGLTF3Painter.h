@@ -29,7 +29,15 @@ Draw TF3 using marching cubes.
 class TGLTF3Painter : public TGLPlotPainter {
 private:
    enum ETF3Style {
+// clang++ (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kDefault,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kMaple0,
       kMaple1,
       kMaple2

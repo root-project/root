@@ -46,7 +46,16 @@ public:
    static void IncCSLevel();
    static UInt_t DecCSLevel();
 
-   enum ESection { kNone            = BIT(0),
+   enum ESection {
+// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+                   kNone            = BIT(0),
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                    kCore            = BIT(1),
                    kBoundingBox     = BIT(2),
                    kShapeSpecific   = BIT(3),

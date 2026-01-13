@@ -103,11 +103,19 @@ protected:
 
    /// TBranch status bits
    enum EStatusBits {
+// clang++ (-Wshadow) does not like this shadowing of global variables in this header. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kDoNotProcess = ::kDoNotProcess, ///< Active bit for branches
       kIsClone      = ::kIsClone,      ///< To indicate a TBranchClones
       kBranchObject = ::kBranchObject, ///< Branch is a TObject*
       kBranchAny    = ::kBranchAny,    ///< Branch is an object*
-      // kMapObject    = kBranchObject | kBranchAny;
+      // kMapObject    = ::kMapObject;    ///< kBranchObject | kBranchAny;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kAutoDelete   = BIT(15),
 
       kDoNotUseBufferMap = BIT(22)     ///< If set, at least one of the entry in the branch will use the buffer's map of classname and objects.

@@ -27,7 +27,17 @@ class TGridJobStatus : public TNamed {
 
 public:
    // Subset of Grid job states for common GetStatus function
-   enum EGridJobStatus { kUNKNOWN, kWAITING, kRUNNING, kABORTED, kFAIL, kDONE };
+   enum EGridJobStatus {
+// clang++ (-Wshadow) complains about shadowing TQpSolverBase.h global enum ETerminationCode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+         kUNKNOWN,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kWAITING, kRUNNING, kABORTED, kFAIL, kDONE };
 
   TGridJobStatus() { }
   virtual ~TGridJobStatus() { }
