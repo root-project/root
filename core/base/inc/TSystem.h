@@ -84,7 +84,15 @@ enum ELogFacility {
 
 enum EFpeMask {
    kNoneMask         = 0x00,
+// clang++ (-Wshadow) complains about shadowing TSocket::ESocketErrors. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    kInvalid          = 0x01,  // Invalid argument
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    kDivByZero        = 0x02,  // Division by zero
    kOverflow         = 0x04,  // Overflow
    kUnderflow        = 0x08,  // Underflow
@@ -240,7 +248,15 @@ enum ESockOptions {
 };
 
 enum ESendRecvOptions {
+// clang++ (-Wshadow) complains about shadowing EAclicMode::kDefault. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    kDefault,           // default option (= 0)
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
    kOob,               // send or receive out-of-band data
    kPeek,              // peek at incoming message (receive only)
    kDontBlock          // send/recv as much data as possible without blocking
@@ -276,7 +292,17 @@ public:
 class TSystem : public TNamed {
 
 public:
-   enum EAclicMode { kDefault, kDebug, kOpt };
+   enum EAclicMode {
+// clang++ (-Wshadow) complains about shadowing ESendRecvOptions::kDefault. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kDefault,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+      kDebug, kOpt };
    enum EAclicProperties {
       kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created sub-directories
    };
