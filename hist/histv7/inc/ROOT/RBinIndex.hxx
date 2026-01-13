@@ -21,15 +21,15 @@ Objects of this type should be passed by value.
 Feedback is welcome!
 */
 class RBinIndex final {
-   static constexpr auto UnderflowIndex = static_cast<std::uint64_t>(-3);
-   static constexpr auto OverflowIndex = static_cast<std::uint64_t>(-2);
-   static constexpr auto InvalidIndex = static_cast<std::uint64_t>(-1);
+   static constexpr auto kUnderflowIndex = static_cast<std::uint64_t>(-3);
+   static constexpr auto kOverflowIndex = static_cast<std::uint64_t>(-2);
+   static constexpr auto kInvalidIndex = static_cast<std::uint64_t>(-1);
 
    // We use std::uint64_t instead of std::size_t for the index because for sparse histograms, not all bins have to be
    // allocated in memory. However, we require that the index has at least that size.
    static_assert(sizeof(std::uint64_t) >= sizeof(std::size_t), "index type not large enough to address all bins");
 
-   std::uint64_t fIndex = InvalidIndex;
+   std::uint64_t fIndex = kInvalidIndex;
 
 public:
    /// Construct an invalid bin index.
@@ -48,22 +48,22 @@ public:
    /// A bin index is normal iff it is not one of the special values.
    ///
    /// Note that a normal bin index may not actually be valid for a given axis if it is outside its range.
-   bool IsNormal() const { return fIndex < UnderflowIndex; }
-   bool IsUnderflow() const { return fIndex == UnderflowIndex; }
-   bool IsOverflow() const { return fIndex == OverflowIndex; }
-   bool IsInvalid() const { return fIndex == InvalidIndex; }
+   bool IsNormal() const { return fIndex < kUnderflowIndex; }
+   bool IsUnderflow() const { return fIndex == kUnderflowIndex; }
+   bool IsOverflow() const { return fIndex == kOverflowIndex; }
+   bool IsInvalid() const { return fIndex == kInvalidIndex; }
 
    RBinIndex &operator+=(std::uint64_t a)
    {
       if (!IsNormal()) {
          // Arithmetic operations on special values go to InvalidIndex.
-         fIndex = InvalidIndex;
+         fIndex = kInvalidIndex;
       } else {
          std::uint64_t old = fIndex;
          fIndex += a;
          if (fIndex < old || !IsNormal()) {
             // The addition wrapped around, go to InvalidIndex.
-            fIndex = InvalidIndex;
+            fIndex = kInvalidIndex;
          }
       }
       return *this;
@@ -93,12 +93,12 @@ public:
    {
       if (!IsNormal()) {
          // Arithmetic operations on special values go to InvalidIndex.
-         fIndex = InvalidIndex;
+         fIndex = kInvalidIndex;
       } else if (fIndex >= a) {
          fIndex -= a;
       } else {
          // The operation would wrap around, go to InvalidIndex.
-         fIndex = InvalidIndex;
+         fIndex = kInvalidIndex;
       }
       return *this;
    }
@@ -147,14 +147,14 @@ public:
    static RBinIndex Underflow()
    {
       RBinIndex underflow;
-      underflow.fIndex = UnderflowIndex;
+      underflow.fIndex = kUnderflowIndex;
       return underflow;
    }
 
    static RBinIndex Overflow()
    {
       RBinIndex overflow;
-      overflow.fIndex = OverflowIndex;
+      overflow.fIndex = kOverflowIndex;
       return overflow;
    }
 };
