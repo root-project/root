@@ -1681,6 +1681,8 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
    TGeoNode *nodecheck = nullptr;
 
    TGeoHMatrix hmat1, hmat2;
+   TGeoMatrix const *tr1, *tr2;
+   TGeoBBox const *box1, *box2;
    TString path, path1;
    UInt_t id, io;
    Int_t level;
@@ -1692,35 +1694,62 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
 
       next1.SetTopName(node01->GetName());
       path = node01->GetName();
-
+      //=== ANY <-> ANY ===//
       for (io = id + 1; io < nd; io++) {
+         // check node01 against node02 daughters of volume
          node02 = vol->GetNode(io);
          if (node02->IsOverlapping())
             continue;
-         if (!vox->MayOverlap(id, io))
+         box1 = (const TGeoBBox *)node01->GetVolume()->GetShape();
+         tr1 = node01->GetMatrix();
+         box2 = (const TGeoBBox *)node02->GetVolume()->GetShape();
+         tr2 = node02->GetMatrix();
+         // OBB check
+         if (!TGeoBBox::MayIntersect(box1, tr1, box2, tr2))
             continue;
 
          next2.SetTopName(node02->GetName());
          path1 = node02->GetName();
 
-         // We have to check node against node1, but they may be assemblies
+         // We have to check node01 against node02, but they may be assemblies
          if (node01->GetVolume()->IsAssembly()) {
-
+            // left node assembly - make a visitor
             next1.Reset(node01->GetVolume());
-            TGeoNode *node = nullptr;
-
+            TGeoNode *node = nullptr; // will iterate components of node01
+            //=== ASSEMBLY/ANY <-> ANY ===//
             while ((node = next1())) {
-               if (!node->GetVolume()->IsAssembly()) {
+               hmat1 = node01->GetMatrix();
+               hmat1 *= *next1.GetCurrentMatrix();
+               box1 = (const TGeoBBox *)node->GetVolume()->GetShape();
+               tr1 = &hmat1;
+               // OBB check
+               if (!TGeoBBox::MayIntersect(box1, tr1, box2, tr2)) {
+                  // No intersection, skip the full left branch
+                  next1.Skip();
+                  continue;
+               }
 
+               if (!node->GetVolume()->IsAssembly()) {
+                  //=== ASSEMBLY/REAL <-> ANY ===//
+                  // Current daughter of node01 is real, get its path and transformation
                   next1.GetPath(path);
-                  hmat1 = node01->GetMatrix();
-                  hmat1 *= *next1.GetCurrentMatrix();
 
                   if (node02->GetVolume()->IsAssembly()) {
-
                      next2.Reset(node02->GetVolume());
+                     //=== ASSEMBLY/REAL <-> ASSEMBLY/ANY ===//
                      while ((node1 = next2())) {
+                        hmat2 = node02->GetMatrix();
+                        hmat2 *= *next2.GetCurrentMatrix();
+                        box2 = (const TGeoBBox *)node1->GetVolume()->GetShape();
+                        // OBB check
+                        if (!TGeoBBox::MayIntersect(box1, &hmat1, box2, &hmat2)) {
+                           // No intersection, skip the full right branch
+                           next2.Skip();
+                           continue;
+                        }
                         if (!node1->GetVolume()->IsAssembly()) {
+                           //=== ASSEMBLY/REAL <-> ASSEMBLY/REAL ===//
+                           // Selected node skip logic
                            if (fSelectedNode) {
                               if ((fSelectedNode != node) && (fSelectedNode != node1) &&
                                   (!fSelectedNode->GetVolume()->IsAssembly())) {
@@ -1752,8 +1781,6 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
                            }
 
                            next2.GetPath(path1);
-                           hmat2 = node02->GetMatrix();
-                           hmat2 *= *next2.GetCurrentMatrix();
 
                            ncand++;
                            PushCandidate(out,
@@ -1766,7 +1793,8 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
                      }
 
                   } else {
-                     // node02 not assembly
+                     //=== ASSEMBLY/REAL <-> REAL
+                     // Selected node skip logic
                      if (fSelectedNode) {
                         if ((fSelectedNode != node) && (fSelectedNode != node02) &&
                             (!fSelectedNode->GetVolume()->IsAssembly())) {
@@ -1800,14 +1828,22 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
             }
 
          } else {
-            // node01 not assembly
-
             if (node02->GetVolume()->IsAssembly()) {
-
                next2.Reset(node02->GetVolume());
+               //=== REAL <-> ASSEMBLY/ANY ===//
                while ((node1 = next2())) {
-                  if (!node1->GetVolume()->IsAssembly()) {
+                  hmat2 = node02->GetMatrix();
+                  hmat2 *= *next2.GetCurrentMatrix();
+                  box2 = (const TGeoBBox *)node1->GetVolume()->GetShape();
+                  // OBB check
+                  if (!TGeoBBox::MayIntersect(box1, node01->GetMatrix(), box2, &hmat2)) {
+                     // No intersection, skip the entire right branch
+                     next2.Skip();
+                     continue;
+                  }
 
+                  if (!node1->GetVolume()->IsAssembly()) {
+                     // Selected node skip logic
                      if (fSelectedNode) {
                         if ((fSelectedNode != node1) && (fSelectedNode != node01) &&
                             (!fSelectedNode->GetVolume()->IsAssembly())) {
@@ -1829,11 +1865,8 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
                         }
                      }
 
-                     next2.GetPath(path1);
-                     hmat2 = node02->GetMatrix();
-                     hmat2 *= *next2.GetCurrentMatrix();
-
                      ncand++;
+                     next2.GetPath(path1);
                      PushCandidate(out,
                                    TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
                                                    vol->GetName(), path1.Data()),

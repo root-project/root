@@ -261,10 +261,8 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    // -------- Stage 1: enumerate candidates (main thread)
    std::vector<TGeoOverlapCandidate> candidates;
    candidates.reserve(2048);
-   Int_t ncand = 0;
 
-   ncand += checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
-
+   Int_t ncand = checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
    TGeoIterator next(fVolume);
    TGeoNode *node = nullptr;
    while ((node = next())) {

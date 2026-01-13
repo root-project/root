@@ -390,6 +390,7 @@ volumes (or volume assemblies) as content.
 #include "TMap.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TStopwatch.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -402,7 +403,6 @@ volumes (or volume assemblies) as content.
 #include "TGeoCompositeShape.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoExtension.h"
-
 
 TGeoMedium *TGeoVolume::fgDummyMedium = nullptr;
 
@@ -609,6 +609,8 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
       return;
    }
 
+   TStopwatch timer;
+   timer.Start();
    auto geom = fGeoManager;
    geom->ClearOverlaps();
    geom->SetCheckingOverlaps(kTRUE);
@@ -621,17 +623,16 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
    std::vector<TGeoOverlapCandidate> candidates;
    candidates.reserve(2048);
 
-   checker->EnumerateOverlapCandidates(this, ovlp, option, candidates);
-
-   TGeoIterator next((TGeoVolume*)this);
+   Int_t ncand = checker->EnumerateOverlapCandidates(this, ovlp, option, candidates);
+   TGeoIterator next((TGeoVolume *)this);
    TGeoNode *node = nullptr;
    while ((node = next())) {
       if (!node->GetVolume()->IsSelected()) {
          node->GetVolume()->SelectVolume(kFALSE);
-         checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+         ncand += checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
       }
    }
-   Info("CheckOverlaps", "Number of overlap candidates found : %zu\n", candidates.size());
+   Info("CheckOverlaps", "Checking %d candidates ...", ncand);
    SelectVolume(kTRUE);
 
    // -------- Stage 2: compute (main thread for now)
@@ -660,7 +661,8 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
    for (Int_t i = 0; i < novlps; i++)
       ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
 
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1531,7 +1533,7 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 
 void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fUserExtension;
+   TGeoExtension *tmp = fUserExtension;
    fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
@@ -1549,7 +1551,7 @@ void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 
 void TGeoVolume::SetFWExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fFWExtension;
+   TGeoExtension *tmp = fFWExtension;
    fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
@@ -2589,7 +2591,6 @@ Double_t TGeoVolume::WeightA() const
    return weight;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy constructor
 
@@ -2909,7 +2910,6 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
       vol->SetVisibility(vis);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
