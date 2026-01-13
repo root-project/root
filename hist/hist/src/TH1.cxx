@@ -8536,7 +8536,8 @@ void TH1::SetBuffer(Int_t bufsize, Option_t * /*option*/)
 /// By default the number of contour levels is set to 20. The contours values
 /// in the array "levels" should be specified in increasing order.
 ///
-/// if argument levels = 0 or missing, equidistant contours are computed
+/// if argument levels = 0 or missing, `nlevels` equidistant contours are computed
+/// between `zmin + dz/2` and `zmax - dz/2` with step `(zmax - zmin)/nlevels`
 
 void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 {
@@ -8568,8 +8569,9 @@ void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
          zmax = TMath::Log10(zmax);
          dz   = (zmax-zmin)/Double_t(nlevels);
       }
-      for (level=0; level<nlevels; level++) {
-         fContour.fArray[level] = zmin + dz*Double_t(level);
+      for (level = 0; level < nlevels; level++) {
+         // Contour levels go from zmin + 0.5*dz till zmax - 0.5*dz
+         fContour.fArray[level] = zmin + dz * (0.5 + level);
       }
    }
 }
