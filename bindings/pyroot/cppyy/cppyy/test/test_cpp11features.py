@@ -440,7 +440,7 @@ class TestCPP11FEATURES:
             gc.collect()
             assert TestSmartPtr.s_counter == 0
 
-    @mark.xfail(condition=IS_WINDOWS, reason='ValueError: Could not find "make_unique<int>"')
+    @mark.xfail(condition=IS_WINDOWS | IS_MAC_ARM, reason='ValueError: Could not find "make_unique<int>"')
     def test15_unique_ptr_template_deduction(self):
         """Argument type deduction with std::unique_ptr"""
 
@@ -460,7 +460,7 @@ class TestCPP11FEATURES:
         with raises(ValueError):  # not an RValue
             cppyy.gbl.UniqueTempl.returnptr[int](uptr_in)
 
-    @mark.xfail(condition=IS_WINDOWS, reason='TypeError: Could not find "make_unique<int>"')
+    @mark.xfail(condition=IS_WINDOWS | IS_MAC_ARM, reason='TypeError: Could not find "make_unique<int>"')
     def test16_unique_ptr_moves(self):
         """std::unique_ptr requires moves"""
 

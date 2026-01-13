@@ -4,28 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(enable_test_cpp11features FALSE)
-if(NOT CMAKE_CXX_STANDARD EQUAL 23)
-    # test_cpp11features crashes when run with C++23
-    if(APPLE)
-        execute_process(
-            COMMAND sw_vers -productVersion
-            OUTPUT_VARIABLE MACOS_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        if(MACOS_VERSION VERSION_LESS "26.0")
-            # Parts of this test suite fail with std::make_unique
-            set(enable_test_cpp11features TRUE)
-        endif()
-    else()
-        set(enable_test_cpp11features TRUE)
-    endif()
-endif()
+set(common_args GENERIC PYTHON_DEPS pytest)
 
-if(MSVC)
-  set(common_args GENERIC PYTHON_DEPS pytest)
-else()
-  set(common_args GENERIC ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR} PYTHON_DEPS pytest)
+if(NOT MSVC)
+  list(APPEND common_args ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 set(root_cmd $<TARGET_FILE:root.exe> -b -q -l)
@@ -45,14 +27,16 @@ function(ADD_PYUNITTEST_ACLIC TESTNAME)
 endfunction()
 
 ADD_PYUNITTEST_ACLIC(test_conversions DICTNAME conversions)
+ADD_PYUNITTEST_ACLIC(test_cpp11features DICTNAME cpp11features)
 ADD_PYUNITTEST_ACLIC(test_crossinheritance DICTNAME crossinheritance)
 ADD_PYUNITTEST_ACLIC(test_doc_features DICTNAME doc_helper)
 ADD_PYUNITTEST_ACLIC(test_fragile DICTNAME fragile)
 ADD_PYUNITTEST_ACLIC(test_operators DICTNAME operators)
 ADD_PYUNITTEST_ACLIC(test_overloads DICTNAME overloads)
+ADD_PYUNITTEST_ACLIC(test_pythonization DICTNAME pythonizables)
+ADD_PYUNITTEST_ACLIC(test_stltypes DICTNAME stltypes)
 ADD_PYUNITTEST_ACLIC(test_streams DICTNAME std_streams)
 ADD_PYUNITTEST_ACLIC(test_templates DICTNAME templates)
-ADD_PYUNITTEST_ACLIC(test_pythonization DICTNAME pythonizables)
 
 ROOT_ADD_PYUNITTEST(test_pythonify test_pythonify.py ${common_args}
   COPY_TO_BUILDDIR example01.cxx example01.h
@@ -77,18 +61,6 @@ ROOT_ADD_PYUNITTEST(test_boost test_boost.py ${common_args})
 ROOT_ADD_PYUNITTEST(test_concurrent test_concurrent.py ${common_args})
 ROOT_ADD_PYUNITTEST(test_datatypes test_datatypes.py ${common_args} FIXTURES_REQUIRED datatypes_dict_fixture)
 ROOT_ADD_PYUNITTEST(test_eigen test_eigen.py ${common_args})
+ROOT_ADD_PYUNITTEST(test_leakcheck test_leakcheck.py ${common_args})
 ROOT_ADD_PYUNITTEST(test_numba test_numba.py ${common_args})
 ROOT_ADD_PYUNITTEST(test_regression test_regression.py ${common_args})
-
-if(NOT APPLE)
-  # test_stltypes completely fails on OSX
-  # because it is unable to load the necessary shared libraries
-  ADD_PYUNITTEST_ACLIC(test_stltypes DICTNAME stltypes)
-endif()
-
-if(enable_test_cpp11features)
-  ADD_PYUNITTEST_ACLIC(test_cpp11features DICTNAME cpp11features)
-endif()
-
-# The leakcheck test is disabled due to its sporadic nature, especially fragile on VMs
-# ROOT_ADD_PYUNITTEST(test_leakcheck test_leakcheck.py ${common_args})
