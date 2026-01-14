@@ -2179,5 +2179,33 @@ class TestSTLEXCEPTION:
         assert cppyy.gbl.GetMyErrorCount() == 0
 
 
+def has_cpp_20():
+    import cppyy
+
+    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
+
+
+@mark.skipif(not has_cpp_20(), reason="std::span requires C++20")
+class TestSTLSPAN:
+    import cppyy
+
+    def test01_span_iterators(self):
+        """
+        Test that std::span::begin() and std::span::end() can be used.
+
+        Covers https://github.com/root-project/root/issues/18837
+        """
+        import cppyy
+
+        l1 = [1, 2, 3]
+        v = cppyy.gbl.vector(int)(l1)
+        s = cppyy.gbl.span(int)(v)
+        s.begin()
+        s.end()
+        # Check that the iteration also works, which uses begin() and end()
+        # internally.
+        assert [b for b in s] == l1
+
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
