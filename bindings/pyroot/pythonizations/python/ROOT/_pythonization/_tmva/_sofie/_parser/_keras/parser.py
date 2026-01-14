@@ -277,7 +277,7 @@ def add_layer_into_RModel(rmodel, layer_data):
     else:
         raise Exception("TMVA.SOFIE - parsing keras layer " + fLayerType + " is not yet supported")
 
-class RModelParser_Keras:
+class PyKeras:
 
     def Parse(filename, batch_size=1):  # If a model does not have a defined batch size, then assuming it is 1
 
