@@ -6043,7 +6043,7 @@ void THistPainter::PaintContour(Option_t *option)
    TList *list = nullptr;
    TGraph *graph = nullptr;
    std::vector<Int_t> np;
-   if (Hoption.Contour == 1) {
+   if (Hoption.Contour == 1 || (Hoption.List && (Hoption.Contour == 11 || Hoption.Contour == 12 || Hoption.Contour == 13))) {
       np.resize(ncontour);
       for (i=0;i<ncontour;i++)
          np[i] = 0;
@@ -6168,7 +6168,8 @@ void THistPainter::PaintContour(Option_t *option)
                if (Hoption.Contour != 1) {
                   fH->TAttLine::Modify();
                   gPad->PaintPolyLine(2,xarr.data()+ix-1,yarr.data()+ix-1);
-                  continue;
+                  if ((Hoption.Contour != 11 && Hoption.Contour != 12 && Hoption.Contour != 13) || !Hoption.List)
+                     continue;
                }
 
                ipoly = itarr[ix-1];
@@ -6190,7 +6191,10 @@ void THistPainter::PaintContour(Option_t *option)
    Int_t first = ncontour;
    std::vector<Int_t> polysort;
    Int_t contListNb;
-   if (Hoption.Contour != 1) goto theEND;
+   if (Hoption.Contour != 1) {
+       if (!Hoption.List || (Hoption.Contour != 11 && Hoption.Contour != 12 && Hoption.Contour != 13))
+          goto theEND;
+   }
 
    //The 2 points line generated above are now sorted/merged to generate
    //a list of consecutive points.
@@ -6209,9 +6213,9 @@ void THistPainter::PaintContour(Option_t *option)
    k = 0;
    for (ipoly=first-1;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
    for (ipoly=first;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
-   // we can now draw sorted contours
+   // if Contour==1 we can now draw sorted contours, otherwise (11,12,13) just store
    contListNb = 0;
-   fH->SetFillStyle(1001);
+   if (Hoption.Contour == 1) fH->SetFillStyle(1001);
    for (k=0;k<ncontour;k++) {
       ipoly = polysort[k];
       if (Hoption.List) list = (TList*)contours->At(contListNb);
@@ -6250,12 +6254,22 @@ void THistPainter::PaintContour(Option_t *option)
          }
          theColor = Int_t((ipoly+0.99)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
-         if (ndivz > 1) fH->SetFillColor(icol);
-         fH->TAttFill::Modify();
-         gPad->PaintFillArea(iplus-iminus+1,xp.data()+iminus,yp.data()+iminus);
+         if (Hoption.Contour == 1) {
+            if (ndivz > 1) fH->SetFillColor(icol);
+            fH->TAttFill::Modify();
+            gPad->PaintFillArea(iplus-iminus+1,xp.data()+iminus,yp.data()+iminus);
+         }
          if (Hoption.List) {
             graph = new TGraph(iplus-iminus+1,xp.data()+iminus,yp.data()+iminus);
-            graph->SetFillColor(icol);
+            if (Hoption.Contour == 1)
+                graph->SetFillColor(icol);
+            else if (Hoption.Contour == 11)
+                graph->SetLineColor(icol);
+            else if (Hoption.Contour == 12) {
+                mode = icol%5;
+                if (mode == 0) mode = 5;
+                graph->SetLineStyle(mode);
+            }
             graph->SetLineWidth(fH->GetLineWidth());
             list->Add(graph);
          }
