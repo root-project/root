@@ -563,9 +563,9 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop)
 EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)}
 {
 #ifndef ROOFIT_CLAD
-   if (value == Value::Codegen || value == Value::CodegenNoGrad) {
+   if (value == Value::Codegen) {
       oocoutE(nullptr, InputArguments)
-         << "RooFit was built without clad. Codegen backends are unavailable. Falling back to default.\n";
+         << "RooFit was built without clad. The \"codegen\" backend is unavailable. Falling back to default.\n";
       setInt(0, static_cast<int>(defaultValue()));
    }
 #endif
