@@ -606,6 +606,20 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
    return 0;
 }
 
+static bool FilesAreEquivalent(std::string_view source, std::string_view target)
+{
+   const bool sourceHasProtocol = source.find_first_of("://") == std::string_view::npos;
+   const bool targetHasProtocol = target.find_first_of("://") == std::string_view::npos;
+   if (sourceHasProtocol != targetHasProtocol)
+      return false;
+
+   // We cannot use std::filesystem functions for file paths that have a protocol.
+   if (!sourceHasProtocol)
+      return source == target;
+
+   return std::filesystem::exists(target) && std::filesystem::equivalent(source, target);
+}
+
 int main(int argc, char **argv)
 {
    if (argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1])) {
@@ -707,7 +721,7 @@ int main(int argc, char **argv)
                            << (argv[a] + 1) << std::endl;
                      if (!args.fSkipErrors)
                         return 1;
-                  } else if (std::filesystem::exists(targetname) && std::filesystem::equivalent(line, targetname)) {
+                  } else if (FilesAreEquivalent(line, targetname)) {
                      Err() << "file " << line << " cannot be both the target and an input!\n";
                      if (!args.fSkipErrors)
                         return 1;
@@ -718,12 +732,12 @@ int main(int argc, char **argv)
             }
          }
       } else {
-         const std::string line = argv[a];
-         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
+         const char *line = argv[a];
+         if (gSystem->AccessPathName(line, kReadPermission) == kTRUE) {
             Err() << "could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!args.fSkipErrors)
                return 1;
-         } else if (std::filesystem::exists(targetname) && std::filesystem::equivalent(line, targetname)) {
+         } else if (FilesAreEquivalent(line, targetname)) {
             Err() << "file " << line << " cannot be both the target and an input!\n";
             if (!args.fSkipErrors)
                return 1;
