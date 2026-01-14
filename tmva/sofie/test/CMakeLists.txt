@@ -103,6 +103,13 @@ if (BLAS_FOUND)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
     ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
   endif()
+
+  # GELU Operator Unit Test
+  # Tests code generation with hexfloat constants for bit-exact reproducibility
+  ROOT_ADD_GTEST(TestSofieGELU TestSofieGELU.cxx
+    LIBRARIES
+      ROOTTMVASofie
+  )
 endif()
 
 # Look for needed Python modules
