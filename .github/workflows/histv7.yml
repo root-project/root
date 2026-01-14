@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=install -Dhistv7_benchmark=ON hist/histv7
+        run: cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="-Werror -Wall -Wextra -Wpedantic -Wsign-conversion" -DCMAKE_INSTALL_PREFIX=install -Dhistv7_benchmark=ON hist/histv7
       - name: Build
         run: cmake --build build
       - name: Install
