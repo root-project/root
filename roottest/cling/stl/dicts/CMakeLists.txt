@@ -11,3 +11,7 @@ ROOTTEST_LINKER_LIBRARY(stldictTest TEST MyClass1.cpp MyClass2.cpp MyClass3.cpp
 # of targets. Doing so right now would build the dictionaries twice.
 ROOT_ADD_TEST(roottest-cling-stl-dicts-build 
               COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target stldictTest${fast} -- ${always-make})
+if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
+    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+endif()

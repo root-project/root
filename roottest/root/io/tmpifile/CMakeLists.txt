@@ -13,6 +13,10 @@ ROOTTEST_ADD_TEST(split-fail
 
 ROOTTEST_ADD_TEST(libjetevent-build
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target JetEvent${fast} -- ${always-make})
+if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+    set_property(TEST roottest-root-io-tmpifile-libjetevent-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
+    set_property(TEST roottest-root-io-tmpifile-libjetevent-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+endif()
 
 ROOTTEST_ADD_TEST(sync-rate
                   COPY_TO_BUILDDIR sync_rate.C
