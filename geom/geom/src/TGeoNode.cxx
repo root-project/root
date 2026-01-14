@@ -70,9 +70,15 @@ painting a node on a pad will take the corresponding volume attributes.
 
 #include <iostream>
 
-#include "TBrowser.h"
-#include "TObjArray.h"
-#include "TStyle.h"
+#include <TBrowser.h>
+#include <TObjArray.h>
+#include <TStyle.h>
+#include <TMath.h>
+#include <TStopwatch.h>
+#include <ROOT/TThreadExecutor.hxx>
+#include <mutex>
+#include <vector>
+#include <utility>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -82,8 +88,6 @@ painting a node on a pad will take the corresponding volume attributes.
 #include "TVirtualGeoChecker.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoNode.h"
-#include "TMath.h"
-#include "TStopwatch.h"
 #include "TGeoExtension.h"
 
 // statics and globals
@@ -271,21 +275,74 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
          ncand += checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
       }
    }
-   Info("CheckOverlaps", "Checking %d candidates ...", ncand);
+   timer.Stop();
+   Info("CheckOverlaps", "--- found %d candidates in %g [sec]", ncand, timer.RealTime());
+
+   Info("CheckOverlaps", "--- filling points to be checked...");
+   timer.Start();
+   checker->BuildMeshPointsCache(candidates);
+   timer.Stop();
+   Info("CheckOverlaps", "--- points filled in: %g [sec]", timer.RealTime());
+
    fVolume->SelectVolume(kTRUE);
 
-   // -------- Stage 2: compute (main thread for now)
-   TGeoOverlapWorkState ws(checker->GetNmeshPoints());
-   ws.Reset();
+   // -------- Stage 2: compute (parallel)
+   const size_t chunkSize = 1024; // tune: 256..4096
+   auto makeChunks = [&](size_t n) {
+      std::vector<std::pair<size_t, size_t>> chunks;
+      chunks.reserve((n + chunkSize - 1) / chunkSize);
+      for (size_t b = 0; b < n; b += chunkSize)
+         chunks.emplace_back(b, std::min(n, b + chunkSize));
+      return chunks;
+   };
+
+   auto chunks = makeChunks(candidates.size());
 
    std::vector<TGeoOverlapResult> results;
    results.reserve(256);
 
-   for (const auto &c : candidates) {
-      TGeoOverlapResult r;
-      if (checker->ComputeOverlap(c, ws, r))
-         results.emplace_back(std::move(r));
-   }
+   std::mutex resultsMutex;
+
+   // Policy: if ROOT IMT is enabled, follow the number of threads defined via:
+   //         ROOT::EnableImplicitMT()
+   ROOT::TThreadExecutor pool(ROOT::GetThreadPoolSize());
+   auto nthreads = pool.GetPoolSize();
+   if (!ROOT::IsImplicitMTEnabled())
+      Info("CheckOverlaps", "--- checking candidates with %u threads (use ROOT::EnableImplicitMT(N) to change)...",
+           nthreads);
+   else
+      Info("CheckOverlaps", "--- checking candidates with %u threads...", nthreads);
+
+   // Make sure TGeoManager MT mode follows, otherwise TGeo is thread unsafe
+   if (nthreads > 1)
+      geom->SetMaxThreads(nthreads);
+
+   timer.Start();
+   pool.Foreach(
+      [&](const std::pair<size_t, size_t> &range) {
+         // one-time init per OS thread
+         static thread_local bool navInit = false;
+         if (!navInit) {
+            if (!geom->GetCurrentNavigator())
+               geom->AddNavigator();
+            navInit = true;
+         }
+
+         std::vector<TGeoOverlapResult> local;
+         local.reserve(32);
+
+         for (size_t i = range.first; i < range.second; ++i) {
+            TGeoOverlapResult r;
+            if (checker->ComputeOverlap(candidates[i], r))
+               local.emplace_back(std::move(r));
+         }
+
+         if (!local.empty()) {
+            std::lock_guard<std::mutex> lock(resultsMutex);
+            results.insert(results.end(), std::make_move_iterator(local.begin()), std::make_move_iterator(local.end()));
+         }
+      },
+      chunks);
 
    // -------- Stage 3: materialize overlaps (main thread)
    for (const auto &r : results)

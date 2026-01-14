@@ -9,9 +9,10 @@
 #ifndef ROOT_TVirtualGeoChecker
 #define ROOT_TVirtualGeoChecker
 
-#include "TObject.h"
 #include <vector>
-#include "TGeoOverlapWorkState.h"
+
+#include "TObject.h"
+#include "TGeoOverlapCandidate.h"
 
 class TGeoVolume;
 class TGeoShape;
@@ -28,6 +29,7 @@ public:
    TVirtualGeoChecker();
    ~TVirtualGeoChecker() override;
 
+   virtual void BuildMeshPointsCache(const std::vector<TGeoOverlapCandidate> &candidates) = 0;
    virtual void
    CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.) = 0;
    virtual void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) = 0;
@@ -37,8 +39,7 @@ public:
                                   const Double_t *vertex = nullptr) = 0;
    virtual void CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
    virtual void CheckOverlapsBySampling(const TGeoVolume *vol, Double_t ovlp = 0.1, Int_t npoints = 1000000) const = 0;
-   virtual Bool_t
-   ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapWorkState &ws, TGeoOverlapResult &out) const = 0;
+   virtual Bool_t ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapResult &out) const = 0;
    virtual Int_t EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
                                             std::vector<TGeoOverlapCandidate> &out) = 0;
    Int_t GetNmeshPoints() const { return fNmeshPoints; }
