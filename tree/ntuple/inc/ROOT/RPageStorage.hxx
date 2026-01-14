@@ -757,7 +757,7 @@ public:
    /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:
    /// within one thread, only one lock (shared or exclusive) must be acquired at the same time. This requires special
    /// care in sections protected by `GetSharedDescriptorGuard()` and `GetExclDescriptorGuard()` especially to avoid
-   /// that the locks are acquired indirectly (e.g. by a call to `GetNEntries()`). As a general guideline, no other
+   /// that the locks are acquired indirectly. As a general guideline, no other
    /// method of the page source should be called (directly or indirectly) in a guarded section.
    const RSharedDescriptorGuard GetSharedDescriptorGuard() const
    {
