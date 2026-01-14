@@ -4,13 +4,24 @@ set(CMAKE_ROOTTEST_NOROOTMAP OFF)
 ROOT_GENERATE_DICTIONARY(base_cling ${CMAKE_CURRENT_SOURCE_DIR}/base.h MODULE base LINKDEF baseLinkDef.h)
 ROOTTEST_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES ROOT::Core ROOT::RIO)
 
+add_test(NAME roottest-root-io-transient-base-build
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                                  ${build_config}
+                                  --target base${fast}
+                                  -- ${always-make})
+set_property(TEST roottest-root-io-transient-base-build PROPERTY FIXTURES_SETUP root-io-transient-base-build)
+if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
+   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+endif()
+
 ROOTTEST_ADD_TEST(WriteFile
                   COPY_TO_BUILDDIR testobject.h testobjectderived.h
-                  PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target base${fast}
                   MACRO execWriteFile.cxx+
                   ROOTEXE_OPTS -e "(void)gSystem->Load(\"libbase\")"
                   OUTREF execWriteFile${ref_suffix}
                   TIMEOUT 600
+                  FIXTURES_REQUIRED root-io-transient-base-build
                   FIXTURES_SETUP root-io-transient-base-WriteFile-fixture)
 
 if(${compression_default} STREQUAL "lz4")
