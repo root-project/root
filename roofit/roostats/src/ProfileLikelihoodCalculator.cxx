@@ -160,7 +160,7 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    const char * minimAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
    int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
    int level = ROOT::Math::MinimizerOptions::DefaultPrintLevel() -1;// RooFit level starts from  -1
-   int tolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
+   double tolerance = ROOT::Math::MinimizerOptions::DefaultTolerance();
    // do global fit and store fit result for further use
 
    const auto& config = GetGlobalRooStatsConfig();
