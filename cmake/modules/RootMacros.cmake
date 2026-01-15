@@ -498,7 +498,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
    if((NOT d MATCHES "=") AND (NOT d MATCHES "^[$]<.*>$")) # avoid generator expressions
-     set(definitions ${definitions} -D${d})
+     set(definitions ${definitions} -D;${d})
    endif()
   endforeach()
   #---Get LinkDef.h file------------------------------------
@@ -679,14 +679,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
      list(REMOVE_DUPLICATES incdirs)
      foreach(dir ${incdirs})
         if (NOT ${dir} MATCHES "^\\$<INSTALL_INTERFACE:")
-          list(APPEND includedirs -I${dir})
+          list(APPEND includedirs -I;${dir})
         endif()
      endforeach()
   endif()
 
   set(compIncPaths)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND compIncPaths "-compilerI${implinc}")
+    list(APPEND compIncPaths "--compilerI;${implinc}")
   endforeach()
 
   if(cpp_module_file AND TARGET ${ARG_MODULE})
@@ -699,15 +699,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
     COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                        ${ARG_OPTIONS}
-                       ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
+                       ${definitions} "$<$<BOOL:${module_defs}>:-D;$<JOIN:${module_defs},;-D;>>"
                        ${compIncPaths}
                        "$<$<BOOL:${module_sysincs}>:-isystem;$<JOIN:${module_sysincs},;-isystem;>>"
-                       ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
+                       ${includedirs} "$<$<BOOL:${module_incs}>:-I;$<JOIN:${module_incs},;-I;>>"
                        ${headerfiles} ${_linkdef}
                        # Add random dummy macro including the CMAKE_CXX_STANDARD variable. This the easiest way to
                        # make the dictionary generation command depend on the C++ standard, ensuring that the
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
-                       -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
+                       -D R__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
     IMPLICIT_DEPENDS ${_implicitdeps}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
