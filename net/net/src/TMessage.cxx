@@ -409,15 +409,27 @@ Int_t TMessage::Uncompress()
    if (!fBufComp || !(fWhat & kMESS_ZIP))
       return -1;
 
+   Int_t nbytesRemain = CompLength();
+   if (nbytesRemain < static_cast<Int_t>(3 * sizeof(Int_t))) {
+      Error("Uncompress", "Compressed buffer too short (%d)", CompLength());
+      return -1;
+   }
    Int_t buflen;
    Int_t hdrlen = 2*sizeof(UInt_t);
    char *bufcur1 = fBufComp + hdrlen;
    frombuf(bufcur1, &buflen);
    UChar_t *bufcur = (UChar_t*)bufcur1;
+   nbytesRemain -= 3 * sizeof(Int_t);
+
+   if (buflen < hdrlen) {
+      Error("Uncompress", "Uncompressed buffer length too short (%d)", buflen);
+      return -1;
+   }
 
    /* early consistency check */
-   Int_t nin, nbuf;
-   if(R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+   Int_t nin = 0;
+   Int_t nbuf = 0;
+   if ((nbytesRemain < ROOT::Internal::kZipHeaderSize) || R__unzip_header(&nin, bufcur, &nbuf) != 0) {
       Error("Uncompress", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
       return -1;
    }
@@ -427,21 +439,34 @@ Int_t TMessage::Uncompress()
    fBufCur  = fBuffer + sizeof(UInt_t) + sizeof(fWhat);
    fBufMax  = fBuffer + fBufSize;
    char *messbuf = fBuffer + hdrlen;
-   
+
    // Force being owner of the newly created buffer
    SetBit(kIsOwner);
 
-   Int_t nout;
+   Int_t nout = 0;
    Int_t noutot = 0;
-   while (1) {
+   Int_t objlenRemain = buflen - hdrlen;
+   while (nbytesRemain >= ROOT::Internal::kZipHeaderSize) {
       Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
-      if (hc!=0) break;
+      if ((hc != 0) || (nin > nbytesRemain) || (nbuf > objlenRemain))
+         break;
       R__unzip(&nin, bufcur, &nbuf, (unsigned char*) messbuf, &nout);
       if (!nout) break;
       noutot += nout;
       if (noutot >= buflen - hdrlen) break;
       bufcur  += nin;
       messbuf += nout;
+      nbytesRemain -= nin;
+      objlenRemain -= nout;
+   }
+
+   if (noutot != buflen - hdrlen) {
+      Error("Uncompress", "buflen = %d, objlenRemain = %d, noutot = %d, nout=%d, nin=%d, nbuf=%d", buflen, objlenRemain,
+            noutot, nout, nin, nbuf);
+      delete[] fBuffer;
+      fBuffer = fBufCur = fBufMax = nullptr;
+      fBufSize = 0;
+      return -1;
    }
 
    fWhat &= ~kMESS_ZIP;
