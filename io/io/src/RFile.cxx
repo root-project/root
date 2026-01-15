@@ -551,3 +551,8 @@ void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RK
    void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
    return obj;
 }
+
+TFile *ROOT::Experimental::Internal::GetRFileTFile(RFile &file)
+{
+   return file.fFile.get();
+}

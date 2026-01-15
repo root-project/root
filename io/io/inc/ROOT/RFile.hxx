@@ -36,6 +36,8 @@ ROOT::RLogChannel &RFileLog();
 /// This method is meant to only be used by the pythonization.
 [[nodiscard]] void *RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
 
+TFile *GetRFileTFile(RFile &rfile);
+
 } // namespace Internal
 
 namespace Detail {
@@ -224,6 +226,7 @@ auto myObj = file->Get<TH1D>("h");
 */
 class RFile final {
    friend void *Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
+   friend TFile *Internal::GetRFileTFile(RFile &rfile);
 
    /// Flags used in PutInternal()
    enum PutFlags {
