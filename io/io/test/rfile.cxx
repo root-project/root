@@ -11,6 +11,9 @@
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 using ROOT::Experimental::RFile;
 using ROOT::TestSupport::FileRaii;
@@ -685,7 +688,7 @@ TEST(RFile, GetKeyInfo)
 
    EXPECT_EQ(file->GetKeyInfo("foo"), std::nullopt);
 
-   for (const std::string_view path : { "/s", "a/b/c", "b", "/a/d" }) {
+   for (const std::string_view path : {"/s", "a/b/c", "b", "/a/d"}) {
       auto key = file->GetKeyInfo(path);
       ASSERT_NE(key, std::nullopt);
       EXPECT_EQ(key->GetPath(), path[0] == '/' ? path.substr(1) : path);
@@ -693,4 +696,28 @@ TEST(RFile, GetKeyInfo)
       EXPECT_EQ(key->GetTitle(), "");
       EXPECT_EQ(key->GetCycle(), 1);
    }
+}
+
+TEST(RFile, RNTuple)
+{
+   FileRaii fileGuard("test_rfile_rntuple.root");
+
+   // Writing
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+
+      auto model = ROOT::RNTupleModel::Create();
+      *model->MakeField<float>("x") = 42;
+
+      auto writer = ROOT::Experimental::RNTupleWriter_Append(std::move(model), "data", *file);
+      writer->Fill();
+   }
+
+   // Reading back
+   auto file = RFile::Open(fileGuard.GetPath());
+   auto ntuple = file->Get<ROOT::RNTuple>("data");
+   ASSERT_NE(ntuple, nullptr);
+   auto reader = ROOT::RNTupleReader::Open(*ntuple);
+   EXPECT_EQ(reader->GetNEntries(), 1);
+   EXPECT_FLOAT_EQ(reader->GetView<float>("x")(0), 42);
 }
