@@ -1027,26 +1027,26 @@ th2_stats.svg
 </text>
 <text xml:space="preserve" x="32" y="62" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">20
 </text>
-<rect x="481" y="453" width="26" height="15" fill="#263da8"/>
-<rect x="481" y="437" width="26" height="15" fill="#1652cc"/>
-<rect x="481" y="422" width="26" height="15" fill="#1063db"/>
-<rect x="481" y="407" width="26" height="15" fill="#1171d8"/>
-<rect x="481" y="392" width="26" height="15" fill="#1380d5"/>
-<rect x="481" y="377" width="26" height="15" fill="#0e8ed0"/>
-<rect x="481" y="361" width="26" height="15" fill="#089dcc"/>
-<rect x="481" y="346" width="26" height="15" fill="#0da7c2"/>
-<rect x="481" y="331" width="26" height="15" fill="#1dafb3"/>
-<rect x="481" y="316" width="26" height="15" fill="#2db7a3"/>
-<rect x="481" y="300" width="26" height="15" fill="#52ba91"/>
-<rect x="481" y="285" width="26" height="15" fill="#73bd80"/>
-<rect x="481" y="270" width="26" height="15" fill="#94be71"/>
-<rect x="481" y="255" width="26" height="15" fill="#b2bc65"/>
-<rect x="481" y="239" width="26" height="15" fill="#d0ba59"/>
-<rect x="481" y="224" width="26" height="15" fill="#e1bf4a"/>
-<rect x="481" y="209" width="26" height="15" fill="#f4c53a"/>
-<rect x="481" y="194" width="26" height="15" fill="#fcd12b"/>
-<rect x="481" y="178" width="26" height="15" fill="#fae61c"/>
-<rect x="481" y="163" width="26" height="15" fill="#f9f90e"/>
+<rect x="481" y="445" width="26" height="15" fill="#263da8"/>
+<rect x="481" y="430" width="26" height="15" fill="#1652cc"/>
+<rect x="481" y="415" width="26" height="15" fill="#1063db"/>
+<rect x="481" y="399" width="26" height="15" fill="#1171d8"/>
+<rect x="481" y="384" width="26" height="15" fill="#1380d5"/>
+<rect x="481" y="369" width="26" height="15" fill="#0e8ed0"/>
+<rect x="481" y="354" width="26" height="15" fill="#089dcc"/>
+<rect x="481" y="338" width="26" height="15" fill="#0da7c2"/>
+<rect x="481" y="323" width="26" height="15" fill="#1dafb3"/>
+<rect x="481" y="308" width="26" height="15" fill="#2db7a3"/>
+<rect x="481" y="293" width="26" height="15" fill="#52ba91"/>
+<rect x="481" y="277" width="26" height="15" fill="#73bd80"/>
+<rect x="481" y="262" width="26" height="15" fill="#94be71"/>
+<rect x="481" y="247" width="26" height="15" fill="#b2bc65"/>
+<rect x="481" y="232" width="26" height="15" fill="#d0ba59"/>
+<rect x="481" y="217" width="26" height="15" fill="#e1bf4a"/>
+<rect x="481" y="201" width="26" height="15" fill="#f4c53a"/>
+<rect x="481" y="186" width="26" height="15" fill="#fcd12b"/>
+<rect x="481" y="171" width="26" height="15" fill="#fae61c"/>
+<rect x="481" y="163" width="26" height="7.6" fill="#f9f90e"/>
 <path d="M506,468v -305" fill="none" stroke="black"/>
 <path d="M497,468h 9.5" fill="none" stroke="black"/>
 <path d="M497,435h 9.5" fill="none" stroke="black"/>
