@@ -327,7 +327,7 @@ class TestSTLVECTOR:
 
         v.__destruct__()
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test05_push_back_iterables_with_iadd(self):
         """Test usage of += of iterable on push_back-able container"""
 
@@ -447,7 +447,7 @@ class TestSTLVECTOR:
 
         raises(TypeError, cppyy.gbl.std.vector["std::string"], "abc")
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test10_vector_std_distance(self):
         """Use of std::distance with vector"""
 
@@ -459,7 +459,7 @@ class TestSTLVECTOR:
         assert std.distance(v.begin(), v.end()) == v.size()
         assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test11_vector_of_pair(self):
         """Use of std::vector<std::pair>"""
 
@@ -570,7 +570,7 @@ class TestSTLVECTOR:
             i += 1
         assert i == len(result)
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test14_vector_of_vector_of_(self):
         """Nested vectors"""
 
@@ -586,7 +586,7 @@ class TestSTLVECTOR:
         assert vv[1][0] == 3
         assert vv[1][1] == 4
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test15_vector_slicing(self):
         """Advanced test of vector slicing"""
 

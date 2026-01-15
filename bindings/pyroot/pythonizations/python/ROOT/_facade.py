@@ -142,14 +142,6 @@ class ROOTFacade(types.ModuleType):
     def _register_converters_and_executors(self):
 
         converter_aliases = {
-            "Long64_t": "long long",
-            "Long64_t ptr": "long long ptr",
-            "Long64_t&": "long long&",
-            "const Long64_t&": "const long long&",
-            "ULong64_t": "unsigned long long",
-            "ULong64_t ptr": "unsigned long long ptr",
-            "ULong64_t&": "unsigned long long&",
-            "const ULong64_t&": "const unsigned long long&",
             "Float16_t": "float",
             "const Float16_t&": "const float&",
             "Double32_t": "double",
@@ -158,12 +150,6 @@ class ROOTFacade(types.ModuleType):
         }
 
         executor_aliases = {
-            "Long64_t": "long long",
-            "Long64_t&": "long long&",
-            "Long64_t ptr": "long long ptr",
-            "ULong64_t": "unsigned long long",
-            "ULong64_t&": "unsigned long long&",
-            "ULong64_t ptr": "unsigned long long ptr",
             "Float16_t": "float",
             "Float16_t&": "float&",
             "Double32_t": "double",
