@@ -323,12 +323,7 @@ static bool FillVector(PyObject* vecin, PyObject* args, ItemGetter* getter)
 // reserve memory as applicable
     if (0 < sz) {
         PyObject* res = PyObject_CallMethod(vecin, (char*)"reserve", (char*)"n", sz);
-        // TODO: Actually this "res" should never be nullptr, but somehow this
-        // call can fail on Windows 64 bit, resulting in "res" being a nullptr.
-        // This needs to be fixed, and then we can use again Py_DECREF(res),
-        // which doesn't do the nullptr check. Alternatively, there should be a
-        // proper error if calling reserve() fails.
-        Py_XDECREF(res);
+        Py_DECREF(res);
     } else   // i.e. sz == 0, so empty container: done
         return true;
 
