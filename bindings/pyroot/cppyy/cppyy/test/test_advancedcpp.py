@@ -11,7 +11,7 @@ class TestADVANCEDCPP:
         import cppyy
         cls.advanced = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail
+    @mark.xfail(strict=True)
     def test01_default_arguments(self):
         """Test usage of default arguments"""
 
@@ -386,7 +386,7 @@ class TestADVANCEDCPP:
         assert gbl.get_d(d) == 44
         d.__destruct__()
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_void_pointer_passing(self):
         """Test passing of variants of void pointer arguments"""
 
@@ -597,7 +597,7 @@ class TestADVANCEDCPP:
         gc.collect()
         assert cppyy.gbl.new_overloader.s_instances == 0
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test15_template_instantiation_with_vector_of_float(self):
         """Test template instantiation with a std::vector<float>"""
 
@@ -623,7 +623,7 @@ class TestADVANCEDCPP:
         assert f(3.) == 3.
         assert type(f(4.)) == type(4.)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test17_assign_to_return_byref(self):
         """Test assignment to an instance returned by reference"""
 
@@ -684,7 +684,7 @@ class TestADVANCEDCPP:
         assert cppyy.gbl.overload_one_way().gime() == 1
         assert cppyy.gbl.overload_the_other_way().gime() == "aap"
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test21_access_to_global_variables(self):
         """Access global_variables_and_pointers"""
 
@@ -773,7 +773,7 @@ class TestADVANCEDCPP:
         assert d2.vcheck()  == 'A'
         assert d2.vcheck(1) == 'B'
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test24_typedef_to_private_class(self):
         """Typedefs to private classes should not resolve"""
 
@@ -781,7 +781,7 @@ class TestADVANCEDCPP:
 
         assert cppyy.gbl.TypedefToPrivateClass().f().m_val == 42
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test25_ostream_printing(self):
         """Mapping of __str__ through operator<<(ostream&)"""
 

@@ -380,7 +380,7 @@ namespace Namespace {
 
         pass
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_x_inheritance(self):
         import cppyy
         from cppyy.gbl import Abstract, Concrete, call_abstract_method
@@ -785,7 +785,7 @@ class TestADVERTISED:
         Advert02.Picam_OpenFirstCamera(cam)
         assert Advert02.Picam_CloseCamera(cam)
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test03_use_of_ctypes_and_enum(self):
         """Use of (opaque) enum through ctypes.c_void_p"""
 
@@ -837,7 +837,7 @@ class TestADVERTISED:
         assert list(arr) == [1, 42, 1, 42]
         cppyy.gbl.free(vp)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_ptr_ptr_python_owns(self):
         """Example of ptr-ptr use where python owns"""
 
@@ -923,7 +923,7 @@ class TestADVERTISED:
         val = createit(ptr)
         assert destroyit(ptr) == val
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test07_array_of_arrays(self):
         """Example of array of array usage"""
 
@@ -1077,7 +1077,7 @@ class TestTALKEXAMPLES:
 
         cppyy.gbl.talk_examples
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_template_instantiation(self):
         """Run-time template instantiation example"""
 
@@ -1130,7 +1130,7 @@ class TestTALKEXAMPLES:
 
         assert v.back().add(17) == 4+42+2*17
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_fallbacks(self):
         """Template instantation switches based on value sizes"""
 
@@ -1149,7 +1149,7 @@ class TestTALKEXAMPLES:
         assert CC.passT(2**64-1) == 2**64-1
         assert 'unsigned long long' in CC.passT.__doc__
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_callbacks(self):
         """Function callback example"""
 
@@ -1176,7 +1176,7 @@ class TestTALKEXAMPLES:
         assert CC.callPtr(lambda i: 5*i, 4) == 20
         assert CC.callFun(lambda i: 6*i, 4) == 24
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_templated_callback(self):
         """Templated callback example"""
 
@@ -1255,7 +1255,7 @@ class TestTALKEXAMPLES:
         with raises(CC.MyException):
             CC.throw_error()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test_unicode(self):
         """Unicode non-UTF-8 example"""
 

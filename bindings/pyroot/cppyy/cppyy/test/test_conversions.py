@@ -86,7 +86,7 @@ class TestCONVERSIONS:
         gc.collect()
         assert CC.s_count == 0
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test04_implicit_conversion_from_tuple(self):
         """Allow implicit conversions from tuples as arguments {}-like"""
 

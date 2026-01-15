@@ -162,7 +162,7 @@ class TestFRAGILE:
         g = cppyy.gbl.fragile.gI
         assert not g
 
-    @mark.xfail
+    @mark.xfail(strict=True)
     def test10_documentation(self):
         """Check contents of documentation"""
 
@@ -208,7 +208,7 @@ class TestFRAGILE:
         except TypeError as e:
             assert "cannot instantiate abstract class 'fragile::O'" in str(e)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test11_dir(self):
         """Test __dir__ method"""
 
@@ -443,7 +443,7 @@ class TestFRAGILE:
         finally:
             sys.path = oldsp
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test18_overload(self):
         """Test usage of __overload__"""
 
@@ -532,7 +532,7 @@ class TestFRAGILE:
         assert "invaliddigit" in err
         assert "1aap=42;" in err
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test22_cppexec(self):
         """Interactive access to the Cling global scope"""
 
@@ -560,7 +560,7 @@ class TestFRAGILE:
         cppyy.set_debug(False)
         assert cppyy.gbl.CppyyLegacy.gDebug ==  0
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test24_asan(self):
         """Check availability of ASAN with gcc"""
 
@@ -731,7 +731,7 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail
+    @mark.xfail(strict=True)
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -786,7 +786,7 @@ class TestSIGNALS:
 
 
 class TestSTDNOTINGLOBAL:
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test01_stl_in_std(self):
         """STL classes should live in std:: only"""
 
@@ -817,7 +817,7 @@ class TestSTDNOTINGLOBAL:
         assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
         assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test03_clashing_using_in_global(self):
         """Redefines of std:: typedefs should be possible in global"""
 
@@ -833,7 +833,7 @@ class TestSTDNOTINGLOBAL:
         for name in ['int', 'uint', 'ushort', 'uchar', 'byte']:
             getattr(cppyy.gbl, name)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_no_legacy(self):
         """Test some functions that previously crashed"""
 
@@ -853,7 +853,7 @@ class TestSTDNOTINGLOBAL:
 
         assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test05_span_compatibility(self):
         """Test compatibility of span under C++2a compilers that support it"""
 

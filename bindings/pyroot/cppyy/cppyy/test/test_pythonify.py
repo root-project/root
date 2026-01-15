@@ -241,7 +241,7 @@ class TestPYTHONIFY:
 
         # TODO: need ReferenceError on touching pl_a
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test10_default_arguments(self):
         """Test propagation of default function arguments"""
 
@@ -376,7 +376,7 @@ class TestPYTHONIFY:
 
         assert example01.getCount() == 0
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test17_chaining(self):
         """Respective return values of temporaries should not go away"""
 
@@ -394,7 +394,7 @@ class TestPYTHONIFY:
 
         assert cppyy.gbl.Lifeline.gime(42).get()[0].get()[0].get()[0].get()[0].x == 42
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test18_keywords(self):
         """Use of keyword arguments"""
 

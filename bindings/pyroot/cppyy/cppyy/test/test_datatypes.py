@@ -184,7 +184,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test02_instance_data_write_access(self):
         """Test write access to instance public data and verify values"""
 
@@ -366,7 +366,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_class_read_access(self):
         """Test read access to class public data and verify values"""
 
@@ -529,7 +529,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test07_type_conversions(self):
         """Test conversions between builtin types"""
 
@@ -723,7 +723,7 @@ class TestDATATYPES:
         assert gbl.EnumSpace.AA == 1
         assert gbl.EnumSpace.BB == 2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test11_typed_enums(self):
         """Determine correct types of enums"""
 
@@ -766,7 +766,7 @@ class TestDATATYPES:
         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
         assert isinstance(sc.vraioufaux.faux, bool)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_enum_scopes(self):
         """Enum accessibility and scopes"""
 
@@ -1092,7 +1092,7 @@ class TestDATATYPES:
 
         assert not d2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test22_buffer_shapes(self):
         """Correctness of declared buffer shapes"""
 
@@ -1468,7 +1468,7 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test29_std_function_life_lines(self):
         """Life lines to std::function data members"""
 
@@ -1540,7 +1540,7 @@ class TestDATATYPES:
                 p = (ctype * len(buf)).from_buffer(buf)
                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_anonymous_union(self):
         """Anonymous unions place there fields in the parent scope"""
 
@@ -1634,7 +1634,7 @@ class TestDATATYPES:
         assert type(p.data_c[0]) == float
         assert p.intensity == 5.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_anonymous_struct(self):
         """Anonymous struct creates an unnamed type"""
 
@@ -1683,7 +1683,7 @@ class TestDATATYPES:
 
         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test33_pointer_to_array(self):
         """Usability of pointer to array"""
 
@@ -1863,7 +1863,7 @@ class TestDATATYPES:
         m = ns.create_matrix(N, M)
         assert ns.destroy_matrix(ns.g_matrix, N, M)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_plain_old_data(self):
         """Initializer construction of PODs"""
 
@@ -1950,7 +1950,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Test doesn't work on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Test doesn't work on Windows")
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2040,7 +2040,7 @@ class TestDATATYPES:
         r2 = ns.make_R2()
         assert r2.s.x == 1
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test41_complex_numpy_arrays(self):
         """Usage of complex numpy arrays"""
 
@@ -2088,7 +2088,7 @@ class TestDATATYPES:
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2102,7 +2102,7 @@ class TestDATATYPES:
         assert c*(c*c) == p*(p*p)
         assert (c*c)*c == (p*p)*p
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test43_ccharp_memory_handling(self):
         """cppyy side handled memory of C strings"""
 
@@ -2219,7 +2219,7 @@ class TestDATATYPES:
         b = ns.B()
         assert b.body1.name == b.body2.name
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test46_small_int_enums(self):
         """Proper typing of small int enums"""
 
@@ -2274,7 +2274,7 @@ class TestDATATYPES:
         assert ns.func_int8()  == -1
         assert ns.func_uint8() == 255
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 
@@ -2391,7 +2391,7 @@ class TestDATATYPES:
             else:
                 assert type(v) == gbl.PolymorphicMaps.Derived
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test52_virtual_inheritance(self):
         import cppyy
         from cppyy import gbl

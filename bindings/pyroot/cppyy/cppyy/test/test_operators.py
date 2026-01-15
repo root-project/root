@@ -221,7 +221,7 @@ class TestOPERATORS:
             assert m[1]    == 74
             assert m(1,2)  == 74
 
-    @mark.xfail(reason="Compilation of unused call wrappers emits errors")
+    @mark.xfail(strict=True, reason="Compilation of unused call wrappers emits errors")
     def test09_templated_operator(self):
         """Templated operator<()"""
 
@@ -337,7 +337,7 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
-    @mark.xfail(reason='Fails on macOS and on Linux with gcc 16 because cppyy picks the wrong "operator-" overload.')
+    @mark.xfail(strict=True, reason='Fails on macOS and on Linux with gcc 16 because cppyy picks the wrong "operator-" overload.')
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 

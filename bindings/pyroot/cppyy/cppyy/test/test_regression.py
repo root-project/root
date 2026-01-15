@@ -83,7 +83,7 @@ class TestREGRESSION:
         # TODO: it's deeply silly that namespaces inherit from CPPInstance (in CPyCppyy)
         assert ('CPPInstance' in helptext or 'CPPNamespace' in helptext)
 
-    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
+    @mark.xfail(strict=True, condition=IS_MAC, reason="Fails on OSX")
     def test03_pyfunc_doc(self):
         """Help on a generated pyfunc used to crash."""
 
@@ -308,7 +308,7 @@ class TestREGRESSION:
         assert cppyy.gbl.csoc3.call('0')  == 'string'
         assert cppyy.gbl.csoc3.call('00') == 'string'
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test14_struct_direct_definition(self):
         """Struct defined directly in a scope miseed scope in renormalized name"""
 
@@ -383,7 +383,7 @@ class TestREGRESSION:
         sizeit = cppyy.gbl.vec_vs_init.sizeit
         assert sizeit(list(range(10))) == 10
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test16_iterable_enum(self):
         """Use template to iterate over an enum"""
       # from: https://stackoverflow.com/questions/52459530/pybind11-emulate-python-enum-behaviour
@@ -476,7 +476,7 @@ class TestREGRESSION:
 
         assert a != b             # derived class' C++ operator!= called
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test18_operator_plus_overloads(self):
         """operator+(string, string) should return a string"""
 
@@ -525,7 +525,7 @@ class TestREGRESSION:
 
         assert obj.getter() == 'c'
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test21_temporaries_and_vector(self):
         """Extend a life line to references into a vector if needed"""
 
@@ -538,7 +538,7 @@ class TestREGRESSION:
         l = [e for e in cppyy.gbl.get_some_temporary_vector()]
         assert l == ['x', 'y', 'z']
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test22_initializer_list_and_temporary(self):
         """Conversion rules when selecting intializer_list v.s. temporary"""
 
@@ -710,7 +710,7 @@ class TestREGRESSION:
             i += 1
         assert i
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test26_const_charptr_data(self):
         """const char* is not const; const char* const is"""
 
@@ -860,7 +860,7 @@ class TestREGRESSION:
         g.triggerChange()
         assert g.success
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test30_uint64_t(self):
         """Failure due to typo"""
 
@@ -894,7 +894,7 @@ class TestREGRESSION:
         assert ns.TTest(True).fT == True
         assert type(ns.TTest(True).fT) == bool
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_enum_in_dir(self):
         """Failed to pick up enum data"""
 
@@ -917,7 +917,7 @@ class TestREGRESSION:
         required = {'prod', 'a', 'b', 'smth', 'my_enum'}
         assert all_names.intersection(required) == required
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_typedef_class_enum(self):
         """Use of class enum with typedef'd type"""
 
@@ -955,7 +955,7 @@ class TestREGRESSION:
             assert o.x == Foo.BAZ
             assert o.y == 1
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test33_explicit_template_in_namespace(self):
         """Lookup of explicit template in namespace"""
 
@@ -1061,7 +1061,7 @@ class TestREGRESSION:
 
         assert cppyy.sizeof(param) == ctypes.sizeof(param)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test37_array_of_pointers_argument(self):
         """Passing an array of pointers used to crash"""
 
@@ -1087,7 +1087,7 @@ class TestREGRESSION:
 
             assert cppyy.addressof(res) == cppyy.addressof(arr)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_char16_arrays(self):
         """Access to fixed-size char16 arrays as data members"""
 
@@ -1143,7 +1143,7 @@ class TestREGRESSION:
             assert ai.name[:5] == u'hello'
         cppyy.ll.array_delete(aa)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test39_vector_of_pointers_conversion(self):
         """vector<T*>'s const T*& used to be T**, now T*"""
 
@@ -1356,7 +1356,7 @@ class TestREGRESSION:
         finally:
             cppyy._backend.SetHeuristicMemoryPolicy(old_memory_policy)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test45_typedef_resolution(self):
         """Typedefs starting with 'c'"""
 

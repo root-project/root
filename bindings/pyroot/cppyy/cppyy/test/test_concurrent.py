@@ -91,7 +91,7 @@ class TestCONCURRENT:
         if t.is_alive():        # was timed-out
             cppyy.gbl.test12_timeout.stopit[0] = True
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test04_cpp_threading_with_exceptions(self):
         """Threads and Python exceptions"""
 

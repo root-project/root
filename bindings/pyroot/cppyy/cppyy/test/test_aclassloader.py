@@ -10,7 +10,7 @@ class TestACLASSLOADER:
     def setup_class(cls):
         import cppyy
 
-    @mark.xfail(reason="rootmap files are a legacy feature")
+    @mark.xfail(strict=True, reason="rootmap files are a legacy feature")
     def test01_class_autoloading(self):
         """Test whether a class can be found through .rootmap."""
         import cppyy

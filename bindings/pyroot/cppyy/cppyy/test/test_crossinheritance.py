@@ -11,7 +11,7 @@ class TestCROSSINHERITANCE:
         import cppyy
         cls.example01 = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test01_override_function(self):
         """Test ability to override a simple function"""
 
@@ -288,7 +288,7 @@ class TestCROSSINHERITANCE:
 
         assert raises(TypeError, Base1.call_get_value, d)
 
-    @mark.xfail(condition=IS_WINDOWS, reason="TypeError: 'NoneType' object cannot be interpreted as an integer")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="TypeError: 'NoneType' object cannot be interpreted as an integer")
     def test10_python_in_templates(self):
         """Usage of Python derived objects in std::vector"""
 
@@ -372,7 +372,7 @@ class TestCROSSINHERITANCE:
         assert call_shared(v) == 13
         assert v.some_imp() == 13
 
-    @mark.xfail(condition=IS_WINDOWS, reason="assert 0 == (0 + 1)")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="assert 0 == (0 + 1)")
     def test12a_counter_test(self):
         """Test countable base counting"""
 
@@ -474,7 +474,7 @@ class TestCROSSINHERITANCE:
         class MyPyDerived4(VD.MyClass4[int]):
             pass
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test14_protected_access(self):
         """Derived classes should have access to protected members"""
 
@@ -1392,7 +1392,7 @@ class TestCROSSINHERITANCE:
         class PyDerived(ns.Base):
             pass
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_object_rebind(self):
         """Usage of bind_object to cast with Python derived objects"""
 
@@ -1550,7 +1550,7 @@ class TestCROSSINHERITANCE:
 
         assert p.func(d) == 42 + 2 * d.value
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test33_direct_base_methods(self):
         """Call base class methods directly"""
 
@@ -1782,7 +1782,7 @@ class TestCROSSINHERITANCE:
         assert pysub.f3() == "Python: PySub::f3()"
         assert ns.call_fs(pysub) == pysub.f1() + pysub.f2() + pysub.f3()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test38_protected_data(self):
         """Multiple cross inheritance with protected data"""
 
