@@ -1,6 +1,6 @@
 import pytest, os
 from pytest import raises, mark
-from support import setup_make, IS_MAC
+from support import setup_make, IS_WINDOWS
 
 test_dct = "libexample_cxx"
 
@@ -10,7 +10,7 @@ class TestACLASSLOADER:
     def setup_class(cls):
         import cppyy
 
-    @mark.xfail(reason="rootmap files are a legacy feature")
+    @mark.xfail(strict=True, condition=not IS_WINDOWS, reason="rootmap files are a legacy feature")
     def test01_class_autoloading(self):
         """Test whether a class can be found through .rootmap."""
         import cppyy

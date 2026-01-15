@@ -44,7 +44,6 @@ class TestLOWLEVEL:
         assert len(ll.reinterpret_cast['int*'](0)) == 0
         raises(ReferenceError, ll.reinterpret_cast['int*'](0).__getitem__, 0)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_memory(self):
         """Memory allocation and free-ing"""
 
@@ -82,7 +81,6 @@ class TestLOWLEVEL:
         mem.__python_owns__ = True
         assert     mem.__python_owns__
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_python_casts(self):
         """Casts to common Python pointer encapsulations"""
 
@@ -105,7 +103,6 @@ class TestLOWLEVEL:
         ptrptr = cppyy.ll.as_ctypes(s, byref=True)
         assert pycasts.get_deref(ptrptr) == actual
 
-    @mark.xfail()
     def test05_array_as_ref(self):
         """Use arrays for pass-by-ref"""
 
@@ -135,7 +132,7 @@ class TestLOWLEVEL:
         f = array('f', [0]);     ctd.set_float_r(f);  assert f[0] ==  5.
         f = array('d', [0]);     ctd.set_double_r(f); assert f[0] == -5.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test06_ctypes_as_ref_and_ptr(self):
         """Use ctypes for pass-by-ref/ptr"""
 
@@ -346,7 +343,6 @@ class TestLOWLEVEL:
         x = np.array([True], dtype=bool)
         assert cppyy.gbl.convert_bool(x)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test10_array_of_const_char_star(self):
         """Test passting of const char*[]"""
 
@@ -493,7 +489,7 @@ class TestLOWLEVEL:
         assert cppyy.gbl.std.vector[cppyy.gbl.std.vector[int]].value_type == 'std::vector<int>'
         assert cppyy.gbl.std.vector['int[1]'].value_type == 'int[1]'
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test15_templated_arrays_gmpxx(self):
         """Use of gmpxx array types in templates"""
 
@@ -547,7 +543,6 @@ class TestMULTIDIMARRAYS:
     def _data_m(self, lbl):
         return [('m_'+tp.replace(' ', '_')+lbl, tp) for tp in self.numeric_builtin_types]
 
-    @mark.xfail()
     def test01_2D_arrays(self):
         """Access and use of 2D data members"""
 
@@ -590,7 +585,6 @@ class TestMULTIDIMARRAYS:
                     assert arr[i][j] == val
                     assert arr[i, j] == val
 
-    @mark.xfail()
     def test02_assign_2D_arrays(self):
         """Direct assignment of 2D arrays"""
 
@@ -643,7 +637,6 @@ class TestMULTIDIMARRAYS:
             arr[2][3] = 10
             assert arr[2][3] == 10
 
-    @mark.xfail()
     def test03_3D_arrays(self):
         """Access and use of 3D data members"""
 
@@ -690,7 +683,6 @@ class TestMULTIDIMARRAYS:
                         assert arr[i][j][k] == val
                         assert arr[i, j, k] == val
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_malloc(self):
         """Use of malloc to create multi-dim arrays"""
 

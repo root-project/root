@@ -1,6 +1,6 @@
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS
 
 test_dct = "datatypes_cxx"
 
@@ -13,7 +13,7 @@ class TestDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-    @mark.skip()
+    @mark.xfail(strict=True)
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
@@ -184,7 +184,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test02_instance_data_write_access(self):
         """Test write access to instance public data and verify values"""
 
@@ -366,7 +366,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
     def test04_class_read_access(self):
         """Test read access to class public data and verify values"""
 
@@ -529,7 +528,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail()
     def test07_type_conversions(self):
         """Test conversions between builtin types"""
 
@@ -723,7 +721,7 @@ class TestDATATYPES:
         assert gbl.EnumSpace.AA == 1
         assert gbl.EnumSpace.BB == 2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test11_typed_enums(self):
         """Determine correct types of enums"""
 
@@ -766,7 +764,7 @@ class TestDATATYPES:
         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
         assert isinstance(sc.vraioufaux.faux, bool)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_enum_scopes(self):
         """Enum accessibility and scopes"""
 
@@ -1092,7 +1090,7 @@ class TestDATATYPES:
 
         assert not d2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test22_buffer_shapes(self):
         """Correctness of declared buffer shapes"""
 
@@ -1222,7 +1220,7 @@ class TestDATATYPES:
                 for k in range(7):
                     assert int(ns.vvv[i,j,k]) == i+j+k
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="segmentation violation")
     def test25_byte_arrays(self):
         """Usage of unsigned char* as byte array and std::byte*"""
 
@@ -1256,7 +1254,7 @@ class TestDATATYPES:
         run(self, cppyy.gbl.sum_uc_data, buf, total)
         run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail(run=not IS_MAC, reason = "Fails on all platforms; crashes on macOS with " \
+    @mark.xfail(strict=True, run=not IS_MAC, reason="Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
@@ -1320,8 +1318,6 @@ class TestDATATYPES:
         ns = cppyy.gbl.FuncPtrReturn
         assert ns.foo()() == "Hello, World!"
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test27_callable_passing(self):
         """Passing callables through function pointers"""
 
@@ -1394,8 +1390,6 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM or (WINDOWS_BITS == 64), reason = "Crashes on Windows 64 bit or OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test28_callable_through_function_passing(self):
         """Passing callables through std::function"""
 
@@ -1468,7 +1462,6 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test29_std_function_life_lines(self):
         """Life lines to std::function data members"""
 
@@ -1540,7 +1533,7 @@ class TestDATATYPES:
                 p = (ctype * len(buf)).from_buffer(buf)
                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_anonymous_union(self):
         """Anonymous unions place there fields in the parent scope"""
 
@@ -1634,7 +1627,7 @@ class TestDATATYPES:
         assert type(p.data_c[0]) == float
         assert p.intensity == 5.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_anonymous_struct(self):
         """Anonymous struct creates an unnamed type"""
 
@@ -1683,7 +1676,7 @@ class TestDATATYPES:
 
         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test33_pointer_to_array(self):
         """Usability of pointer to array"""
 
@@ -1863,7 +1856,6 @@ class TestDATATYPES:
         m = ns.create_matrix(N, M)
         assert ns.destroy_matrix(ns.g_matrix, N, M)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_plain_old_data(self):
         """Initializer construction of PODs"""
 
@@ -1950,7 +1942,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Test doesn't work on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Test doesn't work on Windows")
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2003,8 +1995,8 @@ class TestDATATYPES:
         assert b.name     == "aap"
         assert b.buf_type == ns.SHAPE
 
-    @mark.skip()
-    def test40_more_aggregates(self):
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
+    def test40_more_aggregates(self, capfd):
         """More aggregate testings (used to fail/report errors)"""
 
         import cppyy
@@ -2040,8 +2032,13 @@ class TestDATATYPES:
         r2 = ns.make_R2()
         assert r2.s.x == 1
 
-    @mark.xfail()
-    def test41_complex_numpy_arrays(self):
+        # Fail if there was an interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
+
+    @mark.xfail(strict=True)
+    def test41_complex_numpy_arrays(self, capfd):
         """Usage of complex numpy arrays"""
 
         import cppyy
@@ -2088,7 +2085,13 @@ class TestDATATYPES:
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
 
-    @mark.xfail()
+        # Fail if there was an interpreter error about calling an
+        # implicitly-deleted copy constructor
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "call to implicitly-deleted copy constructor" not in output
+
+    @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="Argument conversion error on macOS and Windows")
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2102,7 +2105,6 @@ class TestDATATYPES:
         assert c*(c*c) == p*(p*p)
         assert (c*c)*c == (p*p)*p
 
-    @mark.xfail()
     def test43_ccharp_memory_handling(self):
         """cppyy side handled memory of C strings"""
 
@@ -2219,7 +2221,7 @@ class TestDATATYPES:
         b = ns.B()
         assert b.body1.name == b.body2.name
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test46_small_int_enums(self):
         """Proper typing of small int enums"""
 
@@ -2274,7 +2276,7 @@ class TestDATATYPES:
         assert ns.func_int8()  == -1
         assert ns.func_uint8() == 255
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 
@@ -2337,7 +2339,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(run = not IS_MAC_ARM, reason="Crashes on mac-beta ARM64, fails on alma9 runtime_cxxmodules=off")
+    @mark.xfail(strict=True, condition=IS_MAC_ARM or IS_WINDOWS, reason="Crashes on mac-beta ARM64 and fails on Windows")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
@@ -2391,7 +2393,6 @@ class TestDATATYPES:
             else:
                 assert type(v) == gbl.PolymorphicMaps.Derived
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test52_virtual_inheritance(self):
         import cppyy
         from cppyy import gbl
@@ -2429,4 +2430,4 @@ class TestDATATYPES:
             assert i.name == "NAME"
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

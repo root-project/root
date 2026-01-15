@@ -11,7 +11,7 @@ class TestClassPYTHONIZATION:
         import cppyy
         cls.pyzables = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test00_api(self):
         """Test basic semantics of the pythonization API"""
 
@@ -222,7 +222,6 @@ class TestClassPYTHONIZATION:
         # associative  container, with 'index' a key, not a counter
         #raises(IndexError, d.__getitem__, 1)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test09_cpp_side_pythonization(self):
         """Use of C++ side pythonizations"""
 

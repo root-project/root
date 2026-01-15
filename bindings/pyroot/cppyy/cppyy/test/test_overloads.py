@@ -1,6 +1,6 @@
 import pytest, os
 from pytest import raises, skip, mark
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, WINDOWS_BITS
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 test_dct = "overloads_cxx"
@@ -139,7 +139,6 @@ class TestOVERLOADS:
             a = array.array(l, numbers)
             assert round(cmean(len(a), a) - mean, 8) == 0
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_const_non_const_overloads(self):
         """Check selectability of const/non-const overloads"""
 
@@ -199,8 +198,6 @@ class TestOVERLOADS:
         with raises(ValueError):
             cpp.BoolInt4.fff(2)
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test10_overload_and_exceptions(self):
         """Prioritize reporting C++ exceptions from callee"""
 
@@ -406,7 +403,6 @@ class TestOVERLOADS:
         assert result_instance == result_direct
 
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test14_disallow_functor_to_function_pointer(self):
         """Make sure we're no allowing to convert C++ functors to function
         pointers, extending the C++ language in an unnatural way that can lead
