@@ -1,7 +1,7 @@
 import os, pytest
 import math, time
 from pytest import mark, raises
-from support import setup_make, IS_MAC, IS_WINDOWS
+from support import setup_make, IS_MAC, IS_WINDOWS, WINDOWS_BITS
 
 try:
     import numba
@@ -93,7 +93,7 @@ class TestNUMBA:
 
         return fast_time < slow_time
 
-    @mark.xfail(strict=True, reason = "Numba tests comparing execution times are sensitive and fail sporadically")
+    @mark.skip(reason="Numba tests comparing execution times are sensitive and fail sporadically")
     def test01_compiled_free_func(self):
         """Numba-JITing of a compiled free function"""
 
@@ -152,8 +152,7 @@ class TestNUMBA:
         assert (go_fast(x) == go_slow(x)).all()
         assert self.compare(go_slow, go_fast, 100000, x)
 
-    @mark.xfail(strict=True, reason = "Numba tests comparing execution times are sensitive and fail sporadically. \
-                Fails on OS X")
+    @mark.skip(reason="Numba tests comparing execution times are sensitive and fail sporadically.")
     def test03_proxy_argument_for_field(self):
         """Numba-JITing of a free function taking a proxy argument for field access"""
 
@@ -187,8 +186,7 @@ class TestNUMBA:
         assert((go_fast(x, d) == go_slow(x, d)).all())
         assert self.compare(go_slow, go_fast, 10000, x, d)
 
-    @mark.xfail(strict=True, reason = "Numba tests comparing execution times are sensitive and fail sporadically. \
-                Fails on OS X")
+    @mark.skip(reason="Numba tests comparing execution times are sensitive and fail sporadically.")
     def test04_proxy_argument_for_method(self):
         """Numba-JITing of a free function taking a proxy argument for method access"""
 
@@ -222,7 +220,7 @@ class TestNUMBA:
         assert((go_fast(x, d) == go_slow(x, d)).all())
         assert self.compare(go_slow, go_fast, 10000, x, d)
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 32, reason="Fails on Windows 32 bit")
     def test05_multiple_arguments_function(self):
         """Numba-JITing of functions with multiple arguments"""
 
@@ -249,7 +247,7 @@ class TestNUMBA:
 
         assert sum == loop_add(x)
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 32, reason="Fails on Windows 32 bit")
     def test06_multiple_arguments_template_freefunction(self):
         """Numba-JITing of a free template function that recieves more than one template arg"""
 
@@ -344,7 +342,7 @@ class TestNUMBA:
         assert((go_fast(x) == go_slow(x)).all())
         assert self.compare(go_slow, go_fast, 100000, x)
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 32, reason="Fails on Windows 32 bit")
     def test09_non_typed_templates(self):
         """Numba-JITing of a free template function that recieves multiple template args with non types"""
 

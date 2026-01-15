@@ -6,6 +6,12 @@ from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC, no_root_er
 test_dct = "operators_cxx"
 
 
+def compiled_with_gcc16():
+    import cppyy
+
+    return "gcc16" in cppyy.gbl.gSystem.GetBuildCompilerVersion()
+
+
 class TestOPERATORS:
     def setup_class(cls):
         cls.test_dct = test_dct
@@ -337,7 +343,7 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
-    @mark.xfail(strict=True, reason='Fails on macOS and on Linux with gcc 16 because cppyy picks the wrong "operator-" overload.')
+    @mark.xfail(strict=True, condition=IS_MAC or compiled_with_gcc16(), reason="Fails on macOS or gcc 16")
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 

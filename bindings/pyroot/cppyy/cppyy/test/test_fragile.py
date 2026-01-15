@@ -1,9 +1,16 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, IS_LINUX
 
 
 test_dct = "fragile_cxx"
+
+
+def has_cpp_20():
+    import cppyy
+
+    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
+
 
 class TestFRAGILE:
     def setup_class(cls):
@@ -532,7 +539,7 @@ class TestFRAGILE:
         assert "invaliddigit" in err
         assert "1aap=42;" in err
 
-    @mark.xfail(strict=True)
+    @mark.xfail(strict=True, condition=not IS_WINDOWS, reason="Fails on Windows")
     def test22_cppexec(self):
         """Interactive access to the Cling global scope"""
 
@@ -560,7 +567,7 @@ class TestFRAGILE:
         cppyy.set_debug(False)
         assert cppyy.gbl.CppyyLegacy.gDebug ==  0
 
-    @mark.xfail(strict=True)
+    @mark.skip(reason="Not actually a cppyy test")
     def test24_asan(self):
         """Check availability of ASAN with gcc"""
 
@@ -731,7 +738,6 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail(strict=True)
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -853,7 +859,7 @@ class TestSTDNOTINGLOBAL:
 
         assert cppyy.gbl.ELogLevel != cppyy.gbl.CppyyLegacy.ELogLevel
 
-    @mark.xfail(strict=True)
+    @mark.skipif(not has_cpp_20(), reason="std::span requires C++20")
     def test05_span_compatibility(self):
         """Test compatibility of span under C++2a compilers that support it"""
 

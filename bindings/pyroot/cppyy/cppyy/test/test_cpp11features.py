@@ -385,7 +385,6 @@ class TestCPP11FEATURES:
         f = FunctionNS.FNCreateTestStructFunc()
         assert f(t) == 27
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test13_stdhash(self):
         """Use of std::hash"""
 

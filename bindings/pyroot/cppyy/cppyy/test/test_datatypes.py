@@ -366,7 +366,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail(strict=True)
     def test04_class_read_access(self):
         """Test read access to class public data and verify values"""
 
@@ -529,7 +528,6 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.xfail(strict=True)
     def test07_type_conversions(self):
         """Test conversions between builtin types"""
 
@@ -2088,7 +2086,7 @@ class TestDATATYPES:
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
 
-    @mark.xfail(strict=True)
+    @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="Argument conversion error on macOS and Windows")
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2102,7 +2100,6 @@ class TestDATATYPES:
         assert c*(c*c) == p*(p*p)
         assert (c*c)*c == (p*p)*p
 
-    @mark.xfail(strict=True)
     def test43_ccharp_memory_handling(self):
         """cppyy side handled memory of C strings"""
 

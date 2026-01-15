@@ -222,7 +222,6 @@ class TestClassPYTHONIZATION:
         # associative  container, with 'index' a key, not a counter
         #raises(IndexError, d.__getitem__, 1)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test09_cpp_side_pythonization(self):
         """Use of C++ side pythonizations"""
 

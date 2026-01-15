@@ -380,7 +380,6 @@ namespace Namespace {
 
         pass
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_x_inheritance(self):
         import cppyy
         from cppyy.gbl import Abstract, Concrete, call_abstract_method
@@ -837,7 +836,6 @@ class TestADVERTISED:
         assert list(arr) == [1, 42, 1, 42]
         cppyy.gbl.free(vp)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test04_ptr_ptr_python_owns(self):
         """Example of ptr-ptr use where python owns"""
 
@@ -923,7 +921,6 @@ class TestADVERTISED:
         val = createit(ptr)
         assert destroyit(ptr) == val
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test07_array_of_arrays(self):
         """Example of array of array usage"""
 
@@ -1077,7 +1074,6 @@ class TestTALKEXAMPLES:
 
         cppyy.gbl.talk_examples
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_template_instantiation(self):
         """Run-time template instantiation example"""
 
@@ -1149,7 +1145,6 @@ class TestTALKEXAMPLES:
         assert CC.passT(2**64-1) == 2**64-1
         assert 'unsigned long long' in CC.passT.__doc__
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test_callbacks(self):
         """Function callback example"""
 

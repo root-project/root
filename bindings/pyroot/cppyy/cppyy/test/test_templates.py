@@ -185,7 +185,6 @@ class TestTEMPLATES:
         assert issubclass(select_template_arg[0, int, float].argument, int)
         assert issubclass(select_template_arg[1, int, float].argument, float)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_using_of_static_data(self):
         """Derived class using static data of base"""
 
@@ -396,7 +395,6 @@ class TestTEMPLATES:
         assert is_valid(1.)
         assert not is_valid(0.)
 
-    @mark.xfail(strict=True)
     def test16_variadic(self):
         """Range of variadic templates"""
 
@@ -450,7 +448,6 @@ class TestTEMPLATES:
         b.b_T['int'](1, 1., 'a')
         assert get_tn(ns).find("int(some_variadic::B::*)(int&&,double&&,std::") == 0
 
-    @mark.xfail(strict=True)
     def test17_empty_body(self):
         """Use of templated function with empty body"""
 
@@ -462,7 +459,6 @@ class TestTEMPLATES:
         assert f_T[int]() is None
         assert cppyy.gbl.T_WithEmptyBody.side_effect == "side effect"
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test18_greedy_overloads(self):
         """void*/void** should not pre-empt template instantiations"""
 
@@ -569,7 +565,6 @@ class TestTEMPLATES:
         assert l2v.test3[int]([d1])     == 1
         assert l2v.test3[int]([d1, d1]) == 2
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows: TypeError: Template method resolution failed: Python int too large to convert to C long")
     def test22_type_deduction_of_proper_integer_size(self):
         """Template type from integer arg should be big enough"""
 
@@ -585,7 +580,6 @@ class TestTEMPLATES:
         for val in [2**64, -2**63-1]:
             raises(OverflowError, PassSomeInt, val)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test23_overloaded_setitem(self):
         """Template with overloaded non-templated and templated setitem"""
 
@@ -690,7 +684,6 @@ class TestTEMPLATES:
         foo.fnc = ns.bar
         foo.fnc       # <- this access used to fail
 
-    @mark.xfail(strict=True)
     def test26_partial_templates(self):
         """Deduction of types with partial templates"""
 

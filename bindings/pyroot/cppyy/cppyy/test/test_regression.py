@@ -83,7 +83,6 @@ class TestREGRESSION:
         # TODO: it's deeply silly that namespaces inherit from CPPInstance (in CPyCppyy)
         assert ('CPPInstance' in helptext or 'CPPNamespace' in helptext)
 
-    @mark.xfail(strict=True, condition=IS_MAC, reason="Fails on OSX")
     def test03_pyfunc_doc(self):
         """Help on a generated pyfunc used to crash."""
 
@@ -308,7 +307,6 @@ class TestREGRESSION:
         assert cppyy.gbl.csoc3.call('0')  == 'string'
         assert cppyy.gbl.csoc3.call('00') == 'string'
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test14_struct_direct_definition(self):
         """Struct defined directly in a scope miseed scope in renormalized name"""
 
@@ -525,7 +523,6 @@ class TestREGRESSION:
 
         assert obj.getter() == 'c'
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test21_temporaries_and_vector(self):
         """Extend a life line to references into a vector if needed"""
 
@@ -538,7 +535,6 @@ class TestREGRESSION:
         l = [e for e in cppyy.gbl.get_some_temporary_vector()]
         assert l == ['x', 'y', 'z']
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test22_initializer_list_and_temporary(self):
         """Conversion rules when selecting intializer_list v.s. temporary"""
 
@@ -710,7 +706,6 @@ class TestREGRESSION:
             i += 1
         assert i
 
-    @mark.xfail(strict=True)
     def test26_const_charptr_data(self):
         """const char* is not const; const char* const is"""
 
@@ -860,7 +855,7 @@ class TestREGRESSION:
         g.triggerChange()
         assert g.success
 
-    @mark.xfail(strict=True)
+    @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="int64_t and uint64_t not automatically materialized on macOS and Windows")
     def test30_uint64_t(self):
         """Failure due to typo"""
 
@@ -1061,7 +1056,6 @@ class TestREGRESSION:
 
         assert cppyy.sizeof(param) == ctypes.sizeof(param)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test37_array_of_pointers_argument(self):
         """Passing an array of pointers used to crash"""
 
@@ -1087,7 +1081,6 @@ class TestREGRESSION:
 
             assert cppyy.addressof(res) == cppyy.addressof(arr)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_char16_arrays(self):
         """Access to fixed-size char16 arrays as data members"""
 
@@ -1143,7 +1136,6 @@ class TestREGRESSION:
             assert ai.name[:5] == u'hello'
         cppyy.ll.array_delete(aa)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test39_vector_of_pointers_conversion(self):
         """vector<T*>'s const T*& used to be T**, now T*"""
 
