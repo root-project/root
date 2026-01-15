@@ -616,13 +616,13 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
 
 static bool FilesAreEquivalent(std::string_view source, std::string_view target)
 {
-   const bool sourceIsLocal = source.find_first_of("://") == std::string_view::npos;
-   const bool targetIsLocal = target.find_first_of("://") == std::string_view::npos;
-   if (sourceIsLocal != targetIsLocal)
+   const bool sourceHasProtocol = source.find_first_of("://") == std::string_view::npos;
+   const bool targetHasProtocol = target.find_first_of("://") == std::string_view::npos;
+   if (sourceHasProtocol != targetHasProtocol)
       return false;
 
-   // We cannot use std::filesystem functions for remote files.
-   if (!sourceIsLocal)
+   // We cannot use std::filesystem functions for file paths that have a protocol.
+   if (!sourceHasProtocol)
       return source == target;
 
    return std::filesystem::exists(target) && std::filesystem::equivalent(source, target);
