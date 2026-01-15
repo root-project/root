@@ -28,7 +28,9 @@ void write(const char *filename = "histo.root")
 {
    TFile * f = TFile::Open(filename,"RECREATE");
    TH1F *histo = new TH1F_inst("h1","h1",10,0,10); histo->Fill(3);
+   histo->SetDirectory(f);
    histo = new TH1F_inst("h2","h2",10,0,10); histo->Fill(3);
+   histo->SetDirectory(f);
    TCanvas *c1 = new TCanvas("c1");
    histo->SetBit(kCanDelete);
    histo->Draw();
