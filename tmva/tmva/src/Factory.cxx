@@ -1664,11 +1664,10 @@ void TMVA::Factory::EvaluateAllMethods(void)
                TPrincipal *tpBkg = new TPrincipal(nmeth + nvar, "");
 
                //              set required tree branch references
-               Int_t ivar = 0;
                std::vector<TString> *theVars = new std::vector<TString>;
                std::vector<ResultsClassification *> mvaRes;
                for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end();
-                    ++itrMethod, ++ivar) {
+                    ++itrMethod) {
                   MethodBase *m = dynamic_cast<MethodBase *>(*itrMethod);
                   if (m == 0)
                      continue;
