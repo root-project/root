@@ -1262,11 +1262,9 @@ public:
 
       RVecN ret;
       ret.reserve(n_true);
-      size_type j = 0u;
       for (size_type i = 0u; i < n; ++i) {
          if (conds[i]) {
             ret.push_back(this->operator[](i));
-            ++j;
          }
       }
       return ret;
