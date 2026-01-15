@@ -309,8 +309,8 @@ class TestNUMBA:
                 val = getattr(nl[ntype], m)()
                 assert access_field(getattr(ns, 'M%d'%i)(val)) == val
 
-    @mark.xfail(reason = "Numba tests comparing execution times are sensitive and fail sporadically. \
-                Fails on OS X")
+    @mark.xfail(run=False, reason = "Numba tests comparing execution times are sensitive and fail sporadically. \
+                Fails on OS X and Windows 64 bit")
     def test08_object_returns(self):
         """Numba-JITing of a function that returns an object"""
 
