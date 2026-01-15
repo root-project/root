@@ -3618,6 +3618,19 @@ public:
         gf[CCOMPLEX_F " ptr"] =             gf["std::complex<float> ptr"];
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
 
+        // We always need these converters when cppyy is based on an unpatched
+        // ROOT, because the "long long" types are always converted to Long64_t
+        // and ULong64_t already at the ROOT Meta level.
+        // See https://github.com/root-project/root/issues/15872#issuecomment-2174092763
+        gf["Long64_t"] =                    gf["long long"];
+        gf["Long64_t ptr"] =                gf["long long ptr"];
+        gf["Long64_t&"] =                   gf["long long&"];
+        gf["const Long64_t&"] =             gf["const long long&"];
+        gf["ULong64_t"] =                   gf["unsigned long long"];
+        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
+        gf["ULong64_t&"] =                  gf["unsigned long long&"];
+        gf["const ULong64_t&"] =            gf["const unsigned long long&"];
+
     // factories for special cases
         gf["nullptr_t"] =                   (cf_t)+[](cdims_t) { static NullptrConverter c{};        return &c;};
         gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
