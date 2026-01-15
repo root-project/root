@@ -6,6 +6,9 @@
 #include "TH1F.h"
 #include "THLimitsFinder.h"
 
+#include "TDirectory.h"
+#include "TList.h"
+
 #include <cmath>
 #include <cstddef>
 #include <random>
@@ -332,4 +335,29 @@ TEST(TH1L, SetBinContent)
    static constexpr long long Large = 1LL << 42;
    h.SetBinContent(1, Large);
    EXPECT_EQ(h.GetBinContent(1), Large);
+}
+
+TEST(TH1, InteractionWithTDirectoryAdd)
+{
+   auto histo = std::make_unique<TH1F>("h", "h", 2, 0, 1);
+   auto tNamed = std::make_unique<TNamed>("h", "name clash");
+   auto tNamed2 = std::make_unique<TNamed>("h", "name clash 2");
+
+   auto dir = std::make_unique<TDirectory>("dir", "dir");
+   histo->SetDirectory(dir.get());
+   dir->Add(histo.get());
+   dir->Add(histo.get());
+   dir->Add(tNamed.get());
+   dir->Add(tNamed.get());
+   dir->Add(tNamed2.get());
+
+   EXPECT_EQ(histo->GetDirectory(), dir.get());
+
+   ROOT_EXPECT_WARNING_PARTIAL(dir->Add(histo.get(), /*replace=*/true), "Append", "Replacing existing TNamed");
+   EXPECT_EQ(histo->GetDirectory(), dir.get());
+   EXPECT_EQ(dir->GetList()->size(), 1);
+   EXPECT_EQ(dir->GetList()->First(), histo.get());
+
+   // Leave the ownership to the unique_ptrs
+   histo->SetDirectory(nullptr);
 }
