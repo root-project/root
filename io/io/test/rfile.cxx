@@ -11,6 +11,9 @@
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 using ROOT::Experimental::RFile;
 using ROOT::TestSupport::FileRaii;
@@ -77,7 +80,7 @@ TEST(RFile, OpenInexistent)
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kSysError, "TFile::TFile", "", false);
    diags.optionalDiag(kError, "TFile::TFile", "", false);
-   
+
    try {
       auto f = RFile::Open("does_not_exist.root");
       FAIL() << "trying to open an inexistent file should throw";
@@ -685,12 +688,48 @@ TEST(RFile, GetKeyInfo)
 
    EXPECT_EQ(file->GetKeyInfo("foo"), std::nullopt);
 
-   for (const std::string_view path : { "/s", "a/b/c", "b", "/a/d" }) {
+   for (const std::string_view path : {"/s", "a/b/c", "b", "/a/d"}) {
       auto key = file->GetKeyInfo(path);
       ASSERT_NE(key, std::nullopt);
       EXPECT_EQ(key->GetPath(), path[0] == '/' ? path.substr(1) : path);
       EXPECT_EQ(key->GetClassName(), "string");
       EXPECT_EQ(key->GetTitle(), "");
       EXPECT_EQ(key->GetCycle(), 1);
+   }
+}
+
+TEST(RFile, RNTuple)
+{
+   FileRaii fileGuard("test_rfile_rntuple.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+
+   auto model = ROOT::RNTupleModel::Create();
+   auto pX = model->MakeField<float>("x");
+   auto pY = model->MakeField<std::vector<float>>("v");
+
+   // Writing
+   const auto kNDatasets = 10;
+   const auto kNEntries = 100;
+   for (int i = 0; i < kNDatasets; ++i) {
+      const auto ntuplePath = std::string("data_") + (i + 1);
+      const auto writer = ROOT::RNTupleWriter::Append(model->Clone(), ntuplePath, *file);
+      for (int j = 0; j < kNEntries; ++j) {
+         *pX = j;
+         pY->clear();
+         pY->push_back(j);
+         writer->Fill();
+      }
+   }
+
+   file.reset();
+
+   // Reading back
+   file = RFile::Open(fileGuard.GetPath());
+   for (int i = 0; i < kNDatasets; ++i) {
+      auto ntuple = file->Get<ROOT::RNTuple>(std::string("data_") + (i + 1));
+      ASSERT_NE(ntuple, nullptr);
+      auto reader = ROOT::RNTupleReader::Open(*ntuple);
+      EXPECT_EQ(reader->GetNEntries(), kNEntries);
    }
 }
