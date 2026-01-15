@@ -5,9 +5,11 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/TestSupport.hxx>
 
+#include <Bytes.h>
 #include <RZip.h>
 #include <TKey.h>
 #include <TMemFile.h>
+#include <TMessage.h>
 #include <TNamed.h>
 #include <TTree.h>
 #include <TTreeCacheUnzip.h>
@@ -237,4 +239,44 @@ TEST(RZip, CorruptHeaderTTree)
 
    EXPECT_EQ(sizeof(int), tree->GetEntry(0));
    EXPECT_EQ(137, val);
+}
+
+TEST(RZip, CorruptHeaderMessage)
+{
+   TNamed named;
+   named.SetName(std::string(1000, 'x').c_str());
+   TMessage msg(kMESS_OBJECT | kMESS_ZIP);
+   msg.SetCompressionSettings(101);
+   msg.WriteObject(&named);
+
+   EXPECT_EQ(0, msg.Compress());
+   EXPECT_TRUE(msg.CompBuffer());
+   EXPECT_LT(msg.CompLength(), 1000);
+   EXPECT_GT(msg.CompLength(), 9);
+
+   Int_t ziplen;
+   Int_t what;
+   Int_t length;
+   char *bufcur = msg.CompBuffer();
+
+   frombuf(bufcur, &ziplen);
+   EXPECT_EQ(msg.CompLength() - sizeof(UInt_t), ziplen);
+   frombuf(bufcur, &what);
+   EXPECT_EQ(kMESS_OBJECT | kMESS_ZIP, what);
+   frombuf(bufcur, &length);
+   EXPECT_EQ(length, msg.Length());
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kError, "TMessage::Uncompress", "objlenRemain", /* matchFullMessage= */ false);
+
+      bufcur[3]++;
+      EXPECT_NE(0, msg.Uncompress());
+      bufcur[3]--;
+      bufcur[6]++;
+      EXPECT_NE(0, msg.Uncompress());
+      bufcur[6]--;
+   }
+
+   EXPECT_EQ(0, msg.Uncompress());
 }
