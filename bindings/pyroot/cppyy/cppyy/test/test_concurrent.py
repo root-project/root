@@ -22,7 +22,7 @@ class TestCONCURRENT:
 
         cppyy.gbl.Workers.calc.__release_gil__ = True
 
-    @mark.skip
+    @mark.xfail(run=False, reason="Crashes because TClingCallFunc generates wrong code")
     def test01_simple_threads(self):
         """Run basic Python threads"""
 
@@ -41,7 +41,7 @@ class TestCONCURRENT:
         for t in threads:
             t.join()
 
-    @mark.skip
+    @mark.xfail(run=False, reason="Crashes because the interpreter emits too many warnings")
     def test02_futures(self):
         """Run with Python futures"""
 
@@ -91,7 +91,7 @@ class TestCONCURRENT:
         if t.is_alive():        # was timed-out
             cppyy.gbl.test12_timeout.stopit[0] = True
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="Fails on Windows")
     def test04_cpp_threading_with_exceptions(self):
         """Threads and Python exceptions"""
 
@@ -262,7 +262,7 @@ class TestCONCURRENT:
         for t in threads:
             t.join()
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="segmentation violation")
     def test07_overload_reuse_in_threads_wo_gil(self):
         """Threads reuse overload objects; check for clashes if no GIL"""
 
