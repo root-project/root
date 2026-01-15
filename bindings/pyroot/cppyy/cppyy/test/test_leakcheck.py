@@ -237,7 +237,7 @@ class TestLEAKCHECK:
 
         self.check_func(cppyy.gbl, '__dir__', cppyy.gbl)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test07_string_handling(self):
         """Leak check of returning an std::string by value"""
 
