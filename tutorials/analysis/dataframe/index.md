@@ -64,6 +64,7 @@ A collection of building block examples for your analysis.
 | df036_missingBranches.C | df036_missingBranches.py | Deal with missing values due to a missing branch when switching to a new file in a chain. |
 | df037_TTreeEventMatching.C | df037_TTreeEventMatching.py | Deal with missing values due to not finding a matching event in an auxiliary dataset. |
 | df040_RResultPtr_lifetimeManagement.C | | Lifetime management of RResultPtr and the underlying objects. |
+| df041_ThreadSafeRNG.C | | Thread-safe usage of random number generators in multithreading. |
 
 
 \anchor readwrite
