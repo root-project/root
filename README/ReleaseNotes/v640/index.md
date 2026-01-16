@@ -57,6 +57,9 @@ The following people have contributed to this new version:
 ## Build System
 
 ## Core Libraries
+- ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
+  that compiled the macro. See [TSystem::SetMakeSharedLib()](https://root.cern.ch/doc/master/classTSystem.html#a80cd12e064e2285b35e9f39b5111d20e) for
+  customising or disabling the RUNPATH.
 
 ## I/O
 
