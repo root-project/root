@@ -6216,9 +6216,10 @@ void THistPainter::PaintContour(Option_t *option)
    fH->SetFillStyle(1001);
    for (k=0;k<ncontour;k++) {
       ipoly = polysort[k];
-      if (np[ipoly] == 0) continue;
       if (Hoption.List) list = (TList*)contours->At(contListNb);
       contListNb++;
+      if (np[ipoly] == 0)
+         continue;
       Double_t *xx = polys[ipoly]->GetX();
       Double_t *yy = polys[ipoly]->GetY();
       istart = 0;
