@@ -596,8 +596,8 @@ TFile::~TFile()
    }
 
    if (IsOnHeap()) {
-      // Delete object from CINT symbol table so it can not be used anymore.
-      // CINT object are always on the heap.
+      // Delete object from Cling symbol table so it can not be used anymore.
+      // Cling objects are always on the heap.
       gInterpreter->ResetGlobalVar(this);
    }
 
@@ -1756,15 +1756,11 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    if (IsZombie()) return kTRUE;
 
-   // --- NEW METRICS LOGIC ---
-   // Only calculate skip if this isn't the very first read (fReadCalls > 0)
    if (IsOpen()) {
-
       if (fReadCalls > 0) {
          fSumSkip += std::abs(pos - fLastReadEnd);
       }
       fLastReadEnd = pos + len;
-      // -------------------------
 
       SetOffset(pos);
 
@@ -2749,7 +2745,7 @@ void TFile::WriteHeader()
 ///   - creates a new directory demo unless it already exist
 ///   - clear the previous directory content
 ///   - generate the xxx.h files for all classes xxx found in this file
-///    and not yet known to the CINT dictionary.
+///    and not yet known to the Cling dictionary.
 ///   - creates the build script MAKEP
 ///   - creates a LinkDef.h file
 ///   - runs rootcling generating demoProjectDict.cxx
