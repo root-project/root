@@ -28,7 +28,7 @@ BUILD_DIR = tempfile.mkdtemp()
 INSTALL_DIR = tempfile.mkdtemp()
 
 # Name given to an internal directory within the build directory
-# used to mimick the structure of the target installation directory
+# used to mimic the structure of the target installation directory
 # in the user Python environment, usually named "site-packages"
 ROOT_BUILD_INTERNAL_DIRNAME = "mock_site_packages"
 
@@ -146,6 +146,20 @@ class ROOTInstall(_install):
         self.copy_tree(os.path.join(INSTALL_DIR, "README"), os.path.join(root_package_dir, "README"))
         self.copy_tree(os.path.join(INSTALL_DIR, "tutorials"), os.path.join(root_package_dir, "tutorials"))
         self.copy_file(os.path.join(INSTALL_DIR, "LICENSE"), os.path.join(root_package_dir, "LICENSE"))
+
+        # As of commit [1], ROOT became smarter about finding the include path
+        # in the install tree, inferring the correct relative path from
+        # $ROOTSYS and the CMAKE_INSTALL_INCLUDEDIR variable at build time.
+        #
+        # However, for the Python wheel, we are breaking the assumptions that
+        # ROOT makes by moving around directories in the install tree.
+        # Fortunately, we are moving directories around such that in the end,
+        # it has same structure as the build tree. Hence, we put the build tree
+        # marker in the Python package, so ROOT thinks the relative resource
+        # paths from the build tree apply.
+        #
+        # [1] https://github.com/root-project/root/commit/a5b1ed9
+        pathlib.Path(os.path.join(root_package_dir, "lib/root-build-tree-marker")).touch()
 
     def get_outputs(self):
         outputs = _install.get_outputs(self)
