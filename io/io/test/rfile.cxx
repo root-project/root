@@ -713,7 +713,7 @@ TEST(RFile, RNTuple)
    const auto kNEntries = 100;
    for (int i = 0; i < kNDatasets; ++i) {
       const auto ntuplePath = std::string("data_") + (i + 1);
-      const auto writer = ROOT::RNTupleWriter::Append(model->Clone(), ntuplePath, *file);
+      const auto writer = ROOT::Experimental::RNTupleWriter_Append(model->Clone(), ntuplePath, *file);
       for (int j = 0; j < kNEntries; ++j) {
          *pX = j;
          pY->clear();
