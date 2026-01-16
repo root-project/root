@@ -373,6 +373,26 @@ TEST(RNTupleParallelWriter, ForbidNonRootTFiles)
    EXPECT_THROW(RNTupleParallelWriter::Append(std::move(model), "ntpl", *file), ROOT::RException);
 }
 
+TEST(RNTupleParallelWriter, AppendReadOnly)
+{
+   FileRaii fileGuard("test_ntuple_parallel_append_readonly.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("a");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+   }
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   try {
+      RNTupleParallelWriter::Append(std::move(model), "A", *file);
+      FAIL() << "appending to a read-only TFile should throw.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("is not writable"));
+   }
+}
+
 TEST(RNTupleFillContext, FlushColumns)
 {
    FileRaii fileGuard("test_ntuple_context_flush.root");
