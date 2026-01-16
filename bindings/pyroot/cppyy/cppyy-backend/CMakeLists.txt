@@ -6,4 +6,6 @@
 
 add_library(cppyy_backend STATIC clingwrapper/src/clingwrapper.cxx)
 target_link_libraries(cppyy_backend Core)
-target_compile_options(cppyy_backend PRIVATE -fPIC)
+if(NOT MSVC)
+  target_compile_options(cppyy_backend PRIVATE -fPIC)
+endif()
