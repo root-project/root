@@ -37,6 +37,7 @@
 // #endif
 
 #ifdef R__USE_IMT
+#include "ROOT/TRWSpinLock.hxx"
 #include <mutex>
 #endif
 
@@ -155,6 +156,8 @@ protected:
    Long64_t         fBytesReadExtra{0};       ///<Number of extra bytes (overhead) read by the readahead buffer
    Long64_t         fBEGIN{0};                ///<First used byte in file
    Long64_t         fEND{0};                  ///<Last used byte in file
+   Double_t         fSumSkip{0.0};            ///<!Sum of skip distances (in bytes)
+   Long64_t         fLastReadEnd{0};          ///<!End position of the previous read operation
    Long64_t         fSeekFree{0};             ///<Location on disk of free segments structure
    Long64_t         fSeekInfo{0};             ///<Location on disk of StreamerInfo record
    Int_t            fD{-1};                   ///<File descriptor
@@ -330,6 +333,8 @@ public:
    virtual Long64_t    GetSeekFree() const {return fSeekFree;}
    virtual Long64_t    GetSeekInfo() const {return fSeekInfo;}
    virtual Long64_t    GetSize() const;
+   virtual Double_t    GetSparseness() const;
+   virtual Double_t    GetRandomness() const;
    virtual TList      *GetStreamerInfoList() final; // Note: to override behavior, please override GetStreamerInfoListImpl
    const   TList      *GetStreamerInfoCache();
    virtual void        IncrementProcessIDs() { fNProcessIDs++; }
