@@ -182,6 +182,11 @@ ROOT::RNTupleParallelWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model, s
       throw RException(R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into " +
                                std::string(file->GetName())));
    }
+   if (!file->IsWritable()) {
+      throw RException(R__FAIL("The file '" + std::string(file->GetName()) +
+                               "' given to RNTupleParallelWriter is not writable. Open it with 'UPDATE' or 'RECREATE' "
+                               "if you want to write into it."));
+   }
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
