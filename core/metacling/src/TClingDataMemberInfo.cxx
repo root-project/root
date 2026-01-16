@@ -407,7 +407,13 @@ Longptr_t TClingDataMemberInfo::Offset()
       // https://github.com/llvm/llvm-project/pull/78311
       // We were relying on the leak to provide the address for EnumConstantDecl.
       // Now store the data value as a member instead.
-      fEnumValue = ECD->getInitVal().getExtValue();
+      auto v = ECD->getInitVal();
+      if (v.getActiveBits() == 64 && v.isUnsigned()) {
+         // We silently cast a huge uint64_t to a int64_t (will become negative)
+         fEnumValue = static_cast<int64_t>(v.getZExtValue());
+      } else {
+         fEnumValue = v.getExtValue();
+      }
       return reinterpret_cast<Longptr_t>(&fEnumValue);
    }
    return -1L;
