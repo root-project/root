@@ -33,7 +33,7 @@ jobs:
       - x64
 
     env:
-      PLATFORM: alma10
+      PLATFORM: alma9
       DOC_DIR: v6-36-00-patches
       DOC_LOCATION: /github/home
       BASE_REF: v6-36-00-patches
