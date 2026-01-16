@@ -251,8 +251,22 @@ ROOTTEST_ADD_TEST(test_hadd_args_quieter
 ################################################################
 configure_file(file1_20706.root . COPYONLY)
 configure_file(file2_20706.root . COPYONLY)
+configure_file(filelist_20872.txt . COPYONLY)
 
 ROOTTEST_ADD_TEST(test_hadd_regr_20706
                   PRECMD ${CMAKE_COMMAND} -E rm -f merged_20706.root
                   COMMAND ${ROOT_hadd_CMD} -f merged_20706.root file1_20706.root file2_20706.root
 )
+
+if(davix AND NOT MSVC)
+ROOTTEST_ADD_TEST(test_hadd_regr_20872
+                  PRECMD ${CMAKE_COMMAND} -E rm -f merged_20872.root
+                  COMMAND ${ROOT_hadd_CMD} -f merged_20872.root root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root
+)
+
+ROOTTEST_ADD_TEST(test_hadd_regr_20872_2
+                  PRECMD ${CMAKE_COMMAND} -E rm -f merged_20872_2.root
+                  COMMAND ${ROOT_hadd_CMD} -f root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root @filelist_20872.txt
+                  PASSREGEX "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root cannot be both the target and an input!"
+)
+endif()
