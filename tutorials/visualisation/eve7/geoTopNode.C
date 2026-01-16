@@ -41,7 +41,7 @@ TGeoNode *getNodeFromPath(TGeoNode *top, std::string path)
 void geoTopNode()
 {
    auto eveMng = REX::REveManager::Create();
-   // eveMng->AllowMultipleRemoteConnections(false, false);
+   eveMng->AllowMultipleRemoteConnections(false, false);
 
    TFile::SetCacheFileDir(".");
 
@@ -51,11 +51,15 @@ void geoTopNode()
 
    // tracker barrel
    {
-      // Init RGeomDescription object
-      auto data = new REX::REveGeoTopNodeData("TRACK GeoNode-Data ");
-      data->SetTNode(getNodeFromPath(top, "TRAK_1/SVTX_1"));
-      data->RefDescription().SetVisLevel(2);
-      eveMng->GetWorld()->AddElement(data); // data can be added to any scene
+      auto data = new REX::REveGeoTopNodeData("MUON GeoNode-Data");
+
+      std::vector<std::string> path;
+      path.push_back("CMSE_1");
+      path.push_back("TRAK_1");
+      path.push_back("SVTX_1");
+      data->SetTopNodeWithPath(path);
+      data->RefDescription().SetVisLevel(1);
+      eveMng->GetWorld()->AddElement(data);
 
       // 3D GL representation
       auto geoViz = new REX::REveGeoTopNodeViz("CaloTopNode");
@@ -67,9 +71,13 @@ void geoTopNode()
 
    // muon barrel
    {
-      // Init RGeomDescription object
       auto data = new REX::REveGeoTopNodeData("MUON GeoNode-Data");
-      data->SetTNode(getNodeFromPath(top, "MUON_1/MB_1"));
+
+      std::vector<std::string> path;
+      path.push_back("CMSE_1");
+      path.push_back("MUON_1");
+      path.push_back("MB_1");
+      data->SetTopNodeWithPath(path);
       data->RefDescription().SetVisLevel(2);
       eveMng->GetWorld()->AddElement(data);
 

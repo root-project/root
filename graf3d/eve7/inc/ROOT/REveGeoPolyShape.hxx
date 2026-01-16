@@ -31,7 +31,7 @@ private:
    REveGeoPolyShape(const REveGeoPolyShape&) = delete;
    REveGeoPolyShape& operator=(const REveGeoPolyShape&) = delete;
 
-protected:
+public:
    std::vector<Double_t> fVertices;
    std::vector<Double_t> fNormals;
    std::vector<UInt_t>   fPolyDesc;

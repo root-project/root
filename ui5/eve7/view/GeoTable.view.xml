@@ -5,8 +5,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:layout="sap.ui.layout"
     xmlns:m="sap.m"
-    xmlns:table="sap.ui.table"
-    xmlns:f="sap.ui.layout.form"
+    xmlns:t="sap.ui.table"
     height="100%">
     <Toolbar id="tbar">
       <content>
@@ -16,7 +15,40 @@
          <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
       </content>
     </Toolbar>
-    <mvc:XMLView id="geomHierarchyPanel" width="100%"
+   <FlexBox height="100%" direction="Column">
+      <Toolbar>
+         <layoutData>
+            <FlexItemData baseSize="35px"/>
+         </layoutData>
+
+         <Button icon="sap-icon://synchronize" type="Transparent"
+                 tooltip="Reload geometry hierarchy" press="onRealoadPress"/>
+
+         <Button text="cdTop" type="Transparent"
+                 tooltip="Reload geometry hierarchy" press="cdTop"/>
+         <Button text="cdUp" type="Transparent"
+                 tooltip="Reload geometry hierarchy" press="cdUp"/>
+         <ToolbarSpacer />
+         <SearchField id="searchNode" liveChange="onSearch"
+                      tooltip="Type regexp for name or material with prefix m:"/>
+      </Toolbar>
+      <t:TreeTable
+         id="treeTable"
+         columnHeaderVisible="false"
+         editable="false"
+         enableSelectAll="false"
+         selectionBehavior="RowOnly"
+         selectionMode="Single"
+         visibleRowCountMode="Auto"
+         cellClick="onCellClick"
+         cellContextmenu="onCellContextMenu"
+         rows="{/nodes}">
+         <t:layoutData>
+            <FlexItemData growFactor="1"/>
+         </t:layoutData>
+      </t:TreeTable>
+   </FlexBox>
+    <!--mvc:XMLView id="geomHierarchyPanel" width="100%"
       height="100%" viewName="rootui5.geom.view.GeomHierarchy">
-    </mvc:XMLView>
+    </mvc:XMLView-->
 </mvc:View>
