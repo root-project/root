@@ -117,3 +117,5 @@ ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES RooFit RooStats
                ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                ${CMAKE_CURRENT_SOURCE_DIR}/data/workspace_with_model_config_classdef_6.root
                )
+
+ROOT_ADD_GTEST(testRooLinkedList testRooLinkedList.cxx LIBRARIES RooFitCore)
