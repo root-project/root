@@ -39,6 +39,8 @@ static constexpr int kHttpResponseBadRequest = 400;
 static constexpr int kHttpResponseNotFound = 404;
 static constexpr int kHttpResponseRangeNotSatisfiable = 416;
 
+static constexpr int kMaxDebugDataChars = 50; ///< Maximum number of characters of debug HTTP content before snipping
+
 /// A byte range as specified in an HTTP range request header
 struct RHttpRange {
    std::uint64_t fFirstByte = std::uint64_t(-1);
@@ -363,6 +365,53 @@ std::size_t CallbackHeader(char *buffer, std::size_t size, std::size_t nitems, v
 }
 #endif
 
+int CallbackDebug(CURL * /* handle */, curl_infotype type, char *data, size_t size, void * /* clientp */)
+{
+   std::string prefix = "(libcurl debug) ";
+   switch (type) {
+   case CURLINFO_TEXT: prefix += "{info} "; break;
+   case CURLINFO_HEADER_IN: prefix += "{header/recv} "; break;
+   case CURLINFO_HEADER_OUT: prefix += "{header/sent} "; break;
+   case CURLINFO_DATA_IN: prefix += "{data/recv} "; break;
+   case CURLINFO_DATA_OUT: prefix += "{data/sent} "; break;
+   case CURLINFO_SSL_DATA_IN: prefix += "{ssldata/recv} "; break;
+   case CURLINFO_SSL_DATA_OUT: prefix += "{ssldata/sent} "; break;
+   default: break;
+   }
+
+   switch (type) {
+   case CURLINFO_DATA_IN:
+   case CURLINFO_DATA_OUT:
+   case CURLINFO_SSL_DATA_IN:
+   case CURLINFO_SSL_DATA_OUT:
+      if (size > kMaxDebugDataChars) {
+         Info("RCurlConnection", "%s <snip>", prefix.c_str());
+         return 0;
+      }
+   default: break;
+   }
+
+   std::string msg(data, size);
+   bool isPrintable = true;
+
+   for (std::size_t i = 0; i < msg.length(); ++i) {
+      if (msg[i] == '\0') {
+         msg[i] = '~';
+      }
+
+      if ((msg[i] < ' ' || msg[i] > '~') && (msg[i] != 10 /*line feed*/ && msg[i] != 13 /*carriage return*/)) {
+         isPrintable = false;
+         break;
+      }
+   }
+
+   if (!isPrintable) {
+      msg = "<Non-plaintext sequence>";
+   }
+   Info("RCurlConnection", "%s%s", prefix.c_str(), msg.c_str());
+   return 0;
+}
+
 // From the list of non-overlapping (displaced) ranges, create the HTTP request ranges, ordered by offset.
 // Skip empty user ranges and coalesce adjacent user ranges.
 std::vector<RHttpRange>
@@ -573,8 +622,20 @@ void ROOT::Internal::RCurlConnection::SetupErrorBuffer()
 
 void ROOT::Internal::RCurlConnection::SetOptions()
 {
+   int rc;
+
+   if (gDebug) {
+      rc = curl_easy_setopt(fHandle, CURLOPT_VERBOSE, 1);
+      R__ASSERT(rc == CURLE_OK);
+      rc = curl_easy_setopt(fHandle, CURLOPT_DEBUGFUNCTION, CallbackDebug);
+      R__ASSERT(rc == CURLE_OK);
+   } else {
+      rc = curl_easy_setopt(fHandle, CURLOPT_VERBOSE, 0);
+      R__ASSERT(rc == CURLE_OK);
+   }
+
    static const std::string kUserAgent = GetUserAgentString();
-   auto rc = curl_easy_setopt(fHandle, CURLOPT_USERAGENT, kUserAgent.c_str());
+   rc = curl_easy_setopt(fHandle, CURLOPT_USERAGENT, kUserAgent.c_str());
    R__ASSERT(rc == CURLE_OK);
 
    rc = curl_easy_setopt(fHandle, CURLOPT_FOLLOWLOCATION, 1);
