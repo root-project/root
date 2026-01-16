@@ -2083,7 +2083,14 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLViewStringStr,        METH_NOARGS);
     }
 
-    else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {
+// The first condition was already present in upstream CPyCppyy. The other two
+// are special to ROOT, because its reflection layer gives us the types without
+// the "std::" namespace. On some platforms, that applies only to the template
+// arguments, and on others also to the "basic_string".
+    else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >"
+          || name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
+          || name == "std::basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >"
+    ) {
         Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLWStringRepr,       METH_NOARGS);
         Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLWStringStr,        METH_NOARGS);
         Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLWStringBytes,      METH_NOARGS);
