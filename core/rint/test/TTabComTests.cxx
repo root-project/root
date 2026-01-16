@@ -92,6 +92,7 @@ TEST(TTabComTests, CompleteTH1)
    {
       ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.optionalDiag(kError, "", "libGed[.so | .dll | .dylib | .sl | .dl | .a] does not exist in", false);
+      diagRAII.optionalDiag(kWarning, "TUnixSystem::SetDisplay", "DISPLAY not set", false); // When tested over ssh
       if (0 == gSystem->Load("libGed")) {
          expected += " TH1Editor";
       }
