@@ -342,6 +342,11 @@ void RooLinkedList::setHashTableSize(Int_t size)
       // (Re)create hash tables
       _htableName = std::make_unique<HashTableByName>(size);
       _htableLink = std::make_unique<HashTableByLink>(size);
+
+      for (RooLinkedListElem *elem = _first; elem; elem = elem->_next) {
+         _htableName->insert({elem->_arg->GetName(), elem->_arg});
+         _htableLink->insert({elem->_arg, reinterpret_cast<TObject *>(elem)});
+      }
    }
 
    _htableName->reserve(size);
