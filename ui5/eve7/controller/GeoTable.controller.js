@@ -1,16 +1,20 @@
 sap.ui.define([
-    'sap/ui/core/mvc/Controller',
-    'sap/ui/table/Column',
-    'sap/m/Text',
-    "sap/ui/core/ResizeHandler",
-    'sap/ui/core/UIComponent',
+    'rootui5/geom/controller/GeomHierarchy.controller',
     'rootui5/geom/model/GeomBrowserModel',
-    'rootui5/geom/lib/ColorBox'
-], function (Controller, tableColumn, mText, ResizeHandler, UIComponent,GeomBrowserModel,GeomColorBox) {
+    'sap/ui/table/Column',
+    'sap/ui/Device',
+    'sap/ui/unified/Menu',
+    'sap/ui/unified/MenuItem',
+    'sap/ui/core/Popup',
+    'sap/ui/layout/HorizontalLayout',
+    'rootui5/geom/lib/ColorBox',
+    'sap/m/CheckBox',
+    'sap/m/Text'
+], function (GeomHierarchy,GeomBrowserModel, tableColumn, Device, Menu, MenuItem, Popup, HorizontalLayout, GeomColorBox, mCheckBox, mText) {
 
     "use strict";
 
-    return Controller.extend("rootui5.eve7.controller.GeoTable", {
+    return GeomHierarchy.extend("rootui5.eve7.controller.GeoTable", {
 
         onInit: function () {
             // disable narrowing axis range
@@ -40,15 +44,62 @@ sap.ui.define([
             let scene = this.mgr.GetElement(sceneInfo.fSceneId);
             let topNodeEve = scene.childs[0];
 
-            let h = this.byId('geomHierarchyPanel');
+            //let h = this.byId('geomHierarchyPanel');
 
             let websocket = this.mgr.handle.createChannel();
 
-            h.getController().configure({
+            // h.getController().configure({
+            this.configure({
                websocket,
-               show_columns: true,
+               show_columns: false,
                jsroot: EVE.JSR
             });
+            
+                let t = this.byId("treeTable");
+                t.setColumnHeaderVisible(true);
+
+                t.addColumn(new tableColumn('columnVis', {
+                    label: 'Visibility',
+                    tooltip: 'Visibility flags',
+                    autoResizable: true,
+                    visible: true,
+                    width: '20%',
+                    template: new HorizontalLayout({
+                        content: [
+                            new mCheckBox({ enabled: true, visible: true, selected: "{avisible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} Visibility Children' }),
+                            new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: '{name} Visibility Self' })
+                        ]
+                    })
+                }));
+
+                t.addColumn(new tableColumn('columnColor', {
+                    label: 'Color',
+                    tooltip: 'Color of geometry volumes',
+                    width: '10%',
+                    autoResizable: true,
+                    visible: true,
+                    template: new GeomColorBox({ color: "{_node/color}", visible: "{= !!${_node/color}}" })
+                }));
+                t.addColumn(new tableColumn('columnMaterial', {
+                    label: 'Material',
+                    tooltip: 'Material of the volumes',
+                    width: '20%',
+                    autoResizable: true,
+                    visible: true,
+                    template: new mText({ text: "{_node/material}", wrapping: false })
+                }));
+
+            this.model.addNodeAttributes = function (node, item) {
+                node._node = this.provideLogicalNode(item);
+
+                if (item.pvis !== undefined) {
+                    node.pvisible = item.pvis != 0;
+                    node.avisible = item.vis != 0;
+                    node.top = item.top;
+                } else {
+                    console.error("add node attributes not handled");
+                }
+            };
 
             console.log('channel id is', websocket.getChannelId());
             this.mgr.handle.send("SETCHANNEL:" + topNodeEve.fElementId + "," + websocket.getChannelId());
@@ -68,6 +119,110 @@ sap.ui.define([
         detachViewer: function () {
             this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
             this.destroy();
+        },       
+        cdTop() {
+            this.websocket.send('CDTOP:');
+
+            let len = this.model?.getLength() ?? 0;
+            for (let n = 0; n < len; ++n)
+                this.model?.setProperty(`/nodes/${n}/top`, false);
+            // this.model?.setProperty(ctxt.getPath() + '/top', true);
+           // this.doReload();
+        },
+        cdUp() {
+            this.websocket.send('CDUP:');
+
+            let len = this.model?.getLength() ?? 0;
+            for (let n = 0; n < len; ++n)
+                this.model?.setProperty(`/nodes/${n}/top`, false);
+            // this.model?.setProperty(ctxt.getPath() + '/top', true);
+           // this.doReload();
+        },
+
+      /** @summary Get entry with physical node visibility */
+      getPhysVisibilityEntry(path, force) {
+         console.error("AMT get PHY entry unused ...");
+
+         let stack = this.getStackByPath(this.fullModel, path);
+         if (stack === null)
+            return;
+
+         let len = stack.length;
+
+         for (let i = 0; i < this.physVisibility?.length; ++i) {
+            let item = this.physVisibility[i], match = true;
+            if (len != item.stack?.length) continue;
+            for (let k = 0; match && (k < len); ++k)
+               if (stack[k] != item.stack[k])
+                  match = false;
+            if (match)
+               return item;
+         }
+        },
+
+        /** @summary invoked when visibility checkbox clicked */
+        changeVisibility(oEvent, physical) {
+            let row = oEvent.getSource(),
+                flag = oEvent.getParameter('selected'),
+                ctxt = row?.getBindingContext(),
+                ttt = ctxt?.getProperty(ctxt?.getPath());
+
+            if (!ttt?.path)
+                return console.error('Fail to get path');
+
+
+            let msg = '';
+
+            if (physical) {
+                ttt.pvisible = flag;
+                ttt._elem.pvis = flag;
+                msg = flag ? 'SHOW' : 'HIDE';
+            } else {
+                ttt.avisible = flag;
+                ttt._elem.vis = flag;
+                msg = "SETVI" + (flag ? '1' : '0');
+            }
+
+            msg += ':' + JSON.stringify(ttt.path);
+
+            this.websocket.send(msg);
+        },
+
+        onCellContextMenu(oEvent) {
+            if (Device.support.touch)
+                return; //Do not use context menus on touch devices
+
+            let ctxt = oEvent.getParameter('rowBindingContext'),
+                colid = oEvent.getParameter('columnId'),
+                prop = ctxt?.getProperty(ctxt.getPath());
+
+            oEvent.preventDefault();
+
+            if (!prop?._elem) return;
+
+            if (!this._oIdContextMenu) {
+                this._oIdContextMenu = new Menu();
+                this.getView().addDependent(this._oIdContextMenu);
+            }
+
+            this._oIdContextMenu.destroyItems();
+
+            this._oIdContextMenu.addItem(new MenuItem({
+                text: 'Set as top',
+                select: () => {
+                    this.setPhysTopNode(prop.path);
+                    this.websocket.send('SETAPEX:' + JSON.stringify(prop.path));
+
+                    let len = this.model?.getLength() ?? 0;
+                    for (let n = 0; n < len; ++n)
+                        this.model?.setProperty(`/nodes/${n}/top`, false);
+                    this.model?.setProperty(ctxt.getPath() + '/top', true);
+                }
+            }));
+
+            //Open the menu on the cell
+            let oCellDomRef = oEvent.getParameter("cellDomRef");
+            this._oIdContextMenu.open(false, oCellDomRef, Popup.Dock.BeginTop, Popup.Dock.BeginBottom, oCellDomRef, "none none");
         }
     });
 });

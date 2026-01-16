@@ -206,6 +206,7 @@ using RGeomSignalFunc_t = std::function<void(const std::string &)>;
 
 class RGeomDescription {
 
+protected:
    friend class RGeomBrowserIter;
 
    class ShapeDescr {
@@ -296,6 +297,9 @@ class RGeomDescription {
 
    int IsPhysNodeVisible(const std::vector<int> &stack);
 
+   virtual RGeoItem MakeBrowserItem(const RGeomNode& node, std::vector<int>& stack);
+   virtual bool IsFullModelStreamedAtOnce();
+
    /** clear drawing data without locking mutex */
    void _ClearDrawData()
    {
@@ -305,6 +309,7 @@ class RGeomDescription {
 
 public:
    RGeomDescription() = default;
+   virtual ~RGeomDescription(){};
 
    void AddSignalHandler(const void *handler, RGeomSignalFunc_t func);
 
@@ -460,7 +465,7 @@ public:
 
    bool IsPrincipalEndNode(int nodeid);
 
-   std::string ProcessBrowserRequest(const std::string &req = "");
+   virtual std::string ProcessBrowserRequest(const std::string &req = "");
 
    bool HasDrawData() const;
    void ProduceDrawData();

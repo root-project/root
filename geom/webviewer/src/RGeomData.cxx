@@ -781,7 +781,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
    if (!request)
       return res;
 
-   if (request->path.empty() && (request->first == 0) && (GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000))) {
+   if (request->path.empty() && (request->first == 0) && IsFullModelStreamedAtOnce()) {
 
       std::vector<RGeomNodeBase *> vect(fDesc.size(), nullptr);
 
@@ -823,9 +823,9 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
             auto stack = MakeStackByIds(iter.CurrentIds());
 
             while (iter.IsValid() && (request->number > 0)) {
-               int pvis = IsPhysNodeVisible(stack);
-               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetNodeId(), iter.GetColor(),
-                                       iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
+
+               temp_nodes.emplace_back(MakeBrowserItem(fDesc[iter.GetNodeId()], stack));
+
                if (toplevel)
                   temp_nodes.back().SetExpanded(true);
                if (stack == fSelectedStack)
@@ -2058,6 +2058,27 @@ int RGeomDescription::IsPhysNodeVisible(const std::vector<int> &stack)
          return item.visible ? 1 : 0;
    }
    return -1;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Create temprary browser item.
+/// Function is called from ProcessBrowserRequest
+
+RGeoItem RGeomDescription::MakeBrowserItem(const RGeomNode &node, std::vector<int> &stack)
+{
+   int pvis = IsPhysNodeVisible(stack);
+   bool test_vis = pvis < 0 ? true : pvis;
+   return RGeoItem(node.name, node.chlds.size(), node.id, node.color, node.material,
+                   node.vis, test_vis);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Decide if the whole model is streamed at once
+/// Function is called from ProcessBrowserRequest
+
+bool RGeomDescription::IsFullModelStreamedAtOnce()
+{
+   return GetNumNodes() < (IsPreferredOffline() ? 1000000 : 1000);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
