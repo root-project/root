@@ -8536,7 +8536,11 @@ void TH1::SetBuffer(Int_t bufsize, Option_t * /*option*/)
 /// By default the number of contour levels is set to 20. The contours values
 /// in the array "levels" should be specified in increasing order.
 ///
-/// if argument levels = 0 or missing, equidistant contours are computed
+/// if argument levels = 0 or missing, `nlevels` equidistant contours are computed
+/// between `zmin` and `zmax - dz`, both included, with step
+/// `dz = (zmax - zmin)/nlevels`. Note that contour lines are not centered, but
+/// contour surfaces (when drawing with `COLZ`) will be, since contour color `i` covers
+/// the region of values between contour line `i` and `i+1`.
 
 void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 {
