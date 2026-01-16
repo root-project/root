@@ -3736,6 +3736,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("\"$BuildDir","$BuildDir");
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
+   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir());
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
@@ -4133,7 +4134,7 @@ void TSystem::SetMakeExe(const char *directives)
 /// construct should be avoided. In particular this description can contain
 /// environment variables, like $ROOTSYS (or %ROOTSYS% on windows).
 /// ~~~ {.cpp}
-/// Five special variables will be expanded before execution:
+/// The following special variables will be expanded before execution:
 ///   Variable name       Expands to
 ///   -------------       ----------
 ///   $SourceFiles        Name of source files to be compiled
@@ -4142,6 +4143,7 @@ void TSystem::SetMakeExe(const char *directives)
 ///   $BuildDir           Directory where the files will be created
 ///   $IncludePath        value of fIncludePath
 ///   $LinkedLibs         value of fLinkedLibs
+///   $RPath              ROOT's library directory is added as -rpath
 ///   $DepLibs            libraries on which this library depends on
 ///   $ObjectFiles        Name of source files to be compiler with
 ///                       their extension changed to .o or .obj
@@ -4155,10 +4157,11 @@ void TSystem::SetMakeExe(const char *directives)
 ///  --no_exceptions --signed_chars --display_error_number
 ///  --diag_suppress 68 -o $SharedLib");
 ///
-/// gSystem->setMakeSharedLib(
+/// // Or adding an rpath to the generated libraries (ROOT's rpath is inserted automatically into $RPath):
+/// gSystem->SetMakeSharedLib(
 /// "Cxx $IncludePath -c $SourceFile;
 ///  ld  -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved
-///  \$Opt -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
+///  \$Opt \$RPath -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
 ///  -o $SharedLib $ObjectFile -lcxxstd -lcxx -lexc -lots -lc"
 ///
 /// gSystem->SetMakeSharedLib(
