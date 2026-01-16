@@ -861,7 +861,6 @@ class TestSTLSTRING:
 
             raises(TypeError, c.get_string2, "temp string")
 
-    @mark.xfail()
     def test02_string_data_access(self):
         """Test access to std::string object data members"""
 
