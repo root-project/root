@@ -8,6 +8,14 @@
 # @author Patrick Bos, NL eScience Center, 2018
 
 ROOT_ADD_GTEST(testSimple testSimple.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooFitCollections
+  testRooSTLRefCountList.cxx
+  testRooAbsCollection.cxx
+  testRooCollectionProxy.cxx
+  testRooLinkedList.cxx
+  LIBRARIES RooFitCore
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooCollectionProxy_v626.root
+)
 ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooFit RooStats)
 ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCategory testRooCategory.cxx LIBRARIES RooFitCore)
@@ -19,7 +27,6 @@ ROOT_ADD_GTEST(testRooBinSamplingPdf testRooBinSamplingPdf.cxx LIBRARIES RooFitC
 ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testGenericPdf testGenericPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
-ROOT_ADD_GTEST(testRooAbsCollection testRooAbsCollection.cxx LIBRARIES RooFitCore)
 
 ROOT_ADD_GTEST(testRooDataSet testRooDataSet.cxx LIBRARIES Tree RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataSet_with_errors_6_26_10.root)
@@ -32,9 +39,6 @@ ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v621.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v622.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v624.root)
-ROOT_ADD_GTEST(testRooCollectionProxy testRooCollectionProxy.cxx
-  LIBRARIES RooFitCore
-  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooCollectionProxy_v626.root)
 ROOT_ADD_GTEST(testRooRealVar testRooRealVar.cxx LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooRealVar_data1.root)
 
@@ -64,7 +68,6 @@ ROOT_ADD_GTEST(testRooMulti testRooMulti.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/testRooRealL.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)
-ROOT_ADD_GTEST(testRooSTLRefCountList testRooSTLRefCountList.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)
@@ -117,5 +120,3 @@ ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES RooFit RooStats
                ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                ${CMAKE_CURRENT_SOURCE_DIR}/data/workspace_with_model_config_classdef_6.root
                )
-
-ROOT_ADD_GTEST(testRooLinkedList testRooLinkedList.cxx LIBRARIES RooFitCore)
