@@ -228,8 +228,8 @@ llvm::Expected<FileEntryRef> FileManager::getFileRef(StringRef Filename,
   bool needsRereading = false;
   if (NamedFileEnt && NamedFileEnt->getValue()) {
     FileEntryRef::MapValue Value = *NamedFileEnt->getValue();
-    if (Value.V.is<FileEntry *>()) {
-      auto found = FileEntriesToReread.find(Value.V.get<FileEntry*>());
+    if (isa<FileEntry *>(Value.V)) {
+      auto found = FileEntriesToReread.find(cast<FileEntry *>(Value.V));
       if (found != FileEntriesToReread.end()) {
         needsRereading = true;
         StaleFileEntry = *found;
@@ -379,8 +379,8 @@ llvm::Expected<FileEntryRef> FileManager::getFileRef(StringRef Filename,
     for (auto& fe: SeenFileEntries) {
       if (fe.getValue()) {
         FileEntryRef::MapValue Value = *fe.getValue();
-        if (Value.V.is<FileEntry *>()
-            && Value.V.get<FileEntry*>() == StaleFileEntry) {
+        if (isa<FileEntry *>(Value.V) &&
+            cast<FileEntry *>(Value.V) == StaleFileEntry) {
           fe.setValue(FileEntryRef::MapValue(*UFE, DirInfo));
         }
       }
