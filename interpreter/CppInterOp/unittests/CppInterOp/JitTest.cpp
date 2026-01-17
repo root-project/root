@@ -11,7 +11,7 @@ static int printf_jit(const char* format, ...) {
   return 0;
 }
 
-TEST(JitTest, InsertOrReplaceJitSymbol) {
+TYPED_TEST(CppInterOpTest, JitTestInsertOrReplaceJitSymbol) {
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
@@ -20,6 +20,8 @@ TEST(JitTest, InsertOrReplaceJitSymbol) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
   std::vector<Decl*> Decls;
   std::string code = R"(
     extern "C" int printf(const char*,...);
@@ -39,7 +41,9 @@ TEST(JitTest, InsertOrReplaceJitSymbol) {
   EXPECT_TRUE(Cpp::InsertOrReplaceJitSymbol("non_existent", 0));
 }
 
-TEST(Streams, StreamRedirect) {
+TYPED_TEST(CppInterOpTest, JitTestStreamRedirect) {
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
   // printf and etc are fine here.
   // NOLINTBEGIN(cppcoreguidelines-pro-type-vararg)
   Cpp::BeginStdStreamCapture(Cpp::kStdOut);
@@ -70,3 +74,39 @@ TEST(Streams, StreamRedirect) {
   EXPECT_STREQ(cerrs.c_str(), "Err\nStdErr\n");
   // NOLINTEND(cppcoreguidelines-pro-type-vararg)
 }
+
+TYPED_TEST(CppInterOpTest, JitTestStreamRedirectJIT) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+  if (llvm::sys::RunningOnValgrind())
+    GTEST_SKIP() << "XFAIL due to Valgrind report";
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "Test fails for cling builds";
+#endif
+  TestFixture::CreateInterpreter();
+  Interp->process(R"(
+    #include <stdio.h>
+    printf("%s\n", "Hello World");
+    fprintf(stderr, "%s\n", "Hello Err");
+    fflush(nullptr);
+  )");
+
+  Cpp::BeginStdStreamCapture(Cpp::kStdOut);
+  Cpp::BeginStdStreamCapture(Cpp::kStdErr);
+  Interp->process(R"(
+    #include <stdio.h>
+    printf("%s\n", "Hello World");
+    fprintf(stderr, "%s\n", "Hello Err");
+    fflush(nullptr);
+    )");
+  std::string CapturedStringErr = Cpp::EndStdStreamCapture();
+  std::string CapturedStringOut = Cpp::EndStdStreamCapture();
+
+  EXPECT_STREQ(CapturedStringOut.c_str(), "Hello World\n");
+  EXPECT_STREQ(CapturedStringErr.c_str(), "Hello Err\n");
+}
+

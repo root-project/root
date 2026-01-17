@@ -63,6 +63,9 @@ static inline char* GetEnv(const char* Var_Name) {
   CXXSpecialMemberKind::MoveConstructor
 #endif
 
+#define STRINGIFY(s) STRINGIFY_X(s)
+#define STRINGIFY_X(...) #__VA_ARGS__
+
 #include "clang/Interpreter/CodeCompletion.h"
 
 #include "llvm/ADT/SmallString.h"
@@ -87,6 +90,7 @@ static inline char* GetEnv(const char* Var_Name) {
 #include "cling/Utils/AST.h"
 
 #include <regex>
+#include <vector>
 
 namespace Cpp {
 namespace Cpp_utils = cling::utils;
@@ -202,10 +206,22 @@ inline void codeComplete(std::vector<std::string>& Results,
 
 #include "llvm/Support/Error.h"
 
+#ifdef LLVM_BUILT_WITH_OOP_JIT
+#include "clang/Basic/Version.h"
+#include "llvm/TargetParser/Host.h"
+
+#include "llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h"
+
+#include <unistd.h>
+#endif
+
+#include <algorithm>
+
 namespace compat {
 
 inline std::unique_ptr<clang::Interpreter>
-createClangInterpreter(std::vector<const char*>& args) {
+createClangInterpreter(std::vector<const char*>& args, int stdin_fd = -1,
+                       int stdout_fd = -1, int stderr_fd = -1) {
   auto has_arg = [](const char* x, llvm::StringRef match = "cuda") {
     llvm::StringRef Arg = x;
     Arg = Arg.trim().ltrim('-');
@@ -243,11 +259,62 @@ createClangInterpreter(std::vector<const char*>& args) {
   (*ciOrErr)->LoadRequestedPlugins();
   if (CudaEnabled)
     DeviceCI->LoadRequestedPlugins();
+
+  bool outOfProcess;
+#if defined(_WIN32) || !defined(LLVM_BUILT_WITH_OOP_JIT)
+  outOfProcess = false;
+#else
+  outOfProcess = std::any_of(args.begin(), args.end(), [](const char* arg) {
+    return llvm::StringRef(arg).trim() == "--use-oop-jit";
+  });
+#endif
+
+#ifdef LLVM_BUILT_WITH_OOP_JIT
+
+  clang::Interpreter::JITConfig OutOfProcessConfig;
+  if (outOfProcess) {
+    OutOfProcessConfig.IsOutOfProcess = true;
+    OutOfProcessConfig.OOPExecutor =
+        LLVM_BINARY_LIB_DIR "/bin/llvm-jitlink-executor";
+    OutOfProcessConfig.UseSharedMemory = false;
+    OutOfProcessConfig.SlabAllocateSize = 0;
+    OutOfProcessConfig.CustomizeFork = [stdin_fd, stdout_fd,
+                                        stderr_fd]() { // Lambda defined inline
+      dup2(stdin_fd, STDIN_FILENO);
+      dup2(stdout_fd, STDOUT_FILENO);
+      dup2(stderr_fd, STDERR_FILENO);
+
+      setvbuf(fdopen(stdout_fd, "w+"), nullptr, _IONBF, 0);
+      setvbuf(fdopen(stderr_fd, "w+"), nullptr, _IONBF, 0);
+    };
+
+#ifdef __APPLE__
+    std::string OrcRuntimePath = LLVM_BINARY_LIB_DIR "/lib/clang/" STRINGIFY(
+        LLVM_VERSION_MAJOR) "/lib/darwin/liborc_rt_osx.a";
+#else
+    std::string OrcRuntimePath = LLVM_BINARY_LIB_DIR "/lib/clang/" STRINGIFY(
+        LLVM_VERSION_MAJOR) "/lib/x86_64-unknown-linux-gnu/liborc_rt.a";
+#endif
+    OutOfProcessConfig.OrcRuntimePath = OrcRuntimePath;
+  }
+  auto innerOrErr =
+      CudaEnabled
+          ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
+                                               std::move(DeviceCI))
+          : clang::Interpreter::create(std::move(*ciOrErr), OutOfProcessConfig);
+#else
+  if (outOfProcess) {
+    llvm::errs()
+        << "[CreateClangInterpreter]: No compatibility with out-of-process "
+           "JIT. Running in-process JIT execution."
+        << "(To enable recompile CppInterOp with -DLLVM_BUILT_WITH_OOP_JIT=ON)"
+        << "\n";
+  }
   auto innerOrErr =
       CudaEnabled ? clang::Interpreter::createWithCUDA(std::move(*ciOrErr),
                                                        std::move(DeviceCI))
                   : clang::Interpreter::create(std::move(*ciOrErr));
-
+#endif
   if (!innerOrErr) {
     llvm::logAllUnhandledErrors(innerOrErr.takeError(), llvm::errs(),
                                 "Failed to build Interpreter:");
@@ -387,7 +454,7 @@ public:
                                   "Failed to generate PTU:");
   }
 };
-}
+} // namespace compat
 
 #endif // CPPINTEROP_USE_REPL
 

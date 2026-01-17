@@ -89,7 +89,11 @@ if (NOT EMSCRIPTEN)
   set(EXTRA_PATH_TEST_BINARIES /TestSharedLib/unittests/bin/$<CONFIG>/)
 endif()
 
-add_cppinterop_unittest(DynamicLibraryManagerTests DynamicLibraryManagerTest.cpp ${EXTRA_TEST_SOURCE_FILES})
+add_cppinterop_unittest(DynamicLibraryManagerTests 
+  DynamicLibraryManagerTest.cpp 
+  Utils.cpp 
+  ${EXTRA_TEST_SOURCE_FILES}
+)
 
 target_link_libraries(DynamicLibraryManagerTests
   PRIVATE
