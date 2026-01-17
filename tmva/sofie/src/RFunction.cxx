@@ -26,7 +26,7 @@ RFunction_Update::RFunction_Update(FunctionTarget target, GraphType gType): fTar
         throw std::runtime_error("Invalid target for Update function");
     }
     fType = FunctionType::UPDATE;
-    function_block = std::make_unique<RModel>(fFuncName);
+    fFunction_block = std::make_unique<RModel>(fFuncName);
 
     if(fGraphType == GraphType::GNN) {
         if(fTarget == FunctionTarget::EDGES) {
@@ -49,25 +49,23 @@ RFunction_Update::RFunction_Update(FunctionTarget target, GraphType gType): fTar
 // add input tensors, order of provided shapes must be the same as in fInputTensors
 void RFunction_Update::AddInputTensors(const std::vector<std::vector<std::size_t>>& inputShapes) {
     for(long unsigned int i=0; i<inputShapes.size(); ++i) {
-        function_block->AddInputTensorInfo(fInputTensors[i],ETensorType::FLOAT, inputShapes[i]);
-        function_block->AddInputTensorName(fInputTensors[i]);
+        fFunction_block->AddInputTensorInfo(fInputTensors[i],ETensorType::FLOAT, inputShapes[i]);
+        fFunction_block->AddInputTensorName(fInputTensors[i]);
     }
 }
 void RFunction_Update::AddInputTensors(const std::vector<std::vector<Dim>>& inputShapes) {
     for(long unsigned int i=0; i<inputShapes.size(); ++i) {
-        function_block->AddInputTensorInfo(fInputTensors[i],ETensorType::FLOAT, inputShapes[i]);
-        function_block->AddInputTensorName(fInputTensors[i]);
+        fFunction_block->AddInputTensorInfo(fInputTensors[i],ETensorType::FLOAT, inputShapes[i]);
+        fFunction_block->AddInputTensorName(fInputTensors[i]);
     }
 }
 
-std::string RFunction_Update::GenerateModel(const std::string& filename, long read_pos, long block_size) {
-    function_block->SetFilename(filename);
+std::string RFunction_Update::GenerateModel(const std::string& filename, long read_pos, long block_size, bool verbose) {
+    fFunction_block->SetFilename(filename);
     // use batch size as block size in RModel::generate
-    function_block->PrintRequiredInputTensors();
-    function_block->PrintDynamicTensors();
-    function_block->Generate(Options::kGNNComponent,block_size,read_pos);
+    fFunction_block->Generate(Options::kGNNComponent,block_size,read_pos, verbose);
     std::string modelGenerationString;
-    modelGenerationString = "\n//--------- GNN_Update_Function---"+fFuncName+"\n"+function_block->ReturnGenerated();
+    modelGenerationString = "\n//--------- GNN_Update_Function---"+fFuncName+"\n"+fFunction_block->ReturnGenerated();
     return modelGenerationString;
 }
 

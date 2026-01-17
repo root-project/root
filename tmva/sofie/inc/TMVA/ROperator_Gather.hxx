@@ -72,8 +72,6 @@ public:
           // empty shape Indices is a scalar value for the indices
          size_t indicesLength = ConvertShapeToLength(model.GetTensorShape(fNIndices));
          int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
-         //flag index tensor as not writable (not sure this is needed since index tensor might be used in generated code)
-         model.SetNotWritableInitializedTensor(fNIndices);
          // update indices data in case of negative dim values
          for (size_t i = 0; i < indicesLength; i++) {
             // move this at generation time?
@@ -153,13 +151,14 @@ public:
    }
 
    std::string Generate(std::string opName) override {
-      if (fIsOutputConstant) {
-         // no code to generate here for constant output. Tensor output is defined in Session constructor
-         return "//---------------------------------------\n";
-      }
       opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- Gather " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << "//--------- Gather " << opName << " --> " << fNY << "  " << ConvertShapeToString(fShapeY) << "\n";
+      if (fIsOutputConstant) {
+         // no code to generate here for constant output. Tensor output is defined in Session constructor
+         out << "//--------------------(constant)----------\n";
+         return out.str();
+      }
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q

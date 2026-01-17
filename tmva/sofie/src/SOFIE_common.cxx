@@ -4,6 +4,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <charconv>
+#include <unordered_map>
+#include <set>
 
 namespace TMVA {
 namespace Experimental {
@@ -89,7 +91,7 @@ std::string ConvertTypeToString(ETensorType type){
          return "double";
       }
       case ETensorType::BOOL : {
-         return "bool";
+         return "uint8_t";
       }
       default:{
          return "other_" + std::to_string( (int) type);
@@ -130,7 +132,7 @@ std::string ConvertDimShapeToString(const std::vector<Dim> & shape) {
    std::stringstream out;
    out << "{ ";
    for (size_t i = 0; i < shape.size(); i++) {
-      out << shape[i].GetVal();
+      out << shape[i];
       if (i < shape.size()-1) out << " , ";
    }
    out << " }";
@@ -412,14 +414,15 @@ std::pair<int, std::vector<size_t>>  UTILITY::MultidirectionalBroadcastShape(std
             + " to a common shape.");
    }
 }
-// unidirectional broadcast- only B changes
+// unidirectional broadcast- of shape A to target B
 std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> & shapeA, std::vector<size_t> & shapeB)
 {
-   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeA, shapeB);
+   auto ret = UTILITY::MultidirectionalBroadcastShape(shapeB, shapeA);
    if (ret.first > 1) {
-      std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
-            + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
-            + " to a common shape.");
+      throw
+         std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+            + ConvertShapeToString(shapeA) + " to  " + ConvertShapeToString(shapeB)
+            + " in a common shape.");
    }
    return ret.second;
 }
@@ -545,6 +548,130 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
       }
    }
    return strides;
+}
+
+struct FreeBlock {
+  std::size_t offset;
+  std::size_t size;
+  bool operator<(const FreeBlock& other) const {
+    // order by offset for deterministic coalescing
+    return offset < other.offset;
+  }
+};
+
+struct MemoryEvent {
+  int t;      // time (i.e. operator index)
+  int type;   // 0 = END first, 1 = START
+  int idx;    // tensor index
+  bool operator<(const MemoryEvent& o) const {
+    if (t != o.t) return t < o.t;
+    return type < o.type; // END before START at the same time
+  }
+};
+
+/// Greedy best-fit planner with coalescing free list.
+MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> & tensorsInfo )
+{
+   // Basic validation
+   for (const auto &t : tensorsInfo) {
+      if (!(t.end > t.begin)) {
+         throw std::runtime_error("Each tensor must have end > begin.");
+      }
+   }
+
+   // Build events: free before allocate at equal times.
+   std::vector<MemoryEvent> events;
+   events.reserve(tensorsInfo.size() * 2);
+   for (int i = 0; i < (int)tensorsInfo.size(); ++i) {
+      events.push_back({tensorsInfo[i].end, 0, i});   // END
+      events.push_back({tensorsInfo[i].begin, 1, i}); // START
+   }
+   std::sort(events.begin(), events.end());
+
+   std::vector<size_t> tensorsOffset(tensorsInfo.size());
+
+   // Free list ordered by offset (for O(log n) coalescing)
+   // and faster insert/erase with respect to a vector
+   std::set<FreeBlock> free_list;
+
+   // Bookkeeping: size/offset map for frees.
+   std::unordered_map<int, std::size_t> live_size;
+   std::unordered_map<int, std::size_t> live_offset;
+
+   std::size_t total_bytes = 0;
+
+   auto allocate_best_fit = [&](std::size_t need) -> std::size_t {
+      // Find the *smallest* block whose size >= need (best-fit).
+      // Since free_list is ordered by offset, we scan to find best by size.
+      // (For very large sets you could maintain a multimap by size as well.)
+      auto best = free_list.end();
+      for (auto it = free_list.begin(); it != free_list.end(); ++it) {
+         if (it->size >= need) {
+            if (best == free_list.end() || it->size < best->size)
+               best = it;
+         }
+      }
+      if (best != free_list.end()) {
+         std::size_t off = best->offset;
+         if (best->size == need) {
+            free_list.erase(best);
+         } else {
+            FreeBlock updated{best->offset + need, best->size - need};
+            free_list.erase(best);
+            free_list.insert(updated);
+         }
+         return off;
+      }
+      // No free block large enough; grow the heap.
+      std::size_t off = total_bytes;
+      total_bytes += need;
+      return off;
+   };
+
+   auto try_coalesce = [&](std::set<FreeBlock>::iterator it) {
+      // Coalesce with previous
+      if (it != free_list.begin()) {
+         auto prev = std::prev(it);
+         if (prev->offset + prev->size == it->offset) {
+            FreeBlock merged{prev->offset, prev->size + it->size};
+            free_list.erase(prev);
+            it = free_list.erase(it);
+            it = free_list.insert(merged).first;
+         }
+      }
+      // Coalesce with next
+      auto next = std::next(it);
+      if (next != free_list.end() && it->offset + it->size == next->offset) {
+         FreeBlock merged{it->offset, it->size + next->size};
+         free_list.erase(next);
+         it = free_list.erase(it);
+         free_list.insert(merged);
+      }
+   };
+
+   // Sweep through time.
+   for (const auto &e : events) {
+      if (e.type == 0) { // END: free
+         auto it_sz = live_size.find(e.idx);
+         auto it_off = live_offset.find(e.idx);
+         if (it_sz != live_size.end() && it_off != live_offset.end()) {
+            FreeBlock fb{it_off->second, it_sz->second};
+            // Insert and coalesce with neighbors
+            auto it = free_list.insert(fb).first;
+            try_coalesce(it);
+            live_size.erase(it_sz);
+            live_offset.erase(it_off);
+         }
+      } else { // START: allocate
+         auto &t = tensorsInfo[e.idx];
+         std::size_t off = allocate_best_fit(t.size);
+         tensorsOffset[e.idx] = off;
+         live_size[e.idx] = t.size;
+         live_offset[e.idx] = off;
+      }
+   }
+
+   return MemoryResult{total_bytes, std::move(tensorsOffset)};
 }
 
 } // namespace SOFIE
