@@ -84,9 +84,9 @@ class ROOTBuild(_build):
             #   see https://peps.python.org/pep-0513/#libpythonx-y-so-1
             # - thisroot_scripts: the thisroot.* scripts are broken if CMAKE_INSTALL_PYTHONDIR!=CMAKE_INSTALL_LIBDIR
             "-Dtmva-pymva=OFF -Dtpython=OFF -Dthisroot_scripts=OFF "
-            "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
+            "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON -Dbuiltin_davix=ON "  # builtins
             "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON "  # builtins
-            "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
+            "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Ddavix=ON -Dssl=ON -Dimt=ON "
             "-Droofit=ON -Dmathmore=ON -Dbuiltin_fftw3=ON -Dbuiltin_gsl=ON "
             # Next 4 paths represent the structure of the target binaries/headers/libs
             # as the target installation directory of the Python environment would expect
