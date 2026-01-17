@@ -32,6 +32,10 @@ TEST(TH1, MapCppNameTest)
    auto h3 = new TH2Poly(n3.Data(), n3.Data(), 10 , 0, 1, 10, 0, 1);
    h3->AddBin(0., 0., 1., 1.);
    auto h4 = new TProfile(n4.Data(), n4.Data(), 10, 0, 1);
+   h1->SetDirectory(nullptr);
+   h2->SetDirectory(nullptr);
+   h3->SetDirectory(nullptr);
+   h4->SetDirectory(nullptr);
 
    g1->Draw();
    h1->Draw("same");
@@ -47,7 +51,7 @@ TEST(TH1, MapCppNameTest)
    if (!gSystem->GetPathInfo(CFile.Data(), fs))
       FileSize = (Int_t)fs.fSize;
 
-   EXPECT_NEAR(FileSize, 6350, 200);
+   EXPECT_NEAR(FileSize, 6644, 200);
 
    gSystem->Unlink(CFile.Data());
 }

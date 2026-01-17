@@ -70,19 +70,21 @@ void combinedFit()
    TH1D *hB = new TH1D("hB", "histo B", 100, 0, 100);
    TH1D *hSB = new TH1D("hSB", "histo S+B", 100, 0, 100);
 
-   TF1 *fB = new TF1("fB", "expo", 0, 100);
+   // Create functions (not adding them to ROOT's global list,
+   // because we want to add them to the histograms later)
+   TF1 *fB = new TF1("fB", "expo", 0, 100, TF1::EAddToList::kNo);
    fB->SetParameters(1, -0.05);
-   hB->FillRandom("fB");
+   hB->FillRandom(fB);
 
-   TF1 *fS = new TF1("fS", "gaus", 0, 100);
+   TF1 *fS = new TF1("fS", "gaus", 0, 100, TF1::EAddToList::kNo);
    fS->SetParameters(1, 30, 5);
 
-   hSB->FillRandom("fB", 2000);
-   hSB->FillRandom("fS", 1000);
+   hSB->FillRandom(fB, 2000);
+   hSB->FillRandom(fS, 1000);
 
    // perform now global fit
 
-   TF1 *fSB = new TF1("fSB", "expo + gaus(2)", 0, 100);
+   TF1 *fSB = new TF1("fSB", "expo + gaus(2)", 0, 100, TF1::EAddToList::kNo);
 
    ROOT::Math::WrappedMultiTF1 wfB(*fB, 1);
    ROOT::Math::WrappedMultiTF1 wfSB(*fSB, 1);

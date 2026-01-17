@@ -197,6 +197,7 @@ void TMLPAnalyzer::GatherInformations()
          index[i] = val.Atoi();
       }
       TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
+      tmp.SetDirectory(gDirectory);
       data->Draw(Form("%s>>tmpb",formula.Data()),"","goff");
       rms[i]  = tmp.GetRMS();
    }

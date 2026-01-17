@@ -663,40 +663,6 @@ th2_violin.svg
 </text>
 <text xml:space="preserve" x="254" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="218" y="6.8" width="54" height="63" fill="#f2f2f2"/>
-<path d="M221,70v 1.4h 54v -63h -1.4v 61z" fill="black"/>
-<path d="M218,70v -63h 54v 63h -54z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="229" y="16" fill="black" font-size="9.4" font-family="Helvetica" font-weight="bold">violinh1
-</text>
-<path d="M218,17h 54" fill="none" stroke="black"/>
-<text xml:space="preserve" x="221" y="25" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="254" y="25" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="221" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="250" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="247" y="36" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="247" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="221" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="249" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="247" y="46" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="246" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="221" y="57" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="253" y="57" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="221" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="254" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="8.9" y="6.8" width="141" height="15" fill="#f2f2f2"/>
 <path d="M7.5,9.0v 14h 140v -1.4h -139v -12z" fill="black"/>
 <path d="M8.9,21v -15h 141v 15h -141z" fill="none" stroke="black"/>
@@ -1506,40 +1472,6 @@ th2_violin.svg
 </text>
 <text xml:space="preserve" x="538" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
 </text>
-<rect x="502" y="6.8" width="54" height="63" fill="#f2f2f2"/>
-<path d="M504,70v 1.4h 54v -63h -1.4v 61z" fill="black"/>
-<path d="M502,70v -63h 54v 63h -54z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="512" y="16" fill="black" font-size="9.4" font-family="Helvetica" font-weight="bold">violinh2
-</text>
-<path d="M502,17h 54" fill="none" stroke="black"/>
-<text xml:space="preserve" x="505" y="25" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="538" y="25" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="505" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="534" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="531" y="36" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="530" y="36" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="505" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="533" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="530" y="46" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="529" y="46" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="505" y="57" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="537" y="57" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="505" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="538" y="67" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
-</text>
 <rect x="292" y="6.8" width="141" height="15" fill="#f2f2f2"/>
 <path d="M291,9.0v 14h 140v -1.4h -139v -12z" fill="black"/>
 <path d="M292,21v -15h 141v 15h -141z" fill="none" stroke="black"/>
@@ -2168,40 +2100,6 @@ th2_violin.svg
 <text xml:space="preserve" x="27" y="337" fill="black" font-size="9.0" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="27" y="311" fill="black" font-size="9.0" font-family="Helvetica">4
-</text>
-<rect x="218" y="282" width="54" height="63" fill="#f2f2f2"/>
-<path d="M221,345v 1.4h 54v -63h -1.4v 61z" fill="black"/>
-<path d="M218,345v -63h 54v 63h -54z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="229" y="291" fill="black" font-size="9.4" font-family="Helvetica" font-weight="bold">violinv1
-</text>
-<path d="M218,292h 54" fill="none" stroke="black"/>
-<text xml:space="preserve" x="221" y="300" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="254" y="300" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="221" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="250" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="247" y="311" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="247" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="221" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="249" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="247" y="321" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="246" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="221" y="332" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="253" y="332" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="221" y="342" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="254" y="342" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="218" y="282" width="54" height="63" fill="#f2f2f2"/>
 <path d="M221,345v 1.4h 54v -63h -1.4v 61z" fill="black"/>
@@ -2999,40 +2897,6 @@ th2_violin.svg
 <text xml:space="preserve" x="311" y="337" fill="black" font-size="9.0" font-family="Helvetica">3
 </text>
 <text xml:space="preserve" x="311" y="311" fill="black" font-size="9.0" font-family="Helvetica">4
-</text>
-<rect x="502" y="282" width="54" height="63" fill="#f2f2f2"/>
-<path d="M504,345v 1.4h 54v -63h -1.4v 61z" fill="black"/>
-<path d="M502,345v -63h 54v 63h -54z" fill="none" stroke="black"/>
-<text xml:space="preserve" x="512" y="291" fill="black" font-size="9.4" font-family="Helvetica" font-weight="bold">violinv2
-</text>
-<path d="M502,292h 54" fill="none" stroke="black"/>
-<text xml:space="preserve" x="505" y="300" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Entries 
-</text>
-<text xml:space="preserve" x="538" y="300" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 25000
-</text>
-<text xml:space="preserve" x="505" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean x 
-</text>
-<text xml:space="preserve" x="534" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003961
-</text>
-<text xml:space="preserve" x="531" y="311" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="530" y="311" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="505" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Mean y 
-</text>
-<text xml:space="preserve" x="533" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">0.003377
-</text>
-<text xml:space="preserve" x="530" y="321" fill="black" font-size="5.5" font-family="Times">&#8722;
-</text>
-<text xml:space="preserve" x="529" y="321" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 
-</text>
-<text xml:space="preserve" x="505" y="332" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev x 
-</text>
-<text xml:space="preserve" x="537" y="332" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold"> 0.9978
-</text>
-<text xml:space="preserve" x="505" y="342" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">Std Dev y 
-</text>
-<text xml:space="preserve" x="538" y="342" fill="black" font-size="5.5" font-family="Helvetica" font-weight="bold">  1.006
 </text>
 <rect x="502" y="282" width="54" height="63" fill="#f2f2f2"/>
 <path d="M504,345v 1.4h 54v -63h -1.4v 61z" fill="black"/>

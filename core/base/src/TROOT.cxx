@@ -71,6 +71,7 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <map>
@@ -471,6 +472,49 @@ namespace Internal {
       return isImplicitMTEnabled;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Test if objects such as TTree and TH1-derived classes should be implicitly owned
+   /// by gDirectory.
+   /// A default can be set in a .rootrc using "Root.ImplicitOwnership: 1" or setting
+   /// the environment variable "ROOT_IMPLICIT_OWNERSHIP=0".
+   static std::atomic_bool &IsImplicitOwnershipEnabled()
+   {
+      static std::atomic_bool initCompleted = false;
+      static std::atomic_bool implicitOwnership = true;
+
+      if (!initCompleted.load(std::memory_order_acquire)) {
+         R__LOCKGUARD(gROOTMutex);
+         // test again, because another thread might have raced us here
+         if (!initCompleted) {
+            int desiredValue = -1;
+            bool silent = false;
+            if (auto env = gSystem->Getenv("ROOT_IMPLICIT_OWNERSHIP"); env) {
+               if (strcmp(env, "silentOff") == 0) {
+                  implicitOwnership = false;
+                  silent = true;
+               } else {
+                  try {
+                     desiredValue = std::stoi(env);
+                  } catch (std::invalid_argument& e) { }
+                  if (desiredValue < 0) Error("TROOT", "ROOT_IMPLICIT_OWNERSHIP should be >= 0");
+               }
+            } else if (gEnv) {
+               desiredValue = gEnv->GetValue("Root.ImplicitOwnership", -1);
+            }
+
+            if (desiredValue == 0) {
+               if (!silent) Info("TROOT", "Implicit object ownership switched off by ROOT_IMPLICIT_OWNERSHIP or rootrc");
+               implicitOwnership = false;
+            } else if (desiredValue > 0) {
+               implicitOwnership = true;
+            }
+
+            initCompleted = true;
+         }
+      }
+
+      return implicitOwnership;
+   }
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -616,6 +660,64 @@ namespace Internal {
       return 0;
 #endif
    }
+
+   namespace Experimental {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Switch ROOT's object ownership model to ROOT 6 mode.
+   ///
+   /// In ROOT 6 mode, ROOT will implicitly assign ownership of histograms or TTrees
+   /// to the current \ref gDirectory, for example to the last TFile that was opened.
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TTree* tree = new TTree(...);
+   /// TH1D* histo = new TH1D(...);
+   /// file.Write(); // Both tree and histogram are in the file now
+   /// \endcode
+   ///
+   /// In ROOT 7 mode, these objects won't register themselves to the current gDirectory,
+   /// so they are fully owned by the user. To write these to files, the user needs to do
+   /// one of the following:
+   /// - Explicitly transfer ownership:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// TTree* tree = new TTree(...);
+   /// tree->SetDirectory(&file);
+   /// \endcode
+   /// - Keep ownership of the object, but write explicitly:
+   /// \code{.cpp}
+   /// TFile file(...);
+   /// std::unique_ptr<TH1D> histo{new TH1D(...)};
+   /// file.WriteObject(histo.get(), "HistogramName");
+   /// file.Close();
+   /// // histo is still valid
+   /// \endcode
+   ///
+   /// \note This setting has higher priority than TH1::AddDirectoryStatus() and TDirectory::AddDirectoryStatus().
+   /// These two will always evaluate to false if implicit ownership is off.
+   ///
+   /// \copydetails ROOT::Internal::IsImplicitOwnershipEnabled()
+   void EnableImplicitObjectOwnerhsip()
+   {
+      Internal::IsImplicitOwnershipEnabled() = true;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// \brief Switch ROOT's object ownership model to ROOT 7 mode (no ownership).
+   /// \copydetails ROOT::Experimental::EnableImplicitObjectOwnership()
+   void DisableImplicitObjectOwnerhsip()
+   {
+      Internal::IsImplicitOwnershipEnabled() = false;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Test whether the current directory should take ownership of objects such as
+   /// TH1-derived classes, TTree, TEntryList etc.
+   /// \copydetails ROOT::Experimental::EnableImplicitObjectOwnership()
+   bool IsImplicitObjectOwnershipEnabled()
+   {
+      return Internal::IsImplicitOwnershipEnabled();
+   }
+}
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
@@ -2832,7 +2934,7 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
-///  
+///
 /// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)
