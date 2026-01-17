@@ -200,7 +200,10 @@ def _reverse_pyz(self):
         return
 
     t = tuple(self)
+    was_owner = self.IsOwner()
+    self.SetOwner(False)
     self.Clear()
+    self.SetOwner(was_owner)
     for elem in t:
         self.AddAt(elem, 0)
 
@@ -222,7 +225,10 @@ def _sort_pyz(self, *args, **kwargs):
         # Sort in a Python list copy
         pylist = list(self)
         pylist.sort(*args, **kwargs)
+        was_owner = self.IsOwner()
+        self.SetOwner(False)
         self.Clear()
+        self.SetOwner(was_owner)
         self.extend(pylist)
 
 
@@ -241,10 +247,29 @@ def _index_pyz(self, val):
     return idx
 
 
+def _TSeqCollection_AddAt(self, *args, **kwargs):
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    def condition(_):
+        return self.IsOwner()
+
+    declare_cpp_owned_arg(0, "obj", args, kwargs, condition=condition)
+
+    self._AddAt(*args, **kwargs)
+
+
 @pythonization('TSeqCollection')
 def pythonize_tseqcollection(klass):
+    from ROOT._pythonization._tcollection import _TCollection_Add
+
     # Parameters:
     # klass: class to be pythonized
+
+    # Pythonize Add() methods
+    klass._Add = klass.Add
+    klass.Add = _TCollection_Add
+    klass._AddAt = klass.AddAt
+    klass.AddAt = _TSeqCollection_AddAt
 
     # Item access methods
     klass.__getitem__ = _getitem_pyz
@@ -257,3 +282,17 @@ def pythonize_tseqcollection(klass):
     klass.reverse = _reverse_pyz
     klass.sort    = _sort_pyz
     klass.index   = _index_pyz
+
+
+@pythonization("TList")
+def pythonize_tlist(klass):
+    from ROOT._pythonization._tcollection import _TCollection_Add
+
+    # Parameters:
+    # klass: class to be pythonized
+
+    # Pythonize Add() methods
+    klass._Add = klass.Add
+    klass.Add = _TCollection_Add
+    klass._AddAt = klass.AddAt
+    klass.AddAt = _TSeqCollection_AddAt

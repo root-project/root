@@ -181,6 +181,9 @@ canvas.SaveAs("tgraph_comparison.pdf")
 
 import cppyy
 
+from . import pythonization
+
+
 def set_size(self, buf):
     # Parameters:
     # - self: graph object
@@ -213,3 +216,19 @@ comp = cppyy.py.compose_method(
 # Add the composite to the list of pythonizors
 cppyy.py.add_pythonization(comp)
 
+def _TMultiGraph_Add(self, *args, **kwargs):
+    """
+    The TMultiGraph always takes ownership of the added graphs.
+    """
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    declare_cpp_owned_arg(0, "graph", args, kwargs)
+
+    self._Add(*args, **kwargs)
+
+
+@pythonization("TMultiGraph")
+def pythonize_tmultigraph(klass):
+    # Pythonizations for TMultiGraph::Add
+    klass._Add = klass.Add
+    klass.Add = _TMultiGraph_Add
