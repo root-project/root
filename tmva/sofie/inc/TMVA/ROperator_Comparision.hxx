@@ -77,7 +77,7 @@ public:
    ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){
          fInputTensorNames = { fNX1, fNX2 };
-
+         
          // output will be a boolean vector so should not be considered for memory optimized pool
          fOutputTensorNames = { fNY };
       }
@@ -113,6 +113,8 @@ public:
          fShapeX2 = model.GetTensorShape(fNX2);
          fDimShapeX2 = ConvertShapeToDim(fShapeX2);
       }
+      fShapeX1 = model.GetTensorShape(fNX1);
+      fShapeX2 = model.GetTensorShape(fNX2);
       fTensorType1 = model.GetTensorType(fNX1);
       fTensorType2 = model.GetTensorType(fNX2);
       bool broadcast = !UTILITY::AreSameShape(fShapeX1, fShapeX2);
@@ -131,10 +133,6 @@ public:
                // Update the data and the shape of A
                model.UpdateInitializedTensor(fNX1, model.GetTensorType(fNX1), fShapeY, broadcastedData);
                fShapeX1 = fShapeY;
-            } else {
-               // Add an intermediate tensor for broadcasting A
-               fNBroadcastedX1 = "Broadcasted" + fNX1;
-               model.AddIntermediateTensor(fNBroadcastedX1, model.GetTensorType(fNX1), fShapeY);
             }
          }
          // Broadcast B to Y
@@ -147,105 +145,28 @@ public:
                // Update the data and the shape of B
                model.UpdateInitializedTensor(fNX2, model.GetTensorType(fNX2), fShapeY, broadcastedData);
                fShapeX2 = fShapeY;
-            } else {
-               // Add an intermediate tensor for broadcasting B
-               fNBroadcastedX2 = "Broadcasted" + fNX2;
-               model.AddIntermediateTensor(fNBroadcastedX2, model.GetTensorType(fNX2), fShapeY);
             }
          }
       } else {
          fShapeY = fShapeX1;
       }
       // case of constant tensors
-      T * data1 = nullptr;
-      T * data2 = nullptr;
-      std::vector<Dim> shapeData1;
-      std::vector<Dim> shapeData2;
-      size_t length = ConvertShapeToLength(fShapeY);
-      bool *  outData = new bool[length];
-      if (model.IsInitializedTensor(fNX1)) {
-         data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
-      } else if (model.IsShapeTensor(fNX1)) {
-         shapeData1 = model.GetShapeTensorValues(fNX1);
-      }
-      if (model.IsInitializedTensor(fNX2)) {
-         data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
-      } else if (model.IsShapeTensor(fNX2)) {
-         shapeData2 = model.GetShapeTensorValues(fNX2);
-      }
-      if (data1 && data2) {
+      if (model.IsInitializedTensor(fNX1) && model.IsInitializedTensor(fNX2) ) {
          fIsOutputConstant = true;
+         auto data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
+         auto data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
+         size_t length = ConvertShapeToLength(fShapeY);
+         bool * outData = new bool[length];
          for (size_t i = 0; i < length; i++)
             outData[i] = ComparisionTrait<T,Op>::Result(data1[i], data2[i]);
          model.AddConstantTensor(fNY, fShapeY, outData);
          if (model.Verbose())
             std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
                << ConvertValuesToString(length,outData) << std::endl;
-      } else if ((data1 || !shapeData1.empty()) && (data2 || !shapeData2.empty())) {
-         fIsOutputConstant = true;
-         if (data1 && !data2) {
-            // data 1 is constant and data2 is shape
-            for (size_t i = 0; i < length; i++) {
-               if (shapeData2[i].isParam) {
-                  if (shapeData2[i].dim == size_t(-1) || data1[i] > 0) {
-                     fIsOutputConstant = false;
-                     break;
-                  } else {
-                     // assume a comparison is done with .dim = 0
-                     shapeData2[i].dim = 0;
-                  }
-               }
-               outData[i] = ComparisionTrait<T,Op>::Result(data1[i], static_cast<T>(shapeData2[i].dim));
-            }
-         } else if (!data1 && data2) {
-            // data 1 is shape and dat2 is constant
-            for (size_t i = 0; i < length; i++) {
-               if (shapeData1[i].isParam) {
-                  if (shapeData1[i].dim == size_t(-1) || data2[i] > 0) {
-                     fIsOutputConstant = false;
-                     break;
-                  } else {
-                     // assume a comparison is done with .dim = 0
-                     shapeData1[i].dim = 0;
-                  }
-               }
-               outData[i] = ComparisionTrait<T,Op>::Result(static_cast<T>(shapeData1[i].dim), data2[i]);
-            }
-         } else if (!shapeData1.empty() && !shapeData2.empty() ) {
-            // both data1 and data2 are shape tensors
-            for (size_t i = 0; i < length; i++) {
-               if (!shapeData1[i].isParam && !shapeData2[i].isParam) {
-                  outData[i] = ComparisionTrait<T,Op>::Result(shapeData1[i].dim, shapeData2[i].dim);
-               }
-               else if (shapeData1[i].isParam && shapeData2[i].isParam) {
-                  if (shapeData1[i].param == shapeData2[i].param)
-                     outData[i] = ComparisionTrait<int,Op>::Result(1,1); // comparison of two equal value
-                  else {
-                     fIsOutputConstant = false;
-                     break;
-                  }
-               }
-               else {
-                  fIsOutputConstant = false;
-                  break;
-               }
-            }
-         }
-         if (fIsOutputConstant) {
-            model.AddConstantTensor(fNY, fShapeY, outData);
-            if (model.Verbose())
-               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
-                  << ConvertValuesToString(length,outData) << " (constant) " << std::endl;
-
-         }
-      }
-      delete [] outData;
-      if (!fIsOutputConstant) {
+         delete [] outData;
+      } else {
          model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
-         if (model.Verbose())
-               std::cout <<  ComparisionTrait<T,Op>::Name() << " op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << std::endl;
       }
-
       // check if this is not output operators to add a specific line for definining the tensor_xxx variable
       const auto & outputTensorNames = model.GetOutputTensorNames();
       fIsModelOutput = false;
@@ -257,39 +178,51 @@ public:
       if (fIsOutputConstant) return "";
       opName = "op_" + opName;
 
-     if (fShapeY.empty()) {
+      if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Comparision Op called to Generate without being initialized first");
       }
       std::stringstream out;
       out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "  " << opName
                                  << " --> " << ConvertShapeToString(fShapeY) << "\n";
-      size_t length = ConvertShapeToLength(fShapeY);
-      // Broadcast A if it's uninitialized
-      if (!fNBroadcastedX1.empty()) {
-         std::string type1 = ConvertTypeToString(fTensorType1);
-         out << SP << "// Broadcasting uninitialized tensor " << fNX1 << "\n";
-         out << SP << "{\n";
-         out << SP << SP << type1 << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << type1 << ">(tensor_" << fNX1 << ", " << ConvertShapeToString(fShapeX1) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedX1 << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
-      }
-      // Broadcast B if it's uninitialized
-      if (!fNBroadcastedX2.empty()) {
-         std::string type2 = ConvertTypeToString(fTensorType2);
-         out << SP << "// Broadcasting uninitialized tensor " << fNX2 << "\n";
-         out << SP << "{\n";
-         out << SP << SP << type2 << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << type2 << ">(tensor_" << fNX2 << ", " << ConvertShapeToString(fShapeX2) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedX2 << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
-      }
-      const std::string& nameX1 = fNBroadcastedX1.empty()? fNX1 : fNBroadcastedX1;
-      const std::string& nameX2 = fNBroadcastedX2.empty()? fNX2 : fNBroadcastedX2;
 
-      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "fTensor_" << fNY << "[id] = " << ComparisionTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
-      out << SP << "}\n";
+      auto stridesX1 = UTILITY::ComputeStrideFromShape(fShapeX1);
+      auto stridesX2 = UTILITY::ComputeStrideFromShape(fShapeX2);
+      auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+
+      std::string compute_idx_X1, compute_idx_X2, compute_idx_Y;
+      if (std::all_of(fShapeX1.begin(), fShapeX1.end(), [](size_t x) { return x == 1; })){
+         compute_idx_X1 = "0";
+      } else {
+         for(size_t i = 0; i<fShapeX1.size(); ++i){
+            if(fShapeX1[i]==1) continue;
+            compute_idx_X1 += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeX1.size()))+" * "+std::to_string(stridesX1[i])+" +";
+         }
+         compute_idx_X1.pop_back();
+      }
+      if (std::all_of(fShapeX2.begin(), fShapeX2.end(), [](size_t x) { return x == 1; })){
+         compute_idx_X2 = "0";
+      } else {
+         for(size_t i = 0; i<fShapeX2.size(); ++i){
+            if(fShapeX2[i]==1) continue;
+            compute_idx_X2 += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeX2.size()))+" * "+std::to_string(stridesX2[i])+" +";
+         }
+         compute_idx_X2.pop_back();
+      }
+      
+      for(size_t i=0; i<fShapeY.size(); ++i){
+         if(fShapeY[i]!=1){
+            out<<std::string(i + 1, ' ')<<"for(size_t idx_"<<fNY<<i<<"=0; idx_"<<fNY<<i<<"<"<<fShapeY[i]<<"; ++idx_"<<fNY<<i<<"){\n";
+            compute_idx_Y += "idx_"+fNY+std::to_string(i)+"*"+std::to_string(stridesY[i])+"+";
+         }
+      }
+      compute_idx_Y.pop_back();
+      out << SP << SP << "tensor_" << fNY <<"["<<compute_idx_Y<<"] = "<<ComparisionTrait<T,Op>::Op("tensor_"+ fNX1 + "["+compute_idx_X1+"]", "tensor_"+ fNX2 + "["+compute_idx_X2+"]")<<" ;\n";
+      for(size_t i=0; i<fShapeY.size(); ++i){
+         if(fShapeY[i]!=1){
+            out<<std::string(fShapeY.size()-i+1, ' ')<<"}\n";
+         }
+      }
+
       // since output is a boolean need to add the tensor_xxx variable since it is not defined as a pointer to a boolean std::vector
       if (!fIsModelOutput)
          out << SP << "const std::vector<std::uint8_t> & tensor_" << fNY << " = fTensor_" << fNY << ";\n";
