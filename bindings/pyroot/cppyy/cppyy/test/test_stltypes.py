@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, IS_WINDOWS
 
 test_dct = "stltypes_cxx"
 
@@ -819,7 +819,7 @@ class TestSTLVECTOR:
             for i, d in zip(range(-5, 5, 1), data):
                 assert d == i
 
-    def test24_vector_to_span(self):
+    def test24_vector_to_span(self, capfd):
         """Vectors should convert to std::span without errors"""
 
         import cppyy
@@ -838,10 +838,14 @@ class TestSTLVECTOR:
         l = list(range(4))
         v = cppyy.gbl.std.vector["double"](l)
 
-        with no_root_errors():
-            result = cppyy.gbl.calc_cumsum(len(v), v)
+        result = cppyy.gbl.calc_cumsum(len(v), v)
 
         assert result == sum(l)
+
+        # Fail if there were interpreter errors:
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
 
 
 class TestSTLSTRING:
@@ -1041,7 +1045,7 @@ class TestSTLSTRING:
         assert s1+s2 == "Hello, World!"
         assert s2+s1 == ", World!Hello"
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="AttributeError: <class cppyy.gbl.std.string at 0x0000021275350610> has no attribute 'size_type'")
+    @mark.xfail(strict=True, condition=IS_WINDOWS == 64, reason="AttributeError: <class cppyy.gbl.std.string at 0x0000021275350610> has no attribute 'size_type'")
     def test09_string_as_str_bytes(self):
         """Python-style methods of str/bytes on std::string"""
 
@@ -2111,7 +2115,7 @@ class TestSTLEXCEPTION:
         gc.collect()
         assert cppyy.gbl.GetMyErrorCount() == 0
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Crashes on Windows 64 bit")
+    @mark.xfail(run=False, condition=IS_WINDOWS == 64, reason="Crashes on Windows 64 bit")
     def test04_from_cpp(self):
         """Catch C++ exceptiosn from C++"""
 
@@ -2174,4 +2178,4 @@ class TestSTLSPAN:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

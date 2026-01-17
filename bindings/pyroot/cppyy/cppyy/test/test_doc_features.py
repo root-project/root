@@ -1,6 +1,6 @@
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, WINDOWS_BITS
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 test_dct = "doc_helper_cxx"
@@ -444,7 +444,7 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason = "Crashes on Windows 64 bit")
+    @mark.xfail(run=False, condition=IS_WINDOWS == 64, reason = "Crashes on Windows 64 bit")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
