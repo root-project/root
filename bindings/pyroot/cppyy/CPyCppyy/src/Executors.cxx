@@ -771,8 +771,12 @@ PyObject* CPyCppyy::FunctionPointerExecutor::Execute(
     void* address = (void*)GILCallR(method, self, ctxt);
     if (address)
         return Utility::FuncPtr2StdFunction(fRetType, fSignature, address);
-    PyErr_SetString(PyExc_TypeError, "can not convert null function pointer");
-    return nullptr;
+
+// There's currently now way to return a typed function nullptr, but given that
+// this is a return value (thus can not be set) and overloading function based
+// on function pointer return type is likely uncommon ...
+    Py_INCREF(gNullPtrObject);
+    return gNullPtrObject;
 }
 
 //- factories ----------------------------------------------------------------
