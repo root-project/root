@@ -57,8 +57,10 @@ public:
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ TANH\n";
-      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = std::tanh(tensor_" << fNX << "[id]);\n";
+      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
+      out << SP << SP << "auto x = tensor_" << fNX << "[id];\n";
+      out << SP << SP << "auto exp2x = std::exp(2.0f * x);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = (exp2x - 1.0f) / (exp2x + 1.0f);\n";
       out << SP << "}\n";
       return out.str();
    }
