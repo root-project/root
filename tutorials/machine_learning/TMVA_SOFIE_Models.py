@@ -79,9 +79,10 @@ x_train, y_train, x_test, y_test = PrepareData()
 
 ## create models and train them
 
-model1 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_4L_50')
-model2 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_4L_200')
-model3 = TrainModel(CreateModel(4,64),x_train, y_train, 'Higgs_Model_2L_500')
+model1 = TrainModel(CreateModel(4,50), x_train, y_train, 'Higgs_Model_4L_50')
+model2 = TrainModel(CreateModel(4,200), x_train, y_train, 'Higgs_Model_4L_200')
+model3 = TrainModel(CreateModel(2,500), x_train, y_train, 'Higgs_Model_2L_500')
+
 
 #evaluate with SOFIE the 3 trained models
 
@@ -100,11 +101,14 @@ def GenerateModelCode(modelFile, generatedHeaderFile):
 
 generatedHeaderFile = "Higgs_Model.hxx"
 #need to remove existing header file since we are appending on same one
-if (os.path.exists(generatedHeaderFile)):
-   weightFile = "Higgs_Model.root"
-   print("removing existing files", generatedHeaderFile,weightFile)
+weightFile = "Higgs_Model.root"
+if os.path.exists(generatedHeaderFile):
+   print("removing existing file", generatedHeaderFile)
    os.remove(generatedHeaderFile)
+if os.path.exists(weightFile):
+   print("removing existing file", weightFile)
    os.remove(weightFile)
+
 
 GenerateModelCode(model1, generatedHeaderFile)
 GenerateModelCode(model2, generatedHeaderFile)
