@@ -16,6 +16,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -618,7 +619,7 @@ private:
    ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
    /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
    /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
-   /// previous clusters are evicted from the page pool.
+   /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
    std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
@@ -694,7 +695,14 @@ protected:
    ROOT::RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
+   /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
+   /// Pages of pinned clusters won't be evicted from the page pool.
+   std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
+   /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
+   /// fClusterPool.StopBackgroundThread() in their destructor so that the I/O background thread does not call
+   /// methods from the destructed derived class.
+   ROOT::Internal::RClusterPool fClusterPool;
    /// Pages that are unzipped with IMT are staged into the page pool
    ROOT::Internal::RPagePool fPagePool;
 
@@ -814,6 +822,12 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(ROOT::Internal::RCluster *cluster);
+
+   /// Instructs the cluster pool and page pool to consider the given cluster as active (should stay cached).
+   void PinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.insert(clusterId); }
+   /// Allows the given cluster to be evicted from the cluster pool and page pool.
+   void UnpinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.erase(clusterId); }
+   const std::unordered_set<ROOT::DescriptorId_t> &GetPinnedClusters() const { return fPinnedClusters; }
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
    RResult<ROOT::Internal::RPage>

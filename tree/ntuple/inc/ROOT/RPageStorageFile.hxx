@@ -36,7 +36,6 @@ class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
 
 namespace Internal {
-class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
 
@@ -141,8 +140,6 @@ private:
    ROOT::Internal::RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
-   /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 

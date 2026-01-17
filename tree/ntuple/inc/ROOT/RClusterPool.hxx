@@ -17,6 +17,7 @@
 #define ROOT_RClusterPool
 
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <condition_variable>
@@ -25,7 +26,7 @@
 #include <mutex>
 #include <future>
 #include <thread>
-#include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace ROOT {
@@ -64,7 +65,7 @@ private:
    };
 
    /// Clusters that are currently being processed by the pipeline.  Every in-flight cluster has a corresponding
-   /// work item, first a read item and then an unzip item.
+   /// read item.
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
       RCluster::RKey fClusterKey;
@@ -78,18 +79,21 @@ private:
       bool operator <(const RInFlightCluster &other) const;
    };
 
+   /// Performance counters that get registered in fMetrics
+   struct RCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNCluster;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
    /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    ROOT::Internal::RPageSource &fPageSource;
-   /// The number of clusters before the currently active cluster that should stay in the pool if present
-   /// Reserved for later use.
-   unsigned int fWindowPre = 0;
    /// The number of clusters that are being read in a single vector read.
    unsigned int fClusterBunchSize;
    /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
    std::int64_t fBunchId = 0;
-   /// The cache of clusters around the currently active cluster
-   std::vector<std::unique_ptr<RCluster>> fPool;
+   /// The cache of active clusters and their successors
+   std::unordered_map<ROOT::DescriptorId_t, std::unique_ptr<RCluster>> fPool;
 
    /// Protects the shared state between the main thread and the I/O thread, namely the work queue and the in-flight
    /// clusters vector
@@ -106,11 +110,9 @@ private:
    /// main threads.
    std::thread fThreadIo;
 
-   /// Every cluster id has at most one corresponding RCluster pointer in the pool
-   RCluster *FindInPool(ROOT::DescriptorId_t clusterId) const;
-   /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
-   /// make sure that a free slot actually exists
-   size_t FindFreeSlot() const;
+   /// The cluster pool counters are observed by the page source
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecReadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
@@ -128,9 +130,15 @@ public:
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
 
+   /// Spawn the I/O background thread. No-op if already started.
+   void StartBackgroundThread();
+
+   /// Stop the I/O background thread. No-op if already stopped. Called by the destructor.
+   void StopBackgroundThread();
+
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
-   /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of
+   /// of the following fClusterBunchSize number of clusters.  The returned cluster has at least all the pages of
    /// `physicalColumns` and possibly pages of other columns, too.  If implicit multi-threading is turned on, the
    /// uncompressed pages of the returned cluster are already pushed into the page pool associated with the page source
    /// upon return. The cluster remains valid until the next call to GetCluster().
@@ -138,6 +146,8 @@ public:
 
    /// Used by the unit tests to drain the queue of clusters to be preloaded
    void WaitForInFlightClusters();
+
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 }; // class RClusterPool
 
 } // namespace Internal

@@ -16,6 +16,7 @@
 
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
@@ -29,6 +30,8 @@
 
 namespace ROOT {
 namespace Internal {
+
+class RPageSource;
 
 // clang-format off
 /**
@@ -112,6 +115,15 @@ private:
       explicit RPagePosition(RNTupleLocalIndex localIndex) : fClusterFirstElement(localIndex) {}
    };
 
+   /// Performance counters that get registered in fMetrics
+   struct RCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fNPage;
+   };
+   std::unique_ptr<RCounters> fCounters;
+
+   /// Every page pool is associated to exactly one page source. The page source is queried for pinned cluster
+   /// when pages are released.
+   RPageSource &fPageSource;
    std::vector<REntry> fEntries; ///< All cached pages in the page pool
    /// Used in ReleasePage() to find the page index in fPages
    std::unordered_map<void *, std::size_t> fLookupByBuffer;
@@ -127,14 +139,20 @@ private:
    std::unordered_map<ROOT::DescriptorId_t, std::unordered_set<void *>> fUnusedPages;
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
+   /// The page pool counters are observed by the page source
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+
    /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
    REntry &AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter);
 
    /// Give back a page to the pool and decrease the reference counter. There must not be any pointers anymore into
    /// this page. If the reference counter drops to zero, the page pool might decide to call the deleter given in
-   /// during registration. Called by the RPageRef destructor.
+   /// during registration. Pages of pinned clusters are given back to the "unused pages" pool and are not immedately
+   /// evicted. Called by the RPageRef destructor.
    void ReleasePage(const RPage &page);
 
+   /// Called by PreloadPage() if the page at hand is new and thus added with ref counter 0
+   void AddToUnusedPages(const RPage &page);
    /// Called by GetPage(), when the reference counter increases from zero to one
    void RemoveFromUnusedPages(const RPage &page);
 
@@ -142,7 +160,7 @@ private:
    void ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr);
 
 public:
-   RPagePool() = default;
+   explicit RPagePool(RPageSource &pageSource);
    RPagePool(const RPagePool&) = delete;
    RPagePool& operator =(const RPagePool&) = delete;
    ~RPagePool() = default;
@@ -160,6 +178,8 @@ public:
    /// counter is increased
    RPageRef GetPage(RKey key, ROOT::NTupleSize_t globalIndex);
    RPageRef GetPage(RKey key, RNTupleLocalIndex localIndex);
+
+   ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 };
 
 // clang-format off

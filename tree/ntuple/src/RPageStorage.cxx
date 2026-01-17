@@ -162,7 +162,10 @@ bool ROOT::Internal::RPageSource::REntryRange::IntersectsWith(const ROOT::RClust
 }
 
 ROOT::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name),
+     fOptions(options),
+     fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions)),
+     fPagePool(*this)
 {
 }
 
@@ -362,8 +365,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
    auto itr = fPreloadedClusters.begin();
    while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
    std::size_t poolWindow = 0;
    while ((itr != fPreloadedClusters.end()) &&
@@ -372,8 +379,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       ++poolWindow;
    }
    while (itr != fPreloadedClusters.end()) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
 
    fLastUsedCluster = clusterId;
@@ -458,6 +469,8 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
 void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
+   fMetrics.ObserveMetrics(fClusterPool.GetMetrics());
+   fMetrics.ObserveMetrics(fPagePool.GetMetrics());
    fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter *>("nRead", "", "number of byte ranges read"),
