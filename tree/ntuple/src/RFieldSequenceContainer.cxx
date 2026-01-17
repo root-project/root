@@ -128,7 +128,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
       fTypeAlias = "std::array<" + itemField->GetTypeAlias() + "," +
                    Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">";
    }
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayField::CloneImpl(std::string_view newName) const
@@ -251,7 +251,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
       fItemDeleter = GetDeleterOf(*itemField);
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
 
    // Determine if we can optimimize bulk reading
@@ -560,7 +560,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
@@ -870,7 +870,7 @@ ROOT::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldName, std::uniq
 {
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);
@@ -974,7 +974,7 @@ ROOT::RArrayAsVectorField::RArrayAsVectorField(std::string_view fieldName, std::
 {
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "std::vector<" + itemField->GetTypeAlias() + ">";
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);
 }
