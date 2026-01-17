@@ -99,47 +99,43 @@ public:
 
 
       std::stringstream out;
-      std::string input = "tensor_" + fNInput;
-      std::string output = "tensor_" + fNY;
-      out << "///-------- Tile operator\n";
-      out << "{\n"; // add scope to re-use same names
-      out << "const int input_shape[" << fShapeInput.size() << "] = " << ConvertShapeToString(fShapeInput) << ";\n";
+      out << "///-------- Tile operator (Optimized Direct Mapping)\n";
+      out << "{\n";
 
-      out << "int inputLength = " << ConvertShapeToLength(fShapeInput) << ";\n";
-      out << "int s = 1;\n";
-      // loop from inverse dim order
-      out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";
-      out << SP << "int r = tensor_" << fNRepeats << "[i];\n";
-      // we cannot exclude case where repeats=1 since we need offset
-      //out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
-      out << SP << "int i_offset = 0, o_offset = 0;\n";
-      out << SP << "s = s * input_shape[i];\n";
-      // case we have first copy
-      out << SP << "if (i == " << fShapeInput.size()-1 <<  ") {\n";
-      out << SP << SP <<  "for (int j = 0; j < inputLength/s ; j++) {\n";
-      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
-      out << SP << SP << SP << SP << "std::copy(" << input << "+ i_offset, "
-                                    << input << "+ i_offset + s, " << output << "+ o_offset);\n";
-      out << SP << SP << SP << SP << "o_offset += s;\n";
-      out << SP << SP << SP << "}\n"; // end k loop
-      out << SP << SP << SP << "i_offset += s;\n";
-      out << SP << SP << "}\n"; // end j loop
-      out << SP << "} else {\n";  // second copy we do from output to output
-      // and we need to loop on j from reverse order to avoir re-writing in output tensor
-      out << SP << SP << "for (int j = inputLength/s - 1 ; j>=0; j--) {\n";
-      out << SP << SP << SP << "o_offset = j*s*r;\n";
-      out << SP << SP << SP << "i_offset = j*s;\n";
-      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
-      out << SP << SP << SP << SP << "std::copy(" << output << "+ i_offset, "
-                                    << output << "+ i_offset + s, " << output << "+ o_offset);\n";
-      out << SP << SP << SP << SP << "o_offset += s;\n";
-      out << SP << SP << SP << "}\n"; // end k loop
-      out << SP << SP << "}\n"; // end j loop
-      out << SP << "}\n"; // end if
-      out << SP << "s *= r;\n";
-      out << SP << "inputLength *= r;\n";
-      out << "}\n"; // end i loop
-      out << "}\n";  // end of scope
+      const int rank = fShapeInput.size();
+      
+      out << SP << "const int input_shape[" << rank << "] = " << ConvertShapeToString(fShapeInput) << ";\n";
+      out << SP << "const int output_shape[" << rank << "] = " << ConvertShapeToString(fShapeY) << ";\n\n";
+
+      // Pre-calculating strides for both input and output tensors to find element positions.
+      out << SP << "int input_strides[" << rank << "];\n";
+      out << SP << "int output_strides[" << rank << "];\n";
+      out << SP << "input_strides[" << rank - 1 << "] = 1;\n";
+      out << SP << "output_strides[" << rank - 1 << "] = 1;\n";
+      out << SP << "for (int i = " << rank - 2 << "; i >= 0; --i) {\n";
+      out << SP << SP << "input_strides[i] = input_strides[i+1] * input_shape[i+1];\n";
+      out << SP << SP << "output_strides[i] = output_strides[i+1] * output_shape[i+1];\n";
+      out << SP << "}\n\n";
+
+      out << SP << "const int output_size = " << ConvertShapeToLength(fShapeY) << ";\n";
+
+      // Main loop
+      out << SP << "for (int out_idx = 0; out_idx < output_size; ++out_idx) {\n";
+      out << SP << SP << "int current_idx = out_idx;\n";
+      out << SP << SP << "int in_idx = 0;\n";
+      
+      // For each output element, calculating the corresponding input element's index.
+      out << SP << SP << "for (int i = 0; i < " << rank << "; ++i) {\n";
+      out << SP << SP << SP << "const int out_coord = current_idx / output_strides[i];\n";
+      out << SP << SP << SP << "const int in_coord = out_coord % input_shape[i];\n";
+      out << SP << SP << SP << "in_idx += in_coord * input_strides[i];\n";
+      out << SP << SP << SP << "current_idx %= output_strides[i];\n";
+      out << SP << SP << "}\n";
+      
+      out << SP << SP << "tensor_" << fNY << "[out_idx] = tensor_" << fNInput << "[in_idx];\n";
+      out << SP << "}\n"; // End of main loop
+      
+      out << "}\n"; // End of scope
       return out.str();
    }
 };
