@@ -19,7 +19,7 @@ add_test(NAME ${GENERATE_DICTIONARY_TEST}
                                     ${build_config}
                                     --target ${dictname}${fast}
                                     -- ${always-make})
-if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
 endif()

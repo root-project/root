@@ -27,7 +27,7 @@ if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(PyCoolLib-build
                     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target PyCoolLib${fast} -- ${always-make}
                     FIXTURES_REQUIRED PyCool-reflex-dict)
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+  if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST roottest-root-meta-genreflex-ROOT-5768-PyCoolLib-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
     set_property(TEST roottest-root-meta-genreflex-ROOT-5768-PyCoolLib-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
   endif()
