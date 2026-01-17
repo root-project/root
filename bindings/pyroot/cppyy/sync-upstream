@@ -26,7 +26,7 @@ rebase_topic () {
 }
 
 cd CPyCppyy/
-git reset --hard 1d049d4dab7cc26387dc938846e42bc3a7e0a05c
+git reset --hard 8367c2d9711c45bef6697bab315b9d7b06dd84e8
 
 git remote rename origin wlav
 
@@ -42,7 +42,7 @@ cd ../
 
 cd cppyy/
 
-git reset --hard a3bd17f45b42689c2504a514ea0397b2eeb63a5d
+git reset --hard 92967c195e47361dc04a6f1b0a77cfc745f4d914
 
 git remote rename origin wlav
 
