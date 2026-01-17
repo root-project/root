@@ -66,7 +66,15 @@ enum ETerminationCode
    kNOT_FINISHED,
    kMAX_ITS_EXCEEDED,
    kINFEASIBLE,
+// clang++ (-Wshadow) complains about shadowing TTreeDrawArgsParser::EOutputType. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
    kUNKNOWN
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 };
 
 class TQpSolverBase : public TObject

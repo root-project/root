@@ -199,7 +199,15 @@ class TGListTree : public TGContainer {
 public:
    //---- color markup mode of tree items
    enum EColorMarkupMode {
+// clang++ (-Wshadow) complains about shadowing TSystem::EAclicMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kDefault        = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kColorUnderline = BIT(0),
       kColorBox       = BIT(1)
    };

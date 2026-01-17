@@ -60,7 +60,15 @@ class TTreeCloner {
    TFileCacheRead *fPrevCache;   ///< Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
 
    enum ECloneMethod {
+// clang++ (-Wshadow) complains about shadowing TSystem::EAclicMode. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kDefault             = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kSortBasketsByBranch = 1,
       kSortBasketsByOffset = 2,
       kSortBasketsByEntry  = 3
@@ -96,7 +104,15 @@ private:
 
 public:
    enum EClonerOptions {
+// clang++ (-Wshadow) complains about shadowing kNone in GuiTypes.h. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kNone       = 0,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
       kNoWarnings = BIT(1),
       kIgnoreMissingTopLevel = BIT(2),
       kNoFileCache = BIT(3)
