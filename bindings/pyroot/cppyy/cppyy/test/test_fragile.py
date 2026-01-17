@@ -1,6 +1,6 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM, IS_LINUX
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
 test_dct = "fragile_cxx"

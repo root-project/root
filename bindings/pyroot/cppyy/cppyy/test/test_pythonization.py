@@ -1,6 +1,6 @@
 import sys, pytest, os
 from pytest import mark, raises
-from support import setup_make, pylong, WINDOWS_BITS
+from support import setup_make, pylong
 
 test_dct = "pythonizables_cxx"
 

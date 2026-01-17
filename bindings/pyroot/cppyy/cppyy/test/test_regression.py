@@ -1,6 +1,6 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86, IS_MAC_ARM, IS_MAC, WINDOWS_BITS, IS_LINUX
+from support import setup_make, IS_WINDOWS, ispypy, IS_MAC, IS_MAC_ARM
 
 
 class TestREGRESSION:
@@ -1366,7 +1366,7 @@ class TestREGRESSION:
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("my_custom_type_t") == "const int"
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("cmy_custom_type_t") == "const int"
 
-    @mark.xfail(run=WINDOWS_BITS != 64, condition=IS_MAC_ARM | WINDOWS_BITS == 64, reason = "Crashes on Windows 64 bit and fails macOS ARM with" \
+    @mark.xfail(run=IS_WINDOWS != 64, condition=IS_MAC_ARM | IS_WINDOWS == 64, reason = "Crashes on Windows 64 bit and fails macOS ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test46_exception_narrowing(self):
         """Exception narrowing to C++ exception of all overloads"""

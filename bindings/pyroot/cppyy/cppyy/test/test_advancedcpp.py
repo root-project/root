@@ -1,6 +1,6 @@
 import pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, IS_WINDOWS, WINDOWS_BITS, ispypy
+from support import setup_make, pylong, IS_WINDOWS, ispypy
 
 test_dct = "advancedcpp_cxx"
 
@@ -399,7 +399,7 @@ class TestADVANCEDCPP:
         assert cppyy.addressof(o) == pp.gime_address_ptr_ptr(o)
         assert cppyy.addressof(o) == pp.gime_address_ptr_ref(o)
 
-        if WINDOWS_BITS != 64:
+        if IS_WINDOWS != 64:
           # there is no 8-byte integer type array on Windows 64b
             import array
             addressofo = array.array('l', [cppyy.addressof(o)])

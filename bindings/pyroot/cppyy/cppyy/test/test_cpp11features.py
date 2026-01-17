@@ -1,6 +1,6 @@
 import sys, pytest, os
 from pytest import mark, raises
-from support import setup_make, ispypy, IS_MAC_ARM, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, ispypy, IS_MAC_ARM, IS_WINDOWS
 
 
 test_dct = "cpp11features_cxx"

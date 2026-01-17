@@ -1,6 +1,6 @@
 import py, os, sys, pytest
 from pytest import mark, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, WINDOWS_BITS
+from support import setup_make, pylong, pyunicode
 
 nopsutil = False
 try:
