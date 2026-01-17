@@ -13,6 +13,8 @@
 
 #include <TNamed.h>
 
+#include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -26,17 +28,6 @@ class TH1;
 class RooWorkspace;
 
 namespace RooStats::HistFactory {
-
-namespace Constraint {
-
-enum Type {
-   Gaussian,
-   Poisson
-};
-std::string Name(Type type);
-Type GetType(const std::string &Name);
-
-} // namespace Constraint
 
 /** \class OverallSys
  * \ingroup HistFactory
@@ -257,12 +248,24 @@ public:
    }
    const std::string &GetHistoPath() const { return fHistoPathHigh; }
 
+   double GetVal() const { return fValue; }
+
+   double GetMin() const { return fMinVal; }
+   double GetMax() const { return fMaxVal; }
+
+   void SetVal(double value) { fValue = value; }
+
+   void SetMin(double minVal) { fMinVal = minVal; }
+   void SetMax(double maxVal) { fMaxVal = maxVal; }
+
 protected:
    bool fConstant = false;
-
-   // A histogram representing
-   // the initial shape
    bool fHasInitialShape = false;
+   double fValue = 1.0;
+   // GHL: Again, we are putting hard ranges on the gammas by default.
+   //      We should change this to range from 0 to /inf.
+   double fMinVal = Detail::MagicConstants::defaultGammaMin;
+   double fMaxVal = Detail::MagicConstants::defaultShapeFactorGammaMax;
 };
 
 /** \class StatError
@@ -484,6 +487,7 @@ public:
    void AddHistoFactor(const HistoFactor &Factor);
 
    void AddShapeFactor(std::string Name);
+   void AddShapeFactor(std::string Name, double initialVal, double minVal, double maxVal);
    void AddShapeFactor(const ShapeFactor &Factor);
 
    void AddShapeSys(std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile,
