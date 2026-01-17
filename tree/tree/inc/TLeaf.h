@@ -71,6 +71,7 @@ protected:
       Long64_t fStartEntry{-1}; ///<! entry number of corresponding to element 0 of the vector.
    };
 
+   char             fTypeCode;        ///<! Character encoding the type of this leaf
    Int_t            fNdata;           ///<! Number of elements in fAddress data buffer.
    Int_t            fLen;             ///<  Number of fixed length elements in the leaf's data.
    Int_t            fLenType;         ///<  Number of bytes for this data type
@@ -136,6 +137,7 @@ public:
    virtual Int_t    GetLenType() const { return fLenType; }
    virtual Int_t    GetMaximum() const { return 0; }
    virtual Int_t    GetMinimum() const { return 0; }
+   virtual char     GetTypeCode() const { return fTypeCode; }
    virtual Int_t    GetNdata() const { return fNdata; }
    virtual Int_t    GetOffset() const { return fOffset; }
    virtual void    *GetValuePointer() const { return nullptr; }
@@ -168,7 +170,7 @@ public:
    virtual void     SetRange(bool range = true) { fIsRange = range; }
    virtual void     SetUnsigned() { fIsUnsigned = true; }
 
-   ClassDefOverride(TLeaf, 2); // Leaf: description of a Branch data type
+   ClassDefOverride(TLeaf, 3); // Leaf: description of a Branch data type
 };
 
 
