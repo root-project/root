@@ -162,6 +162,8 @@ TEST_P(FactoryTest, NLLFit)
    // this, we make sure to validate also the NLL values of the generated code.
    static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
+   RooFit::Experimental::writeCodegenDebugMacro(*nllFunc, _params._name);
+
    double tol = _params._fitResultTolerance;
 
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
