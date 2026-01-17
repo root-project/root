@@ -252,8 +252,14 @@ public:
    bool IsConstantTensor() const { return fConstant;}
    // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
    bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
+   // check if a Tensor is Writable (need to be written in the file or in the generated code (e.g. as a constant tensor)
+   // if an initialized tensors is used in a constant operator at compile time does not need to be written and can be omitted in
+   // the generated code
+   bool IsNotWritable() const { return fIsNotWritable; }
    // set not writable initialized tensors - i.e. tensor that must not be written in a file
    void SetNotWritable() { fIsNotWritable = true;}
+   // set as constant (needed for non-float initialized tensors)
+   void SetConstant() { fConstant = true;}
 
    template <class T = void>
    T const *data() const
@@ -804,6 +810,22 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
       throw std::runtime_error("TMVA-SOFIE failed to read the values for tensor " + expectedName);
    }
 }
+
+
+// code for the memory greeding allocations
+struct TensorLifeInfo {
+   int begin;   // start time (op index) lifetime
+   int end;     //  end time lifetime
+   size_t size; // size of tensors in bytes
+};
+
+struct MemoryResult {
+  std::size_t total_bytes = 0;  // total memory needed
+  std::vector<size_t> offsets; // resulted offsets for each tensor
+};
+
+/// Greedy best-fit planner with coalescing free list.
+MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> & tensorsInfo );
 
 } // namespace SOFIE
 } // namespace Experimental

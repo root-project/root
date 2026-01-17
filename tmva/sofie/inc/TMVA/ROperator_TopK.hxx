@@ -19,13 +19,13 @@ private:
    int fAttrLargest;
    int fAttrSorted;
 
-   size_t fK;
+   Dim fK;
    std::string fNK;
    std::string fNX;
    std::string fNVal;
    std::string fNInd;
-   std::vector<size_t> fShapeX;
-   std::vector<size_t> fShapeY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
    std::string fType;
 
 public:
@@ -43,22 +43,9 @@ public:
         }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-         ETensorType ret = input[0];
-         return {ret, ret};
-      }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      if (input.size() != 2) {
-         throw std::runtime_error("TMVA SOFIE TopK Op Shape Inference needs exactly 2 input tensors");
-      }
-
-      auto shape = input[0]; // Shape format: [ m x n x o x p ... ]
-
-      // set the dimension at the specified axis to k  (fAttrAxis is checked before that is in the correct range
-      shape[fAttrAxis] = fK; // Modified shape: [ m x n x k x p ... ]
-      return {shape, shape};
+      ETensorType ret = input[0];
+      return {ret, ret};
    }
-
 
    void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false) {
@@ -70,10 +57,10 @@ public:
          throw std::runtime_error("TMVA SOFIE TopK Op Input Tensor i.e. K is not found in model");
       }
 
-      fShapeX = model.GetTensorShape(fNX);
+      fShapeX = model.GetDimTensorShape(fNX);
       auto fShapeK = model.GetTensorShape(fNK);
       auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
-      fK = *kptr;
+      size_t kval = *kptr;
       model.SetNotWritableInitializedTensor(fNK);
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
@@ -81,14 +68,25 @@ public:
             std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+fShapeX.size()+" .");
       }
       // fK cannot be larger that axis dimension
-      fK = std::min(fK, fShapeX[fAttrAxis]);
+      if (fShapeX[fAttrAxis].isParam)
+         fK = Dim{std::string("std::min(size_t(" + std::to_string(kval) + "), " + fShapeX[fAttrAxis].GetVal() + ")" ), static_cast<size_t>(-1) };
+      else
+         fK = Dim { std::min(kval, fShapeX[fAttrAxis].dim) };
 
-      fShapeY = ShapeInference({fShapeX, fShapeK})[0];
+      // output shape is equal to input shape apart for value in fAttrAxis
+      fShapeY = fShapeX;
+      fShapeY[fAttrAxis] = Dim{fK};
+
       model.AddIntermediateTensor(fNVal, model.GetTensorType(fNX), fShapeY);
 
       // output indices should be an int64 tensor
       model.AddIntermediateTensor(fNInd, ETensorType::INT64, fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
+
+      if (model.Verbose()) {
+         std::cout << "TopK " << fNX << "  " << ConvertShapeToString(fShapeX)
+                      << "---> " << fNVal << " " <<  ConvertShapeToString(fShapeY) << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName) override {
@@ -101,19 +99,20 @@ public:
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
       out << "\n" << SP << "//------ TopK\n";
 
-      size_t length=ConvertShapeToLength(fShapeX);
+      auto length=ConvertDimShapeToLength(fShapeX);
       auto strideX = UTILITY::ComputeStrideFromShape(fShapeX);
       auto strideY = UTILITY::ComputeStrideFromShape(fShapeY);
       // we perform loop on dimension before sorted axis and after sorted axis
-      size_t n_before = (axis>0) ? length/strideX[axis-1] : 1;
-      size_t n_after = strideX[axis];
-      size_t n_elements = fShapeX[axis]; // number of elements to be sorted
+      std::vector<Dim> shape_before(fShapeX.begin(), fShapeX.begin() + axis);   // input shape before axis
+      std::string n_before = (axis>0) ? ConvertDimShapeToLength(shape_before) : "1";
+      std::string n_after = strideX[axis].GetVal();
+      std::string n_elements = fShapeX[axis].GetVal(); // number of elements to be sorted
 
       // }
       out << SP << "{\n"; // to define a separate scope for the operator code
       out << SP << "std::vector<std::pair<float,int64_t>> elements(" << n_elements << ");\n";
       // loop on elements before
-      if (n_before > 1) {
+      if (n_before != "1") {
          out << SP << "for (size_t i = 0; i < " << n_before << "; i++) {\n";
          out << SP << SP << "size_t xoffset = i*" << strideX[axis-1] << ";\n";
          out << SP << SP << "size_t yoffset = i*" << strideY[axis-1] << ";\n";
@@ -122,7 +121,7 @@ public:
          out << SP << "size_t xoffset = 0;\n";
          out << SP << "size_t yoffset = 0;\n";
       }
-      if (n_after > 1)
+      if (n_after !=  "1")
          out << SP << "for (size_t j = 0; j < " << n_after << "; j++) {\n";
       else
          out << SP << "const size_t j = 0;\n";
@@ -149,8 +148,8 @@ public:
       out << SP << SP << SP << "tensor_" << fNVal   << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].first;\n";
       out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].second;\n";
       out << SP << SP << "}\n";
-      if (n_after > 1) out << SP << SP << "}\n";
-      if (n_before> 1) out << SP << "}\n";
+      if (n_after != "1") out << SP << SP << "}\n";
+      if (n_before != "1") out << SP << "}\n";
       out << SP << "}\n"; // end operator scope
       return out.str();
    }

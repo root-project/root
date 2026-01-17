@@ -20,6 +20,8 @@ template<typename T>
 class ROperator_Conv final : public ROperator
 {
 private:
+   bool fBroadcastBias = false;
+
    std::string fAttrAutopad;
    std::vector<size_t> fAttrDilations;
    size_t fAttrGroup;
@@ -30,7 +32,6 @@ private:
    std::string fNX;
    std::string fNW;
    std::string fNB;
-   std::string fNB2; // bias tensor name after broadcasting
    std::string fNY;
 
    std::string convK;
@@ -262,6 +263,9 @@ public:
                std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNB + " is not found in model");
          }
          fShapeB = model.GetTensorShape(fNB);
+         if (fShapeB.size() != 1)
+            throw
+               std::runtime_error("TMVA SOFIE Conv op : invalid shape for Bias tensor (is not 1D)");
          std::vector<Dim> targetShape(fShapeY.begin() + 1, fShapeY.end());
          auto shapeDimB = model.GetDimTensorShape(fNB);
          bool broadcast_needed = !UTILITY::AreSameShape(shapeDimB, targetShape);
@@ -278,7 +282,9 @@ public:
             if (fType != "float")
                throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
             // here is the actual broadcasting
+            fBroadcastBias = true;
             if (!fUseSession) {
+               // do here broadcasting
                std::vector<size_t> shape(fDim + 1, 1);
                shape[0] = fShapeB[0];
                auto intTargetShape = ConvertShapeToInt(targetShape);
@@ -287,26 +293,28 @@ public:
                   std::default_delete<float[]>());
                model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), intTargetShape, new_data_ptr);
                fShapeB = model.GetTensorShape(fNB);
-               fNB2 = fNB;   // use same name
-            }
-            else {
-               // In case of session add broadcasting code in Session constructor and in GenerateInitCode
-               // we need to add a new intermediate tensor for broadcasted bias tensor
-               fNB2 = fNB + "bcast";
-               model.AddIntermediateTensor(fNB2, model.GetTensorType(fNB), targetShape);
             }
          }
       }
-      // output channel size can be parametric
+      // output channel size can be parametric and is an expression
       std::vector<Dim> outputDims = std::vector<Dim>(fShapeY.begin()+2, fShapeY.end());
-      auto outputChannelSize = ConvertDimShapeToLength(outputDims); // size/channel = D * H * W
+      //check if shape is not parametric
+      std::vector<size_t> outputInts = ConvertShapeToInt(outputDims);
+      Dim channelDim;
+      if (outputInts.empty()) {
+         auto outputChannelSize = ConvertDimShapeToLength(outputDims); // size/channel = D * H * W
+         channelDim = Dim{ outputChannelSize, static_cast<size_t>(-1)};
+      } else {
+         size_t outputChannelSize = ConvertShapeToLength(outputInts);
+         channelDim = Dim{ outputChannelSize };
+      }
       size_t kernelSize = fAttrKernelShape[0];
       for (size_t i = 1; i < fDim; i++) {
          kernelSize *= fAttrKernelShape[i];
       }
 
       std::vector<size_t> shape1 = {fShapeW[0], fShapeW[1], kernelSize};
-      std::vector<Dim> shape2 = {Dim{fShapeW[1]}, Dim{kernelSize}, Dim{outputChannelSize}};
+      std::vector<Dim> shape2 = {Dim{fShapeW[1]}, Dim{kernelSize}, channelDim };
       model.AddIntermediateTensor(fNX +"_f", ConvertStringToType(fType), shape1 );
       model.AddIntermediateTensor(fNX +"_xcol", ConvertStringToType(fType), shape2 );
       convK = fNX +"_f";
@@ -325,15 +333,25 @@ public:
    std::string GenerateInitCode() override {
       std::stringstream out;
       // Generate initialization code for broadcasting of bias tensor
-      if (!fNB2.empty()) {
+      if (fBroadcastBias) {
          // include a separate scope to avoid defining unique operator temp variables
          std::vector<size_t> shape(fDim + 1, 1);
+         // bias (is a 1D tensor)
          shape[0] = fShapeB[0];
          std::vector<Dim> targetShape(fShapeY.begin() + 1, fShapeY.end());
-         out << SP << "{\n";
+         out << "//--- broadcast bias tensor " << fNB << "for Conv op if needed \n";
+         // in case of dynamic tensors check needs to be done at run time
+         bool isOutDynamic = ConvertShapeToInt(targetShape).empty();
+         auto length = ConvertDimShapeToLength(targetShape);
+         if (isOutDynamic)
+            out << SP << "if (" << length << " > " << ConvertShapeToLength(shape) << ") {\n";
+         else
+            out << SP << "{\n";
          out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
              << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << ConvertDimShapeToLength(targetShape) << ", tensor_" << fNB2 << ");\n";
+         out << SP << SP << "fTensor_" << fNB << ".resize(" << length << ");\n";
+         out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNB << ".begin());\n";
+         out << SP << SP << "tensor_" << fNB << " = fTensor_" << fNB << ".data();\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
       }
@@ -553,13 +571,13 @@ public:
          out << SP << SP << "}\n"; // end of group loop
       }
 
-      if (fNB2 != "") {
+      if (fNB != "") {
          out << SP << "int " << OpName << "_size = " << outputBatchStride << ";\n";
          out << SP << "float " << OpName << "_gamma = 1.0;\n";
          out << SP << "int " << OpName << "_incx = 1;\n";
          out << SP << "int " << OpName << "_incy = 1;\n";
 
-         out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB2 << ", &"
+         out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB << ", &"
              << OpName << "_incx, tensor_" << fNY << " + out_offset, &" << OpName << "_incy);\n";
 
       }
