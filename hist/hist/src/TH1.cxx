@@ -744,6 +744,54 @@ Bool_t TH1::AddDirectoryStatus()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Autozoom histogram in all their axes
+/// \see TAxis::AutoZoom
+
+void TH1::AutoZoom()
+{
+   const auto ndims = GetDimension();
+   if (ndims < 1 || ndims > 3)
+      return;
+   // First apply autozoom in pure coordinate axis
+   if (ndims >= 1)
+      GetXaxis()->AutoZoom();
+   if (ndims >= 2)
+      GetYaxis()->AutoZoom();
+   if (ndims >= 3)
+      GetZaxis()->AutoZoom();
+   // Now apply autozoom in the bin content axis if it's a TH1 or TH2
+   if (ndims == 1)
+      GetYaxis()->AutoZoom();
+   else if (ndims == 2)
+      GetZaxis()->AutoZoom();
+   // For 3D, there is no UnZoom or AutoZoom implemented for TPaletteAxis
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Unzoom histogram in all their axes
+/// \see TAxis::UnZoom
+
+void TH1::UnZoom()
+{
+   const auto ndims = GetDimension();
+   if (ndims < 1 || ndims > 3)
+      return;
+   // First apply Unzoom in pure coordinate axis
+   if (ndims >= 1)
+      GetXaxis()->UnZoom();
+   if (ndims >= 2)
+      GetYaxis()->UnZoom();
+   if (ndims >= 3)
+      GetZaxis()->UnZoom();
+   // Now apply unzoom in the bin content axis if it's a TH1 or TH2
+   if (ndims == 1)
+      GetYaxis()->UnZoom();
+   else if (ndims == 2)
+      GetZaxis()->UnZoom();
+   // For 3D, there is no UnZoom or AutoZoom implemented for TPaletteAxis
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Browse the Histogram object.
 
 void TH1::Browse(TBrowser *b)
@@ -7965,21 +8013,157 @@ void TH1::ResetStats()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the range of the histogram that is filled with non-empty contents (i.e. 
+/// non-zero content and non-zero error).
+/// \param dim 0 for the x-axis, 1 for the y-axis, 2 for the z-axis, must be <= GetDimension()
+/// \param first where the first non-empty bin index will be stored (minus margin)
+/// \param last where the last non-empty bin index will be stored (plus margin)
+/// \param margin number of bins to enlarge each side of the range, to leave some room
+/// \param includeUnderOverflow when searching for non-empty bins, set to true to include the under/overflow bins
+
+void TH1::GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const Int_t margin, const bool includeUnderOverflow) const
+{
+   if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
+
+   const auto ndims = GetDimension();
+   const Int_t startX = (includeUnderOverflow ? 0 : 1);
+   const Int_t startY = ndims < 2 ? 1 : startX;
+   const Int_t startZ = ndims < 3 ? 1 : startX;
+   const Int_t lastX = fXaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastY = ndims < 2 ? 1 : fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastZ = ndims < 3 ? 1 : fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+
+   R__ASSERT(dim == 0 || dim == 1 || dim == 2);
+   if (ndims == 1) {
+      R__ASSERT(dim == 0);
+   } else if (ndims == 2) {
+      R__ASSERT(dim == 0 || dim == 1);
+   } else if (ndims == 3) {
+      R__ASSERT(dim == 0 || dim == 1 || dim == 2);
+   }
+
+   if (dim == 0) {
+      first = startX;
+      for(Int_t binx = startX; binx <= lastX; binx++) {
+         for(auto biny = startY; biny <= lastY; biny++) {
+            for(auto binz = startZ; binz <= lastZ; binz++) {
+               auto bin = GetBin(binx, biny, binz);
+               if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+               {
+                  first = binx;
+                  // Break:
+                  binx = lastX;
+                  biny = lastY;
+                  binz = lastZ;
+               }
+            }
+         }
+      }
+      last = lastX;
+      for(Int_t binx = lastX; binx >= startX; binx--) {
+          for(auto biny = startY; biny <= lastY; biny++) {
+             for(auto binz = startZ; binz <= lastZ; binz++) {
+                auto bin = GetBin(binx, biny, binz);
+                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+                {
+                   last = binx;
+                   // Break:
+                   binx = startX;
+                   biny = lastY;
+                   binz = lastZ;
+                }
+             }
+          }
+      }
+   } else if (dim == 1) {
+      first = startY;
+      for(auto biny = startY; biny <= lastY; biny++) {
+         for(Int_t binx = startX; binx <= lastX; binx++) {
+            for(auto binz = startZ; binz <= lastZ; binz++) {
+               auto bin = GetBin(binx, biny, binz);
+               if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+               {
+                  first = biny;
+                  // Break:
+                  binx = lastX;
+                  biny = lastY;
+                  binz = lastZ;
+               }
+            }
+         }
+      }
+      last = lastY;
+      for(Int_t biny = lastY; biny >= startY; biny--) {
+          for(auto binx = startX; binx <= lastX; binx++) {
+             for(auto binz = startZ; binz <= lastZ; binz++) {
+                auto bin = GetBin(binx, biny, binz);
+                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+                {
+                   last = biny;
+                   // Break:
+                   binx = lastX;
+                   biny = startY;
+                   binz = lastZ;
+                }
+             }
+          }
+      }
+   } else if (dim == 2) {
+      first = startZ;
+      for(auto binz = startZ; binz <= lastZ; binz++) {
+         for(Int_t binx = startX; binx <= lastX; binx++) {
+            for(auto biny = startY; biny <= lastY; biny++) {
+               auto bin = GetBin(binx, biny, binz);
+               if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+               {
+                  first = biny;
+                  // Break:
+                  binx = lastX;
+                  biny = lastY;
+                  binz = lastZ;
+               }
+            }
+         }
+      }
+      last = lastZ;
+      for(Int_t binz = lastZ; binz >= startZ; binz--) {
+          for(auto binx = startX; binx <= lastX; binx++) {
+             for(auto biny = startY; biny <= lastY; biny++) {
+                auto bin = GetBin(binx, biny, binz);
+                if (RetrieveBinContent(bin) != 0 || GetBinError(bin) != 0)
+                {
+                   last = binz;
+                   // Break:
+                   binx = lastX;
+                   biny = lastY;
+                   binz = startZ;
+                }
+             }
+          }
+      }
+   }
+   // Apply some margins 
+   first = std::max(dim == 0 ? startX : dim == 1 ? startY : startZ, first - margin);
+   last = std::min(dim == 0 ? lastX : dim == 1 ? lastY : lastZ, last + margin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the sum of all weights
 /// \param includeOverflow true to include under/overflows bins, false to exclude those.
 /// \note Different from TH1::GetSumOfWeights, that always excludes those
 
-Double_t TH1::GetSumOfAllWeights(const bool includeOverflow) const
+Double_t TH1::GetSumOfAllWeights(const bool includeUnderOverflow) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
-   const Int_t start = (includeOverflow ? 0 : 1);
-   const Int_t lastX = fXaxis.GetNbins() + (includeOverflow ? 1 : 0);
-   const Int_t lastY = fYaxis.GetNbins() + (includeOverflow ? 1 : 0);
-   const Int_t lastZ = fZaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const auto ndims = GetDimension();
+   const Int_t start = (includeUnderOverflow ? 0 : 1);
+   const Int_t lastX = fXaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastY = ndims < 2 ? 1 : fYaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
+   const Int_t lastZ = ndims < 3 ? 1 : fZaxis.GetNbins() + (includeUnderOverflow ? 1 : 0);
    Double_t sum =0;
-   for(auto binz = start; binz <= lastZ; binz++) {
-      for(auto biny = start; biny <= lastY; biny++) {
+   for(auto binz = ndims < 3 ? 1 : start; binz <= lastZ; binz++) {
+      for(auto biny = ndims < 2 ? 1 : start; biny <= lastY; biny++) {
          for(auto binx = start; binx <= lastX; binx++) {
             const auto bin = GetBin(binx, biny, binz);
             sum += RetrieveBinContent(bin);
