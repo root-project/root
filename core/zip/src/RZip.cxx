@@ -203,7 +203,7 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
     stream.avail_out = (uInt)(*tgtsize) - HDRSIZE;
 
-    stream.zalloc = nullptr;
+    stream.zalloc = (alloc_func) 0;
     stream.zfree = nullptr;
     stream.opaque = nullptr;
 
