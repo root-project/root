@@ -11,7 +11,7 @@
 
 /** \class TDataType
 Basic data type descriptor (datatype information is obtained from
-CINT). This class describes the attributes of type definitions
+Cling). This class describes the attributes of type definitions
 (typedef's). The TROOT class contains a list of all currently
 defined types (accessible via TROOT::GetListOfTypes()).
 */
@@ -99,7 +99,7 @@ TDataType& TDataType::operator=(const TDataType& dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TDataType dtor deletes adopted CINT TypedefInfo object.
+/// TDataType dtor deletes adopted Cling TypedefInfo object.
 
 TDataType::~TDataType()
 {
@@ -384,7 +384,7 @@ void TDataType::CheckInfo()
 {
    // This can be needed if the library defining this typedef was loaded after
    // another library and that this other library is unloaded (in which case
-   // things can get renumbered inside CINT).
+   // things can get renumbered inside Cling).
 
    if (!fInfo) return;
 

@@ -17,7 +17,7 @@
 //                                                                      //
 // TGlobal                                                              //
 //                                                                      //
-// Global variables class (global variables are obtained from CINT).    //
+// Global variables class (global variables are obtained from Cling).   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@
 class TGlobal : public TDictionary {
 
 private:
-   DataMemberInfo_t  *fInfo;      //!pointer to CINT data member info
+   DataMemberInfo_t  *fInfo;      //!pointer to Cling data member info
 
 public:
    TGlobal(DataMemberInfo_t *info = nullptr);
