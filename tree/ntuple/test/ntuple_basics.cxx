@@ -217,6 +217,30 @@ TEST(RNTuple, WriteReadSubdir)
    EXPECT_FLOAT_EQ(137.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
+TEST(RNTuple, AppendReadOnly)
+{
+   FileRaii fileGuard("test_ntuple_append_readonly.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pA = model->MakeField<int>("a");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+      for (int i = 0; i < 100; ++i) {
+         *pA = i;
+         writer->Fill();
+      }
+   }
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   try {
+      RNTupleWriter::Append(std::move(model), "A", *file);
+      FAIL() << "appending to a read-only TFile should throw.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("is not writable"));
+   }
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
