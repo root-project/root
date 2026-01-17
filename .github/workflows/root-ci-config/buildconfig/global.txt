@@ -37,6 +37,7 @@ clingtest=OFF
 cocoa=OFF
 coverage=OFF
 cuda=OFF
+curl=ON
 daos=OFF
 dataframe=ON
 davix=ON
