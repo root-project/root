@@ -263,7 +263,6 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.TestMoving1.s_instance_counter == 0
         assert cppyy.gbl.TestMoving2.s_instance_counter == 0
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_initializer_list(self):
         """Initializer list construction"""
 
@@ -347,7 +346,7 @@ class TestCPP11FEATURES:
         c = cppyy.gbl.std.nullopt
         assert cppyy.gbl.callopt(c)
 
-    @mark.xfail(run = False, reason = "Crashes")
+    @mark.xfail(run=False, reason = "Crashes")
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 

@@ -11,6 +11,17 @@ def has_cpp_20():
 
     return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
 
+def has_asserts():
+    import cppyy
+
+    return "asserts" in cppyy.gbl.gROOT.GetConfigFeatures()
+
+
+def is_modules_off():
+    import cppyy
+
+    return "runtime_cxxmodules" not in cppyy.gbl.gROOT.GetConfigFeatures()
+
 
 class TestFRAGILE:
     def setup_class(cls):
@@ -401,7 +412,6 @@ class TestFRAGILE:
         assert cppyy.gbl.myvar3
         assert cppyy.gbl.myvar4
 
-    @mark.xfail(run=False, reason="Crashes with \"alma10\"")
     def test16_opaque_handle(self):
         """Support use of opaque handles"""
 
@@ -466,7 +476,7 @@ class TestFRAGILE:
                     'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
-    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
+    @mark.xfail(strict=True, run=not is_modules_off(), condition=IS_WINDOWS or is_modules_off(), reason="Fails on Windows, crashes on alma9 with modules off")
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
 
@@ -579,7 +589,8 @@ class TestFRAGILE:
 
         cppyy.include('sanitizer/asan_interface.h')
 
-    @mark.xfail(run=False)
+    @mark.xfail(run=False, condition=has_asserts(),
+                reason="Transaction.cpp:98: void cling::Transaction::addNestedTransaction(cling::Transaction*): Assertion `!m_Unloading && \"Must not nest within unloading transaction\"' failed.")
     def test25_cppdef_error_reporting(self):
         """Check error reporting of cppyy.cppdef"""
 
@@ -698,7 +709,7 @@ class TestFRAGILE:
         p = Test.Family1.Parent()
         p.children                          # used to crash
 
-    @mark.xfail(run=False)
+    @mark.xfail(strict=True)
     def test31_template_with_class_enum(self):
         """Template instantiated with class enum"""
 
@@ -738,6 +749,7 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail(run=False, condition=is_modules_off(), reason="Crashes on build with modules off: Fatal Python error: Segmentation fault")
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 

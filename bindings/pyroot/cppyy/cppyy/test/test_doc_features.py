@@ -445,8 +445,7 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM | (WINDOWS_BITS == 64), reason = "Crashes on Windows 64 bit and macOS ARM with" \
-    "libc++abi: terminating due to uncaught exception")
+    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason = "Crashes on Windows 64 bit")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
@@ -567,7 +566,6 @@ namespace Zoo {
         assert not isinstance(i, int)
         assert isinstance(i, Integer1)
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_STL_containers(self):
         """Instantiate STL contaienrs with new class"""
 
@@ -1224,8 +1222,7 @@ class TestTALKEXAMPLES:
         assert type(b) == CC.Derived
         assert d is b
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM | IS_WINDOWS, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception, and also on Windows")
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason = "Crashes on Windows")
     def test_exceptions(self):
         """Exceptions example"""
 

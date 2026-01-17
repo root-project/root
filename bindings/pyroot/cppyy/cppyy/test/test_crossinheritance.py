@@ -225,7 +225,7 @@ class TestCROSSINHERITANCE:
         p1 = TPyDerived1()
         assert p1.get_value() == 13
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM | IS_WINDOWS, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(strict=True, condition=IS_MAC_ARM | IS_WINDOWS, reason = "Crashes on OS X ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test08_error_handling(self):
         """Python errors should propagate through wrapper"""
@@ -269,8 +269,6 @@ class TestCROSSINHERITANCE:
         assert 'ValueError' in res
         assert os.path.basename(__file__) in res
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test09_interface_checking(self):
         """Conversion errors should be Python exceptions"""
 
@@ -991,7 +989,6 @@ class TestCROSSINHERITANCE:
         a = MyPyDerived(27, 55, nArgs=2)
         verify(a, 27, 55, 67)
 
-    @mark.xfail(run=False, condition=IS_WINDOWS, reason="TypeError: <class cppyy.gbl.std.string at 0x0000018A025B6C60> has no attribute 'npos'.")
     def test23_const_byvalue_return(self):
         """Const by-value return in overridden method"""
 

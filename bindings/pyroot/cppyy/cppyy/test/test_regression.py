@@ -1,6 +1,6 @@
 import os, sys, pytest
 from pytest import mark, raises, skip
-from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86, IS_MAC_ARM, IS_MAC, WINDOWS_BITS
+from support import setup_make, IS_WINDOWS, ispypy, IS_MAC_X86, IS_MAC_ARM, IS_MAC, WINDOWS_BITS, IS_LINUX
 
 
 class TestREGRESSION:
@@ -103,9 +103,12 @@ class TestREGRESSION:
 
         assert 1 == cppyy.gbl.py2long(1)
 
-    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
+    @mark.skip(reason="For ROOT, we don't enable AVX by default ('-mavx' is not passed to Cling)")
     def test04_avx(self):
         """Test usability of AVX by default."""
+
+        if IS_MAC_ARM:
+            skip('AVX not available on Apple silicon')
 
         import cppyy, subprocess
 
@@ -348,7 +351,6 @@ class TestREGRESSION:
         f = sds.Foo()
         assert f.bar.x == 5
 
-    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Fails on Windows")
     def test15_vector_vs_initializer_list(self):
         """Prefer vector in template and initializer_list in formal arguments"""
 
@@ -1362,7 +1364,7 @@ class TestREGRESSION:
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("my_custom_type_t") == "const int"
         assert cppyy.gbl.CppyyLegacy.TClassEdit.ResolveTypedef("cmy_custom_type_t") == "const int"
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM | WINDOWS_BITS == 64, reason = "Crashes on Windows 64 bit and macOS ARM with" \
+    @mark.xfail(run=WINDOWS_BITS != 64, condition=IS_MAC_ARM | WINDOWS_BITS == 64, reason = "Crashes on Windows 64 bit and fails macOS ARM with" \
     "libc++abi: terminating due to uncaught exception")
     def test46_exception_narrowing(self):
         """Exception narrowing to C++ exception of all overloads"""

@@ -196,7 +196,6 @@ class TestSTLVECTOR:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = global_n
 
-    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Fails on Windows")
     def test01_builtin_type_vector_types(self):
         """Test access to std::vector<int>/std::vector<double>"""
 
@@ -600,7 +599,6 @@ class TestSTLVECTOR:
       # additional test from CPython's test suite
         getslice_cpython_test(vector[int])
 
-    @mark.xfail(run=False, condition=IS_WINDOWS, reason="Fails on Windows")
     def test16_vector_construction(self):
         """Vector construction following CPython's sequence"""
 
@@ -617,7 +615,7 @@ class TestSTLVECTOR:
         v = cppyy.gbl.std.vector(l)
         assert list(l) == l
 
-    @mark.xfail(run=False)
+    @mark.xfail(strict=True)
     def test18_array_interface(self):
         """Test usage of __array__ from numpy"""
 
@@ -1043,6 +1041,7 @@ class TestSTLSTRING:
         assert s1+s2 == "Hello, World!"
         assert s2+s1 == ", World!Hello"
 
+    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="AttributeError: <class cppyy.gbl.std.string at 0x0000021275350610> has no attribute 'size_type'")
     def test09_string_as_str_bytes(self):
         """Python-style methods of str/bytes on std::string"""
 

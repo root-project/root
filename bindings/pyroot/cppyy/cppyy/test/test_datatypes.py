@@ -1,6 +1,6 @@
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS
 
 test_dct = "datatypes_cxx"
 
@@ -1254,7 +1254,7 @@ class TestDATATYPES:
         run(self, cppyy.gbl.sum_uc_data, buf, total)
         run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail(run=not IS_MAC, reason = "Fails on all platforms; crashes on macOS with " \
+    @mark.xfail(strict=True, run=not IS_MAC, reason="Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
@@ -1318,8 +1318,6 @@ class TestDATATYPES:
         ns = cppyy.gbl.FuncPtrReturn
         assert ns.foo()() == "Hello, World!"
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test27_callable_passing(self):
         """Passing callables through function pointers"""
 
@@ -1392,8 +1390,6 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(run=False, condition=IS_MAC_ARM or (WINDOWS_BITS == 64), reason = "Crashes on Windows 64 bit or OS X ARM with" \
-    "libc++abi: terminating due to uncaught exception")
     def test28_callable_through_function_passing(self):
         """Passing callables through std::function"""
 
@@ -1466,7 +1462,6 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test29_std_function_life_lines(self):
         """Life lines to std::function data members"""
 
@@ -1861,7 +1856,6 @@ class TestDATATYPES:
         m = ns.create_matrix(N, M)
         assert ns.destroy_matrix(ns.g_matrix, N, M)
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test38_plain_old_data(self):
         """Initializer construction of PODs"""
 
@@ -2334,7 +2328,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(run = not IS_MAC_ARM, reason="Crashes on mac-beta ARM64, fails on alma9 runtime_cxxmodules=off")
+    @mark.xfail(strict=True, condition=IS_MAC_ARM or IS_WINDOWS, reason="Crashes on mac-beta ARM64 and fails on Windows")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
@@ -2388,7 +2382,6 @@ class TestDATATYPES:
             else:
                 assert type(v) == gbl.PolymorphicMaps.Derived
 
-    @mark.xfail(strict=True, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test52_virtual_inheritance(self):
         import cppyy
         from cppyy import gbl

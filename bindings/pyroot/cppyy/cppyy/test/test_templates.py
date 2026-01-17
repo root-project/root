@@ -1,6 +1,6 @@
 import pytest, os
 from pytest import mark, raises
-from support import setup_make, pylong, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, pylong, IS_WINDOWS
 
 
 test_dct = "templates_cxx"
@@ -68,7 +68,6 @@ class TestTEMPLATES:
         assert cppyy.gbl.nt_templ_args[1]()   == 1
         assert cppyy.gbl.nt_templ_args[256]() == 256
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_templated_function(self):
         """Templated global and static functions lookup and calls"""
 
@@ -149,9 +148,8 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
-    @mark.xfail(run = False, reason = "This test causes the interpreter to raises errors and" \
-    "should not be run until further investigated")
-    def test06_variadic_sfinae(self):
+    @mark.xfail(strict=True, reason="This test causes the interpreter to raises errors")
+    def test06_variadic_sfinae(self, capfd):
         """Attribute testing through SFINAE"""
 
         import cppyy
@@ -166,6 +164,11 @@ class TestTEMPLATES:
 
         assert call_has_var1(move(Obj1())) == True
         assert call_has_var1(move(Obj2())) == False
+
+        # Fail if there were interpreter errors:
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
 
     def test07_type_deduction(self):
         """Traits/type deduction"""
@@ -526,7 +529,6 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.TemplatedCtor.C(0)
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test21_type_deduction_with_conversion(self):
         """Template instantiation with [] -> std::vector conversion"""
 
@@ -1122,7 +1124,6 @@ class TestTEMPLATES:
                         run_n = getattr(cppyy.gbl, 'TNaRun_%d' % n)
                         getattr(run_n, t)
 
-    @mark.xfail(run = False, reason = "This test crashes sporadically")
     def test33_using_template_argument(self):
         """`using` type as template argument"""
 
@@ -1379,4 +1380,4 @@ class TestTEMPLATED_CALLBACK:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))
