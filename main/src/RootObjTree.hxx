@@ -1,0 +1,149 @@
+// \file RootObjTree.hxx
+///
+/// Utility functions used by command line tools to parse "path-like" strings like: "foo.root:dir/obj*" into a
+/// tree structure usable to iterate the matched objects.
+///
+/// For example usage, see rootls.cxx
+///
+/// \author Giacomo Parolini <giacomo.parolini@cern.ch>
+/// \date 2025-10-14
+
+#ifndef ROOT_CMDLINE_OBJTREE
+#define ROOT_CMDLINE_OBJTREE
+
+#include <cstdint>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <TKey.h>
+
+#include <ROOT/RError.hxx>
+
+class TDirectory;
+class TFile;
+
+namespace ROOT::CmdLine {
+
+using NodeIdx_t = std::uint32_t;
+
+struct RootObjNode {
+   std::string fName;
+   std::string fClassName;
+   TKey *fKey = nullptr; // This is non-null for all nodes except the root node (which is the file itself)
+
+   TDirectory *fDir = nullptr; // This is null for all non-directory nodes
+   // NOTE: by construction of the tree, all children of the same node are contiguous.
+   NodeIdx_t fFirstChild = 0;
+   std::uint32_t fNChildren = 0;
+   std::uint32_t fNesting = 0;
+   NodeIdx_t fParent = 0;
+};
+
+inline RootObjNode NodeFromKey(TKey &key)
+{
+   RootObjNode node = {};
+   node.fName = key.GetName();
+   node.fClassName = key.GetClassName();
+   node.fKey = &key;
+   return node;
+}
+
+/// A representation of all objects involved in a rootls-style ROOT file listing. This listing is used in command
+/// line tools like rootls, rootcp etc. and it comes from a shell glob-style syntax like:
+///
+///   file.root:dir/*
+///
+/// In this case, a RootObjTree that represents the above query will contain the TFile relative to `file.root`,
+/// all nodes "visited" by the glob expression in `fNodes` and links to them in `fDirList` and `fLeafList`. This is
+/// basically a filtered view of a ROOT file.
+///
+/// Example: assume you have a ROOT file with the following structure:
+///
+/// file.root
+///   `--- a/
+///   |    `--- b
+///   |    `--- c
+///   `--- d
+///
+/// Then the RootObjTree representing the query `file.root:*` will contain:
+///
+///  fNodes: [a, b, c, d]
+///  fLeafList: [1, 2, 3]
+///  fDirList: [0]
+///
+struct RootObjTree {
+   // 0th node is the root node
+   std::vector<RootObjNode> fNodes;
+   // All nodes in fNodes that are dirs
+   std::vector<NodeIdx_t> fDirList;
+   // All nodes in fNodes that are leaves (non-TDirectories)
+   std::vector<NodeIdx_t> fLeafList;
+   // The file must be kept alive in order to access the nodes' keys
+   std::unique_ptr<TFile> fFile;
+};
+
+/// Prints out the structure of the object tree. Helpful for debugging.
+void PrintObjTree(const RootObjTree &tree, std::ostream &out = std::cout);
+
+enum class ENodeFullPathOpt {
+   kExcludeFilename,
+   kIncludeFilename,
+};
+/// Given a node, returns its full path. If `opt == kIncludeFilename`, the path is prepended by "filename.root:"
+std::string NodeFullPath(const RootObjTree &tree, NodeIdx_t nodeIdx, ENodeFullPathOpt opt);
+
+struct RootSource {
+   std::string fFileName;
+   RootObjTree fObjectTree;
+   std::vector<std::string> fErrors;
+};
+
+enum EGetMatchingPathsFlags {
+   /// Recurse into subdirectories when matching objects
+   kRecursive = 1 << 0,
+   kIgnoreFailedMatches = 1 << 1,
+};
+
+/// Given a file and a "path pattern", returns a RootSource containing the tree of matched objects.
+/// If `pattern` is non-empty, not a single '*' and it doesn't match any object in `fileName`,
+/// an error will be appended to RootSource::fErrors unless `kIgnoreFailedMatches` is part of `flags`.
+///
+/// \param fileName The name of the ROOT file to look into
+/// \param pattern A glob-like pattern (basically a `ls` pattern). May be empty to match anything.
+/// \param flags A bitmask of EGetMatchingPathsFlags
+RootSource GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern, std::uint32_t flags);
+
+/// Given a string like "root://file.root:a/b/c", splits it into { "root://file.root", "a/b/c" }.
+/// \return An error if the file prefix is unknown (e.g. "foo://file.root"), otherwise the result described above.
+ROOT::RResult<std::pair<std::string_view, std::string_view>> SplitIntoFileNameAndPattern(std::string_view sourceRaw);
+
+/// Given a string like "file.root:dir/obj", converts it to a RootSource.
+/// As a result of a successful call, a ROOT file is opened and may be accessed from RootSource::fObjectTree.fFile.
+/// Note that the file will _not_ be registered to the global list and doesn't have to be explicitly closed, being
+/// stored in a unique_ptr.
+///
+/// The string may start with one of the known file protocols: "http", "https", "root", "gs", "s3"
+/// (e.g. "https://file.root").
+///
+/// If the source fails to get created, its fErrors list will be non-empty.
+///
+/// \param flags A bitmask of EGetMatchingPathsFlags
+/// \return The converted source.
+RootSource ParseRootSource(std::string_view sourceRaw, std::uint32_t flags);
+
+/// Given a list of strings like "file.root:dir/obj", converts each string to a RootSource.
+/// The string may start with one of the known file protocols: "http", "https", "root", "gs", "s3"
+/// (e.g. "https://file.root").
+///
+/// If one or more sources fail to get created, each sources's fErrors list will be non-empty.
+///
+/// \param flags A bitmask of EGetMatchingPathsFlags
+/// \return The list of converted sources.
+std::vector<ROOT::CmdLine::RootSource>
+ParseRootSources(const std::vector<std::string> &sourcesRaw, std::uint32_t flags);
+
+} // namespace ROOT::CmdLine
+
+#endif
