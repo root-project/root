@@ -51,6 +51,7 @@ extern ParserFuncSignature ParseReduceProd;
 extern ParserFuncSignature ParseBatchNormalization;
 extern ParserFuncSignature ParseConstant;
 extern ParserFuncSignature ParseTranspose;
+extern ParserFuncSignature ParseGelu;
 extern ParserFuncSignature ParseRelu;
 extern ParserFuncSignature ParseTanh;
 extern ParserFuncSignature ParseConv;
@@ -201,6 +202,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("AveragePool", ParsePool);
    RegisterOperator("GlobalAveragePool", ParsePool);
    RegisterOperator("MaxPool", ParsePool);
+   RegisterOperator("Gelu", ParseGelu);
    RegisterOperator("Relu", ParseRelu);
    RegisterOperator("Reshape", ParseReshape);
    RegisterOperator("Flatten", ParseReshape);
