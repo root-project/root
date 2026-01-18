@@ -33,5 +33,5 @@ add_dependencies(TClingTest Cling RIO)
 ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Cling RIO)
 
 if(pyroot)
-  ROOT_ADD_PYUNITTEST(TClingCallFuncTests TClingCallFuncTests.py)
+  ROOT_ADD_PYUNITTEST(MetaClingTests MetaClingTests.py)
 endif()
