@@ -24,19 +24,19 @@
 #include <memory> // make_unique
 #include <vector>
 
-RooAbsPdf *generate_1D_gaussian_pdf(RooWorkspace &ws)
+inline RooAbsPdf *generate_1D_gaussian_pdf(RooWorkspace &ws)
 {
    ws.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
    RooAbsPdf *pdf = ws.pdf("g");
    return pdf;
 }
 
-std::unique_ptr<RooDataSet> generate_1D_dataset(RooWorkspace &ws, RooAbsPdf *pdf, unsigned long nEvents)
+inline std::unique_ptr<RooDataSet> generate_1D_dataset(RooWorkspace &ws, RooAbsPdf *pdf, unsigned long nEvents)
 {
    return std::unique_ptr<RooDataSet>{pdf->generate(RooArgSet(*ws.var("x")), nEvents)};
 }
 
-std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
+inline std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
 generate_1D_gaussian_pdf_nll(RooWorkspace &ws, unsigned long nEvents)
 {
    RooAbsPdf *pdf = generate_1D_gaussian_pdf(ws);
@@ -56,7 +56,7 @@ generate_1D_gaussian_pdf_nll(RooWorkspace &ws, unsigned long nEvents)
 
 // return two unique_ptrs, the first because nll is a pointer,
 // the second because RooArgSet doesn't have a move constructor
-std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
+inline std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
 generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEvents, RooFit::EvalBackend evalBackend)
 {
    RooArgSet obs_set;
