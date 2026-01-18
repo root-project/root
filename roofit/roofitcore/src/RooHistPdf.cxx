@@ -319,7 +319,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
   // Disable partial analytical integrals if interpolation is used, and we
   // integrate over sub-ranges, but leave them enabled when we integrate over
   // the full range of one or several variables
-  if (intOrder > 1 && !(code & 1)) {
+  if (intOrder > 0 && !(code & 1)) {
     analVars.removeAll();
     return 0;
   }
