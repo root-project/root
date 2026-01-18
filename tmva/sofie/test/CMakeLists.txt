@@ -110,6 +110,13 @@ if (BLAS_FOUND)
     LIBRARIES
       ROOTTMVASofie
   )
+
+  # HardSwish Operator Unit Test
+  # Tests hexfloat constants, split topology, numerical correctness
+  ROOT_ADD_GTEST(TestSofieHardSwish TestSofieHardSwish.cxx
+    LIBRARIES
+      ROOTTMVASofie
+  )
 endif()
 
 # Look for needed Python modules

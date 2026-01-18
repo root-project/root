@@ -11,6 +11,7 @@
 #include <functional>
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator_HardSigmoid.hxx"
+#include "TMVA/ROperator_HardSwish.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -242,6 +243,21 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
       }
       std::string output_name = nodeproto.output(0);
       auto op = std::make_unique<ROperator_HardSigmoid<float>>(input_name, output_name, alpha, beta);
+      if (!parser.IsRegisteredTensorType(output_name)) {
+         parser.RegisterTensorType(output_name, parser.GetTensorType(input_name));
+      }
+      return op;
+   });
+
+   // HardSwish operator with inline lambda registration (no attributes)
+   RegisterOperator("HardSwish", [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+      auto input_name = nodeproto.input(0);
+      if (!parser.IsRegisteredTensorType(input_name)) {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser HardSwish op has input tensor " +
+                                  input_name + " but its type is not yet registered");
+      }
+      std::string output_name = nodeproto.output(0);
+      auto op = std::make_unique<ROperator_HardSwish<float>>(input_name, output_name);
       if (!parser.IsRegisteredTensorType(output_name)) {
          parser.RegisterTensorType(output_name, parser.GetTensorType(input_name));
       }
