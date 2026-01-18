@@ -41,6 +41,8 @@ class RooRealL : public ::testing::TestWithParam<std::tuple<std::size_t>> {};
 
 TEST_P(RooRealL, getVal)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    // Real-life test: calculate a NLL using event-based parallelization. This
    // should replicate RooRealMPFE results.
    RooRandom::randomGenerator()->SetSeed(std::get<0>(GetParam()));
@@ -194,6 +196,8 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
 
 TEST_P(RooRealL, setVal)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    // calculate the NLL twice with different parameters
    const bool verbose = false;
 

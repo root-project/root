@@ -267,6 +267,8 @@ void fillHist(TH2D *histo, double content)
 
 TEST(RooDataHist, BatchDataAccess)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
    RooRealVar y("y", "y", 1, 0, 20);
 
@@ -317,6 +319,8 @@ void fillHist(TH1D *histo, double content)
 
 TEST(RooDataHist, BatchDataAccessWithCategories)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
    RooCategory cat("cat", "category");
 
@@ -360,6 +364,8 @@ TEST(RooDataHist, BatchDataAccessWithCategories)
 
 TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
    RooCategory cat("cat", "category");
    x.setRange(-8., 5);
@@ -448,6 +454,8 @@ TEST(RooDataHist, AnalyticalIntegration)
    //  - bin1 [0.0, 1.0]: 3 counts (bin volume x counts = 3)
    //  - bin2 [1.0, 3.0]: 1 count  (bin volume x counts = 2)
    //  - bin3 [3.0, 3.5]: 8 counts (bin volume x counts = 4)
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x("x", "x", 0, 3.5);
    x.setRange("R1", 1.0, 3.0);  // subrange that respects the bin edges
