@@ -71,3 +71,8 @@ foreach(file ${TestSource})
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} Minuit2 )
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()
+
+# We don't want to run the gtests if gtest is not available in Minuit2 standalone builds
+if(TARGET GTest::gtest)
+  ROOT_ADD_GTEST(testMinuit2 testMinuit2.cxx LIBRARIES Minuit2)
+endif()
