@@ -404,6 +404,7 @@ if(DEFINED rpath)
   message(DEPRECATION ">>> Option 'rpath' is deprecated and without effect."
       " Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT"
       " executables and libraries."
+      " Using this option will result in configuration errors in ROOT 6.42."
       "") # empty line at the end to make the deprecation message more visible
 endif()
 
