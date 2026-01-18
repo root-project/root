@@ -1,0 +1,4 @@
+ccache=ON
+mysql=OFF
+pythia8=OFF
+tmva-sofie=ON
