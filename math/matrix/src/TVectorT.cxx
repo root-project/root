@@ -43,6 +43,7 @@ For usage examples see `$ROOTSYS/test/stressLinear.cxx`
 #include "TROOT.h"
 #include "Varargs.h"
 
+#include <type_traits>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2463,3 +2464,11 @@ template Bool_t    TMatrixTAutoloadOps::AreCompatible       <Double_t,Double_t>(
 template void      TMatrixTAutoloadOps::Compare             <Double_t>         (const TVectorD &v1,const TVectorD &v2);
 template Bool_t    TMatrixTAutoloadOps::VerifyVectorValue   <Double_t>         (const TVectorD &m,       Double_t  val,Int_t verbose,Double_t maxDevAllow);
 template Bool_t    TMatrixTAutoloadOps::VerifyVectorIdentity<Double_t>         (const TVectorD &m1,const TVectorD &m2, Int_t verbose,Double_t maxDevAllow);
+
+
+// ROOT-7739
+static_assert(std::is_same_v<decltype(std::declval<double>() * std::declval<TVectorD>()), TVectorD>,
+              "double * TVectorD must be TVectorD");
+
+static_assert(std::is_same_v<decltype(std::declval<TVectorD>() * std::declval<double>()), TVectorD>,
+              "TVectorD * double must be TVectorD");
