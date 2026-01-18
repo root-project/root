@@ -198,7 +198,7 @@ AddPseudoGlobals() {
 ////////////////////////////////////////////////////////////////////////////////
 /// File default Constructor.
 
-TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fSumSkip(0), fLastReadEnd(0)
 {
    fCacheReadMap    = new TMap();
    SetBit(kBinaryFile, kTRUE);
@@ -341,7 +341,7 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// ~~~
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
-           : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE)
+           : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE), fSumSkip(0), fLastReadEnd(0)
 {
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
@@ -1737,6 +1737,10 @@ void TFile::Paint(Option_t *option)
 void TFile::Print(Option_t *option) const
 {
    Printf("TFile: name=%s, title=%s, option=%s", GetName(), GetTitle(), GetOption());
+   if (IsOpen()) {
+      Printf("  IO Performance : Transactions=%-6d, Sparseness=%.4f, Randomness=%.4f", 
+             GetReadCalls(), GetSparseness(), GetRandomness());
+   }
    GetList()->R__FOR_EACH(TObject,Print)(option);
 }
 
@@ -1750,7 +1754,13 @@ void TFile::Print(Option_t *option) const
 
 Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
+   if (IsZombie()) return kTRUE;
+
    if (IsOpen()) {
+      if (fReadCalls > 0) {
+         fSumSkip += std::abs(pos - fLastReadEnd);
+      }
+      fLastReadEnd = pos + len;
 
       SetOffset(pos);
 
@@ -4898,4 +4908,26 @@ Int_t TFile::GetBytesToPrefetch() const
       return ((bytes < 0) ? 0 : bytes);
    }
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the sparseness of the file.
+/// Sparseness is defined as the total bytes read divided by the total file size.
+
+Double_t TFile::GetSparseness() const
+{
+   Long64_t size = GetSize();
+   if (size <= 0) return 0.0;
+   return (Double_t)GetBytesRead() / (Double_t)size;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the randomness of the file.
+/// Randomness is defined as the sum of the skip distances, divided by the total bytes read.
+
+Double_t TFile::GetRandomness() const
+{
+   Long64_t bytesRead = GetBytesRead();
+   if (bytesRead <= 0) return 0.0;
+   return fSumSkip / (Double_t)bytesRead;
 }
