@@ -233,15 +233,19 @@ set(full_core_filename $<TARGET_FILE_NAME:Core>)
 # Absolue CMAKE_INSTALL_<dir> paths are discouraged in CMake, but some
 # packagers use them anyway. So we support it.
 if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
-   set(install_includedir_is_absolute 1)
+  set(install_lib_to_include "${CMAKE_INSTALL_INCLUDEDIR}")
 else()
-   set(install_includedir_is_absolute 0)
+  if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
+    set(libdir "${CMAKE_INSTALL_LIBDIR}")
+  else()
+    set(libdir "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  endif()
+  file(RELATIVE_PATH install_lib_to_include "${libdir}" "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+  unset(libdir)
 endif()
-file(TO_NATIVE_PATH "${CMAKE_INSTALL_INCLUDEDIR}" install_includedir_native)
 
 target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename}
-                                    -DINSTALL_INCLUDEDIR=${install_includedir_native}
-                                    -DINSTALL_INCLUDEDIR_IS_ABSOLUTE=${install_includedir_is_absolute}
+                                    -DINSTALL_LIB_TO_INCLUDE="${install_lib_to_include}"
 )
 add_dependencies(Core ensure_build_tree_marker)
 

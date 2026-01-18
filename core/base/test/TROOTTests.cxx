@@ -41,3 +41,13 @@ TEST(TROOT, GetSharedLibDir)
 
    EXPECT_EQ(libDir, libDirRef);
 }
+
+TEST(TROOT, GetIncludeDir)
+{
+   namespace fs = std::filesystem;
+
+   fs::path includeDir = gROOT->GetIncludeDir().Data();
+   fs::path includeDirRef = EXPECTED_INCLUDE_DIR;
+
+   EXPECT_EQ(includeDir, includeDirRef);
+}

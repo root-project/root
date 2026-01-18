@@ -3182,20 +3182,26 @@ const TString &TROOT::GetIncludeDir()
    if (!rootincdir.IsNull())
       return rootincdir;
 
-   const std::string &sep = ROOT::FoundationUtils::GetPathSeparator();
+   namespace fs = std::filesystem;
+
+   // The shared library directory can be found automatically, because the
+   // libCore is loaded by definition when using TROOT. It's used as the anchor
+   // to resolve the ROOT include directory, using the correct relative path
+   // for either the build or install tree.
+   fs::path libPath = GetSharedLibDir().Data();
 
    // Check if we are in the build tree using the build tree marker file
-   const bool isBuildTree = std::filesystem::exists((GetSharedLibDir() + sep + "root-build-tree-marker").Data());
+   const bool isBuildTree = fs::exists(libPath / "root-build-tree-marker");
 
-   if (isBuildTree) {
-      rootincdir = GetRootSys() + sep + "include";
-   } else {
-#if INSTALL_INCLUDEDIR_IS_ABSOLUTE
-      rootincdir = _R_QUOTEVAL_(INSTALL_INCLUDEDIR);
-#else
-      rootincdir = GetRootSys() + sep + _R_QUOTEVAL_(INSTALL_INCLUDEDIR);
-#endif
+   fs::path includePath = isBuildTree ? "../include" : INSTALL_LIB_TO_INCLUDE;
+
+   // The INSTALL_LIB_TO_INCLUDE might already be absolute
+   if (!includePath.is_absolute()) {
+      includePath = libPath / includePath;
    }
+
+   // Normalize to get rid of the "../" in relative paths
+   rootincdir = includePath.lexically_normal().string();
 
    return rootincdir;
 }
