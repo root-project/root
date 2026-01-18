@@ -393,6 +393,8 @@ TEST(RooNLLVar, CopyRangedNLL)
 /// Inspired by the rf609_xychi2fit tutorial.
 TEST(RooXYChi2Var, IntegrateLinearFunction)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    // Make weighted XY dataset with asymmetric errors stored The StoreError()

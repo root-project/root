@@ -4,6 +4,7 @@
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooGlobalFunc.h>
+#include <RooHelpers.h>
 
 #include <TTree.h>
 
@@ -12,6 +13,8 @@
 // GitHub issue 10278: RooDataSet incorrectly loads RooCategory values from TTree branch of type Short_t
 TEST(RooCategory, CategoryDefineMultiState)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    TTree tree("test_tree", "Test tree");
    Short_t cat_in;
    tree.Branch("cat", &cat_in);

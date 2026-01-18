@@ -33,6 +33,8 @@ class Interface : public ::testing::Test {};
 // Verifies that RooAbsPdf::createNLL() can create a valid RooAbsL wrapped in RooRealL
 TEST(Interface, createNLLRooAbsL)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    RooRandom::randomGenerator()->SetSeed(42);
@@ -57,6 +59,8 @@ TEST(Interface, createNLLRooAbsL)
 // New Style likelihoods cannot be initialized with offsetting
 TEST(Interface, createNLLModularLAndOffset)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    RooRandom::randomGenerator()->SetSeed(42);

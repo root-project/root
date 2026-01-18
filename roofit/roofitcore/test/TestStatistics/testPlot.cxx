@@ -30,26 +30,6 @@
 
 using namespace RooFit;
 
-class Environment : public testing::Environment {
-public:
-   void SetUp() override
-   {
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
-      ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
-   }
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
-
-int main(int argc, char **argv)
-{
-   testing::InitGoogleTest(&argc, argv);
-   testing::AddGlobalTestEnvironment(new Environment);
-   return RUN_ALL_TESTS();
-}
-
 class TestRooRealLPlot : public RooUnitTest {
 public:
    TestRooRealLPlot(TFile &refFile, bool writeRef, int verbose)

@@ -10,7 +10,7 @@
 #include <RooProdPdf.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
-#include <RooStats/ModelConfig.h>
+#include <RooFit/ModelConfig.h>
 #include <RooWorkspace.h>
 
 #include <ROOT/StringUtils.hxx>
