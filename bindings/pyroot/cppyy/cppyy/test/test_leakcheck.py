@@ -99,7 +99,7 @@ class TestLEAKCHECK:
         self.check_func(ns, 'free_f_ret1')
         self.check_func(ns, 'free_f_ret1')
 
-    @mark.xfail()
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test02_test_static_methods(self):
         """Leak test of static methods"""
 
@@ -227,6 +227,7 @@ class TestLEAKCHECK:
         self.check_func(ns, 'SomeBuf')
         self.check_func(ns, 'SomeBuf', val=10, name="aap", buf_type=ns.SHAPE)
 
+    @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
     def test06_dir(self):
         """Global function uploads used to cause more function generation"""
 

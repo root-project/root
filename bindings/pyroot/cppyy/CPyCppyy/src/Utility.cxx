@@ -141,7 +141,7 @@ unsigned long CPyCppyy::PyLongOrInt_AsULong(PyObject* pyobject)
     }
 
     unsigned long ul = PyLong_AsUnsignedLong(pyobject);
-    if (PyErr_Occurred() && PyInt_Check(pyobject)) {
+    if (ul == (unsigned long)-1 && PyErr_Occurred() && PyInt_Check(pyobject)) {
         PyErr_Clear();
         long i = PyInt_AS_LONG(pyobject);
         if (0 <= i) {

@@ -45,7 +45,7 @@ class TestSTDStreams:
         cppyy.gbl.stringstream_base.pass_through_base(s)
         assert s.str() == "TEST STRING"
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_naming_of_ostringstream(self):
         """Naming consistency of ostringstream"""
 

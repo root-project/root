@@ -1,6 +1,6 @@
 import pytest, os
 from pytest import mark, raises
-from support import setup_make, pylong, IS_WINDOWS, WINDOWS_BITS
+from support import setup_make, pylong, IS_WINDOWS
 
 
 test_dct = "templates_cxx"
@@ -68,7 +68,6 @@ class TestTEMPLATES:
         assert cppyy.gbl.nt_templ_args[1]()   == 1
         assert cppyy.gbl.nt_templ_args[256]() == 256
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test03_templated_function(self):
         """Templated global and static functions lookup and calls"""
 
@@ -149,9 +148,8 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
-    @mark.xfail(run = False, reason = "This test causes the interpreter to raises errors and" \
-    "should not be run until further investigated")
-    def test06_variadic_sfinae(self):
+    @mark.xfail(strict=True, reason="This test causes the interpreter to raises errors")
+    def test06_variadic_sfinae(self, capfd):
         """Attribute testing through SFINAE"""
 
         import cppyy
@@ -166,6 +164,11 @@ class TestTEMPLATES:
 
         assert call_has_var1(move(Obj1())) == True
         assert call_has_var1(move(Obj2())) == False
+
+        # Fail if there were interpreter errors:
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
 
     def test07_type_deduction(self):
         """Traits/type deduction"""
@@ -185,7 +188,6 @@ class TestTEMPLATES:
         assert issubclass(select_template_arg[0, int, float].argument, int)
         assert issubclass(select_template_arg[1, int, float].argument, float)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_using_of_static_data(self):
         """Derived class using static data of base"""
 
@@ -275,7 +277,7 @@ class TestTEMPLATES:
         assert round(RTTest2[int](1, 3.1).m_double - 4.1, 8) == 0.
         assert round(RTTest2[int]().m_double + 1., 8) == 0.
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_template_aliases(self):
         """Access to templates made available with 'using'"""
 
@@ -325,7 +327,7 @@ class TestTEMPLATES:
         assert nsup.Foo
         assert nsup.Bar.Foo        # used to fail
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test13_using_templated_method(self):
         """Access to base class templated methods through 'using'"""
 
@@ -349,7 +351,7 @@ class TestTEMPLATES:
         assert type(d.get3()) == int
         assert d.get3() == 5
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test14_templated_return_type(self):
         """Use of a templated return type"""
 
@@ -396,7 +398,6 @@ class TestTEMPLATES:
         assert is_valid(1.)
         assert not is_valid(0.)
 
-    @mark.xfail()
     def test16_variadic(self):
         """Range of variadic templates"""
 
@@ -450,7 +451,6 @@ class TestTEMPLATES:
         b.b_T['int'](1, 1., 'a')
         assert get_tn(ns).find("int(some_variadic::B::*)(int&&,double&&,std::") == 0
 
-    @mark.xfail()
     def test17_empty_body(self):
         """Use of templated function with empty body"""
 
@@ -462,7 +462,6 @@ class TestTEMPLATES:
         assert f_T[int]() is None
         assert cppyy.gbl.T_WithEmptyBody.side_effect == "side effect"
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test18_greedy_overloads(self):
         """void*/void** should not pre-empt template instantiations"""
 
@@ -530,7 +529,6 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.TemplatedCtor.C(0)
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test21_type_deduction_with_conversion(self):
         """Template instantiation with [] -> std::vector conversion"""
 
@@ -569,7 +567,6 @@ class TestTEMPLATES:
         assert l2v.test3[int]([d1])     == 1
         assert l2v.test3[int]([d1, d1]) == 2
 
-    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows: TypeError: Template method resolution failed: Python int too large to convert to C long")
     def test22_type_deduction_of_proper_integer_size(self):
         """Template type from integer arg should be big enough"""
 
@@ -585,7 +582,6 @@ class TestTEMPLATES:
         for val in [2**64, -2**63-1]:
             raises(OverflowError, PassSomeInt, val)
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test23_overloaded_setitem(self):
         """Template with overloaded non-templated and templated setitem"""
 
@@ -596,7 +592,7 @@ class TestTEMPLATES:
         v = MyVec["float"](2)
         v[0] = 1        # used to throw TypeError
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test24_stdfunction_templated_arguments(self):
         """Use of std::function with templated arguments"""
 
@@ -623,7 +619,7 @@ class TestTEMPLATES:
 
         assert cppyy.gbl.std.function['double(std::vector<double>)']
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test25_stdfunction_ref_and_ptr_args(self):
         """Use of std::function with reference or pointer args"""
 
@@ -690,7 +686,6 @@ class TestTEMPLATES:
         foo.fnc = ns.bar
         foo.fnc       # <- this access used to fail
 
-    @mark.xfail()
     def test26_partial_templates(self):
         """Deduction of types with partial templates"""
 
@@ -809,7 +804,7 @@ class TestTEMPLATES:
         assert ns.FS('i', ns.ST.I32,    ns.FS.EQ,   10)
         assert ns.FS('i', ns.ST.TI.I32, ns.FS.R.EQ, 10)
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
     def test29_function_ptr_as_template_arg(self):
         """Function pointers as template arguments"""
 
@@ -921,7 +916,7 @@ class TestTEMPLATES:
 
         ns.Templated()       # used to crash
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test31_ltlt_in_template_name(self):
         """Verify lookup of template names with << in the name"""
 
@@ -987,7 +982,7 @@ class TestTEMPLATES:
         assert len(cppyy.gbl.gLutData6) == (1<<3)+1
         assert len(cppyy.gbl.gLutData8) == 14<<2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test32_template_of_function_with_templated_args(self):
         """Lookup of templates of function with templated args used to fail"""
 
@@ -1129,7 +1124,6 @@ class TestTEMPLATES:
                         run_n = getattr(cppyy.gbl, 'TNaRun_%d' % n)
                         getattr(run_n, t)
 
-    @mark.xfail(run = False, reason = "This test crashes sporadically")
     def test33_using_template_argument(self):
         """`using` type as template argument"""
 
@@ -1159,7 +1153,7 @@ class TestTEMPLATES:
         assert ns.testptr
         assert cppyy.gbl.std.vector[ns.testptr]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
 
@@ -1256,7 +1250,7 @@ class TestTEMPLATED_TYPEDEFS:
         assert tct['long double', dum, 4] is tct[in_type, dum, 4]
         assert tct['double', dum, 4] is not tct[in_type, dum, 4]
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test04_type_deduction(self):
         """Usage of type reducer"""
 
@@ -1272,7 +1266,7 @@ class TestTEMPLATED_TYPEDEFS:
         three = w.whatis(3)
         assert three == 3
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test05_type_deduction_and_extern(self):
         """Usage of type reducer with extern template"""
 
@@ -1335,7 +1329,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test01_reduce_binary(self):
         """Squash template expressions for binary operations (like in gmpxx)"""
 
@@ -1386,4 +1380,4 @@ class TestTEMPLATED_CALLBACK:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

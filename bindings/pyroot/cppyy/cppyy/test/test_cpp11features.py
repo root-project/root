@@ -263,7 +263,6 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.TestMoving1.s_instance_counter == 0
         assert cppyy.gbl.TestMoving2.s_instance_counter == 0
 
-    @mark.xfail(run=False, condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test08_initializer_list(self):
         """Initializer list construction"""
 
@@ -301,7 +300,7 @@ class TestCPP11FEATURES:
         for l in (['x'], ['x', 'y', 'z']):
             assert ns.foo(l) == std.vector['std::string'](l)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test09_lambda_calls(self):
         """Call (global) lambdas"""
 
@@ -347,7 +346,7 @@ class TestCPP11FEATURES:
         c = cppyy.gbl.std.nullopt
         assert cppyy.gbl.callopt(c)
 
-    @mark.xfail(run = False, reason = "Crashes")
+    @mark.xfail(run=False, reason = "Crashes")
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 
@@ -358,7 +357,7 @@ class TestCPP11FEATURES:
         # following used to fail with compilation error
         t = std.chrono.system_clock.now() + std.chrono.seconds(1)
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test12_stdfunction(self):
         """Use of std::function with arguments in a namespace"""
 
@@ -385,7 +384,6 @@ class TestCPP11FEATURES:
         f = FunctionNS.FNCreateTestStructFunc()
         assert f(t) == 27
 
-    @mark.xfail(condition=WINDOWS_BITS == 64, reason="Fails on Windows 64 bit")
     def test13_stdhash(self):
         """Use of std::hash"""
 
@@ -414,7 +412,7 @@ class TestCPP11FEATURES:
             assert hash(sw)  == 17
             assert hash(sw)  == 17
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test14_shared_ptr_passing(self):
         """Ability to pass normal pointers through shared_ptr by value"""
 
@@ -440,7 +438,7 @@ class TestCPP11FEATURES:
             gc.collect()
             assert TestSmartPtr.s_counter == 0
 
-    @mark.xfail(condition=IS_WINDOWS | IS_MAC_ARM, reason='ValueError: Could not find "make_unique<int>"')
+    @mark.xfail(strict=True, condition=IS_WINDOWS | IS_MAC_ARM, reason='ValueError: Could not find "make_unique<int>"')
     def test15_unique_ptr_template_deduction(self):
         """Argument type deduction with std::unique_ptr"""
 
@@ -460,7 +458,7 @@ class TestCPP11FEATURES:
         with raises(ValueError):  # not an RValue
             cppyy.gbl.UniqueTempl.returnptr[int](uptr_in)
 
-    @mark.xfail(condition=IS_WINDOWS | IS_MAC_ARM, reason='TypeError: Could not find "make_unique<int>"')
+    @mark.xfail(strict=True, condition=IS_WINDOWS | IS_MAC_ARM, reason='TypeError: Could not find "make_unique<int>"')
     def test16_unique_ptr_moves(self):
         """std::unique_ptr requires moves"""
 
@@ -547,7 +545,7 @@ class TestCPP11FEATURES:
         p2 = c.pget()
         assert p1 is p2
 
-    @mark.xfail()
+    @mark.xfail(strict=True)
     def test19_smartptr_from_callback(self):
         """Return a smart pointer from a callback"""
 
