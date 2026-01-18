@@ -589,3 +589,74 @@ TEST(OptParse, MultipleFlagsAsIntError)
    EXPECT_TRUE(opts.GetErrors().empty());
    EXPECT_THROW(opts.GetFlagValuesAs<int>("a"), std::invalid_argument);
 }
+
+TEST(OptParse, PrefixShort)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"-D"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+   opts.AddFlag({"-b"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+
+   const char *args[] = {"somename", "-b", "-Dname"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_TRUE(opts.GetSwitch("b"));
+   EXPECT_EQ(opts.GetFlagValue("D"), "name");
+}
+
+TEST(OptParse, PrefixLong)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"--D"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "--Dname", "--DotherName"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetFlagValues("D"), std::vector<std::string_view>({"name", "otherName"}));
+}
+
+TEST(OptParse, PrefixAmbiguous)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"-f"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+   EXPECT_THROW(opts.AddFlag({"-foo"}, ROOT::RCmdLineOpts::EFlagType::kSwitch), std::invalid_argument);
+}
+
+TEST(OptParse, PrefixAmbiguous2)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"-f22"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+   EXPECT_THROW(opts.AddFlag({"-f2"}, ROOT::RCmdLineOpts::EFlagType::kWithArg), std::invalid_argument);
+}
+
+TEST(OptParse, PrefixNonAmbiguous)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"-f1"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+   opts.AddFlag({"-f2"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+}
+
+TEST(OptParse, PrefixMultiple)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"--D"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "--D", "name", "--D=name", "--Dname"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetFlagValues("D"), std::vector<std::string_view>({"name", "name", "name"}));
+}
+
+TEST(OptParse, PrefixWithEqual)
+{
+   ROOT::RCmdLineOpts opts({ROOT::RCmdLineOpts::EFlagTreatment::kPrefix});
+   opts.AddFlag({"--D"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "", ROOT::RCmdLineOpts::kFlagAllowMultiple);
+
+   const char *args[] = {"somename", "--Df=a"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_EQ(opts.GetErrors().size(), 1);
+   EXPECT_TRUE(opts.GetFlagValues("D").empty());
+}

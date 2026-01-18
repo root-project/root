@@ -37,11 +37,19 @@
 /// ~~~
 ///
 /// ## Additional Notes
-/// If all the short flags you pass (those starting with a single `-`) are 1 character long, the parser will accept
-/// grouped flags like "-abc" as equivalent to "-a -b -c". The last flag in the group may also accept an argument, in
-/// which case "-abc foo" will count as "-a -b -c foo" where "foo" is the argument to "-c".
 ///
-/// Multiple repeated flags, like `-vvv`, are supported but must explicitly be marked as such:
+/// ### Flag grouping
+/// By default, if all the short flags you pass (those starting with a single `-`) are 1 character long, the parser will
+/// accept grouped flags like "-abc" as equivalent to "-a -b -c". The last flag in the group may also accept an
+/// argument, in which case "-abc foo" will count as "-a -b -c foo" where "foo" is the argument to "-c". If you want to
+/// disable flag grouping, use:
+///
+/// ~~~{.cpp}
+/// ROOT::RCmdLineOpts opts({ EFlagTreatment::kSimple });
+/// ~~~
+///
+/// ### Repeated flags
+/// Multiple repeated flags, like `-vvv`, are supported but must explicitly be marked as such on a per-flag basis:
 /// ~~~{.cpp}
 /// opts.AddFlag({"-v"}, RCmdLineOpts::EFlagType::kSwitch, "", RCmdLineOpts::kFlagAllowMultiple);
 /// ~~~
@@ -49,8 +57,21 @@
 /// appeared; for flags with arguments `GetFlagValues` and `GetFlagValuesAs<T>` can be used to access the values as
 /// vectors.
 ///
+/// ### Positional argument separator
 /// The string "--" is treated as the positional argument separator: all strings after it will be treated as positional
 /// arguments even if they start with "-".
+///
+/// ## Prefix flags (aka no space between flag and argument)
+/// If you need your flags to support the syntax "-fXYZ" where "-f" is your flag and "XYZ" its argument, you can enable
+/// the "prefix mode" by constructing the `opts` object with:
+///
+/// ~~~{.cpp}
+/// ROOT::RCmdLineOpts opts({ EFlagTreatment::kPrefix });
+/// ~~~
+///
+/// (see EFlagTreatment for more details). This will **disable** flag grouping, but allows the parser to interpret
+/// flags and arguments that are not separated by spaces. Keep in mind that this is a global setting and affects both
+/// short and long flags.
 ///
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-10-09
@@ -59,6 +80,7 @@
 #define ROOT_OptParse
 
 #include <algorithm>
+#include <cassert>
 #include <charconv>
 #include <cstring>
 #include <cstdint>
@@ -75,6 +97,26 @@ namespace ROOT {
 
 class RCmdLineOpts {
 public:
+   enum class EFlagTreatment {
+      /// Will result to kGrouped if you don't define any short flag longer than 1 character, otherwise kSimple.
+      kDefault,
+      /// `-abc` will always be treated as the single flag "-abc"
+      kSimple,
+      /// `-abc` will be treated as "-a -b -c". This is only valid for short flags.
+      /// With this setting you cannot define short flags that are more than 1 character long.
+      kGrouped,
+      /// `-abc` may be treated as "-a bc", "-ab c" or "-abc" (depending on which flag is actually defined).
+      /// Likewise, `--abc` may be treated in the same way.
+      /// To avoid ambiguities, with this setting you cannot define flags where one is the prefix of another
+      /// (like "-a" and "-ab").
+      kPrefix,
+   };
+
+   struct RSettings {
+      /// Affects how flags are parsed (\see EFlagTreatment).
+      EFlagTreatment fFlagTreatment;
+   };
+
    enum class EFlagType {
       kSwitch,
       kWithArg
@@ -93,12 +135,9 @@ public:
    };
 
 private:
+   RSettings fSettings;
    std::vector<RFlag> fFlags;
    std::vector<std::string> fArgs;
-   // If true, many short flags may be grouped: "-abc" == "-a -b -c".
-   // This is automatically true if all short flags given are 1 character long, otherwise it's false.
-   // (a short flag is a flag with a single `-` as its prefix).
-   bool fAllowFlagGrouping = true;
 
    struct RExpectedFlag {
       EFlagType fFlagType = EFlagType::kSwitch;
@@ -116,14 +155,27 @@ private:
 
    const RExpectedFlag *GetExpectedFlag(std::string_view name) const
    {
+      const auto StartsWith = [](std::string_view string, std::string_view prefix) {
+         return string.size() >= prefix.size() && string.substr(0, prefix.size()) == prefix;
+      };
+
       for (const auto &flag : fExpectedFlags) {
-         if (flag.fName == name)
+         if (fSettings.fFlagTreatment == EFlagTreatment::kPrefix) {
+            if (StartsWith(name, flag.fName)) {
+               // NOTE: we can't have ambiguities here because we make sure that no flags share a common prefix in
+               // AddFlag().
+               return &flag;
+            }
+         } else if (flag.fName == name) {
             return &flag;
+         }
       }
       return nullptr;
    }
 
 public:
+   explicit RCmdLineOpts(RSettings settings = {EFlagTreatment::kDefault}) : fSettings(settings) {}
+
    /// Returns all parsing errors
    const std::vector<std::string> &GetErrors() const { return fErrors; }
    /// Retrieves all positional arguments
@@ -155,6 +207,10 @@ public:
    void AddFlag(std::initializer_list<std::string_view> aliases, EFlagType type = EFlagType::kSwitch,
                 std::string_view help = "", std::uint32_t flagOpts = 0)
    {
+      const auto ShareCommonPrefix = [](std::string_view a, std::string_view b) {
+         return std::equal(a.begin(), a.begin() + std::min(a.size(), b.size()), b.begin());
+      };
+
       int aliasIdx = -1;
       for (auto f : aliases) {
          auto prefixLen = f.find_first_not_of('-');
@@ -164,7 +220,28 @@ public:
          if (f.size() == prefixLen)
             throw std::invalid_argument("Flag name cannot be empty");
 
-         fAllowFlagGrouping = fAllowFlagGrouping && (prefixLen > 1 || f.size() == 2);
+         if (fSettings.fFlagTreatment == EFlagTreatment::kPrefix) {
+            for (const auto &expFlag : fExpectedFlags) {
+               if (ShareCommonPrefix(expFlag.fName, f.substr(prefixLen))) {
+                  throw std::invalid_argument(
+                     "Flags `" + expFlag.AsStr() + "` and `" + std::string(f) +
+                     "` have a common prefix. This causes ambiguity with your selected setting 'FlagTreatment == "
+                     "EFlagTreatment::kPrefix' and is therefore not allowed.");
+               }
+            }
+         } else {
+            bool disallowsGrouping = prefixLen == 1 && f.size() > 2;
+            if (disallowsGrouping) {
+               if (fSettings.fFlagTreatment == EFlagTreatment::kDefault) {
+                  fSettings.fFlagTreatment = EFlagTreatment::kSimple;
+               } else if (fSettings.fFlagTreatment == EFlagTreatment::kGrouped) {
+                  throw std::invalid_argument(
+                     std::string("Flags starting with a single dash must be 1 character long when `FlagTreatment == "
+                                 "EFlagTreatment::kGrouped'! Cannot accept given flag `") +
+                     std::string(f) + "`");
+               }
+            }
+         }
 
          RExpectedFlag expected;
          expected.fFlagType = type;
@@ -218,8 +295,7 @@ public:
       if (!exp)
          throw std::invalid_argument(std::string("Flag `") + std::string(name) + "` is not expected");
       if (exp->fFlagType != EFlagType::kWithArg)
-         throw std::invalid_argument(std::string("Flag `") + std::string(name) +
-                                     "` is a switch, use GetSwitch()");
+         throw std::invalid_argument(std::string("Flag `") + std::string(name) + "` is a switch, use GetSwitch()");
 
       std::string_view lookedUpName = name;
       if (exp->fAlias >= 0)
@@ -312,6 +388,11 @@ public:
    {
       bool forcePositional = false;
 
+      // If flag treatment is still Default by now it means we can safely group short flags (otherwise we'd have
+      // already changed it to Simple).
+      if (fSettings.fFlagTreatment == EFlagTreatment::kDefault)
+         fSettings.fFlagTreatment = EFlagTreatment::kGrouped;
+
       // Contains one or more flags coming from one of the arguments (e.g. "-abc" may be split
       // into flags "a", "b", and "c", which will be stored in `argStr`).
       std::vector<std::string_view> argStr;
@@ -336,6 +417,7 @@ public:
             // refers only to the last one).
             argStr.clear();
             std::string_view nxtArgStr;
+            // If this is false `nxtArgStr` *must* refer to the next arg, otherwise it might or might not be.
             bool nxtArgIsTentative = true;
             if (arg[0] == '-') {
                // long flag
@@ -356,7 +438,7 @@ public:
                // short flag.
                // If flag grouping is active, all flags except the last one will have an implicitly empty argument.
                auto argLen = strlen(arg);
-               while (fAllowFlagGrouping && argLen > 1) {
+               while (fSettings.fFlagTreatment == EFlagTreatment::kGrouped && argLen > 1) {
                   argStr.push_back(std::string_view{arg, 1});
                   ++arg, --argLen;
                }
@@ -370,10 +452,31 @@ public:
 
             for (auto j = 0u; j < argStr.size(); ++j) {
                std::string_view argS = argStr[j];
+
                const auto *exp = GetExpectedFlag(argS);
                if (!exp) {
                   fErrors.push_back(std::string("Unknown flag: ") + argOrig);
                   break;
+               }
+
+               // In Prefix mode, check if the returned expected flag is shorter than `argS`. This can mean two things:
+               // - if `nxtArgIsTentative == false` then this flag was followed by an equal sign, and in that case
+               //   the intention is interpreted as "I want this flag's argument to be whatever follows the equal sign",
+               //   which means we treat this as an unknown flag;
+               // - otherwise, we use the rest of `argS` as the argument to the flag.
+               // More concretely: if the user added flag "-D" and argS is "-Dfoo=bar", we parse it as
+               // {flag: "-Dfoo", arg: "bar"}, rather than {flag: "-D", arg: "foo=bar"}.
+               if (fSettings.fFlagTreatment == EFlagTreatment::kPrefix && argS.size() > exp->fName.size()) {
+                  if (nxtArgIsTentative) {
+                     i -= !nxtArgStr.empty(); // if we had already picked a candidate next arg, undo that.
+                     nxtArgStr = argS.substr(exp->fName.size());
+                     nxtArgIsTentative = false;
+                  } else {
+                     fErrors.push_back(std::string("Unknown flag: ") + argOrig);
+                     break;
+                  }
+               } else {
+                  assert(exp->fName.size() == argS.size());
                }
 
                std::string_view nxtArg = (j == argStr.size() - 1) ? nxtArgStr : "";
@@ -383,7 +486,7 @@ public:
                // If the flag is an alias (e.g. long version of a short one), save its name as the aliased one, so we
                // can fetch the value later by using any of the aliases.
                if (exp->fAlias < 0)
-                  flag.fName = argS;
+                  flag.fName = exp->fName;
                else
                   flag.fName = fExpectedFlags[exp->fAlias].fName;
 
