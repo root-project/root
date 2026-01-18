@@ -32,3 +32,18 @@ struct GH_14425_Required {
         self.assertEqual(ROOT.GH_14425_Default().fMember, 1)
         self.assertEqual(ROOT.GH_14425_Default(ROOT.GH_14425(2)).fMember, 2)
         self.assertEqual(ROOT.GH_14425_Required(ROOT.GH_14425(3)).fMember, 3)
+
+class TClingTest(unittest.TestCase):
+    """Tests related to TCling and federation of classes usage from Python"""
+
+    def test_GH_20925(self):
+      """Do not assert when casting huge enum uint64_t into int64_t"""
+   
+      ROOT.gInterpreter.Declare(r"""
+struct Foo
+{
+enum E: unsigned long long { BIG = ((unsigned long long)1)<<63};
+};
+""")
+      f = ROOT.Foo()
+      self.assertEqual(f.BIG, -9223372036854775808)
