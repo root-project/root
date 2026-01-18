@@ -13,7 +13,7 @@ class TestDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-    @mark.skip()
+    @mark.xfail(strict=True)
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
@@ -1220,7 +1220,7 @@ class TestDATATYPES:
                 for k in range(7):
                     assert int(ns.vvv[i,j,k]) == i+j+k
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="segmentation violation")
     def test25_byte_arrays(self):
         """Usage of unsigned char* as byte array and std::byte*"""
 
@@ -1995,8 +1995,8 @@ class TestDATATYPES:
         assert b.name     == "aap"
         assert b.buf_type == ns.SHAPE
 
-    @mark.skip()
-    def test40_more_aggregates(self):
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
+    def test40_more_aggregates(self, capfd):
         """More aggregate testings (used to fail/report errors)"""
 
         import cppyy
@@ -2032,8 +2032,13 @@ class TestDATATYPES:
         r2 = ns.make_R2()
         assert r2.s.x == 1
 
+        # Fail if there was an interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
+
     @mark.xfail(strict=True)
-    def test41_complex_numpy_arrays(self):
+    def test41_complex_numpy_arrays(self, capfd):
         """Usage of complex numpy arrays"""
 
         import cppyy
@@ -2079,6 +2084,12 @@ class TestDATATYPES:
 
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
+
+        # Fail if there was an interpreter error about calling an
+        # implicitly-deleted copy constructor
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "call to implicitly-deleted copy constructor" not in output
 
     @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="Argument conversion error on macOS and Windows")
     def test42_mixed_complex_arithmetic(self):
@@ -2419,4 +2430,4 @@ class TestDATATYPES:
             assert i.name == "NAME"
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

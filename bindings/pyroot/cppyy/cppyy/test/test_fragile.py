@@ -561,8 +561,7 @@ class TestFRAGILE:
         with raises(SyntaxError):
             cppyy.cppexec("doesnotexist");
 
-    # This test is very verbose since it sets gDebugo to true
-    @mark.skip()
+    @mark.skip(reason="This test is very verbose since it sets gDebug to True")
     def test23_set_debug(self):
         """Setting of global gDebug variable"""
 
@@ -625,7 +624,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="Fatal Python error: Aborted")
     def test26_macro(self):
         """Test access to C++ pre-processor macro's"""
 
@@ -679,8 +678,8 @@ class TestFRAGILE:
         cppyy.cppdef("struct VectorDatamember { std::vector<unsigned> v; };")
         cppyy.gbl.VectorDatamember     # used to crash on Mac arm64
 
-    @mark.skip()
-    def test30_two_nested_ambiguity(self):
+    @mark.xfail(run=False, reason="Fatal Python error: Aborted")
+    def test30_two_nested_ambiguity(self, capfd):
         """Nested class ambiguity in older Clangs"""
 
         import cppyy
@@ -708,6 +707,11 @@ class TestFRAGILE:
 
         p = Test.Family1.Parent()
         p.children                          # used to crash
+
+        # Fail if there was an interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "error:" not in output
 
     @mark.xfail(strict=True)
     def test31_template_with_class_enum(self):
@@ -886,4 +890,4 @@ class TestSTDNOTINGLOBAL:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

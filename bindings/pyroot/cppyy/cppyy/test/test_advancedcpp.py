@@ -875,7 +875,7 @@ class TestADVANCEDCPP:
         #assert type(ns.A.Val(1)) == int
         #assert type(ns.B.Val(1)) == float
 
-    @mark.skip()
+    @mark.xfail(strict=True)
     def test28_extern_C_in_namespace(self):
         """Access to extern "C" declared functions in namespaces"""
 

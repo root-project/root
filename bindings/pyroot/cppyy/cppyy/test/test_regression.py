@@ -786,8 +786,8 @@ class TestREGRESSION:
         null = cppyy.gbl.exception_as_shared_ptr.get_shared_null()
         assert not null
 
-    @mark.skip()
-    def test29_callback_pointer_values(self):
+    @mark.xfail(strict=True)
+    def test29_callback_pointer_values(self, capfd):
         """Make sure pointer comparisons in callbacks work as expected"""
 
         import cppyy
@@ -856,6 +856,11 @@ class TestREGRESSION:
 
         g.triggerChange()
         assert g.success
+
+        # Fail if there was a specific interpreter error
+        captured = capfd.readouterr()
+        output = (captured.out + captured.err).lower()
+        assert "taking address of non-addressable standard library function" not in output
 
     @mark.xfail(strict=True, condition=IS_MAC or IS_WINDOWS, reason="int64_t and uint64_t not automatically materialized on macOS and Windows")
     def test30_uint64_t(self):
@@ -1387,4 +1392,4 @@ class TestREGRESSION:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-sv', '-ra', __file__]))
+    exit(pytest.main(args=['-v', '-ra', __file__]))

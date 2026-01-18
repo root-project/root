@@ -731,7 +731,6 @@ class TestCROSSINHERITANCE:
             def abstract1(self):
                 return ns.Result(1)
 
-    @mark.skip
     def test20_basic_multiple_inheritance(self):
         """Basic multiple inheritance"""
 
@@ -810,7 +809,6 @@ class TestCROSSINHERITANCE:
         assert a.m_2 == 42
         assert a.m_3 == 67
 
-    @mark.skip()
     def test21_multiple_inheritance_with_constructors(self):
         """Multiple inheritance with constructors"""
 
@@ -898,7 +896,6 @@ class TestCROSSINHERITANCE:
         assert a.m_2 ==  88
         assert a.m_3 == -11
 
-    @mark.skip()
     def test22_multiple_inheritance_with_defaults(self):
         """Multiple inheritance with defaults"""
 
@@ -1018,7 +1015,7 @@ class TestCROSSINHERITANCE:
         assert a.return_const().m_value == "abcdef"
         assert ns.callit(a).m_value     == "abcdef"
 
-    @mark.skip()
+    @mark.xfail(strict=True)
     def test24_non_copyable(self):
         """Inheriting from a non-copyable base class"""
 
@@ -1099,7 +1096,6 @@ class TestCROSSINHERITANCE:
 
         assert DerivedNoCopyNoMove().callme() == "Hello, World!"
 
-    @mark.skip()
     def test25_default_ctor_and_multiple_inheritance(self):
         """Regression test: default ctor did not get added"""
 
@@ -1140,7 +1136,6 @@ class TestCROSSINHERITANCE:
         d = DerivedMulti()
         assert d
 
-    @mark.skip()
     def test26_no_default_ctor(self):
         """Make sure no default ctor is created if not viable"""
 
@@ -1270,7 +1265,6 @@ class TestCROSSINHERITANCE:
             assert inst.fun1() == val1
             assert inst.fun2() == inst.fun1()
 
-    @mark.skip()
     def test29_cross_deep_multi(self):
         """Deep multi-inheritance hierarchy"""
 
@@ -1836,4 +1830,4 @@ class TestCROSSINHERITANCE:
                 return 1
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-ra', __file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

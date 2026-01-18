@@ -492,7 +492,7 @@ class TestSTLVECTOR:
         ll4[1] = 'a'
         raises(TypeError, a.vector_pair, ll4)
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="Fatal Python error: Segmentation fault")
     def test12_vector_lifeline(self):
         """Check lifeline setting on vectors of objects"""
 

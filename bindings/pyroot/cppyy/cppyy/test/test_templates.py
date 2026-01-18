@@ -804,7 +804,7 @@ class TestTEMPLATES:
         assert ns.FS('i', ns.ST.I32,    ns.FS.EQ,   10)
         assert ns.FS('i', ns.ST.TI.I32, ns.FS.R.EQ, 10)
 
-    @mark.skip()
+    @mark.xfail(run=False, reason="error code: Subprocess aborted")
     def test29_function_ptr_as_template_arg(self):
         """Function pointers as template arguments"""
 
