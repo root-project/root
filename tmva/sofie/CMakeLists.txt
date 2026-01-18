@@ -73,6 +73,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Clip.hxx
    TMVA/ROperator_Gelu.hxx
    TMVA/ROperator_HardSigmoid.hxx
+   TMVA/ROperator_HardSwish.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 
