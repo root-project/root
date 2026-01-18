@@ -25,7 +25,7 @@ interoperability with Python. Thanks to its dynamic Python bindings, leveraging 
 ROOT offers efficient, on-demand C++/Python interoperability in a uniform cross-language 
 execution environment.
 
-ROOT fully embraces open-source, it's made with passion by its community,
+ROOT fully embraces open-source; it is made with passion by its community.
 for the benefit of its community.
 
 [![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
