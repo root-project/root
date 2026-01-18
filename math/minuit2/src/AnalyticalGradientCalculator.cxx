@@ -95,7 +95,7 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
          if (fTransformation.Parameters()[jext].HasLimits()) {
             dxdj = fTransformation.DInt2Ext(j, par.Vec()(j));
          }
-         hmat(i, j) = dxdi * extHessian[i*next+ j] * dxdj;
+         hmat(i, j) = dxdi * extHessian[iext*next+ jext] * dxdj;
       }
    }
    return true;
