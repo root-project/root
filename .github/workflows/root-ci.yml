@@ -374,6 +374,8 @@ jobs:
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2604
+            is_special: true
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON"]
           # Special builds
