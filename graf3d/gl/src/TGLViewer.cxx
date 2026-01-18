@@ -811,7 +811,7 @@ Bool_t TGLViewer::SavePicture(const TString &fileName)
    }
    else
    {
-      if (GLEW_EXT_framebuffer_object && gEnv->GetValue("OpenGL.SavePicturesViaFBO", 1))
+      if (GLAD_GL_EXT_framebuffer_object && gEnv->GetValue("OpenGL.SavePicturesViaFBO", 1))
       {
          return SavePictureUsingFBO(fileName, fViewport.Width(), fViewport.Height(), kFALSE);
       }

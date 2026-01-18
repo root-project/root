@@ -4,7 +4,6 @@ builtin_freetype=ON
 builtin_ftgl=ON
 builtin_gif=ON
 builtin_gl2ps=ON
-builtin_glew=ON
 builtin_gtest=ON
 builtin_jpeg=ON
 builtin_lz4=ON
