@@ -363,6 +363,8 @@ INSTANTIATE_TEST_SUITE_P(RooRealIntegral, LevelTest, testing::Values(1, 2, 3),
 // clones because RooFit considers them identical. Covers GitHub issue #12646.
 TEST(RooRealIntegral, RooLinearVarModelIntegratedOverVariableClones)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
    ws.factory("LinearVar::x2(x[0, 1], 1, 0)");
    ws.factory("LinearVar::y2(y[0, 1], 1, 0)");
@@ -392,6 +394,8 @@ TEST(RooRealIntegral, RooLinearVarModelIntegratedOverVariableClones)
 // Covers GitHub issue #14320.
 TEST(RooRealIntegral, GaussianWithSigmaDependingOnX)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
    ws.factory("x[100., 1000.]");
    ws.factory("expr::res('0.07 * x + 2.0',x)");

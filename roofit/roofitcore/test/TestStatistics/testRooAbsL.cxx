@@ -35,32 +35,13 @@
 
 using RooFit::TestStatistics::LikelihoodWrapper;
 
-class Environment : public testing::Environment {
-public:
-   void SetUp() override { _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR); }
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
-
-// Previously, we just called AddGlobalTestEnvironment in global namespace, but this caused either a warning about an
-// unused declared variable (the return value of the call) or a parsing problem that the compiler can't handle if you
-// don't store the return value at all. The solution is to just define this manual main function. The default gtest
-// main function does InitGoogleTest and RUN_ALL_TESTS, we add the environment call in the middle.
-int main(int argc, char **argv)
-{
-   testing::InitGoogleTest(&argc, argv);
-   testing::AddGlobalTestEnvironment(new Environment);
-   return RUN_ALL_TESTS();
-}
-
 class RooAbsLTest : public ::testing::Test {
 protected:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(seed);
       clean_flags = std::make_unique<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
+      changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    std::size_t seed = 23;
@@ -71,6 +52,7 @@ protected:
    std::unique_ptr<RooAbsData> data;
    std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood;
    std::shared_ptr<RooFit::TestStatistics::WrapperCalculationCleanFlags> clean_flags;
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> changeMsgLvl;
 };
 
 class BinnedDatasetTest : public RooAbsLTest {

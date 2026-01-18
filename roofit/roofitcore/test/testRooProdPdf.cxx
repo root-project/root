@@ -231,7 +231,7 @@ TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
 // RooProdPdf is not considered as a constraint. Covers JIRA issue ROOT-7604.
 TEST(RooProdPdf, RooProdPdfWithExtendedTerm)
 {
-   RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Minimization, false);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
    ws.factory("Gaussian::L_constraint(L_nom[10],L[10,0,20],0.2)");
