@@ -1,0 +1,5 @@
+mysql=OFF
+pyroot=OFF
+pythia8=OFF
+tmva-cpu=OFF
+unuran=OFF
