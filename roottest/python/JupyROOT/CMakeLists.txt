@@ -15,7 +15,8 @@ set(NOTEBOOKS importROOT.ipynb
               simpleCppMagic.ipynb
               thread_local.ipynb
               ROOT_kernel.ipynb
-              tpython.ipynb)
+              tpython.ipynb
+              tcolor_definedcolors.ipynb)
 
 # Test all modules with doctest. All new tests will be automatically picked up
 file(GLOB pyfiles ${MODULES_LOCATION}/*.py)
