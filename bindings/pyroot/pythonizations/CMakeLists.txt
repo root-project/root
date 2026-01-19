@@ -149,16 +149,32 @@ set(cpp_sources
 set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers_dir inc)
 
-# Add custom rules to copy the Python sources into the build directory
+# Ensure output directory exists
+file(MAKE_DIRECTORY ${localruntimedir}/ROOT)
+
+set(root_copy_commands)
+set(py_sources_in_source_dir)
+set(py_sources_in_localruntimedir)
+
 foreach(py_source ${py_sources})
-  add_custom_command(
-      OUTPUT ${localruntimedir}/${py_source}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}
-                                       ${localruntimedir}/${py_source}
-      DEPENDS python/${py_source}
-      COMMENT "Copying ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}")
-  list(APPEND py_sources_in_localruntimedir ${localruntimedir}/${py_source})
+  list(APPEND root_copy_commands
+       COMMAND ${CMAKE_COMMAND} -E copy_if_different
+               ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}
+               ${localruntimedir}/${py_source})
+
+  list(APPEND py_sources_in_source_dir
+       ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source})
+
+  list(APPEND py_sources_in_localruntimedir
+       ${localruntimedir}/${py_source})
 endforeach()
+
+add_custom_command(
+  OUTPUT ${py_sources_in_localruntimedir}
+  ${root_copy_commands}
+  DEPENDS ${py_sources_in_source_dir}
+  COMMENT "Copying ROOT Pythonization Python sources"
+)
 
 # A custom target that depends on the Python sources being present in the build
 # directory. This will be used as a dependency of the pythonization libraries,
@@ -198,13 +214,25 @@ endif()
 
 
 # Compile .py files
-foreach(py_source ${py_sources})
-  add_custom_command(TARGET ${libname}
-                      POST_BUILD
-                      COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
-                      COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
-                      COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
-endforeach()
+
+# Stamp file so CMake knows it doesn't need to re-compile. We can't set the
+# actual bytecode files as the OUTPUT of the custom command, because their
+# names are CPython implementation dependent and therefore not reliable.
+set(root_bytecode_stamp ${localruntimedir}/ROOT/bytecode.stamp)
+
+# It's 10x faster to compile all in one go than in single invocations
+add_custom_command(
+  OUTPUT ${root_bytecode_stamp}
+  COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_localruntimedir}
+  COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_localruntimedir}
+  COMMAND ${CMAKE_COMMAND} -E touch ${root_bytecode_stamp}
+  DEPENDS ${py_sources_in_localruntimedir}
+  COMMENT "Compiling ROOT Pythonization Python sources"
+)
+
+add_custom_target(ROOTPythonizationsPyBytecode ALL DEPENDS ${root_bytecode_stamp})
+add_dependencies(ROOTPythonizationsPyBytecode ROOTPythonizationsPySources)
+
 
 # Create meta-target PyROOT3 (INTERFACE library)
 # Export of targets are not supported for custom targets(add_custom_targets())
@@ -244,6 +272,7 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
 install(DIRECTORY ${localruntimedir}/ROOT
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries
+        PATTERN *.stamp EXCLUDE
         PATTERN *.so EXCLUDE)
 
 # Install headers required by pythonizations
