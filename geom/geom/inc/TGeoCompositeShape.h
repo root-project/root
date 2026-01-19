@@ -66,6 +66,7 @@ public:
    Bool_t IsComposite() const override { return kTRUE; }
    Bool_t IsConvex() const final { return kFALSE; }
    Bool_t IsCylType() const override { return kFALSE; }
+   void InvalidateMeshCaches();
    void MakeNode(const char *expression);
    virtual Bool_t PaintComposite(Option_t *option = "") const;
    void RegisterYourself();

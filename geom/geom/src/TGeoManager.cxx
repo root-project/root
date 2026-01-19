@@ -291,7 +291,6 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = nullptr;
 
-
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock = kFALSE;
 Bool_t TGeoManager::fgLockNavigators = kFALSE;
@@ -3651,6 +3650,7 @@ void TGeoManager::SetNsegments(Int_t nseg)
       fNsegments = nseg;
    if (fPainter)
       fPainter->SetNsegments(nseg);
+   InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3659,6 +3659,19 @@ void TGeoManager::SetNsegments(Int_t nseg)
 Int_t TGeoManager::GetNsegments() const
 {
    return fNsegments;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caches built by composite shapes
+
+void TGeoManager::InvalidateMeshCaches()
+{
+   TIter next_shape(fShapes);
+   TGeoShape *shape;
+   while ((shape = (TGeoShape *)next_shape())) {
+      if (shape->IsComposite())
+         ((TGeoCompositeShape *)shape)->InvalidateMeshCaches();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -224,6 +224,7 @@ public:
    Double_t GetVisDensity() const { return fVisDensity; }
    Int_t GetVisLevel() const;
    Int_t GetVisOption() const;
+   void InvalidateMeshCaches();
    Bool_t IsInPhiRange() const;
    Bool_t IsDrawingExtra() const { return fDrawExtra; }
    Bool_t IsNodeSelectable() const { return fIsNodeSelectable; }
