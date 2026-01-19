@@ -235,7 +235,7 @@ void TGeoNode::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
    }
    geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, &timer, kTRUE);
    timer.Stop();
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

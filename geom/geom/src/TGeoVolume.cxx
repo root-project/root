@@ -715,7 +715,7 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
       ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
 
    timer.Stop();
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

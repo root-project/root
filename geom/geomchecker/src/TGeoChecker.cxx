@@ -1449,7 +1449,6 @@ void TGeoChecker::BuildMeshPointsCache(const std::vector<TGeoOverlapCandidate> &
          return;
       if (fMeshPointsCache.find(shape) != fMeshPointsCache.end())
          return;
-
       MeshPointsEntry entry;
 
       // IMPORTANT: meshN is the *only* correct size for SetPoints() buffer.
