@@ -39,7 +39,19 @@ class RNTupleWriteOptions;
 
 namespace Experimental {
 class RFile;
-}
+
+/// Creates an RNTupleWriter that writes into the given `file`, appending to it. The RNTuple is written under the
+/// path `ntuplePath`.
+/// `ntuplePath` may have the form `"path/to/ntuple"`, in which case the ntuple's name will be `"ntuple"` and it will
+/// be stored under the given `ntuplePath` in the RFile.
+/// Throws an exception if the model is null.
+/// NOTE: this is a temporary, experimental API that will be replaced by an overload of RNTupleWriter::Append in the
+/// future.
+std::unique_ptr<RNTupleWriter>
+RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
+                     ROOT::Experimental::RFile &file,
+                     const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+} // namespace Experimental
 
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
@@ -106,6 +118,9 @@ class RNTupleWriter {
    friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
+   friend std::unique_ptr<RNTupleWriter>
+   Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
+                                      ROOT::Experimental::RFile &file, const ROOT::RNTupleWriteOptions &options);
 
 private:
    RNTupleFillContext fFillContext;
@@ -155,12 +170,6 @@ public:
    /// \see Recreate()
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
-                                                const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
-   /// Throws an exception if the model is null.
-   /// `ntuplePath` may have the form `"path/to/ntuple"`, in which case the ntuple's name will be `"ntuple"` and it will
-   /// be stored under the given `ntuplePath` in the RFile.
-   static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
-                                                ROOT::Experimental::RFile &file,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    RNTupleWriter(const RNTupleWriter &) = delete;
