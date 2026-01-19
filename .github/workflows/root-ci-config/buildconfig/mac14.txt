@@ -1,3 +1,4 @@
+ROOT_CTEST_CUSTOM_FLAGS="-E ^tutorial-"
 asimage_tiff=OFF
 builtin_cfitsio=ON
 builtin_cppzmq=ON
