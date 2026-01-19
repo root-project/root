@@ -143,9 +143,8 @@ public:
    void Exec(unsigned int slot, ColumnTypes... values)
    {
       std::vector<double> &vector = _events[slot];
-      for (auto &&val : {static_cast<double>(values)...}) {
-         vector.push_back(val);
-      }
+      std::array<double, sizeof...(ColumnTypes)> valuesArr{static_cast<double>(values)...};
+      vector.insert(vector.end(), valuesArr.begin(), valuesArr.end());
 
       ExecImpl(sizeof...(values), vector);
    }
