@@ -6747,7 +6747,10 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 ////////////////////////////////////////////////////////////////////////////////
 /// Adopt the TMemberStreamer pointer to by p and use it to Stream non basic
 /// member name.
-
+/// Returns false if the member streamer could not be adopted (which happens if this class had its StreamerInfo
+/// compiled already).
+/// This function transfers ownership of the `strm` pointer to the TClass, so it should not be used anymore on the
+/// caller side. In particular, if `AdoptMemberStreamer` returns false `strm` has been deleted and becomes invalid.
 bool TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
    // Too late to add member streamers!

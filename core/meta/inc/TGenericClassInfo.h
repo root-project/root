@@ -120,8 +120,6 @@ namespace ROOT {
       TClass                           *IsA(const void *obj);
 
       void                              AdoptAlternate(ROOT::TClassAlt *alt);
-      // Returns false if the member streamer could not be adopted (this happens if the underlying TClass had its
-      // StreamerInfo compiled already).
       bool                              AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
