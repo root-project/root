@@ -2783,8 +2783,9 @@ Int_t TAuthenticate::SecureRecv(TSocket *sock, Int_t dec, Int_t key, char **str)
    if (len == 0) {
       return len;
    }
-   if (!strncmp(buflen, "-1", 2))
+   if (len < 0 || len > kMAXSECBUF) {
       return nrec;
+   }
 
    // Receive buffer
    if ((nrec = sock->RecvRaw(buftmp, len)) < 0)
@@ -3341,7 +3342,7 @@ Int_t StdCheckSecCtx(const char *user, TRootSecContext *ctx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tool for updating fgAuthInfo 
+/// Tool for updating fgAuthInfo
 /// 'nin' contains list of last input information through (re)reading
 /// of a rootauthrc-alike file. 'nin' info has priority.
 /// 'std' is cleaned from inactive members.
