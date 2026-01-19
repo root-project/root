@@ -79,9 +79,10 @@ public:
 
    /// Compute the linarized index for a single argument.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
-   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$. If the argument is outside all
-   /// bin edges and the flow bins are disabled, the return value is invalid.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fBinEdges.size()\f$. If the argument is outside all bin edges and the flow bins are disabled, the return value
+   /// is invalid.
    ///
    /// \param[in] x the argument
    /// \return the linearized index that may be invalid
@@ -91,7 +92,7 @@ public:
       // Put NaNs into overflow bin.
       bool overflow = !(x < fBinEdges.back());
       if (underflow) {
-         return {fBinEdges.size() - 1, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (overflow) {
          return {fBinEdges.size(), fEnableFlowBins};
       }
@@ -99,24 +100,33 @@ public:
       // TODO (for later): The following can be optimized with binary search...
       for (std::size_t bin = 0; bin < fBinEdges.size() - 2; bin++) {
          if (x < fBinEdges[bin + 1]) {
+            // If the underflow bin is enabled, shift the normal bins by one.
+            if (fEnableFlowBins) {
+               bin += 1;
+            }
             return {bin, true};
          }
       }
       std::size_t bin = fBinEdges.size() - 2;
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
       return {bin, true};
    }
 
    /// Get the linearized index for an RBinIndex.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
-   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fBinEdges.size()\f$.
    ///
    /// \param[in] index the RBinIndex
    /// \return the linearized index that may be invalid
    RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
    {
       if (index.IsUnderflow()) {
-         return {fBinEdges.size() - 1, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (index.IsOverflow()) {
          return {fBinEdges.size(), fEnableFlowBins};
       } else if (index.IsInvalid()) {
@@ -124,7 +134,15 @@ public:
       }
       assert(index.IsNormal());
       std::uint64_t bin = index.GetIndex();
-      return {bin, bin < fBinEdges.size() - 1};
+      if (bin >= fBinEdges.size() - 1) {
+         // Index is out of range and invalid.
+         return {bin, false};
+      }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
+      return {bin, true};
    }
 
    /// Get the range of all normal bins.
