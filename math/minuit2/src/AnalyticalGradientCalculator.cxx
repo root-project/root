@@ -30,12 +30,8 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
    MnAlgebraicVector v(par.Vec().size());
    for (unsigned int i = 0; i < par.Vec().size(); i++) {
       unsigned int ext = fTransformation.ExtOfInt(i);
-      if (fTransformation.Parameter(ext).HasLimits()) {
-         double dd = fTransformation.DInt2Ext(i, par.Vec()(i));
-         v(i) = dd * grad[ext];
-      } else {
-         v(i) = grad[ext];
-      }
+      double dd = fTransformation.DInt2Ext(i, par.Vec()(i));
+      v(i) = dd * grad[ext];
    }
 
    MnPrint print("AnalyticalGradientCalculator");
@@ -86,16 +82,10 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
    // we need now to transform the matrix from external to internal coordinates
    for (unsigned int i = 0; i < n; i++) {
       unsigned int iext = fTransformation.ExtOfInt(i);
-      double dxdi = 1.;
-      if (fTransformation.Parameters()[iext].HasLimits()) {
-         dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-      }
+      double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
       for (unsigned int j = i; j < n; j++) {
-         double dxdj = 1.;
+         double dxdj = fTransformation.DInt2Ext(j, par.Vec()(j));
          unsigned int jext = fTransformation.ExtOfInt(j);
-         if (fTransformation.Parameters()[jext].HasLimits()) {
-            dxdj = fTransformation.DInt2Ext(j, par.Vec()(j));
-         }
          hmat(i, j) = dxdi * extHessian[iext*next+ jext] * dxdj;
       }
    }
@@ -120,12 +110,8 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
       assert(extG2.size() == fTransformation.Parameters().size());
       for (unsigned int i = 0; i < n; i++) {
          const unsigned int iext = fTransformation.ExtOfInt(i);
-         if (fTransformation.Parameters()[iext].HasLimits()) {
-            const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-            g2(i) = dxdi * dxdi * extG2[iext];
-         } else {
-            g2(i) = extG2[iext];
-         }
+         const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
+         g2(i) = dxdi * dxdi * extG2[iext];
       }
       return true;
    }
@@ -154,12 +140,8 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
    for (unsigned int i = 0; i < n; i++) {
       const unsigned int iext = fTransformation.ExtOfInt(i);
       const double diag = extHessian[iext * nExt + iext];
-      if (fTransformation.Parameters()[iext].HasLimits()) {
-         const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-         g2(i) = dxdi * dxdi * diag;
-      } else {
-         g2(i) = diag;
-      }
+      const double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
+      g2(i) = dxdi * dxdi * diag;
    }
    return true;
 }
