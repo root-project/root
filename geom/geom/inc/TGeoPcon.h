@@ -85,7 +85,7 @@ public:
    Double_t GetZ(Int_t ipl) const;
    TGeoShape *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const override { return nullptr; }
    Int_t GetNmeshVertices() const override;
-   Bool_t GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const override { return kFALSE; }
+   Bool_t GetPointsOnSegments(Int_t npoints, Double_t *array) const override;
    void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
    inline Bool_t HasDphi() const { return (TGeoShape::IsSameWithinTolerance(fDphi, 360.)); }
    inline Bool_t HasRmin(Int_t isec) const { return (fRmin[isec] == 0. && fRmin[isec + 1] == 0.); }

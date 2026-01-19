@@ -81,7 +81,6 @@ public:
    void InspectShape() const override;
    Bool_t IsConvex() const override { return !HasRmin(); }
    Bool_t IsCylType() const override { return kTRUE; }
-   TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
    static Double_t SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -169,7 +168,6 @@ public:
    inline Bool_t HasDphi() const { return (fPhi2 - fPhi1) < 360.; }
    void InspectShape() const override;
    Bool_t IsConvex() const final { return !HasRmin() && !HasDphi(); }
-   TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
    static Double_t SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,

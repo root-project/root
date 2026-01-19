@@ -92,7 +92,6 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -754,50 +753,89 @@ TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 
 Bool_t TGeoCone::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints > (npoints / 2) * 2) {
-      Error("GetPointsOnSegments", "Npoints must be even number");
+   if (!array || npoints <= 0)
       return kFALSE;
+
+   const Bool_t hasInner = (fRmin1 > 0.0) || (fRmin2 > 0.0);
+   const Double_t z1 = -fDz;
+   const Double_t z2 = +fDz;
+   const Double_t dzTot = z2 - z1;
+
+   // Degenerate: if dzTot == 0, the "cone" collapses to a disk/ring; this routine
+   // is about generators, so just refuse.
+   if (dzTot == 0.0)
+      return kFALSE;
+
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInner) {
+      outPoints = (npoints + 1) / 2; // outer gets the extra point if odd
+      inPoints = npoints - outPoints;
    }
-   Bool_t hasrmin = (fRmin1 > 0 || fRmin2 > 0) ? kTRUE : kFALSE;
-   Int_t nc = 0;
-   if (hasrmin)
-      nc = (Int_t)TMath::Sqrt(0.5 * npoints);
-   else
-      nc = (Int_t)TMath::Sqrt(1. * npoints);
-   Double_t dphi = TMath::TwoPi() / nc;
-   Double_t phi = 0;
-   Int_t ntop = 0;
-   if (hasrmin)
-      ntop = npoints / 2 - nc * (nc - 1);
-   else
-      ntop = npoints - nc * (nc - 1);
-   Double_t dz = 2 * fDz / (nc - 1);
-   Double_t z = 0;
-   Int_t icrt = 0;
-   Int_t nphi = nc;
-   Double_t rmin = 0.;
-   Double_t rmax = 0.;
-   // loop z sections
-   for (Int_t i = 0; i < nc; i++) {
-      if (i == (nc - 1))
-         nphi = ntop;
-      z = -fDz + i * dz;
-      if (hasrmin)
-         rmin = 0.5 * (fRmin1 + fRmin2) + 0.5 * (fRmin2 - fRmin1) * z / fDz;
-      rmax = 0.5 * (fRmax1 + fRmax2) + 0.5 * (fRmax2 - fRmax1) * z / fDz;
-      // loop points on circle sections
-      for (Int_t j = 0; j < nphi; j++) {
-         phi = j * dphi;
-         if (hasrmin) {
-            array[icrt++] = rmin * TMath::Cos(phi);
-            array[icrt++] = rmin * TMath::Sin(phi);
-            array[icrt++] = z;
+
+   auto fillSurface = [&](Int_t nSurfPoints, Double_t r1, Double_t r2, Int_t &iCrt) -> Bool_t {
+      if (nSurfPoints <= 0)
+         return kTRUE;
+
+      // Choose number of generators ~ sqrt(n), clamped to [1, nSurfPoints]
+      Int_t nGen = (Int_t)TMath::Sqrt((Double_t)nSurfPoints);
+      if (nGen < 1)
+         nGen = 1;
+      if (nGen > nSurfPoints)
+         nGen = nSurfPoints;
+
+      const Double_t dphi = TMath::TwoPi() / (Double_t)nGen;
+
+      // Distribute points across generators as evenly as possible
+      const Int_t q = nSurfPoints / nGen;
+      const Int_t r = nSurfPoints % nGen;
+
+      for (Int_t ig = 0; ig < nGen; ++ig) {
+         const Int_t m = q + (ig < r ? 1 : 0); // points on this generator
+         if (m <= 0)
+            continue;
+
+         const Double_t phi = ig * dphi;
+         const Double_t c = TMath::Cos(phi);
+         const Double_t s = TMath::Sin(phi);
+
+         // Place m points along the generator (avoid exact endpoints to reduce duplicates)
+         // t in (0,1): (j+1)/(m+1)
+         for (Int_t j = 0; j < m; ++j) {
+            if (iCrt >= 3 * npoints)
+               return kFALSE; // overflow guard
+
+            const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1);
+            const Double_t z = z1 + t * dzTot;
+
+            // Linear radius interpolation along z (same formula you used; stable)
+            const Double_t rz = 0.5 * (r1 + r2) + 0.5 * (r2 - r1) * (z / fDz);
+
+            array[iCrt++] = rz * c;
+            array[iCrt++] = rz * s;
+            array[iCrt++] = z;
          }
-         array[icrt++] = rmax * TMath::Cos(phi);
-         array[icrt++] = rmax * TMath::Sin(phi);
-         array[icrt++] = z;
       }
+
+      return kTRUE;
+   };
+
+   Int_t icrt = 0;
+
+   // Outer surface
+   if (!fillSurface(outPoints, fRmax1, fRmax2, icrt))
+      return kFALSE;
+
+   // Inner surface (if hollow)
+   if (hasInner) {
+      if (!fillSurface(inPoints, fRmin1, fRmin2, icrt))
+         return kFALSE;
    }
+
+   // Contract: must fill exactly npoints
+   if (icrt != 3 * npoints)
+      return kFALSE;
+
    return kTRUE;
 }
 
@@ -814,26 +852,6 @@ void TGeoCone::InspectShape() const
    printf("    Rmax2 = %11.5f\n", fRmax2);
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Creates a TBuffer3D describing *this* shape.
-/// Coordinates are in local reference frame.
-
-TBuffer3D *TGeoCone::MakeBuffer3D() const
-{
-   Int_t n = gGeoManager->GetNsegments();
-   Int_t nbPnts = 4 * n;
-   Int_t nbSegs = 8 * n;
-   Int_t nbPols = 4 * n;
-   TBuffer3D *buff =
-      new TBuffer3D(TBuffer3DTypes::kGeneric, nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols);
-
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
-   }
-   return buff;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1252,7 +1270,6 @@ void TGeoCone::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
    for (Int_t i = 0; i < vecsize; i++)
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2218,27 +2235,6 @@ void TGeoConeSeg::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// Creates a TBuffer3D describing *this* shape.
-/// Coordinates are in local reference frame.
-
-TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
-{
-   Int_t n = gGeoManager->GetNsegments() + 1;
-   Int_t nbPnts = 4 * n;
-   Int_t nbSegs = 2 * nbPnts;
-   Int_t nbPols = nbPnts - 2;
-   TBuffer3D *buff =
-      new TBuffer3D(TBuffer3DTypes::kGeneric, nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols);
-
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
-   }
-
-   return buff;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill TBuffer3D structure for segments and polygons.
 
@@ -2568,41 +2564,104 @@ const TBuffer3D &TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame) 
 
 Bool_t TGeoConeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints > (npoints / 2) * 2) {
-      Error("GetPointsOnSegments", "Npoints must be even number");
+   if (!array || npoints <= 0)
       return kFALSE;
+
+   // Basic geometric sanity
+   if (fDz <= 0.0)
+      return kFALSE;
+
+   // Phi span (in radians), normalized to a positive value
+   const Double_t phi1 = fPhi1 * TMath::DegToRad();
+   const Double_t phi2 = fPhi2 * TMath::DegToRad();
+   Double_t dphiSpan = phi2 - phi1;
+
+   // ROOT conesegs typically have phi2 > phi1, but be robust
+   if (dphiSpan <= 0.0) {
+      // try to wrap once
+      dphiSpan += TMath::TwoPi();
+      if (dphiSpan <= 0.0)
+         return kFALSE;
    }
-   Int_t nc = (Int_t)TMath::Sqrt(0.5 * npoints);
-   Double_t dphi = (fPhi2 - fPhi1) * TMath::DegToRad() / (nc - 1);
-   Double_t phi = 0;
-   Double_t phi1 = fPhi1 * TMath::DegToRad();
-   Int_t ntop = npoints / 2 - nc * (nc - 1);
-   Double_t dz = 2 * fDz / (nc - 1);
-   Double_t z = 0;
-   Double_t rmin = 0.;
-   Double_t rmax = 0.;
+
+   const Bool_t hasInner = (fRmin1 > 0.0) || (fRmin2 > 0.0);
+
+   // Split budget: outer gets the extra point if odd
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInner) {
+      outPoints = (npoints + 1) / 2;
+      inPoints = npoints - outPoints;
+   }
+
+   auto radiusAtZ = [&](Double_t r1, Double_t r2, Double_t z) -> Double_t {
+      // linear interpolation in z, same form as legacy code
+      return 0.5 * (r1 + r2) + 0.5 * (r2 - r1) * (z / fDz);
+   };
+
+   auto fillSurface = [&](Int_t nSurfPoints, Double_t r1, Double_t r2, Int_t &icrt) -> Bool_t {
+      if (nSurfPoints <= 0)
+         return kTRUE;
+
+      // Choose number of generators ~ sqrt(n), clamp to [1, nSurfPoints]
+      Int_t nGen = (Int_t)TMath::Sqrt((Double_t)nSurfPoints);
+      if (nGen < 1)
+         nGen = 1;
+      if (nGen > nSurfPoints)
+         nGen = nSurfPoints;
+
+      // Distribute points across generators evenly
+      const Int_t q = nSurfPoints / nGen;
+      const Int_t r = nSurfPoints % nGen;
+
+      // Use interior φ values (avoid φ endpoints; those are already covered by SetPoints)
+      const Double_t dphi = dphiSpan / (Double_t)nGen;
+
+      for (Int_t ig = 0; ig < nGen; ++ig) {
+         const Int_t m = q + (ig < r ? 1 : 0); // points on this generator
+         if (m <= 0)
+            continue;
+
+         // Center of the φ bin => never exactly on the cut planes
+         const Double_t phi = phi1 + (ig + 0.5) * dphi;
+         const Double_t c = TMath::Cos(phi);
+         const Double_t s = TMath::Sin(phi);
+
+         // Place points interior in z as well: t in (0,1)
+         for (Int_t j = 0; j < m; ++j) {
+            if (icrt + 3 > 3 * npoints)
+               return kFALSE; // overflow guard
+
+            const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1); // avoids endpoints
+            const Double_t z = -fDz + t * (2.0 * fDz);
+
+            const Double_t rz = radiusAtZ(r1, r2, z);
+
+            array[icrt++] = rz * c;
+            array[icrt++] = rz * s;
+            array[icrt++] = z;
+         }
+      }
+
+      return kTRUE;
+   };
+
    Int_t icrt = 0;
-   Int_t nphi = nc;
-   // loop z sections
-   for (Int_t i = 0; i < nc; i++) {
-      if (i == (nc - 1)) {
-         nphi = ntop;
-         dphi = (fPhi2 - fPhi1) * TMath::DegToRad() / (nphi - 1);
-      }
-      z = -fDz + i * dz;
-      rmin = 0.5 * (fRmin1 + fRmin2) + 0.5 * (fRmin2 - fRmin1) * z / fDz;
-      rmax = 0.5 * (fRmax1 + fRmax2) + 0.5 * (fRmax2 - fRmax1) * z / fDz;
-      // loop points on circle sections
-      for (Int_t j = 0; j < nphi; j++) {
-         phi = phi1 + j * dphi;
-         array[icrt++] = rmin * TMath::Cos(phi);
-         array[icrt++] = rmin * TMath::Sin(phi);
-         array[icrt++] = z;
-         array[icrt++] = rmax * TMath::Cos(phi);
-         array[icrt++] = rmax * TMath::Sin(phi);
-         array[icrt++] = z;
-      }
+
+   // Outer conical surface
+   if (!fillSurface(outPoints, fRmax1, fRmax2, icrt))
+      return kFALSE;
+
+   // Inner conical surface (if hollow)
+   if (hasInner) {
+      if (!fillSurface(inPoints, fRmin1, fRmin2, icrt))
+         return kFALSE;
    }
+
+   // Contract: must fill exactly npoints
+   if (icrt != 3 * npoints)
+      return kFALSE;
+
    return kTRUE;
 }
 

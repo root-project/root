@@ -701,37 +701,57 @@ Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) c
 
 Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints < GetNmeshVertices()) {
-      Error("GetPointsOnSegments", "You should require at least %d points", GetNmeshVertices());
+   if (!array || npoints <= 0)
+      return kFALSE;
+
+   auto buff = this->MakeBuffer3D();
+   if (!buff)
+      return kFALSE;
+
+   const Int_t npnts = (Int_t)buff->NbPnts();
+   const Int_t nsegs = (Int_t)buff->NbSegs();
+   if (npnts <= 0 || nsegs <= 0 || !buff->fPnts || !buff->fSegs) {
+      delete buff;
       return kFALSE;
    }
-   TBuffer3D &buff = (TBuffer3D &)GetBuffer3D(TBuffer3D::kRawSizes | TBuffer3D::kRaw, kTRUE);
-   Int_t npnts = buff.NbPnts();
-   Int_t nsegs = buff.NbSegs();
-   // Copy buffered points  in the array
-   memcpy(array, buff.fPnts, 3 * npnts * sizeof(Double_t));
-   Int_t ipoints = npoints - npnts;
-   Int_t icrt = 3 * npnts;
-   Int_t nperseg = (Int_t)(Double_t(ipoints) / nsegs);
-   Double_t *p0, *p1;
-   Double_t x, y, z, dx, dy, dz;
-   for (Int_t i = 0; i < nsegs; i++) {
-      p0 = &array[3 * buff.fSegs[3 * i + 1]];
-      p1 = &array[3 * buff.fSegs[3 * i + 2]];
-      if (i == (nsegs - 1))
-         nperseg = ipoints;
-      dx = (p1[0] - p0[0]) / (nperseg + 1);
-      dy = (p1[1] - p0[1]) / (nperseg + 1);
-      dz = (p1[2] - p0[2]) / (nperseg + 1);
-      for (Int_t j = 0; j < nperseg; j++) {
-         x = p0[0] + (j + 1) * dx;
-         y = p0[1] + (j + 1) * dy;
-         z = p0[2] + (j + 1) * dz;
-         array[icrt++] = x;
-         array[icrt++] = y;
-         array[icrt++] = z;
-         ipoints--;
+
+   // Fill only points on segments into `array`
+   Int_t remaining = npoints;
+   Int_t icrt = 0; // <--- start at 0, output-only buffer
+
+   Int_t nperseg = TMath::Max((Int_t)(Double_t(remaining) / nsegs), 1);
+
+   for (Int_t i = 0; i < nsegs && remaining > 0; i++) {
+      const Int_t i0 = buff->fSegs[3 * i + 1];
+      const Int_t i1 = buff->fSegs[3 * i + 2];
+
+      if (i0 < 0 || i0 >= npnts || i1 < 0 || i1 >= npnts) {
+         delete buff;
+         Error("GetPointsOnSegments", "Segment index out of range: (%d,%d) npnts=%d", i0, i1, npnts);
+         return kFALSE;
       }
+      const Double_t *p0 = &buff->fPnts[3 * i0];
+      const Double_t *p1 = &buff->fPnts[3 * i1];
+
+      if (i == (nsegs - 1))
+         nperseg = remaining;
+
+      const Double_t dx = (p1[0] - p0[0]) / (nperseg + 1);
+      const Double_t dy = (p1[1] - p0[1]) / (nperseg + 1);
+      const Double_t dz = (p1[2] - p0[2]) / (nperseg + 1);
+
+      for (Int_t j = 0; j < nperseg && remaining > 0; ++j) {
+         array[icrt++] = p0[0] + (j + 1) * dx;
+         array[icrt++] = p0[1] + (j + 1) * dy;
+         array[icrt++] = p0[2] + (j + 1) * dz;
+         --remaining;
+      }
+   }
+   delete buff;
+
+   if (remaining > 0) {
+      Error("GetPointsOnSegments", "Could not fill %d points (%d missing)", npoints, remaining);
+      return kFALSE;
    }
    return kTRUE;
 }
@@ -886,12 +906,13 @@ Bool_t TGeoBBox::IsSeparatingAxis(const TVector3 &L, const TVector3 &D, const TV
 
 TBuffer3D *TGeoBBox::MakeBuffer3D() const
 {
-   TBuffer3D *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, 8, 24, 12, 36, 6, 36);
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
-   }
-
+   Int_t npnts = 0, nsegs = 0, npols = 0;
+   this->GetMeshNumbers(npnts, nsegs, npols);
+   if (npnts <= 0 || nsegs <= 0)
+      return nullptr;
+   TBuffer3D *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, npnts, 3 * npnts, nsegs, 3 * nsegs, npols, 6 * npols);
+   this->SetPoints(buff->fPnts);
+   this->SetSegsAndPols(*buff);
    return buff;
 }
 
