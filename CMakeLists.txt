@@ -584,12 +584,16 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 add_custom_command(OUTPUT tutorials/hsimple.root
+                   VERBATIM
                    COMMAND
                      ${CMAKE_COMMAND} -E env
                      ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                      ROOTIGNOREPREFIX=1
                      ROOT_HIST=0
-                     $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return
+                     $<TARGET_FILE:root.exe> -l -q -b -n
+                       -e ".L ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C"
+                       -e "hsimple();"
+                       -e return
                    WORKING_DIRECTORY tutorials
                    DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
