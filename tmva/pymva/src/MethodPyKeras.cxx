@@ -771,7 +771,7 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
 
    InitEvaluation(nEvents);
 
-   assert (fVals.size() == fNVars*nEvents);
+   assert (static_cast<Long64_t>(fVals.size()) == fNVars*nEvents);
    for (UInt_t i=0; i<nEvents; i++) {
       Data()->SetCurrentEvent(i);
       const TMVA::Event *e = GetEvent();
@@ -847,8 +847,8 @@ std::vector<Float_t> MethodPyKeras::GetAllRegressionValues() {
    InitEvaluation(nEvents);
 
 
-   assert (fVals.size() == fNVars*nEvents);
-   assert (fOutput.size() == fNOutputs*nEvents);
+   assert (static_cast<Long64_t>(fVals.size()) == fNVars*nEvents);
+   assert (static_cast<Long64_t>(fOutput.size()) == fNOutputs*nEvents);
    for (UInt_t i=0; i<nEvents; i++) {
       Data()->SetCurrentEvent(i);
       const TMVA::Event *e = GetEvent();
@@ -914,8 +914,8 @@ std::vector<Float_t> MethodPyKeras::GetAllMulticlassValues() {
    auto nEvents = Data()->GetNEvents();
    InitEvaluation(nEvents);
 
-   assert (fVals.size() == fNVars*nEvents);
-   assert (fOutput.size() == fNOutputs*nEvents);
+   assert (static_cast<Long64_t>(fVals.size()) == fNVars*nEvents);
+   assert (static_cast<Long64_t>(fOutput.size()) == fNOutputs*nEvents);
    for (UInt_t i=0; i<nEvents; i++) {
       Data()->SetCurrentEvent(i);
       const TMVA::Event *e = GetEvent();
