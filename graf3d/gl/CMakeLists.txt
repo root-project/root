@@ -210,7 +210,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     ${FTGL_LIBRARIES}
     ${GL2PS_LIBRARIES}
     ${X11_LIBRARIES}
-    GLEW::GLEW
+    RGlew
   DEPENDENCIES
     Hist
     Gui
@@ -220,6 +220,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   INSTALL_OPTIONS
     ${installoptions}
 )
+if(MSVC)
+  target_compile_definitions(RGL PRIVATE GLAD_API_CALL_EXPORT)
+endif()
 
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
@@ -232,10 +235,6 @@ if(builtin_gl2ps)
   target_include_directories(RGL PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/gl2ps)
 else()
   target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
-endif()
-
-if(MSVC AND builtin_glew)
-  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
 endif()
 
 if(MACOSX_GLU_DEPRECATED)
