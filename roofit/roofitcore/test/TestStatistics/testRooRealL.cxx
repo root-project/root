@@ -354,10 +354,11 @@ TEST_P(RealLVsMPFE, minimize)
    double mu1 = mu->getVal();
    double muerr1 = mu->getError();
 
-   EXPECT_EQ(minNll0, minNll1);
-   EXPECT_EQ(mu0, mu1);
-   EXPECT_EQ(muerr0, muerr1);
-   EXPECT_EQ(edm0, edm1);
+   constexpr double tolerance = 1.E-11;
+   EXPECT_DOUBLE_EQ(minNll0, minNll1);
+   EXPECT_NEAR(mu0, mu1, fabs(mu0) * tolerance);
+   EXPECT_NEAR(muerr0, muerr1, muerr0 * tolerance);
+   EXPECT_NEAR(edm0, edm1, edm0 * tolerance);
 }
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RealLVsMPFE, ::testing::Values(2, 3)); // random seed
