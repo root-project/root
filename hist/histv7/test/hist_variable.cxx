@@ -87,16 +87,16 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
    static constexpr double UnderflowSmall = -0.1;
    for (double underflow : {NegativeInfinity, UnderflowLarge, UnderflowSmall}) {
       auto linIndex = axis.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i + 0.5);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i + 0.5);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -106,7 +106,7 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
    // Exactly on the bin edges
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -153,16 +153,16 @@ TEST(RVariableBinAxis, GetLinearizedIndex)
    {
       const auto underflow = RBinIndex::Underflow();
       auto linIndex = axis.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(underflow);
-      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_EQ(linIndex.fIndex, 0);
       EXPECT_FALSE(linIndex.fValid);
    }
 
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.GetLinearizedIndex(i);
-      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_EQ(linIndex.fIndex, i + 1);
       EXPECT_TRUE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(i);
       EXPECT_EQ(linIndex.fIndex, i);

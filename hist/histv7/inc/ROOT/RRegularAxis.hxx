@@ -83,9 +83,10 @@ public:
 
    /// Compute the linarized index for a single argument.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$, the underflow bin has index
-   /// \f$fNNormalBins\f$, and the overflow bin has index \f$fNNormalBins + 1\f$. If the argument is outside the
-   /// interval \f$[fLow, fHigh)\f$ and the flow bins are disabled, the return value is invalid.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fNNormalBins + 1\f$. If the argument is outside the interval \f$[fLow, fHigh)\f$ and the flow bins are
+   /// disabled, the return value is invalid.
    ///
    /// \param[in] x the argument
    /// \return the linearized index that may be invalid
@@ -95,7 +96,7 @@ public:
       // Put NaNs into overflow bin.
       bool overflow = !(x < fHigh);
       if (underflow) {
-         return {fNNormalBins, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (overflow) {
          return {fNNormalBins + 1, fEnableFlowBins};
       }
@@ -104,20 +105,25 @@ public:
       if (bin >= fNNormalBins) {
          bin = fNNormalBins - 1;
       }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
       return {bin, true};
    }
 
    /// Get the linearized index for an RBinIndex.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$, the underflow bin has index
-   /// \f$fNNormalBins\f$, and the overflow bin has index \f$fNNormalBins + 1\f$.
+   /// If flow bins are disabled, the normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$. Otherwise the
+   /// underflow bin has index \f$0\$, the indices of all normal bins shift by one, and the overflow bin has index
+   /// \f$fNNormalBins + 1\f$.
    ///
    /// \param[in] index the RBinIndex
    /// \return the linearized index that may be invalid
    RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
    {
       if (index.IsUnderflow()) {
-         return {fNNormalBins, fEnableFlowBins};
+         return {0, fEnableFlowBins};
       } else if (index.IsOverflow()) {
          return {fNNormalBins + 1, fEnableFlowBins};
       } else if (index.IsInvalid()) {
@@ -125,7 +131,15 @@ public:
       }
       assert(index.IsNormal());
       std::uint64_t bin = index.GetIndex();
-      return {bin, bin < fNNormalBins};
+      if (bin >= fNNormalBins) {
+         // Index is out of range and invalid.
+         return {bin, false};
+      }
+      // If the underflow bin is enabled, shift the normal bins by one.
+      if (fEnableFlowBins) {
+         bin += 1;
+      }
+      return {bin, true};
    }
 
    /// Get the range of all normal bins.
