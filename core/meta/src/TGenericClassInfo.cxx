@@ -438,6 +438,8 @@ namespace Internal {
       fAlternate.push_back(alt);
    }
 
+   /// Returns false if the member streamer could not be adopted (this happens if the underlying TClass had its
+   /// StreamerInfo compiled already).
    bool TGenericClassInfo::AdoptMemberStreamer(const char *name, TMemberStreamer *strm)
    {
       if (fClass) {
