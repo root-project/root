@@ -97,6 +97,11 @@ def main():
         options_dict.update((arg.split("=", maxsplit=1) for arg in args.overrides))
         build_utils.print_options_diff(options_dict, last_options)
 
+    ctest_custom_flags = ""
+    if 'ROOT_CTEST_CUSTOM_FLAGS' in options_dict:
+        ctest_custom_flags = options_dict['ROOT_CTEST_CUSTOM_FLAGS']
+        options_dict.pop('ROOT_CTEST_CUSTOM_FLAGS') # we do not want a -D called like that
+
     options = build_utils.cmake_options_from_dict(options_dict)
     print("Full build options")
     for key, val in sorted(options_dict.items()):
@@ -179,6 +184,8 @@ def main():
             extra_ctest_flags += '--build-config ' + args.buildtype
         if benchmark:
             extra_ctest_flags = ' -R "^rootbench-" '
+        if ctest_custom_flags:
+            extra_ctest_flags += ctest_custom_flags
         ctest_returncode = run_ctest(extra_ctest_flags)
 
     if args.coverage:
