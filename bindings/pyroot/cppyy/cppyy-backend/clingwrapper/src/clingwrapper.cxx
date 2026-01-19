@@ -1113,7 +1113,17 @@ Cppyy::TCppObject_t Cppyy::CallO(TCppMethod_t method,
     TCppObject_t self, size_t nargs, void* args, TCppType_t result_type)
 {
     TClassRef& cr = type_from_handle(result_type);
-    void* obj = ::operator new(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
+    auto *classInfo = cr->GetClassInfo();
+    // If the class info is missing, we better return null and let cppyy
+    // handle the error, before we step into undefined behavior
+    if(!classInfo)
+       return (TCppObject_t)0;
+    auto classSize = gInterpreter->ClassInfo_Size(classInfo);
+    // ClassInfo_Size returns -1 in case of invalid info, and 0 for
+    // forward-declared classes, which we can't use.
+    if (classSize <= 0)
+        return (TCppObject_t)0;
+    void* obj = ::operator new(classSize);
     if (WrapperCall(method, nargs, args, self, obj))
         return (TCppObject_t)obj;
     ::operator delete(obj);
