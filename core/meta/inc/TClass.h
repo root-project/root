@@ -584,10 +584,6 @@ public:
 
    void               AdoptReferenceProxy(TVirtualRefProxy* proxy);
    void               AdoptStreamer(TClassStreamer *strm);
-   // Returns false if the member streamer could not be adopted (which happens if this class had its StreamerInfo
-   // compiled already).
-   // This function transfers ownership of the `strm` pointer to the TClass, so it should not be used anymore on the
-   // caller side. In particular, if `AdoptMemberStreamer` returns false `strm` has been deleted and becomes invalid.
    bool               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
    void               SetStreamerFunc(ClassStreamerFunc_t strm);
