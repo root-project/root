@@ -20,6 +20,7 @@
 #include "llvm/Support/Process.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/raw_ostream.h"
+#include <iostream>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
@@ -29,6 +30,7 @@
 #include <algorithm>
 #include <bitset>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <system_error>
 
@@ -82,6 +84,16 @@ namespace cling {
 
     std::transform(argv.begin(), argv.end(), argvChar.begin(),
                    [&](const std::string& s) { return s.c_str(); });
+
+    // TODO investigate where the -include-pch argument without a file 
+    // is added from. This is a problem for builds without modules.
+    for (auto& el : argvChar) {
+      //std::cout << el << std::endl;   
+      if (el != nullptr && std::string(el) == "-include-pch") {
+        el = nullptr; 
+        break;
+      }
+    }
 
     // argv list have to finish with a nullptr.
     argvChar.push_back(nullptr);
@@ -206,6 +218,13 @@ namespace cling {
 
       if (e.Group == clang::frontend::IncludeDirGroup::Angled)
         argv.push_back("-I" + e.Path);
+
+      // make sure the cuda_wrappers directory is added as system include
+      // TODO ensure that this is the correct way to do that  
+      if (e.Group == clang::frontend::IncludeDirGroup::System) {
+        argv.push_back("-isystem");
+        argv.push_back(e.Path);
+      }
     }
   }
 
