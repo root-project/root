@@ -753,7 +753,11 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail(run=False, condition=is_modules_off(), reason="Crashes on build with modules off: Fatal Python error: Segmentation fault")
+    # This test has unclear failure conditions. On the ROOT CI PR builds if
+    # passes, but it fails in the nightlies with:
+    # "Failed: DID NOT RAISE <class 'cppyy.ll.AbortSignal'>"
+    # We can therefore not use strict=True and a meaningful failure condition.
+    @mark.xfail()
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
