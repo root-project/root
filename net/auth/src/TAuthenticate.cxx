@@ -119,7 +119,7 @@ Int_t           TAuthenticate::fgProcessID = -1;
 TVirtualMutex *gAuthenticateMutex = 0;
 
 // Standard version of Sec Context match checking
-Int_t StdCheckSecCtx(const char *, TRootSecContext *);
+Int_t StdCheckSecCtx(const char *, ROOT::Deprecated::TRootSecContext *);
 
 
 
@@ -319,8 +319,8 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // This is what we have in memory
    if (gDebug > 3) {
       TIter next(fHostAuth->Established());
-      TRootSecContext *ctx;
-      while ((ctx = (TRootSecContext *) next()))
+      ROOT::Deprecated::TRootSecContext *ctx;
+      while ((ctx = (ROOT::Deprecated::TRootSecContext *) next()))
          ctx->Print("0");
    }
 }
@@ -2191,8 +2191,8 @@ Int_t TAuthenticate::AuthExists(TString username, Int_t method, const char *opti
 
    // First in the local list
    TIter next(fHostAuth->Established());
-   TRootSecContext *secctx;
-   while ((secctx = (TRootSecContext *)next())) {
+   ROOT::Deprecated::TRootSecContext *secctx;
+   while ((secctx = (ROOT::Deprecated::TRootSecContext *)next())) {
       if (secctx->GetMethod() == method) {
          if (fRemote == secctx->GetHost()) {
             if (checksecctx &&
@@ -2205,7 +2205,7 @@ Int_t TAuthenticate::AuthExists(TString username, Int_t method, const char *opti
    // If nothing found, try the all list
    if (!secctx) {
       next = TIter(gROOT->GetListOfSecContexts());
-      while ((secctx = (TRootSecContext *)next())) {
+      while ((secctx = (ROOT::Deprecated::TRootSecContext *)next())) {
          if (secctx->GetMethod() == method) {
             if (fRemote == secctx->GetHost()) {
                if (checksecctx &&
@@ -3329,7 +3329,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
 /// Returns: 1 if ok, 0 if not
 /// Deactivates Ctx is not valid
 
-Int_t StdCheckSecCtx(const char *user, TRootSecContext *ctx)
+Int_t StdCheckSecCtx(const char *user, ROOT::Deprecated::TRootSecContext *ctx)
 {
    Int_t rc = 0;
 
@@ -3399,7 +3399,7 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 /// Tool for removing SecContext ctx from THostAuth listed in
 /// fgAuthInfo
 
-void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
+void TAuthenticate::RemoveSecContext(ROOT::Deprecated::TRootSecContext *ctx)
 {
    THostAuth *ha = 0;
 
@@ -3407,8 +3407,8 @@ void TAuthenticate::RemoveSecContext(TRootSecContext *ctx)
    TIter nxai(GetAuthInfo());
    while ((ha = (THostAuth *)nxai())) {
       TIter next(ha->Established());
-      TRootSecContext *lctx = 0;
-      while ((lctx = (TRootSecContext *) next())) {
+      ROOT::Deprecated::TRootSecContext *lctx = 0;
+      while ((lctx = (ROOT::Deprecated::TRootSecContext *) next())) {
          if (lctx == ctx) {
             ha->Established()->Remove(ctx);
             break;

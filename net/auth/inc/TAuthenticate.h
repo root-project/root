@@ -34,13 +34,13 @@ class TAuthenticate;
 class THostAuth;
 class TPluginHandler;
 class TSocket;
-class TRootSecContext;
 class TVirtualMutex;
 namespace ROOT::Deprecated {
 class TRootAuth;
+class TRootSecContext;
 }
 
-typedef Int_t (*CheckSecCtx_t)(const char *subj, TRootSecContext *ctx);
+typedef Int_t (*CheckSecCtx_t)(const char *subj, ROOT::Deprecated::TRootSecContext *ctx);
 typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
 typedef Int_t (*Krb5Auth_t)(TAuthenticate *auth, TString &user, TString &det, Int_t version);
 typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char *passwd,
@@ -55,7 +55,7 @@ struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
 class TAuthenticate : public TObject {
 
 friend class ROOT::Deprecated::TRootAuth;
-friend class TRootSecContext;
+friend class ROOT::Deprecated::TRootSecContext;
 friend class TSocket;
 
 public:
@@ -79,7 +79,7 @@ private:
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
    TString      fRemote;      // remote host to which we want to connect
    Int_t        fRSAKey;      // Type of RSA key used
-   TRootSecContext *fSecContext;  // pointer to relevant sec context
+   ROOT::Deprecated::TRootSecContext *fSecContext;  // pointer to relevant sec context
    ESecurity    fSecurity;    // actual logon security level
    TSocket     *fSocket;      // connection to remote daemon
    Int_t        fVersion;     // 0,1,2, ... accordingly to remote daemon version
@@ -132,7 +132,7 @@ private:
    static Bool_t          CheckHost(const char *Host, const char *host);
 
    static void            FileExpand(const char *fin, FILE *ftmp);
-   static void            RemoveSecContext(TRootSecContext *ctx);
+   static void            RemoveSecContext(ROOT::Deprecated::TRootSecContext *ctx);
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
@@ -150,12 +150,12 @@ public:
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
    Int_t              GetRSAKeyType() const { return fRSAKey; }
-   TRootSecContext       *GetSecContext() const { return fSecContext; }
+   ROOT::Deprecated::TRootSecContext       *GetSecContext() const { return fSecContext; }
    TSocket           *GetSocket() const { return fSocket; }
    const char        *GetUser() const { return fUser; }
    Int_t              HasTimedOut() const { return fTimeOut; }
    void               SetRSAKeyType(Int_t key) { fRSAKey = key; }
-   void               SetSecContext(TRootSecContext *ctx) { fSecContext = ctx; }
+   void               SetSecContext(ROOT::Deprecated::TRootSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
 

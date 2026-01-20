@@ -651,13 +651,13 @@ void THostAuth::CountFailure(Int_t method)
 /// Create a Security context and add it to local list
 /// Return pointer to it to be stored in TAuthenticate
 
-TRootSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
-                                             Int_t meth, Int_t offset,
-                                             const char *details, const char *token,
-                                             TDatime expdate, void *sctx, Int_t key)
+ROOT::Deprecated::TRootSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
+                                                               Int_t meth, Int_t offset,
+                                                               const char *details, const char *token,
+                                                               TDatime expdate, void *sctx, Int_t key)
 {
-   TRootSecContext *ctx = new TRootSecContext(user, host, meth, offset, details,
-                                              token, expdate, sctx, key);
+   auto *ctx = new ROOT::Deprecated::TRootSecContext(user, host, meth, offset, details,
+                                                     token, expdate, sctx, key);
    // Add it also to the local list if active
    if (ctx->IsActive())
       fSecContexts->Add(ctx);
