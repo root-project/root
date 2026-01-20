@@ -24,12 +24,9 @@ TEST(RAxes, Constructor)
    EXPECT_EQ(axes.GetNDimensions(), 3);
    const auto &v = axes.Get();
    ASSERT_EQ(v.size(), 3);
-   EXPECT_EQ(v[0].index(), 0);
-   EXPECT_EQ(v[1].index(), 1);
-   EXPECT_EQ(v[2].index(), 2);
-   EXPECT_TRUE(std::get_if<RRegularAxis>(&v[0]) != nullptr);
-   EXPECT_TRUE(std::get_if<RVariableBinAxis>(&v[1]) != nullptr);
-   EXPECT_TRUE(std::get_if<RCategoricalAxis>(&v[2]) != nullptr);
+   EXPECT_TRUE(v[0].GetRegularAxis() != nullptr);
+   EXPECT_TRUE(v[1].GetVariableBinAxis() != nullptr);
+   EXPECT_TRUE(v[2].GetCategoricalAxis() != nullptr);
 
    std::vector<RAxisVariant> newAxes{categoricalAxis, variableBinAxis, regularAxis};
    axes = RAxes(newAxes);

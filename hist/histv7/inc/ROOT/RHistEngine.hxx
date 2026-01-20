@@ -6,6 +6,7 @@
 #define ROOT_RHistEngine
 
 #include "RAxes.hxx"
+#include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"

@@ -46,7 +46,7 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
 
    const auto &axes = engine.GetAxes();
    RBinIndexRange range;
-   if (auto *regular = std::get_if<RRegularAxis>(&axes[0])) {
+   if (auto *regular = axes[0].GetRegularAxis()) {
       const std::size_t nNormalBins = regular->GetNNormalBins();
       ret.reset(new Hist("", "", nNormalBins, regular->GetLow(), regular->GetHigh()));
 

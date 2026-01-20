@@ -1,0 +1,60 @@
+/// \file
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
+
+#ifndef ROOT_RAxisVariant
+#define ROOT_RAxisVariant
+
+#include "RCategoricalAxis.hxx"
+#include "RRegularAxis.hxx"
+#include "RVariableBinAxis.hxx"
+
+#include <stdexcept>
+#include <utility>
+#include <variant>
+
+class TBuffer;
+
+namespace ROOT {
+namespace Experimental {
+
+/**
+A variant of all supported axis types.
+
+This class provides easy access to the contained axis object and dispatching methods for common accessors.
+
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
+*/
+class RAxisVariant final {
+public:
+   using VariantType = std::variant<RRegularAxis, RVariableBinAxis, RCategoricalAxis>;
+
+private:
+   VariantType fVariant;
+
+public:
+   RAxisVariant(VariantType axis) : fVariant(std::move(axis)) {}
+   RAxisVariant(RRegularAxis axis) : fVariant(std::move(axis)) {}
+   RAxisVariant(RVariableBinAxis axis) : fVariant(std::move(axis)) {}
+   RAxisVariant(RCategoricalAxis axis) : fVariant(std::move(axis)) {}
+
+   const VariantType &GetVariant() const { return fVariant; }
+
+   /// \return the RRegularAxis or nullptr, if this variant stores a different axis type
+   const RRegularAxis *GetRegularAxis() const { return std::get_if<RRegularAxis>(&fVariant); }
+   /// \return the RVariableBinAxis or nullptr, if this variant stores a different axis type
+   const RVariableBinAxis *GetVariableBinAxis() const { return std::get_if<RVariableBinAxis>(&fVariant); }
+   /// \return the RCategoricalAxis or nullptr, if this variant stores a different axis type
+   const RCategoricalAxis *GetCategoricalAxis() const { return std::get_if<RCategoricalAxis>(&fVariant); }
+
+   friend bool operator==(const RAxisVariant &lhs, const RAxisVariant &rhs) { return lhs.fVariant == rhs.fVariant; }
+
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
+   void Streamer(TBuffer &) { throw std::runtime_error("unable to store RAxisVariant"); }
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
+#endif
