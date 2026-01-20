@@ -1493,6 +1493,84 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
 endfunction()
 
+#---------------------------------------------------------------------------------------------------
+#---ROOT_PYTHON_PACKAGE(pkgname
+#                       SOURCES source1.py source2.py : must be in python/ subdirectory
+#                      )
+#
+# Define a CMake target that copies Python sources to the build directory,
+# compiles them to byte code, and installs both sources and bytecode into the
+# configured Python install directory.
+#---------------------------------------------------------------------------------------------------
+function(ROOT_PYTHON_PACKAGE pkgname)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "SOURCES" ${ARGN})
+
+  # Ensure output directory exists
+  file(MAKE_DIRECTORY ${localruntimedir}/${pkgname})
+
+  set(copy_commands)
+  set(py_sources_in_source_dir)
+  set(py_sources_in_localruntimedir)
+  set(bytecode_dirs)
+
+  foreach(py_source ${ARG_SOURCES})
+    set(src ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source})
+    set(tgt ${localruntimedir}/${py_source})
+
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${tgt})
+
+    list(APPEND py_sources_in_source_dir ${src})
+    list(APPEND py_sources_in_localruntimedir ${tgt})
+
+    get_filename_component(pydir ${tgt} DIRECTORY)
+
+    # According to PEP 3147 (https://peps.python.org/pep-3147/), the byte code
+    # cache files are always in the __pycache__ directory.
+    list(APPEND bytecode_dirs ${pydir}/__pycache__)
+  endforeach()
+
+  list(REMOVE_DUPLICATES bytecode_dirs)
+
+  add_custom_command(
+    OUTPUT ${py_sources_in_localruntimedir}
+    ${copy_commands}
+    DEPENDS ${py_sources_in_source_dir}
+    COMMENT "Copying ${pkgname} Python sources"
+  )
+
+  # Compile .py files
+
+  # Stamp file so CMake knows it doesn't need to re-compile. We can't set the
+  # actual bytecode files as the OUTPUT of the custom command, because their
+  # names are CPython implementation dependent and therefore not reliable.
+  set(bytecode_stamp ${localruntimedir}/${pkgname}/pybytecode.stamp)
+
+  # It's 10x faster to compile all in one go than in single invocations
+  add_custom_command(
+    OUTPUT ${bytecode_stamp}
+    COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_localruntimedir}
+    COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_localruntimedir}
+    COMMAND ${CMAKE_COMMAND} -E touch ${bytecode_stamp}
+    DEPENDS ${py_sources_in_localruntimedir}
+    COMMENT "Compiling ${pkgname} Python sources"
+  )
+
+  add_custom_target(${pkgname}Python ALL DEPENDS ${bytecode_stamp})
+
+  # So that `make clean` / `ninja clean` picks up the bytecode
+  set_property(TARGET ${pkgname}Python APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${bytecode_dirs})
+
+  # Install Python sources and bytecode
+  install(DIRECTORY ${localruntimedir}/${pkgname}
+          DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
+          COMPONENT libraries
+          FILES_MATCHING
+            PATTERN "*.py"
+            PATTERN "*.pyc"
+  )
+
+endfunction()
+
 # Need to set this outside of the function so that ${CMAKE_CURRENT_LIST_DIR}
 # is for RootMacros.cmake and not for the file currently calling the function.
 set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
