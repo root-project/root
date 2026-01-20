@@ -1,5 +1,6 @@
 set(histv7_headers
     ROOT/RAxes.hxx
+    ROOT/RAxisVariant.hxx
     ROOT/RBinIndex.hxx
     ROOT/RBinIndexRange.hxx
     ROOT/RBinWithError.hxx

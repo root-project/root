@@ -5,6 +5,7 @@
 #ifndef ROOT_RAxes
 #define ROOT_RAxes
 
+#include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RLinearizedIndex.hxx"
@@ -25,9 +26,6 @@ class TBuffer;
 
 namespace ROOT {
 namespace Experimental {
-
-/// Variant of all supported axis types.
-using RAxisVariant = std::variant<RRegularAxis, RVariableBinAxis, RCategoricalAxis>;
 
 // forward declaration for friend declaration
 template <typename T>
@@ -68,11 +66,11 @@ public:
    {
       std::uint64_t totalNBins = 1;
       for (auto &&axis : fAxes) {
-         if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
+         if (auto *regular = axis.GetRegularAxis()) {
             totalNBins *= regular->GetTotalNBins();
-         } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
+         } else if (auto *variable = axis.GetVariableBinAxis()) {
             totalNBins *= variable->GetTotalNBins();
-         } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+         } else if (auto *categorical = axis.GetCategoricalAxis()) {
             totalNBins *= categorical->GetTotalNBins();
          } else {
             throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
@@ -88,21 +86,21 @@ private:
       using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
       const auto &axis = fAxes[I];
       RLinearizedIndex linIndex;
-      if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
+      if (auto *regular = axis.GetRegularAxis()) {
          if constexpr (std::is_convertible_v<ArgumentType, RRegularAxis::ArgumentType>) {
             index *= regular->GetTotalNBins();
             linIndex = regular->ComputeLinearizedIndex(std::get<I>(args));
          } else {
             throw std::invalid_argument("invalid type of argument");
          }
-      } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
+      } else if (auto *variable = axis.GetVariableBinAxis()) {
          if constexpr (std::is_convertible_v<ArgumentType, RVariableBinAxis::ArgumentType>) {
             index *= variable->GetTotalNBins();
             linIndex = variable->ComputeLinearizedIndex(std::get<I>(args));
          } else {
             throw std::invalid_argument("invalid type of argument");
          }
-      } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+      } else if (auto *categorical = axis.GetCategoricalAxis()) {
          if constexpr (std::is_convertible_v<ArgumentType, RCategoricalAxis::ArgumentType>) {
             index *= categorical->GetTotalNBins();
             linIndex = categorical->ComputeLinearizedIndex(std::get<I>(args));
@@ -160,13 +158,13 @@ public:
          const auto &index = indices[i];
          const auto &axis = fAxes[i];
          RLinearizedIndex linIndex;
-         if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
+         if (auto *regular = axis.GetRegularAxis()) {
             globalIndex *= regular->GetTotalNBins();
             linIndex = regular->GetLinearizedIndex(index);
-         } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
+         } else if (auto *variable = axis.GetVariableBinAxis()) {
             globalIndex *= variable->GetTotalNBins();
             linIndex = variable->GetLinearizedIndex(index);
-         } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+         } else if (auto *categorical = axis.GetCategoricalAxis()) {
             globalIndex *= categorical->GetTotalNBins();
             linIndex = categorical->GetLinearizedIndex(index);
          } else {

@@ -2,6 +2,7 @@
 #define hist_test
 
 #include <ROOT/RAxes.hxx>
+#include <ROOT/RAxisVariant.hxx>
 #include <ROOT/RBinIndex.hxx>
 #include <ROOT/RBinIndexRange.hxx>
 #include <ROOT/RBinWithError.hxx>
