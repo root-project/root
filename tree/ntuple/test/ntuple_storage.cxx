@@ -483,7 +483,7 @@ TEST(RNTuple, WritePageBudget)
    EXPECT_EQ(7u, prDD.GetPageInfos()[2].GetNElements());
 }
 
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
 TEST(RNTuple, OpenHTTP)
 {
    std::unique_ptr<TFile> file(TFile::Open("http://root.cern/files/tutorials/ntpl004_dimuon_v1.root"));
