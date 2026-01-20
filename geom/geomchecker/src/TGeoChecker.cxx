@@ -58,6 +58,102 @@ lego plot for a given volume, in a given theta/phi range.
 
 Implementation of TGeoVolume::Weight(). Estimates the total weight of a given
 volume by material sampling. Accepts as input the desired precision.
+
+#### TGeoChecker::CheckOverlaps(Double_t ovlp, Option_t *option)
+Checks the geometry definition for illegal overlaps and illegal extrusions
+within a selected geometry hierarchy.
+
+An **illegal overlap** is reported when two placed volumes (typically sibling
+daughters of the same mother, or a daughter against the mother depending on
+the traversal) occupy a common region of space larger than the allowed tolerance.
+In practical terms, a set of test points generated on the surface of one
+candidate is found **inside** the other candidate volume by more than the configured
+tolerance.
+
+An **illegal extrusion** is reported when a placed daughter volume has surface
+points that lie outside its expected container region (e.g. outside its mother
+or outside the allowed placement region as defined by the geometry navigation
+context), again beyond the configured tolerance.
+
+The overlap checking is performed in three stages:
+
+1. Candidate search and filtering
+The checker traverses the requested hierarchy and generates candidate pairs.
+Candidate pairs are aggressively reduced using fast bounding checks (including
+oriented bounding box filters) before any expensive navigation tests are performed.
+
+2. Surface point generation and caching
+For each distinct TGeoShape appearing in the candidate list, the checker generates
+a set of surface sampling points and caches them. The cached sampling depends on
+the current meshing policy (see tuning below).
+
+3. Exact overlap/extrusion tests (navigation-based)
+The final test uses TGeo navigation (Contains, Safety, frame transforms) to evaluate
+whether sampled surface points violate the overlap/extrusion constraints. This final
+stage can run in parallel when ROOT Implicit MT is enabled.
+
+* Usage:
+- Check the full geometry
+  - Call from the manager:
+
+~~~{.cpp}
+gGeoManager->CheckOverlaps(ovlp);
+~~~
+
+- Check only a sub-hierarchy
+  - Call from a volume:
+
+~~~{.cpp}
+gGeoManager->GetTopVolume()->CheckOverlaps(ovlp);
+~~~
+
+This checks overlaps/extrusions for the selected volume and its daughters
+(recursively), without requiring a full-geometry check.
+
+* Parameters:
+~~~{.cpp}
+ovlp
+~~~
+The allowed overlap tolerance. Violations larger than ovlp are reported
+as illegal overlaps/extrusions. The default value is 1.e-1, but a thorough overlap
+check may use 1e-6
+
+(The option string is intentionally not documented here; legacy sampling modes are
+deprecated in favor of dedicated sampling entry points.)
+
+* Tuning the surface sampling
+
+The quality and cost of the surface sampling used in overlap checking can be tuned
+via TGeoManager:
+
+~~~{.cpp}
+TGeoManager::SetNsegments(Int_t nseg) (default 20)
+~~~
+Controls the segmentation used by shapes whose surface discretization depends on
+angular subdivision (e.g. tubes, cones, polycones, polygonal shapes). Increasing
+nseg increases the geometric fidelity of the discretization and usually increases
+the time spent in the point-generation and checking stages.
+
+~~~{.cpp}
+TGeoManager::SetNmeshPoints(Int_t npoints) (default 1000)
+~~~
+Controls the number of additional surface points requested via GetPointsOnSegments.
+Increasing npoints improves sampling density (potentially catching smaller overlaps)
+at the cost of more computation in the point-generation and overlap checking stages.
+
+Both nseg and npoints affect the cached mesh points. Changing them changes the
+sampling policy and triggers regeneration of cached surface points at the next
+CheckOverlaps() call.
+
+* Parallel execution
+
+When ROOT Implicit MT is enabled via:
+~~~{.cpp}
+ROOT::EnableImplicitMT(N);
+~~~
+the checker runs the final navigation-based overlap/extrusion evaluation in parallel.
+Each worker thread initializes its own navigation state to avoid shared state in
+TGeo navigation.
 */
 
 #include "TCanvas.h"
