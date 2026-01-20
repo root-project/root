@@ -69,17 +69,20 @@ painting a node on a pad will take the corresponding volume attributes.
 */
 
 #include <iostream>
+#include <mutex>
+#include <vector>
+#include <utility>
 
 #include <TBrowser.h>
 #include <TObjArray.h>
 #include <TStyle.h>
 #include <TMath.h>
 #include <TStopwatch.h>
+#ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
-#include <mutex>
-#include <vector>
-#include <utility>
+#endif
 
+#include "TGeoNode.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoShape.h"
@@ -87,7 +90,6 @@ painting a node on a pad will take the corresponding volume attributes.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualGeoChecker.h"
 #include "TGeoVoxelFinder.h"
-#include "TGeoNode.h"
 #include "TGeoExtension.h"
 
 // statics and globals
@@ -287,6 +289,11 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    fVolume->SelectVolume(kTRUE);
 
    // -------- Stage 2: compute (parallel)
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+#ifdef R__USE_IMT
+   // parallelized version
    const size_t chunkSize = 1024; // tune: 256..4096
    auto makeChunks = [&](size_t n) {
       std::vector<std::pair<size_t, size_t>> chunks;
@@ -297,10 +304,6 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    };
 
    auto chunks = makeChunks(candidates.size());
-
-   std::vector<TGeoOverlapResult> results;
-   results.reserve(256);
-
    std::mutex resultsMutex;
 
    // Policy: if ROOT IMT is enabled, follow the number of threads defined via:
@@ -343,6 +346,16 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
          }
       },
       chunks);
+#else
+   // serial version
+   Info("CheckOverlaps", "--- checking candidates with on a single thread (IMT not configured)...");
+   timer.Start();
+   for (size_t i = 0; i < candidates.size(); ++i) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(candidates[i], r))
+         results.emplace_back(std::move(r));
+   }
+#endif
 
    // -------- Stage 3: materialize overlaps (main thread)
    for (const auto &r : results)
@@ -357,7 +370,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    for (Int_t i = 0; i < novlps; i++)
       ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
    timer.Stop();
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]\n", novlps, timer.RealTime());
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

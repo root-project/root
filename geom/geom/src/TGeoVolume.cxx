@@ -390,7 +390,9 @@ volumes (or volume assemblies) as content.
 #include <TMap.h>
 #include <TFile.h>
 #include <TKey.h>
+#ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
+#endif
 #include <TStopwatch.h>
 
 #include "TGeoManager.h"
@@ -644,6 +646,11 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
    SelectVolume(kTRUE);
 
    // -------- Stage 2: compute (parallel)
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+#ifdef R__USE_IMT
+   // parallelized version
    const size_t chunkSize = 1024; // tune: 256..4096
    auto makeChunks = [&](size_t n) {
       std::vector<std::pair<size_t, size_t>> chunks;
@@ -654,10 +661,6 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
    };
 
    auto chunks = makeChunks(candidates.size());
-
-   std::vector<TGeoOverlapResult> results;
-   results.reserve(256);
-
    std::mutex resultsMutex;
 
    // Policy: if ROOT IMT is enabled, follow the number of threads defined via:
@@ -700,6 +703,16 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option)
          }
       },
       chunks);
+#else
+   // serial version
+   Info("CheckOverlaps", "--- checking candidates with on a single thread (IMT not configured)...");
+   timer.Start();
+   for (size_t i = 0; i < candidates.size(); ++i) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(candidates[i], r))
+         results.emplace_back(std::move(r));
+   }
+#endif
 
    // -------- Stage 3: materialize overlaps (main thread)
    for (const auto &r : results)
