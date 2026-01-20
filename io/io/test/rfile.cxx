@@ -77,7 +77,7 @@ TEST(RFile, OpenInexistent)
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kSysError, "TFile::TFile", "", false);
    diags.optionalDiag(kError, "TFile::TFile", "", false);
-   
+
    try {
       auto f = RFile::Open("does_not_exist.root");
       FAIL() << "trying to open an inexistent file should throw";
@@ -508,7 +508,7 @@ TEST(RFile, IterateKeysOnlyDirsNonRecursive)
 
 // TODO: this test could in principle also run without davix: need to figure out a way to detect if we have
 // remote access capabilities.
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
 TEST(RFile, RemoteRead)
 {
    constexpr const char *kFileName = "https://root.cern/files/rootcode.root";

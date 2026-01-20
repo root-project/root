@@ -99,7 +99,7 @@ TEST(RRawFile, Basic)
 
 TEST(RRawFile, Remote)
 {
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
    auto f = RRawFile::Create("http://root.cern/files/davix.test");
    std::string line;
    EXPECT_TRUE(f->Readln(line));
