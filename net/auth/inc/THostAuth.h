@@ -102,10 +102,10 @@ public:
    void  Print(Option_t *option = "") const override;
    void     PrintEstablished() const;
 
-   TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
-                                     Int_t offset, const char *details,
-                                     const char *token, TDatime expdate = kROOTTZERO,
-                                     void *ctx = nullptr, Int_t key = -1);
+   ROOT::Deprecated::TRootSecContext *CreateSecContext(const char *user, const char *host, Int_t meth,
+                                                       Int_t offset, const char *details,
+                                                       const char *token, TDatime expdate = kROOTTZERO,
+                                                       void *ctx = nullptr, Int_t key = -1);
 
    ClassDefOverride(THostAuth,1)  // Class providing host specific authentication information
 };

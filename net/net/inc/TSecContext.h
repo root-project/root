@@ -33,9 +33,13 @@ R__EXTERN const TDatime kROOTTZERO;
 class TSecContextCleanup;
 class TPwdCtx;
 
+namespace ROOT::Deprecated {
+class TRootSecContext;
+}
+
 class TSecContext : public TObject {
 
-friend class TRootSecContext;
+friend class ROOT::Deprecated::TRootSecContext;
 
 private:
    void        *fContext;             // ptr to specific sec context

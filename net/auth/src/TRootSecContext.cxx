@@ -32,10 +32,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
 
-   TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
-                                    Int_t offset, const char *id,
-                                    const char *token, TDatime expdate,
-                                    void *ctx, Int_t key)
+ROOT::Deprecated::TRootSecContext::TRootSecContext(const char *user, const char *host, Int_t meth,
+                                                   Int_t offset, const char *id,
+                                                   const char *token, TDatime expdate,
+                                                   void *ctx, Int_t key)
       : TSecContext(user, host, meth, offset, id, token, expdate, ctx)
 {
    R__ASSERT(gROOT);
@@ -48,9 +48,9 @@
 /// Ctor for SecContext object.
 /// User and host from url = `user@host` .
 
-TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
-                                 const char *id, const char *token,
-                                 TDatime expdate, void *ctx, Int_t key)
+ROOT::Deprecated::TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
+                                                   const char *id, const char *token,
+                                                   TDatime expdate, void *ctx, Int_t key)
    : TSecContext(url, meth, offset, id, token, expdate, ctx)
 {
    R__ASSERT(gROOT);
@@ -63,7 +63,7 @@ TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
 /// Dtor: delete (deActivate, local/remote cleanup, list removal)
 /// all what is still active
 
-TRootSecContext::~TRootSecContext()
+ROOT::Deprecated::TRootSecContext::~TRootSecContext()
 {
    TSecContext::Cleanup();
 }
@@ -75,7 +75,7 @@ TRootSecContext::~TRootSecContext()
 /// If Opt contains "R" or "r", remove from the list
 /// Default Opt="CR"
 
-void TRootSecContext::DeActivate(Option_t *Opt)
+void ROOT::Deprecated::TRootSecContext::DeActivate(Option_t *Opt)
 {
    // Ask remote cleanup of this context
    Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
@@ -109,7 +109,7 @@ void TRootSecContext::DeActivate(Option_t *Opt)
 /// If 'all', all sec context with the same host as ctx
 /// are cleaned.
 
-Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
+Bool_t ROOT::Deprecated::TRootSecContext::CleanupSecContext(Bool_t all)
 {
    Bool_t cleaned = kFALSE;
 
@@ -182,7 +182,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
 /// If opt is "S" prints short in-line form for calls within TFTP,
 /// TSlave ...
 
-void TRootSecContext::Print(Option_t *opt) const
+void ROOT::Deprecated::TRootSecContext::Print(Option_t *opt) const
 {
    // Check if option is numeric
    Int_t ord = -1, i = 0;
@@ -237,7 +237,7 @@ void TRootSecContext::Print(Option_t *opt) const
 /// Returns short string with relevant information about this
 /// security context
 
-const char *TRootSecContext::AsString(TString &out)
+const char *ROOT::Deprecated::TRootSecContext::AsString(TString &out)
 {
    if (fOffSet > -1) {
       if (fID.BeginsWith("AFS"))
