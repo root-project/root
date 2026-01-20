@@ -230,9 +230,9 @@ TEST(RSqliteDS, IMT)
 
 #endif // R__USE_IMT
 
-TEST(RSqliteDS, Davix)
+TEST(RSqliteDS, Remote)
 {
-#ifdef R__HAS_DAVIX
+#if defined(R__HAS_DAVIX) || defined(R__HAS_CURL)
    auto rdf = ROOT::RDF::FromSqlite(url0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
    EXPECT_EQ(2, *rdf.Max("fint"));
