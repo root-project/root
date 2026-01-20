@@ -66,15 +66,7 @@ public:
    {
       std::uint64_t totalNBins = 1;
       for (auto &&axis : fAxes) {
-         if (auto *regular = axis.GetRegularAxis()) {
-            totalNBins *= regular->GetTotalNBins();
-         } else if (auto *variable = axis.GetVariableBinAxis()) {
-            totalNBins *= variable->GetTotalNBins();
-         } else if (auto *categorical = axis.GetCategoricalAxis()) {
-            totalNBins *= categorical->GetTotalNBins();
-         } else {
-            throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
-         }
+         totalNBins *= axis.GetTotalNBins();
       }
       return totalNBins;
    }

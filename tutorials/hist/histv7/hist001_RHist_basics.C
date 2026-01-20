@@ -22,7 +22,7 @@
 static void DrawHistogram(const ROOT::Experimental::RHist<int> &hist)
 {
    // Get the axis object from the histogram.
-   auto &axis = *hist.GetAxes()[0].GetRegularAxis();
+   auto &axis = hist.GetAxes()[0];
 
    // Print (some of) the global statistics.
    std::cout << "entries = " << hist.GetNEntries();

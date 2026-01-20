@@ -9,6 +9,7 @@
 #include "RRegularAxis.hxx"
 #include "RVariableBinAxis.hxx"
 
+#include <cstdint>
 #include <stdexcept>
 #include <utility>
 #include <variant>
@@ -47,6 +48,84 @@ public:
    const RVariableBinAxis *GetVariableBinAxis() const { return std::get_if<RVariableBinAxis>(&fVariant); }
    /// \return the RCategoricalAxis or nullptr, if this variant stores a different axis type
    const RCategoricalAxis *GetCategoricalAxis() const { return std::get_if<RCategoricalAxis>(&fVariant); }
+
+   std::uint64_t GetNNormalBins() const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->GetNNormalBins();
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->GetNNormalBins();
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->GetNNormalBins();
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
+
+   std::uint64_t GetTotalNBins() const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->GetTotalNBins();
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->GetTotalNBins();
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->GetTotalNBins();
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
+
+   /// Get the range of all normal bins.
+   ///
+   /// \return the bin index range from the first to the last normal bin, inclusive
+   RBinIndexRange GetNormalRange() const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->GetNormalRange();
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->GetNormalRange();
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->GetNormalRange();
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
+
+   /// Get a range of normal bins.
+   ///
+   /// \param[in] begin the begin of the bin index range (inclusive), must be normal
+   /// \param[in] end the end of the bin index range (exclusive), must be normal and >= begin
+   /// \return a bin index range \f$[begin, end)\f$
+   RBinIndexRange GetNormalRange(RBinIndex begin, RBinIndex end) const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->GetNormalRange(begin, end);
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->GetNormalRange(begin, end);
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->GetNormalRange(begin, end);
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
+
+   /// Get the full range of all bins.
+   ///
+   /// This includes underflow and overflow bins, if enabled.
+   ///
+   /// \return the bin index range of all bins
+   RBinIndexRange GetFullRange() const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->GetFullRange();
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->GetFullRange();
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->GetFullRange();
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
 
    friend bool operator==(const RAxisVariant &lhs, const RAxisVariant &rhs) { return lhs.fVariant == rhs.fVariant; }
 
