@@ -32,8 +32,8 @@
 /// Invoked when dynamic loading is needed.
 /// Returns 1 on success, 0 on failure.
 
-TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
-                                     const char *user, Option_t */*opts*/)
+TSecContext *
+ROOT::Deprecated::TRootAuth::Authenticate(TSocket *s, const char *host, const char *user, Option_t */*opts*/)
 {
    TSecContext *ctx = 0;
 
@@ -88,7 +88,7 @@ TSecContext *TRootAuth::Authenticate(TSocket *s, const char *host,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return client version;
 
-Int_t TRootAuth::ClientVersion()
+Int_t ROOT::Deprecated::TRootAuth::ClientVersion()
 {
    return TSocket::GetClientProtocol();
 }
@@ -96,7 +96,7 @@ Int_t TRootAuth::ClientVersion()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print error string corresponding to ecode, prepending location
 
-void TRootAuth::ErrorMsg(const char *where, Int_t ecode)
+void ROOT::Deprecated::TRootAuth::ErrorMsg(const char *where, Int_t ecode)
 {
    TAuthenticate::AuthError(where, ecode);
 }

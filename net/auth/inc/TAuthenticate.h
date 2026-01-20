@@ -36,6 +36,9 @@ class TPluginHandler;
 class TSocket;
 class TRootSecContext;
 class TVirtualMutex;
+namespace ROOT::Deprecated {
+class TRootAuth;
+}
 
 typedef Int_t (*CheckSecCtx_t)(const char *subj, TRootSecContext *ctx);
 typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
@@ -51,7 +54,7 @@ struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
 
 class TAuthenticate : public TObject {
 
-friend class TRootAuth;
+friend class ROOT::Deprecated::TRootAuth;
 friend class TRootSecContext;
 friend class TSocket;
 
