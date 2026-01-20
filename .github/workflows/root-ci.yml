@@ -83,6 +83,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    env:
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.platform }}-${{ github.event_name == 'push' || github.run_id }}
+
+    steps:
+      - name: Print
+        run: echo "Concurrency group is ${group}"
+
   build-macos:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
@@ -98,7 +108,7 @@ jobs:
       contents: read
 
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event_name == 'push' || github.run_id }}
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.platform }}-${{ github.event_name == 'push' || github.run_id }}
 
     defaults:
       run:
