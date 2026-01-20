@@ -31,7 +31,7 @@ TEST(RHist, Constructor)
    // Test other constructors, including move-assignment.
    hist = RHist<int>(Bins, {0, Bins});
    ASSERT_EQ(hist.GetNDimensions(), 1);
-   auto *regular = std::get_if<RRegularAxis>(&hist.GetAxes()[0]);
+   auto *regular = hist.GetAxes()[0].GetRegularAxis();
    ASSERT_TRUE(regular != nullptr);
    EXPECT_EQ(regular->GetNNormalBins(), Bins);
    EXPECT_EQ(regular->GetLow(), 0);

@@ -43,6 +43,13 @@ TEST(RCategoricalAxis, Streamer)
    ExpectThrowOnWriteObject(axis);
 }
 
+TEST(RAxisVariant, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RAxisVariant axis(RRegularAxis(Bins, {0, Bins}));
+   ExpectThrowOnWriteObject(axis);
+}
+
 TEST(RAxes, Streamer)
 {
    static constexpr std::size_t BinsX = 20;

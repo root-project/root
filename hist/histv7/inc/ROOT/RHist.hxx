@@ -5,7 +5,7 @@
 #ifndef ROOT_RHist
 #define ROOT_RHist
 
-#include "RAxes.hxx" // for RAxisVariant
+#include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RHistEngine.hxx"
@@ -81,7 +81,7 @@ public:
       // The axes parameter was moved, use from the engine.
       const auto &engineAxes = fEngine.GetAxes();
       for (std::size_t i = 0; i < engineAxes.size(); i++) {
-         if (std::get_if<RCategoricalAxis>(&engineAxes[i])) {
+         if (engineAxes[i].GetCategoricalAxis() != nullptr) {
             fStats.DisableDimension(i);
          }
       }

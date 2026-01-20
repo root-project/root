@@ -31,12 +31,9 @@ TEST(RHistEngine, Constructor)
    {
       const auto &engineAxes = engine.GetAxes();
       ASSERT_EQ(engineAxes.size(), 3);
-      EXPECT_EQ(engineAxes[0].index(), 0);
-      EXPECT_EQ(engineAxes[1].index(), 1);
-      EXPECT_EQ(engineAxes[2].index(), 2);
-      EXPECT_TRUE(std::get_if<RRegularAxis>(&engineAxes[0]) != nullptr);
-      EXPECT_TRUE(std::get_if<RVariableBinAxis>(&engineAxes[1]) != nullptr);
-      EXPECT_TRUE(std::get_if<RCategoricalAxis>(&engineAxes[2]) != nullptr);
+      EXPECT_TRUE(engineAxes[0].GetRegularAxis() != nullptr);
+      EXPECT_TRUE(engineAxes[1].GetVariableBinAxis() != nullptr);
+      EXPECT_TRUE(engineAxes[2].GetCategoricalAxis() != nullptr);
    }
 
    // All axes include underflow and overflow bins.
@@ -45,7 +42,7 @@ TEST(RHistEngine, Constructor)
    // Test other constructors, including move-assignment.
    engine = RHistEngine<int>(BinsX, {0, BinsX});
    ASSERT_EQ(engine.GetNDimensions(), 1);
-   auto *regular = std::get_if<RRegularAxis>(&engine.GetAxes()[0]);
+   auto *regular = engine.GetAxes()[0].GetRegularAxis();
    ASSERT_TRUE(regular != nullptr);
    EXPECT_EQ(regular->GetNNormalBins(), BinsX);
    EXPECT_EQ(regular->GetLow(), 0);
