@@ -1495,7 +1495,7 @@ endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_PYTHON_PACKAGE(pkgname
-#                       SOURCES source1.py source2.py : must be in python/ subdirectory
+#                       SOURCES source1.py source2.py
 #                      )
 #
 # Define a CMake target that copies Python sources to the build directory,
@@ -1514,7 +1514,7 @@ function(ROOT_PYTHON_PACKAGE pkgname)
   set(bytecode_dirs)
 
   foreach(py_source ${ARG_SOURCES})
-    set(src ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source})
+    set(src ${CMAKE_CURRENT_SOURCE_DIR}/${py_source})
     set(tgt ${localruntimedir}/${py_source})
 
     list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${tgt})
