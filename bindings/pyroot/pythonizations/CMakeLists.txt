@@ -65,9 +65,6 @@ if(tmva)
     endif()
 endif()
 
-list(APPEND PYROOT_EXTRA_HEADERS
-     inc/TPyDispatcher.h)
-
 set(py_sources
   #ROOT/JsMVA/DataLoader.py
   #ROOT/JsMVA/Factory.py
@@ -135,6 +132,11 @@ set(py_sources
   ${PYROOT_EXTRA_PYTHON_SOURCES}
 )
 
+ROOT_PYTHON_PACKAGE(ROOT SOURCES ${py_sources})
+
+list(APPEND PYROOT_EXTRA_HEADERS
+     inc/TPyDispatcher.h)
+
 set(cpp_sources
     src/PyROOTModule.cxx
     src/RPyROOTApplication.cxx
@@ -146,41 +148,7 @@ set(cpp_sources
     inc/TPyDispatcher.h
 )
 
-set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers_dir inc)
-
-# Ensure output directory exists
-file(MAKE_DIRECTORY ${localruntimedir}/ROOT)
-
-set(root_copy_commands)
-set(py_sources_in_source_dir)
-set(py_sources_in_localruntimedir)
-
-foreach(py_source ${py_sources})
-  list(APPEND root_copy_commands
-       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-               ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source}
-               ${localruntimedir}/${py_source})
-
-  list(APPEND py_sources_in_source_dir
-       ${CMAKE_CURRENT_SOURCE_DIR}/python/${py_source})
-
-  list(APPEND py_sources_in_localruntimedir
-       ${localruntimedir}/${py_source})
-endforeach()
-
-add_custom_command(
-  OUTPUT ${py_sources_in_localruntimedir}
-  ${root_copy_commands}
-  DEPENDS ${py_sources_in_source_dir}
-  COMMENT "Copying ROOT Pythonization Python sources"
-)
-
-# A custom target that depends on the Python sources being present in the build
-# directory. This will be used as a dependency of the pythonization libraries,
-# such that the Python sources get re-copied to the build directory when
-# changed.
-add_custom_target(ROOTPythonizationsPySources ALL DEPENDS ${py_sources_in_localruntimedir})
 
 # Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
@@ -188,9 +156,6 @@ file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
-
-# Insert the ROOTPythonizationsPySources in the dependency graph
-add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
@@ -211,27 +176,6 @@ target_include_directories(${libname}
 if(NOT MSVC)
   target_compile_options(${libname} PRIVATE -Wno-strict-aliasing)
 endif()
-
-
-# Compile .py files
-
-# Stamp file so CMake knows it doesn't need to re-compile. We can't set the
-# actual bytecode files as the OUTPUT of the custom command, because their
-# names are CPython implementation dependent and therefore not reliable.
-set(root_bytecode_stamp ${localruntimedir}/ROOT/bytecode.stamp)
-
-# It's 10x faster to compile all in one go than in single invocations
-add_custom_command(
-  OUTPUT ${root_bytecode_stamp}
-  COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_localruntimedir}
-  COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_localruntimedir}
-  COMMAND ${CMAKE_COMMAND} -E touch ${root_bytecode_stamp}
-  DEPENDS ${py_sources_in_localruntimedir}
-  COMMENT "Compiling ROOT Pythonization Python sources"
-)
-
-add_custom_target(ROOTPythonizationsPyBytecode ALL DEPENDS ${root_bytecode_stamp})
-add_dependencies(ROOTPythonizationsPyBytecode ROOTPythonizationsPySources)
 
 
 # Create meta-target PyROOT3 (INTERFACE library)
@@ -267,13 +211,6 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
                             RUNTIME DESTINATION ${pymoduledir_install} COMPONENT libraries
                             LIBRARY DESTINATION ${pymoduledir_install}  COMPONENT libraries
                             ARCHIVE DESTINATION ${pymoduledir_install} COMPONENT libraries)
-
-# Install Python sources and bytecode
-install(DIRECTORY ${localruntimedir}/ROOT
-        DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
-        COMPONENT libraries
-        PATTERN *.stamp EXCLUDE
-        PATTERN *.so EXCLUDE)
 
 # Install headers required by pythonizations
 install(FILES ${PYROOT_EXTRA_HEADERS}
