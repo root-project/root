@@ -98,8 +98,8 @@ public:
    virtual TGeoVolume *CloneVolume() const;
    void CloneNodesAndConnect(TGeoVolume *newmother) const;
    void CheckGeometry(Int_t nrays = 1, Double_t startx = 0, Double_t starty = 0, Double_t startz = 0) const;
-   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");         // *MENU*
-   void CheckOverlapsBySampling(Double_t ovlp = 0.1, Int_t npoints = 1000000); // *MENU*
+   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");               // *MENU*
+   void CheckOverlapsBySampling(Double_t ovlp = 0.1, Int_t npoints = 1000000);   // *MENU*
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = ""); // *MENU*
    Int_t CountNodes(Int_t nlevels = 1000, Int_t option = 0);
    Bool_t Contains(const Double_t *point) const { return fShape->Contains(point); }
@@ -206,7 +206,7 @@ public:
    void RemoveNode(TGeoNode *node);
    TGeoNode *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape = nullptr, TGeoMatrix *newpos = nullptr,
                          TGeoMedium *newmed = nullptr);
-   void ResetTransparency(Char_t transparency = -1); // *MENU*
+   void ResetTransparency(Char_t transparency = -1);                             // *MENU*
    void SaveAs(const char *filename = "", Option_t *option = "") const override; // *MENU*
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void SelectVolume(Bool_t clear = kFALSE);
@@ -254,7 +254,7 @@ public:
    Double_t Weight(Double_t precision = 0.01, Option_t *option = "va"); // *MENU*
    Double_t WeightA() const;
 
-   ClassDefOverride(TGeoVolume, 7)              // geometry volume descriptor
+   ClassDefOverride(TGeoVolume, 7) // geometry volume descriptor
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -370,13 +370,14 @@ inline Int_t TGeoVolume::GetNdaughters() const
 inline Char_t TGeoVolume::GetTransparency() const
 {
    // If the transparency is (-1), the old default handling is applied
-   if ( fTransparency >= 0 ) return fTransparency;
+   if (fTransparency >= 0)
+      return fTransparency;
    return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency();
 }
 
 inline void TGeoVolume::SetTransparency(Char_t transparency)
 {
-   if (fMedium)  {
+   if (fMedium) {
       fMedium->GetMaterial()->SetTransparency(transparency);
    }
 }
