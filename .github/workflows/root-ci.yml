@@ -97,6 +97,9 @@ jobs:
     permissions:
       contents: read
 
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event_name == 'push' || github.run_id }}
+
     defaults:
       run:
         shell: bash -leo pipefail {0} # Use login shell, so profile scripts get sourced
