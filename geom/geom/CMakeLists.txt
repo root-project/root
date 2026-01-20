@@ -125,6 +125,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     MathCore
     Hist
     Physics
+    Imt
 )
 
 # GCC has bugs with -O3 or -Ofast that break Geom
