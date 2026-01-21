@@ -182,6 +182,17 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
    ASTContext &C = FD->getASTContext();
    PrintingPolicy Policy(C.getPrintingPolicy());
    refType = kNotReference;
+
+   // Handle an autotype before canonicalizing it. Otherwise we could lose aliases to private types
+   if (const AutoType* AutoTy = dyn_cast<AutoType>(QT.getTypePtr())) {
+      if (!AutoTy->getDeducedType().isNull()) {
+         QT = cling::utils::TypeName::GetFullyQualifiedType(AutoTy->getDeducedType(), FD->getASTContext());
+         QT.getAsStringInternal(type_name, Policy);
+         return;
+      }
+      // FIXME : Come up with a way to handle undeduced types
+   }
+   QT = QT.getCanonicalType();
    if (QT->isRecordType() && forArgument) {
       GetTypeAsString(QT, type_name, C, Policy);
       return;
@@ -283,12 +294,12 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
-      QualType QT = Ty.getCanonicalType();
       string type_name;
       EReferenceType refType = kNotReference;
       bool isPointer = false;
-      collect_type_info(QT, typedefbuf, callbuf, type_name,
+      collect_type_info(Ty, typedefbuf, callbuf, type_name,
                         refType, isPointer, indent_level, true);
+      QualType QT = Ty.getCanonicalType();
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -407,12 +418,11 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
-      QualType QT = Ty.getCanonicalType();
       string type_name;
       EReferenceType refType = kNotReference;
       bool isPointer = false;
-      collect_type_info(QT, typedefbuf, callbuf, type_name, refType, isPointer, indent_level, true);
-
+      collect_type_info(Ty, typedefbuf, callbuf, type_name, refType, isPointer, indent_level, true);
+      QualType QT = Ty.getCanonicalType();
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -927,7 +937,8 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
       return;
    }
-   QualType QT = FD->getReturnType().getCanonicalType();
+   QualType QT = FD->getReturnType();
+
    if (QT->isVoidType()) {
       ostringstream typedefbuf;
       ostringstream callbuf;
