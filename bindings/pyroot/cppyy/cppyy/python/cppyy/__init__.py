@@ -153,12 +153,19 @@ class make_smartptr(object):
     def __call__(self, ptr):
         return py_make_smartptr(type(ptr), self.ptrcls)(ptr)
     def __getitem__(self, cls):
+        # For the builtin types that directly map to C++ types, we get the name
+        # immediately so we don't reach the fallback in the end.
+        # See also Utility::ConstructTemplateArgs() in CPyCpyy.
+        if cls is int:
+            cls = "int"
+        elif cls is float:
+            cls = "float"
         try:
             if not cls.__module__ == int.__module__:
                 return py_make_smartptr(cls, self.ptrcls)
         except AttributeError:
             pass
-        if isinstance(cls, str) and not cls in ('int', 'float'):
+        if isinstance(cls, str):
             return py_make_smartptr(getattr(gbl, cls), self.ptrcls)
         return self.maker[cls]
 
