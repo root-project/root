@@ -280,7 +280,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    // make a personalized memory copy of this THostAuth
    if (strchr(fHostAuth->GetHost(),'*') || strchr(fHostAuth->GetHost(),'*') ||
        fHostAuth->GetServer() == -1 ) {
-      fHostAuth = new THostAuth(*fHostAuth);
+      fHostAuth = new ROOT::Deprecated::THostAuth(*fHostAuth);
       fHostAuth->SetHost(fqdn);
       fHostAuth->SetUser(checkUser);
       fHostAuth->SetServer(servtype);
@@ -1907,8 +1907,8 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
 /// (host,user), setting fHostAuth accordingly.
 /// If no entry is found fHostAuth is not changed
 
-THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
-                                      Option_t */*opt*/, Int_t *exact)
+ROOT::Deprecated::THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
+                                                        Option_t */*opt*/, Int_t *exact)
 {
    if (exact)
       *exact = 0;
@@ -1934,15 +1934,15 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
    TString usr = user;
    if (!usr.Length())
       usr = "*";
-   THostAuth *rHA = 0;
+   ROOT::Deprecated::THostAuth *rHA = 0;
 
    // Check list of auth info for already loaded info about this host
    TIter *next = new TIter(GetAuthInfo());
 
-   THostAuth *ai;
+   ROOT::Deprecated::THostAuth *ai;
    Bool_t notFound = kTRUE;
    Bool_t serverOK = kTRUE;
-   while ((ai = (THostAuth *) (*next)())) {
+   while ((ai = (ROOT::Deprecated::THostAuth *) (*next)())) {
       if (gDebug > 3)
          ai->Print("Authenticate::GetHostAuth");
 
@@ -1979,8 +1979,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user,
 /// in the fgAuthInfo list
 /// Returns pointer to it or 0
 
-THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
-                                      Option_t */*opt*/)
+ROOT::Deprecated::THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user, Option_t */*opt*/)
 {
    if (gDebug > 2)
       ::Info("TAuthenticate::HasHostAuth", "enter ... %s ... %s", host, user);
@@ -2001,8 +2000,8 @@ THostAuth *TAuthenticate::HasHostAuth(const char *host, const char *user,
    }
 
    TIter *next = new TIter(GetAuthInfo());
-   THostAuth *ai;
-   while ((ai = (THostAuth *) (*next)())) {
+   ROOT::Deprecated::THostAuth *ai;
+   while ((ai = (ROOT::Deprecated::THostAuth *) (*next)())) {
 
       if (hostFQDN == ai->GetHost() &&
           !strcmp(user, ai->GetUser()) && srvtyp == ai->GetServer()) {
@@ -2129,7 +2128,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove THostAuth instance from the list
 
-void TAuthenticate::RemoveHostAuth(THostAuth * ha, Option_t */*opt*/)
+void TAuthenticate::RemoveHostAuth(ROOT::Deprecated::THostAuth * ha, Option_t */*opt*/)
 {
    GetAuthInfo()->Remove(ha);
    // ... destroy it
@@ -2162,8 +2161,8 @@ void TAuthenticate::Show(Option_t *opt)
       ::Info("::Print", " +                                                                  +");
       ::Info("::Print", " +------------------------------------------------------------------+");
       TIter next(GetAuthInfo());
-      THostAuth *ai;
-      while ((ai = (THostAuth *)next())) {
+      ROOT::Deprecated::THostAuth *ai;
+      while ((ai = (ROOT::Deprecated::THostAuth *)next())) {
          ai->Print();
          ai->PrintEstablished();
       }
@@ -3246,15 +3245,15 @@ Int_t TAuthenticate::ReadRootAuthrc()
 
          // Get related THostAuth, if exists in the tmp list,
          TIter next(&tmpAuthInfo);
-         THostAuth *ha;
-         while ((ha = (THostAuth *)next())) {
+         ROOT::Deprecated::THostAuth *ha;
+         while ((ha = (ROOT::Deprecated::THostAuth *)next())) {
             if (host == ha->GetHost() && user == ha->GetUser() &&
                 srvtyp == ha->GetServer())
                break;
          }
          if (!ha) {
             // Create a new one
-            ha = new THostAuth(host,srvtyp,user);
+            ha = new ROOT::Deprecated::THostAuth(host,srvtyp,user);
             tmpAuthInfo.Add(ha);
          }
 
@@ -3353,8 +3352,8 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 {
    // Remove inactive from the 'std'
    TIter nxstd(std);
-   THostAuth *ha;
-   while ((ha = (THostAuth *) nxstd())) {
+   ROOT::Deprecated::THostAuth *ha;
+   while ((ha = (ROOT::Deprecated::THostAuth *) nxstd())) {
       if (!ha->IsActive()) {
          std->Remove(ha);
          SafeDelete(ha);
@@ -3363,12 +3362,12 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 
    // Merge 'nin' info in 'std'
    TIter nxnew(nin);
-   THostAuth *hanew;
-   while ((hanew = (THostAuth *)nxnew())) {
+   ROOT::Deprecated::THostAuth *hanew;
+   while ((hanew = (ROOT::Deprecated::THostAuth *)nxnew())) {
       if (hanew->NumMethods()) {
          TString hostsrv;
          hostsrv.Form("%s:%d",hanew->GetHost(),hanew->GetServer());
-         THostAuth *hastd =
+         ROOT::Deprecated::THostAuth *hastd =
             TAuthenticate::HasHostAuth(hostsrv,hanew->GetUser(),opt);
          if (hastd) {
             // Update with new info
@@ -3386,7 +3385,7 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 
    // Cleanup memory before quitting
    nxnew.Reset();
-   while ((hanew = (THostAuth *)nxnew())) {
+   while ((hanew = (ROOT::Deprecated::THostAuth *)nxnew())) {
       if (!hanew->IsActive()) {
          nin->Remove(hanew);
          SafeDelete(hanew);
@@ -3401,11 +3400,11 @@ void TAuthenticate::MergeHostAuthList(TList *std, TList *nin, Option_t *opt)
 
 void TAuthenticate::RemoveSecContext(ROOT::Deprecated::TRootSecContext *ctx)
 {
-   THostAuth *ha = 0;
+   ROOT::Deprecated::THostAuth *ha = 0;
 
    // authinfo first
    TIter nxai(GetAuthInfo());
-   while ((ha = (THostAuth *)nxai())) {
+   while ((ha = (ROOT::Deprecated::THostAuth *)nxai())) {
       TIter next(ha->Established());
       ROOT::Deprecated::TRootSecContext *lctx = 0;
       while ((lctx = (ROOT::Deprecated::TRootSecContext *) next())) {
