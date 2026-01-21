@@ -30,9 +30,13 @@
 class TList;
 class TVirtualStreamerInfo;
 
+namespace ROOT::Deprecated {
+class TAuthenticate;
+} // namespace ROOT::Deprecated;
+
 class TMessage : public TBufferFile {
 
-friend class TAuthenticate;
+friend class ROOT::Deprecated::TAuthenticate;
 friend class TSocket;
 friend class TUDPSocket;
 friend class TPSocket;
