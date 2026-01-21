@@ -88,6 +88,13 @@ jobs:
     permissions:
       contents: read
 
+    concurrency:
+      # We need only one build cache update to run after merges to master
+      # The group name expands to something like
+      # "ROOT CI-20964/merge-mac26-21173435944", unless it's a build cache update, where it will be
+      # "ROOT CI-master     -mac26-update_build_cache", so only one of these jobs will run
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.platform }}-${{ github.event_name == 'push' && 'update_build_cache' || github.run_id }}
+
     strategy:
       fail-fast: false
       matrix:
