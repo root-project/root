@@ -403,7 +403,6 @@ jobs:
             platform_config: alma9-modules_off
             is_special: true
             property: modules_off
-            overrides: ["CMAKE_CXX_STANDARD=20"]
           - image: alma9
             platform_config: alma9-march_native
             is_special: true
