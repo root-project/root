@@ -477,11 +477,17 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
             std::string subtype{"std::initializer_list<"};
             PyObject* item = PySequence_GetItem(arg, 0);
             ArgPreference subpref = pref == kValue ? kValue : kPointer;
-            if (AddTypeName(subtype, (PyObject*)Py_TYPE(item), item, subpref)) {
+            bool ret = AddTypeName(subtype, (PyObject*)Py_TYPE(item), item, subpref);
+            if (ret) {
                 tmpl_name.append(subtype);
                 tmpl_name.append(">");
             }
             Py_DECREF(item);
+        // Error occurred in inner call to AddTypeName, which means it has
+        // also set a TypeError. We return and let the error propagate.
+            if (!ret) {
+                return false;
+            }
         }
 
         return true;
@@ -615,6 +621,15 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
         return true;
     }
 
+// Give up with a TypeError
+
+// Try to get a readable representation of the argument
+    PyObject *repr = PyObject_Repr(tn);
+    const char *repr_cstr = repr ? PyUnicode_AsUTF8(repr) : "<unprintable>";
+
+    PyErr_Format(PyExc_TypeError, "could not construct C++ name from template argument %s", repr_cstr);
+
+    Py_XDECREF(repr);
     return false;
 }
 
@@ -644,8 +659,6 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
     // __cpp_name__ and/or __name__ is rather expensive)
         } else {
             if (!AddTypeName(tmpl_name, tn, (args ? PyTuple_GET_ITEM(args, i) : nullptr), pref, pcnt)) {
-                PyErr_SetString(PyExc_SyntaxError,
-                    "could not construct C++ name from provided template argument.");
                 return "";
             }
         }
