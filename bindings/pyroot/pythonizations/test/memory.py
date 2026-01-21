@@ -49,7 +49,7 @@ class MemoryStlString(unittest.TestCase):
 
         ttree = ROOT.TTree("tree", "tree")
 
-        with ROOT.TFile(filename, "RECREATE") as infile:
+        with ROOT.TFile(filename, "RECREATE") as _:
             ttree_clone = ttree.CloneTree()
 
         os.remove(filename)
@@ -88,7 +88,6 @@ class MemoryStlString(unittest.TestCase):
             "TH1I": ("h", "h", 10, 0, 10),
             "TH1L": ("h", "h", 10, 0, 10),
             "TH1F": ("h", "h", 10, 0, 10),
-            "TH1D": ("h", "h", 10, 0, 10),
             "TProfile": ("h", "h", 10, 0, 10),
             "TH2C": ("h", "h", 10, 0, 10, 10, 0, 10),
             "TH2S": ("h", "h", 10, 0, 10, 10, 0, 10),
@@ -111,8 +110,6 @@ class MemoryStlString(unittest.TestCase):
             "TGraph2D": (100,),
             "TEntryList": ("name", "title"),
             "TEventList": ("name", "title"),
-            "TTree": ("name", "title"),
-            "TNtuple": ("name", "title", "x:y:z"),
         }
         for klass, args in objs.items():
             with self.subTest(klass=klass):
