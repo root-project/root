@@ -304,9 +304,14 @@ void *RFile::GetUntyped(std::string_view path,
    void *obj = key ? key->ReadObjectAny(cls) : nullptr;
 
    if (obj) {
-      // Disavow any ownership on `obj`
-      if (auto autoAddFunc = cls->GetDirectoryAutoAdd(); autoAddFunc) {
-         autoAddFunc(obj, nullptr);
+      // Disavow any ownership on `obj` unless the object is a TTree, in which case we need to link it to our internal
+      // file for it to be usable.
+      if (auto autoAddFunc = cls->GetDirectoryAutoAdd()) {
+         if (cls->InheritsFrom("TTree")) {
+            autoAddFunc(obj, fFile.get());
+         } else {
+            autoAddFunc(obj, nullptr);
+         }
       }
    } else if (key) {
       R__LOG_INFO(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
