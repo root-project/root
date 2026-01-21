@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-   THostAuth::THostAuth() : TObject()
+   ROOT::Deprecated::THostAuth::THostAuth() : TObject()
 {
    Create(0, 0);
 }
@@ -45,8 +45,8 @@
 /// with server either "sock[d]", "root[d]" or
 /// 0, 1, respectively.
 
-THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
-                     Int_t *authmeth, char **details) : TObject()
+ROOT::Deprecated::THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
+                                       Int_t *authmeth, char **details) : TObject()
 {
    Create(host, user, nmeth, authmeth, details);
 }
@@ -58,8 +58,8 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
 /// with server either "sock[d]", "root[d]" or
 /// 0, 1, respectively.
 
-THostAuth::THostAuth(const char *host, Int_t server, const char *user,
-                     Int_t nmeth, Int_t *authmeth, char **details) : TObject()
+ROOT::Deprecated::THostAuth::THostAuth(const char *host, Int_t server, const char *user,
+                                       Int_t nmeth, Int_t *authmeth, char **details) : TObject()
 {
    Create(host, user, nmeth, authmeth, details);
 
@@ -71,8 +71,8 @@ THostAuth::THostAuth(const char *host, Int_t server, const char *user,
 /// 'host' may contain also the server for whicb these directives
 /// are valid in the form 'host:server' or 'server://host'
 
-THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
-                     const char *details) : TObject()
+ROOT::Deprecated::THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
+                                       const char *details) : TObject()
 {
    Create(host, user, 1, &authmeth, (char **)&details);
 }
@@ -82,8 +82,8 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
 /// 'host' may contain also the server for whicb these directives
 /// are valid in the form 'host:server' or 'server://host'
 
-THostAuth::THostAuth(const char *host, Int_t server, const char *user,
-                     Int_t authmeth, const char *details) : TObject()
+ROOT::Deprecated::THostAuth::THostAuth(const char *host, Int_t server, const char *user,
+                                       Int_t authmeth, const char *details) : TObject()
 {
    Create(host, user, 1, &authmeth, (char **)&details);
    fServer = server;
@@ -96,8 +96,8 @@ THostAuth::THostAuth(const char *host, Int_t server, const char *user,
 /// with server either "sock[d]", "root[d]" or
 /// 0, 1, respectively.
 
-void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
-                       Int_t *authmeth, char **details)
+void ROOT::Deprecated::THostAuth::Create(const char *host, const char *user, Int_t nmeth,
+                                         Int_t *authmeth, char **details)
 {
    int i;
 
@@ -184,7 +184,7 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy ctor ...
 
-THostAuth::THostAuth(THostAuth &ha) : TObject()
+ROOT::Deprecated::THostAuth::THostAuth(THostAuth &ha) : TObject()
 {
    fHost = ha.fHost;
    fServer = ha.fServer;
@@ -205,7 +205,7 @@ THostAuth::THostAuth(THostAuth &ha) : TObject()
 /// Add method to the list. If already there, change its
 /// details to 'details'
 
-void  THostAuth::AddMethod(Int_t meth, const char *details)
+void  ROOT::Deprecated::THostAuth::AddMethod(Int_t meth, const char *details)
 {
    // Check 'meth'
    if (meth < 0 || meth >= kMAXSEC) return;
@@ -238,7 +238,7 @@ void  THostAuth::AddMethod(Int_t meth, const char *details)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove method 'meth' from the list, if there ...
 
-void  THostAuth::RemoveMethod(Int_t meth)
+void  ROOT::Deprecated::THostAuth::RemoveMethod(Int_t meth)
 {
    // If we don't have it, nothing to do
    Int_t pos = -1;
@@ -272,7 +272,7 @@ void  THostAuth::RemoveMethod(Int_t meth)
 /// Remove all methods, leaving Active status and
 /// list of associted TSceContexts unchanged
 
-void  THostAuth::Reset()
+void  ROOT::Deprecated::THostAuth::Reset()
 {
    // Free all filled positions
    Int_t i = 0;
@@ -290,7 +290,7 @@ void  THostAuth::Reset()
 ////////////////////////////////////////////////////////////////////////////////
 /// The dtor.
 
-THostAuth::~THostAuth()
+ROOT::Deprecated::THostAuth::~THostAuth()
 {
    delete    fSecContexts;
 }
@@ -299,7 +299,7 @@ THostAuth::~THostAuth()
 /// Return authentication details for specified level
 /// or "" if the specified level does not exist for this host.
 
-const char *THostAuth::GetDetails(Int_t level)
+const char *ROOT::Deprecated::THostAuth::GetDetails(Int_t level)
 {
    Int_t i = -1;
    if (HasMethod(level,&i)) {
@@ -315,7 +315,7 @@ const char *THostAuth::GetDetails(Int_t level)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if method 'level' is in the list
 
-Bool_t THostAuth::HasMethod(Int_t level, Int_t *pos)
+Bool_t ROOT::Deprecated::THostAuth::HasMethod(Int_t level, Int_t *pos)
 {
    int i;
    for (i = 0; i < fNumMethods; i++) {
@@ -331,7 +331,7 @@ Bool_t THostAuth::HasMethod(Int_t level, Int_t *pos)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set authentication details for specified level.
 
-void THostAuth::SetDetails(Int_t level, const char *details)
+void ROOT::Deprecated::THostAuth::SetDetails(Int_t level, const char *details)
 {
    Int_t i = -1;
    if (HasMethod(level,&i)) {
@@ -352,7 +352,7 @@ void THostAuth::SetDetails(Int_t level, const char *details)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print object content.
 
-void THostAuth::Print(Option_t *proc) const
+void ROOT::Deprecated::THostAuth::Print(Option_t *proc) const
 {
    char srvnam[4][8] = { "any", "sockd", "rootd", "???" };
 
@@ -376,7 +376,7 @@ void THostAuth::Print(Option_t *proc) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print info about established authentication vis-a-vis of this Host.
 
-void THostAuth::PrintEstablished() const
+void ROOT::Deprecated::THostAuth::PrintEstablished() const
 {
    Info("PrintEstablished",
         "+------------------------------------------------------------------------------+");
@@ -401,7 +401,7 @@ void THostAuth::PrintEstablished() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Reorder nmet methods according fmet[nmet]
 
-void  THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
+void  ROOT::Deprecated::THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
 {
    // Temporary arrays
    Int_t   tMethods[kMAXSEC] = {0};
@@ -461,7 +461,7 @@ void  THostAuth::ReOrder(Int_t nmet, Int_t *fmet)
 /// Update info with the one in ha
 /// Remaining methods, if any, get lower priority
 
-void  THostAuth::Update(THostAuth *ha)
+void  ROOT::Deprecated::THostAuth::Update(THostAuth *ha)
 {
    // Temporary arrays
    Int_t   tNumMethods = fNumMethods;
@@ -511,7 +511,7 @@ void  THostAuth::Update(THostAuth *ha)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set 'method' to be the first used (if in the list ...).
 
-void  THostAuth::SetFirst(Int_t method)
+void  ROOT::Deprecated::THostAuth::SetFirst(Int_t method)
 {
    Int_t i = -1;
    if (HasMethod(method,&i)) {
@@ -543,7 +543,7 @@ void  THostAuth::SetFirst(Int_t method)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set 'method' to be the last used (if in the list ...).
 
-void THostAuth::SetLast(Int_t method)
+void ROOT::Deprecated::THostAuth::SetLast(Int_t method)
 {
    Int_t i = -1;
    if (HasMethod(method,&i)) {
@@ -579,7 +579,7 @@ void THostAuth::SetLast(Int_t method)
 /// authentication 'details'.
 /// Faster then AddMethod(method,details)+SetFirst(method).
 
-void THostAuth::AddFirst(Int_t level, const char *details)
+void ROOT::Deprecated::THostAuth::AddFirst(Int_t level, const char *details)
 {
    Int_t i = -1;
    if (HasMethod(level,&i)) {
@@ -622,7 +622,7 @@ void THostAuth::AddFirst(Int_t level, const char *details)
 ////////////////////////////////////////////////////////////////////////////////
 /// Count successes for 'method'
 
-void THostAuth::CountSuccess(Int_t method)
+void ROOT::Deprecated::THostAuth::CountSuccess(Int_t method)
 {
    int i;
    for (i = 0; i < fNumMethods; i++) {
@@ -636,7 +636,7 @@ void THostAuth::CountSuccess(Int_t method)
 ////////////////////////////////////////////////////////////////////////////////
 /// Count failures for 'method'
 
-void THostAuth::CountFailure(Int_t method)
+void ROOT::Deprecated::THostAuth::CountFailure(Int_t method)
 {
    int i;
    for (i = 0; i < fNumMethods; i++) {
@@ -651,13 +651,13 @@ void THostAuth::CountFailure(Int_t method)
 /// Create a Security context and add it to local list
 /// Return pointer to it to be stored in TAuthenticate
 
-ROOT::Deprecated::TRootSecContext *THostAuth::CreateSecContext(const char *user, const char *host,
-                                                               Int_t meth, Int_t offset,
-                                                               const char *details, const char *token,
-                                                               TDatime expdate, void *sctx, Int_t key)
+ROOT::Deprecated::TRootSecContext *
+ROOT::Deprecated::THostAuth::CreateSecContext(const char *user, const char *host,
+                                              Int_t meth, Int_t offset,
+                                              const char *details, const char *token,
+                                              TDatime expdate, void *sctx, Int_t key)
 {
-   auto *ctx = new ROOT::Deprecated::TRootSecContext(user, host, meth, offset, details,
-                                                     token, expdate, sctx, key);
+   auto *ctx = new TRootSecContext(user, host, meth, offset, details, token, expdate, sctx, key);
    // Add it also to the local list if active
    if (ctx->IsActive())
       fSecContexts->Add(ctx);
@@ -669,7 +669,7 @@ ROOT::Deprecated::TRootSecContext *THostAuth::CreateSecContext(const char *user,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a static string with all info in a serialized form
 
-void THostAuth::AsString(TString &Out) const
+void ROOT::Deprecated::THostAuth::AsString(TString &Out) const
 {
    Out = Form("h:%s u:%s n:%d",GetHost(),GetUser(),fNumMethods);
 

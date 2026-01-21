@@ -31,11 +31,11 @@
 #include "AuthConst.h"
 
 class TAuthenticate;
-class THostAuth;
 class TPluginHandler;
 class TSocket;
 class TVirtualMutex;
 namespace ROOT::Deprecated {
+class THostAuth;
 class TRootAuth;
 class TRootSecContext;
 }
@@ -73,7 +73,7 @@ public:
 
 private:
    TString      fDetails;     // logon details (method dependent ...)
-   THostAuth   *fHostAuth;    // pointer to relevant authentication info
+   ROOT::Deprecated::THostAuth   *fHostAuth;    // pointer to relevant authentication info
    TString      fPasswd;      // user's password
    TString      fProtocol;    // remote service (rootd)
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
@@ -146,7 +146,7 @@ public:
    Bool_t             CheckNetrc(TString &user, TString &passwd);
    Bool_t             CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t srppwd);
-   THostAuth         *GetHostAuth() const { return fHostAuth; }
+   ROOT::Deprecated::THostAuth         *GetHostAuth() const { return fHostAuth; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
    Int_t              GetRSAKeyType() const { return fRSAKey; }
@@ -174,20 +174,20 @@ public:
    static Bool_t      GetGlobalSRPPwd();
    static const char *GetGlobalUser();
    static GlobusAuth_t GetGlobusAuthHook();
-   static THostAuth  *GetHostAuth(const char *host, const char *user="",
-                                  Option_t *opt = "R", Int_t *Exact = nullptr);
+   static ROOT::Deprecated::THostAuth  *GetHostAuth(const char *host, const char *user="",
+                                                    Option_t *opt = "R", Int_t *Exact = nullptr);
    static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
    static Int_t       GetRSAInit();
    static const char *GetRSAPubExport(Int_t key = 0);
-   static THostAuth  *HasHostAuth(const char *host, const char *user,
-                                  Option_t *opt = "R");
+   static ROOT::Deprecated::THostAuth  *HasHostAuth(const char *host, const char *user,
+                                                    Option_t *opt = "R");
    static void        InitRandom();
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static char       *PromptUser(const char *remote);
    static Int_t       ReadRootAuthrc();
-   static void        RemoveHostAuth(THostAuth *ha, Option_t *opt = "");
+   static void        RemoveHostAuth(ROOT::Deprecated::THostAuth *ha, Option_t *opt = "");
    static Int_t       SecureRecv(TSocket *Socket, Int_t dec,
                                  Int_t KeyType, char **Out);
    static Int_t       SecureSend(TSocket *Socket, Int_t enc,

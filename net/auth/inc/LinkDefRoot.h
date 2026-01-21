@@ -13,7 +13,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TAuthenticate;
-#pragma link C++ class THostAuth;
+#pragma link C++ class ROOT::Deprecated::THostAuth;
 #pragma link C++ class ROOT::Deprecated::TRootAuth;
 #pragma link C++ class ROOT::Deprecated::TRootSecContext;
 
