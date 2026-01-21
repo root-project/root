@@ -1770,6 +1770,12 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t dx = ((TGeoBBox *)shape)->GetDX();
    Double_t dy = ((TGeoBBox *)shape)->GetDY();
    Double_t dz = ((TGeoBBox *)shape)->GetDZ();
+   // the box might be displaced
+   auto origin_p = ((TGeoBBox *)shape)->GetOrigin();
+   Double_t ox = origin_p[0];
+   Double_t oy = origin_p[1];
+   Double_t oz = origin_p[2];
+
    Double_t dmax = 2. * TMath::Sqrt(dx * dx + dy * dy + dz * dz);
    Double_t d1, d2, dmove, dnext;
    Int_t itot = 0;
@@ -1794,9 +1800,9 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    while (itot < nsamples) {
       Bool_t inside = kFALSE;
       while (!inside) {
-         point[0] = gRandom->Uniform(-dx, dx);
-         point[1] = gRandom->Uniform(-dy, dy);
-         point[2] = gRandom->Uniform(-dz, dz);
+         point[0] = ox + gRandom->Uniform(-dx, dx);
+         point[1] = oy + gRandom->Uniform(-dy, dy);
+         point[2] = oz + gRandom->Uniform(-dz, dz);
          inside = shape->Contains(point);
       }
       itot++;
@@ -1939,6 +1945,12 @@ void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t dx = ((TGeoBBox *)shape)->GetDX();
    Double_t dy = ((TGeoBBox *)shape)->GetDY();
    Double_t dz = ((TGeoBBox *)shape)->GetDZ();
+   // the box might be displaced
+   auto origin_p = ((TGeoBBox *)shape)->GetOrigin();
+   Double_t ox = origin_p[0];
+   Double_t oy = origin_p[1];
+   Double_t oz = origin_p[2];
+
    // Number of tracks shot for every point inside the shape
    const Int_t kNtracks = 1000;
    Int_t n10 = nsamples / 10;
@@ -1956,9 +1968,9 @@ void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
    Int_t itot = 0;
    while (itot < nsamples) {
       Bool_t inside = kFALSE;
-      point[0] = gRandom->Uniform(-2 * dx, 2 * dx);
-      point[1] = gRandom->Uniform(-2 * dy, 2 * dy);
-      point[2] = gRandom->Uniform(-2 * dz, 2 * dz);
+      point[0] = ox + gRandom->Uniform(-2 * dx, 2 * dx);
+      point[1] = oy + gRandom->Uniform(-2 * dy, 2 * dy);
+      point[2] = oz + gRandom->Uniform(-2 * dz, 2 * dz);
       inside = shape->Contains(point);
       Double_t safe = shape->Safety(point, inside);
       itot++;
@@ -2013,6 +2025,12 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t dx = ((TGeoBBox *)shape)->GetDX();
    Double_t dy = ((TGeoBBox *)shape)->GetDY();
    Double_t dz = ((TGeoBBox *)shape)->GetDZ();
+   // the box might be displaced
+   auto origin_p = ((TGeoBBox *)shape)->GetOrigin();
+   Double_t ox = origin_p[0];
+   Double_t oy = origin_p[1];
+   Double_t oz = origin_p[2];
+
    Double_t dmax = 2. * TMath::Sqrt(dx * dx + dy * dy + dz * dz);
    // Number of tracks shot for every point inside the shape
    const Int_t kNtracks = 1000;
@@ -2026,9 +2044,9 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
    while (itot < nsamples) {
       Bool_t inside = kFALSE;
       while (!inside) {
-         spoint[3 * itot] = gRandom->Uniform(-dx, dx);
-         spoint[3 * itot + 1] = gRandom->Uniform(-dy, dy);
-         spoint[3 * itot + 2] = gRandom->Uniform(-dz, dz);
+         spoint[3 * itot] = ox + gRandom->Uniform(-dx, dx);
+         spoint[3 * itot + 1] = oy + gRandom->Uniform(-dy, dy);
+         spoint[3 * itot + 2] = oz + gRandom->Uniform(-dz, dz);
          inside = shape->Contains(&spoint[3 * itot]);
       }
       phi = 2 * TMath::Pi() * gRandom->Rndm();
@@ -2067,6 +2085,12 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
          if (errcnt > 0)
             break;
          dist = shape->DistFromInside(point, dir, 3);
+         if (dist > dmax) {
+            // distance is bigger than from bounding box
+            // should not happen for point inside
+            printf("Error DistFromInside Too large(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g\n",
+                   point[0], point[1], point[2], dir[0], dir[1], dir[2], dist);
+         }
          for (Int_t j = 0; j < 3; j++) {
             newpoint[j] = point[j] + dist * dir[j];
          }
@@ -2150,7 +2174,7 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
             dir[1] = TMath::Sin(theta) * TMath::Sin(phi);
             dir[2] = TMath::Cos(theta);
             ndotd = dir[0] * norm[0] + dir[1] * norm[1] + dir[2] * norm[2];
-            if (ndotd < 0)
+            if (ndotd <= 0)
                break; // backwards, still inside shape
          }
          if ((itot % 10) == 0)
