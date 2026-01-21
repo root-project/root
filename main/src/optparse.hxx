@@ -70,8 +70,9 @@
 /// ~~~
 ///
 /// (see EFlagTreatment for more details). This will **disable** flag grouping globally, but allows the parser to
-/// interpret flags and arguments that are not separated by spaces.
-/// Note that this only makes sense for flags with arguments.
+/// interpret flags and arguments that are not separated by spaces. If prefix arg is used, the equal sign will *not*
+/// be considered as the key-value separator (`-Dfoo=bar` if `-D` is a prefix arg flag will be parsed as `"-D",
+/// "foo=bar"`). Note that this option only makes sense for flags with arguments.
 ///
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-10-09
@@ -218,6 +219,10 @@ public:
          throw std::invalid_argument("Flag `" + std::string(*aliases.begin()) +
                                      "` has option kFlagPrefixArg but it's a Switch, so the option makes no sense.");
 
+      std::vector<RExpectedFlag> flagsToBeAdded;
+      flagsToBeAdded.reserve(aliases.size());
+
+      const auto nCurrentFlags = fExpectedFlags.size();
       int aliasIdx = -1;
       for (auto f : aliases) {
          auto prefixLen = f.find_first_not_of('-');
@@ -229,13 +234,17 @@ public:
 
          auto flagName = f.substr(prefixLen);
 
-         // Check that we're not introducing ambiguities with prefix flags. While we're at it, also check that none
-         // of the given aliases were already added.
+         // Check that we're not introducing ambiguities with prefix flags.
+         // While we're at it, also check that none of the given aliases were already added. Note that it is valid to
+         // add the same flag name as both a long and short flag (like "-foo" and "--foo") but only if they are aliases
+         // of the same flag.
          for (const auto &expFlag : fExpectedFlags) {
-            // NOTE: we're checking against the full string, not just the flag name, to allow cases like:
-            // AddFlag({"-foo", "--foo"}).
-            if (expFlag.AsStr() == f)
-               throw std::invalid_argument("Flag `" + expFlag.AsStr() + "` was added multiple times.");
+            if (expFlag.fName == flagName) {
+               throw std::invalid_argument(
+                  "Flag `" + std::string(flagName) +
+                  "` was added multiple times. Note that adding flags with the same name but different number of `-` "
+                  "can only be done as aliases of the same call to AddFlag().");
+            }
 
             if (!(flagOpts & kFlagPrefixArg) && !(expFlag.fOpts & kFlagPrefixArg))
                continue;
@@ -247,6 +256,15 @@ public:
                                            "` have a common prefix. This causes ambiguity because at least one of them "
                                            "is marked with kFlagPrefixArg.");
             }
+         }
+
+         // Check that the user didn't pass the very same flag multiple times in the same AddFlag invocation, as that's
+         // likely a mistake. This is different from the check done in the previous loop as that one only concerns
+         // flags that were already added before this AddFlag invocation.
+         for (const auto &expFlag : flagsToBeAdded) {
+            if (expFlag.AsStr() == f)
+               throw std::invalid_argument("The same flag `" + expFlag.AsStr() +
+                                           "` was passed multiple times to AddFlag().");
          }
 
          bool disallowsGrouping = (prefixLen == 1 && (f.size() > 2 || (flagOpts & kFlagPrefixArg)));
@@ -268,10 +286,12 @@ public:
          expected.fAlias = aliasIdx;
          expected.fShort = prefixLen == 1;
          expected.fOpts = flagOpts;
-         fExpectedFlags.push_back(expected);
+         flagsToBeAdded.push_back(expected);
          if (aliasIdx < 0)
-            aliasIdx = fExpectedFlags.size() - 1;
+            aliasIdx = nCurrentFlags + flagsToBeAdded.size() - 1;
       }
+
+      fExpectedFlags.insert(fExpectedFlags.end(), flagsToBeAdded.begin(), flagsToBeAdded.end());
    }
 
    /// If `name` refers to a previously-defined switch (i.e. a boolean flag), returns how many times
@@ -431,7 +451,8 @@ public:
             continue;
          }
 
-         ++arg;
+         ++arg; // eat first `-`.
+
          // Parse long or short flag and its argument into `argStr` / `nxtArgStr`.
          // Note that `argStr` may contain multiple flags in case of grouped short flags (in which case nxtArgStr
          // refers only to the last one).
@@ -442,16 +463,31 @@ public:
          if (arg[0] == '-') {
             // long flag
             ++arg;
-            const char *eq = strchr(arg, '=');
-            if (eq) {
-               argStr.push_back(std::string_view(arg, eq - arg));
-               nxtArgStr = std::string_view(eq + 1);
-               nxtArgIsTentative = false;
-            } else {
-               argStr.push_back(std::string_view(arg));
-               if (i < nArgs - 1 && args[i + 1][0] != '-') {
-                  nxtArgStr = args[i + 1];
-                  ++i;
+
+            // if we have prefix flags we need to check them first, as in that case the `=` sign should not be treated
+            // as the key-value separator.
+            const auto argLen = strlen(arg);
+            for (const auto &flag : fExpectedFlags) {
+               if ((flag.fOpts & kFlagPrefixArg) && flag.fName.size() < argLen &&
+                   strncmp(arg, flag.fName.c_str(), flag.fName.size()) == 0) {
+                  argStr.push_back(std::string_view(arg, flag.fName.size()));
+                  nxtArgStr = std::string_view(arg + flag.fName.size(), argLen - flag.fName.size());
+                  break;
+               }
+            }
+
+            if (argStr.empty()) {
+               const char *eq = strchr(arg, '=');
+               if (eq) {
+                  argStr.push_back(std::string_view(arg, eq - arg));
+                  nxtArgStr = std::string_view(eq + 1);
+                  nxtArgIsTentative = false;
+               } else {
+                  argStr.push_back(std::string_view(arg));
+                  if (i < nArgs - 1 && args[i + 1][0] != '-') {
+                     nxtArgStr = args[i + 1];
+                     ++i;
+                  }
                }
             }
          } else {
@@ -469,6 +505,8 @@ public:
                ++i;
             }
          }
+
+         assert(argStr.size() < 2 || fSettings.fFlagTreatment == EFlagTreatment::kGrouped);
 
          for (auto j = 0u; j < argStr.size(); ++j) {
             std::string_view argS = argStr[j];

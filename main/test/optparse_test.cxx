@@ -664,7 +664,7 @@ TEST(OptParse, PrefixMultiple)
    opts.Parse(args, std::size(args));
 
    EXPECT_TRUE(opts.GetErrors().empty());
-   EXPECT_EQ(opts.GetFlagValues("D"), std::vector<std::string_view>({"name", "name", "name"}));
+   EXPECT_EQ(opts.GetFlagValues("D"), std::vector<std::string_view>({"name", "=name", "name"}));
 }
 
 TEST(OptParse, PrefixWithEqual)
@@ -673,11 +673,24 @@ TEST(OptParse, PrefixWithEqual)
    opts.AddFlag({"--D"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "",
                 ROOT::RCmdLineOpts::kFlagAllowMultiple | ROOT::RCmdLineOpts::kFlagPrefixArg);
 
-   const char *args[] = {"somename", "--Df=a"};
+   const char *args[] = {"somename", "--Df=a", "--D", "f=a"};
    opts.Parse(args, std::size(args));
 
-   EXPECT_EQ(opts.GetErrors().size(), 1);
-   EXPECT_TRUE(opts.GetFlagValues("D").empty());
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetFlagValues("D"), std::vector<std::string_view>({"f=a", "f=a"}));
+}
+
+TEST(OptParse, PrefixShortMulticharacter)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-includeI"}, ROOT::RCmdLineOpts::EFlagType::kWithArg, "",
+                ROOT::RCmdLineOpts::kFlagAllowMultiple | ROOT::RCmdLineOpts::kFlagPrefixArg);
+
+   const char *args[] = {"somename", "-includeI/foo/bar", "-includeI", "/foo/bar"};
+   opts.Parse(args, std::size(args));
+
+   EXPECT_TRUE(opts.GetErrors().empty());
+   EXPECT_EQ(opts.GetFlagValues("includeI"), std::vector<std::string_view>({"/foo/bar", "/foo/bar"}));
 }
 
 TEST(OptParse, PrefixDisablesGrouping)
@@ -724,6 +737,37 @@ TEST(OptParse, DuplicateFlag)
       opts.AddFlag({"-a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
       FAIL() << "adding the same flag twice should fail";
    } catch (const std::invalid_argument &ex) {
-      EXPECT_STREQ(ex.what(), "Flag `-a` was added multiple times.");
+      EXPECT_STREQ(ex.what(), "Flag `a` was added multiple times. Note that adding flags with the same name but "
+                              "different number of `-` can only be done as aliases of the same call to AddFlag().");
+   }
+}
+
+TEST(OptParse, DuplicateFlagLongShort)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+   try {
+      opts.AddFlag({"--a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+      FAIL() << "adding the same flag twice should fail";
+   } catch (const std::invalid_argument &ex) {
+      EXPECT_STREQ(ex.what(), "Flag `a` was added multiple times. Note that adding flags with the same name but "
+                              "different number of `-` can only be done as aliases of the same call to AddFlag().");
+   }
+}
+
+TEST(OptParse, DuplicateFlagLongShortOk)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-a", "--a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+}
+
+TEST(OptParse, DuplicateFlagAlias)
+{
+   ROOT::RCmdLineOpts opts;
+   try {
+      opts.AddFlag({"--a", "--a"}, ROOT::RCmdLineOpts::EFlagType::kSwitch);
+      FAIL() << "adding the same flag twice should fail";
+   } catch (const std::invalid_argument &ex) {
+      EXPECT_STREQ(ex.what(), "The same flag `--a` was passed multiple times to AddFlag().");
    }
 }
