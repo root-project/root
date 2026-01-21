@@ -36,7 +36,6 @@
 #include "TVirtualMutex.h"
 
 class TMessage;
-class THostAuth;
 
 class TSocket : public TNamed {
 
