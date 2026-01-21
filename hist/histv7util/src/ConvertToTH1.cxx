@@ -2,6 +2,7 @@
 /// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
 /// Feedback is welcome!
 
+#include <ROOT/Hist/ConversionUtils.hxx>
 #include <ROOT/Hist/ConvertToTH1.hxx>
 #include <ROOT/RBinIndex.hxx>
 #include <ROOT/RHist.hxx>
@@ -27,7 +28,12 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
       throw std::invalid_argument("TH1 requires one dimension");
    }
 
-   std::unique_ptr<Hist> ret;
+   auto ret = std::make_unique<Hist>();
+   ret->SetDirectory(nullptr);
+
+   ROOT::Experimental::Hist::Internal::ConvertAxis(*ret->GetXaxis(), engine.GetAxes()[0]);
+   ret->SetBinsLength();
+
    Double_t *sumw2 = nullptr;
    auto copyBinContent = [&ret, &engine, &sumw2](Int_t i, RBinIndex index) {
       if constexpr (std::is_same_v<T, RBinWithError>) {
@@ -44,18 +50,8 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
       }
    };
 
-   const auto &axis = engine.GetAxes()[0];
-   if (auto *regular = axis.GetRegularAxis()) {
-      const std::size_t nNormalBins = regular->GetNNormalBins();
-      ret.reset(new Hist("", "", nNormalBins, regular->GetLow(), regular->GetHigh()));
-   } else {
-      throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
-   }
-
-   assert(ret);
-   ret->SetDirectory(nullptr);
-
    // Copy the bin contents, accounting for TH1 numbering conventions.
+   const auto &axis = engine.GetAxes()[0];
    for (auto index : axis.GetFullRange()) {
       if (index.IsUnderflow()) {
          copyBinContent(0, index);
