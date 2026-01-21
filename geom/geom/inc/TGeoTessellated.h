@@ -67,10 +67,18 @@ private:
    bool fClosedBody = false;              // The faces are making a closed body
    std::vector<Vertex_t> fVertices;       // List of vertices
    std::vector<TGeoFacet> fFacets;        // List of facets
+   std::vector<Vertex_t> fOutwardNormals; // Vector of outward-facing normals (to be streamed !)
+
    std::multimap<long, int> fVerticesMap; //! Temporary map used to deduplicate vertices
+   bool fIsClosed = false;                //! to know if shape still needs closure/initialization
+   void *fBVH = nullptr;                  //! BVH acceleration structure for safety and navigation
 
    TGeoTessellated(const TGeoTessellated &) = delete;
    TGeoTessellated &operator=(const TGeoTessellated &) = delete;
+
+   // bvh helper functions
+   void BuildBVH();
+   void CalculateNormals();
 
 public:
    // constructors
@@ -130,7 +138,23 @@ public:
    /// Reader from .obj format
    static TGeoTessellated *ImportFromObjFormat(const char *objfile, bool check = false, bool verbose = false);
 
-   ClassDefOverride(TGeoTessellated, 1) // tessellated shape class
+   // navigation functions used by TGeoNavigator (attention: only the iact == 3 cases implemented for now)
+   Double_t DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact = 1,
+                            Double_t step = TGeoShape::Big(), Double_t *safe = nullptr) const override;
+   Double_t DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact = 1, Double_t step = TGeoShape::Big(),
+                           Double_t *safe = nullptr) const override;
+   bool Contains(const Double_t *point) const override;
+   Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
+
+   Double_t Capacity() const override;
+
+private:
+   // a safety kernel used in multiple implementations
+   template <bool closest_facet = false>
+   Double_t SafetyKernel(const Double_t *point, bool in, int *closest_facet_id = nullptr) const;
+
+   ClassDefOverride(TGeoTessellated, 2) // tessellated shape class
 };
 
 #endif
