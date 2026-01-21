@@ -709,7 +709,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields));
+   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
    fOffsets.push_back(offsets[0]);
    fOffsets.push_back(offsets[1]);
 }
@@ -721,7 +721,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields));
+   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
 
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    auto *c = TClass::GetClass(GetTypeName().c_str());
@@ -852,11 +852,10 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    auto clone =
       std::unique_ptr<RProxiedCollectionField>(new RProxiedCollectionField(newName, fProxy->GetCollectionClass()));
    clone->fItemSize = fItemSize;
-   clone->Attach(std::move(newItemField));
+   clone->Attach(fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
    return clone;
 }
 
@@ -976,7 +975,7 @@ ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::un
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
 
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RMapField::CloneImpl(std::string_view newName) const
@@ -1011,7 +1010,7 @@ ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::un
 
    fItemSize = itemField->GetValueSize();
 
-   Attach(std::move(itemField));
+   Attach(std::move(itemField), "_0");
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RSetField::CloneImpl(std::string_view newName) const
@@ -1323,7 +1322,7 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields));
+   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
    fOffsets = offsets;
 }
 
@@ -1334,7 +1333,7 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields));
+   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
 
    auto *c = TClass::GetClass(GetTypeName().c_str());
    if (!c)
@@ -1438,7 +1437,7 @@ ROOT::RVariantField::RVariantField(std::string_view fieldName, std::vector<std::
       fMaxItemSize = std::max(fMaxItemSize, itemFields[i]->GetValueSize());
       fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
       fTraits &= itemFields[i]->GetTraits();
-      Attach(std::move(itemFields[i]));
+      Attach(std::move(itemFields[i]), "_" + std::to_string(i));
    }
 
    // With certain template parameters, the union of members of an std::variant starts at an offset > 0.
