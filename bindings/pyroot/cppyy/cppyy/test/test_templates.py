@@ -1177,6 +1177,22 @@ class TestTEMPLATES:
         assert ns.stringify["const char*"]("Aap")                    == "Aap "
         assert ns.stringify(ctypes.c_char_p(bytes("Noot", "ascii"))) == "Noot "
 
+    def test35_no_possible_cpp_name(self):
+        """Verify that we get a meaningful error if the C++ name can't be
+        constructed, e.g. because one attempts to use a Python object that
+        doens't map to a C++ type.
+        """
+
+        import cppyy
+
+        cppyy.cppdef(r"""
+        template<class T, class Y=void>
+        void test35_func () { }
+        """)
+
+        with pytest.raises(TypeError, match=r"could not construct C\+\+ name"):
+            cppyy.gbl.test35_func[set(), list()]()
+
 
 class TestTEMPLATED_TYPEDEFS:
     def setup_class(cls):
