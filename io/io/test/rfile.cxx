@@ -6,6 +6,7 @@
 #include <TRandom3.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <TTree.h>
 #include <RZip.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
@@ -692,5 +693,35 @@ TEST(RFile, GetKeyInfo)
       EXPECT_EQ(key->GetClassName(), "string");
       EXPECT_EQ(key->GetTitle(), "");
       EXPECT_EQ(key->GetCycle(), 1);
+   }
+}
+
+TEST(RFile, TTreeRead)
+{
+   FileRaii fileGuard("test_rfile_ttree_read.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      int x;
+      tree->SetBranchAddress("x", &x);
+      for (auto i = 0u; i < tree->GetEntries(); ++i) {
+         tree->GetEntry(i);
+         EXPECT_EQ(x, i);
+      }
    }
 }
