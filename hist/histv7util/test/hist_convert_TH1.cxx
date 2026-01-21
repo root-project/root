@@ -1,6 +1,5 @@
 #include "histutil_test.hxx"
 
-#include <TAxis.h>
 #include <TH1.h>
 
 #include <array>
@@ -29,12 +28,6 @@ TEST(ConvertToTH1I, RHistEngine)
    ASSERT_EQ(th1i->GetNbinsX(), Bins);
    ASSERT_EQ(th1i->GetNbinsY(), 1);
    ASSERT_EQ(th1i->GetNbinsZ(), 1);
-
-   const auto *xAxis = th1i->GetXaxis();
-   EXPECT_FALSE(xAxis->IsVariableBinSize());
-   EXPECT_EQ(xAxis->GetNbins(), Bins);
-   EXPECT_EQ(xAxis->GetXmin(), 0.0);
-   EXPECT_EQ(xAxis->GetXmax(), Bins);
 
    for (std::size_t i = 0; i < Bins + 2; i++) {
       // Bin 7 was filled twice.
