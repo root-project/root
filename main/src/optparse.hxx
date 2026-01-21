@@ -428,124 +428,125 @@ public:
          if (!isFlag) {
             // positional argument
             fArgs.push_back(arg);
-         } else {
-            ++arg;
-            // Parse long or short flag and its argument into `argStr` / `nxtArgStr`.
-            // Note that `argStr` may contain multiple flags in case of grouped short flags (in which case nxtArgStr
-            // refers only to the last one).
-            argStr.clear();
-            std::string_view nxtArgStr;
-            // If this is false `nxtArgStr` *must* refer to the next arg, otherwise it might or might not be.
-            bool nxtArgIsTentative = true;
-            if (arg[0] == '-') {
-               // long flag
-               ++arg;
-               const char *eq = strchr(arg, '=');
-               if (eq) {
-                  argStr.push_back(std::string_view(arg, eq - arg));
-                  nxtArgStr = std::string_view(eq + 1);
-                  nxtArgIsTentative = false;
-               } else {
-                  argStr.push_back(std::string_view(arg));
-                  if (i < nArgs - 1 && args[i + 1][0] != '-') {
-                     nxtArgStr = args[i + 1];
-                     ++i;
-                  }
-               }
-            } else {
-               // short flag.
-               // If flag grouping is active, all flags except the last one will have an implicitly empty argument.
-               auto argLen = strlen(arg);
-               while (fSettings.fFlagTreatment == EFlagTreatment::kGrouped && argLen > 1) {
-                  argStr.push_back(std::string_view{arg, 1});
-                  ++arg, --argLen;
-               }
+            continue;
+         }
 
+         ++arg;
+         // Parse long or short flag and its argument into `argStr` / `nxtArgStr`.
+         // Note that `argStr` may contain multiple flags in case of grouped short flags (in which case nxtArgStr
+         // refers only to the last one).
+         argStr.clear();
+         std::string_view nxtArgStr;
+         // If this is false `nxtArgStr` *must* refer to the next arg, otherwise it might or might not be.
+         bool nxtArgIsTentative = true;
+         if (arg[0] == '-') {
+            // long flag
+            ++arg;
+            const char *eq = strchr(arg, '=');
+            if (eq) {
+               argStr.push_back(std::string_view(arg, eq - arg));
+               nxtArgStr = std::string_view(eq + 1);
+               nxtArgIsTentative = false;
+            } else {
                argStr.push_back(std::string_view(arg));
                if (i < nArgs - 1 && args[i + 1][0] != '-') {
                   nxtArgStr = args[i + 1];
                   ++i;
                }
             }
+         } else {
+            // short flag.
+            // If flag grouping is active, all flags except the last one will have an implicitly empty argument.
+            auto argLen = strlen(arg);
+            while (fSettings.fFlagTreatment == EFlagTreatment::kGrouped && argLen > 1) {
+               argStr.push_back(std::string_view{arg, 1});
+               ++arg, --argLen;
+            }
 
-            for (auto j = 0u; j < argStr.size(); ++j) {
-               std::string_view argS = argStr[j];
+            argStr.push_back(std::string_view(arg));
+            if (i < nArgs - 1 && args[i + 1][0] != '-') {
+               nxtArgStr = args[i + 1];
+               ++i;
+            }
+         }
 
-               const auto *exp = GetExpectedFlag(argS);
-               if (!exp) {
+         for (auto j = 0u; j < argStr.size(); ++j) {
+            std::string_view argS = argStr[j];
+
+            const auto *exp = GetExpectedFlag(argS);
+            if (!exp) {
+               fErrors.push_back(std::string("Unknown flag: ") + argOrig);
+               break;
+            }
+
+            // In Prefix mode, check if the returned expected flag is shorter than `argS`. This can mean two things:
+            // - if `nxtArgIsTentative == false` then this flag was followed by an equal sign, and in that case
+            //   the intention is interpreted as "I want this flag's argument to be whatever follows the equal sign",
+            //   which means we treat this as an unknown flag;
+            // - otherwise, we use the rest of `argS` as the argument to the flag.
+            // More concretely: if the user added flag "-D" and argS is "-Dfoo=bar", we parse it as
+            // {flag: "-Dfoo", arg: "bar"}, rather than {flag: "-D", arg: "foo=bar"}.
+            if ((exp->fOpts & kFlagPrefixArg) && argS.size() > exp->fName.size()) {
+               if (nxtArgIsTentative) {
+                  i -= !nxtArgStr.empty(); // if we had already picked a candidate next arg, undo that.
+                  nxtArgStr = argS.substr(exp->fName.size());
+                  nxtArgIsTentative = false;
+               } else {
                   fErrors.push_back(std::string("Unknown flag: ") + argOrig);
                   break;
                }
+            } else {
+               assert(exp->fName.size() == argS.size());
+            }
 
-               // In Prefix mode, check if the returned expected flag is shorter than `argS`. This can mean two things:
-               // - if `nxtArgIsTentative == false` then this flag was followed by an equal sign, and in that case
-               //   the intention is interpreted as "I want this flag's argument to be whatever follows the equal sign",
-               //   which means we treat this as an unknown flag;
-               // - otherwise, we use the rest of `argS` as the argument to the flag.
-               // More concretely: if the user added flag "-D" and argS is "-Dfoo=bar", we parse it as
-               // {flag: "-Dfoo", arg: "bar"}, rather than {flag: "-D", arg: "foo=bar"}.
-               if ((exp->fOpts & kFlagPrefixArg) && argS.size() > exp->fName.size()) {
-                  if (nxtArgIsTentative) {
-                     i -= !nxtArgStr.empty(); // if we had already picked a candidate next arg, undo that.
-                     nxtArgStr = argS.substr(exp->fName.size());
-                     nxtArgIsTentative = false;
-                  } else {
-                     fErrors.push_back(std::string("Unknown flag: ") + argOrig);
-                     break;
-                  }
-               } else {
-                  assert(exp->fName.size() == argS.size());
-               }
+            std::string_view nxtArg = (j == argStr.size() - 1) ? nxtArgStr : "";
 
-               std::string_view nxtArg = (j == argStr.size() - 1) ? nxtArgStr : "";
+            RCmdLineOpts::RFlag flag;
+            flag.fHelp = exp->fHelp;
+            // If the flag is an alias (e.g. long version of a short one), save its name as the aliased one, so we
+            // can fetch the value later by using any of the aliases.
+            if (exp->fAlias < 0)
+               flag.fName = exp->fName;
+            else
+               flag.fName = fExpectedFlags[exp->fAlias].fName;
 
-               RCmdLineOpts::RFlag flag;
-               flag.fHelp = exp->fHelp;
-               // If the flag is an alias (e.g. long version of a short one), save its name as the aliased one, so we
-               // can fetch the value later by using any of the aliases.
-               if (exp->fAlias < 0)
-                  flag.fName = exp->fName;
-               else
-                  flag.fName = fExpectedFlags[exp->fAlias].fName;
-
-               // Check for duplicate flags
-               if (!(exp->fOpts & kFlagAllowMultiple)) {
-                  auto existingIt = std::find_if(fFlags.begin(), fFlags.end(),
-                                                 [&flag](const auto &f) { return f.fName == flag.fName; });
-                  if (existingIt != fFlags.end()) {
-                     std::string err = std::string("Flag ") + exp->AsStr() + " appeared more than once";
-                     if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg)
-                        err += " with the value: " + existingIt->fValue;
-                     fErrors.push_back(err);
-                     break;
-                  }
-               }
-
-               // Check that arguments are what we expect.
-               if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg) {
-                  if (!nxtArg.empty()) {
-                     flag.fValue = nxtArg;
-                  } else {
-                     fErrors.push_back("Missing argument for flag " + exp->AsStr());
-                  }
-               } else {
-                  if (!nxtArg.empty()) {
-                     if (nxtArgIsTentative)
-                        --i;
-                     else
-                        fErrors.push_back("Flag " + exp->AsStr() + " does not expect an argument");
-                  }
-               }
-
-               if (!fErrors.empty())
+            // Check for duplicate flags
+            if (!(exp->fOpts & kFlagAllowMultiple)) {
+               auto existingIt =
+                  std::find_if(fFlags.begin(), fFlags.end(), [&flag](const auto &f) { return f.fName == flag.fName; });
+               if (existingIt != fFlags.end()) {
+                  std::string err = std::string("Flag ") + exp->AsStr() + " appeared more than once";
+                  if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg)
+                     err += " with the value: " + existingIt->fValue;
+                  fErrors.push_back(err);
                   break;
+               }
+            }
 
-               fFlags.push_back(flag);
+            // Check that arguments are what we expect.
+            if (exp->fFlagType == RCmdLineOpts::EFlagType::kWithArg) {
+               if (!nxtArg.empty()) {
+                  flag.fValue = nxtArg;
+               } else {
+                  fErrors.push_back("Missing argument for flag " + exp->AsStr());
+               }
+            } else {
+               if (!nxtArg.empty()) {
+                  if (nxtArgIsTentative)
+                     --i;
+                  else
+                     fErrors.push_back("Flag " + exp->AsStr() + " does not expect an argument");
+               }
             }
 
             if (!fErrors.empty())
                break;
+
+            fFlags.push_back(flag);
          }
+
+         if (!fErrors.empty())
+            break;
       }
    }
 };
