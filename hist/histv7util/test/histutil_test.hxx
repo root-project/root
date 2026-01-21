@@ -1,13 +1,16 @@
 #ifndef histutil_test
 #define histutil_test
 
+#include <ROOT/Hist/ConversionUtils.hxx>
 #include <ROOT/Hist/ConvertToTH1.hxx>
+#include <ROOT/RAxisVariant.hxx>
 #include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RWeight.hxx>
 
 using namespace ROOT::Experimental::Hist;
+using ROOT::Experimental::RAxisVariant;
 using ROOT::Experimental::RBinIndex;
 using ROOT::Experimental::RBinWithError;
 using ROOT::Experimental::RHist;
