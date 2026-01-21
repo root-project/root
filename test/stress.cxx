@@ -363,7 +363,7 @@ void stress2()
          OK = kFALSE;
 #else
 #ifdef R__HAS_CLOUDFLARE_ZLIB
-      Long64_t lastgood = 9813;
+      Long64_t lastgood = 9826; // changes for TH1 PR#18459
 #else
       Long64_t lastgood = 10100;  // changes in TFormula (v13)
 #endif
@@ -373,7 +373,7 @@ void stress2()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
+      printf("%-8s last=%lld, comp=%f vs lastgood=%lld\n"," ", last, comp, lastgood);
    }
    if (gPrintSubBench) { printf("Test  2 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
