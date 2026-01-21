@@ -30,20 +30,23 @@
 #endif
 #include "AuthConst.h"
 
-class TAuthenticate;
 class TPluginHandler;
 class TSocket;
 class TVirtualMutex;
+
 namespace ROOT::Deprecated {
+
+class TAuthenticate;
 class THostAuth;
 class TRootAuth;
 class TRootSecContext;
-}
+
+} // namespace ROOT::Deprecated
 
 typedef Int_t (*CheckSecCtx_t)(const char *subj, ROOT::Deprecated::TRootSecContext *ctx);
-typedef Int_t (*GlobusAuth_t)(TAuthenticate *auth, TString &user, TString &det);
-typedef Int_t (*Krb5Auth_t)(TAuthenticate *auth, TString &user, TString &det, Int_t version);
-typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char *passwd,
+typedef Int_t (*GlobusAuth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det);
+typedef Int_t (*Krb5Auth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det, Int_t version);
+typedef Int_t (*SecureAuth_t)(ROOT::Deprecated::TAuthenticate *auth, const char *user, const char *passwd,
                               const char *remote, TString &det, Int_t version);
 
 R__EXTERN TVirtualMutex *gAuthenticateMutex;
@@ -51,6 +54,8 @@ R__EXTERN TVirtualMutex *gAuthenticateMutex;
 struct R__rsa_KEY; // opaque replacement for rsa_KEY
 struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
 struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
+
+namespace ROOT::Deprecated {
 
 class TAuthenticate : public TObject {
 
@@ -73,13 +78,13 @@ public:
 
 private:
    TString      fDetails;     // logon details (method dependent ...)
-   ROOT::Deprecated::THostAuth   *fHostAuth;    // pointer to relevant authentication info
+   THostAuth   *fHostAuth;    // pointer to relevant authentication info
    TString      fPasswd;      // user's password
    TString      fProtocol;    // remote service (rootd)
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
    TString      fRemote;      // remote host to which we want to connect
    Int_t        fRSAKey;      // Type of RSA key used
-   ROOT::Deprecated::TRootSecContext *fSecContext;  // pointer to relevant sec context
+   TRootSecContext *fSecContext;  // pointer to relevant sec context
    ESecurity    fSecurity;    // actual logon security level
    TSocket     *fSocket;      // connection to remote daemon
    Int_t        fVersion;     // 0,1,2, ... accordingly to remote daemon version
@@ -132,7 +137,7 @@ private:
    static Bool_t          CheckHost(const char *Host, const char *host);
 
    static void            FileExpand(const char *fin, FILE *ftmp);
-   static void            RemoveSecContext(ROOT::Deprecated::TRootSecContext *ctx);
+   static void            RemoveSecContext(TRootSecContext *ctx);
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
@@ -146,16 +151,16 @@ public:
    Bool_t             CheckNetrc(TString &user, TString &passwd);
    Bool_t             CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t srppwd);
-   ROOT::Deprecated::THostAuth         *GetHostAuth() const { return fHostAuth; }
+   THostAuth         *GetHostAuth() const { return fHostAuth; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
    Int_t              GetRSAKeyType() const { return fRSAKey; }
-   ROOT::Deprecated::TRootSecContext       *GetSecContext() const { return fSecContext; }
+   TRootSecContext       *GetSecContext() const { return fSecContext; }
    TSocket           *GetSocket() const { return fSocket; }
    const char        *GetUser() const { return fUser; }
    Int_t              HasTimedOut() const { return fTimeOut; }
    void               SetRSAKeyType(Int_t key) { fRSAKey = key; }
-   void               SetSecContext(ROOT::Deprecated::TRootSecContext *ctx) { fSecContext = ctx; }
+   void               SetSecContext(TRootSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
 
@@ -174,20 +179,20 @@ public:
    static Bool_t      GetGlobalSRPPwd();
    static const char *GetGlobalUser();
    static GlobusAuth_t GetGlobusAuthHook();
-   static ROOT::Deprecated::THostAuth  *GetHostAuth(const char *host, const char *user="",
+   static THostAuth  *GetHostAuth(const char *host, const char *user="",
                                                     Option_t *opt = "R", Int_t *Exact = nullptr);
    static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
    static Int_t       GetRSAInit();
    static const char *GetRSAPubExport(Int_t key = 0);
-   static ROOT::Deprecated::THostAuth  *HasHostAuth(const char *host, const char *user,
+   static THostAuth  *HasHostAuth(const char *host, const char *user,
                                                     Option_t *opt = "R");
    static void        InitRandom();
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static char       *PromptUser(const char *remote);
    static Int_t       ReadRootAuthrc();
-   static void        RemoveHostAuth(ROOT::Deprecated::THostAuth *ha, Option_t *opt = "");
+   static void        RemoveHostAuth(THostAuth *ha, Option_t *opt = "");
    static Int_t       SecureRecv(TSocket *Socket, Int_t dec,
                                  Int_t KeyType, char **Out);
    static Int_t       SecureSend(TSocket *Socket, Int_t enc,
@@ -212,5 +217,9 @@ public:
 
    ClassDefOverride(TAuthenticate,0)  // Class providing remote authentication service
 };
+
+} // namespace ROOT::Deprecated
+
+using TAuthenticate R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::TAuthenticate;
 
 #endif
