@@ -1,1 +1,2 @@
+ROOT_ADD_GTEST(hist_conversion_utils hist_conversion_utils.cxx LIBRARIES ROOTHist ROOTHistUtil)
 ROOT_ADD_GTEST(hist_convert_TH1 hist_convert_TH1.cxx LIBRARIES ROOTHist ROOTHistUtil)
