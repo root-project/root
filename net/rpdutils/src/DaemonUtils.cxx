@@ -53,7 +53,6 @@
 #include "Rtypes.h"
 #include "Varargs.h"
 #include "DaemonUtils.h"
-#include "TAuthenticate.h"
 #include "TSecContext.h"
 #include "TEnv.h"
 #include "TROOT.h"
