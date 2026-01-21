@@ -1968,6 +1968,32 @@ class TestSTLTUPLE:
         assert s1.fInt == 42
         assert s2.fInt == 42
 
+    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="The wrong values are read back from the tuple!")
+    def test05_tuple_assignment_operator(self):
+        """Check that using std::tuple<>::operator= works.
+        This used to fail because ROOT uses a different type to represent
+        std::tuple internally.
+        """
+        import cppyy
+
+        l1 = [1, 2, 3.0, 4.0]
+
+        long = cppyy.gbl.long
+        double = cppyy.gbl.double
+
+        # We need some container in which we can re-assign the tuple elements
+        container = cppyy.gbl.std.vector("std::tuple<long, long, double, double>")(2)
+
+        value = cppyy.gbl.std.make_tuple[long, long, double, double](*l1)
+
+        # This checks if the tuple assignment operator works from Python
+        container[0] = value
+
+        # Get back elements as a Python list
+        l2 = [cppyy.gbl.std.get[i](container[0]) for i in range(len(l1))]
+
+        assert l2 == l1
+
 
 class TestSTLPAIR:
     def setup_class(cls):
