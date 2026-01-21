@@ -123,7 +123,7 @@ Int_t           TAuthenticate::fgProcessID = -1;
 TVirtualMutex *gAuthenticateMutex = 0;
 
 // Standard version of Sec Context match checking
-Int_t StdCheckSecCtx(const char *, ROOT::Deprecated::TRootSecContext *);
+static Int_t StdCheckSecCtx(const char *, ROOT::Deprecated::TRootSecContext *);
 
 
 
@@ -3329,7 +3329,7 @@ Int_t ROOT::Deprecated::TAuthenticate::ReadRootAuthrc()
 /// Returns: 1 if ok, 0 if not
 /// Deactivates Ctx is not valid
 
-Int_t StdCheckSecCtx(const char *user, ROOT::Deprecated::TRootSecContext *ctx)
+static Int_t StdCheckSecCtx(const char *user, ROOT::Deprecated::TRootSecContext *ctx)
 {
    Int_t rc = 0;
 
