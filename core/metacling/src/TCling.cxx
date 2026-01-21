@@ -4041,6 +4041,8 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    guard << guard_name;
 
    std::ostringstream alternateTuple;
+   std::ostringstream initializers;
+
    alternateTuple << "#ifndef " << guard.str() << "\n";
    alternateTuple << "#define " << guard.str() << "\n";
    alternateTuple << "namespace ROOT { namespace Internal {\n";
@@ -4053,10 +4055,13 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
          unsigned int nMember = 0;
          auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
          auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+         auto sep = ':';
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            initializers << "    " << sep << " _" << nMember << "(std::get<" << nMember << ">(std::forward<Tuple>(t)))\n";
             ++iter;
             ++nMember;
+            sep = ',';
          }
          break;
       }
@@ -4064,10 +4069,13 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
          unsigned int nMember = tupleContent.fElements.size() - 3;
          auto iter = tupleContent.fElements.rbegin() + 1; // skip the 'stars'.
          auto theEnd = tupleContent.fElements.rend() - 1; // Skip the template name (tuple).
+         auto sep = ':';
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+            initializers << "    " << sep << " _" << nMember << "(std::get<" << nMember << ">(std::forward<Tuple>(t)))\n";
             ++iter;
             --nMember;
+            sep = ',';
          }
          break;
       }
@@ -4077,6 +4085,15 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
          break;
       }
    }
+
+   // default constructor
+   alternateTuple << "  TEmulatedTuple() = default;\n";
+
+   // constructor from other tuple-like types, like std::tuple
+   alternateTuple << "  template <typename Tuple>\n";
+   alternateTuple << "  TEmulatedTuple(Tuple&& t)\n";
+   alternateTuple << initializers.str();
+   alternateTuple << "  {}\n";
 
    alternateTuple << "};\n";
    alternateTuple << "}}\n";
