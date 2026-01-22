@@ -454,6 +454,8 @@ Int_t TMemFile::SysReadImpl(Int_t, void *buf, Long64_t len)
          len = fSize - fSysOffset;
       }
 
+      R__ASSERT(len >= 0);
+
       if (fBlockOffset+len <= fBlockSeek->fSize) {
          // 'len' does not go past the end of the current block,
          // so let's make a simple copy.
