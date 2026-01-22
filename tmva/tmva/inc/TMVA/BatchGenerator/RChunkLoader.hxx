@@ -22,6 +22,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
+#include "TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx"
 
 #include "ROOT/RLogger.hxx"
 
@@ -119,6 +120,7 @@ private:
 
    std::size_t fNumTrainEntries;
    std::size_t fNumValidationEntries;
+   std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
 
    ROOT::RDF::RNode &f_rdf;
    std::vector<std::string> fCols;
@@ -152,6 +154,7 @@ public:
         fShuffle(shuffle),
         fSetSeed(setSeed)
    {
+      fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
       fNumCols = fCols.size();
       fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
 
@@ -323,29 +326,10 @@ public:
    void LoadTrainingChunk(RFlat2DMatrix &TrainChunkTensor, std::size_t chunk)
     {
 
-      std::random_device rd;
-      std::mt19937 g;
-
-      if (fSetSeed == 0) {
-         g.seed(rd());
-      } else {
-         g.seed(fSetSeed);
-      }
-
       std::size_t chunkSize = fTraining->ChunksSizes[chunk];
 
       if (chunk < fTraining->Chunks) {
          RFlat2DMatrix Tensor(chunkSize, fNumChunkCols);
-         TrainChunkTensor.Resize(chunkSize, fNumChunkCols);
-
-         // make an identity permutation map        
-         std::vector<int> indices(chunkSize);
-         std::iota(indices.begin(), indices.end(), 0);
-
-         // shuffle the identity permutation to create a new permutation         
-         if (fShuffle) {
-            std::shuffle(indices.begin(), indices.end(), g);
-         }
 
          // fill a chunk by looping over the blocks in a chunk (see RChunkConstructor)
          std::size_t chunkEntry = 0;
@@ -380,12 +364,8 @@ public:
             }
          }
 
-         // shuffle data in RTensor with the permutation map defined above
-         for (std::size_t i = 0; i < chunkSize; i++) {
-            std::copy(Tensor.GetData() + indices[i] * fNumChunkCols,
-                      Tensor.GetData() + (indices[i] + 1) * fNumChunkCols,
-                      TrainChunkTensor.GetData() + i * fNumChunkCols);
-         }
+         // shuffle the data in the chunk tensor
+         fTensorOperators->ShuffleTensor(TrainChunkTensor, Tensor);
       }
    }
 
@@ -396,29 +376,10 @@ public:
    void LoadValidationChunk(RFlat2DMatrix &ValidationChunkTensor, std::size_t chunk)
     {
 
-      std::random_device rd;
-      std::mt19937 g;
-
-      if (fSetSeed == 0) {
-         g.seed(rd());
-      } else {
-         g.seed(fSetSeed);
-      }
-
       std::size_t chunkSize = fValidation->ChunksSizes[chunk];
 
       if (chunk < fValidation->Chunks) {
          RFlat2DMatrix Tensor(chunkSize, fNumChunkCols);
-         ValidationChunkTensor.Resize(chunkSize, fNumChunkCols);
-
-         // make an identity permutation map        
-         std::vector<int> indices(chunkSize);
-         std::iota(indices.begin(), indices.end(), 0);
-
-         // shuffle the identity permutation to create a new permutation
-         if (fShuffle) {
-            std::shuffle(indices.begin(), indices.end(), g);
-         }
 
          std::size_t chunkEntry = 0;
          std::vector<std::pair<Long_t, Long_t>> BlocksInChunk = fValidation->ChunksIntervals[chunk];
@@ -452,12 +413,8 @@ public:
             }
          }
 
-         // shuffle data in RTensor with the permutation map defined above         
-         for (std::size_t i = 0; i < chunkSize; i++) {
-            std::copy(Tensor.GetData() + indices[i] * fNumChunkCols,
-                      Tensor.GetData() + (indices[i] + 1) * fNumChunkCols,
-                      ValidationChunkTensor.GetData() + i * fNumChunkCols);
-         }
+         // shuffle the data in the chunk tensor
+         fTensorOperators->ShuffleTensor(ValidationChunkTensor, Tensor);         
       }
    }
 
