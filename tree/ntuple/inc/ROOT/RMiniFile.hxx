@@ -87,7 +87,10 @@ public:
    /// Reads a given byte range from the file into the provided memory buffer.
    /// If `nbytes > fMaxKeySize` it will perform chunked read from multiple blobs,
    /// whose addresses are listed at the end of the first chunk.
+   /// \throw ROOT::RException if the read fails.
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
+   /// Like ReadBuffer but returns a RResult instead of throwing.
+   ROOT::RResult<void> TryReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
    /// Attempts to load the streamer info from the file.
    void LoadStreamerInfo();
 
