@@ -30,10 +30,6 @@ namespace RootCling {
       void (*fAddEnumToROOTFile)(const char *tdname) = nullptr;
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
-
-   struct TROOTSYSSetter {
-     TROOTSYSSetter();
-   };
 } // namespace RootCling
 } // namespace Internal
 } // namespace ROOT

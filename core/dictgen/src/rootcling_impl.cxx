@@ -149,15 +149,6 @@ static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SetRootSys();
-
-ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
-   // rootcling's libCore needs "our" ROOTSYS:
-   SetRootSys();
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 void EmitStreamerInfo(const char *normName)
 {
    if (gDriverConfig->fAddStreamerInfoToROOTFile)
@@ -467,73 +458,6 @@ bool IsLinkdefFile(const clang::PresumedLoc& PLoc)
 bool IsSelectionFile(const char *filename)
 {
    return ROOT::TMetaUtils::IsLinkdefFile(filename) || IsSelectionXml(filename);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the ROOTSYS env var based on the executable location.
-
-void SetRootSys()
-{
-   const char *exepath = GetExePath();
-   if (exepath && *exepath) {
-#if !defined(_WIN32)
-      char *ep = new char[PATH_MAX];
-      if (!realpath(exepath, ep)) {
-         fprintf(stderr, "rootcling: error getting realpath of rootcling!");
-         strlcpy(ep, exepath, PATH_MAX);
-      }
-#else
-      int nche = strlen(exepath) + 1;
-      char *ep = new char[nche];
-      strlcpy(ep, exepath, nche);
-#endif
-      char *s;
-
-      if ((s = strrchr(ep, '/'))) {
-         // $ROOTSYS/bin/rootcling
-         int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_stage1.exe", 20)) {
-            // $ROOTSYS/bin/rootcling_stage1.exe
-            removesubdirs = 2;
-            gBuildingROOT = true;
-         } else if (!strncmp(s + 1, "rootcling_stage1", 16)) {
-            // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
-            removesubdirs = 4;
-            gBuildingROOT = true;
-         }
-         for (int i = 1; s && i < removesubdirs; ++i) {
-            *s = 0;
-            s = strrchr(ep, '/');
-         }
-         if (s) *s = 0;
-      } else {
-         // There was no slashes at all let now change ROOTSYS
-         delete [] ep;
-         return;
-      }
-
-      if (!gBuildingROOT) {
-         delete [] ep;
-         return; // don't mess with user's ROOTSYS.
-      }
-
-      int ncha = strlen(ep) + 10;
-      char *env = new char[ncha];
-      snprintf(env, ncha, "ROOTSYS=%s", ep);
-
-      if (gDriverConfig) {
-         // After the putenv below, gRootDir might point to the old ROOTSYS
-         // entry, i.e. to deleted memory. Update it.
-         const char** pRootDir = gDriverConfig->fPRootDir;
-         if (pRootDir) {
-            *pRootDir = env + 8;
-         }
-      }
-
-      putenv(env);
-      // intentionally not call delete [] env, while GLIBC keep use pointer
-      delete [] ep;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
