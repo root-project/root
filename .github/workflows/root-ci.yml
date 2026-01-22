@@ -163,10 +163,11 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          ROOT_IMPLICIT_OWNERSHIP: silentOff
         run: |
           [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
           echo "Python is now $(which python3) $(python3 --version)"
-          src/.github/workflows/root-ci-config/build_root.py  \
+          src/.github/workflows/root-ci-config/build_root.py \
                     --buildtype       RelWithDebInfo          \
                     --incremental     $INCREMENTAL            \
                     --base_ref        ${{ github.base_ref }}  \
@@ -518,6 +519,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          ROOT_IMPLICIT_OWNERSHIP: silentOff
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}

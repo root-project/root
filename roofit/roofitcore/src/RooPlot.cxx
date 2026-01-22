@@ -56,6 +56,7 @@ object onto a one-dimensional plot.
 #include "TH1D.h"
 #include "TBrowser.h"
 #include "TVirtualPad.h"
+#include "TROOT.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -73,7 +74,10 @@ object onto a one-dimensional plot.
 
 bool RooPlot::_addDirStatus = true ;
 
-bool RooPlot::addDirectoryStatus() { return _addDirStatus; }
+bool RooPlot::addDirectoryStatus()
+{
+   return ROOT::Experimental::IsImplicitObjectOwnershipEnabled() && _addDirStatus;
+}
 bool RooPlot::setAddDirectoryStatus(bool flag) { bool ret = flag ; _addDirStatus = flag ; return ret ; }
 
 
