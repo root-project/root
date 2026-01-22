@@ -144,5 +144,29 @@ class RFileTests(unittest.TestCase):
         finally:
             os.remove(fileName)
 
+    def test_getTree(self):
+        from array import array
+
+        fileName = "test_rfile_gettree_py.root"
+        try:
+            with ROOT.TFile.Open(fileName, "RECREATE") as file:
+                tree = ROOT.TTree("tree", "tree")
+                x = array("i", [0])
+                tree.Branch("myColumn", x, "myColumn/I")
+                for i in range(10):
+                    x[0] = i
+                    tree.Fill()
+                tree.Write()
+
+            with RFile.Open(fileName) as rfile:
+                tree = rfile.Get("tree")
+                self.assertIsNot(tree, None)
+                self.assertEqual(tree.GetEntries(), 10)
+                xs = [entry.myColumn for entry in tree]
+                self.assertEqual(xs, [x for x in range(10)])
+        finally:
+            os.remove(fileName)
+
+
 if __name__ == "__main__":
     unittest.main()
