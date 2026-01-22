@@ -11,6 +11,9 @@
 TEST(Geometry, NoExtrusionInUnionSpan)
 {
    // import a GDML geometry with a policone inside a union of two polycones and a tube
+   TGeoManager::LockDefaultUnits(kFALSE);
+   TGeoManager::SetDefaultUnits(TGeoManager::kRootUnits);
+   TGeoManager::LockDefaultUnits(kTRUE);
    auto geom = TGeoManager::Import("no_extrusion.gdml");
    EXPECT_NE(geom, nullptr);
    if (!geom) {
