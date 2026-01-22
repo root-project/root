@@ -44,20 +44,10 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
       }
    };
 
-   const auto &axes = engine.GetAxes();
-   RBinIndexRange range;
-   if (auto *regular = axes[0].GetRegularAxis()) {
+   const auto &axis = engine.GetAxes()[0];
+   if (auto *regular = axis.GetRegularAxis()) {
       const std::size_t nNormalBins = regular->GetNNormalBins();
       ret.reset(new Hist("", "", nNormalBins, regular->GetLow(), regular->GetHigh()));
-
-      // Convert the flow bins, if enabled.
-      if (regular->HasFlowBins()) {
-         copyBinContent(0, RBinIndex::Underflow());
-         copyBinContent(nNormalBins + 1, RBinIndex::Overflow());
-      }
-
-      // Get the range of normal bins for the loop below.
-      range = regular->GetNormalRange();
    } else {
       throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
    }
@@ -65,9 +55,16 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
    assert(ret);
    ret->SetDirectory(nullptr);
 
-   // Convert the normal bins, accounting for TH1 numbering conventions.
-   for (auto index : range) {
-      copyBinContent(index.GetIndex() + 1, index);
+   // Copy the bin contents, accounting for TH1 numbering conventions.
+   for (auto index : axis.GetFullRange()) {
+      if (index.IsUnderflow()) {
+         copyBinContent(0, index);
+      } else if (index.IsOverflow()) {
+         copyBinContent(axis.GetNNormalBins() + 1, index);
+      } else {
+         assert(index.IsNormal());
+         copyBinContent(index.GetIndex() + 1, index);
+      }
    }
 
    return ret;
