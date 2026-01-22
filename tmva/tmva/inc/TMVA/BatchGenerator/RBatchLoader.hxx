@@ -118,9 +118,9 @@ public:
 
    /// \brief Return a batch of data as a unique pointer.
    /// After the batch has been processed, it should be destroyed.
-   /// \param[in] chunkTensor RTensor with the data from the chunk
+   /// \param[in] chunkTensor Tensor with the data from the chunk
    /// \param[in] idxs Index of batch in the chunk
-   /// \return Training batch
+   /// \return Batch
    std::unique_ptr<RFlat2DMatrix> CreateBatch(RFlat2DMatrix &chunTensor, std::size_t idxs)
    {
       auto batch = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
@@ -130,8 +130,8 @@ public:
       return batch;
    }
 
-   /// \brief Loading the training batch from the queue
-   /// \return Training batch
+   /// \brief Loading the batch from the queue
+   /// \return Batch
    RFlat2DMatrix GetBatch()
    {
 
@@ -146,11 +146,9 @@ public:
       return *fCurrentBatch;
    }
 
-   /// \brief Creating the training batches from a chunk and add them to the queue.
-   /// \param[in] chunkTensor RTensor with the data from the chunk
+   /// \brief Creating the batches from a chunk and add them to the queue.
+   /// \param[in] chunkTensor Tensor with the data from the chunk
    /// \param[in] lastbatch Check if the batch in the chunk is the last one
-   /// \param[in] leftoverBatchSize Size of the leftover batch in the training dataset
-   /// \param[in] dromRemainder Bool to drop the remainder batch or not
    void
    CreateBatches(RFlat2DMatrix &chunkTensor, std::size_t lastbatch)
    {
@@ -174,56 +172,56 @@ public:
                 chunkTensor.GetData() + (Batches * fBatchSize * NumCols + LeftoverBatchSize * NumCols),
                 LeftoverBatch.GetData());
 
-      // calculate how many empty slots are left in fPrimaryLeftoverTrainingBatch
+      // calculate how many empty slots are left in fPrimaryLeftoverBatch
       std::size_t PrimaryLeftoverSize = fPrimaryLeftoverBatch->GetRows();
       std::size_t emptySlots = fBatchSize - PrimaryLeftoverSize;
 
-      // copy LeftoverBatch to end of fPrimaryLeftoverTrainingBatch
+      // copy LeftoverBatch to end of fPrimaryLeftoverBatch
       if (emptySlots >= LeftoverBatchSize) {
          fPrimaryLeftoverBatch->Resize(PrimaryLeftoverSize + LeftoverBatchSize, NumCols);
          std::copy(LeftoverBatch.GetData(), LeftoverBatch.GetData() + (LeftoverBatchSize * fNumColumns),
                    fPrimaryLeftoverBatch->GetData() + (PrimaryLeftoverSize * NumCols));
 
-         // copy LeftoverBatch to end of fPrimaryLeftoverTrainingBatch and add it to the batch vector
+         // copy LeftoverBatch to end of fPrimaryLeftoverBatch and add it to the batch vector
          if (emptySlots == LeftoverBatchSize) {
             auto copy = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
             std::copy(fPrimaryLeftoverBatch->GetData(),
                       fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns), copy->GetData());
             batches.emplace_back(std::move(copy));
 
-            // reset fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverTrainingBatch
+            // reset fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
             *fPrimaryLeftoverBatch = *fSecondaryLeftoverBatch;
             fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
          }
       }
 
-      // copy LeftoverBatch to both fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverTrainingBatch
+      // copy LeftoverBatch to both fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
       else if (emptySlots < LeftoverBatchSize) {
          // copy the first part of LeftoverBatch to end of fPrimaryLeftoverTrainingBatch
          fPrimaryLeftoverBatch->Resize(fBatchSize, NumCols);
          std::copy(LeftoverBatch.GetData(), LeftoverBatch.GetData() + (emptySlots * NumCols),
                    fPrimaryLeftoverBatch->GetData() + (PrimaryLeftoverSize * NumCols));
 
-         // copy the last part of LeftoverBatch to the end of fSecondaryLeftoverTrainingBatch
+         // copy the last part of LeftoverBatch to the end of fSecondaryLeftoverBatch
          fSecondaryLeftoverBatch->Resize(LeftoverBatchSize - emptySlots, NumCols);
          std::copy(LeftoverBatch.GetData() + (emptySlots * NumCols),
                    LeftoverBatch.GetData() + (LeftoverBatchSize * NumCols),
                    fSecondaryLeftoverBatch->GetData());
 
-         // add fPrimaryLeftoverTrainingBatch to the batch vector
+         // add fPrimaryLeftoverBatch to the batch vector
          auto copy = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
          std::copy(fPrimaryLeftoverBatch->GetData(),
                    fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns), copy->GetData());
          batches.emplace_back(std::move(copy));
 
-         // exchange fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverTrainingBatch
+         // exchange fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
          *fPrimaryLeftoverBatch = *fSecondaryLeftoverBatch;
 
          // reset fSecondaryLeftoverTrainingBatch
          fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
       }
 
-      // copy the content of fPrimaryLeftoverTrainingBatch to the leftover batch from the chunk
+      // copy the content of fPrimaryLeftoverBatch to the leftover batch from the chunk
       if (lastbatch == 1) {
 
          if (fDropRemainder == false && fLeftoverBatchSize > 0) {
