@@ -74,3 +74,25 @@ TEST(TH3D, FillAtomicNoSumW2)
 }
 
 #endif
+
+// ROOT-10678
+TEST(TH3D, InterpolateCloseToEdge)
+{
+   TH3F hist("3D", "boring histo", 20, 0, 20, 20, 0, 20, 20, 0, 20);
+
+   for (int i = 0; i < hist.GetNbinsX(); i++)
+      for (int j = 0; j < hist.GetNbinsY(); j++)
+         for (int k = 0; k < hist.GetNbinsZ(); k++)
+            hist.SetBinContent(i + 1, j + 1, k + 1, i + 100. * j + 10000. * k);
+
+   EXPECT_DOUBLE_EQ(hist.Interpolate(hist.GetXaxis()->GetBinCenter(2), hist.GetYaxis()->GetBinCenter(3),
+                                     hist.GetZaxis()->GetBinCenter(4)),
+                    1. + 100. * 2. + 10000. * 3);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(hist.GetXaxis()->GetBinCenter(2) + 0.5, hist.GetYaxis()->GetBinCenter(3) + 0.4,
+                                     hist.GetZaxis()->GetBinCenter(4) + 0.3),
+                    1. + 0.5 + 100. * 2.4 + 10000. * 3.3);
+
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0., 0., 5.), 10000. * 4.5);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0.3, 19.9, 5.), 100. * 19 + 10000. * 4.5);
+   EXPECT_DOUBLE_EQ(hist.Interpolate(0.8, 19.9, 5.), 0.3 + 100. * 19 + 10000. * 4.5);
+}
