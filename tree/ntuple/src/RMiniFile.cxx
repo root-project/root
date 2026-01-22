@@ -887,6 +887,16 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleBare(std:
 
 void ROOT::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
+   TryReadBuffer(buffer, nbytes, offset).ThrowOnError();
+}
+
+ROOT::RResult<void> ROOT::Internal::RMiniFileReader::TryReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   const auto ByteReadErr = [](std::size_t expected, std::size_t nread) {
+      return R__FAIL("invalid read (expected bytes: " + std::to_string(expected) + ", read: " + std::to_string(nread) +
+                     ")");
+   };
+
    size_t nread;
    if (fMaxKeySize == 0 || nbytes <= fMaxKeySize) {
       // Fast path: read single blob
@@ -900,7 +910,9 @@ void ROOT::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, st
 
       // Read first chunk
       nread = fRawFile->ReadAt(bufCur, fMaxKeySize, offset);
-      R__ASSERT(nread == fMaxKeySize);
+      if (nread != fMaxKeySize)
+         return ByteReadErr(fMaxKeySize, nread);
+
       // NOTE: we read the entire chunk in `bufCur`, but we only advance the pointer by `nbytesFirstChunk`,
       // since the last part of `bufCur` will later be overwritten by the next chunk's payload.
       // We do this to avoid a second ReadAt to read in the chunk offsets.
@@ -923,14 +935,19 @@ void ROOT::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, st
          R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
 
          auto nbytesRead = fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
-         R__ASSERT(nbytesRead == bytesToRead);
+         if (nbytesRead != bytesToRead)
+            return ByteReadErr(bytesToRead, nbytesRead);
 
          nread += bytesToRead;
          bufCur += bytesToRead;
          remainingBytes -= bytesToRead;
       } while (remainingBytes > 0);
    }
-   R__ASSERT(nread == nbytes);
+
+   if (nread != nbytes)
+      return ByteReadErr(nbytes, nread);
+
+   return RResult<void>::Success();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
