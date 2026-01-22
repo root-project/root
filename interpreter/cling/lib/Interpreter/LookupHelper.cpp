@@ -47,7 +47,7 @@ namespace cling {
     // whether we need to do so here too or whether we need to also see the
     // "on-going" semantic information ... For now, we leave Sema untouched.
     clang::Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
-    clang::Parser::ParserCurTokRestoreRAII fSavedCurToken;
+    cling::ParserCurTokRestoreRAII fSavedCurToken;
     ParserStateRAII ResetParserState;
     clang::Sema::SFINAETrap fSFINAETrap;
     void prepareForParsing(llvm::StringRef code, llvm::StringRef bufferName,

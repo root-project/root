@@ -58,7 +58,7 @@ namespace ROOT {
        };
 
        clang::Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
-       clang::Parser::ParserCurTokRestoreRAII fSavedCurToken;
+       cling::ParserCurTokRestoreRAII fSavedCurToken;
        cling::ParserStateRAII fParserRAII;
 
        // Buffer the delayed infos when doing recursive parsing.
