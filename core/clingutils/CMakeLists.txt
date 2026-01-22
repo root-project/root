@@ -133,7 +133,7 @@ if (runtime_cxxmodules)
 
       add_custom_command(
         OUTPUT ${GENERATED_MODULEMAP}
-        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${GENERATED_MODULEMAP}
+        COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py ${CMAKE_OSX_SYSROOT} ${GENERATED_MODULEMAP}
         DEPENDS ${PROJECT_SOURCE_DIR}/cmake/scripts/std_modulemap_darwin_fix.py
         COMMENT "Generating wrapped std modulemap for macOS SDK"
       )
