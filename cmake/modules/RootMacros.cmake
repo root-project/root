@@ -941,6 +941,9 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
   set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  if(MSVC)
+    target_compile_options(${library} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
+  endif()
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -2608,6 +2611,9 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  if(MSVC)
+    target_compile_options(${targetname_libgen} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
+  endif()
 
   if(ARG_SOURCES)
     target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
@@ -2713,6 +2719,9 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
+  if(MSVC)
+    target_compile_options(${targetname_libgen} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
+  endif()
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
