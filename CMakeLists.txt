@@ -34,8 +34,8 @@ if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL "")
 
     set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
   else()
-    message(WARNING "The CMAKE_OSX_SYSROOT variable is not set and the 'xcrun' executable is not available. "
-                    "This build of ROOT might not be able to find the correct MacOS SDK.")
+    message(FATAL_ERROR "The CMAKE_OSX_SYSROOT variable is not set and the 'xcrun' executable is not available. "
+                        "This build of ROOT cannot find the correct MacOS SDK.")
   endif()
 endif()
 
