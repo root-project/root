@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <TGeoManager.h>
+#include <TGeoOverlap.h>
 #include <TROOT.h>
 
 /**
@@ -22,5 +23,14 @@ TEST(Geometry, NoExtrusionInUnionSpan)
    }
    geom->CheckOverlaps(0.001);
    auto num_overlaps = gGeoManager->GetListOfOverlaps()->GetEntries();
+   if (num_overlaps > 0) {
+      // Diagnostics: print overlap details
+      auto const ovlps = gGeoManager->GetListOfOverlaps();
+      printf(" ==EEE== Found %d overlaps\n", num_overlaps);
+      TIter next(ovlps);
+      TGeoOverlap *ovlp;
+      while ((ovlp = (TGeoOverlap *)next()))
+         ovlp->Print("P");
+   }
    EXPECT_EQ(num_overlaps, 0);
 }

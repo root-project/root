@@ -11,5 +11,5 @@ if(gdml)
     LIBRARIES Geom)
   ROOT_ADD_GTEST(boolean_extrusion
     test_boolean_extrusion.cxx
-    LIBRARIES Geom)
+    LIBRARIES Geom GeomChecker)
 endif()
