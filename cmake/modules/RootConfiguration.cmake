@@ -502,7 +502,8 @@ endif()
 # The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
 # Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
 # even be different between compiler and interpreter, or when ROOT is compiled on a different machine.
-if(CMAKE_VERSION VERSION_GREATER 3.24) # For older CMake, we simply fall back to 64
+# For older CMake and when cross compiling, we simply fall back to 64
+if(CMAKE_VERSION VERSION_GREATER 3.24 AND NOT CMAKE_CROSSCOMPILING)
 set(test_interference_size "
 #include <new>
 #include <iostream>
