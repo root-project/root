@@ -69,7 +69,7 @@ jobs:
 
     - name: Lint code
       run: |
-        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        files=$(grep '\.py$' changed_files.txt || echo "")
         if [ -n "$files" ]; then
           echo "$files" | xargs ruff check --diff || true
           echo "$files" | xargs ruff check
@@ -80,7 +80,7 @@ jobs:
     - name: Format code
       if: always()
       run: |
-        files=$(cat changed_files.txt | grep '\.py$' || echo "")
+        files=$(grep '\.py$' changed_files.txt || echo "")
         if [ -n "$files" ]; then
           diff_command=""
           apply_command=""
