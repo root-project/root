@@ -4,34 +4,14 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-# CMakeLists.txt for the ROOT tutorials programs.
-# Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-
-project(tutorials)
-
-# Sergey: make no sense while CMakeLists.txt file cannot be used separately from ROOT
-# but variables like ROOT_asimage_FOUND used here and produced in ROOTConfig.cmake
-find_package(ROOT REQUIRED)
-
-if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
-  set(ROOT_root_CMD root.exe)
-  if(NOT MSVC)  # Ignore environment on Windows
-    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                     ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
-  else()
-    set(ROOT_environ ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
-  endif()
-else()                       # testing using an installation
-  include(${ROOT_USE_FILE})
-  if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
-    include(RootMacros)
-    set(ROOT_root_CMD root.exe)
-  endif()
-  enable_testing()
+set(ROOT_root_CMD root.exe)
+if(NOT MSVC)  # Ignore environment on Windows
+  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                   ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
+                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+else()
+  set(ROOT_environ ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
+                   PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
 endif()
 
 # - Set the environment for the tutorials, which is the eventual ROOT_environ
@@ -161,11 +141,11 @@ if(NOT geom)
   set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
 endif()
 
-if(NOT ROOT_spectrum_FOUND)
+if(NOT spectrum)
    set(spectrum_veto legacy/spectrum/*.C)
 endif()
 
-if(NOT ROOT_roofit_FOUND)
+if(NOT roofit)
   set(roofit_veto roofit/roofit/*.C roofit/roofit/*.py
                   roofit/roostats/*.C roofit/roostats/*.py
                   roofit/histfactory/*.C roofit/histfactory/*.py)
@@ -178,12 +158,12 @@ else()
   endif()
 endif()
 
-if(NOT ROOT_unuran_FOUND)
+if(NOT unuran)
   set(unuran_veto  math/testrandom.C math/unuran/unuranDemo.C math/unuran/unuranFoamTest.C
                    math/multidimSampling.C)
 endif()
 
-if(NOT ROOT_xml_FOUND)
+if(NOT xml)
   set(xml_veto  io/xml/*.C
                 roofit/histfactory/*.C   # histfactory requires xml
                 roofit/histfactory/*.py
@@ -191,11 +171,11 @@ if(NOT ROOT_xml_FOUND)
                 roofit/roostats/*.py)    # because they create test data with histfactory
 endif()
 
-if(NOT ROOT_unfold_FOUND)
+if(NOT unfold)
   list(APPEND xml_veto analysis/unfold/*.C)
 endif()
 
-if(NOT ROOT_mpi_FOUND)
+if(NOT mpi)
   set(mpi_veto io/testTMPIFile.C)
 endif()
 
@@ -220,18 +200,17 @@ if(NOT xrootd)
                   )
 endif()
 
-# variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
-if(NOT ROOT_r_FOUND)
+if(NOT r)
   set(r_veto  math/r/*.C)
 endif()
 
 set(histfactory_veto roofit/histfactory/makeExample.C)
 
-if(NOT ROOT_fitsio_FOUND)
+if(NOT fitsio)
   set(fitsio_veto  io/fitsio/*.C)
 endif()
 
-if(NOT ROOT_mathmore_FOUND)
+if(NOT mathmore)
   set(mathmore_veto
       math/quasirandom.C
       math/exampleMultiRoot.C
@@ -249,7 +228,7 @@ if(NOT ROOT_mathmore_FOUND)
       math/pdf/pdf012_tStudent.py)
 endif()
 
-if(NOT ROOT_fftw3_FOUND)
+if(NOT fftw3)
   set(fftw3_veto roofit/roofit/rf208_convolution.C
                  roofit/roofit/rf210_angularconv.C
                  roofit/roofit/rf211_paramconv.C
@@ -263,7 +242,7 @@ if(NOT ROOT_fftw3_FOUND)
                  math/fit/fitConvolution.py)
 endif()
 
-if(NOT ROOT_opengl_FOUND)
+if(NOT opengl)
   set(opengl_veto io/tree/tree502_staff.C
                   visualisation/gl/*.C)
 endif()
@@ -276,7 +255,7 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  analysis/parallel/mtbb*.C io/tree/mtbb*.C)
 endif()
 
-if(NOT ROOT_imt_FOUND)
+if(NOT imt)
   set(imt_veto io/tree/imt*.C io/tree/mt*.C analysis/parallel/mt*.C)
 endif()
 if(MSVC)
@@ -325,7 +304,7 @@ if(NOT TARGET Gui)
   )
 endif()
 
-if (NOT ROOT_tmva_FOUND)
+if (NOT tmva)
   list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
   #copy input data files
@@ -391,7 +370,7 @@ else()
 
 endif()
 
-if (NOT ROOT_pythia8_FOUND)
+if (NOT pythia8)
   set(pythia_veto evegen/evegen_000_pythia8.C)
 else()
   if("$ENV{PYTHIA8}" STREQUAL "")
@@ -403,7 +382,7 @@ else()
   endif()
 endif()
 
-if (NOT ROOT_vecgeom_FOUND)
+if (NOT vecgeom)
   set(vecgeom_veto visualisation/geom/tessellatedNav.C)
 endif()
 
@@ -679,7 +658,7 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
     PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
-if(ROOT_geom_FOUND)
+if(geom)
   ROOT_ADD_TEST(tutorial-legacy-g3d-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/legacy/g3d/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
@@ -781,7 +760,7 @@ foreach(t ${mpi_tutorials})
 endforeach()
 
 #---Python tutorials-----------------------------------------------------
-if(ROOT_pyroot_FOUND)
+if(pyroot)
 
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
@@ -855,7 +834,7 @@ if(ROOT_pyroot_FOUND)
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto machine_learning/PyTorch_Generate_CNN_Model.py)
 
-  if(NOT ROOT_geom_FOUND)
+  if(NOT geom)
     list(APPEND pyveto geom/geometry.py)
   endif()
 
