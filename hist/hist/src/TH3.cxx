@@ -25,6 +25,7 @@
 #include "TMath.h"
 #include "TObjString.h"
 
+#include <algorithm>
 #include <atomic>
 #include <stdexcept>
 
@@ -1471,16 +1472,15 @@ Double_t TH3::Interpolate(Double_t, Double_t) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Given a point P(x,y,z), Interpolate approximates the value via trilinear interpolation
-/// based on the 8 nearest bin center points (corner of the cube surrounding the points)
-/// The Algorithm is described in http://en.wikipedia.org/wiki/Trilinear_interpolation
-/// The given values (x,y,z) must be between first bin center and  last bin center for each coordinate:
+/// based on the 8 nearest bin center points (corner of the cube surrounding the points).
+/// The Algorithm is described in http://en.wikipedia.org/wiki/Trilinear_interpolation.
 ///
-///   fXAxis.GetBinCenter(1) < x  < fXaxis.GetBinCenter(nbinX)     AND
-///   fYAxis.GetBinCenter(1) < y  < fYaxis.GetBinCenter(nbinY)     AND
-///   fZAxis.GetBinCenter(1) < z  < fZaxis.GetBinCenter(nbinZ)
+/// The coordinate (x,y,z) must be in the histogram range. If a coordinate falls into the first
+/// or last bin of an axis, the histogram is assumed to be constant at the edges. The interpolation
+/// proceeds as if the bin "left of" the first bin in x had the same bin content as the first bin x,
+/// and similar for the other axes.
 
 Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z) const
 {
@@ -1496,29 +1496,41 @@ Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z) const
    if ( z < fZaxis.GetBinCenter(ubz) ) ubz -= 1;
    Int_t obz = ubz + 1;
 
+   auto GetBinCenterExtrapolate = [](TAxis const &axis, Int_t index) {
+      // Get bin centres if inside the histogram, or return the centre of an imaginary
+      // bin that's just outside the histogram, and which is as wide as the last valid bin.
+      // We need to make up a number here to not confuse the linear interpolation code below.
+      if (index == 0) {
+         return axis.GetBinCenter(1) - axis.GetBinWidth(1);
+      } else if (index == axis.GetNbins() + 1) {
+         return axis.GetBinCenter(axis.GetNbins()) + axis.GetBinWidth(axis.GetNbins());
+      } else {
+         return axis.GetBinCenter(index);
+      }
+   };
 
-//    if ( IsBinUnderflow(GetBin(ubx, uby, ubz)) ||
-//         IsBinOverflow (GetBin(obx, oby, obz)) ) {
-   if (ubx <=0 || uby <=0 || ubz <= 0 ||
-       obx > fXaxis.GetNbins() || oby > fYaxis.GetNbins() || obz > fZaxis.GetNbins() ) {
-      Error("Interpolate","Cannot interpolate outside histogram domain.");
-      return 0;
-   }
+   Double_t xw = GetBinCenterExtrapolate(fXaxis, obx) - GetBinCenterExtrapolate(fXaxis, ubx);
+   Double_t yw = GetBinCenterExtrapolate(fYaxis, oby) - GetBinCenterExtrapolate(fYaxis, uby);
+   Double_t zw = GetBinCenterExtrapolate(fZaxis, obz) - GetBinCenterExtrapolate(fZaxis, ubz);
 
-   Double_t xw = fXaxis.GetBinCenter(obx) - fXaxis.GetBinCenter(ubx);
-   Double_t yw = fYaxis.GetBinCenter(oby) - fYaxis.GetBinCenter(uby);
-   Double_t zw = fZaxis.GetBinCenter(obz) - fZaxis.GetBinCenter(ubz);
+   Double_t xd = (x - GetBinCenterExtrapolate(fXaxis, ubx)) / xw;
+   Double_t yd = (y - GetBinCenterExtrapolate(fYaxis, uby)) / yw;
+   Double_t zd = (z - GetBinCenterExtrapolate(fZaxis, ubz)) / zw;
 
-   Double_t xd = (x - fXaxis.GetBinCenter(ubx)) / xw;
-   Double_t yd = (y - fYaxis.GetBinCenter(uby)) / yw;
-   Double_t zd = (z - fZaxis.GetBinCenter(ubz)) / zw;
+   auto GetBinContentNoOverflow = [this](int ix, int iy, int iz) {
+      // When a bin is outside the histogram range, return the last value inside
+      // the range. That is, make the histogram constant at its edges.
+      ix = std::clamp(ix, 1, GetNbinsX());
+      iy = std::clamp(iy, 1, GetNbinsY());
+      iz = std::clamp(iz, 1, GetNbinsZ());
 
+      return GetBinContent(ix, iy, iz);
+   };
 
-   Double_t v[] = { GetBinContent( ubx, uby, ubz ), GetBinContent( ubx, uby, obz ),
-                    GetBinContent( ubx, oby, ubz ), GetBinContent( ubx, oby, obz ),
-                    GetBinContent( obx, uby, ubz ), GetBinContent( obx, uby, obz ),
-                    GetBinContent( obx, oby, ubz ), GetBinContent( obx, oby, obz ) };
-
+   Double_t v[] = {GetBinContentNoOverflow(ubx, uby, ubz), GetBinContentNoOverflow(ubx, uby, obz),
+                   GetBinContentNoOverflow(ubx, oby, ubz), GetBinContentNoOverflow(ubx, oby, obz),
+                   GetBinContentNoOverflow(obx, uby, ubz), GetBinContentNoOverflow(obx, uby, obz),
+                   GetBinContentNoOverflow(obx, oby, ubz), GetBinContentNoOverflow(obx, oby, obz)};
 
    Double_t i1 = v[0] * (1 - zd) + v[1] * zd;
    Double_t i2 = v[2] * (1 - zd) + v[3] * zd;
