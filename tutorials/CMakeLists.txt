@@ -5,22 +5,27 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 set(ROOT_root_CMD root.exe)
-if(NOT MSVC)  # Ignore environment on Windows
-  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                   ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
-                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
-else()
-  set(ROOT_environ ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
-                   PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
-endif()
 
-# - Set the environment for the tutorials, which is the eventual ROOT_environ
-# plus some environment variables related to limiting the number of threads
-# used by NumPy and enabling batch mode.
+set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
+
+set(root_includepaths ${CMAKE_BINARY_DIR}/tutorials/io/tree ${DEFAULT_ROOT_INCLUDE_PATH})
+cmake_path(CONVERT "${root_includepaths}" TO_NATIVE_PATH_LIST root_includepaths_native)
+
+# - Set the environment for the tutorials, which also contains some environment
+# variables related to limiting the number of threads used by NumPy and
+# enabling batch mode.
 # See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
 # - For matplotlib, disable a blocking event loop on show() using a non-interactive backend
-set(TUTORIAL_ENV ${ROOT_environ} ROOT_BATCH=1 OMP_NUM_THREADS=1
-                 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=AGG)
+set(TUTORIAL_ENV
+    MKL_NUM_THREADS=1
+    MPLBACKEND=AGG
+    OMP_NUM_THREADS=1
+    OPENBLAS_NUM_THREADS=1
+    PYTHONPATH=${pythonpaths_native}
+    ROOT_BATCH=1
+    ROOT_INCLUDE_PATH=${root_includepaths_native}
+)
 
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
