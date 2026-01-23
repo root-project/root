@@ -445,13 +445,12 @@ public:
    template <typename T>
    std::shared_ptr<T> MakeField(std::string_view name, std::string_view description = "")
    {
-      auto objPtr = fOpenChangeset.fModel.MakeField<T>(name, description);
-      auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
-      auto it =
-         std::find_if(fieldZero->begin(), fieldZero->end(), [&](const auto &f) { return f.GetFieldName() == name; });
-      R__ASSERT(it != fieldZero->end());
-      fOpenChangeset.fAddedFields.emplace_back(&(*it));
-      return objPtr;
+      auto field = std::make_unique<ROOT::RField<T>>(name);
+      field->SetDescription(description);
+      AddField(std::move(field));
+      if (fOpenChangeset.fModel.IsBare())
+         return std::shared_ptr<T>();
+      return fOpenChangeset.fModel.GetDefaultEntry().GetPtr<T>(name);
    }
 
    void AddField(std::unique_ptr<ROOT::RFieldBase> field);
