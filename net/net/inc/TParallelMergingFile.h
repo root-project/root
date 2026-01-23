@@ -30,6 +30,7 @@
 #include "TMemFile.h"
 #include "TMessage.h"
 #include "TUrl.h"
+#include <memory>
 
 
 class TSocket;
@@ -38,12 +39,12 @@ class TArrayC;
 class TParallelMergingFile : public TMemFile
 {
 private:
-   TSocket *fSocket;         // Socket to the parallel file merger server.
-   TUrl     fServerLocation; // Url of the server.
-   Int_t    fServerIdx;      // Index of this socket/file on the server.
-   Int_t    fServerVersion;  // Protocol version used by the server.
-   TArrayC *fClassSent;      // Record which StreamerInfo we already sent.
-   TMessage fMessage;
+   std::unique_ptr<TSocket> fSocket;    // Socket to the parallel file merger server.
+   TUrl     fServerLocation;            // Url of the server.
+   Int_t    fServerIdx = -1;            // Index of this socket/file on the server.
+   Int_t    fServerVersion = 0;         // Protocol version used by the server.
+   std::unique_ptr<TArrayC> fClassSent; // Record which StreamerInfo we already sent.
+   TMessage fMessage {kMESS_OBJECT};
 
 public:
    TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
