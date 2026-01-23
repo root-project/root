@@ -262,7 +262,8 @@ public:
 
    /// Convert this histogram engine to a different bin content type.
    ///
-   /// There is no bounds checking to make sure that the converted values can be represented.
+   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
+   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
    ///
    /// Converting all bin contents can be an expensive operation, depending on the number of bins.
    ///
