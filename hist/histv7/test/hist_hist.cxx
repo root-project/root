@@ -151,6 +151,22 @@ TEST(RHist, Clone)
    EXPECT_EQ(histB.GetBinContent(9), 1);
 }
 
+TEST(RHist, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> histI({axis});
+
+   histI.Fill(8.5);
+
+   RHist<float> histF = histI.Convert<float>();
+   ASSERT_EQ(histF.GetNDimensions(), 1);
+   ASSERT_EQ(histF.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(histF.GetNEntries(), 1);
+   EXPECT_EQ(histF.GetBinContent(8), 1);
+}
+
 TEST(RHist, Fill)
 {
    static constexpr std::size_t Bins = 20;
