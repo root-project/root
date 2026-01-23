@@ -634,7 +634,6 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    }
 
    // check if there are initialized tensors to write in a weight file
-   // support for the time being only weight of FLOAT type
    if (fUseWeightFile) {
       bool modelHasWeights = false;
       for (auto &it : fInitializedTensors) {
@@ -910,15 +909,6 @@ void RModel::GenerateDynamicTensorInfo()
    if (missingTensor)
       throw std::runtime_error("TMVA-SOFIE: RModel::GenerateDynamicTensorInfo - some tensors are not in input/output list");
 
-
-
-   // for (auto &i : fDynamicTensorInfos) {
-   //    auto length = ConvertDynamicShapeToLength(i.second.shape);
-   //    out << SP << "if (" << length << " > 0) {\n";
-   //    out << SP << SP << "fTensor_" << i.first << ".resize(" << length << ");\n";
-   //    out << SP << SP << "tensor_" << i.first << " = fTensor_" << i.first << ".data();\n";
-   //    out << SP << "}\n";
-   // }
    fGC += out.str();
 }
 

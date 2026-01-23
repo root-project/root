@@ -205,7 +205,7 @@
                      size_t inputLength = ConvertShapeToLength(inputShape);
                      std::copy(inputData, inputData + inputLength, outputData.begin() + offset );
                      offset += inputLength;
-                     // data do not need to be written in teh generated code
+                     // the data of the input tensor don't need to be written in the generated code and data file
                      model.SetNotWritableInitializedTensor(input);
                   }
                   model.AddConstantTensor<int64_t>(fOutput, outputShape, outputData.data());
