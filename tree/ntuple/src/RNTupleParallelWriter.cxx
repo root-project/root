@@ -111,6 +111,10 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
+   std::unique_ptr<RPageSink> DeriveFor(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("DeriveFor unavailable for RPageSynchronizingSink"));
+   }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };
