@@ -170,10 +170,10 @@ public:
    /// Fill an RRawPtrWriteEntry into this ntuple.  This method will check the entry's model ID to ensure it comes from
    /// the writer's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(Experimental::Detail::RRawPtrWriteEntry &entry) { return fFillContext.Fill(entry); }
+   std::size_t Fill(ROOT::Detail::RRawPtrWriteEntry &entry) { return fFillContext.Fill(entry); }
    /// Fill an RRawPtrWriteEntry into this ntuple, but don't commit the cluster. The calling code must pass an
    /// RNTupleFillStatus and check RNTupleFillStatus::ShouldFlushCluster.
-   void FillNoFlush(Experimental::Detail::RRawPtrWriteEntry &entry, RNTupleFillStatus &status)
+   void FillNoFlush(ROOT::Detail::RRawPtrWriteEntry &entry, RNTupleFillStatus &status)
    {
       fFillContext.FillNoFlush(entry, status);
    }
@@ -196,7 +196,7 @@ public:
    void CommitDataset();
 
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fFillContext.CreateEntry(); }
-   std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
+   std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
    {
       return fFillContext.CreateRawPtrWriteEntry();
    }
