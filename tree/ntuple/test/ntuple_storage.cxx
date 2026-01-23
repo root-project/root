@@ -1145,3 +1145,62 @@ TEST(RPageSourceFile, NameFromAnchor)
    source->Attach();
    EXPECT_EQ(source->GetNTupleName(), "ntpl");
 }
+
+TEST(RPageSourceFile, OpenDifferentAnchor)
+{
+   FileRaii fileGuard("test_ntuple_open_diff_anchor.root");
+
+   auto model = RNTupleModel::Create();
+   auto pF = model->MakeField<float>("f");
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   {
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl1", *file);
+      for (auto i = 0; i < 100; ++i) {
+         *pF = i;
+         writer->Fill();
+      }
+   }
+   {
+      model = RNTupleModel::Create();
+      auto pI = model->MakeField<int>("i");
+      auto pC = model->MakeField<char>("c");
+
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl2", *file);
+      for (auto i = 0; i < 20; ++i) {
+         *pI = i;
+         *pC = i;
+         writer->Fill();
+      }
+   }
+
+   auto source = std::make_unique<RPageSourceFile>("ntpl1", fileGuard.GetPath(), RNTupleReadOptions());
+   source->Attach();
+   EXPECT_EQ(source->GetNEntries(), 100);
+   {
+      auto desc = source->GetSharedDescriptorGuard();
+      EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+   }
+
+   auto anchor2 = file->Get<ROOT::RNTuple>("ntpl2");
+   ASSERT_NE(anchor2, nullptr);
+   auto source2 = source->OpenWithDifferentAnchor(*anchor2);
+   source2->Attach();
+   EXPECT_EQ(source2->GetNTupleName(), "ntpl2");
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+
+   source.reset();
+   // source2 should still be valid after dropping the first source.
+   EXPECT_EQ(source2->GetNEntries(), 20);
+   {
+      auto desc2 = source2->GetSharedDescriptorGuard();
+      EXPECT_EQ(desc2->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
+      EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
+   }
+}
