@@ -272,37 +272,6 @@ namespace SOFIE{
          model.AddNeededStdLib("algorithm");
       }
 
-      std::string GenerateInitCode() override {
-         std::stringstream out;
-         // generate initialization code for broadcasting of bias tensor
-#if 0
-         if (fShapeC.size() != fShapeY.size() && fBroadcastBias) {
-            // we broadcast here always C in Y output, so target shape is the one of Y
-            // no need to call UTILITY::UnidirectionalBroadcastShape.
-            // here in case of parametric shape we need to assume that the parameters will be defined in the initialization code.
-            auto length = ConvertDimShapeToLength(fShapeY); // output size
-            // include a separate scope to avoid defining unique operator temp variables
-            out << "//--- broadcast bias tensor " << fNC << "for Gemm op if needed \n";
-            // in case of dynamic tensors check needs to be done at run time
-            bool isOutDynamic = ConvertShapeToInt(fShapeY).empty();
-            if (isOutDynamic)
-               out << SP << "if (" << length << " > " << ConvertShapeToLength(fShapeC) << ") {\n";
-            else
-               out << SP << "{\n";
-            // here we broadcast
-            out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
-                << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-
-            out << SP << SP << "fTensor_" << fNC << ".resize(" << length << ");\n";
-            out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNC << ".begin());\n";
-            out << SP << SP << "tensor_" << fNC << " = fTensor_" << fNC << ".data();\n";
-            out << SP << SP << "delete [] data;\n";
-            out << SP << "}\n";
-         }
-#endif
-         return out.str();
-      }
-
       std::string Generate(std::string opName) override {
          opName = "op_" + opName;
 
@@ -322,7 +291,7 @@ namespace SOFIE{
          auto m = (fAttrTransA ? fShapeA[dimA-1].GetVal() : fShapeA[dimA-2].GetVal());
          auto n = (fAttrTransB ? fShapeB[dimB-2].GetVal() : fShapeB[dimB-1].GetVal());
          auto k = (fAttrTransA ? fShapeA[dimA-2].GetVal() : fShapeA[dimA-1].GetVal());
-         // size of A: if (trasposeA) is m*k else k*m
+         // size of A: if (transposeA) is m*k else k*m
          // size of B  n*k
          std::vector<Dim> sY = {fShapeY[dimY-2], fShapeY[dimY-1]};
          // extra dimensions in case of stacked MatMul
