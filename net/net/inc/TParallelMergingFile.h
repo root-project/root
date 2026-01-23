@@ -51,6 +51,7 @@ public:
    ~TParallelMergingFile();
 
    void   Close(Option_t *option="") override;
+   Bool_t OpenConnection();
    Bool_t UploadAndReset();
    Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
    Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
