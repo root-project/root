@@ -9,6 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+find_library(OPENGL_FRAMEWORK OpenGL REQUIRED)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   HEADERS
     TGCocoa.h
@@ -36,8 +39,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     Gui
   LIBRARIES
     GQuartz
-    "-framework Cocoa"
-    "-framework OpenGL"
+    ${COCOA_FRAMEWORK}
+    ${OPENGL_FRAMEWORK}
     ${FREETYPE_LIBRARIES}
 )
 
