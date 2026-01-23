@@ -12,8 +12,9 @@ if(NOT APPLE)
   return()
 endif()
 
+find_library(CORESYMBOLICATION_FRAMEWORK CoreSymbolication PATHS "${CMAKE_OSX_SYSROOT}/System/Library/PrivateFrameworks" REQUIRED)
 target_link_libraries(Core PRIVATE
-  "-F/System/Library/PrivateFrameworks -framework CoreSymbolication"
+  ${CORESYMBOLICATION_FRAMEWORK}
 )
 
 if(cocoa)
@@ -21,7 +22,8 @@ if(cocoa)
 
   target_include_directories(Core PRIVATE inc)
 
-  target_link_libraries(Core PRIVATE "-framework Cocoa")
+  find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+  target_link_libraries(Core PRIVATE ${COCOA_FRAMEWORK})
 
   ROOT_OBJECT_LIBRARY(Macosx
     src/CocoaUtils.mm
