@@ -454,6 +454,27 @@ TEST(RHistEngine_RBinWithError, Add)
    }
 }
 
+TEST(RHistEngine_RBinWithError, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<RBinWithError> engine({axis});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   // It is not possible to convert to RBinWithError, but the other way around is fine.
+   RHistEngine<float> engineF = engine.Convert<float>();
+   RHistEngine<double> engineD = engine.Convert<double>();
+
+   for (auto index : axis.GetNormalRange()) {
+      double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(engineF.GetBinContent(index), weight);
+      EXPECT_EQ(engineD.GetBinContent(index), weight);
+   }
+}
+
 TEST(RHistEngine_RBinWithError, Fill)
 {
    static constexpr std::size_t Bins = 20;

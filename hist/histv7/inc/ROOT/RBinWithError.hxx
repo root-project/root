@@ -20,6 +20,9 @@ struct RBinWithError final {
    double fSum = 0;
    double fSum2 = 0;
 
+   explicit operator float() const { return fSum; }
+   explicit operator double() const { return fSum; }
+
    RBinWithError &operator++()
    {
       fSum++;
