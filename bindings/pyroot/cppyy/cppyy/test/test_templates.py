@@ -1129,15 +1129,6 @@ class TestTEMPLATES:
 
         import cppyy
 
-        cppyy.cppdef("""
-        namespace UsingPtr {
-        struct Test {};
-        using testptr = Test*;
-
-        template<typename T>
-        bool testfun(T const& x) { return !(bool)x; }
-        }""")
-
         ns = cppyy.gbl.UsingPtr
 
         assert ns.testfun["testptr"](cppyy.bind_object(cppyy.nullptr, ns.Test))
