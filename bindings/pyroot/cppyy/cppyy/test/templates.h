@@ -522,4 +522,17 @@ extern template class B<int>;
 
 }
 
+namespace UsingPtr {
+
+struct Test {};
+using testptr = Test *;
+
+template <typename T>
+bool testfun(T const &x)
+{
+   return !(bool)x;
+}
+
+}
+
 #endif // !CPPYY_TEST_TEMPLATES_H
