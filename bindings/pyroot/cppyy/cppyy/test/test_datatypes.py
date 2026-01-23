@@ -5,6 +5,18 @@ from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOW
 test_dct = "datatypes_cxx"
 
 
+def has_cpp_20():
+    import cppyy
+
+    return cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 202002
+
+
+def is_modules_off():
+    import cppyy
+
+    return "runtime_cxxmodules" not in cppyy.gbl.gROOT.GetConfigFeatures()
+
+
 class TestDATATYPES:
     def setup_class(cls):
         import cppyy
@@ -2339,7 +2351,8 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(strict=True, condition=IS_MAC_ARM or IS_WINDOWS, reason="Crashes on mac-beta ARM64 and fails on Windows")
+    @mark.xfail(strict=True, condition=IS_MAC_ARM or IS_WINDOWS or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
+            assertion error for runtime_cxxmodules=OFF build that is explained in GitHub issue #21005")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
