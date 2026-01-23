@@ -34,7 +34,7 @@
 
 TParallelMergingFile::TParallelMergingFile(const char *filename, Option_t *option /* = "" */,
                                            const char *ftitle /* = "" */, Int_t compress /* = 1 */) :
-   TMemFile(filename,option,ftitle,compress),fSocket(0),fServerIdx(-1),fServerVersion(0),fClassSent(0),fMessage(kMESS_OBJECT)
+   TMemFile(filename,option,ftitle,compress)
 {
    TString serverurl = strstr(fUrl.GetOptions(),"pmerge=");
    if (serverurl.Length()) {
@@ -51,7 +51,6 @@ TParallelMergingFile::~TParallelMergingFile()
    // We need to call Close, right here so that it is executed _before_
    // the data member of TParallelMergingFile are destructed.
    Close();
-   delete fClassSent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,9 +63,8 @@ void TParallelMergingFile::Close(Option_t *option)
          Warning("Close","Failed to send the finishing message to the server %s:%d",fServerLocation.GetHost(),fServerLocation.GetPort());
       }
       fSocket->Close();
-      delete fSocket;
+      fSocket.reset();
    }
-   fSocket = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,15 +74,14 @@ void TParallelMergingFile::Close(Option_t *option)
 Bool_t TParallelMergingFile::UploadAndReset()
 {
    // Open connection to server
-   if (fSocket == 0) {
+   if (!fSocket) {
       const char *path = fServerLocation.GetFile();
       if (path && strlen(path) > 0 && path[0] == '/') {
          // UNIX domain socket
-         fSocket = new TSocket(path);
+         fSocket.reset(new TSocket(path));
          if (!fSocket->IsValid()) {
             Error("UploadAndReset", "Could not contact the server %s\n", path);
-            delete fSocket;
-            fSocket = 0;
+            fSocket.reset();
             return kFALSE;
          }
       } else {
@@ -97,11 +94,10 @@ Bool_t TParallelMergingFile::UploadAndReset()
          if (port <= 0) {
             port = 1095;
          }
-         fSocket = new TSocket(host, port);
+         fSocket.reset(new TSocket(host, port));
          if (!fSocket->IsValid()) {
             Error("UploadAndReset", "Could not contact the server %s:%d\n", host, port);
-            delete fSocket;
-            fSocket = 0;
+            fSocket.reset();
             return kFALSE;
          }
       }
@@ -113,8 +109,7 @@ Bool_t TParallelMergingFile::UploadAndReset()
       if (n < 0 && kind != 0 /* kStartConnection */)
       {
          Error("UploadAndReset","Unexpected server message: kind=%d idx=%d\n",kind,fServerIdx);
-         delete fSocket;
-         fSocket = 0;
+         fSocket.reset();
          return kTRUE;
       }
       n = fSocket->Recv(fServerVersion, kind);
@@ -135,15 +130,14 @@ Bool_t TParallelMergingFile::UploadAndReset()
 
    if (int error = fSocket->Send(fMessage); error <= 0) {
       Error("UploadAndReset","Upload to the merging server failed with %d\n",error);
-      delete fSocket;
-      fSocket = 0;
+      fSocket.reset();
       return kFALSE;
    }
 
    // Record the StreamerInfo we sent over.
    Int_t isize = fClassIndex->GetSize();
    if (!fClassSent) {
-      fClassSent = new TArrayC(isize);
+      fClassSent.reset(new TArrayC(isize));
    } else {
       if (isize > fClassSent->GetSize()) {
          fClassSent->Set(isize);
