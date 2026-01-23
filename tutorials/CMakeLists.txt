@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(ROOT_root_CMD root.exe)
+set(ROOT_root_CMD $<TARGET_FILE:root.exe>)
 
 set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
 cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
