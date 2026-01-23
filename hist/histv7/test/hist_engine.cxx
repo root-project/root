@@ -207,6 +207,37 @@ TEST(RHistEngine, Clone)
    }
 }
 
+TEST(RHistEngine, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engineI({axis});
+
+   engineI.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineI.Fill(i);
+      if (i % 2 == 0) {
+         engineI.Fill(i);
+      }
+   }
+   engineI.Fill(100);
+   engineI.Fill(100);
+
+   RHistEngine<float> engineF = engineI.Convert<float>();
+   ASSERT_EQ(engineF.GetNDimensions(), 1);
+   ASSERT_EQ(engineF.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      if (index.GetIndex() % 2 == 0) {
+         EXPECT_EQ(engineF.GetBinContent(index), 2);
+      } else {
+         EXPECT_EQ(engineF.GetBinContent(index), 1);
+      }
+   }
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Overflow()), 2);
+}
+
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;
