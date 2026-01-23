@@ -1966,18 +1966,14 @@ endfunction()
 # ROOT_ADD_PYUNITTESTS( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTESTS name)
-  if(MSVC)
-    set(ROOT_ENV
-        PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
-  else()
-    set(ROOT_ENV
-        PATH=${ROOTSYS}/bin:$ENV{PATH}
-        PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
-  endif()
+
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
+
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
-                ENVIRONMENT ${ROOT_ENV})
+                ENVIRONMENT PYTHONPATH=${pythonpaths_native})
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -1997,14 +1993,10 @@ function(ROOT_ADD_PYUNITTEST name file)
       "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PRECMD;POSTCMD"
       ${ARGN}
   )
-  if(MSVC)
-    set(ROOT_ENV
-        PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
-  else()
-    set(ROOT_ENV
-        PATH=${ROOTSYS}/bin:$ENV{PATH}
-        PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
-  endif()
+
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
+
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
@@ -2048,7 +2040,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   set(test_name pyunittests${clean_name_with_path})
   ROOT_ADD_TEST(${test_name}
               ${test_cmd}
-              ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
+              ENVIRONMENT PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
@@ -3237,22 +3229,13 @@ function(ROOTTEST_ADD_TEST testname)
     set(run_serial RUN_SERIAL ${ARG_RUN_SERIAL})
   endif()
 
-  if(MSVC)
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-  else()
-    string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
-    string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
-
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
-  endif()
+  set(environment ENVIRONMENT
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
+                  PYTHONPATH=${pythonpaths_native})
 
   if(ARG_WORKING_DIR)
     get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
@@ -3490,20 +3473,13 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     endforeach()
   endif(ARG_DEPENDS)
 
-  if(MSVC)
-    set(environment ENVIRONMENT
-                    PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-  else()
-    string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
-    string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+  cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
-
-    set(environment ENVIRONMENT
-                    ${ROOTTEST_ENV_EXTRA}
-                    ${ARG_ENVIRONMENT}
-                    PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
-  endif()
+  set(environment ENVIRONMENT
+                  ${ROOTTEST_ENV_EXTRA}
+                  ${ARG_ENVIRONMENT}
+                  PYTHONPATH=${pythonpaths_native})
 
   ROOT_ADD_TEST(${fulltestname} COMMAND ${binary}
     ${environment}
