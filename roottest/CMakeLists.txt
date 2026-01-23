@@ -87,26 +87,8 @@ else()
 endif()
 
 # Setup environment.
-set(ROOTTEST_ENV_PATH ${ROOT_BINDIR})
-if(MSVC)
-  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_BINDIR})
-else()
-  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
-endif()
-set(ROOTTEST_ENV_EXTRA)
-
-if(MSVC)
-  set(ROOTTEST_ENVIRONMENT
-      PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
-else()
-  # `PYTHONPATH=...:` (trailing `:`) kills roottest/python/stl/PyROOT_stltests.py.
-  string(REGEX REPLACE ":$" "" TESTPYTHONPATH "${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}")
-  set(ROOTTEST_ENVIRONMENT
-      PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
-      PYTHONPATH=${TESTPYTHONPATH})
-  if (gnuinstall)
-    set(ROOTTEST_ENVIRONMENT ${ROOTTEST_ENVIRONMENT} ROOTIGNOREPREFIX=1)
-  endif()
+if (gnuinstall)
+  set(ROOTTEST_ENVIRONMENT ROOTIGNOREPREFIX=1)
 endif()
 
 # Set some variables that customizes the behaviour of the ROOT macros
