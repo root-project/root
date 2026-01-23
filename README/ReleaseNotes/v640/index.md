@@ -87,6 +87,8 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ### RNTuple
 
+* `RRawPtrWriteEntry` is now part of the stable API, in the `ROOT::Detail` namespace. It is useful for frameworks passing data to RNTuple as `const` raw pointers.
+
 ## Math
 
 ### Migration from VecCore/Vc to `std::experimental::simd` for Vectorization

@@ -505,7 +505,7 @@ std::unique_ptr<ROOT::REntry> ROOT::RNTupleModel::CreateBareEntry() const
    return entry;
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry> ROOT::RNTupleModel::CreateRawPtrWriteEntry() const
+std::unique_ptr<ROOT::Detail::RRawPtrWriteEntry> ROOT::RNTupleModel::CreateRawPtrWriteEntry() const
 {
    switch (fModelState) {
    case EState::kBuilding: throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
@@ -513,8 +513,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RRawPtrWriteEntry> ROOT::RNTupleMode
    case EState::kFrozen: break;
    }
 
-   auto entry = std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry>(
-      new Experimental::Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
+   auto entry = std::unique_ptr<Detail::RRawPtrWriteEntry>(new Detail::RRawPtrWriteEntry(fModelId, fSchemaId));
    for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddField(*f);
    }

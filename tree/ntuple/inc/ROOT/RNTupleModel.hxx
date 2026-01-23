@@ -35,11 +35,9 @@ class RNTupleWriteOptions;
 class RNTupleModel;
 class RNTupleWriter;
 
-namespace Experimental {
 namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
-} // namespace Experimental
 
 namespace Internal {
 class RProjectedFields;
@@ -343,7 +341,7 @@ public:
    /// Creates a "bare entry", i.e. a entry with all null values. The user needs to explicitly call BindValue() or
    /// BindRawPtr() to set memory addresses before serializing / deserializing the entry.
    std::unique_ptr<REntry> CreateBareEntry() const;
-   std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const;
+   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const;
    /// Creates a token to be used in REntry methods to address a field present in the entry
    ROOT::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an RException if no field with the given name exists.
