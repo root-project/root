@@ -3,7 +3,6 @@ if(MSVC)
   set(CMAKE_SUPPRESS_REGENERATION TRUE)
   set(libsuffix .dll)
   set(exesuffix .exe)
-  set(CMAKE_CXX_FLAGS "/nologo /Zc:__cplusplus /MD /GR /EHsc- /W3 /D_WIN32")
   set(grep_cmd "findstr")
 
   set(build_config "--config $<CONFIG>")
@@ -22,7 +21,6 @@ if(MSVC)
     set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
 
-  set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS})
   # ROOT_BINDIR is set by ROOTConfig.cmake
   set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
   execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--prefix" OUTPUT_VARIABLE ROOTSYS RESULT_VARIABLE RETVAR OUTPUT_STRIP_TRAILING_WHITESPACE)
