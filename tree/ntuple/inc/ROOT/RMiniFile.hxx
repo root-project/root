@@ -32,13 +32,12 @@ class TVirtualStreamerInfo;
 
 namespace ROOT {
 
-namespace Internal {
-class RRawFile;
-}
-
 class RNTupleWriteOptions;
 
 namespace Internal {
+
+class RRawFile;
+
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
