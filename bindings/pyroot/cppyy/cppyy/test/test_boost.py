@@ -141,7 +141,7 @@ class TestBOOSTERASURE:
         cppyy.include("boost/type_erasure/member.hpp")
         cppyy.include("boost/mpl/vector.hpp")
 
-    @mark.xfail(strict=True, reason="TClassInfo for 'Lengths' is missing")
+    @mark.xfail(run=False, reason="TClassInfo for 'Lengths' is missing & triggering Cling assertions during unloading")
     def test01_erasure_usage(self):
         """boost::type_erasure usage"""
 
