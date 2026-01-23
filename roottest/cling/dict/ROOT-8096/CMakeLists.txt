@@ -7,9 +7,6 @@ set_source_files_properties(dict.cxx PROPERTIES GENERATED TRUE)
 
 add_library(ROOT-8096 EXCLUDE_FROM_ALL SHARED dict.cxx)
 set_target_properties(ROOT-8096 PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
-if(MSVC)
-  target_compile_options(ROOT-8096 PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-endif()
 
 target_link_libraries(ROOT-8096 ${ARG_LIBRARIES} ${ROOT_LIBRARIES})
 set_property(TARGET ROOT-8096 APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})

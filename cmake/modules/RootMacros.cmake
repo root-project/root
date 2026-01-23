@@ -941,9 +941,6 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
   set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  if(MSVC)
-    target_compile_options(${library} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -1428,9 +1425,6 @@ function(ROOT_EXECUTABLE executable)
   endif()
   add_executable(${executable} ${_all} ${exe_srcs})
   target_link_libraries(${executable} PRIVATE ${ARG_LIBRARIES})
-  if(MSVC)
-    target_compile_options(${executable} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   if(WIN32 AND ${executable} MATCHES \\.exe)
     set_target_properties(${executable} PROPERTIES SUFFIX "")
@@ -2611,9 +2605,6 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
-  if(MSVC)
-    target_compile_options(${targetname_libgen} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   if(ARG_SOURCES)
     target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
@@ -2719,9 +2710,6 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   ROOT_SET_OUTPUT_DIRECTORIES(${targetname_libgen})
-  if(MSVC)
-    target_compile_options(${targetname_libgen} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -2797,9 +2785,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
-  if(MSVC)
-    target_compile_options(${executable} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   set_property(TARGET ${executable}
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
@@ -3435,9 +3420,6 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   add_executable(${binary} ${unittests_SRC})
   target_link_libraries(${binary} PRIVATE GTest::gtest GTest::gtest_main ${libraries})
   set_property(TARGET ${binary} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
-  if(MSVC)
-    target_compile_options(${binary} PRIVATE -Zc:__cplusplus -std:c++${CMAKE_CXX_STANDARD})
-  endif()
 
   if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     if(TARGET ROOTStaticSanitizerConfig)
