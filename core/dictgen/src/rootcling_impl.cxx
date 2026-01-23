@@ -3636,14 +3636,14 @@ public:
       // an error because rootcling is not able to generate the corresponding
       // dictionary.
       // If we build a I/O requiring module implicitly we should display
-      // an error unless -mSystemByproducts or -mByproduct were specified.
+      // an error unless --mSystemByproducts or --mByproduct were specified.
       bool isByproductModule = false;
       if (module) {
-         // -mSystemByproducts allows implicit building of any system module.
+         // --mSystemByproducts allows implicit building of any system module.
          if (module->IsSystem && gOptSystemModuleByproducts) {
             isByproductModule = true;
          }
-         // -mByproduct lists concrete module names that are allowed.
+         // --mByproduct lists concrete module names that are allowed.
          if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) !=
              gOptModuleByproducts.end()) {
             isByproductModule = true;
@@ -3656,7 +3656,7 @@ public:
          ROOT::TMetaUtils::Error(nullptr,
                                  "Building module '%s' implicitly. If '%s' requires a \n"
                                  "dictionary please specify build dependency: '%s' depends on '%s'.\n"
-                                 "Otherwise, specify '-mByproduct %s' to disable this diagnostic.\n",
+                                 "Otherwise, specify '--mByproduct %s' to disable this diagnostic.\n",
                                  moduleName.c_str(), moduleName.c_str(), gOptDictionaryFileName.c_str(),
                                  moduleName.c_str(), moduleName.c_str());
       }
@@ -3736,7 +3736,7 @@ rootcling common options:
   --failOnWarnings         - Fail if there are warnings.
   --inlineInputHeader      - Does not generate #include <header> but expands the header content.
   --interpreteronly        - Generate minimal dictionary for interactivity (without IO information).
-  --isystem=<string>       - Specify a system include path.
+  -isystem=<string>        - Specify a system include path.
   -m <string>              - The list of dependent modules of the dictionary.
   --moduleMapFile=<string> - Specify a C++ modulemap file.
   --multiDict              - If this library has multiple separate LinkDef files.
@@ -3752,11 +3752,11 @@ rootcling common options:
   --umbrellaHeader         - A single header including all headers instead of specifying them on the command line.
   Choose verbosity level:
       -v                     - Show errors.
-      --v0                    - Show only fatal errors.
-      --v1                    - Show errors (the same as -v).
-      --v2                    - Show warnings (default).
-      --v3                    - Show notes.
-      --v4                    - Show information.
+      -v0                    - Show only fatal errors.
+      -v1                    - Show errors (the same as -v).
+      -v2                    - Show warnings (default).
+      -v3                    - Show notes.
+      -v4                    - Show information.
 )";
 
 void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
@@ -3768,19 +3768,19 @@ void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
 
    // switches
    opts.AddFlag({"-f"}, FT::kSwitch, "Overwrite <file>s.");
-   opts.AddFlag({"-rootbuild"}, FT::kSwitch, "If we are building ROOT.");
+   opts.AddFlag({"--rootbuild"}, FT::kSwitch, "If we are building ROOT.");
    opts.AddFlag({"--cint"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
-   opts.AddFlag({"-reflex"}, FT::kSwitch, "Behave internally like genreflex.");
+   opts.AddFlag({"--reflex"}, FT::kSwitch, "Behave internally like genreflex.");
    opts.AddFlag({"--gccxml"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
-   opts.AddFlag({"-generate-pch"}, FT::kSwitch,
+   opts.AddFlag({"--generate-pch"}, FT::kSwitch,
                 "Generates a pch file from a predefined set of headers. See makepch.py.");
    opts.AddFlag({"-c"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
    opts.AddFlag({"-p"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
-   opts.AddFlag({"-cxxmodule"}, FT::kSwitch, "Generate a C++ module.");
-   // FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
+   opts.AddFlag({"--cxxmodule"}, FT::kSwitch, "Generate a C++ module.");
+   // FIXME: Figure out how to combine the code of --umbrellaHeader and inlineInputHeader
    opts.AddFlag({"--umbrellaHeader"}, FT::kSwitch,
                 "A single header including all headers instead of specifying them on the command line.");
-   opts.AddFlag({"-multiDict"}, FT::kSwitch, "If this library has multiple separate LinkDef files.");
+   opts.AddFlag({"--multiDict"}, FT::kSwitch, "If this library has multiple separate LinkDef files.");
    opts.AddFlag({"--noGlobalUsingStd"}, FT::kSwitch,
                 "Do not declare {using namespace std} in dictionary global scope.");
    opts.AddFlag({"--interpreteronly"}, FT::kSwitch,
@@ -3789,9 +3789,9 @@ void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
                 "Split the dictionary into two parts: one containing the IO (ClassDef) information and another the "
                 "interactivity support.");
    opts.AddFlag({"--noDictSelection"}, FT::kSwitch, "Do not run the selection rules. Useful when in -onepcm mode.");
-   // FIXME: This does not seem to work. We have one use of -inlineInputHeader in
+   // FIXME: This does not seem to work. We have one use of --inlineInputHeader in
    // ROOT and it does not produce the expected result.
-   opts.AddFlag({"-inlineInputHeader"}, FT::kSwitch,
+   opts.AddFlag({"--inlineInputHeader"}, FT::kSwitch,
                 "Does not generate #include <header> but expands the header content.");
    // FIXME: This is totally the wrong concept. We should not expose an interface
    // to be able to tell which component is in the pch and which needs extra
@@ -3799,25 +3799,26 @@ void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
    // partially in the pch and this option makes it impossible to express that.
    // We should be able to get the list of headers in the pch early and scan
    // through them.
+   // FIXME: Change this to a long-flag, used in a lot of places.
    opts.AddFlag({"-writeEmptyRootPCM"}, FT::kSwitch,
                 "Does not include the header files as it assumes they exist in the pch.");
    opts.AddFlag({"--selSyntaxOnly"}, FT::kSwitch, "Check the selection syntax only.");
-   opts.AddFlag({"-failOnWarnings"}, FT::kSwitch, "Fail if there are warnings.");
+   opts.AddFlag({"--failOnWarnings"}, FT::kSwitch, "Fail if there are warnings.");
    opts.AddFlag({"--noIncludePaths"}, FT::kSwitch,
                 "Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH.");
-   opts.AddFlag({"-mSystemByproducts"}, FT::kSwitch, "Allow implicit build of system modules.");
+   opts.AddFlag({"--mSystemByproducts"}, FT::kSwitch, "Allow implicit build of system modules.");
 
    // flags with arguments
    opts.AddFlag({"--lib-list-prefix"}, FT::kWithArg, "An ACLiC feature which exports the list of dependent libraries.");
-   opts.AddFlag({"-rmf"}, FT::kWithArg, "Generate a rootmap file with the specified name.");
+   opts.AddFlag({"--rmf"}, FT::kWithArg, "Generate a rootmap file with the specified name.");
    opts.AddFlag({"-s"}, FT::kWithArg, "The path to the library of the built dictionary.");
    opts.AddFlag({"-isysroot"}, FT::kWithArg, "Specify an isysroot.", FO::kFlagPrefixArg);
 
    // flags with repeated args
-   opts.AddFlag({"-rml"}, FT::kWithArg, "Generate rootmap file.", FO::kFlagAllowMultiple);
-   opts.AddFlag({"-moduleMapFile"}, FT::kWithArg, "Specify a C++ modulemap file.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"--rml"}, FT::kWithArg, "Generate rootmap file.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"--moduleMapFile"}, FT::kWithArg, "Specify a C++ modulemap file.", FO::kFlagAllowMultiple);
    opts.AddFlag({"-m"}, FT::kWithArg, "The list of dependent modules of the dictionary.", FO::kFlagAllowMultiple);
-   opts.AddFlag({"-excludePath"}, FT::kWithArg, "Do not store the <path> in the dictionary.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"--excludePath"}, FT::kWithArg, "Do not store the <path> in the dictionary.", FO::kFlagAllowMultiple);
    opts.AddFlag({"-isystem"}, FT::kWithArg, "Specify a system include path.", FO::kFlagAllowMultiple);
    opts.AddFlag({"-I"}, FT::kWithArg, "Specify an include path.", FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
    opts.AddFlag({"--compilerI"}, FT::kWithArg,
@@ -3827,7 +3828,7 @@ void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
    opts.AddFlag({"-U"}, FT::kWithArg, "Specify undefined macros.", FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
    opts.AddFlag({"-W"}, FT::kWithArg, "Specify compiler diagnostics options.",
                 FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
-   opts.AddFlag({"-mByproduct"}, FT::kWithArg,
+   opts.AddFlag({"--mByproduct"}, FT::kWithArg,
                 "The list of the expected implicit modules build as part of building the current module.",
                 FO::kFlagAllowMultiple);
 
@@ -5419,23 +5420,23 @@ namespace genreflex {
 
       // RootMap filename
       if (!newRootmapFileName.empty()) {
-         argvVector.push_back(string2charptr("-rmf"));
+         argvVector.push_back(string2charptr("--rmf"));
          argvVector.push_back(string2charptr(newRootmapFileName));
       }
 
       // RootMap Lib filename
       if (!newRootmapLibName.empty()) {
-         argvVector.push_back(string2charptr("-rml"));
+         argvVector.push_back(string2charptr("--rml"));
          argvVector.push_back(string2charptr(newRootmapLibName));
       }
 
-      // Always use the -reflex option: we want rootcling to behave
+      // Always use the --reflex option: we want rootcling to behave
       // like genreflex in this case
-      argvVector.push_back(string2charptr("-reflex"));
+      argvVector.push_back(string2charptr("--reflex"));
 
       // Interpreter only dictionaries
       if (interpreteronly)
-         argvVector.push_back(string2charptr("-interpreteronly"));
+         argvVector.push_back(string2charptr("--interpreteronly"));
 
       // Split dictionaries
       if (doSplit)
@@ -5449,17 +5450,16 @@ namespace genreflex {
 
       // Multidict support
       if (multiDict)
-         argvVector.push_back(string2charptr("-multiDict"));
+         argvVector.push_back(string2charptr("--multiDict"));
 
       // Don't declare "using namespace std"
       if (noGlobalUsingStd)
-         argvVector.push_back(string2charptr("-noGlobalUsingStd"));
-
+         argvVector.push_back(string2charptr("--noGlobalUsingStd"));
 
       AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
       // Inline the input header
-      argvVector.push_back(string2charptr("-inlineInputHeader"));
+      argvVector.push_back(string2charptr("--inlineInputHeader"));
 
       // Write empty root pcms
       if (writeEmptyRootPCM)
@@ -5475,7 +5475,7 @@ namespace genreflex {
 
       // Fail on warnings
       if (failOnWarnings)
-         argvVector.push_back(string2charptr("-failOnWarnings"));
+         argvVector.push_back(string2charptr("--failOnWarnings"));
 
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
@@ -5657,8 +5657,8 @@ bool IsGoodLibraryName(const std::string &name)
 /// New arguments:
 /// -l --library targetLib name (new)   -s  targetLib name
 /// -m pcmname (can be many -m) (new)   -m pcmname (can be many -m)
-/// --rootmap                           -rmf (new)
-/// --rootmap-lib                       -rml (new)
+/// --rootmap                           --rmf (new)
+/// --rootmap-lib                       --rml (new)
 ///
 /// genreflex options which rise warnings (feedback is desirable)
 /// --no_membertypedefs (it should be irrelevant)

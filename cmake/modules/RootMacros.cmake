@@ -554,7 +554,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   set(pcm_name ${library_output_dir}/${libprefix}${library_output_name}_rdict.pcm)
   if(ARG_MODULE)
     if(ARG_MULTIDICT)
-      set(newargs ${newargs} -multiDict)
+      set(newargs ${newargs} --multiDict)
       set(pcm_name ${library_output_dir}/${libprefix}${library_output_name}_${dictionary}_rdict.pcm)
       set(rootmap_name ${library_output_dir}/${libprefix}${library_output_name}32.rootmap)
     else()
@@ -595,7 +595,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmap_name)
     set(rootmapargs)
   else()
-    set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+    set(rootmapargs --rml ${library_name} --rmf ${rootmap_name})
   endif()
 
   #---Get the library and module dependencies-----------------
@@ -621,7 +621,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(cpp_module_file)
-    set(newargs -cxxmodule ${newargs})
+    set(newargs --cxxmodule ${newargs})
   endif()
 
   #---what rootcling command to use--------------------------
@@ -632,9 +632,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
-        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe -rootbuild)
+        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe --rootbuild)
       else()
-        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
+        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> --rootbuild)
         # Modules need RConfigure.h copied into include/.
         set(ROOTCLINGDEP rootcling rconfigure)
       endif()
@@ -648,7 +648,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---build the path exclusion switches----------------------
   set(excludepathsargs "")
   foreach(excludepath ${excludepaths})
-    set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
+    set(excludepathsargs ${excludepathsargs} --excludePath ${excludepath})
   endforeach()
 
   #---build the implicit dependencies arguments
@@ -686,7 +686,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   set(compIncPaths)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
-    list(APPEND compIncPaths "-compilerI${implinc}")
+    list(APPEND compIncPaths "--compilerI${implinc}")
   endforeach()
 
   if(cpp_module_file AND TARGET ${ARG_MODULE})

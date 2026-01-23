@@ -42,7 +42,7 @@ rmfName = $(dir $1)$(subst .$(SOEXT),.rootmap,$(notdir $1))
 # generate the rootmap file
 #    $(call rootmapModule, TREELIB)
 # the argument is the upper case name of the library (see the Module.mk)
-rootmapModule = -rml $(notdir $1) -rmf $(call rmfName, $1)
+rootmapModule = --rml $(notdir $1) --rmf $(call rmfName, $1)
 
 # This macro returns the argument to be passed to rootcling to
 # properly setup the pcm

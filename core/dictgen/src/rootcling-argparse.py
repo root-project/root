@@ -99,11 +99,11 @@ The pcm file (module) produced by this invocation of rootcling
 will not include any of the declarations already included in the
 pcm files loaded via -m.  There can be more than one -m
 """)
-	parser.add_argument('-rmf', help="""Rootmap file name
+	parser.add_argument('--rmf', help="""Rootmap file name
 Name of the rootmap file. In order to be picked up by ROOT it must
 have .rootmap extension
 """)
-	parser.add_argument('-rml', help="""Rootmap library name
+	parser.add_argument('--rml', help="""Rootmap library name
 Specify the name of the library which contains the autoload keys. This
 switch can be specified multiple times to autoload several libraries in
 presence of a particular key
@@ -124,17 +124,17 @@ The name influences the name of the created pcm:
    3) If this is specified in conjunction with --multiDict, the output is
       libTARGETLIBRARY_DICTIONARY_rdict.pcm
 """)
-	parser.add_argument('-multiDict', help="""Enable support for multiple pcms in one library
+	parser.add_argument('--multiDict', help="""Enable support for multiple pcms in one library
 Needs the -s flag. See its documentation.
 """)
-	parser.add_argument('-inlineInputHeader', help="""Add the argument header to the code of the dictionary
+	parser.add_argument('--inlineInputHeader', help="""Add the argument header to the code of the dictionary
 This allows the header to be inlined within the dictionary
 """)
-	parser.add_argument('-interpreteronly', help='No IO information in the dictionary\n')
+	parser.add_argument('--interpreteronly', help='No IO information in the dictionary\n')
 	parser.add_argument('-noIncludePaths', help="""Do not store the headers' directories in the dictionary
 Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime
 """)
-	parser.add_argument('-excludePath', help="""Specify a path to be excluded from the include paths
+	parser.add_argument('--excludePath', help="""Specify a path to be excluded from the include paths
 specified for building this dictionary
 """)
 	parser.add_argument('--lib-list-prefix', help="""Specify libraries needed by the header files parsed

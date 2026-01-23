@@ -3557,7 +3557,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling.Append(dict).Append("\" ");
 
    if (produceRootmap && !useCxxModules) {
-      rcling += " -rml " + libname + " -rmf \"" + libmapfilename + "\" ";
+      rcling += " --rml " + libname + " --rmf \"" + libmapfilename + "\" ";
       rcling.Append("-DR__ACLIC_ROOTMAP ");
    }
    rcling.Append(GetIncludePath()).Append(" -D__ACLIC__ ");
@@ -3575,7 +3575,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // Create a modulemap
    // FIXME: Merge the modulemap generation from cmake and here in rootcling.
    if (useCxxModules && produceRootmap) {
-      rcling += " -cxxmodule ";
+      rcling += " --cxxmodule ";
       // TString moduleMapFileName = file_dirname + "/" + libname + ".modulemap";
       TString moduleName = libname + "_ACLiC_dict";
       if (moduleName.BeginsWith("lib"))
@@ -3596,7 +3596,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       moduleMapFile << "}" << std::endl;
       moduleMapFile.close();
       gInterpreter->RegisterPrebuiltModulePath(build_loc.Data(), moduleMapName.Data());
-      rcling.Append(" \"-moduleMapFile=" + moduleMapFullPath + "\" ");
+      rcling.Append(" \"--moduleMapFile=" + moduleMapFullPath + "\" ");
    }
 
    rcling.Append(" \"").Append(filename_fullpath).Append("\" ");

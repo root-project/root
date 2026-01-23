@@ -1492,7 +1492,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
      clingArgsStorage.push_back("-ftime-report");
 
    // Add the overlay file. Note that we cannot factor it out for both root
-   // and rootcling because rootcling activates modules only if -cxxmodule
+   // and rootcling because rootcling activates modules only if --cxxmodule
    // flag is passed.
    if (fCxxModulesEnabled && !fromRootCling) {
       // For now we prefer rootcling to enumerate explicitly its modulemaps.
