@@ -67,7 +67,11 @@ TFile *hsimple(Int_t getFile=0)
    TProfile *hprof = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);
    TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
-   gBenchmark->Start("hsimple");
+   // Set to "true" if you want to see in the output how much time it took to fill the histogram:
+   const bool doBenchmark = false;
+
+   if (doBenchmark)
+      gBenchmark->Start("hsimple");
 
    // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
@@ -97,7 +101,8 @@ TFile *hsimple(Int_t getFile=0)
             break;
       }
    }
-   gBenchmark->Show("hsimple");
+   if (doBenchmark)
+      gBenchmark->Show("hsimple");
 
    // Save all objects in this file
    hpx->SetFillColor(0);
