@@ -1,4 +1,3 @@
-
 Processing execResolveTypedef.cxx...
 Test 1 The result is correct: const int
 Test 2 The result is correct: const int

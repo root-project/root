@@ -1,4 +1,3 @@
-
 Processing execAtlasTest2.C...
 Members of class Atlas::ClassA<Atlas::ClassB>
   - Atlas::ClassB* m_variable; // persistent = Yes

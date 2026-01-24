@@ -1,4 +1,3 @@
-
 !props->HasKey("Doesn't Exist"): ok.
 props->HasKey("id"): ok.
 props->GetPropertyAsString("id") == string("MyID"): ok.

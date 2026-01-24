@@ -1,4 +1,3 @@
-
 Warning in <TStreamerInfo::Build>: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >: edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > has no streamer or dictionary, data member "second" will not be saved
 
 Last verifications:

@@ -1,4 +1,3 @@
-
 Processing /local2/pcanal/cint_working/rootcling/root/roottest/root/meta/tclass/execInitOrder.cxx+...
 Info in <TUnixSystem::ACLiC>: creating shared library /home/pcanal/root_builds/master/cpp17/roottest/root/meta/tclass/execInitOrder_cxx.so
 Error in <TClass::LoadClassInfo>: no interpreter information for class Derived is available even though it has a TClass initialization routine.

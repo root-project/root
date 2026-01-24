@@ -128,6 +128,12 @@ As part of this migration, the following build options are deprecated. From ROOT
 
 ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
 
+## ROOT executable
+
+- Removed stray linebreak when running `root -q` with input files or commands passed with `-e`.
+  This ensures that there is no superfluous output when running `root`.
+  Note that ROOT 6.38 already removed a spurious newline when starting `root` **without** input files or commands.
+
 ## Command-line utilities
 
 ## JavaScript ROOT

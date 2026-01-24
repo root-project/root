@@ -1,4 +1,3 @@
-
 Processing execReadOrderClass.cxx+...
 Warning in <TStreamerInfo::BuildOld>: Cannot convert MyClass::fArray from type: vector<int> to type: int, skip element
 rule reading class version: 1

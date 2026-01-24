@@ -1,4 +1,3 @@
-
 Processing runtemplateBase.C...
 Warning in <TClass::Init>: no dictionary for class edm::EDProduct is available
 Warning in <TClass::Init>: no dictionary for class CaloCrystal is available

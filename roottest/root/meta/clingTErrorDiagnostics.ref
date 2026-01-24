@@ -1,4 +1,3 @@
-
 input_line_26:1:12: error: non-void function 'f1' should return a value [-Wreturn-mismatch]
 int f1() { return; }
            ^

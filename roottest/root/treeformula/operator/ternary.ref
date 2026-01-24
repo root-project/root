@@ -1,4 +1,3 @@
-
 Processing runternary.C...
 **********************************************************************************************************************
 *    Row   *      cond *     first *    second *  cond<2?first:second *      left *     right *    cond<2?left:right *

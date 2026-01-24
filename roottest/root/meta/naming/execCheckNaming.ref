@@ -1,4 +1,3 @@
-
 Processing execCheckNaming.C...
 Check TClassEdit::ResolveTypedef
 @const Something_t&@ --> @const std::Something&@

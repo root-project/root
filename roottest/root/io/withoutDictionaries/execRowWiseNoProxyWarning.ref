@@ -1,4 +1,3 @@
-
 Processing execRowWiseNoProxyWarning.C...
 Error in <TFile::WriteObjectAny>: The class requested (vector<CustomClass>) for the key name "cVec" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (vector<CustomClass>). No data will be written.
 Error in <TFile::WriteObjectAny>: The class requested (list<CustomClass>) for the key name "cList" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (list<CustomClass>). No data will be written.

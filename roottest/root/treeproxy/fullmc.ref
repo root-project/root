@@ -1,4 +1,3 @@
-
 Processing runfullmc.C+(5)...
 Warning in <TClass::Init>: no dictionary for class EventInfo_p3 is available
 Warning in <TClass::Init>: no dictionary for class McEventCollection_p5 is available
