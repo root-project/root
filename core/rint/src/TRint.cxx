@@ -430,7 +430,10 @@ void TRint::Run(Bool_t retrn)
             }
             TObjString *file = (TObjString *)fileObj;
             char cmd[kMAXPATHLEN+50];
-            if (!fNcmd)
+            // First print a newline before going over the inputs to separate
+            // printouts from the initial "root [0]" prompt. If root is run
+            // with "-q", there is no prompt and we don't need the newline.
+            if (!fNcmd && !QuitOpt())
                printf("\n");
             Bool_t rootfile = kFALSE;
 

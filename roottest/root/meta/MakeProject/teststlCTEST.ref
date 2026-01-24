@@ -1,4 +1,3 @@
-
 Processing runstltest.C...
 Warning in <TClass::Init>: no dictionary for class SillyStlEvent is available
 MakeProject has generated 1 classes in stltest

@@ -1,4 +1,3 @@
-
 Processing execDrawString.C...
 Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 TH1.Print Name  = htemp, Entries= 3354, Total sum= 3354

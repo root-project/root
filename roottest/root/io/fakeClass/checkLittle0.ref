@@ -1,4 +1,3 @@
-
 Processing checkLittle0.C...
 Warning in <TStreamerInfo::BuildCheck>: 
         The StreamerInfo of class wrapper read from file little.root
