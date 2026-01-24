@@ -1,4 +1,3 @@
-
 Processing runscopedEnums.C...
 OK: enumerator cond::IOVSequence::ScopeTypenot found
 OK: class cond::IOVSequence should not be in the list of classes

@@ -1,4 +1,3 @@
-
 Processing runFullMissingEntriesROOT-5759.C...
 input_line_FILTERED:1:10: fatal error: 'does_not_exist.h' file not found
 #include "does_not_exist.h"

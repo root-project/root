@@ -1,4 +1,3 @@
-
 Processing test3.cxx+("r")...
 [i] Reading test data model version 2
 Warning in <TClass::Init>: no dictionary for class ClassAIns is available

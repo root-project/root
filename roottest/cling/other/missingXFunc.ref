@@ -1,4 +1,3 @@
-
 Processing runmissingXFunc.C(12)...
 input_line_:2:2: error: no matching function for call to 'runmissingXFunc'
  runmissingXFunc(12) /* invoking function corresponding to '.x' */
