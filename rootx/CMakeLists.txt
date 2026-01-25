@@ -15,6 +15,10 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(root PRIVATE util procstat)
 endif()
 
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(root PRIVATE stdc++fs)
+endif()
+
 target_include_directories(root PRIVATE
   ${CMAKE_SOURCE_DIR}/core/foundation/inc
   ${CMAKE_SOURCE_DIR}/core/base/inc
