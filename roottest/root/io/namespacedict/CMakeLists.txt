@@ -1,8 +1,8 @@
 if(MSVC)
-  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
+  set(command ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
 else()
   set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                                      "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling)
+                                      ${CMAKE_BINARY_DIR}/bin/rootcling)
 endif()
 
 ROOTTEST_ADD_TEST(HeaderDict

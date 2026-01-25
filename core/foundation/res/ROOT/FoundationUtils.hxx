@@ -60,16 +60,6 @@ namespace FoundationUtils {
       return gEnvPathSeparator;
    }
 
-   ///\returns the fallback directory in the installation (eg. /usr/local/root/).
-   const std::string& GetFallbackRootSys();
-
-   ///\returns the rootsys directory in the installation.
-   ///
-   const std::string& GetRootSys();
-
-   ///\returns the sysconfig directory in the installation.
-   const std::string& GetEtcDir();
-
    ///\returns true if lowercase \c value is 1, on, true, 0, off, false
    bool CanConvertEnvValueToBool(const std::string& value);
 

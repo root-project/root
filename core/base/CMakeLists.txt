@@ -232,20 +232,49 @@ set(full_core_filename $<TARGET_FILE_NAME:Core>)
 
 # Absolue CMAKE_INSTALL_<dir> paths are discouraged in CMake, but some
 # packagers use them anyway. So we support it.
-if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
-  set(install_lib_to_include "${CMAKE_INSTALL_INCLUDEDIR}")
-else()
-  if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
-    set(libdir "${CMAKE_INSTALL_LIBDIR}")
+
+function(install_path_from_libdir out_var install_dir)
+  if(IS_ABSOLUTE "${install_dir}")
+    set(install_dir_absolute "${install_dir}")
   else()
-    set(libdir "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    set(install_dir_absolute "${CMAKE_INSTALL_PREFIX}/${install_dir}")
   endif()
-  file(RELATIVE_PATH install_lib_to_include "${libdir}" "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
-  unset(libdir)
+  file(RELATIVE_PATH _rel "${libdir}" "${install_dir_absolute}")
+  set("${out_var}" "${_rel}" PARENT_SCOPE)
+endfunction()
+
+if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
+  set(libdir "${CMAKE_INSTALL_LIBDIR}")
+else()
+  set(libdir "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 endif()
 
+install_path_from_libdir(install_lib_to_bin        "${CMAKE_INSTALL_BINDIR}")
+install_path_from_libdir(install_lib_to_data       "${CMAKE_INSTALL_DATADIR}")
+install_path_from_libdir(install_lib_to_docs       "${CMAKE_INSTALL_DOCDIR}")
+install_path_from_libdir(install_lib_to_etc        "${CMAKE_INSTALL_SYSCONFDIR}")
+install_path_from_libdir(install_lib_to_fonts      "${CMAKE_INSTALL_FONTDIR}")
+install_path_from_libdir(install_lib_to_icons      "${CMAKE_INSTALL_ICONDIR}")
+install_path_from_libdir(install_lib_to_include    "${CMAKE_INSTALL_INCLUDEDIR}")
+install_path_from_libdir(install_lib_to_macros     "${CMAKE_INSTALL_MACRODIR}")
+install_path_from_libdir(install_lib_to_rootsys    "${CMAKE_INSTALL_PREFIX}")
+install_path_from_libdir(install_lib_to_src        "${CMAKE_INSTALL_SRCDIR}")
+install_path_from_libdir(install_lib_to_tutorials  "${CMAKE_INSTALL_TUTDIR}")
+
+unset(libdir)
+
 target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename}
+                                    -DINSTALL_LIB_TO_BIN="${install_lib_to_bin}"
+                                    -DINSTALL_LIB_TO_DATA="${install_lib_to_data}"
+                                    -DINSTALL_LIB_TO_DOCS="${install_lib_to_docs}"
+                                    -DINSTALL_LIB_TO_ETC="${install_lib_to_etc}"
+                                    -DINSTALL_LIB_TO_FONTS="${install_lib_to_fonts}"
+                                    -DINSTALL_LIB_TO_ICONS="${install_lib_to_icons}"
                                     -DINSTALL_LIB_TO_INCLUDE="${install_lib_to_include}"
+                                    -DINSTALL_LIB_TO_MACROS="${install_lib_to_macros}"
+                                    -DINSTALL_LIB_TO_ROOTSYS="${install_lib_to_rootsys}"
+                                    -DINSTALL_LIB_TO_SRC="${install_lib_to_src}"
+                                    -DINSTALL_LIB_TO_TUTORIALS="${install_lib_to_tutorials}"
 )
 add_dependencies(Core ensure_build_tree_marker)
 
