@@ -267,8 +267,8 @@ Int_t TObject::Compare(const TObject *) const
 void TObject::Delete(Option_t *)
 {
    if (IsOnHeap()) {
-      // Delete object from CINT symbol table so it can not be used anymore.
-      // CINT object are always on the heap.
+      // Delete object from Cling symbol table so it can not be used anymore.
+      // Cling object are always on the heap.
       gInterpreter->DeleteGlobal(this);
 
       delete this;
@@ -694,7 +694,7 @@ void TObject::RecursiveRemove(TObject *)
 ///   Specific code should be implemented in each object to handle this
 ///   option. Like in TF1::SavePrimitive().
 ///
-/// - otherwise the object is written to filename as a CINT/C++ script. The
+/// - otherwise the object is written to filename as a Cling/C++ script. The
 ///   C++ code to rebuild this object is generated via SavePrimitive(). The
 ///   "option" parameter is passed to SavePrimitive. By default it is an empty
 ///   string. It can be used to specify the Draw option in the code generated
@@ -742,7 +742,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
       return;
    }
 
-   //==============Save as a C++ CINT file======================================
+   //==============Save as a C++ Cling file======================================
    TString fname;
    if (filename && strlen(filename) > 0) {
       fname = filename;

@@ -600,7 +600,7 @@ void CheckClassNameForRootMap(const std::string &classname, map<string, string> 
          if (k) {
             string base = classname.substr(0, k);
             if (base == "std") {
-               // std is not declared but is also ignored by CINT!
+               // std is not declared but is also ignored by Cling (and historical CINT)
                break;
             } else {
                autoloads[base] = ""; // We never load namespaces on their own.
@@ -2801,7 +2801,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                // We do not want deprecation warnings to fire in dictionaries
                << "#define R__NO_DEPRECATION" << std::endl
 
-               // Now that CINT is not longer there to write the header file,
+               // Now that historical CINT is not longer there to write the header file,
                // write one and include in there a few things for backward
                // compatibility.
                << "\n/*******************************************************************/\n"
@@ -3699,7 +3699,7 @@ gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
                 llvm::cl::cat(gRootclingOptions));
 
 static llvm::cl::opt<bool>
-gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."), // TODO potentially remove
         llvm::cl::Hidden,
         llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
@@ -4462,7 +4462,7 @@ int RootClingMain(int argc,
    }
 
    if (!isGenreflex) { // rootcling
-      // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
+      // historial rootcint used to define a few header implicitly, we need to do it explicitly in Cling.
       if (interp.declare("#include <cassert>\n"
                          "#include \"Rtypes.h\"\n"
                          "#include \"TObject.h\"") != cling::Interpreter::kSuccess
