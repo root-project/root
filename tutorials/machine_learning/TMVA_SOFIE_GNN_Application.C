@@ -234,10 +234,3 @@ void TMVA_SOFIE_GNN_Application (bool verbose = false)
    c2->cd(3); o3->Draw();
 
 }
-
-int main () {
-
-   TMVA_SOFIE_GNN_Application();
-}
-
-
