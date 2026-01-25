@@ -201,7 +201,7 @@ class BaseBackend(ABC):
 
             **kwargs (dict): Keyword arguments used to execute the function.
         """
-        cls.initialization = partial(fun, *args, **kwargs)    
+        cls.initialization = staticmethod(partial(fun, *args, **kwargs))
         fun(*args, **kwargs) 
 
     @classmethod
