@@ -128,6 +128,11 @@ jobs:
           - platform: mac-beta
             is_special: true
             arch: ARM64
+            # For the PR and incremental builds, we set gnuinstall=ON to check
+            # if CMake can deal with the different structure of the install and
+            # build tree at build and test time. We don't care how the install
+            # actually looks like.
+            overrides: ["gnuinstall=ON"]
 
     runs-on:
       - self-hosted
