@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <functional>
 #include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator_Softplus.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -234,6 +235,21 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("RandomUniform", ParseRandom);
    RegisterOperator("RandomUniformLike", ParseRandom);
    RegisterOperator("ScatterElements", ParseScatterElements);
+
+   // Softplus operator with inline lambda registration (no attributes)
+   RegisterOperator("Softplus", [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+      auto input_name = nodeproto.input(0);
+      if (!parser.IsRegisteredTensorType(input_name)) {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Softplus op has input tensor " +
+                                  input_name + " but its type is not yet registered");
+      }
+      std::string output_name = nodeproto.output(0);
+      auto op = std::make_unique<ROperator_Softplus<float>>(input_name, output_name);
+      if (!parser.IsRegisteredTensorType(output_name)) {
+         parser.RegisterTensorType(output_name, parser.GetTensorType(input_name));
+      }
+      return op;
+   });
 }
 
 // Destructor of the parser
