@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <csignal>
+#include <filesystem>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <cerrno>
@@ -95,26 +96,6 @@ static const char *GetExePath()
    return exepath.c_str();
 }
 
-static void SetRootSys()
-{
-   const char *exepath = GetExePath();
-   if (exepath && *exepath) {
-      std::string epStr{exepath};
-      char *ep = epStr.data();
-      char *s;
-      if ((s = strrchr(ep, '/'))) {
-         *s = 0;
-         if ((s = strrchr(ep, '/'))) {
-            *s = 0;
-            int l2 = strlen(ep) + 10;
-            char *env = new char[l2];
-            snprintf(env, l2, "ROOTSYS=%s", ep);
-            putenv(env); // NOLINT: allocated memory now used by environment variable
-         }
-      }
-   }
-}
-
 extern "C" {
    static void SigTerm(int);
 }
@@ -162,21 +143,6 @@ int main(int argc, char **argv)
 {
    char **argvv;
    char  arg0[kMAXPATHLEN];
-
-#ifdef ROOTPREFIX
-   if (std::getenv("ROOTIGNOREPREFIX")) {
-#endif
-   // Try to set ROOTSYS depending on pathname of the executable
-   SetRootSys();
-
-   if (!std::getenv("ROOTSYS")) {
-      fprintf(stderr, "%s: ROOTSYS not set. Set it before trying to run %s.\n",
-              argv[0], argv[0]);
-      return 1;
-   }
-#ifdef ROOTPREFIX
-   }
-#endif
 
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
@@ -242,14 +208,10 @@ int main(int argc, char **argv)
 
    // Build argv vector
    argvv = new char* [argc+1];
-#ifdef ROOTBINDIR
-   if (std::getenv("ROOTIGNOREPREFIX"))
-#endif
-      snprintf(arg0, sizeof(arg0), "%s/bin/%s", std::getenv("ROOTSYS"), ROOTBINARY);
-#ifdef ROOTBINDIR
-   else
-      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
-#endif
+   // The root binary is in the same path by construction
+   namespace fs = std::filesystem;
+   fs::path p{GetExePath()};
+   snprintf(arg0, sizeof(arg0), "%s/%s", p.parent_path().string().c_str(), ROOTBINARY);
    argvv[0] = arg0;
 
    for (i = 1; i < argc; i++)
