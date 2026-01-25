@@ -2868,18 +2868,23 @@ TEST(ONNX, Softplus)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   // Preparing the random input
-   std::vector<float> input({0.1,-0.2,0.3,-0.4,0.5,1.});
+   // Inputs spanning stable region, threshold boundary, and overflow-prone range
+   std::vector<float> input({0.1f, -0.2f, 100.0f, 89.0f, 0.0f, 50.0f});
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softplus", input);
 
-   // Checking output size
    EXPECT_EQ(output.size(), input.size());
 
-   // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
-      double exp_value = std::log(std::exp(input[i])+1);
-      EXPECT_LE(std::abs(output[i] - exp_value), TOLERANCE);
+      EXPECT_FALSE(std::isinf(output[i])) << "Inf at input=" << input[i];
+      EXPECT_FALSE(std::isnan(output[i])) << "NaN at input=" << input[i];
+      // For large positive x (>= 20.0), softplus(x) ≈ x
+      if (input[i] >= 20.0f) {
+         EXPECT_NEAR(output[i], input[i], TOLERANCE);
+      } else {
+         float exp_value = std::log1p(std::exp(input[i]));
+         EXPECT_LE(std::abs(output[i] - exp_value), TOLERANCE);
+      }
    }
 }
 // tests of Einsum operator
