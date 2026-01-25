@@ -397,6 +397,21 @@ namespace ROOT {
       inline Bool_t RequiresCleanup(TObject &obj) {
          return obj.TestBit(kIsReferenced) && obj.GetUniqueID() == 0;
       }
+
+      struct ResourceDirs {
+         TString bin;
+         TString data;
+         TString docs;
+         TString etc;
+         TString fonts;
+         TString icons;
+         TString include;
+         TString macros;
+         TString rootsys;
+         TString tutorials;
+      };
+
+      ResourceDirs const &GetResourceDirs();
    }
 
    /// \brief call RecursiveRemove for obj if gROOT is valid

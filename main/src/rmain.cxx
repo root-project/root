@@ -17,6 +17,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h" // for ROOT::Internal::GetResourceDirs()
 #include "TRint.h"
 #include "RConfigure.h"
 #include "snprintf.h"
@@ -40,14 +41,7 @@ void handle_notebook_option(int argc, char **argv)
    }
    if (notebook > 0) {
       // Build command
-#ifdef ROOTBINDIR
-      if (std::getenv("ROOTIGNOREPREFIX"))
-#endif
-         snprintf(arg0, sizeof(arg0), "%s/bin/%s", std::getenv("ROOTSYS"), ROOTNBBINARY);
-#ifdef ROOTBINDIR
-      else
-         snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
-#endif
+      snprintf(arg0, sizeof(arg0), "%s/%s", ROOT::Internal::GetResourceDirs().bin.Data(), ROOTNBBINARY);
 
       int numnbargs = 1 + (argc - notebook);
 
