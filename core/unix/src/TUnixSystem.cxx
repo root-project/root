@@ -464,32 +464,6 @@ static const char *GetExePath()
    return exepath;
 }
 
-#if defined(HAVE_DLADDR) && !defined(R__MACOSX)
-////////////////////////////////////////////////////////////////////////////////
-
-static void SetRootSys()
-{
-#ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
-#endif
-   void *addr = (void *)SetRootSys;
-   Dl_info info;
-   if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(info.dli_fname, respath)) {
-         if (!gSystem->Getenv("ROOTSYS"))
-            ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
-      } else {
-         TString rs = gSystem->GetDirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
-      }
-   }
-#ifdef ROOTPREFIX
-   }
-#endif
-}
-#endif
-
 #if defined(R__MACOSX)
 static TString gLinkedDylibs;
 
@@ -512,24 +486,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.so";
    TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.dylib";
-
-#ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
-#endif
-   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
-       lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
-      char respath[kMAXPATHLEN];
-      if (!realpath(lib, respath)) {
-         if (!gSystem->Getenv("ROOTSYS"))
-            ::SysError("TUnixSystem::DylibAdded", "error getting realpath of libCore, please set ROOTSYS in the shell");
-      } else {
-         TString rs = gSystem->GetDirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
-      }
-   }
-#ifdef ROOTPREFIX
-   }
-#endif
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
    // explicitly linked against the executable. Additional dylibs
@@ -616,15 +572,9 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigUser2,                 SigHandler);
 
 #if defined(R__MACOSX)
-   // trap loading of all dylibs to register dylib name,
-   // sets also ROOTSYS if built without ROOTPREFIX
+   // trap loading of all dylibs to register dylib name
    _dyld_register_func_for_add_image(DylibAdded);
-#elif defined(HAVE_DLADDR)
-   SetRootSys();
 #endif
-
-   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    return kFALSE;
 }

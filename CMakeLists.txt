@@ -527,7 +527,7 @@ else()
       ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
-      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
+      ${Python3_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
       ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
     DEPENDS
@@ -561,10 +561,10 @@ if(runtime_cxxmodules)
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if(WIN32)
     set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${library_output_dir}\\\;%PATH%"
-                                ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
+                                ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
     set(modules_idx_cmd COMMAND ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
-                                ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
+                                ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
                      COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
@@ -588,7 +588,6 @@ add_custom_command(OUTPUT tutorials/hsimple.root
                    COMMAND
                      ${CMAKE_COMMAND} -E env
                      ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
-                     ROOTIGNOREPREFIX=1
                      ROOT_HIST=0
                      $<TARGET_FILE:root.exe> -l -q -b -n
                        -e ".L ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C"

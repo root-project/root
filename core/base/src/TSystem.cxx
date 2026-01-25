@@ -3737,6 +3737,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
    cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir());
+   // $BinDir and $LibDir are not mentioned in the docs, but used internally to
+   // build the absolute paths to ROOTs directories
+   cmd.ReplaceAll("$BinDir", gROOT->GetBinDir());
+   cmd.ReplaceAll("$LibDir", gROOT->GetLibDir());
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
