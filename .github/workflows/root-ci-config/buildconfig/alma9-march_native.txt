@@ -6,6 +6,7 @@ builtin_vdt=ON
 builtin_veccore=ON
 builtin_zlib=ON
 builtin_zstd=ON
+gnuinstall=ON
 pythia8=ON
 tmva-sofie=ON
 veccore=ON
