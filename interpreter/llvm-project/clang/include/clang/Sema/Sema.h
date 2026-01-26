@@ -2732,7 +2732,7 @@ public:
 
 public:
   // Marks SS invalid if it represents an incomplete type.
-  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *&DC);
+  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *DC);
   // Complete an enum decl, maybe without a scope spec.
   bool RequireCompleteEnumDecl(EnumDecl *D, SourceLocation L,
                                CXXScopeSpec *SS = nullptr);
@@ -11344,8 +11344,8 @@ public:
   bool CheckTemplateParameterList(TemplateParameterList *NewParams,
                                   TemplateParameterList *OldParams,
                                   TemplateParamListContext TPC,
-                                  SkipBodyInfo *SkipBody = nullptr,
-                                  bool Complain = true);
+                                  SkipBodyInfo *SkipBody = nullptr);
+
   /// Match the given template parameter lists to the given scope
   /// specifier, returning the template parameter list that applies to the
   /// name.

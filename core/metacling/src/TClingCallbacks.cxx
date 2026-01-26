@@ -19,6 +19,7 @@
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/ParserStateRAII.h"
 
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
@@ -252,7 +253,7 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
          Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
          // We parsed 'include' token. Store it.
-         clang::Parser::ParserCurTokRestoreRAII fSavedCurToken(P);
+         cling::ParserCurTokRestoreRAII fSavedCurToken(P);
          // We provide our own way of handling the entire #include "file.c+"
          // After we have saved the token reset the current one to
          // something which is safe (semi colon usually means empty decl)

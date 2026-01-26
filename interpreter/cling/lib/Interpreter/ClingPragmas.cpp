@@ -13,6 +13,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/Output.h"
+#include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/Paths.h"
 
 #include "clang/AST/ASTContext.h"
@@ -140,7 +141,7 @@ namespace {
         FileInfos.push_back({std::move(Literal), Tok.getLocation()});
 
       clang::Parser& P = m_Interp.getParser();
-      Parser::ParserCurTokRestoreRAII savedCurToken(P);
+      cling::ParserCurTokRestoreRAII savedCurToken(P);
       // After we have saved the token reset the current one to something
       // which is safe (semi colon usually means empty decl)
       Token& CurTok = const_cast<Token&>(P.getCurToken());

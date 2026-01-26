@@ -857,10 +857,6 @@ SourceLocation Lexer::getLocForEndOfToken(SourceLocation Loc, unsigned Offset,
       return {}; // Points inside the macro expansion.
   }
 
-  // Don't hit the file system for ASTReader tokens.
-  if (SM.isLoadedSourceLocation(Loc))
-    return Loc;
-
   unsigned Len = Lexer::MeasureTokenLength(Loc, SM, LangOpts);
   if (Len > Offset)
     Len = Len - Offset;

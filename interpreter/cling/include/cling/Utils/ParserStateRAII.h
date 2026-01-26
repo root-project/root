@@ -19,6 +19,30 @@ namespace clang {
 }
 
 namespace cling {
+  /// A RAII object to temporarily reset PP's state and restore it.
+  class ParserCurTokRestoreRAII {
+  private:
+    clang::Parser& P;
+    clang::Token SavedTok;
+
+  public:
+    ParserCurTokRestoreRAII(clang::Parser& P)
+        : P(P), SavedTok(P.getCurToken()) {}
+
+    void pop() {
+      if (SavedTok.is(clang::tok::unknown))
+        return;
+
+      // Restore the token by getting a non-const reference
+      // Not ideal, but the only way to avoid the patch.
+      const_cast<clang::Token&>(P.getCurToken()) = SavedTok;
+
+      SavedTok.startToken();
+    }
+
+    ~ParserCurTokRestoreRAII() { pop(); }
+  };
+
   ///\brief Cleanup Parser state after a failed lookup.
   ///
   /// After a failed lookup we need to discard the remaining unparsed input,
