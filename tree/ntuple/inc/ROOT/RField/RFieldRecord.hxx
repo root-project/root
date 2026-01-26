@@ -20,10 +20,12 @@
 
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/StringUtils.hxx>
 
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -59,6 +61,8 @@ class RRecordField : public RFieldBase {
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
+   std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
+
    RRecordField(std::string_view name, const RRecordField &source); // Used by CloneImpl()
 
    /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
@@ -66,6 +70,16 @@ class RRecordField : public RFieldBase {
    /// Used by the public constructor and by Internal::CreateEmulatedRecordField().
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                 std::string_view emulatedFromType);
+
+   bool IsPairOrTuple() const
+   {
+      return StartsWith(GetTypeName(), "std::pair<") || StartsWith(GetTypeName(), "std::tuple<");
+   }
+
+   /// Adds an additional item field. Note that the derived RPairField and RTupleField have a sub field handling
+   /// that differs from a struct-like record: their sub field names must be numbered and these derived fields have
+   /// their own member offset calculation.
+   void AddItem(std::unique_ptr<RFieldBase> item);
 
 protected:
    std::size_t fMaxAlignment = 1;
@@ -87,17 +101,20 @@ protected:
    /// that ensure that the resulting memory layout matches std::pair or std::tuple, resp.
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
-   void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields, bool useNumberedFields);
-
-   template <std::size_t N>
-   void AttachItemFields(std::array<std::unique_ptr<RFieldBase>, N> itemFields, bool useNumberedFields)
+   template <typename ContainerT>
+   void AttachItemFields(ContainerT &&itemFields)
    {
+      static_assert(std::is_same_v<typename ContainerT::value_type, std::unique_ptr<ROOT::RFieldBase>>,
+                    "ContainerT must hold std::unique_ptr<ROOT::RFieldBase>");
+
+      if (!IsPairOrTuple()) {
+         assert(fOffsets.empty());
+         fOffsets.reserve(itemFields.size());
+      }
+
       fTraits |= kTraitTrivialType;
-      for (unsigned i = 0; i < N; ++i) {
-         fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
-         fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
-         fTraits &= itemFields[i]->GetTraits();
-         Attach(std::move(itemFields[i]), useNumberedFields ? ("_" + std::to_string(i)) : "");
+      for (auto &&item : itemFields) {
+         AddItem(std::move(item));
       }
       // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
       // requirements of the type with strictest alignment
