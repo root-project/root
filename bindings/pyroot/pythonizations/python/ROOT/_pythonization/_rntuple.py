@@ -141,6 +141,12 @@ def _RNTupleReader_LoadEntry(self, *args):
     return self._LoadEntry(*args)
 
 
+def _RNTupleReader_exit(self, *args):
+    import ROOT
+    ROOT.Internal.CloseRNTupleReader(self)
+    return False
+
+
 @pythonization("RNTupleReader", ns="ROOT")
 def pythonize_RNTupleReader(klass):
     klass._Open = klass.Open
@@ -148,6 +154,9 @@ def pythonize_RNTupleReader(klass):
 
     klass._LoadEntry = klass.LoadEntry
     klass.LoadEntry = _RNTupleReader_LoadEntry
+
+    klass.__enter__ = lambda reader: reader
+    klass.__exit__ = _RNTupleReader_exit
 
 
 def _RNTupleWriter_Append(model, *args):
@@ -174,7 +183,9 @@ def _RNTupleWriter_Fill(self, *args):
 
 
 def _RNTupleWriter_exit(self, *args):
+    import ROOT
     self.CommitDataset()
+    ROOT.Internal.CloseRNTupleWriter(self)
     return False
 
 
