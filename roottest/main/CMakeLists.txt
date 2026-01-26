@@ -6,16 +6,15 @@ configure_file(subdirs.root . COPYONLY)
 configure_file(nested.root . COPYONLY)
 configure_file(RNTuple.root . COPYONLY)
 
+# We should explicitly use the Python executable from the Python version that
+# was used to build ROOT. Otherwise, we risk picking up a different Python
+# version at test time.
+set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOTSYS}/bin)
+set(TOOLS_PREFIX ${ROOTSYS}/bin)
+
 if(MSVC)
-    # the command line tools works fine in the Windows command prompt but
-    # not from CTest, so let's add Python.exe and the .py file extension
-    set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOTSYS}/bin)
-    set(TOOLS_PREFIX ${ROOTSYS}/bin)
     set(pyext .py)
     set(exeext .exe)
-else()
-    set(PY_TOOLS_PREFIX ${ROOTSYS}/bin)
-    set(TOOLS_PREFIX ${ROOTSYS}/bin)
 endif()
 
 ############################## ROOLS TESTS ##############################
