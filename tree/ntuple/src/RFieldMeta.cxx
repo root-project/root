@@ -709,7 +709,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
+   AttachItemFields(std::move(itemFields));
    fOffsets.push_back(offsets[0]);
    fOffsets.push_back(offsets[1]);
 }
@@ -721,7 +721,7 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
+   AttachItemFields(std::move(itemFields));
 
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    auto *c = TClass::GetClass(GetTypeName().c_str());
@@ -1322,7 +1322,7 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
+   AttachItemFields(std::move(itemFields));
    fOffsets = offsets;
 }
 
@@ -1333,7 +1333,7 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
    if (typeAlias != GetTypeName())
       fTypeAlias = typeAlias;
 
-   AttachItemFields(std::move(itemFields), true /* useNumberedFields */);
+   AttachItemFields(std::move(itemFields));
 
    auto *c = TClass::GetClass(GetTypeName().c_str());
    if (!c)

@@ -568,27 +568,13 @@ ROOT::RRecordField::RRecordField(std::string_view name, const RRecordField &sour
 {
    for (const auto &f : source.GetConstSubfields())
       Attach(f->Clone(f->GetFieldName()));
+   fSubfieldNames = source.fSubfieldNames;
    fTraits = source.fTraits;
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::string_view typeName)
    : ROOT::RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
-}
-
-void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields, bool useNumberedFields)
-{
-   fTraits |= kTraitTrivialType;
-   const auto N = itemFields.size();
-   for (std::size_t i = 0; i < N; ++i) {
-      fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
-      fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
-      fTraits &= itemFields[i]->GetTraits();
-      Attach(std::move(itemFields[i]), useNumberedFields ? ("_" + std::to_string(i)) : "");
-   }
-   // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
-   // requirements of the type with strictest alignment
-   fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
 std::unique_ptr<ROOT::RFieldBase>
@@ -612,30 +598,34 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::un
                                  std::string_view emulatedFromType)
    : ROOT::RFieldBase(fieldName, emulatedFromType, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
-   fTraits |= kTraitTrivialType;
-   fOffsets.reserve(itemFields.size());
-   std::unordered_set<std::string_view> fieldNames;
-   for (auto &item : itemFields) {
-      const auto &itemName = item->GetFieldName();
-      if (!fieldNames.insert(itemName).second) {
-         throw RException(R__FAIL("duplicate field name: " + itemName));
-      }
-      fSize += GetItemPadding(fSize, item->GetAlignment());
-      fOffsets.push_back(fSize);
-      fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-      fSize += item->GetValueSize();
-      fTraits &= item->GetTraits();
-      Attach(std::move(item));
-   }
+   AttachItemFields(std::move(itemFields));
    fTraits |= !emulatedFromType.empty() * kTraitEmulatedField;
-   // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
-   // requirements of the type with strictest alignment
-   fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, std::move(itemFields), "")
 {
+}
+
+void ROOT::RRecordField::AddItem(std::unique_ptr<RFieldBase> item)
+{
+   fSize += GetItemPadding(fSize, item->GetAlignment());
+   if (!IsPairOrTuple()) {
+      fOffsets.emplace_back(fSize);
+   }
+   fSize += item->GetValueSize();
+   fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
+   fTraits &= item->GetTraits();
+
+   if (IsPairOrTuple()) {
+      Attach(std::move(item), "_" + std::to_string(fSubfields.size()));
+   } else {
+      const std::string itemName = item->GetFieldName();
+      if (fSubfieldNames.count(itemName) > 0)
+         throw RException(R__FAIL("duplicate field name: " + itemName));
+      Attach(std::move(item));
+      fSubfieldNames.insert(itemName);
+   }
 }
 
 std::size_t ROOT::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
