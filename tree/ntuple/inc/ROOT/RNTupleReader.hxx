@@ -34,6 +34,14 @@
 
 namespace ROOT {
 class RNTuple;
+class RNTupleReader;
+
+namespace Internal {
+
+// Used by the pythonization.
+void CloseRNTupleReader(RNTupleReader &reader);
+
+} // namespace Internal
 
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {
@@ -65,6 +73,8 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 // clang-format on
 class RNTupleReader {
 private:
+   friend void Internal::CloseRNTupleReader(RNTupleReader &reader);
+
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
    std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;

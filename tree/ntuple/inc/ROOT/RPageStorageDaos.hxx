@@ -141,6 +141,8 @@ protected:
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
+
+   void Close() final;
 }; // class RPageSinkDaos
 
 // clang-format off
@@ -188,6 +190,7 @@ public:
    std::string GetObjectClass() const;
 
    void LoadStreamerInfo() final;
+   void Close() final;
 }; // class RPageSourceDaos
 
 } // namespace Internal
