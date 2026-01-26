@@ -193,6 +193,15 @@ ROOT::RNTupleModel::RUpdater::RUpdater(ROOT::RNTupleWriter &writer)
 {
 }
 
+ROOT::RNTupleModel::RUpdater::~RUpdater()
+{
+   // If we made any changes, we should commit them because the model was already altered.
+   // Otherwise, we _do not_ commit -- it may be that the referenced model is already expired if the
+   // corresponding writer is already destructed.
+   if (!fOpenChangeset.IsEmpty())
+      ROOT::RNTupleModel::RUpdater::CommitUpdate();
+}
+
 void ROOT::RNTupleModel::RUpdater::BeginUpdate()
 {
    fOpenChangeset.fModel.Unfreeze();
