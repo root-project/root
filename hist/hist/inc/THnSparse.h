@@ -109,56 +109,24 @@ class THnSparse: public THnBase {
    Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE) override;
    Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE) override;
 
-   /// Forwards to THnBase::SetBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
-   void SetBinContent(const Int_t* idx, Double_t v) {
-      THnBase::SetBinContent(idx, v);
-   }
+   using THnBase::SetBinContent; // non-virtual SetBinContent(const Int_t* idx, Double_t v)
    void SetBinContent(Long64_t bin, Double_t v) override;
    void SetBinError2(Long64_t bin, Double_t e2) override;
 
-   /// Forwards to THnBase::AddBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
-   void AddBinContent(const Int_t* idx, Double_t v = 1.) {
-      THnBase::AddBinContent(idx, v);
-   }
+   using THnBase::AddBinContent; // non-virtual void AddBinContent(const Int_t* idx, Double_t v = 1.)
    void AddBinContent(Long64_t bin, Double_t v = 1.) override;
    void AddBinError2(Long64_t bin, Double_t e2) override;
 
-   /// Forwards to THnBase::GetBinContent() overload.
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
-   Double_t GetBinContent(const Int_t *idx) const {
-
-      return THnBase::GetBinContent(idx);
-   }
+   using THnBase::GetBinContent; // non-virtual Double_t GetBinContent(const Int_t *idx) const
    Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const override;
    Double_t GetBinError2(Long64_t linidx) const override;
 
    Double_t GetSparseFractionBins() const;
    Double_t GetSparseFractionMem() const;
 
-   /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
-   /// declaration.
-   TH1D*      Projection(Int_t xDim, Option_t* option = "") const{
-      return THnBase::Projection(xDim, option);
-   }
-
-   /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
-   /// declaration.
-   TH2D*      Projection(Int_t yDim, Int_t xDim,
-                         Option_t* option = "") const {
-      return THnBase::Projection(yDim, xDim, option);
-   }
-
-   /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
-   /// declaration.
-   TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
-                         Option_t* option = "") const {
-      return THnBase::Projection(xDim, yDim, zDim, option);
-   }
+   using THnBase::Projection; // non-virtual TH1D* Projection(Int_t xDim, Option_t* option = "") const
+                              //             TH2D* Projection(Int_t yDim, Int_t xDim, Option_t* option = "") const
+                              //             TH3D* Projection(Int_t xDim, Int_t yDim, Int_t zDim, Option_t* option = "") const
 
    THnSparse* Projection(Int_t ndim, const Int_t* dim,
                          Option_t* option = "") const {
