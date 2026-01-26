@@ -433,7 +433,7 @@ private:
 
 public:
    explicit RUpdater(ROOT::RNTupleWriter &writer);
-   ~RUpdater() { CommitUpdate(); }
+   ~RUpdater();
    /// Begin a new set of alterations to the underlying model. As a side effect, all REntry
    /// instances related to the model are invalidated.
    void BeginUpdate();
