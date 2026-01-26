@@ -2,10 +2,10 @@
 # Author: Kristupas Pranckietis, Vilnius University 05/2024
 # Author: Nopphakorn Subsa-Ard, King Mongkut's University of Technology Thonburi (KMUTT) (TH) 08/2024
 # Author: Vincenzo Eduardo Padulano, CERN 10/2024
-# Author: Martin Føll, University of Oslo (UiO) & CERN 05/2025
+# Author: Martin Føll, University of Oslo (UiO) & CERN 01/2026
 
 ################################################################################
-# Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -82,10 +82,10 @@ class BaseGenerator:
 
     def __init__(
         self,
-        rdataframe: ROOT.RDF.RNode,
-        batch_size: int,
-        chunk_size: int,
-        block_size: int,            
+        rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),        
+        batch_size: int = 0,
+        chunk_size: int = 0,
+        block_size: int = 0,            
         columns: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
         vec_padding: int = 0,
@@ -96,6 +96,8 @@ class BaseGenerator:
         shuffle: bool = True,
         drop_remainder: bool = True,
         set_seed: int = 0,
+        load_eager: bool = False,
+        sampling_type: str = "random",
     ):
         """Wrapper around the Cpp RBatchGenerator
 
@@ -105,6 +107,10 @@ class BaseGenerator:
             chunk_size (int):
                 The size of the chunks loaded from the ROOT file. Higher chunk size
                 results in better randomization, but also higher memory usage.
+            block_size (int):
+                The size of the blocks of consecutive entries from the dataframe.
+                A chunk is build up from multiple blocks. Lower block size results in
+                a better randomization, but also higher memory usage.
             columns (list[str], optional):
                 Columns to be returned. If not given, all columns are used.
             max_vec_sizes (dict[std, int], optional):
@@ -134,6 +140,13 @@ class BaseGenerator:
                 For reproducibility: Set the seed for the random number generator used
                 to split the dataset into training and validation and shuffling of the chunks
                 Defaults to 0 which means that the seed is set to the random device.
+            load_eager (bool):
+                Load the full dataframe(s) into memory (True) or
+                load chunks from the dataframe into memory (False).
+                Defuaults to False.
+            sampling_type (str):
+                Describes the mode of sampling from the dataframe(s). Options: 'random'.
+                Defaults to 'random' and requires load_eager = True.
         """
 
         import ROOT
@@ -148,7 +161,7 @@ class BaseGenerator:
                     using RBatchGenerator"
             )
 
-        if chunk_size < batch_size:
+        if load_eager == False and chunk_size < batch_size:
             raise ValueError(
                 f"chunk_size cannot be smaller than batch_size: chunk_size: \
                     {chunk_size}, batch_size: {batch_size}"
@@ -160,7 +173,9 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
 
-        self.noded_rdf = RDF.AsRNode(rdataframe)
+        if not isinstance(rdataframes, list):
+            rdataframes = [rdataframes]
+        self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
 
         if isinstance(target, str):
             target = [target]
@@ -169,7 +184,7 @@ class BaseGenerator:
         self.weights_column = weights
 
         template, max_vec_sizes_list = self.get_template(
-            rdataframe, columns, max_vec_sizes
+            rdataframes[0], columns, max_vec_sizes
         )
 
         self.num_columns = len(self.all_columns)
@@ -222,7 +237,7 @@ class BaseGenerator:
         EnableThreadSafety()
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
-            self.noded_rdf,
+            self.noded_rdfs,
             chunk_size,
             block_size,            
             batch_size,
@@ -234,6 +249,8 @@ class BaseGenerator:
             shuffle,
             drop_remainder,
             set_seed,
+            load_eager,
+            sampling_type,
         )
 
         atexit.register(self.DeActivate)
@@ -652,10 +669,10 @@ class ValidationRBatchGenerator:
         return None    
     
 def CreateNumPyGenerators(
-    rdataframe: ROOT.RDF.RNode,
-    batch_size: int,
-    chunk_size: int,
-    block_size: int,        
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),    
+    batch_size: int = 0,
+    chunk_size: int = 0,
+    block_size: int = 0,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -666,6 +683,8 @@ def CreateNumPyGenerators(
     shuffle: bool = True,
     drop_remainder=True,
     set_seed: int = 0,
+    load_eager: bool = False,
+    sampling_type: str = "random",
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two batch generators based on the given ROOT file and tree or RDataFrame
@@ -678,6 +697,10 @@ def CreateNumPyGenerators(
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
+        block_size (int):
+            The size of the blocks of consecutive entries from the dataframe.
+            A chunk is build up from multiple blocks. Lower block size results in
+            a better randomization, but also higher memory usage.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
         max_vec_sizes (list[int], optional):
@@ -706,6 +729,20 @@ def CreateNumPyGenerators(
             [4, 5, 6, 7] will be returned.
             If drop_remainder = False, then three batches [0, 1, 2, 3],
             [4, 5, 6, 7] and [8, 9] will be returned.
+        set_seed (int):
+            For reproducibility: Set the seed for the random number generator used
+            to split the dataset into training and validation and shuffling of the chunks
+            Defaults to 0 which means that the seed is set to the random device.
+        load_eager (bool):
+            Load the full dataframe(s) into memory (True) or
+            load chunks from the dataframe into memory (False).
+            Defuaults to False.
+         sampling_type (str):
+             Describes the mode of sampling from the dataframe(s). Options: 'random'.
+             Defaults to 'random' and requires load_eager = True.
+    
+    
+    
 
     Returns:
         TrainRBatchGenerator or
@@ -721,7 +758,7 @@ def CreateNumPyGenerators(
     import numpy as np
 
     base_generator = BaseGenerator(
-        rdataframe,
+        rdataframes,
         batch_size,
         chunk_size,
         block_size,        
@@ -734,7 +771,9 @@ def CreateNumPyGenerators(
         max_chunks,
         shuffle,
         drop_remainder,
-        set_seed,        
+        set_seed,
+        load_eager,
+        sampling_type,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -752,10 +791,10 @@ def CreateNumPyGenerators(
 
 
 def CreateTFDatasets(
-    rdataframe: ROOT.RDF.RNode,
-    batch_size: int,
-    chunk_size: int,
-    block_size: int,        
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),    
+    batch_size: int = 0,
+    chunk_size: int = 0,
+    block_size: int = 0,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -765,7 +804,9 @@ def CreateTFDatasets(
     max_chunks: int = 0,
     shuffle: bool = True,
     drop_remainder=True,
-    set_seed: int = 0,        
+    set_seed: int = 0,
+    load_eager: bool = False,
+    sampling_type: str = "random",
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -778,6 +819,10 @@ def CreateTFDatasets(
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
+        block_size (int):
+            The size of the blocks of consecutive entries from the dataframe.
+            A chunk is build up from multiple blocks. Lower block size results in
+            a better randomization, but also higher memory usage.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
         max_vec_sizes (list[int], optional):
@@ -806,6 +851,17 @@ def CreateTFDatasets(
             [4, 5, 6, 7] will be returned.
             If drop_remainder = False, then three batches [0, 1, 2, 3],
             [4, 5, 6, 7] and [8, 9] will be returned.
+        set_seed (int):
+            For reproducibility: Set the seed for the random number generator used
+            to split the dataset into training and validation and shuffling of the chunks
+            Defaults to 0 which means that the seed is set to the random device.
+        load_eager (bool):
+            Load the full dataframe(s) into memory (True) or
+            load chunks from the dataframe into memory (False).
+            Defuaults to False.
+         sampling_type (str):
+             Describes the mode of sampling from the dataframe(s). Options: 'random'.
+             Defaults to 'random' and requires load_eager = True.
 
     Returns:
         TrainRBatchGenerator or
@@ -820,7 +876,7 @@ def CreateTFDatasets(
     import tensorflow as tf
 
     base_generator = BaseGenerator(
-        rdataframe,
+        rdataframes,
         batch_size,
         chunk_size,
         block_size,
@@ -833,7 +889,9 @@ def CreateTFDatasets(
         max_chunks,
         shuffle,
         drop_remainder,
-        set_seed,        
+        set_seed,
+        load_eager,
+        sampling_type,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -901,10 +959,10 @@ def CreateTFDatasets(
 
 
 def CreatePyTorchGenerators(
-    rdataframe: ROOT.RDF.RNode,
-    batch_size: int,
-    chunk_size: int,
-    block_size: int,        
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),    
+    batch_size: int = 0,
+    chunk_size: int = 0,
+    block_size: int = 0,        
     columns: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
@@ -914,7 +972,9 @@ def CreatePyTorchGenerators(
     max_chunks: int = 0,
     shuffle: bool = True,
     drop_remainder=True,
-    set_seed: int = 0,        
+    set_seed: int = 0,
+    load_eager: bool = False,
+    sampling_type: str = "random",
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -927,6 +987,10 @@ def CreatePyTorchGenerators(
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
+        block_size (int):
+            The size of the blocks of consecutive entries from the dataframe.
+            A chunk is build up from multiple blocks. Lower block size results in
+            a better randomization, but also higher memory usage.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
         max_vec_sizes (list[int], optional):
@@ -955,6 +1019,17 @@ def CreatePyTorchGenerators(
             [4, 5, 6, 7] will be returned.
             If drop_remainder = False, then three batches [0, 1, 2, 3],
             [4, 5, 6, 7] and [8, 9] will be returned.
+        set_seed (int):
+            For reproducibility: Set the seed for the random number generator used
+            to split the dataset into training and validation and shuffling of the chunks
+            Defaults to 0 which means that the seed is set to the random device.
+        load_eager (bool):
+            Load the full dataframe(s) into memory (True) or
+            load chunks from the dataframe into memory (False).
+            Defuaults to False.
+         sampling_type (str):
+             Describes the mode of sampling from the dataframe(s). Options: 'random'.
+             Defaults to 'random' and requires load_eager = True.
 
     Returns:
         TrainRBatchGenerator or
@@ -967,7 +1042,7 @@ def CreatePyTorchGenerators(
             validation generator will return no batches.
     """
     base_generator = BaseGenerator(
-        rdataframe,
+        rdataframes,
         batch_size,
         chunk_size,
         block_size,
@@ -980,7 +1055,9 @@ def CreatePyTorchGenerators(
         max_chunks,
         shuffle,
         drop_remainder,
-        set_seed,        
+        set_seed,
+        load_eager,
+        sampling_type,
     )
 
     train_generator = TrainRBatchGenerator(
