@@ -88,7 +88,6 @@
 
 #include "llvm/ADT/StringRef.h"
 
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Signals.h"
@@ -106,6 +105,7 @@
 #include "strlcpy.h"
 
 #include "OptionParser.h"
+#include "optparse.hxx"
 
 #ifdef WIN32
 const std::string gLibraryExtension(".dll");
@@ -142,10 +142,6 @@ using std::string, std::map, std::ifstream, std::ofstream, std::endl, std::ios, 
 namespace genreflex {
    bool verbose = false;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1837,8 +1833,7 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
-                     std::string &code_for_parser)
+void GenerateLinkdef(std::vector<std::string> &InputFiles, std::string &code_for_parser)
 {
    code_for_parser += "#ifdef __CLING__\n\n";
    code_for_parser += "#pragma link off all globals;\n";
@@ -3526,19 +3521,58 @@ public:
    }
 };
 
-static llvm::cl::opt<bool> gOptSystemModuleByproducts("mSystemByproducts", llvm::cl::Hidden,
-                                                      llvm::cl::desc("Allow implicit build of system modules."),
-                                                      llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
-                     llvm::cl::Hidden,
-                     llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
-                     llvm::cl::cat(gRootclingOptions));
-// Really llvm::cl::Required, will be changed in RootClingMain below.
-static llvm::cl::opt<std::string>
-gOptDictionaryFileName(llvm::cl::Positional,
-                      llvm::cl::desc("<output dictionary file>"),
-                      llvm::cl::cat(gRootclingOptions));
+enum VerboseLevel {
+   v = ROOT::TMetaUtils::kError,
+   v0 = ROOT::TMetaUtils::kFatal,
+   v1 = v,
+   v2 = ROOT::TMetaUtils::kWarning,
+   v3 = ROOT::TMetaUtils::kNote,
+   v4 = ROOT::TMetaUtils::kInfo
+};
+
+static VerboseLevel gOptVerboseLevel;
+
+static bool gOptForce;
+static bool gOptRootBuild;
+static bool gOptCint;
+static bool gOptReflex;
+static bool gOptGccXml;
+static bool gOptGeneratePCH;
+static bool gOptC;
+static bool gOptP;
+static bool gOptCxxModule;
+static bool gOptUmbrellaInput;
+static bool gOptMultiDict;
+static bool gOptNoGlobalUsingStd;
+static bool gOptInterpreterOnly;
+static bool gOptSplit;
+static bool gOptNoDictSelection;
+static bool gOptInlineInput;
+static bool gOptWriteEmptyRootPCM;
+static bool gOptCheckSelectionSyntax;
+static bool gOptFailOnWarnings;
+static bool gOptNoIncludePaths;
+static bool gOptSystemModuleByproducts;
+
+static std::string gOptLibListPrefix;
+static std::string gOptRootMapFileName;
+static std::string gOptSharedLibFileName;
+static std::string gOptISysRoot;
+
+static std::vector<std::string> gOptRootmapLibNames;
+static std::vector<std::string> gOptModuleMapFiles;
+static std::vector<std::string> gOptModuleDependencies;
+static std::vector<std::string> gOptExcludePaths;
+static std::vector<std::string> gOptSysIncludePaths;
+static std::vector<std::string> gOptIncludePaths;
+static std::vector<std::string> gOptCompDefaultIncludePaths;
+static std::vector<std::string> gOptPPDefines;
+static std::vector<std::string> gOptPPUndefines;
+static std::vector<std::string> gOptWDiags;
+static std::vector<std::string> gOptModuleByproducts;
+
+static std::string gOptDictionaryFileName;
+static std::vector<std::string> gOptDictionaryHeaderFiles;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
@@ -3602,14 +3636,14 @@ public:
       // an error because rootcling is not able to generate the corresponding
       // dictionary.
       // If we build a I/O requiring module implicitly we should display
-      // an error unless -mSystemByproducts or -mByproduct were specified.
+      // an error unless --mSystemByproducts or --mByproduct were specified.
       bool isByproductModule = false;
       if (module) {
-         // -mSystemByproducts allows implicit building of any system module.
+         // --mSystemByproducts allows implicit building of any system module.
          if (module->IsSystem && gOptSystemModuleByproducts) {
             isByproductModule = true;
          }
-         // -mByproduct lists concrete module names that are allowed.
+         // --mByproduct lists concrete module names that are allowed.
          if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) !=
              gOptModuleByproducts.end()) {
             isByproductModule = true;
@@ -3622,7 +3656,7 @@ public:
          ROOT::TMetaUtils::Error(nullptr,
                                  "Building module '%s' implicitly. If '%s' requires a \n"
                                  "dictionary please specify build dependency: '%s' depends on '%s'.\n"
-                                 "Otherwise, specify '-mByproduct %s' to disable this diagnostic.\n",
+                                 "Otherwise, specify '--mByproduct %s' to disable this diagnostic.\n",
                                  moduleName.c_str(), moduleName.c_str(), gOptDictionaryFileName.c_str(),
                                  moduleName.c_str(), moduleName.c_str());
       }
@@ -3674,187 +3708,138 @@ static void MaybeSuppressWin32CrashDialogs() {
 #endif
 }
 
-static llvm::cl::opt<bool> gOptForce("f", llvm::cl::desc("Overwrite <file>s."),
-                                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool> gOptRootBuild("rootbuild", llvm::cl::desc("If we are building ROOT."),
-                                        llvm::cl::Hidden,
-                                        llvm::cl::cat(gRootclingOptions));
-enum VerboseLevel {
-   v = ROOT::TMetaUtils::kError,
-   v0 = ROOT::TMetaUtils::kFatal,
-   v1 = v,
-   v2 = ROOT::TMetaUtils::kWarning,
-   v3 = ROOT::TMetaUtils::kNote,
-   v4 = ROOT::TMetaUtils::kInfo
-};
-static llvm::cl::opt<VerboseLevel>
-gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
-                llvm::cl::values(clEnumVal(v, "Show errors."),
-                                 clEnumVal(v0, "Show only fatal errors."),
-                                 clEnumVal(v1, "Show errors (the same as -v)."),
-                                 clEnumVal(v2, "Show warnings (default)."),
-                                 clEnumVal(v3, "Show notes."),
-                                 clEnumVal(v4, "Show information.")),
-                llvm::cl::init(v2),
-                llvm::cl::cat(gRootclingOptions));
+// FIXME: Copied and adapted from previous help menu, would be nice if optparse supports generating this automatically.
+static const char *const kShortHelp = "USAGE: rootcling [subcommand] [options] <output dictionary file> <list of "
+                                      "dictionary header files> <LinkDef file | selection xml file>\n";
+static const char *const kLongHelp = R"(
+SUBCOMMANDS:
 
-static llvm::cl::opt<bool>
-gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-        llvm::cl::Hidden,
-        llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptReflex("reflex", llvm::cl::desc("Behave internally like genreflex."),
-          llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-          llvm::cl::Hidden,
-          llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptLibListPrefix("lib-list-prefix",
-                 llvm::cl::desc("An ACLiC feature which exports the list of dependent libraries."),
-                 llvm::cl::Hidden,
-                 llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptGeneratePCH("generate-pch",
-               llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
-               llvm::cl::Hidden,
-               llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptC("c", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptP("p", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptRootmapLibNames("rml", llvm::cl::ZeroOrMore,
-                   llvm::cl::desc("Generate rootmap file."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptRootMapFileName("rmf",
-                   llvm::cl::desc("Generate a rootmap file with the specified name."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptCxxModule("cxxmodule",
-             llvm::cl::desc("Generate a C++ module."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptModuleMapFiles("moduleMapFile",
-                   llvm::cl::desc("Specify a C++ modulemap file."),
-                   llvm::cl::cat(gRootclingOptions));
-// FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
-static llvm::cl::opt<bool>
-gOptUmbrellaInput("umbrellaHeader",
-                  llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptMultiDict("multiDict",
-             llvm::cl::desc("If this library has multiple separate LinkDef files."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoGlobalUsingStd("noGlobalUsingStd",
-             llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptInterpreterOnly("interpreteronly",
-                   llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptSplit("split",
-         llvm::cl::desc("Split the dictionary into two parts: one containing the IO (ClassDef)\
-information and another the interactivity support."),
-         llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoDictSelection("noDictSelection",
-                   llvm::cl::Hidden,
-                   llvm::cl::desc("Do not run the selection rules. Useful when in -onepcm mode."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptSharedLibFileName("s",
-                     llvm::cl::desc("The path to the library of the built dictionary."),
-                     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptModuleDependencies("m",
-                      llvm::cl::desc("The list of dependent modules of the dictionary."),
-                      llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptExcludePaths("excludePath", llvm::cl::ZeroOrMore,
-                llvm::cl::desc("Do not store the <path> in the dictionary."),
-                llvm::cl::cat(gRootclingOptions));
-// FIXME: This does not seem to work. We have one use of -inlineInputHeader in
-// ROOT and it does not produce the expected result.
-static llvm::cl::opt<bool>
-gOptInlineInput("inlineInputHeader",
-               llvm::cl::desc("Does not generate #include <header> but expands the header content."),
-               llvm::cl::cat(gRootclingOptions));
-// FIXME: This is totally the wrong concept. We should not expose an interface
-// to be able to tell which component is in the pch and which needs extra
-// scaffolding for interactive use. Moreover, some of the ROOT components are
-// partially in the pch and this option makes it impossible to express that.
-// We should be able to get the list of headers in the pch early and scan
-// through them.
-static llvm::cl::opt<bool>
-gOptWriteEmptyRootPCM("writeEmptyRootPCM",
-                     llvm::cl::Hidden,
-                     llvm::cl::desc("Does not include the header files as it assumes they exist in the pch."),
-                     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptCheckSelectionSyntax("selSyntaxOnly",
-                        llvm::cl::desc("Check the selection syntax only."),
-                        llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptFailOnWarnings("failOnWarnings",
-                  llvm::cl::desc("Fail if there are warnings."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoIncludePaths("noIncludePaths",
-                  llvm::cl::desc("Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptISysRoot("isysroot", llvm::cl::Prefix, llvm::cl::Hidden,
-            llvm::cl::desc("Specify an isysroot."),
-            llvm::cl::cat(gRootclingOptions),
-            llvm::cl::init("-"));
-static llvm::cl::list<std::string>
-gOptIncludePaths("I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-                llvm::cl::desc("Specify an include path."),
-                llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptCompDefaultIncludePaths("compilerI", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-                    llvm::cl::desc("Specify a compiler default include path, to suppress unneeded `-isystem` arguments."),
-                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptSysIncludePaths("isystem", llvm::cl::ZeroOrMore,
-                    llvm::cl::desc("Specify a system include path."),
-                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptPPDefines("D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-             llvm::cl::desc("Specify defined macros."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptPPUndefines("U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-             llvm::cl::desc("Specify undefined macros."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-          llvm::cl::desc("Specify compiler diagnostics options."),
-          llvm::cl::cat(gRootclingOptions));
-// Really OneOrMore, will be changed in RootClingMain below.
-static llvm::cl::list<std::string>
-gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
-                         llvm::cl::desc("<list of dictionary header files> <LinkDef file | selection xml file>"),
-                         llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
-         llvm::cl::desc("Consumes all unrecognized options."),
-         llvm::cl::cat(gRootclingOptions));
+  bare-cling - Call directly cling and exit.
 
-static llvm::cl::SubCommand
-gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
+OPTIONS:
 
-static llvm::cl::list<std::string>
-gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
-                  llvm::cl::desc("Consumes options and sends them to cling."),
-                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gBareClingSubcommand));
+Generic Options:
+
+  --help                   - Display available options (--help-hidden for more)
+
+rootcling common options:
+
+  -D <string>              - Specify defined macros.
+  -I <string>              - Specify an include path.
+  -U <string>              - Specify undefined macros.
+  -W <string>              - Specify compiler diagnostics options.
+  -c                       - Deprecated, legacy flag which is ignored.
+  --compilerI=<string>     - Specify a compiler default include path, to suppress unneeded `-isystem` arguments.
+  --cxxmodule              - Generate a C++ module.
+  --excludePath=<string>   - Do not store the <path> in the dictionary.
+  -f                       - Overwrite <file>s.
+  --failOnWarnings         - Fail if there are warnings.
+  --inlineInputHeader      - Does not generate #include <header> but expands the header content.
+  --interpreteronly        - Generate minimal dictionary for interactivity (without IO information).
+  -isystem=<string>        - Specify a system include path.
+  -m <string>              - The list of dependent modules of the dictionary.
+  --moduleMapFile=<string> - Specify a C++ modulemap file.
+  --multiDict              - If this library has multiple separate LinkDef files.
+  --noGlobalUsingStd       - Do not declare {using namespace std} in dictionary global scope.
+  --noIncludePaths         - Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH.
+  -p                       - Deprecated, legacy flag which is ignored.
+  --reflex                 - Behave internally like genreflex.
+  --rmf=<string>           - Generate a rootmap file with the specified name.
+  --rml=<string>           - Generate rootmap file.
+  -s <string>              - The path to the library of the built dictionary.
+  --selSyntaxOnly          - Check the selection syntax only.
+  --split                  - Split the dictionary into two parts: one containing the IO (ClassDef)information and another the interactivity support.
+  --umbrellaHeader         - A single header including all headers instead of specifying them on the command line.
+  Choose verbosity level:
+      -v                     - Show errors.
+      -v0                    - Show only fatal errors.
+      -v1                    - Show errors (the same as -v).
+      -v2                    - Show warnings (default).
+      -v3                    - Show notes.
+      -v4                    - Show information.
+)";
+
+void DefineRootclingOptions(ROOT::RCmdLineOpts &opts)
+{
+   using FT = ROOT::RCmdLineOpts::EFlagType;
+   using FO = ROOT::RCmdLineOpts::EFlagOpt;
+
+   opts.AddFlag({"-h", "--help"});
+
+   // switches
+   opts.AddFlag({"-f"}, FT::kSwitch, "Overwrite <file>s.");
+   opts.AddFlag({"--rootbuild"}, FT::kSwitch, "If we are building ROOT.");
+   opts.AddFlag({"--cint"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
+   opts.AddFlag({"--reflex"}, FT::kSwitch, "Behave internally like genreflex.");
+   opts.AddFlag({"--gccxml"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
+   opts.AddFlag({"--generate-pch"}, FT::kSwitch,
+                "Generates a pch file from a predefined set of headers. See makepch.py.");
+   opts.AddFlag({"-c"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
+   opts.AddFlag({"-p"}, FT::kSwitch, "Deprecated, legacy flag which is ignored.");
+   opts.AddFlag({"--cxxmodule"}, FT::kSwitch, "Generate a C++ module.");
+   // FIXME: Figure out how to combine the code of --umbrellaHeader and inlineInputHeader
+   opts.AddFlag({"--umbrellaHeader"}, FT::kSwitch,
+                "A single header including all headers instead of specifying them on the command line.");
+   opts.AddFlag({"--multiDict"}, FT::kSwitch, "If this library has multiple separate LinkDef files.");
+   opts.AddFlag({"--noGlobalUsingStd"}, FT::kSwitch,
+                "Do not declare {using namespace std} in dictionary global scope.");
+   opts.AddFlag({"--interpreteronly"}, FT::kSwitch,
+                "Generate minimal dictionary for interactivity (without IO information).");
+   opts.AddFlag({"--split"}, FT::kSwitch,
+                "Split the dictionary into two parts: one containing the IO (ClassDef) information and another the "
+                "interactivity support.");
+   opts.AddFlag({"--noDictSelection"}, FT::kSwitch, "Do not run the selection rules. Useful when in -onepcm mode.");
+   // FIXME: This does not seem to work. We have one use of --inlineInputHeader in
+   // ROOT and it does not produce the expected result.
+   opts.AddFlag({"--inlineInputHeader"}, FT::kSwitch,
+                "Does not generate #include <header> but expands the header content.");
+   // FIXME: This is totally the wrong concept. We should not expose an interface
+   // to be able to tell which component is in the pch and which needs extra
+   // scaffolding for interactive use. Moreover, some of the ROOT components are
+   // partially in the pch and this option makes it impossible to express that.
+   // We should be able to get the list of headers in the pch early and scan
+   // through them.
+   // FIXME: Change this to a long-flag, used in a lot of places.
+   opts.AddFlag({"-writeEmptyRootPCM"}, FT::kSwitch,
+                "Does not include the header files as it assumes they exist in the pch.");
+   opts.AddFlag({"--selSyntaxOnly"}, FT::kSwitch, "Check the selection syntax only.");
+   opts.AddFlag({"--failOnWarnings"}, FT::kSwitch, "Fail if there are warnings.");
+   opts.AddFlag({"--noIncludePaths"}, FT::kSwitch,
+                "Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH.");
+   opts.AddFlag({"--mSystemByproducts"}, FT::kSwitch, "Allow implicit build of system modules.");
+
+   // flags with arguments
+   opts.AddFlag({"--lib-list-prefix"}, FT::kWithArg, "An ACLiC feature which exports the list of dependent libraries.");
+   opts.AddFlag({"--rmf"}, FT::kWithArg, "Generate a rootmap file with the specified name.");
+   opts.AddFlag({"-s"}, FT::kWithArg, "The path to the library of the built dictionary.");
+   opts.AddFlag({"-isysroot"}, FT::kWithArg, "Specify an isysroot.", FO::kFlagPrefixArg);
+
+   // flags with repeated args
+   opts.AddFlag({"--rml"}, FT::kWithArg, "Generate rootmap file.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"--moduleMapFile"}, FT::kWithArg, "Specify a C++ modulemap file.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"-m"}, FT::kWithArg, "The list of dependent modules of the dictionary.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"--excludePath"}, FT::kWithArg, "Do not store the <path> in the dictionary.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"-isystem"}, FT::kWithArg, "Specify a system include path.", FO::kFlagAllowMultiple);
+   opts.AddFlag({"-I"}, FT::kWithArg, "Specify an include path.", FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
+   opts.AddFlag({"--compilerI"}, FT::kWithArg,
+                "Specify a compiler default include path, to suppress unneeded `-isystem` arguments.",
+                FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
+   opts.AddFlag({"-D"}, FT::kWithArg, "Specify defined macros.", FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
+   opts.AddFlag({"-U"}, FT::kWithArg, "Specify undefined macros.", FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
+   opts.AddFlag({"-W"}, FT::kWithArg, "Specify compiler diagnostics options.",
+                FO::kFlagAllowMultiple | FO::kFlagPrefixArg);
+   opts.AddFlag({"--mByproduct"}, FT::kWithArg,
+                "The list of the expected implicit modules build as part of building the current module.",
+                FO::kFlagAllowMultiple);
+
+   // verbosity (switch instead of enum)
+   opts.AddFlag({"-v"}, FT::kSwitch, "Show errors.");
+   opts.AddFlag({"-v0"}, FT::kSwitch, "Show only fatal errors.");
+   opts.AddFlag({"-v1"}, FT::kSwitch, "Show errors (same as -v).");
+   opts.AddFlag({"-v2"}, FT::kSwitch, "Show warnings (default).");
+   opts.AddFlag({"-v3"}, FT::kSwitch, "Show notes.");
+   opts.AddFlag({"-v4"}, FT::kSwitch, "Show information.");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true iff a given module (and its submodules) contains all headers
@@ -3975,8 +3960,7 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
       // This way we will make sure the module is properly activated.
       if (!gOptUmbrellaInput && maybeUmbrella) {
          ROOT::TMetaUtils::Info("CheckModuleValid, %s. You can silence this message by adding %s to the invocation.",
-                                warningMessage.c_str(),
-                                gOptUmbrellaInput.ArgStr.data());
+                                warningMessage.c_str(), "umbrellaHeader");
          return true;
       }
 
@@ -4010,11 +3994,6 @@ int RootClingMain(int argc,
               char **argv,
               bool isGenreflex = false)
 {
-   // Set number of required arguments. We cannot do this globally since it
-   // would interfere with LLVM's option parsing.
-   gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
-   gOptDictionaryHeaderFiles.setNumOccurrencesFlag(llvm::cl::OneOrMore);
-
    // Copied from cling driver.
    // FIXME: Uncomment once we fix ROOT's teardown order.
    //llvm::llvm_shutdown_obj shutdownTrigger;
@@ -4042,25 +4021,11 @@ int RootClingMain(int argc,
    }
 #endif
 
-   // Hide options from llvm which we got from static initialization of libCling.
-   llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
-
-   // Define Options aliasses
-   auto &opts = llvm::cl::getRegisteredOptions();
-   llvm::cl::Option* optHelp = opts["help"];
-   llvm::cl::alias optHelpAlias1("h",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(*optHelp));
-   llvm::cl::alias optHelpAlias2("?",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(*optHelp));
-
-   llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
-
+   // Check if first positional arg is the subcommand, we pass everything directly to cling.
+   // FIXME: It would be nice to have optparse handle subcommands, but this works for now.
    const char *etcDir = gDriverConfig->fTROOT__GetEtcDir();
    std::string llvmResourceDir = etcDir ? std::string(etcDir) + "/cling" : "";
-   
-   if (gBareClingSubcommand) {
+   if (argc > 0 && std::string(argv[1]) == "bare-cling") {
       std::vector<const char *> clingArgsC;
       clingArgsC.push_back(executableFileName);
       // Help cling finds its runtime (RuntimeUniverse.h and such).
@@ -4072,8 +4037,11 @@ int RootClingMain(int argc,
       //clingArgsC.push_back("-resource-dir");
       //clingArgsC.push_back(llvmResourceDir.c_str());
 
-      for (const std::string& Opt : gOptBareClingSink)
-         clingArgsC.push_back(Opt.c_str());
+      // Push all args after 'bare-cling' exactly as they were passed
+      for (int i = 2; i < argc; ++i) {
+         llvm::errs() << argv[i] << "\n";
+         clingArgsC.push_back(argv[i]);
+      }
 
       auto interp = std::make_unique<cling::Interpreter>(clingArgsC.size(),
                                                          &clingArgsC[0],
@@ -4081,6 +4049,135 @@ int RootClingMain(int argc,
       // FIXME: Diagnose when we have misspelled a flag. Currently we show no
       // diagnostic and report exit as success.
       return interp->getDiagnostics().hasFatalErrorOccurred();
+   }
+
+   ROOT::RCmdLineOpts opts;
+   DefineRootclingOptions(opts);
+
+   std::vector<const char *> cargv(argv, argv + argc);
+   opts.Parse(cargv.data(), argc);
+
+   if (opts.ReportErrors()) {
+      std::cerr << kShortHelp;
+      return 1;
+   }
+
+   if (opts.GetSwitch("help")) {
+      std::cerr << kShortHelp;
+      std::cerr << kLongHelp;
+      return 0;
+   }
+
+   // Set the default verbosity
+   gOptVerboseLevel = v2;
+
+   // FIXME: if -v2 and -v4 is set, should we set -v4 by default?
+   // From CommandLine docs:
+   // Options that are specified multiple times are redundant. Any instances after the first are discarded.
+   if (opts.GetSwitch("v0"))
+      gOptVerboseLevel = v0;
+   if (opts.GetSwitch("v1") || opts.GetSwitch("v"))
+      gOptVerboseLevel = v;
+   if (opts.GetSwitch("v2"))
+      gOptVerboseLevel = v2;
+   if (opts.GetSwitch("v3"))
+      gOptVerboseLevel = v3;
+   if (opts.GetSwitch("v4"))
+      gOptVerboseLevel = v4;
+
+   gOptForce = opts.GetSwitch("f");
+   gOptRootBuild = opts.GetSwitch("rootbuild");
+   gOptCint = opts.GetSwitch("cint");
+   gOptReflex = opts.GetSwitch("reflex");
+   gOptGccXml = opts.GetSwitch("gccxml");
+   gOptGeneratePCH = opts.GetSwitch("generate-pch");
+   gOptC = opts.GetSwitch("c");
+   gOptP = opts.GetSwitch("p");
+   gOptCxxModule = opts.GetSwitch("cxxmodule");
+   gOptUmbrellaInput = opts.GetSwitch("umbrellaHeader");
+   gOptMultiDict = opts.GetSwitch("multiDict");
+   gOptNoGlobalUsingStd = opts.GetSwitch("noGlobalUsingStd");
+   gOptInterpreterOnly = opts.GetSwitch("interpreteronly");
+   gOptSplit = opts.GetSwitch("split");
+   gOptNoDictSelection = opts.GetSwitch("noDictSelection");
+   gOptInlineInput = opts.GetSwitch("inlineInputHeader");
+   gOptWriteEmptyRootPCM = opts.GetSwitch("writeEmptyRootPCM");
+   gOptCheckSelectionSyntax = opts.GetSwitch("selSyntaxOnly");
+   gOptFailOnWarnings = opts.GetSwitch("failOnWarnings");
+   gOptNoIncludePaths = opts.GetSwitch("noIncludePaths");
+   gOptSystemModuleByproducts = opts.GetSwitch("mSystemByproducts");
+
+   gOptLibListPrefix = std::string(opts.GetFlagValue("lib-list-prefix"));
+   gOptRootMapFileName = std::string(opts.GetFlagValue("rmf"));
+   gOptSharedLibFileName = std::string(opts.GetFlagValue("s"));
+   gOptISysRoot = std::string(opts.GetFlagValue("isysroot"));
+
+   gOptRootmapLibNames.reserve(opts.GetFlagValues("rml").size());
+   for (std::string_view v : opts.GetFlagValues("rml")) {
+      gOptRootmapLibNames.emplace_back(v);
+   }
+
+   gOptModuleMapFiles.reserve(opts.GetFlagValues("moduleMapFile").size());
+   for (std::string_view v : opts.GetFlagValues("moduleMapFile")) {
+      gOptModuleMapFiles.emplace_back(v);
+   }
+
+   gOptModuleDependencies.reserve(opts.GetFlagValues("m").size());
+   for (std::string_view v : opts.GetFlagValues("m")) {
+      gOptModuleDependencies.emplace_back(v);
+   }
+
+   gOptExcludePaths.reserve(opts.GetFlagValues("excludePath").size());
+   for (std::string_view v : opts.GetFlagValues("excludePath")) {
+      gOptExcludePaths.emplace_back(v);
+   }
+
+   gOptSysIncludePaths.reserve(opts.GetFlagValues("isystem").size());
+   for (std::string_view v : opts.GetFlagValues("isystem")) {
+      gOptSysIncludePaths.emplace_back(v);
+   }
+
+   gOptIncludePaths.reserve(opts.GetFlagValues("I").size());
+   for (std::string_view v : opts.GetFlagValues("I")) {
+      gOptIncludePaths.emplace_back(v);
+   }
+
+   gOptCompDefaultIncludePaths.reserve(opts.GetFlagValues("compilerI").size());
+   for (std::string_view v : opts.GetFlagValues("compilerI")) {
+      gOptCompDefaultIncludePaths.emplace_back(v);
+   }
+
+   gOptPPDefines.reserve(opts.GetFlagValues("D").size());
+   for (std::string_view v : opts.GetFlagValues("D")) {
+      gOptPPDefines.emplace_back(v);
+   }
+
+   gOptPPUndefines.reserve(opts.GetFlagValues("U").size());
+   for (std::string_view v : opts.GetFlagValues("U")) {
+      gOptPPUndefines.emplace_back(v);
+   }
+
+   gOptWDiags.reserve(opts.GetFlagValues("W").size());
+   for (std::string_view v : opts.GetFlagValues("W")) {
+      gOptWDiags.emplace_back(v);
+   }
+
+   gOptModuleByproducts.reserve(opts.GetFlagValues("mByproduct").size());
+   for (std::string_view v : opts.GetFlagValues("mByproduct")) {
+      gOptModuleByproducts.emplace_back(v);
+   }
+
+   // Positional args: rootcling, <output dictionary file>, <list of dictionary header files>
+   auto positionalArgs = opts.GetArgs();
+   if (!positionalArgs.empty()) {
+      gOptDictionaryFileName = positionalArgs[1];
+   } else {
+      ROOT::TMetaUtils::Error(nullptr, "No dictionary file specified!\n");
+      return 1;
+   }
+
+   for (size_t i = 2, e = positionalArgs.size(); i < e; ++i) {
+      gOptDictionaryHeaderFiles.push_back(positionalArgs[i]);
    }
 
    std::string dictname;
@@ -4093,11 +4190,9 @@ int RootClingMain(int argc,
    }
 
    if (!gOptModuleMapFiles.empty() && !gOptCxxModule) {
-      ROOT::TMetaUtils::Error("", "Option %s can be used only when option %s is specified.\n",
-                              gOptModuleMapFiles.ArgStr.str().c_str(),
-                              gOptCxxModule.ArgStr.str().c_str());
-      std::cout << "\n";
-      llvm::cl::PrintHelpMessage();
+      ROOT::TMetaUtils::Error("", "Option %s can be used only when option %s is specified.\n", "moduleMapFile",
+                              "cxxmodule");
+      std::cerr << kShortHelp << kLongHelp;
       return 1;
    }
 
@@ -4141,7 +4236,7 @@ int RootClingMain(int argc,
 
    if (gOptForce && dictname.empty()) {
       ROOT::TMetaUtils::Error(nullptr, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
-      llvm::cl::PrintHelpMessage();
+      std::cerr << kShortHelp << kLongHelp;
       return 1;
    }
 
@@ -4164,13 +4259,9 @@ int RootClingMain(int argc,
       GetWarningsAreErrors() = true;
    }
 
-   if (gOptISysRoot != "-") {
-      if (gOptISysRoot.empty()) {
-        ROOT::TMetaUtils::Error("", "isysroot specified without a value.\n");
-        return 1;
-      }
-      clingArgs.push_back(gOptISysRoot.ArgStr.str());
-      clingArgs.push_back(gOptISysRoot.ValueStr.str());
+   if (!gOptISysRoot.empty()) {
+      clingArgs.push_back("-isysroot");
+      clingArgs.push_back(gOptISysRoot);
    }
 
    // Check if we have a multi dict request but no target library
@@ -4269,7 +4360,7 @@ int RootClingMain(int argc,
    // FIXME: This line is from TModuleGenerator, but we can't reuse this code
    // at this point because TModuleGenerator needs a CompilerInstance (and we
    // currently create the arguments for creating said CompilerInstance).
-   bool isPCH = (gOptDictionaryFileName.getValue() == "allDict.cxx");
+   bool isPCH = (gOptDictionaryFileName == "allDict.cxx");
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
    llvm::StringRef moduleName;
@@ -4280,7 +4371,7 @@ int RootClingMain(int argc,
    auto clingArgsInterpreter = clingArgs;
 
    if (gOptSharedLibFileName.empty()) {
-      gOptSharedLibFileName = gOptDictionaryFileName.getValue();
+      gOptSharedLibFileName = gOptDictionaryFileName;
    }
 
    if (!isPCH && gOptCxxModule) {
@@ -4543,7 +4634,7 @@ int RootClingMain(int argc,
       unsigned expectedHeaderFilesSize = 1 + hasSelectionFile;
       if (gOptDictionaryHeaderFiles.size() > expectedHeaderFilesSize)
          ROOT::TMetaUtils::Error(nullptr, "Option %s used but more than one header file specified.\n",
-                                 gOptUmbrellaInput.ArgStr.data());
+                                 "umbrellaHeader");
    }
 
    // We have a multiDict request. This implies generating a pcm which is of the form
@@ -4646,13 +4737,13 @@ int RootClingMain(int argc,
 
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
-   string main_dictname(gOptDictionaryFileName.getValue());
+   string main_dictname(gOptDictionaryFileName);
    std::ostream *splitDictStream = nullptr;
    std::unique_ptr<std::ostream> splitDeleter(nullptr);
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
    if (!gOptDictionaryFileName.empty()) {
-      tmpCatalog.addFileName(gOptDictionaryFileName.getValue());
+      tmpCatalog.addFileName(gOptDictionaryFileName);
       fileout.open(gOptDictionaryFileName.c_str());
       if (!fileout) {
          ROOT::TMetaUtils::Error(nullptr, "rootcling: failed to open %s in main\n",
@@ -4662,11 +4753,11 @@ int RootClingMain(int argc,
    }
 
    std::ostream &dictStream = (!gOptDictionaryFileName.empty()) ? fileout : std::cout;
-   bool isACLiC = gOptDictionaryFileName.getValue().find("_ACLiC_dict") != std::string::npos;
+   bool isACLiC = gOptDictionaryFileName.find("_ACLiC_dict") != std::string::npos;
 
    // Now generate a second stream for the split dictionary if it is necessary
    if (gOptSplit) {
-      splitDictStream = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
+      splitDictStream = CreateStreamPtrForSplitDict(gOptDictionaryFileName, tmpCatalog);
       splitDeleter.reset(splitDictStream);
    } else {
       splitDictStream = &dictStream;
@@ -5132,7 +5223,6 @@ int RootClingMain(int argc,
    }
 
    return rootclingRetCode;
-
 }
 
 namespace genreflex {
@@ -5330,23 +5420,23 @@ namespace genreflex {
 
       // RootMap filename
       if (!newRootmapFileName.empty()) {
-         argvVector.push_back(string2charptr("-rmf"));
+         argvVector.push_back(string2charptr("--rmf"));
          argvVector.push_back(string2charptr(newRootmapFileName));
       }
 
       // RootMap Lib filename
       if (!newRootmapLibName.empty()) {
-         argvVector.push_back(string2charptr("-rml"));
+         argvVector.push_back(string2charptr("--rml"));
          argvVector.push_back(string2charptr(newRootmapLibName));
       }
 
-      // Always use the -reflex option: we want rootcling to behave
+      // Always use the --reflex option: we want rootcling to behave
       // like genreflex in this case
-      argvVector.push_back(string2charptr("-reflex"));
+      argvVector.push_back(string2charptr("--reflex"));
 
       // Interpreter only dictionaries
       if (interpreteronly)
-         argvVector.push_back(string2charptr("-interpreteronly"));
+         argvVector.push_back(string2charptr("--interpreteronly"));
 
       // Split dictionaries
       if (doSplit)
@@ -5360,17 +5450,16 @@ namespace genreflex {
 
       // Multidict support
       if (multiDict)
-         argvVector.push_back(string2charptr("-multiDict"));
+         argvVector.push_back(string2charptr("--multiDict"));
 
       // Don't declare "using namespace std"
       if (noGlobalUsingStd)
-         argvVector.push_back(string2charptr("-noGlobalUsingStd"));
-
+         argvVector.push_back(string2charptr("--noGlobalUsingStd"));
 
       AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
       // Inline the input header
-      argvVector.push_back(string2charptr("-inlineInputHeader"));
+      argvVector.push_back(string2charptr("--inlineInputHeader"));
 
       // Write empty root pcms
       if (writeEmptyRootPCM)
@@ -5386,7 +5475,7 @@ namespace genreflex {
 
       // Fail on warnings
       if (failOnWarnings)
-         argvVector.push_back(string2charptr("-failOnWarnings"));
+         argvVector.push_back(string2charptr("--failOnWarnings"));
 
       // Clingargs
       AddToArgVector(argvVector, includes, "-I");
@@ -5568,8 +5657,8 @@ bool IsGoodLibraryName(const std::string &name)
 /// New arguments:
 /// -l --library targetLib name (new)   -s  targetLib name
 /// -m pcmname (can be many -m) (new)   -m pcmname (can be many -m)
-/// --rootmap                           -rmf (new)
-/// --rootmap-lib                       -rml (new)
+/// --rootmap                           --rmf (new)
+/// --rootmap-lib                       --rml (new)
 ///
 /// genreflex options which rise warnings (feedback is desirable)
 /// --no_membertypedefs (it should be irrelevant)

@@ -243,7 +243,7 @@ With ``genreflex``, the mapping file can be automatically created with
 ``--rootmap-lib=MyClassDict``, where "MyClassDict" is the name of the shared
 library (without the extension) build from the dictionary file.
 With ``rootcling``, create the same mapping file with
-``-rmf MyClassDict.rootmap -rml MyClassDict``.
+``--rmf MyClassDict.rootmap --rml MyClassDict``.
 It is necessary to provide the final library name explicitly, since it is
 only in the separate linking step where these names are fixed and those names
 may not match the default choice.

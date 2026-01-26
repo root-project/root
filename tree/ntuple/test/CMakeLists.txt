@@ -36,7 +36,7 @@ ROOT_ADD_GTEST(ntuple_evolution_type ntuple_evolution_type.cxx LIBRARIES ROOTNTu
 ROOT_GENERATE_DICTIONARY(STLContainerEvolutionDict ${CMAKE_CURRENT_SOURCE_DIR}/STLContainerEvolution.hxx
                          MODULE ntuple_evolution_type
                          LINKDEF STLContainerEvolutionLinkDef.h
-                         OPTIONS -inlineInputHeader
+                         OPTIONS --inlineInputHeader
                          DEPENDENCIES CustomStruct)
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
@@ -64,7 +64,7 @@ if(NOT MSVC OR llvm13_broken_tests)
   ROOT_GENERATE_DICTIONARY(ProxiedSTLContainerDict ${CMAKE_CURRENT_SOURCE_DIR}/ProxiedSTLContainer.hxx
                            MODULE ntuple_types
                            LINKDEF ProxiedSTLContainerLinkDef.h
-                           OPTIONS -inlineInputHeader
+                           OPTIONS --inlineInputHeader
                            DEPENDENCIES CustomStruct)
 endif()
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTNTuple CustomStruct)
@@ -103,7 +103,7 @@ ROOT_ADD_GTEST(ntuple_limits ntuple_limits.cxx LIBRARIES ROOTNTuple)
 
 ROOT_ADD_GTEST(rfield_streamer rfield_streamer.cxx StreamerField.cxx StreamerFieldXML.cxx LIBRARIES ROOTNTuple)
 ROOT_GENERATE_DICTIONARY(StreamerFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerField.hxx
-                         MODULE rfield_streamer LINKDEF StreamerFieldLinkDef.h OPTIONS -inlineInputHeader
+                         MODULE rfield_streamer LINKDEF StreamerFieldLinkDef.h OPTIONS --inlineInputHeader
                          DEPENDENCIES RIO)
 
 if(MSVC)
