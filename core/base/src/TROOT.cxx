@@ -3159,7 +3159,26 @@ const TString &TROOT::GetSharedLibDir()
 
       fs::path p = info->dlpi_name;
       if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
-         libdir = p.parent_path().c_str();
+         std::error_code ec;
+
+         // Resolve symlinks: critical for environments like CMSSW, where the
+         // ROOT libraries are loaded via symlinks that point to the actual
+         // install directory
+         fs::path resolved = fs::canonical(p, ec);
+         if (ec) {
+            ::Error("TROOT",
+                    "Failed to canonicalize detected ROOT shared library path:\n"
+                    "%s\n"
+                    "Error code: %d (%s)\n"
+                    "Error category: %s\n"
+                    "This is an unexpected internal error and ROOT might not work.\n"
+                    "Please report this issue on GitHub: https://github.com/root-project/root/issues",
+                    p.string().c_str(), ec.value(), ec.message().c_str(), ec.category().name());
+            // Fall back to the loader path if canonicalization fails. The path
+            // will likely be wrong, but at least not garbage
+            resolved = p;
+         }
+         libdir = resolved.parent_path().c_str();
          return 1; // stop iteration
       }
       return 0; // continue
