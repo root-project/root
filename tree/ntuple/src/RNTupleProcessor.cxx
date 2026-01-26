@@ -397,11 +397,7 @@ public:
    RAuxiliaryProcessorField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
       : ROOT::RRecordField(fieldName, "RAuxiliaryProcessorField")
    {
-      fOffsets.reserve(itemFields.size());
-      for (auto &item : itemFields) {
-         fOffsets.push_back(GetItemPadding(fSize, item->GetAlignment()));
-      }
-      AttachItemFields(std::move(itemFields), false /* useNumberedFields */);
+      AttachItemFields(std::move(itemFields));
    }
 };
 } // namespace ROOT::Experimental::Internal
