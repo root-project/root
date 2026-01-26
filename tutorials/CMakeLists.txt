@@ -328,6 +328,7 @@ else()
   ROOT_FIND_PYTHON_MODULE(keras)
   ROOT_FIND_PYTHON_MODULE(sonnet)
   ROOT_FIND_PYTHON_MODULE(graph_nets)
+  ROOT_FIND_PYTHON_MODULE(onnx)
 
   # Check if we support the installed Keras version. Otherwise, veto SOFIE
   # Keras tutorials. This mirrors the logic in tmva/sofie/test/CMakeLists.txt.
@@ -359,6 +360,9 @@ else()
   endif()
   if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
+  endif()
+  if (NOT tmva-sofie OR NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)

@@ -17,6 +17,7 @@ import torch
 import torch.nn as nn
 import ROOT
 import numpy as np
+import inspect
 
 def CreateAndTrainModel(modelName):
 
@@ -43,19 +44,41 @@ def CreateAndTrainModel(modelName):
       loss.backward()
       optimizer.step()
 
+   #*******************************************************
+   ##  EXPORT to ONNX
+   #
+   #  need to evaluate the model before exporting to ONNX
+   #  and to provide a dummy input tensor to set the input model shape
    model.eval()
-   #export the model to ONNX
+
    modelFile = modelName + ".onnx"
    dummy_x = torch.randn(1,32)
    model(dummy_x)
-   torch.onnx.export(model, dummy_x, modelFile,  export_params=True,
-                     dynamo = True,   # this is for new PyTorch exporter from version 2.5
-                     external_data=False,  # this important to avoid weights saved in a different onnx.data file
-                     input_names=["input"],
-                     output_names=["output"])
-   print("model exported to ONNX as",modelFile)
-   return modelFile
 
+   #check for torch.onnx.export parameters
+   def filtered_kwargs(func, **candidate_kwargs):
+    sig = inspect.signature(func)
+    return {
+        k: v for k, v in candidate_kwargs.items()
+        if k in sig.parameters
+   }
+   kwargs = filtered_kwargs(
+      torch.onnx.export,
+      input_names=["input"],
+      output_names=["output"],
+      external_data=False,  # may not exist
+      dynamo=True           # may not exist
+   )
+   print("calling torch.onnx.export with parameters",kwargs)
+
+   try:
+      torch.onnx.export(model, dummy_x, modelFile, **kwargs)
+      print("model exported to ONNX as",modelFile)
+      return modelFile
+   except TypeError:
+      print("Cannot export model from pytorch to ONNX - with version ",torch.__version__)
+      print("Skip tutorial execution")
+      exit()
 
 
 def ParseModel(modelFile, verbose=False):
