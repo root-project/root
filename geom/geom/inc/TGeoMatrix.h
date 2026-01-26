@@ -464,7 +464,7 @@ private:
 
 public:
    TGeoHMatrix();
-   TGeoHMatrix(const TGeoHMatrix &other) : TGeoHMatrix((TGeoMatrix &)other) {}
+   TGeoHMatrix(const TGeoHMatrix &other);
    TGeoHMatrix(const TGeoMatrix &matrix);
    TGeoHMatrix(const char *name);
    ~TGeoHMatrix() override;

@@ -2409,7 +2409,17 @@ TGeoHMatrix::TGeoHMatrix(const char *name) : TGeoMatrix(name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assignment
+/// copy constructor
+
+TGeoHMatrix::TGeoHMatrix(const TGeoHMatrix &other) : TGeoMatrix(other)
+{
+   memcpy(fTranslation, other.fTranslation, kN3);
+   memcpy(fRotationMatrix, other.fRotationMatrix, kN9);
+   memcpy(fScale, other.fScale, kN3);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor from generic matrix
 
 TGeoHMatrix::TGeoHMatrix(const TGeoMatrix &matrix) : TGeoMatrix(matrix)
 {
