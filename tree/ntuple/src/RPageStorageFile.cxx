@@ -295,6 +295,11 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
    fWriter->Commit(GetWriteOptions().GetCompression());
 }
 
+void ROOT::Internal::RPageSinkFile::Close()
+{
+   fWriter.reset();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
@@ -721,4 +726,9 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
 void ROOT::Internal::RPageSourceFile::LoadStreamerInfo()
 {
    fReader.LoadStreamerInfo();
+}
+
+void ROOT::Internal::RPageSourceFile::Close()
+{
+   fFile.reset();
 }

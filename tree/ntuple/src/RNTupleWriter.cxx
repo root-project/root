@@ -150,3 +150,12 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
 {
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
 }
+void ROOT::Internal::CloseRNTupleWriter(RNTupleWriter &writer)
+{
+   writer.Close();
+}
+
+void ROOT::RNTupleWriter::Close()
+{
+   fFillContext.fSink->Close();
+}

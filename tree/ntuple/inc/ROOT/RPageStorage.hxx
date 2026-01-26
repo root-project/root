@@ -191,6 +191,9 @@ public:
    /// overriding this.
    virtual ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
+   // Called only by the Pythonization. Closes the source/sink without destroying it.
+   virtual void Close() {}
+
    /// Returns the NTuple name.
    const std::string &GetNTupleName() const { return fNTupleName; }
 

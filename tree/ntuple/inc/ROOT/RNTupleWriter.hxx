@@ -41,6 +41,9 @@ namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
 CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
+
+// Used by the pythonization.
+void CloseRNTupleWriter(RNTupleWriter &writer);
 } // namespace Internal
 
 // clang-format off
@@ -102,6 +105,7 @@ class RNTupleWriter {
    friend ROOT::RNTupleModel::RUpdater;
    friend std::unique_ptr<RNTupleWriter>
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
+   friend void Internal::CloseRNTupleWriter(RNTupleWriter &writer);
 
 private:
    RNTupleFillContext fFillContext;
@@ -116,6 +120,9 @@ private:
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
+
+   // Only called by Python
+   void Close();
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,

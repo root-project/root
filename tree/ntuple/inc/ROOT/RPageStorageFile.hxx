@@ -104,6 +104,8 @@ public:
    ~RPageSinkFile() override;
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+
+   void Close() final;
 }; // class RPageSinkFile
 
 // clang-format off
@@ -186,6 +188,8 @@ public:
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
 
    void LoadStreamerInfo() final;
+
+   void Close() final;
 }; // class RPageSourceFile
 
 } // namespace Internal

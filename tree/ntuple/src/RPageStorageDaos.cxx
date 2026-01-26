@@ -483,6 +483,11 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
 }
 
+void ROOT::Experimental::Internal::RPageSinkDaos::Close()
+{
+   fDaosContainer.reset();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
@@ -772,4 +777,9 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 void ROOT::Experimental::Internal::RPageSourceDaos::LoadStreamerInfo()
 {
    R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "DAOS-backed sources have no associated StreamerInfo to load.";
+}
+
+void ROOT::Experimental::Internal::RPageSourceDaos::Close()
+{
+   fDaosContainer.reset();
 }

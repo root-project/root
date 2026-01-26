@@ -270,3 +270,8 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
    }
    return fieldId;
 }
+
+void ROOT::Internal::CloseRNTupleReader(RNTupleReader &reader)
+{
+   reader.fSource->Close();
+}
