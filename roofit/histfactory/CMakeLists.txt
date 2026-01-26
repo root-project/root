@@ -22,20 +22,24 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(HISTFACTORY_HEADERS
+  RooStats/HistFactory/Detail/HistFactoryImpl.h
+  RooStats/HistFactory/FlexibleInterpVar.h
+  RooStats/HistFactory/HistFactoryException.h
+  RooStats/HistFactory/HistFactoryModelUtils.h
+  RooStats/HistFactory/HistFactoryNavigation.h
+  RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
+  RooStats/HistFactory/LinInterpVar.h
+  RooStats/HistFactory/MakeModelAndMeasurementsFast.h
+  RooStats/HistFactory/Measurement.h
+  RooStats/HistFactory/ParamHistFunc.h
+  RooStats/HistFactory/PiecewiseInterpolation.h
+  RooStats/HistFactory/RooBarlowBeestonLL.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
   HEADERS
-    RooStats/HistFactory/Detail/HistFactoryImpl.h
-    RooStats/HistFactory/FlexibleInterpVar.h
-    RooStats/HistFactory/HistFactoryException.h
-    RooStats/HistFactory/HistFactoryModelUtils.h
-    RooStats/HistFactory/HistFactoryNavigation.h
-    RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
-    RooStats/HistFactory/LinInterpVar.h
-    RooStats/HistFactory/MakeModelAndMeasurementsFast.h
-    RooStats/HistFactory/Measurement.h
-    RooStats/HistFactory/ParamHistFunc.h
-    RooStats/HistFactory/PiecewiseInterpolation.h
-    RooStats/HistFactory/RooBarlowBeestonLL.h
+    ${HISTFACTORY_HEADERS}
     ${HISTFACTORY_XML_HEADERS}
   SOURCES
     src/FlexibleInterpVar.cxx
@@ -94,5 +98,21 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
                 DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+set(RELATIVE_INC_HEADERS ${HISTFACTORY_HEADERS} ${HISTFACTORY_XML_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      HistFactory
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+          inc/LinkDef.h # seemingly not being used by ROOT_STL_PACKAGE call
+          inc/HFMsgService.h # not part of list above
+  )
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -30,6 +30,31 @@ target_include_directories(RooFitMultiProcess
 
 target_link_libraries(RooFitMultiProcess PRIVATE nlohmann_json::nlohmann_json)
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      RooFitMultiProcess
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ res/ src/
+      FILES
+        inc/RooFit/MultiProcess/Config.h
+        inc/RooFit/MultiProcess/HeatmapAnalyzer.h
+        inc/RooFit/MultiProcess/types.h
+        res/RooFit/MultiProcess/JobManager.h
+        res/RooFit/MultiProcess/Job.h
+        res/RooFit/MultiProcess/Messenger.h
+        res/RooFit/MultiProcess/Messenger_decl.h
+        res/RooFit/MultiProcess/ProcessManager.h
+        res/RooFit/MultiProcess/ProcessTimer.h
+        res/RooFit/MultiProcess/Queue.h
+        res/RooFit/MultiProcess/util.h
+        res/RooFit/MultiProcess/worker.h
+        src/FIFOQueue.h
+        src/PriorityQueue.h
+  )
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 ROOT_INSTALL_HEADERS()
