@@ -24,6 +24,7 @@
 #include <TFile.h>
 #include <TH1F.h>
 #include <TMath.h>
+#include <TROOT.h>
 #include <TString.h>
 #include <TSystem.h>
 
@@ -154,9 +155,7 @@ public:
       }
       // build model using XML files
       gSystem->ChangeDirectory("../XML/");
-      // be sure libraries are found for running hist2workspace
-      gSystem->AddDynamicPath("$ROOTSYS/lib");
-      TString cmd = "$ROOTSYS/bin/hist2workspace config/Measurement.xml";
+      TString cmd = gROOT->GetBinDir() + "/hist2workspace config/Measurement.xml";
       int ret = gSystem->Exec(cmd);
       if (ret != 0) {
          Error("testCode", "Error running hist2workspace");
