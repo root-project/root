@@ -714,6 +714,7 @@ class TestADVANCEDCPP:
         assert len(cppyy.gbl.gtestv1) == 1
         assert len(cppyy.gbl.gtestv2) == 1
 
+    @mark.skipif(IS_WINDOWS, reason="Crashes with some versions of Visual Studio")
     def test22_exceptions(self):
         """Catching of C++ exceptions"""
 
