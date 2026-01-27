@@ -44,7 +44,10 @@ class TGeoBorderSurface;
 
 class TGeoManager : public TNamed {
 public:
-   enum EDefaultUnits { kG4Units = 0, kRootUnits = 1 };
+   enum EDefaultUnits {
+      kG4Units = 0,
+      kRootUnits = 1
+   };
 
 protected:
    static std::mutex fgMutex;           //! mutex for navigator booking in MT mode
@@ -221,12 +224,14 @@ public:
    Double_t GetVisDensity() const { return fVisDensity; }
    Int_t GetVisLevel() const;
    Int_t GetVisOption() const;
+   void InvalidateMeshCaches();
    Bool_t IsInPhiRange() const;
    Bool_t IsDrawingExtra() const { return fDrawExtra; }
    Bool_t IsNodeSelectable() const { return fIsNodeSelectable; }
    Bool_t IsVisLeaves() const { return fVisOption == 1; }
    void ModifiedPad() const;
-   void OptimizeVoxels(const char *filename = "tgeovox.C");                                     // *MENU*
+   void OptimizeVoxels(const char *filename = "tgeovox.C"); // *MENU*
+   void RebuildVoxels();
    void SetClipping(Bool_t flag = kTRUE) { SetClippingShape(flag ? fClippingShape : nullptr); } // *MENU*
    void SetClippingShape(TGeoShape *clip);
    void SetExplodedView(Int_t iopt = 0); // *MENU*
@@ -255,8 +260,10 @@ public:
    void CheckGeometryFull(Int_t ntracks = 1000000, Double_t vx = 0., Double_t vy = 0., Double_t vz = 0.,
                           Option_t *option = "ob"); // *MENU*
    void CheckGeometry(Option_t *option = "");
-   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = "");                         // *MENU*
-   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "", Double_t safety = 0.); // *MENU*
+   void CheckOverlaps(Double_t ovlp = 0.1, Option_t *option = ""); // *MENU*
+   void CheckOverlapsBySampling(Double_t ovlp, Int_t npoints);
+   void CheckPoint(Double_t x = 0, Double_t y = 0, Double_t z = 0, Option_t *option = "",
+                   Double_t safety = 0.); // *MENU*
    void CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option);
    void ConvertReflections();
    void DrawCurrentPoint(Int_t color = 2); // *MENU*

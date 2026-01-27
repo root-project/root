@@ -291,7 +291,6 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = nullptr;
 
-
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock = kFALSE;
 Bool_t TGeoManager::fgLockNavigators = kFALSE;
@@ -1198,6 +1197,26 @@ Int_t TGeoManager::ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew)
               "medium ID.\n %i occurrences for assembly replacing volume %s",
               ierr, vorig->GetName());
    return nref;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Rebuild the voxel structures that are flagged as needing rebuild.
+
+void TGeoManager::RebuildVoxels()
+{
+   Int_t nvol = fVolumes->GetEntriesFast();
+   TGeoVolume *vol;
+   TGeoVoxelFinder *voxels;
+   for (Int_t i = 0; i < nvol; i++) {
+      vol = (TGeoVolume *)fVolumes->At(i);
+      if (!vol)
+         continue;
+      voxels = vol->GetVoxels();
+      if (voxels && voxels->NeedRebuild()) {
+         voxels->Voxelize();
+         vol->FindOverlaps(); // after voxelization, check overlaps again
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3631,6 +3650,7 @@ void TGeoManager::SetNsegments(Int_t nseg)
       fNsegments = nseg;
    if (fPainter)
       fPainter->SetNsegments(nseg);
+   InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3639,6 +3659,19 @@ void TGeoManager::SetNsegments(Int_t nseg)
 Int_t TGeoManager::GetNsegments() const
 {
    return fNsegments;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caches built by composite shapes
+
+void TGeoManager::InvalidateMeshCaches()
+{
+   TIter next_shape(fShapes);
+   TGeoShape *shape;
+   while ((shape = (TGeoShape *)next_shape())) {
+      if (shape->IsComposite())
+         ((TGeoCompositeShape *)shape)->InvalidateMeshCaches();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3905,6 +3938,18 @@ void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t *option)
       return;
    }
    fTopNode->CheckOverlaps(ovlp, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check all geometry for illegal overlaps within a limit OVLP.
+
+void TGeoManager::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
+{
+   if (!fTopNode) {
+      Error("CheckOverlaps", "Top node not set");
+      return;
+   }
+   fTopNode->CheckOverlapsBySampling(ovlp, npoints);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

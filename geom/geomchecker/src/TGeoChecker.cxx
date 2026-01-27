@@ -58,6 +58,102 @@ lego plot for a given volume, in a given theta/phi range.
 
 Implementation of TGeoVolume::Weight(). Estimates the total weight of a given
 volume by material sampling. Accepts as input the desired precision.
+
+#### TGeoChecker::CheckOverlaps(Double_t ovlp, Option_t *option)
+Checks the geometry definition for illegal overlaps and illegal extrusions
+within a selected geometry hierarchy.
+
+An **illegal overlap** is reported when two placed volumes (typically sibling
+daughters of the same mother, or a daughter against the mother depending on
+the traversal) occupy a common region of space larger than the allowed tolerance.
+In practical terms, a set of test points generated on the surface of one
+candidate is found **inside** the other candidate volume by more than the configured
+tolerance.
+
+An **illegal extrusion** is reported when a placed daughter volume has surface
+points that lie outside its expected container region (e.g. outside its mother
+or outside the allowed placement region as defined by the geometry navigation
+context), again beyond the configured tolerance.
+
+The overlap checking is performed in three stages:
+
+1. Candidate search and filtering
+The checker traverses the requested hierarchy and generates candidate pairs.
+Candidate pairs are aggressively reduced using fast bounding checks (including
+oriented bounding box filters) before any expensive navigation tests are performed.
+
+2. Surface point generation and caching
+For each distinct TGeoShape appearing in the candidate list, the checker generates
+a set of surface sampling points and caches them. The cached sampling depends on
+the current meshing policy (see tuning below).
+
+3. Exact overlap/extrusion tests (navigation-based)
+The final test uses TGeo navigation (Contains, Safety, frame transforms) to evaluate
+whether sampled surface points violate the overlap/extrusion constraints. This final
+stage can run in parallel when ROOT Implicit MT is enabled.
+
+* Usage:
+- Check the full geometry
+  - Call from the manager:
+
+~~~{.cpp}
+gGeoManager->CheckOverlaps(ovlp);
+~~~
+
+- Check only a sub-hierarchy
+  - Call from a volume:
+
+~~~{.cpp}
+gGeoManager->GetTopVolume()->CheckOverlaps(ovlp);
+~~~
+
+This checks overlaps/extrusions for the selected volume and its daughters
+(recursively), without requiring a full-geometry check.
+
+* Parameters:
+~~~{.cpp}
+ovlp
+~~~
+The allowed overlap tolerance. Violations larger than ovlp are reported
+as illegal overlaps/extrusions. The default value is 1.e-1, but a thorough overlap
+check may use 1e-6
+
+(The option string is intentionally not documented here; legacy sampling modes are
+deprecated in favor of dedicated sampling entry points.)
+
+* Tuning the surface sampling
+
+The quality and cost of the surface sampling used in overlap checking can be tuned
+via TGeoManager:
+
+~~~{.cpp}
+TGeoManager::SetNsegments(Int_t nseg) (default 20)
+~~~
+Controls the segmentation used by shapes whose surface discretization depends on
+angular subdivision (e.g. tubes, cones, polycones, polygonal shapes). Increasing
+nseg increases the geometric fidelity of the discretization and usually increases
+the time spent in the point-generation and checking stages.
+
+~~~{.cpp}
+TGeoManager::SetNmeshPoints(Int_t npoints) (default 1000)
+~~~
+Controls the number of additional surface points requested via GetPointsOnSegments.
+Increasing npoints improves sampling density (potentially catching smaller overlaps)
+at the cost of more computation in the point-generation and overlap checking stages.
+
+Both nseg and npoints affect the cached mesh points. Changing them changes the
+sampling policy and triggers regeneration of cached surface points at the next
+CheckOverlaps() call.
+
+* Parallel execution
+
+When ROOT Implicit MT is enabled via:
+~~~{.cpp}
+ROOT::EnableImplicitMT(N);
+~~~
+the checker runs the final navigation-based overlap/extrusion evaluation in parallel.
+Each worker thread initializes its own navigation state to avoid shared state in
+TGeo navigation.
 */
 
 #include "TCanvas.h"
@@ -86,7 +182,6 @@ volume by material sampling. Accepts as input the desired precision.
 
 // statics and globals
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -94,16 +189,13 @@ TGeoChecker::TGeoChecker()
    : TVirtualGeoChecker(),
      fGeoManager(nullptr),
      fVsafe(nullptr),
-     fBuff1(nullptr),
-     fBuff2(nullptr),
      fFullCheck(kFALSE),
      fVal1(nullptr),
      fVal2(nullptr),
      fFlags(nullptr),
      fTimer(nullptr),
      fSelectedNode(nullptr),
-     fNchecks(0),
-     fNmeshPoints(1000)
+     fNchecks(0)
 {
 }
 
@@ -114,19 +206,14 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
    : TVirtualGeoChecker(),
      fGeoManager(geom),
      fVsafe(nullptr),
-     fBuff1(nullptr),
-     fBuff2(nullptr),
      fFullCheck(kFALSE),
      fVal1(nullptr),
      fVal2(nullptr),
      fFlags(nullptr),
      fTimer(nullptr),
      fSelectedNode(nullptr),
-     fNchecks(0),
-     fNmeshPoints(1000)
+     fNchecks(0)
 {
-   fBuff1 = new TBuffer3D(TBuffer3DTypes::kGeneric, 500, 3 * 500, 0, 0, 0, 0);
-   fBuff2 = new TBuffer3D(TBuffer3DTypes::kGeneric, 500, 3 * 500, 0, 0, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,10 +221,6 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
 
 TGeoChecker::~TGeoChecker()
 {
-   if (fBuff1)
-      delete fBuff1;
-   if (fBuff2)
-      delete fBuff2;
    if (fTimer)
       delete fTimer;
 }
@@ -720,18 +803,6 @@ void TGeoChecker::Score(TGeoVolume *vol, Int_t ifield, Double_t value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set number of points to be generated on the shape outline when checking for overlaps.
-
-void TGeoChecker::SetNmeshPoints(Int_t npoints)
-{
-   fNmeshPoints = npoints;
-   if (npoints < 1000) {
-      Error("SetNmeshPoints", "Cannot allow less than 1000 points for checking - set to 1000");
-      fNmeshPoints = 1000;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Compute timing per "FindNextBoundary" + "Safety" call. Volume must be
 /// in the current path.
 
@@ -917,13 +988,13 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
          dy = array1[3 * ist1 + 4] - array1[3 * ist1 + 1];
          dz = array1[3 * ist1 + 5] - array1[3 * ist1 + 2];
          // distance to next point
-         dwmin = dx + dir[0] + dy * dir[1] + dz * dir[2];
+         dwmin = dx * dir[0] + dy * dir[1] + dz * dir[2];
          while (ist2 < nelem2) {
             ifound = 0;
             dx = array2[3 * ist2] - array1[3 * ist1];
             dy = array2[3 * ist2 + 1] - array1[3 * ist1 + 1];
             dz = array2[3 * ist2 + 2] - array1[3 * ist1 + 2];
-            dw = dx + dir[0] + dy * dir[1] + dz * dir[2];
+            dw = dx * dir[0] + dy * dir[1] + dz * dir[2];
             if (TMath::Abs(dw - dwmin) < 1E-4) {
                ist1++;
                ist2++;
@@ -1006,105 +1077,107 @@ void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the 2 non-assembly volume candidates overlap/extrude. Returns overlap object.
+/// Compute overlap/extrusion for given candidate using mesh points of the shapes.
 
-TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1,
-                                           TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp)
+Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapResult &out) const
 {
-   TGeoOverlap *nodeovlp = nullptr;
+   out = TGeoOverlapResult{}; // reset
+
+   TGeoVolume *vol1 = c.fVol1;
+   TGeoVolume *vol2 = c.fVol2;
+   if (!vol1 || !vol2)
+      return kFALSE;
+
+   // Keep legacy early outs
    if (vol1->IsAssembly() || vol2->IsAssembly())
-      return nullptr;
+      return kFALSE;
+
    if (dynamic_cast<TGeoTessellated *>(vol1->GetShape()) || dynamic_cast<TGeoTessellated *>(vol2->GetShape()))
-      return nullptr;
-   Int_t numPoints1 = fBuff1->NbPnts();
-   Int_t numSegs1 = fBuff1->NbSegs();
-   Int_t numPols1 = fBuff1->NbPols();
-   Int_t numPoints2 = fBuff2->NbPnts();
-   Int_t numSegs2 = fBuff2->NbSegs();
-   Int_t numPols2 = fBuff2->NbPols();
-   Int_t ip;
-   Bool_t extrude, isextrusion, isoverlapping;
-   Double_t *points1 = fBuff1->fPnts;
-   Double_t *points2 = fBuff2->fPnts;
-   Double_t local[3], local1[3];
-   Double_t point[3];
-   Double_t safety = TGeoShape::Big();
-   Double_t tolerance = TGeoShape::Tolerance();
+      return kFALSE;
+
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
-   OpProgress("refresh", 0, 0, nullptr, kFALSE, kTRUE);
-   shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
-   if (fBuff1->fID != (TObject *)shape1) {
-      // Fill first buffer.
-      fBuff1->SetRawSizes(TMath::Max(numPoints1, fNmeshPoints), 3 * TMath::Max(numPoints1, fNmeshPoints), 0, 0, 0, 0);
-      points1 = fBuff1->fPnts;
-      if (shape1->GetPointsOnSegments(fNmeshPoints, points1)) {
-         numPoints1 = fNmeshPoints;
-      } else {
-         shape1->SetPoints(points1);
-      }
-      //      if (shape1->InheritsFrom(TGeoPcon::Class())) {
-      //         CleanPoints(points1, numPoints1);
-      //         fBuff1->SetRawSizes(numPoints1, 3*numPoints1,0, 0, 0, 0);
-      //      }
-      fBuff1->fID = shape1;
-   }
-   shape2->GetMeshNumbers(numPoints2, numSegs2, numPols2);
-   if (fBuff2->fID != (TObject *)shape2) {
-      // Fill second buffer.
-      fBuff2->SetRawSizes(TMath::Max(numPoints2, fNmeshPoints), 3 * TMath::Max(numPoints2, fNmeshPoints), 0, 0, 0, 0);
-      points2 = fBuff2->fPnts;
-      if (shape2->GetPointsOnSegments(fNmeshPoints, points2)) {
-         numPoints2 = fNmeshPoints;
-      } else {
-         shape2->SetPoints(points2);
-      }
-      //      if (shape2->InheritsFrom(TGeoPcon::Class())) {
-      //         CleanPoints(points2, numPoints2);
-      //         fBuff1->SetRawSizes(numPoints2, 3*numPoints2,0,0,0,0);
-      //      }
-      fBuff2->fID = shape2;
-   }
 
-   if (!isovlp) {
-      // Extrusion case. Test vol2 extrude vol1.
-      isextrusion = kFALSE;
-      // loop all points of the daughter
-      for (ip = 0; ip < numPoints2; ip++) {
+   const auto &m1 = GetMeshPoints(shape1);
+   const auto &m2 = GetMeshPoints(shape2);
+   if (m1.fNPoints <= 0 || m2.fNPoints <= 0)
+      return kFALSE;
+
+   const Double_t *points1 = m1.fPoints.data();
+   const Double_t *points2 = m2.fPoints.data();
+   const Int_t numPoints1 = m1.fNPoints;
+   const Int_t numPoints2 = m2.fNPoints;
+
+   const TGeoHMatrix mat1 = c.fMat1;
+   const TGeoHMatrix mat2 = c.fMat2;
+
+   const Double_t tolerance = TGeoShape::Tolerance();
+   const Double_t ovlp = c.fOvlp;
+
+   auto add_point = [&](const Double_t p[3]) {
+      if (out.fPoints.size() < 100)
+         out.fPoints.push_back({{p[0], p[1], p[2]}});
+   };
+
+   auto start_result_if_needed = [&]() {
+      if (out.fVol1)
+         return; // already started
+      out.fName = c.fName;
+      out.fVol1 = vol1;
+      out.fVol2 = vol2;
+      out.fMat1 = mat1;
+      out.fMat2 = mat2;
+      out.fIsOverlap = c.fIsOverlap;
+      out.fMaxOverlap = 0.0;
+   };
+
+   // Scratch
+   Double_t local[3], local1[3], point[3];
+   Double_t safety = TGeoShape::Big();
+
+   // ---------------------------
+   // Extrusion case (c.fIsOverlap == false):
+   // "Test vol2 extrudes vol1" and also the legacy “mother points inside daughter” pass.
+   // ---------------------------
+   if (!c.fIsOverlap) {
+      Bool_t found = kFALSE;
+
+      // loop all points of the daughter (vol2)
+      for (Int_t ip = 0; ip < numPoints2; ++ip) {
          memcpy(local, &points2[3 * ip], 3 * sizeof(Double_t));
          if (TMath::Abs(local[0]) < tolerance && TMath::Abs(local[1]) < tolerance)
             continue;
-         mat2->LocalToMaster(local, point);
-         mat1->MasterToLocal(point, local);
-         extrude = !shape1->Contains(local);
+
+         mat2.LocalToMaster(local, point);
+         mat1.MasterToLocal(point, local);
+
+         Bool_t extrude = !shape1->Contains(local);
          if (extrude) {
             safety = shape1->Safety(local, kFALSE);
             if (safety < ovlp)
                extrude = kFALSE;
          }
+
          if (extrude) {
-            if (!isextrusion) {
-               isextrusion = kTRUE;
-               nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1, mat2, kFALSE, safety);
-               nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety > nodeovlp->GetOverlap())
-                  nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-            }
+            start_result_if_needed();
+            found = kTRUE;
+            if (safety > out.fMaxOverlap)
+               out.fMaxOverlap = safety;
+            add_point(point);
          }
       }
-      // loop all points of the mother
-      for (ip = 0; ip < numPoints1; ip++) {
+
+      // loop all points of the mother (vol1)
+      for (Int_t ip = 0; ip < numPoints1; ++ip) {
          memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
          if (local[0] < 1e-10 && local[1] < 1e-10)
             continue;
-         mat1->LocalToMaster(local, point);
-         mat2->MasterToLocal(point, local1);
-         extrude = shape2->Contains(local1);
+
+         mat1.LocalToMaster(local, point);
+         mat2.MasterToLocal(point, local1);
+
+         Bool_t extrude = shape2->Contains(local1);
          if (extrude) {
-            // skip points on mother mesh that have no neighborhood outside mother
             safety = shape1->Safety(local, kTRUE);
             if (safety > 1E-6) {
                extrude = kFALSE;
@@ -1114,83 +1187,82 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
                   extrude = kFALSE;
             }
          }
+
          if (extrude) {
-            if (!isextrusion) {
-               isextrusion = kTRUE;
-               nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1, mat2, kFALSE, safety);
-               nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-               fGeoManager->AddOverlap(nodeovlp);
-            } else {
-               if (safety > nodeovlp->GetOverlap())
-                  nodeovlp->SetOverlap(safety);
-               nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-            }
+            start_result_if_needed();
+            found = kTRUE;
+            if (safety > out.fMaxOverlap)
+               out.fMaxOverlap = safety;
+            add_point(point);
          }
       }
-      return nodeovlp;
+
+      return found;
    }
-   // Check overlap
-   isoverlapping = kFALSE;
-   // loop all points of first candidate
-   for (ip = 0; ip < numPoints1; ip++) {
+
+   // ---------------------------
+   // Overlap case
+   // ---------------------------
+   Bool_t found = kFALSE;
+
+   // loop all points of first candidate (vol1) in vol2
+   for (Int_t ip = 0; ip < numPoints1; ++ip) {
       memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
       if (local[0] < 1e-10 && local[1] < 1e-10)
          continue;
-      mat1->LocalToMaster(local, point);
-      mat2->MasterToLocal(point, local); // now point in local reference of second
+
+      mat1.LocalToMaster(local, point);
+      mat2.MasterToLocal(point, local);
+
       Bool_t overlap = shape2->Contains(local);
       if (overlap) {
          safety = shape2->Safety(local, kTRUE);
          if (safety < ovlp)
             overlap = kFALSE;
       }
+
       if (overlap) {
-         if (!isoverlapping) {
-            isoverlapping = kTRUE;
-            nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1, mat2, kTRUE, safety);
-            nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-            fGeoManager->AddOverlap(nodeovlp);
-         } else {
-            if (safety > nodeovlp->GetOverlap())
-               nodeovlp->SetOverlap(safety);
-            nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-         }
+         start_result_if_needed();
+         found = kTRUE;
+         if (safety > out.fMaxOverlap)
+            out.fMaxOverlap = safety;
+         add_point(point);
       }
    }
-   // loop all points of second candidate
-   for (ip = 0; ip < numPoints2; ip++) {
+
+   // loop all points of second candidate (vol2) in vol1
+   for (Int_t ip = 0; ip < numPoints2; ++ip) {
       memcpy(local, &points2[3 * ip], 3 * sizeof(Double_t));
       if (local[0] < 1e-10 && local[1] < 1e-10)
          continue;
-      mat2->LocalToMaster(local, point);
-      mat1->MasterToLocal(point, local); // now point in local reference of first
+
+      mat2.LocalToMaster(local, point);
+      mat1.MasterToLocal(point, local);
+
       Bool_t overlap = shape1->Contains(local);
       if (overlap) {
          safety = shape1->Safety(local, kTRUE);
          if (safety < ovlp)
             overlap = kFALSE;
       }
+
       if (overlap) {
-         if (!isoverlapping) {
-            isoverlapping = kTRUE;
-            nodeovlp = new TGeoOverlap(name, vol1, vol2, mat1, mat2, kTRUE, safety);
-            nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-            fGeoManager->AddOverlap(nodeovlp);
-         } else {
-            if (safety > nodeovlp->GetOverlap())
-               nodeovlp->SetOverlap(safety);
-            nodeovlp->SetNextPoint(point[0], point[1], point[2]);
-         }
+         start_result_if_needed();
+         found = kTRUE;
+         if (safety > out.fMaxOverlap)
+            out.fMaxOverlap = safety;
+         add_point(point);
       }
    }
-   return nodeovlp;
+
+   return found;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check illegal overlaps for volume VOL within a limit OVLP by sampling npoints
 /// inside the volume shape.
 
-void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
+void TGeoChecker::CheckOverlapsBySampling(const TGeoVolume *vol, Double_t ovlp, Int_t npoints) const
 {
    Int_t nd = vol->GetNdaughters();
    if (nd < 2)
@@ -1198,10 +1270,6 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    if (!voxels)
       return;
-   if (voxels->NeedRebuild()) {
-      voxels->Voxelize();
-      vol->FindOverlaps();
-   }
    TGeoBBox *box = (TGeoBBox *)vol->GetShape();
    TGeoShape *shape;
    TGeoNode *node;
@@ -1265,7 +1333,8 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
          }
          // The point is inside 2 or more daughters, check safety
          safe = shape->Safety(local, kTRUE);
-         if (safe < ovlp) continue;
+         if (safe < ovlp)
+            continue;
          // We really have found an overlap -> store the point in a container
          iovlp++;
          if (!novlps) {
@@ -1320,6 +1389,29 @@ void TGeoChecker::CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp, Int_t 
    Double_t err = 1. / TMath::Sqrt(Double_t(iovlp));
    Info("CheckOverlapsBySampling", "#Found %d overlaps adding-up to %g +/- %g [cm3] for daughters of %s", novlps,
         capacity, err * capacity, vol->GetName());
+}
+
+/// @brief Materialize a TGeoOverlapResult into a TGeoOverlap
+/// @param r The result to materialize
+void TGeoChecker::MaterializeOverlap(const TGeoOverlapResult &r)
+{
+   auto *ov = new TGeoOverlap(r.fName.Data(), r.fVol1, r.fVol2, &r.fMat1, &r.fMat2, r.fIsOverlap, r.fMaxOverlap);
+
+   for (const auto &p : r.fPoints)
+      ov->SetNextPoint(p[0], p[1], p[2]);
+
+   fGeoManager->AddOverlap(ov);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a policy stamp for overlap checking
+
+TGeoChecker::MeshPolicyStamp TGeoChecker::CurrentMeshPolicyStamp() const
+{
+   MeshPolicyStamp s;
+   s.fNmeshPoints = fNmeshPoints;
+   s.fNsegments = gGeoManager ? gGeoManager->GetNsegments() : -1;
+   return s;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1418,48 +1510,154 @@ Int_t TGeoChecker::NChecksPerVolume(TGeoVolume *vol)
    return nchecks;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Check illegal overlaps for volume VOL within a limit OVLP.
+const TGeoChecker::MeshPointsEntry &TGeoChecker::GetMeshPoints(const TGeoShape *shape) const
+{
+   static const TGeoChecker::MeshPointsEntry kEmpty;
+   if (!shape)
+      return kEmpty;
 
-void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option)
+   std::shared_lock lock(fMeshCacheMutex);
+   auto it = fMeshPointsCache.find(shape);
+   if (it != fMeshPointsCache.end())
+      return it->second;
+
+   // Strict mode: caller forgot to include this shape in BuildMeshPointsCache
+   ::Error("TGeoChecker::GetMeshPoints",
+           "Mesh cache miss for shape %s. BuildMeshPointsCache did not cover all candidates.", shape->ClassName());
+   return kEmpty;
+}
+
+void TGeoChecker::BuildMeshPointsCache(const std::vector<TGeoOverlapCandidate> &candidates)
+{
+   std::unique_lock lock(fMeshCacheMutex);
+
+   const auto nowStamp = CurrentMeshPolicyStamp();
+   const bool policyChanged = PolicyChanged(fMeshPolicyStamp, nowStamp);
+
+   if (policyChanged) {
+      fMeshPointsCache.clear();
+      fMeshPointsCache.reserve(2 * candidates.size());
+      fMeshPolicyStamp = nowStamp;
+   }
+
+   auto ensureShape = [&](const TGeoShape *shape) {
+      if (!shape)
+         return;
+      if (fMeshPointsCache.find(shape) != fMeshPointsCache.end())
+         return;
+      MeshPointsEntry entry;
+
+      // IMPORTANT: meshN is the *only* correct size for SetPoints() buffer.
+      Int_t meshN = 0, meshS = 0, meshP = 0;
+      const_cast<TGeoShape *>(shape)->GetMeshNumbers(meshN, meshS, meshP);
+
+      // 1) Base mesh points via SetPoints (exact sizing!)
+      if (meshN > 0) {
+         entry.fPoints.resize(3 * meshN);
+         const_cast<TGeoShape *>(shape)->SetPoints(entry.fPoints.data());
+         entry.fNPoints = meshN;
+      } else {
+         entry.fNPoints = 0;
+      }
+
+      // 2) Extra points on segments: fill into exactly-sized array, then append
+      const Int_t nSegWanted = fNmeshPoints;
+      if (nSegWanted > 0) {
+         std::vector<Double_t> seg(3 * nSegWanted);
+         Bool_t usedSeg = const_cast<TGeoShape *>(shape)->GetPointsOnSegments(nSegWanted, seg.data());
+         if (usedSeg) {
+            const auto oldSize = entry.fPoints.size();
+            entry.fPoints.resize(oldSize + seg.size());
+            std::memcpy(entry.fPoints.data() + oldSize, seg.data(), seg.size() * sizeof(Double_t));
+            entry.fNPoints += nSegWanted;
+         }
+      }
+
+      // 3) Hardening: ensure consistency between count and storage.
+      // (No dedup; just guard against inconsistencies.)
+      if ((Int_t)entry.fPoints.size() != 3 * entry.fNPoints) {
+         // This should never happen with the logic above, but keep a guard.
+         const Int_t n3 = entry.fPoints.size() / 3;
+         entry.fNPoints = n3;
+         entry.fPoints.resize(3 * n3);
+      }
+
+      fMeshPointsCache.emplace(shape, std::move(entry));
+   };
+
+   // Ensure all shapes referenced by *this* candidate set exist in the cache.
+   for (const auto &c : candidates) {
+      if (c.fVol1)
+         ensureShape(c.fVol1->GetShape());
+      if (c.fVol2)
+         ensureShape(c.fVol2->GetShape());
+   }
+}
+
+Int_t TGeoChecker::FillMeshPoints(TBuffer3D &buff, const TGeoShape *shape, const TGeoShape *&lastShape, Int_t &cachedN,
+                                  Int_t nMeshPoints, Double_t *&points) const
+{
+   // Cache hit: reuse last filled content for this shape
+   if (lastShape == shape && cachedN > 0) {
+      points = buff.fPnts;
+      return cachedN;
+   }
+
+   // Refill: compute mesh numbers only now
+   Int_t meshN = buff.NbPnts();
+   Int_t meshS = buff.NbSegs();
+   Int_t meshP = buff.NbPols();
+   shape->GetMeshNumbers(meshN, meshS, meshP);
+
+   const Int_t nraw = TMath::Max(meshN, nMeshPoints);
+   buff.SetRawSizes(nraw, 3 * nraw, 0, 0, 0, 0);
+   points = buff.fPnts;
+
+   const Bool_t useSeg = shape->GetPointsOnSegments(nMeshPoints, points);
+
+   Int_t filledN = 0;
+   if (useSeg) {
+      filledN = nMeshPoints;
+   } else {
+      shape->SetPoints(points);
+      filledN = meshN;
+   }
+
+   lastShape = shape;
+   cachedN = filledN;
+   return filledN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stage1: Enumerate all overlap candidates for volume VOL within a limit OVLP.
+
+Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ovlp, Option_t *option,
+                                              std::vector<TGeoOverlapCandidate> &out)
 {
    if (vol->GetFinder())
-      return;
+      return 0;
    UInt_t nd = vol->GetNdaughters();
    if (!nd)
-      return;
-   TGeoShape::SetTransform(gGeoIdentity);
-   fNchecks = NChecksPerVolume((TGeoVolume *)vol);
-   Bool_t sampling = kFALSE;
+      return 0;
+
+   const Bool_t is_assembly = vol->IsAssembly();
+
    TString opt(option);
    opt.ToLower();
-   if (opt.Contains("s"))
-      sampling = kTRUE;
-   if (opt.Contains("f"))
-      fFullCheck = kTRUE;
-   else
-      fFullCheck = kFALSE;
-   if (sampling) {
-      opt = opt.Strip(TString::kLeading, 's');
-      Int_t npoints = atoi(opt.Data());
-      if (!npoints)
-         npoints = 1000000;
-      CheckOverlapsBySampling((TGeoVolume *)vol, ovlp, npoints);
-      return;
-   }
-   Bool_t is_assembly = vol->IsAssembly();
-   TGeoIterator next1((TGeoVolume *)vol);
-   TGeoIterator next2((TGeoVolume *)vol);
-   TString path;
-   // first, test if daughters extrude their container
-   TGeoNode *node, *nodecheck;
-   TGeoChecker *checker = (TGeoChecker *)this;
+   fFullCheck = opt.Contains("f");
 
-   //   TGeoOverlap *nodeovlp = 0;
-   UInt_t id;
-   Int_t level;
-   // Check extrusion only for daughters of a non-assembly volume
+   Int_t ncand = 0;
+   Int_t nextr = 0;
+   // Bool_t conv = vol->GetShape()->IsConvex();
+
+   // ---- EXTRUSIONS (only for daughters of a non-assembly volume)
    if (!is_assembly) {
+      TGeoIterator next1((TGeoVolume *)vol);
+      TGeoNode *node = nullptr;
+      TGeoNode *nodecheck = nullptr;
+      TString path;
+      Int_t level;
+
       while ((node = next1())) {
          if (node->IsOverlapping()) {
             next1.Skip();
@@ -1467,7 +1665,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
          }
          if (!node->GetVolume()->IsAssembly()) {
             if (fSelectedNode) {
-               // We have to check only overlaps of the selected node (or real daughters if an assembly)
+               // only overlaps of the selected node OR real daughters if selected is assembly
                if ((fSelectedNode != node) && (!fSelectedNode->GetVolume()->IsAssembly())) {
                   next1.Skip();
                   continue;
@@ -1484,72 +1682,110 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                   }
                }
             }
+
             next1.GetPath(path);
-            checker->MakeCheckOverlap(TString::Format("%s extruded by: %s", vol->GetName(), path.Data()),
-                                      (TGeoVolume *)vol, node->GetVolume(), gGeoIdentity,
-                                      (TGeoMatrix *)next1.GetCurrentMatrix(), kFALSE, ovlp);
+            ncand++;
+            nextr++;
+            PushCandidate(out, TString::Format("%s extruded by: %s", vol->GetName(), path.Data()), (TGeoVolume *)vol,
+                          node->GetVolume(), gGeoIdentity, next1.GetCurrentMatrix(), kFALSE, ovlp);
+
             next1.Skip();
          }
       }
    }
 
-   // now check if the daughters overlap with each other
+   //   if (nextr > 0)
+   //      printf("extrusion cand for %s : %d  (convex = %d)\n", vol->GetName(), nextr, conv);
+
+   // ---- OVERLAPS between daughters
    if (nd < 2)
-      return;
+      return ncand;
+
    TGeoVoxelFinder *vox = vol->GetVoxels();
    if (!vox) {
-      Warning("CheckOverlaps", "Volume %s with %i daughters but not voxelized", vol->GetName(), nd);
-      return;
+      Warning("EnumerateOverlapCandidates", "Volume %s with %i daughters but not voxelized", vol->GetName(), nd);
+      return ncand;
    }
-   if (vox->NeedRebuild()) {
-      vox->Voxelize();
-      vol->FindOverlaps();
-   }
-   TGeoNode *node1, *node01, *node02;
+
+   TGeoIterator next1((TGeoVolume *)vol);
+   TGeoIterator next2((TGeoVolume *)vol);
+
+   TGeoNode *node1 = nullptr;
+   TGeoNode *node01 = nullptr;
+   TGeoNode *node02 = nullptr;
+   TGeoNode *nodecheck = nullptr;
+
    TGeoHMatrix hmat1, hmat2;
-   TString path1;
-   Int_t novlp;
-   Int_t *ovlps;
-   Int_t ko;
-   UInt_t io;
+   TGeoMatrix const *tr1, *tr2;
+   TGeoBBox const *box1, *box2;
+   TString path, path1;
+   UInt_t id, io;
+   Int_t level;
+
    for (id = 0; id < nd; id++) {
       node01 = vol->GetNode(id);
       if (node01->IsOverlapping())
          continue;
-      vox->FindOverlaps(id);
-      ovlps = node01->GetOverlaps(novlp);
-      if (!ovlps)
-         continue;
+
       next1.SetTopName(node01->GetName());
       path = node01->GetName();
-      for (ko = 0; ko < novlp; ko++) { // loop all possible overlapping candidates
-         io = ovlps[ko];               // (node1, shaped, matrix1, points, fBuff1)
-         if (io <= id)
-            continue;
+      //=== ANY <-> ANY ===//
+      for (io = id + 1; io < nd; io++) {
+         // check node01 against node02 daughters of volume
          node02 = vol->GetNode(io);
          if (node02->IsOverlapping())
             continue;
-         // Try to fasten-up things...
-         //         if (!TGeoBBox::AreOverlapping((TGeoBBox*)node01->GetVolume()->GetShape(), node01->GetMatrix(),
-         //                                       (TGeoBBox*)node02->GetVolume()->GetShape(), node02->GetMatrix()))
-         //                                       continue;
+         box1 = (const TGeoBBox *)node01->GetVolume()->GetShape();
+         tr1 = node01->GetMatrix();
+         box2 = (const TGeoBBox *)node02->GetVolume()->GetShape();
+         tr2 = node02->GetMatrix();
+         // OBB check
+         if (!TGeoBBox::MayIntersect(box1, tr1, box2, tr2))
+            continue;
+
          next2.SetTopName(node02->GetName());
          path1 = node02->GetName();
 
-         // We have to check node against node1, but they may be assemblies
+         // We have to check node01 against node02, but they may be assemblies
          if (node01->GetVolume()->IsAssembly()) {
+            // left node assembly - make a visitor
             next1.Reset(node01->GetVolume());
+            TGeoNode *node = nullptr; // will iterate components of node01
+            //=== ASSEMBLY/ANY <-> ANY ===//
             while ((node = next1())) {
+               hmat1 = node01->GetMatrix();
+               hmat1 *= *next1.GetCurrentMatrix();
+               box1 = (const TGeoBBox *)node->GetVolume()->GetShape();
+               tr1 = &hmat1;
+               // OBB check
+               if (!TGeoBBox::MayIntersect(box1, tr1, box2, tr2)) {
+                  // No intersection, skip the full left branch
+                  next1.Skip();
+                  continue;
+               }
+
                if (!node->GetVolume()->IsAssembly()) {
+                  //=== ASSEMBLY/REAL <-> ANY ===//
+                  // Current daughter of node01 is real, get its path and transformation
                   next1.GetPath(path);
-                  hmat1 = node01->GetMatrix();
-                  hmat1 *= *next1.GetCurrentMatrix();
+
                   if (node02->GetVolume()->IsAssembly()) {
                      next2.Reset(node02->GetVolume());
+                     //=== ASSEMBLY/REAL <-> ASSEMBLY/ANY ===//
                      while ((node1 = next2())) {
+                        hmat2 = node02->GetMatrix();
+                        hmat2 *= *next2.GetCurrentMatrix();
+                        box2 = (const TGeoBBox *)node1->GetVolume()->GetShape();
+                        // OBB check
+                        if (!TGeoBBox::MayIntersect(box1, &hmat1, box2, &hmat2)) {
+                           // No intersection, skip the full right branch
+                           next2.Skip();
+                           continue;
+                        }
                         if (!node1->GetVolume()->IsAssembly()) {
+                           //=== ASSEMBLY/REAL <-> ASSEMBLY/REAL ===//
+                           // Selected node skip logic
                            if (fSelectedNode) {
-                              // We have to check only overlaps of the selected node (or real daughters if an assembly)
                               if ((fSelectedNode != node) && (fSelectedNode != node1) &&
                                   (!fSelectedNode->GetVolume()->IsAssembly())) {
                                  next2.Skip();
@@ -1578,19 +1814,23 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                                  }
                               }
                            }
+
                            next2.GetPath(path1);
-                           hmat2 = node02->GetMatrix();
-                           hmat2 *= *next2.GetCurrentMatrix();
-                           checker->MakeCheckOverlap(TString::Format("%s/%s overlapping %s/%s", vol->GetName(),
-                                                                     path.Data(), vol->GetName(), path1.Data()),
-                                                     node->GetVolume(), node1->GetVolume(), &hmat1, &hmat2, kTRUE,
-                                                     ovlp);
+
+                           ncand++;
+                           PushCandidate(out,
+                                         TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
+                                                         vol->GetName(), path1.Data()),
+                                         node->GetVolume(), node1->GetVolume(), &hmat1, &hmat2, kTRUE, ovlp);
+
                            next2.Skip();
                         }
                      }
+
                   } else {
+                     //=== ASSEMBLY/REAL <-> REAL
+                     // Selected node skip logic
                      if (fSelectedNode) {
-                        // We have to check only overlaps of the selected node (or real daughters if an assembly)
                         if ((fSelectedNode != node) && (fSelectedNode != node02) &&
                             (!fSelectedNode->GetVolume()->IsAssembly())) {
                            next1.Skip();
@@ -1610,22 +1850,36 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                            }
                         }
                      }
-                     checker->MakeCheckOverlap(TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
-                                                               vol->GetName(), path1.Data()),
-                                               node->GetVolume(), node02->GetVolume(), &hmat1, node02->GetMatrix(),
-                                               kTRUE, ovlp);
+
+                     ncand++;
+                     PushCandidate(out,
+                                   TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
+                                                   vol->GetName(), path1.Data()),
+                                   node->GetVolume(), node02->GetVolume(), &hmat1, node02->GetMatrix(), kTRUE, ovlp);
                   }
+
                   next1.Skip();
                }
             }
+
          } else {
-            // node not assembly
             if (node02->GetVolume()->IsAssembly()) {
                next2.Reset(node02->GetVolume());
+               //=== REAL <-> ASSEMBLY/ANY ===//
                while ((node1 = next2())) {
+                  hmat2 = node02->GetMatrix();
+                  hmat2 *= *next2.GetCurrentMatrix();
+                  box2 = (const TGeoBBox *)node1->GetVolume()->GetShape();
+                  // OBB check
+                  if (!TGeoBBox::MayIntersect(box1, node01->GetMatrix(), box2, &hmat2)) {
+                     // No intersection, skip the entire right branch
+                     next2.Skip();
+                     continue;
+                  }
+
                   if (!node1->GetVolume()->IsAssembly()) {
+                     // Selected node skip logic
                      if (fSelectedNode) {
-                        // We have to check only overlaps of the selected node (or real daughters if an assembly)
                         if ((fSelectedNode != node1) && (fSelectedNode != node01) &&
                             (!fSelectedNode->GetVolume()->IsAssembly())) {
                            next2.Skip();
@@ -1645,28 +1899,53 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
                            }
                         }
                      }
+
+                     ncand++;
                      next2.GetPath(path1);
-                     hmat2 = node02->GetMatrix();
-                     hmat2 *= *next2.GetCurrentMatrix();
-                     checker->MakeCheckOverlap(TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
-                                                               vol->GetName(), path1.Data()),
-                                               node01->GetVolume(), node1->GetVolume(), node01->GetMatrix(), &hmat2,
-                                               kTRUE, ovlp);
+                     PushCandidate(out,
+                                   TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(),
+                                                   vol->GetName(), path1.Data()),
+                                   node01->GetVolume(), node1->GetVolume(), node01->GetMatrix(), &hmat2, kTRUE, ovlp);
+
                      next2.Skip();
                   }
                }
+
             } else {
-               // node1 also not assembly
+               // both not assembly
                if (fSelectedNode && (fSelectedNode != node01) && (fSelectedNode != node02))
                   continue;
-               checker->MakeCheckOverlap(
+
+               ncand++;
+               PushCandidate(
+                  out,
                   TString::Format("%s/%s overlapping %s/%s", vol->GetName(), path.Data(), vol->GetName(), path1.Data()),
                   node01->GetVolume(), node02->GetVolume(), node01->GetMatrix(), node02->GetMatrix(), kTRUE, ovlp);
             }
          }
       }
-      node01->SetOverlaps(nullptr, 0);
    }
+   //   if ((ncand - nextr) > 0)
+   //      printf("overlap cand for %s : %d\n", vol->GetName(), ncand - nextr);
+   return ncand;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Helper to fill candidates list
+
+void TGeoChecker::PushCandidate(std::vector<TGeoOverlapCandidate> &out, const TString &name, TGeoVolume *vol1,
+                                TGeoVolume *vol2, const TGeoMatrix *mat1, const TGeoMatrix *mat2, Bool_t isovlp,
+                                Double_t ovlp) const
+{
+   TGeoOverlapCandidate c;
+   c.fName = name;
+   c.fVol1 = vol1;
+   c.fVol2 = vol2;
+   c.fMat1 = TGeoHMatrix(*mat1);
+   c.fMat2 = TGeoHMatrix(*mat2);
+   c.fIsOverlap = isovlp;
+   c.fOvlp = ovlp;
+   out.emplace_back(std::move(c));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2581,7 +2860,8 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
       fGeoManager->SetCurrentPoint(point[0] - eps[0] + 2 * eps[0] * gRandom->Rndm(),
                                    point[1] - eps[1] + 2 * eps[1] * gRandom->Rndm(),
                                    point[2] - eps[2] + 2 * eps[2] * gRandom->Rndm());
-      // check if new node is different from the old one
+      node1 = fGeoManager->FindNode();
+      // check if new node1 is different from the old one
       if (node1 != node) {
          dist1 = TMath::Sqrt((point[0] - pointg[0]) * (point[0] - pointg[0]) +
                              (point[1] - pointg[1]) * (point[1] - pointg[1]) +

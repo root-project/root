@@ -69,11 +69,20 @@ painting a node on a pad will take the corresponding volume attributes.
 */
 
 #include <iostream>
+#include <mutex>
+#include <vector>
+#include <utility>
 
-#include "TBrowser.h"
-#include "TObjArray.h"
-#include "TStyle.h"
+#include <TBrowser.h>
+#include <TObjArray.h>
+#include <TStyle.h>
+#include <TMath.h>
+#include <TStopwatch.h>
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#endif
 
+#include "TGeoNode.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoShape.h"
@@ -81,13 +90,9 @@ painting a node on a pad will take the corresponding volume attributes.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualGeoChecker.h"
 #include "TGeoVoxelFinder.h"
-#include "TGeoNode.h"
-#include "TMath.h"
-#include "TStopwatch.h"
 #include "TGeoExtension.h"
 
 // statics and globals
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -188,32 +193,22 @@ Int_t TGeoNode::CountDaughters(Bool_t unique_volumes)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check overlaps bigger than OVLP hierarchically, starting with this node.
+/// npoints are sampled in the volume(s)
 
-void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
+void TGeoNode::CheckOverlapsBySampling(Double_t ovlp, Int_t npoints)
 {
    Int_t icheck = 0;
-   Int_t ncheck = 0;
-   TStopwatch *timer;
-   Int_t i;
-   Bool_t sampling = kFALSE;
-   TString opt(option);
-   opt.ToLower();
-   if (opt.Contains("s"))
-      sampling = kTRUE;
-
    TGeoManager *geom = fVolume->GetGeoManager();
-   ncheck = CountDaughters(kFALSE);
-   timer = new TStopwatch();
+   Int_t ncheck = CountDaughters(kFALSE);
    geom->ClearOverlaps();
    geom->SetCheckingOverlaps(kTRUE);
-   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(), ovlp);
-   if (sampling) {
-      Info("CheckOverlaps", "Checking overlaps by sampling <%s> for %s and daughters", option, fVolume->GetName());
-      Info("CheckOverlaps", "=== NOTE: Extrusions NOT checked with sampling option ! ===");
-   }
-   timer->Start();
-   geom->GetGeomChecker()->OpProgress(fVolume->GetName(), icheck, ncheck, timer, kFALSE);
-   fVolume->CheckOverlaps(ovlp, option);
+   Info("CheckOverlaps", "[LEGACY] Checking overlaps by sampling %d points for %s and daughters", npoints,
+        fVolume->GetName());
+   Info("CheckOverlaps", "=== NOTE: Many overlaps may be missed. Extrusions NOT checked with sampling option ! ===");
+   TStopwatch timer;
+   timer.Start();
+   geom->GetGeomChecker()->OpProgress(fVolume->GetName(), icheck, ncheck, &timer, kFALSE);
+   fVolume->CheckOverlapsBySampling(ovlp, npoints);
    icheck++;
    TGeoIterator next(fVolume);
    TGeoNode *node;
@@ -226,9 +221,9 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
       icheck++;
       if (!node->GetVolume()->IsSelected()) {
          msg = TString::Format("found %d overlaps", overlaps->GetEntriesFast());
-         geom->GetGeomChecker()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, timer, kFALSE, msg);
+         geom->GetGeomChecker()->OpProgress(node->GetVolume()->GetName(), icheck, ncheck, &timer, kFALSE, msg);
          node->GetVolume()->SelectVolume(kFALSE);
-         node->GetVolume()->CheckOverlaps(ovlp, option);
+         node->GetVolume()->CheckOverlapsBySampling(ovlp, npoints);
       }
    }
    fVolume->SelectVolume(kTRUE);
@@ -236,13 +231,146 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    geom->SortOverlaps();
    novlps = overlaps->GetEntriesFast();
    TNamed *obj;
-   for (i = 0; i < novlps; i++) {
+   for (auto i = 0; i < novlps; i++) {
       obj = (TNamed *)overlaps->At(i);
       obj->SetName(TString::Format("ov%05d", i));
    }
-   geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, timer, kTRUE);
-   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d\n", novlps);
-   delete timer;
+   geom->GetGeomChecker()->OpProgress("Check overlaps:", icheck, ncheck, &timer, kTRUE);
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check overlaps bigger than OVLP hierarchically, starting with this node.
+
+void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
+{
+   TString opt(option);
+   opt.ToLower();
+   if (opt.Contains("s")) {
+      Info("CheckOverlaps", "Option 's' deprecated. Use CheckOverlapsBySampling() instead.");
+      return;
+   }
+
+   TStopwatch timer;
+   timer.Start();
+   TGeoManager *geom = fVolume->GetGeoManager();
+   geom->ClearOverlaps();
+   // Voxels may be marked to be rebuilt
+   geom->RebuildVoxels();
+   geom->SetCheckingOverlaps(kTRUE);
+
+   Info("CheckOverlaps", "Checking overlaps for %s and daughters within %g", fVolume->GetName(), ovlp);
+
+   auto checker = geom->GetGeomChecker();
+
+   // -------- Stage 1: enumerate candidates (main thread)
+   std::vector<TGeoOverlapCandidate> candidates;
+   candidates.reserve(2048);
+
+   Int_t ncand = checker->EnumerateOverlapCandidates(fVolume, ovlp, option, candidates);
+   TGeoIterator next(fVolume);
+   TGeoNode *node = nullptr;
+   while ((node = next())) {
+      if (!node->GetVolume()->IsSelected()) {
+         node->GetVolume()->SelectVolume(kFALSE);
+         ncand += checker->EnumerateOverlapCandidates(node->GetVolume(), ovlp, option, candidates);
+      }
+   }
+   timer.Stop();
+   Info("CheckOverlaps", "--- found %d candidates in %g [sec]", ncand, timer.RealTime());
+
+   Info("CheckOverlaps", "--- filling points to be checked...");
+   timer.Start();
+   checker->BuildMeshPointsCache(candidates);
+   timer.Stop();
+   Info("CheckOverlaps", "--- points filled in: %g [sec]", timer.RealTime());
+
+   fVolume->SelectVolume(kTRUE);
+
+   // -------- Stage 2: compute (parallel)
+   std::vector<TGeoOverlapResult> results;
+   results.reserve(256);
+
+#ifdef R__USE_IMT
+   // parallelized version
+   const size_t chunkSize = 1024; // tune: 256..4096
+   auto makeChunks = [&](size_t n) {
+      std::vector<std::pair<size_t, size_t>> chunks;
+      chunks.reserve((n + chunkSize - 1) / chunkSize);
+      for (size_t b = 0; b < n; b += chunkSize)
+         chunks.emplace_back(b, std::min(n, b + chunkSize));
+      return chunks;
+   };
+
+   auto chunks = makeChunks(candidates.size());
+   std::mutex resultsMutex;
+
+   // Policy: if ROOT IMT is enabled, follow the number of threads defined via:
+   //         ROOT::EnableImplicitMT()
+   ROOT::TThreadExecutor pool(ROOT::GetThreadPoolSize());
+   auto nthreads = pool.GetPoolSize();
+   if (!ROOT::IsImplicitMTEnabled())
+      Info("CheckOverlaps", "--- checking candidates with %u threads (use ROOT::EnableImplicitMT(N) to change)...",
+           nthreads);
+   else
+      Info("CheckOverlaps", "--- checking candidates with %u threads...", nthreads);
+
+   // Make sure TGeoManager MT mode follows, otherwise TGeo is thread unsafe
+   if (nthreads > 1)
+      geom->SetMaxThreads(nthreads);
+
+   timer.Start();
+   pool.Foreach(
+      [&](const std::pair<size_t, size_t> &range) {
+         // one-time init per OS thread
+         static thread_local bool navInit = false;
+         if (!navInit) {
+            if (!geom->GetCurrentNavigator())
+               geom->AddNavigator();
+            navInit = true;
+         }
+
+         std::vector<TGeoOverlapResult> local;
+         local.reserve(32);
+
+         for (size_t i = range.first; i < range.second; ++i) {
+            TGeoOverlapResult r;
+            if (checker->ComputeOverlap(candidates[i], r))
+               local.emplace_back(std::move(r));
+         }
+
+         if (!local.empty()) {
+            std::lock_guard<std::mutex> lock(resultsMutex);
+            results.insert(results.end(), std::make_move_iterator(local.begin()), std::make_move_iterator(local.end()));
+         }
+      },
+      chunks);
+#else
+   // serial version
+   Info("CheckOverlaps", "--- checking candidates with on a single thread (IMT not configured)...");
+   timer.Start();
+   for (size_t i = 0; i < candidates.size(); ++i) {
+      TGeoOverlapResult r;
+      if (checker->ComputeOverlap(candidates[i], r))
+         results.emplace_back(std::move(r));
+   }
+#endif
+
+   // -------- Stage 3: materialize overlaps (main thread)
+   for (const auto &r : results)
+      checker->MaterializeOverlap(r);
+
+   geom->SetCheckingOverlaps(kFALSE);
+   geom->SortOverlaps();
+
+   // Rename overlaps as before
+   TObjArray *overlaps = geom->GetListOfOverlaps();
+   const Int_t novlps = overlaps->GetEntriesFast();
+   for (Int_t i = 0; i < novlps; i++)
+      ((TNamed *)overlaps->At(i))->SetName(TString::Format("ov%05d", i));
+   timer.Stop();
+   Info("CheckOverlaps", "Number of illegal overlaps/extrusions : %d found in %g [sec]", novlps, timer.RealTime());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +627,7 @@ void TGeoNode::SaveAttributes(std::ostream &out)
 
 void TGeoNode::SetUserExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fUserExtension;
+   TGeoExtension *tmp = fUserExtension;
    fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
@@ -517,7 +645,7 @@ void TGeoNode::SetUserExtension(TGeoExtension *ext)
 
 void TGeoNode::SetFWExtension(TGeoExtension *ext)
 {
-   TGeoExtension* tmp = fFWExtension;
+   TGeoExtension *tmp = fFWExtension;
    fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
@@ -741,7 +869,6 @@ void TGeoNode::VisibleDaughters(Bool_t vis)
 A node containing local transformation.
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -836,7 +963,6 @@ void TGeoNodeMatrix::SetMatrix(const TGeoMatrix *matrix)
 \ingroup Geometry_classes
 Node containing an offset.
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -979,7 +1105,6 @@ We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
 /** \class TGeoIteratorPlugin
 \ingroup Geometry_classes
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry iterator for a branch starting with a TOP node.
