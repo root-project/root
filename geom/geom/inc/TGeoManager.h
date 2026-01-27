@@ -41,6 +41,7 @@ class TGDMLMatrix;
 class TGeoOpticalSurface;
 class TGeoSkinSurface;
 class TGeoBorderSurface;
+class TGeoColorScheme;
 
 class TGeoManager : public TNamed {
 public:
@@ -202,9 +203,9 @@ public:
    virtual void Edit(Option_t *option = ""); // *MENU*
    void BombTranslation(const Double_t *tr, Double_t *bombtr);
    void UnbombTranslation(const Double_t *tr, Double_t *bombtr);
-   void ClearAttributes(); // *MENU*
-   void DefaultAngles();   // *MENU*
-   void DefaultColors();   // *MENU*
+   void ClearAttributes();                                  // *MENU*
+   void DefaultAngles();                                    // *MENU*
+   void DefaultColors(const TGeoColorScheme *cs = nullptr); // *MENU*
    TGeoShape *GetClippingShape() const { return fClippingShape; }
    Int_t GetNsegments() const;
    TVirtualGeoPainter *GetGeomPainter();
