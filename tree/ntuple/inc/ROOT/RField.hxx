@@ -76,7 +76,7 @@ protected:
    void ConstructValue(void *) const final {}
 
 public:
-   RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */) {}
+   RFieldZero();
 
    /// A public version of the Attach method that allows piece-wise construction of the zero field.
    /// Will throw on duplicate subfield names.

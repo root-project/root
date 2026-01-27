@@ -47,6 +47,11 @@ void ROOT::RFieldZero::Attach(std::unique_ptr<RFieldBase> child)
    fSubFieldNames.insert(childName);
 }
 
+ROOT::RFieldZero::RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
+{
+   fTraits |= kTraitExtensible;
+}
+
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
@@ -605,6 +610,7 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::un
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::RRecordField(fieldName, std::move(itemFields), "")
 {
+   fTraits |= kTraitExtensible;
 }
 
 void ROOT::RRecordField::AddItem(std::unique_ptr<RFieldBase> item)
@@ -615,7 +621,7 @@ void ROOT::RRecordField::AddItem(std::unique_ptr<RFieldBase> item)
    }
    fSize += item->GetValueSize();
    fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
-   fTraits &= item->GetTraits();
+   fTraits &= item->GetTraits() | (fTraits & kTraitExtensible); // may be called by AddItemToRecord()
 
    if (IsPairOrTuple()) {
       Attach(std::move(item), "_" + std::to_string(fSubfields.size()));
