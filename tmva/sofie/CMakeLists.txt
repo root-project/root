@@ -99,7 +99,7 @@ if(sofie_root_support)
   target_compile_definitions(ROOTTMVASofie PRIVATE SOFIE_SUPPORT_ROOT_BINARY)
 endif()
 
-# tests requires protobuf
+# The building of the tests requires protobuf (available only when tmva-sofie is ON)
 if (tmva-sofie)
    ROOT_ADD_TEST_SUBDIRECTORY(test)
 endif()

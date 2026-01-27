@@ -309,6 +309,8 @@
 #include "Cos_FromONNX.hxx"
 #include "Abs_FromONNX.hxx"
 
+#include "Softplus_FromONNX.hxx"
+
 #include "Einsum_matmul_FromONNX.hxx"
 #include "Einsum_dotprod_FromONNX.hxx"
 #include "Einsum_3_FromONNX.hxx"
@@ -3024,6 +3026,27 @@ TEST(ONNX, Abs)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - std::abs(input[i])), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Softplus)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({0.1,-0.2,0.3,-0.4,0.5,1.});
+
+   TMVA_SOFIE_Softplus::Session s("Softplus_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), input.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      double exp_value = std::log(std::exp(input[i])+1);
+      EXPECT_LE(std::abs(output[i] - exp_value), TOLERANCE);
    }
 }
 // tests of Einsum operator
