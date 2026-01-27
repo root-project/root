@@ -56,6 +56,7 @@ public:
    TGeoScale *GetScale() const { return fScale; }
    void InspectShape() const override;
    Bool_t IsAssembly() const override;
+   Bool_t IsConvex() const final { return fShape->IsConvex(); }
    Bool_t IsCylType() const override { return fShape->IsCylType(); }
    Bool_t IsReflected() const override;
    TBuffer3D *MakeBuffer3D() const override;

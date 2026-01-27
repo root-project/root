@@ -105,6 +105,7 @@ public:
    void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
    Int_t GetNmeshVertices() const override;
    void InspectShape() const override;
+   Bool_t IsConvex() const final;
    TBuffer3D *MakeBuffer3D() const override;
    Double_t &Z(Int_t ipl) { return fZ[ipl]; }
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;

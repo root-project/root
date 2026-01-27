@@ -223,7 +223,6 @@ const Int_t kN9 = 9 * sizeof(Double_t);
 
 // statics and globals
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy constructor
 
@@ -333,6 +332,32 @@ void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
       }
    }
    hmatrix[15] = 1.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Extract world-space axes of a placed TGeoBBox.
+///
+/// The axes correspond to the directions of the local X, Y and Z axes
+/// of the box, expressed in the common (master) reference frame.
+///
+/// ROOT stores the rotation as a 3x3 matrix in row-major order:
+///
+///   [ r0 r1 r2 ]
+///   [ r3 r4 r5 ]
+///   [ r6 r7 r8 ]
+///
+/// The columns of this matrix represent the transformed local axes.
+///
+/// @param[out] ax World-space direction of the local X axis.
+/// @param[out] ay World-space direction of the local Y axis.
+/// @param[out] az World-space direction of the local Z axis.
+
+void TGeoMatrix::GetWorldAxes(TVector3 &ax, TVector3 &ay, TVector3 &az) const
+{
+   const Double_t *r = GetRotationMatrix();
+   ax.SetXYZ(r[0], r[3], r[6]);
+   ay.SetXYZ(r[1], r[4], r[7]);
+   az.SetXYZ(r[2], r[5], r[8]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -567,7 +592,6 @@ Class describing translations. A translation is
 basically an array of 3 doubles matching the positions 12, 13
 and 14 in the homogenous matrix description.
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -849,7 +873,6 @@ void TGeoTranslation::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*=
 Class describing rotations. A rotation is a 3*3 array
 Column vectors has to be orthogonal unit vectors.
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1434,7 +1457,6 @@ array of 3 doubles (sx, sy, sz) multiplying elements 0, 5 and 10
 of the homogenous matrix. A scale is normalized : sx*sy*sz = 1
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
@@ -1669,7 +1691,6 @@ Double_t TGeoScale::MasterToLocal(Double_t dist, const Double_t *dir) const
 Class describing rotation + translation. Most frequently used in the description
 of TGeoNode 's
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
@@ -2217,7 +2238,6 @@ const Double_t *TGeoCombiTrans::GetRotationMatrix() const
 Most general transformation, holding a translation, a rotation and a scale
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
 
@@ -2330,7 +2350,6 @@ and returns pointers to static null translation and identity
 transformations for rotation and scale
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
 
@@ -2369,7 +2388,6 @@ is generally used to pile-up local transformations starting from
 the top level physical node, down to the current node.
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
 
@@ -2391,7 +2409,17 @@ TGeoHMatrix::TGeoHMatrix(const char *name) : TGeoMatrix(name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assignment
+/// copy constructor
+
+TGeoHMatrix::TGeoHMatrix(const TGeoHMatrix &other) : TGeoMatrix(other)
+{
+   memcpy(fTranslation, other.fTranslation, kN3);
+   memcpy(fRotationMatrix, other.fRotationMatrix, kN9);
+   memcpy(fScale, other.fScale, kN3);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor from generic matrix
 
 TGeoHMatrix::TGeoHMatrix(const TGeoMatrix &matrix) : TGeoMatrix(matrix)
 {

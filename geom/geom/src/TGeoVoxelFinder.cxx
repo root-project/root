@@ -31,7 +31,6 @@ Full description with examples and pictures
 #include "TGeoManager.h"
 #include "TGeoStateInfo.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -322,6 +321,44 @@ Double_t TGeoVoxelFinder::Efficiency()
    printf("Total efficiency : %g\n", eff);
    return eff;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// check if the aligned bounding boxes of nodes i and j overlap
+
+Bool_t TGeoVoxelFinder::MayOverlap(UInt_t i, UInt_t j) const
+{
+   Double_t xmin, xmax, ymin, ymax, zmin, zmax;
+   Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
+   Double_t ddx1, ddx2;
+   xmin = fBoxes[6 * i + 3] - fBoxes[6 * i];
+   xmax = fBoxes[6 * i + 3] + fBoxes[6 * i];
+   ymin = fBoxes[6 * i + 4] - fBoxes[6 * i + 1];
+   ymax = fBoxes[6 * i + 4] + fBoxes[6 * i + 1];
+   zmin = fBoxes[6 * i + 5] - fBoxes[6 * i + 2];
+   zmax = fBoxes[6 * i + 5] + fBoxes[6 * i + 2];
+
+   xmin1 = fBoxes[6 * j + 3] - fBoxes[6 * j];
+   xmax1 = fBoxes[6 * j + 3] + fBoxes[6 * j];
+   ymin1 = fBoxes[6 * j + 4] - fBoxes[6 * j + 1];
+   ymax1 = fBoxes[6 * j + 4] + fBoxes[6 * j + 1];
+   zmin1 = fBoxes[6 * j + 5] - fBoxes[6 * j + 2];
+   zmax1 = fBoxes[6 * j + 5] + fBoxes[6 * j + 2];
+
+   ddx1 = xmax - xmin1;
+   ddx2 = xmax1 - xmin;
+   if (ddx1 * ddx2 <= 0.)
+      return kFALSE;
+   ddx1 = ymax - ymin1;
+   ddx2 = ymax1 - ymin;
+   if (ddx1 * ddx2 <= 0.)
+      return kFALSE;
+   ddx1 = zmax - zmin1;
+   ddx2 = zmax1 - zmin;
+   if (ddx1 * ddx2 <= 0.)
+      return kFALSE;
+   return kTRUE;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// create the list of nodes for which the bboxes overlap with inode's bbox
 

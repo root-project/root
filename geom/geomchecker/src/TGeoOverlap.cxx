@@ -22,7 +22,6 @@
 
 #include "TGeoOverlap.h"
 
-
 /** \class TGeoOverlap
 \ingroup Geometry_painter
 
@@ -150,7 +149,7 @@ void TGeoOverlap::Paint(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print detailed info.
 
-void TGeoOverlap::Print(Option_t *) const
+void TGeoOverlap::Print(Option_t *option) const
 {
    PrintInfo();
    printf(" - first volume: %s at position:\n", fVolume1->GetName());
@@ -159,6 +158,20 @@ void TGeoOverlap::Print(Option_t *) const
    printf(" - second volume: %s at position:\n", fVolume2->GetName());
    fMatrix2->Print();
    fVolume2->InspectShape();
+   TString opt(option);
+   opt.ToUpper();
+   if (opt.Contains("P")) {
+      // print the first 10 points of the marker
+      if (fMarker && (fMarker->Size() > 0)) {
+         Int_t nshow = TMath::Min(fMarker->Size(), 10);
+         printf(" - first %d points in the overlapping region :\n", nshow);
+         Float_t x, y, z;
+         for (auto i = 0; i < nshow; ++i) {
+            fMarker->GetPoint(i, x, y, z);
+            printf("   {%g, %g, %g}\n", x, y, z);
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

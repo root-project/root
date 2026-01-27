@@ -43,7 +43,6 @@ implementations for Boolean nodes are:
   - TGeoIntersection - representing the Boolean intersection of two positioned shapes
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -214,6 +213,7 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
       fPoints = new Double_t[3 * fNpoints];
       memcpy(fPoints, points, 3 * fNpoints * sizeof(Double_t));
    }
+   fMeshValid = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,18 +222,22 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
 Int_t TGeoBoolNode::GetNpoints()
 {
    Int_t itot = 0;
-   if (fNpoints)
+   if (fNpoints && fMeshValid)
       return fNpoints;
    // Local points for the left shape
    Int_t nleft = fLeft->GetNmeshVertices();
    Int_t nright = fRight->GetNmeshVertices();
-   if (nleft + nright == 0) return 0;
+   if (nleft + nright == 0)
+      return 0;
 
+   // This is an expensive check to make sure the generated points are on the surface of the shape
    Double_t *points1 = (nleft > 0) ? new Double_t[3 * nleft] : nullptr;
-   if (nleft > 0) fLeft->SetPoints(points1);
+   if (nleft > 0)
+      fLeft->SetPoints(points1);
    // Local points for the right shape
    Double_t *points2 = (nright > 0) ? new Double_t[3 * nright] : nullptr;
-   if (nright > 0) fRight->SetPoints(points2);
+   if (nright > 0)
+      fRight->SetPoints(points2);
    Double_t *points = new Double_t[3 * (nleft + nright)];
    for (Int_t i = 0; i < nleft; i++) {
       fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
@@ -252,6 +256,18 @@ Int_t TGeoBoolNode::GetNpoints()
    delete[] points2;
    delete[] points;
    return fNpoints;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidate mesh caching recursively
+
+void TGeoBoolNode::InvalidateMeshCaches()
+{
+   fMeshValid = kFALSE;
+   if (fLeft->IsComposite())
+      ((TGeoCompositeShape *)fLeft)->InvalidateMeshCaches();
+   if (fRight->IsComposite())
+      ((TGeoCompositeShape *)fRight)->InvalidateMeshCaches();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +484,6 @@ void TGeoBoolNode::Sizeof3D() const
    fLeft->Sizeof3D();
    fRight->Sizeof3D();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
@@ -867,7 +882,6 @@ void TGeoUnion::Sizeof3D() const
    TGeoBoolNode::Sizeof3D();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
 
@@ -1178,7 +1192,6 @@ void TGeoSubtraction::Sizeof3D() const
 {
    TGeoBoolNode::Sizeof3D();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.

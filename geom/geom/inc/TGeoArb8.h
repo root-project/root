@@ -72,6 +72,7 @@ public:
    static void GetPlaneNormal(Double_t *p1, Double_t *p2, Double_t *p3, Double_t *norm);
    Double_t *GetVertices() { return &fXY[0][0]; }
    Double_t GetTwist(Int_t iseg) const;
+   Bool_t IsConvex() const override { return !IsTwisted(); }
    Bool_t IsCylType() const override { return kFALSE; }
    static Bool_t IsSamePoint(const Double_t *p1, const Double_t *p2)
    {
@@ -140,6 +141,7 @@ public:
    Double_t GetTl2() const { return fTl2; }
    Double_t GetAlpha2() const { return fAlpha2; }
    TGeoShape *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const override;
+   Bool_t IsConvex() const override { return kTRUE; }
    void SetDimensions(Double_t *param) override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
@@ -171,6 +173,7 @@ public:
                           Double_t *step) const override;
    TGeoShape *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const override;
    Double_t GetTwistAngle() const { return fTwistAngle; }
+   Bool_t IsConvex() const final { return kFALSE; }
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
    void SetDimensions(Double_t *param) override;

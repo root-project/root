@@ -72,10 +72,10 @@ public:
    virtual Double_t GetRmin() const { return fRmin; }
    virtual Double_t GetRmax() const { return fRmax; }
    virtual Double_t GetDz() const { return fDz; }
-   Bool_t HasRmin() const { return (fRmin > 0) ? kTRUE : kFALSE; }
+   inline Bool_t HasRmin() const { return (fRmin > 0) ? kTRUE : kFALSE; }
    void InspectShape() const override;
+   Bool_t IsConvex() const override { return !HasRmin(); }
    Bool_t IsCylType() const override { return kTRUE; }
-   TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
    static Double_t
@@ -153,8 +153,9 @@ public:
    void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
    Double_t GetPhi1() const { return fPhi1; }
    Double_t GetPhi2() const { return fPhi2; }
+   inline Bool_t HasDphi() const { return (fPhi2 - fPhi1) < 360.; }
    void InspectShape() const override;
-   TBuffer3D *MakeBuffer3D() const override;
+   Bool_t IsConvex() const final { return !HasRmin() && !HasDphi(); }
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
    void Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
    static Double_t SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1,
@@ -208,8 +209,6 @@ public:
    Int_t GetByteCount() const override { return 98; }
    Bool_t GetPointsOnSegments(Int_t npoints, Double_t *array) const override;
    TGeoShape *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const override;
-   void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
-   Int_t GetNmeshVertices() const override;
    const Double_t *GetNlow() const { return &fNlow[0]; }
    const Double_t *GetNhigh() const { return &fNhigh[0]; }
    Double_t GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;

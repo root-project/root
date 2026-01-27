@@ -76,6 +76,7 @@ public:
    Double_t GetPhi1() const { return fPhi1; }
    Double_t GetDphi() const { return fDphi; }
    void InspectShape() const override;
+   Bool_t IsConvex() const final { return kFALSE; }
    Bool_t IsCylType() const override { return kTRUE; }
    TBuffer3D *MakeBuffer3D() const override;
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;

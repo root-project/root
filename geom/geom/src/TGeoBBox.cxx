@@ -156,7 +156,6 @@ See also class TGeoShape for utility methods provided by any particular shape.
 #include "TMath.h"
 #include "TRandom.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -702,37 +701,57 @@ Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) c
 
 Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints < GetNmeshVertices()) {
-      Error("GetPointsOnSegments", "You should require at least %d points", GetNmeshVertices());
+   if (!array || npoints <= 0)
+      return kFALSE;
+
+   auto buff = this->MakeBuffer3D();
+   if (!buff)
+      return kFALSE;
+
+   const Int_t npnts = (Int_t)buff->NbPnts();
+   const Int_t nsegs = (Int_t)buff->NbSegs();
+   if (npnts <= 0 || nsegs <= 0 || !buff->fPnts || !buff->fSegs) {
+      delete buff;
       return kFALSE;
    }
-   TBuffer3D &buff = (TBuffer3D &)GetBuffer3D(TBuffer3D::kRawSizes | TBuffer3D::kRaw, kTRUE);
-   Int_t npnts = buff.NbPnts();
-   Int_t nsegs = buff.NbSegs();
-   // Copy buffered points  in the array
-   memcpy(array, buff.fPnts, 3 * npnts * sizeof(Double_t));
-   Int_t ipoints = npoints - npnts;
-   Int_t icrt = 3 * npnts;
-   Int_t nperseg = (Int_t)(Double_t(ipoints) / nsegs);
-   Double_t *p0, *p1;
-   Double_t x, y, z, dx, dy, dz;
-   for (Int_t i = 0; i < nsegs; i++) {
-      p0 = &array[3 * buff.fSegs[3 * i + 1]];
-      p1 = &array[3 * buff.fSegs[3 * i + 2]];
-      if (i == (nsegs - 1))
-         nperseg = ipoints;
-      dx = (p1[0] - p0[0]) / (nperseg + 1);
-      dy = (p1[1] - p0[1]) / (nperseg + 1);
-      dz = (p1[2] - p0[2]) / (nperseg + 1);
-      for (Int_t j = 0; j < nperseg; j++) {
-         x = p0[0] + (j + 1) * dx;
-         y = p0[1] + (j + 1) * dy;
-         z = p0[2] + (j + 1) * dz;
-         array[icrt++] = x;
-         array[icrt++] = y;
-         array[icrt++] = z;
-         ipoints--;
+
+   // Fill only points on segments into `array`
+   Int_t remaining = npoints;
+   Int_t icrt = 0; // <--- start at 0, output-only buffer
+
+   Int_t nperseg = TMath::Max((Int_t)(Double_t(remaining) / nsegs), 1);
+
+   for (Int_t i = 0; i < nsegs && remaining > 0; i++) {
+      const Int_t i0 = buff->fSegs[3 * i + 1];
+      const Int_t i1 = buff->fSegs[3 * i + 2];
+
+      if (i0 < 0 || i0 >= npnts || i1 < 0 || i1 >= npnts) {
+         delete buff;
+         Error("GetPointsOnSegments", "Segment index out of range: (%d,%d) npnts=%d", i0, i1, npnts);
+         return kFALSE;
       }
+      const Double_t *p0 = &buff->fPnts[3 * i0];
+      const Double_t *p1 = &buff->fPnts[3 * i1];
+
+      if (i == (nsegs - 1))
+         nperseg = remaining;
+
+      const Double_t dx = (p1[0] - p0[0]) / (nperseg + 1);
+      const Double_t dy = (p1[1] - p0[1]) / (nperseg + 1);
+      const Double_t dz = (p1[2] - p0[2]) / (nperseg + 1);
+
+      for (Int_t j = 0; j < nperseg && remaining > 0; ++j) {
+         array[icrt++] = p0[0] + (j + 1) * dx;
+         array[icrt++] = p0[1] + (j + 1) * dy;
+         array[icrt++] = p0[2] + (j + 1) * dz;
+         --remaining;
+      }
+   }
+   delete buff;
+
+   if (remaining > 0) {
+      Error("GetPointsOnSegments", "Could not fill %d points (%d missing)", npoints, remaining);
+      return kFALSE;
    }
    return kTRUE;
 }
@@ -805,6 +824,22 @@ void TGeoBBox::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @brief Compute the world-space center of a placed TGeoBBox.
+///
+/// A TGeoBBox does not necessarily have its center at local coordinates (0,0,0).
+/// Instead, its local center is given by TGeoBBox::GetOrigin().
+///
+/// @param[in] m   Pointer to the placement TGeoMatrix.
+/// @return        World-space center of the box.
+
+TVector3 TGeoBBox::GetWorldCenter(const TGeoMatrix *m) const
+{
+   Double_t w[3];
+   m->LocalToMaster(fOrigin, w);
+   return TVector3(w[0], w[1], w[2]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Prints shape parameters
 
 void TGeoBBox::InspectShape() const
@@ -817,18 +852,158 @@ void TGeoBBox::InspectShape() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @brief Test whether a given axis is a separating axis for two oriented boxes.
+///
+/// The test is based on the Separating Axis Theorem (SAT). The boxes are projected
+/// onto the axis L using a center-plus-radius formulation, avoiding explicit
+/// vertex enumeration.
+///
+/// Tolerance handling:
+///   Two boxes that only touch (face, edge, or corner contact) within
+///   TGeoShape::Tolerance() are considered NON-intersecting.
+///
+/// Formally, the axis separates the boxes if:
+///
+///   |(oB - oA) · L| >= rA(L) + rB(L) - tol
+///
+/// where rA and rB are the projection radii of each box onto L.
+///
+/// @param[in] L   Candidate separating axis in world coordinates.
+/// @param[in] D   Vector from center of box A to center of box B (oB - oA).
+/// @param[in] Ax  World-space X axis of box A.
+/// @param[in] Ay  World-space Y axis of box A.
+/// @param[in] Az  World-space Z axis of box A.
+/// @param[in] Bx  World-space X axis of box B.
+/// @param[in] By  World-space Y axis of box B.
+/// @param[in] Bz  World-space Z axis of box B.
+/// @param[in] dA  Half-length vector of box A.
+/// @param[in] dB  Half-length vector of box B.
+/// @param[in] tol Geometric tolerance (typically TGeoShape::Tolerance()).
+///
+/// @return true  If L is a separating axis (boxes do NOT intersect).
+/// @return false If L does not separate the boxes or is degenerate.
+
+Bool_t TGeoBBox::IsSeparatingAxis(const TVector3 &L, const TVector3 &D, const TVector3 &Ax, const TVector3 &Ay,
+                                  const TVector3 &Az, const TVector3 &Bx, const TVector3 &By, const TVector3 &Bz,
+                                  const TVector3 &dA, const TVector3 &dB, Double_t tol)
+{
+   // Degenerate axes can arise from cross products of nearly parallel axes.
+   const Double_t eps = 1e-18;
+   if (L.Mag2() < eps)
+      return false;
+
+   const Double_t dist = std::fabs(D.Dot(L));
+   const Double_t rA = TMath::Abs(dA[0] * Ax.Dot(L)) + TMath::Abs(dA[1] * Ay.Dot(L)) + TMath::Abs(dA[2] * Az.Dot(L));
+   const Double_t rB = TMath::Abs(dB[0] * Bx.Dot(L)) + TMath::Abs(dB[1] * By.Dot(L)) + TMath::Abs(dB[2] * Bz.Dot(L));
+
+   // Touching within tolerance is treated as non-intersecting
+   return dist >= (rA + rB - tol);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates a TBuffer3D describing *this* shape.
 /// Coordinates are in local reference frame.
 
 TBuffer3D *TGeoBBox::MakeBuffer3D() const
 {
-   TBuffer3D *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, 8, 24, 12, 36, 6, 36);
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
+   Int_t npnts = 0, nsegs = 0, npols = 0;
+   this->GetMeshNumbers(npnts, nsegs, npols);
+   if (npnts <= 0 || nsegs <= 0)
+      return nullptr;
+   TBuffer3D *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, npnts, 3 * npnts, nsegs, 3 * nsegs, npols, 6 * npols);
+   this->SetPoints(buff->fPnts);
+   this->SetSegsAndPols(*buff);
+   return buff;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Fast "may-intersect" test for two placed TGeoBBox objects.
+///
+/// This method implements a broad-phase oriented bounding box (OBB) intersection
+/// test using the Separating Axis Theorem (SAT).
+///
+/// The test is optimized for fast rejection:
+///   - bounding-sphere early exit,
+///   - face-normal axes tested first,
+///   - cross-product axes tested only if needed.
+///
+/// Geometry and tolerance semantics:
+///   - Boxes are treated as oriented bounding boxes defined by their half-lengths
+///     and placement matrices.
+///   - TGeoBBox::GetOrigin() is fully taken into account.
+///   - Boxes that only touch within TGeoShape::Tolerance() are considered
+///     NON-intersecting.
+///
+/// Intended usage:
+///   - Broad-phase culling in navigation or overlap checks.
+///   - Conservative test: returning true means the boxes MAY intersect.
+///
+/// @param[in] boxA Pointer to the first TGeoBBox shape.
+/// @param[in] mA   Placement matrix of the first box.
+/// @param[in] boxB Pointer to the second TGeoBBox shape.
+/// @param[in] mB   Placement matrix of the second box.
+///
+/// @return true  If the boxes MAY intersect.
+/// @return false If the boxes are guaranteed NOT to intersect
+///               (or only touch within tolerance).
+
+bool TGeoBBox::MayIntersect(const TGeoBBox *boxA, const TGeoMatrix *mA, const TGeoBBox *boxB, const TGeoMatrix *mB)
+{
+   const Double_t tol = TGeoShape::Tolerance();
+
+   // Half-lengths vectors
+   const TVector3 dA = boxA->GetDimensions();
+   const TVector3 dB = boxB->GetDimensions();
+
+   // Correct world-space centers (including TGeoBBox origin)
+   const TVector3 oA = boxA->GetWorldCenter(mA);
+   const TVector3 oB = boxB->GetWorldCenter(mB);
+   const TVector3 D = oB - oA;
+
+   // Very cheap early rejection using bounding spheres
+   const Double_t rA = dA.Mag();
+   const Double_t rB = dB.Mag();
+   const Double_t dmax = rA + rB - tol;
+
+   // Touching within tolerance is treated as non-intersecting
+   if (D.Mag2() >= dmax * dmax)
+      return kFALSE;
+
+   // World-space box axes
+   TVector3 Ax, Ay, Az;
+   TVector3 Bx, By, Bz;
+   mA->GetWorldAxes(Ax, Ay, Az);
+   mB->GetWorldAxes(Bx, By, Bz);
+
+   // SAT: face-normal axes (6 tests)
+   if (IsSeparatingAxis(Ax, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+   if (IsSeparatingAxis(Ay, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+   if (IsSeparatingAxis(Az, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+
+   if (IsSeparatingAxis(Bx, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+   if (IsSeparatingAxis(By, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+   if (IsSeparatingAxis(Bz, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+      return kFALSE;
+
+   // SAT: cross-product axes (9 tests)
+   const TVector3 Aaxes[3] = {Ax, Ay, Az};
+   const TVector3 Baxes[3] = {Bx, By, Bz};
+
+   for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+         const TVector3 L = Aaxes[i].Cross(Baxes[j]);
+         if (IsSeparatingAxis(L, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
+            return kFALSE;
+      }
    }
 
-   return buff;
+   // No separating axis found: boxes MAY intersect
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

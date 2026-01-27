@@ -33,6 +33,18 @@ TVirtualGeoChecker::~TVirtualGeoChecker()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set number of points to be generated on the shape outline when checking for overlaps.
+
+void TVirtualGeoChecker::SetNmeshPoints(Int_t npoints)
+{
+   fNmeshPoints = npoints;
+   if (npoints < 1000) {
+      Error("SetNmeshPoints", "Cannot allow less than 1000 points for checking - set to 1000");
+      fNmeshPoints = 1000;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function returning a pointer to the geometry checker.
 /// If the geometry checker does not exist a default checker is created.
 

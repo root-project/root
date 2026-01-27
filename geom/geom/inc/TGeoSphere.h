@@ -75,6 +75,10 @@ public:
    Double_t GetTheta2() const { return fTheta2; }
    Double_t GetPhi1() const { return fPhi1; }
    Double_t GetPhi2() const { return fPhi2; }
+   Bool_t IsConvex() const override
+   {
+      return !TGeoShape::TestBit(kGeoRSeg) && !TGeoShape::TestBit(kGeoPhiSeg) && !TGeoShape::TestBit(kGeoThetaSeg);
+   }
    void InspectShape() const override;
    Bool_t IsCylType() const override { return kFALSE; }
    Int_t IsOnBoundary(const Double_t *point) const;

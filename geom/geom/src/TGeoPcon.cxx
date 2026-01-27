@@ -96,7 +96,6 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
 
@@ -1518,6 +1517,168 @@ Int_t TGeoPcon::GetNmeshVertices() const
    Int_t nvert, nsegs, npols;
    GetMeshNumbers(nvert, nsegs, npols);
    return nvert;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the line segments of the shape mesh.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation is implemented.
+
+Bool_t TGeoPcon::GetPointsOnSegments(Int_t npoints, Double_t *array) const
+{
+   if (!array || npoints <= 0)
+      return kFALSE;
+
+   if (fNz < 2)
+      return kFALSE;
+
+   // Angular span (degrees). In SetPoints it is fDphi/(n-1) with n = Nsegments+1.
+   // Here we sample generator centers, so we use nGen generators and step = fDphi/nGen.
+   const Double_t phi1Deg = fPhi1;
+   const Double_t dPhiDeg = fDphi;
+   if (!(dPhiDeg > 0.0))
+      return kFALSE;
+
+   const Bool_t hasInside = HasInsideSurface();
+
+   // Build list of active Z-segments (dz != 0) and their lengths
+   struct ZSeg {
+      Int_t i; // segment index from i -> i+1
+      Double_t z0, z1;
+      Double_t dzAbs;
+   };
+   std::vector<ZSeg> zsegs;
+   zsegs.reserve(fNz - 1);
+
+   Double_t sumLen = 0.0;
+   for (Int_t i = 0; i < fNz - 1; ++i) {
+      const Double_t z0 = fZ[i];
+      const Double_t z1 = fZ[i + 1];
+      const Double_t dz = z1 - z0;
+      if (dz == 0.0)
+         continue;
+      const Double_t len = std::abs(dz);
+      zsegs.push_back({i, z0, z1, len});
+      sumLen += len;
+   }
+   if (zsegs.empty() || sumLen <= 0.0)
+      return kFALSE;
+
+   // Split point budget between outer/inner surfaces
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInside) {
+      outPoints = (npoints + 1) / 2; // outer gets extra if odd
+      inPoints = npoints - outPoints;
+   }
+
+   // Helper: distribute N points over K segments proportionally to segment length (|dz|)
+   auto distributeOverZ = [&](Int_t N) {
+      std::vector<Int_t> perZ(zsegs.size(), 0);
+      if (N <= 0)
+         return perZ;
+
+      // First pass: floor
+      Int_t assigned = 0;
+      std::vector<Double_t> frac(zsegs.size(), 0.0);
+      for (size_t k = 0; k < zsegs.size(); ++k) {
+         const Double_t ideal = (Double_t)N * (zsegs[k].dzAbs / sumLen);
+         const Int_t base = (Int_t)std::floor(ideal);
+         perZ[k] = base;
+         assigned += base;
+         frac[k] = ideal - base;
+      }
+
+      // Remainder: give to largest fractional parts
+      Int_t rem = N - assigned;
+      if (rem > 0) {
+         std::vector<size_t> idx(zsegs.size());
+         for (size_t k = 0; k < zsegs.size(); ++k)
+            idx[k] = k;
+         std::sort(idx.begin(), idx.end(), [&](size_t a, size_t b) { return frac[a] > frac[b]; });
+         for (Int_t r = 0; r < rem; ++r)
+            perZ[idx[r % idx.size()]]++;
+      }
+      return perZ;
+   };
+
+   // Helper: fill points on one surface (outer or inner) along generators in Z
+   auto fillSurface = [&](Int_t N, const Double_t *rArr, Int_t &icrt) -> Bool_t {
+      if (N <= 0)
+         return kTRUE;
+
+      auto perZ = distributeOverZ(N);
+
+      for (size_t kz = 0; kz < zsegs.size(); ++kz) {
+         const Int_t segPts = perZ[kz];
+         if (segPts <= 0)
+            continue;
+
+         const Int_t i = zsegs[kz].i;
+         const Double_t z0 = zsegs[kz].z0;
+         const Double_t z1 = zsegs[kz].z1;
+
+         const Double_t r0 = rArr[i];
+         const Double_t r1 = rArr[i + 1];
+         // If radius is non-positive everywhere, nothing to sample
+         if (r0 <= 0.0 && r1 <= 0.0)
+            continue;
+
+         // Choose number of generators for this Z segment ~ sqrt(points), clamp
+         Int_t nGen = (Int_t)TMath::Sqrt((Double_t)segPts);
+         if (nGen < 1)
+            nGen = 1;
+         if (nGen > segPts)
+            nGen = segPts;
+
+         const Int_t q = segPts / nGen;
+         const Int_t rem = segPts % nGen;
+
+         const Double_t dphi = dPhiDeg / (Double_t)nGen;
+
+         for (Int_t ig = 0; ig < nGen; ++ig) {
+            const Int_t m = q + (ig < rem ? 1 : 0);
+            if (m <= 0)
+               continue;
+
+            // Generator center angle: avoids phi endpoints
+            const Double_t phi = (phi1Deg + (ig + 0.5) * dphi) * TMath::DegToRad();
+            const Double_t c = TMath::Cos(phi);
+            const Double_t s = TMath::Sin(phi);
+
+            // Interior points along Z (no endpoints)
+            for (Int_t j = 0; j < m; ++j) {
+               if (icrt + 3 > 3 * npoints)
+                  return kFALSE;
+
+               const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1); // in (0,1)
+               const Double_t z = z0 + t * (z1 - z0);
+               const Double_t r = r0 + t * (r1 - r0);
+
+               array[icrt++] = r * c;
+               array[icrt++] = r * s;
+               array[icrt++] = z;
+            }
+         }
+      }
+
+      return kTRUE;
+   };
+
+   Int_t icrt = 0;
+
+   // Outer surface (Rmax profile)
+   if (!fillSurface(outPoints, fRmax, icrt))
+      return kFALSE;
+
+   // Inner surface (Rmin profile), if any
+   if (hasInside) {
+      if (!fillSurface(inPoints, fRmin, icrt))
+         return kFALSE;
+   }
+
+   // Contract: must fill exactly npoints
+   return (icrt == 3 * npoints) ? kTRUE : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

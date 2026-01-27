@@ -24,7 +24,11 @@ class TGeoHMatrix;
 
 class TGeoBoolNode : public TObject {
 public:
-   enum EGeoBoolType { kGeoUnion, kGeoIntersection, kGeoSubtraction };
+   enum EGeoBoolType {
+      kGeoUnion,
+      kGeoIntersection,
+      kGeoSubtraction
+   };
    struct ThreadData_t {
       Int_t fSelected; // ! selected branch
 
@@ -40,16 +44,17 @@ private:
    TGeoBoolNode &operator=(const TGeoBoolNode &) = delete;
 
 protected:
-   TGeoShape *fLeft{nullptr};      // shape on the left branch
-   TGeoShape *fRight{nullptr};     // shape on the right branch
-   TGeoMatrix *fLeftMat{nullptr};  // transformation that applies to the left branch
-   TGeoMatrix *fRightMat{nullptr}; // transformation that applies to the right branch
-   Int_t fNpoints{0};              //! number of points on the mesh
-   Double_t *fPoints{nullptr};     //! array of mesh points
+   TGeoShape *fLeft{nullptr};          // shape on the left branch
+   TGeoShape *fRight{nullptr};         // shape on the right branch
+   TGeoMatrix *fLeftMat{nullptr};      // transformation that applies to the left branch
+   TGeoMatrix *fRightMat{nullptr};     // transformation that applies to the right branch
+   mutable Int_t fNpoints{0};          //! number of points on the mesh
+   mutable Double_t *fPoints{nullptr}; //! array of mesh points
 
    mutable std::vector<ThreadData_t *> fThreadData; //! Navigation data per thread
    mutable Int_t fThreadSize{0};                    //! Size for the navigation data array
    mutable std::mutex fMutex;                       //! Mutex for thread data access
+   mutable Bool_t fMeshValid{kFALSE};               //! Flag for mesh cache validity
                                                     // methods
    Bool_t MakeBranch(const char *expr, Bool_t left);
    void AssignPoints(Int_t npoints, Double_t *points);
@@ -78,6 +83,7 @@ public:
    TGeoShape *GetLeftShape() const { return fLeft; }
    TGeoShape *GetRightShape() const { return fRight; }
    TGeoShape::EInside Inside(const Double_t *point) const;
+   void InvalidateMeshCaches();
    virtual TGeoBoolNode *MakeClone() const = 0;
    void Paint(Option_t *option) override;
    void RegisterMatrices();
