@@ -600,13 +600,11 @@ ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindPrevClusterId(ROOT::Descriptor
 }
 
 std::vector<ROOT::DescriptorId_t>
-ROOT::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const RNTupleDescriptor &desc) const
+ROOT::RNTupleDescriptor::RHeaderExtension::GetTopMostFields(const RNTupleDescriptor &desc) const
 {
-   auto fieldZeroId = desc.GetFieldZeroId();
-
    std::vector<ROOT::DescriptorId_t> fields;
    for (const auto fieldId : fFieldIdsOrder) {
-      if (desc.GetFieldDescriptor(fieldId).GetParentId() == fieldZeroId)
+      if (fFieldIdsLookup.count(desc.GetFieldDescriptor(fieldId).GetParentId()) == 0)
          fields.emplace_back(fieldId);
    }
    return fields;
