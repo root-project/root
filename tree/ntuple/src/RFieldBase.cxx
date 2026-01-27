@@ -650,10 +650,10 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RFieldBase::SplitValue(const RValue 
 
 void ROOT::RFieldBase::Attach(std::unique_ptr<ROOT::RFieldBase> child, std::string_view expectedChildName)
 {
-   // Note that during a model update, new fields will be attached to the zero field. The zero field, however,
-   // does not change its inital state because only its sub fields get connected by RPageSink::UpdateSchema.
-   if (fState != EState::kUnconnected)
-      throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
+   // Note that technically the zero field would not need to have the extensible trait: because only its sub fields
+   // get connected by RPageSink::UpdateSchema, it does not change its initial state.
+   if (!(fTraits & kTraitExtensible) && (fState != EState::kUnconnected))
+      throw RException(R__FAIL("invalid attempt to attach subfield to already connected, non-extensible field"));
 
    if (!expectedChildName.empty() && child->GetFieldName() != expectedChildName) {
       throw RException(R__FAIL(std::string("invalid subfield name: ") + child->GetFieldName() +
