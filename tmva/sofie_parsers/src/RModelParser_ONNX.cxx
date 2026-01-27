@@ -107,49 +107,122 @@ struct ExtractDataFromTP {
 // trait function to extract data from TensorProto
 template<>
 struct ExtractDataFromTP<float> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->float_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read float initialized tensor - actual size is " + std::to_string(tensor->float_data_size()));
       tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(),
                                                             static_cast<float *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<double> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->double_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read double initialized tensor - actual size is " + std::to_string(tensor->double_data_size()));
       tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(),
                                                             static_cast<double *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<int32_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->int32_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read int32 initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
       tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(),
                                                             static_cast<int32_t *>(data));
    }
 };
 template<>
 struct ExtractDataFromTP<int64_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
+   static void Copy(onnx::TensorProto * tensor, void * data, int length) {
+      if (tensor->int64_data_size() != length)
+         throw std::runtime_error("TMVA::SOFIE - Failed to read int64 initialized tensor - actual size is " + std::to_string(tensor->int64_data_size()));
       tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(),
                                                             static_cast<int64_t *>(data));
    }
 };
-template<typename T>
-std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, size_t length) {
-   std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
 
-   if (!tensorproto->raw_data().empty()) {
+
+std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_size, ETensorType tensor_type)
+{
+
+   std::shared_ptr<void> data(malloc(tensor_size), free);
+
+   // check if initialized tensors are stored internally
+   if (tensorproto->data_location() != onnx::TensorProto::EXTERNAL) {
+      if (tensorproto->raw_data().size() > 0) {
+         if (tensorproto->raw_data().size() != tensor_size)
+            throw std::runtime_error("TMVA::SOFIE - Failed to read raw data of initialized tensor - actual raw size is " +
+                                 std::to_string(tensorproto->raw_data().size()));
+
 #ifdef R__BYTESWAP
-      std::memcpy(data.get(), tensorproto->raw_data().c_str(), length * sizeof(T));
+         // R__BYTESWAP is defined for little-endian architectures (most common ones)
+         std::memcpy(data.get(), tensorproto->raw_data().c_str(), tensor_size);
 #else
-      for (std::size_t k = 0; k < length; ++k)
-         (reinterpret_cast<typename RByteSwap<sizeof(T)>::value_type *>(data.get()))[k] =
-            RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(T)>::value_type *>(tensorproto->raw_data().c_str()))[k]);
+         // big-endian architectures - need to swap bytes
+         for (std::size_t k = 0; k < tensor_size; ++k)
+            (reinterpret_cast<typename RByteSwap<sizeof(uint8_t)>::value_type *>(data.get()))[k] =
+               RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(uint8_t)>::value_type *>(
+                  tensorproto->raw_data().c_str()))[k]);
 #endif
-   } else {
-      ExtractDataFromTP<T>::Copy(tensorproto, data.get());
+      } else {
+         // case tensor data are stored as specific types and now in raw_data
+         switch (tensor_type) {
+            case ETensorType::FLOAT: {
+               ExtractDataFromTP<float>::Copy(tensorproto, data.get(), tensor_size/ 4);
+               break;
+            }
+            case ETensorType::DOUBLE: {
+               ExtractDataFromTP<double>::Copy(tensorproto, data.get(), tensor_size/ 8);
+               break;
+            }
+            case ETensorType::INT32: {
+               ExtractDataFromTP<int32_t>::Copy(tensorproto, data.get(), tensor_size/ 4);
+               break;
+            }
+            case ETensorType::INT64: {
+               ExtractDataFromTP<int64_t>::Copy(tensorproto, data.get(), tensor_size/ 8);
+               break;
+            }
+            default:
+               throw std::runtime_error("Data type " + ConvertTypeToString(tensor_type) + " in weight tensor is not supported!\n");
+         }
+      }
+
+   }  else {
+      // case of external data
+      if (fVerbose)
+         std::cout << "Initialized data are stored externally in file " << fDataFileName;
+
+      // read now tensor from file
+      std::string location;
+      size_t offset = 0, buffer_size = 0;
+
+      for (const auto &kv : tensorproto->external_data()) {
+         if (kv.key() == "location")  location = kv.value();
+         else if (kv.key() == "offset") offset = std::stoull(kv.value());
+         else if (kv.key() == "length") buffer_size = std::stoull(kv.value());
+      }
+      if (fVerbose)
+         std::cout << " at location " << location << " offset " << offset << " and with length " << buffer_size << std::endl;
+
+      if (buffer_size != tensor_size)
+         throw std::runtime_error("TMVA::SOFIE ONNX : invalid stored data size vs tensor size");
+
+      // open the data file if needed
+      if (!fDataFile.is_open()) {
+         fDataFile.open(fDataFileName, std::ios::binary);
+         if (!fDataFile.is_open())
+            throw std::runtime_error("TMVA::SOFIE ONNX:  error reading external weight ONNX data file " + fDataFileName);
+      }
+
+      fDataFile.seekg(offset);
+      fDataFile.read(reinterpret_cast<char *>(data.get()), buffer_size);
    }
+
    return data;
 }
+
 
 // Constructor of the parser
 RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
@@ -370,6 +443,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       filename_nodir = (filename.substr(isep + 1, filename.length() - isep));
    }
 
+   if (fDataFileName.empty() ) fDataFileName = filename + ".data";
+
    RModel rmodel(filename_nodir, parsetime);
    ParseONNXGraph(rmodel, graph, filename_nodir);
    return rmodel;
@@ -541,56 +616,41 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    for (int i = 0; i < graph.initializer_size(); i++) {
       onnx::TensorProto *tensorproto = const_cast<onnx::TensorProto *>(&graph.initializer(i));
       std::vector<std::size_t> shape;
-      std::size_t fLength = 1;
+      std::size_t tensor_length = 1;
       for (int j = 0; j < tensorproto->dims_size(); j++) {
          shape.push_back(tensorproto->dims(j));
-         fLength *= tensorproto->dims(j);
+         tensor_length *= tensorproto->dims(j);
       }
       // in case of scalars keep an empty shape but with length =1
 
-      std::string input_name = graph.initializer(i).name();
+      std::string tensor_name = graph.initializer(i).name();
 
       if (verbose)
-         std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
-                   << std::endl;
+         std::cout << "\t initializer " << i << " name " << tensor_name << " type " << graph.initializer(i).data_type()
+                   << " and length " << tensor_length << std::endl;
+
 
       // register also the initialized tensors
       auto tensor_type = static_cast<ETensorType>(graph.initializer(i).data_type());
-      RegisterTensorType(input_name, tensor_type);
+      RegisterTensorType(tensor_name, tensor_type);
 
-      switch (tensor_type) {
-      case ETensorType::FLOAT: {
-         std::shared_ptr<void> data = GetInitializedTensorData<float>(tensorproto, fLength);
-         if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
+      std::shared_ptr<void> data = GetInitializedTensorData(tensorproto, tensor_length * GetTypeSize(tensor_type), tensor_type);
+      rmodel.AddInitializedTensor(tensor_name, tensor_type, shape, data);
+      allInitializedTensors[tensor_name] = i;
+
+      if (verbose) {
+         std::cout << "add initialized tensor " << tensor_name << "with shape " << ConvertShapeToString(shape) << "and  ";
+         if (tensor_type == ETensorType::FLOAT) {
+            std::cout << " float data: ";
+            for (int i = 0; i < std::min(int(tensor_length),3); i++) std::cout << static_cast<float*>(data.get())[0] << "  ";
+         }
+         else if (tensor_type == ETensorType::INT64) {
+            std::cout << " int64 data: ";
+            for (int i = 0; i < std::min(int(tensor_length),3); i++) std::cout << static_cast<int64_t*>(data.get())[0] << "  ";
+         }
+         std::cout << std::endl;
       }
-      case ETensorType::DOUBLE: {
-         std::shared_ptr<void> data = GetInitializedTensorData<double>(tensorproto, fLength);
-         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      case ETensorType::INT32: {
-         std::shared_ptr<void> data = GetInitializedTensorData<int32_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      case ETensorType::INT64: {
-         std::shared_ptr<void> data = GetInitializedTensorData<int64_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
-         rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
-         allInitializedTensors[input_name] = i;
-         break;
-      }
-      default:
-         throw std::runtime_error("Data type in weight tensor " + graph.initializer(i).name() + " not supported!\n");
-      }
-   }
+   }   // end initializer list
 
    // Initial operator order
    if (verbose) {

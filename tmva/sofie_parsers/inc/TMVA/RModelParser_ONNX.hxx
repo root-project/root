@@ -6,12 +6,14 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
+#include <fstream>
 
 // forward declaration
 namespace onnx {
 class NodeProto;
 class GraphProto;
 class ModelProto;
+class TensorProto;
 } // namespace onnx
 
 namespace TMVA {
@@ -38,6 +40,10 @@ private:
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
    // flag list of fused operators
    std::vector<bool> fFusedOperators;
+   //  weight data file
+   std::ifstream fDataFile;
+   // filename of model
+   std::string fDataFileName;
 
 
 public:
@@ -76,6 +82,8 @@ public:
 
    std::unique_ptr<onnx::ModelProto> LoadModel(std::string filename);
 
+   std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_length, ETensorType type );
+
 public:
 
    RModelParser_ONNX() noexcept;
@@ -84,6 +92,12 @@ public:
 
    // check the model for missing operators - return false in case some operator implementation is missing
    bool CheckModel(std::string filename, bool verbose = false);
+
+   //set external data full path (needed if external data are not stored in the default modelName.onnx.data)
+   // call this function before parsing
+   void SetExternalDataFile(const std::string & dataFileName) {
+      fDataFileName = dataFileName;
+   }
 
    ~RModelParser_ONNX();
 };
