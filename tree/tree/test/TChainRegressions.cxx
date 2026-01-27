@@ -1,9 +1,10 @@
 #include <TChain.h>
+#include <TDirectory.h>
+#include <TEntryList.h>
 #include <TFile.h>
+#include <TROOT.h>
 #include <TSystem.h>
 #include <TTree.h>
-#include <TEntryList.h>
-#include <TDirectory.h>
 
 #include "gtest/gtest.h"
 
@@ -207,7 +208,7 @@ TEST_P(SetBranchStatusInteraction, TestTChain)
    const auto [nFiles, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
 
    const auto treename = "ntuple";
-   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+   const auto filename = gROOT->GetTutorialDir() + "/hsimple.root";
 
    TChain chain(treename);
    for (auto i = 0; i < nFiles; ++i) {
@@ -243,7 +244,7 @@ TEST_P(SetBranchStatusInteraction, TestTTree)
    const auto [_, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
 
    const auto treename = "ntuple";
-   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+   const auto filename = gROOT->GetTutorialDir() + "/hsimple.root";
 
    auto tfile = std::make_unique<TFile>(filename);
    auto *ttree = tfile->Get<TTree>(treename);
