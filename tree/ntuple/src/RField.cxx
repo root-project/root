@@ -628,6 +628,13 @@ void ROOT::RRecordField::AddItem(std::unique_ptr<RFieldBase> item)
    }
 }
 
+void ROOT::Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem)
+{
+   // Only supported for untyped records
+   assert(record.GetTypeName().empty());
+   record.AddItem(std::move(newItem));
+}
+
 std::size_t ROOT::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const
 {
    if (itemAlignment > 1) {
