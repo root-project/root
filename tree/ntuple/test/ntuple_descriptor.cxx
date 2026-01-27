@@ -226,6 +226,13 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 1);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(10)
+                           .FieldName("untypedRecord")
+                           .Structure(ROOT::ENTupleStructure::kRecord)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddFieldLink(0, 10);
 
    EXPECT_TRUE(descBuilder.GetDescriptor().GetHeaderExtension() == nullptr);
    descBuilder.BeginHeaderExtension();
@@ -291,30 +298,49 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 5);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(11)
+                           .FieldName("f")
+                           .TypeName("float")
+                           .Structure(ROOT::ENTupleStructure::kPlain)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(10)
+                            .PhysicalColumnId(10)
+                            .BitsOnStorage(32)
+                            .Type(ROOT::ENTupleColumnType::kReal32)
+                            .FieldId(11)
+                            .Index(0)
+                            .FirstElementIndex(1002)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(10, 11);
 
    auto desc = descBuilder.MoveDescriptor();
-   ASSERT_EQ(desc.GetNFields(), 6);
-   ASSERT_EQ(desc.GetNLogicalColumns(), 4);
-   ASSERT_EQ(desc.GetNPhysicalColumns(), 3);
+   ASSERT_EQ(desc.GetNFields(), 8);
+   ASSERT_EQ(desc.GetNLogicalColumns(), 5);
+   ASSERT_EQ(desc.GetNPhysicalColumns(), 4);
    {
-      std::string_view child_names[] = {"i32", "topLevel1", "topLevel2", "projected"};
+      std::string_view child_names[] = {"i32", "untypedRecord", "topLevel1", "topLevel2", "projected"};
       unsigned i = 0;
       for (auto &child_field : desc.GetTopLevelFields())
          EXPECT_EQ(child_field.GetFieldName(), child_names[i++]);
    }
    auto xHeader = desc.GetHeaderExtension();
-   EXPECT_EQ(xHeader->GetNFields(), 4);
-   EXPECT_EQ(xHeader->GetNLogicalColumns(), 3);
-   EXPECT_EQ(xHeader->GetNPhysicalColumns(), 2);
+   EXPECT_EQ(xHeader->GetNFields(), 5);
+   EXPECT_EQ(xHeader->GetNLogicalColumns(), 4);
+   EXPECT_EQ(xHeader->GetNPhysicalColumns(), 3);
    {
-      std::string_view child_names[] = {"topLevel1", "topLevel2", "projected"};
+      std::string_view child_names[] = {"topLevel1", "topLevel2", "projected", "f"};
       unsigned i = 0;
-      for (auto child_field : xHeader->GetTopLevelFields(desc))
+      for (auto child_field : xHeader->GetTopMostFields(desc))
          EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
    }
    EXPECT_EQ(desc.GetColumnDescriptor(0).GetFirstElementIndex(), 0U);
    EXPECT_EQ(desc.GetColumnDescriptor(1).GetFirstElementIndex(), 1002U);
    EXPECT_EQ(desc.GetColumnDescriptor(2).GetFirstElementIndex(), 1100U);
+   EXPECT_EQ(desc.GetColumnDescriptor(10).GetFirstElementIndex(), 1002U);
 }
 
 TEST(RNTupleDescriptor, QualifiedFieldName)

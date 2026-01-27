@@ -1319,7 +1319,7 @@ void ROOT::Internal::RNTupleSerializer::RContext::MapSchema(const ROOT::RNTupleD
    if (!forHeaderExtension) {
       fieldTrees.emplace_back(fieldZeroId);
    } else if (auto xHeader = desc.GetHeaderExtension()) {
-      fieldTrees = xHeader->GetTopLevelFields(desc);
+      fieldTrees = xHeader->GetTopMostFields(desc);
    }
    depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) { MapFieldId(fieldId); });
    depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) {
