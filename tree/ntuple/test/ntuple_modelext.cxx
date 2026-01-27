@@ -605,3 +605,250 @@ TEST(RNTuple, ModelExtensionStreamerFields)
       EXPECT_THAT(ex.what(), testing::HasSubstr("a Model cannot be extended with Streamer fields"));
    }
 }
+
+TEST(RNTuple, ModelExtensionRecordFailures)
+{
+   FileRaii fileGuard("test_ntuple_modelext_record_failures.root");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("pt");
+   model->AddField(std::make_unique<ROOT::RRecordField>("r", std::vector<std::unique_ptr<RFieldBase>>()));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fE = std::make_unique<RField<float>>("E");
+      try {
+         modelUpdater->AddField(std::move(fE), "r");
+         FAIL() << "extending a record field with a non-bare model should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(),
+                     testing::HasSubstr("invalid attempt to late-model-extend an untyped record of a non-bare model"));
+      }
+      modelUpdater->CommitUpdate();
+   }
+
+   model = RNTupleModel::CreateBare();
+   model->MakeField<std::pair<float, float>>("pair");
+   model->AddField(std::make_unique<ROOT::RRecordField>("r", std::vector<std::unique_ptr<RFieldBase>>()));
+
+   auto nestedRecord = std::make_unique<ROOT::RRecordField>("_0", std::vector<std::unique_ptr<RFieldBase>>());
+   auto collectionField = ROOT::RVectorField::CreateUntyped("v", std::move(nestedRecord));
+   model->AddField(std::move(collectionField));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntplBare", fileGuard.GetPath());
+      auto entry = writer->GetModel().CreateEntry();
+      writer->Fill(*entry);
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+
+      auto fE = std::make_unique<RField<float>>("E");
+      try {
+         modelUpdater->AddField(std::move(fE), "XYZ");
+         FAIL() << "extending a non-existant field should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(), testing::HasSubstr("invalid field: XYZ"));
+      }
+
+      fE = std::make_unique<RField<float>>("E");
+      try {
+         modelUpdater->AddField(std::move(fE), "pair");
+         FAIL() << "extending a field that is not an untyped record should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(), testing::HasSubstr("invalid attempt to extend a field that is not an untyped record"));
+      }
+
+      fE = std::make_unique<RField<float>>("E");
+      try {
+         modelUpdater->AddField(std::move(fE), "v._0");
+         FAIL() << "extending a field under a vector should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(),
+                     testing::HasSubstr("invalid attempt to extend an untyped record that has a non-record parent"));
+      }
+
+      fE = std::make_unique<RField<float>>("E");
+      EXPECT_NO_THROW(modelUpdater->AddField(std::move(fE), "r"));
+      modelUpdater->CommitUpdate();
+   }
+}
+
+TEST(RNTuple, ModelExtensionRecordSimple)
+{
+   FileRaii fileGuard("test_ntuple_modelext_record_simple.root");
+
+   {
+      auto model = RNTupleModel::CreateBare();
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      items.emplace_back(std::make_unique<RField<float>>("pt"));
+      model->AddField(std::make_unique<ROOT::RRecordField>("r", std::move(items)));
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto entry = writer->CreateEntry();
+      auto ptrRecord = entry->GetPtr<void>("r");
+      auto offsetPt = static_cast<const ROOT::RRecordField &>(writer->GetModel().GetConstField("r")).GetOffsets()[0];
+      auto ptrPt = reinterpret_cast<float *>(static_cast<unsigned char *>(ptrRecord.get()) + offsetPt);
+      *ptrPt = 1.0;
+      writer->Fill(*entry);
+      writer->CommitCluster();
+      *ptrPt = 2.0;
+      writer->Fill(*entry);
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      auto fVec = std::make_unique<RField<std::vector<float>>>("vec");
+      modelUpdater->AddField(std::move(fVec), "r");
+      modelUpdater->CommitUpdate();
+
+      entry = writer->CreateEntry();
+      ptrRecord = entry->GetPtr<void>("r");
+      ptrPt = reinterpret_cast<float *>(static_cast<unsigned char *>(ptrRecord.get()) + offsetPt);
+      auto offsetVec = static_cast<const ROOT::RRecordField &>(writer->GetModel().GetConstField("r")).GetOffsets()[1];
+      auto ptrVec = reinterpret_cast<std::vector<float> *>(static_cast<unsigned char *>(ptrRecord.get()) + offsetVec);
+      *ptrPt = 3.0;
+      ptrVec->emplace_back(10.0);
+      ptrVec->emplace_back(11.0);
+      writer->Fill(*entry);
+
+      *ptrPt = 4.0;
+      ptrVec->clear();
+      writer->Fill(*entry);
+
+      *ptrPt = 5.0;
+      ptrVec->emplace_back(12.0);
+      writer->Fill(*entry);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(5u, reader->GetNEntries());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   reader->Show(1, os);
+   reader->Show(2, os);
+   reader->Show(3, os);
+   reader->Show(4, os);
+   // clang-format off
+   std::string expect{
+R"({
+  "r": {
+    "pt": 1
+  },
+  "vec": []
+}
+{
+  "r": {
+    "pt": 2
+  },
+  "vec": []
+}
+{
+  "r": {
+    "pt": 3
+  },
+  "vec": [10, 11]
+}
+{
+  "r": {
+    "pt": 4
+  },
+  "vec": []
+}
+{
+  "r": {
+    "pt": 5
+  },
+  "vec": [12]
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expect, os.str());
+}
+
+TEST(RNTuple, ModelExtensionRecordNested)
+{
+   FileRaii fileGuard("test_ntuple_modelext_record_nested.root");
+
+   {
+      auto model = RNTupleModel::CreateBare();
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      items.emplace_back(std::make_unique<ROOT::RRecordField>("r2", std::vector<std::unique_ptr<RFieldBase>>()));
+      auto recordField = std::make_unique<ROOT::RRecordField>("r1", std::move(items));
+      model->AddField(std::move(recordField));
+
+      RNTupleWriteOptions opts;
+      opts.SetUseBufferedWrite(false);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), opts);
+
+      auto entry = writer->CreateEntry();
+      writer->Fill(*entry);
+      writer->CommitCluster();
+      writer->Fill(*entry);
+
+      auto modelUpdater = writer->CreateModelUpdater();
+      modelUpdater->BeginUpdate();
+      std::vector<std::unique_ptr<RFieldBase>> innerItems;
+      innerItems.emplace_back(std::make_unique<RField<float>>("pt"));
+      items = std::vector<std::unique_ptr<RFieldBase>>();
+      items.emplace_back(std::make_unique<ROOT::RRecordField>("r4", std::move(innerItems)));
+      recordField = std::make_unique<ROOT::RRecordField>("r3", std::move(items));
+      modelUpdater->AddField(std::move(recordField), "r1.r2");
+      modelUpdater->CommitUpdate();
+
+      entry = writer->CreateEntry();
+      auto ptrFloat = static_cast<float *>(entry->GetPtr<void>("r1").get());
+      *ptrFloat = 1.0;
+      writer->Fill(*entry);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   reader->Show(1, os);
+   reader->Show(2, os);
+   // clang-format off
+   std::string expect{
+R"({
+  "r1": {
+    "r2": {
+      "r3": {
+        "r4": {
+          "pt": 0
+        }
+      }
+    }
+  }
+}
+{
+  "r1": {
+    "r2": {
+      "r3": {
+        "r4": {
+          "pt": 0
+        }
+      }
+    }
+  }
+}
+{
+  "r1": {
+    "r2": {
+      "r3": {
+        "r4": {
+          "pt": 1
+        }
+      }
+    }
+  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expect, os.str());
+}
