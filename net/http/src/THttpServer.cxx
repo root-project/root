@@ -1139,9 +1139,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       if (arg->fContent.empty())
          arg->Set404();
    } else if ((filename == "h.xml") || (filename == "get.xml")) {
-
-      Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
-
+      Bool_t compact = arg->fQuery.Index("compact") != kNPOS,
+             processed = kFALSE;
       TString res;
 
       res.Form("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
@@ -1152,20 +1151,22 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          res.Append("\n");
       {
          TRootSnifferStoreXml store(res, compact);
-
+         auto len0 = res.Length();
          const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0)
             topname = arg->fTopName.Data();
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, filename == "get.xml");
+         processed = res.Length() > len0;
       }
 
       res.Append("</root>");
       if (!compact)
          res.Append("\n");
-
-      arg->SetContent(std::string(res.Data()));
-
-      arg->SetXml();
+      if (processed) {
+         arg->SetContent(std::string(res.Data()));
+         arg->SetXml();
+      } else
+         MissedRequest(arg.get());
    } else if (filename == "h.json") {
       TString res;
       TRootSnifferStoreJson store(res, arg->fQuery.Index("compact") != kNPOS);
@@ -1173,8 +1174,12 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
       if (arg->fTopName.Length() > 0)
          topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
-      arg->SetContent(std::string(res.Data()));
-      arg->SetJson();
+
+      if (res.Length() > 0) {
+         arg->SetContent(std::string(res.Data()));
+         arg->SetJson();
+      } else
+         MissedRequest(arg.get());
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fContent)) {
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
