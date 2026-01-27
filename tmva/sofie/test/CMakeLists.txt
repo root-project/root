@@ -113,6 +113,7 @@ ROOT_FIND_PYTHON_MODULE(keras)
 
 # onnx 1.19.0 has a bug that makes this version unusable:
 # https://github.com/onnx/onnx/issues/7249
+# 1.19.1 instead could be used
 # In that case, we have to disable the "TestSofieModels" and
 # "TestRModelParserPyTorch" tests, which import onnx indirectly via torch.onnx
 ROOT_FIND_PYTHON_MODULE(onnx)
