@@ -1314,10 +1314,11 @@ public:
       return fExtendedColumnRepresentations;
    }
    /// Return a vector containing the IDs of the top-level fields defined in the extension header, in the order
-   /// of their addition.
+   /// of their addition. Note that these fields are not necessarily top-level fields in the overall schema.
+   /// If a nested field is extended, it will return the top-most field of the extended subtree.
    /// We cannot create this vector when building the fFields because at the time when AddExtendedField is called,
    /// the field is not yet linked into the schema tree.
-   std::vector<ROOT::DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
+   std::vector<ROOT::DescriptorId_t> GetTopMostFields(const RNTupleDescriptor &desc) const;
 
    bool ContainsField(ROOT::DescriptorId_t fieldId) const
    {
