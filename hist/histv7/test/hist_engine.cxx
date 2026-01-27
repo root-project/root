@@ -119,9 +119,9 @@ TEST(RHistEngine, Add)
 
    engineA.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i);
-      engineA.Fill(i);
-      engineB.Fill(i);
+      engineA.Fill(i + 0.5);
+      engineA.Fill(i + 0.5);
+      engineB.Fill(i + 0.5);
    }
    engineB.Fill(100);
 
@@ -161,7 +161,7 @@ TEST(RHistEngine, Clear)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -182,7 +182,7 @@ TEST(RHistEngine, Clone)
 
    engineA.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i);
+      engineA.Fill(i + 0.5);
    }
    engineA.Fill(100);
 
@@ -198,7 +198,7 @@ TEST(RHistEngine, Clone)
 
    // Check that we can continue filling the clone.
    for (std::size_t i = 0; i < Bins; i++) {
-      engineB.Fill(i);
+      engineB.Fill(i + 0.5);
    }
 
    for (auto index : axis.GetNormalRange()) {
@@ -215,7 +215,7 @@ TEST(RHistEngine, Fill)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -234,7 +234,7 @@ TEST(RHistEngine, FillDiscard)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -252,8 +252,8 @@ TEST(RHistEngine, FillOnlyInner)
    RHistEngine<int> engineNoFlowBins({axisNoFlowBins});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
-      engineNoFlowBins.Fill(i);
+      engine.Fill(i + 0.5);
+      engineNoFlowBins.Fill(i + 0.5);
    }
 
    EXPECT_EQ(engine.GetBinContent(RBinIndex::Underflow()), 0);
@@ -272,7 +272,7 @@ TEST(RHistEngine, FillTuple)
 
    engine.Fill(std::make_tuple(-100));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(std::make_tuple(i));
+      engine.Fill(std::make_tuple(i + 0.5));
    }
    engine.Fill(std::make_tuple(100));
 
@@ -311,7 +311,7 @@ TEST(RHistEngine, FillWeight)
 
    engine.Fill(-100, RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
    engine.Fill(100, RWeight(0.75));
 
@@ -330,7 +330,7 @@ TEST(RHistEngine, FillTupleWeight)
 
    engine.Fill(std::make_tuple(-100), RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(std::make_tuple(i), RWeight(0.1 + i * 0.03));
+      engine.Fill(std::make_tuple(i + 0.5), RWeight(0.1 + i * 0.03));
    }
    engine.Fill(std::make_tuple(100), RWeight(0.75));
 
@@ -386,7 +386,7 @@ TEST(RHistEngine, Scale)
 
    engine.Fill(-100, RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
    engine.Fill(100, RWeight(0.75));
 
@@ -408,8 +408,8 @@ TEST(RHistEngine_RBinWithError, Add)
    RHistEngine<RBinWithError> engineB({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i, RWeight(0.2 + i * 0.03));
-      engineB.Fill(i, RWeight(0.1 + i * 0.05));
+      engineA.Fill(i + 0.5, RWeight(0.2 + i * 0.03));
+      engineB.Fill(i + 0.5, RWeight(0.1 + i * 0.05));
    }
 
    engineA.Add(engineB);
@@ -430,7 +430,7 @@ TEST(RHistEngine_RBinWithError, Fill)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
 
    for (auto index : axis.GetNormalRange()) {
@@ -447,7 +447,7 @@ TEST(RHistEngine_RBinWithError, FillWeight)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
 
    for (auto index : axis.GetNormalRange()) {
@@ -465,7 +465,7 @@ TEST(RHistEngine_RBinWithError, Scale)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
 
    static constexpr double Factor = 0.8;
