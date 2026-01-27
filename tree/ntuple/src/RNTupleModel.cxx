@@ -222,16 +222,53 @@ void ROOT::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+ROOT::RRecordField *ROOT::Internal::RNTupleModelChangeset::GetParentRecordField(std::string_view parentName) const
+{
+   if (parentName.empty())
+      return nullptr;
+
+   if (!fModel.IsBare()) {
+      throw RException(R__FAIL("invalid attempt to late-model-extend an untyped record of a non-bare model"));
+   }
+
+   auto &parentField = fModel.GetMutableField(parentName);
+   auto parentRecord = dynamic_cast<ROOT::RRecordField *>(&parentField);
+   if (!parentRecord || !parentRecord->GetTypeName().empty()) {
+      throw RException(
+         R__FAIL("invalid attempt to extend a field that is not an untyped record: " + std::string(parentName)));
+   }
+
+   auto itr = parentRecord->GetParent();
+   while (itr) {
+      if (typeid(*itr) == typeid(RFieldZero))
+         break;
+
+      if (!dynamic_cast<const ROOT::RRecordField *>(itr)) {
+         throw RException(R__FAIL("invalid attempt to extend an untyped record that has a non-record parent: " +
+                                  std::string(parentName)));
+      }
+
+      itr = itr->GetParent();
+   }
+
+   return parentRecord;
+}
+
+void ROOT::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<ROOT::RFieldBase> field,
+                                                     std::string_view parentName)
 {
    auto fieldp = field.get();
-   fModel.AddField(std::move(field));
+   if (auto parent = GetParentRecordField(parentName)) {
+      Internal::AddItemToRecord(*parent, std::move(field));
+   } else {
+      fModel.AddField(std::move(field));
+   }
    fAddedFields.emplace_back(fieldp);
 }
 
-void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::RNTupleModel::RUpdater::AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName)
 {
-   fOpenChangeset.AddField(std::move(field));
+   fOpenChangeset.AddField(std::move(field), parentName);
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field,

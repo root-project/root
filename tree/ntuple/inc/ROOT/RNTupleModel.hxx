@@ -411,7 +411,11 @@ struct RNTupleModelChangeset {
    RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 
-   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+   // Returns the corresponding record field for parentName. Throws on error.
+   // Returns nullptr if parentName is empty (i.e. if the parent is the zero field).
+   ROOT::RRecordField *GetParentRecordField(std::string_view parentName) const;
+
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName = "");
 
    /// \see RNTupleModel::AddProjectedField()
    ROOT::RResult<void>
@@ -453,7 +457,7 @@ public:
       return fOpenChangeset.fModel.GetDefaultEntry().GetPtr<T>(name);
    }
 
-   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field, std::string_view parentName = "");
 
    /// \see RNTupleModel::AddProjectedField()
    RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
