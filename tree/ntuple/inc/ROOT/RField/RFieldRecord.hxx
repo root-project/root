@@ -31,6 +31,8 @@
 
 namespace ROOT {
 
+class RRecordField;
+
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
@@ -39,6 +41,8 @@ namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedRecordField(std::string_view fieldName,
                                                       std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                                       std::string_view emulatedFromType);
+// Used by to late-model-extend fields to untyped records
+void AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 } // namespace Internal
 
 /// The field for an untyped record. The subfields are stored consecutively in a memory block, i.e.
@@ -47,6 +51,7 @@ class RRecordField : public RFieldBase {
    friend std::unique_ptr<RFieldBase>
    Internal::CreateEmulatedRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                        std::string_view emulatedFromType);
+   friend void Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 
    class RRecordDeleter : public RDeleter {
    private:
