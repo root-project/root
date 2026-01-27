@@ -511,6 +511,22 @@ namespace cling {
       m_FilesToUncache.insert(FID);
   }
 
+  bool DeclUnloader::UnloadDecl(Decl* D) {
+    if (D->isFromASTFile()) {
+      // We cannot ignore instantiated CXXMethodDecl's in templated classes:
+      // They may have failing static_assert.
+      if (auto* M = dyn_cast<CXXMethodDecl>(D)) {
+        if (M->getTemplateSpecializationKind() !=
+            TemplateSpecializationKind::TSK_ImplicitInstantiation) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+    return Visit(D);
+  }
+
   bool DeclUnloader::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
     CollectFilesToUncache(D->getBeginLoc());
