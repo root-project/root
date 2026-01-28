@@ -275,16 +275,8 @@ public:
       for (std::size_t item : fShape) {
          fSize *= static_cast<int>(item);
       }
-      switch (fType) {
-      case ETensorType::FLOAT: fSize *= sizeof(float); break;
-      case ETensorType::DOUBLE: fSize *= sizeof(double); break;
-      case ETensorType::INT32: fSize *= sizeof(int32_t); break;
-      case ETensorType::INT64: fSize *= sizeof(int64_t); break;
-      case ETensorType::BOOL: fSize *= sizeof(bool); break;
-      default:
-         throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
-                                  ConvertTypeToString(fType));
-      }
+      // get size in bytes
+      fSize *= GetTypeSize(fType);
       fPersistentData = static_cast<char *>(fData.get());
    }
    void CastPersistentToShared()
