@@ -16,6 +16,7 @@
 #include "TList.h"
 #include "TBufferJSON.h"
 #include "TROOT.h"
+#include "TInterpreter.h"
 #include "TFolder.h"
 #include "TClass.h"
 #include "TRealData.h"
@@ -1238,7 +1239,15 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
          Info("ExecuteCmd", "Executing %s", method.Data());
    }
 
-   auto v = gROOT->ProcessLineSync(method.Data());
+   Int_t err = 0;
+   auto v = gROOT->ProcessLineSync(method.Data(), &err);
+   if (err == TInterpreter::kProcessing) {
+      gInterpreter->ProcessLine(".@");
+      if (gDebug > 0)
+         Info("ExecuteCmd", "Unbalanced braces in %s", method.Data());
+      res = "false";
+      return kTRUE;
+   }
 
    res = std::to_string(v);
 
@@ -1508,7 +1517,7 @@ Bool_t TRootSniffer::CallProduceImage(const std::string &/*kind*/, const std::st
 /// * "exe.txt"   - method execution with debug output
 /// * "cmd.json"  - execution of registered commands
 ///
-/// @param options specific options 
+/// @param options specific options
 /// @param res returns result - binary or text.
 
 Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res)
