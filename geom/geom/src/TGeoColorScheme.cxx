@@ -2,109 +2,101 @@
 // TGeoColorScheme.cxx
 //==============================================================================
 
-/** \class TGeoColorScheme
-\ingroup Geometry_classes
-
-  Helper "strategy" class used by TGeoManager::DefaultColors() to assign
-  visualization attributes (line color and optional transparency) to imported
-  geometries (e.g. GDML), where the source format does not encode colors.
-
-  Design goals
-  ------------
-  - Backward compatibility: calling TGeoManager::DefaultColors() with no
-    arguments behaves like today (default "natural" scheme).
-  - Reasonable defaults for detector geometries: first try name-based material
-    classification (e.g. copper, aluminium, steel, FR4/G10, kapton/polyimide,
-    gases), then fall back to a Z-binned lookup.
-  - User extensibility without requiring subclassing: users can provide hooks
-    (std::function) that override the default decisions partially or fully.
-    Hooks are runtime-only (not persistified).
-
-  How TGeoManager::DefaultColors() uses a scheme
-  ----------------------------------------------
-  For each volume:
-    - scheme->Color(vol) is queried
-        * return >= 0 : use returned ROOT color index (TColor index)
-        * return <  0 : caller may ignore or use its own fallback
-    - scheme->Transparency(vol) is queried
-        * return in [0..100] : set volume transparency
-        * return < 0         : do not change transparency
-
-  Default behavior
-  ----------------
-  - Color(vol):
-      1) If a user color hook is installed, it is called first.
-         If it returns >=0, that color is used.
-      2) If no hook decision, try name-based overrides (tokens like
-         "copper", "steel", "fr4", "g10", "kapton", "argon", "c6f14", ...).
-      3) If still unresolved, fall back to ColorForZ(effectiveZ).
-         Users can override the Z fallback via SetZFallbackHook() or by
-         subclassing and overriding ColorForZ().
-
-  - Transparency(vol):
-      1) If a user transparency hook is installed and returns >=0, use it.
-      2) Otherwise, the default makes very low-density materials (gases)
-         semi-transparent (60), preserving historical behavior.
-
-  User extensibility (examples)
-  -----------------------------
-
-  Example A: Tweak just copper-like materials (leave everything else default)
-
-  ```cpp
-    TGeoColorScheme cs(EGeoColorSet::kNatural);
-    cs.SetColorHook([](const TGeoVolume* v) -> Int_t {
-      const TGeoMaterial* m = TGeoColorScheme::GetMaterial(v);
-      if (!m || !m->GetName()) return -1;
-      std::string n = m->GetName();
-      std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-      if (n.find("copper") != std::string::npos || n.find("_cu") != std::string::npos)
-        return TColor::GetColor(0.90f, 0.55f, 0.30f); // custom copper tint
-      return -1; // let defaults handle the rest
-    });
-    gGeoManager->DefaultColors(&cs);
-  ```
-
-  Example B: Override Z-fallback mapping (keep name overrides)
-
-  ```cpp
-    TGeoColorScheme cs(EGeoColorSet::kNatural);
-    cs.SetZFallbackHook([](Int_t Z, EGeoColorSet) -> Int_t {
-      float t = std::min(1.f, std::max(0.f, Z / 100.f));
-      return TColor::GetColor(t, t, t); // grayscale by Z
-    });
-    gGeoManager->DefaultColors(&cs);
-  ```
-
-  Example C: Full custom policy via subclassing (optional)
-
-  ```cpp
-    class MyScheme : public TGeoColorScheme {
-    public:
-      using TGeoColorScheme::TGeoColorScheme;
-      Int_t ColorForZ(Int_t Z, EGeoColorSet set) const override { ... }
-      Int_t Color(const TGeoVolume* vol) const override { ... }
-    };
-    MyScheme cs(EGeoColorSet::kFlashy);
-    gGeoManager->DefaultColors(&cs);
-  ```
-
-  Notes
-  -----
-  - This class is intended for runtime use; it is not persistified because
-    hooks are user-provided callables which are not I/O friendly.
-  - The default name token rules are heuristic and aimed at typical HEP
-    detector material naming conventions; users can refine them locally via
-    hooks or subclassing.
-
-------------------------------------------------------------------------------
-*/
-
-#include "TGeoColorScheme.h"
+/**
+ * @class TGeoColorScheme
+ * @ingroup Geometry_classes
+ * @brief Strategy class for assigning colors/transparency to geometry volumes.
+ *
+ * @details
+ * Helper "strategy" class used by TGeoManager::DefaultColors() to assign
+ * visualization attributes (line color and optional transparency) to imported
+ * geometries (e.g. GDML), where the source format does not encode colors.
+ *
+ * @par Design goals
+ * @li Backward compatibility: calling TGeoManager::DefaultColors() with no
+ *     arguments behaves like today (default "natural" scheme).
+ * @li Reasonable defaults for detector geometries: first try name-based material
+ *     classification (e.g. copper, aluminium, steel, FR4/G10, kapton/polyimide,
+ *     gases), then fall back to a Z-binned lookup.
+ * @li User extensibility without requiring subclassing: users can provide hooks
+ *     (std::function) that override the default decisions partially or fully.
+ *     Hooks are runtime-only (not persistified).
+ *
+ * @par How TGeoManager::DefaultColors() uses a scheme
+ * For each volume:
+ * @li scheme->Color(vol) is queried:
+ *     @li return >= 0 : use returned ROOT color index (TColor index)
+ *     @li return <  0 : caller may ignore or use its own fallback
+ * @li scheme->Transparency(vol) is queried:
+ *     @li return in [0..100] : set volume transparency
+ *     @li return < 0         : do not change transparency
+ *
+ * @par Default behavior
+ * @li Color(vol):
+ *     @li If a user color hook is installed, it is called first. If it returns
+ *         >= 0, that color is used.
+ *     @li Otherwise, try name-based overrides (tokens like "copper", "steel",
+ *         "fr4", "g10", "kapton", "argon", "c6f14", ...).
+ *     @li If still unresolved, fall back to ColorForZ(effectiveZ). Users can
+ *         override the Z fallback via SetZFallbackHook() or by subclassing and
+ *         overriding ColorForZ().
+ * @li Transparency(vol):
+ *     @li If a user transparency hook is installed and returns >= 0, use it.
+ *     @li Otherwise, the default makes very low-density materials (gases)
+ *         semi-transparent (60), preserving historical behavior.
+ *
+ * @par User extensibility examples
+ * Example A: Tweak just copper-like materials (leave everything else default)
+ * @code{.cpp}
+ * TGeoColorScheme cs(EGeoColorSet::kNatural);
+ * cs.SetColorHook([](const TGeoVolume* v) -> Int_t {
+ *   const TGeoMaterial* m = TGeoColorScheme::GetMaterial(v);
+ *   if (!m || !m->GetName()) return -1;
+ *   std::string n = m->GetName();
+ *   std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+ *   if (n.find("copper") != std::string::npos || n.find("_cu") != std::string::npos)
+ *     return TColor::GetColor(0.90f, 0.55f, 0.30f); // custom copper tint
+ *   return -1; // let defaults handle the rest
+ * });
+ * gGeoManager->DefaultColors(&cs);
+ * @endcode
+ *
+ * Example B: Override Z-fallback mapping (keep name overrides)
+ * @code{.cpp}
+ * TGeoColorScheme cs(EGeoColorSet::kNatural);
+ * cs.SetZFallbackHook([](Int_t Z, EGeoColorSet) -> Int_t {
+ *   float t = std::min(1.f, std::max(0.f, Z / 100.f));
+ *   return TColor::GetColor(t, t, t); // grayscale by Z
+ * });
+ * gGeoManager->DefaultColors(&cs);
+ * @endcode
+ *
+ * Example C: Full custom policy via subclassing (optional)
+ * @code{.cpp}
+ * class MyScheme : public TGeoColorScheme {
+ * public:
+ *   using TGeoColorScheme::TGeoColorScheme;
+ *   Int_t ColorForZ(Int_t Z, EGeoColorSet set) const override { ... }
+ *   Int_t Color(const TGeoVolume* vol) const override { ... }
+ * };
+ * MyScheme cs(EGeoColorSet::kFlashy);
+ * gGeoManager->DefaultColors(&cs);
+ * @endcode
+ *
+ * @par Notes
+ * @li This class is intended for runtime use; it is not persistified because
+ *     hooks are user-provided callables which are not I/O friendly.
+ * @li The default name token rules are heuristic and aimed at typical HEP
+ *     detector material naming conventions; users can refine them locally via
+ *     hooks or subclassing.
+ *
+ * @see TGeoManager::DefaultColors
+ */
 
 #include <string>
 #include <algorithm>
 
+#include "TGeoColorScheme.h"
 #include "TColor.h"
 #include "TGeoVolume.h"
 #include "TGeoMedium.h"
