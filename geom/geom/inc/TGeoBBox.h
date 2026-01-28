@@ -13,7 +13,7 @@
 #define ROOT_TGeoBBox
 
 #include "TGeoShape.h"
-#include "TVector3.h"
+#include "Math/Vector3D.h"
 
 class TGeoBBox : public TGeoShape {
 protected:
@@ -66,7 +66,7 @@ public:
    void GetBoundingCylinder(Double_t *param) const override;
    const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
    Int_t GetByteCount() const override { return 36; }
-   inline TVector3 GetDimensions() const { return TVector3(fDX, fDY, fDZ); }
+   inline ROOT::Math::XYZVector GetDimensions() const { return ROOT::Math::XYZVector(fDX, fDY, fDZ); }
    virtual Double_t GetFacetArea(Int_t index = 0) const;
    virtual Bool_t GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) const;
    Bool_t GetPointsOnSegments(Int_t npoints, Double_t *array) const override;
@@ -79,15 +79,17 @@ public:
    virtual Double_t GetDY() const { return fDY; }
    virtual Double_t GetDZ() const { return fDZ; }
    virtual const Double_t *GetOrigin() const { return fOrigin; }
-   TVector3 GetWorldCenter(const TGeoMatrix *m) const;
+   ROOT::Math::XYZVector GetWorldCenter(const TGeoMatrix *m) const;
    void InspectShape() const override;
    Bool_t IsConvex() const override { return kTRUE; }
    Bool_t IsCylType() const override { return kFALSE; }
    Bool_t IsValidBox() const override { return ((fDX < 0) || (fDY < 0) || (fDZ < 0)) ? kFALSE : kTRUE; }
    virtual Bool_t IsNullBox() const { return ((fDX < 1.E-16) && (fDY < 1.E-16) && (fDZ < 1.E-16)) ? kTRUE : kFALSE; }
-   static Bool_t IsSeparatingAxis(const TVector3 &L, const TVector3 &D, const TVector3 &Ax, const TVector3 &Ay,
-                                  const TVector3 &Az, const TVector3 &Bx, const TVector3 &By, const TVector3 &Bz,
-                                  const TVector3 &dA, const TVector3 &dB, Double_t tol);
+   static Bool_t IsSeparatingAxis(const ROOT::Math::XYZVector &L, const ROOT::Math::XYZVector &D,
+                                  const ROOT::Math::XYZVector &Ax, const ROOT::Math::XYZVector &Ay,
+                                  const ROOT::Math::XYZVector &Az, const ROOT::Math::XYZVector &Bx,
+                                  const ROOT::Math::XYZVector &By, const ROOT::Math::XYZVector &Bz,
+                                  const ROOT::Math::XYZVector &dA, const ROOT::Math::XYZVector &dB, Double_t tol);
    TBuffer3D *MakeBuffer3D() const override;
    static bool MayIntersect(const TGeoBBox *boxA, const TGeoMatrix *mA, const TGeoBBox *boxB, const TGeoMatrix *mB);
    Double_t Safety(const Double_t *point, Bool_t in = kTRUE) const override;
