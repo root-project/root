@@ -154,6 +154,8 @@ public:
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
+   RNTupleWriter(RNTupleWriter &&) = delete;
+   RNTupleWriter &operator=(RNTupleWriter &&) = delete;
    ~RNTupleWriter();
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used.
