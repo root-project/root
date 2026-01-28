@@ -832,11 +832,11 @@ void TGeoBBox::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 /// @param[in] m   Pointer to the placement TGeoMatrix.
 /// @return        World-space center of the box.
 
-TVector3 TGeoBBox::GetWorldCenter(const TGeoMatrix *m) const
+ROOT::Math::XYZVector TGeoBBox::GetWorldCenter(const TGeoMatrix *m) const
 {
    Double_t w[3];
    m->LocalToMaster(fOrigin, w);
-   return TVector3(w[0], w[1], w[2]);
+   return ROOT::Math::XYZVector(w[0], w[1], w[2]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -883,9 +883,11 @@ void TGeoBBox::InspectShape() const
 /// @return true  If L is a separating axis (boxes do NOT intersect).
 /// @return false If L does not separate the boxes or is degenerate.
 
-Bool_t TGeoBBox::IsSeparatingAxis(const TVector3 &L, const TVector3 &D, const TVector3 &Ax, const TVector3 &Ay,
-                                  const TVector3 &Az, const TVector3 &Bx, const TVector3 &By, const TVector3 &Bz,
-                                  const TVector3 &dA, const TVector3 &dB, Double_t tol)
+Bool_t TGeoBBox::IsSeparatingAxis(const ROOT::Math::XYZVector &L, const ROOT::Math::XYZVector &D,
+                                  const ROOT::Math::XYZVector &Ax, const ROOT::Math::XYZVector &Ay,
+                                  const ROOT::Math::XYZVector &Az, const ROOT::Math::XYZVector &Bx,
+                                  const ROOT::Math::XYZVector &By, const ROOT::Math::XYZVector &Bz,
+                                  const ROOT::Math::XYZVector &dA, const ROOT::Math::XYZVector &dB, Double_t tol)
 {
    // Degenerate axes can arise from cross products of nearly parallel axes.
    const Double_t eps = 1e-18;
@@ -893,8 +895,8 @@ Bool_t TGeoBBox::IsSeparatingAxis(const TVector3 &L, const TVector3 &D, const TV
       return false;
 
    const Double_t dist = std::fabs(D.Dot(L));
-   const Double_t rA = TMath::Abs(dA[0] * Ax.Dot(L)) + TMath::Abs(dA[1] * Ay.Dot(L)) + TMath::Abs(dA[2] * Az.Dot(L));
-   const Double_t rB = TMath::Abs(dB[0] * Bx.Dot(L)) + TMath::Abs(dB[1] * By.Dot(L)) + TMath::Abs(dB[2] * Bz.Dot(L));
+   const Double_t rA = TMath::Abs(dA.x() * Ax.Dot(L)) + TMath::Abs(dA.y() * Ay.Dot(L)) + TMath::Abs(dA.z() * Az.Dot(L));
+   const Double_t rB = TMath::Abs(dB.x() * Bx.Dot(L)) + TMath::Abs(dB.y() * By.Dot(L)) + TMath::Abs(dB.z() * Bz.Dot(L));
 
    // Touching within tolerance is treated as non-intersecting
    return dist >= (rA + rB - tol);
@@ -952,17 +954,17 @@ bool TGeoBBox::MayIntersect(const TGeoBBox *boxA, const TGeoMatrix *mA, const TG
    const Double_t tol = TGeoShape::Tolerance();
 
    // Half-lengths vectors
-   const TVector3 dA = boxA->GetDimensions();
-   const TVector3 dB = boxB->GetDimensions();
+   const ROOT::Math::XYZVector dA = boxA->GetDimensions();
+   const ROOT::Math::XYZVector dB = boxB->GetDimensions();
 
    // Correct world-space centers (including TGeoBBox origin)
-   const TVector3 oA = boxA->GetWorldCenter(mA);
-   const TVector3 oB = boxB->GetWorldCenter(mB);
-   const TVector3 D = oB - oA;
+   const ROOT::Math::XYZVector oA = boxA->GetWorldCenter(mA);
+   const ROOT::Math::XYZVector oB = boxB->GetWorldCenter(mB);
+   const ROOT::Math::XYZVector D = oB - oA;
 
    // Very cheap early rejection using bounding spheres
-   const Double_t rA = dA.Mag();
-   const Double_t rB = dB.Mag();
+   const Double_t rA = TMath::Sqrt(dA.Mag2());
+   const Double_t rB = TMath::Sqrt(dB.Mag2());
    const Double_t dmax = rA + rB - tol;
 
    // Touching within tolerance is treated as non-intersecting
@@ -970,8 +972,8 @@ bool TGeoBBox::MayIntersect(const TGeoBBox *boxA, const TGeoMatrix *mA, const TG
       return kFALSE;
 
    // World-space box axes
-   TVector3 Ax, Ay, Az;
-   TVector3 Bx, By, Bz;
+   ROOT::Math::XYZVector Ax, Ay, Az;
+   ROOT::Math::XYZVector Bx, By, Bz;
    mA->GetWorldAxes(Ax, Ay, Az);
    mB->GetWorldAxes(Bx, By, Bz);
 
@@ -991,12 +993,12 @@ bool TGeoBBox::MayIntersect(const TGeoBBox *boxA, const TGeoMatrix *mA, const TG
       return kFALSE;
 
    // SAT: cross-product axes (9 tests)
-   const TVector3 Aaxes[3] = {Ax, Ay, Az};
-   const TVector3 Baxes[3] = {Bx, By, Bz};
+   const ROOT::Math::XYZVector Aaxes[3] = {Ax, Ay, Az};
+   const ROOT::Math::XYZVector Baxes[3] = {Bx, By, Bz};
 
    for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
-         const TVector3 L = Aaxes[i].Cross(Baxes[j]);
+         const ROOT::Math::XYZVector L = Aaxes[i].Cross(Baxes[j]);
          if (IsSeparatingAxis(L, D, Ax, Ay, Az, Bx, By, Bz, dA, dB, tol))
             return kFALSE;
       }

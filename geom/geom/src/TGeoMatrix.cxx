@@ -352,7 +352,7 @@ void TGeoMatrix::GetHomogenousMatrix(Double_t *hmat) const
 /// @param[out] ay World-space direction of the local Y axis.
 /// @param[out] az World-space direction of the local Z axis.
 
-void TGeoMatrix::GetWorldAxes(TVector3 &ax, TVector3 &ay, TVector3 &az) const
+void TGeoMatrix::GetWorldAxes(ROOT::Math::XYZVector &ax, ROOT::Math::XYZVector &ay, ROOT::Math::XYZVector &az) const
 {
    const Double_t *r = GetRotationMatrix();
    ax.SetXYZ(r[0], r[3], r[6]);

@@ -124,7 +124,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     RIO
     MathCore
     Hist
-    Physics
+    GenVector
     Imt
 )
 
