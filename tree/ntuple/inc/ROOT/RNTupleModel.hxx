@@ -202,6 +202,8 @@ private:
 public:
    RNTupleModel(const RNTupleModel &) = delete;
    RNTupleModel &operator=(const RNTupleModel &) = delete;
+   RNTupleModel(RNTupleModel &&) = delete;
+   RNTupleModel &operator=(RNTupleModel &&) = delete;
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;

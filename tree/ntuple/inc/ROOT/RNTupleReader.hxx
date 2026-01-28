@@ -225,6 +225,11 @@ public:
       options.SetEnableMetrics(fMetrics.IsEnabled());
       return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone(), options));
    }
+
+   RNTupleReader(const ROOT::RNTupleReader &) = delete;
+   RNTupleReader &operator=(const ROOT::RNTupleReader &) = delete;
+   RNTupleReader(ROOT::RNTupleReader &&) = delete;
+   RNTupleReader &operator=(ROOT::RNTupleReader &&) = delete;
    ~RNTupleReader();
 
    /// Returns the number of entries in this RNTuple.
