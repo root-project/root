@@ -103,6 +103,13 @@ if (BLAS_FOUND)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
     ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
   endif()
+
+  # HardSigmoid Operator Unit Test
+  # Tests clamp constants, float suffix, linear region, and attribute handling
+  ROOT_ADD_GTEST(TestSofieHardSigmoid TestSofieHardSigmoid.cxx
+    LIBRARIES
+      ROOTTMVASofie
+  )
 endif()
 
 # Look for needed Python modules
