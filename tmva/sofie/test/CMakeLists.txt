@@ -103,6 +103,13 @@ if (BLAS_FOUND)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
     ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
   endif()
+
+  # Softplus Operator Unit Test
+  # Tests threshold hexfloat, numerical stability, overflow protection
+  ROOT_ADD_GTEST(TestSofieSoftplus TestSofieSoftplus.cxx
+    LIBRARIES
+      ROOTTMVASofie
+  )
 endif()
 
 # Look for needed Python modules
