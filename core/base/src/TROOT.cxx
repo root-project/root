@@ -2977,42 +2977,68 @@ const char**& TROOT::GetExtraInterpreterArgs() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef ROOTPREFIX
-static Bool_t IgnorePrefix() {
-   static Bool_t ignorePrefix = gSystem->Getenv("ROOTIGNOREPREFIX");
-   return ignorePrefix;
+namespace {
+
+std::string GetRelativeToSharedLibDir(const char *buildTreePath, const char *installTreePath)
+{
+   namespace fs = std::filesystem;
+
+   // The shared library directory can be found automatically, because the
+   // libCore is loaded by definition when using TROOT. It's used as the anchor
+   // to resolve other resource directories, using the correct relative path
+   // for either the build or install tree.
+   fs::path libPath = TROOT::GetSharedLibDir().Data();
+
+   // Check if we are in the build tree using the build tree marker file
+   static const bool isBuildTree = fs::exists(libPath / "root-build-tree-marker");
+
+   fs::path outputPath = libPath / (isBuildTree ? buildTreePath : installTreePath);
+
+   // Normalize to get rid of the "../" in relative paths
+   return outputPath.lexically_normal().string();
 }
-#endif
+
+} // namespace
+
+ROOT::Internal::ResourceDirs const &ROOT::Internal::GetResourceDirs()
+{
+   static ResourceDirs dirs;
+
+   if (dirs.initialized)
+      return dirs;
+
+   // Initialize resource directories with the correct relative paths for the
+   // build tree or the install tree.
+   dirs.bin = GetRelativeToSharedLibDir("../bin", INSTALL_LIB_TO_BIN);
+   dirs.data = GetRelativeToSharedLibDir("..", INSTALL_LIB_TO_DATA);
+   dirs.docs = GetRelativeToSharedLibDir("..", INSTALL_LIB_TO_DOCS);
+   dirs.etc = GetRelativeToSharedLibDir("../etc", INSTALL_LIB_TO_ETC);
+   dirs.fonts = GetRelativeToSharedLibDir("../fonts", INSTALL_LIB_TO_FONTS);
+   dirs.icons = GetRelativeToSharedLibDir("../icons", INSTALL_LIB_TO_ICONS);
+   dirs.include = GetRelativeToSharedLibDir("../include", INSTALL_LIB_TO_INCLUDE);
+   dirs.macros = GetRelativeToSharedLibDir("../macros", INSTALL_LIB_TO_MACROS);
+   dirs.rootsys = GetRelativeToSharedLibDir("..", INSTALL_LIB_TO_ROOTSYS);
+   dirs.src = GetRelativeToSharedLibDir("../src", INSTALL_LIB_TO_SRC);
+   dirs.tutorials = GetRelativeToSharedLibDir("../tutorials", INSTALL_LIB_TO_TUTORIALS);
+
+   dirs.initialized = true;
+
+   return dirs;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the rootsys directory in the installation. Static utility function.
 
 const TString& TROOT::GetRootSys() {
-   // Avoid returning a reference to a temporary because of the conversion
-   // between std::string and TString.
-   const static TString rootsys = ROOT::FoundationUtils::GetRootSys();
-   return rootsys;
+   return ROOT::Internal::GetResourceDirs().rootsys;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the binary directory in the installation. Static utility function.
 
-const TString& TROOT::GetBinDir() {
-#ifdef ROOTBINDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootbindir;
-      if (rootbindir.IsNull()) {
-         rootbindir = "bin";
-         gSystem->PrependPathName(GetRootSys(), rootbindir);
-      }
-      return rootbindir;
-#ifdef ROOTBINDIR
-   } else {
-      const static TString rootbindir = ROOTBINDIR;
-      return rootbindir;
-   }
-#endif
+const TString &TROOT::GetBinDir()
+{
+   return ROOT::Internal::GetResourceDirs().bin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3188,6 +3214,9 @@ const TString &TROOT::GetSharedLibDir()
 
 #endif
 
+   // Normalize to get rid of the "../" in relative paths
+   rootlibdir = fs::path{rootlibdir.Data()}.lexically_normal().string().c_str();
+
    return rootlibdir;
 }
 
@@ -3196,117 +3225,46 @@ const TString &TROOT::GetSharedLibDir()
 
 const TString &TROOT::GetIncludeDir()
 {
-   static TString rootincdir;
-
-   if (!rootincdir.IsNull())
-      return rootincdir;
-
-   namespace fs = std::filesystem;
-
-   // The shared library directory can be found automatically, because the
-   // libCore is loaded by definition when using TROOT. It's used as the anchor
-   // to resolve the ROOT include directory, using the correct relative path
-   // for either the build or install tree.
-   fs::path libPath = GetSharedLibDir().Data();
-
-   // Check if we are in the build tree using the build tree marker file
-   const bool isBuildTree = fs::exists(libPath / "root-build-tree-marker");
-
-   fs::path includePath = isBuildTree ? "../include" : INSTALL_LIB_TO_INCLUDE;
-
-   // The INSTALL_LIB_TO_INCLUDE might already be absolute
-   if (!includePath.is_absolute()) {
-      includePath = libPath / includePath;
-   }
-
-   // Normalize to get rid of the "../" in relative paths
-   rootincdir = includePath.lexically_normal().string();
-
-   return rootincdir;
+   return ROOT::Internal::GetResourceDirs().include;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the sysconfig directory in the installation. Static utility function.
 
-const TString& TROOT::GetEtcDir() {
-   // Avoid returning a reference to a temporary because of the conversion
-   // between std::string and TString.
-   const static TString etcdir = ROOT::FoundationUtils::GetEtcDir();
-   return etcdir;
+const TString &TROOT::GetEtcDir()
+{
+   return ROOT::Internal::GetResourceDirs().etc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the data directory in the installation. Static utility function.
 
 const TString& TROOT::GetDataDir() {
-#ifdef ROOTDATADIR
-   if (IgnorePrefix()) {
-#endif
-      return GetRootSys();
-#ifdef ROOTDATADIR
-   } else {
-      const static TString rootdatadir = ROOTDATADIR;
-      return rootdatadir;
-   }
-#endif
+   return ROOT::Internal::GetResourceDirs().data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the documentation directory in the installation. Static utility function.
 
-const TString& TROOT::GetDocDir() {
-#ifdef ROOTDOCDIR
-   if (IgnorePrefix()) {
-#endif
-      return GetRootSys();
-#ifdef ROOTDOCDIR
-   } else {
-      const static TString rootdocdir = ROOTDOCDIR;
-      return rootdocdir;
-   }
-#endif
+const TString &TROOT::GetDocDir()
+{
+   return ROOT::Internal::GetResourceDirs().docs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the macro directory in the installation. Static utility function.
 
-const TString& TROOT::GetMacroDir() {
-#ifdef ROOTMACRODIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootmacrodir;
-      if (rootmacrodir.IsNull()) {
-         rootmacrodir = "macros";
-         gSystem->PrependPathName(GetRootSys(), rootmacrodir);
-      }
-      return rootmacrodir;
-#ifdef ROOTMACRODIR
-   } else {
-      const static TString rootmacrodir = ROOTMACRODIR;
-      return rootmacrodir;
-   }
-#endif
+const TString &TROOT::GetMacroDir()
+{
+   return ROOT::Internal::GetResourceDirs().macros;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the tutorials directory in the installation. Static utility function.
 
-const TString& TROOT::GetTutorialDir() {
-#ifdef ROOTTUTDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString roottutdir;
-      if (roottutdir.IsNull()) {
-         roottutdir = "tutorials";
-         gSystem->PrependPathName(GetRootSys(), roottutdir);
-      }
-      return roottutdir;
-#ifdef ROOTTUTDIR
-   } else {
-      const static TString roottutdir = ROOTTUTDIR;
-      return roottutdir;
-   }
-#endif
+const TString &TROOT::GetTutorialDir()
+{
+   return ROOT::Internal::GetResourceDirs().tutorials;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3323,64 +3281,25 @@ void TROOT::ShutDown()
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the source directory in the installation. Static utility function.
 
-const TString& TROOT::GetSourceDir() {
-#ifdef ROOTSRCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootsrcdir;
-      if (rootsrcdir.IsNull()) {
-         rootsrcdir = "src";
-         gSystem->PrependPathName(GetRootSys(), rootsrcdir);
-      }
-      return rootsrcdir;
-#ifdef ROOTSRCDIR
-   } else {
-      const static TString rootsrcdir = ROOTSRCDIR;
-      return rootsrcdir;
-   }
-#endif
+const TString &TROOT::GetSourceDir()
+{
+   return ROOT::Internal::GetResourceDirs().src;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the icon path in the installation. Static utility function.
 
-const TString& TROOT::GetIconPath() {
-#ifdef ROOTICONPATH
-   if (IgnorePrefix()) {
-#endif
-      static TString rooticonpath;
-      if (rooticonpath.IsNull()) {
-         rooticonpath = "icons";
-         gSystem->PrependPathName(GetRootSys(), rooticonpath);
-      }
-      return rooticonpath;
-#ifdef ROOTICONPATH
-   } else {
-      const static TString rooticonpath = ROOTICONPATH;
-      return rooticonpath;
-   }
-#endif
+const TString &TROOT::GetIconPath()
+{
+   return ROOT::Internal::GetResourceDirs().icons;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the fonts directory in the installation. Static utility function.
 
-const TString& TROOT::GetTTFFontDir() {
-#ifdef TTFFONTDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString ttffontdir;
-      if (ttffontdir.IsNull()) {
-         ttffontdir = "fonts";
-         gSystem->PrependPathName(GetRootSys(), ttffontdir);
-      }
-      return ttffontdir;
-#ifdef TTFFONTDIR
-   } else {
-      const static TString ttffontdir = TTFFONTDIR;
-      return ttffontdir;
-   }
-#endif
+const TString &TROOT::GetTTFFontDir()
+{
+   return ROOT::Internal::GetResourceDirs().fonts;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

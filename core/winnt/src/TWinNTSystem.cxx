@@ -827,9 +827,7 @@ namespace {
 
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
-      TString rootmacrodir = "macros";
-      sys->PrependPathName(std::getenv("ROOTSYS"), rootmacrodir);
-      sys->PrependPathName(rootmacrodir.Data(), fileopen);
+      sys->PrependPathName(gROOT->GetMacroDir().Data(), fileopen);
 
       if (regROOTwrite) {
          // only write to registry if fileopen.C is readable
@@ -1004,40 +1002,6 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 
    char *buf = new char[MAX_MODULE_NAME32 + 1];
 
-#ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
-#endif
-   // set ROOTSYS
-   HMODULE hModCore = ::GetModuleHandle("libCore.dll");
-   if (hModCore) {
-      ::GetModuleFileName(hModCore, buf, MAX_MODULE_NAME32 + 1);
-      char *pLibName = strstr(buf, "libCore.dll");
-      if (pLibName) {
-         --pLibName; // skip trailing \\ or /
-         while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
-         *pLibName = 0; // replace trailing \\ or / with 0
-         TString check_path = buf;
-         check_path += "\\etc";
-         // look for $ROOTSYS (it should contain the "etc" subdirectory)
-         while (buf[0] && GetFileAttributes(check_path.Data()) == INVALID_FILE_ATTRIBUTES) {
-            while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
-            *pLibName = 0;
-            check_path = buf;
-            check_path += "\\etc";
-         }
-         if (buf[0]) {
-            Setenv("ROOTSYS", buf);
-            TString path = buf;
-            path += "\\bin;";
-            path += Getenv("PATH");
-            Setenv("PATH", path.Data());
-         }
-      }
-   }
-#ifdef ROOTPREFIX
-   }
-#endif
-
    UpdateRegistry(this, buf);
 
    delete [] buf;
@@ -1103,9 +1067,6 @@ Bool_t TWinNTSystem::Init()
    ::SetUnhandledExceptionFilter(ExceptionFilter);
 
    fSigcnt = 0;
-
-   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
