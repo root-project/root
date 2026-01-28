@@ -40,11 +40,23 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       return TMath::QuietNaN();
    }
 
-   if   (num == 200)//expo: exp(p0+p1*x)
-   {
-      result = ( exp(p[0]+p[1]*xmax) - exp(p[0]+p[1]*xmin))/p[1];
+   else if (num == 200) { // expo: exp(p0 + p1*x)
+      const double p0 = p[0];
+      const double p1 = p[1];
+
+      if (p1 == 0) {
+         // Limit p1 -> 0: integral of constant exp(p0)
+         result = std::exp(p0) * (xmax - xmin);
+      } else {
+         const double ea = p0 + p1 * xmin;
+         const double eb = p0 + p1 * xmax;
+
+         // Use expm1 for improved numerical stability when eb ~ ea
+         result = std::exp(ea) * std::expm1(eb - ea) / p1;
+      }
    }
-   else if (num == 100)//gaus: [0]*exp(-0.5*((x-[1])/[2])^2))
+
+   else if (num == 100) // gaus: [0]*exp(-0.5*((x-[1])/[2])^2))
    {
       double amp   = p[0];
       double mean  = p[1];
@@ -54,8 +66,7 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       else
          result = amp * sqrt(2 * TMath::Pi()) * sigma *
                   (ROOT::Math::gaussian_cdf(xmax, sigma, mean) - ROOT::Math::gaussian_cdf(xmin, sigma, mean)); //
-   }
-   else if (num == 400)//landau: root::math::landau(x,mpv=0,sigma=1,bool norm=false)
+   } else if (num == 400) // landau: root::math::landau(x,mpv=0,sigma=1,bool norm=false)
    {
 
       double amp   = p[0];
@@ -66,8 +77,7 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
          result = amp*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
       else
          result = amp*sigma*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
-   }
-   else if (num == 500) //crystal ball
+   } else if (num == 500) // crystal ball
    {
       double amp   = p[0];
       double mean  = p[1];
@@ -83,15 +93,14 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       }
    }
 
-   else if (num >= 300 && num < 400)//polN
+   else if (num >= 300 && num < 400) // polN
    {
       Int_t n = num - 300;
       for (int i=0;i<n+1;i++)
       {
          result += p[i]/(i+1)*(std::pow(xmax,i+1)-std::pow(xmin,i+1));
       }
-   }
-   else
+   } else
       result = TMath::QuietNaN();
 
    return result;
