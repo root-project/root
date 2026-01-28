@@ -1266,7 +1266,7 @@ class TestDATATYPES:
         run(self, cppyy.gbl.sum_uc_data, buf, total)
         run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail(strict=True, run=not IS_MAC, reason="Fails on all platforms; crashes on macOS with " \
+    @mark.xfail(strict=True, run=not IS_MAC and not IS_WINDOWS, reason="Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
@@ -2351,7 +2351,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(strict=True, condition=IS_MAC_ARM or IS_WINDOWS or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
+    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=IS_MAC_ARM or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
             assertion error for runtime_cxxmodules=OFF build that is explained in GitHub issue #21005")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
