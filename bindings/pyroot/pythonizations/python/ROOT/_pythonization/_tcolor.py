@@ -7,19 +7,22 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+
+import functools
+
 from . import pythonization
 
-def _TColor_constructor(self, *args, **kwargs):
-    """
-    Forward the arguments to the C++ constructor and retain ownership. This
-    helps avoiding double deletes due to ROOT automatic memory management.
-    """
-    self._cpp_constructor(*args, **kwargs)
-    import ROOT
-    ROOT.SetOwnership(self, False)
+
+def _tcolor_constructor(original_init):
+    @functools.wraps(original_init)
+    def wrapper(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        import ROOT
+        ROOT.SetOwnership(self, False)
+    return wrapper
 
 
 @pythonization("TColor")
 def pythonize_tcolor(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TColor_constructor
+    klass.__init__ = _tcolor_constructor(klass.__init__)
+
