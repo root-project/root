@@ -143,6 +143,12 @@ private:
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
+   // fLastOffset tracks the file pointer for THIS source instance.
+   // Thread safety is guaranteed because RPageSourceFile instances
+   // are effectively thread-local (owned by a specific RNTupleReader/PageSource).
+   std::size_t fLastOffset = 0;
+   void UpdateReadMetrics(std::uint64_t offset, std::size_t nbytes);
+
    RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the

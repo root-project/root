@@ -295,14 +295,107 @@ private:
    std::string fName;
    bool fIsEnabled = false;
 
+   std::atomic<std::uint64_t> fSumSkip{0};           ///< Sum of seek distances
+   std::atomic<std::uint64_t> fTotalFileSize{0};     ///< Total size of the backing file
+   std::atomic<std::uint64_t> fExplicitBytesRead{0}; ///< Mirrored counter for API access
+   std::atomic<std::uint64_t> fTransactions{0};      ///< Number of I/O transactions
+
    bool Contains(const std::string &name) const;
 
 public:
+   void AddSumSkip(std::uint64_t n) { fSumSkip += n; }
+   void AddExplicitBytesRead(std::uint64_t n) { fExplicitBytesRead += n; }
+   void AddTransactions(std::uint64_t n) { fTransactions += n; }
+   void SetTotalFileSize(std::uint64_t n) { fTotalFileSize = n; }
+   std::uint64_t GetTotalFileSize() const { return fTotalFileSize; }
+
    explicit RNTupleMetrics(const std::string &name) : fName(name) {}
+
+   /// \brief Returns the sparseness metric: ratio of payload bytes read to total file size.
+   /// \return Value in [0.0, 1.0]. Returns 0.0 if file size is unknown or 0.
+   double GetSparseness() const {
+      std::uint64_t totalSize = fTotalFileSize;
+      std::uint64_t totalBytes = fExplicitBytesRead;
+      for (auto *m : fObservedMetrics) {
+         totalSize += m->fTotalFileSize;
+         totalBytes += m->fExplicitBytesRead;
+      }
+      return totalSize > 0 ? (double)totalBytes / (double)totalSize : 0.0;
+   }
+
+   /// \brief Returns the randomness metric: ratio of seek distance to bytes read.
+   /// Higher values indicate inefficient, non-sequential access patterns.
+   /// \return Ratio >= 0.0. Returns 0.0 if no bytes have been read.
+   double GetRandomness() const {
+      std::uint64_t totalSkip = fSumSkip;
+      std::uint64_t totalBytes = fExplicitBytesRead;
+      for (auto *m : fObservedMetrics) {
+         totalSkip += m->fSumSkip;
+         totalBytes += m->fExplicitBytesRead;
+      }
+      return totalBytes > 0 ? (double)totalSkip / (double)totalBytes : 0.0;
+   }
+
+   /// \brief Returns the transactions metric: total number of I/O operations.
+   /// Counts all read operations across this metrics object and observed sub-metrics.
+   /// \return Total number of read transactions.
+   std::uint64_t GetTransactions() const {
+      std::uint64_t total = fTransactions;
+      for (auto *m : fObservedMetrics) {
+         total += m->GetTransactions();
+      }
+      return total;
+   }
+
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
-   RNTupleMetrics(RNTupleMetrics &&other) = default;
-   RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
+   
+   RNTupleMetrics(RNTupleMetrics &&other) 
+      : fCounters(std::move(other.fCounters)),
+        fObservedMetrics(std::move(other.fObservedMetrics)),
+        fName(std::move(other.fName)),
+        fIsEnabled(other.fIsEnabled),
+        fSumSkip(other.fSumSkip.load()),
+        fTotalFileSize(other.fTotalFileSize.load()),
+        fExplicitBytesRead(other.fExplicitBytesRead.load()),
+        fTransactions(other.fTransactions.load())
+   {
+       other.fSumSkip.store(0);
+       other.fTotalFileSize.store(0);
+       other.fExplicitBytesRead.store(0);
+       other.fTransactions.store(0);
+   }
+
+   RNTupleMetrics & operator=(RNTupleMetrics &&other) {
+      if (this != &other) {
+         fCounters = std::move(other.fCounters);
+         fObservedMetrics = std::move(other.fObservedMetrics);
+         fName = std::move(other.fName);
+         fIsEnabled = other.fIsEnabled;
+         fSumSkip.store(other.fSumSkip.load());
+         fTotalFileSize.store(other.fTotalFileSize.load());
+         fExplicitBytesRead.store(other.fExplicitBytesRead.load());
+         fTransactions.store(other.fTransactions.load());
+         
+         other.fSumSkip.store(0);
+         other.fTotalFileSize.store(0);
+         other.fExplicitBytesRead.store(0);
+         other.fTransactions.store(0);
+      }
+      return *this;
+   }
+   
+   /// \brief Resets accumulated metrics (skip distance and bytes read).
+   /// File size is not reset as it's an invariant property.
+   void Reset() {
+      fSumSkip = 0;
+      fExplicitBytesRead = 0;
+      fTransactions = 0;
+      // fTotalFileSize is constant, so we don't reset it.
+      for (auto *m : fObservedMetrics) {
+          m->Reset();
+      }
+   }
    ~RNTupleMetrics() = default;
 
    // TODO(jblomer): return a reference

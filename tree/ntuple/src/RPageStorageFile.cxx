@@ -379,7 +379,10 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
        (fAnchor->GetNBytesHeader() + fAnchor->GetNBytesFooter() > readvLimits.fMaxTotalSize)) {
       RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
       fReader.ReadBuffer(fStructureBuffer.fPtrHeader, fAnchor->GetNBytesHeader(), fAnchor->GetSeekHeader());
+      UpdateReadMetrics(fAnchor->GetSeekHeader(), fAnchor->GetNBytesHeader());
       fReader.ReadBuffer(fStructureBuffer.fPtrFooter, fAnchor->GetNBytesFooter(), fAnchor->GetSeekFooter());
+      UpdateReadMetrics(fAnchor->GetSeekFooter(), fAnchor->GetNBytesFooter());
+      fMetrics.AddTransactions(2);
       fCounters->fNRead.Add(2);
    } else {
       RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
@@ -390,6 +393,9 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
                                                           {fStructureBuffer.fPtrFooter, fAnchor->GetSeekFooter(),
                                                            static_cast<std::size_t>(fAnchor->GetNBytesFooter()), 0}};
       fFile->ReadV(readRequests, 2);
+      UpdateReadMetrics(fAnchor->GetSeekHeader(), fAnchor->GetNBytesHeader());
+      UpdateReadMetrics(fAnchor->GetSeekFooter(), fAnchor->GetNBytesFooter());
+      fMetrics.AddTransactions(1);
       fCounters->fNReadV.Inc();
    }
 }
@@ -420,6 +426,9 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
       auto *zipBuffer = buffer.data() + cgDesc.GetPageListLength();
       fReader.ReadBuffer(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
                          cgDesc.GetPageListLocator().GetPosition<std::uint64_t>());
+      UpdateReadMetrics(cgDesc.GetPageListLocator().GetPosition<std::uint64_t>(),
+                        cgDesc.GetPageListLocator().GetNBytesOnStorage());
+      fMetrics.AddTransactions(1);
       RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
                                  cgDesc.GetPageListLength(), buffer.data());
 
@@ -428,6 +437,9 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
    fFile->SetBuffering(false);
+
+   // Initialize total file size for sparseness metric
+   fMetrics.SetTotalFileSize(fFile->GetSize());
 
    return desc;
 }
@@ -452,6 +464,8 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPage(ROOT::DescriptorId_t physic
    if (pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero) {
       fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
                          pageInfo.GetLocator().GetPosition<std::uint64_t>());
+      UpdateReadMetrics(pageInfo.GetLocator().GetPosition<std::uint64_t>(), sealedPage.GetBufferSize());
+      fMetrics.AddTransactions(1);
    } else {
       assert(!pageInfo.HasChecksum());
       memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
@@ -494,6 +508,8 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
          RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
                             pageInfo.GetLocator().GetPosition<std::uint64_t>());
+         UpdateReadMetrics(pageInfo.GetLocator().GetPosition<std::uint64_t>(), sealedPage.GetBufferSize());
+         fMetrics.AddTransactions(1);
       }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
@@ -703,9 +719,15 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
          nBatch = 1;
          RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fReader.ReadBuffer(readRequests[iReq].fBuffer, readRequests[iReq].fSize, readRequests[iReq].fOffset);
+         UpdateReadMetrics(readRequests[iReq].fOffset, readRequests[iReq].fSize);
+         fMetrics.AddTransactions(1);
       } else {
          RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fFile->ReadV(&readRequests[iReq], nBatch);
+         for (size_t k = 0; k < nBatch; ++k) {
+            UpdateReadMetrics(readRequests[iReq + k].fOffset, readRequests[iReq + k].fSize);
+         }
+         fMetrics.AddTransactions(1);
       }
       fCounters->fNReadV.Inc();
       fCounters->fNRead.Add(nBatch);
@@ -720,4 +742,28 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
 void ROOT::Internal::RPageSourceFile::LoadStreamerInfo()
 {
    fReader.LoadStreamerInfo();
+}
+
+void ROOT::Internal::RPageSourceFile::UpdateReadMetrics(std::uint64_t offset, std::size_t nbytes)
+{
+   if (fMetrics.GetTotalFileSize() == 0 && fFile) {
+       fMetrics.SetTotalFileSize(fFile->GetSize());
+   }
+
+   std::size_t skip = 0;
+   if (fLastOffset != 0) {
+      // Calculate absolute seek distance (Manhattan distance) for the disk head.
+      // Forward: Gap between end of last read and start of new read.
+      // Backward: Distance from end of last read back to start of new read.
+      if (offset > fLastOffset){
+         skip = offset - fLastOffset;
+      }
+      else{
+         skip = fLastOffset - offset;
+      }
+   }
+
+   fMetrics.AddSumSkip(skip);
+   fMetrics.AddExplicitBytesRead(nbytes);
+   fLastOffset = offset + nbytes;
 }

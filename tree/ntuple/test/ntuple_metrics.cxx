@@ -112,3 +112,48 @@ TEST(Metrics, RNTupleWriter)
    // one page for the int field, one for the float field
    EXPECT_EQ(2, page_counter->GetValueAsInt());
 }
+
+TEST(Metrics, IOMetrics)
+{
+   // Setup: Write a small dummy ntuple
+   {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<int>("val");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", "test_metrics.root");
+      for (int i = 0; i < 1000; ++i) {
+         *field = i;
+         writer->Fill();
+      }
+   }
+
+   // Read it back and check metrics
+   auto reader = RNTupleReader::Open("ntuple", "test_metrics.root");
+   reader->EnableMetrics();
+
+   for (auto entry : *reader) {
+      (void)entry;
+   }
+
+   auto& metrics = reader->GetMetrics();
+
+   // Assertions
+   // Sparseness: Should be > 0 (we read data) and <= 1.0
+   EXPECT_GT(metrics.GetSparseness(), 0.0);
+   EXPECT_LE(metrics.GetSparseness(), 1.0);
+
+   // Randomness: Should be > 0 (we had to seek to header/footer)
+   EXPECT_GT(metrics.GetRandomness(), 0.0);
+
+   // Transactions: We definitely did I/O
+   EXPECT_GT(metrics.GetTransactions(), 0);
+
+   // Test Reset()
+   // Note: We need a non-const reference to call Reset.
+   // RNTupleReader::GetMetrics() returns a reference, so this works.
+   reader->GetMetrics().Reset();
+
+   EXPECT_DOUBLE_EQ(metrics.GetRandomness(), 0.0);
+   EXPECT_DOUBLE_EQ(metrics.GetSparseness(), 0.0);
+   // Transactions should also be reset
+   EXPECT_EQ(metrics.GetTransactions(), 0);
+}
