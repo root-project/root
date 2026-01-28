@@ -40,15 +40,27 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       return TMath::QuietNaN();
    }
 
-   if   (num == 200)//expo: exp(p0+p1*x)
-   {
-      result = ( exp(p[0]+p[1]*xmax) - exp(p[0]+p[1]*xmin))/p[1];
+   else if (num == 200) { // expo: exp(p0 + p1*x)
+   const double p0 = p[0];
+   const double p1 = p[1];
+
+   if (p1 == 0) {
+      // Limit p1 -> 0: integral of constant exp(p0)
+      result = std::exp(p0) * (xmax - xmin);
+   } else {
+      const double ea = p0 + p1 * xmin;
+      const double eb = p0 + p1 * xmax;
+      result = (std::exp(eb) - std::exp(ea)) / p1;
    }
+}
+
    else if (num == 100)//gaus: [0]*exp(-0.5*((x-[1])/[2])^2))
    {
       double amp   = p[0];
       double mean  = p[1];
       double sigma = p[2];
+      if (sigma <= 0)
+   return TMath::QuietNaN();
       if (formula->TestBit(TFormula::kNormalized))
          result = amp * (ROOT::Math::gaussian_cdf(xmax, sigma, mean) - ROOT::Math::gaussian_cdf(xmin, sigma, mean));
       else
@@ -61,6 +73,8 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       double amp   = p[0];
       double mean  = p[1];
       double sigma = p[2];
+      if (sigma <= 0)
+      return TMath::QuietNaN();
       //printf("computing integral for landau in [%f,%f] for m=%f s = %f \n",xmin,xmax,mean,sigma);
       if (formula->TestBit(TFormula::kNormalized) )
          result = amp*(ROOT::Math::landau_cdf(xmax,sigma,mean) - ROOT::Math::landau_cdf(xmin,sigma,mean));
@@ -74,7 +88,8 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       double sigma = p[2];
       double alpha = p[3];
       double n     = p[4];
-
+      if (sigma <= 0 || n <= 0)
+   return TMath::QuietNaN();
       //printf("computing integral for CB in [%f,%f] for m=%f s = %f alpha = %f n = %f\n",xmin,xmax,mean,sigma,alpha,n);
       if (alpha > 0)
          result = amp*( ROOT::Math::crystalball_integral(xmin,alpha,n,sigma,mean) -  ROOT::Math::crystalball_integral(xmax,alpha,n,sigma,mean) );
