@@ -1,9 +1,11 @@
 name: CppInterOp-wasm
 channels:
-  - https://repo.prefix.dev/emscripten-forge-dev
+  - https://prefix.dev/emscripten-forge-4x
+  - https://prefix.dev/conda-forge
 dependencies:
-  - emscripten-abi==3.1.73
-  - nlohmann_json=3.12.0
+  - emscripten-abi==4.0.9
+  - nlohmann_json
+  - nlohmann_json-abi
   - xeus-lite
   - xeus
   - cpp-argparse
