@@ -1387,6 +1387,29 @@ class TestREGRESSION:
         with raises(cppyy.gbl.std.logic_error):
             foo.bar()
 
+    def test47_initializer_list_fail(self, capfd):
+        """Conversion to intializer_list requires default constructor"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace regression_test47 {
+        std::size_t size = 0;
+        struct IntWrapper { IntWrapper(int i) : fInt(i) {} int fInt; };
+        void f(std::initializer_list<IntWrapper> l) {}
+        void f(std::vector<IntWrapper> l) { size = l.size(); }
+        }""")
+
+        r47 = cppyy.gbl.regression_test47
+
+        assert r47.size == 0
+
+        r47.f([1])
+        assert r47.size == 1
+        (out, err) = capfd.readouterr()
+        assert out == ""
+        assert err == ""
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-v', '-ra', __file__]))
