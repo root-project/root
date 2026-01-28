@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/EP-SFT,\
  Marta Czurylo, CERN/EP-SFT,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Andrei Gheata, CERN/EP-SFT,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Stephan Hageboeck, CERN/EP-SFT,\
@@ -61,6 +62,40 @@ The following people have contributed to this new version:
 - ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
   that compiled the macro. See [TSystem::SetMakeSharedLib()](https://root.cern.ch/doc/master/classTSystem.html#a80cd12e064e2285b35e9f39b5111d20e) for
   customising or disabling the RUNPATH.
+
+## Geometry
+
+### Extensible color schemes for geometry visualization
+ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.
+
+This improves the readability of geometries imported from formats such as GDML that do not store volume colors. The default behavior now uses a name-based material classification (e.g. metals, polymers, composites, gases) with a Z-binned fallback. Three predefined color sets are provided:
+* `EGeoColorSet::kNatural` (default): material-inspired colors
+* `EGeoColorSet::kFlashy`: high-contrast, presentation-friendly colors
+* `EGeoColorSet::kHighContrast`: darker, saturated colors suited for light backgrounds
+
+Users can customize the behavior at runtime by providing hooks (std::function) to override the computed color, transparency, and/or the Z-based fallback mapping.
+
+**Usage examples:**
+```cpp
+gGeoManager->DefaultColors(); // default (natural) scheme
+
+TGeoColorScheme cs(EGeoColorSet::kFlashy);
+gGeoManager->DefaultColors(&cs); // select a predefined scheme
+```
+
+**Override examples (hooks):**
+```cpp
+TGeoColorScheme cs(EGeoColorSet::kNatural);
+cs.SetZFallbackHook([](Int_t Z, EGeoColorSet) -> Int_t {
+   float g = std::min(1.f, Z / 100.f);
+   return TColor::GetColor(g, g, g); // grayscale fallback
+});
+gGeoManager->DefaultColors(&cs);
+```
+
+A new tutorial macro demonstrates the feature and customization options: `tutorials/visualization/geom/geomColors.C`.
+
+See: https://github.com/root-project/root/pull/21047 for more details
 
 ## I/O
 
