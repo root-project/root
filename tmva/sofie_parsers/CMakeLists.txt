@@ -41,6 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParsePool.cxx
     src/ParseReduce.cxx
     src/ParseRelu.cxx
+    src/ParseGelu.cxx
     src/ParseReshape.cxx
     src/ParseRNN.cxx
     src/ParseSelu.cxx
