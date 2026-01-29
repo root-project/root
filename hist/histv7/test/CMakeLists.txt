@@ -15,4 +15,8 @@ HIST_ADD_GTEST(hist_variable hist_variable.cxx)
 
 if(NOT DEFINED histv7_standalone)
   ROOT_ADD_GTEST(hist_io hist_io.cxx LIBRARIES RIO ROOTHist)
+
+  if(pyroot)
+    ROOT_ADD_PYUNITTEST(hist_py hist.py)
+  endif()
 endif()
