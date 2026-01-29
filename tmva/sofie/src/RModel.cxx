@@ -1001,6 +1001,35 @@ void RModel::GenerateOutput()
    if (!doInferArgs.empty())
       doInferArgs.back() = ' ';
 
+   // verifying if the dynamic parameters are within allowed range
+   std::unordered_set<std::string> input_params_checked;
+   std::string dynamic_parameters_check = "";
+   for (auto &name : fInputTensorNames) {
+      if (IsDimInputTensor(name)) {
+         auto shape = GetDynamicTensorShape(name);
+         for (auto &d : shape) {
+            std::string pName = d.param;
+            if (d.isParam && input_params_checked.count(pName) == 0) {
+               std::string cap = d.param;
+               if (!cap.empty()) {
+                  cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
+               }
+               dynamic_parameters_check += d.param + " > f" + cap + " || ";
+               input_params_checked.insert(pName);
+            }
+         }
+      }
+   }
+   // remove last && from fGC
+   if (input_params_checked.size() > 0) {
+      dynamic_parameters_check = dynamic_parameters_check.substr(0, dynamic_parameters_check.size() - 4);
+      fGC += "\n" + SP + "if (" + dynamic_parameters_check + ") {\n";
+      fGC += SP + SP +
+             "throw std::runtime_error(\"TMVA-SOFIE: dynamic input tensor shape parameters exceed the initialized "
+             "maximum allowed shape.\");\n";
+      fGC += SP + "}\n";
+   }
+
    fGC += SP + "doInfer(" + doInferArgs + ");\n";
 
    fGC += SP + "return {";
@@ -1068,7 +1097,18 @@ void RModel::GenerateSessionCode()
    // generate code for declarations of some specific operators
    GenerateOperatorDeclarations();
 
-
+   // storing the parameters for future checking to avoid mismatches
+   if (!fDimShapeNames.empty()) {
+      fGC += "\n\n";
+      std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
+      for (const auto &p : fDimShapeNames) {
+         std::string cap = p;
+         if (!cap.empty()) {
+            cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
+         }
+         fGC += "size_t f" + cap + ";\n";
+      }
+   }
 
    // add subgraph session
    if (!fSubGraphs.empty()) fGC += "//   subgraph sessions\n";
@@ -1114,6 +1154,19 @@ void RModel::GenerateSessionCode()
          }
       }
       fGC += ") {\n";
+
+      // initializing dynamic parameters
+      if (!fDimShapeNames.empty()) {
+         fGC += "\n\n";
+         std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
+         for (const auto &p : fDimShapeNames) {
+            std::string cap = p;
+            if (!cap.empty()) {
+               cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
+            }
+            fGC += "   f" + cap + " = " + p + ";\n";
+         }
+      }
 
       if (fUseWeightFile) {
          fGC += "\n//--- reading weights from file\n";
