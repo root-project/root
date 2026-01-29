@@ -436,6 +436,8 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w) = 0;
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
+   virtual void     AutoZoom();  // *MENU*
+   virtual void     UnZoom();  // *MENU*
            void     Browse(TBrowser *b) override;
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
@@ -550,10 +552,11 @@ public:
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
    virtual Double_t GetRandom(TRandom *rng = nullptr, Option_t *option = "") const;
+   void             GetRangeOfFilledWeights(const Int_t dim, Int_t& first, Int_t& last, const Int_t margin, const bool includeUnderOverflow) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
-   Double_t         GetSumOfAllWeights(const bool includeOverflow) const;
+   Double_t         GetSumOfAllWeights(const bool includeUnderOverflow) const;
    /// Return the sum of weights across all bins excluding under/overflows.
    /// \see TH1::GetSumOfAllWeights()
    virtual Double_t GetSumOfWeights() const { return GetSumOfAllWeights(false); }

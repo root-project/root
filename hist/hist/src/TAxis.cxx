@@ -17,6 +17,7 @@
 #include "TList.h"
 #include "TAxisModLab.h"
 #include "TH1.h"
+#include "THStack.h"
 #include "TObjString.h"
 #include "TDatime.h"
 #include "TTimeStamp.h"
@@ -1341,6 +1342,126 @@ void TAxis::UnZoom()
    }
 
    gPad->UnZoomed();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Automatically zoom the current axis to the range of the parent histogram
+/// filled with non-zero contents (weights or errors)
+/// \note For the bin content axis (yaxis) of a TH1 or (zaxis) of a TH2,
+/// UnZoom is called instead. TH3, the PaletteAxis does not implement AutoZoom nor UnZoom
+
+void TAxis::AutoZoom()
+{
+   if (!GetParent()) {
+      Warning("TAxis::AutoZoom","Cannot AutoZoom if parent does not exist. Did you mean to draw the TAxis first?");
+      return;
+   }
+   if (!GetParent()->InheritsFrom(TH1::Class())) {
+      Warning("TAxis::AutoZoom","Cannot AutoZoom if axis parent (of type `%s`) does not derive from TH1.", GetParent()->ClassName());
+      return;
+   } 
+   auto dim = strstr(GetName(), "xaxis") ? 0 : strstr(GetName(), "yaxis") ? 1 : strstr(GetName(), "zaxis") ? 2 : -1;
+   TH1 *hobj1 = static_cast<TH1 *>(GetParent());
+   Int_t first = -1, last = -1;
+
+   auto ndims = hobj1->GetDimension();
+   // Sanity checks
+   if (dim == 0) {
+      if (ndims != 1 && ndims != 2 && ndims != 3) {
+         Warning("TAxis::AutoZoom","Cannot AutoZoom xaxis if TH has %d dimension(s)", ndims);
+         return;
+      }
+   } else if (dim == 1) {
+      if (ndims == 1) {
+         UnZoom(); // For a TH1, it acts as an AutoZoom of the yaxis (bin content axis)
+         return;
+      }
+      if (ndims != 2 && ndims != 3) {
+         Warning("TAxis::AutoZoom","Cannot AutoZoom yaxis if TH has %d dimension(s)", ndims);
+         return;
+      }
+   } else if (dim == 2) {
+      if (ndims == 2) {
+         UnZoom(); // For a TH2, it acts as an AutoZoom of the zaxis (bin content axis)
+         return;
+      }
+      if (ndims != 3) {
+         Warning("TAxis::AutoZoom","Cannot AutoZoom zaxis if TH has %d dimension(s)", ndims);
+         return;
+      }
+   }
+
+   hobj1->GetRangeOfFilledWeights(dim, first, last, 1, false);
+   SetRange(first, last);
+
+   if (gPad)
+      gPad->AutoZoomed();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Automatically zoom the current axis to the range of all histograms overlaid
+/// in this pad and detect shared range filled with non-zero contents (weights or errors)
+/// \note For the bin content axis (yaxis) of a TH1 or (zaxis) of a TH2,
+/// UnZoom is called instead. TH3, the PaletteAxis does not implement AutoZoom nor UnZoom
+
+void TAxis::AutoZoomAll()
+{
+   if (!gPad) {
+      Warning("TAxis::AutoZoomAll","Cannot AutoZoomAll if gPad does not exist. Did you mean to draw the TAxis first?");
+      return;
+   }
+   gPad->SetView();
+   auto dim = strstr(GetName(), "xaxis") ? 0 : strstr(GetName(), "yaxis") ? 1 : strstr(GetName(), "zaxis") ? 2 : -1;
+   Int_t first = -1, last = -1;
+
+   Double_t globalMin = DBL_MAX;
+   Double_t globalMax = -DBL_MAX;
+   TIter next(gPad->GetListOfPrimitives());
+   while (TObject *obj= next()) {
+      if (!obj)
+         continue;
+      if (obj->InheritsFrom(TH1::Class())) {
+         TH1 *hobj = static_cast<TH1*>(obj);
+         if (dim > hobj->GetDimension())
+            continue;
+         hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
+         TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
+         if (ax) {
+            globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
+            globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
+         }
+      } else if (obj->InheritsFrom(THStack::Class())) {
+         THStack *hs = static_cast<THStack*>(obj);
+         TIter hsnext(hs->begin());
+         while (TObject *hsobj= hsnext()) {
+            if (!hsobj)
+               continue;
+            TH1 *hobj = static_cast<TH1*>(hsobj);
+            if (dim > hobj->GetDimension())
+               continue;
+            hobj->GetRangeOfFilledWeights(dim, first, last, 1, false);
+            TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
+            if (ax) {
+               globalMin = std::min(globalMin, ax->GetBinLowEdge(first));
+               globalMax = std::max(globalMax, ax->GetBinUpEdge(last));
+            }
+         }
+      }
+   }
+   next.Reset();
+   while (TObject *obj = next()) {
+      if (!obj || (!obj->InheritsFrom(TH1::Class()) && !obj->InheritsFrom(THStack::Class())))
+         continue;
+      TH1 *hobj = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : static_cast<THStack *>(obj)->GetHistogram();
+      if (dim > hobj->GetDimension())
+         continue;
+      TAxis *ax = (dim == 0) ? hobj->GetXaxis() : (dim == 1) ? hobj->GetYaxis() : (dim == 2) ? hobj->GetZaxis() : nullptr;
+      if (ax) {
+         ax->SetRangeUser(globalMin, globalMax);
+      }
+   }
+
+   gPad->AutoZoomed();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
