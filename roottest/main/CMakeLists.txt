@@ -414,6 +414,26 @@ ROOTTEST_ADD_TEST(SimpleRootcpInexistent
                   COMMAND ${TOOLS_PREFIX}/rootcp${exeext} test.root:does_not_exist test.root:
                   PASSREGEX "Error in <rootcp>: 'test.root:does_not_exist' matches no objects.")
 
+ROOTTEST_ADD_TEST(RootcpReplaceEntireFilePrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root copy_repl.root
+                  FIXTURES_SETUP main-RootcpReplaceEntireFilePrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(RootcpReplaceEntireFile
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --replace test.root copy_repl.root
+                  FIXTURES_REQUIRED main-RootcpReplaceEntireFilePrepareInput-fixture
+                  FIXTURES_SETUP main-RootcpReplaceEntireFile-fixture)
+
+ROOTTEST_ADD_TEST(RootcpReplaceEntireFileCheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -c1 copy_repl.root
+                  OUTREF RootcpReplaceEntireFile.ref
+                  FIXTURES_REQUIRED main-RootcpReplaceEntireFile-fixture
+                  FIXTURES_SETUP main-RootcpReplaceEntireFileCheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(RootcpReplaceEntireFileClean
+                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_repl.root
+                  FIXTURES_REQUIRED main-RootcpReplaceEntireFileCheckOutput-fixture)
+
 if(davix)
 ROOTTEST_ADD_TEST(RootcpReadRemote
                   COMMAND ${TOOLS_PREFIX}/rootcp${exeext} root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root copy_remote.root
