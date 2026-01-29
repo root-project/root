@@ -11,6 +11,7 @@
 
 #include <ROOT/REveManager.hxx>
 
+#include <ROOT/REveCamera.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveSelection.hxx>
 #include <ROOT/REveViewer.hxx>
@@ -141,6 +142,59 @@ REveManager::REveManager()
    fScenes = new REveSceneList("Scenes");
    fScenes->IncDenyDestroy();
    fWorld->AddElement(fScenes);
+
+   // --------------------------------
+   // Create camera list
+   // --------------------------------
+   fCameras = new REveElement("Cameras", "Camera list");
+   fCameras->IncDenyDestroy();
+   fWorld->AddElement(fCameras);
+
+   // Create predefined cameras with their view vectors, yuxiao
+   struct CameraDef {
+      REveCamera::ECameraType type;
+      const char* name;
+      REveVector v1;
+      REveVector v2;
+   };
+
+   CameraDef predefinedCameras[] = {
+      // Perspective cameras
+      {REveCamera::kCameraPerspXOZ, "PerspXOZ", 
+       REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraPerspYOZ, "PerspYOZ", 
+       REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      {REveCamera::kCameraPerspXOY, "PerspXOY", 
+       REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      
+      // Orthographic cameras
+      {REveCamera::kCameraOrthoXOY, "OrthoXOY", 
+       REveVector(0.0, 0.0, 1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXOZ, "OrthoXOZ", 
+       REveVector(0.0, -1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZOY, "OrthoZOY", 
+       REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZOX, "OrthoZOX", 
+       REveVector(0.0, -1.0, 0.0), REveVector(1.0, 0.0, 0.0)},
+      
+      // Orthographic negative cameras
+      {REveCamera::kCameraOrthoXnOY, "OrthoXnOY", 
+       REveVector(0.0, 0.0, -1.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoXnOZ, "OrthoXnOZ", 
+       REveVector(0.0, 1.0, 0.0), REveVector(0.0, 0.0, 1.0)},
+      {REveCamera::kCameraOrthoZnOY, "OrthoZnOY", 
+       REveVector(1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0)},
+      {REveCamera::kCameraOrthoZnOX, "OrthoZnOX", 
+       REveVector(0.0, 1.0, 0.0), REveVector(1.0, 0.0, 0.0)}
+   };
+
+   // Create and add all predefined cameras
+   for (const auto &camDef : predefinedCameras) {
+      auto cam = new REveCamera(camDef.name);
+      cam->Setup(camDef.type, camDef.name, camDef.v1, camDef.v2);
+      fCameras->AddElement(cam);
+      std::cout << "camera ID: " << cam->GetElementId() << std::endl;
+   }
 
    fGlobalScene = new REveScene("Geometry scene");
    fGlobalScene->IncDenyDestroy();
