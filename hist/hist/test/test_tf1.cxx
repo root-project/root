@@ -4,6 +4,7 @@
 #include "TObjArray.h"
 
 #include "gtest/gtest.h"
+#include <cmath>
 
 #include <iostream>
 
@@ -80,6 +81,31 @@ void test_normalization() {
    EXPECT_NEAR(n2.Integral(xmin, xmax), 0, delta);
    n2.SetParameter(0, 0);
    EXPECT_NEAR(n2.Integral(xmin, xmax), -.5, delta);
+}
+// Test analytical exponential integral when p1 == 0
+TEST(TF1AnalyticalIntegral, ExponentialP1Zero)
+{
+   TF1 f("f_expo_zero", "expo", 0.0, 2.0);
+   f.SetParameters(1.2, 0.0); // p0 = 1.2, p1 = 0
+
+   const double a = 0.3;
+   const double b = 1.7;
+
+   const double result = f.AnalyticalIntegral(a, b);
+   const double expected = std::exp(1.2) * (b - a);
+
+   EXPECT_NEAR(result, expected, 1e-12);
+}
+
+// Test analytical Gaussian integral with invalid sigma
+TEST(TF1AnalyticalIntegral, GaussianInvalidSigma)
+{
+   TF1 f("f_gaus_invalid", "gaus", -5.0, 5.0);
+   f.SetParameters(1.0, 0.0, 0.0); // sigma = 0
+
+   const double result = f.AnalyticalIntegral(-1.0, 1.0);
+
+   EXPECT_TRUE(std::isnan(result));
 }
 
 void voigtHelper(double sigma, double lg)
