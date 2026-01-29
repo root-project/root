@@ -30,6 +30,7 @@ using NodeIdx_t = std::uint32_t;
 
 struct RootObjNode {
    std::string fName;
+   std::int16_t fCycle = 0;
    std::string fClassName;
    TKey *fKey = nullptr; // This is non-null for all nodes except the root node (which is the file itself)
 
@@ -45,6 +46,7 @@ inline RootObjNode NodeFromKey(TKey &key)
 {
    RootObjNode node = {};
    node.fName = key.GetName();
+   node.fCycle = key.GetCycle();
    node.fClassName = key.GetClassName();
    node.fKey = &key;
    return node;
