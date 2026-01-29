@@ -53,7 +53,25 @@ public:
    ClassDef(TAttMarker,3);  //Marker attributes
 };
 
-   enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
+   enum EMarkerStyle {kDot=1,
+// clang++ (-Wshadow) complains about shadowing TMatrixT::EMatrixCreatorsOp2 or TParameter::EStatusBits. Let's silence warning:
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+                      kPlus,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+                      kStar, kCircle=4,
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+                      kMultiply=5,
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
                       kFullDotSmall=6, kFullDotMedium=7, kFullDotLarge=8,
                       kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
                       kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
