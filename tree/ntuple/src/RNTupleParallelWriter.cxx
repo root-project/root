@@ -113,6 +113,11 @@ public:
    }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
+
+   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cloning a RPageSynchronizingSink is not implemented yet"));
+   }
 };
 
 } // namespace

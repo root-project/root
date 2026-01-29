@@ -152,6 +152,9 @@ public:
    void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+
+   std::unique_ptr<RPageSink>
+   CloneWithDifferentName(std::string_view name, const RNTupleWriteOptions &opts) const final;
 }; // RPageSinkBuf
 
 } // namespace Internal

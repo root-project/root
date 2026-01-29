@@ -55,6 +55,11 @@ protected:
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 
+   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
+
 public:
    RPageSinkMock(const ROOT::RNTupleWriteOptions &options) : RPageSink("test", options) {}
 };
@@ -1203,4 +1208,27 @@ TEST(RPageSourceFile, OpenDifferentAnchor)
       EXPECT_NE(desc2->FindFieldId("i"), ROOT::kInvalidDescriptorId);
       EXPECT_NE(desc2->FindFieldId("c"), ROOT::kInvalidDescriptorId);
    }
+}
+
+TEST(RPageSinkFile, CloneWithDifferentName)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_file_diffname.ntuple");
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto opts = RNTupleWriteOptions();
+   auto model = RNTupleModel::Create();
+
+   {
+      auto sink1 = std::make_unique<RPageSinkFile>("ntuple1", *file, opts);
+      sink1->Init(*model);
+
+      auto sink2 = sink1->CloneWithDifferentName("ntuple2", opts);
+      sink2->Init(*model);
+
+      sink1->CommitDataset();
+      sink2->CommitDataset();
+   }
+
+   EXPECT_NE(file->Get<ROOT::RNTuple>("ntuple1"), nullptr);
+   EXPECT_NE(file->Get<ROOT::RNTuple>("ntuple2"), nullptr);
 }

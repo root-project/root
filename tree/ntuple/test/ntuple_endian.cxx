@@ -60,6 +60,11 @@ protected:
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
 
+   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone sink"));
+   }
+
 public:
    RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
    {

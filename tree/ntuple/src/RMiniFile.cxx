@@ -1232,7 +1232,7 @@ ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std:
    fStreamerInfoMap[infoRNTuple->GetNumber()] = infoRNTuple;
 }
 
-ROOT::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
+ROOT::Internal::RNTupleFileWriter::~RNTupleFileWriter() = default;
 
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
@@ -1315,6 +1315,16 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Exp
    R__ASSERT(ntupleDir.empty() || ntupleDir[ntupleDir.size() - 1] == '/');
    rfile.fDir = ntupleDir;
    return writer;
+}
+
+std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
+ROOT::Internal::RNTupleFileWriter::CloneWithDifferentName(std::string_view ntupleName) const
+{
+   if (auto *file = std::get_if<RImplTFile>(&fFile)) {
+      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize);
+   }
+   // TODO: support also non-TFile-based writers
+   throw ROOT::RException(R__FAIL("cannot clone a non-TFile-based RNTupleFileWriter."));
 }
 
 void ROOT::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)

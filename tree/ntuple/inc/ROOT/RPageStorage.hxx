@@ -387,6 +387,9 @@ public:
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
 
+   virtual std::unique_ptr<RPageSink>
+   CloneWithDifferentName(std::string_view name, const RNTupleWriteOptions &opts) const = 0;
+
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
