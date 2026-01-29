@@ -697,11 +697,6 @@ RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Co
    }
    std::unique_ptr<RooAbsAnaConvPdf> pdfClone(static_cast<RooAbsAnaConvPdf *>(this->Clone()));
 
-   // The actual resolution model is not serving the RooAbsAnaConvPdf
-   // in the evaluation. It was only used get the convolutions with a given
-   // basis. We can remove it for the compiled model.
-   pdfClone->removeServer(const_cast<RooAbsReal &>(pdfClone->_model.arg()), true);
-
    // The other servers will be compiled with the original normSet, but the
    // _convSet has to be evaluated unnormalized.
    RooArgList convArgClones;
