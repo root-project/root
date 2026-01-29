@@ -18,7 +18,7 @@ if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
 
-ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist)
+ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist ROOTNTuple)
 if(pyroot)
   ROOT_ADD_PYUNITTEST(rfile_py rfile.py)
 endif()

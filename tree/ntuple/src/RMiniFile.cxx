@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RFile.hxx>
 
 #include <Byteswap.h>
 #include <TBufferFile.h>
@@ -1155,6 +1156,36 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileSimple::ReserveBlobKey(std
 
 ////////////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+std::uint64_t ROOT::Internal::RNTupleFileWriter::ReserveBlobKey(T &caller, TFile &file, std::size_t nbytes,
+                                                                std::size_t len, unsigned char keyBuffer[kBlobKeyLen])
+{
+   std::uint64_t offsetKey;
+   ROOT::Internal::RKeyBlob keyBlob(&file);
+   // Since it is unknown beforehand if offsetKey is beyond the 2GB limit or not,
+   // RKeyBlob will always reserve space for a big key (version >= 1000)
+   keyBlob.Reserve(nbytes, &offsetKey);
+
+   if (keyBuffer) {
+      PrepareBlobKey(offsetKey, nbytes, len, keyBuffer);
+   } else {
+      unsigned char localKeyBuffer[kBlobKeyLen];
+      PrepareBlobKey(offsetKey, nbytes, len, localKeyBuffer);
+      caller.Write(localKeyBuffer, kBlobKeyLen, offsetKey);
+   }
+
+   if (keyBlob.WasAllocatedInAFreeSlot()) {
+      // If the key was allocated in a free slot, the last 4 bytes of its buffer contain the new size
+      // of the remaining free slot and we need to write it to disk before the key gets destroyed at the end of the
+      // function.
+      caller.Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
+   }
+
+   auto offsetData = offsetKey + kBlobKeyLen;
+
+   return offsetData;
+}
+
 void ROOT::Internal::RNTupleFileWriter::RFileProper::Write(const void *buffer, size_t nbytes, std::int64_t offset)
 {
    fDirectory->GetFile()->Seek(offset);
@@ -1166,29 +1197,26 @@ void ROOT::Internal::RNTupleFileWriter::RFileProper::Write(const void *buffer, s
 std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(size_t nbytes, size_t len,
                                                                              unsigned char keyBuffer[kBlobKeyLen])
 {
-   std::uint64_t offsetKey;
-   RKeyBlob keyBlob(fDirectory->GetFile());
-   // Since it is unknown beforehand if offsetKey is beyond the 2GB limit or not,
-   // RKeyBlob will always reserve space for a big key (version >= 1000)
-   keyBlob.Reserve(nbytes, &offsetKey);
+   auto offsetData = RNTupleFileWriter::ReserveBlobKey(*this, *fDirectory->GetFile(), nbytes, len, keyBuffer);
+   return offsetData;
+}
 
-   if (keyBuffer) {
-      PrepareBlobKey(offsetKey, nbytes, len, keyBuffer);
-   } else {
-      unsigned char localKeyBuffer[kBlobKeyLen];
-      PrepareBlobKey(offsetKey, nbytes, len, localKeyBuffer);
-      Write(localKeyBuffer, kBlobKeyLen, offsetKey);
-   }
+////////////////////////////////////////////////////////////////////////////////
 
-   if (keyBlob.WasAllocatedInAFreeSlot()) {
-      // If the key was allocated in a free slot, the last 4 bytes of its buffer contain the new size
-      // of the remaining free slot and we need to write it to disk before the key gets destroyed at the end of the
-      // function.
-      Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
-   }
+void ROOT::Internal::RNTupleFileWriter::RFileRFile::Write(const void *buffer, size_t nbytes, std::int64_t offset)
+{
+   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   file->Seek(offset);
+   bool rv = file->WriteBuffer((char *)(buffer), nbytes);
+   if (rv)
+      throw RException(R__FAIL("WriteBuffer failed."));
+}
 
-   auto offsetData = offsetKey + kBlobKeyLen;
-
+std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileRFile::ReserveBlobKey(size_t nbytes, size_t len,
+                                                                            unsigned char keyBuffer[kBlobKeyLen])
+{
+   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   auto offsetData = RNTupleFileWriter::ReserveBlobKey(*this, *file, nbytes, len, keyBuffer);
    return offsetData;
 }
 
@@ -1277,6 +1305,18 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirector
    return writer;
 }
 
+std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
+ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
+                                          std::string_view ntupleDir, std::uint64_t maxKeySize)
+{
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   auto &rfile = writer->fFile.emplace<RFileRFile>();
+   rfile.fFile = &file;
+   R__ASSERT(ntupleDir.empty() || ntupleDir[ntupleDir.size() - 1] == '/');
+   rfile.fDir = ntupleDir;
+   return writer;
+}
+
 void ROOT::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
 {
    RFileSimple *fileSimple = std::get_if<RFileSimple>(&fFile);
@@ -1295,17 +1335,25 @@ void ROOT::Internal::RNTupleFileWriter::UpdateStreamerInfos(const RNTupleSeriali
 
 void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 {
+   const auto WriteStreamerInfoToFile = [&](TFile *file) {
+      // Make sure the streamer info records used in the RNTuple are written to the file
+      TBufferFile buf(TBuffer::kWrite);
+      buf.SetParent(file);
+      for (auto [_, info] : fStreamerInfoMap)
+         buf.TagStreamerInfo(info);
+   };
+
    if (auto fileProper = std::get_if<RFileProper>(&fFile)) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
       fileProper->fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
-
-      // Make sure the streamer info records used in the RNTuple are written to the file
-      TBufferFile buf(TBuffer::kWrite);
-      buf.SetParent(fileProper->fDirectory->GetFile());
-      for (auto [_, info] : fStreamerInfoMap)
-         buf.TagStreamerInfo(info);
-
+      WriteStreamerInfoToFile(fileProper->fDirectory->GetFile());
       fileProper->fDirectory->GetFile()->Write();
+      return;
+   } else if (auto fileRFile = std::get_if<RFileRFile>(&fFile)) {
+      // Same as the case above but handled via RFile
+      fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
+      WriteStreamerInfoToFile(ROOT::Experimental::Internal::GetRFileTFile(*fileRFile->fFile));
+      fileRFile->fFile->Flush();
       return;
    }
 
@@ -1417,9 +1465,11 @@ ROOT::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len, unsign
       } else {
          offset = fileSimple->ReserveBlobKey(nbytes, len, keyBuffer);
       }
+   } else if (auto *fileProper = std::get_if<RFileProper>(&fFile)) {
+      offset = fileProper->ReserveBlobKey(nbytes, len, keyBuffer);
    } else {
-      auto &fileProper = std::get<RFileProper>(fFile);
-      offset = fileProper.ReserveBlobKey(nbytes, len, keyBuffer);
+      auto &fileRFile = std::get<RFileRFile>(fFile);
+      offset = fileRFile.ReserveBlobKey(nbytes, len, keyBuffer);
    }
    return offset;
 }
@@ -1428,9 +1478,11 @@ void ROOT::Internal::RNTupleFileWriter::WriteIntoReservedBlob(const void *buffer
 {
    if (auto *fileSimple = std::get_if<RFileSimple>(&fFile)) {
       fileSimple->Write(buffer, nbytes, offset);
+   } else if (auto *fileProper = std::get_if<RFileProper>(&fFile)) {
+      fileProper->Write(buffer, nbytes, offset);
    } else {
-      auto &fileProper = std::get<RFileProper>(fFile);
-      fileProper.Write(buffer, nbytes, offset);
+      auto &fileRFile = std::get<RFileRFile>(fFile);
+      fileRFile.Write(buffer, nbytes, offset);
    }
 }
 
