@@ -379,22 +379,32 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
                                 std::vector<NodeIdx_t>::const_iterator nodesBegin,
                                 std::vector<NodeIdx_t>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
-   const auto nNodes = std::distance(nodesBegin, nodesEnd);
+   // Calculate number of nodes, min and max name length
+   std::size_t minElemWidth = std::numeric_limits<std::size_t>::max();
+   std::size_t maxElemWidth = 0;
+   std::vector<NodeIdx_t> uniqueNodes;
+   std::string_view prevNodeName;
+   for (auto it = nodesBegin; it != nodesEnd; ++it) {
+      NodeIdx_t nodeIdx = *it;
+      const auto &node = tree.fNodes[nodeIdx];
+      // De-duplicate node names (we only print one name even if the node has multiple cycles)
+      if (node.fName == prevNodeName)
+         continue;
+      uniqueNodes.push_back(nodeIdx);
+      minElemWidth = std::min(node.fName.length(), minElemWidth);
+      maxElemWidth = std::max(node.fName.length(), maxElemWidth);
+      prevNodeName = node.fName;
+   }
+
+   const auto nNodes = uniqueNodes.size();
    if (nNodes == 0)
       return;
 
-   // Calculate the min and max column size
    V2i terminalSize = GetTerminalSize();
    terminalSize.x -= indent;
-   const auto [minElemWidthIt, maxElemWidthIt] =
-      std::minmax_element(nodesBegin, nodesEnd, [&tree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
-         const auto &a = tree.fNodes[aIdx];
-         const auto &b = tree.fNodes[bIdx];
-         return a.fName.length() < b.fName.length();
-      });
    const int minCharsBetween = 2;
-   const auto minElemWidth = tree.fNodes[*minElemWidthIt].fName.length() + minCharsBetween;
-   const auto maxElemWidth = tree.fNodes[*maxElemWidthIt].fName.length() + minCharsBetween;
+   minElemWidth += minCharsBetween;
+   maxElemWidth += minCharsBetween;
 
    // Figure out how many columns do we need
    std::size_t nCols = 0;
@@ -444,8 +454,9 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
 
    auto curCol = 0u;
    for (auto i = 0u; i < nNodes; ++i) {
-      NodeIdx_t childIdx = nodesBegin[i];
+      NodeIdx_t childIdx = uniqueNodes[i];
       const auto &child = tree.fNodes[childIdx];
+
       if (curCol == 0) {
          PrintIndent(stream, indent);
       }
@@ -463,12 +474,12 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
       // - when the current column number reaches the max number of columns
       // - when we are in recursive mode and the item is a directory with children
       // - when we are in recursive mode and the NEXT item is a directory with children
-      
+
       const bool isDirWithRecursiveDisplay = isDir && (flags & RootLsArgs::kRecursiveListing) && child.fNChildren > 0;
 
       bool nextIsDirWithRecursiveDisplay = false;
       if ((flags & RootLsArgs::kRecursiveListing) && i < nNodes - 1) {
-         NodeIdx_t nextChildIdx = nodesBegin[i + 1];
+         NodeIdx_t nextChildIdx = uniqueNodes[i + 1];
          const auto &nextChild = tree.fNodes[nextChildIdx];
          nextIsDirWithRecursiveDisplay =
             nextChild.fNChildren > 0 && ClassInheritsFrom(nextChild.fClassName.c_str(), "TDirectory");
@@ -600,13 +611,14 @@ int main(int argc, char **argv)
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
 
-   // sort leaves by name
+   // sort leaves by namecycle
    for (auto &source : args.fSources) {
       std::sort(source.fObjectTree.fLeafList.begin(), source.fObjectTree.fLeafList.end(),
                 [&tree = source.fObjectTree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
                    const auto &a = tree.fNodes[aIdx];
                    const auto &b = tree.fNodes[bIdx];
-                   return a.fName < b.fName;
+                   // Note that we order by decreasing cycle, i.e. from most to least recent
+                   return (a.fName != b.fName) ? a.fName < b.fName : a.fCycle > b.fCycle;
                 });
    }
 
