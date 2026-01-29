@@ -71,16 +71,16 @@ static const char *const kLongHelp = R"(
 Display ROOT files contents in the terminal.
 
 positional arguments:
-  FILE                  Input file
+  FILE                    Input file
 
 options:
-  -h, --help            show this help message and exit
-  -1, --oneColumn       Print content in one column
-  -l, --longListing     Use a long listing format.
-  -t, --treeListing     Print tree recursively and use a long listing format.
-  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
-  -r, --recursiveListing
-                        Traverse file recursively entering any TDirectory.
+  -h, --help              show this help message and exit
+  -1, --oneColumn         Print content in one column
+  -c, --allCycles         Force display of all objects' cycles
+  -l, --longListing       Use a long listing format.
+  -t, --treeListing       Print tree recursively and use a long listing format.
+  -R, --rntupleListing    Print RNTuples recursively and use a long listing format.
+  -r, --recursiveListing  Traverse file recursively entering any TDirectory.
 
 Examples:
 - rootls example.root
@@ -126,6 +126,7 @@ struct RootLsArgs {
       kTreeListing = 0x4,
       kRNTupleListing = 0x8,
       kRecursiveListing = 0x10,
+      kForceAllCycles = 0x20,
    };
 
    enum class EPrintUsage {
@@ -379,6 +380,8 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
                                 std::vector<NodeIdx_t>::const_iterator nodesBegin,
                                 std::vector<NodeIdx_t>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
+   const bool displayAllCycles = (flags & RootLsArgs::kForceAllCycles);
+
    // Calculate number of nodes, min and max name length
    std::size_t minElemWidth = std::numeric_limits<std::size_t>::max();
    std::size_t maxElemWidth = 0;
@@ -387,12 +390,19 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
    for (auto it = nodesBegin; it != nodesEnd; ++it) {
       NodeIdx_t nodeIdx = *it;
       const auto &node = tree.fNodes[nodeIdx];
-      // De-duplicate node names (we only print one name even if the node has multiple cycles)
-      if (node.fName == prevNodeName)
+      // De-duplicate node names (we only print one name even if the node has multiple cycles - unless we have the
+      // kForceAllCycles flag active)
+      if (!displayAllCycles && node.fName == prevNodeName)
          continue;
       uniqueNodes.push_back(nodeIdx);
-      minElemWidth = std::min(node.fName.length(), minElemWidth);
-      maxElemWidth = std::max(node.fName.length(), maxElemWidth);
+      auto elemWidth = node.fName.length();
+      if (displayAllCycles) {
+         // If we're displaying the cycles we need to keep that in mind for calculating the column widths.
+         const auto cycleLen = std::to_string(node.fCycle).length();
+         elemWidth += cycleLen + 1; // +1 to account for the ';'
+      }
+      minElemWidth = std::min(elemWidth, minElemWidth);
+      maxElemWidth = std::max(elemWidth, maxElemWidth);
       prevNodeName = node.fName;
    }
 
@@ -426,7 +436,12 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
                if ((j % nCols) == colIdx) {
                   NodeIdx_t childIdx = nodesBegin[j];
                   const RootObjNode &child = tree.fNodes[childIdx];
-                  width = std::max<int>(width, child.fName.length() + minCharsBetween);
+                  auto nameLen = child.fName.length();
+                  if (displayAllCycles) {
+                     const auto cycleLen = std::to_string(child.fCycle).length();
+                     nameLen += cycleLen + 1; // +1 to account for the ';'
+                  }
+                  width = std::max<int>(width, nameLen + minCharsBetween);
                }
             }
 
@@ -487,10 +502,11 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
 
       const bool isExtremal = (((curCol + 1) % nCols) == 0) || (i == nNodes - 1) || isDirWithRecursiveDisplay ||
                               nextIsDirWithRecursiveDisplay;
+      auto nodeName = child.fName + (displayAllCycles ? ";" + std::to_string(child.fCycle) : "");
       if (!isExtremal) {
-         stream << std::left << std::setw(colWidths[curCol % nCols]) << child.fName;
+         stream << std::left << std::setw(colWidths[curCol % nCols]) << nodeName;
       } else {
-         stream << std::setw(1) << child.fName;
+         stream << std::setw(1) << nodeName;
       }
       stream << Color(kAnsiNone);
 
@@ -562,6 +578,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    opts.AddFlag({"-t", "--treeListing"});
    opts.AddFlag({"-R", "--rntupleListing"});
    opts.AddFlag({"-r", "--recursiveListing"});
+   opts.AddFlag({"-c", "--allCycles"});
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
@@ -582,6 +599,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    outArgs.fFlags |= opts.GetSwitch("treeListing") * RootLsArgs::kTreeListing;
    outArgs.fFlags |= opts.GetSwitch("recursiveListing") * RootLsArgs::kRecursiveListing;
    outArgs.fFlags |= opts.GetSwitch("rntupleListing") * RootLsArgs::kRNTupleListing;
+   outArgs.fFlags |= opts.GetSwitch("allCycles") * RootLsArgs::kForceAllCycles;
 
    // Positional arguments
    auto flags = !!(outArgs.fFlags & RootLsArgs::kRecursiveListing) * EGetMatchingPathsFlags::kRecursive;
