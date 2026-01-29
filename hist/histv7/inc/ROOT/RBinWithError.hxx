@@ -58,26 +58,22 @@ struct RBinWithError final {
       return *this;
    }
 
-   void AtomicInc()
+private:
+   void AtomicAdd(double a, double a2)
    {
-      Internal::AtomicInc(&fSum);
-      Internal::AtomicInc(&fSum2);
+      Internal::AtomicAdd(&fSum, a);
+      Internal::AtomicAdd(&fSum2, a2);
    }
 
-   void AtomicAdd(double w)
-   {
-      Internal::AtomicAdd(&fSum, w);
-      Internal::AtomicAdd(&fSum2, w * w);
-   }
+public:
+   void AtomicInc() { AtomicAdd(1.0, 1.0); }
+
+   void AtomicAdd(double w) { AtomicAdd(w, w * w); }
 
    /// Add another bin content using atomic instructions.
    ///
    /// \param[in] rhs another bin content that must not be modified during the operation
-   void AtomicAdd(const RBinWithError &rhs)
-   {
-      Internal::AtomicAdd(&fSum, rhs.fSum);
-      Internal::AtomicAdd(&fSum2, rhs.fSum2);
-   }
+   void AtomicAdd(const RBinWithError &rhs) { AtomicAdd(rhs.fSum, rhs.fSum2); }
 };
 
 } // namespace Experimental
