@@ -18,15 +18,15 @@ set(root_includepaths
 )
 cmake_path(CONVERT "${root_includepaths}" TO_NATIVE_PATH_LIST root_includepaths_native)
 
-# The environment argument gets serialized in ROOT_ADD_TEST for the
-# RootTestDriver, and then deserialized in the latter with multiple steps of
-# string parsing. We have to escape the semicolon excessively, because in every
-# parsing step we lose one semicolon. Also we use the SEMICOLON generator
-# expression, so at least we don't have to worry about escaping for the initial
-# configuration stage.
-# TODO: consider improving ROOT_ADD_TEST and RootTestDriver.cmake so this is not necessary.
-string(REPLACE ";" "\\\\\\\\$<SEMICOLON>" pythonpaths_escaped "${pythonpaths_native}")
-string(REPLACE ";" "\\\\\\\\$<SEMICOLON>" root_includepaths_escaped "${root_includepaths_native}")
+# Use the $<SEMICOLON> generator expression to defer semicolon expansion until
+# generator-expression evaluation. This avoids CMake interpreting literal ';'
+# as list separators during argument handling.
+#
+# ROOT_ADD_TEST performs multiple string-to-list conversions when serializing
+# the test command, which makes it unsafe to pass literal semicolons in
+# arguments until this behavior is fixed.
+string(REPLACE ";" "$<SEMICOLON>" pythonpaths_escaped "${pythonpaths_native}")
+string(REPLACE ";" "$<SEMICOLON>" root_includepaths_escaped "${root_includepaths_native}")
 
 # - Set the environment for the tutorials, which also contains some environment
 # variables related to limiting the number of threads used by NumPy and
