@@ -250,4 +250,8 @@
 // Tables
 #pragma link C++ class ROOT::Experimental::REveTableViewInfo;
 
+// Camera
+#pragma link C++ class ROOT::Experimental::REveCamera+;
+#pragma link C++ enum ROOT::Experimental::REveCamera::ECameraType;
+
 #endif

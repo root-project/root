@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveViewer.hxx>
-
+#include <ROOT/REveCamera.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveSceneInfo.hxx>
@@ -34,9 +34,34 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 /// Constructor.
 
 REveViewer::REveViewer(const std::string& n, const std::string& t) :
-   REveElement(n, t)
+   REveElement(n, t),
+   fCamera(nullptr)
 {
-   // SetChildClass(TClass::GetClass<REveSceneInfo>());
+   // Set default camera to kCameraPerspXOZ
+   if (gEve)
+   {
+      auto cameras = gEve->GetCameras();
+      if (cameras && cameras->HasChildren())
+      {
+         // Search for kCameraPerspXOZ camera
+         for (auto child : cameras->RefChildren())
+         {
+            auto cam = dynamic_cast<REveCamera*>(child);
+            if (cam && cam->GetType() == REveCamera::kCameraPerspXOZ)
+            {
+               fCamera = cam;
+               break;
+            }
+         }
+         
+         // Fallback: use first camera if kCameraPerspXOZ not found.
+         // But usually, kCameraPerspXOZ is always the first camera..
+         if (!fCamera)
+         {
+            fCamera = dynamic_cast<REveCamera*>(cameras->FirstChild());
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,11 +154,12 @@ void REveViewer::SetBlackBackground(bool x)
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   fCamera.WriteCoreJson(j, rnr_offset);
+   // fCamera.WriteCoreJson(j, rnr_offset);
 
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
    j["BlackBg"] = fBlackBackground;
+   j["fCameraId"] = fCamera ? fCamera->GetElementId() : 0;
 
    j["UT_PostStream"] = "UT_EveViewerUpdate";
 
@@ -171,6 +197,7 @@ void REveViewer::SetMandatory(bool x)
 ///
 //  Set base vectors of camera base matrix
 //
+/*
 void REveViewer::SetCameraType(ECameraType cameraType)
 {
    switch(cameraType) {
@@ -212,33 +239,14 @@ void REveViewer::SetCameraType(ECameraType cameraType)
          return;
    }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
-//
-//  Set camera base matrix
-//
-void REveViewer::REveCamera::Setup( ECameraType type, const std::string& name, REveVector v1, REveVector v2)
+/// Set camera reference by ID, yuxiao
+
+void REveViewer::SetCamera(::ROOT::Experimental::REveCamera *cam)
 {
-   fType = type;
-   fName = name;
-   fV1 = v1;
-   fV2 = v2;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-//  Stream camera info
-//
-int REveViewer::REveCamera::WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/)
-{
-   nlohmann::json out;
-   out["type"] = fName;
-   out["V1"] = {fV1.fX, fV1.fY, fV1.fZ};
-   out["V2"] = {fV2.fX, fV2.fY, fV2.fZ};
-
-   j["camera"] = out;
-
-   return 0;
+   fCamera = cam;
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,4 +442,20 @@ void REveViewerList::SwitchColorSet()
       //    c->UseDarkColorSet();
    // }
    // EndChanges on EveWorld;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set camera by element ID (called from MIR)
+
+void REveViewer::SetCameraByElementId(ElementId_t cameraId)
+{
+   if (gEve) {
+      auto element = gEve->FindElementById(cameraId);
+      auto cam = dynamic_cast<REveCamera*>(element);
+      
+      if (cam) {
+         fCamera = cam;
+         StampObjProps();
+      }
+   }
 }

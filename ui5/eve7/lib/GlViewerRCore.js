@@ -31,7 +31,7 @@ sap.ui.define([
          this.top_path = jsrp.substring(0, jsrp.length - 10);
          this.eve_path = this.top_path + 'rootui5sys/eve7/';
 
-         this._logLevel = 1; // 0 - error, 1 - warning, 2 - info, 3 - debug
+         this._logLevel = 3; // 0 - error, 1 - warning, 2 - info, 3 - debug
 
          if (this._logLevel > 2) {
             console.log("GlViewerRCore RQ_Mode:", this.RQ_Mode, "RQ_SSAA:", this.RQ_SSAA,
@@ -448,8 +448,23 @@ sap.ui.define([
             }
          });
 
+         // implement the camera control to client side (and look into how to locate the camera)
          this.controls = new RC.REveCameraControls(this.camera, this.canvas.canvasDOM);
          this.controls.addEventListener('change', this.render.bind(this));
+
+         // send to server when the client finishes camera setting
+         this.controls.addEventListener('end', () => {
+            let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+            if (eveView && eveView.fCameraId && this.controls.camBaseMtx) {
+               let arr = Array.from(this.controls.camBaseMtx.elements);
+               this.controller.mgr.SendMIR("SetCamBaseMtx", eveView.fCameraId, 
+                                           "ROOT::Experimental::REveCamera", 
+                                           JSON.stringify(arr));
+               if (this._logLevel >= 2) {
+                  console.log("Camera matrix sent to server, ID:", eveView.fCameraId);
+               }
+            }
+         });
 
          // camera center marker
          let col = new RC.Color(0.5, 0, 0);
@@ -490,7 +505,7 @@ sap.ui.define([
          let sbbox = this.scene_bbox;
          let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
          let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
-
+      
          let extV = new RC.Vector3; extV = negV; extV.negate(); extV.max(posV);
          let extR = extV.length();
 
@@ -498,9 +513,53 @@ sap.ui.define([
             console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
 
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
-         let v1 = eveView.camera.V1;
-         let v2 = eveView.camera.V2;
 
+         // Try to use standalone REveCamera if available
+         // let cameraId = eveView.fCameraId;
+         let cameraId = 8;
+         let camera = null;
+         let v1, v2;
+         
+         if (cameraId) {
+            camera = this.controller.mgr.GetElement(cameraId);
+            if (this._logLevel >= 2) {
+               console.log("GlViewerRCore.resetRenderer: Using standalone camera ID", cameraId);
+               if (camera) {
+                  console.log("  Camera name:", camera.fName);
+                  // console.log("  Camera fV1:", camera.fV1);
+                  // console.log("  Camera fV2:", camera.fV2);
+                  console.log("  Camera camBase:", camera.camBase);
+               }
+            }
+         }
+         
+         // In resetRenderer()
+         // if (camera && camera.fV1 && camera.fV2) {
+            // v1 = camera.fV1;
+            // v2 = camera.fV2;
+            if (camera && camera.camBase && camera.camBase.length === 16) {
+               v1 = [camera.camBase[8], camera.camBase[9], camera.camBase[10]];   // forward/direction
+               v2 = [camera.camBase[4], camera.camBase[5], camera.camBase[6]];    // up
+
+            // Apply camTrans if available
+            if (camera.camTrans && camera.camTrans.length === 16) {
+               this.controls.setCamTrans(camera.camTrans);
+               if (this._logLevel >= 2) {
+                  console.log("GlViewerRCore.resetRenderer: Applied camTrans from REveCamera");
+               }
+            }
+
+            if (this._logLevel >= 2) {
+               console.log("GlViewerRCore.resetRenderer: Using standalone REveCamera");
+            }
+         } else {
+            // Fallback to nested camera for backward compatibility
+            v1 = eveView.camera.V1;
+            v2 = eveView.camera.V2;
+            if (this._logLevel >= 1) {
+               console.log("GlViewerRCore.resetRenderer: Using nested camera (fallback)");
+            }
+         }
 
          if (this.camera.isPerspectiveCamera)
          {
