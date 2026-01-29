@@ -73,6 +73,7 @@ private:
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfClassFields;
 
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::unique_ptr<ROOT::Internal::RNTupleFileWriter> writer, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
@@ -109,6 +110,11 @@ public:
    ~RPageSinkFile() override;
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+
+   /// Creates a new sink that uses the same underlying file/directory but writes to a different RNTuple with the
+   /// given `name`.
+   std::unique_ptr<RPageSink>
+   CloneWithDifferentName(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
 }; // class RPageSinkFile
 
 // clang-format off

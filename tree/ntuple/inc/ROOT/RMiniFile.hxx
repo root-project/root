@@ -261,6 +261,12 @@ public:
    RNTupleFileWriter &operator=(RNTupleFileWriter &&other) = delete;
    ~RNTupleFileWriter();
 
+   /// Creates a new RNTupleFileWriter with the same underlying TDirectory as this but writing to a different
+   /// RNTuple named `ntupleName`. Onle one of the two writers can safely write to the file at the same time.
+   /// This method is currently only supported for TFile-based Writers and will throw an exception if that's not the
+   /// case.
+   std::unique_ptr<RNTupleFileWriter> CloneWithDifferentName(std::string_view ntupleName) const;
+
    /// Seek a simple writer to offset. Note that previous data is not flushed immediately, but only by the next write
    /// (if necessary).
    void Seek(std::uint64_t offset);
@@ -286,6 +292,8 @@ public:
    void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
+
+   std::string_view GetNTupleName() const { return fNTupleName; }
 };
 
 } // namespace Internal

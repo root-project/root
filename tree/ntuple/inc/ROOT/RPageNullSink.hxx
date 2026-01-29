@@ -106,6 +106,11 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
+
+   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const RNTupleWriteOptions &) const final
+   {
+      throw ROOT::RException(R__FAIL("cannot clone null sink"));
+   }
 };
 
 } // namespace Internal

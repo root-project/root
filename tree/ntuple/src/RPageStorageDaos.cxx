@@ -482,6 +482,13 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
 }
 
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Experimental::Internal::RPageSinkDaos::CloneWithDifferentName(std::string_view /*name*/,
+                                                                    const ROOT::RNTupleWriteOptions & /*opts*/) const
+{
+   throw ROOT::RException(R__FAIL("cloning a DAOS sink is not implemented yet"));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,

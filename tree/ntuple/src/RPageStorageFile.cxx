@@ -72,6 +72,13 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::
    fWriter = RNTupleFileWriter::Append(ntupleName, file, ntupleDir, options.GetMaxKeySize());
 }
 
+ROOT::Internal::RPageSinkFile::RPageSinkFile(std::unique_ptr<ROOT::Internal::RNTupleFileWriter> writer,
+                                             const ROOT::RNTupleWriteOptions &options)
+   : RPageSinkFile(writer->GetNTupleName(), options)
+{
+   fWriter = std::move(writer);
+}
+
 ROOT::Internal::RPageSinkFile::~RPageSinkFile() {}
 
 void ROOT::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
@@ -289,6 +296,15 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
       RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    fWriter->Commit(GetWriteOptions().GetCompression());
+}
+
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Internal::RPageSinkFile::CloneWithDifferentName(std::string_view name,
+                                                      const ROOT::RNTupleWriteOptions &opts) const
+{
+   auto writer = fWriter->CloneWithDifferentName(name);
+   auto cloned = std::unique_ptr<RPageSinkFile>(new RPageSinkFile(std::move(writer), opts));
+   return cloned;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
