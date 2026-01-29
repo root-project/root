@@ -1,3 +1,6 @@
+add_executable(hist_benchmark_atomic hist_benchmark_atomic.cxx)
+target_link_libraries(hist_benchmark_atomic ROOTHist benchmark::benchmark)
+
 add_executable(hist_benchmark_axes hist_benchmark_axes.cxx)
 target_link_libraries(hist_benchmark_axes ROOTHist benchmark::benchmark)
 
