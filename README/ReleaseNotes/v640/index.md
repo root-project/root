@@ -97,6 +97,40 @@ A new tutorial macro demonstrates the feature and customization options: `tutori
 
 See: https://github.com/root-project/root/pull/21047 for more details
 
+### Accelerated overlap checking with parallel execution
+The geometry overlap checker (TGeoChecker::CheckOverlaps) has been significantly refactored and optimized to improve performance and scalability on large detector geometries.
+
+Overlap checking is now structured in three explicit stages:
+
+1. Candidate discovery
+Potentially overlapping volume pairs are identified using oriented bounding-box (OBB) tests, drastically reducing the number of candidates to be examined.
+
+2. Surface point generation and caching
+Points are generated on the surfaces of the candidate shapes (including additional points on edges and generators) and cached per shape.
+The sampling density can be tuned via:
+* `TGeoManager::SetNsegments(nseg)` (default: 20)
+* `TGeoManager::SetNmeshPoints(npoints)` (default: 1000)
+
+3. Overlap and extrusion checks
+The actual geometric checks are performed using navigation queries.
+This stage is now **parallelized** and automatically uses ROOT’s implicit multithreading when enabled.
+
+Only the final stage is currently parallelized, but it dominates the runtime for complex geometries and shows good strong scaling.
+
+For large assembly-rich detector descriptions such as the ALICE O² geometry, the new candidate filtering reduces the number of overlap candidates by roughly three orders of magnitude compared to the legacy implementation. Combined with multithreaded execution, this reduces the total runtime of a full overlap check from hours to minutes on modern multi-core systems.
+
+**Usage example**
+
+```cpp
+ROOT::EnableImplicitMT();        // enable parallel checking
+gGeoManager->SetNsegments(40);  // increase surface resolution if needed
+gGeoManager0->SetNmeshPoints(2000); // increase resolution of points on surface-embedded segments if needed
+gGeoManager->CheckOverlaps(1.e-6);
+```
+Performance and scaling plots for the CMS Run4 and ALICE aligned geometry are included in the corresponding pull request.
+
+See: https://github.com/root-project/root/pull/20963 for implementation details and benchmarks
+
 ## I/O
 
 * The behavior or `TDirectoryFile::mkdir` (which is also `TFile::mkdir`) was changed regarding the creation of directory hierarchies: calling `mkdir("a/b/c", "myTitle")` will now assign `myTitle` to the innermost directory `"c"` (before this change it would assign it to `"a"`).
