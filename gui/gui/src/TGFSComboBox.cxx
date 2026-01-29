@@ -35,6 +35,7 @@ It will allow the file path selection.
 #include "TGFSComboBox.h"
 #include "TGResourcePool.h"
 #include "TGPicture.h"
+#include "TROOT.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
@@ -210,11 +211,6 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    //--- first check for the existence of some directories...
 
    const char *homeDir = gSystem->HomeDirectory();
-#ifndef ROOTPREFIX
-   const char *rootSys = gSystem->Getenv("ROOTSYS");
-#else
-   // const char *rootSys = ROOTPREFIX;
-#endif
 
    TList *volumes = gSystem->GetVolumes("all");
    TList *curvol  = gSystem->GetVolumes("cur");
@@ -243,11 +239,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       fLbc.emplace_back("CD-ROM", "/cdrom", "cdrom_t.xpm", 1);
    }
    fLbc.emplace_back("Home", "$HOME", "home_t.xpm", 1);
-#ifndef ROOTPREFIX
-   fLbc.emplace_back("RootSys", "$ROOTSYS", "root_t.xpm", 1);
-#else
-   fLbc.emplace_back(ROOTPREFIX, ROOTPREFIX, "root_t.xpm", 1);
-#endif
+   fLbc.emplace_back("RootSys", gROOT->GetRootSys(), "root_t.xpm", 1);
 
    if (volumes && curvol) {
       TIter next(volumes);
@@ -285,25 +277,6 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
             entry.fFlags = 0;
          }
       }
-#ifndef ROOTPREFIX
-      // Below should _only_ be called if the prefix isn't set at build
-      // time. The code below expands the occurance of `$ROOTSYS' in
-      // the table above.  However, in the case of prefix being set at
-      // build time, we do not need to expand the prefix, as it is
-      // already known, so the entries in the table above are actually
-      // fully expanded.
-      if (entry.fPath.find("$ROOTSYS") == 0) {
-         // Get the size of the prefix template
-         const int plen = 8;
-         if (rootSys) {
-            std::string newpath = rootSys;
-            newpath.append(entry.fPath.substr(plen));
-            entry.fPath = newpath;
-         } else {
-            entry.fFlags = 0;
-         }
-      }
-#endif
       if (gSystem->AccessPathName(entry.fPath.c_str(), kFileExists) == 0)
          entry.fFlags = 1;
    }
