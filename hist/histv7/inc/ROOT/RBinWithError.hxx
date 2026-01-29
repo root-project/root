@@ -7,6 +7,8 @@
 
 #include "RHistUtils.hxx"
 
+#include <cmath>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -61,8 +63,29 @@ struct RBinWithError final {
 private:
    void AtomicAdd(double a, double a2)
    {
-      Internal::AtomicAdd(&fSum, a);
-      Internal::AtomicAdd(&fSum2, a2);
+      // The sum of squares is always non-negative. Use the sign bit to implement a cheap spin lock.
+      double origSum2;
+      Internal::AtomicLoad(&fSum2, &origSum2);
+
+      while (true) {
+         // Repeat loads from memory until we see a non-negative value.
+         // NB: do not use origSum2 < 0, it does not work for -0.0!
+         while (std::signbit(origSum2)) {
+            Internal::AtomicLoad(&fSum2, &origSum2);
+         }
+
+         // The variable appears to be unlocked, confirm with a compare-exchange.
+         double negated = std::copysign(origSum2, -1.0);
+         if (Internal::AtomicCompareExchangeAcquire(&fSum2, &origSum2, &negated)) {
+            break;
+         }
+      }
+
+      // By using a spin lock, we do not need atomic operations for fSum.
+      fSum += a;
+
+      double sum2 = origSum2 + a2;
+      Internal::AtomicStoreRelease(&fSum2, &sum2);
    }
 
 public:
