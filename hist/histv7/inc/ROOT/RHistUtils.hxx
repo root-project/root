@@ -5,6 +5,7 @@
 #ifndef ROOT_RHistUtils
 #define ROOT_RHistUtils
 
+#include <atomic>
 #include <type_traits>
 
 #ifdef _MSC_VER
@@ -33,6 +34,10 @@ struct AtomicOps<1> {
    {
       *static_cast<char *>(ret) = __iso_volatile_load8(static_cast<const char *>(ptr));
    }
+   static void Store(void *ptr, void *val)
+   {
+      __iso_volatile_store8(static_cast<char *>(ptr), *static_cast<char *>(val));
+   }
    static void Add(void *ptr, const void *val)
    {
       _InterlockedExchangeAdd8(static_cast<char *>(ptr), *static_cast<const char *>(val));
@@ -56,6 +61,10 @@ struct AtomicOps<2> {
    static void Load(const void *ptr, void *ret)
    {
       *static_cast<short *>(ret) = __iso_volatile_load16(static_cast<const short *>(ptr));
+   }
+   static void Store(void *ptr, void *val)
+   {
+      __iso_volatile_store16(static_cast<short *>(ptr), *static_cast<short *>(val));
    }
    static void Add(void *ptr, const void *val)
    {
@@ -81,6 +90,10 @@ struct AtomicOps<4> {
    {
       *static_cast<int *>(ret) = __iso_volatile_load32(static_cast<const int *>(ptr));
    }
+   static void Store(void *ptr, void *val)
+   {
+      __iso_volatile_store32(static_cast<int *>(ptr), *static_cast<int *>(val));
+   }
    static void Add(void *ptr, const void *val)
    {
       _InterlockedExchangeAdd(static_cast<long *>(ptr), *static_cast<const long *>(val));
@@ -104,6 +117,10 @@ struct AtomicOps<8> {
    static void Load(const void *ptr, void *ret)
    {
       *static_cast<__int64 *>(ret) = __iso_volatile_load64(static_cast<const __int64 *>(ptr));
+   }
+   static void Store(void *ptr, void *val)
+   {
+      __iso_volatile_store64(static_cast<__int64 *>(ptr), *static_cast<__int64 *>(val));
    }
    static void Add(void *ptr, const void *val);
    static bool CompareExchange(void *ptr, void *expected, const void *desired)
@@ -133,12 +150,37 @@ void AtomicLoad(const T *ptr, T *ret)
 }
 
 template <typename T>
+void AtomicStoreRelease(T *ptr, T *val)
+{
+#ifndef _MSC_VER
+   __atomic_store(ptr, val, __ATOMIC_RELEASE);
+#else
+   // Cannot specify the memory order directly, use a fence.
+   std::atomic_thread_fence(std::memory_order_release);
+   MSVC::AtomicOps<sizeof(T)>::Store(ptr, val);
+#endif
+}
+
+template <typename T>
 bool AtomicCompareExchange(T *ptr, T *expected, T *desired)
 {
 #ifndef _MSC_VER
    return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
 #else
    return MSVC::AtomicOps<sizeof(T)>::CompareExchange(ptr, expected, desired);
+#endif
+}
+
+template <typename T>
+bool AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
+{
+#ifndef _MSC_VER
+   return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
+#else
+   bool success = MSVC::AtomicOps<sizeof(T)>::CompareExchange(ptr, expected, desired);
+   // Cannot specify the memory order directly, use an unconditional fence to avoid branching code.
+   std::atomic_thread_fence(std::memory_order_acquire);
+   return success;
 #endif
 }
 
