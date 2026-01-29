@@ -449,6 +449,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/BatchGenerator/RChunkConstructor.hxx
   TMVA/BatchGenerator/RFlat2DMatrix.hxx
   TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx
+  TMVA/BatchGenerator/RDatasetLoader.hxx
+  TMVA/BatchGenerator/RSampler.hxx   
 
   SOURCES
 
