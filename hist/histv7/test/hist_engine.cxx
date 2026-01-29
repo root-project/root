@@ -207,6 +207,29 @@ TEST(RHistEngine, Clone)
    }
 }
 
+TEST(RHistEngine, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engineI({axis});
+
+   engineI.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineI.Fill(i);
+   }
+   engineI.Fill(100);
+
+   RHistEngine<float> engineF = engineI.Convert<float>();
+   ASSERT_EQ(engineF.GetNDimensions(), 1);
+   ASSERT_EQ(engineF.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineF.GetBinContent(index), 1);
+   }
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Overflow()), 1);
+}
+
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;
@@ -420,6 +443,27 @@ TEST(RHistEngine_RBinWithError, Add)
       double weightB = 0.1 + index.GetIndex() * 0.05;
       EXPECT_FLOAT_EQ(bin.fSum, weightA + weightB);
       EXPECT_FLOAT_EQ(bin.fSum2, weightA * weightA + weightB * weightB);
+   }
+}
+
+TEST(RHistEngine_RBinWithError, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<RBinWithError> engine({axis});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   // It is not possible to convert to RBinWithError, but the other way around is fine.
+   RHistEngine<float> engineF = engine.Convert<float>();
+   RHistEngine<double> engineD = engine.Convert<double>();
+
+   for (auto index : axis.GetNormalRange()) {
+      double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(engineF.GetBinContent(index), weight);
+      EXPECT_EQ(engineD.GetBinContent(index), weight);
    }
 }
 
