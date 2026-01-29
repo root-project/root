@@ -19,6 +19,7 @@ if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
 endif()
 
+ROOT_ADD_GTEST(ntuple_attributes ntuple_attributes.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cast ntuple_cast.cxx LIBRARIES ROOTNTuple)
