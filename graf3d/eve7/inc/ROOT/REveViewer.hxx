@@ -18,6 +18,7 @@ namespace ROOT {
 namespace Experimental {
 
 class REveScene;
+class REveCamera; // yuxiao
 
 ////////////////////////////////////////////////////////////////////////////////
 /// REveViewer
@@ -51,30 +52,12 @@ public:
       kAxesEdge
    };
 
-   // For the moment REveCamera is internal class
-   class REveCamera
-   {
-      ECameraType fType;
-      std::string fName;
-      REveVector fV2;
-      REveVector fV1;
-
-      public:
-       REveCamera() { Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));}
-       ~REveCamera() {}
-
-       void Setup(ECameraType type, const std::string& name, REveVector v1, REveVector v2);
-
-       ECameraType GetType() const { return fType; }
-
-       int WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/);
-   };
-
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
-   REveCamera fCamera;
+   REveCamera* fCamera{0};
+
    EAxesType fAxesType{kAxesNone};
    bool      fBlackBackground{false};
 
@@ -90,8 +73,12 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
-   void SetCameraType(ECameraType t);
-   ECameraType GetCameraType() const { return fCamera.GetType(); }
+   // void SetCameraType(ECameraType t);
+   // ECameraType GetCameraType() const { return fCamera->GetType(); }
+   void SetCamera(::ROOT::Experimental::REveCamera *cam);
+   REveCamera* GetCamera() const { return fCamera;}
+
+   void SetCameraByElementId(ElementId_t cameraId); // set camera via ElementID
 
    void SetAxesType(int);
    void SetBlackBackground(bool);
