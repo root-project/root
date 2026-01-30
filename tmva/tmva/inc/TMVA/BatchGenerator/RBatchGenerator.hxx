@@ -16,6 +16,7 @@
 #define TMVA_RBATCHGENERATOR
 
 #include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
+#include "TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx"
 #include "TMVA/BatchGenerator/RSampler.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 
@@ -66,6 +67,8 @@ private:
    std::unique_ptr<RSampler> fTrainingSampler;
    std::unique_ptr<RSampler> fValidationSampler;
 
+   std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
+   
    std::vector<ROOT::RDF::RNode> f_rdfs;
    
    std::unique_ptr<std::thread> fLoadingThread;
@@ -79,6 +82,8 @@ private:
    bool fShuffle;
    bool fLoadEager;
    std::string fSampleType;
+   float fSampleRatio;
+   bool fReplacement;   
    
    bool fIsActive{false}; // Whether the loading thread is active
    bool fUseWholeFile;
@@ -97,6 +102,9 @@ private:
    std::vector<RFlat2DMatrix> fTrainingDatasets;
    std::vector<RFlat2DMatrix> fValidationDatasets;
 
+   RFlat2DMatrix fTrainingDataset;
+   RFlat2DMatrix fValidationDataset;
+   
    RFlat2DMatrix fSampledTrainingDataset;
    RFlat2DMatrix fSampledValidationDataset;
    
@@ -112,7 +120,7 @@ public:
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
                    const float validationSplit = 0.0, const std::size_t maxChunks = 0, bool shuffle = true,
                    bool dropRemainder = true, const std::size_t setSeed = 0, bool loadEager = false,
-                   std::string sampleType = "random")
+                   std::string sampleType = "", float sampleRatio = 1.0, bool replacement = false)
 
       : f_rdfs(rdfs),
         fCols(cols),
@@ -127,25 +135,40 @@ public:
         fShuffle(shuffle),
         fLoadEager(loadEager),
         fSampleType(sampleType),
+        fSampleRatio(sampleRatio),
+        fReplacement(replacement),
         fUseWholeFile(maxChunks == 0)
    {
+      fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
+      
       if (fLoadEager) {
          fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(f_rdfs, fValidationSplit, fCols, fVecSizes,
                                                                        vecPadding, fShuffle, fSetSeed);
          // split the datasets and extract the training and validation datasets
          fDatasetLoader->SplitDatasets();
-         fTrainingDatasets = fDatasetLoader->GetTrainingDatasets();
-         fValidationDatasets = fDatasetLoader->GetValidationDatasets();         
-         
-         fTrainingSampler = std::make_unique<RSampler>(fTrainingDatasets, fSampleType, fShuffle, fSetSeed);
-         fValidationSampler = std::make_unique<RSampler>(fValidationDatasets, fSampleType, fShuffle, fSetSeed);
 
-         // sample the training and validation dataset from the datasets
-         fTrainingSampler->Sampler(fSampledTrainingDataset);
-         fValidationSampler->Sampler(fSampledValidationDataset);
+         if (fSampleType == "") {
+            fDatasetLoader->ConcatenateDatasets();
+            
+            fTrainingDataset = fDatasetLoader->GetTrainingDataset();
+            fValidationDataset = fDatasetLoader->GetValidationDataset();         
+            
+            fNumTrainingEntries = fDatasetLoader->GetNumTrainingEntries();
+            fNumValidationEntries = fDatasetLoader->GetNumValidationEntries();
+         }
+
+         else {
+            fTrainingDatasets = fDatasetLoader->GetTrainingDatasets();
+            fValidationDatasets = fDatasetLoader->GetValidationDatasets();         
          
-         fNumTrainingEntries = fTrainingSampler->GetNumEntries();                  
-         fNumValidationEntries = fValidationSampler->GetNumEntries();
+            fTrainingSampler = std::make_unique<RSampler>(fTrainingDatasets, fSampleType, fSampleRatio, fReplacement,
+                                                          fShuffle, fSetSeed);
+            fValidationSampler = std::make_unique<RSampler>(fValidationDatasets, fSampleType, fSampleRatio, fReplacement,
+                                                            fShuffle, fSetSeed);
+
+            fNumTrainingEntries = fTrainingSampler->GetNumEntries();                  
+            fNumValidationEntries = fValidationSampler->GetNumEntries();
+         }
       }
 
       else {
@@ -223,7 +246,15 @@ public:
    {
      fTrainingEpochActive = true;
       if (fLoadEager) {
-         fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, 1);    
+         if (fSampleType == "") {
+            fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
+         }
+
+         else {
+            fTrainingSampler->Sampler(fSampledTrainingDataset);
+         }
+         
+         fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, 1);
       }
       
       else {
@@ -240,7 +271,15 @@ public:
    {
      fValidationEpochActive = true;      
       if (fLoadEager) {
-        fValidationBatchLoader->CreateBatches(fSampledValidationDataset, 1);
+         if (fSampleType == "") {
+            fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
+         }
+
+         else {
+            fValidationSampler->Sampler(fSampledValidationDataset);
+         }
+         
+         fValidationBatchLoader->CreateBatches(fSampledValidationDataset, 1);
       }
 
       else {
@@ -265,10 +304,9 @@ public:
            fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, lastTrainingBatch);
            fTrainingChunkNum++;
         }
-        
         else {
-         fChunkLoader->ResetDataframe();           
-        }
+           fChunkLoader->ResetDataframe();           
+        }         
      }
      // Get next batch if available
      return fTrainingBatchLoader->GetBatch();
@@ -287,10 +325,9 @@ public:
             fValidationBatchLoader->CreateBatches(fValidationChunkTensor, lastValidationBatch);
             fValidationChunkNum++;
          }
-
          else {
-            fChunkLoader->ResetDataframe();            
-         }
+            fChunkLoader->ResetDataframe();           
+        }      
       }
       // Get next batch if available
       return fValidationBatchLoader->GetBatch();

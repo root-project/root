@@ -97,7 +97,9 @@ class BaseGenerator:
         drop_remainder: bool = True,
         set_seed: int = 0,
         load_eager: bool = False,
-        sampling_type: str = "random",
+        sampling_type: str = "",
+        sampling_ratio: float = 1.0,
+        replacement: bool = False,
     ):
         """Wrapper around the Cpp RBatchGenerator
 
@@ -145,8 +147,17 @@ class BaseGenerator:
                 load chunks from the dataframe into memory (False).
                 Defuaults to False.
             sampling_type (str):
-                Describes the mode of sampling from the dataframe(s). Options: 'random'.
-                Defaults to 'random' and requires load_eager = True.
+                Describes the mode of sampling from the minority and majority dataframes.
+                Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+                For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
+                where the dataframe with the most entries is the majority dataframe
+                and the dataframe with the fewest entries is the minority dataframe.
+            sampling_ratio (float):
+                Ratio of minority and majority entries in the resampled dataset.
+                Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+            replacement (bool):
+                Whether the sampling is with (True) or without (False) replacement.
+                Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.                
         """
 
         import ROOT
@@ -173,7 +184,20 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
 
-        if not isinstance(rdataframes, list):
+        if load_eager:
+            # TODO: overhead, check if we can improve the following lines
+            if sampling_type == "undersampling" and replacement == False:
+                rdf_0 = rdataframes[0].Count().GetValue()
+                rdf_1 = rdataframes[1].Count().GetValue()                
+                rdf_minor = min(rdf_0, rdf_1)
+                rdf_major = max(rdf_0, rdf_1)
+                if rdf_major < rdf_minor / sampling_ratio:
+                    raise ValueError(
+                        f"The sampling_ratio is too low: not enough entries in the majority class to sample from. \n \
+                        Choose sampling_ratio > {round(rdf_minor/rdf_major, 3)} or set replacement to False."
+                    )
+        
+        if not hasattr(rdataframes, "__iter__"):    
             rdataframes = [rdataframes]
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
 
@@ -251,6 +275,8 @@ class BaseGenerator:
             set_seed,
             load_eager,
             sampling_type,
+            sampling_ratio,
+            replacement,
         )
 
         atexit.register(self.DeActivate)
@@ -684,7 +710,9 @@ def CreateNumPyGenerators(
     drop_remainder=True,
     set_seed: int = 0,
     load_eager: bool = False,
-    sampling_type: str = "random",
+    sampling_type: str = "",
+    sampling_ratio: float = 1.0,
+    replacement: bool = False,
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two batch generators based on the given ROOT file and tree or RDataFrame
@@ -737,12 +765,18 @@ def CreateNumPyGenerators(
             Load the full dataframe(s) into memory (True) or
             load chunks from the dataframe into memory (False).
             Defuaults to False.
-         sampling_type (str):
-             Describes the mode of sampling from the dataframe(s). Options: 'random'.
-             Defaults to 'random' and requires load_eager = True.
-    
-    
-    
+        sampling_type (str):
+            Describes the mode of sampling from the minority and majority dataframes.
+            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
+            where the dataframe with the most entries is the majority dataframe
+            and the dataframe with the fewest entries is the minority dataframe.
+        sampling_ratio (float):
+            Ratio of minority and majority entries in the resampled dataset.
+            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+        replacement (bool):
+            Whether the sampling is with (True) or without (False) replacement.
+            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.                
 
     Returns:
         TrainRBatchGenerator or
@@ -774,6 +808,8 @@ def CreateNumPyGenerators(
         set_seed,
         load_eager,
         sampling_type,
+        sampling_ratio,
+        replacement,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -806,7 +842,9 @@ def CreateTFDatasets(
     drop_remainder=True,
     set_seed: int = 0,
     load_eager: bool = False,
-    sampling_type: str = "random",
+    sampling_type: str = "",
+    sampling_ratio: float = 1.0,
+    replacement: bool = False,
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -859,9 +897,18 @@ def CreateTFDatasets(
             Load the full dataframe(s) into memory (True) or
             load chunks from the dataframe into memory (False).
             Defuaults to False.
-         sampling_type (str):
-             Describes the mode of sampling from the dataframe(s). Options: 'random'.
-             Defaults to 'random' and requires load_eager = True.
+        sampling_type (str):
+            Describes the mode of sampling from the minority and majority dataframes.
+            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
+            where the dataframe with the most entries is the majority dataframe
+            and the dataframe with the fewest entries is the minority dataframe.
+        sampling_ratio (float):
+            Ratio of minority and majority entries in the resampled dataset.
+            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+        replacement (bool):
+            Whether the sampling is with (True) or without (False) replacement.
+            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.                
 
     Returns:
         TrainRBatchGenerator or
@@ -892,6 +939,8 @@ def CreateTFDatasets(
         set_seed,
         load_eager,
         sampling_type,
+        sampling_ratio,
+        replacement,
     )
 
     train_generator = TrainRBatchGenerator(
@@ -974,7 +1023,9 @@ def CreatePyTorchGenerators(
     drop_remainder=True,
     set_seed: int = 0,
     load_eager: bool = False,
-    sampling_type: str = "random",
+    sampling_type: str = "",
+    sampling_ratio: float = 1.0,
+    replacement: bool = False,
 ) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
@@ -1027,9 +1078,18 @@ def CreatePyTorchGenerators(
             Load the full dataframe(s) into memory (True) or
             load chunks from the dataframe into memory (False).
             Defuaults to False.
-         sampling_type (str):
-             Describes the mode of sampling from the dataframe(s). Options: 'random'.
-             Defaults to 'random' and requires load_eager = True.
+        sampling_type (str):
+            Describes the mode of sampling from the minority and majority dataframes.
+            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
+            where the dataframe with the most entries is the majority dataframe
+            and the dataframe with the fewest entries is the minority dataframe.
+        sampling_ratio (float):
+            Ratio of minority and majority entries in the resampled dataset.
+            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+        replacement (bool):
+            Whether the sampling is with (True) or without (False) replacement.
+            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.                
 
     Returns:
         TrainRBatchGenerator or
@@ -1058,6 +1118,8 @@ def CreatePyTorchGenerators(
         set_seed,
         load_eager,
         sampling_type,
+        sampling_ratio,
+        replacement,
     )
 
     train_generator = TrainRBatchGenerator(
