@@ -184,6 +184,9 @@ public:
             datasetEntry++;
          }
       }
+      
+      // reset dataframe
+      ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);      
 
       RFlat2DMatrix ShuffledDataset({NumEntries, fNumDatasetCols});
       fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);

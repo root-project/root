@@ -4,6 +4,7 @@ import ROOT
 from ROOT import RVec
 import numpy as np
 from random import randrange
+from random import uniform
 
 class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
@@ -50,7 +51,9 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+            
+            entries_before = df.AsNumpy(["rdfentry_"])["rdfentry_"]
+            
             gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
                 df,
                 batch_size=3,
@@ -107,6 +110,11 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             self.assertEqual(results_y_train, flat_y_train)
             self.assertEqual(results_y_val, flat_y_val)
 
+            entries_after = df.AsNumpy(["rdfentry_"])["rdfentry_"]
+            
+            # check if the dataframe is correctly reset
+            self.assertTrue(np.array_equal(entries_before, entries_after))
+            
             self.teardown_file(self.file_name1)
 
         except:
@@ -480,6 +488,8 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
+            filter_entries_before = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
+            
             gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
@@ -528,6 +538,11 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             self.assertEqual(results_y_train, flat_y_train)
             self.assertEqual(results_y_val, flat_y_val)
 
+            filter_entries_after = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
+            
+            # check if the dataframe is correctly reset
+            self.assertTrue(np.array_equal(filter_entries_before, filter_entries_after))
+            
             self.teardown_file(self.file_name1)
 
         except:
@@ -2363,6 +2378,9 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
+            df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
+            
             gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
@@ -2418,6 +2436,13 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             self.assertEqual(results_y_train, flat_y_train)
             self.assertEqual(results_y_val, flat_y_val)
 
+            df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]            
+                        
+            # check if the dataframes are correctly reset
+            self.assertTrue(np.array_equal(df1_entries_before, df1_entries_after))
+            self.assertTrue(np.array_equal(df2_entries_before, df2_entries_after))            
+            
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
 
@@ -2797,6 +2822,9 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             dff1 = df1.Filter("b1 % 2 == 0", "name")
             dff2 = df2.Filter("b1 % 2 != 0", "name")                        
             
+            dff1_entries_before = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            dff2_entries_before = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]            
+            
             gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
                 [dff1, dff2],
                 batch_size=3,
@@ -2844,6 +2872,13 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             self.assertEqual(results_y_train, flat_y_train)
             self.assertEqual(results_y_val, flat_y_val)
 
+            dff1_entries_after = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+            dff2_entries_after = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]            
+                        
+            # check if the dataframes are correctly reset
+            self.assertTrue(np.array_equal(dff1_entries_before, dff1_entries_after))
+            self.assertTrue(np.array_equal(dff2_entries_before, dff2_entries_after))            
+            
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)            
 

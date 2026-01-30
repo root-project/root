@@ -304,9 +304,6 @@ public:
            fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, lastTrainingBatch);
            fTrainingChunkNum++;
         }
-        else {
-           fChunkLoader->ResetDataframe();           
-        }         
      }
      // Get next batch if available
      return fTrainingBatchLoader->GetBatch();
@@ -325,9 +322,6 @@ public:
             fValidationBatchLoader->CreateBatches(fValidationChunkTensor, lastValidationBatch);
             fValidationChunkNum++;
          }
-         else {
-            fChunkLoader->ResetDataframe();           
-        }      
       }
       // Get next batch if available
       return fValidationBatchLoader->GetBatch();
