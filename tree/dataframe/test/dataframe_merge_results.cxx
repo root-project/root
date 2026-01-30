@@ -428,3 +428,34 @@ TEST(RDataFrameMergeResults, MergeVariedHisto)
       EXPECT_EQ(histo.GetEntries(), 20);
    }
 }
+
+TEST(RDataFrameMergeResults, MergeReport)
+{
+   ROOT::RDataFrame dfmerge1{100};
+   ROOT::RDataFrame dfmerge2{100};
+
+   auto col1 = dfmerge1.Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = dfmerge2.Define("x", [](ULong64_t e) { return double(2 * e); }, {"rdfentry_"});
+
+   auto filtered1 = col1.Filter("x>25.", "Cut1");
+   auto filtered2 = filtered1.Filter("x>50.", "Cut2");
+
+   auto filtered3 = col2.Filter("x>25.", "Cut1");
+   auto filtered4 = filtered3.Filter("x>50.", "Cut2");
+
+   auto report1 = filtered2.Report();
+   auto report2 = filtered4.Report();
+
+   auto md1 = GetMergeableValue(report1);
+   auto md2 = GetMergeableValue(report2);
+
+   auto mergedptr = MergeValues(std::move(md1), std::move(md2));
+
+   const auto &ms = mergedptr->GetValue();
+
+   std::string expected =
+      "Cut1                : pass=161        all=200        -- eff=80.50 % cumulative eff=80.50 %\n"
+      "Cut2                : pass=123        all=161        -- eff=76.40 % cumulative eff=61.50 %\n";
+
+   EXPECT_EQ(ms.AsString(), expected);
+}
