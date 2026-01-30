@@ -1265,3 +1265,8 @@ void TObject::operator delete[](void *ptr, void *vp)
 {
    TStorage::ObjectDealloc(ptr, vp);
 }
+
+void ROOT::Internal::MarkTObjectAsNotOnHeap(TObject &obj)
+{
+   obj.fBits &= ~TObject::kIsOnHeap;
+}
