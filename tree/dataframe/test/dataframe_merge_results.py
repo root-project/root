@@ -54,6 +54,42 @@ class RDataFrameMergeResults(unittest.TestCase):
 
         self.assertAlmostEqual(deser_deser1.GetValue(), mergedmean)
 
+    def test_pickle_report(self):
+        """Merge two reports, pickle and merge again."""
+
+        import textwrap
+
+        df1 = ROOT.RDataFrame(100)
+        df2 = ROOT.RDataFrame(100)
+
+        def1 = df1.Define("x", "rdfentry_")
+        def2 = df2.Define("x", "2*rdfentry_")
+
+        filtered1 = def1.Filter("x>25.", "Cut1")
+        filtered2 = filtered1.Filter("x>50.", "Cut2")
+
+        filtered3 = def2.Filter("x>25.", "Cut1")
+        filtered4 = filtered3.Filter("x>50.", "Cut2")
+
+        report1 = filtered2.Report()
+        report2 = filtered4.Report()
+
+        mm1 = GetMergeableValue(report1)
+        mm2 = GetMergeableValue(report2)
+
+        deser1 = pickle.loads(pickle.dumps(mm1))
+        deser2 = pickle.loads(pickle.dumps(mm2))
+
+        MergeValues(deser1, deser2)
+
+        result = deser1.GetValue()
+
+        expected_merged = textwrap.dedent("""\
+            Cut1                : pass=161        all=200        -- eff=80.50 % cumulative eff=80.50 %
+            Cut2                : pass=123        all=161        -- eff=76.40 % cumulative eff=61.50 %
+        """)
+
+        self.assertEqual(result.AsString(), expected_merged)
 
     def test_pickle_histo1d(self):
         """Merge two histograms, pickle and merge again."""

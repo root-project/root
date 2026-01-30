@@ -422,6 +422,27 @@ class TestReducerMerge:
         assert sum_before.GetValue() == 10.0
         assert sum_after.GetValue() == 20.0
 
+    def test_report(self, payload):
+        """Test the report action (outputting cut flow reports)."""
+
+        import textwrap
+
+        connection, _ = payload
+        df = ROOT.RDataFrame(100, executor=connection)
+        def1 = df.Define("x", "rdfentry_")
+
+        filtered1 = def1.Filter("x>25.", "Cut1")
+        filtered2 = filtered1.Filter("x>50.", "Cut2")
+
+        report = filtered2.Report()
+
+        expected = textwrap.dedent("""\
+            Cut1                : pass=74         all=100        -- eff=74.00 % cumulative eff=74.00 %
+            Cut2                : pass=49         all=74         -- eff=66.22 % cumulative eff=49.00 %
+        """)
+
+        assert report.AsString() == expected
+
     @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
     def test_distributed_stddev(self, payload, datasource):
         """Test support for the StdDev action."""
