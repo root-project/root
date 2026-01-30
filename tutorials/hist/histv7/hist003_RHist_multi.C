@@ -38,7 +38,7 @@ void hist003_RHist_multi()
 
    // Print some information about the histogram.
    std::cout << "Created a histogram with " << hist.GetNDimensions() << " dimensions and " << hist.GetTotalNBins()
-             << "\n";
+             << " bins\n";
 
    // Generate angles and energies to fill the histogram.
    std::mt19937 gen;
