@@ -22,14 +22,23 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RFilterBase;
+class RMergeableReport;
 } // End NS RDF
 } // End NS Detail
+
+namespace Internal {
+namespace RDF {
+template <typename RNode_t>
+class ReportHelper;
+} // namespace RDF
+} // namespace Internal
 
 namespace RDF {
 
 class TCutInfo {
    friend class RCutFlowReport;
    friend class ROOT::Detail::RDF::RFilterBase;
+   friend class ROOT::Detail::RDF::RMergeableReport;
 
 private:
    std::string fName;
@@ -48,6 +57,9 @@ public:
 
 class RCutFlowReport {
    friend class ROOT::Detail::RDF::RFilterBase;
+   friend class ROOT::Detail::RDF::RMergeableReport;
+   template <typename RNode_t>
+   friend class ROOT::Internal::RDF::ReportHelper;
 
 private:
    std::vector<TCutInfo> fCutInfos;
