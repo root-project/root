@@ -5219,9 +5219,16 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
 
    if (!envInclPath)
       return;
+
+#ifdef _WIN32
+   constexpr char kPathSep = ';';
+#else
+   constexpr char kPathSep = ':';
+#endif
+
    std::istringstream envInclPathsStream(envInclPath);
    std::string inclPath;
-   while (std::getline(envInclPathsStream, inclPath, ':')) {
+   while (std::getline(envInclPathsStream, inclPath, kPathSep)) {
       // Can't use TSystem in here; re-implement TSystem::ExpandPathName().
       replaceEnvVars("ROOT_INCLUDE_PATH", inclPath);
       if (!inclPath.empty()) {
