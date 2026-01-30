@@ -17,6 +17,8 @@
 #ifndef ROOT_RDF_RMERGEABLEVALUE
 #define ROOT_RDF_RMERGEABLEVALUE
 
+#include "ROOT/RDF/RCutFlowReport.hxx"
+
 #include <algorithm> // std::find, std::min, std::max
 #include <iterator>  // std::distance
 #include <memory>
@@ -138,6 +140,7 @@ currently available:
 - RMergeableMin
 - RMergeableStdDev
 - RMergeableSum
+- RMergeableReport
 */
 template <typename T>
 class RMergeableValue : public RMergeableValueBase {
@@ -555,6 +558,63 @@ public:
    RMergeableSum &operator=(const RMergeableSum &) = delete;
    RMergeableSum(RMergeableSum &&) = delete;
    RMergeableSum &operator=(RMergeableSum &&) = delete;
+};
+
+/**
+\ingroup dataframe
+\brief Specialization of RMergeableValue for the
+[Report](https://root.cern/doc/master/classROOT_1_1RDF_1_1RCutFlowReport.html)
+action.
+
+This subclass is responsible for merging results coming from Report actions. Other
+than the result itself, the vector of TCutInfos is stored in the object.
+*/
+class RMergeableReport final : public RMergeableValue<ROOT::RDF::RCutFlowReport> {
+
+   std::vector<ROOT::RDF::TCutInfo> fCutInfoVec;
+   void Merge(const RMergeableValue<ROOT::RDF::RCutFlowReport> &other) final
+   {
+      ROOT::RDF::RCutFlowReport report;
+      const auto &othercast = dynamic_cast<const RMergeableReport &>(other);
+
+      for (unsigned long i = 0; i < fCutInfoVec.size(); i++) {
+
+         auto accumulated_pass = this->fCutInfoVec[i].GetPass() + othercast.fCutInfoVec[i].GetPass();
+         auto accumulated_all = this->fCutInfoVec[i].GetAll() + othercast.fCutInfoVec[i].GetAll();
+
+         // Updating the RCutFlowReport cut by cut
+         // Adding a cut which has an appropriate name and accumulated pass and all.
+         // We only want to merge reports that have the same cuts (given by their cut names).
+         if (this->fCutInfoVec[i].GetName() == othercast.fCutInfoVec[i].GetName()) {
+            // Adding a cut which has an appropriate name and accumulated pass and all
+            report.AddCut({this->fCutInfoVec[i].GetName(), accumulated_pass, accumulated_all});
+         } else {
+            throw std::runtime_error("Cutflow report with different cut names cannot be merged.");
+         }
+      }
+      this->fValue = report;
+   }
+
+public:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructor that initializes data members.
+   /// \param[in] value The action result.
+   /// \param[in] cutinfovec The vector of TCutInfos.
+   RMergeableReport(ROOT::RDF::RCutFlowReport value, std::vector<ROOT::RDF::TCutInfo> cutinfovec)
+      : RMergeableValue<ROOT::RDF::RCutFlowReport>(value), fCutInfoVec{cutinfovec}
+   {
+   }
+
+   /**
+      Default constructor. Needed to allow serialization of ROOT objects. See
+      [TBufferFile::WriteObjectClass]
+      (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
+   */
+   RMergeableReport() = default;
+   RMergeableReport(const RMergeableReport &) = delete;
+   RMergeableReport &operator=(const RMergeableReport &) = delete;
+   RMergeableReport(RMergeableReport &&) = delete;
+   RMergeableReport &operator=(RMergeableReport &&) = delete;
 };
 
 /**

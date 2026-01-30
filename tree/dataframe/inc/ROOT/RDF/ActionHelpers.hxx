@@ -161,6 +161,12 @@ public:
          fNode->Report(*fReport);
    }
 
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      auto cutinfo_vec = fReport->fCutInfos;
+      return std::make_unique<RMergeableReport>(*fReport, cutinfo_vec);
+   }
+
    std::string GetActionName() { return "Report"; }
 
    ReportHelper MakeNew(void *newResult, std::string_view variation = "nominal")
