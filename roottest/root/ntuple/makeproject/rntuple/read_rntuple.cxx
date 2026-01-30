@@ -1,7 +1,11 @@
-#include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleReader.hxx>
-#include "librntuplestltest/MySTLEvent.h"
+#include <TInterpreter.h>
+#include <TSystem.h>
+
 #include "gtest/gtest.h"
+
+#include <bitset>
+#include <unordered_map>
+#include <unordered_set>
 
 void check_bitset(const std::bitset<16> &a, const std::bitset<16> &b)
 {
@@ -32,25 +36,32 @@ void check_unordered_multimap(const std::unordered_multimap<std::string, std::ve
    EXPECT_EQ(a, b);
 }
 
+template <typename T>
+T interpreter_get(const char *expr)
+{
+   T *ptr = reinterpret_cast<T *>(gInterpreter->Calc(expr));
+   EXPECT_NE(ptr, nullptr);
+   return *ptr;
+}
+
 TEST(RNTupleMakeProject, ReadBackRNTuple)
 {
-   auto ntuple = ROOT::RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
+   ASSERT_EQ(gSystem->Load("librntuplestltest/librntuplestltest"), 0);
 
-#ifdef _MSC_VER
-   // The Microsoft linker uses an optimization such that a library is not going
-   // to be linked against even if it was explicitly requested in case that its
-   // objects are not explicitly used in the program. In this particular test,
-   // the class MySTLEvent is used as the template argument for GetView, but
-   // this apparently does not qualify as usage for the linker. In fact, without
-   // the following line which just instantiates a dummy MySTLEvent object, this
-   // executable would not be linked against the shared library created by the
-   // TFile::MakeProject call.
-   [[maybe_unused]] MySTLEvent dummy;
-#endif
+   // Everything involving MySTLEvent lives in the interpreter
+   gInterpreter->ProcessLine(R"(
+      auto ntuple = ROOT::RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
 
-   auto viewEvent = ntuple->GetView<MySTLEvent>("test");
+      auto viewEvent = ntuple->GetView<MySTLEvent>("test");
+      const auto &event = viewEvent(0);
+   )");
 
-   const auto &event = viewEvent(0);
+   // Get values out as plain STL types
+   auto event_foo = interpreter_get<std::bitset<16>>("&event.foo");
+   auto event_bar = interpreter_get<std::vector<int>>("&event.bar");
+   auto event_spam = interpreter_get<std::unordered_set<double>>("&event.spam");
+   auto event_eggs = interpreter_get<std::unordered_map<int, std::string>>("&event.eggs");
+   auto event_strange = interpreter_get<std::unordered_multimap<std::string, std::vector<float>>>("&event.strange");
 
    std::bitset<16> foo = 0xfa2;
    std::vector<int> bar = {1, 2};
@@ -59,11 +70,11 @@ TEST(RNTupleMakeProject, ReadBackRNTuple)
    std::unordered_multimap<std::string, std::vector<float>> strange = {
       {"one", {1, 2, 3}}, {"one", {4, 5, 6}}, {"two", {7, 8, 9}}};
 
-   check_bitset(event.foo, foo);
-   check_vector(event.bar, bar);
-   check_unordered_set(event.spam, spam);
-   check_unordered_map(event.eggs, eggs);
-   check_unordered_multimap(event.strange, strange);
+   check_bitset(event_foo, foo);
+   check_vector(event_bar, bar);
+   check_unordered_set(event_spam, spam);
+   check_unordered_map(event_eggs, eggs);
+   check_unordered_multimap(event_strange, strange);
 }
 
 int main(int argc, char **argv)
