@@ -36,9 +36,11 @@ class TTimer;
 namespace ROOT {
 namespace Internal {
    bool DeleteChangesMemoryImpl();
+   void MarkTObjectAsNotOnHeap(TObject &obj);
 }}
 
 class TObject {
+   friend void ROOT::Internal::MarkTObjectAsNotOnHeap(TObject &obj);
 
 private:
    UInt_t         fUniqueID;   ///< object unique identifier

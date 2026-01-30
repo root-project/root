@@ -16,6 +16,8 @@
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 
+#include "RFileTestIncludes.hxx"
+
 using ROOT::Experimental::RFile;
 using ROOT::TestSupport::FileRaii;
 
@@ -751,4 +753,60 @@ TEST(RFile, TTreeRead)
          EXPECT_EQ(x, i);
       }
    }
+}
+
+TEST(RFile, TTreeReadAfterClose)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_after_close.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      file.reset(); // close the file
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      EXPECT_EQ(tree->GetEntry(0), -1); // -1 means "I/O error"
+   }
+}
+
+TEST(RFile, TTreeNoDoubleFree)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_no_double_free.root");
+
+   TTreeDestructorCounter::ResetTimesDestructed();
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTreeDestructorCounter>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 1);
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTreeDestructorCounter>("tree");
+      file.reset(); // close the file (does not delete the three)
+      // tree is deleted here
+   }
+
+   // destructed once during writing, once during reading.
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 2);
 }
