@@ -88,13 +88,20 @@ class ROOTBuild(_build):
             "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON "  # builtins
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
             "-Droofit=ON -Dmathmore=ON -Dbuiltin_fftw3=ON -Dbuiltin_gsl=ON "
-            # Next 4 paths represent the structure of the target binaries/headers/libs
+            f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR} "
+            # Next paths represent the structure of the target binaries/headers/libs
             # as the target installation directory of the Python environment would expect
             f"-DCMAKE_INSTALL_BINDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/bin "
+            f"-DCMAKE_INSTALL_CMAKEDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/cmake "
+            f"-DCMAKE_INSTALL_FONTDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/fonts "
+            f"-DCMAKE_INSTALL_ICONDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/icons "
             f"-DCMAKE_INSTALL_INCLUDEDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/include "
             f"-DCMAKE_INSTALL_LIBDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/lib "
+            f"-DCMAKE_INSTALL_MACRODIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/macros "
+            f"-DCMAKE_INSTALL_MANDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/man "
             f"-DCMAKE_INSTALL_PYTHONDIR={ROOT_BUILD_INTERNAL_DIRNAME} "
-            f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}"
+            f"-DCMAKE_INSTALL_SYSCONFDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/etc "
+            f"-DCMAKE_INSTALL_TUTDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/tutorials "
         )
         subprocess.run(configure_command, check=True)
 
@@ -136,15 +143,8 @@ class ROOTInstall(_install):
         root_package_dir = os.path.join(install_path, "ROOT")
 
         # After the copy of the "mock" package structure from the ROOT installations, these are the
-        # leftover directories that still need to be copied
-        self.copy_tree(os.path.join(INSTALL_DIR, "cmake"), os.path.join(root_package_dir, "cmake"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "etc"), os.path.join(root_package_dir, "etc"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "fonts"), os.path.join(root_package_dir, "fonts"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "icons"), os.path.join(root_package_dir, "icons"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "macros"), os.path.join(root_package_dir, "macros"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "man"), os.path.join(root_package_dir, "man"))
+        # leftover files that still need to be copied
         self.copy_tree(os.path.join(INSTALL_DIR, "README"), os.path.join(root_package_dir, "README"))
-        self.copy_tree(os.path.join(INSTALL_DIR, "tutorials"), os.path.join(root_package_dir, "tutorials"))
         self.copy_file(os.path.join(INSTALL_DIR, "LICENSE"), os.path.join(root_package_dir, "LICENSE"))
 
     def get_outputs(self):
