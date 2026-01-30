@@ -25,7 +25,7 @@ auto hist = std::make_shared<ROOT::Experimental::RHist<int>>(10, std::make_pair(
 {
    ROOT::Experimental::RHistConcurrentFiller filler(hist);
    auto context = filler.CreateFillContext();
-   context.Fill(8.5);
+   context->Fill(8.5);
 }
 // hist->GetBinContent(ROOT::Experimental::RBinIndex(3)) will return 1
 \endcode
