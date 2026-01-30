@@ -30,8 +30,18 @@ else()
   set(outref_suffix "ZLIB")
 endif()
 
+set(root_includepaths
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${DEFAULT_ROOT_INCLUDE_PATH}
+)
+cmake_path(CONVERT "${root_includepaths}" TO_NATIVE_PATH_LIST root_includepaths_native)
+# Like in tutorials/CMakeLists.txt, we use this generator expression to make
+# sure the semicolon in Windows path separators doesn't get used up for list
+# parsing at configuration time in ROOTTEST_ADD_TEST.
+string(REPLACE ";" "$<SEMICOLON>" root_includepaths_escaped "${root_includepaths_native}")
+
 ROOTTEST_ADD_TEST(hadd_autoload
                   COMMAND hadd -f data_merge.root data1.root data2.root
                   OUTREF hadd_autoload${outref_suffix}.ref
                   FIXTURES_REQUIRED root-io-transient-base-WriteFile-fixture
-                  ENVIRONMENT ROOT_INCLUDE_PATH=${CMAKE_CURRENT_SOURCE_DIR}:${DEFAULT_ROOT_INCLUDE_PATH})
+                  ENVIRONMENT ROOT_INCLUDE_PATH=${root_includepaths_escaped})
