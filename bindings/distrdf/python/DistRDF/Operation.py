@@ -125,6 +125,7 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Stats": Action,
     "StdDev": Action,
     "Sum": Action,
+    "Report": Action,
     "VariationsFor": VariationsFor,
     "Vary": Transformation,
 }
