@@ -1016,18 +1016,13 @@ void RModel::GenerateOutput()
                }
                dynamic_parameters_check += d.param + " > f" + cap + " || ";
                input_params_checked.insert(pName);
+               fGC += SP + "if (" + d.param + " > f" + cap + ") {\n";
+               fGC += SP + SP + "throw std::runtime_error(\"TMVA-SOFIE: dynamic input tensor shape parameter " +
+                      d.param + " exceeds the initialized maximum allowed shape.\");\n";
+               fGC += SP + "}\n";
             }
          }
       }
-   }
-   // remove last && from fGC
-   if (input_params_checked.size() > 0) {
-      dynamic_parameters_check = dynamic_parameters_check.substr(0, dynamic_parameters_check.size() - 4);
-      fGC += "\n" + SP + "if (" + dynamic_parameters_check + ") {\n";
-      fGC += SP + SP +
-             "throw std::runtime_error(\"TMVA-SOFIE: dynamic input tensor shape parameters exceed the initialized "
-             "maximum allowed shape.\");\n";
-      fGC += SP + "}\n";
    }
 
    fGC += SP + "doInfer(" + doInferArgs + ");\n";
