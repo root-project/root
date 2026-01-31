@@ -40,7 +40,7 @@ private:
    std::unique_ptr<TPartitioningI> fPartitioningStruct{nullptr}; ///<  partitioning structure
    std::vector<UInt_t> fUsedTriangles{};                         ///<! vector of indices of valid triangles
    mutable TStopwatch fTimer{}; ///<! timer to help determine timeconsuming TGeoTessellated instances
-
+   Bool_t fPrintTime{kFALSE};
 private:
    void FillBuffer3DWithPoints(TBuffer3D &b) const;
    void FillBuffer3DWithSegmentsAndPols(TBuffer3D &b, const std::vector<UInt_t> &indices) const;
@@ -92,7 +92,7 @@ public:
    TPartitioningI const *GetPartitioningStruct() const { return fPartitioningStruct.get(); }
 
    void ResizeCenter(Double_t maxsize);
-
+   void PrintTime(Bool_t flag) {fPrintTime = flag;}
    ClassDefOverride(TGeoTessellated, 1)
 };
 

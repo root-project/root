@@ -19,7 +19,7 @@
 #include "RtypesCore.h" // for UInt_t, Int_t, Bool_t
 #include "TObject.h"    // for TObject
 #include "TString.h"    // for TString
-#include "TGeoTriangle.h"  // for TGeoTriangle, TGeoTriangle::TriangleIntersection_t
+#include "TGeoTriangle.h"  // for TGeoTriangle
 #include "TVector3.h"   // for TVector3
 
 class TBuffer;
@@ -33,19 +33,27 @@ public:
    enum class LengthUnit : Int_t { kMilliMeter, kCentiMeter, kMeter };
 
    struct IntersectedTriangle_t {
-      Int_t fIndex;
-      TGeoTriangle::TriangleIntersection_t fIntersection;
+      const TGeoTriangle *fTriangle{nullptr};
+      Int_t fIndex{-1};
+      TVector3 fIntersectionPoint{0,0,0};
+      Double_t fDistance{TGeoTriangle::sINF};
+      Double_t fDirDotNormal{0};
       Bool_t operator<(const IntersectedTriangle_t &rhs) const
       {
-         return fIntersection.fDistance < rhs.fIntersection.fDistance;
+         if (std::abs(fDistance - rhs.fDistance) < TGeoShape::Tolerance()) {
+            return std::abs(fDirDotNormal) > std::abs(rhs.fDirDotNormal);
+         }
+         return fDistance < rhs.fDistance;
       }
    };
 
    struct ClosestTriangle_t {
-      TGeoTriangle::ClosestPoint_t fClosestPointInfo{};
       const TGeoTriangle *fTriangle{nullptr};
+      TVector3 fClosestPoint{0,0,0};
+      Double_t fDistance{TGeoTriangle::sINF};
       Int_t fIndex{-1};
    };
+
 
 private:
    std::vector<TVector3> fPoints{};     ///< vector of mesh vertices/points

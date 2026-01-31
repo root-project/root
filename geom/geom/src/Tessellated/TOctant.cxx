@@ -27,7 +27,7 @@ triangle box intersections, the be able to determine the triangles contained by 
 #include <numeric>   // for iota
 
 #include "TGeoShape.h"     // for TGeoShape
-#include "Tessellated/TGeoTriangle.h"     // for TGeoTriangle, TGeoTriangle::TriangleIntersection_t
+#include "Tessellated/TGeoTriangle.h"     // for TGeoTriangle
 #include "Tessellated/TGeoTriangleMesh.h" // for TGeoTriangleMesh::IntersectedTriangle_t, TTr...
 
 namespace Tessellated {
@@ -317,6 +317,7 @@ void TOctant::SetState(const TGeoTriangleMesh *mesh)
       indir.clear();
       oppdir.clear();
       dir = mesh->TriangleAt(0).Center(); // something went wrong, an edge was hit and not properly recognized
+      dir.SetMag(1);
       mesh->FindClosestIntersectedTriangles(point, dir, indices, indir, oppdir);
    }
    if (indir.empty() && oppdir.empty()) {
@@ -325,7 +326,7 @@ void TOctant::SetState(const TGeoTriangleMesh *mesh)
       return;
    }
    if (!indir.empty() && !oppdir.empty()) {
-      if (indir[0].fIntersection.fDirDotNormal > 0 && oppdir[0].fIntersection.fDirDotNormal < 0) {
+      if (indir[0].fDirDotNormal > 0 && oppdir[0].fDirDotNormal < 0) {
          fState = State::INSIDE;
          ++sNumberOfInsideOctants;
          return;

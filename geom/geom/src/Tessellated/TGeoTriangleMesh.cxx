@@ -82,38 +82,23 @@ std::vector<UInt_t> TGeoTriangleMesh::GetTriangleIndices() const
 
 void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, const TVector3 &direction,
                                                     const std::vector<UInt_t> &usedTriangleIndices,
-                                                    std::vector<IntersectedTriangle_t> &indirection,
-                                                    std::vector<IntersectedTriangle_t> &againstdirection) const
+                                                    std::vector<IntersectedTriangle_t> &indirection, 
+                                                    std::vector<IntersectedTriangle_t> &oppdirection) const
 {
-   auto triangleIntersection = TGeoTriangle::TriangleIntersection_t{};
-   triangleIntersection.fIntersectionType = TGeoTriangle::IntersectionType::kNone;
-   triangleIntersection.fDistance = 1e30;
-   triangleIntersection.fDirDotNormal = 0.0;
-
-   auto current = IntersectedTriangle_t{-1, triangleIntersection};
-
    for (UInt_t index : usedTriangleIndices) {
-      triangleIntersection = fTriangles[index].IsIntersected(origin, direction);
-      current.fIndex = static_cast<Int_t>(index);
-      current.fIntersection = triangleIntersection;
-
-      switch (triangleIntersection.fIntersectionType) {
-      case TGeoTriangle::IntersectionType::kNone: break;
-
-      case TGeoTriangle::IntersectionType::kLiesOnPlane:
-         indirection.push_back(current);
-         againstdirection.push_back(current);
-         break;
-
-      case TGeoTriangle::IntersectionType::kInDirection: indirection.push_back(current); break;
-
-      case TGeoTriangle::IntersectionType::kInOppositeDirection: againstdirection.push_back(current); break;
-
-      default: break;
+      const TGeoTriangle &triangle = fTriangles[index];
+      const auto t = triangle.DistanceFrom(origin, direction);
+      if (t != TGeoTriangle::sINF) {
+         if (t > 0) {
+            indirection.push_back(IntersectedTriangle_t{&triangle, index, origin + t * direction, t, triangle.Normal().Dot(direction)});
+         } else {
+            oppdirection.push_back(IntersectedTriangle_t{&triangle, index, origin + t * direction, -t, triangle.Normal().Dot(direction)});
+         }
       }
+      
    }
    std::sort(std::begin(indirection), std::end(indirection));
-   std::sort(std::begin(againstdirection), std::end(againstdirection));
+   std::sort(std::begin(oppdirection), std::end(oppdirection));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,16 +108,16 @@ void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, c
 Bool_t TGeoTriangleMesh::IsCloserTriangle(const ClosestTriangle_t &candidate, const ClosestTriangle_t &current,
                                        const TVector3 &point) const
 {
-   if (std::abs(candidate.fClosestPointInfo.fDistance - current.fClosestPointInfo.fDistance) <= 0.0000005) {
+   if (std::abs(candidate.fDistance - current.fDistance) <= 0.0000005) {
 
-      const TVector3 candidateNormal = (candidate.fClosestPointInfo.fClosestPoint - point).Unit();
-      const TVector3 currentNormal = (current.fClosestPointInfo.fClosestPoint - point).Unit();
+      const TVector3 candidateNormal = (candidate.fClosestPoint - point).Unit();
+      const TVector3 currentNormal = (current.fClosestPoint - point).Unit();
       const Double_t candidateDot = std::abs(candidateNormal.Dot(candidate.fTriangle->Normal()));
       const Double_t currentDot = std::abs(currentNormal.Dot(current.fTriangle->Normal()));
 
       return candidateDot > currentDot;
    }
-   return candidate.fClosestPointInfo.fDistance < current.fClosestPointInfo.fDistance;
+   return candidate.fDistance < current.fDistance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,11 +133,11 @@ TGeoTriangleMesh::FindClosestTriangleInMesh(const TVector3 &point, const std::ve
 {
    UInt_t currentindex = 0;
    auto closesTGeoTriangle = ClosestTriangle_t{};
-   closesTGeoTriangle.fClosestPointInfo = TGeoTriangle::ClosestPoint_t{{0.0, 0.0, 0.0}, 1e30};
    for (UInt_t cindex : usedTriangleIndices) {
       ClosestTriangle_t candidateCloseTGeoTriangle;
       candidateCloseTGeoTriangle.fTriangle = &fTriangles[cindex];
-      candidateCloseTGeoTriangle.fClosestPointInfo = candidateCloseTGeoTriangle.fTriangle->ClosestPointToPoint(point);
+      candidateCloseTGeoTriangle.fClosestPoint = candidateCloseTGeoTriangle.fTriangle->ClosestPointToPoint(point);
+      candidateCloseTGeoTriangle.fDistance = (candidateCloseTGeoTriangle.fClosestPoint-point).Mag();
       candidateCloseTGeoTriangle.fIndex = static_cast<Int_t>(cindex);
 
       if (IsCloserTriangle(candidateCloseTGeoTriangle, closesTGeoTriangle, point)) {

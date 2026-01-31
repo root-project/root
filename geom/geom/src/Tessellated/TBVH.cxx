@@ -178,7 +178,6 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &poi
    // algorithm is based on standard iterative tree traversal with priority queues
    auto best_enclosing_R_sq = std::numeric_limits<Double_t>::max();
    auto current_safety_sq = 0.0;
-   TGeoTriangle::ClosestPoint_t overallclosestpoint{};
    TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle{};
    do {
       if (currnode.is_leaf()) {
@@ -190,13 +189,14 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &poi
             //
             // fetch leaf_bounding box
             const TGeoTriangle &triangle = fMesh->TriangleAt(triangle_id);
-            const TGeoTriangle::ClosestPoint_t closestpoint = triangle.ClosestPointToPoint(point);
-            const auto safety_sq = closestpoint.fDistance * closestpoint.fDistance;
+            const TVector3 closestpoint = triangle.ClosestPointToPoint(point);
+            const auto safety_sq = (closestpoint - point).Mag2();
 
             // update best Rmin
             if (safety_sq < best_enclosing_R_sq) {
                best_enclosing_R_sq = safety_sq;
-               closesTGeoTriangle.fClosestPointInfo = closestpoint;
+               closesTGeoTriangle.fClosestPoint = closestpoint;
+               closesTGeoTriangle.fDistance = sqrt(safety_sq);
                closesTGeoTriangle.fTriangle = &triangle;
                closesTGeoTriangle.fIndex = triangle_id;
             }
@@ -246,7 +246,7 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &poi
 Double_t TBVH::GetSafetyDistance(const TVector3 &point) const
 {
    TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = GetClosestTriangle(point);
-   return closesTGeoTriangle.fClosestPointInfo.fDistance;
+   return closesTGeoTriangle.fDistance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,7 +277,7 @@ Double_t TBVH::DistanceInDirection(const TVector3 &origin, const TVector3 &direc
       } else {
          ray = Ray{Vec3(origin.X(), origin.Y(), origin.Z()),          // Ray origin
                    Vec3(direction.X(), direction.Y(), direction.Z()), // Ray direction
-                   ray.tmax + TGeoTriangle::sAccuracy, 1e30};
+                   ray.tmax + TGeoTriangle::sAccuracy, 1e30};         // Update minimum tmin to be current tmax for next triangle intersection
          triangle = GetIntersectedTriangle(ray);
       }
    }

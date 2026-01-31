@@ -14,6 +14,7 @@
 #include <cmath>  // for abs
 #include <array>  // for array
 #include <vector> // for vector
+#include <limits> // for numeric_limits
 
 #include "Rtypes.h"     // for THashConsistencyHolder, ClassDefOverride
 #include "RtypesCore.h" // for Double_t, Bool_t, Int_t, UInt_t
@@ -36,28 +37,8 @@ Bool_t LargerThan(Double_t a, Double_t b, Double_t accuracy);
 class TGeoTriangle : public TObject {
 public:
    static constexpr Double_t sAccuracy = 1e-09;
+   static constexpr Double_t sINF = std::numeric_limits<double>::infinity();
    static const UInt_t sNumberOfVertices = 3;
-
-   enum class IntersectionType : Int_t { kNone, kInDirection, kLiesOnPlane, kInOppositeDirection };
-
-   struct TriangleIntersection_t {
-      TVector3 fIntersectionPoint;
-      IntersectionType fIntersectionType;
-      Double_t fDistance;
-      Double_t fDirDotNormal;
-      Bool_t operator<(const TriangleIntersection_t &rhs) const
-      {
-         if (std::abs(fDistance - rhs.fDistance) < TGeoShape::Tolerance()) {
-            return std::abs(fDirDotNormal) > std::abs(rhs.fDirDotNormal);
-         }
-         return fDistance < rhs.fDistance;
-      }
-   };
-
-   struct ClosestPoint_t {
-      TVector3 fClosestPoint;
-      Double_t fDistance;
-   };
 
 private:
    const std::vector<TVector3> *fPoints{nullptr}; ///<! non owning pointer to vector of points (owned by TGeoTriangleMesh)
@@ -72,11 +53,8 @@ private:
    TVector3 CalculateCenter() const;
    TVector3 CalculateNormal() const;
 
-   void IntersectsPlane(const TVector3 &linepoint, const TVector3 &linedirection, Double_t accuracy,
-                        TriangleIntersection_t &result) const;
-   void ClosestPointOfEdgesToPoint(const TVector3 &point, ClosestPoint_t &closestPoint) const;
-   void ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection,
-                                  ClosestPoint_t &closestPoint) const;
+   TVector3 ClosestPointOfEdgesToPoint(const TVector3 &point) const;
+   TVector3 ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection) const;
 
 public:
    TGeoTriangle() : TObject() {} /* = default */
@@ -88,10 +66,8 @@ public:
    void Flip();
    Bool_t IsValid() const;
    Bool_t IsNeighbour(const TGeoTriangle &other, Bool_t &requireFlip) const;
-   TriangleIntersection_t IsIntersected(const TVector3 &origin, const TVector3 &direction) const;
-   ClosestPoint_t ClosestPointToPoint(const TVector3 &point) const;
-   Bool_t IsPointContained(const TVector3 &point) const;
-   Bool_t IsPointContainedCenterCast(const TVector3 &point) const;
+   double DistanceFrom(const TVector3 &origin, const TVector3 &direction) const;
+   TVector3 ClosestPointToPoint(const TVector3 &point) const;
    Double_t Area() const;
    const std::array<UInt_t, 3> &Indices() const { return fIndices; }
    UInt_t Index(size_t i) const { return fIndices.at(i); }

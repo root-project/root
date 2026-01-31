@@ -154,168 +154,92 @@ Bool_t TGeoTriangle::IsNeighbour(const TGeoTriangle &other, Bool_t &requireFlip)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Test if this triangle is hit by the ray given by origin and direction
+/// Compute distance from origin along line until triangle is hit. Returns
+/// std::numeric_limits<double>::infinity() if not hit. Implementation taken from Sandro Wenzel's
+/// ROOT PR https://github.com/root-project/root/pull/21045
 ///
 /// \param[in] origin
 /// \param[in] direction
-/// \return TriangleIntersection_t
+/// \return Distance from origin to triangle along direction
 
-TGeoTriangle::TriangleIntersection_t TGeoTriangle::IsIntersected(const TVector3 &origin, const TVector3 &direction) const
+Double_t TGeoTriangle::DistanceFrom(const TVector3 &origin, const TVector3 &direction) const
 {
-   TriangleIntersection_t result;
-   IntersectsPlane(origin, direction, TGeoShape::Tolerance(), result);
-   if (result.fIntersectionType != TGeoTriangle::IntersectionType::kNone) {
-      if (IsPointContained(result.fIntersectionPoint)) {
-         if (result.fIntersectionType == TGeoTriangle::IntersectionType::kLiesOnPlane) {
-            result.fDistance = (result.fIntersectionPoint - origin).Mag();
-         }
-         return result;
-      }
-   }
-   result.fIntersectionType = TGeoTriangle::IntersectionType::kNone;
-   result.fDistance = std::numeric_limits<double>::max();
+   constexpr double EPS = sAccuracy;
+   constexpr double rayEPS = sAccuracy;
+   const TVector3 &v0 = Point(0);
+   const TVector3 &v1 = Point(1);
+   const TVector3 &v2 = Point(2);
 
-   return result;
+   TVector3 e1{v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
+   TVector3 e2{v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
+   auto p = direction.Cross(e2);
+   auto det = e1.Dot(p);
+   if (std::abs(det) <= EPS) {
+      return sINF;
+   }
+
+   TVector3 tvec{origin[0] - v0[0], origin[1] - v0[1], origin[2] - v0[2]};
+   auto invDet = 1.0 / det;
+   auto u = tvec.Dot(p) * invDet;
+   if (u < 0.0 || u > 1.0) {
+      return sINF;
+   }
+   auto q = tvec.Cross(e1);
+   auto v = direction.Dot(q) * invDet;
+   if (v < 0.0 || u + v > 1.0) {
+      return sINF;
+   }
+   auto t = e2.Dot(q) * invDet;
+   // If t is larger than rayEPS we have a intersection in the direction of the ray, otherwise it is a intersection in the opposite direction
+   // return (t > rayEPS) ? t : sINF;
+   // Actually, we want to also return the distances in the opposite direction. It allows to cross check certain things. It is also helpful
+   // with origin almost on triangle situations
+   return t;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Test if the ray given by linepoint and linedirection intersect the plane
-/// in which the triangle lies
-///
-/// \param[in] linepoint
-/// \param[in] linedirection
-/// \param[in] accuracy Double_t giving the accuracy
-/// \param[out] result TriangleIntersection_t object containing
-///                    the intersected triangle
-
-void TGeoTriangle::IntersectsPlane(const TVector3 &linepoint, const TVector3 &linedirection, Double_t accuracy,
-                                TriangleIntersection_t &result) const
-{
-   result.fIntersectionType = TGeoTriangle::IntersectionType::kNone;
-   result.fDirDotNormal = linedirection.Dot(fNormal);
-
-   Double_t nominator = (fCenter - linepoint).Dot(fNormal);
-
-   if (std::abs(nominator) < TGeoShape::Tolerance()) { // linepoint lies on plane
-      result.fIntersectionPoint = linepoint;
-      result.fIntersectionType = TGeoTriangle::IntersectionType::kLiesOnPlane;
-   }
-   if (TGeoTriangleInternal::EqualTo(result.fDirDotNormal, 0, accuracy)) { // line and plane are parallel
-      result.fIntersectionType = TGeoTriangle::IntersectionType::kNone;
-      return;
-   }
-   Double_t scale = nominator / result.fDirDotNormal;
-
-   if (scale < 0) {
-      result.fIntersectionType = TGeoTriangle::IntersectionType::kInOppositeDirection;
-      result.fIntersectionPoint = linepoint + (linedirection * scale);
-      result.fDistance = (result.fIntersectionPoint - linepoint).Mag();
-
-   } else {
-      result.fIntersectionType = TGeoTriangle::IntersectionType::kInDirection;
-      result.fIntersectionPoint = linepoint + (linedirection * scale);
-      result.fDistance = (result.fIntersectionPoint - linepoint).Mag();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Test if the point contained by the triangle.
-/// Barycentric point in triangle test
-///
-/// @param[in] point
-/// @return Bool_t
-
-Bool_t TGeoTriangle::IsPointContained(const TVector3 &point) const
-{
-   if ((point - fCenter).Mag2() > fRadiusSqr) {
-      return kFALSE;
-   }
-   const TVector3 AToC = Point(2) - Point(0);
-   const TVector3 AToB = Point(1) - Point(0);
-   const Double_t DotCC = AToC.Dot(AToC);
-   const Double_t DotCB = AToC.Dot(AToB);
-   const Double_t DotBB = AToB.Dot(AToB);
-   const Double_t InvDenom = 1.0 / (DotCC * DotBB - DotCB * DotCB);
-   if (InvDenom < 1e5 && InvDenom > 0.1) {
-      // Input dependent part
-      const TVector3 AToPoint = point - Point(0);
-      const Double_t dotCPoint = AToC.Dot(AToPoint);
-      const Double_t dotBPoint = AToB.Dot(AToPoint);
-
-      const Double_t u = (DotBB * dotCPoint - DotCB * dotBPoint) * InvDenom;
-      const Double_t v = (DotCC * dotBPoint - DotCB * dotCPoint) * InvDenom;
-
-      if ((u >= -TGeoShape::Tolerance()) && (v >= -TGeoShape::Tolerance()) && u + v >= 0 && u + v <= 1.01) {
-         return IsPointContainedCenterCast(point);
-      } else {
-         return (u >= 0) && (v >= 0) && u + v <= 1;
-      }
-   } else {
-      return IsPointContainedCenterCast(point);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Public helper function for IsPoiontContained
-/// Alternative point in triangle test by finding closest point of the triangle
-/// edges to the point, and comparing if the ray from center to that edge point
-/// is parallel or antiparallel to the direction from the test point to the edge
-/// point
-///
-/// \param[in] point
-/// \return Bool_t indicating, that point is inside this triangle
-
-Bool_t TGeoTriangle::IsPointContainedCenterCast(const TVector3 &point) const
-{
-   auto closestPoint = ClosestPoint_t{};
-   ClosestPointOfEdgesToPoint(point, closestPoint);
-   TVector3 dir = closestPoint.fClosestPoint - point;
-
-   TVector3 centerdir = (closestPoint.fClosestPoint - fCenter).Unit();
-
-   return dir.Mag() < TGeoShape::Tolerance() || dir.Dot(centerdir) > 0 ||
-          (dir.Mag() < TGeoShape::Tolerance() && dir.Dot(centerdir) > -TGeoShape::Tolerance());
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the closest point on the triangle to point
 ///
 /// \param[in] point
-/// \return ClosestPoint_t
+/// \return closest point on triangle to point
 
-TGeoTriangle::ClosestPoint_t TGeoTriangle::ClosestPointToPoint(const TVector3 &point) const
+TVector3 TGeoTriangle::ClosestPointToPoint(const TVector3 &point) const
 {
-   TriangleIntersection_t intersection = IsIntersected(point, fNormal);
-   auto closestPoint = ClosestPoint_t{intersection.fIntersectionPoint, intersection.fDistance};
-   if (intersection.fIntersectionType == TGeoTriangle::IntersectionType::kNone ||
-       !IsPointContained(intersection.fIntersectionPoint)) {
-      ClosestPointOfEdgesToPoint(point, closestPoint);
-   }
-
-   return closestPoint;
+   Double_t t = DistanceFrom(point, fNormal);
+   // Point is not projectable onto triangle
+   if (t == sINF) {
+      return ClosestPointOfEdgesToPoint(point);
+   } 
+   // Otherwise, closest point on triangle is projection:
+   return point + t * fNormal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates Closest point of triangle edges to given point point
 ///
 /// \param[in] point
-/// \param[out] closestPoint
+/// return closestPoint
 
-void TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point, ClosestPoint_t &closestPoint) const
+TVector3 TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point) const
 {
-   closestPoint.fDistance = 1e30;
-   TVector3 edgedir = TVector3{0.0, 0.0, 0.0};
-   auto current = ClosestPoint_t{{0.0, 0.0, 0.0}, 1e30};
+   double_t smallestdistance = sINF;
+   TVector3 edgedir{0.0, 0.0, 0.0};
+   TVector3 closestpoint{0.0, 0.0, 0.0};
+   TVector3 current{0.0, 0.0, 0.0};
    for (UInt_t index = 0; index < sNumberOfVertices; ++index) {
       const TVector3 &startedge = Point((index + 1) % sNumberOfVertices);
       const TVector3 &endedge = Point(index);
       edgedir = endedge - startedge;
 
-      ClosestPointOfEdgeToPoint(point, startedge, edgedir, current);
-      if (current.fDistance < closestPoint.fDistance) {
-         closestPoint = current;
+      current = ClosestPointOfEdgeToPoint(point, startedge, edgedir);
+      double_t distance = (closestpoint-point).Mag();
+      if (smallestdistance < distance) {
+         smallestdistance = distance;
+         closestpoint = current;
       }
    }
+   return closestpoint;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,27 +248,22 @@ void TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point, ClosestPoin
 /// \param[in] point
 /// \param[in] edge
 /// \param[in] edgedirection
-/// \param[out] closestPoint
+/// return closest point
 
-void TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection,
-                                          ClosestPoint_t &closestPoint) const
+TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection) const
 {
    TVector3 edgetopoint = point - edge;
    Double_t isleft = edgetopoint.Dot(edgedirection);
    if (TGeoTriangleInternal::SmallerThan(isleft, 0, sAccuracy)) {
-      closestPoint.fDistance = edgetopoint.Mag();
-      closestPoint.fClosestPoint = edge;
-      return;
+      return edge;
    }
    Double_t isright = edgedirection.Dot(edgedirection);
    if (TGeoTriangleInternal::LargerThan(isleft, isright, sAccuracy)) {
-      closestPoint.fClosestPoint = (edge + edgedirection);
-      closestPoint.fDistance = (point - closestPoint.fClosestPoint).Mag();
-      return;
+      return (edge + edgedirection);
+      
    }
    Double_t scale = isleft / isright;
-   closestPoint.fClosestPoint = edge + (edgedirection * scale);
-   closestPoint.fDistance = (point - closestPoint.fClosestPoint).Mag();
+   return edge + (edgedirection * scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

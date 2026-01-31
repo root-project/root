@@ -40,7 +40,7 @@ triangle count) shapes.
 #include "TClass.h"         // for TClass
 #include "TGeoShape.h"      // for TGeoShape
 #include "TString.h"        // for operator<<
-#include "Tessellated/TGeoTriangle.h"      // for TGeoTriangle::TriangleIntersection_t, TTria...
+#include "Tessellated/TGeoTriangle.h"      // for TGeoTriangle
 #include "TVector3.h"       // for TVector3, operator*, operator+
 
 class TGeoMatrix;
@@ -70,8 +70,10 @@ TGeoTessellated::TGeoTessellated(const char *name) : TGeoBBox(name, 0,0,0), fMes
 
 TGeoTessellated::~TGeoTessellated()
 {
+   if (fPrintTime) {
    std::cout << "TGeoTessellated " << fMesh->GetMeshFile() << " took Real time " << fTimer.RealTime() << " s, CPU time "
              << fTimer.CpuTime() << "s" << std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +118,8 @@ bool TGeoTessellated::Contains(const Double_t *pointa) const
    fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
 
    if (indir.empty() || oppdir.empty()) {
-      if ((!indir.empty() && indir[0].fIntersection.fDistance < TGeoShape::Tolerance() * 10) ||
-          (!oppdir.empty() && oppdir[0].fIntersection.fDistance < TGeoShape::Tolerance() * 10)) {
+      if ((!indir.empty() && indir[0].fDistance < TGeoShape::Tolerance() * 10) ||
+          (!oppdir.empty() && oppdir[0].fDistance < TGeoShape::Tolerance() * 10)) {
          fTimer.Stop();
          return true;
       }
@@ -125,7 +127,7 @@ bool TGeoTessellated::Contains(const Double_t *pointa) const
       return false;
    }
 
-   if (indir[0].fIntersection.fDirDotNormal > 0 && oppdir[0].fIntersection.fDirDotNormal < 0) {
+   if (indir[0].fDirDotNormal > 0 && oppdir[0].fDirDotNormal < 0) {
       fTimer.Stop();
       return true;
    }
@@ -167,6 +169,7 @@ TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, In
 
    TVector3 point(pointa);
    TVector3 dir{dira};
+   dir.SetMag(1);
 
    if (fPartitioningStruct != nullptr) {
       auto result = fPartitioningStruct->DistanceInDirection(point, dir, true);
@@ -181,14 +184,14 @@ TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, In
    size_t counter = 0;
 
    while (counter < size) {
-      if (indir[counter].fIntersection.fDirDotNormal < 0) {
+      if (indir[counter].fDirDotNormal < 0) {
          ++counter;
       } else {
          fTimer.Stop();
-         return indir[counter].fIntersection.fDistance;
+         return indir[counter].fDistance;
       }
    }
-   if ((!oppdir.empty() && oppdir[0].fIntersection.fDirDotNormal > 0) || (oppdir.empty() && indir.empty())) {
+   if ((!oppdir.empty() && oppdir[0].fDirDotNormal > 0) || (oppdir.empty() && indir.empty())) {
       fTimer.Stop();
       return 0;
    }
@@ -246,19 +249,16 @@ TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, I
       return result;
    }
    
-   TVector3 tmpoffset = dir*-1;
-   tmpoffset.SetMag(2*TGeoShape::Tolerance());
-   TVector3 newpoint = point+tmpoffset;
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
-   fMesh->FindClosestIntersectedTriangles(newpoint, dir, fUsedTriangles, indir, oppdir);
+   fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
    size_t size = indir.size();
    size_t counter = 0;
 
    while (counter < size) {
-      if (indir[counter].fIntersection.fDirDotNormal <= TGeoShape::Tolerance()) {
+      if (indir[counter].fDirDotNormal <= TGeoShape::Tolerance()) {
          fTimer.Stop();
-         return indir[counter].fIntersection.fDistance-2*TGeoShape::Tolerance();
+         return indir[counter].fDistance-2*TGeoShape::Tolerance();
       } else {
          ++counter;
       }
@@ -303,7 +303,7 @@ Double_t TGeoTessellated::Safety(const Double_t *pointa, bool inside) const
       fTimer.Stop();
       return result;
    }
-   Double_t result = fMesh->FindClosestTriangleInMesh(TVector3{pointa}, fUsedTriangles).fClosestPointInfo.fDistance;
+   Double_t result = fMesh->FindClosestTriangleInMesh(TVector3{pointa}, fUsedTriangles).fDistance;
    fTimer.Stop();
    return result;
 }

@@ -31,6 +31,7 @@ namespace Tessellated {
 
 class TOctree : public TPartitioningI {
 private:
+
    TOctant *fRoot{nullptr};
    Bool_t fIsSetup{kFALSE};
 
@@ -51,17 +52,17 @@ private:
 
 private:
    Double_t DistFromInside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
-                           const std::vector<TGeoTriangle::TriangleIntersection_t> &triangleIntersections);
+                           const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections);
    Double_t DistFromOutside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
-                            const std::vector<TGeoTriangle::TriangleIntersection_t> &triangleIntersections);
+                            const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections);
 
    Bool_t CheckFacesInOctant(const TOctant *octant,
-                             std::vector<TGeoTriangle::TriangleIntersection_t> &triangleIntersections) const;
+                             std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
    Bool_t FindClosestFacePoint(TVector3 origin, TVector3 direction,
-                               std::vector<TGeoTriangle::TriangleIntersection_t> &triangleIntersections) const;
+                               std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
    Bool_t ProcessSubtree(Double_t tx0, Double_t ty0, Double_t tz0, Double_t tx1, Double_t ty1, Double_t tz1,
                          const TOctant *octant, const TVector3 &origin, const TVector3 &direction,
-                         std::vector<TGeoTriangle::TriangleIntersection_t> &triangleIntersections) const;
+                         std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
    Int_t FindNextNodeIndex(Double_t txM, Int_t x, Double_t tyM, Int_t y, Double_t tzM, Int_t z) const;
    Int_t FindFirstNodeIndex(Double_t tx0, Double_t ty0, Double_t tz0, Double_t txM, Double_t tyM, Double_t tzM) const;
 
