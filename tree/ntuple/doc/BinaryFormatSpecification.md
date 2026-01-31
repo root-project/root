@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.1.1
+# RNTuple Binary Format Specification 1.0.1.2
 
 ## Versioning Notes
 
@@ -562,6 +562,12 @@ If the index of the first element is negative (sign bit set), the column is defe
 In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
 See Section "Page List Envelope" for further information about suppressed columns.
 
+Note that an unsuppressed deferred column must only be attached to a field that has no ancestor fields
+with the structural role collection or variant.
+For instance, columns belonging to nested structs can be deferred; columns belonging to a struct under a vector cannot.
+For the latter to work, the RNTuple metadata would need to store the sum of elements written in a collection
+(or individually for all variants) per cluster and cluster group, which is not recorded in this file format version.
+
 If flag 0x02 (column with range) is set, the column metadata contains the inclusive range of valid values
 for this column (used e.g. for quantized real values).
 The range is represented as a min and a max value, specified as IEEE 754 little-endian double precision floats.
@@ -650,6 +656,7 @@ In general, a schema extension is optional, and thus this record frame might be 
 The interpretation of the information contained therein should be identical
 as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
+In particular, it is possible to add in the extension header subfields of parents defined in the regular header.
 
 Note that the field IDs and physical column IDs given by the serialization order
 should continue from the largest IDs found in the header.
