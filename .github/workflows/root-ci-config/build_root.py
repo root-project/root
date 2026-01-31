@@ -473,6 +473,20 @@ def create_binaries(buildtype):
     if result != 0:
         die(result, "Failed to generate binary package")
 
+    if WINDOWS:
+        sign_binaries()
+
+def sign_binaries():
+    packagedir = os.path.join(WORKDIR, "packages")
+
+    result = subprocess_with_log(f"""
+        cd '{packagedir}'
+        signtool.exe sign /n 'ROOT Code Sign' /fd sha256 /tr http://timestamp.comodoca.com/?td=sha256 /td sha256 /as /v *.exe
+    """)
+
+    if result != 0:
+        print(f'Failed to sign Windows binaries!\n')
+
 
 @github_log_group("Rebase")
 def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
