@@ -154,6 +154,7 @@ Bool_t TGeoTriangle::IsNeighbour(const TGeoTriangle &other, Bool_t &requireFlip)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Moeller-Trumbore ray triangle-intersection
 /// Compute distance from origin along line until triangle is hit. Returns
 /// std::numeric_limits<double>::infinity() if not hit. Implementation taken from Sandro Wenzel's
 /// ROOT PR https://github.com/root-project/root/pull/21045
