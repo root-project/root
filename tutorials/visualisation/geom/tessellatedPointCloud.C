@@ -11,6 +11,7 @@
 #include <TColor.h>
 #include <TDatime.h>
 #include <TRandom3.h>
+#include <TGeoChecker.h>
 #include <TGeoManager.h>
 #include <TGeoTessellated.h>
 #include <Tessellated/TGeoMeshLoading.h>
@@ -29,7 +30,7 @@ int randomColor()
 }
 
 //______________________________________________________________________________
-void tessellatedNav(const char *dot_obj_file = "", bool check = true, int mode = 1)
+void tessellatedPointCloud(const char *dot_obj_file = "", int number_of_test_points = 10000000, bool check = true, int mode = 1)
 {
    // Input a file in .obj format (https://en.wikipedia.org/wiki/Wavefront_.obj_file)
    // The file should have a single object inside, only vertex and faces information is used
@@ -46,14 +47,12 @@ void tessellatedNav(const char *dot_obj_file = "", bool check = true, int mode =
    auto geom = new TGeoManager(name, "Imported from .obj file");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
    TGeoMedium *med = new TGeoMedium("MED", 1, mat);
-   TGeoVolume *top = geom->MakeBox("TOP", med, 10, 10, 10);
+   TGeoVolume *top = geom->MakeBox("TOP", med, 5, 5, 5);
    geom->SetTopVolume(top);
 
    //Creating mesh is now a little more verbose, as there are several options to create it from, which is why it had to be moved out from
    //TGeoTessellated
    auto mesh = Tessellated::ImportMeshFromObjFormat(sfile.Data(), Tessellated::TGeoTriangleMesh::LengthUnit::kCentiMeter);
-   // auto mesh = Tessellated::ImportMeshFromASCIIStl(
-      // "BoxKristall_12.stl", Tessellated::TGeoTriangleMesh::LengthUnit::kMilliMeter);
    if (!mesh) {
       return;
    }
@@ -63,27 +62,27 @@ void tessellatedNav(const char *dot_obj_file = "", bool check = true, int mode =
       mesh->CheckClosure(fixTriangleOrientation, verbose);
    }
 
-   // mesh->ResizeCenter(10.);
+   // mesh->ResizeCenter(5.); // You can resize on the mesh, or on TGeoTessellated. However: IMPORTANT!!! Call Resize bevore setting up partitioning structure!!!
+
 
    auto tsl = new TGeoTessellated(); 
    tsl->SetMesh(std::move(mesh));
-   tsl->InspectShape();
 
-   tsl->ResizeCenter(5.);
+   tsl->ResizeCenter(5.); // IMPORTANT!!! Call Resize bevore setting up partitioning structure!!!
 
    if (mode == 1) {
       std::unique_ptr<Tessellated::TPartitioningI>octree{Tessellated::TOctree::CreateOctree(tsl, 4, 1, true)};
       tsl->SetPartitioningStruct(octree);
    } else if (mode == 2) {
-      std::unique_ptr<Tessellated::TPartitioningI> bvh{new Tessellated::TBVH()};
+      std::unique_ptr<Tessellated::TPartitioningI>bvh{new Tessellated::TBVH()};
       bvh->SetTriangleMesh(tsl->GetTriangleMesh());
+      dynamic_cast<Tessellated::TBVH*>(bvh.get())->SetBVHQuality(bvh::v2::DefaultBuilder<bvh::v2::Node<Double_t, 3>>::Quality::High);
       tsl->SetPartitioningStruct(bvh);
    } else {
       // You run without a partitioning structure. Perfectly fine, but ssssslllllooooowwwww, besides for meshes with only a few triangles < 100, than it can be
       // faster than with a paritioning structure.
    }
    tsl->InspectShape();
-
    TGeoVolume *vol = new TGeoVolume(name, tsl, med);
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
@@ -98,7 +97,5 @@ void tessellatedNav(const char *dot_obj_file = "", bool check = true, int mode =
    if (!view)
       return;
    view->Top();
-
-   // Raytracing will call VecGeom navigation
-   top->Raytrace();
+   top->RandomPoints(number_of_test_points);
 }
