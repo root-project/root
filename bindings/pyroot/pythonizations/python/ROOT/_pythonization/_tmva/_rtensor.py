@@ -60,7 +60,7 @@ def _AsRTensor(arr):
 
     # Construct an RTensor of the correct data-type
     out = ROOT.TMVA.Experimental.RTensor[cppdtype, ROOT.std.vector[cppdtype]](
-        ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data),
+        ROOT._cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data),
         [s for s in shape],
         [s // dtypesize for s in strides],
         layout,

@@ -4,9 +4,6 @@ import sys
 import types
 from functools import partial
 
-import cppyy
-import cppyy.ll
-
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -28,7 +25,7 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
+        self.__dict__["_gROOT"] = facade._cppyy.gbl.ROOT.GetROOT()
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -57,7 +54,7 @@ class ROOTFacade(types.ModuleType):
 
         types.ModuleType.__init__(self, module.__name__)
 
-        self.module = module
+        self._cppyy = module.cppyy
 
         self.__all__ = module.__all__
         self.__name__ = module.__name__
@@ -82,7 +79,7 @@ class ROOTFacade(types.ModuleType):
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
-            setattr(self, name, getattr(cppyy._backend, name))
+            setattr(self, name, getattr(self._cppyy._backend, name))
         # For backwards compatibility
         self.MakeNullPointer = partial(self.bind_object, 0)
         self.BindObject = self.bind_object
@@ -117,7 +114,7 @@ class ROOTFacade(types.ModuleType):
         out_type = "Long64_t*" if sys.maxsize > 2**32 else "Int_t*"
 
         # Create a buffer (LowLevelView) from address
-        return cppyy.ll.cast[out_type](addr)
+        return self._cppyy.ll.cast[out_type](addr)
 
     def _fallback_getattr(self, name):
         # Try:
@@ -129,10 +126,10 @@ class ROOTFacade(types.ModuleType):
         # e.g. ROOT.ROOT.Math as ROOT.Math
 
         # Note that hasattr caches the lookup for getattr
-        if hasattr(cppyy.gbl, name):
-            return getattr(cppyy.gbl, name)
-        elif hasattr(cppyy.gbl.ROOT, name):
-            return getattr(cppyy.gbl.ROOT, name)
+        if hasattr(self._cppyy.gbl, name):
+            return getattr(self._cppyy.gbl, name)
+        elif hasattr(self._cppyy.gbl.ROOT, name):
+            return getattr(self._cppyy.gbl.ROOT, name)
         else:
             res = self.gROOT.FindObject(name)
             if res:
@@ -168,10 +165,10 @@ class ROOTFacade(types.ModuleType):
         from ._application import PyROOTApplication
 
         # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
+        self.__dict__["gROOT"] = self._cppyy.gbl.ROOT.GetROOT()
 
         # Make sure the interpreter is initialized once gROOT has been initialized
-        cppyy.gbl.TInterpreter.Instance()
+        self._cppyy.gbl.TInterpreter.Instance()
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
@@ -194,7 +191,7 @@ class ROOTFacade(types.ModuleType):
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
-        self.__class__.__setattr__ = lambda self, name, val: setattr(cppyy.gbl, name, val)
+        self.__class__.__setattr__ = lambda self, name, val: setattr(self._cppyy.gbl, name, val)
 
         # Register custom converters and executors
         self._register_converters_and_executors()
@@ -431,7 +428,7 @@ class ROOTFacade(types.ModuleType):
     def Numba(self):
         from ._numbadeclare import _NumbaDeclareDecorator
 
-        cppyy.cppdef("namespace Numba {}")
+        self._cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
@@ -453,8 +450,8 @@ class ROOTFacade(types.ModuleType):
     # Get TPyDispatcher for programming GUI callbacks
     @property
     def TPyDispatcher(self):
-        cppyy.include("ROOT/TPyDispatcher.h")
-        tpd = cppyy.gbl.TPyDispatcher
+        self._cppyy.include("ROOT/TPyDispatcher.h")
+        tpd = self._cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd
 

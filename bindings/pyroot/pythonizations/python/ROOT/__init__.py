@@ -18,6 +18,7 @@ from importlib.machinery import ModuleSpec
 from typing import Optional, Union
 
 import cppyy
+import cppyy.ll
 import cppyy.types
 
 from . import _asan  # noqa: F401  # imported for side effects for setup specific to AddressSanitizer environments
