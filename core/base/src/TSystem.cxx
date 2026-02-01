@@ -3712,6 +3712,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #else
    linkLibraries.Prepend(librariesWithQuotes);
 #endif
+   std::cout << "linkLibraries : " << linkLibraries << std::endl;
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
