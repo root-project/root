@@ -12,7 +12,6 @@
 
 from ._rooabscollection import RooAbsCollection
 
-import cppyy
 import operator
 
 
@@ -35,9 +34,10 @@ class RooArgSet(RooAbsCollection):
         return self._init(*args, **kwargs)
 
     def __getitem__(self, key):
+        import ROOT
 
         # other than the RooArgList, the RooArgSet also supports string keys
-        if isinstance(key, (str, cppyy.gbl.TString, cppyy.gbl.std.string)):
+        if isinstance(key, (str, ROOT.TString, ROOT.std.string)):
             return self._getitem(key)
 
         try:

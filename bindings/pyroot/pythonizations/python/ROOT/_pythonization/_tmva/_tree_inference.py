@@ -10,8 +10,6 @@
 
 import json
 
-import cppyy
-
 
 def get_basescore(model):
     """Get base score from an XGBoost sklearn estimator.
@@ -51,6 +49,8 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     Raises:
         Exception: If the XGBoost model has an unsupported objective.
     """
+    import ROOT
+
     # Extract objective
     objective_map = {
         "multi:softprob": "softmax",  # Naming the objective softmax is more common today
@@ -65,7 +65,7 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
                 model_objective, objective_map.keys()
             )
         )
-    objective = cppyy.gbl.std.string(objective_map[model_objective])
+    objective = ROOT.std.string(objective_map[model_objective])
 
     # Determine number of outputs
     num_outputs = xgb_model.n_classes_ if "multi:" in model_objective else 1
@@ -77,18 +77,18 @@ def SaveXGBoost(xgb_model, key_name, output_path, num_inputs):
     xgb_model.get_booster().dump_model(output_path)
 
     if xgb_model.get_booster().feature_names is None:
-        features = cppyy.gbl.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
+        features = ROOT.std.vector["std::string"]([f"f{i}" for i in range(num_inputs)])
     else:
-        features = cppyy.gbl.std.vector["std::string"](xgb_model.get_booster().feature_names)
+        features = ROOT.std.vector["std::string"](xgb_model.get_booster().feature_names)
     bs = get_basescore(xgb_model)
     logistic = objective == "logistic"
-    bdt = cppyy.gbl.TMVA.Experimental.RBDT.LoadText(
+    bdt = ROOT.TMVA.Experimental.RBDT.LoadText(
         output_path,
         features,
         num_outputs,
         logistic,
-        cppyy.gbl.std.log(bs / (1.0 - bs)) if logistic else bs,
+        ROOT.std.log(bs / (1.0 - bs)) if logistic else bs,
     )
 
-    with cppyy.gbl.TFile.Open(output_path, "RECREATE") as tFile:
+    with ROOT.TFile.Open(output_path, "RECREATE") as tFile:
         tFile.WriteObject(bdt, key_name)
