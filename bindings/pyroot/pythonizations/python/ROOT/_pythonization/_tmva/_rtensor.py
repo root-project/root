@@ -7,9 +7,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+import sys
+
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
-import sys
 
 
 def _AsRTensor(arr):
@@ -24,8 +25,6 @@ def _AsRTensor(arr):
     interface dictionary.
     """
     import ROOT
-    import math
-    import platform
 
     # Get array interface of object
     interface = arr.__array_interface__
@@ -35,7 +34,6 @@ def _AsRTensor(arr):
 
     # Get the size of the contiguous memory
     shape = interface["shape"]
-    size = math.prod(shape) if len(shape) > 0 else 0
 
     # Get the typestring and properties thereof
     typestr = interface["typestr"]
@@ -145,13 +143,13 @@ def RTensorGetitem(self, idx):
     # Convert negative indices and Nones
     isSlice = False
     for i, x in enumerate(idx):
-        if type(x) == slice:
+        if isinstance(x, slice):
             isSlice = True
             start = 0 if x.start is None else x.start
             stop = shape[i] if x.stop is None else x.stop
             if stop < 0:
                 stop += shape[i]
-            if x.step != None:
+            if x.step is not None:
                 raise Exception("RTensor does not support slices with step size unequal 1.")
             idx[i] = slice(start, stop, None)
         else:
@@ -163,7 +161,7 @@ def RTensorGetitem(self, idx):
         idxVec = ROOT.std.vector("vector<size_t>")(len(idx))
         for i, x in enumerate(idx):
             idxVec[i].resize(2)
-            if type(x) == slice:
+            if isinstance(x, slice):
                 idxVec[i][0] = x.start
                 idxVec[i][1] = x.stop
             else:

@@ -68,8 +68,9 @@ class RooWorkspace(object):
                     + " another instance with same name already in the workspace and no conflict resolution protocol specified"
                 )
         elif isinstance(value, dict):
-            import ROOT
             import json
+
+            import ROOT
 
             json_string = json.dumps(value, separators=(",", ":"))
             ROOT.RooJSONFactoryWSTool(self).importJSONElement(key, json_string)

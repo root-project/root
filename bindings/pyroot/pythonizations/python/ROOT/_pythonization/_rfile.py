@@ -63,7 +63,7 @@ class _RFile_Put:
         Non-templated Put()
         """
         objType = type(obj)
-        if objType == str:
+        if isinstance(obj, str):
             # special case: automatically convert python str to std::string
             className = "std::string"
         elif not hasattr(objType, '__cpp_name__'):

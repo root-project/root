@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import atexit
 import builtins
 import os
 import sys

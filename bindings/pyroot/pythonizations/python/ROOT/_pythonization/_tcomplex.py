@@ -10,6 +10,7 @@
 
 from . import pythonization
 
+
 def _rsub(self, other):
     # Parameters:
     # - self: complex number
@@ -30,7 +31,7 @@ def _rdiv(self, other):
     # Parameters:
     # - self: complex number
     # - other: other term
-    if isinstance(other, (int, long, float)):
+    if isinstance(other, (int, float)):
         return _perform_division(self, other)
     else:
         return NotImplemented
