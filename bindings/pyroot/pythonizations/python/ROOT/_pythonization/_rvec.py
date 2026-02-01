@@ -58,8 +58,6 @@ print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 
 import sys
 
-import cppyy
-
 from . import pythonization
 
 # This map includes all relevant C++ fundamental types found at
@@ -216,11 +214,13 @@ def _AsRVec(arr):
 
 
 def get_array_interface(self):
+    import ROOT
+
     cppname = type(self).__cpp_name__
     for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
-            dtype_size = cppyy.sizeof(dtype)
+            dtype_size = ROOT._cppyy.sizeof(dtype)
             endianness = "<" if sys.byteorder == "little" else ">"
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
@@ -228,7 +228,7 @@ def get_array_interface(self):
             if self.empty():
                 pointer = 1
             else:
-                pointer = cppyy.ll.addressof(self.data())
+                pointer = ROOT._cppyy.ll.addressof(self.data())
             return {
                 "shape": (size,),
                 "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),

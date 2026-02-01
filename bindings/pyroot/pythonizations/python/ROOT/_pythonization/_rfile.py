@@ -29,12 +29,11 @@ class _RFile_Get:
         Non-templated Get()
         """
         import ROOT
-        import cppyy
 
         key = self._rfile.GetKeyInfo(namecycle)
         if key:
             obj = ROOT.Experimental.Internal.RFile_GetObjectFromKey(self._rfile, key)
-            return cppyy.bind_object(obj, key.GetClassName())
+            return ROOT._cppyy.bind_object(obj, key.GetClassName())
         # No key
         return None
 

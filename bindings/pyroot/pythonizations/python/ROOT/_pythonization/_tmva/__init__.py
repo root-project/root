@@ -12,7 +12,6 @@
 
 import sys
 import cppyy
-from cppyy.gbl import gSystem
 
 from .. import pythonization
 

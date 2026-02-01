@@ -50,7 +50,7 @@ def FitOptions(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `FitOptions` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._FitOptions(*args, **kwargs)
@@ -67,7 +67,7 @@ def Format(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `Format` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if "what" in kwargs:
         args = (kwargs["what"],) + args
@@ -86,7 +86,7 @@ def Frame(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `Frame` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._Frame(*args, **kwargs)
@@ -103,7 +103,7 @@ def MultiArg(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `MultiArg` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return RooFit._MultiArg(*args, **kwargs)
@@ -115,7 +115,7 @@ def YVar(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `YVar` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if "var" in kwargs:
         args = (kwargs["var"],) + args
@@ -130,7 +130,7 @@ def ZVar(*args, **kwargs):
     The keywords must correspond to the CmdArg of the function.
     """
     # Redefinition of `ZVar` for keyword arguments.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if "var" in kwargs:
         args = (kwargs["var"],) + args
@@ -146,7 +146,7 @@ def Slice(*args, **kwargs):
     The instances in the dict must correspond to the template argument in std::map of the function.
     """
     # Redefinition of `Slice` for keyword arguments and converting python dict to std::map.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
         return RooFit.Detail.SliceFlatMap(_dict_to_flat_map(args[0], {"RooCategory*": "std::string"}))
@@ -167,7 +167,7 @@ def Import(*args, **kwargs):
     The instances in the dict must correspond to the template argument in std::map of the function.
     """
     # Redefinition of `Import` for keyword arguments and converting python dict to std::map.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
         return RooFit.Detail.ImportFlatMap(
@@ -184,7 +184,7 @@ def Link(*args, **kwargs):
     The instances in the dict must correspond to the template argument in std::map of the function.
     """
     # Redefinition of `Link` for keyword arguments and converting python dict to std::map.
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
         return RooFit.Detail.LinkFlatMap(_dict_to_flat_map(args[0], {"std::string": "RooAbsData*"}))
@@ -202,7 +202,7 @@ def DataError(etype):
         # instead of DataError="None"
     ~~~
     """
-    from cppyy.gbl import RooFit
+    from ROOT import RooFit
 
     # One of the possible enum values is "None", and we want the user to be
     # able to pass None also as a NoneType for convenience.
