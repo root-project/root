@@ -32,7 +32,7 @@ import os
 import sys
 
 for mName in macros:
-    command = "root -b -l -q %s" %mName
+    command = "root -b -q %s" %mName
     if mName == "slits.C": command = 'echo "2 4" | %s' %command
     print "\n ******* Running %s" %mName
     if 0 !=os.system(command):

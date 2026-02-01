@@ -17,7 +17,7 @@ export PYSPARK_PYTHON := $(Python3_EXECUTABLE)
 DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
 export DOXYGEN_OUTPUT_DIRECTORY
 export DOXYGEN_SOURCE_DIRECTORY := ../..
-export DOXYGEN_ROOT_VERSION := $(shell root -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());')
+export DOXYGEN_ROOT_VERSION := $(shell root -b -q -e 'printf("%s\n",gROOT->GetGitBranch());')
 export DOXYGEN_ROOT_VERSION := $(subst -00-patches,,$(DOXYGEN_ROOT_VERSION))
 export DOXYGEN_ROOT_VERSION := $(subst heads/,,$(DOXYGEN_ROOT_VERSION))
 export DOXYGEN_EXAMPLE_PATH := $(DOXYGEN_OUTPUT_DIRECTORY)/macros

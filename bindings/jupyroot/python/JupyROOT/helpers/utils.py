@@ -253,7 +253,7 @@ def _invokeAclicMac(fileName):
     to exclude these libraries, so we launch a second root session to compile
     the library, which we then load.
     """
-    command = 'root -l -q -b -e gSystem->CompileMacro("%s","k")*0' % fileName
+    command = 'root -q -b -e gSystem->CompileMacro("%s","k")*0' % fileName
     out = _checkOutput(command, "Error ivoking ACLiC")  # noqa: F841
     libNameBase = fileName.replace(".C", "_C")
     ROOT.gSystem.Load(libNameBase)

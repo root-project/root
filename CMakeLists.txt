@@ -590,7 +590,7 @@ add_custom_command(OUTPUT tutorials/hsimple.root
                      ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                      ROOTIGNOREPREFIX=1
                      ROOT_HIST=0
-                     $<TARGET_FILE:root.exe> -l -q -b -n
+                     $<TARGET_FILE:root.exe> -q -b -n
                        -e ".L ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C"
                        -e "hsimple();"
                        -e return

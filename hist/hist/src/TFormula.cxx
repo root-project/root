@@ -262,9 +262,9 @@ std::string vectorizedArgType()
     conjunction with a variable or a parameter. Variables and parameters are treated
     as doubles internally for which these operators are not defined.
     This means the following command will run successfully
-       ```root -l -q -e TFormula("", "x+(10%3)").Eval(0)```
+       ```root -q -e TFormula("", "x+(10%3)").Eval(0)```
     but not
-       ```root -l -q -e TFormula("", "x%10").Eval(0)```.
+       ```root -q -e TFormula("", "x%10").Eval(0)```.
 
     The operator `^` is defined to mean exponentiation instead of the C/C++
     interpretation xor. `**` is added, also meaning exponentiation.

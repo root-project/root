@@ -11,7 +11,7 @@ endif()
 
 if((NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS) AND NOT experimental_adaptivecpp)
   ROOTTEST_ADD_TEST(nullderef-e
-                    COMMAND ${ROOT_root_CMD} -l -b -q --ptrcheck -e "int*p=nullptr" -e "*p"
+                    COMMAND ${ROOT_root_CMD} -b -q --ptrcheck -e "int*p=nullptr" -e "*p"
                     PASSRC 1
                     LABELS roottest regression cling)
 endif()

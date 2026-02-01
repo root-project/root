@@ -32,7 +32,7 @@ endif
 inherit_C.$(DllSuf): inherit.C buildInherit.C
 
 inheritTest.log: runInherit.C inherit_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runInherit.C > inheritTest.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b runInherit.C > inheritTest.log 2>&1
 
 inheritTest: inheritTest.log
 	$(CMDECHO) diff -ubw inheritTest.ref inheritTest.log
@@ -44,7 +44,7 @@ headerTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L header.h+g");'
 endif
 
 headerTest.log: runHeader.C header_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runHeader.C > headerTest.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b runHeader.C > headerTest.log 2>&1
 
 headerTest: headerTest.log
 	$(CMDECHO) diff -ubw headerTest.ref headerTest.log
@@ -56,7 +56,7 @@ clonesA.log: CALLROOTEXE += -e 'gSystem->Load("clonesA_Event_cxx");'
 endif
 
 clonesA.log: clonesA_rw.C clonesA_Event_cxx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l clonesA_rw.C > clonesA.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b clonesA_rw.C > clonesA.log 2>&1
 
 clonesATest: clonesA.log
 	$(CMDECHO) test ! `(grep exception clonesA.log > /dev/null) && echo $?`
@@ -70,7 +70,7 @@ EmbeddedTest.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L Embedded_load.C+");'
 endif
 
 Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l embwrite.C > embwrite.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b embwrite.C > embwrite.log
 
 relations_load_C.$(DllSuf) : relations.h relationsLinkdef.h
 
@@ -79,7 +79,7 @@ relations_write_C.$(DllSuf) : relations.h
 relations_read_C.$(DllSuf) : relations.h
 
 EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l embread.C | sed -e "s/e+006/e+06/g" > EmbeddedTest.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b embread.C | sed -e "s/e+006/e+06/g" > EmbeddedTest.log
 
 EmbeddedTest: EmbeddedTest.log
 	$(CMDECHO) diff -ubw EmbeddedTest.ref EmbeddedTest.log
@@ -92,7 +92,7 @@ relations_write_C.$(DllSuf) : relations_write.C relations.h relations_load_C.$(D
 relations_read_C.$(DllSuf) : relations.h
 
 relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) $(ROOTCORELIBS)
-	$(CMDECHO)  $(CALLROOTEXE) -q -b -l relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
+	$(CMDECHO)  $(CALLROOTEXE) -q -b relationsRun.C | sed 's|File  Size =.*\*||g' > relationsTest.log
 
 relationsTest: relationsTest.log 
 	$(CMDECHO) diff -ubw relationsTest.ref relationsTest.log
@@ -153,11 +153,11 @@ suetest.log: CALLROOTEXE += -e 'gSystem -> Load("sueloader_C");gSystem -> Load("
 endif
 
 configtest.root: ConfigRecord_cxx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestwrt.C > configtest.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b suetestwrt.C > configtest.log 2>&1
 	$(CMDECHO) diff -u -b -w configtest.ref configtest.log
 
 suetest.log: configtest.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l suetestrd.C > suetest.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b suetestrd.C > suetest.log 2>&1
 
 suetest: suetest.log
 	$(TestDiff)

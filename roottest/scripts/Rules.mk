@@ -173,7 +173,7 @@ perftrack: $(ROOTTEST_LOC)scripts/pt_collector $(ROOTTEST_LOC)scripts/ptpreload.
 # For now logs.tar.gz is a phony target
 perftrack.tar.gz: $(ROOTTEST_LOC)scripts/pt_createIndex_C.so
 	$(CMDECHO) rm -f perftrack.tar perftrack.tar.gz; touch perftrack.tar ; \
-                $(CALLROOTEXEBUILD) -b -l -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; \
+                $(CALLROOTEXEBUILD) -b -q $(ROOTTEST_LOC)/scripts/pt_createIndex.C+ ; \
 		find . -type f -name 'pt_*.root' -o -name 'pt_*.gif' -o -name pt_index.html | xargs -I{}  tar --transform=s/pt_index.html/index.html/ -u -f perftrack.tar "{}" ; gzip  perftrack.tar
 
 #	$(CMDECHO) cd $(ROOTTEST_LOC) && find . -type f -name 'pt_*.root' | xargs -I{} bash -c 'mkdir -p $(ROOTTEST_LOC)/../perftrack/`dirname "{}"` && cp "{}" "$(ROOTTEST_LOC)/../perftrack/{}"' || true
@@ -652,7 +652,7 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
@@ -693,33 +693,33 @@ utils:  $(UTILS_LIBS)
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$@
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_C.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_C.build.log
 
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cxx.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cxx.build.log
 
 %_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cc.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cc.build.log
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_h.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_h.build.log
 
    #( result=$$? ; cat $*_h.build.log ; exit $$result )
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
 
 %.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b $< > $*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$*
 
 assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=assert$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b $< > assert$*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=assert$*
 
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b assert$*.cxx+ > assert$*.log 2> $@ || handleError.sh --cmd='Execution of assert$*.cxx+' --result=$$? --log=$@ --test=assert$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b assert$*.cxx+ > assert$*.log 2> $@ || handleError.sh --cmd='Execution of assert$*.cxx+' --result=$$? --log=$@ --test=assert$*
 
 $(subst .cxx,.success,$(ALL_ASSERT_CXX)) : assert%.success: assert%.eclog assert%.ref
 	$(SuccessTestDiff) && touch $@
@@ -732,10 +732,10 @@ $(subst .cxx,,$(ALL_ASSERT_CXX)) : assert%: assert%.success
 $(subst .C,,$(ALL_ASSERT_C)) : assert%: assert%.success
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $< > $@' --result=$$? --log=$@ --test=exec$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $< > $@' --result=$$? --log=$@ --test=exec$*
 
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b exec$*.cxx+ > $@ 2>&1 || handleError.sh --cmd='Execution of exec$*.cxx+' --result=$$? --log=$@ --test=exec$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b exec$*.cxx+ > $@ 2>&1 || handleError.sh --cmd='Execution of exec$*.cxx+' --result=$$? --log=$@ --test=exec$*
 
 $(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref
 	$(SuccessTestDiff) && touch $@
@@ -769,13 +769,13 @@ endif
 .PRECIOUS: %_C.$(DllSuf)
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b run$*.C+ > $@ 2>&1 || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
 
 %.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
 
 %.eclog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
+	$(CMDECHO) $(CALLROOTEXE) -q -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
 
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x[0-9a-fA-F]*:0xRemoved:g' > $@
@@ -800,13 +800,13 @@ exec%.ref:  | exec%.log
 ifneq ($(PLATFORM),macosx)
 
 define BuildWithLib
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 else
 
 define BuildWithLib
-        $(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
+        $(CMDECHO) $(CALLROOTEXEBUILD) -q -b "$(ROOTTEST_HOME)/scripts/build.C(\"$<\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"\")" > $*.build.log 2>&1 || cat $*.build.log
 endef
 
 endif
@@ -875,13 +875,13 @@ endef
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \
-	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"$(abspath $<)\",\"$(@:.$(DllSuf)=)\")" > $@.build.log 2>&1 || cat $@.build.log ) \
+	($(CALLROOTEXEBUILD) -q -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"$(abspath $<)\",\"$(@:.$(DllSuf)=)\")" > $@.build.log 2>&1 || cat $@.build.log ) \
 )
 endef
 
 define BuildFromObjs
 $(CMDECHO) ( touch dummy$$$$.C && \
-	($(CALLROOTEXEBUILD) -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"$(abspath $(filter %.$(ObjSuf),$^))\",\"$(@:.$(DllSuf)=)\")" > $@.build.log 2>&1 || cat $@.build.log ) )
+	($(CALLROOTEXEBUILD) -q -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy$$$$.C\",\"$(shell $(SetPathForBuild) $(filter %.$(DllSuf),$^) )\",\"$(abspath $(filter %.$(ObjSuf),$^))\",\"$(@:.$(DllSuf)=)\")" > $@.build.log 2>&1 || cat $@.build.log ) )
 endef
 
 ifeq ($(SED_VERSION),)

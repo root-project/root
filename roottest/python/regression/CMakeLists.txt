@@ -7,7 +7,7 @@ if(NOT MSVC OR win_broken_tests)
                     LABELS longtest
                     COPY_TO_BUILDDIR ${scott_file} Scott2.C Scott3.C MuonTileID.C LoKiNamespace.C ULongLong.C
                                      Till.C CoralAttributeList.C NestedNamespace.h Marco.C
-                                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->Load\(\"libROOTTPython\"\)
+                                     PRECMD ${ROOT_root_CMD} -b -q -e gSystem->Load\(\"libROOTTPython\"\)
                                          -e .L\ ${scott_file}+
                                          -e .L\ Scott2.C+
                                          -e .L\ Scott3.C+
@@ -21,7 +21,7 @@ endif()
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+)
+                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ root_6023.h+)
 
   ROOTTEST_ADD_TEST(gh_16406
                     MACRO gh_16406.py

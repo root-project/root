@@ -4,7 +4,7 @@ ROOTTEST_LINKER_LIBRARY(JetEvent TEST JetEvent.cxx G__JetEvent.cxx LIBRARIES ${R
 
 ROOTTEST_ADD_TEST(split
                   COPY_TO_BUILDDIR split.C
-                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${ROOT_root_CMD} -q -l -b split.C
+                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${ROOT_root_CMD} -q -b split.C
                   OUTREF references/split.ref)
 
 ROOTTEST_ADD_TEST(split-fail
@@ -20,13 +20,13 @@ endif()
 
 ROOTTEST_ADD_TEST(sync-rate
                   COPY_TO_BUILDDIR sync_rate.C
-                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ${ROOT_root_CMD} -q -l -b sync_rate.C
+                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ${ROOT_root_CMD} -q -b sync_rate.C
                   ERRREF references/sync-rate.ref
                   DEPENDS libjetevent-build)
 
 ROOTTEST_ADD_TEST(execTMPIFile
                   COPY_TO_BUILDDIR execTMPIFile.C
-                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -q -l -b execTMPIFile.C
+                  COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -q -b execTMPIFile.C
                   PASSREGEX "file should have 50 events and has 50"
                   DEPENDS libjetevent-build)
 endif()

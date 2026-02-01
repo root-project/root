@@ -681,10 +681,10 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 #---Loop over all tutorials and define the corresponding test---------
 
 #---Define the primordial tutorials-----------------------------------
-ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
+ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
     PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 if(geom)
-  ROOT_ADD_TEST(tutorial-legacy-g3d-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/legacy/g3d/geometry.C
+  ROOT_ADD_TEST(tutorial-legacy-g3d-geometry COMMAND ${ROOT_root_CMD} -b -n -q ${CMAKE_CURRENT_SOURCE_DIR}/legacy/g3d/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
@@ -739,7 +739,7 @@ foreach(t ${tutorials})
    endif()
 
   ROOT_ADD_TEST(tutorial-${tname}
-                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                COMMAND ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
@@ -776,7 +776,7 @@ foreach(t ${mpi_tutorials})
    endif()
 
   ROOT_ADD_TEST(tutorial-${tname}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}

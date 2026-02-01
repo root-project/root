@@ -11,7 +11,7 @@ include(CTest)
 
 if(BUILD_TESTING)
   add_test(NAME run-hsimple
-    COMMAND ${ROOT_BINDIR}/root.exe -b -q -l -e ".x ${CMAKE_SOURCE_DIR}/../../tutorials/hsimple.C" -e "return"
+    COMMAND ${ROOT_BINDIR}/root.exe -b -q -e ".x ${CMAKE_SOURCE_DIR}/../../tutorials/hsimple.C" -e "return"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   add_test(NAME read-hsimple
     COMMAND $<TARGET_FILE:readHSimple>

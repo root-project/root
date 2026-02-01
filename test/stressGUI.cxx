@@ -2057,9 +2057,9 @@ const char *excluded[] = {
 Int_t bexec(TString &dir, const char *macro)
 {
 #ifdef WIN32
-   return gSystem->Exec(TString::Format("set ROOT_HIST=0 & root.exe -l -q exec_macro.C(\\\"%s/%s\\\") >nul 2>&1", dir.Data(), macro));
+   return gSystem->Exec(TString::Format("set ROOT_HIST=0 & root.exe -q exec_macro.C(\\\"%s/%s\\\") >nul 2>&1", dir.Data(), macro));
 #else
-   return gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -l -q exec_macro.C\\(\\\"%s/%s\\\"\\) >&/dev/null", dir.Data(), macro));
+   return gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -q exec_macro.C\\(\\\"%s/%s\\\"\\) >&/dev/null", dir.Data(), macro));
 #endif
 }
 

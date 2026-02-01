@@ -11,7 +11,7 @@ if [ ! -d "$HTMLPATH" -o ! -f "$WORKFILE" ]; then
 fi
 
 # Find the libraries for the class $1
-libname=$(root -l -b -q "libs.C+g(\"$1\")" | grep 'mainlib=')
+libname=$(root -b -q "libs.C+g(\"$1\")" | grep 'mainlib=')
 
 # The class was not found. Remove the collaboration graph
 if [ -z "${libname}" ]; then
