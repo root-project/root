@@ -159,10 +159,16 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
-from ROOT.libROOTPythonizations import GetBranchAttr, BranchPyz
-from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
+from ROOT._pythonization._memory_utils import (
+    _constructor_releasing_ownership,
+    _SetDirectory_SetOwnership,
+    _should_give_up_ownership,
+)
+from ROOT.libROOTPythonizations import BranchPyz, GetBranchAttr
+
 from . import pythonization
-from ROOT._pythonization._memory_utils import _should_give_up_ownership, _constructor_releasing_ownership, _SetDirectory_SetOwnership
+from ._rvec import _get_cpp_type_from_numpy_type
+
 
 # TTree iterator
 def _TTree__iter__(self):
@@ -377,7 +383,7 @@ def pythonize_tchain(klass):
     klass.SetBranchAddress = _SetBranchAddress
 
 @pythonization("TNtuple")
-def pythonize_tchain(klass):
+def pythonize_tntuple(klass):
 
     # The constructor needs to be explicitly pythonized for derived classes.
     klass._cpp_constructor = klass.__init__

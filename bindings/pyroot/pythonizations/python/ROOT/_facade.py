@@ -413,7 +413,9 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import SaveXGBoost, _AsRTensor, inject_rbatchgenerator
+                from ._pythonization._tmva import inject_rbatchgenerator
+                from ._pythonization._tmva._rtensor import _AsRTensor
+                from ._pythonization._tmva._tree_inference import SaveXGBoost
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
