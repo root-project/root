@@ -532,7 +532,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv5Clean
 
 
 ROOTTEST_ADD_TEST(NameCyclesRootmvPrepareInput
-                  COMMAND root.exe -b -q -l MakeNameCyclesRootmvInput.C
+                  COMMAND root.exe -b -q MakeNameCyclesRootmvInput.C
                   FIXTURES_SETUP main-NameCyclesRootmvPrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(NameCyclesRootmv

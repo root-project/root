@@ -1,3 +1,3 @@
 #! /usr/bin/env sh
 
-root.exe -b -l -q semicolon.C\(\"abc\ \;\ xyz\"\)
+root.exe -b -q semicolon.C\(\"abc\ \;\ xyz\"\)

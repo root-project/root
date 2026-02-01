@@ -2502,7 +2502,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
       ${ROOT_root_CMD}
       -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
       ${RootMacroDirDefines}
-      -q -l -b
+      -q -b
   )
 
   get_filename_component(realfp ${filename} ABSOLUTE)
@@ -2916,9 +2916,9 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                ${ARG_ROOTEXE_OPTS}
-               -q -l -b)
+               -q -b)
 
-  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
+  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -b)
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")

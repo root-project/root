@@ -46,7 +46,7 @@ if [ "x$logfile" != "x" ] ; then
             if [ "x$cmd" != "x" ] ; then 
               echo "'$cmd' exited with error code: $result" >> $SUMMARY_FILE
             else 
-              echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY_FILE
+              echo "'A command like root.exe -b -q $testname' exited with error code: $result" >> $SUMMARY_FILE
             fi
           fi
         fi
@@ -65,7 +65,7 @@ if [ "x$logfile" != "x" ] ; then
        if [ "x$cmd" != "x" ] ; then 
          echo "'$cmd' exited with error code: $result" >> $logfile
        else 
-         echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $logfile
+         echo "'A command like root.exe -b -q $testname' exited with error code: $result" >> $logfile
        fi
      fi
   fi

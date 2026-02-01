@@ -66,14 +66,14 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 cachedchain.log: runcachedchain.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runcachedchain.C 2>&1 \
+	$(CMDECHO) $(CALLROOTEXE) -q -b runcachedchain.C 2>&1 \
 	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > cachedchain.log
 
 cachedchain: cachedchain.log
 	$(TestDiff)
 
 autocache.log: runautocache.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runautocache.C > autocache.log 2> autocache.elog
+	$(CMDECHO) $(CALLROOTEXE) -q -b runautocache.C > autocache.log 2> autocache.elog
 	$(CMDECHO) grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)' autocache.elog >> autocache.raw.log || true
 
 autocache: autocache.log

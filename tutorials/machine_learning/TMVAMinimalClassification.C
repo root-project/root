@@ -67,7 +67,7 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
 // Minimal setup for performing binary classification in TMVA.
 //
 // Modify the setup to your liking and run with
-//    `root -l -b -q TMVAMinimalClassification.C`.
+//    `root -b -q TMVAMinimalClassification.C`.
 // This will generate an output file "out.root" that can be viewed with
 //    `root -l -e 'TMVA::TMVAGui("out.root")'`.
 //
