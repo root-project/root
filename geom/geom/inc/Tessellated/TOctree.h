@@ -31,7 +31,6 @@ namespace Tessellated {
 
 class TOctree : public TPartitioningI {
 private:
-
    TOctant *fRoot{nullptr};
    Bool_t fIsSetup{kFALSE};
 
@@ -45,10 +44,10 @@ private:
    UInt_t fMaxLayer{};
    UInt_t fMaxPower{};
    mutable UInt_t fIndexByte{};
-   double fTolerance{1e-19};  // This value is used to determine 
-                              // when a direction component in the Revelles Octree Traversal 
-                              // is considered to be zero, i.e. when a ray direction is parallel
-                              // to one of the axes. 
+   double fTolerance{1e-19}; // This value is used to determine
+                             // when a direction component in the Revelles Octree Traversal
+                             // is considered to be zero, i.e. when a ray direction is parallel
+                             // to one of the axes.
 
 private:
    Double_t DistFromInside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
@@ -80,8 +79,8 @@ public:
    explicit TOctree(const OctreeConfig_t &octreeconfig);
    ~TOctree() override;
 
-   void SetTolerance(double tolerance) {fTolerance = tolerance;}
-   double GetTolerance() const {return fTolerance;}
+   void SetTolerance(double tolerance) { fTolerance = tolerance; }
+   double GetTolerance() const { return fTolerance; }
    void SetupOctree(const OctreeConfig_t &octreeconfig);
    const TOctant *GetRelevantOctant(const TVector3 &point) const;
    virtual Bool_t IsPointContained(const TVector3 &point) const override;

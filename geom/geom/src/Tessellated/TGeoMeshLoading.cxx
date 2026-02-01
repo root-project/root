@@ -27,7 +27,7 @@ object for use with TGeoTessellated.
 #include <vector>   // for vector
 
 #include "Tessellated/TGeoTriangle.h" // for TGeoTriangle
-#include "TVector3.h"  // for TVector3
+#include "TVector3.h"                 // for TVector3
 
 namespace Tessellated {
 namespace ASCIIStl {
@@ -130,7 +130,8 @@ std::string Vector3ToString(const TVector3 &vect)
 ///\return std::unique_ptr<TGeoTriangleMesh>
 ///
 
-std::unique_ptr<TGeoTriangleMesh> ImportMeshFromASCIIStl(const TString &stlfilename, const TGeoTriangleMesh::LengthUnit unit)
+std::unique_ptr<TGeoTriangleMesh>
+ImportMeshFromASCIIStl(const TString &stlfilename, const TGeoTriangleMesh::LengthUnit unit)
 {
    const auto scale = ASCIIStl::GetScaleFactor(unit);
    std::unique_ptr<TGeoTriangleMesh> mesh{new TGeoTriangleMesh(stlfilename)};
@@ -226,7 +227,8 @@ std::unique_ptr<TGeoTriangleMesh> ImportMeshFromObjFormat(const char *objfile, c
          // Decode the vertex
          double pos[4] = {0, 0, 0, 1};
          ss >> tag >> pos[0] >> pos[1] >> pos[2] >> pos[3];
-         const std::string key = std::to_string(pos[0] * pos[3] * scale) + ';' + std::to_string(pos[1] * pos[3] * scale) + ';' +
+         const std::string key = std::to_string(pos[0] * pos[3] * scale) + ';' +
+                                 std::to_string(pos[1] * pos[3] * scale) + ';' +
                                  std::to_string(pos[2] * pos[3] * scale);
          if (stringToIndex.find(key) == stringToIndex.end()) {
             stringToIndex[key] = currentIndex;
@@ -315,7 +317,7 @@ UInt_t MeshBuilder::AddVertex(const TVector3 &vertex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a Vertex_t vertex to the mesh. 
+/// Add a Vertex_t vertex to the mesh.
 /// \param[in] vertex to be added
 /// \return UInt_t indicating vertex index
 
@@ -323,7 +325,6 @@ UInt_t MeshBuilder::AddVertex(const Vertex_t &vertex)
 {
    return AddVertex(TVector3FromVertex_t(vertex));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if a vertex is existent. Create a string to look up if vertex is
@@ -360,7 +361,6 @@ void MeshBuilder::AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_
    AddFacet(TVector3FromVertex_t(v0), TVector3FromVertex_t(v1), TVector3FromVertex_t(v2));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a triangular face providing the indices of the vertices (as returned from
 /// MeshBuilder::AddVertex)
@@ -385,12 +385,10 @@ void MeshBuilder::AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector
 /// Add a quadrilateral face providing the vertices directly
 /// Note, that 2 triangles are made out of the single quadrilateral
 
-
 void MeshBuilder::AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_t &v2, const Vertex_t &v3)
 {
    AddFacet(TVector3FromVertex_t(v0), TVector3FromVertex_t(v1), TVector3FromVertex_t(v2), TVector3FromVertex_t(v3));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a quadrilateral face providing the indices of the vertices (as returned from

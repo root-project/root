@@ -15,12 +15,12 @@
 \ingroup Geometry_classes
 
 Tessellated solid class. It is composed by a set of planar faces having triangular
-shape. Uses ray-casting methods to compute navigation functionality (analog to 
-G4TessellatedSolid). 
+shape. Uses ray-casting methods to compute navigation functionality (analog to
+G4TessellatedSolid).
 As the processing for the navigation functionality scales with the number of
 triangle faces, a partitioning structure such as the Tessellated::TOctree or the
 Tessellated::TBVH structures may be used to speed up processing. The benefits are not
-guaranteed. Indeed, they may come with significant processing overhead for simple (low 
+guaranteed. Indeed, they may come with significant processing overhead for simple (low
 triangle count) shapes.
 
 
@@ -34,14 +34,14 @@ triangle count) shapes.
 #include <numeric>  // for iota, accumulate
 #include <utility>  // for move
 
-#include "TBuffer.h"        // for TBuffer
-#include "TBuffer3D.h"      // for TBuffer3D, TBuffer3D::kRaw, TBuffer3D::k...
-#include "TBuffer3DTypes.h" // for TBuffer3DTypes, TBuffer3DTypes::kGeneric
-#include "TClass.h"         // for TClass
-#include "TGeoShape.h"      // for TGeoShape
-#include "TString.h"        // for operator<<
-#include "Tessellated/TGeoTriangle.h"      // for TGeoTriangle
-#include "TVector3.h"       // for TVector3, operator*, operator+
+#include "TBuffer.h"                  // for TBuffer
+#include "TBuffer3D.h"                // for TBuffer3D, TBuffer3D::kRaw, TBuffer3D::k...
+#include "TBuffer3DTypes.h"           // for TBuffer3DTypes, TBuffer3DTypes::kGeneric
+#include "TClass.h"                   // for TClass
+#include "TGeoShape.h"                // for TGeoShape
+#include "TString.h"                  // for operator<<
+#include "Tessellated/TGeoTriangle.h" // for TGeoTriangle
+#include "TVector3.h"                 // for TVector3, operator*, operator+
 
 class TGeoMatrix;
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,8 @@ TGeoTessellated::TGeoTessellated() : TGeoBBox(), fMesh(nullptr), fPartitioningSt
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TGeoTessellated::TGeoTessellated(const char *name) : TGeoBBox(name, 0,0,0), fMesh(nullptr), fPartitioningStruct(nullptr)
+TGeoTessellated::TGeoTessellated(const char *name)
+   : TGeoBBox(name, 0, 0, 0), fMesh(nullptr), fPartitioningStruct(nullptr)
 {
    fTimer.Stop();
    fTimer.Reset();
@@ -71,8 +72,8 @@ TGeoTessellated::TGeoTessellated(const char *name) : TGeoBBox(name, 0,0,0), fMes
 TGeoTessellated::~TGeoTessellated()
 {
    if (fPrintTime) {
-   std::cout << "TGeoTessellated " << fMesh->GetMeshFile() << " took Real time " << fTimer.RealTime() << " s, CPU time "
-             << fTimer.CpuTime() << "s" << std::endl;
+      std::cout << "TGeoTessellated " << fMesh->GetMeshFile() << " took Real time " << fTimer.RealTime()
+                << " s, CPU time " << fTimer.CpuTime() << "s" << std::endl;
    }
 }
 
@@ -147,8 +148,8 @@ bool TGeoTessellated::Contains(const Double_t *pointa) const
 /// \return Double_t
 ///
 
-Double_t
-TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step,
+                                         Double_t *safe) const
 {
    fTimer.Start(kFALSE);
    if (safe != nullptr) {
@@ -219,8 +220,8 @@ TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, In
 /// \return Double_t
 ///
 
-Double_t
-TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step,
+                                          Double_t *safe) const
 {
    fTimer.Start(kFALSE);
    if (safe != nullptr) {
@@ -235,7 +236,8 @@ TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, I
       }
       if (iact == 1 && step < *safe) {
          fTimer.Stop();
-         return  TGeoShape::Big(); // might be misinterpreting the description, but returning Big seems wrong, should be step
+         return TGeoShape::Big(); // might be misinterpreting the description, but returning Big seems wrong, should be
+                                  // step
       }
    }
 
@@ -248,7 +250,7 @@ TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, I
       fTimer.Stop();
       return result;
    }
-   
+
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
    fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
@@ -258,7 +260,7 @@ TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, I
    while (counter < size) {
       if (indir[counter].fDirDotNormal <= TGeoShape::Tolerance()) {
          fTimer.Stop();
-         return indir[counter].fDistance-2*TGeoShape::Tolerance();
+         return indir[counter].fDistance - 2 * TGeoShape::Tolerance();
       } else {
          ++counter;
       }
@@ -277,7 +279,7 @@ TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, I
       return DistFromOutside(npointa, dira, iact, step, safe);
    }
    fTimer.Stop();
-      
+
    return TGeoShape::Big();
 }
 

@@ -12,7 +12,7 @@
 \ingroup Geometry_classes
 
 TGeoTriangle (replacement for TGeoFacet) to represent a single triangle face
-of a triangle mesh for use with TGeoTessellated. Contains functionality to 
+of a triangle mesh for use with TGeoTessellated. Contains functionality to
 detect ray triangle intersections and closest point to point computation.
 */
 
@@ -190,13 +190,12 @@ Double_t TGeoTriangle::DistanceFrom(const TVector3 &origin, const TVector3 &dire
       return sINF;
    }
    auto t = e2.Dot(q) * invDet;
-   // If t is larger than rayEPS we have a intersection in the direction of the ray, otherwise it is a intersection in the opposite direction
-   // return (t > rayEPS) ? t : sINF;
-   // Actually, we want to also return the distances in the opposite direction. It allows to cross check certain things. It is also helpful
-   // with origin almost on triangle situations
+   // If t is larger than rayEPS we have a intersection in the direction of the ray, otherwise it is a intersection in
+   // the opposite direction return (t > rayEPS) ? t : sINF; Actually, we want to also return the distances in the
+   // opposite direction. It allows to cross check certain things. It is also helpful with origin almost on triangle
+   // situations
    return t;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the closest point on the triangle to point
@@ -210,7 +209,7 @@ TVector3 TGeoTriangle::ClosestPointToPoint(const TVector3 &point) const
    // Point is not projectable onto triangle
    if (t == sINF) {
       return ClosestPointOfEdgesToPoint(point);
-   } 
+   }
    // Otherwise, closest point on triangle is projection:
    return point + t * fNormal;
 }
@@ -233,7 +232,7 @@ TVector3 TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point) const
       edgedir = endedge - startedge;
 
       current = ClosestPointOfEdgeToPoint(point, startedge, edgedir);
-      double_t distance = (closestpoint-point).Mag();
+      double_t distance = (closestpoint - point).Mag();
       if (smallestdistance < distance) {
          smallestdistance = distance;
          closestpoint = current;
@@ -250,7 +249,8 @@ TVector3 TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point) const
 /// \param[in] edgedirection
 /// return closest point
 
-TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection) const
+TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge,
+                                                 const TVector3 &edgedirection) const
 {
    TVector3 edgetopoint = point - edge;
    Double_t isleft = edgetopoint.Dot(edgedirection);
@@ -260,7 +260,6 @@ TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TV
    Double_t isright = edgedirection.Dot(edgedirection);
    if (TGeoTriangleInternal::LargerThan(isleft, isright, sAccuracy)) {
       return (edge + edgedirection);
-      
    }
    Double_t scale = isleft / isright;
    return edge + (edgedirection * scale);

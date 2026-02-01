@@ -26,8 +26,8 @@ for closure.
 #include <iterator>  // for begin, end
 #include <memory>    // for allocator_traits<>::value_type
 
-#include "TBuffer.h"   // for TBuffer
-#include "TClass.h"    // for TClass
+#include "TBuffer.h"                  // for TBuffer
+#include "TClass.h"                   // for TClass
 #include "Tessellated/TGeoTriangle.h" // for TGeoTriangle, TGeoTriangle::ClosestPoint_t, TTriang...
 
 namespace Tessellated {
@@ -81,21 +81,22 @@ std::vector<UInt_t> TGeoTriangleMesh::GetTriangleIndices() const
 /// @param[out] againstdirection
 
 void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, const TVector3 &direction,
-                                                    const std::vector<UInt_t> &usedTriangleIndices,
-                                                    std::vector<IntersectedTriangle_t> &indirection, 
-                                                    std::vector<IntersectedTriangle_t> &oppdirection) const
+                                                       const std::vector<UInt_t> &usedTriangleIndices,
+                                                       std::vector<IntersectedTriangle_t> &indirection,
+                                                       std::vector<IntersectedTriangle_t> &oppdirection) const
 {
    for (UInt_t index : usedTriangleIndices) {
       const TGeoTriangle &triangle = fTriangles[index];
       const auto t = triangle.DistanceFrom(origin, direction);
       if (t != TGeoTriangle::sINF) {
          if (t > 0) {
-            indirection.push_back(IntersectedTriangle_t{&triangle, index, origin + t * direction, t, triangle.Normal().Dot(direction)});
+            indirection.push_back(
+               IntersectedTriangle_t{&triangle, index, origin + t * direction, t, triangle.Normal().Dot(direction)});
          } else {
-            oppdirection.push_back(IntersectedTriangle_t{&triangle, index, origin + t * direction, -t, triangle.Normal().Dot(direction)});
+            oppdirection.push_back(
+               IntersectedTriangle_t{&triangle, index, origin + t * direction, -t, triangle.Normal().Dot(direction)});
          }
       }
-      
    }
    std::sort(std::begin(indirection), std::end(indirection));
    std::sort(std::begin(oppdirection), std::end(oppdirection));
@@ -106,7 +107,7 @@ void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, c
 /// \return Bool_t if canidate is closer than current
 
 Bool_t TGeoTriangleMesh::IsCloserTriangle(const ClosestTriangle_t &candidate, const ClosestTriangle_t &current,
-                                       const TVector3 &point) const
+                                          const TVector3 &point) const
 {
    if (std::abs(candidate.fDistance - current.fDistance) <= 0.0000005) {
 
@@ -137,7 +138,7 @@ TGeoTriangleMesh::FindClosestTriangleInMesh(const TVector3 &point, const std::ve
       ClosestTriangle_t candidateCloseTGeoTriangle;
       candidateCloseTGeoTriangle.fTriangle = &fTriangles[cindex];
       candidateCloseTGeoTriangle.fClosestPoint = candidateCloseTGeoTriangle.fTriangle->ClosestPointToPoint(point);
-      candidateCloseTGeoTriangle.fDistance = (candidateCloseTGeoTriangle.fClosestPoint-point).Mag();
+      candidateCloseTGeoTriangle.fDistance = (candidateCloseTGeoTriangle.fClosestPoint - point).Mag();
       candidateCloseTGeoTriangle.fIndex = static_cast<Int_t>(cindex);
 
       if (IsCloserTriangle(candidateCloseTGeoTriangle, closesTGeoTriangle, point)) {
@@ -202,7 +203,7 @@ void TGeoTriangleMesh::ResizeCenter(Double_t maxsize)
    for (size_t i = 0; i < fPoints.size(); ++i) {
       fPoints[i] = scale * (fPoints[i] - origin);
    }
-   //After the points are changed, the triangles need to recompute center and normals
+   // After the points are changed, the triangles need to recompute center and normals
    for (auto &tri : fTriangles) {
       tri.Setup();
    }

@@ -12,9 +12,9 @@
 \ingroup Geometry_classes
 
 Helper class for Tessellated::TOctree. TOctant represents box containing list
-of triangle indices that it contains. Implements functionality to recursively 
+of triangle indices that it contains. Implements functionality to recursively
 subdivide itself, creating its own child boxes, and functionality to detect
-triangle box intersections, the be able to determine the triangles contained by itself.  
+triangle box intersections, the be able to determine the triangles contained by itself.
 */
 
 #include "Tessellated/TOctant.h"
@@ -26,7 +26,7 @@ triangle box intersections, the be able to determine the triangles contained by 
 #include <memory>    // for allocator_traits<>::value_type
 #include <numeric>   // for iota
 
-#include "TGeoShape.h"     // for TGeoShape
+#include "TGeoShape.h"                    // for TGeoShape
 #include "Tessellated/TGeoTriangle.h"     // for TGeoTriangle
 #include "Tessellated/TGeoTriangleMesh.h" // for TGeoTriangleMesh::IntersectedTriangle_t, TTr...
 
@@ -159,7 +159,8 @@ std::vector<OctantBounds_t> TOctant::CreateChildBounds(const OctantBounds_t &bou
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of AABB-triangle overlap test following
-/// Akenine-Möller, Tomas. (2004). Fast 3D Triangle-Box Overlap Testing. Journal of Graphics Tools. 6. 10.1145/1198555.1198747. 
+/// Akenine-Möller, Tomas. (2004). Fast 3D Triangle-Box Overlap Testing. Journal of Graphics
+/// Tools. 6. 10.1145/1198555.1198747.
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function to determine if a triangle intersects with an box
 

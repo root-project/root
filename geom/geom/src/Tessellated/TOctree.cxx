@@ -11,13 +11,13 @@
 /** \class TOctree
 \ingroup Geometry_classes
 
-Partitioning structure to improve processing time for TGeoTessellated's 
+Partitioning structure to improve processing time for TGeoTessellated's
 navigation functions. Recursively subdivides box into 8 childboxes.
-Each box contains list contained triangles. Rather than considering all 
+Each box contains list contained triangles. Rather than considering all
 triangles in navigation functions, only triangles within relevant boxes are
-considered. Navigation functionality for meshes with small triangle 
-counts suffer from overhead introduced by TOctree, higher triangle count 
-meshes (> 1000 triangles) can benefit greatly from usage of TOctree. 
+considered. Navigation functionality for meshes with small triangle
+counts suffer from overhead introduced by TOctree, higher triangle count
+meshes (> 1000 triangles) can benefit greatly from usage of TOctree.
 */
 
 #include "Tessellated/TOctree.h"
@@ -31,8 +31,8 @@ meshes (> 1000 triangles) can benefit greatly from usage of TOctree.
 #include <memory>    // for allocator_traits<>::value_type
 #include <set>       // for set<>::iterator, set
 
-#include "TGeoShape.h"     // for TGeoShape
-#include "TGeoTessellated.h"      // for TGeoTessellated
+#include "TGeoShape.h"                    // for TGeoShape
+#include "TGeoTessellated.h"              // for TGeoTessellated
 #include "Tessellated/TGeoTriangleMesh.h" // for TGeoTriangleMesh::ClosestTriangle_t, TTriang...
 
 namespace Tessellated {
@@ -122,7 +122,6 @@ void TOctree::SetupOctree(const OctreeConfig_t &octreeconfig)
    }
    fIsSetup = true;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints Octree information
@@ -217,8 +216,7 @@ Bool_t TOctree::IsPointContained(const TVector3 &point) const
       }
       std::sort(std::begin(triangleIntersections), std::end(triangleIntersections));
 
-      return triangleIntersections[0].fDirDotNormal > 0 ||
-             triangleIntersections[0].fDistance < TGeoShape::Tolerance();
+      return triangleIntersections[0].fDirDotNormal > 0 || triangleIntersections[0].fDistance < TGeoShape::Tolerance();
    } else {
       if (octant->GetState() == TOctant::State::INSIDE) {
          return true;
@@ -240,8 +238,7 @@ TGeoTriangleMesh::ClosestTriangle_t TOctree::GetClosestTriangle(const TVector3 &
    const auto &triIndices = octant->GetContainedTriangles();
    if (!triIndices.empty()) {
       auto closestTriangle = fMesh->FindClosestTriangleInMesh(point, triIndices);
-      if (octant->GetMinDistanceToBoundaries(point) + TOctant::sAccuracy >
-          closestTriangle.fDistance) {
+      if (octant->GetMinDistanceToBoundaries(point) + TOctant::sAccuracy > closestTriangle.fDistance) {
          return closestTriangle;
       }
    }
@@ -263,8 +260,7 @@ Double_t TOctree::GetSafetyDistance(const TVector3 &point) const
    const auto &triIndices = octant->GetContainedTriangles();
    if (!triIndices.empty()) {
       auto closestTriangle = fMesh->FindClosestTriangleInMesh(point, triIndices);
-      return std::min(octant->GetMinDistanceToBoundaries(point) + TOctant::sAccuracy,
-                      closestTriangle.fDistance);
+      return std::min(octant->GetMinDistanceToBoundaries(point) + TOctant::sAccuracy, closestTriangle.fDistance);
    }
    return octant->GetMinDistanceToBoundaries(point) + TOctant::sAccuracy;
 }
@@ -379,14 +375,14 @@ Double_t TOctree::DistFromInside(const TVector3 &origin, const TVector3 &directi
       if (triangleIntersections[counter].fDistance < TGeoShape::Tolerance()) {
          ++counter;
          // return triangleIntersections[counter].fDistance;
-      } else if (triangleIntersections[counter].fDirDotNormal < 0 /*&& indir[counter].fIntersection.fDistance < 2*TGeoShape::Tolerance()*/) {
+      } else if (triangleIntersections[counter].fDirDotNormal < 0) {
          ++counter;
       } else {
          return triangleIntersections[counter].fDistance;
       }
    }
    // if we reach here, there was no intersection in direction with a triangle with a facenormal parallel to the
-   // direction. So we could be actually outside of the geometry or on a triangle looking out. 
+   // direction. So we could be actually outside of the geometry or on a triangle looking out.
    // Test that the closest triangles in direction to the direction indicate this
    if (triangleIntersections[0].fDistance < TGeoShape::Tolerance() || triangleIntersections[0].fDirDotNormal > 0) {
       return 0.0;
@@ -482,10 +478,11 @@ Bool_t TOctree::CheckFacesInOctant(const TOctant *octant,
       const TGeoTriangle &triangle = fMesh->TriangleAt(index);
       const double currentdistance = triangle.DistanceFrom(fOrigin, fDirection);
       if (currentdistance > -TGeoTriangle::sAccuracy) {
-         const TVector3 currentIntersectionPoint = fOrigin + currentdistance*fDirection;
+         const TVector3 currentIntersectionPoint = fOrigin + currentdistance * fDirection;
          if (octant->IsContainedByOctant(currentIntersectionPoint, TGeoTriangle::sAccuracy)) {
             const double dot = triangle.Normal().Dot(fDirection);
-            triangleIntersections.push_back(TGeoTriangleMesh::IntersectedTriangle_t{&triangle, index, currentIntersectionPoint, currentdistance, dot});
+            triangleIntersections.push_back(TGeoTriangleMesh::IntersectedTriangle_t{
+               &triangle, index, currentIntersectionPoint, currentdistance, dot});
             if ((fOriginInside && dot > 0) || (!fOriginInside && dot < TGeoTriangle::sAccuracy)) {
                FoundRelevant = kTRUE;
             }

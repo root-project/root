@@ -17,10 +17,10 @@
 
 #include "RtypesCore.h" // for Double_t, UInt_t, Bool_t
 
-#include "TString.h"       // for TString
+#include "TString.h"          // for TString
 #include "TGeoTriangleMesh.h" // for TGeoTriangleMesh, TGeoTriangleMesh::LengthUnit
-#include "TVector3.h"      // for TVector3
-#include "TGeoTypedefs.h"      // for Vertex_t
+#include "TVector3.h"         // for TVector3
+#include "TGeoTypedefs.h"     // for Vertex_t
 
 namespace Tessellated {
 
@@ -37,7 +37,8 @@ UInt_t LookupVertexIndex(const std::string &key, std::map<std::string, size_t> &
 std::string Vector3ToString(const TVector3 &vect);
 
 // Helper function to import full meshes from files (.stl, .obj)
-std::unique_ptr<TGeoTriangleMesh> ImportMeshFromASCIIStl(const TString &t_filename, TGeoTriangleMesh::LengthUnit t_unit);
+std::unique_ptr<TGeoTriangleMesh>
+ImportMeshFromASCIIStl(const TString &t_filename, TGeoTriangleMesh::LengthUnit t_unit);
 std::unique_ptr<TGeoTriangleMesh> ImportMeshFromObjFormat(const char *objfile, const TGeoTriangleMesh::LengthUnit unit);
 
 // Functions returning meshes for specific primitive shapes for testing purposes
@@ -51,8 +52,9 @@ private:
    std::vector<TGeoTriangle> fTriangles;
    UInt_t fCounter{0};
 
-   inline static TVector3 TVector3FromVertex_t(const Vertex_t &vertex) {
-      return TVector3{vertex.x(),  vertex.y(), vertex.z()};
+   inline static TVector3 TVector3FromVertex_t(const Vertex_t &vertex)
+   {
+      return TVector3{vertex.x(), vertex.y(), vertex.z()};
    }
 
 public:

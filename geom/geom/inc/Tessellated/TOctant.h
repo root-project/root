@@ -36,8 +36,9 @@ struct OctantBounds_t {
 
 struct OctreeConfig_t {
    OctreeConfig_t() = default;
-   OctreeConfig_t(const OctantBounds_t &octantbounds, const TGeoTriangleMesh *mesh, const std::vector<UInt_t> *triangles,
-                  UInt_t maxdepth = 4, UInt_t maxtriangles = 1, UInt_t currentdepth = 0)
+   OctreeConfig_t(const OctantBounds_t &octantbounds, const TGeoTriangleMesh *mesh,
+                  const std::vector<UInt_t> *triangles, UInt_t maxdepth = 4, UInt_t maxtriangles = 1,
+                  UInt_t currentdepth = 0)
       : fOctantBounds(octantbounds),
         fMesh(mesh),
         fContainedTriangles(triangles),
@@ -63,7 +64,12 @@ public:
    static unsigned int sNumberOfOutsideOctants;
    static unsigned int sNumberOfLeafOctants;
    static const Double_t sAccuracy;
-   enum class State : int { MIXED, INSIDE, OUTSIDE, UNKNOWN };
+   enum class State : int {
+      MIXED,
+      INSIDE,
+      OUTSIDE,
+      UNKNOWN
+   };
 
    static const UInt_t sNUMBER_OF_CHILDREN = 8;
 

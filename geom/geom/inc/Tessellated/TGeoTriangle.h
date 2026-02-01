@@ -41,7 +41,8 @@ public:
    static const UInt_t sNumberOfVertices = 3;
 
 private:
-   const std::vector<TVector3> *fPoints{nullptr}; ///<! non owning pointer to vector of points (owned by TGeoTriangleMesh)
+   const std::vector<TVector3> *fPoints{
+      nullptr}; ///<! non owning pointer to vector of points (owned by TGeoTriangleMesh)
    std::array<UInt_t, sNumberOfVertices> fIndices{}; ///< triangle only knows the three indices of the points forming it
 
    TVector3 fCenter{}; ///<! center of triangle

@@ -14,13 +14,13 @@
 #include <memory> // for unique_ptr
 #include <vector> // for vector
 
-#include "Rtypes.h"         // for THashConsistencyHolder, ClassDefOverride
-#include "RtypesCore.h"     // for Double_t, Bool_t, Int_t, UInt_t, kTRUE
-#include "TGeoBBox.h"       // for TGeoBBox
-#include "TStopwatch.h"     // for TStopwatch
+#include "Rtypes.h"     // for THashConsistencyHolder, ClassDefOverride
+#include "RtypesCore.h" // for Double_t, Bool_t, Int_t, UInt_t, kTRUE
+#include "TGeoBBox.h"   // for TGeoBBox
+#include "TStopwatch.h" // for TStopwatch
 
-#include "Tessellated/TPartitioningI.h" // for TPartitioningI
-#include "Tessellated/TGeoTriangleMesh.h"  // for TGeoTriangleMesh
+#include "Tessellated/TPartitioningI.h"   // for TPartitioningI
+#include "Tessellated/TGeoTriangleMesh.h" // for TGeoTriangleMesh
 
 class TBuffer3D;
 class TBuffer;
@@ -36,11 +36,12 @@ class TGeoTessellated : public TGeoBBox {
    using TGeoTriangle = Tessellated::TGeoTriangle;
 
 private:
-   std::unique_ptr<TGeoTriangleMesh> fMesh{nullptr};                ///<  triangle mesh
+   std::unique_ptr<TGeoTriangleMesh> fMesh{nullptr};             ///<  triangle mesh
    std::unique_ptr<TPartitioningI> fPartitioningStruct{nullptr}; ///<  partitioning structure
    std::vector<UInt_t> fUsedTriangles{};                         ///<! vector of indices of valid triangles
    mutable TStopwatch fTimer{}; ///<! timer to help determine timeconsuming TGeoTessellated instances
    Bool_t fPrintTime{kFALSE};
+
 private:
    void FillBuffer3DWithPoints(TBuffer3D &b) const;
    void FillBuffer3DWithSegmentsAndPols(TBuffer3D &b, const std::vector<UInt_t> &indices) const;
@@ -92,7 +93,7 @@ public:
    TPartitioningI const *GetPartitioningStruct() const { return fPartitioningStruct.get(); }
 
    void ResizeCenter(Double_t maxsize);
-   void PrintTime(Bool_t flag) {fPrintTime = flag;}
+   void PrintTime(Bool_t flag) { fPrintTime = flag; }
    ClassDefOverride(TGeoTessellated, 1)
 };
 

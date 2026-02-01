@@ -11,7 +11,7 @@
 /** \class TBVH
 \ingroup Geometry_classes
 
-Partitioning structure to improve processing time for TGeoTessellated's 
+Partitioning structure to improve processing time for TGeoTessellated's
 navigation functions. Uses bounding volume hierarchy structure contained in
 geom/geom/inc/bvh/v2
 */
@@ -277,7 +277,8 @@ Double_t TBVH::DistanceInDirection(const TVector3 &origin, const TVector3 &direc
       } else {
          ray = Ray{Vec3(origin.X(), origin.Y(), origin.Z()),          // Ray origin
                    Vec3(direction.X(), direction.Y(), direction.Z()), // Ray direction
-                   ray.tmax + TGeoTriangle::sAccuracy, 1e30};         // Update minimum tmin to be current tmax for next triangle intersection
+                   ray.tmax + TGeoTriangle::sAccuracy,
+                   1e30}; // Update minimum tmin to be current tmax for next triangle intersection
          triangle = GetIntersectedTriangle(ray);
       }
    }
