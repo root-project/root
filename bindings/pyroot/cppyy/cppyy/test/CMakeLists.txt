@@ -10,7 +10,7 @@ if(NOT MSVC)
   list(APPEND common_args ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-set(root_cmd $<TARGET_FILE:root.exe> -b -q -l)
+set(root_cmd $<TARGET_FILE:root.exe> -b -q)
 
 function(ADD_PYUNITTEST_ACLIC TESTNAME)
   set(options)

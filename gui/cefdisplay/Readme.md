@@ -76,7 +76,7 @@ not include support of Ozone framework, which the only support headless mode in 
 one can use `Xvfb` server. Most simple way is to use `xvfb-run` utility like:
 
 ~~~
-      $ xvfb-run --server-args='-screen 0, 1024x768x16'  root.exe -l --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
+      $ xvfb-run --server-args='-screen 0, 1024x768x16'  root.exe --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
 ~~~
 
 Or run `Xvfb` before starting ROOT:
@@ -84,7 +84,7 @@ Or run `Xvfb` before starting ROOT:
 ~~~
      $ Xvfb :99 &
      $ export DISPLAY=:99
-     $ root.exe -l --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
+     $ root.exe --web=cef $ROOTSYS/tutorials/experimental/rcanvas/rline.cxx -q
 ~~~
 
 
