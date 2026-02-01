@@ -8,8 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
-
 from . import pythonization
 
 # Python-list-like methods
@@ -84,10 +82,12 @@ def _imul_pyz(self, n):
 # Python iteration
 
 def _iter_pyz(self):
+    import ROOT
+
     # Generator function to iterate on TCollections
     # Parameters:
     # - self: collection to be iterated
-    it = cppyy.gbl.TIter(self)
+    it = ROOT.TIter(self)
     # TIter instances are iterable
     for o in it:
         yield o

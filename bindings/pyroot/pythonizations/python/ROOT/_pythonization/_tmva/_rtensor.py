@@ -9,7 +9,6 @@
 ################################################################################
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
-import cppyy
 import sys
 
 
@@ -81,6 +80,10 @@ def get_array_interface(self):
     Returns:
         Dictionary following the Numpy array interface specifications
     """
+    import ROOT
+
+    cppyy = ROOT._cppyy
+
     cppname = type(self).__cpp_name__
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
@@ -127,6 +130,8 @@ def RTensorGetitem(self, idx):
     Returns:
         New RTensor object if indices represent a slice or the requested element
     """
+    import ROOT
+
     # Make single index iterable and convert to list
     if not hasattr(idx, "__len__"):
         idx = [idx]
@@ -155,7 +160,7 @@ def RTensorGetitem(self, idx):
 
     # If a slice is requested, return a new RTensor
     if isSlice:
-        idxVec = cppyy.gbl.std.vector("vector<size_t>")(len(idx))
+        idxVec = ROOT.std.vector("vector<size_t>")(len(idx))
         for i, x in enumerate(idx):
             idxVec[i].resize(2)
             if type(x) == slice:
@@ -167,7 +172,7 @@ def RTensorGetitem(self, idx):
         return self.Slice(idxVec)
 
     # Otherwise, access element by array of indices
-    idxVec = cppyy.gbl.std.vector("size_t")(len(idx))
+    idxVec = ROOT.std.vector("size_t")(len(idx))
     for i, x in enumerate(idx):
         idxVec[i] = x
     return self(idxVec)

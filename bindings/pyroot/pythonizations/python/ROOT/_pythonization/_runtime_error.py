@@ -17,10 +17,11 @@ from . import pythonization
 
 def _create_error(what):
     """
-    Creates a new cppyy std::runtime_error proxy with the original message.
+    Creates a new std::runtime_error proxy with the original message.
     """
-    import cppyy
-    return cppyy.gbl.std.runtime_error(what)
+    import ROOT
+
+    return ROOT.std.runtime_error(what)
 
 def _reduce_error(self):
     """

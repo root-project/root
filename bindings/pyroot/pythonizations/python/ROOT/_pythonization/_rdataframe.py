@@ -486,7 +486,7 @@ def pythonize_rdataframe(klass):
     # Parameters:
     # klass: class to be pythonized
 
-    from cppyy.gbl.ROOT import RDF
+    from ROOT import RDF
 
     # Add asNumpy feature
     klass.AsNumpy = RDataFrameAsNumpy
