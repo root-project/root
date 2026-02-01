@@ -141,6 +141,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     Hist
     GenVector
     Imt
+    Physics
 )
 
 # GCC has bugs with -O3 or -Ofast that break Geom
