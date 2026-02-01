@@ -207,7 +207,7 @@ def _AsRVec(arr):
 
     # Construct an RVec of the correct data-type
     cppdtype = _get_cpp_type_from_numpy_type(dtype)
-    out = ROOT.VecOps.RVec[cppdtype](ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
+    out = ROOT.VecOps.RVec[cppdtype](ROOT._cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data), size)
 
     # Bind pyobject holding adopted memory to the RVec
     out.__adopted__ = arr
