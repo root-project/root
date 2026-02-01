@@ -22,9 +22,10 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
         # v: value of the kwarg
 
         # We have to use ROOT here and not cppy.gbl, because the RooFit namespace is pythonized itself.
-        import ROOT
         import cppyy
         import cppyy.types
+
+        import ROOT
 
         func = getattr(ROOT.RooFit, k)
 
@@ -47,7 +48,7 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
                 return func(*v)
             elif isinstance(v, (dict,)):
                 return func(**v)
-        except:
+        except Exception:
             pass
 
         return func(v)
@@ -85,12 +86,12 @@ def _dict_to_flat_map(arg_dict, allowed_val_dict):
         # otherwise try to get class from the ROOT namespace
         return getattr(ROOT, cpp_type_name)
 
-    def prettyprint_str_list(l):
-        if len(l) == 1:
-            return l[0]
-        if len(l) == 2:
-            return l[0] + " or " + l[1]
-        return ", ".join(l[:-1]) + ", or " + l[-1]
+    def prettyprint_str_list(l_in):
+        if len(l_in) == 1:
+            return l_in[0]
+        if len(l_in) == 2:
+            return l_in[0] + " or " + l_in[1]
+        return ", ".join(l_in[:-1]) + ", or " + l_in[-1]
 
     def get_template_args(import_dict):
 
@@ -104,7 +105,7 @@ def _dict_to_flat_map(arg_dict, allowed_val_dict):
             if all_of_class(import_dict, get_python_class(key_typename), True):
                 key_type = key_typename
 
-                if type(allowed_val_dict[key_typename]) == str:
+                if isinstance(allowed_val_dict[key_typename], str):
                     allowed_val_dict[key_typename] = [allowed_val_dict[key_typename]]
 
                 for val_typename in allowed_val_dict[key_typename]:
@@ -152,7 +153,7 @@ def _decaytype_string_to_enum(caller, kwargs):
         if isinstance(val, str):
             try:
                 kwargs[type_key] = getattr(caller.__class__, val)
-            except AttributeError as error:
+            except AttributeError:
                 raise ValueError(
                     "Unsupported decay type passed to "
                     + caller.__class__.__name__
