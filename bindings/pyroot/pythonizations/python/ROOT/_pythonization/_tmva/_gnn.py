@@ -10,8 +10,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+
 from .. import pythonization
-import sys
 
 
 def getActivationFunction(model):
@@ -119,7 +119,6 @@ def add_layer_norm(gin, module_layer, function_target):
     name_scale = module_layer.scale.name
     name_Y = name_x+"output"
     model_block.AddLayerNormalization(axis[0], eps, stash_type, name_x, name_scale, name_bias, name_Y)
-    current_output_tensors = model_block.GetFunctionBlock().GetOutputTensorNames()
     new_output_tensors = ROOT.std.vector['std::string']()
     new_output_tensors.push_back(name_Y)
     model_block.GetFunctionBlock().AddOutputTensorNameList(new_output_tensors)
@@ -230,7 +229,6 @@ class RModel_GNN:
         gin.num_nodes = len(graph_data['nodes'])
 
         # extracting the edges
-        edges = []
         for sender, receiver in zip(graph_data['senders'], graph_data['receivers']):
             gin.edges.push_back(ROOT.std.make_pair['int,int'](int(receiver), int(sender)))
 
@@ -305,7 +303,6 @@ class RModel_GraphIndependent:
         gin.num_nodes = len(graph_data['nodes'])
 
         # extracting the edges
-        edges = []
         for sender, receiver in zip(graph_data['senders'], graph_data['receivers']):
             gin.edges.push_back(ROOT.std.make_pair['int,int'](int(receiver), int(sender)))
 
