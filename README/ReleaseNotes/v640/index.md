@@ -210,6 +210,9 @@ ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3
 
 ## Command-line utilities
 
+- `rootls` has a new flag: `-c / --allCycles`, which displays all cycles of each object in the inspected file/directory even in normal mode (cycles are already displayed by default with `-l` or `-t`).
+- `rootcp` has a new native implementation, which should make it significantly faster to startup and usable even without Python.
+
 ## JavaScript ROOT
 
 ## Experimental features
