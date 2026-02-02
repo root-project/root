@@ -39,9 +39,11 @@ EXPLLINKLIBS="\$LinkedLibs"
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
    [ "$ARCH" = "macosxicc" ] || [ "$ARCH" = "macosxarm64" ]; then
    SOEXT="so"
-   if [ "x`echo $SOFLAGS | grep -- '-install_name'`" != "x" ]; then
-      # If install_name is specified, remove it.
-      SOFLAGS="$OPT -dynamiclib -single_module -Wl,-dead_strip_dylibs"
+   if [ "x`echo $SOFLAGS | grep -- '-install_name'`" == "x" ]; then
+      # If install_name is not specified, add default RPATH-compatible syntax
+      # See 'man ld' on a MacOS system and the following link for further explanation:
+      # https://developer.apple.com/forums/thread/736728
+      SOFLAGS="$SOFLAGS -Wl,-install_name,@rpath/\$LibName.$SOEXT"
    fi
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
