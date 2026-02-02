@@ -3,11 +3,13 @@ ROOTTEST_COMPILE_MACRO(foo.C
 
 ROOTTEST_COMPILE_MACRO(bar.C
                        BUILDLIB foo_C
+                       EXTRA_RPATHS ${CMAKE_CURRENT_BINARY_DIR}
                        FIXTURES_REQUIRED root-io-arrayobject-foo-fixture
                        FIXTURES_SETUP root-io-arrayobject-bar-fixture)
 
 ROOTTEST_COMPILE_MACRO(main.C
                        BUILDLIB bar_C
+                       EXTRA_RPATHS ${CMAKE_CURRENT_BINARY_DIR}
                        FIXTURES_REQUIRED root-io-arrayobject-bar-fixture
                        FIXTURES_SETUP root-io-arrayobject-main-fixture)
 
