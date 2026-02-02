@@ -164,7 +164,7 @@ def add_aggregate_function(gin, reducer, relation):
     if(reducer == "unsorted_segment_sum"):
         agg = ROOT.TMVA.Experimental.SOFIE.RFunction_Sum()
         gin.createAggregateFunction[ROOT.TMVA.Experimental.SOFIE.RFunction_Sum](agg, relation)
-    elif(node_global_reducer == "unsorted_segment_mean"):
+    elif(reducer == "unsorted_segment_mean"):
         agg = ROOT.TMVA.Experimental.SOFIE.RFunction_Mean()
         gin.createAggregateFunction[ROOT.TMVA.Experimental.SOFIE.RFunction_Mean](agg, relation)
     else:
