@@ -102,8 +102,8 @@ class RooWorkspace(object):
     def __setattr__(self, name, value):
         # Many people pythonized the RooWorkspace themselves, by adding a new
         # attribute `_import` that calls getattr(self, "import") under the
-        # hood. However, `_import` is now the reference to the original cppyy
-        # overload, and resetting it with a wrapper around `import` would cause
+        # hood. However, `_import` is now the reference to the original overload
+        # proxy, and resetting it with a wrapper around `import` would cause
         # infinite recursions! We prevent resetting any import-related function
         # here, which results in a clearer error to the user than an infinite
         # call stack involving the internal pythonization code.

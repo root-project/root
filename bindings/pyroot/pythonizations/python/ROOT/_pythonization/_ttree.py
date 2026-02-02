@@ -260,13 +260,12 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     t.SetBranchAddress("my_vector_branch", v)
     ```
     """
-    import cppyy
-    import cppyy.types
+    import ROOT
 
     branch = self.GetBranch(bname)
 
     # Pythonization for cppyy proxies (of type CPPInstance)
-    if isinstance(addr, cppyy.types.Instance):
+    if isinstance(addr, ROOT._cppyy.types.Instance):
         addr = _pythonize_branch_addr(branch, addr)
 
     # Figure out data_type in case addr is a numpy.ndarray or array.array
@@ -308,7 +307,6 @@ def _TTree__getattr__(self, key):
     self (TTree): The instance of the TTree object from which the attribute is being retrieved.
     key (str): The name of the branch to retrieve from the TTree object.
     """
-
     import ROOT
 
     out, cast_type = GetBranchAttr(self, key)

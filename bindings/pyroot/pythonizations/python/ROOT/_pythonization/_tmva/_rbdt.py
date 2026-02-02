@@ -9,24 +9,21 @@
 ################################################################################
 
 from .. import pythonization
-from cppyy import gbl as gbl_namespace
 
 
 def Compute(self, x):
-    # Import numpy lazily
-    try:
-        import numpy as np
-    except:
-        raise ImportError("Failed to import numpy during call of RBDT::Compute.")
+    import numpy as np
+
+    import ROOT
 
     # numpy.array is a factory and the actual type of a numpy array is numpy.ndarray
     if isinstance(x, np.ndarray):
         if len(x.shape) == 1:
-            x_ = gbl_namespace.VecOps.AsRVec(x)
+            x_ = ROOT.VecOps.AsRVec(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
         elif len(x.shape) == 2:
-            x_ = gbl_namespace.TMVA.Experimental.AsRTensor(x)
+            x_ = ROOT.TMVA.Experimental.AsRTensor(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
         else:

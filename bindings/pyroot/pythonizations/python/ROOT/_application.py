@@ -11,10 +11,6 @@
 import sys
 import time
 
-from cppyy.gbl import gSystem, gInterpreter, gEnv
-
-from ROOT.libROOTPythonizations import InitApplication, InstallGUIEventInputHook
-
 
 class PyROOTApplication(object):
     """
@@ -23,6 +19,8 @@ class PyROOTApplication(object):
     """
 
     def __init__(self, config, is_ipython):
+        from ROOT.libROOTPythonizations import InitApplication
+
         # Construct a TApplication for PyROOT
         InitApplication(config.IgnoreCommandLineOptions)
 
@@ -38,24 +36,28 @@ class PyROOTApplication(object):
         from IPython.terminal.interactiveshell import TerminalInteractiveShell
 
         def inputhook(context):
+            import ROOT
+
             while not context.input_is_ready():
-                gSystem.ProcessEvents()
+                ROOT.gSystem.ProcessEvents()
                 time.sleep(0.01)
 
-        pt_inputhooks.register('ROOT', inputhook)
+        pt_inputhooks.register("ROOT", inputhook)
 
         ipy = get_ipython()
 
         # Only the TerminalInteractiveShell will use the input hooks that are
         # registered via terminal.pt_inputhooks.
         if ipy and isinstance(ipy, TerminalInteractiveShell):
-            get_ipython().run_line_magic('gui', 'ROOT')
+            get_ipython().run_line_magic("gui", "ROOT")
 
     @staticmethod
     def _inputhook_config():
         # PyOS_InputHook-based mechanism
         # Point to a function which will be called when Python's interpreter prompt
         # is about to become idle and wait for user input from the terminal
+        from ROOT.libROOTPythonizations import InstallGUIEventInputHook
+
         InstallGUIEventInputHook()
 
     @staticmethod
@@ -69,12 +71,14 @@ class PyROOTApplication(object):
             # in an interactive Python session.
             # Therefore, this function will call EndOfLineAction after each interactive
             # command (to update display etc.)
-            gInterpreter.EndOfLineAction()
+            import ROOT
+
+            ROOT.gInterpreter.EndOfLineAction()
             return orig_dhook(v)
 
         sys.displayhook = displayhook
 
-    def init_graphics(self):
+    def init_graphics(self, gEnv, gSystem):
         """Configure ROOT graphics to be used interactively"""
 
         # Note that we only end up in this function if gROOT.IsBatch() is false
@@ -83,7 +87,9 @@ class PyROOTApplication(object):
         if self._is_ipython and "IPython" in sys.modules and sys.modules["IPython"].version_info[0] >= 5:
             # ipython and notebooks, register our event processing with their hooks
             self._ipython_config()
-        elif (sys.flags.interactive == 1 or not hasattr(__main__, '__file__')) and not gSystem.InheritsFrom('TWinNTSystem'):
+        elif (sys.flags.interactive == 1 or not hasattr(__main__, "__file__")) and not gSystem.InheritsFrom(
+            "TWinNTSystem"
+        ):
             # Python in interactive mode, use the PyOS_InputHook to call our event processing
             # - sys.flags.interactive checks for the -i flags passed to python
             # - __main__ does not have the attribute __file__ if the Python prompt is started directly

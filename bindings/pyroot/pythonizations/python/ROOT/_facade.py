@@ -50,8 +50,6 @@ class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
     def __init__(self, module, is_ipython):
-        from ._pythonization import pythonization
-
         types.ModuleType.__init__(self, module.__name__)
 
         self._cppyy = module.cppyy
@@ -87,9 +85,6 @@ class ROOTFacade(types.ModuleType):
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
-
-        # @pythonization decorator
-        self.pythonization = pythonization
 
         self._is_ipython = is_ipython
 
@@ -163,6 +158,10 @@ class ROOTFacade(types.ModuleType):
 
     def _finalSetup(self):
         from ._application import PyROOTApplication
+        from ._pythonization import _register_pythonizations, pythonization
+
+        # Trigger the addition of the pythonizations
+        _register_pythonizations()
 
         # Prevent this method from being re-entered through the gROOT wrapper
         self.__dict__["gROOT"] = self._cppyy.gbl.ROOT.GetROOT()
@@ -173,7 +172,7 @@ class ROOTFacade(types.ModuleType):
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
-            self.app.init_graphics()
+            self.app.init_graphics(self._cppyy.gbl.gEnv, self._cppyy.gbl.gSystem)
 
         # Set memory policy to kUseHeuristics.
         # This restores the default in PyROOT which was changed
@@ -198,6 +197,9 @@ class ROOTFacade(types.ModuleType):
 
         # Run rootlogon if exists
         self._run_rootlogon()
+
+        # @pythonization decorator
+        self.pythonization = pythonization
 
     def _getattr(self, name):
         # Special case, to allow "from ROOT import gROOT" w/o starting the graphics
