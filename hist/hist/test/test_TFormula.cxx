@@ -98,3 +98,12 @@ TEST(TFormulaPolTest, CompoundExpressions)
    TFormula f1("f1", "pol1(x,0) + pol1(y,2)");
    EXPECT_EQ(f1.GetExpFormula(), TString("([p0]+[p1]*x)+([p2]+[p3]*y)"));
 }
+
+// https://github.com/root-project/root/issues/21104
+TEST(TFormula, SingleOpeningBracket)
+{
+   TFormula f1("f1", "[");
+   EXPECT_EQ(f1.GetNdim(), 0);
+   TFormula f2("f2", "(");
+   EXPECT_EQ(f2.GetNdim(), 0);
+}
