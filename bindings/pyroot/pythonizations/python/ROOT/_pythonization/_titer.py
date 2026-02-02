@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
 
 def _next_pyz(self):
     # Parameters:
@@ -23,7 +22,9 @@ def _next_pyz(self):
 
 
 def pythonize_titer():
-    klass = cppyy.gbl.TIter
+    import ROOT
+
+    klass = ROOT.TIter
 
     # Make TIter a Python iterable
     klass.__iter__ = lambda self: self

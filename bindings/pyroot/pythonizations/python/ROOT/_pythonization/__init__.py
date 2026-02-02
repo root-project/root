@@ -12,12 +12,6 @@ import inspect
 import pkgutil
 import traceback
 
-import cppyy
-
-# \cond INTERNALS
-gbl_namespace = cppyy.gbl
-# \endcond
-
 
 def pythonization(class_name, ns="::", is_prefix=False):
     r"""
@@ -92,6 +86,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
             function: the user function, after being registered as a
                 pythonizor.
         """
+        import ROOT
 
         npars = _check_num_pars(user_pythonizor)
 
@@ -124,7 +119,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
                 _invoke(user_pythonizor, npars, klass, fqn)
 
         # Register pythonizor in its namespace
-        cppyy.py.add_pythonization(cppyy_pythonizor, ns)
+        ROOT._cppyy.py.add_pythonization(cppyy_pythonizor, ns)
 
         # Return the original user function.
         # We don't want to modify the user function, we just use the decorator
@@ -310,11 +305,12 @@ def _find_namespace(ns):
         namespace proxy object, if the namespace has already been accessed,
             otherwise None.
     """
+    import ROOT
 
     if ns == "":
-        return gbl_namespace
+        return ROOT._cppyy.gbl
 
-    ns_obj = gbl_namespace
+    ns_obj = ROOT._cppyy.gbl
     # Get all namespaces in a list
     every_ns = ns.split("::")
     for ns in every_ns:
@@ -338,9 +334,10 @@ def _register_pythonizations():
 
 
 def _wait_press_windows():
-   from ROOT import gSystem
    import msvcrt
    import time
+
+   from ROOT import gSystem
 
    while not gSystem.ProcessEvents():
       if msvcrt.kbhit():
@@ -352,12 +349,13 @@ def _wait_press_windows():
 
 
 def _wait_press_posix():
-   from ROOT import gSystem
-   import sys
    import select
-   import tty
+   import sys
    import termios
    import time
+   import tty
+
+   from ROOT import gSystem
 
    old_settings = termios.tcgetattr(sys.stdin)
 
@@ -378,9 +376,10 @@ def _wait_press_posix():
 
 
 def _run_root_event_loop():
-   from ROOT import gROOT
    import os
    import sys
+
+   from ROOT import gROOT
 
    # no special handling in batch mode
    if gROOT.IsBatch():

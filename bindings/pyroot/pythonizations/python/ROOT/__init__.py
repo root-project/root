@@ -22,7 +22,6 @@ import cppyy.types
 
 from . import _asan  # noqa: F401  # imported for side effects for setup specific to AddressSanitizer environments
 from ._facade import ROOTFacade
-from ._pythonization import _register_pythonizations
 
 # Prevent cppyy's check for extra header directory
 os.environ["CPPYY_API_PATH"] = "none"
@@ -46,10 +45,6 @@ if "win32" in sys.platform:
 _cached_strings = []
 for s in ["Branch", "FitFCN", "ROOT", "SetBranchAddress", "SetFCN", "_TClass__DynamicCast", "__class__"]:
     _cached_strings.append(sys.intern(s))
-
-
-# Trigger the addition of the pythonizations
-_register_pythonizations()
 
 # Check if we are in the IPython shell
 _is_ipython = hasattr(builtins, "__IPYTHON__")
@@ -176,4 +171,3 @@ if _is_ipython:
         import JupyROOT  # noqa: F401  # imported the side effect of setting up JupyROOT
 
         # from . import JsMVA
-
