@@ -53,3 +53,31 @@ TEST(AtomicAdd, FloatDouble)
    ROOT::Experimental::Internal::AtomicAdd(&a, b);
    EXPECT_EQ(a, 3);
 }
+
+TEST(RBinWithError, AtomicAdd)
+{
+   RBinWithError bin;
+   bin.fSum = 1;
+   bin.fSum2 = 2;
+   bin.AtomicAdd(1.5);
+   EXPECT_EQ(bin.fSum, 2.5);
+   EXPECT_EQ(bin.fSum2, 4.25);
+}
+
+TEST(RBinWithError, StressAtomicAdd)
+{
+   static constexpr double Addend = 2.0;
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 8000;
+   static constexpr std::size_t NAdds = NThreads * NAddsPerThread;
+
+   RBinWithError bin;
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NAddsPerThread; i++) {
+         bin.AtomicAdd(Addend);
+      }
+   });
+
+   EXPECT_EQ(bin.fSum, NAdds * Addend);
+   EXPECT_EQ(bin.fSum2, NAdds * Addend * Addend);
+}
