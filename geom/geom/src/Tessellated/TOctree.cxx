@@ -57,8 +57,8 @@ TOctree::CreateOctree(const TGeoTessellated *tsl, UInt_t maxdepth, UInt_t maxtri
    const Double_t dy = tsl->GetDY();
    const Double_t dz = tsl->GetDZ();
 
-   OctreeConfig_t octreeconfig(OctantBounds_t(TVector3(origin[0] - dx, origin[1] - dy, origin[2] - dz),
-                                              TVector3(origin[0] + dx, origin[1] + dy, origin[2] + dz)),
+   OctreeConfig_t octreeconfig(OctantBounds_t(ROOT::Math::XYZVector(origin[0] - dx, origin[1] - dy, origin[2] - dz),
+                                              ROOT::Math::XYZVector(origin[0] + dx, origin[1] + dy, origin[2] + dz)),
                                tsl->GetTriangleMesh(), &tsl->GetUsedTriangleIndices(), maxdepth, maxtriangles, 0);
    octreeconfig.fAccurateSafety = accurateSafety;
    return std::make_unique<TOctree>(octreeconfig);
@@ -101,8 +101,8 @@ void TOctree::SetupOctree(const OctreeConfig_t &octreeconfig)
       delete fRoot;
    }
    fRoot = new TOctant(octreeconfig);
-   TVector3 lowerLeft = octreeconfig.fOctantBounds.fMin;
-   TVector3 uppercorner = octreeconfig.fOctantBounds.fMax;
+   ROOT::Math::XYZVector lowerLeft = octreeconfig.fOctantBounds.fMin;
+   ROOT::Math::XYZVector uppercorner = octreeconfig.fOctantBounds.fMax;
    fScale = uppercorner - lowerLeft;
    fMaxLayer = octreeconfig.fMaxDepth;
    fMaxPower = static_cast<UInt_t>(std::pow(2, fMaxLayer));
@@ -177,7 +177,7 @@ std::vector<TOctant const *> TOctree::GetLeafOctants() const
 /// \param[in] point to be located
 /// \return  const TOctant * containing point
 
-const TOctant *TOctree::GetRelevantOctant(const TVector3 &point) const
+const TOctant *TOctree::GetRelevantOctant(const ROOT::Math::XYZVector &point) const
 {
    const TOctant *octant = fRoot;
 
@@ -199,15 +199,15 @@ const TOctant *TOctree::GetRelevantOctant(const TVector3 &point) const
 /// \param[in] point to be tested if it is inside mesh
 /// \return Bool_t indicating if point is contained
 
-Bool_t TOctree::IsPointContained(const TVector3 &point) const
+Bool_t TOctree::IsPointContained(const ROOT::Math::XYZVector &point) const
 {
    const TOctant *octant = GetRelevantOctant(point);
    const auto &triIndices = octant->GetContainedTriangles();
 
    if (!triIndices.empty()) {
       fOrigin = point;
-      // TVector3 targetPoint = fMesh->TriangleAt(triIndices[0]).Center();
-      TVector3 dir = {0, 0, 1};
+      // ROOT::Math::XYZVector targetPoint = fMesh->TriangleAt(triIndices[0]).Center();
+      ROOT::Math::XYZVector dir = {0, 0, 1};
       fDirection = dir.Unit();
       std::vector<TGeoTriangleMesh::IntersectedTriangle_t> triangleIntersections;
       FindClosestFacePoint(point, dir, triangleIntersections);
@@ -231,7 +231,7 @@ Bool_t TOctree::IsPointContained(const TVector3 &point) const
 /// \param[in] point for which closest triangle needs to be found
 /// \return TGeoTriangleMesh::ClosestTriangle_t
 
-TGeoTriangleMesh::ClosestTriangle_t TOctree::GetClosestTriangle(const TVector3 &point) const
+TGeoTriangleMesh::ClosestTriangle_t TOctree::GetClosestTriangle(const ROOT::Math::XYZVector &point) const
 {
 
    const TOctant *octant = GetRelevantOctant(point);
@@ -251,7 +251,7 @@ TGeoTriangleMesh::ClosestTriangle_t TOctree::GetClosestTriangle(const TVector3 &
 /// \param[in] point for which smallest distance to mesh needs to be determined
 /// \return Double_t for the smallest distance to mesh
 
-Double_t TOctree::GetSafetyDistance(const TVector3 &point) const
+Double_t TOctree::GetSafetyDistance(const ROOT::Math::XYZVector &point) const
 {
    if (fAccurateSafety) {
       return GetSafetyDistanceAccurate(point).fDistance;
@@ -271,7 +271,7 @@ Double_t TOctree::GetSafetyDistance(const TVector3 &point) const
 /// \param[in] point for which smallest distance to mesh needs to be determined
 /// \return Double_t for the smallest distance to mesh
 
-TGeoTriangleMesh::ClosestTriangle_t TOctree::GetSafetyDistanceAccurate(const TVector3 &point) const
+TGeoTriangleMesh::ClosestTriangle_t TOctree::GetSafetyDistanceAccurate(const ROOT::Math::XYZVector &point) const
 {
    const TOctant *octant = GetRelevantOctant(point);
    const auto &triIndices = octant->GetContainedTriangles();
@@ -303,7 +303,8 @@ TGeoTriangleMesh::ClosestTriangle_t TOctree::GetSafetyDistanceAccurate(const TVe
 /// \return Double_t for the smallest distance to mesh
 
 TGeoTriangleMesh::ClosestTriangle_t
-TOctree::GetSafetyInSphere(const TVector3 &point, const TGeoTriangleMesh::ClosestTriangle_t &candidate) const
+TOctree::GetSafetyInSphere(const ROOT::Math::XYZVector &point,
+                           const TGeoTriangleMesh::ClosestTriangle_t &candidate) const
 {
    std::vector<std::pair<TOctant const *, Double_t>> octantDistances;
    FindOctantsInSphere(candidate.fDistance, point, fRoot, octantDistances);
@@ -344,7 +345,7 @@ TOctree::GetSafetyInSphere(const TVector3 &point, const TGeoTriangleMesh::Closes
 /// \param[in] point center around which all octants need to be collected
 /// \return Double_t for the smallest distance to mesh
 
-void TOctree::FindOctantsInSphere(Double_t radius, const TVector3 &point, TOctant const *octant,
+void TOctree::FindOctantsInSphere(Double_t radius, const ROOT::Math::XYZVector &point, TOctant const *octant,
                                   std::vector<std::pair<const TOctant *, Double_t>> &octants) const
 {
    for (UInt_t i = 0; i < TOctant::sNUMBER_OF_CHILDREN; ++i) {
@@ -363,7 +364,8 @@ void TOctree::FindOctantsInSphere(Double_t radius, const TVector3 &point, TOctan
 /// Helper function for DistanceInDirection for when testpoint is inside of
 /// the mesh
 
-Double_t TOctree::DistFromInside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
+Double_t TOctree::DistFromInside(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                 Bool_t isorigininside,
                                  const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections)
 {
    size_t size = triangleIntersections.size();
@@ -390,13 +392,15 @@ Double_t TOctree::DistFromInside(const TVector3 &origin, const TVector3 &directi
 
    // if point lies inside triangle mesh, one must find a triangle with a facenormal pointing away
    // Hence, the origin is slightly shifted and the ray is reshot
-   TVector3 orthogonal = direction.Orthogonal();
+   ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(direction);
    Double_t smallestExtent = std::min(fScale.X(), std::min(fScale.Y(), fScale.Z()));
-   orthogonal.SetMag(0.01 * smallestExtent);
-   TVector3 npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(), origin.Z() - orthogonal.Z()};
+   Tessellated::XYZVectorHelper::SetMag(orthogonal, (0.01 * smallestExtent));
+
+   ROOT::Math::XYZVector npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(),
+                                    origin.Z() - orthogonal.Z()};
    std::cerr
-      << "TOctree::DistanceInDirection((" << origin[0] << "," << origin[1] << ", " << origin[2] << "),"
-      << "(" << direction[0] << "," << direction[1] << ", " << direction[2] << "),...) from the inside found "
+      << "TOctree::DistanceInDirection((" << origin.X() << "," << origin.Y() << ", " << origin.Z() << "),"
+      << "(" << direction.X() << "," << direction.Y() << ", " << direction.Z() << "),...) from the inside found "
       << " triangles in direction, or all triangles are parallel to direction (even though we are in the geometry)"
       << " -> We must be hitting the edge of two triangles. We reshoot from a slightly moved point" << std::endl;
    return DistanceInDirection(npointa, direction, isorigininside);
@@ -406,7 +410,8 @@ Double_t TOctree::DistFromInside(const TVector3 &origin, const TVector3 &directi
 /// Helper function for DistanceInDirection for when testpoint is outside of
 /// the mesh
 
-Double_t TOctree::DistFromOutside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
+Double_t TOctree::DistFromOutside(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                  Bool_t isorigininside,
                                   const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections)
 {
    size_t size = triangleIntersections.size();
@@ -429,12 +434,13 @@ Double_t TOctree::DistFromOutside(const TVector3 &origin, const TVector3 &direct
    }
 
    if (size > 0 && !IsPointContained(origin)) {
-      TVector3 orthogonal = direction.Orthogonal();
+      ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(direction);
       Double_t smallestExtent = std::min(fScale.X(), std::min(fScale.Y(), fScale.Z()));
-      orthogonal.SetMag(0.01 * smallestExtent);
-      TVector3 npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(), origin.Z() - orthogonal.Z()};
-      std::cerr << "TOctree::DistanceInDirection((" << origin[0] << "," << origin[1] << ", " << origin[2] << "),"
-                << "(" << direction[0] << "," << direction[1] << ", " << direction[2]
+      Tessellated::XYZVectorHelper::SetMag(orthogonal, (0.01 * smallestExtent));
+      ROOT::Math::XYZVector npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(),
+                                       origin.Z() - orthogonal.Z()};
+      std::cerr << "TOctree::DistanceInDirection((" << origin.X() << "," << origin.Y() << ", " << origin.Z() << "),"
+                << "(" << direction.X() << "," << direction.Y() << ", " << direction.Z()
                 << "),...) from the outside found " << std::endl;
       return DistanceInDirection(npointa, direction, isorigininside);
    }
@@ -449,7 +455,8 @@ Double_t TOctree::DistFromOutside(const TVector3 &origin, const TVector3 &direct
 /// \param[in] isorigininside
 /// \return Double_t
 
-Double_t TOctree::DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside)
+Double_t TOctree::DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                      Bool_t isorigininside)
 {
    fOrigin = origin;
    fDirection = direction.Unit();
@@ -478,7 +485,7 @@ Bool_t TOctree::CheckFacesInOctant(const TOctant *octant,
       const TGeoTriangle &triangle = fMesh->TriangleAt(index);
       const double currentdistance = triangle.DistanceFrom(fOrigin, fDirection);
       if (currentdistance > -TGeoTriangle::sAccuracy) {
-         const TVector3 currentIntersectionPoint = fOrigin + currentdistance * fDirection;
+         const ROOT::Math::XYZVector currentIntersectionPoint = fOrigin + currentdistance * fDirection;
          if (octant->IsContainedByOctant(currentIntersectionPoint, TGeoTriangle::sAccuracy)) {
             const double dot = triangle.Normal().Dot(fDirection);
             triangleIntersections.push_back(TGeoTriangleMesh::IntersectedTriangle_t{
@@ -572,7 +579,8 @@ Int_t TOctree::FindNextNodeIndex(Double_t txM, Int_t x, Double_t tyM, Int_t y, D
 /// DistanceInDirection)
 
 Bool_t TOctree::ProcessSubtree(Double_t tx0, Double_t ty0, Double_t tz0, Double_t tx1, Double_t ty1, Double_t tz1,
-                               const TOctant *octant, const TVector3 &origin, const TVector3 &direction,
+                               const TOctant *octant, const ROOT::Math::XYZVector &origin,
+                               const ROOT::Math::XYZVector &direction,
                                std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const
 {
 
@@ -594,8 +602,8 @@ Bool_t TOctree::ProcessSubtree(Double_t tx0, Double_t ty0, Double_t tz0, Double_
 
    // handle rays with zero direction component
    Double_t max = std::numeric_limits<Double_t>::max();
-   const TVector3 &lower = octant->GetLowerCorner();
-   const TVector3 &upper = octant->GetUpperCorner();
+   const ROOT::Math::XYZVector &lower = octant->GetLowerCorner();
+   const ROOT::Math::XYZVector &upper = octant->GetUpperCorner();
    if (std::abs(direction.X()) < fTolerance) {
       txM = -max;
       if (origin.X() < (lower.X() + upper.X()) * 0.5) {
@@ -675,36 +683,36 @@ Bool_t TOctree::ProcessSubtree(Double_t tx0, Double_t ty0, Double_t tz0, Double_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Bool_t TOctree::FindClosestFacePoint(TVector3 origin, TVector3 direction,
+Bool_t TOctree::FindClosestFacePoint(ROOT::Math::XYZVector origin, ROOT::Math::XYZVector direction,
                                      std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const
 {
 
    fIndexByte = 0;
 
-   const TVector3 &upper = fRoot->GetUpperCorner();
-   const TVector3 &lower = fRoot->GetLowerCorner();
-   // TVector3 scale = (upper - lower);
-   const TVector3 center = (upper + lower) * 0.5;
+   const ROOT::Math::XYZVector &upper = fRoot->GetUpperCorner();
+   const ROOT::Math::XYZVector &lower = fRoot->GetLowerCorner();
+   // ROOT::Math::XYZVector scale = (upper - lower);
+   const ROOT::Math::XYZVector center = (upper + lower) * 0.5;
    direction = direction.Unit();
 
    //"transform" negative direction components by flipping the direction components sign and  the origin component
    // around the center and take the flip into account for the first
    // intersected octant by masking with the fIndexByte
    if (direction.X() < 0) {
-      origin[0] = center.X() + (center.X() - origin.X());
-      direction[0] = -direction.X();
+      origin.SetX(center.X() + (center.X() - origin.X()));
+      direction.SetX(-direction.X());
       fIndexByte |= 4;
    }
 
    if (direction.Y() < 0) {
-      origin[1] = center.Y() + (center.Y() - origin.Y());
-      direction[1] = -direction.Y();
+      origin.SetY(center.Y() + (center.Y() - origin.Y()));
+      direction.SetY(-direction.Y());
       fIndexByte |= 2;
    }
 
    if (direction.Z() < 0) {
-      origin[2] = center.Z() + (center.Z() - origin.Z());
-      direction[2] = -direction.Z();
+      origin.SetZ(center.Z() + (center.Z() - origin.Z()));
+      direction.SetZ(-direction.Z());
       fIndexByte |= 1;
    }
 

@@ -29,6 +29,49 @@ namespace Tessellated {
 ///////////////////////////////////////////////////////////////////////////////
 // ClassImp(TGeoTriangle);
 
+namespace XYZVectorHelper {
+// Helper functions to make the transition from TVector3 to XYZVector a little easier.
+
+std::array<Double_t, 3> ToArray(const ROOT::Math::XYZVector &vec)
+{
+   std::array<Double_t, 3> a;
+   vec.GetCoordinates(a.begin(), a.end());
+   return a;
+}
+
+Double_t Mag(const ROOT::Math::XYZVector &vec)
+{
+   return TMath::Sqrt(vec.Mag2());
+}
+
+void SetMag(ROOT::Math::XYZVector &vec, Double_t mag)
+{
+   vec *= mag / (Mag(vec));
+}
+
+ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec)
+{
+   const Double_t fX = vec.X();
+   const Double_t fY = vec.Y();
+   const Double_t fZ = vec.Z();
+
+   Double_t xx = fX < 0.0 ? -fX : fX;
+   Double_t yy = fY < 0.0 ? -fY : fY;
+   Double_t zz = fZ < 0.0 ? -fZ : fZ;
+   if (xx < yy) {
+      return xx < zz ? ROOT::Math::XYZVector(0, fZ, -fY) : ROOT::Math::XYZVector(fY, -fX, 0);
+   } else {
+      return yy < zz ? ROOT::Math::XYZVector(-fZ, 0, fX) : ROOT::Math::XYZVector(fY, -fX, 0);
+   }
+}
+
+void Print(const ROOT::Math::XYZVector &vec)
+{
+   Printf("ROOT::Math::XYZVector (x,y,z)=(%f,%f,%f) (rho,theta,phi)=(%f,%f,%f)", vec.X(), vec.Y(), vec.Z(), Mag(vec),
+          vec.Theta() * TMath::RadToDeg(), vec.Phi() * TMath::RadToDeg());
+}
+}; // namespace XYZVectorHelper
+
 namespace TGeoTriangleInternal {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +102,7 @@ Bool_t LargerThan(Double_t a, Double_t b, Double_t accuracy)
 TGeoTriangle::TGeoTriangle(const std::array<UInt_t, 3> &indices) : TObject(), fIndices(indices) {}
 
 ////////////////////////////////////////////////////////////////////////////////
-TGeoTriangle::TGeoTriangle(const std::vector<TVector3> *points, const std::array<UInt_t, 3> &indices)
+TGeoTriangle::TGeoTriangle(const std::vector<ROOT::Math::XYZVector> *points, const std::array<UInt_t, 3> &indices)
    : TObject(), fIndices(indices)
 {
    SetPoints(points);
@@ -98,11 +141,11 @@ void TGeoTriangle::Flip()
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the center of the triangle
-/// \return TVector3 describing the triangle center
+/// \return ROOT::Math::XYZVector describing the triangle center
 
-TVector3 TGeoTriangle::CalculateCenter() const
+ROOT::Math::XYZVector TGeoTriangle::CalculateCenter() const
 {
-   TVector3 center{0.0, 0.0, 0.0};
+   ROOT::Math::XYZVector center{0.0, 0.0, 0.0};
 
    for (size_t index = 0; index < (size_t)sNumberOfVertices; ++index) {
       center += Point(index);
@@ -115,9 +158,9 @@ TVector3 TGeoTriangle::CalculateCenter() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the normal of the triangle. The normals of the triangles in the mesh
 /// have to point outwards.
-/// \return TVector3 describing the triangle normal
+/// \return ROOT::Math::XYZVector describing the triangle normal
 
-TVector3 TGeoTriangle::CalculateNormal() const
+ROOT::Math::XYZVector TGeoTriangle::CalculateNormal() const
 {
    return ((Point(1) - Point(0)).Cross(Point(2) - Point(1))).Unit();
 }
@@ -163,23 +206,23 @@ Bool_t TGeoTriangle::IsNeighbour(const TGeoTriangle &other, Bool_t &requireFlip)
 /// \param[in] direction
 /// \return Distance from origin to triangle along direction
 
-Double_t TGeoTriangle::DistanceFrom(const TVector3 &origin, const TVector3 &direction) const
+Double_t TGeoTriangle::DistanceFrom(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction) const
 {
    constexpr double EPS = sAccuracy;
    constexpr double rayEPS = sAccuracy;
-   const TVector3 &v0 = Point(0);
-   const TVector3 &v1 = Point(1);
-   const TVector3 &v2 = Point(2);
+   const ROOT::Math::XYZVector &v0 = Point(0);
+   const ROOT::Math::XYZVector &v1 = Point(1);
+   const ROOT::Math::XYZVector &v2 = Point(2);
 
-   TVector3 e1{v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
-   TVector3 e2{v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
+   ROOT::Math::XYZVector e1{v1.X() - v0.X(), v1.Y() - v0.Y(), v1.Z() - v0.Z()};
+   ROOT::Math::XYZVector e2{v2.X() - v0.X(), v2.Y() - v0.Y(), v2.Z() - v0.Z()};
    auto p = direction.Cross(e2);
    auto det = e1.Dot(p);
    if (std::abs(det) <= EPS) {
       return sINF;
    }
 
-   TVector3 tvec{origin[0] - v0[0], origin[1] - v0[1], origin[2] - v0[2]};
+   ROOT::Math::XYZVector tvec{origin.X() - v0.X(), origin.Y() - v0.Y(), origin.Z() - v0.Z()};
    auto invDet = 1.0 / det;
    auto u = tvec.Dot(p) * invDet;
    if (u < 0.0 || u > 1.0) {
@@ -204,7 +247,7 @@ Double_t TGeoTriangle::DistanceFrom(const TVector3 &origin, const TVector3 &dire
 /// \param[in] point
 /// \return closest point on triangle to point
 
-TVector3 TGeoTriangle::ClosestPointToPoint(const TVector3 &point) const
+ROOT::Math::XYZVector TGeoTriangle::ClosestPointToPoint(const ROOT::Math::XYZVector &point) const
 {
    Double_t t = DistanceFrom(point, fNormal);
    // Point is not projectable onto triangle
@@ -221,19 +264,19 @@ TVector3 TGeoTriangle::ClosestPointToPoint(const TVector3 &point) const
 /// \param[in] point
 /// return closestPoint
 
-TVector3 TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point) const
+ROOT::Math::XYZVector TGeoTriangle::ClosestPointOfEdgesToPoint(const ROOT::Math::XYZVector &point) const
 {
    double_t smallestdistance = sINF;
-   TVector3 edgedir{0.0, 0.0, 0.0};
-   TVector3 closestpoint{0.0, 0.0, 0.0};
-   TVector3 current{0.0, 0.0, 0.0};
+   ROOT::Math::XYZVector edgedir{0.0, 0.0, 0.0};
+   ROOT::Math::XYZVector closestpoint{0.0, 0.0, 0.0};
+   ROOT::Math::XYZVector current{0.0, 0.0, 0.0};
    for (UInt_t index = 0; index < sNumberOfVertices; ++index) {
-      const TVector3 &startedge = Point((index + 1) % sNumberOfVertices);
-      const TVector3 &endedge = Point(index);
+      const ROOT::Math::XYZVector &startedge = Point((index + 1) % sNumberOfVertices);
+      const ROOT::Math::XYZVector &endedge = Point(index);
       edgedir = endedge - startedge;
 
       current = ClosestPointOfEdgeToPoint(point, startedge, edgedir);
-      double_t distance = (closestpoint - point).Mag();
+      double_t distance = Tessellated::XYZVectorHelper::Mag(closestpoint - point);
       if (smallestdistance < distance) {
          smallestdistance = distance;
          closestpoint = current;
@@ -250,10 +293,11 @@ TVector3 TGeoTriangle::ClosestPointOfEdgesToPoint(const TVector3 &point) const
 /// \param[in] edgedirection
 /// return closest point
 
-TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge,
-                                                 const TVector3 &edgedirection) const
+ROOT::Math::XYZVector TGeoTriangle::ClosestPointOfEdgeToPoint(const ROOT::Math::XYZVector &point,
+                                                              const ROOT::Math::XYZVector &edge,
+                                                              const ROOT::Math::XYZVector &edgedirection) const
 {
-   TVector3 edgetopoint = point - edge;
+   ROOT::Math::XYZVector edgetopoint = point - edge;
    Double_t isleft = edgetopoint.Dot(edgedirection);
    if (TGeoTriangleInternal::SmallerThan(isleft, 0, sAccuracy)) {
       return edge;
@@ -273,7 +317,7 @@ TVector3 TGeoTriangle::ClosestPointOfEdgeToPoint(const TVector3 &point, const TV
 
 Double_t TGeoTriangle::Area() const
 {
-   TVector3 result = TVector3{0.0, 0.0, 0.0};
+   ROOT::Math::XYZVector result = ROOT::Math::XYZVector{0.0, 0.0, 0.0};
 
    for (UInt_t ptn = 0; ptn < sNumberOfVertices; ++ptn) {
       result += Point(ptn).Cross(Point((ptn + 1) % sNumberOfVertices));
@@ -289,22 +333,22 @@ Bool_t TGeoTriangle::IsValid() const
 {
    constexpr double kTolerance = 1.e-10;
    Bool_t is_valid = kTRUE;
-   const TVector3 e1 = Point(1) - Point(0);
+   const ROOT::Math::XYZVector e1 = Point(1) - Point(0);
    if (e1.Mag2() < kTolerance) {
       std::cout << "Triangle edge e1 is degenerated\n";
       is_valid = kFALSE;
    }
-   const TVector3 e2 = Point(2) - Point(1);
+   const ROOT::Math::XYZVector e2 = Point(2) - Point(1);
    if (e2.Mag2() < kTolerance) {
       std::cout << "Triangle edge e2 is degenerated\n";
       is_valid = kFALSE;
    }
-   const TVector3 e3 = Point(0) - Point(2);
+   const ROOT::Math::XYZVector e3 = Point(0) - Point(2);
    if (e3.Mag2() < kTolerance) {
       std::cout << "Triangle edge e3 is degenerated\n";
       is_valid = kFALSE;
    }
-   const TVector3 normal = e1.Cross(e2);
+   const ROOT::Math::XYZVector normal = e1.Cross(e2);
    if (normal.Mag2() < kTolerance) {
       std::cout << "Triangle normal is degenerated\n";
       is_valid = kFALSE;
@@ -326,13 +370,13 @@ Bool_t TGeoTriangle::IsValid() const
 void TGeoTriangle::Print(Option_t * /*option*/) const
 {
    std::cout << "TGeoTriangle:\n";
-   Point(0).Print();
-   Point(1).Print();
-   Point(2).Print();
+   Tessellated::XYZVectorHelper::Print(Point(0));
+   Tessellated::XYZVectorHelper::Print(Point(1));
+   Tessellated::XYZVectorHelper::Print(Point(2));
    std::cout << "Normal \n";
-   fNormal.Print();
+   Tessellated::XYZVectorHelper::Print(fNormal);
    std::cout << "Center \n";
-   fCenter.Print();
+   Tessellated::XYZVectorHelper::Print(fCenter);
    std::cout << "Area: " << Area();
 
    std::cout << std::endl;

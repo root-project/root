@@ -16,17 +16,27 @@
 #include <vector> // for vector
 #include <limits> // for numeric_limits
 
-#include "Rtypes.h"     // for THashConsistencyHolder, ClassDefOverride
-#include "RtypesCore.h" // for Double_t, Bool_t, Int_t, UInt_t
-#include "TGeoShape.h"  // for TGeoShape
-#include "TObject.h"    // for TObject
-#include "TVector3.h"   // for TVector3
+#include "Rtypes.h"        // for THashConsistencyHolder, ClassDefOverride
+#include "RtypesCore.h"    // for Double_t, Bool_t, Int_t, UInt_t
+#include "TGeoShape.h"     // for TGeoShape
+#include "TObject.h"       // for TObject
+#include "Math/Vector3D.h" // for ROOT::Math::XYZVector
 
 class TBuffer;
 class TClass;
 class TMemberInspector;
 
 namespace Tessellated {
+
+namespace XYZVectorHelper {
+// Helper functions to make the transition from TVector3 to XYZVector a little easier.
+// Placed in TGeoTriangle, as that is included in all other Tessellated related classes.
+std::array<Double_t, 3> ToArray(const ROOT::Math::XYZVector &vec);
+Double_t Mag(const ROOT::Math::XYZVector &vec);
+void SetMag(ROOT::Math::XYZVector &vec, Double_t mag);
+ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec);
+void Print(const ROOT::Math::XYZVector &vec);
+}; // namespace XYZVectorHelper
 
 namespace TGeoTriangleInternal {
 Bool_t EqualTo(Double_t a, Double_t b, Double_t accuracy);
@@ -41,46 +51,48 @@ public:
    static const UInt_t sNumberOfVertices = 3;
 
 private:
-   const std::vector<TVector3> *fPoints{
+   const std::vector<ROOT::Math::XYZVector> *fPoints{
       nullptr}; ///<! non owning pointer to vector of points (owned by TGeoTriangleMesh)
    std::array<UInt_t, sNumberOfVertices> fIndices{}; ///< triangle only knows the three indices of the points forming it
 
-   TVector3 fCenter{}; ///<! center of triangle
-   TVector3 fNormal{}; ///<! normal of triangle
+   ROOT::Math::XYZVector fCenter{}; ///<! center of triangle
+   ROOT::Math::XYZVector fNormal{}; ///<! normal of triangle
    Double_t fRadiusSqr{
       0}; ///<! squared distance from center to furthes corner (for quick checks if point is on triangle or not)
 
 private:
-   TVector3 CalculateCenter() const;
-   TVector3 CalculateNormal() const;
+   ROOT::Math::XYZVector CalculateCenter() const;
+   ROOT::Math::XYZVector CalculateNormal() const;
 
-   TVector3 ClosestPointOfEdgesToPoint(const TVector3 &point) const;
-   TVector3 ClosestPointOfEdgeToPoint(const TVector3 &point, const TVector3 &edge, const TVector3 &edgedirection) const;
+   ROOT::Math::XYZVector ClosestPointOfEdgesToPoint(const ROOT::Math::XYZVector &point) const;
+   ROOT::Math::XYZVector ClosestPointOfEdgeToPoint(const ROOT::Math::XYZVector &point,
+                                                   const ROOT::Math::XYZVector &edge,
+                                                   const ROOT::Math::XYZVector &edgedirection) const;
 
 public:
    TGeoTriangle() : TObject() {} /* = default */
    explicit TGeoTriangle(const std::array<UInt_t, 3> &indices);
-   TGeoTriangle(const std::vector<TVector3> *points, const std::array<UInt_t, 3> &indices);
+   TGeoTriangle(const std::vector<ROOT::Math::XYZVector> *points, const std::array<UInt_t, 3> &indices);
    ~TGeoTriangle() override {} /* = default */
 
    void Setup();
    void Flip();
    Bool_t IsValid() const;
    Bool_t IsNeighbour(const TGeoTriangle &other, Bool_t &requireFlip) const;
-   double DistanceFrom(const TVector3 &origin, const TVector3 &direction) const;
-   TVector3 ClosestPointToPoint(const TVector3 &point) const;
+   double DistanceFrom(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction) const;
+   ROOT::Math::XYZVector ClosestPointToPoint(const ROOT::Math::XYZVector &point) const;
    Double_t Area() const;
    const std::array<UInt_t, 3> &Indices() const { return fIndices; }
    UInt_t Index(size_t i) const { return fIndices.at(i); }
-   const TVector3 &Point(size_t index) const { return fPoints->at(fIndices[index]); }
-   void SetPoints(const std::vector<TVector3> *points)
+   const ROOT::Math::XYZVector &Point(size_t index) const { return fPoints->at(fIndices[index]); }
+   void SetPoints(const std::vector<ROOT::Math::XYZVector> *points)
    {
       fPoints = points;
       Setup();
    }
 
-   const TVector3 &Center() const { return fCenter; }
-   const TVector3 &Normal() const { return fNormal; }
+   const ROOT::Math::XYZVector &Center() const { return fCenter; }
+   const ROOT::Math::XYZVector &Normal() const { return fNormal; }
    void Print(Option_t *option = "") const override;
 
    ClassDefOverride(TGeoTriangle, 1)

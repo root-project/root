@@ -11,7 +11,7 @@
 /** \class TGeoTriangleMesh
 \ingroup Geometry_classes
 
-Helper class for TGeoTessellated. Holds a set of triangles and vertices (TVector3)
+Helper class for TGeoTessellated. Holds a set of triangles and vertices (ROOT::Math::XYZVector)
 and is provides functions to return intersected triangles with ray or finds closest
 triangle to point. Includes further functionality to naively test the contained mesh
 for closure.
@@ -39,7 +39,7 @@ namespace Tessellated {
 /// TGeoTriangleMesh default constructor
 
 TGeoTriangleMesh::TGeoTriangleMesh()
-   : TObject(), fPoints(std::vector<TVector3>(0)), fTriangles(std::vector<TGeoTriangle>(0)), fMeshFile("")
+   : TObject(), fPoints(std::vector<ROOT::Math::XYZVector>(0)), fTriangles(std::vector<TGeoTriangle>(0)), fMeshFile("")
 {
 } /* = default; */
 
@@ -47,7 +47,10 @@ TGeoTriangleMesh::TGeoTriangleMesh()
 /// TGeoTriangleMesh constructor setting the meshfilename
 
 TGeoTriangleMesh::TGeoTriangleMesh(const TString &meshfile)
-   : TObject(), fPoints(std::vector<TVector3>(0)), fTriangles(std::vector<TGeoTriangle>(0)), fMeshFile(meshfile)
+   : TObject(),
+     fPoints(std::vector<ROOT::Math::XYZVector>(0)),
+     fTriangles(std::vector<TGeoTriangle>(0)),
+     fMeshFile(meshfile)
 {
 } /* = default; */
 
@@ -80,7 +83,8 @@ std::vector<UInt_t> TGeoTriangleMesh::GetTriangleIndices() const
 /// @param[out] indirection
 /// @param[out] againstdirection
 
-void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, const TVector3 &direction,
+void TGeoTriangleMesh::FindClosestIntersectedTriangles(const ROOT::Math::XYZVector &origin,
+                                                       const ROOT::Math::XYZVector &direction,
                                                        const std::vector<UInt_t> &usedTriangleIndices,
                                                        std::vector<IntersectedTriangle_t> &indirection,
                                                        std::vector<IntersectedTriangle_t> &oppdirection) const
@@ -107,12 +111,12 @@ void TGeoTriangleMesh::FindClosestIntersectedTriangles(const TVector3 &origin, c
 /// \return Bool_t if canidate is closer than current
 
 Bool_t TGeoTriangleMesh::IsCloserTriangle(const ClosestTriangle_t &candidate, const ClosestTriangle_t &current,
-                                          const TVector3 &point) const
+                                          const ROOT::Math::XYZVector &point) const
 {
    if (std::abs(candidate.fDistance - current.fDistance) <= 0.0000005) {
 
-      const TVector3 candidateNormal = (candidate.fClosestPoint - point).Unit();
-      const TVector3 currentNormal = (current.fClosestPoint - point).Unit();
+      const ROOT::Math::XYZVector candidateNormal = (candidate.fClosestPoint - point).Unit();
+      const ROOT::Math::XYZVector currentNormal = (current.fClosestPoint - point).Unit();
       const Double_t candidateDot = std::abs(candidateNormal.Dot(candidate.fTriangle->Normal()));
       const Double_t currentDot = std::abs(currentNormal.Dot(current.fTriangle->Normal()));
 
@@ -130,7 +134,8 @@ Bool_t TGeoTriangleMesh::IsCloserTriangle(const ClosestTriangle_t &candidate, co
 /// triangle to point and the distance
 
 TGeoTriangleMesh::ClosestTriangle_t
-TGeoTriangleMesh::FindClosestTriangleInMesh(const TVector3 &point, const std::vector<UInt_t> &usedTriangleIndices) const
+TGeoTriangleMesh::FindClosestTriangleInMesh(const ROOT::Math::XYZVector &point,
+                                            const std::vector<UInt_t> &usedTriangleIndices) const
 {
    UInt_t currentindex = 0;
    auto closesTGeoTriangle = ClosestTriangle_t{};
@@ -138,7 +143,8 @@ TGeoTriangleMesh::FindClosestTriangleInMesh(const TVector3 &point, const std::ve
       ClosestTriangle_t candidateCloseTGeoTriangle;
       candidateCloseTGeoTriangle.fTriangle = &fTriangles[cindex];
       candidateCloseTGeoTriangle.fClosestPoint = candidateCloseTGeoTriangle.fTriangle->ClosestPointToPoint(point);
-      candidateCloseTGeoTriangle.fDistance = (candidateCloseTGeoTriangle.fClosestPoint - point).Mag();
+      candidateCloseTGeoTriangle.fDistance =
+         Tessellated::XYZVectorHelper::Mag(candidateCloseTGeoTriangle.fClosestPoint - point);
       candidateCloseTGeoTriangle.fIndex = static_cast<Int_t>(cindex);
 
       if (IsCloserTriangle(candidateCloseTGeoTriangle, closesTGeoTriangle, point)) {
@@ -157,17 +163,16 @@ TGeoTriangleMesh::FindClosestTriangleInMesh(const TVector3 &point, const std::ve
 /// \param[out] min
 /// \param[out] max
 
-void TGeoTriangleMesh::ExtremaOfMeshHull(TVector3 &min, TVector3 &max) const
+void TGeoTriangleMesh::ExtremaOfMeshHull(ROOT::Math::XYZVector &min, ROOT::Math::XYZVector &max) const
 {
-   for (const TVector3 &point : fPoints) {
-      for (Int_t component = 0; component < 3; ++component) {
-         if (point[component] < min[component]) {
-            min[component] = point[component];
-         }
-         if (max[component] < point[component]) {
-            max[component] = point[component];
-         }
-      }
+   for (const ROOT::Math::XYZVector &point : fPoints) {
+      min.SetX((point.X() < min.X()) ? point.X() : min.X());
+      min.SetY((point.Y() < min.Y()) ? point.Y() : min.Y());
+      min.SetZ((point.Z() < min.Z()) ? point.Z() : min.Z());
+
+      max.SetX((max.X() < point.X()) ? point.X() : max.X());
+      max.SetY((max.Y() < point.Y()) ? point.Y() : max.Y());
+      max.SetZ((max.Z() < point.Z()) ? point.Z() : max.Z());
    }
 }
 
@@ -190,11 +195,11 @@ void TGeoTriangleMesh::TriangleMeshIndices(std::vector<UInt_t> &indices) const
 
 void TGeoTriangleMesh::ResizeCenter(Double_t maxsize)
 {
-   TVector3 origin, halflengths;
+   ROOT::Math::XYZVector origin, halflengths;
    const Double_t min_val = -std::numeric_limits<double>::max();
    const Double_t max_val = std::numeric_limits<double>::max();
-   TVector3 min{max_val, max_val, max_val};
-   TVector3 max{min_val, min_val, min_val};
+   ROOT::Math::XYZVector min{max_val, max_val, max_val};
+   ROOT::Math::XYZVector max{min_val, min_val, min_val};
    ExtremaOfMeshHull(min, max);
    origin = (min + max) * 0.5;
    halflengths = max - origin;

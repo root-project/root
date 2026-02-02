@@ -1761,9 +1761,9 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated *geoShape)
       auto vertex = mesh->Point(i);
       TString posName = TString::Format("%s_%zu", genname.Data(), i);
       Xyz nodPos;
-      nodPos.x = vertex[0];
-      nodPos.y = vertex[1];
-      nodPos.z = vertex[2];
+      nodPos.x = vertex.X();
+      nodPos.y = vertex.Y();
+      nodPos.z = vertex.Z();
       auto childN = CreatePositionN(posName.Data(), nodPos, "position", fDefault_lunit);
       fGdmlE->AddChild(fDefineNode, childN); // adding node to <define> node
    }

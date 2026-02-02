@@ -19,7 +19,7 @@ triangles needed to be tested to compute TGeoTessellated's navigation functions.
 #define TPARTITIONINGI_HH
 
 #include "TObject.h"
-#include "TVector3.h"
+#include "Math/Vector3D.h"
 
 #include "TGeoTriangleMesh.h"
 
@@ -36,24 +36,25 @@ public:
    /// Is point contained by mesh
    /// \param[in] point to be tested for containment in mesh
    /// \return Bool_t indicating containment
-   virtual Bool_t IsPointContained(const TVector3 &point) const = 0;
+   virtual Bool_t IsPointContained(const ROOT::Math::XYZVector &point) const = 0;
 
    /// Compute minimal distance between point an mesh surface
    /// \param[in] point for which minimum distance is required
    /// \return Double_t indicating minimum distance
-   virtual Double_t GetSafetyDistance(const TVector3 &point) const = 0;
+   virtual Double_t GetSafetyDistance(const ROOT::Math::XYZVector &point) const = 0;
 
    /// Find closest triangle to given point
    /// \param[in] point for which closest triangle is required
    /// \return TGeoTriangleMesh::ClosestTriangle_t
-   virtual TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const TVector3 &point) const = 0;
+   virtual TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const ROOT::Math::XYZVector &point) const = 0;
 
    /// Find distance from origin to first intersected triangle in direction
    /// \param[in] origin of ray
    /// \param[in] direction of ray
    /// \param[in] isorigininside indicating if origin is inside mesh
    /// \return Double_t indicating distance to first intersected triangle by ray
-   virtual Double_t DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside) = 0;
+   virtual Double_t DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                        Bool_t isorigininside) = 0;
 
    virtual ~TPartitioningI() override {}
 

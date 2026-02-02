@@ -27,7 +27,7 @@ object for use with TGeoTessellated.
 #include <vector>   // for vector
 
 #include "Tessellated/TGeoTriangle.h" // for TGeoTriangle
-#include "TVector3.h"                 // for TVector3
+#include "Math/Vector3D.h"            // for ROOT::Math::XYZVector
 
 namespace Tessellated {
 namespace ASCIIStl {
@@ -91,9 +91,9 @@ std::string VertexCoordinatesAsString(std::string line)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert a std::string containing 3 vertex elements into a TVector3
+/// Convert a std::string containing 3 vertex elements into a ROOT::Math::XYZVector
 
-TVector3 Vector3FromString(const std::string &coordinatestring, const Double_t scale)
+ROOT::Math::XYZVector Vector3FromString(const std::string &coordinatestring, const Double_t scale)
 {
    auto foundx = coordinatestring.find_first_of(';');
    auto xcoords = coordinatestring.substr(0, foundx);
@@ -106,15 +106,15 @@ TVector3 Vector3FromString(const std::string &coordinatestring, const Double_t s
    auto zcoords = coordinatestring.substr(foundy + 1, std::string::npos);
    auto z = std::stod(zcoords);
 
-   return TVector3{x * scale, y * scale, z * scale};
+   return ROOT::Math::XYZVector{x * scale, y * scale, z * scale};
 }
 
 }; // namespace ASCIIStl
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Helper function to create string out of TVector3
+/// Helper function to create string out of ROOT::Math::XYZVector
 
-std::string Vector3ToString(const TVector3 &vect)
+std::string Vector3ToString(const ROOT::Math::XYZVector &vect)
 {
    return std::to_string(vect.X()) + ";" + std::to_string(vect.Y()) + ";" + std::to_string(vect.Z());
 }
@@ -138,7 +138,7 @@ ImportMeshFromASCIIStl(const TString &stlfilename, const TGeoTriangleMesh::Lengt
 
    auto stlfile = std::ifstream(stlfilename.Data());
    std::vector<TGeoTriangle> triangles{};
-   std::vector<TVector3> points{};
+   std::vector<ROOT::Math::XYZVector> points{};
 
    if (stlfile.is_open()) {
       std::map<std::string, size_t> pointmap{};
@@ -184,7 +184,7 @@ std::unique_ptr<TGeoTriangleMesh> ImportMeshFromObjFormat(const char *objfile, c
 
    std::vector<std::string> sfacets;
 
-   std::vector<TVector3> vertices;
+   std::vector<ROOT::Math::XYZVector> vertices;
 
    std::vector<TGeoTriangle> facets;
 
@@ -306,7 +306,7 @@ void MeshBuilder::Reset()
 /// \param[in] vertex to be added
 /// \return UInt_t indicating vertex index
 
-UInt_t MeshBuilder::AddVertex(const TVector3 &vertex)
+UInt_t MeshBuilder::AddVertex(const ROOT::Math::XYZVector &vertex)
 {
    const std::string &strOfVertex = Vector3ToString(vertex);
    if (fStringToIndex.find(strOfVertex) == fStringToIndex.end()) {
@@ -323,7 +323,7 @@ UInt_t MeshBuilder::AddVertex(const TVector3 &vertex)
 
 UInt_t MeshBuilder::AddVertex(const Vertex_t &vertex)
 {
-   return AddVertex(TVector3FromVertex_t(vertex));
+   return AddVertex(ToVector3D(vertex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,7 +332,7 @@ UInt_t MeshBuilder::AddVertex(const Vertex_t &vertex)
 /// \param[in] vertex to be looked up
 /// \return Int_t -1 for when vertex is not included, else the vertex index
 
-Int_t MeshBuilder::LookupVertex(const TVector3 &vertex) const
+Int_t MeshBuilder::LookupVertex(const ROOT::Math::XYZVector &vertex) const
 {
    const std::string &strOfVertex = Vector3ToString(vertex);
    if (fStringToIndex.find(strOfVertex) == fStringToIndex.end()) {
@@ -344,7 +344,8 @@ Int_t MeshBuilder::LookupVertex(const TVector3 &vertex) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a triangular face providing the vertices directly
 
-void MeshBuilder::AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector3 &v2)
+void MeshBuilder::AddFacet(const ROOT::Math::XYZVector &v0, const ROOT::Math::XYZVector &v1,
+                           const ROOT::Math::XYZVector &v2)
 {
    std::array<UInt_t, 3> indices;
    indices[0] = AddVertex(v0);
@@ -358,7 +359,7 @@ void MeshBuilder::AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector
 
 void MeshBuilder::AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_t &v2)
 {
-   AddFacet(TVector3FromVertex_t(v0), TVector3FromVertex_t(v1), TVector3FromVertex_t(v2));
+   AddFacet(ToVector3D(v0), ToVector3D(v1), ToVector3D(v2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +376,8 @@ void MeshBuilder::AddFacet(const UInt_t v0, const UInt_t v1, const UInt_t v2)
 /// Add a quadrilateral face providing the vertices directly
 /// Note, that 2 triangles are made out of the single quadrilateral
 
-void MeshBuilder::AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector3 &v2, const TVector3 &v3)
+void MeshBuilder::AddFacet(const ROOT::Math::XYZVector &v0, const ROOT::Math::XYZVector &v1,
+                           const ROOT::Math::XYZVector &v2, const ROOT::Math::XYZVector &v3)
 {
    AddFacet(v0, v1, v2);
    AddFacet(v0, v2, v3);
@@ -387,7 +389,7 @@ void MeshBuilder::AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector
 
 void MeshBuilder::AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_t &v2, const Vertex_t &v3)
 {
-   AddFacet(TVector3FromVertex_t(v0), TVector3FromVertex_t(v1), TVector3FromVertex_t(v2), TVector3FromVertex_t(v3));
+   AddFacet(ToVector3D(v0), ToVector3D(v1), ToVector3D(v2), ToVector3D(v3));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,9 +424,9 @@ std::unique_ptr<TGeoTriangleMesh> MeshBuilder::CreateMesh() const
 // {
 //    MeshBuilder builder;
 //    builder.AddFacet(
-//       TVector3{},
-//       TVector3{},
-//       TVector3{},
+//       ROOT::Math::XYZVector{},
+//       ROOT::Math::XYZVector{},
+//       ROOT::Math::XYZVector{},
 //    )
 // }
 

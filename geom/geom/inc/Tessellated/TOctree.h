@@ -20,7 +20,7 @@
 #include "TPartitioningI.h"   // for TPartitioningI
 #include "TGeoTriangle.h"     // for TGeoTriangle
 #include "TGeoTriangleMesh.h" // for TGeoTriangleMesh, TGeoTriangleMesh::ClosestTri...
-#include "TVector3.h"         // for TVector3
+#include "Math/Vector3D.h"    // for ROOT::Math::XYZVector
 
 class TGeoTessellated;
 class TBuffer;
@@ -34,11 +34,11 @@ private:
    TOctant *fRoot{nullptr};
    Bool_t fIsSetup{kFALSE};
 
-   mutable TVector3 fDirection{};
-   mutable TVector3 fOrigin{};
+   mutable ROOT::Math::XYZVector fDirection{};
+   mutable ROOT::Math::XYZVector fOrigin{};
    Bool_t fOriginInside{kFALSE};
-   TVector3 fOffset{}; ///< kept for backward compatibility
-   TVector3 fScale{};
+   ROOT::Math::XYZVector fOffset{}; ///< kept for backward compatibility
+   ROOT::Math::XYZVector fScale{};
 
    Bool_t fAccurateSafety{kTRUE};
    UInt_t fMaxLayer{};
@@ -50,25 +50,28 @@ private:
                              // to one of the axes.
 
 private:
-   Double_t DistFromInside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
+   Double_t DistFromInside(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                           Bool_t isorigininside,
                            const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections);
-   Double_t DistFromOutside(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside,
+   Double_t DistFromOutside(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                            Bool_t isorigininside,
                             const std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections);
 
    Bool_t CheckFacesInOctant(const TOctant *octant,
                              std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
-   Bool_t FindClosestFacePoint(TVector3 origin, TVector3 direction,
+   Bool_t FindClosestFacePoint(ROOT::Math::XYZVector origin, ROOT::Math::XYZVector direction,
                                std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
    Bool_t ProcessSubtree(Double_t tx0, Double_t ty0, Double_t tz0, Double_t tx1, Double_t ty1, Double_t tz1,
-                         const TOctant *octant, const TVector3 &origin, const TVector3 &direction,
+                         const TOctant *octant, const ROOT::Math::XYZVector &origin,
+                         const ROOT::Math::XYZVector &direction,
                          std::vector<TGeoTriangleMesh::IntersectedTriangle_t> &triangleIntersections) const;
    Int_t FindNextNodeIndex(Double_t txM, Int_t x, Double_t tyM, Int_t y, Double_t tzM, Int_t z) const;
    Int_t FindFirstNodeIndex(Double_t tx0, Double_t ty0, Double_t tz0, Double_t txM, Double_t tyM, Double_t tzM) const;
 
    void GetOctants(TOctant const *tmp, std::vector<TOctant const *> &octants) const;
    TGeoTriangleMesh::ClosestTriangle_t
-   GetSafetyInSphere(const TVector3 &point, const TGeoTriangleMesh::ClosestTriangle_t &candidate) const;
-   void FindOctantsInSphere(Double_t radius, const TVector3 &point, TOctant const *octant,
+   GetSafetyInSphere(const ROOT::Math::XYZVector &point, const TGeoTriangleMesh::ClosestTriangle_t &candidate) const;
+   void FindOctantsInSphere(Double_t radius, const ROOT::Math::XYZVector &point, TOctant const *octant,
                             std::vector<std::pair<const TOctant *, Double_t>> &octants) const;
 
 public:
@@ -82,14 +85,14 @@ public:
    void SetTolerance(double tolerance) { fTolerance = tolerance; }
    double GetTolerance() const { return fTolerance; }
    void SetupOctree(const OctreeConfig_t &octreeconfig);
-   const TOctant *GetRelevantOctant(const TVector3 &point) const;
-   virtual Bool_t IsPointContained(const TVector3 &point) const override;
-   virtual Double_t GetSafetyDistance(const TVector3 &point) const override;
-   TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const TVector3 &point) const override;
-   TGeoTriangleMesh::ClosestTriangle_t GetSafetyDistanceAccurate(const TVector3 &point) const;
+   const TOctant *GetRelevantOctant(const ROOT::Math::XYZVector &point) const;
+   virtual Bool_t IsPointContained(const ROOT::Math::XYZVector &point) const override;
+   virtual Double_t GetSafetyDistance(const ROOT::Math::XYZVector &point) const override;
+   TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const ROOT::Math::XYZVector &point) const override;
+   TGeoTriangleMesh::ClosestTriangle_t GetSafetyDistanceAccurate(const ROOT::Math::XYZVector &point) const;
 
-   virtual Double_t
-   DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside) override;
+   virtual Double_t DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                        Bool_t isorigininside) override;
 
    Bool_t IsSetup() const { return fIsSetup; }
    UInt_t GetNumberOfOctants() const { return fRoot->GetNumberOfOctants(); }

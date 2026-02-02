@@ -126,32 +126,27 @@ std::vector<OctantBounds_t> TOctant::CreateChildBounds(const OctantBounds_t &bou
 {
    // Determine new edge vertices of daughter voxels.
    std::vector<OctantBounds_t> newcorners;
-   const TVector3 &min = bounds.fMin;
-   const TVector3 &max = bounds.fMax;
-   TVector3 middlepoint = (min + (max - min) * 0.5);
-   TVector3 low{0, 0, 0};
-   TVector3 up{0, 0, 0};
-   const Int_t x = 0;
-   const Int_t y = 1;
-   const Int_t z = 2;
+   const ROOT::Math::XYZVector &min = bounds.fMin;
+   const ROOT::Math::XYZVector &max = bounds.fMax;
+   ROOT::Math::XYZVector middlepoint = (min + (max - min) * 0.5);
+   ROOT::Math::XYZVector low{0, 0, 0};
+   ROOT::Math::XYZVector up{0, 0, 0};
+
    for (UInt_t i = 0; i < sNUMBER_OF_CHILDREN; ++i) {
-      low[x] = middlepoint.X();
-      low[y] = middlepoint.Y();
-      low[z] = middlepoint.Z();
-      up[x] = max.X();
-      up[y] = max.Y();
-      up[z] = max.Z();
+      low.SetXYZ(middlepoint.X(), middlepoint.Y(), middlepoint.Z());
+      up.SetXYZ(max.X(), max.Y(), max.Z());
+
       if (i < 4) {
-         low[x] = min.X();
-         up[x] = middlepoint.X();
+         low.SetX(min.X());
+         up.SetX(middlepoint.X());
       }
       if (i % 2 == 0) {
-         low[z] = min.Z();
-         up[z] = middlepoint.Z();
+         low.SetZ(min.Z());
+         up.SetZ(middlepoint.Z());
       }
       if (i == 0 || i == 1 || i == 4 || i == 5) {
-         low[y] = min.Y();
-         up[y] = middlepoint.Y();
+         low.SetY(min.Y());
+         up.SetY(middlepoint.Y());
       }
       newcorners.emplace_back(OctantBounds_t{low, up});
    }
@@ -164,20 +159,22 @@ std::vector<OctantBounds_t> TOctant::CreateChildBounds(const OctantBounds_t &bou
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function to determine if a triangle intersects with an box
 
-Bool_t
-TOctant::IsNormalAxisSeparating(const ThreeVector3s_t &triVertices, Int_t component, const TVector3 &extents) const
+Bool_t TOctant::IsNormalAxisSeparating(const ThreeVector3s_t &triVertices, Int_t component,
+                                       const ROOT::Math::XYZVector &extents) const
 {
-   return std::max({triVertices.vec1[component], triVertices.vec2[component], triVertices.vec3[component]}) <
-             -extents[component] - TGeoShape::Tolerance() ||
-          std::min({triVertices.vec1[component], triVertices.vec2[component], triVertices.vec3[component]}) >
-             extents[component] + TGeoShape::Tolerance();
+   // Since the XYZVector does not seem to define GetCoordinate(index) this becomes rather ... questionable
+   const Double_t c1{Tessellated::XYZVectorHelper::ToArray(triVertices.vec1)[component]};
+   const Double_t c2{Tessellated::XYZVectorHelper::ToArray(triVertices.vec2)[component]};
+   const Double_t c3{Tessellated::XYZVectorHelper::ToArray(triVertices.vec3)[component]};
+   const Double_t ec{Tessellated::XYZVectorHelper::ToArray(extents)[component]};
+   return std::max({c1, c2, c3}) < -ec - TGeoShape::Tolerance() || std::min({c1, c2, c3}) > ec + TGeoShape::Tolerance();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function to determine if a triangle intersects with an box
 
-Bool_t TOctant::IsSeparatingAxis(const ThreeVector3s_t &triVertices, const TVector3 &axis, const TVector3 & /*edge*/,
-                                 const TVector3 &extents) const
+Bool_t TOctant::IsSeparatingAxis(const ThreeVector3s_t &triVertices, const ROOT::Math::XYZVector &axis,
+                                 const ROOT::Math::XYZVector & /*edge*/, const ROOT::Math::XYZVector &extents) const
 {
    const Double_t p0 = axis.Dot(triVertices.vec1);
    const Double_t p1 = axis.Dot(triVertices.vec2);
@@ -197,35 +194,35 @@ Bool_t TOctant::IsSeparatingAxis(const ThreeVector3s_t &triVertices, const TVect
 Bool_t TOctant::TriangleOctantBoundsIntersection(const TGeoTriangle &triangle, const OctantBounds_t &octantbounds) const
 {
 
-   TVector3 octcenter = ((octantbounds.fMax + octantbounds.fMin) * 0.5);
-   TVector3 extents = octantbounds.fMax - octcenter;
-   extents += TVector3{TOctant::sAccuracy, TOctant::sAccuracy, TOctant::sAccuracy};
+   ROOT::Math::XYZVector octcenter = ((octantbounds.fMax + octantbounds.fMin) * 0.5);
+   ROOT::Math::XYZVector extents = octantbounds.fMax - octcenter;
+   extents += ROOT::Math::XYZVector{TOctant::sAccuracy, TOctant::sAccuracy, TOctant::sAccuracy};
    ThreeVector3s_t trivertices;
    trivertices.vec1 = (triangle.Point(0) - octcenter);
    trivertices.vec2 = (triangle.Point(1) - octcenter);
    trivertices.vec3 = (triangle.Point(2) - octcenter);
 
    // Compute edge vectors for triangle
-   TVector3 edge10 = (trivertices.vec2 - trivertices.vec1);
-   TVector3 edge21 = (trivertices.vec3 - trivertices.vec2);
-   TVector3 edge02 = (trivertices.vec1 - trivertices.vec3);
+   ROOT::Math::XYZVector edge10 = (trivertices.vec2 - trivertices.vec1);
+   ROOT::Math::XYZVector edge21 = (trivertices.vec3 - trivertices.vec2);
+   ROOT::Math::XYZVector edge02 = (trivertices.vec1 - trivertices.vec3);
 
    // Compute edge vectors for triangle
-   // TVector3 edge10 = (triangle.Point(1) - triangle.Point(0));
-   // TVector3 edge21 = (triangle.Point(2) - triangle.Point(1));
-   // TVector3 edge02 = (triangle.Point(0) - triangle.Point(2));
+   // ROOT::Math::XYZVector edge10 = (triangle.Point(1) - triangle.Point(0));
+   // ROOT::Math::XYZVector edge21 = (triangle.Point(2) - triangle.Point(1));
+   // ROOT::Math::XYZVector edge02 = (triangle.Point(0) - triangle.Point(2));
 
    // Compute each axis perpendicular to  one of the unit-axis vectors and triangle edge
 
-   auto a00 = TVector3(0, -edge10.Z(), edge10.Y()).Unit(); // edge10 cross e_x
-   auto a01 = TVector3(0, -edge21.Z(), edge21.Y()).Unit();
-   auto a02 = TVector3(0, -edge02.Z(), edge02.Y()).Unit();
-   auto a10 = TVector3(edge10.Z(), 0, -edge10.X()).Unit();
-   auto a11 = TVector3(edge21.Z(), 0, -edge21.X()).Unit();
-   auto a12 = TVector3(edge02.Z(), 0, -edge02.X()).Unit();
-   auto a20 = TVector3(-edge10.Y(), edge10.X(), 0).Unit();
-   auto a21 = TVector3(-edge21.Y(), edge21.X(), 0).Unit();
-   auto a22 = TVector3(-edge02.Y(), edge02.X(), 0).Unit();
+   auto a00 = ROOT::Math::XYZVector(0, -edge10.Z(), edge10.Y()).Unit(); // edge10 cross e_x
+   auto a01 = ROOT::Math::XYZVector(0, -edge21.Z(), edge21.Y()).Unit();
+   auto a02 = ROOT::Math::XYZVector(0, -edge02.Z(), edge02.Y()).Unit();
+   auto a10 = ROOT::Math::XYZVector(edge10.Z(), 0, -edge10.X()).Unit();
+   auto a11 = ROOT::Math::XYZVector(edge21.Z(), 0, -edge21.X()).Unit();
+   auto a12 = ROOT::Math::XYZVector(edge02.Z(), 0, -edge02.X()).Unit();
+   auto a20 = ROOT::Math::XYZVector(-edge10.Y(), edge10.X(), 0).Unit();
+   auto a21 = ROOT::Math::XYZVector(-edge21.Y(), edge21.X(), 0).Unit();
+   auto a22 = ROOT::Math::XYZVector(-edge02.Y(), edge02.X(), 0).Unit();
 
    // Test axis
    if (IsSeparatingAxis(trivertices, a00, edge10, extents)) {
@@ -266,11 +263,11 @@ Bool_t TOctant::TriangleOctantBoundsIntersection(const TGeoTriangle &triangle, c
       return false;
    }
 
-   TVector3 nNormal = edge10.Cross(edge21);
+   ROOT::Math::XYZVector nNormal = edge10.Cross(edge21);
    nNormal = nNormal.Unit();
 
    Double_t r =
-      extents[0] * std::abs(nNormal[0]) + extents[1] * std::abs(nNormal[1]) + extents[2] * std::abs(nNormal[2]);
+      extents.X() * std::abs(nNormal.X()) + extents.Y() * std::abs(nNormal.Y()) + extents.Z() * std::abs(nNormal.Z());
 
    Double_t boxCenterDistance = nNormal.Dot(trivertices.vec1);
 
@@ -306,8 +303,8 @@ void TOctant::SetState(const TGeoTriangleMesh *mesh)
       fState = State::MIXED;
       return;
    }
-   TVector3 point = (fMin + fMax) * 0.5;
-   TVector3 dir{0.0, 0.0, 1.0};
+   ROOT::Math::XYZVector point = (fMin + fMax) * 0.5;
+   ROOT::Math::XYZVector dir{0.0, 0.0, 1.0};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
    std::vector<UInt_t> indices(mesh->Triangles().size());
@@ -318,7 +315,7 @@ void TOctant::SetState(const TGeoTriangleMesh *mesh)
       indir.clear();
       oppdir.clear();
       dir = mesh->TriangleAt(0).Center(); // something went wrong, an edge was hit and not properly recognized
-      dir.SetMag(1);
+      dir = dir.Unit();
       mesh->FindClosestIntersectedTriangles(point, dir, indices, indir, oppdir);
    }
    if (indir.empty() && oppdir.empty()) {
@@ -351,8 +348,8 @@ void TOctant::CreateChildOctants(const OctreeConfig_t &octantconfig)
    auto bounds = CreateChildBounds(OctantBounds_t(fMin, fMax));
    UInt_t childindex = 0;
    for (const OctantBounds_t &bound : bounds) {
-      TVector3 octcenter = ((bound.fMax + bound.fMin) * 0.5);
-      TVector3 extents = bound.fMax - octcenter;
+      ROOT::Math::XYZVector octcenter = ((bound.fMax + bound.fMin) * 0.5);
+      ROOT::Math::XYZVector extents = bound.fMax - octcenter;
 
       auto containedtriangles = ContainedTriangles(bound, *octantconfig.fContainedTriangles, octantconfig.fMesh);
 
@@ -378,7 +375,7 @@ void TOctant::CreateChildOctants(const OctreeConfig_t &octantconfig)
 /// \param[in] epsilon for floating point precision
 /// \return Bool_t whether point is contained or not
 
-Bool_t TOctant::IsContainedByOctant(const TVector3 &point, Double_t epsilon) const
+Bool_t TOctant::IsContainedByOctant(const ROOT::Math::XYZVector &point, Double_t epsilon) const
 {
    if (point.X() + epsilon < fMin.X() || point.X() - epsilon > fMax.X()) {
       return false;
@@ -398,10 +395,10 @@ Bool_t TOctant::IsContainedByOctant(const TVector3 &point, Double_t epsilon) con
 /// \param[in] point for which distance should be calculated
 /// \return Double_t shortest distance of point to octant boundaries
 
-Double_t TOctant::GetMinDistanceToBoundaries(const TVector3 &point) const
+Double_t TOctant::GetMinDistanceToBoundaries(const ROOT::Math::XYZVector &point) const
 {
-   TVector3 diffpointlower = (fMin)-point;
-   TVector3 diffpointupper = (fMax)-point;
+   ROOT::Math::XYZVector diffpointlower = (fMin)-point;
+   ROOT::Math::XYZVector diffpointupper = (fMax)-point;
 
    // get the smallest distance component of box to point
    Double_t min1 =
@@ -418,8 +415,8 @@ Double_t TOctant::GetMinDistanceToBoundaries(const TVector3 &point) const
 void TOctant::Print(Option_t * /*option*/) const
 {
    std::cout << "Octant at level " << fCurrentTreeDepth << std::endl;
-   fMin.Print();
-   fMax.Print();
+   Tessellated::XYZVectorHelper::Print(fMin);
+   Tessellated::XYZVectorHelper::Print(fMax);
    std::cout << "Contains " << fContainedTriangles.size() << " Triangles" << std::endl;
    for (UInt_t id : fContainedTriangles) {
       std::cout << "ID:" << id << " ";
@@ -433,26 +430,25 @@ void TOctant::Print(Option_t * /*option*/) const
 /// \param[in] point for which distance should be calculated
 /// \return Double_t shortest distance of point to triangles/octant boundaries
 
-Double_t TOctant::GetMinDistance(const TVector3 &point) const
+Double_t TOctant::GetMinDistance(const ROOT::Math::XYZVector &point) const
 {
-   TVector3 mid = (fMax + fMin) * (1. / 2.);
-   TVector3 relPoint = point - mid;
-   for (Int_t i = 0; i < 3; ++i) {
-      relPoint[i] = std::abs(relPoint[i]);
-   }
-   TVector3 ext = mid - fMin;
-   TVector3 distance = relPoint - ext;
-   for (Int_t i = 0; i < 3; ++i) {
-      distance[i] = (distance[i] < 0) ? 0 : distance[i];
-   }
-   Double_t max = distance.X();
-   for (Int_t i = 0; i < 3; ++i) {
-      max = (max < distance[i]) ? distance[i] : max;
-   }
+   ROOT::Math::XYZVector mid = (fMax + fMin) * (1. / 2.);
+   ROOT::Math::XYZVector relPoint = point - mid;
+   relPoint.SetXYZ(std::abs(relPoint.X()), std::abs(relPoint.Y()), std::abs(relPoint.Z()));
+
+   ROOT::Math::XYZVector ext = mid - fMin;
+   ROOT::Math::XYZVector distanceVec = relPoint - ext;
+   distanceVec.SetXYZ(((distanceVec.X() < 0) ? 0 : distanceVec.X()), ((distanceVec.Y() < 0) ? 0 : distanceVec.Y()),
+                      ((distanceVec.Z() < 0) ? 0 : distanceVec.Z()));
+   Double_t max = distanceVec.X();
+   // max = (max < distanceVec.X()) ? distanceVec.X() : max;
+   max = (max < distanceVec.Y()) ? distanceVec.Y() : max;
+   max = (max < distanceVec.Z()) ? distanceVec.Z() : max;
+
    if (max <= 0) {
       return 0;
    }
-   return distance.Mag();
+   return Tessellated::XYZVectorHelper::Mag(distanceVec);
 }
 
 }; // namespace Tessellated

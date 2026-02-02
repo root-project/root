@@ -19,7 +19,7 @@
 
 #include "TString.h"          // for TString
 #include "TGeoTriangleMesh.h" // for TGeoTriangleMesh, TGeoTriangleMesh::LengthUnit
-#include "TVector3.h"         // for TVector3
+#include "Math/Vector3D.h"    // for ROOT::Math::XYZVector
 #include "TGeoTypedefs.h"     // for Vertex_t
 
 namespace Tessellated {
@@ -27,14 +27,14 @@ namespace Tessellated {
 namespace ASCIIStl {
 
 Double_t GetScaleFactor(const TGeoTriangleMesh::LengthUnit unit);
-TVector3 Vector3FromString(const std::string &coordinatestring, const Double_t scale);
+ROOT::Math::XYZVector Vector3FromString(const std::string &coordinatestring, const Double_t scale);
 std::string VertexCoordinatesAsString(std::string line);
 UInt_t LookupVertexIndex(const std::string &key, std::map<std::string, size_t> &pointmap, Bool_t &newpoint);
 
 }; // namespace ASCIIStl
 
 // common helper functions
-std::string Vector3ToString(const TVector3 &vect);
+std::string Vector3ToString(const ROOT::Math::XYZVector &vect);
 
 // Helper function to import full meshes from files (.stl, .obj)
 std::unique_ptr<TGeoTriangleMesh>
@@ -48,24 +48,25 @@ std::unique_ptr<TGeoTriangleMesh> ImportMeshFromObjFormat(const char *objfile, c
 class MeshBuilder {
 private:
    std::map<std::string, UInt_t> fStringToIndex{};
-   std::vector<TVector3> fVertices;
+   std::vector<ROOT::Math::XYZVector> fVertices;
    std::vector<TGeoTriangle> fTriangles;
    UInt_t fCounter{0};
 
-   inline static TVector3 TVector3FromVertex_t(const Vertex_t &vertex)
+   inline static ROOT::Math::XYZVector ToVector3D(const Vertex_t &vertex)
    {
-      return TVector3{vertex.x(), vertex.y(), vertex.z()};
+      return ROOT::Math::XYZVector{vertex.x(), vertex.y(), vertex.z()};
    }
 
 public:
    void Reset();
-   UInt_t AddVertex(const TVector3 &vertex);
+   UInt_t AddVertex(const ROOT::Math::XYZVector &vertex);
    UInt_t AddVertex(const Vertex_t &vertex);
-   Int_t LookupVertex(const TVector3 &vertex) const;
-   void AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector3 &v2);
+   Int_t LookupVertex(const ROOT::Math::XYZVector &vertex) const;
+   void AddFacet(const ROOT::Math::XYZVector &v0, const ROOT::Math::XYZVector &v1, const ROOT::Math::XYZVector &v2);
    void AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_t &v2);
    void AddFacet(const UInt_t v0, const UInt_t v1, const UInt_t v2);
-   void AddFacet(const TVector3 &v0, const TVector3 &v1, const TVector3 &v2, const TVector3 &v3);
+   void AddFacet(const ROOT::Math::XYZVector &v0, const ROOT::Math::XYZVector &v1, const ROOT::Math::XYZVector &v2,
+                 const ROOT::Math::XYZVector &v3);
    void AddFacet(const Vertex_t &v0, const Vertex_t &v1, const Vertex_t &v2, const Vertex_t &v3);
    void AddFacet(const UInt_t v0, const UInt_t v1, const UInt_t v2, const UInt_t v3);
 

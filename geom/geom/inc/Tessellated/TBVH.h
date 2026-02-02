@@ -20,7 +20,7 @@
 #include "TPartitioningI.h"   // for TPartitioningI
 #include "TGeoTriangle.h"     // for TGeoTriangle
 #include "TGeoTriangleMesh.h" // for TGeoTriangleMesh, TGeoTriangleMesh::ClosestTri...
-#include "TVector3.h"         // for TVector3
+#include "Math/Vector3D.h"    // for ROOT::Math::XYZVector
 
 #include <bvh/v2/bvh.h>
 #include <bvh/v2/vec.h>
@@ -85,11 +85,11 @@ public:
    virtual void SetTriangleMesh(const TGeoTriangleMesh *trianglemesh) override;
    virtual void SetBVHQuality(bvh::v2::DefaultBuilder<Node>::Quality quality);
 
-   virtual Bool_t IsPointContained(const TVector3 &point) const override;
-   virtual Double_t GetSafetyDistance(const TVector3 &point) const override;
-   virtual TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const TVector3 &point) const override;
-   virtual Double_t
-   DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside) override;
+   virtual Bool_t IsPointContained(const ROOT::Math::XYZVector &point) const override;
+   virtual Double_t GetSafetyDistance(const ROOT::Math::XYZVector &point) const override;
+   virtual TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const ROOT::Math::XYZVector &point) const override;
+   virtual Double_t DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction,
+                                        Bool_t isorigininside) override;
 
    virtual void Print(Option_t *opt = nullptr) const override;
 

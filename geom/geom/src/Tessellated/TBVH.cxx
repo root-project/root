@@ -73,9 +73,9 @@ void TBVH::BuildBVH()
    const size_t nTriangles{triangles.size()};
    tris.reserve(nTriangles);
    for (const auto &triangle : triangles) {
-      const TVector3 &a = triangle.Point(0);
-      const TVector3 &b = triangle.Point(1);
-      const TVector3 &c = triangle.Point(2);
+      const ROOT::Math::XYZVector &a = triangle.Point(0);
+      const ROOT::Math::XYZVector &b = triangle.Point(1);
+      const ROOT::Math::XYZVector &c = triangle.Point(2);
       tris.emplace_back(Vec3(a.X(), a.Y(), a.Z()), Vec3(b.X(), b.Y(), b.Z()), Vec3(c.X(), c.Y(), c.Z()));
    }
 
@@ -140,11 +140,11 @@ void TBVH::SetBVHQuality(bvh::v2::DefaultBuilder<Node>::Quality quality)
 /// \return Bool_t
 ///
 
-Bool_t TBVH::IsPointContained(const TVector3 &point) const
+Bool_t TBVH::IsPointContained(const ROOT::Math::XYZVector &point) const
 {
    // Shoot test ray in arbitrary direction. Check for intersected triangle. If intersection occured, check
    // projection of testdirection and triangle normal
-   TVector3 testdir{0, 0, 1};
+   ROOT::Math::XYZVector testdir{0, 0, 1};
    auto ray = Ray{
       Vec3(point.X(), point.Y(), point.Z()),      // Ray origin
       Vec3(testdir.X(), testdir.Y(), testdir.Z()) // Ray direction
@@ -164,10 +164,10 @@ Bool_t TBVH::IsPointContained(const TVector3 &point) const
 /// \return TGeoTriangleMesh::ClosestTriangle_t
 ///
 
-TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &point) const
+TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const ROOT::Math::XYZVector &point) const
 {
    // testpoint object in float for quick BVH interaction
-   Vec3 testpoint(point[0], point[1], point[2]);
+   Vec3 testpoint(point.X(), point.Y(), point.Z());
 
    // comparator bringing out "smallest" value on top
    auto cmp = [](BVHPrioElement_t a, BVHPrioElement_t b) { return a.value > b.value; };
@@ -189,7 +189,7 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &poi
             //
             // fetch leaf_bounding box
             const TGeoTriangle &triangle = fMesh->TriangleAt(triangle_id);
-            const TVector3 closestpoint = triangle.ClosestPointToPoint(point);
+            const ROOT::Math::XYZVector closestpoint = triangle.ClosestPointToPoint(point);
             const auto safety_sq = (closestpoint - point).Mag2();
 
             // update best Rmin
@@ -243,7 +243,7 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const TVector3 &poi
 ///\return Double_t
 ///
 
-Double_t TBVH::GetSafetyDistance(const TVector3 &point) const
+Double_t TBVH::GetSafetyDistance(const ROOT::Math::XYZVector &point) const
 {
    TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = GetClosestTriangle(point);
    return closesTGeoTriangle.fDistance;
@@ -259,13 +259,14 @@ Double_t TBVH::GetSafetyDistance(const TVector3 &point) const
 /// \return Double_t
 ///
 
-Double_t TBVH::DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isInside)
+Double_t
+TBVH::DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math::XYZVector &direction, Bool_t isInside)
 {
    // Account for the fact that a point can sit on a triangle. To be able to see the triangle one sits on
    // we have to shift the origin ever so slightly back
-   TVector3 tmpoffset = direction * -1;
-   tmpoffset.SetMag(TGeoShape::Tolerance());
-   TVector3 neworigin = (origin + tmpoffset);
+   ROOT::Math::XYZVector tmpoffset = direction * -1;
+   tmpoffset *= TGeoShape::Tolerance() / TMath::Sqrt(tmpoffset.Mag2());
+   ROOT::Math::XYZVector neworigin = (origin + tmpoffset);
    auto ray = Ray{Vec3(neworigin.X(), neworigin.Y(), neworigin.Z()), // Ray origin
                   Vec3(direction.X(), direction.Y(), direction.Z()), // Ray direction
                   0, 1e30};

@@ -41,7 +41,7 @@ triangle count) shapes.
 #include "TGeoShape.h"                // for TGeoShape
 #include "TString.h"                  // for operator<<
 #include "Tessellated/TGeoTriangle.h" // for TGeoTriangle
-#include "TVector3.h"                 // for TVector3, operator*, operator+
+#include "Math/Vector3D.h"            // for ROOT::Math::XYZVector, operator*, operator+
 
 class TGeoMatrix;
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,8 @@ bool TGeoTessellated::Contains(const Double_t *pointa) const
       return false;
    }
 
-   TVector3 point(pointa);
+   ROOT::Math::XYZVector point{};
+   point.SetCoordinates(pointa);
 
    if (fPartitioningStruct != nullptr) {
       bool result = fPartitioningStruct->IsPointContained(point);
@@ -113,7 +114,7 @@ bool TGeoTessellated::Contains(const Double_t *pointa) const
       return result;
    }
 
-   TVector3 dir{0.0, 0.0, 1.0};
+   ROOT::Math::XYZVector dir{0.0, 0.0, 1.0};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
    fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
@@ -168,9 +169,11 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t 
       }
    }
 
-   TVector3 point(pointa);
-   TVector3 dir{dira};
-   dir.SetMag(1);
+   ROOT::Math::XYZVector point{};
+   point.SetCoordinates(pointa);
+   ROOT::Math::XYZVector dir{};
+   dir.SetCoordinates(dira);
+   dir = dir.Unit();
 
    if (fPartitioningStruct != nullptr) {
       auto result = fPartitioningStruct->DistanceInDirection(point, dir, true);
@@ -202,8 +205,8 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t 
       << "(" << dira[0] << "," << dira[1] << ", " << dira[2] << "),...) found " << indir.size()
       << " triangles in direction, or all triangles are parallel to direction (even though we are in the geometry)"
       << " -> We must be hitting the edge of two triangles. We reshoot from a slightly moved point" << std::endl;
-   TVector3 orthogonal = dir.Orthogonal();
-   orthogonal.SetMag(1e-6);
+   ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(dir);
+   Tessellated::XYZVectorHelper::SetMag(orthogonal, 1e-6);
    Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
    fTimer.Stop();
    return DistFromInside(npointa, dira, iact, step, safe);
@@ -241,9 +244,11 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t
       }
    }
 
-   TVector3 point(pointa);
-   TVector3 dir{dira};
-   dir.SetMag(1);
+   ROOT::Math::XYZVector point{};
+   point.SetCoordinates(pointa);
+   ROOT::Math::XYZVector dir{};
+   dir.SetCoordinates(dira);
+   dir = dir.Unit();
 
    if (fPartitioningStruct != nullptr) {
       auto result = fPartitioningStruct->DistanceInDirection(point, dir, false);
@@ -272,8 +277,8 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t
                 << " triangles in direction, but all facing towards direction -> We must be hitting the edge of two "
                    "triangles. We reshoot from a slightly moved point"
                 << std::endl;
-      TVector3 orthogonal = dir.Orthogonal();
-      orthogonal.SetMag(1e-6);
+      ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(dir);
+      Tessellated::XYZVectorHelper::SetMag(orthogonal, 1e-6);
       Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
       fTimer.Stop();
       return DistFromOutside(npointa, dira, iact, step, safe);
@@ -299,13 +304,14 @@ Double_t TGeoTessellated::Safety(const Double_t *pointa, bool inside) const
       fTimer.Stop();
       return result;
    }
-
+   ROOT::Math::XYZVector point{};
+   point.SetCoordinates(pointa);
    if (fPartitioningStruct != nullptr) {
-      Double_t result = fPartitioningStruct->GetSafetyDistance(TVector3{pointa});
+      Double_t result = fPartitioningStruct->GetSafetyDistance(point);
       fTimer.Stop();
       return result;
    }
-   Double_t result = fMesh->FindClosestTriangleInMesh(TVector3{pointa}, fUsedTriangles).fDistance;
+   Double_t result = fMesh->FindClosestTriangleInMesh(point, fUsedTriangles).fDistance;
    fTimer.Stop();
    return result;
 }
@@ -326,10 +332,12 @@ void TGeoTessellated::ComputeNormal(const Double_t *pointa, const Double_t *dira
 {
 
    fTimer.Start(kFALSE);
-   TVector3 point(pointa);
-   TVector3 dir{dira};
+   ROOT::Math::XYZVector point{};
+   point.SetCoordinates(pointa);
+   ROOT::Math::XYZVector dir{};
+   dir.SetCoordinates(dira);
 
-   TVector3 trianglenormal{0, 0, 0};
+   ROOT::Math::XYZVector trianglenormal{0, 0, 0};
 
    if (fPartitioningStruct != nullptr) {
       TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = fPartitioningStruct->GetClosestTriangle(point);
@@ -338,11 +346,11 @@ void TGeoTessellated::ComputeNormal(const Double_t *pointa, const Double_t *dira
       TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = fMesh->FindClosestTriangleInMesh(point, fUsedTriangles);
       trianglenormal = closesTGeoTriangle.fTriangle->Normal();
    }
-   norm[0] = trianglenormal[0];
-   norm[1] = trianglenormal[1];
-   norm[2] = trianglenormal[2];
+   norm[0] = trianglenormal.X();
+   norm[1] = trianglenormal.Y();
+   norm[2] = trianglenormal.Z();
 
-   Double_t ndotd = norm[0] * dir[0] + norm[1] * dir[1] + norm[2] * dir[2];
+   Double_t ndotd = norm[0] * dira[0] + norm[1] * dira[1] + norm[2] * dira[2];
    if (ndotd < 0.0) {
       norm[0] = -norm[0];
       norm[1] = -norm[1];
@@ -414,7 +422,7 @@ void TGeoTessellated::GetBoundingCylinder(Double_t *param) const
 {
    // fTimer.Start(kFALSE);
    param[0] = 0.;
-   param[1] = sqrt(fDX * fDX + fDY * fDY + fDZ * fDZ);
+   param[1] = TMath::Sqrt(fDX * fDX + fDY * fDY + fDZ * fDZ);
    param[2] = 0.;
    param[3] = 360.;
    // fTimer.Stop();
@@ -485,9 +493,9 @@ void TGeoTessellated::ComputeBBox()
 {
    Double_t min_val = -std::numeric_limits<double>::max();
    Double_t max_val = std::numeric_limits<double>::max();
-   TVector3 min{max_val, max_val, max_val};
-   TVector3 max{min_val, min_val, min_val};
-   TVector3 mid;
+   ROOT::Math::XYZVector min{max_val, max_val, max_val};
+   ROOT::Math::XYZVector max{min_val, min_val, min_val};
+   ROOT::Math::XYZVector mid;
    fMesh->ExtremaOfMeshHull(min, max);
 
    mid = ((min + max) * (1.0 / 2.0));
