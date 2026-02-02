@@ -106,16 +106,6 @@ void TGeoTriangle::Setup()
 {
    fCenter = CalculateCenter();
    fNormal = CalculateNormal();
-   Double_t radiussqr = (Point(0) - fCenter).Mag2();
-   fRadiusSqr = radiussqr;
-   radiussqr = (Point(1) - fCenter).Mag2();
-   if (radiussqr > fRadiusSqr) {
-      fRadiusSqr = radiussqr;
-   }
-   radiussqr = (Point(2) - fCenter).Mag2();
-   if (radiussqr > fRadiusSqr) {
-      fRadiusSqr = radiussqr;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

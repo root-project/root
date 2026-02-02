@@ -130,16 +130,6 @@ void TOctree::Print(Option_t *) const
 {
    std::vector<TOctant const *> octants = GetLeafOctants();
    std::cout << "Octree containing " << octants.size() << " leaf octants" << std::endl;
-   // for (size_t i = 0; i < octants.size(); ++i) {
-   //    const auto *octant = octants[i];
-   //    auto min = octant->GetLowerCorner();
-   //    auto max = octant->GetUpperCorner();
-   //    std::cout << "Octant spanning " << i << " "
-   //              << " prim_count: " << n.index.prim_count() << " first_id " << n.index.first_id() << " object_id "
-   //              << objectid << " ( " << min[0] << " , " << min[1] << " , " << min[2] << ")"
-   //              << " ( " << max[0] << " , " << max[1] << " , " << max[2] << ")"
-   //              << "\n";
-   // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +196,6 @@ Bool_t TOctree::IsPointContained(const ROOT::Math::XYZVector &point) const
 
    if (!triIndices.empty()) {
       fOrigin = point;
-      // ROOT::Math::XYZVector targetPoint = fMesh->TriangleAt(triIndices[0]).Center();
       ROOT::Math::XYZVector dir = {0, 0, 1};
       fDirection = dir.Unit();
       std::vector<TGeoTriangleMesh::IntersectedTriangle_t> triangleIntersections;
@@ -376,7 +365,6 @@ Double_t TOctree::DistFromInside(const ROOT::Math::XYZVector &origin, const ROOT
    while (counter < size) {
       if (triangleIntersections[counter].fDistance < TGeoShape::Tolerance()) {
          ++counter;
-         // return triangleIntersections[counter].fDistance;
       } else if (triangleIntersections[counter].fDirDotNormal < 0) {
          ++counter;
       } else {
@@ -417,16 +405,12 @@ Double_t TOctree::DistFromOutside(const ROOT::Math::XYZVector &origin, const ROO
    size_t size = triangleIntersections.size();
    size_t counter = 0;
 
-   // Bool_t noDistance = kTRUE;
-   // Double_t distance = 0;
    while (counter < size) {
       // If you sit on the triangle, ignore it
       if (triangleIntersections[counter].fDistance < TGeoShape::Tolerance()) {
          ++counter;
-         // return triangleIntersections[counter].fDistance;
-      } else if (triangleIntersections[counter].fDirDotNormal > TGeoTriangle::sAccuracy /*&& (noDistance || std::abs(triangleIntersections[counter].fDistance-distance) < TGeoShape::Tolerance())*/) {
-         // distance = triangleIntersections[counter].fDistance;
-         // noDistance = kFALSE;
+      } else if (triangleIntersections[counter].fDirDotNormal > TGeoTriangle::sAccuracy) {
+
          ++counter;
       } else {
          return triangleIntersections[counter].fDistance;

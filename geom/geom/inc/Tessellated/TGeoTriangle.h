@@ -55,8 +55,6 @@ private:
 
    ROOT::Math::XYZVector fCenter{}; ///<! center of triangle
    ROOT::Math::XYZVector fNormal{}; ///<! normal of triangle
-   Double_t fRadiusSqr{
-      0}; ///<! squared distance from center to furthes corner (for quick checks if point is on triangle or not)
 
 private:
    ROOT::Math::XYZVector CalculateCenter() const;

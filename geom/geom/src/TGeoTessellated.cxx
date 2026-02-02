@@ -82,13 +82,11 @@ TGeoTessellated::~TGeoTessellated()
 
 void TGeoTessellated::SetMesh(std::unique_ptr<TGeoTriangleMesh> mesh)
 {
-   // fTimer.Start(kFALSE);
    fMesh = std::move(mesh);
    fUsedTriangles.resize(fMesh->Triangles().size());
    std::iota(fUsedTriangles.begin(), fUsedTriangles.end(), 0);
    ComputeBBox();
 
-   // fTimer.Stop();
    return;
 }
 
@@ -420,12 +418,10 @@ Bool_t TGeoTessellated::IsValidBox() const
 
 void TGeoTessellated::GetBoundingCylinder(Double_t *param) const
 {
-   // fTimer.Start(kFALSE);
    param[0] = 0.;
    param[1] = TMath::Sqrt(fDX * fDX + fDY * fDY + fDZ * fDZ);
    param[2] = 0.;
    param[3] = 360.;
-   // fTimer.Stop();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,10 +619,8 @@ const TBuffer3D &TGeoTessellated::GetBuffer3D(Int_t reqSections, Bool_t localFra
 
 TBuffer3D *TGeoTessellated::MakeBuffer3D() const
 {
-   // fTimer.Start(kFALSE);
    TBuffer3D *buf = new TBuffer3D(TBuffer3DTypes::kGeneric);
    FillBuffer3D(*buf, TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw, kFALSE);
-   // fTimer.Stop();
    return buf;
 }
 

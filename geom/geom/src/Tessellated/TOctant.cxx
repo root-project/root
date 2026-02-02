@@ -182,8 +182,6 @@ Bool_t TOctant::IsSeparatingAxis(const ThreeVector3s_t &triVertices, const ROOT:
 
    const Double_t r =
       extents.X() * std::abs(axis.X()) + extents.Y() * std::abs(axis.Y()) + extents.Z() * std::abs(axis.Z());
-   // Double_t r = extents.X() * std::abs(edge.X()) + extents.Y() * std::abs(edge.Y()) + extents.Z() *
-   // std::abs(edge.Z()); Double_t testval = std::max(-std::max(p0, std::max(p1, p2)), std::min(p0, std::min(p1, p2)));
 
    return std::max({p0, p1, p2}) < -r - TGeoShape::Tolerance() || std::min({p0, p1, p2}) > r + TGeoShape::Tolerance();
 }
@@ -207,13 +205,7 @@ Bool_t TOctant::TriangleOctantBoundsIntersection(const TGeoTriangle &triangle, c
    ROOT::Math::XYZVector edge21 = (trivertices.vec3 - trivertices.vec2);
    ROOT::Math::XYZVector edge02 = (trivertices.vec1 - trivertices.vec3);
 
-   // Compute edge vectors for triangle
-   // ROOT::Math::XYZVector edge10 = (triangle.Point(1) - triangle.Point(0));
-   // ROOT::Math::XYZVector edge21 = (triangle.Point(2) - triangle.Point(1));
-   // ROOT::Math::XYZVector edge02 = (triangle.Point(0) - triangle.Point(2));
-
    // Compute each axis perpendicular to  one of the unit-axis vectors and triangle edge
-
    auto a00 = ROOT::Math::XYZVector(0, -edge10.Z(), edge10.Y()).Unit(); // edge10 cross e_x
    auto a01 = ROOT::Math::XYZVector(0, -edge21.Z(), edge21.Y()).Unit();
    auto a02 = ROOT::Math::XYZVector(0, -edge02.Z(), edge02.Y()).Unit();
@@ -441,7 +433,7 @@ Double_t TOctant::GetMinDistance(const ROOT::Math::XYZVector &point) const
    distanceVec.SetXYZ(((distanceVec.X() < 0) ? 0 : distanceVec.X()), ((distanceVec.Y() < 0) ? 0 : distanceVec.Y()),
                       ((distanceVec.Z() < 0) ? 0 : distanceVec.Z()));
    Double_t max = distanceVec.X();
-   // max = (max < distanceVec.X()) ? distanceVec.X() : max;
+   // max = (max < distanceVec.X()) ? distanceVec.X() : max; //not needed but kept 
    max = (max < distanceVec.Y()) ? distanceVec.Y() : max;
    max = (max < distanceVec.Z()) ? distanceVec.Z() : max;
 

@@ -41,9 +41,6 @@ std::unique_ptr<TGeoTriangleMesh>
 ImportMeshFromASCIIStl(const TString &t_filename, TGeoTriangleMesh::LengthUnit t_unit);
 std::unique_ptr<TGeoTriangleMesh> ImportMeshFromObjFormat(const char *objfile, const TGeoTriangleMesh::LengthUnit unit);
 
-// Functions returning meshes for specific primitive shapes for testing purposes
-// std::unique_ptr<TGeoTriangleMesh> CreateBoxMesh(const Double_t dx, const Double_t dy, const Double_t dz)
-
 /// Helper class to create triangular meshes by hand
 class MeshBuilder {
 private:

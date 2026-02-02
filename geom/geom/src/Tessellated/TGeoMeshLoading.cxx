@@ -416,18 +416,4 @@ std::unique_ptr<TGeoTriangleMesh> MeshBuilder::CreateMesh() const
    return mesh;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Helper function to create a triangular mesh for a box with halflengths
-/// dx,dy,dz centered at (0,0,0)
-
-// std::unique_ptr<TGeoTriangleMesh> CreateBoxMesh(const Double_t dx, const Double_t dy, const Double_t dz)
-// {
-//    MeshBuilder builder;
-//    builder.AddFacet(
-//       ROOT::Math::XYZVector{},
-//       ROOT::Math::XYZVector{},
-//       ROOT::Math::XYZVector{},
-//    )
-// }
-
 }; // namespace Tessellated
