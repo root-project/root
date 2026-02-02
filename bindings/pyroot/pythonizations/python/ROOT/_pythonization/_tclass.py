@@ -8,16 +8,18 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
 from ROOT.libROOTPythonizations import AddTClassDynamicCastPyz
 
 
 def pythonize_tclass():
-    klass = cppyy.gbl.TClass
+    import ROOT
+
+    klass = ROOT.TClass
 
     # DynamicCast
     klass._TClass__DynamicCast = klass.DynamicCast
     AddTClassDynamicCastPyz(klass)
+
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
 # decorator. This is a core class that is instantiated before cppyy's

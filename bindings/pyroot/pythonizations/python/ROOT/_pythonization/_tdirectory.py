@@ -43,9 +43,6 @@ for more information.
 """
 
 
-import cppyy
-
-
 def _TDirectory_getitem(self, key):
     """Injection of TDirectory.__getitem__ that raises AttributeError on failure.
 
@@ -105,7 +102,9 @@ def _ipython_key_completions_(self):
 
 
 def pythonize_tdirectory():
-    klass = cppyy.gbl.TDirectory
+    import ROOT
+
+    klass = ROOT.TDirectory
     klass.__getitem__ = _TDirectory_getitem
     klass._WriteObject = klass.WriteObject
     klass.WriteObject = _TDirectory_WriteObject

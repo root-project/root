@@ -188,7 +188,7 @@ def RTensorInit(self, *args):
             # conversion from numpy to buffer float/double * works only if C order
             if data.flags.c_contiguous:
                 shape = data.shape
-                from cppyy.gbl import TMVA
+                from ROOT import TMVA
 
                 layout = TMVA.Experimental.MemoryLayout.RowMajor
                 return self._original_init_(data, shape, layout)

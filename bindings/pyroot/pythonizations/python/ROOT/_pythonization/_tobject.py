@@ -8,8 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import cppyy
-
 # Searching
 
 
@@ -27,35 +25,45 @@ def _contains(self, o):
 
 
 def _lt(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
+    import ROOT
+
+    if isinstance(o, ROOT.TObject):
         return self.Compare(o) == -1
     else:
         return NotImplemented
 
 
 def _le(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
+    import ROOT
+
+    if isinstance(o, ROOT.TObject):
         return self.Compare(o) <= 0
     else:
         return NotImplemented
 
 
 def _gt(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
+    import ROOT
+
+    if isinstance(o, ROOT.TObject):
         return self.Compare(o) == 1
     else:
         return NotImplemented
 
 
 def _ge(self, o):
-    if isinstance(o, cppyy.gbl.TObject):
+    import ROOT
+
+    if isinstance(o, ROOT.TObject):
         return self.Compare(o) >= 0
     else:
         return NotImplemented
 
 
 def pythonize_tobject():
-    klass = cppyy.gbl.TObject
+    import ROOT
+
+    klass = ROOT.TObject
 
     # Allow 'obj in container' syntax for searching
     klass.__contains__ = _contains

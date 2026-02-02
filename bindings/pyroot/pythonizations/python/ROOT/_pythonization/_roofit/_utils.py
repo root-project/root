@@ -20,16 +20,11 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
         # Parameters:
         # k: key of the kwarg
         # v: value of the kwarg
-
-        # We have to use ROOT here and not cppy.gbl, because the RooFit namespace is pythonized itself.
-        import cppyy
-        import cppyy.types
-
         import ROOT
 
         func = getattr(ROOT.RooFit, k)
 
-        if isinstance(func, cppyy.types.Function):
+        if isinstance(func, ROOT._cppyy.types.Function):
             # Pythonization for functions that don't pass any RooCmdArgs like ShiftToZero() and MoveToBack(). For Eg,
             # Default bindings: pdf.plotOn(frame, ROOT.RooFit.MoveToBack())
             # With pythonizations: pdf.plotOn(frame, MoveToBack=True)
