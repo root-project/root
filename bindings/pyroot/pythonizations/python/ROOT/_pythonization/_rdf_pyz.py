@@ -229,33 +229,6 @@ class FunctionJitter:
         return self.func_call
 
 
-def _convert_to_vector(args):
-    """
-    Converts a Python list of strings into an std::vector before passing such
-    argument to a Filter operation.
-    The purpose of this function is to workaround issue #10092 until there is
-    a proper fix in cppyy.
-    Arguments:
-        args: arguments passed to Filter, possibly including the list of column
-    names
-    Returns:
-        Tuple with arguments, possibly replacing a list of column names by a
-    vector
-    """
-
-    import ROOT
-
-    if not args or not isinstance(args[0], list):
-        return args
-
-    try:
-        v = ROOT.std.vector["std::string"](args[0])
-    except TypeError:
-        raise TypeError(f"The list of columns of a Filter operation can only contain strings. Please check: {args[0]}")
-
-    return (v, *args[1:])
-
-
 def remove_fn_name_from_signature(signature):
     """
     Removes the function name from a signature string.
@@ -463,7 +436,7 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
                 f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__, type(args[1]).__name__}."
             )
 
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args), rdf=rdf, cols=col_list)
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *args, rdf=rdf, cols=col_list)
     if rdf_node is not None:
         return rdf_node
 
