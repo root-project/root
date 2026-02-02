@@ -341,7 +341,7 @@ else()
         AND EXISTS ${LLVM_TOOLS_BINARY_DIR}/not${CMAKE_EXECUTABLE_SUFFIX})
       set(LLVM_UTILS_PROVIDED ON)
     endif()
-    set(ROOT_LLVM_MAIN_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/")
+    set(ROOT_LLVM_MAIN_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
     if(EXISTS ${ROOT_LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
       # Note: path not really used, except for checking if lit was found
       set(LLVM_LIT ${ROOT_LLVM_MAIN_SRC_DIR}/utils/lit/lit.py CACHE PATH "The location of the lit test runner.")
