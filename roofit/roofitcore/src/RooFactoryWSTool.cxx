@@ -762,7 +762,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// ```
 /// to create a pdf and its variables in one go. This nesting can be applied recursively e.g.
 /// ```
-///   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3] ),
+///   SUM::model( f[0.5,0,1] * RooGaussian::g( x[-10,10], m[0], 3 ),
 ///                            RooChebychev::c( x, {a0[0.1],a1[0.2],a2[-0.3]} ))
 /// ```
 /// creates the sum of a Gaussian and a Chebychev and all its variables.
