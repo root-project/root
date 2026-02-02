@@ -206,7 +206,7 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t 
       << " triangles in direction, or all triangles are parallel to direction (even though we are in the geometry)"
       << " -> We must be hitting the edge of two triangles. We reshoot from a slightly moved point" << std::endl;
    ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(dir);
-   Tessellated::XYZVectorHelper::SetMag(orthogonal, 1e-6);
+   orthogonal *= (1e-6) / TMath::Sqrt(orthogonal.Mag2());
    Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
    fTimer.Stop();
    return DistFromInside(npointa, dira, iact, step, safe);
@@ -278,7 +278,7 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t
                    "triangles. We reshoot from a slightly moved point"
                 << std::endl;
       ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(dir);
-      Tessellated::XYZVectorHelper::SetMag(orthogonal, 1e-6);
+      orthogonal *= (1e-6) / TMath::Sqrt(orthogonal.Mag2());
       Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
       fTimer.Stop();
       return DistFromOutside(npointa, dira, iact, step, safe);

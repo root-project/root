@@ -394,7 +394,7 @@ Double_t TOctree::DistFromInside(const ROOT::Math::XYZVector &origin, const ROOT
    // Hence, the origin is slightly shifted and the ray is reshot
    ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(direction);
    Double_t smallestExtent = std::min(fScale.X(), std::min(fScale.Y(), fScale.Z()));
-   Tessellated::XYZVectorHelper::SetMag(orthogonal, (0.01 * smallestExtent));
+   orthogonal *= (0.01 * smallestExtent) / TMath::Sqrt(orthogonal.Mag2());
 
    ROOT::Math::XYZVector npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(),
                                     origin.Z() - orthogonal.Z()};
@@ -436,7 +436,7 @@ Double_t TOctree::DistFromOutside(const ROOT::Math::XYZVector &origin, const ROO
    if (size > 0 && !IsPointContained(origin)) {
       ROOT::Math::XYZVector orthogonal = Tessellated::XYZVectorHelper::Orthogonal(direction);
       Double_t smallestExtent = std::min(fScale.X(), std::min(fScale.Y(), fScale.Z()));
-      Tessellated::XYZVectorHelper::SetMag(orthogonal, (0.01 * smallestExtent));
+      orthogonal *= (0.01 * smallestExtent) / TMath::Sqrt(orthogonal.Mag2());
       ROOT::Math::XYZVector npointa = {origin.X() - orthogonal.X(), origin.Y() - orthogonal.Y(),
                                        origin.Z() - orthogonal.Z()};
       std::cerr << "TOctree::DistanceInDirection((" << origin.X() << "," << origin.Y() << ", " << origin.Z() << "),"

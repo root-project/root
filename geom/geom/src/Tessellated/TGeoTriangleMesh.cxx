@@ -144,7 +144,7 @@ TGeoTriangleMesh::FindClosestTriangleInMesh(const ROOT::Math::XYZVector &point,
       candidateCloseTGeoTriangle.fTriangle = &fTriangles[cindex];
       candidateCloseTGeoTriangle.fClosestPoint = candidateCloseTGeoTriangle.fTriangle->ClosestPointToPoint(point);
       candidateCloseTGeoTriangle.fDistance =
-         Tessellated::XYZVectorHelper::Mag(candidateCloseTGeoTriangle.fClosestPoint - point);
+         TMath::Sqrt((candidateCloseTGeoTriangle.fClosestPoint - point).Mag2());
       candidateCloseTGeoTriangle.fIndex = static_cast<Int_t>(cindex);
 
       if (IsCloserTriangle(candidateCloseTGeoTriangle, closesTGeoTriangle, point)) {

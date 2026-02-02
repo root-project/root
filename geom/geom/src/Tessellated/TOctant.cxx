@@ -448,7 +448,7 @@ Double_t TOctant::GetMinDistance(const ROOT::Math::XYZVector &point) const
    if (max <= 0) {
       return 0;
    }
-   return Tessellated::XYZVectorHelper::Mag(distanceVec);
+   return TMath::Sqrt(distanceVec.Mag2());
 }
 
 }; // namespace Tessellated

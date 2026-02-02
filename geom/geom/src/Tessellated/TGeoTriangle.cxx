@@ -39,16 +39,6 @@ std::array<Double_t, 3> ToArray(const ROOT::Math::XYZVector &vec)
    return a;
 }
 
-Double_t Mag(const ROOT::Math::XYZVector &vec)
-{
-   return TMath::Sqrt(vec.Mag2());
-}
-
-void SetMag(ROOT::Math::XYZVector &vec, Double_t mag)
-{
-   vec *= mag / (Mag(vec));
-}
-
 ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec)
 {
    const Double_t fX = vec.X();
@@ -67,7 +57,7 @@ ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec)
 
 void Print(const ROOT::Math::XYZVector &vec)
 {
-   Printf("ROOT::Math::XYZVector (x,y,z)=(%f,%f,%f) (rho,theta,phi)=(%f,%f,%f)", vec.X(), vec.Y(), vec.Z(), Mag(vec),
+   Printf("ROOT::Math::XYZVector (x,y,z)=(%f,%f,%f) (rho,theta,phi)=(%f,%f,%f)", vec.X(), vec.Y(), vec.Z(), TMath::Sqrt(vec.Mag2()),
           vec.Theta() * TMath::RadToDeg(), vec.Phi() * TMath::RadToDeg());
 }
 }; // namespace XYZVectorHelper
@@ -276,7 +266,7 @@ ROOT::Math::XYZVector TGeoTriangle::ClosestPointOfEdgesToPoint(const ROOT::Math:
       edgedir = endedge - startedge;
 
       current = ClosestPointOfEdgeToPoint(point, startedge, edgedir);
-      double_t distance = Tessellated::XYZVectorHelper::Mag(closestpoint - point);
+      double_t distance = TMath::Sqrt((closestpoint - point).Mag2());
       if (smallestdistance < distance) {
          smallestdistance = distance;
          closestpoint = current;

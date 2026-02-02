@@ -31,11 +31,9 @@ namespace Tessellated {
 namespace XYZVectorHelper {
 // Helper functions to make the transition from TVector3 to XYZVector a little easier.
 // Placed in TGeoTriangle, as that is included in all other Tessellated related classes.
-std::array<Double_t, 3> ToArray(const ROOT::Math::XYZVector &vec);
-Double_t Mag(const ROOT::Math::XYZVector &vec);
-void SetMag(ROOT::Math::XYZVector &vec, Double_t mag);
-ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec);
-void Print(const ROOT::Math::XYZVector &vec);
+std::array<Double_t, 3> ToArray(const ROOT::Math::XYZVector &vec); // Only used in TOctant.cxx
+ROOT::Math::XYZVector Orthogonal(const ROOT::Math::XYZVector &vec);// Used in TGeoTessellated.cxx and TOctree.cxx
+void Print(const ROOT::Math::XYZVector &vec);                      // Used all over Tessellated
 }; // namespace XYZVectorHelper
 
 namespace TGeoTriangleInternal {
