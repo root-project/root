@@ -202,6 +202,11 @@ ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3
 - Removed stray linebreak when running `root -q` with input files or commands passed with `-e`.
   This ensures that there is no superfluous output when running `root`.
   Note that ROOT 6.38 already removed a spurious newline when starting `root` **without** input files or commands.
+- The ROOT header printed by default when starting the interpreter is now
+  suppressed when scripts or commands are passed on the command line.
+  This makes sure the output doesn't contain unexpected and ROOT
+  version dependent output, which helps in case the output is piped to other
+  commands or compared to reference files.
 
 ## Command-line utilities
 
