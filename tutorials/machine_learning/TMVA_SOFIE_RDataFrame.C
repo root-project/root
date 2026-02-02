@@ -4,15 +4,13 @@
 /// This macro provides an example of using a trained model with Keras
 /// and make inference using SOFIE and RDataFrame
 /// This macro uses as input a Keras model generated with the
-/// TMVA_Higgs_Classification.C tutorial
+/// Python tutorial TMVA_SOFIE_Keras_HiggsModel.py
 /// You need to run that macro before to generate the trained Keras model
-/// Then you need to run the macro TMVA_SOFIE_Keras_HiggsModel.C to generate the  corresponding
-/// header file using SOFIE.
+/// and also the  corresponding header file with SOFIE which can then be used for inference
 ///
 /// Execute in this order:
 /// ```
-/// root TMVA_Higgs_Classification.C
-/// root TMVA_SOFIE_Keras_HiggsModel.C
+/// python3 TMVA_SOFIE_Keras_HiggsModel.py
 /// root TMVA_SOFIE_RDataFrame.C
 /// ```
 ///
@@ -25,7 +23,7 @@ using namespace TMVA::Experimental;
 // need to add the current directory (from where we are running this macro)
 // to the include path for Cling
 R__ADD_INCLUDE_PATH($PWD)
-#include "Higgs_trained_model.hxx"
+#include "HiggsModel.hxx"
 #include "TMVA/SOFIEHelpers.hxx"
 
 using namespace TMVA::Experimental;

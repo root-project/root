@@ -246,8 +246,10 @@ public:
 
    void Initialize(RModel& model) override {
 
-      std::cout << "initialize reshape op type " << fOpMode << " - " << fNInput2 << " " << fNData << std::endl;
       fVerbose = model.Verbose();
+      if (fVerbose)
+         std::cout << "initialize reshape op type " << fOpMode << " - " << fNInput2 << " " << fNData << std::endl;
+
       if (model.CheckIfTensorAlreadyExist(fNData) == false) {
           // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");

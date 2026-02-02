@@ -222,6 +222,7 @@ public:
          }
          iret = gSystem->Exec(TString("python3 -c ") + TString(parserPythonCode.c_str()));
          fNInputs = 1;
+         // need number of inputs from input shapes
          if (!inputShapes.empty()) fNInputs = inputShapes.size();
       }
 
@@ -256,6 +257,11 @@ public:
       declCode += sessionClassName + " " + sessionName + "(\"" + modelWeights + "\");";
 
       if (verbose) std::cout << "//global session declaration\n" << declCode << std::endl;
+
+      // need to load the ROOTTMVASOFIE library for some symbols used in generated code
+      iret = gSystem->Load("libROOTTMVASofie");
+      if (iret < 0)
+         throw std::runtime_error("Error loading libROOTTMVASofie library");
 
       bool ret = gInterpreter->Declare(declCode.c_str());
       if (!ret) {

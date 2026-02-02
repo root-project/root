@@ -2,15 +2,8 @@ def generate_keras_functional(dst_dir):
 
     from keras import models, layers, backend
     import numpy as np
+    from parser_test_function import is_channels_first_supported
 
-    def is_channels_first_supported() :
-      #channel first is not supported on tensorflow CPU versions
-      from keras import backend
-      if backend.backend() == "tensorflow" :
-         import tensorflow as tf
-         if len(tf.config.list_physical_devices("GPU")) == 0:
-            return False
-      return True
 
     # Helper training function
     def train_and_save(model, name):
@@ -45,10 +38,11 @@ def generate_keras_functional(dst_dir):
     train_and_save(model, "Add")
 
     # AveragePooling2D channels_first
-    inp = layers.Input(shape=(3, 8, 8))
-    out = layers.AveragePooling2D(pool_size=(2, 2), data_format='channels_first')(inp)
-    model = models.Model(inp, out)
-    train_and_save(model, "AveragePooling2D_channels_first")
+    if (is_channels_first_supported()):
+      inp = layers.Input(shape=(3, 8, 8))
+      out = layers.AveragePooling2D(pool_size=(2, 2), data_format='channels_first')(inp)
+      model = models.Model(inp, out)
+      train_and_save(model, "AveragePooling2D_channels_first")
 
     # AveragePooling2D channels_last
     inp = layers.Input(shape=(8, 8, 3))
@@ -191,7 +185,7 @@ def generate_keras_functional(dst_dir):
     # Layer Combination
 
     inp = layers.Input(shape=(32, 32, 3))
-    x = layers.Conv2D(8, (3,3), padding="same", activation="relu")(inp)
+    x = layers.Conv2D(8, (3,3), padding="same", activation="relu", data_format='channels_last')(inp)
     x = layers.MaxPooling2D((2,2))(x)
     x = layers.Reshape((16, 16, 8))(x)
     x = layers.Permute((3, 1, 2))(x)

@@ -98,8 +98,6 @@ def add_layer_into_RModel(rmodel, layer_data):
 
     fLayerType = layer_data['layerType']
 
-    print('Model: parsing layer',fLayerType)
-
     # reshape and flatten layers don't have weights, but they need constant tensor for the shape
     if fLayerType == "Reshape" or fLayerType == "Flatten":
         Attributes = layer_data['layerAttributes']
@@ -132,7 +130,6 @@ def add_layer_into_RModel(rmodel, layer_data):
         print(len(TargetShape))
         rmodel.AddInitializedTensor['int64_t'](shape_tensor_name, [len(TargetShape)], shape_data)
 
-    print('check other layers...')
     # These layers only have one operator - excluding the recurrent layers, in which the activation function(s)
     # are included in the recurrent operator
     if fLayerType in mapKerasLayer.keys():
@@ -288,7 +285,7 @@ class PyKeras:
 
     def Parse(filename, batch_size=1):  # If a model does not have a defined batch size, then assuming it is 1
 
-        # TensoFlow/Keras is too fragile to import unconditionally. As its presence might break several ROOT
+        # TensorFlow/Keras is too fragile to import unconditionally. As its presence might break several ROOT
         # usecases and importing keras globally will slow down importing ROOT, which is not desired. For this,
         # we import keras within the functions instead of importing it at the start of the file (i.e. globally).
         # So, whenever the parser function is called, only then keras will be imported, and not everytime we
@@ -323,6 +320,8 @@ class PyKeras:
         parsetime = time.asctime(gmt_time)
 
         rmodel = gbl_namespace.TMVA.Experimental.SOFIE.RModel.RModel(filename_nodir, parsetime)
+
+        print("PyKeras: parsing model ",filename)
 
         # iterate over the layers and add them to the RModel
         # in case of keras 3.x (particularly in sequential models), the layer input and output name conventions are
@@ -516,28 +515,24 @@ class PyKeras:
                 fPInputDType.append(dtype[9:-2])
 
         if len(fPInputShape) == 1:
-            fInputName = fPInputs[0]
-            fInputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fPInputDType[0])
-            if fInputDType ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-                if fPInputShape[0][0] is None or fPInputShape[0][0] <= 0:
-                    fPInputShape = list(fPInputShape[0])
-                    fPInputShape[0] = batch_size
-                rmodel.AddInputTensorInfo(fInputName, gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT, fPInputShape)
-                rmodel.AddInputTensorName(fInputName)
-            else:
-                raise TypeError("Type error: TMVA SOFIE does not yet support data type " + gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fInputDType))
+            inputName = fPInputs[0]
+            inputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fPInputDType[0])
+            # convert ot a list to modify batch size
+            inputShape = list(fPInputShape[0])
+            #set the batch size in case of -1 or None as first value
+            if inputShape[0] is None or inputShape[0] <= 0:
+                inputShape[0] = batch_size
+            rmodel.AddInputTensorInfo(inputName, inputDType, inputShape)
+            rmodel.AddInputTensorName(inputName)
         else:
             # Iterating through multiple input tensors
-            for fInputName, fInputDType, fInputShapeTuple in zip(fPInputs, fPInputDType, fPInputShape):
-                fInputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fInputDType)
-                if fInputDType ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-                    if fInputShapeTuple[0] is None or fInputShapeTuple[0] <= 0:
-                        fInputShapeTuple = list(fInputShapeTuple)
-                        fInputShapeTuple[0] = batch_size
-                    rmodel.AddInputTensorInfo(fInputName,  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT, fInputShapeTuple)
-                    rmodel.AddInputTensorName(fInputName)
-                else:
-                    raise TypeError("Type error: TMVA SOFIE does not yet support data type " + gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fInputDType))
+            for inputName, inputDType, inputShapeTuple in zip(fPInputs, fPInputDType, fPInputShape):
+                inputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(inputDType)
+                inputShape = list(inputShapeTuple)
+                if inputShape[0] is None or inputShape[0] <= 0:
+                    inputShape[0] = batch_size
+                rmodel.AddInputTensorInfo(inputName,  inputDType, inputShape)
+                rmodel.AddInputTensorName(inputName)
 
         # Adding OutputTensorInfos
         outputNames = []

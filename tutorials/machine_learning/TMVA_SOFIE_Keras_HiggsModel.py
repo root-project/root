@@ -62,7 +62,7 @@ def TrainModel(model, x, y, name) :
    model.fit(x,y,epochs=5,batch_size=50)
    modelFile = name + '.keras'
    model.save(modelFile)
-   return modelFile
+   return model, modelFile
 
 
 def  GenerateCode(modelFile = "model.keras") :
@@ -89,7 +89,7 @@ def  GenerateCode(modelFile = "model.keras") :
 x_train, y_train, x_test, y_test = PrepareData()
 #create dense model with 3 layers of 64 units
 model = CreateModel(3,64)
-modelFile = TrainModel(model,x_train, y_train, 'HiggsModel')
+model, modelFile = TrainModel(model,x_train, y_train, 'HiggsModel')
 
 ###################################################################
 ## Step 2 : Parse model and generate inference code with SOFIE
@@ -119,7 +119,7 @@ ykeras = model(x.reshape(1,7)).numpy()
 print("input to model is ",x, "\n\t -> output using SOFIE = ", y[0], " using Keras = ", ykeras[0])
 
 if (abs(y[0]-ykeras[0]) > 0.01) :
-   raiseError('Result is different between SOFIE and Keras')
+   raise RuntimeError('ERROR: Result is different between SOFIE and Keras')
 
 print("OK")
 

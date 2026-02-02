@@ -121,11 +121,11 @@ public:
       }
       if (dynamicInputs & 1 && model.Verbose())
          std::cout << BinaryOperatorTrait<T, Op>::Name() << " : input " << fNA << " is dynamic "
-                   << ConvertShapeToString(fDimShapeA) << "  ";
+                   << ConvertShapeToString(fDimShapeA) << std::endl;
       if (dynamicInputs & 2 && model.Verbose())
          std::cout << BinaryOperatorTrait<T, Op>::Name() << " : input " << fNB << " is dynamic "
-                   << ConvertShapeToString(fDimShapeB) << "  ";
-      std::cout << std::endl;
+                   << ConvertShapeToString(fDimShapeB) << std::endl;
+
       // check if need to broadcast at initialization time if shapes are known and different
       // (we could broadcast the tensor tensor to maximum values of dynamic shapes - to be done)
       // case of known shapes

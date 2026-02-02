@@ -2,15 +2,7 @@ def generate_keras_sequential(dst_dir):
 
     from keras import models, layers, backend
     import numpy as np
-
-    def is_channels_first_supported() :
-      #channel first is not supported on tensorflow CPU versions
-      from keras import backend
-      if backend.backend() == "tensorflow" :
-         import tensorflow as tf
-         if len(tf.config.list_physical_devices("GPU")) == 0:
-            return False
-      return True
+    from parser_test_function import is_channels_first_supported
 
     # Helper training function
     def train_and_save(model, name):
@@ -22,14 +14,6 @@ def generate_keras_sequential(dst_dir):
         print("fitting sequential model",name)
         model.save(f"{dst_dir}/Sequential_{name}_test.keras")
 
-    def is_channels_first_supported() :
-        #channel first is not supported on tensorflow CPU versions
-        if backend.backend() == "tensorflow" :
-            import tensorflow as tf
-            if len(tf.config.list_physical_devices("GPU")) == 0:
-               return False
-
-        return True
 
     # Binary Ops: Add, Subtract, Multiply are not typical in Sequential - skipping those
     # Concat (not applicable in Sequential without multi-input)
@@ -218,7 +202,7 @@ def generate_keras_sequential(dst_dir):
         layers.Input(shape=(4, 8, 2)),
         layers.Permute((2, 1, 3)),
         layers.Reshape((8, 8, 1)),
-        layers.Conv2D(4, (3,3), padding='same', activation='relu'),
+        layers.Conv2D(4, (3,3), padding='same', activation='relu', data_format='channels_last'),
         layers.AveragePooling2D((2,2)),
         layers.BatchNormalization(),
         layers.Flatten(),

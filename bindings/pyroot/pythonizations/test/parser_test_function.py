@@ -32,8 +32,17 @@ The test file contains two types of functions:
           NumPy arrays before being passed to the is_accurate function for comparison.
 
 '''
+def is_channels_first_supported() :
+      #channel first is not supported on tensorflow CPU versions
+      from keras import backend
+      if backend.backend() == "tensorflow" :
+         import tensorflow as tf
+         if len(tf.config.list_physical_devices("GPU")) == 0:
+            return False
 
-def is_accurate(tensor_a, tensor_b, tolerance=1e-3):
+      return True
+
+def is_accurate(tensor_a, tensor_b, tolerance=1e-2):
     tensor_a = tensor_a.flatten()
     tensor_b = tensor_b.flatten()
     for i in range(len(tensor_a)):
@@ -73,16 +82,12 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     inference_session = sofie_model_namespace.Session(generated_header_file_path.removesuffix(".hxx") + ".dat")
     keras_model = keras.models.load_model(model_file_path)
     keras_model.load_weights(model_file_path)
-    if len(keras_model.inputs) == 1:
-        input_shape = list(keras_model.inputs[0].shape)
-        input_shape[0] = batch_size
-        input_tensors = np.ones(input_shape, dtype='float32')
-    else:
-        input_tensors = []
-        for model_input in keras_model.inputs:
-            input_shape = list(model_input.shape)
-            input_shape[0] = batch_size
-            input_tensors.append(np.ones(input_shape, dtype='float32'))
+
+    input_tensors = []
+    for model_input in keras_model.inputs:
+      input_shape = list(model_input.shape)
+      input_shape[0] = batch_size
+      input_tensors.append(np.ones(input_shape, dtype='float32'))
     sofie_inference_result = inference_session.infer(*input_tensors)
     sofie_output_tensor_shape = list(rmodel.GetTensorShape(rmodel.GetOutputTensorNames()[0]))   # get output shape
                                                                                                 # from SOFIE

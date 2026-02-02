@@ -2,19 +2,11 @@ import unittest
 import os
 import shutil
 
-def is_channels_first_supported() :
-   #channel first is not supported on tensorflow CPU versions
-   from keras import backend
-   if backend.backend() == "tensorflow" :
-      import tensorflow as tf
-      if len(tf.config.list_physical_devices("GPU")) == 0:
-         return False
 
-   return True
-
-from ROOT._pythonization._tmva._sofie._parser._keras.parser_test_function import generate_and_test_inference
-from ROOT._pythonization._tmva._sofie._parser._keras.generate_keras_functional import generate_keras_functional
-from ROOT._pythonization._tmva._sofie._parser._keras.generate_keras_sequential import generate_keras_sequential
+from parser_test_function import generate_and_test_inference
+from parser_test_function import is_channels_first_supported
+from generate_keras_functional import generate_keras_functional
+from generate_keras_sequential import generate_keras_sequential
 
 
 def make_testname(test_case: str):

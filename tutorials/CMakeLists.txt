@@ -346,16 +346,6 @@ else()
   ROOT_FIND_PYTHON_MODULE(graph_nets)
   ROOT_FIND_PYTHON_MODULE(onnx)
 
-  # Check if we support the installed Keras version. Otherwise, veto SOFIE
-  # Keras tutorials. This mirrors the logic in tmva/sofie/test/CMakeLists.txt.
-  # TODO: make sure we also support the newest Keras
-  set(unsupported_keras_version "4.0.0")
-  if (ROOT_KERAS_FOUND AND NOT DEFINED ROOT_KERAS_VERSION)
-    message(WARNING "Keras found, but version unknown — cannot verify compatibility.")
-  elseif (ROOT_KERAS_FOUND AND NOT ROOT_KERAS_VERSION VERSION_LESS ${unsupported_keras_version})
-      message(WARNING "Keras version ${ROOT_KERAS_VERSION} is too new for the SOFIE Keras parser (only supports < ${unsupported_keras_version}). Corresponding tutorials will not be tested.")
-    set(keras_unsupported TRUE)
-  endif()
 
   if (NOT BLAS_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
@@ -363,7 +353,7 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
   # These SOFIE tutorials take models trained via PyMVA-PyKeras as input
-  if (NOT tmva-sofie OR NOT ROOT_KERAS_FOUND OR keras_unsupported)
+  if (NOT tmva-sofie OR NOT ROOT_KERAS_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.py)
