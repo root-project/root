@@ -3214,6 +3214,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    cmd.ReplaceAll("$LinkedLibs",gSystem->GetLibraries("","SDL"));
    cmd.ReplaceAll("$LibName",sdirname);
    cmd.ReplaceAll("$BuildDir",".");
+   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir());
    TString sOpt;
    TString rootbuild = ROOTBUILD;
    if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
