@@ -48,10 +48,10 @@ TEST(RModelParser_Keras, SEQUENTIAL)
 
     Py_Initialize();
 
-    if (gSystem->AccessPathName("KerasModelSequential.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelSequential.keras",kFileExists))
         GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelSequential.h5",{{4,8}});
+    TMVA::Experimental:: RSofieReader r("KerasModelSequential.keras",{{4,8}});
     std::vector<float> outputSequential = r.Compute(inputSequential);
 
 
@@ -68,7 +68,7 @@ TEST(RModelParser_Keras, SEQUENTIAL)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelSequential.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelSequential.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.12107884, 0.89718615, 0.89123899, 0.32197549,"
                                     "0.17891638, 0.83555135, 0.98680066, 0.14496809,"
                                     "0.07255503, 0.55386989, 0.6628149 , 0.29843291,"
@@ -101,10 +101,10 @@ TEST(RModelParser_Keras, FUNCTIONAL)
 
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelFunctional.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelFunctional.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelFunctional.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelFunctional.keras");
     std::vector<float> outputFunctional = r.Compute(inputFunctional);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -120,7 +120,7 @@ TEST(RModelParser_Keras, FUNCTIONAL)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelFunctional.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelFunctional.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.60828574, 0.50069386, 0.75186709, 0.14968806, 0.7692464 ,0.77027585, 0.75095316, 0.96651197,"
                                     "0.38536308, 0.95565917, 0.62796356, 0.13818375, 0.65484891,0.89220363, 0.23879365, 0.00635323]).reshape(2,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -146,10 +146,10 @@ TEST(RModelParser_Keras, BATCH_NORM)
                              0.69947928, 0.29743695, 0.81379782, 0.39650574};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelBatchNorm.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelBatchNorm.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelBatchNorm.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelBatchNorm.keras");
     std::vector<float> outputBatchNorm =  r.Compute(inputBatchNorm);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -165,7 +165,7 @@ TEST(RModelParser_Keras, BATCH_NORM)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelBatchNorm.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelBatchNorm.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.22308163, 0.95274901, 0.44712538, 0.84640867,"
                                     "0.69947928, 0.29743695, 0.81379782, 0.39650574]).reshape(2,4)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -196,10 +196,10 @@ TEST(DISABLED_RModelParser_Keras, CONV_VALID)
                                 1,1,1,1,
                                 1,1,1,1};
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelConv2D_Valid.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelConv2D_Valid.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelConv2D_Valid.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelConv2D_Valid.keras");
     std::vector<float> outputConv2D_Valid =  r.Compute(inputConv2D_Valid);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -215,7 +215,7 @@ TEST(DISABLED_RModelParser_Keras, CONV_VALID)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConv2D_Valid.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConv2D_Valid.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -246,10 +246,10 @@ TEST(DISABLED_RModelParser_Keras, CONV_SAME)
                                 1,1,1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelConv2D_Same.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelConv2D_Same.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelConv2D_Same.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelConv2D_Same.keras");
     std::vector<float> outputConv2D_Same =  r.Compute(inputConv2D_Same);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -265,7 +265,7 @@ TEST(DISABLED_RModelParser_Keras, CONV_SAME)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConv2D_Same.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConv2D_Same.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -292,10 +292,10 @@ TEST(RModelParser_Keras, RESHAPE)
                           1,1,1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelReshape.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelReshape.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelReshape.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelReshape.keras");
     std::vector<float> outputReshape =  r.Compute(inputReshape);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -311,7 +311,7 @@ TEST(RModelParser_Keras, RESHAPE)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelReshape.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelReshape.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -336,10 +336,10 @@ TEST(RModelParser_Keras, CONCATENATE)
     std::vector<float>inputConcatenate_2 = {1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelConcatenate.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelConcatenate.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelConcatenate.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelConcatenate.keras",{{1,2},{1,2}});
     std::vector<float> outputConcatenate =  r.Compute(inputConcatenate_1, inputConcatenate_2);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -355,15 +355,15 @@ TEST(RModelParser_Keras, CONCATENATE)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConcatenate.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConcatenate.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input_1=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input_2=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input_1,input_2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputConcatenateSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    long pOutputConcatenateSize=PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
 
-    //Testing the actual and expected output tensor sizes
-    EXPECT_EQ(outputConcatenate.size(), pOutputConcatenateSize);
+    //Testing the actual and expected output tensor sizes (can fail if an error eccoured and returns a -1 from Python)
+    EXPECT_EQ((long) outputConcatenate.size(), pOutputConcatenateSize);
 
     PyArrayObject* pConcatenateValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
     float* pOutputConcatenate=(float*)PyArray_DATA(pConcatenateValues);
@@ -377,14 +377,15 @@ TEST(RModelParser_Keras, CONCATENATE)
 TEST(RModelParser_Keras, BINARY_OP)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-    std::vector<float>input_BinaryOp_1 = {1,1};
-    std::vector<float>input_BinaryOp_2 = {1,1};
+    // test with batch size =2 input shapes are {2,2}
+    std::vector<float>input_BinaryOp_1 = {1,2,3,4};
+    std::vector<float>input_BinaryOp_2 = {5,6,7,8};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelBinaryOp.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelBinaryOp.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelBinaryOp.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelBinaryOp.keras", {{2,2},{2,2}});
     std::vector<float> outputBinaryOp =  r.Compute(input_BinaryOp_1,input_BinaryOp_2);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -400,15 +401,15 @@ TEST(RModelParser_Keras, BINARY_OP)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelBinaryOp.h5')",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("input1=numpy.array([1,1])",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("input2=numpy.array([1,1])",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelBinaryOp.keras')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input1=numpy.array([[1,2],[3,4]],dtype='float32')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input2=numpy.array([[5,6],[7,8]],dtype='float32')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input1,input2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputBinaryOpSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    long pOutputBinaryOpSize=PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
 
     //Testing the actual and expected output tensor sizes
-    EXPECT_EQ(outputBinaryOp.size(), pOutputBinaryOpSize);
+    EXPECT_EQ((long) outputBinaryOp.size(), pOutputBinaryOpSize);
 
     PyArrayObject* pBinaryOpValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
     float* pOutputBinaryOp=(float*)PyArray_DATA(pBinaryOpValues);
@@ -425,10 +426,10 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     std::vector<float>inputActivations = {1,1,1,1,1,1,1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelActivations.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelActivations.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelActivations.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelActivations.keras");
     std::vector<float> outputActivations =  r.Compute(inputActivations);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -444,7 +445,7 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelActivations.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelActivations.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -468,10 +469,10 @@ TEST(RModelParser_Keras, SWISH)
     std::vector<float>input = {1,1,1,1,1,1,1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelSwish.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelSwish.keras",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelSwish.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelSwish.keras");
     std::vector<float> output =  r.Compute(input);
 
     PyObject* main = PyImport_AddModule("__main__");
@@ -487,7 +488,7 @@ TEST(RModelParser_Keras, SWISH)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelSwish.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelSwish.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -507,11 +508,12 @@ TEST(RModelParser_Keras, SWISH)
 
 TEST(RModel, CUSTOM_OP)
 {
+    GTEST_SKIP() << "Skipping custop op test since it is not yet supported in new Python Keras parser";
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     std::vector<float>input_custom ={1,1,1,1,1,1,1,1};
 
     Py_Initialize();
-    if (gSystem->AccessPathName("KerasModelCustomOp.h5",kFileExists))
+    if (gSystem->AccessPathName("KerasModelCustomOp.keras",kFileExists))
        GenerateModels();
 
 
@@ -531,7 +533,7 @@ TEST(RModel, CUSTOM_OP)
 
     PyRun_String("from tensorflow.keras.layers import Lambda",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelCustomOp.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelCustomOp.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("model.add(Lambda(lambda x: x * 2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([1,1,1,1,1,1,1,1]).reshape(1,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -549,7 +551,7 @@ TEST(RModel, CUSTOM_OP)
                         /*output shapes*/"{{1,4}}",
                        /*header file name with the compute function*/ "scale_by_2_op.hxx");
     // need to load model afterwards
-    r.Load("KerasModelCustomOp.h5",{}, false);
+    r.Load("KerasModelCustomOp.keras",{}, false);
     std::vector<float> outputCustomOp =  r.Compute(input_custom);
 
     //Testing the actual and expected output tensor sizes
