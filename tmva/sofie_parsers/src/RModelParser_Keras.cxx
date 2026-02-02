@@ -11,8 +11,8 @@ namespace TMVA::Experimental::SOFIE::PyKeras {
 
 RModel Parse(std::string /*filename*/, int /* batch_size */ ){
 
-   throw std::runtime_error("TMVA::SOFIE C++ Keras parser is deprecated. Use python3 function "
-                         "ROOT.TMVA.Experimental.SOFIE.RModelParser_Keras.Parse('model.keras',batch_size) " );
+   throw std::runtime_error("TMVA::SOFIE C++ Keras parser is deprecated. Use the python3 function "
+                         "model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse('model.keras',batch_size=1) " );
 
    return RModel();
 }

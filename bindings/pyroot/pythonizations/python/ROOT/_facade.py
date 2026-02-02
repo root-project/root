@@ -410,9 +410,10 @@ class ROOTFacade(types.ModuleType):
         # This line is needed to import the pythonizations in _tmva directory.
         # The comment suppresses linter errors about unused imports.
         from ._pythonization import _tmva  # noqa: F401
+        from ._pythonization._tmva._sofie._parser._keras.parser import PyKeras
 
         ns = self._fallback_getattr("TMVA")
-        setattr(ns.Experimental.SOFIE, "PyKeras", _tmva.PyKeras)
+        setattr(ns.Experimental.SOFIE, "PyKeras", PyKeras)
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
