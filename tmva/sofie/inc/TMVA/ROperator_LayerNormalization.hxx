@@ -243,7 +243,8 @@ public:
       // compute mean and std-dev. Save in tensors if requested
 
       out << SP << "// Compute the mean\n";
-      // Loop over all the dims in [0, fAxis)
+
+      // Loop over all the outer dims in [0, fAxis)
       for (size_t i = 0; i < fAxis; i++) {
          std::string iIdx = "axis_" + std::to_string(i);
          out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
@@ -262,18 +263,8 @@ public:
       }
       out << SP << SP << "mean  /= " << fType << "(" << fNormalizedLength << ");\n";
 
-      // for (size_t i = fAxis; i < fSize; i++) {
-      //    out << SP << "}\n";
-      // }
-      // tensor_" << fNMean << "[" << axesIndex << "]
 
       out << SP << "// Compute the inverse Standard Deviation\n";
-      // Loop over the normalized dimensions
-      // for (size_t i = 0; i < fAxis; i++) {
-      //    std::string iIdx = "axis_" + std::to_string(i);
-      //    out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
-      //              << "; " << iIdx << "++){\n";
-      // }
 
       // Set sum = 0
       out << SP << SP << fType << " sum = 0.;\n";
@@ -291,9 +282,6 @@ public:
       out << SP << SP << fType << " invStdDev = 1 / std::sqrt(";
       out << "sum / " << fType << "(" << fNormalizedLength << ") + " << fAttrEpsilon << ");\n";
 
-      // for (size_t i = 0; i < fAxis; i++) {
-      //    out << SP << "}\n";
-      // }
 
       // set output mean and invStdDev if requested
       if (!fNMean.empty())
@@ -304,11 +292,6 @@ public:
       // scale and add bias
 
       out << SP << "// Y = Scale o InvStdDev (X - Mean)\n";
-      // for (size_t i = 0; i < fAxis; i++) {
-      //    std::string iIdx = "axis_" + std::to_string(i);
-      //    out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
-      //                 << "; " << iIdx << "++){\n";
-      // }
 
       for (size_t j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
@@ -324,22 +307,14 @@ public:
          out << " + tensor_" << fNB << "[" << biasIndex << "]";
       out << ";\n";
 
+      // close loops on normalizing dim  [..,fAxis,...fSize-1]
       for (size_t j = fAxis; j < fSize; j++) {
          out << SP << SP << "}\n";
       }
-      for (size_t i = fAxis; i < fSize; i++) {
+      // close loops on the other dimensions [0,...,fAxis]
+      for (size_t i = 0; i < fAxis; i++) {
          out << SP << "}\n";
       }
-
-      // if (!fNB.empty()) {
-      //    std::string bias = "tensor_" + (fNBroadcastedB.empty() ? fNB : fNBroadcastedB);
-      //    out << SP << "// Add the bias to Y\n";
-      //    out << SP << "int " << opName << "_n = " << fLength << ";\n";
-      //    out << SP << "float " << opName << "_alpha = 1.;\n";
-      //    out << SP << "int " << opName << "_inc = 1;\n";
-      //    out << SP << "BLAS::saxpy_(&" << opName << "_n, &" << opName << "_alpha, " << bias << ", &";
-      //    out << opName << "_inc, " << "tensor_" << fNY << ", &" << opName << "_inc);\n";
-      // }
 
       return out.str();
    }
