@@ -25,6 +25,31 @@ namespace Tessellated {
 // ClassImp(TBVH)
 
 namespace TBVHInternal {
+////////////////////////////////////////////////////////////////////////////////
+/// This code is taken from Dr. Sandro Wenzel's commit to include 
+/// the BVH to TGeoParallelWorld 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Boilerplate code to find the closest triangle to a point
+/// structure keeping cost (value) for a BVH index
+struct BVHPrioElement {
+   size_t bvh_node_id;
+   Double_t value;
+};
+
+/// A priority queue for BVHPrioElement with an additional clear method
+/// for quick reset
+template <typename Comparator>
+class BVHPrioQueue : public std::priority_queue<BVHPrioElement, std::vector<BVHPrioElement>, Comparator> {
+public:
+   using std::priority_queue<BVHPrioElement, std::vector<BVHPrioElement>,
+                             Comparator>::priority_queue; // constructor inclusion
+
+   // convenience method to quickly clear/reset the queue (instead of having to pop one by one)
+   void clear() { this->c.clear(); }
+};
+
+
 // determines if a point is inside the bounding box
 template <typename T>
 bool Contains(bvh::v2::BBox<T, 3> const &box, bvh::v2::Vec<T, 3> const &p)
@@ -59,7 +84,6 @@ auto SafetySqToNode(bvh::v2::BBox<T, 3> const &box, bvh::v2::Vec<T, 3> const &p)
 void TBVH::ResetInternalState()
 {
    fBVH.reset(nullptr);
-   fPrecomputedTris.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,40 +93,30 @@ void TBVH::BuildBVH()
 {
    ResetInternalState();
    const std::vector<TGeoTriangle> &triangles = fMesh->Triangles();
-   std::vector<Tri> tris{};
    const size_t nTriangles{triangles.size()};
-   tris.reserve(nTriangles);
-   for (const auto &triangle : triangles) {
-      const ROOT::Math::XYZVector &a = triangle.Point(0);
-      const ROOT::Math::XYZVector &b = triangle.Point(1);
-      const ROOT::Math::XYZVector &c = triangle.Point(2);
-      tris.emplace_back(Vec3(a.X(), a.Y(), a.Z()), Vec3(b.X(), b.Y(), b.Z()), Vec3(c.X(), c.Y(), c.Z()));
-   }
-
+   
    // Get triangle centers and bounding boxes (required for BVH builder)
    std::vector<BBox> bboxes;
    bboxes.resize(nTriangles);
    std::vector<Vec3> centers(nTriangles);
-   for (size_t i = 0; i < tris.size(); ++i) {
-      bboxes[i] = tris[i].get_bbox();
-      centers[i] = tris[i].get_center();
+   size_t i{0};
+   for (const auto &triangle : triangles) {
+      const ROOT::Math::XYZVector &a = triangle.Point(0);
+      const ROOT::Math::XYZVector &b = triangle.Point(1);
+      const ROOT::Math::XYZVector &c = triangle.Point(2);
+      bboxes[i].min[0] = std::min({a.X(),b.X(),c.X()});
+      bboxes[i].min[1] = std::min({a.Y(),b.Y(),c.Y()});
+      bboxes[i].min[2] = std::min({a.Z(),b.Z(),c.Z()});
+      bboxes[i].max[0] = std::max({a.X(),b.X(),c.X()});
+      bboxes[i].max[1] = std::max({a.Y(),b.Y(),c.Y()});
+      bboxes[i].max[2] = std::max({a.Z(),b.Z(),c.Z()});
+      centers[i] = bboxes[i].get_center();
+      ++i;
    }
 
    typename bvh::v2::DefaultBuilder<Node>::Config config;
    config.quality = fBVHQuality;
    auto bvh = bvh::v2::DefaultBuilder<Node>::build(bboxes, centers, config);
-
-   // Permuting the primitive data allows to remove indirections during traversal, which makes it faster.
-   static constexpr bool should_permute = true;
-
-   // This precomputes some data to speed up traversal further.
-   fPrecomputedTris.clear();
-   fPrecomputedTris.resize(nTriangles);
-   for (size_t i = 0; i < tris.size(); ++i) {
-      auto j = should_permute ? bvh.prim_ids[i] : i;
-      fPrecomputedTris[i] = tris[j];
-   }
-
    auto bvhptr = new Bvh{};
    *bvhptr = std::move(bvh);
    fBVH.reset(bvhptr);
@@ -157,8 +171,11 @@ Bool_t TBVH::IsPointContained(const ROOT::Math::XYZVector &point) const
    }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the closest Triangle object to point
+/// Get the closest Triangle object to point. This is also almost taken 1:1 
+/// from Dr. Sandro Wenzel's BVH implementation for
+/// TGeoParallelWorld::GetBVHSafetyCandidates, besides the computation of 
 ///
 /// \param[in] point to which the closest triangle needs to be found
 /// \return TGeoTriangleMesh::ClosestTriangle_t
@@ -170,8 +187,8 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const ROOT::Math::X
    Vec3 testpoint(point.X(), point.Y(), point.Z());
 
    // comparator bringing out "smallest" value on top
-   auto cmp = [](BVHPrioElement_t a, BVHPrioElement_t b) { return a.value > b.value; };
-   BVHPrioQueue<decltype(cmp)> queue(cmp);
+   auto cmp = [](TBVHInternal::BVHPrioElement a, TBVHInternal::BVHPrioElement b) { return a.value > b.value; };
+   TBVHInternal::BVHPrioQueue<decltype(cmp)> queue(cmp);
    queue.clear();
 
    auto currnode = fBVH->nodes[0]; // we start from the top BVH node
@@ -186,8 +203,6 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const ROOT::Math::X
          const auto end_prim_id = begin_prim_id + currnode.index.prim_count();
          for (auto p_id = begin_prim_id; p_id < end_prim_id; p_id++) {
             const auto triangle_id = fBVH->prim_ids[p_id];
-            //
-            // fetch leaf_bounding box
             const TGeoTriangle &triangle = fMesh->TriangleAt(triangle_id);
             const ROOT::Math::XYZVector closestpoint = triangle.ClosestPointToPoint(point);
             const auto safety_sq = (closestpoint - point).Mag2();
@@ -217,7 +232,7 @@ TGeoTriangleMesh::ClosestTriangle_t TBVH::GetClosestTriangle(const ROOT::Math::X
             const auto this_safety_sq = inside ? -1.f : TBVHInternal::SafetySqToNode(thisbbox, testpoint);
             if (this_safety_sq <= best_enclosing_R_sq) {
                // this should be further considered
-               queue.push(BVHPrioElement_t{childid, this_safety_sq});
+               queue.push(TBVHInternal::BVHPrioElement{childid, this_safety_sq});
             }
          }
       }
@@ -297,33 +312,26 @@ TBVH::DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math:
 
 const TGeoTriangle *TBVH::GetIntersectedTriangle(Ray &ray) const
 {
-   static constexpr size_t invalid_id = std::numeric_limits<size_t>::max();
    static constexpr size_t stack_size = 64;
-   static constexpr bool use_robust_traversal = false;
-   // Permuting the primitive data allows to remove indirections during traversal, which makes it faster.
-   static constexpr bool should_permute = true;
+   static constexpr bool use_robust_traversal = true;
 
-   auto prim_id = invalid_id;
-   Scalar u, v;
-
+   const TGeoTriangle *first_intersected_triangle{nullptr};
    // Traverse the BVH and get the u, v coordinates of the closest intersection.
    bvh::v2::SmallStack<Bvh::Index, stack_size> stack;
    fBVH->intersect<false, use_robust_traversal>(ray, fBVH->get_root().index, stack, [&](size_t begin, size_t end) {
       for (size_t i = begin; i < end; ++i) {
-         size_t j = should_permute ? i : fBVH->prim_ids[i];
-         if (auto hit = fPrecomputedTris[j].intersect(ray)) {
-            prim_id = i;
-            std::tie(u, v) = *hit;
+         size_t triangleId = fBVH->prim_ids[i];
+         auto &triangle = fMesh->TriangleAt(triangleId);
+         auto t = triangle.DistanceFrom({ray.org[0], ray.org[1], ray.org[2]}, {ray.dir[0], ray.dir[1], ray.dir[2]});
+         if (t < ray.tmax && ray.tmin < t) {
+            ray.tmax = t;
+            first_intersected_triangle = &triangle;
          }
       }
-      return prim_id != invalid_id;
+      return false; // Iterate over all triangles
    });
 
-   if (prim_id != invalid_id) {
-      return &fMesh->TriangleAt(fBVH->prim_ids[prim_id]);
-   } else {
-      return nullptr;
-   }
+   return first_intersected_triangle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

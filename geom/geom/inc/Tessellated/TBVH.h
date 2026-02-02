@@ -30,7 +30,6 @@
 #include <bvh/v2/thread_pool.h>
 #include <bvh/v2/executor.h>
 #include <bvh/v2/stack.h>
-#include <bvh/v2/tri.h>
 
 class TBuffer;
 class TClass;
@@ -43,35 +42,13 @@ private:
    using Scalar = Double_t;
    using Vec3 = bvh::v2::Vec<Scalar, 3>;
    using BBox = bvh::v2::BBox<Scalar, 3>;
-   using Tri = bvh::v2::Tri<Scalar, 3>;
    using Node = bvh::v2::Node<Scalar, 3>;
    using Bvh = bvh::v2::Bvh<Node>;
    using Ray = bvh::v2::Ray<Scalar, 3>;
-   using PrecomputedTri = bvh::v2::PrecomputedTri<Scalar>;
    using Quality = bvh::v2::DefaultBuilder<Node>::Quality;
 
    std::unique_ptr<bvh::v2::Bvh<Node>> fBVH{nullptr}; ///< bounding volume hierarchy structure
    Quality fBVHQuality{Quality::Medium};              ///< quality for bvh building
-   std::vector<PrecomputedTri> fPrecomputedTris{};    ///< precomputed triangles for quicker intersection tests
-
-private:
-   // structure keeping cost (value) for a BVH index
-   struct BVHPrioElement_t {
-      size_t bvh_node_id;
-      Double_t value;
-   };
-
-   // A priority queue for BVHPrioElement_t with an additional clear method
-   // for quick reset
-   template <typename Comparator>
-   class BVHPrioQueue : public std::priority_queue<BVHPrioElement_t, std::vector<BVHPrioElement_t>, Comparator> {
-   public:
-      using std::priority_queue<BVHPrioElement_t, std::vector<BVHPrioElement_t>,
-                                Comparator>::priority_queue; // constructor inclusion
-
-      // convenience method to quickly clear/reset the queue (instead of having to pop one by one)
-      void clear() { this->c.clear(); }
-   };
 
 private:
    void BuildBVH();
