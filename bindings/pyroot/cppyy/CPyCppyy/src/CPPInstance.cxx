@@ -447,20 +447,8 @@ static CPPInstance* op_new(PyTypeObject* subtype, PyObject*, PyObject*)
 static void op_dealloc(CPPInstance* pyobj)
 {
 // Remove (Python-side) memory held by the object proxy.
-    PyObject_GC_UnTrack((PyObject*)pyobj);
     op_dealloc_nofree(pyobj);
-    PyObject_GC_Del((PyObject*)pyobj);
-}
-
-//----------------------------------------------------------------------------
-static int op_clear(CPPInstance* pyobj)
-{
-// Garbage collector clear of held python member objects; this is a good time
-// to safely remove this object from the memory regulator.
-    if (pyobj->fFlags & CPPInstance::kIsRegulated)
-        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
-
-    return 0;
+    Py_TYPE(pyobj)->tp_free((PyObject*)pyobj);
 }
 
 //----------------------------------------------------------------------------
@@ -1086,11 +1074,10 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_buffer
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE |
-        Py_TPFLAGS_CHECKTYPES |
-        Py_TPFLAGS_HAVE_GC,        // tp_flags
+        Py_TPFLAGS_CHECKTYPES,     // tp_flags
     (char*)"cppyy object proxy (internal)", // tp_doc
     (traverseproc)op_traverse,     // tp_traverse
-    (inquiry)op_clear,             // tp_clear
+    0,                             // tp_clear
     (richcmpfunc)op_richcompare,   // tp_richcompare
     0,                             // tp_weaklistoffset
     0,                             // tp_iter
