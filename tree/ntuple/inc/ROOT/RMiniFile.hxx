@@ -122,7 +122,7 @@ public:
    static constexpr std::size_t kBlobKeyLen = 42;
 
 private:
-   struct RFileProper {
+   struct RImplTFile {
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
@@ -134,7 +134,7 @@ private:
       operator bool() const { return fDirectory; }
    };
 
-   struct RFileRFile {
+   struct RImplRFile {
       ROOT::Experimental::RFile *fFile = nullptr;
       std::string fDir;
       /// Low-level writing using a TFile
@@ -146,7 +146,7 @@ private:
       operator bool() const { return fFile; }
    };
 
-   struct RFileSimple {
+   struct RImplSimple {
       /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
       /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
       static constexpr int kBlockAlign = 4096;
@@ -173,12 +173,12 @@ private:
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
 
-      RFileSimple();
-      RFileSimple(const RFileSimple &other) = delete;
-      RFileSimple(RFileSimple &&other) = delete;
-      RFileSimple &operator=(const RFileSimple &other) = delete;
-      RFileSimple &operator=(RFileSimple &&other) = delete;
-      ~RFileSimple();
+      RImplSimple();
+      RImplSimple(const RImplSimple &other) = delete;
+      RImplSimple(RImplSimple &&other) = delete;
+      RImplSimple &operator=(const RImplSimple &other) = delete;
+      RImplSimple &operator=(RImplSimple &&other) = delete;
+      ~RImplSimple();
 
       void AllocateBuffers(std::size_t bufferSize);
       void Flush();
@@ -201,10 +201,10 @@ private:
    static std::uint64_t
    ReserveBlobKey(T &caller, TFile &file, std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen]);
 
-   /// RFileSimple: for simple use cases, survives without libRIO dependency
-   /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
-   /// RFileRFile: like RFileProper but using RFile instead of TFile.
-   using FileType_t = std::variant<RFileSimple, RFileProper, RFileRFile>;
+   /// RImplSimple: for simple use cases, survives without libRIO dependency
+   /// RImplTFile: for updating existing files and for storing more than just an RNTuple in the file
+   /// RImplRFile: like RImplTFile but using RFile instead of TFile.
+   using FileType_t = std::variant<RImplSimple, RImplTFile, RImplRFile>;
    FileType_t fFile;
 
    /// A simple file can either be written as TFile container or as NTuple bare file
