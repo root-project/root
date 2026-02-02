@@ -340,21 +340,6 @@ const TGeoTriangle *TBVH::GetIntersectedTriangle(Ray &ray) const
 void TBVH::Print(Option_t *) const
 {
    std::cout << "BVH containing " << fBVH->nodes.size() << " nodes" << std::endl;
-   for (size_t i = 0; i < fBVH->nodes.size(); ++i) {
-      const auto &n = fBVH->nodes[i];
-      auto bbox = n.get_bbox();
-      auto min = bbox.min;
-      auto max = bbox.max;
-      long objectid = -1;
-      if (n.index.prim_count() > 0) {
-         objectid = fBVH->prim_ids[n.index.first_id()];
-      }
-      std::cout << "NODE id" << i << " "
-                << " prim_count: " << n.index.prim_count() << " first_id " << n.index.first_id() << " object_id "
-                << objectid << " ( " << min[0] << " , " << min[1] << " , " << min[2] << ")"
-                << " ( " << max[0] << " , " << max[1] << " , " << max[2] << ")"
-                << "\n";
-   }
 }
 
 }; // namespace Tessellated
