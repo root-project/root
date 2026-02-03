@@ -187,9 +187,9 @@ ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 # Tests with memory usage
 ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
-# rbatchgenerator tests
-if (tmva)
-  ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
+# ML dataloader tests
+if (dataframe)
+  ROOT_ADD_PYUNITTEST(ml_dataloader ml_dataloader.py PYTHON_DEPS numpy tensorflow torch)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)

@@ -120,7 +120,6 @@ class ROOTFacade(types.ModuleType):
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
     def _register_converters_and_executors(self):
-
         converter_aliases = {
             "Float16_t": "float",
             "const Float16_t&": "const float&",
@@ -448,11 +447,9 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator
                 from ._pythonization._tmva._rtensor import _AsRTensor
                 from ._pythonization._tmva._tree_inference import SaveXGBoost
 
-                inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
                 ns.Experimental.SaveXGBoost = SaveXGBoost
             except Exception:
@@ -505,3 +502,13 @@ class ROOTFacade(types.ModuleType):
         except ImportError:
             raise Exception("Failed to pythonize the namespace uhi")
         return uhi_module
+
+    @property
+    def Experimental(self):
+        ns = self._fallback_getattr("Experimental")
+
+        from ._pythonization._ml_dataloader import _inject_dataloader_api
+
+        _inject_dataloader_api(ns.ML)
+
+        return ns
