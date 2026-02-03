@@ -32,7 +32,6 @@ jobs:
       pull-requests: write
     if: >-
       (github.repository == 'root-project/root') &&
-      (github.event_name == 'pull_request') &&
       !startswith(github.event.comment.body, '<!--IGNORE-->') &&
       contains(github.event.comment.body, '/backport to')
     steps:
@@ -50,7 +49,7 @@ jobs:
       - name: Backport Commits
         run: " cd root && .github/workflows/utilities/backport_pr.py
                         --comment \"$COMMENT_BODY\"
-                        --pull ${{ github.event.pull_request.number }}
+                        --pull ${{ github.event.issue.number }}
                         --requestor ${{ github.event.comment.user.login }}
                         --pr-token ${{ secrets.PR_CREDENTIALS_TOKEN }}
                         --push-token ${{ secrets.BOT_PUSH_CREDENTIALS_TOKEN }}
