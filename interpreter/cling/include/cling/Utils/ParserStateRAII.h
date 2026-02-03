@@ -30,9 +30,7 @@ namespace cling {
   private:
     clang::Parser* P;
     clang::Preprocessor& PP;
-#ifndef UPSTREAM_CLANG
     decltype(clang::Parser::TemplateIds) OldTemplateIds;
-#endif
     bool PPDiagHadErrors;
     bool SemaDiagHadErrors;
     bool OldSuppressAllDiagnostics;

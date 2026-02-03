@@ -23,25 +23,21 @@ cling::ParserStateRAII::ParserStateRAII(Parser& p, bool skipToEOF)
     OldPPSuppressAllDiagnostics(p.getPreprocessor().getDiagnostics()
                                 .getSuppressAllDiagnostics()),
     OldSpellChecking(p.getPreprocessor().getLangOpts().SpellChecking),
-#ifndef UPSTREAM_CLANG
   OldTok(p.Tok), OldPrevTokLocation(p.PrevTokLocation),
   OldParenCount(p.ParenCount), OldBracketCount(p.BracketCount),
   OldBraceCount(p.BraceCount),
   OldTemplateParameterDepth(p.TemplateParameterDepth),
-#endif
   OldInNonInstantiationSFINAEContext(P->getActions()
                                      .InNonInstantiationSFINAEContext),
   SkipToEOF(skipToEOF),
   ResetExprEvalCtx(p.getActions(), clang::Sema::ExpressionEvaluationContext::PotentiallyEvaluated)
 {
   // Set to defaults, reset to previous values by ~ParserStateRAII().
-#ifndef UPSTREAM_CLANG
   OldTemplateIds.swap(P->TemplateIds);
   P->ParenCount = 0;
   P->BracketCount = 0;
   P->BraceCount = 0;
   P->TemplateParameterDepth = 0;
-#endif
   P->getActions().InNonInstantiationSFINAEContext = false;
 }
 
@@ -51,7 +47,6 @@ cling::ParserStateRAII::~ParserStateRAII() {
   //
   // Note: Consuming the EOF token will pop the include stack.
   //
-#ifndef UPSTREAM_CLANG
   {
     // Forcefully clean up the TemplateIds, ignoring additional checks in
     // MaybeDestroyTemplateIds called from DestroyTemplateIdAnnotationsRAIIObj,
@@ -59,14 +54,11 @@ cling::ParserStateRAII::~ParserStateRAII() {
     P->DestroyTemplateIds();
   }
   P->TemplateIds.swap(OldTemplateIds);
-#endif
   assert(OldTemplateIds.empty());
   if (SkipToEOF)
     P->SkipUntil(tok::annot_repl_input_end);
-#ifndef UPSTREAM_CLANG
   else
     P->Tok = OldTok;
-#endif
   if (!SemaDiagHadErrors) {
     // Doesn't reset the diagnostic mappings
     P->getActions().getDiagnostics().Reset(/*soft=*/true);
@@ -78,13 +70,11 @@ cling::ParserStateRAII::~ParserStateRAII() {
   const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking =
     OldSpellChecking;
 
-#ifndef UPSTREAM_CLANG
   P->PrevTokLocation = OldPrevTokLocation;
   P->ParenCount = OldParenCount;
   P->BracketCount = OldBracketCount;
   P->BraceCount = OldBraceCount;
   P->TemplateParameterDepth = OldTemplateParameterDepth;
-#endif
   P->getActions().InNonInstantiationSFINAEContext =
     OldInNonInstantiationSFINAEContext;
 }
