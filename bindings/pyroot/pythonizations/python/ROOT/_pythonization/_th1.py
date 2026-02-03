@@ -270,3 +270,4 @@ def pythonize_th1(klass):
     _add_indexing_features(klass)
 
     inject_clone_releasing_ownership(klass)
+    klass.Fit.__release_gil__ = True
