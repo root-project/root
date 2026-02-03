@@ -44,7 +44,7 @@ private:
    // needed for calculating the total number of batch columns when vectors columns are present
    std::vector<std::string> fCols;
    std::vector<std::size_t> fVecSizes;
-   std::size_t fSumVecSizes;  
+   std::size_t fSumVecSizes;
    std::size_t fNumColumns;
    std::size_t fNumEntries;
    bool fDropRemainder;
@@ -53,7 +53,7 @@ private:
    std::size_t fNumLeftoverBatches;
    std::size_t fNumBatches;
    std::size_t fLeftoverBatchSize;
-   
+
    bool fIsActive = false;
 
    std::mutex fBatchLock;
@@ -70,18 +70,14 @@ private:
    std::unique_ptr<RFlat2DMatrix> fSecondaryLeftoverBatch;
 
 public:
-   RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols, const std::vector<std::size_t> &vecSizes = {},
-                std::size_t numEntries = 0, bool dropRemainder = false)
-      : fBatchSize(batchSize),
-        fCols(cols),
-        fVecSizes(vecSizes),        
-        fNumEntries(numEntries),
-        fDropRemainder(dropRemainder)        
+   RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols,
+                const std::vector<std::size_t> &vecSizes = {}, std::size_t numEntries = 0, bool dropRemainder = false)
+      : fBatchSize(batchSize), fCols(cols), fVecSizes(vecSizes), fNumEntries(numEntries), fDropRemainder(dropRemainder)
    {
 
       fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
       fNumColumns = fCols.size() + fSumVecSizes - fVecSizes.size();
-      
+
       if (fBatchSize == 0) {
          fBatchSize = fNumEntries;
       }
@@ -98,10 +94,9 @@ public:
       else {
          fNumBatches = fNumFullBatches + fNumLeftoverBatches;
       }
-      
+
       fPrimaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
       fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
-
    }
 
 public:
@@ -158,8 +153,7 @@ public:
    /// \brief Creating the batches from a chunk and add them to the queue.
    /// \param[in] chunkTensor Tensor with the data from the chunk
    /// \param[in] lastbatch Check if the batch in the chunk is the last one
-   void
-   CreateBatches(RFlat2DMatrix &chunkTensor, std::size_t lastbatch)
+   void CreateBatches(RFlat2DMatrix &chunkTensor, std::size_t lastbatch)
    {
       std::size_t ChunkSize = chunkTensor.GetRows();
       std::size_t NumCols = chunkTensor.GetCols();
@@ -194,8 +188,8 @@ public:
          // copy LeftoverBatch to end of fPrimaryLeftoverBatch and add it to the batch vector
          if (emptySlots == LeftoverBatchSize) {
             auto copy = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
-            std::copy(fPrimaryLeftoverBatch->GetData(),
-                      fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns), copy->GetData());
+            std::copy(fPrimaryLeftoverBatch->GetData(), fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns),
+                      copy->GetData());
             batches.emplace_back(std::move(copy));
 
             // reset fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
@@ -214,13 +208,12 @@ public:
          // copy the last part of LeftoverBatch to the end of fSecondaryLeftoverBatch
          fSecondaryLeftoverBatch->Resize(LeftoverBatchSize - emptySlots, NumCols);
          std::copy(LeftoverBatch.GetData() + (emptySlots * NumCols),
-                   LeftoverBatch.GetData() + (LeftoverBatchSize * NumCols),
-                   fSecondaryLeftoverBatch->GetData());
+                   LeftoverBatch.GetData() + (LeftoverBatchSize * NumCols), fSecondaryLeftoverBatch->GetData());
 
          // add fPrimaryLeftoverBatch to the batch vector
          auto copy = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
-         std::copy(fPrimaryLeftoverBatch->GetData(),
-                   fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns), copy->GetData());
+         std::copy(fPrimaryLeftoverBatch->GetData(), fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns),
+                   copy->GetData());
          batches.emplace_back(std::move(copy));
 
          // exchange fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
@@ -252,7 +245,7 @@ public:
 
    std::size_t GetNumBatches() { return fNumBatches; }
    std::size_t GetNumEntries() { return fNumEntries; }
-   std::size_t GetNumRemainderRows() { return fLeftoverBatchSize; }   
+   std::size_t GetNumRemainderRows() { return fLeftoverBatchSize; }
    std::size_t GetNumBatchQueue() { return fBatchQueue.size(); }
 };
 
