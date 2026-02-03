@@ -53,7 +53,7 @@ private:
 private:
    void BuildBVH();
    void ResetInternalState();
-   const TGeoTriangle *GetIntersectedTriangle(Ray &ray) const;
+   const TGeoTriangle *GetIntersectedTriangle(Ray &ray, Bool_t isorigininside, Bool_t findFirst=kFALSE) const;
 
 public:
    TBVH() = default;

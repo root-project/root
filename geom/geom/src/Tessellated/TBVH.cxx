@@ -26,8 +26,8 @@ namespace Tessellated {
 
 namespace TBVHInternal {
 ////////////////////////////////////////////////////////////////////////////////
-/// This code is taken from Dr. Sandro Wenzel's commit to include 
-/// the BVH to TGeoParallelWorld 
+/// This code is taken from Dr. Sandro Wenzel's commit to include
+/// the BVH to TGeoParallelWorld
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Boilerplate code to find the closest triangle to a point
@@ -48,7 +48,6 @@ public:
    // convenience method to quickly clear/reset the queue (instead of having to pop one by one)
    void clear() { this->c.clear(); }
 };
-
 
 // determines if a point is inside the bounding box
 template <typename T>
@@ -94,7 +93,7 @@ void TBVH::BuildBVH()
    ResetInternalState();
    const std::vector<TGeoTriangle> &triangles = fMesh->Triangles();
    const size_t nTriangles{triangles.size()};
-   
+
    // Get triangle centers and bounding boxes (required for BVH builder)
    std::vector<BBox> bboxes;
    bboxes.resize(nTriangles);
@@ -104,12 +103,12 @@ void TBVH::BuildBVH()
       const ROOT::Math::XYZVector &a = triangle.Point(0);
       const ROOT::Math::XYZVector &b = triangle.Point(1);
       const ROOT::Math::XYZVector &c = triangle.Point(2);
-      bboxes[i].min[0] = std::min({a.X(),b.X(),c.X()});
-      bboxes[i].min[1] = std::min({a.Y(),b.Y(),c.Y()});
-      bboxes[i].min[2] = std::min({a.Z(),b.Z(),c.Z()});
-      bboxes[i].max[0] = std::max({a.X(),b.X(),c.X()});
-      bboxes[i].max[1] = std::max({a.Y(),b.Y(),c.Y()});
-      bboxes[i].max[2] = std::max({a.Z(),b.Z(),c.Z()});
+      bboxes[i].min[0] = std::min({a.X(), b.X(), c.X()});
+      bboxes[i].min[1] = std::min({a.Y(), b.Y(), c.Y()});
+      bboxes[i].min[2] = std::min({a.Z(), b.Z(), c.Z()});
+      bboxes[i].max[0] = std::max({a.X(), b.X(), c.X()});
+      bboxes[i].max[1] = std::max({a.Y(), b.Y(), c.Y()});
+      bboxes[i].max[2] = std::max({a.Z(), b.Z(), c.Z()});
       centers[i] = bboxes[i].get_center();
       ++i;
    }
@@ -163,7 +162,9 @@ Bool_t TBVH::IsPointContained(const ROOT::Math::XYZVector &point) const
       Vec3(point.X(), point.Y(), point.Z()),      // Ray origin
       Vec3(testdir.X(), testdir.Y(), testdir.Z()) // Ray direction
    };
-   const TGeoTriangle *triangle = GetIntersectedTriangle(ray);
+   Bool_t isInside = false;
+   Bool_t findFirst = true;
+   const TGeoTriangle *triangle = GetIntersectedTriangle(ray, isInside, findFirst);
    if (triangle != nullptr) {
       return triangle->Normal().Dot(testdir) > 0 || ray.tmax < TGeoShape::Tolerance();
    } else {
@@ -171,11 +172,10 @@ Bool_t TBVH::IsPointContained(const ROOT::Math::XYZVector &point) const
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the closest Triangle object to point. This is also almost taken 1:1 
+/// Get the closest Triangle object to point. This is also almost taken 1:1
 /// from Dr. Sandro Wenzel's BVH implementation for
-/// TGeoParallelWorld::GetBVHSafetyCandidates, besides the computation of 
+/// TGeoParallelWorld::GetBVHSafetyCandidates, besides the computation of
 ///
 /// \param[in] point to which the closest triangle needs to be found
 /// \return TGeoTriangleMesh::ClosestTriangle_t
@@ -285,18 +285,9 @@ TBVH::DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math:
    auto ray = Ray{Vec3(neworigin.X(), neworigin.Y(), neworigin.Z()), // Ray origin
                   Vec3(direction.X(), direction.Y(), direction.Z()), // Ray direction
                   0, 1e30};
-   const TGeoTriangle *triangle = GetIntersectedTriangle(ray);
-   while (triangle != nullptr) {
-      if ((isInside && triangle->Normal().Dot(direction) > 0) ||
-          (!isInside && triangle->Normal().Dot(direction) <= TGeoShape::Tolerance())) {
-         return ray.tmax;
-      } else {
-         ray = Ray{Vec3(origin.X(), origin.Y(), origin.Z()),          // Ray origin
-                   Vec3(direction.X(), direction.Y(), direction.Z()), // Ray direction
-                   ray.tmax + TGeoTriangle::sAccuracy,
-                   1e30}; // Update minimum tmin to be current tmax for next triangle intersection
-         triangle = GetIntersectedTriangle(ray);
-      }
+   const TGeoTriangle *triangle = GetIntersectedTriangle(ray, isInside);
+   if (triangle != nullptr) {
+      return ray.tmax;
    }
    if (isInside)
       return 0;
@@ -310,7 +301,7 @@ TBVH::DistanceInDirection(const ROOT::Math::XYZVector &origin, const ROOT::Math:
 /// \param[out] ray along which the next intersected triangle needs to be found
 /// \return const TGeoTriangle *
 
-const TGeoTriangle *TBVH::GetIntersectedTriangle(Ray &ray) const
+const TGeoTriangle *TBVH::GetIntersectedTriangle(Ray &ray, Bool_t isInside, Bool_t findFirst) const
 {
    static constexpr size_t stack_size = 64;
    static constexpr bool use_robust_traversal = true;
@@ -322,10 +313,18 @@ const TGeoTriangle *TBVH::GetIntersectedTriangle(Ray &ray) const
       for (size_t i = begin; i < end; ++i) {
          size_t triangleId = fBVH->prim_ids[i];
          auto &triangle = fMesh->TriangleAt(triangleId);
-         auto t = triangle.DistanceFrom({ray.org[0], ray.org[1], ray.org[2]}, {ray.dir[0], ray.dir[1], ray.dir[2]});
+         const ROOT::Math::XYZVector direction{ray.dir[0], ray.dir[1], ray.dir[2]};
+         auto t = triangle.DistanceFrom({ray.org[0], ray.org[1], ray.org[2]}, direction);
          if (t < ray.tmax && ray.tmin < t) {
-            ray.tmax = t;
-            first_intersected_triangle = &triangle;
+            if ((isInside && triangle.Normal().Dot(direction) > 0) ||
+                (!isInside && triangle.Normal().Dot(direction) <= TGeoShape::Tolerance())) {
+               ray.tmax = t;
+               first_intersected_triangle = &triangle;
+            }
+            if (findFirst) {
+               ray.tmax = t;
+               first_intersected_triangle = &triangle;
+            }
          }
       }
       return false; // Iterate over all triangles
