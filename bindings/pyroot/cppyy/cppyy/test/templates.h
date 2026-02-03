@@ -6,6 +6,7 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include <iostream>
 
 #ifndef _WIN32
 #include <cxxabi.h>
@@ -530,6 +531,7 @@ using testptr = Test *;
 template <typename T>
 bool testfun(T const &x)
 {
+   std::cout << "testfun " << x << std::endl;
    return !(bool)x;
 }
 

@@ -14,6 +14,7 @@
 // Standard
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
 
 //- data _____________________________________________________________________
@@ -210,6 +211,9 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
 
     Cppyy::TCppType_t klass = pyobj->ObjectIsA(false /* check_smart */);
     void*& cppobj = pyobj->GetObjectRaw();
+
+    if(cppobj == nullptr)
+       std::cout << "op_dealloc_noree with nullptr" << std::endl;
 
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
         MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));

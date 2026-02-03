@@ -1133,16 +1133,23 @@ class TestTEMPLATES:
 
         assert ns.testfun["testptr"](cppyy.bind_object(cppyy.nullptr, ns.Test))
 
+        print("step 1 done")
+
         # TODO: raises TypeError; the problem is that the type is resolved
         # from UsingPtr::Test*const& to UsingPtr::Test*& (ie. `const` is lost)
         # assert ns.testfun["UsingPtr::testptr"](cppyy.nullptr)
 
         assert ns.testptr.__name__     == "Test"
+        print("step 2 done")
         assert ns.testptr.__cpp_name__ == "UsingPtr::Test*"
+        print("step 3 done")
 
         assert cppyy.gbl.std.vector[ns.Test]
+        print("step 4 done")
         assert ns.testptr
+        print("step 5 done")
         assert cppyy.gbl.std.vector[ns.testptr]
+        print("step 6 done")
 
     @mark.xfail(strict=True)
     def test34_cstring_template_argument(self):
@@ -1410,4 +1417,4 @@ class TestTEMPLATED_CALLBACK:
 
 
 if __name__ == "__main__":
-    exit(pytest.main(args=['-v', '-ra', __file__]))
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

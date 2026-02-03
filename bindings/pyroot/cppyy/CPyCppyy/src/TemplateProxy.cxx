@@ -12,6 +12,7 @@
 
 // Standard
 #include <algorithm>
+#include <iostream>
 
 
 namespace CPyCppyy {
@@ -200,6 +201,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     // can add already existing overloads to the set of methods.
 
         std::string resname = Cppyy::GetMethodFullName(cppmeth);
+        std::cout << "resname : " << resname << std::endl;
 
     // An initializer_list is preferred for the argument types, but should not leak into
     // the argument types. If it did, replace with vector and lookup anew.
