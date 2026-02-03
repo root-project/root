@@ -773,6 +773,10 @@ double rayTriangle(const Vertex_t &orig, const Vertex_t &dir, const Vertex_t &v0
 template <typename T = float>
 struct Vec3f {
    T x, y, z;
+   template <typename Type>
+   Vec3f(Type x_, Type y_, Type z_) : x{T(x_)}, y{T(y_)}, z{T(z_)}
+   {
+   }
 };
 
 template <typename T>
@@ -887,8 +891,8 @@ inline Vec3f<T> triangleNormal(const Vec3f<T> &a, const Vec3f<T> &b, const Vec3f
 ////////////////////////////////////////////////////////////////////////////////
 /// DistFromOutside
 
-Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t stepmax,
-                                          Double_t *safe) const
+Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, Double_t stepmax,
+                                          Double_t * /*safe*/) const
 {
    // use the BVH intersector in combination with leaf ray-triangle testing
    double local_step = Big(); // we need this otherwise the lambda get's confused
@@ -970,8 +974,8 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// DistFromOutside
 
-Double_t TGeoTessellated::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t stepmax,
-                                         Double_t *safe) const
+Double_t TGeoTessellated::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/,
+                                         Double_t /*stepmax*/, Double_t * /*safe*/) const
 {
    // use the BVH intersector in combination with leaf ray-triangle testing
    double local_step = Big(); // we need this otherwise the lambda get's confused
@@ -1042,7 +1046,7 @@ Double_t TGeoTessellated::Capacity() const
    // http://wwwf.imperial.ac.uk/~rn/centroid.pdf
 
    double vol = 0.0;
-   for (int i = 0; i < fFacets.size(); ++i) {
+   for (size_t i = 0; i < fFacets.size(); ++i) {
       auto &facet = fFacets[i];
       auto a = fVertices[facet[0]];
       auto b = fVertices[facet[1]];
@@ -1067,7 +1071,8 @@ void TGeoTessellated::BuildBVH()
    // helper determining axis aligned bounding box from a facet;
    auto GetBoundingBox = [this](TGeoFacet const &facet) {
       const auto nvertices = facet.GetNvert();
-      assert(nvertices == 3); // for now only triangles
+      if (nvertices != 3)
+         Fatal("BuildBVH", "only facets with 3 vertices supported"); // for now only triangles
       const auto &v1 = fVertices[facet[0]];
       const auto &v2 = fVertices[facet[1]];
       const auto &v3 = fVertices[facet[2]];
@@ -1393,7 +1398,7 @@ void TGeoTessellated::ComputeNormal(const Double_t *point, const Double_t *dir, 
 
    // use safety kernel
    int closest_face_id = -1;
-   double saf = SafetyKernel<true>(point, true, &closest_face_id);
+   /*double saf = */ SafetyKernel<true>(point, true, &closest_face_id);
 
    if (closest_face_id < 0) {
       norm[0] = 1.;
