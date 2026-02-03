@@ -171,7 +171,7 @@ def principal():
        execCommand(f'git checkout -b {bpBranchName}')
        execCommand(f'git apply --check {patchName}')
        execCommand(f'git am --keep-cr --signoff < {patchName}')
-       execCommand(f'git push --set-upstream {bpBranchName}')
+       execCommand(f'git push --set-upstream origin {bpBranchName}')
        authenticate(pr_token)
        prUrl = execCommand('gh pr create --repo root-project/root ' \
                                         f'--base {realTargetBranch} '\
