@@ -12,17 +12,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TMVA_RBATCHGENERATOR
-#define TMVA_RBATCHGENERATOR
+#ifndef ROOT_INTERNAL_ML_RBATCHGENERATOR
+#define ROOT_INTERNAL_ML_RBATCHGENERATOR
 
-#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
-#include "TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx"
-#include "TMVA/BatchGenerator/RSampler.hxx"
+#include "ROOT/ML/RFlat2DMatrix.hxx"
+#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "ROOT/ML/RSampler.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 
-#include "TMVA/BatchGenerator/RDatasetLoader.hxx"
-#include "TMVA/BatchGenerator/RChunkLoader.hxx"
-#include "TMVA/BatchGenerator/RBatchLoader.hxx"
+#include "ROOT/ML/RDatasetLoader.hxx"
+#include "ROOT/ML/RChunkLoader.hxx"
+#include "ROOT/ML/RBatchLoader.hxx"
 #include "TROOT.h"
 
 #include <cmath>
@@ -33,17 +33,18 @@
 #include <variant>
 #include <vector>
 
-namespace TMVA {
-namespace Experimental {
-namespace Internal {
+// Empty namespace to create a hook for the Pythonization
+namespace ROOT::Experimental::ML {
+}
 
-// clang-format off
+namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::TMVA::Experimental::Internal::RBatchGenerator
-\ingroup tmva
-\brief 
+\class ROOT::Experimental::Internal::ML::RBatchGenerator
+\brief
 
-In this class, the processes of loading chunks (see RChunkLoader) and creating batches from those chunks (see RBatchLoader) are combined, allowing batches from the training and validation sets to be loaded directly from a dataset in an RDataFrame.
+In this class, the processes of loading chunks (see RChunkLoader) and creating batches from those chunks (see
+RBatchLoader) are combined, allowing batches from the training and validation sets to be loaded directly from a dataset
+in an RDataFrame.
 */
 
 template <typename... Args>
@@ -51,7 +52,6 @@ class RBatchGenerator {
 private:
    std::vector<std::string> fCols;
    std::vector<std::size_t> fVecSizes;
-   // clang-format on
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
@@ -340,8 +340,6 @@ public:
    /// Returns empty RTensor otherwise.
 };
 
-} // namespace Internal
-} // namespace Experimental
-} // namespace TMVA
+} // namespace ROOT::Experimental::Internal::ML
 
-#endif // TMVA_RBATCHGENERATOR
+#endif // ROOT_INTERNAL_ML_RBATCHGENERATOR

@@ -24,14 +24,14 @@ target = "Type"
 
 # Returns two generators that return training and validation batches
 # as PyTorch tensors.
-gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
     rdataframe,
-    batch_size,    
+    batch_size,
     chunk_size,
-    block_size,        
-    target = target,
-    validation_split = 0.3,
-    shuffle = True,
+    block_size,
+    target=target,
+    validation_split=0.3,
+    shuffle=True,
     drop_remainder=True,
 )
 
@@ -83,7 +83,7 @@ for i in range(number_of_epochs):
     # # Validation
     # #################################################################
 
-    model.eval()    
+    model.eval()
     # Evaluate the model on the validation set
     for i, (x_val, y_val) in enumerate(gen_validation):
         # Make prediction and calculate accuracy

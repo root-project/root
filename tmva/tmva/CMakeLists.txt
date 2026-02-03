@@ -443,14 +443,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/BatchGenerator/RBatchGenerator.hxx
-  TMVA/BatchGenerator/RBatchLoader.hxx
-  TMVA/BatchGenerator/RChunkLoader.hxx
-  TMVA/BatchGenerator/RChunkConstructor.hxx
-  TMVA/BatchGenerator/RFlat2DMatrix.hxx
-  TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx
-  TMVA/BatchGenerator/RDatasetLoader.hxx
-  TMVA/BatchGenerator/RSampler.hxx   
 
   SOURCES
 

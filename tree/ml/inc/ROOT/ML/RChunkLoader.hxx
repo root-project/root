@@ -12,34 +12,29 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TMVA_RCHUNKLOADER
-#define TMVA_RCHUNKLOADER
+#ifndef ROOT_INTERNAL_ML_RCHUNKLOADER
+#define ROOT_INTERNAL_ML_RCHUNKLOADER
 
 #include <vector>
 #include <random>
 
-#include "TMVA/BatchGenerator/RChunkConstructor.hxx"
+#include "ROOT/ML/RChunkConstructor.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
-#include "TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx"
+#include "ROOT/ML/RFlat2DMatrix.hxx"
+#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
 
 #include "ROOT/RLogger.hxx"
 
-namespace TMVA {
-namespace Experimental {
-namespace Internal {
-
-// clang-format off
+namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::TMVA::Experimental::Internal::RChunkLoaderFunctor
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RChunkLoaderFunctor
+
 \brief Loading chunks made in RChunkLoader into tensors from data from RDataFrame.
 */
 
 template <typename... ColTypes>
 class RChunkLoaderFunctor {
-   // clang-format on   
    std::size_t fOffset{};
    std::size_t fVecSizeIdx{};
    float fVecPadding{};
@@ -52,7 +47,7 @@ class RChunkLoaderFunctor {
    int fNumColumns;
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of vectors 
+   /// \brief Copy the content of a column into RTensor when the column consits of vectors
    template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &vec, int i, int numColumns)
    {
@@ -68,11 +63,11 @@ class RChunkLoaderFunctor {
       {
          std::copy(vec.begin(), vec.begin() + max_vec_size, dst);
       }
-       fOffset += max_vec_size;
-    }
+      fOffset += max_vec_size;
+   }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of single values 
+   /// \brief Copy the content of a column into RTensor when the column consits of single values
    template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &val, int i, int numColumns)
    {
@@ -82,8 +77,8 @@ class RChunkLoaderFunctor {
    }
 
 public:
-   RChunkLoaderFunctor(RFlat2DMatrix &chunkTensor, std::size_t numColumns,
-                       const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
+   RChunkLoaderFunctor(RFlat2DMatrix &chunkTensor, std::size_t numColumns, const std::vector<std::size_t> &maxVecSizes,
+                       float vecPadding, int i)
       : fChunkTensor(chunkTensor), fMaxVecSizes(maxVecSizes), fVecPadding(vecPadding), fI(i), fNumColumns(numColumns)
    {
    }
@@ -95,19 +90,20 @@ public:
    }
 };
 
-// clang-format off
 /**
-\class ROOT::TMVA::Experimental::Internal::RChunkLoader
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RChunkLoader
+
 \brief Building and loading the chunks from the blocks and chunks constructed in RChunkConstructor
 
-In this class the blocks are stiches together to form chunks that are loaded into memory. The blocks used to create each chunk comes from different parts of the dataset. This is achieved by shuffling the blocks before distributing them into chunks. The purpose of this process is to reduce bias during machine learning training by ensuring that the data is well mixed. The dataset is also spit into training and validation sets with the user-defined validation split fraction.
+In this class the blocks are stiches together to form chunks that are loaded into memory. The blocks used to create each
+chunk comes from different parts of the dataset. This is achieved by shuffling the blocks before distributing them into
+chunks. The purpose of this process is to reduce bias during machine learning training by ensuring that the data is well
+mixed. The dataset is also spit into training and validation sets with the user-defined validation split fraction.
 */
 
 template <typename... Args>
 class RChunkLoader {
 private:
-   // clang-format on   
    std::size_t fNumEntries;
    std::size_t fChunkSize;
    std::size_t fBlockSize;
@@ -152,7 +148,7 @@ public:
         fSetSeed(setSeed)
    {
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
-      
+
       fNumEntries = f_rdf.Count().GetValue();
       fEntries = f_rdf.Take<ULong64_t>("rdfentry_");
 
@@ -208,7 +204,7 @@ public:
          std::shuffle(indices.begin(), indices.end(), g);
       }
 
-      // use the permuation to shuffle the vector of block sizes  
+      // use the permuation to shuffle the vector of block sizes
       std::vector<Long_t> PermutedBlockSizes(BlockSizes.size());
       for (int i = 0; i < BlockSizes.size(); ++i) {
          PermutedBlockSizes[i] = BlockSizes[indices[i]];
@@ -248,7 +244,7 @@ public:
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Create training chunks consisiting of block intervals of different types 
+   /// \brief Create training chunks consisiting of block intervals of different types
    void CreateTrainingChunksIntervals()
    {
 
@@ -288,7 +284,7 @@ public:
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Create training chunks consisiting of block intervals of different types 
+   /// \brief Create training chunks consisiting of block intervals of different types
    void CreateValidationChunksIntervals()
    {
       std::random_device rd;
@@ -328,7 +324,7 @@ public:
    /// \param[in] TrainChunkTensor RTensor for the training chunk
    /// \param[in] chunk Index of the chunk in the dataset
    void LoadTrainingChunk(RFlat2DMatrix &TrainChunkTensor, std::size_t chunk)
-    {
+   {
 
       std::size_t chunkSize = fTraining->ChunksSizes[chunk];
 
@@ -339,11 +335,10 @@ public:
          std::size_t chunkEntry = 0;
          std::vector<std::pair<Long_t, Long_t>> BlocksInChunk = fTraining->ChunksIntervals[chunk];
 
-         std::sort(BlocksInChunk.begin(), BlocksInChunk.end(),
-                   [](const std::pair<Long_t, Long_t>& a, const std::pair<Long_t, Long_t>& b) {
-                      return a.first < b.first;
-                   });
-         
+         std::sort(
+            BlocksInChunk.begin(), BlocksInChunk.end(),
+            [](const std::pair<Long_t, Long_t> &a, const std::pair<Long_t, Long_t> &b) { return a.first < b.first; });
+
          for (std::size_t i = 0; i < BlocksInChunk.size(); i++) {
 
             // Use the block start and end entry to load into the chunk if the dataframe is not filtered
@@ -370,7 +365,7 @@ public:
 
          // reset dataframe
          ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, (*fEntries)[0], (*fEntries)[fNumEntries]);
-         
+
          // shuffle the data in the chunk tensor
          fTensorOperators->ShuffleTensor(TrainChunkTensor, Tensor);
       }
@@ -381,7 +376,7 @@ public:
    /// \param[in] ValidationChunkTensor RTensor for the validation chunk
    /// \param[in] chunk Index of the chunk in the dataset
    void LoadValidationChunk(RFlat2DMatrix &ValidationChunkTensor, std::size_t chunk)
-    {
+   {
 
       std::size_t chunkSize = fValidation->ChunksSizes[chunk];
 
@@ -391,11 +386,10 @@ public:
          std::size_t chunkEntry = 0;
          std::vector<std::pair<Long_t, Long_t>> BlocksInChunk = fValidation->ChunksIntervals[chunk];
 
-         std::sort(BlocksInChunk.begin(), BlocksInChunk.end(),
-                   [](const std::pair<Long_t, Long_t>& a, const std::pair<Long_t, Long_t>& b) {
-                      return a.first < b.first;
-                   });
-         
+         std::sort(
+            BlocksInChunk.begin(), BlocksInChunk.end(),
+            [](const std::pair<Long_t, Long_t> &a, const std::pair<Long_t, Long_t> &b) { return a.first < b.first; });
+
          for (std::size_t i = 0; i < BlocksInChunk.size(); i++) {
 
             // use the block start and end entry to load into the chunk if the dataframe is not filtered
@@ -422,17 +416,14 @@ public:
 
          // reset dataframe
          ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, (*fEntries)[0], (*fEntries)[fNumEntries]);
-         
+
          // shuffle the data in the chunk tensor
-         fTensorOperators->ShuffleTensor(ValidationChunkTensor, Tensor);         
+         fTensorOperators->ShuffleTensor(ValidationChunkTensor, Tensor);
       }
    }
 
-   void ResetDataframe()
-   {
-      ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, 0, fNumEntries);
-   }
-   
+   void ResetDataframe() { ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, 0, fNumEntries); }
+
    std::vector<std::size_t> GetTrainingChunkSizes() { return fTraining->ChunksSizes; }
    std::vector<std::size_t> GetValidationChunkSizes() { return fValidation->ChunksSizes; }
 
@@ -442,7 +433,7 @@ public:
    void CheckIfUnique(RFlat2DMatrix &Tensor)
    {
       const auto &rvec = Tensor.fRVec;
-      if(std::set<float>(rvec.begin(), rvec.end()).size() == rvec.size()) {
+      if (std::set<float>(rvec.begin(), rvec.end()).size() == rvec.size()) {
          std::cout << "Tensor consists of only unique elements" << std::endl;
       }
    };
@@ -475,7 +466,5 @@ public:
    std::size_t GetNumValidationChunks() { return fValidation->Chunks; }
 };
 
-} // namespace Internal
-} // namespace Experimental
-} // namespace TMVA
-#endif // TMVA_RCHUNKLOADER
+} // namespace ROOT::Experimental::Internal::ML
+#endif // ROOT_INTERNAL_ML_RCHUNKLOADER

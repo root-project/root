@@ -41,6 +41,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tree/ @pcanal
 /tutorials/ @couet
 /tree/dataframe/ @martamaja10 @vepadulano
+/tree/ml/ @vepadulano @siliataider
 /tree/readspeed/ @martamaja10
 /tree/ntuple/ @jblomer
 /tree/ntuplebrowse/ @jblomer
