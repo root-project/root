@@ -32,7 +32,6 @@ jobs:
       pull-requests: write
     if: >-
       (github.repository == 'root/root-project') &&
-      (github.event_name == 'pull_request') &&
       !startswith(github.event.comment.body, '<!--IGNORE-->') &&
       contains(github.event.comment.body, '/backport to')
     steps:
