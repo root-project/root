@@ -7823,11 +7823,15 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    }
 
    // Save state of the PP
+#ifndef UPSTREAM_CLANG
    Sema &SemaR = fInterpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
    Preprocessor &PP = SemaR.getPreprocessor();
+#endif
    Parser& P = const_cast<Parser&>(fInterpreter->getParser());
+#ifndef UPSTREAM_CLANG
    Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
 #ifndef UPSTREAM_CLANG
    Parser::ParserCurTokRestoreRAII savedCurToken(P);
 #endif
@@ -7840,8 +7844,10 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    // the DeclContext assumes that we drill down always.
    // We have to be on the global context. At that point we are in a
    // wrapper function so the parent context must be the global.
+#ifndef UPSTREAM_CLANG
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                           SemaR.TUScope);
+#endif
 
    TObject* specObj = gROOT->FindSpecialObject(Name, LookupCtx);
    if (specObj) {

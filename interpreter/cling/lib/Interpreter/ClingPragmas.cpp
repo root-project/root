@@ -148,15 +148,19 @@ namespace {
       Token& CurTok = const_cast<Token&>(P.getCurToken());
       CurTok.setKind(tok::semi);
 
+#ifndef UPSTREAM_CLANG
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
       // We can't PushDeclContext, because we go up and the routine that
       // pops the DeclContext assumes that we drill down always.
       // We have to be on the global context. At that point we are in a
       // wrapper function so the parent context must be the global.
+#ifndef UPSTREAM_CLANG
       TranslationUnitDecl* TU =
       m_Interp.getCI()->getASTContext().getTranslationUnitDecl();
       Sema::ContextAndScopeRAII pushedDCAndS(m_Interp.getSema(),
                                             TU, m_Interp.getSema().TUScope);
+#endif
       Interpreter::PushTransactionRAII pushedT(&m_Interp);
 
       for (const LibraryFileInfo& FI : FileInfos) {

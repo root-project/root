@@ -233,7 +233,9 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
    // error message:
    // input_line_23:1:10: fatal error: 'myfile.C+' file not found
 
+#ifndef UPSTREAM_CLANG
    Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
+#endif
 
    // remove any trailing "\n
    std::string filename(FileName.str().substr(0,FileName.str().find_last_of('"')));
@@ -249,7 +251,9 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
          if (mode.find("O")  != std::string::npos) options += "O";
 
          // Save state of the preprocessor
+#ifndef UPSTREAM_CLANG
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
          Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
          // We parsed 'include' token. Store it.
 #ifndef UPSTREAM_CLANG
@@ -271,10 +275,12 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
          //   else cout << "Error: Could not find the referenced object\n";
          // }
          // #include "A.C+"
+#ifndef UPSTREAM_CLANG
          Sema& SemaR = m_Interpreter->getSema();
          ASTContext& C = SemaR.getASTContext();
          Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                 SemaR.TUScope);
+#endif
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
             // compilation was successful, tell the preprocess to silently
@@ -479,8 +485,9 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    // a decl context, where Sema should do the lookup.
    clang::Scope S(SemaR.TUScope, clang::Scope::DeclScope, SemaR.getDiagnostics());
    S.setEntity(const_cast<DeclContext*>(DC));
+#ifndef UPSTREAM_CLANG
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, const_cast<DeclContext*>(DC), &S);
-
+#endif
    if (tryAutoParseInternal(qualName, R, SemaR.getCurScope())) {
       llvm::SmallVector<NamedDecl*, 4> lookupResults;
       for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
@@ -604,8 +611,12 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
 
      if (TCling__AutoParseCallback(Name.str().c_str())) {
         // Shouldn't we pop more?
+#ifndef UPSTREAM_CLANG
         raii.fPushedDCAndS.pop();
+#endif
+#ifndef UPSTREAM_CLANG
         raii.fCleanupRAII.pop();
+#endif
         lookupSuccess = FE || SemaR.LookupName(R, S);
      } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
         // We are "autoparsing" a header, and the header was not parsed.
@@ -663,7 +674,9 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
+#ifndef UPSTREAM_CLANG
    Preprocessor &PP = SemaR.getPreprocessor();
+#endif
    DeclContext *CurDC = SemaR.CurContext;
    DeclarationName Name = R.getLookupName();
 
@@ -673,10 +686,14 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 
    // Save state of the PP, because TCling__GetObjectAddress may induce nested
    // lookup.
+#ifndef UPSTREAM_CLANG
    Preprocessor::CleanupAndRestoreCacheRAII cleanupPPRAII(PP);
+#endif
    TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(),
                                            fLastLookupCtx);
+#ifndef UPSTREAM_CLANG
    cleanupPPRAII.pop(); // force restoring the cache
+#endif
 
    if (obj) {
 
@@ -711,7 +728,9 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
       }
       else {
          // Save state of the PP
+#ifndef UPSTREAM_CLANG
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
 
          const Decl *TD = TCling__GetObjectDecl(obj);
          // We will declare the variable as pointer.
