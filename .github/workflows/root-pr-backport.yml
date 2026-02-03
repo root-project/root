@@ -21,8 +21,7 @@ on:
       - opened
 
 env:
-  COMMENT_BODY: ${{ github.event.action == 'opened' && github.event.issue.body || github.event.comment.body  }}
-  GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+  COMMENT_BODY: ${{ github.event.comment.body  }}
 
 jobs:
   backport-commits:
@@ -35,7 +34,7 @@ jobs:
       (github.repository == 'root/root-project') &&
       (github.event_name == 'pull_request') &&
       !startswith(github.event.comment.body, '<!--IGNORE-->') &&
-      contains(github.event.action == 'opened' && github.event.issue.body || github.event.comment.body, '/backport to')
+      contains(github.event.comment.body, '/backport to')
     steps:
       - name: Checkout
         uses: actions/checkout@v5
