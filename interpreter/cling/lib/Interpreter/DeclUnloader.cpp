@@ -445,6 +445,7 @@ namespace cling {
   using namespace clang;
 
   void DeclUnloader::resetDefinitionData(TagDecl* decl) {
+#ifndef UPSTREAM_CLANG
     auto canon = dyn_cast<CXXRecordDecl>(decl->getCanonicalDecl());
     assert(canon && "Only CXXRecordDecl have DefinitionData");
     for (auto iter = canon->getMostRecentDecl(); iter;
@@ -453,6 +454,7 @@ namespace cling {
       assert(declcxx && "Only CXXRecordDecl have DefinitionData");
       declcxx->DefinitionData = nullptr;
     }
+#endif
   }
 
   ///\brief Removes given declaration from the chain of redeclarations.
