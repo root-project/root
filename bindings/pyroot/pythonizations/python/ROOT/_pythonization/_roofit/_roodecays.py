@@ -27,6 +27,8 @@ class RooDecay(object):
     \endcode
     """
 
+    __cpp_name__ = "RooDecay"
+
     @cpp_signature(
         "RooDecay(const char *name, const char *title, RooRealVar& t, RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;"
     )
@@ -37,6 +39,9 @@ class RooDecay(object):
 
 
 class RooBDecay(object):
+
+    __cpp_name__ = "RooBDecay"
+
     @cpp_signature(
         "RooBDecay(const char *name, const char *title, RooRealVar& t,"
         "    RooAbsReal& tau, RooAbsReal& dgamma,    RooAbsReal& f0,"
@@ -50,6 +55,9 @@ class RooBDecay(object):
 
 
 class RooBCPGenDecay(object):
+
+    __cpp_name__ = "RooBCPGenDecay"
+
     @cpp_signature(
         "RooBCPGenDecay(const char *name, const char *title, RooRealVar& t, RooAbsCategory& tag,"
         "    RooAbsReal& tau, RooAbsReal& dm, RooAbsReal& avgMistag, RooAbsReal& a, RooAbsReal& b,"
@@ -62,6 +70,9 @@ class RooBCPGenDecay(object):
 
 
 class RooBCPEffDecay(object):
+
+    __cpp_name__ = "RooBCPEffDecay"
+
     @cpp_signature(
         "RooBCPEffDecay(const char *name, const char *title, RooRealVar& t, RooAbsCategory& tag,"
         "    RooAbsReal& tau, RooAbsReal& dm, RooAbsReal& avgMistag, RooAbsReal& CPeigenval,"
@@ -75,6 +86,9 @@ class RooBCPEffDecay(object):
 
 
 class RooBMixDecay(object):
+
+    __cpp_name__ = "RooBMixDecay"
+
     @cpp_signature(
         "RooBMixDecay(const char *name, const char *title, RooRealVar& t, RooAbsCategory& mixState,"
         "    RooAbsCategory& tagFlav, RooAbsReal& tau, RooAbsReal& dm, RooAbsReal& mistag, "
