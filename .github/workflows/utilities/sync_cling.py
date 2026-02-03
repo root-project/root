@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import subprocess
 import sys
+
+from common import printError, printWarning, printInfo, execCommand
 
 # Parameters
 CLING_TAG_ROOT_HASH_PREFIX = "__internal-root-"
@@ -16,39 +17,6 @@ CLING_REPO_DIR_NAME = "cling"
 ROOT_REPO_DIR_NAME = "root"
 INTERP_DIR_NAME = "interpreter/cling"
 DEST_INTERP_DIR_NAME = ""
-
-
-def printError(msg):
-    print(f"*** Error: {msg}")
-
-
-def printWarning(msg):
-    print(f"*** Warning: {msg}")
-
-
-def printInfo(msg):
-    print(f"Info: {msg}")
-
-
-def execCommand(cmd, thisCwd="./", theInput=None, desc=""):
-    """
-    Execute a command and return the output. For logging reasons, the command
-    is also printed.
-    If "desc" is specificed, the command is not printed but "desc".
-    """
-    if "" == desc:
-        printInfo(f"In directory {thisCwd} *** {cmd} {'with std input' if theInput else ''}")
-    else:
-        print(desc)
-    compProc = subprocess.run(
-        cmd, shell=True, capture_output=True, text=True, cwd=thisCwd, input=theInput, encoding="latin1"
-    )
-    if 0 != compProc.returncode:
-        print(f"Error:\n {compProc.stderr.strip()}")
-        raise ValueError(f'Command "{cmd}" failed ({compProc.returncode})')
-    out = compProc.stdout.strip()
-    return out
-
 
 def getAllClingTags():
     execCommand("git fetch --tags", CLING_REPO_DIR_NAME)
