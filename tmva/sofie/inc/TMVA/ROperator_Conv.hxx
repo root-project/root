@@ -436,7 +436,10 @@ public:
       out << SP << "int " << OpName << "_n = " << fShapeW[0] << ";\n"; // output channels
       out << SP << "int " << OpName << "_k = " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] << ";\n";
       out << SP << "float " << OpName << "_alpha = 1.0;\n";
-      out << SP << "float " << OpName << "_beta = 0.0;\n";
+      if (fNB != "")
+         out << SP << "float " << OpName << "_beta = 1.0;\n";
+      else // when bias is not present beta needs to be equal to zero to avoid re-using previous results in output tensor
+         out << SP << "float " << OpName << "_beta = 0.0;\n";
 
 
       // Loop on batch size
@@ -509,11 +512,23 @@ public:
                 << "tensor_" << fNX << "_xcol);\n\n ";
          }
          // BLAS
-         out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, &" << OpName
-             << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-             << " + out_offset, &" << OpName << "_m);\n";
+         out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+             << "tensor_" << fNY << " + out_offset, false, false, "
+             << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
+             << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f, "
+             << OpName << "_beta, ";
+         if (fNB != "")
+            out << "tensor_" << fNB;
+         else
+            out << "nullptr";
+         out << ");\n";
+
+
+         // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, &" << OpName
+         //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
+         // out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         //     << " + out_offset, &" << OpName << "_m);\n";
       } else {
          // case of group convolution
          // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
@@ -522,8 +537,8 @@ public:
          out << SP << SP << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
          out << SP << SP << "size_t x_offset = n * " << inputBatchStride << " + g * "
              << fShapeW[1] << " * " << inputChannelStride << ";\n ";
-         out << SP << SP << "size_t out_offset = n * " << outputBatchStride << " + g * "
-             << fShapeW[0] << " * (" << outputChannelStride << ") / " << fAttrGroup << ";\n ";
+         out << SP << SP << "size_t g_offset = g * " << fShapeW[0] << " * (" << outputChannelStride << ") / " << fAttrGroup << ";\n ";
+         out << SP << SP << "size_t out_offset = n * " << outputBatchStride << " + g_offset;\n";
 
          if (fDim < 3) {
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
@@ -561,26 +576,38 @@ public:
          out << SP << SP << SP << "size_t offset_f = g * "
              << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] / fAttrGroup
              << ";\n";
-         out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
-             << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         out << SP << SP << SP << "tensor_" << fNX << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-             << " + out_offset"
-             << ", &" << OpName << "_m);\n";
+
+         out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+             << "tensor_" << fNY << " + out_offset, false, false, "
+             << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
+             << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f + offset_f, "
+             << OpName << "_beta, ";
+         if (fNB != "")
+            out << "tensor_" << fNB << " + g_offset";
+         else
+            out << "nullptr";
+         out << ");\n";
+
+         // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
+         //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
+         // out << SP << SP << SP << "tensor_" << fNX << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         //     << " + out_offset"
+         //     << ", &" << OpName << "_m);\n";
 
          out << SP << SP << "}\n"; // end of group loop
       }
 
-      if (fNB != "") {
-         out << SP << "int " << OpName << "_size = " << outputBatchStride << ";\n";
-         out << SP << "float " << OpName << "_gamma = 1.0;\n";
-         out << SP << "int " << OpName << "_incx = 1;\n";
-         out << SP << "int " << OpName << "_incy = 1;\n";
+      // if (fNB != "") {
+      //    out << SP << "int " << OpName << "_size = " << outputBatchStride << ";\n";
+      //    out << SP << "float " << OpName << "_gamma = 1.0;\n";
+      //    out << SP << "int " << OpName << "_incx = 1;\n";
+      //    out << SP << "int " << OpName << "_incy = 1;\n";
 
-         out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB << ", &"
-             << OpName << "_incx, tensor_" << fNY << " + out_offset, &" << OpName << "_incy);\n";
+      //    out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB << ", &"
+      //        << OpName << "_incx, tensor_" << fNY << " + out_offset, &" << OpName << "_incy);\n";
 
-      }
+      // }
       out << SP << "}\n"; // end of batch size loop
 
       return out.str();
