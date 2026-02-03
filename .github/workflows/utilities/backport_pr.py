@@ -158,6 +158,9 @@ def principal():
     labelSwitch = '' if labels == '' else f'--label "{labels}"'
     assigneesSwitch = '' if assignees == '' else f'--assignee "{assignees}"'
 
+    execCommand(f'git config user.email "{requestor}@no-reply.github.com"')
+    execCommand(f'git config user.name "{requestor}"')
+
     # Now we loop on the target branches to create one PR for each of them
     for targetBranch in targetBranches:
        printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')
