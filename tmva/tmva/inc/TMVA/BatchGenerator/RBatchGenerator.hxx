@@ -50,7 +50,7 @@ template <typename... Args>
 class RBatchGenerator {
 private:
    std::vector<std::string> fCols;
-   std::vector<std::size_t> fVecSizes;   
+   std::vector<std::size_t> fVecSizes;
    // clang-format on
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
@@ -60,7 +60,7 @@ private:
 
    float fValidationSplit;
 
-   std::unique_ptr<RDatasetLoader<Args...>> fDatasetLoader;   
+   std::unique_ptr<RDatasetLoader<Args...>> fDatasetLoader;
    std::unique_ptr<RChunkLoader<Args...>> fChunkLoader;
    std::unique_ptr<RBatchLoader> fTrainingBatchLoader;
    std::unique_ptr<RBatchLoader> fValidationBatchLoader;
@@ -68,9 +68,9 @@ private:
    std::unique_ptr<RSampler> fValidationSampler;
 
    std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
-   
+
    std::vector<ROOT::RDF::RNode> f_rdfs;
-   
+
    std::unique_ptr<std::thread> fLoadingThread;
 
    std::size_t fTrainingChunkNum;
@@ -83,8 +83,8 @@ private:
    bool fLoadEager;
    std::string fSampleType;
    float fSampleRatio;
-   bool fReplacement;   
-   
+   bool fReplacement;
+
    bool fIsActive{false}; // Whether the loading thread is active
    bool fUseWholeFile;
 
@@ -104,10 +104,10 @@ private:
 
    RFlat2DMatrix fTrainingDataset;
    RFlat2DMatrix fValidationDataset;
-   
+
    RFlat2DMatrix fSampledTrainingDataset;
    RFlat2DMatrix fSampledValidationDataset;
-   
+
    RFlat2DMatrix fTrainTensor;
    RFlat2DMatrix fTrainChunkTensor;
 
@@ -124,7 +124,7 @@ public:
 
       : f_rdfs(rdfs),
         fCols(cols),
-        fVecSizes(vecSizes),        
+        fVecSizes(vecSizes),
         fChunkSize(chunkSize),
         fBlockSize(blockSize),
         fBatchSize(batchSize),
@@ -140,57 +140,56 @@ public:
         fUseWholeFile(maxChunks == 0)
    {
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
-      
+
       if (fLoadEager) {
          fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(f_rdfs, fValidationSplit, fCols, fVecSizes,
-                                                                       vecPadding, fShuffle, fSetSeed);
+                                                                    vecPadding, fShuffle, fSetSeed);
          // split the datasets and extract the training and validation datasets
          fDatasetLoader->SplitDatasets();
 
          if (fSampleType == "") {
             fDatasetLoader->ConcatenateDatasets();
-            
+
             fTrainingDataset = fDatasetLoader->GetTrainingDataset();
-            fValidationDataset = fDatasetLoader->GetValidationDataset();         
-            
+            fValidationDataset = fDatasetLoader->GetValidationDataset();
+
             fNumTrainingEntries = fDatasetLoader->GetNumTrainingEntries();
             fNumValidationEntries = fDatasetLoader->GetNumValidationEntries();
          }
 
          else {
             fTrainingDatasets = fDatasetLoader->GetTrainingDatasets();
-            fValidationDatasets = fDatasetLoader->GetValidationDatasets();         
-         
+            fValidationDatasets = fDatasetLoader->GetValidationDatasets();
+
             fTrainingSampler = std::make_unique<RSampler>(fTrainingDatasets, fSampleType, fSampleRatio, fReplacement,
                                                           fShuffle, fSetSeed);
-            fValidationSampler = std::make_unique<RSampler>(fValidationDatasets, fSampleType, fSampleRatio, fReplacement,
-                                                            fShuffle, fSetSeed);
+            fValidationSampler = std::make_unique<RSampler>(fValidationDatasets, fSampleType, fSampleRatio,
+                                                            fReplacement, fShuffle, fSetSeed);
 
-            fNumTrainingEntries = fTrainingSampler->GetNumEntries();                  
+            fNumTrainingEntries = fTrainingSampler->GetNumEntries();
             fNumValidationEntries = fValidationSampler->GetNumEntries();
          }
       }
 
       else {
-         fChunkLoader =
-         std::make_unique<RChunkLoader<Args...>>(f_rdfs[0], fChunkSize, fBlockSize, fValidationSplit,
-                                                 fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
+         fChunkLoader = std::make_unique<RChunkLoader<Args...>>(f_rdfs[0], fChunkSize, fBlockSize, fValidationSplit,
+                                                                fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
 
          // split the dataset into training and validation sets
          fChunkLoader->SplitDataset();
 
          fNumTrainingEntries = fChunkLoader->GetNumTrainingEntries();
-         fNumValidationEntries = fChunkLoader->GetNumValidationEntries();         
+         fNumValidationEntries = fChunkLoader->GetNumValidationEntries();
 
          // number of training and validation chunks, calculated in RChunkConstructor
          fNumTrainingChunks = fChunkLoader->GetNumTrainingChunks();
          fNumValidationChunks = fChunkLoader->GetNumValidationChunks();
       }
 
-      fTrainingBatchLoader = std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes,
-                                                            fNumTrainingEntries, fDropRemainder);
-      fValidationBatchLoader = std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes,
-                                                              fNumValidationEntries, fDropRemainder);
+      fTrainingBatchLoader =
+         std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes, fNumTrainingEntries, fDropRemainder);
+      fValidationBatchLoader =
+         std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes, fNumValidationEntries, fDropRemainder);
    }
 
    ~RBatchGenerator() { DeActivate(); }
@@ -203,7 +202,7 @@ public:
       }
 
       fTrainingBatchLoader->DeActivate();
-      fValidationBatchLoader->DeActivate();      
+      fValidationBatchLoader->DeActivate();
 
       if (fLoadingThread) {
          if (fLoadingThread->joinable()) {
@@ -225,7 +224,7 @@ public:
       }
 
       fTrainingBatchLoader->Activate();
-      fValidationBatchLoader->Activate();      
+      fValidationBatchLoader->Activate();
       // fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
    }
 
@@ -241,10 +240,11 @@ public:
 
    void DeActivateValidationEpoch() { fValidationEpochActive = false; }
 
-   /// \brief Create training batches by first loading a chunk (see RChunkLoader) and split it into batches (see RBatchLoader)
+   /// \brief Create training batches by first loading a chunk (see RChunkLoader) and split it into batches (see
+   /// RBatchLoader)
    void CreateTrainBatches()
    {
-     fTrainingEpochActive = true;
+      fTrainingEpochActive = true;
       if (fLoadEager) {
          if (fSampleType == "") {
             fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
@@ -253,10 +253,10 @@ public:
          else {
             fTrainingSampler->Sampler(fSampledTrainingDataset);
          }
-         
+
          fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, 1);
       }
-      
+
       else {
          fChunkLoader->CreateTrainingChunksIntervals();
          fTrainingChunkNum = 0;
@@ -266,10 +266,11 @@ public:
       }
    }
 
-   /// \brief Creates validation batches by first loading a chunk (see RChunkLoader), and then split it into batches (see RBatchLoader)   
+   /// \brief Creates validation batches by first loading a chunk (see RChunkLoader), and then split it into batches
+   /// (see RBatchLoader)
    void CreateValidationBatches()
    {
-     fValidationEpochActive = true;      
+      fValidationEpochActive = true;
       if (fLoadEager) {
          if (fSampleType == "") {
             fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
@@ -278,7 +279,7 @@ public:
          else {
             fValidationSampler->Sampler(fSampledValidationDataset);
          }
-         
+
          fValidationBatchLoader->CreateBatches(fSampledValidationDataset, 1);
       }
 
@@ -294,28 +295,28 @@ public:
    /// \brief Loads a training batch from the queue
    RFlat2DMatrix GetTrainBatch()
    {
-     if (!fLoadEager) {      
-        auto batchQueue = fTrainingBatchLoader->GetNumBatchQueue();
+      if (!fLoadEager) {
+         auto batchQueue = fTrainingBatchLoader->GetNumBatchQueue();
 
-        // load the next chunk if the queue is empty
-        if (batchQueue < 1 && fTrainingChunkNum < fNumTrainingChunks) {
-           fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, fTrainingChunkNum);
-           std::size_t lastTrainingBatch = fNumTrainingChunks - fTrainingChunkNum;
-           fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, lastTrainingBatch);
-           fTrainingChunkNum++;
-        }
-     }
-     // Get next batch if available
-     return fTrainingBatchLoader->GetBatch();
+         // load the next chunk if the queue is empty
+         if (batchQueue < 1 && fTrainingChunkNum < fNumTrainingChunks) {
+            fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, fTrainingChunkNum);
+            std::size_t lastTrainingBatch = fNumTrainingChunks - fTrainingChunkNum;
+            fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, lastTrainingBatch);
+            fTrainingChunkNum++;
+         }
+      }
+      // Get next batch if available
+      return fTrainingBatchLoader->GetBatch();
    }
 
    /// \brief Loads a validation batch from the queue
    RFlat2DMatrix GetValidationBatch()
    {
-      if (!fLoadEager) {      
+      if (!fLoadEager) {
          auto batchQueue = fValidationBatchLoader->GetNumBatchQueue();
 
-         // load the next chunk if the queue is empty      
+         // load the next chunk if the queue is empty
          if (batchQueue < 1 && fValidationChunkNum < fNumValidationChunks) {
             fChunkLoader->LoadValidationChunk(fValidationChunkTensor, fValidationChunkNum);
             std::size_t lastValidationBatch = fNumValidationChunks - fValidationChunkNum;
