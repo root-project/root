@@ -41,6 +41,7 @@ for the composing faces.
 #include <bvh/v2/node.h>
 #include <bvh/v2/stack.h>
 #include <bvh/v2/default_builder.h>
+#include <bvh/v2/blob_persistence.h>
 #include <cmath>
 #include <limits>
 
@@ -1524,8 +1525,45 @@ void TGeoTessellated::Streamer(TBuffer &b)
 {
    if (b.IsReading()) {
       b.ReadClassBuffer(TGeoTessellated::Class(), this);
-      CloseShape();
+      bool restored = false;
+      if (!fBVHData.empty()) {
+         using Scalar = float;
+         using Node = bvh::v2::Node<Scalar, 3>;
+         using Bvh = bvh::v2::Bvh<Node>;
+         Bvh bvh;
+         if (bvh::v2::DeserializeBvhFromBlob(fBVHData, bvh)) {
+            if (fBVH) {
+               delete (Bvh *)fBVH;
+               fBVH = nullptr;
+            }
+            auto *bvhptr = new Bvh;
+            *bvhptr = std::move(bvh);
+            fBVH = (void *)bvhptr;
+            CalculateNormals();
+            fIsClosed = true;
+            if (gDebug > 0)
+               Info("Streamer", "Restored BVH from serialized blob (size=%zu bytes).", fBVHData.size());
+            restored = true;
+         }
+      }
+      if (!restored) {
+         if (gDebug > 0)
+            Info("Streamer", "No valid BVH blob found; rebuilding BVH from facets.");
+         CloseShape();
+      }
    } else {
+      if (fBVH) {
+         using Scalar = float;
+         using Node = bvh::v2::Node<Scalar, 3>;
+         using Bvh = bvh::v2::Bvh<Node>;
+         bvh::v2::SerializeBvhToBlob(*static_cast<Bvh *>(fBVH), fBVHData);
+         if (gDebug > 0)
+            Info("Streamer", "Serialized BVH blob (size=%zu bytes).", fBVHData.size());
+      } else {
+         fBVHData.clear();
+         if (gDebug > 0)
+            Info("Streamer", "No BVH instance to serialize; blob cleared.");
+      }
       b.WriteClassBuffer(TGeoTessellated::Class(), this);
    }
 }

@@ -73,6 +73,7 @@ private:
 
    std::multimap<long, int> fVerticesMap; //! Temporary map used to deduplicate vertices
    bool fIsClosed = false;                //! to know if shape still needs closure/initialization
+   std::vector<unsigned char> fBVHData;   // Serialized BVH data for persistence
    void *fBVH = nullptr;                  //! BVH acceleration structure for safety and navigation
 
    TGeoTessellated(const TGeoTessellated &) = delete;
@@ -160,7 +161,7 @@ private:
    template <bool closest_facet = false>
    Double_t SafetyKernel(const Double_t *point, bool in, int *closest_facet_id = nullptr) const;
 
-   ClassDefOverride(TGeoTessellated, 1) // tessellated shape class
+   ClassDefOverride(TGeoTessellated, 2) // tessellated shape class
 };
 
 #endif
