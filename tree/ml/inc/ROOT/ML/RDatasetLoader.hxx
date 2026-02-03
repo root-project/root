@@ -8,35 +8,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TMVA_RDATASETLOADER
-#define TMVA_RDATASETLOADER
+#ifndef ROOT_INTERNAL_ML_RDATASETLOADER
+#define ROOT_INTERNAL_ML_RDATASETLOADER
 
 #include <vector>
 #include <random>
 
-#include "TMVA/RTensor.hxx"
 #include "ROOT/RDataFrame.hxx"
-#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
-#include "TMVA/BatchGenerator/RFlat2DMatrixOperators.hxx"
+#include "ROOT/ML/RFlat2DMatrix.hxx"
+#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RVec.hxx"
 
 #include "ROOT/RLogger.hxx"
 
-namespace TMVA {
-namespace Experimental {
-namespace Internal {
+namespace ROOT::Experimental::Internal::ML {
 
-// clang-format off
 /**
-\class ROOT::TMVA::Experimental::Internal::RDatasetLoaderFunctor
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RDatasetLoaderFunctor
+
 \brief Loading chunks made in RDatasetLoader into tensors from data from RDataFrame.
 */
 
 template <typename... ColTypes>
 class RDatasetLoaderFunctor {
-   // clang-format on   
    std::size_t fOffset{};
    std::size_t fVecSizeIdx{};
    float fVecPadding{};
@@ -49,7 +44,7 @@ class RDatasetLoaderFunctor {
    int fNumColumns;
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of vectors 
+   /// \brief Copy the content of a column into RTensor when the column consits of vectors
    template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &vec, int i, int numColumns)
    {
@@ -68,7 +63,7 @@ class RDatasetLoaderFunctor {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of single values 
+   /// \brief Copy the content of a column into RTensor when the column consits of single values
    template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &val, int i, int numColumns)
    {
@@ -78,8 +73,12 @@ class RDatasetLoaderFunctor {
 
 public:
    RDatasetLoaderFunctor(RFlat2DMatrix &datasetTensor, std::size_t numColumns,
-                       const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
-      : fDatasetTensor(datasetTensor), fMaxVecSizes(maxVecSizes), fVecPadding(vecPadding), fI(i), fNumColumns(numColumns)
+                         const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
+      : fDatasetTensor(datasetTensor),
+        fMaxVecSizes(maxVecSizes),
+        fVecPadding(vecPadding),
+        fI(i),
+        fNumColumns(numColumns)
    {
    }
 
@@ -90,19 +89,18 @@ public:
    }
 };
 
-// clang-format off
 /**
-\class ROOT::TMVA::Experimental::Internal::RDatasetLoader
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RDatasetLoader
+
 \brief Load the whole dataset into memory.
 
-In this class the whole dataset is loaded into memory. The dataset is further shuffled and spit into training and validation sets with the user-defined validation split fraction.
+In this class the whole dataset is loaded into memory. The dataset is further shuffled and spit into training and
+validation sets with the user-defined validation split fraction.
 */
 
 template <typename... Args>
 class RDatasetLoader {
 private:
-   // clang-format on   
    std::size_t fNumEntries;
    float fValidationSplit;
 
@@ -116,12 +114,12 @@ private:
 
    RFlat2DMatrix fTrainingDataset;
    RFlat2DMatrix fValidationDataset;
-   
+
    std::size_t fNumTrainingEntries;
    std::size_t fNumValidationEntries;
    std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
-  
-   std::vector<ROOT::RDF::RNode> f_rdfs;      
+
+   std::vector<ROOT::RDF::RNode> f_rdfs;
    std::vector<std::string> fCols;
    std::size_t fNumCols;
    std::size_t fSetSeed;
@@ -143,7 +141,7 @@ public:
         fShuffle(shuffle),
         fSetSeed(setSeed)
    {
-      fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);      
+      fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
       fNumCols = fCols.size();
       fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
 
@@ -162,11 +160,11 @@ public:
 
       // add the last element in entries to not go out of range when filling chunks
       Entries->push_back((*Entries)[NumEntries - 1] + 1);
-      
+
       // number of training and validation entries after the split
       std::size_t NumValidationEntries = static_cast<std::size_t>(fValidationSplit * NumEntries);
       std::size_t NumTrainingEntries = NumEntries - NumValidationEntries;
-      
+
       RFlat2DMatrix Dataset({NumEntries, fNumDatasetCols});
 
       bool NotFiltered = rdf.GetFilterNames().empty();
@@ -184,36 +182,37 @@ public:
             datasetEntry++;
          }
       }
-      
+
       // reset dataframe
-      ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);      
+      ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
 
       RFlat2DMatrix ShuffledDataset({NumEntries, fNumDatasetCols});
       fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
       fTensorOperators->SliceTensor(TrainingDataset, ShuffledDataset, {{0, NumTrainingEntries}, {0, fNumDatasetCols}});
-      fTensorOperators->SliceTensor(ValidationDataset, ShuffledDataset, {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
+      fTensorOperators->SliceTensor(ValidationDataset, ShuffledDataset,
+                                    {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
    }
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Split the dataframes in a training and validation dataset
    void SplitDatasets()
    {
-     fNumEntries = 0;
-     fNumTrainingEntries = 0;
-     fNumValidationEntries = 0;
-     
-     for (auto& rdf : f_rdfs) {
-       RFlat2DMatrix TrainingDataset;
-       RFlat2DMatrix ValidationDataset;
-       
-       SplitDataframe(rdf, TrainingDataset, ValidationDataset);
-       fTrainingDatasets.push_back(TrainingDataset);
-       fValidationDatasets.push_back(ValidationDataset);
-       
-       fNumTrainingEntries += TrainingDataset.GetRows();
-       fNumValidationEntries += ValidationDataset.GetRows();
-       fNumEntries += TrainingDataset.GetRows() + ValidationDataset.GetRows();       
-     }
+      fNumEntries = 0;
+      fNumTrainingEntries = 0;
+      fNumValidationEntries = 0;
+
+      for (auto &rdf : f_rdfs) {
+         RFlat2DMatrix TrainingDataset;
+         RFlat2DMatrix ValidationDataset;
+
+         SplitDataframe(rdf, TrainingDataset, ValidationDataset);
+         fTrainingDatasets.push_back(TrainingDataset);
+         fValidationDatasets.push_back(ValidationDataset);
+
+         fNumTrainingEntries += TrainingDataset.GetRows();
+         fNumValidationEntries += ValidationDataset.GetRows();
+         fNumEntries += TrainingDataset.GetRows() + ValidationDataset.GetRows();
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -221,20 +220,18 @@ public:
    void ConcatenateDatasets()
    {
       fTensorOperators->ConcatenateTensors(fTrainingDataset, fTrainingDatasets);
-      fTensorOperators->ConcatenateTensors(fValidationDataset, fValidationDatasets);      
+      fTensorOperators->ConcatenateTensors(fValidationDataset, fValidationDatasets);
    }
-   
-   std::vector<RFlat2DMatrix> GetTrainingDatasets() {return fTrainingDatasets;}
-   std::vector<RFlat2DMatrix> GetValidationDatasets() {return fValidationDatasets;}
 
-   RFlat2DMatrix GetTrainingDataset() {return fTrainingDataset;}
-   RFlat2DMatrix GetValidationDataset() {return fValidationDataset;}
-   
-   std::size_t GetNumTrainingEntries() {return fTrainingDataset.GetRows();}
-   std::size_t GetNumValidationEntries() {return fValidationDataset.GetRows();}   
+   std::vector<RFlat2DMatrix> GetTrainingDatasets() { return fTrainingDatasets; }
+   std::vector<RFlat2DMatrix> GetValidationDatasets() { return fValidationDatasets; }
+
+   RFlat2DMatrix GetTrainingDataset() { return fTrainingDataset; }
+   RFlat2DMatrix GetValidationDataset() { return fValidationDataset; }
+
+   std::size_t GetNumTrainingEntries() { return fTrainingDataset.GetRows(); }
+   std::size_t GetNumValidationEntries() { return fValidationDataset.GetRows(); }
 };
 
-} // namespace Internal
-} // namespace Experimental
-} // namespace TMVA
-#endif // TMVA_RDATASETLOADER
+} // namespace ROOT::Experimental::Internal::ML
+#endif // ROOT_INTERNAL_ML_RDATASETLOADER

@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TMVA_RCHUNKCONSTRUCTOR
-#define TMVA_RCHUNKCONSTRUCTOR
+#ifndef ROOT_INTERNAL_ML_RCHUNKCONSTRUCTOR
+#define ROOT_INTERNAL_ML_RCHUNKCONSTRUCTOR
 
 #include <vector>
 
@@ -19,37 +19,33 @@
 
 #include "ROOT/RLogger.hxx"
 
-namespace TMVA {
-namespace Experimental {
-namespace Internal {
-
-// clang-format off
+namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::TMVA::Experimental::Internal::RChunkConstructor
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RChunkConstructor
+
 \brief The logic for constructing chunks from a dataset.
 
-This struct handles the logic for splitting a dataset into smaller subsets 
+This struct handles the logic for splitting a dataset into smaller subsets
 known as chunks, which are constructed from blocks.
- 
-A chunk is the largest portion of the dataset loaded into memory at once, 
+
+A chunk is the largest portion of the dataset loaded into memory at once,
 and each chunk is further divided into batches for machine learning training.
- 
+
 The dataset is split into disjoint chunks based on a user-defined chunk size.
 There are two types of chunks:
  - Full chunks: contain exactly the number of entries specified by the chunk size.
  - Leftover chunk: contains any remaining entries that don't make up a full chunk.
- 
+
 Each chunk is constructed from blocks based on a user-defined block size.
 There are two types of blocks:
  - Full blocks: contain exactly the number of entries specified by the block size.
  - Leftover block: contains any remaining entries that don't make up a full block.
 
-The blocks are defined by their start and end entries, which correspond to positions within the dataset’s total number of entries.
+The blocks are defined by their start and end entries, which correspond to positions within the dataset’s total number
+of entries.
 */
 
 struct RChunkConstructor {
-   // clang-format on
    std::size_t fNumEntries{};
    std::size_t fChunkSize{};
    std::size_t fBlockSize{};
@@ -237,8 +233,6 @@ struct RChunkConstructor {
       }
    }
 };
-} // namespace Internal
-} // namespace Experimental
-} // namespace TMVA
+} // namespace ROOT::Experimental::Internal::ML
 
-#endif // TMVA_RCHUNKCONSTRUCTOR
+#endif // ROOT_INTERNAL_ML_RCHUNKCONSTRUCTOR

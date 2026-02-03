@@ -25,15 +25,15 @@ rdataframe = ROOT.RDataFrame(tree_name, file_name)
 target = ["Type"]
 
 # Returns two TF.Dataset for training and validation batches.
-ds_train, ds_valid = ROOT.TMVA.Experimental.CreateTFDatasets(
+ds_train, ds_valid = ROOT.Experimental.ML.CreateTFDatasets(
     rdataframe,
-    batch_size,    
+    batch_size,
     chunk_size,
-    block_size,        
-    target = target,
-    validation_split = 0.3,
-    shuffle = True,
-    drop_remainder = True
+    block_size,
+    target=target,
+    validation_split=0.3,
+    shuffle=True,
+    drop_remainder=True,
 )
 
 num_of_epochs = 2
@@ -68,6 +68,10 @@ model = tf.keras.Sequential(
 loss_fn = tf.keras.losses.BinaryCrossentropy()
 model.compile(optimizer="adam", loss=loss_fn, metrics=["accuracy"])
 
-model.fit(ds_train_repeated, steps_per_epoch=train_batches_per_epoch, validation_data=ds_valid_repeated,\
-          validation_steps=validation_batches_per_epoch, epochs=num_of_epochs)
-
+model.fit(
+    ds_train_repeated,
+    steps_per_epoch=train_batches_per_epoch,
+    validation_data=ds_valid_repeated,
+    validation_steps=validation_batches_per_epoch,
+    epochs=num_of_epochs,
+)

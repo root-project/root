@@ -12,8 +12,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef TMVA_RBATCHLOADER
-#define TMVA_RBATCHLOADER
+#ifndef ROOT_INTERNAL_ML_RBATCHLOADER
+#define ROOT_INTERNAL_ML_RBATCHLOADER
 
 #include <vector>
 #include <memory>
@@ -24,14 +24,12 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
-#include "TMVA/Tools.h"
+#include "ROOT/ML/RFlat2DMatrix.hxx"
 
-namespace TMVA::Experimental::Internal {
-
+namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::TMVA::Experimental::Internal::RBatchLoader
-\ingroup tmva
+\class ROOT::Experimental::Internal::ML::RBatchLoader
+
 \brief Building and loading the batches from loaded chunks in RChunkLoader
 
 In this class the chunks that are loaded into memory (see RChunkLoader) are split into batches used in the ML training
@@ -249,6 +247,6 @@ public:
    std::size_t GetNumBatchQueue() { return fBatchQueue.size(); }
 };
 
-} // namespace TMVA::Experimental::Internal
+} // namespace ROOT::Experimental::Internal::ML
 
-#endif // TMVA_RBATCHLOADER
+#endif // ROOT_INTERNAL_ML_RBATCHLOADER

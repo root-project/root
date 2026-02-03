@@ -16,27 +16,6 @@ from ._crossvalidation import CrossValidation
 from ._dataloader import DataLoader
 from ._factory import Factory
 
-
-def inject_rbatchgenerator(ns):
-    from ._batchgenerator import (
-        CreateNumPyGenerators,
-        CreatePyTorchGenerators,
-        CreateTFDatasets,
-    )
-
-    python_batchgenerator_functions = [
-        CreateNumPyGenerators,
-        CreateTFDatasets,
-        CreatePyTorchGenerators,
-    ]
-
-    for python_func in python_batchgenerator_functions:
-        func_name = python_func.__name__
-        setattr(ns.Experimental, func_name, python_func)
-
-    return ns
-
-
 # list of python classes that are used to pythonize TMVA classes
 python_classes = [Factory, DataLoader, CrossValidation]
 
@@ -71,7 +50,6 @@ def get_defined_attributes(klass, consider_base_classes=False):
         method_resolution_order.remove(object)
 
     def is_defined(funcname):
-
         if funcname in blacklist:
             return False
 
@@ -138,7 +116,6 @@ def pythonize_tmva(klass, name):
     func_names = get_defined_attributes(python_klass)
 
     for func_name in func_names:
-
         # if the TMVA class already has a function with the same name as our
         # pythonization, we rename it and prefix it with an underscore
         if hasattr(klass, func_name):

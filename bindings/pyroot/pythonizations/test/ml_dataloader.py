@@ -6,7 +6,7 @@ import numpy as np
 import ROOT
 
 
-class RBatchGeneratorMultipleFiles(unittest.TestCase):
+class DataLoaderMultipleFiles(unittest.TestCase):
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "vector_columns.root"
@@ -54,7 +54,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             entries_before = df.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -125,7 +125,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -188,7 +188,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=3,
@@ -213,7 +213,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -255,7 +255,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -315,7 +315,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -400,7 +400,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -470,7 +470,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             filter_entries_before = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
                 chunk_size=5,
@@ -540,7 +540,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
                 chunk_size=9,
@@ -590,7 +590,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -657,7 +657,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -698,7 +698,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -783,7 +783,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateTFDatasets(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateTFDatasets(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -882,7 +882,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             try:
                 df = ROOT.RDataFrame(tree_name, file_name)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     df,
                     batch_size=size_of_batch,
                     chunk_size=size_of_chunk,
@@ -970,7 +970,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
             for _ in range(2):
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     df,
                     batch_size=3,
                     chunk_size=5,
@@ -1034,7 +1034,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             df = ROOT.RDataFrame(self.tree_name, self.file_name3)
             max_vec_sizes = {"v1": 3, "v2": 2}
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 chunk_size=5,
@@ -1148,7 +1148,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             raise
 
 
-class RBatchGeneratorEagerLoading(unittest.TestCase):
+class DataLoaderEagerLoading(unittest.TestCase):
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "vector_columns.root"
@@ -1194,7 +1194,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b2",
@@ -1259,7 +1259,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df, batch_size=3, target="b2", validation_split=0.4, shuffle=True, drop_remainder=False, load_eager=True
             )
 
@@ -1313,7 +1313,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df, batch_size=3, target="b2", validation_split=0.4, shuffle=False, drop_remainder=True, load_eager=True
             )
 
@@ -1348,7 +1348,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b2",
@@ -1407,7 +1407,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target=["b2", "b4"],
@@ -1491,7 +1491,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b2",
@@ -1558,7 +1558,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
                 target="b2",
@@ -1622,7 +1622,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff, batch_size=3, target="b2", validation_split=0, shuffle=False, drop_remainder=False, load_eager=True
             )
 
@@ -1665,7 +1665,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b2",
@@ -1731,7 +1731,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b2",
@@ -1771,7 +1771,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 df,
                 batch_size=3,
                 target=["b2", "b4"],
@@ -1855,7 +1855,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
         try:
             df = ROOT.RDataFrame("myTree", file_name)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateTFDatasets(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateTFDatasets(
                 df,
                 batch_size=3,
                 target=["b2", "b4"],
@@ -1953,7 +1953,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
             try:
                 df = ROOT.RDataFrame(tree_name, file_name)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     df,
                     batch_size=size_of_batch,
                     target=["b3", "b5"],
@@ -2040,7 +2040,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
 
             df = ROOT.RDataFrame(self.tree_name, self.file_name1)
             for _ in range(2):
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     df,
                     batch_size=3,
                     target="b2",
@@ -2103,7 +2103,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
             df = ROOT.RDataFrame(self.tree_name, self.file_name3)
             max_vec_sizes = {"v1": 3, "v2": 2}
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 df,
                 batch_size=3,
                 target="b1",
@@ -2216,7 +2216,7 @@ class RBatchGeneratorEagerLoading(unittest.TestCase):
             raise
 
 
-class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
+class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "second_file.root"
@@ -2286,7 +2286,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
             df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2362,7 +2362,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2426,7 +2426,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2471,7 +2471,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name3)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2537,7 +2537,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame("myTree", file_name1)
             df2 = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target=["b2", "b4"],
@@ -2629,7 +2629,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame("myTree", file_name1)
             df2 = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2704,7 +2704,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             dff1_entries_before = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
             dff2_entries_before = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [dff1, dff2],
                 batch_size=3,
                 target="b2",
@@ -2784,7 +2784,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             dff1 = df1.Filter("b1 % 2 == 0", "name")
             dff2 = df2.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [dff1, dff2],
                 batch_size=3,
                 target="b2",
@@ -2837,7 +2837,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2906,7 +2906,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b2",
@@ -2953,7 +2953,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame("myTree", file_name1)
             df2 = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 [df1, df2],
                 batch_size=3,
                 target=["b2", "b4"],
@@ -3044,7 +3044,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df1 = ROOT.RDataFrame("myTree", file_name1)
             df2 = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateTFDatasets(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateTFDatasets(
                 [df1, df2],
                 batch_size=3,
                 target=["b2", "b4"],
@@ -3147,7 +3147,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
                 df1 = ROOT.RDataFrame(tree_name, file_name1)
                 df2 = ROOT.RDataFrame(tree_name, file_name2)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df1, df2],
                     batch_size=size_of_batch,
                     target=["b3", "b5"],
@@ -3238,7 +3238,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
             for _ in range(2):
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df1, df2],
                     batch_size=3,
                     target="b2",
@@ -3304,7 +3304,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             df2 = ROOT.RDataFrame(self.tree_name, self.file_name5)
             max_vec_sizes = {"v1": 3, "v2": 2}
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df1, df2],
                 batch_size=3,
                 target="b1",
@@ -3419,7 +3419,7 @@ class RBatchGeneratorEagerLoadingMultipleDataframes(unittest.TestCase):
             raise
 
 
-class RBatchGeneratorRandomUndersampling(unittest.TestCase):
+class DataLoaderRandomUndersampling(unittest.TestCase):
     file_name1 = "major.root"
     file_name2 = "minor.root"
     file_name3 = "second_file.root"
@@ -3489,7 +3489,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -3585,7 +3585,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -3706,7 +3706,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -3773,7 +3773,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -3826,7 +3826,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name3])
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -3906,7 +3906,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame("myTree", file_name1)
             df_minor = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -4030,7 +4030,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame("myTree", file_name1)
             df_minor = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -4126,7 +4126,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             major_filter_entries_before = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major_filter, df_minor],
                 batch_size=2,
                 target="b2",
@@ -4215,7 +4215,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -4286,7 +4286,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -4335,7 +4335,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame("myTree", file_name1)
             df_major = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -4457,7 +4457,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame("myTree", file_name1)
             df_major = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -4602,7 +4602,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
                 df1 = ROOT.RDataFrame(tree_name, file_name1)
                 df2 = ROOT.RDataFrame(tree_name, file_name2)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df1, df2],
                     batch_size=size_of_batch,
                     target=["b3", "b5"],
@@ -4724,7 +4724,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
                 df1 = ROOT.RDataFrame(tree_name, file_name1)
                 df2 = ROOT.RDataFrame(tree_name, file_name2)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df1, df2],
                     batch_size=size_of_batch,
                     target=["b3", "b5"],
@@ -4819,7 +4819,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
             for _ in range(2):
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df_major, df_minor],
                     batch_size=2,
                     target="b2",
@@ -4887,7 +4887,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
             max_vec_sizes = {"v1": 3, "v2": 2}
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b1",
@@ -5040,7 +5040,7 @@ class RBatchGeneratorRandomUndersampling(unittest.TestCase):
             raise
 
 
-class RBatchGeneratorRandomOversampling(unittest.TestCase):
+class DataLoaderRandomOversampling(unittest.TestCase):
     file_name1 = "major.root"
     file_name2 = "minor.root"
     file_name3 = "second_file.root"
@@ -5110,7 +5110,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5205,7 +5205,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5278,7 +5278,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5330,7 +5330,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, [self.file_name2, self.file_name3])
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5409,7 +5409,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame("myTree", file_name1)
             df_minor = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -5532,7 +5532,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame("myTree", file_name1)
             df_minor = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5626,7 +5626,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_filter_entries_before = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor_filter],
                 batch_size=2,
                 target="b2",
@@ -5714,7 +5714,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5784,7 +5784,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b2",
@@ -5832,7 +5832,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame("myTree", file_name1)
             df_major = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -5953,7 +5953,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame("myTree", file_name1)
             df_major = ROOT.RDataFrame("myTree", file_name2)
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreatePyTorchGenerators(
                 [df_minor, df_major],
                 batch_size=2,
                 target=["b2", "b4"],
@@ -6096,7 +6096,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
                 df1 = ROOT.RDataFrame(tree_name, file_name1)
                 df2 = ROOT.RDataFrame(tree_name, file_name2)
 
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df1, df2],
                     batch_size=size_of_batch,
                     target=["b3", "b5"],
@@ -6190,7 +6190,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
             for _ in range(2):
-                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                     [df_major, df_minor],
                     batch_size=2,
                     target="b2",
@@ -6257,7 +6257,7 @@ class RBatchGeneratorRandomOversampling(unittest.TestCase):
             df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
             max_vec_sizes = {"v1": 3, "v2": 2}
 
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train, gen_validation = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [df_major, df_minor],
                 batch_size=2,
                 target="b1",

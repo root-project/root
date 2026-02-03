@@ -33,7 +33,7 @@ class BaseGenerator:
         max_vec_sizes: dict[str, int] = dict(),
     ) -> Tuple[str, list[int]]:
         """
-        Generate a template for the RBatchGenerator based on the given
+        Generate a template for the DataLoader based on the given
         RDataFrame and columns.
 
         Args:
@@ -44,7 +44,7 @@ class BaseGenerator:
             max_vec_sizes (list[int]): The length of each vector based column.
 
         Returns:
-            template (str): Template for the RBatchGenerator
+            template (str): Template for the DataLoader
         """
 
         if not columns:
@@ -102,7 +102,7 @@ class BaseGenerator:
         sampling_ratio: float = 1.0,
         replacement: bool = False,
     ):
-        """Wrapper around the Cpp RBatchGenerator
+        """Wrapper around the Cpp DataLoader
 
         Args:
         rdataframe (RNode): Name of RNode object.
@@ -238,15 +238,15 @@ class BaseGenerator:
 
         self.train_columns = [c for c in self.all_columns if c not in self.target_columns + [self.weights_column]]
 
-        from ROOT import TMVA, EnableThreadSafety
+        import ROOT
 
-        # The RBatchGenerator will create a separate C++ thread for I/O.
+        # The DataLoader will create a separate C++ thread for I/O.
         # Enable thread safety in ROOT from here, to make sure there is no
         # interference between the main Python thread (which might call into
         # cling via cppyy) and the I/O thread.
-        EnableThreadSafety()
+        ROOT.EnableThreadSafety()
 
-        self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
+        self.generator = ROOT.Experimental.Internal.ML.RBatchGenerator(template)(
             self.noded_rdfs,
             chunk_size,
             block_size,
@@ -318,7 +318,7 @@ class BaseGenerator:
         try:
             import numpy as np
         except ImportError:
-            raise ImportError("Failed to import numpy in batchgenerator init")
+            raise ImportError("Failed to import numpy needed for the ML dataloader")
 
         # Split the target and weight
         if not self.target_given:
@@ -349,7 +349,7 @@ class BaseGenerator:
         """Convert a RTensor into a NumPy array
 
         Args:
-            batch (RTensor): Batch returned from the RBatchGenerator
+            batch (RTensor): Batch returned from the DataLoader
 
         Returns:
             np.ndarray: converted batch
@@ -357,7 +357,7 @@ class BaseGenerator:
         try:
             import numpy as np
         except ImportError:
-            raise ImportError("Failed to import numpy in batchgenerator init")
+            raise ImportError("Failed to import numpy needed for the ML dataloader")
 
         data = batch.GetData()
         batch_size, num_columns = tuple(batch.GetShape())
@@ -391,7 +391,7 @@ class BaseGenerator:
         """Convert a RTensor into a PyTorch tensor
 
         Args:
-            batch (RTensor): Batch returned from the RBatchGenerator
+            batch (RTensor): Batch returned from the DataLoader
 
         Returns:
             torch.Tensor: converted batch
@@ -432,7 +432,7 @@ class BaseGenerator:
         Convert a RTensor into a TensorFlow tensor
 
         Args:
-            batch (RTensor): Batch returned from the RBatchGenerator
+            batch (RTensor): Batch returned from the DataLoader
 
         Returns:
             tensorflow.Tensor: converted batch
@@ -510,7 +510,7 @@ class LoadingThreadContext:
         return True
 
 
-class TrainRBatchGenerator:
+class TrainDataLoader:
     def __init__(self, base_generator: BaseGenerator, conversion_function: Callable):
         """
         A generator that returns the training batches of the given
@@ -602,11 +602,11 @@ class LoadingThreadContextVal:
         return True
 
 
-class ValidationRBatchGenerator:
+class ValidationDataLoader:
     def __init__(self, base_generator: BaseGenerator, conversion_function: Callable):
         """
         A generator that returns the validation batches of the given base
-        generator. NOTE: The ValidationRBatchGenerator only returns batches
+        generator. NOTE: The ValidationDataLoader only returns batches
         if the training has been run.
 
         Args:
@@ -692,7 +692,7 @@ def CreateNumPyGenerators(
     sampling_type: str = "",
     sampling_ratio: float = 1.0,
     replacement: bool = False,
-) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
+) -> Tuple[TrainDataLoader, ValidationDataLoader]:
     """
     Return two batch generators based on the given ROOT file and tree or RDataFrame
     The first generator returns training batches, while the second generator
@@ -758,9 +758,9 @@ def CreateNumPyGenerators(
             Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
 
     Returns:
-        TrainRBatchGenerator or
-            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            If validation split is 0, return TrainBatchGenerator.
+        TrainDataLoader or
+            Tuple[TrainDataLoader, ValidationDataLoader]:
+            If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
             batches, and one to load validation batches. NOTE: the validation
@@ -789,12 +789,12 @@ def CreateNumPyGenerators(
         replacement,
     )
 
-    train_generator = TrainRBatchGenerator(base_generator, base_generator.ConvertBatchToNumpy)
+    train_generator = TrainDataLoader(base_generator, base_generator.ConvertBatchToNumpy)
 
     if validation_split == 0.0:
         return train_generator, None
 
-    validation_generator = ValidationRBatchGenerator(base_generator, base_generator.ConvertBatchToNumpy)
+    validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToNumpy)
 
     return train_generator, validation_generator
 
@@ -884,9 +884,9 @@ def CreateTFDatasets(
             Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
 
     Returns:
-        TrainRBatchGenerator or
-            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            If validation split is 0, return TrainBatchGenerator.
+        TrainDataLoader or
+            Tuple[TrainDataLoader, ValidationDataLoader]:
+            If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
             batches, and one to load validation batches. NOTE: the validation
@@ -916,8 +916,8 @@ def CreateTFDatasets(
         replacement,
     )
 
-    train_generator = TrainRBatchGenerator(base_generator, base_generator.ConvertBatchToTF)
-    validation_generator = ValidationRBatchGenerator(base_generator, base_generator.ConvertBatchToTF)
+    train_generator = TrainDataLoader(base_generator, base_generator.ConvertBatchToTF)
+    validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToTF)
 
     num_train_columns = len(train_generator.train_columns)
     num_target_columns = len(train_generator.target_columns)
@@ -984,7 +984,7 @@ def CreatePyTorchGenerators(
     sampling_type: str = "",
     sampling_ratio: float = 1.0,
     replacement: bool = False,
-) -> Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
+) -> Tuple[TrainDataLoader, ValidationDataLoader]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
     The first generator returns training batches, while the second generator
@@ -1050,9 +1050,9 @@ def CreatePyTorchGenerators(
             Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
 
     Returns:
-        TrainRBatchGenerator or
-            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            If validation split is 0, return TrainBatchGenerator.
+        TrainDataLoader or
+            Tuple[TrainDataLoader, ValidationDataLoader]:
+            If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
             batches, and one to load validation batches. NOTE: the validation
@@ -1080,11 +1080,28 @@ def CreatePyTorchGenerators(
         replacement,
     )
 
-    train_generator = TrainRBatchGenerator(base_generator, base_generator.ConvertBatchToPyTorch)
+    train_generator = TrainDataLoader(base_generator, base_generator.ConvertBatchToPyTorch)
 
     if validation_split == 0.0:
         return train_generator
 
-    validation_generator = ValidationRBatchGenerator(base_generator, base_generator.ConvertBatchToPyTorch)
+    validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToPyTorch)
 
     return train_generator, validation_generator
+
+
+def _inject_dataloader_api(parentmodule):
+    """
+    Inject the public Python API in the ROOT.IO.ML namespace. This includes the
+    functions to create dataloaders for ML training.
+    """
+
+    fns = [
+        CreateNumPyGenerators,
+        CreateTFDatasets,
+        CreatePyTorchGenerators,
+    ]
+
+    for python_func in fns:
+        func_name = python_func.__name__
+        setattr(parentmodule, func_name, python_func)

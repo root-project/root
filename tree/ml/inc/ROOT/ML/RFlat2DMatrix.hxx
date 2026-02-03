@@ -1,12 +1,12 @@
-#ifndef ROOT_TMVA_RFLAT2DMATRIX
-#define ROOT_TMVA_RFLAT2DMATRIX
+#ifndef ROOT_INTERNAL_ML_RFLAT2DMATRIX
+#define ROOT_INTERNAL_ML_RFLAT2DMATRIX
 
 #include <utility>
 #include <cassert>
 
 #include "ROOT/RVec.hxx"
 
-namespace TMVA::Experimental::Internal {
+namespace ROOT::Experimental::Internal::ML {
 /// \brief Wrapper around ROOT::RVec<float> representing a 2D matrix
 ///
 /// The storage is flattened row-major: index(row, col) == row * cols + col.
@@ -52,5 +52,5 @@ struct RFlat2DMatrix {
    const float &operator[](std::size_t i) const { return fRVec[i]; }
 };
 
-} // namespace TMVA::Experimental::Internal
-#endif // ROOT_TMVA_RFLAT2DMATRIX
+} // namespace ROOT::Experimental::Internal::ML
+#endif // ROOT_INTERNAL_ML_RFLAT2DMATRIX

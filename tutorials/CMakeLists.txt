@@ -71,11 +71,11 @@ set(need_network analysis/dataframe/df027_SQliteDependencyOverVersion.C)
 #---Tutorials disabled depending on the build components-------------
 
 if(MSVC AND NOT win_broken_tests)
-  # RBatchGenerator tutorials don't work on Windows at the moment.
-  list(APPEND dataframe_veto machine_learning/RBatchGenerator_NumPy.py)
-  list(APPEND dataframe_veto machine_learning/RBatchGenerator_TensorFlow.py)
-  list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
-  list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
+  # ML dataloader tutorials don't work on Windows at the moment.
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_NumPy.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
+  list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
   # df036* and df037* seem to trigger OS errors when trying to delete the
   # test files created in the tutorials. It is unclear why.
   list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.C)
@@ -117,10 +117,10 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.py)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_Inference.py)
-    list(APPEND dataframe_veto machine_learning/RBatchGenerator_NumPy.py)
-    list(APPEND dataframe_veto machine_learning/RBatchGenerator_TensorFlow.py)
-    list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
-    list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_NumPy.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
+    list(APPEND dataframe_veto machine_learning/ml_dataloader_filters_vectors.py)
     # RooFit tutorials depending on RDataFrame
     list(APPEND dataframe_veto
         roofit/roofit/rf408_RDataFrameToRooFit.C
@@ -662,7 +662,7 @@ set (multithreaded
      machine_learning/TMVA_CNN_Classification.py
      machine_learning/TMVA_Higgs_Classification.py
      machine_learning/TMVA_RNN_Classification.py
-     machine_learning/RBatchGenerator_TensorFlow.py
+     machine_learning/ml_dataloader_TensorFlow.py
      )
 file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
@@ -943,7 +943,7 @@ if(pyroot)
   )
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/pytorch/*.py
-      machine_learning/RBatchGenerator_PyTorch.py
+      machine_learning/ml_dataloader_PyTorch.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py
@@ -958,7 +958,7 @@ if(pyroot)
       roofit/roofit/rf618_mixture_models.py # uses the xgboost sklearn plugin
   )
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      machine_learning/RBatchGenerator_TensorFlow.py
+      machine_learning/ml_dataloader_TensorFlow.py
       machine_learning/TMVA_CNN_Classification.py
   )
 

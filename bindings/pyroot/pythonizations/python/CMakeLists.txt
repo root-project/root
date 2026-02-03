@@ -16,7 +16,8 @@ if(dataframe)
         ROOT/_pythonization/_rdf_conversion_maps.py
         ROOT/_pythonization/_rdf_pyz.py
         ROOT/_pythonization/_rdisplay.py
-        ROOT/_pythonization/_rdf_namespace.py)
+        ROOT/_pythonization/_rdf_namespace.py
+        ROOT/_pythonization/_ml_dataloader.py)
 endif()
 
 if(roofit)
@@ -82,10 +83,6 @@ if(tmva)
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/softmax.py
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/swish.py
         ROOT/_pythonization/_tmva/_sofie/_parser/_keras/layers/tanh.py)
-    if(dataframe)
-      list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
-          ROOT/_pythonization/_tmva/_batchgenerator.py)
-    endif()
 endif()
 
 set(py_sources
