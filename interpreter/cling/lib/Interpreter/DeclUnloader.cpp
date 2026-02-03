@@ -493,12 +493,14 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
+#ifndef UPSTREAM_CLANG
     SourceManager& SM = m_Sema->getSourceManager();
     for (FileIDs::iterator I = m_FilesToUncache.begin(),
            E = m_FilesToUncache.end(); I != E; ++I) {
       // We need to reset the cache
       SM.invalidateCache(*I);
     }
+#endif
   }
 
   void DeclUnloader::CollectFilesToUncache(SourceLocation Loc) {

@@ -160,11 +160,11 @@ namespace cling {
       T->setState(Transaction::kRolledBack);
     else
       T->setState(Transaction::kRolledBackWithErrors);
-
+#ifndef UPSTREAM_CLANG
     // Release the input_line_X file unless verifying diagnostics.
     if (!m_Interp->getCI()->getDiagnosticOpts().VerifyDiagnostics)
       m_Sema->getSourceManager().invalidateCache(T->getBufferFID());
-
+#endif
     return Successful;
   }
 
