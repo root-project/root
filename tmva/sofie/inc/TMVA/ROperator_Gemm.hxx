@@ -357,6 +357,7 @@ namespace SOFIE{
          }
          // do the bias broadcasting
          if (fBroadcastBias) {
+            fAttrBeta = 1.;
             out << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
             out << SP << SP << "size_t y_index = ";
             if (doStackMul) // add offset in caseof stack multiplications (not sure if bias is present in these cases)
