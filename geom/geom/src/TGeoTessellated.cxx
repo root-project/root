@@ -547,6 +547,9 @@ void TGeoTessellated::ResizeCenter(double maxsize)
    Vector3_t origin(fOrigin[0], fOrigin[1], fOrigin[2]);
    double maxedge = TMath::Max(TMath::Max(fDX, fDY), fDZ);
    double scale = maxsize / maxedge;
+   constexpr double kTol = 1e-12;
+   const bool modified = (std::abs(scale - 1.0) > kTol) || (std::abs(origin[0]) > kTol) ||
+                         (std::abs(origin[1]) > kTol) || (std::abs(origin[2]) > kTol);
    for (size_t i = 0; i < fVertices.size(); ++i) {
       fVertices[i] = scale * (fVertices[i] - origin);
    }
@@ -554,6 +557,10 @@ void TGeoTessellated::ResizeCenter(double maxsize)
    fDX *= scale;
    fDY *= scale;
    fDZ *= scale;
+   if (modified) {
+      BuildBVH();
+      CalculateNormals();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
