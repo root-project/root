@@ -342,10 +342,7 @@ void TGeoTessellated::CloseShape(bool check, bool fixFlipped, bool verbose)
    // Cleanup the vertex map
    std::multimap<long, int>().swap(fVerticesMap);
 
-   if (fVertices.size() > 0) {
-      if (!check)
-         return;
-
+   if (check && fVertices.size() > 0) {
       // Check facets
       for (auto i = 0; i < fNfacets; ++i)
          FacetCheck(i);
