@@ -775,6 +775,26 @@ double rayTriangle(const Vertex_t &orig, const Vertex_t &dir, const Vertex_t &v0
    return (t > rayEPS) ? t : INF;
 }
 
+inline double rayFacet(const Vertex_t &orig, const Vertex_t &dir, const TGeoFacet &facet,
+                       const std::vector<Vertex_t> &vertices, double rayEPS = 1e-8)
+{
+   const auto &v0 = vertices[facet[0]];
+   const auto &v1 = vertices[facet[1]];
+   const auto &v2 = vertices[facet[2]];
+   auto t = rayTriangle(orig, dir, v0, v1, v2, rayEPS);
+   if (facet.GetNvert() == 3)
+      return t;
+   const auto &v3 = vertices[facet[3]];
+   auto t2 = rayTriangle(orig, dir, v0, v2, v3, rayEPS);
+   return std::min(t, t2);
+}
+
+inline bool rayFacetHit(const Vertex_t &orig, const Vertex_t &dir, const TGeoFacet &facet,
+                        const std::vector<Vertex_t> &vertices, double rayEPS = 1e-8)
+{
+   return rayFacet(orig, dir, facet, vertices, rayEPS) != std::numeric_limits<double>::infinity();
+}
+
 template <typename T = float>
 struct Vec3f {
    T x, y, z;
@@ -871,6 +891,22 @@ T pointTriangleDistSq(const Vec3f<T> &p, const Vec3f<T> &a, const Vec3f<T> &b, c
    return dot(d, d);
 }
 
+template <typename T = float>
+T pointFacetDistSq(const Vec3f<T> &p, const TGeoFacet &facet, const std::vector<Vertex_t> &vertices)
+{
+   const auto &v0 = vertices[facet[0]];
+   const auto &v1 = vertices[facet[1]];
+   const auto &v2 = vertices[facet[2]];
+   auto d = pointTriangleDistSq(p, Vec3f<T>{v0[0], v0[1], v0[2]}, Vec3f<T>{v1[0], v1[1], v1[2]},
+                                Vec3f<T>{v2[0], v2[1], v2[2]});
+   if (facet.GetNvert() == 3)
+      return d;
+   const auto &v3 = vertices[facet[3]];
+   auto d2 = pointTriangleDistSq(p, Vec3f<T>{v0[0], v0[1], v0[2]}, Vec3f<T>{v2[0], v2[1], v2[2]},
+                                 Vec3f<T>{v3[0], v3[1], v3[2]});
+   return std::min(d, d2);
+}
+
 template <typename T>
 inline Vec3f<T> normalize(const Vec3f<T> &v)
 {
@@ -963,8 +999,8 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t 
             continue;
          }
 
-         auto thisdist = rayTriangle(Vertex_t(point[0], point[1], point[2]), Vertex_t(dir[0], dir[1], dir[2]),
-                                     fVertices[facet[0]], fVertices[facet[1]], fVertices[facet[2]], 0.);
+         auto thisdist =
+            rayFacet(Vertex_t(point[0], point[1], point[2]), Vertex_t(dir[0], dir[1], dir[2]), facet, fVertices, 0.);
 
          if (thisdist < local_step) {
             local_step = thisdist;
@@ -1025,12 +1061,8 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *point, const Double_t *
             continue;
          }
 
-         const auto &v0 = fVertices[facet[0]];
-         const auto &v1 = fVertices[facet[1]];
-         const auto &v2 = fVertices[facet[2]];
-
          const double t =
-            rayTriangle(Vertex_t{point[0], point[1], point[2]}, Vertex_t{dir[0], dir[1], dir[2]}, v0, v1, v2, 0.);
+            rayFacet(Vertex_t{point[0], point[1], point[2]}, Vertex_t{dir[0], dir[1], dir[2]}, facet, fVertices, 0.);
          if (t < local_step) {
             local_step = t;
          }
@@ -1076,18 +1108,19 @@ void TGeoTessellated::BuildBVH()
    // helper determining axis aligned bounding box from a facet;
    auto GetBoundingBox = [this](TGeoFacet const &facet) {
       const auto nvertices = facet.GetNvert();
-      if (nvertices != 3)
-         Fatal("BuildBVH", "only facets with 3 vertices supported"); // for now only triangles
+      if (nvertices != 3 && nvertices != 4)
+         Fatal("BuildBVH", "only facets with 3 or 4 vertices supported");
       const auto &v1 = fVertices[facet[0]];
       const auto &v2 = fVertices[facet[1]];
       const auto &v3 = fVertices[facet[2]];
+      const auto &v4 = (nvertices == 4) ? fVertices[facet[3]] : v3;
       BBox bbox;
-      bbox.min[0] = std::min(std::min(v1[0], v2[0]), v3[0]) - 0.001f;
-      bbox.min[1] = std::min(std::min(v1[1], v2[1]), v3[1]) - 0.001f;
-      bbox.min[2] = std::min(std::min(v1[2], v2[2]), v3[2]) - 0.001f;
-      bbox.max[0] = std::max(std::max(v1[0], v2[0]), v3[0]) + 0.001f;
-      bbox.max[1] = std::max(std::max(v1[1], v2[1]), v3[1]) + 0.001f;
-      bbox.max[2] = std::max(std::max(v1[2], v2[2]), v3[2]) + 0.001f;
+      bbox.min[0] = std::min(std::min(std::min(v1[0], v2[0]), v3[0]), v4[0]) - 0.001f;
+      bbox.min[1] = std::min(std::min(std::min(v1[1], v2[1]), v3[1]), v4[1]) - 0.001f;
+      bbox.min[2] = std::min(std::min(std::min(v1[2], v2[2]), v3[2]), v4[2]) - 0.001f;
+      bbox.max[0] = std::max(std::max(std::max(v1[0], v2[0]), v3[0]), v4[0]) + 0.001f;
+      bbox.max[1] = std::max(std::max(std::max(v1[1], v2[1]), v3[1]), v4[1]) + 0.001f;
+      bbox.max[2] = std::max(std::max(std::max(v1[2], v2[2]), v3[2]), v4[2]) + 0.001f;
       return bbox;
    };
 
@@ -1177,14 +1210,8 @@ bool TGeoTessellated::Contains(Double_t const *point) const
          auto &facet = fFacets[objectid];
 
          // for the parity test, we probe all crossing surfaces
-         const auto &v0 = fVertices[facet[0]];
-         const auto &v1 = fVertices[facet[1]];
-         const auto &v2 = fVertices[facet[2]];
-
-         const double t = rayTriangle(Vertex_t(point[0], point[1], point[2]),
-                                      Vertex_t(test_dir[0], test_dir[1], test_dir[2]), v0, v1, v2, 0.);
-
-         if (t != std::numeric_limits<double>::infinity()) {
+         if (rayFacetHit(Vertex_t(point[0], point[1], point[2]),
+                         Vertex_t(test_dir[0], test_dir[1], test_dir[2]), facet, fVertices, 0.)) {
             ++crossings;
          }
       }
@@ -1325,12 +1352,7 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
             const auto object_id = mybvh->prim_ids[p_id];
 
             const auto &facet = fFacets[object_id];
-            const auto &v1 = fVertices[facet[0]];
-            const auto &v2 = fVertices[facet[1]];
-            const auto &v3 = fVertices[facet[2]];
-
-            auto thissafetySQ = pointTriangleDistSq(Vec3f{point[0], point[1], point[2]}, Vec3f{v1[0], v1[1], v1[2]},
-                                                    Vec3f{v2[0], v2[1], v2[2]}, Vec3f{v3[0], v3[1], v3[2]});
+            auto thissafetySQ = pointFacetDistSq(Vec3f{point[0], point[1], point[2]}, facet, fVertices);
 
             if (thissafetySQ < smallest_safety_sq) {
                smallest_safety_sq = thissafetySQ;
@@ -1445,11 +1467,7 @@ Double_t TGeoTessellated::DistFromInside_Loop(const Double_t *point, const Doubl
          continue;
       }
 
-      const auto &v0 = fVertices[facet[0]];
-      const auto &v1 = fVertices[facet[1]];
-      const auto &v2 = fVertices[facet[2]];
-
-      const double t = rayTriangle(p, d, v0, v1, v2, 0.);
+      const double t = rayFacet(p, d, facet, fVertices, 0.);
 
       if (t < dist) {
          dist = t;
@@ -1477,11 +1495,7 @@ Double_t TGeoTessellated::DistFromOutside_Loop(const Double_t *point, const Doub
          continue;
       }
 
-      const auto &v0 = fVertices[facet[0]];
-      const auto &v1 = fVertices[facet[1]];
-      const auto &v2 = fVertices[facet[2]];
-
-      const double t = rayTriangle(p, d, v0, v1, v2, 0.);
+      const double t = rayFacet(p, d, facet, fVertices, 0.);
 
       if (t < dist) {
          dist = t;
@@ -1505,12 +1519,7 @@ bool TGeoTessellated::Contains_Loop(const Double_t *point) const
    for (size_t i = 0; i < fFacets.size(); ++i) {
       const auto &facet = fFacets[i];
 
-      const auto &v0 = fVertices[facet[0]];
-      const auto &v1 = fVertices[facet[1]];
-      const auto &v2 = fVertices[facet[2]];
-
-      const double t = rayTriangle(p, test_dir, v0, v1, v2, 0.);
-      if (t != std::numeric_limits<double>::infinity()) {
+      if (rayFacetHit(p, test_dir, facet, fVertices, 0.)) {
          ++crossings;
       }
    }
@@ -1574,12 +1583,10 @@ void TGeoTessellated::Streamer(TBuffer &b)
 void TGeoTessellated::CalculateNormals()
 {
    fOutwardNormals.clear();
-   for (auto &facet : fFacets) {
-      auto &v1 = fVertices[facet[0]];
-      auto &v2 = fVertices[facet[1]];
-      auto &v3 = fVertices[facet[2]];
-      using Vec3d = Vec3f<double>;
-      auto norm = triangleNormal(Vec3d{v1[0], v1[1], v1[2]}, Vec3d{v2[0], v2[1], v2[2]}, Vec3d{v3[0], v3[1], v3[2]});
-      fOutwardNormals.emplace_back(Vertex_t{norm.x, norm.y, norm.z});
+   fOutwardNormals.reserve(fFacets.size());
+   for (size_t i = 0; i < fFacets.size(); ++i) {
+      bool degenerated = false;
+      auto norm = FacetComputeNormal(static_cast<int>(i), degenerated);
+      fOutwardNormals.emplace_back(norm);
    }
 }
