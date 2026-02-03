@@ -61,6 +61,8 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)
+# The above tests a deadlock. It should complete in about 1s. If we don't reduce the timeout, we need to wait 1500 s.
+set_tests_properties(pyunittests-bindings-pyroot-pythonizations-pyroot-pyz-th1 PROPERTIES TIMEOUT 30)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_fillN th1_fillN.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2_fillN th2_fillN.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
