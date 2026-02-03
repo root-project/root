@@ -39,8 +39,7 @@ S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
 
 WINDOWS = (os.name == 'nt')
 WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
-COMPRESSIONLEVEL = 6 if not WINDOWS else 1
-
+COMPRESSIONLEVEL = 1 if WINDOWS else 2
 
 def main():
     # openstack.enable_logging(debug=True)
