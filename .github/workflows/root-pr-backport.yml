@@ -43,7 +43,8 @@ jobs:
           # too, but we want to use a different token for pushing, so we need
           # to disable persist-credentials here.
           persist-credentials: false
-          fetch-depth: 0
+          path: "./root"
+          fetch-depth: 1
 
       - name: Backport Commits
         run: |
