@@ -41,6 +41,10 @@ which are loaded into a queue. This is done for both the training and validation
 class RBatchLoader {
 private:
    std::size_t fBatchSize;
+   // needed for calculating the total number of batch columns when vectors columns are present
+   std::vector<std::string> fCols;
+   std::vector<std::size_t> fVecSizes;
+   std::size_t fSumVecSizes;  
    std::size_t fNumColumns;
    std::size_t fNumEntries;
    bool fDropRemainder;
@@ -66,13 +70,18 @@ private:
    std::unique_ptr<RFlat2DMatrix> fSecondaryLeftoverBatch;
 
 public:
-   RBatchLoader(std::size_t batchSize, std::size_t numColumns, std::size_t numEntries, bool dropRemainder)
+   RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols, const std::vector<std::size_t> &vecSizes = {},
+                std::size_t numEntries = 0, bool dropRemainder = false)
       : fBatchSize(batchSize),
-        fNumColumns(numColumns),
+        fCols(cols),
+        fVecSizes(vecSizes),        
         fNumEntries(numEntries),
         fDropRemainder(dropRemainder)        
    {
 
+      fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
+      fNumColumns = fCols.size() + fSumVecSizes - fVecSizes.size();
+      
       if (fBatchSize == 0) {
          fBatchSize = fNumEntries;
       }

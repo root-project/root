@@ -34,6 +34,12 @@ namespace ROOT {
 
 class RNTupleWriteOptions;
 
+namespace Experimental {
+
+class RFile;
+
+}
+
 namespace Internal {
 
 class RRawFile;
@@ -67,9 +73,6 @@ private:
    /// Used when the file turns out to be a TFile container. The ntuplePath variable is either the ntuple name
    /// or an ntuple name preceded by a directory (`myNtuple` or `foo/bar/myNtuple` or `/foo/bar/myNtuple`)
    RResult<RNTuple> GetNTupleProper(std::string_view ntuplePath);
-   /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
-   RResult<RNTuple>
-   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
 
    /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
    /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
@@ -83,6 +86,9 @@ public:
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RResult<RNTuple> GetNTuple(std::string_view ntupleName);
+   /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
+   RResult<RNTuple>
+   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
    /// Reads a given byte range from the file into the provided memory buffer.
    /// If `nbytes > fMaxKeySize` it will perform chunked read from multiple blobs,
    /// whose addresses are listed at the end of the first chunk.
@@ -116,7 +122,7 @@ public:
    static constexpr std::size_t kBlobKeyLen = 42;
 
 private:
-   struct RFileProper {
+   struct RImplTFile {
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
@@ -128,7 +134,19 @@ private:
       operator bool() const { return fDirectory; }
    };
 
-   struct RFileSimple {
+   struct RImplRFile {
+      ROOT::Experimental::RFile *fFile = nullptr;
+      std::string fDir;
+      /// Low-level writing using a TFile
+      void Write(const void *buffer, size_t nbytes, std::int64_t offset);
+      /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
+      /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
+      /// argument is actually just a pointer.)
+      std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
+      operator bool() const { return fFile; }
+   };
+
+   struct RImplSimple {
       /// Direct I/O requires that all buffers and write lengths are aligned. It seems 512 byte alignment is the minimum
       /// for Direct I/O to work, but further testing showed that it results in worse performance than 4kB.
       static constexpr int kBlockAlign = 4096;
@@ -155,12 +173,12 @@ private:
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
 
-      RFileSimple();
-      RFileSimple(const RFileSimple &other) = delete;
-      RFileSimple(RFileSimple &&other) = delete;
-      RFileSimple &operator=(const RFileSimple &other) = delete;
-      RFileSimple &operator=(RFileSimple &&other) = delete;
-      ~RFileSimple();
+      RImplSimple();
+      RImplSimple(const RImplSimple &other) = delete;
+      RImplSimple(RImplSimple &&other) = delete;
+      RImplSimple &operator=(const RImplSimple &other) = delete;
+      RImplSimple &operator=(RImplSimple &&other) = delete;
+      ~RImplSimple();
 
       void AllocateBuffers(std::size_t bufferSize);
       void Flush();
@@ -179,9 +197,16 @@ private:
       operator bool() const { return fFile; }
    };
 
-   /// RFileSimple: for simple use cases, survives without libRIO dependency
-   /// RFileProper: for updating existing files and for storing more than just an RNTuple in the file
-   std::variant<RFileSimple, RFileProper> fFile;
+   template <typename T>
+   static std::uint64_t
+   ReserveBlobKey(T &caller, TFile &file, std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen]);
+
+   /// RImplSimple: for simple use cases, survives without libRIO dependency
+   /// RImplTFile: for updating existing files and for storing more than just an RNTuple in the file
+   /// RImplRFile: like RImplTFile but using RFile instead of TFile.
+   using FileType_t = std::variant<RImplSimple, RImplTFile, RImplRFile>;
+   FileType_t fFile;
+
    /// A simple file can either be written as TFile container or as NTuple bare file
    bool fIsBare = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
@@ -226,6 +251,9 @@ public:
    /// The directory parameter can also be a TFile object (TFile inherits from TDirectory).
    static std::unique_ptr<RNTupleFileWriter>
    Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize);
+
+   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
+                                                    std::string_view dirPath, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;

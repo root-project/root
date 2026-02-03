@@ -100,7 +100,7 @@ private:
    std::size_t FillImpl(Entry &entry)
    {
       ROOT::RNTupleFillStatus status;
-      FillNoFlush(entry, status);
+      FillNoFlushImpl(entry, status);
       if (status.ShouldFlushCluster())
          FlushCluster();
       return status.GetLastEntrySize();
@@ -109,6 +109,8 @@ private:
    RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
    RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
+   RNTupleFillContext(RNTupleFillContext &&) = delete;
+   RNTupleFillContext &operator=(RNTupleFillContext &&) = delete;
 
 public:
    ~RNTupleFillContext();

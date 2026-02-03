@@ -29,12 +29,11 @@ class _RFile_Get:
         Non-templated Get()
         """
         import ROOT
-        import cppyy
 
         key = self._rfile.GetKeyInfo(namecycle)
         if key:
             obj = ROOT.Experimental.Internal.RFile_GetObjectFromKey(self._rfile, key)
-            return cppyy.bind_object(obj, key.GetClassName())
+            return ROOT._cppyy.bind_object(obj, key.GetClassName())
         # No key
         return None
 
@@ -64,7 +63,7 @@ class _RFile_Put:
         Non-templated Put()
         """
         objType = type(obj)
-        if objType == str:
+        if isinstance(obj, str):
             # special case: automatically convert python str to std::string
             className = "std::string"
         elif not hasattr(objType, '__cpp_name__'):

@@ -663,8 +663,8 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
         int pcnt = 0;
         pymeth = pytmpl->Instantiate(pytmpl->fTI->fCppName, args, nargsf, pref, &pcnt);
         if (pymeth) {
-        // attempt actual call; argument based, so do not allow implicit conversions
-            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, false, sighash);
+        // attempt actual call; even if argument based, allow implicit conversions, for example for non-template arguments
+            result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, true, sighash);
             if (result) TPPCALL_RETURN;
         }
         Utility::FetchError(errors);

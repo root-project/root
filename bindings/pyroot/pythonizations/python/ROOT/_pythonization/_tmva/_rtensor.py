@@ -7,10 +7,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+import sys
+
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
-import cppyy
-import sys
 
 
 def _AsRTensor(arr):
@@ -25,8 +25,6 @@ def _AsRTensor(arr):
     interface dictionary.
     """
     import ROOT
-    import math
-    import platform
 
     # Get array interface of object
     interface = arr.__array_interface__
@@ -36,7 +34,6 @@ def _AsRTensor(arr):
 
     # Get the size of the contiguous memory
     shape = interface["shape"]
-    size = math.prod(shape) if len(shape) > 0 else 0
 
     # Get the typestring and properties thereof
     typestr = interface["typestr"]
@@ -60,7 +57,7 @@ def _AsRTensor(arr):
 
     # Construct an RTensor of the correct data-type
     out = ROOT.TMVA.Experimental.RTensor[cppdtype, ROOT.std.vector[cppdtype]](
-        ROOT.module.cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data),
+        ROOT._cppyy.ll.reinterpret_cast[f"{cppdtype} *"](data),
         [s for s in shape],
         [s // dtypesize for s in strides],
         layout,
@@ -81,6 +78,10 @@ def get_array_interface(self):
     Returns:
         Dictionary following the Numpy array interface specifications
     """
+    import ROOT
+
+    cppyy = ROOT._cppyy
+
     cppname = type(self).__cpp_name__
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
@@ -127,6 +128,8 @@ def RTensorGetitem(self, idx):
     Returns:
         New RTensor object if indices represent a slice or the requested element
     """
+    import ROOT
+
     # Make single index iterable and convert to list
     if not hasattr(idx, "__len__"):
         idx = [idx]
@@ -140,13 +143,13 @@ def RTensorGetitem(self, idx):
     # Convert negative indices and Nones
     isSlice = False
     for i, x in enumerate(idx):
-        if type(x) == slice:
+        if isinstance(x, slice):
             isSlice = True
             start = 0 if x.start is None else x.start
             stop = shape[i] if x.stop is None else x.stop
             if stop < 0:
                 stop += shape[i]
-            if x.step != None:
+            if x.step is not None:
                 raise Exception("RTensor does not support slices with step size unequal 1.")
             idx[i] = slice(start, stop, None)
         else:
@@ -155,10 +158,10 @@ def RTensorGetitem(self, idx):
 
     # If a slice is requested, return a new RTensor
     if isSlice:
-        idxVec = cppyy.gbl.std.vector("vector<size_t>")(len(idx))
+        idxVec = ROOT.std.vector("vector<size_t>")(len(idx))
         for i, x in enumerate(idx):
             idxVec[i].resize(2)
-            if type(x) == slice:
+            if isinstance(x, slice):
                 idxVec[i][0] = x.start
                 idxVec[i][1] = x.stop
             else:
@@ -167,7 +170,7 @@ def RTensorGetitem(self, idx):
         return self.Slice(idxVec)
 
     # Otherwise, access element by array of indices
-    idxVec = cppyy.gbl.std.vector("size_t")(len(idx))
+    idxVec = ROOT.std.vector("size_t")(len(idx))
     for i, x in enumerate(idx):
         idxVec[i] = x
     return self(idxVec)

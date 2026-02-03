@@ -10,9 +10,9 @@
 ################################################################################
 
 
-from ._rooabscollection import RooAbsCollection
-
 import operator
+
+from ._rooabscollection import RooAbsCollection
 
 
 class RooArgList(RooAbsCollection):

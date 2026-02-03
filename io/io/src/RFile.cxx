@@ -304,9 +304,18 @@ void *RFile::GetUntyped(std::string_view path,
    void *obj = key ? key->ReadObjectAny(cls) : nullptr;
 
    if (obj) {
-      // Disavow any ownership on `obj`
-      if (auto autoAddFunc = cls->GetDirectoryAutoAdd(); autoAddFunc) {
-         autoAddFunc(obj, nullptr);
+      // Disavow any ownership on `obj` unless the object is a TTree, in which case we need to link it to our internal
+      // file for it to be usable.
+      if (auto autoAddFunc = cls->GetDirectoryAutoAdd()) {
+         if (cls->InheritsFrom("TTree")) {
+            autoAddFunc(obj, fFile.get());
+            // NOTE(gparolini): this is a hacky but effective way of preventing the Tree from being deleted by
+            // the internal TFile once we close it. We need to avoid that because this TTree will be returned inside
+            // a unique_ptr and would end up being double-freed if we allowed ROOT to do its own memory management.
+            ROOT::Internal::MarkTObjectAsNotOnHeap(*static_cast<TObject *>(obj));
+         } else {
+            autoAddFunc(obj, nullptr);
+         }
       }
    } else if (key) {
       R__LOG_INFO(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
@@ -550,4 +559,9 @@ void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RK
 {
    void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
    return obj;
+}
+
+TFile *ROOT::Experimental::Internal::GetRFileTFile(RFile &file)
+{
+   return file.fFile.get();
 }

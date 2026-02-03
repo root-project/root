@@ -44,6 +44,7 @@ class RProjectedFields;
 
 ROOT::RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
+const RProjectedFields &GetProjectedFieldsOfModel(const RNTupleModel &model);
 
 // clang-format off
 /**
@@ -137,6 +138,7 @@ that were used for writing and are no longer connected to a page sink.
 class RNTupleModel {
    friend ROOT::RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
+   friend const Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(const RNTupleModel &);
 
 public:
    /// User-provided function that describes the mapping of existing source fields to projected fields in terms
@@ -200,6 +202,8 @@ private:
 public:
    RNTupleModel(const RNTupleModel &) = delete;
    RNTupleModel &operator=(const RNTupleModel &) = delete;
+   RNTupleModel(RNTupleModel &&) = delete;
+   RNTupleModel &operator=(RNTupleModel &&) = delete;
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;

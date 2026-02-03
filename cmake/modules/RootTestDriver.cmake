@@ -72,12 +72,33 @@ endif()
 
 #---Set environment --------------------------------------------------------------------------------
 if(ENV)
-  string(REPLACE "#" ";" _env ${ENV})
+  # CMake treats ';' as a list separator. Since ENV values may legitimately
+  # contain semicolons (e.g. PATH-like variables), we must escape them here
+  # so they survive the upcoming list expansion in `foreach()`.
+  string(REPLACE ";" "\\;" _env "${ENV}")
+
+  # Deserialize the ENV string into a CMake list.
+  # This is the inverse operation of ROOT_ADD_TEST, which serializes the list
+  # by joining elements with '#'.
+  string(REPLACE "#" ";" _env "${_env}")
+
   foreach(pair ${_env})
-    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\1;\\2" pair ${pair})
+
+    # During list expansion, CMake has already consumed any previous '\;'
+    # escaping. Re-escape semicolons so the key=value split below treats the
+    # value as a single string.
+    string(REPLACE ";" "\\;" pair "${pair}")
+
+    # Split KEY=VALUE into a 2-element CMake list: [KEY;VALUE]
+    string(REGEX REPLACE "^([^=]+)=(.*)$" "\\1;\\2" pair "${pair}")
+
     list(GET pair 0 var)
     list(GET pair 1 val)
-    set(ENV{${var}} ${val})
+
+    # As before, quoting is important here so the semicolons are not
+    # interpreted as list separators.
+    set(ENV{${var}} "${val}")
+
     if(DBG)
       message(STATUS "testdriver[ENV]:${var}==>${val}")
     endif()

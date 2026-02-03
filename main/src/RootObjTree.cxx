@@ -50,9 +50,6 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
    }
    std::deque<NodeIdx_t> nodesToVisit{0};
 
-   // Keep track of the object names found at every nesting level and only add the first one.
-   std::unordered_set<std::string> namesFound;
-
    const bool isRecursive = flags & EGetMatchingPathsFlags::kRecursive;
    do {
       NodeIdx_t curIdx = nodesToVisit.front();
@@ -60,16 +57,17 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
       ROOT::CmdLine::RootObjNode *cur = &nodeTree.fNodes[curIdx];
       assert(cur->fDir);
 
-      // Gather all keys under this directory and sort them by name.
+      // Gather all keys under this directory and sort them by namecycle.
       std::vector<TKey *> keys;
       keys.reserve(cur->fDir->GetListOfKeys()->GetEntries());
       for (TKey *key : ROOT::Detail::TRangeStaticCast<TKey>(cur->fDir->GetListOfKeys()))
          keys.push_back(key);
 
-      std::sort(keys.begin(), keys.end(),
-                [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
-
-      namesFound.clear();
+      std::sort(keys.begin(), keys.end(), [](const TKey *a, const TKey *b) {
+         int cmp = strcmp(a->GetName(), b->GetName());
+         // Note that we order by decreasing cycle, i.e. from most to least recent
+         return (cmp != 0) ? (cmp < 0) : (a->GetCycle() > b->GetCycle());
+      });
 
       // Iterate the keys and find matches
       for (TKey *key : keys) {
@@ -84,13 +82,6 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
             else
                continue;
          }
-
-         if (namesFound.count(key->GetName()) > 0) {
-            std::cerr << "WARNING: Several versions of '" << key->GetName() << "' are present in '" << fileName
-                      << "'. Only the most recent will be considered.\n";
-            continue;
-         }
-         namesFound.insert(key->GetName());
 
          auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
          // Need to get back cur since the emplace_back() may have moved it.
@@ -238,7 +229,7 @@ void ROOT::CmdLine::PrintObjTree(const RootObjTree &tree, std::ostream &out)
       const auto &node = tree.fNodes[nodeIdx];
       for (auto i = 0u; i < 2 * nesting; ++i)
          out << ' ';
-      out << node.fName << " : " << node.fClassName << "\n";
+      out << node.fName << ";" << node.fCycle << " : " << node.fClassName << "\n";
       // Add the children in reverse order to preserve alphabetical order during depth-first visit.
       for (auto it = cur.fChildren.rbegin(); it != cur.fChildren.rend(); ++it) {
          nodesToVisit.push_back({nesting + 1, *it});

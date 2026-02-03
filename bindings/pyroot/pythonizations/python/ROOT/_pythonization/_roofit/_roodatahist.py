@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, _dict_to_flat_map, cpp_signature
+from ._utils import _dict_to_flat_map, _kwargs_to_roocmdargs, cpp_signature
 
 
 class RooDataHist(object):
@@ -163,8 +163,9 @@ class RooDataHist(object):
         Returns:
             RooDataHist
         """
-        import ROOT
         import numpy as np
+
+        import ROOT
 
         name = "" if name is None else name
         title = "" if title is None else title
@@ -211,7 +212,7 @@ class RooDataHist(object):
                 raise ValueError("Length of weights_squared_sum array doesn't match the size of the RooDataHist.")
 
         for i_bin in range(len(datahist)):
-            if not weights_squared_sum is None:
+            if weights_squared_sum is not None:
                 # some reverse-computation that can't be avoided with the current C++ RooDataHist interface
                 wgt_err = np.sqrt(weights_squared_sum[i_bin])
             else:
@@ -232,7 +233,6 @@ class RooDataHist(object):
                               for each dimension. For dimensions of category
                               types, the list element is `None`.
         """
-        import ROOT
         import numpy as np
 
         bin_edges = []

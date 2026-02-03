@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/EP-SFT,\
  Marta Czurylo, CERN/EP-SFT,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Andrei Gheata, CERN/EP-SFT,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Stephan Hageboeck, CERN/EP-SFT,\
@@ -61,6 +62,74 @@ The following people have contributed to this new version:
 - ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
   that compiled the macro. See [TSystem::SetMakeSharedLib()](https://root.cern.ch/doc/master/classTSystem.html#a80cd12e064e2285b35e9f39b5111d20e) for
   customising or disabling the RUNPATH.
+
+## Geometry
+
+### Extensible color schemes for geometry visualization
+ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.
+
+This improves the readability of geometries imported from formats such as GDML that do not store volume colors. The default behavior now uses a name-based material classification (e.g. metals, polymers, composites, gases) with a Z-binned fallback. Three predefined color sets are provided:
+* `EGeoColorSet::kNatural` (default): material-inspired colors
+* `EGeoColorSet::kFlashy`: high-contrast, presentation-friendly colors
+* `EGeoColorSet::kHighContrast`: darker, saturated colors suited for light backgrounds
+
+Users can customize the behavior at runtime by providing hooks (std::function) to override the computed color, transparency, and/or the Z-based fallback mapping.
+
+**Usage examples:**
+```cpp
+gGeoManager->DefaultColors(); // default (natural) scheme
+
+TGeoColorScheme cs(EGeoColorSet::kFlashy);
+gGeoManager->DefaultColors(&cs); // select a predefined scheme
+```
+
+**Override examples (hooks):**
+```cpp
+TGeoColorScheme cs(EGeoColorSet::kNatural);
+cs.SetZFallbackHook([](Int_t Z, EGeoColorSet) -> Int_t {
+   float g = std::min(1.f, Z / 100.f);
+   return TColor::GetColor(g, g, g); // grayscale fallback
+});
+gGeoManager->DefaultColors(&cs);
+```
+
+A new tutorial macro demonstrates the feature and customization options: `tutorials/visualization/geom/geomColors.C`.
+
+See: https://github.com/root-project/root/pull/21047 for more details
+
+### Accelerated overlap checking with parallel execution
+The geometry overlap checker (TGeoChecker::CheckOverlaps) has been significantly refactored and optimized to improve performance and scalability on large detector geometries.
+
+Overlap checking is now structured in three explicit stages:
+
+1. Candidate discovery
+Potentially overlapping volume pairs are identified using oriented bounding-box (OBB) tests, drastically reducing the number of candidates to be examined.
+
+2. Surface point generation and caching
+Points are generated on the surfaces of the candidate shapes (including additional points on edges and generators) and cached per shape.
+The sampling density can be tuned via:
+* `TGeoManager::SetNsegments(nseg)` (default: 20)
+* `TGeoManager::SetNmeshPoints(npoints)` (default: 1000)
+
+3. Overlap and extrusion checks
+The actual geometric checks are performed using navigation queries.
+This stage is now **parallelized** and automatically uses ROOT’s implicit multithreading when enabled.
+
+Only the final stage is currently parallelized, but it dominates the runtime for complex geometries and shows good strong scaling.
+
+For large assembly-rich detector descriptions such as the ALICE O² geometry, the new candidate filtering reduces the number of overlap candidates by roughly three orders of magnitude compared to the legacy implementation. Combined with multithreaded execution, this reduces the total runtime of a full overlap check from hours to minutes on modern multi-core systems.
+
+**Usage example**
+
+```cpp
+ROOT::EnableImplicitMT();        // enable parallel checking
+gGeoManager->SetNsegments(40);  // increase surface resolution if needed
+gGeoManager0->SetNmeshPoints(2000); // increase resolution of points on surface-embedded segments if needed
+gGeoManager->CheckOverlaps(1.e-6);
+```
+Performance and scaling plots for the CMS Run4 and ALICE aligned geometry are included in the corresponding pull request.
+
+See: https://github.com/root-project/root/pull/20963 for implementation details and benchmarks
 
 ## I/O
 
@@ -133,6 +202,11 @@ ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3
 - Removed stray linebreak when running `root -q` with input files or commands passed with `-e`.
   This ensures that there is no superfluous output when running `root`.
   Note that ROOT 6.38 already removed a spurious newline when starting `root` **without** input files or commands.
+- The ROOT header printed by default when starting the interpreter is now
+  suppressed when scripts or commands are passed on the command line.
+  This makes sure the output doesn't contain unexpected and ROOT
+  version dependent output, which helps in case the output is piped to other
+  commands or compared to reference files.
 
 ## Command-line utilities
 

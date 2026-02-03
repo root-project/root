@@ -10,24 +10,18 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import sys
-import cppyy
-from cppyy.gbl import gSystem
-
 from .. import pythonization
-
-from ._factory import Factory
-from ._dataloader import DataLoader
+from . import _gnn, _rbdt  # noqa: F401  # imported so @pythonization functions are found recursively
 from ._crossvalidation import CrossValidation
-
-from ._rbdt import Compute, pythonize_rbdt
+from ._dataloader import DataLoader
+from ._factory import Factory
 
 
 def inject_rbatchgenerator(ns):
     from ._batchgenerator import (
         CreateNumPyGenerators,
-        CreateTFDatasets,
         CreatePyTorchGenerators,
+        CreateTFDatasets,
     )
 
     python_batchgenerator_functions = [
@@ -41,23 +35,6 @@ def inject_rbatchgenerator(ns):
         setattr(ns.Experimental, func_name, python_func)
 
     return ns
-
-
-from ._gnn import RModel_GNN, RModel_GraphIndependent
-
-hasRDF = "dataframe" in cppyy.gbl.ROOT.GetROOT().GetConfigFeatures()
-if hasRDF:
-    from ._rtensor import (
-        get_array_interface,
-        add_array_interface_property,
-        RTensorGetitem,
-        pythonize_rtensor,
-        _AsRTensor,
-    )
-
-# this should be available only when xgboost is there ?
-# We probably don't need a protection here since the code is run only when there is xgboost
-from ._tree_inference import SaveXGBoost
 
 
 # list of python classes that are used to pythonize TMVA classes
@@ -119,9 +96,6 @@ def rebind_attribute(to_class, from_class, func_name):
     """
     Bind the instance method `from_class.func_name` also to class `to_class`.
     """
-
-    import sys
-
     from_method = getattr(from_class, func_name)
 
     if is_classmethod(from_class, from_method):
@@ -153,7 +127,7 @@ def pythonize_tmva(klass, name):
     ns_prefix = "TMVA::"
     name = name[len(ns_prefix) : len(name)]
 
-    if not name in python_classes_dict:
+    if name not in python_classes_dict:
         print("Error - class ", name, "is not in the pythonization list")
         return
 
@@ -177,7 +151,7 @@ def pythonize_tmva(klass, name):
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__
-            elif not func_orig.__doc__ is None:
+            elif func_orig.__doc__ is not None:
                 python_docstring = func_new.__doc__
                 func_new.__doc__ = "Pythonization info\n"
                 func_new.__doc__ += "==============\n\n"

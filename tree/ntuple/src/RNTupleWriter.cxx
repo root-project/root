@@ -23,6 +23,7 @@
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RFile.hxx>
 
 #include <TFile.h>
 #include <TROOT.h>
@@ -149,4 +150,13 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                     std::unique_ptr<ROOT::Internal::RPageSink> sink)
 {
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
+}
+
+std::unique_ptr<ROOT::RNTupleWriter>
+ROOT::Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
+                                         ROOT::Experimental::RFile &file, const ROOT::RNTupleWriteOptions &options)
+{
+   auto [ntupleDir, ntupleBasename] = ROOT::Experimental::Detail::DecomposePath(ntupleName);
+   auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleBasename, file, ntupleDir, options);
+   return ROOT::RNTupleWriter::Create(std::move(model), std::move(sink), options);
 }

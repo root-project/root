@@ -189,7 +189,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, 
 
    gBenchmark = new TBenchmark();
 
-   if (!noLogo && !NoLogoOpt()) {
+   if (!noLogo && !NoLogoOpt() && !InputFiles()) {
       Bool_t lite = (Bool_t) gEnv->GetValue("Rint.WelcomeLite", 0);
       PrintLogo(lite);
    }

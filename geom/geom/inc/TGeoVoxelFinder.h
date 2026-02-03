@@ -19,7 +19,10 @@ struct TGeoStateInfo;
 
 class TGeoVoxelFinder : public TObject {
 public:
-   enum EVoxelsType { kGeoInvalidVoxels = BIT(15), kGeoRebuildVoxels = BIT(16) };
+   enum EVoxelsType {
+      kGeoInvalidVoxels = BIT(15),
+      kGeoRebuildVoxels = BIT(16)
+   };
 
 private:
    TGeoVoxelFinder(const TGeoVoxelFinder &) = delete;
@@ -101,6 +104,7 @@ public:
    Bool_t NeedRebuild() const { return TObject::TestBit(kGeoRebuildVoxels); }
    Double_t *GetBoxes() const { return fBoxes; }
    Bool_t IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const;
+   Bool_t MayOverlap(UInt_t i, UInt_t j) const;
    void Print(Option_t *option = "") const override;
    void PrintVoxelLimits(const Double_t *point) const;
    void SetInvalid(Bool_t flag = kTRUE) { TObject::SetBit(kGeoInvalidVoxels, flag); }

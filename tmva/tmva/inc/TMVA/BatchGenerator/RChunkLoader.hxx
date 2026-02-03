@@ -136,14 +136,11 @@ private:
    std::unique_ptr<RChunkConstructor> fValidation;
 
 public:
-   RChunkLoader(ROOT::RDF::RNode &rdf, std::size_t numEntries,
-                ROOT::RDF::RResultPtr<std::vector<ULong64_t>> rdf_entries, const std::size_t chunkSize,
-                const std::size_t blockSize, const float validationSplit, const std::vector<std::string> &cols,
+   RChunkLoader(ROOT::RDF::RNode &rdf, const std::size_t chunkSize, const std::size_t blockSize,
+                const float validationSplit, const std::vector<std::string> &cols,
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0, bool shuffle = true,
                 const std::size_t setSeed = 0)
       : f_rdf(rdf),
-        fNumEntries(numEntries),
-        fEntries(rdf_entries),
         fCols(cols),
         fVecSizes(vecSizes),
         fVecPadding(vecPadding),
@@ -155,6 +152,13 @@ public:
         fSetSeed(setSeed)
    {
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
+      
+      fNumEntries = f_rdf.Count().GetValue();
+      fEntries = f_rdf.Take<ULong64_t>("rdfentry_");
+
+      // add the last element in entries to not go out of range when filling chunks
+      fEntries->push_back((*fEntries)[fNumEntries - 1] + 1);
+
       fNumCols = fCols.size();
       fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
 
@@ -364,6 +368,9 @@ public:
             }
          }
 
+         // reset dataframe
+         ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, (*fEntries)[0], (*fEntries)[fNumEntries]);
+         
          // shuffle the data in the chunk tensor
          fTensorOperators->ShuffleTensor(TrainChunkTensor, Tensor);
       }
@@ -413,11 +420,19 @@ public:
             }
          }
 
+         // reset dataframe
+         ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, (*fEntries)[0], (*fEntries)[fNumEntries]);
+         
          // shuffle the data in the chunk tensor
          fTensorOperators->ShuffleTensor(ValidationChunkTensor, Tensor);         
       }
    }
 
+   void ResetDataframe()
+   {
+      ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, 0, fNumEntries);
+   }
+   
    std::vector<std::size_t> GetTrainingChunkSizes() { return fTraining->ChunksSizes; }
    std::vector<std::size_t> GetValidationChunkSizes() { return fValidation->ChunksSizes; }
 

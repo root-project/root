@@ -119,9 +119,9 @@ TEST(RHistEngine, Add)
 
    engineA.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i);
-      engineA.Fill(i);
-      engineB.Fill(i);
+      engineA.Fill(i + 0.5);
+      engineA.Fill(i + 0.5);
+      engineB.Fill(i + 0.5);
    }
    engineB.Fill(100);
 
@@ -161,7 +161,7 @@ TEST(RHistEngine, Clear)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -182,7 +182,7 @@ TEST(RHistEngine, Clone)
 
    engineA.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i);
+      engineA.Fill(i + 0.5);
    }
    engineA.Fill(100);
 
@@ -198,13 +198,44 @@ TEST(RHistEngine, Clone)
 
    // Check that we can continue filling the clone.
    for (std::size_t i = 0; i < Bins; i++) {
-      engineB.Fill(i);
+      engineB.Fill(i + 0.5);
    }
 
    for (auto index : axis.GetNormalRange()) {
       EXPECT_EQ(engineA.GetBinContent(index), 1);
       EXPECT_EQ(engineB.GetBinContent(index), 2);
    }
+}
+
+TEST(RHistEngine, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engineI({axis});
+
+   engineI.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineI.Fill(i);
+      if (i % 2 == 0) {
+         engineI.Fill(i);
+      }
+   }
+   engineI.Fill(100);
+   engineI.Fill(100);
+
+   RHistEngine<float> engineF = engineI.Convert<float>();
+   ASSERT_EQ(engineF.GetNDimensions(), 1);
+   ASSERT_EQ(engineF.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      if (index.GetIndex() % 2 == 0) {
+         EXPECT_EQ(engineF.GetBinContent(index), 2);
+      } else {
+         EXPECT_EQ(engineF.GetBinContent(index), 1);
+      }
+   }
+   EXPECT_EQ(engineF.GetBinContent(RBinIndex::Overflow()), 2);
 }
 
 TEST(RHistEngine, Fill)
@@ -215,7 +246,7 @@ TEST(RHistEngine, Fill)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -234,7 +265,7 @@ TEST(RHistEngine, FillDiscard)
 
    engine.Fill(-100);
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
    engine.Fill(100);
 
@@ -252,8 +283,8 @@ TEST(RHistEngine, FillOnlyInner)
    RHistEngine<int> engineNoFlowBins({axisNoFlowBins});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
-      engineNoFlowBins.Fill(i);
+      engine.Fill(i + 0.5);
+      engineNoFlowBins.Fill(i + 0.5);
    }
 
    EXPECT_EQ(engine.GetBinContent(RBinIndex::Underflow()), 0);
@@ -272,7 +303,7 @@ TEST(RHistEngine, FillTuple)
 
    engine.Fill(std::make_tuple(-100));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(std::make_tuple(i));
+      engine.Fill(std::make_tuple(i + 0.5));
    }
    engine.Fill(std::make_tuple(100));
 
@@ -311,7 +342,7 @@ TEST(RHistEngine, FillWeight)
 
    engine.Fill(-100, RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
    engine.Fill(100, RWeight(0.75));
 
@@ -330,7 +361,7 @@ TEST(RHistEngine, FillTupleWeight)
 
    engine.Fill(std::make_tuple(-100), RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(std::make_tuple(i), RWeight(0.1 + i * 0.03));
+      engine.Fill(std::make_tuple(i + 0.5), RWeight(0.1 + i * 0.03));
    }
    engine.Fill(std::make_tuple(100), RWeight(0.75));
 
@@ -386,7 +417,7 @@ TEST(RHistEngine, Scale)
 
    engine.Fill(-100, RWeight(0.25));
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
    engine.Fill(100, RWeight(0.75));
 
@@ -408,8 +439,8 @@ TEST(RHistEngine_RBinWithError, Add)
    RHistEngine<RBinWithError> engineB({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engineA.Fill(i, RWeight(0.2 + i * 0.03));
-      engineB.Fill(i, RWeight(0.1 + i * 0.05));
+      engineA.Fill(i + 0.5, RWeight(0.2 + i * 0.03));
+      engineB.Fill(i + 0.5, RWeight(0.1 + i * 0.05));
    }
 
    engineA.Add(engineB);
@@ -423,6 +454,27 @@ TEST(RHistEngine_RBinWithError, Add)
    }
 }
 
+TEST(RHistEngine_RBinWithError, Convert)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<RBinWithError> engine({axis});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   // It is not possible to convert to RBinWithError, but the other way around is fine.
+   RHistEngine<float> engineF = engine.Convert<float>();
+   RHistEngine<double> engineD = engine.Convert<double>();
+
+   for (auto index : axis.GetNormalRange()) {
+      double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(engineF.GetBinContent(index), weight);
+      EXPECT_EQ(engineD.GetBinContent(index), weight);
+   }
+}
+
 TEST(RHistEngine_RBinWithError, Fill)
 {
    static constexpr std::size_t Bins = 20;
@@ -430,7 +482,7 @@ TEST(RHistEngine_RBinWithError, Fill)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i);
+      engine.Fill(i + 0.5);
    }
 
    for (auto index : axis.GetNormalRange()) {
@@ -447,7 +499,7 @@ TEST(RHistEngine_RBinWithError, FillWeight)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
 
    for (auto index : axis.GetNormalRange()) {
@@ -465,7 +517,7 @@ TEST(RHistEngine_RBinWithError, Scale)
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
-      engine.Fill(i, RWeight(0.1 + i * 0.03));
+      engine.Fill(i + 0.5, RWeight(0.1 + i * 0.03));
    }
 
    static constexpr double Factor = 0.8;

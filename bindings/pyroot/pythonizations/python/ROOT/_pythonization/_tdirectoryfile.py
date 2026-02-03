@@ -63,13 +63,13 @@ def _TDirectoryFile_Get(self, namecycle):
     In case the object is not found, a null pointer is returned.
     """
 
-    import cppyy
+    import ROOT
 
     key = self.GetKey(namecycle)
     if key:
         class_name = key.GetClassName()
         address = self.GetObjectChecked(namecycle, class_name)
-        return cppyy.bind_object(address, class_name)
+        return ROOT._cppyy.bind_object(address, class_name)
     # no key? for better or worse, call normal Get()
     return self._Get(namecycle)
 

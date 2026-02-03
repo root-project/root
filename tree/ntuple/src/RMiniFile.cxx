@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RFile.hxx>
 
 #include <Byteswap.h>
 #include <TBufferFile.h>
@@ -978,9 +979,9 @@ void ROOT::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Internal::RNTupleFileWriter::RFileSimple::RFileSimple() = default;
+ROOT::Internal::RNTupleFileWriter::RImplSimple::RImplSimple() = default;
 
-void ROOT::Internal::RNTupleFileWriter::RFileSimple::AllocateBuffers(std::size_t bufferSize)
+void ROOT::Internal::RNTupleFileWriter::RImplSimple::AllocateBuffers(std::size_t bufferSize)
 {
    static_assert(kHeaderBlockSize % kBlockAlign == 0, "invalid header block size");
    if (bufferSize % kBlockAlign != 0)
@@ -994,7 +995,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::AllocateBuffers(std::size_t
    memset(fBlock, 0, fBlockSize);
 }
 
-ROOT::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
+ROOT::Internal::RNTupleFileWriter::RImplSimple::~RImplSimple()
 {
    if (fFile)
       fclose(fFile);
@@ -1017,7 +1018,7 @@ int FSeek64(FILE *stream, std::int64_t offset, int origin)
 }
 } // namespace
 
-void ROOT::Internal::RNTupleFileWriter::RFileSimple::Flush()
+void ROOT::Internal::RNTupleFileWriter::RImplSimple::Flush()
 {
    // Write the last partially filled block, which may still need appropriate alignment for Direct I/O.
    // If it is the first block, get the updated header block.
@@ -1052,7 +1053,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Flush()
          throw RException(R__FAIL(std::string("Seek failed: ") + strerror(errno)));
 
       retval = fwrite(fHeaderBlock, 1, kHeaderBlockSize, fFile);
-      if (retval != RFileSimple::kHeaderBlockSize)
+      if (retval != RImplSimple::kHeaderBlockSize)
          throw RException(R__FAIL(std::string("write failed: ") + strerror(errno)));
    }
 
@@ -1061,7 +1062,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Flush()
       throw RException(R__FAIL(std::string("Flush failed: ") + strerror(errno)));
 }
 
-void ROOT::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, size_t nbytes, std::int64_t offset)
+void ROOT::Internal::RNTupleFileWriter::RImplSimple::Write(const void *buffer, size_t nbytes, std::int64_t offset)
 {
    R__ASSERT(fFile);
    size_t retval;
@@ -1110,7 +1111,7 @@ void ROOT::Internal::RNTupleFileWriter::RFileSimple::Write(const void *buffer, s
 }
 
 std::uint64_t
-ROOT::Internal::RNTupleFileWriter::RFileSimple::WriteKey(const void *buffer, std::size_t nbytes, std::size_t len,
+ROOT::Internal::RNTupleFileWriter::RImplSimple::WriteKey(const void *buffer, std::size_t nbytes, std::size_t len,
                                                          std::int64_t offset, std::uint64_t directoryOffset,
                                                          const std::string &className, const std::string &objectName,
                                                          const std::string &title)
@@ -1135,7 +1136,7 @@ ROOT::Internal::RNTupleFileWriter::RFileSimple::WriteKey(const void *buffer, std
    return offsetData;
 }
 
-std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileSimple::ReserveBlobKey(std::size_t nbytes, std::size_t len,
+std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplSimple::ReserveBlobKey(std::size_t nbytes, std::size_t len,
                                                                              unsigned char keyBuffer[kBlobKeyLen])
 {
    if (keyBuffer) {
@@ -1155,19 +1156,12 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileSimple::ReserveBlobKey(std
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ROOT::Internal::RNTupleFileWriter::RFileProper::Write(const void *buffer, size_t nbytes, std::int64_t offset)
-{
-   fDirectory->GetFile()->Seek(offset);
-   bool rv = fDirectory->GetFile()->WriteBuffer((char *)(buffer), nbytes);
-   if (rv)
-      throw RException(R__FAIL("WriteBuffer failed."));
-}
-
-std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(size_t nbytes, size_t len,
-                                                                             unsigned char keyBuffer[kBlobKeyLen])
+template <typename T>
+std::uint64_t ROOT::Internal::RNTupleFileWriter::ReserveBlobKey(T &caller, TFile &file, std::size_t nbytes,
+                                                                std::size_t len, unsigned char keyBuffer[kBlobKeyLen])
 {
    std::uint64_t offsetKey;
-   RKeyBlob keyBlob(fDirectory->GetFile());
+   ROOT::Internal::RKeyBlob keyBlob(&file);
    // Since it is unknown beforehand if offsetKey is beyond the 2GB limit or not,
    // RKeyBlob will always reserve space for a big key (version >= 1000)
    keyBlob.Reserve(nbytes, &offsetKey);
@@ -1177,18 +1171,52 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(siz
    } else {
       unsigned char localKeyBuffer[kBlobKeyLen];
       PrepareBlobKey(offsetKey, nbytes, len, localKeyBuffer);
-      Write(localKeyBuffer, kBlobKeyLen, offsetKey);
+      caller.Write(localKeyBuffer, kBlobKeyLen, offsetKey);
    }
 
    if (keyBlob.WasAllocatedInAFreeSlot()) {
       // If the key was allocated in a free slot, the last 4 bytes of its buffer contain the new size
       // of the remaining free slot and we need to write it to disk before the key gets destroyed at the end of the
       // function.
-      Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
+      caller.Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
    }
 
    auto offsetData = offsetKey + kBlobKeyLen;
 
+   return offsetData;
+}
+
+void ROOT::Internal::RNTupleFileWriter::RImplTFile::Write(const void *buffer, size_t nbytes, std::int64_t offset)
+{
+   fDirectory->GetFile()->Seek(offset);
+   bool rv = fDirectory->GetFile()->WriteBuffer((char *)(buffer), nbytes);
+   if (rv)
+      throw RException(R__FAIL("WriteBuffer failed."));
+}
+
+std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplTFile::ReserveBlobKey(size_t nbytes, size_t len,
+                                                                            unsigned char keyBuffer[kBlobKeyLen])
+{
+   auto offsetData = RNTupleFileWriter::ReserveBlobKey(*this, *fDirectory->GetFile(), nbytes, len, keyBuffer);
+   return offsetData;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void ROOT::Internal::RNTupleFileWriter::RImplRFile::Write(const void *buffer, size_t nbytes, std::int64_t offset)
+{
+   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   file->Seek(offset);
+   bool rv = file->WriteBuffer((char *)(buffer), nbytes);
+   if (rv)
+      throw RException(R__FAIL("WriteBuffer failed."));
+}
+
+std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplRFile::ReserveBlobKey(size_t nbytes, size_t len,
+                                                                            unsigned char keyBuffer[kBlobKeyLen])
+{
+   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   auto offsetData = RNTupleFileWriter::ReserveBlobKey(*this, *file, nbytes, len, keyBuffer);
    return offsetData;
 }
 
@@ -1197,7 +1225,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(siz
 ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize)
    : fNTupleName(name)
 {
-   auto &fileSimple = fFile.emplace<RFileSimple>();
+   auto &fileSimple = fFile.emplace<RImplSimple>();
    fileSimple.fControlBlock = std::make_unique<ROOT::Internal::RTFileControlBlock>();
    fNTupleAnchor.fMaxKeySize = maxKeySize;
    auto infoRNTuple = RNTuple::Class()->GetStreamerInfo();
@@ -1239,11 +1267,11 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
    if (!fileStream) {
       throw RException(R__FAIL(std::string("open failed for file \"") + std::string(path) + "\": " + strerror(errno)));
    }
-   // RNTupleFileWriter::RFileSimple does its own buffering, turn off additional buffering from C stdio.
+   // RNTupleFileWriter::RImplSimple does its own buffering, turn off additional buffering from C stdio.
    std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
-   RFileSimple &fileSimple = std::get<RFileSimple>(writer->fFile);
+   RImplSimple &fileSimple = std::get<RImplSimple>(writer->fFile);
    fileSimple.fFile = fileStream;
    fileSimple.fDirectIO = options.GetUseDirectIO();
    fileSimple.AllocateBuffers(options.GetWriteBufferSize());
@@ -1272,14 +1300,26 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirector
    assert(file->IsBinary());
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
-   auto &fileProper = writer->fFile.emplace<RFileProper>();
+   auto &fileProper = writer->fFile.emplace<RImplTFile>();
    fileProper.fDirectory = &fileOrDirectory;
+   return writer;
+}
+
+std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
+ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
+                                          std::string_view ntupleDir, std::uint64_t maxKeySize)
+{
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   auto &rfile = writer->fFile.emplace<RImplRFile>();
+   rfile.fFile = &file;
+   R__ASSERT(ntupleDir.empty() || ntupleDir[ntupleDir.size() - 1] == '/');
+   rfile.fDir = ntupleDir;
    return writer;
 }
 
 void ROOT::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
 {
-   RFileSimple *fileSimple = std::get_if<RFileSimple>(&fFile);
+   RImplSimple *fileSimple = std::get_if<RImplSimple>(&fFile);
    if (!fileSimple)
       throw RException(R__FAIL("invalid attempt to seek non-simple writer"));
 
@@ -1295,22 +1335,30 @@ void ROOT::Internal::RNTupleFileWriter::UpdateStreamerInfos(const RNTupleSeriali
 
 void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 {
-   if (auto fileProper = std::get_if<RFileProper>(&fFile)) {
-      // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
-      fileProper->fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
-
+   const auto WriteStreamerInfoToFile = [&](TFile *file) {
       // Make sure the streamer info records used in the RNTuple are written to the file
       TBufferFile buf(TBuffer::kWrite);
-      buf.SetParent(fileProper->fDirectory->GetFile());
+      buf.SetParent(file);
       for (auto [_, info] : fStreamerInfoMap)
          buf.TagStreamerInfo(info);
+   };
 
+   if (auto fileProper = std::get_if<RImplTFile>(&fFile)) {
+      // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
+      fileProper->fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
+      WriteStreamerInfoToFile(fileProper->fDirectory->GetFile());
       fileProper->fDirectory->GetFile()->Write();
+      return;
+   } else if (auto fileRFile = std::get_if<RImplRFile>(&fFile)) {
+      // Same as the case above but handled via RFile
+      fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
+      WriteStreamerInfoToFile(ROOT::Experimental::Internal::GetRFileTFile(*fileRFile->fFile));
+      fileRFile->fFile->Flush();
       return;
    }
 
    // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
 
    if (fIsBare) {
       RTFNTuple ntupleOnDisk(fNTupleAnchor);
@@ -1331,7 +1379,7 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
    // Update header and TFile record
    memcpy(fileSimple.fHeaderBlock, &fileSimple.fControlBlock->fHeader, fileSimple.fControlBlock->fHeader.GetSize());
    R__ASSERT(fileSimple.fControlBlock->fSeekFileRecord + fileSimple.fControlBlock->fFileRecord.GetSize() <
-             RFileSimple::kHeaderBlockSize);
+             RImplSimple::kHeaderBlockSize);
    memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekFileRecord, &fileSimple.fControlBlock->fFileRecord,
           fileSimple.fControlBlock->fFileRecord.GetSize());
 
@@ -1410,27 +1458,31 @@ ROOT::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len, unsign
    R__ASSERT(nbytes <= fNTupleAnchor.GetMaxKeySize());
 
    std::uint64_t offset;
-   if (auto *fileSimple = std::get_if<RFileSimple>(&fFile)) {
+   if (auto *fileSimple = std::get_if<RImplSimple>(&fFile)) {
       if (fIsBare) {
          offset = fileSimple->fKeyOffset;
          fileSimple->fKeyOffset += nbytes;
       } else {
          offset = fileSimple->ReserveBlobKey(nbytes, len, keyBuffer);
       }
+   } else if (auto *fileProper = std::get_if<RImplTFile>(&fFile)) {
+      offset = fileProper->ReserveBlobKey(nbytes, len, keyBuffer);
    } else {
-      auto &fileProper = std::get<RFileProper>(fFile);
-      offset = fileProper.ReserveBlobKey(nbytes, len, keyBuffer);
+      auto &fileRFile = std::get<RImplRFile>(fFile);
+      offset = fileRFile.ReserveBlobKey(nbytes, len, keyBuffer);
    }
    return offset;
 }
 
 void ROOT::Internal::RNTupleFileWriter::WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset)
 {
-   if (auto *fileSimple = std::get_if<RFileSimple>(&fFile)) {
+   if (auto *fileSimple = std::get_if<RImplSimple>(&fFile)) {
       fileSimple->Write(buffer, nbytes, offset);
+   } else if (auto *fileProper = std::get_if<RImplTFile>(&fFile)) {
+      fileProper->Write(buffer, nbytes, offset);
    } else {
-      auto &fileProper = std::get<RFileProper>(fFile);
-      fileProper.Write(buffer, nbytes, offset);
+      auto &fileRFile = std::get<RImplRFile>(fFile);
+      fileRFile.Write(buffer, nbytes, offset);
    }
 }
 
@@ -1456,7 +1508,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int defaultCompres
 {
    RBareFileHeader bareHeader;
    bareHeader.fCompress = defaultCompression;
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.Write(&bareHeader, sizeof(bareHeader), 0);
    RTFString ntupleName{fNTupleName};
    fileSimple.Write(&ntupleName, ntupleName.GetSize());
@@ -1491,7 +1543,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileStreamerInfo(int compression)
    RTFString strTList{"TList"};
    RTFString strStreamerInfo{"StreamerInfo"};
    RTFString strStreamerTitle{"Doubly linked list"};
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.fControlBlock->fHeader.SetSeekInfo(fileSimple.fKeyOffset);
    auto keyLen = RTFKey(fileSimple.fControlBlock->fHeader.GetSeekInfo(), RTFHeader::kBEGIN, strTList, strStreamerInfo,
                         strStreamerTitle, 0)
@@ -1521,7 +1573,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileKeysList(std::uint64_t anchorS
    RTFString strRNTupleName{fNTupleName};
    RTFString strFileName{fFileName};
 
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    RTFKey keyRNTuple(fileSimple.fControlBlock->fSeekNTuple, RTFHeader::kBEGIN, strRNTupleClass, strRNTupleName,
                      strEmpty, RTFNTuple::GetSizePlusChecksum(), anchorSize);
 
@@ -1546,7 +1598,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileKeysList(std::uint64_t anchorS
 
 void ROOT::Internal::RNTupleFileWriter::WriteTFileFreeList()
 {
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.fControlBlock->fHeader.SetSeekFree(fileSimple.fKeyOffset);
    RTFString strEmpty;
    RTFString strFileName{fFileName};
@@ -1570,7 +1622,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::WriteTFileNTupleKey(int compres
 
    RTFNTuple ntupleOnDisk(fNTupleAnchor);
    RUInt64BE checksum{XXH3_64bits(ntupleOnDisk.GetPtrCkData(), ntupleOnDisk.GetSizeCkData())};
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.fControlBlock->fSeekNTuple = fileSimple.fKeyOffset;
 
    char keyBuf[RTFNTuple::GetSizePlusChecksum()];
@@ -1594,7 +1646,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompressio
    RTFString strFileName{fFileName};
    RTFString strEmpty;
 
-   auto &fileSimple = std::get<RFileSimple>(fFile);
+   auto &fileSimple = std::get<RImplSimple>(fFile);
    fileSimple.fControlBlock->fHeader = RTFHeader(defaultCompression);
 
    RTFUUID uuid;

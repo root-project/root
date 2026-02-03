@@ -139,7 +139,6 @@ shape:
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -682,31 +681,6 @@ void TGeoTube::InspectShape() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates a TBuffer3D describing *this* shape.
-/// Coordinates are in local reference frame.
-
-TBuffer3D *TGeoTube::MakeBuffer3D() const
-{
-   Int_t n = gGeoManager->GetNsegments();
-   Int_t nbPnts = 4 * n;
-   Int_t nbSegs = 8 * n;
-   Int_t nbPols = 4 * n;
-   if (!HasRmin()) {
-      nbPnts = 2 * (n + 1);
-      nbSegs = 5 * n;
-      nbPols = 3 * n;
-   }
-   TBuffer3D *buff =
-      new TBuffer3D(TBuffer3DTypes::kGeneric, nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols);
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
-   }
-
-   return buff;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Fill TBuffer3D structure for segments and polygons.
 
 void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
@@ -983,45 +957,79 @@ void TGeoTube::SetDimensions(Double_t *param)
 
 Bool_t TGeoTube::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints > (npoints / 2) * 2) {
-      Error("GetPointsOnSegments", "Npoints must be even number");
+   if (!array || npoints <= 0)
       return kFALSE;
+   if (fDz <= 0.0 || fRmax <= 0.0)
+      return kFALSE;
+
+   const Bool_t hasInner = HasRmin() && (fRmin > 0.0);
+
+   // Split budget: outer gets the extra point if odd
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInner) {
+      outPoints = (npoints + 1) / 2;
+      inPoints = npoints - outPoints;
    }
-   Int_t nc = 0;
-   if (HasRmin())
-      nc = (Int_t)TMath::Sqrt(0.5 * npoints);
-   else
-      nc = (Int_t)TMath::Sqrt(1. * npoints);
-   Double_t dphi = TMath::TwoPi() / nc;
-   Double_t phi = 0;
-   Int_t ntop = 0;
-   if (HasRmin())
-      ntop = npoints / 2 - nc * (nc - 1);
-   else
-      ntop = npoints - nc * (nc - 1);
-   Double_t dz = 2 * fDz / (nc - 1);
-   Double_t z = 0;
-   Int_t icrt = 0;
-   Int_t nphi = nc;
-   // loop z sections
-   for (Int_t i = 0; i < nc; i++) {
-      if (i == (nc - 1))
-         nphi = ntop;
-      z = -fDz + i * dz;
-      // loop points on circle sections
-      for (Int_t j = 0; j < nphi; j++) {
-         phi = j * dphi;
-         if (HasRmin()) {
-            array[icrt++] = fRmin * TMath::Cos(phi);
-            array[icrt++] = fRmin * TMath::Sin(phi);
+
+   auto fillCyl = [&](Int_t nSurfPoints, Double_t r, Int_t &icrt) -> Bool_t {
+      if (nSurfPoints <= 0)
+         return kTRUE;
+      if (r <= 0.0)
+         return kFALSE;
+
+      // Number of generators ~ sqrt(n), clamp to [1, nSurfPoints]
+      Int_t nGen = (Int_t)TMath::Sqrt((Double_t)nSurfPoints);
+      if (nGen < 1)
+         nGen = 1;
+      if (nGen > nSurfPoints)
+         nGen = nSurfPoints;
+
+      const Int_t q = nSurfPoints / nGen;
+      const Int_t rem = nSurfPoints % nGen;
+
+      // Full phi, but use bin centers to avoid endpoints (phi=0 and 2pi)
+      const Double_t dphi = TMath::TwoPi() / (Double_t)nGen;
+
+      for (Int_t ig = 0; ig < nGen; ++ig) {
+         const Int_t m = q + (ig < rem ? 1 : 0); // points on this generator
+         if (m <= 0)
+            continue;
+
+         const Double_t phi = (ig + 0.5) * dphi; // never exactly 0 or 2pi
+         const Double_t c = TMath::Cos(phi);
+         const Double_t s = TMath::Sin(phi);
+
+         // Interior in z: t in (0,1) => avoids z=±dz
+         for (Int_t j = 0; j < m; ++j) {
+            if (icrt + 3 > 3 * npoints)
+               return kFALSE; // overflow guard
+
+            const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1);
+            const Double_t z = -fDz + t * (2.0 * fDz);
+
+            array[icrt++] = r * c;
+            array[icrt++] = r * s;
             array[icrt++] = z;
          }
-         array[icrt++] = fRmax * TMath::Cos(phi);
-         array[icrt++] = fRmax * TMath::Sin(phi);
-         array[icrt++] = z;
       }
+      return kTRUE;
+   };
+
+   Int_t icrt = 0;
+
+   // Outer cylindrical surface
+   if (!fillCyl(outPoints, fRmax, icrt))
+      return kFALSE;
+
+   // Inner cylindrical surface (if hollow)
+   if (hasInner) {
+      if (!fillCyl(inPoints, fRmin, icrt))
+         return kFALSE;
    }
-   return kTRUE;
+
+   // Contract: must fill exactly npoints
+   return (icrt == 3 * npoints) ? kTRUE : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1279,7 +1287,6 @@ void TGeoTube::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
    for (Int_t i = 0; i < vecsize; i++)
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2062,27 +2069,6 @@ void TGeoTubeSeg::InspectShape() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates a TBuffer3D describing *this* shape.
-/// Coordinates are in local reference frame.
-
-TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
-{
-   Int_t n = gGeoManager->GetNsegments() + 1;
-   Int_t nbPnts = 4 * n;
-   Int_t nbSegs = 2 * nbPnts;
-   Int_t nbPols = nbPnts - 2;
-
-   TBuffer3D *buff =
-      new TBuffer3D(TBuffer3DTypes::kGeneric, nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols);
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
-   }
-
-   return buff;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Fill TBuffer3D structure for segments and polygons.
 
 void TGeoTubeSeg::SetSegsAndPols(TBuffer3D &buff) const
@@ -2350,38 +2336,89 @@ void TGeoTubeSeg::SetDimensions(Double_t *param)
 
 Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   if (npoints > (npoints / 2) * 2) {
-      Error("GetPointsOnSegments", "Npoints must be even number");
+   if (!array || npoints <= 0)
       return kFALSE;
+
+   if (fDz <= 0.0 || fRmax <= 0.0)
+      return kFALSE;
+
+   // Angular span in radians
+   const Double_t phi1 = fPhi1 * TMath::DegToRad();
+   const Double_t phi2 = fPhi2 * TMath::DegToRad();
+   const Double_t dPhiTot = phi2 - phi1;
+
+   // Must have a non-degenerate segment
+   if (!(dPhiTot > 0.0))
+      return kFALSE;
+
+   const Bool_t hasInner = (fRmin > 0.0);
+
+   // Split budget: outer gets the extra point if odd
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInner) {
+      outPoints = (npoints + 1) / 2;
+      inPoints = npoints - outPoints;
    }
-   Int_t nc = (Int_t)TMath::Sqrt(0.5 * npoints);
-   Double_t dphi = (fPhi2 - fPhi1) * TMath::DegToRad() / (nc - 1);
-   Double_t phi = 0;
-   Double_t phi1 = fPhi1 * TMath::DegToRad();
-   Int_t ntop = npoints / 2 - nc * (nc - 1);
-   Double_t dz = 2 * fDz / (nc - 1);
-   Double_t z = 0;
+
+   auto fillCylSeg = [&](Int_t nSurfPoints, Double_t r, Int_t &icrt) -> Bool_t {
+      if (nSurfPoints <= 0)
+         return kTRUE;
+      if (r <= 0.0)
+         return kFALSE;
+
+      // Number of generators ~ sqrt(n), clamp to [1, nSurfPoints]
+      Int_t nGen = (Int_t)TMath::Sqrt((Double_t)nSurfPoints);
+      if (nGen < 1)
+         nGen = 1;
+      if (nGen > nSurfPoints)
+         nGen = nSurfPoints;
+
+      const Int_t q = nSurfPoints / nGen;
+      const Int_t rem = nSurfPoints % nGen;
+
+      // Use generator centers: never exactly phi1 or phi2
+      const Double_t dphi = dPhiTot / (Double_t)nGen;
+
+      for (Int_t ig = 0; ig < nGen; ++ig) {
+         const Int_t m = q + (ig < rem ? 1 : 0);
+         if (m <= 0)
+            continue;
+
+         const Double_t phi = phi1 + (ig + 0.5) * dphi; // avoid endpoints
+         const Double_t c = TMath::Cos(phi);
+         const Double_t s = TMath::Sin(phi);
+
+         // Interior z: t in (0,1) => avoids z=±dz
+         for (Int_t j = 0; j < m; ++j) {
+            if (icrt + 3 > 3 * npoints)
+               return kFALSE; // overflow guard
+
+            const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1);
+            const Double_t z = -fDz + t * (2.0 * fDz);
+
+            array[icrt++] = r * c;
+            array[icrt++] = r * s;
+            array[icrt++] = z;
+         }
+      }
+      return kTRUE;
+   };
+
    Int_t icrt = 0;
-   Int_t nphi = nc;
-   // loop z sections
-   for (Int_t i = 0; i < nc; i++) {
-      if (i == (nc - 1)) {
-         nphi = ntop;
-         dphi = (fPhi2 - fPhi1) * TMath::DegToRad() / (nphi - 1);
-      }
-      z = -fDz + i * dz;
-      // loop points on circle sections
-      for (Int_t j = 0; j < nphi; j++) {
-         phi = phi1 + j * dphi;
-         array[icrt++] = fRmin * TMath::Cos(phi);
-         array[icrt++] = fRmin * TMath::Sin(phi);
-         array[icrt++] = z;
-         array[icrt++] = fRmax * TMath::Cos(phi);
-         array[icrt++] = fRmax * TMath::Sin(phi);
-         array[icrt++] = z;
-      }
+
+   // Outer cylindrical surface first
+   if (!fillCylSeg(outPoints, fRmax, icrt))
+      return kFALSE;
+
+   // Inner cylindrical surface (if any)
+   if (hasInner) {
+      if (!fillCylSeg(inPoints, fRmin, icrt))
+         return kFALSE;
    }
-   return kTRUE;
+
+   // Contract: must fill exactly npoints
+   return (icrt == 3 * npoints) ? kTRUE : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2586,7 +2623,6 @@ void TGeoTubeSeg::Safety_v(const Double_t *points, const Bool_t *inside, Double_
    for (Int_t i = 0; i < vecsize; i++)
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
-
 
 TGeoCtub::TGeoCtub()
 {
@@ -3252,9 +3288,103 @@ void TGeoCtub::SetDimensions(Double_t *param)
 /// The output array must be provided with a length of minimum 3*npoints. Returns
 /// true if operation is implemented.
 
-Bool_t TGeoCtub::GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const
+Bool_t TGeoCtub::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-   return kFALSE;
+   if (!array || npoints <= 0)
+      return kFALSE;
+
+   if (fDz <= 0.0 || fRmax <= 0.0)
+      return kFALSE;
+
+   // Angular span in radians
+   Double_t phi1 = fPhi1 * TMath::DegToRad();
+   Double_t phi2 = fPhi2 * TMath::DegToRad();
+   if (phi2 < phi1)
+      phi2 += TMath::TwoPi();
+   const Double_t dPhiTot = phi2 - phi1;
+
+   if (!(dPhiTot > 0.0))
+      return kFALSE;
+
+   const Bool_t hasInner = (fRmin > 0.0);
+
+   // Split budget: outer gets the extra point if odd
+   Int_t outPoints = npoints;
+   Int_t inPoints = 0;
+   if (hasInner) {
+      outPoints = (npoints + 1) / 2;
+      inPoints = npoints - outPoints;
+   }
+
+   auto fillCylCut = [&](Int_t nSurfPoints, Double_t r, Int_t &icrt) -> Bool_t {
+      if (nSurfPoints <= 0)
+         return kTRUE;
+      if (r <= 0.0)
+         return kFALSE;
+
+      // Number of generators ~ sqrt(n), clamp to [1, nSurfPoints]
+      Int_t nGen = (Int_t)TMath::Sqrt((Double_t)nSurfPoints);
+      if (nGen < 1)
+         nGen = 1;
+      if (nGen > nSurfPoints)
+         nGen = nSurfPoints;
+
+      const Int_t q = nSurfPoints / nGen;
+      const Int_t rem = nSurfPoints % nGen;
+
+      // Use generator centers: never exactly phi1 or phi2
+      const Double_t dphi = dPhiTot / (Double_t)nGen;
+
+      for (Int_t ig = 0; ig < nGen; ++ig) {
+         const Int_t m = q + (ig < rem ? 1 : 0);
+         if (m <= 0)
+            continue;
+
+         const Double_t phi = phi1 + (ig + 0.5) * dphi; // avoid endpoints
+         const Double_t c = TMath::Cos(phi);
+         const Double_t s = TMath::Sin(phi);
+
+         const Double_t x = r * c;
+         const Double_t y = r * s;
+
+         // Cut-plane endpoints for this generator
+         const Double_t z0 = GetZcoord(x, y, -fDz);
+         const Double_t z1 = GetZcoord(x, y, +fDz);
+
+         if (!(z1 > z0)) // degenerate / invalid for this (x,y)
+            return kFALSE;
+
+         // Interior z: t in (0,1) => avoids endpoints
+         for (Int_t j = 0; j < m; ++j) {
+            if (icrt + 3 > 3 * npoints)
+               return kFALSE;
+
+            const Double_t t = (Double_t)(j + 1) / (Double_t)(m + 1);
+            const Double_t z = z0 + t * (z1 - z0);
+
+            array[icrt++] = x;
+            array[icrt++] = y;
+            array[icrt++] = z;
+         }
+      }
+
+      return kTRUE;
+   };
+
+   Int_t icrt = 0;
+
+   // Outer curved surface
+   if (!fillCylCut(outPoints, fRmax, icrt))
+      return kFALSE;
+
+   // Inner curved surface (if any)
+   if (hasInner) {
+      if (!fillCylCut(inPoints, fRmin, icrt))
+         return kFALSE;
+   }
+
+   // Contract: fill exactly npoints
+   return (icrt == 3 * npoints) ? kTRUE : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3341,24 +3471,6 @@ void TGeoCtub::SetPoints(Float_t *points) const
          indx++;
       }
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns numbers of vertices, segments and polygons composing the shape mesh.
-
-void TGeoCtub::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
-{
-   TGeoTubeSeg::GetMeshNumbers(nvert, nsegs, npols);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return number of vertices of the mesh representation
-
-Int_t TGeoCtub::GetNmeshVertices() const
-{
-   Int_t n = gGeoManager->GetNsegments() + 1;
-   Int_t numPoints = n * 4;
-   return numPoints;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

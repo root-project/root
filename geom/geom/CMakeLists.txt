@@ -18,6 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     TGeoBranchArray.h
     TGeoBuilder.h
     TGeoCache.h
+    TGeoColorScheme.h
     TGeoCompositeShape.h
     TGeoCone.h
     TGeoElement.h
@@ -75,6 +76,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     src/TGeoBranchArray.cxx
     src/TGeoBuilder.cxx
     src/TGeoCache.cxx
+    src/TGeoColorScheme.cxx
     src/TGeoCompositeShape.cxx
     src/TGeoCone.cxx
     src/TGeoElement.cxx
@@ -124,6 +126,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     RIO
     MathCore
     Hist
+    GenVector
+    Imt
 )
 
 # GCC has bugs with -O3 or -Ofast that break Geom

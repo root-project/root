@@ -6,11 +6,17 @@
 #include <TRandom3.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <TTree.h>
 #include <RZip.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+
+#include "RFileTestIncludes.hxx"
 
 using ROOT::Experimental::RFile;
 using ROOT::TestSupport::FileRaii;
@@ -685,7 +691,7 @@ TEST(RFile, GetKeyInfo)
 
    EXPECT_EQ(file->GetKeyInfo("foo"), std::nullopt);
 
-   for (const std::string_view path : { "/s", "a/b/c", "b", "/a/d" }) {
+   for (const std::string_view path : {"/s", "a/b/c", "b", "/a/d"}) {
       auto key = file->GetKeyInfo(path);
       ASSERT_NE(key, std::nullopt);
       EXPECT_EQ(key->GetPath(), path[0] == '/' ? path.substr(1) : path);
@@ -693,4 +699,114 @@ TEST(RFile, GetKeyInfo)
       EXPECT_EQ(key->GetTitle(), "");
       EXPECT_EQ(key->GetCycle(), 1);
    }
+}
+
+TEST(RFile, RNTuple)
+{
+   FileRaii fileGuard("test_rfile_rntuple.root");
+
+   // Writing
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+
+      auto model = ROOT::RNTupleModel::Create();
+      *model->MakeField<float>("x") = 42;
+
+      auto writer = ROOT::Experimental::RNTupleWriter_Append(std::move(model), "data", *file);
+      writer->Fill();
+   }
+
+   // Reading back
+   auto file = RFile::Open(fileGuard.GetPath());
+   auto ntuple = file->Get<ROOT::RNTuple>("data");
+   ASSERT_NE(ntuple, nullptr);
+   auto reader = ROOT::RNTupleReader::Open(*ntuple);
+   EXPECT_EQ(reader->GetNEntries(), 1);
+   EXPECT_FLOAT_EQ(reader->GetView<float>("x")(0), 42);
+}
+
+TEST(RFile, TTreeRead)
+{
+   FileRaii fileGuard("test_rfile_ttree_read.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      int x;
+      tree->SetBranchAddress("x", &x);
+      for (auto i = 0u; i < tree->GetEntries(); ++i) {
+         tree->GetEntry(i);
+         EXPECT_EQ(x, i);
+      }
+   }
+}
+
+TEST(RFile, TTreeReadAfterClose)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_after_close.root");
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTree>("tree");
+      file.reset(); // close the file
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 10);
+      EXPECT_EQ(tree->GetEntry(0), -1); // -1 means "I/O error"
+   }
+}
+
+TEST(RFile, TTreeNoDoubleFree)
+{
+   FileRaii fileGuard("test_rfile_ttree_read_no_double_free.root");
+
+   TTreeDestructorCounter::ResetTimesDestructed();
+
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTreeDestructorCounter>("tree", "tree");
+      int x;
+      tree->Branch("x", &x);
+      for (int i = 0; i < 10; ++i) {
+         x = i;
+         tree->Fill();
+      }
+      tree->Write();
+   }
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 1);
+
+   {
+      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto tree = file->Get<TTreeDestructorCounter>("tree");
+      file.reset(); // close the file (does not delete the three)
+      // tree is deleted here
+   }
+
+   // destructed once during writing, once during reading.
+   EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 2);
 }

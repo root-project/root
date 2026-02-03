@@ -68,6 +68,10 @@ Feedback is welcome!
 */
 template <typename BinContentType>
 class RHistEngine final {
+   // For conversion, all other template instantiations must be a friend.
+   template <typename U>
+   friend class RHistEngine;
+
    template <typename T, std::size_t N>
    friend void Internal::SetBinContent(RHistEngine<T> &, const std::array<RBinIndex, N> &, const T &);
 
@@ -252,6 +256,24 @@ public:
       RHistEngine h(fAxes.Get());
       for (std::size_t i = 0; i < fBinContents.size(); i++) {
          h.fBinContents[i] = fBinContents[i];
+      }
+      return h;
+   }
+
+   /// Convert this histogram engine to a different bin content type.
+   ///
+   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
+   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
+   ///
+   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the converted object
+   template <typename U>
+   RHistEngine<U> Convert() const
+   {
+      RHistEngine<U> h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = static_cast<U>(fBinContents[i]);
       }
       return h;
    }

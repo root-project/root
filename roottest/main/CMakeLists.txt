@@ -17,7 +17,7 @@ if(MSVC)
     set(exeext .exe)
 endif()
 
-############################## ROOLS TESTS ##############################
+############################## ROOTLS TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root
                   OUTREF SimpleRootls.ref
@@ -36,6 +36,11 @@ ROOTTEST_ADD_TEST(SimpleRootls3
 ROOTTEST_ADD_TEST(SimpleRootls4
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root:tof/*
                   OUTREF SimpleRootls4.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimpleRootls5
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1c test.root
+                  OUTREF SimpleRootls5.ref
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(LongRootls1
@@ -78,6 +83,11 @@ ROOTTEST_ADD_TEST(TreeRootls1
 ROOTTEST_ADD_TEST(NameCyclesRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -t multipleNameCycles.root:tree
                   OUTREF MultipleNameCyclesRootls.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(NameCyclesRootls2
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -c1 multipleNameCycles.root:tree
+                  OUTREF MultipleNameCyclesRootls2.ref
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(RecursiveRootls
@@ -532,7 +542,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv5Clean
 
 
 ROOTTEST_ADD_TEST(NameCyclesRootmvPrepareInput
-                  COMMAND root.exe -b -q -l MakeNameCyclesRootmvInput.C
+                  COMMAND root.exe -b -q MakeNameCyclesRootmvInput.C
                   FIXTURES_SETUP main-NameCyclesRootmvPrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(NameCyclesRootmv

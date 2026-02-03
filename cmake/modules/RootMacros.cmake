@@ -2471,7 +2471,8 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #-------------------------------------------------------------------------------
 #
 # macro ROOTTEST_COMPILE_MACRO(<filename> [BUILDOBJ object] [BUILDLIB lib]
-#                                         [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...])
+#                                         [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
+#                                         [EXTRA_RPATHS ...])
 #
 # This macro creates and loads a shared library containing the code from
 # the file <filename>. A test that performs the compilation is created.
@@ -2481,7 +2482,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_COMPILE_MACRO filename)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;EXTRA_RPATHS"  ${ARGN})
 
   # Add defines to root_compile_macro, in order to have out-of-source builds
   # when using the scripts/build.C macro.
@@ -2496,13 +2497,20 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   endforeach()
 
   cmake_path(CONVERT "${CMAKE_CURRENT_BINARY_DIR}" TO_NATIVE_PATH_LIST NATIVE_BINARY_DIR)
+  if(ARG_EXTRA_RPATHS)
+    set(extra_rpaths)
+    foreach(rpath ${ARG_EXTRA_RPATHS})
+      list(APPEND extra_rpaths -e "gSystem->SetMakeSharedLib(TString{gSystem->GetMakeSharedLib()}.ReplaceAll(\"$RPath\", \"$RPath -Wl,-rpath,${rpath}\"))")
+    endforeach()
+  endif()
   set(root_compile_macro ${CMAKE_COMMAND} -E env
       ROOT_LIBRARY_PATH=${NATIVE_BINARY_DIR}
       ROOT_INCLUDE_PATH=${CMAKE_CURRENT_BINARY_DIR}:${DEFAULT_ROOT_INCLUDE_PATH}
       ${ROOT_root_CMD}
       -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
+      ${extra_rpaths}
       ${RootMacroDirDefines}
-      -q -l -b
+      -q -b
   )
 
   get_filename_component(realfp ${filename} ABSOLUTE)
@@ -2916,9 +2924,9 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                ${ARG_ROOTEXE_OPTS}
-               -q -l -b)
+               -q -b)
 
-  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
+  set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -b)
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")

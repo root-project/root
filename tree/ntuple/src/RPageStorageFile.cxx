@@ -65,6 +65,13 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirec
    fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize());
 }
 
+ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file,
+                                             std::string_view ntupleDir, const ROOT::RNTupleWriteOptions &options)
+   : RPageSinkFile(ntupleName, options)
+{
+   fWriter = RNTupleFileWriter::Append(ntupleName, file, ntupleDir, options.GetMaxKeySize());
+}
+
 ROOT::Internal::RPageSinkFile::~RPageSinkFile() {}
 
 void ROOT::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
@@ -338,6 +345,15 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
 ROOT::Internal::RPageSourceFile::~RPageSourceFile()
 {
    fClusterPool.StopBackgroundThread();
+}
+
+std::unique_ptr<ROOT::Internal::RPageSourceFile>
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+{
+   auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
+   pageSource->fAnchor = anchor;
+   // NOTE: fNTupleName gets set only upon Attach().
+   return pageSource;
 }
 
 void ROOT::Internal::RPageSourceFile::LoadStructureImpl()

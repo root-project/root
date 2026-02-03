@@ -1,6 +1,10 @@
-WARNING: Several versions of 'tree' are present in 'multipleNameCycles.root'. Only the most recent will be considered.
-TTree  Apr 01 14:45 2020 tree;2 "tree"
+TTree  Apr 01 14:45 2020 tree;2 "tree" [current cycle]
   x  "x/I"  144
   Cluster INCLUSIVE ranges:
    - # 0: [0, 1]
+  The total number of clusters is 1
+TTree  Apr 01 14:44 2020 tree;1 "tree" [backup cycle]
+  x  "x/I"  72
+  Cluster INCLUSIVE ranges:
+   - # 0: [0, 0]
   The total number of clusters is 1

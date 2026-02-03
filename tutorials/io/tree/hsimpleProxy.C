@@ -5,7 +5,7 @@
 ///
 /// To use this file, generate hsimple.root:
 /// ~~~ {.cpp}
-///    root.exe -b -l -q hsimple.C
+///    root.exe -b -q hsimple.C
 /// ~~~
 /// and do
 /// ~~~ {.cpp}

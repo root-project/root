@@ -1184,6 +1184,29 @@ class TestTEMPLATES:
         with pytest.raises(TypeError, match=r"could not construct C\+\+ name"):
             cppyy.gbl.test35_func[set(), list()]()
 
+    def test36_constructor_implicit_conversion(self):
+        """Implicit conversion to call a templated constructor"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace ConstructorImplicitConversion {
+        struct IntWrapper {
+            IntWrapper(int i) : m_i(i) {}
+            int m_i;
+        };
+        struct S {
+            template <typename T>
+            S(IntWrapper a, T b) : m_a(a.m_i) {}
+
+            int m_a = 0;
+        }; }""")
+
+        ns = cppyy.gbl.ConstructorImplicitConversion
+
+        a = ns.S(1, 2)
+        assert a.m_a == 1
+
 
 class TestTEMPLATED_TYPEDEFS:
     def setup_class(cls):

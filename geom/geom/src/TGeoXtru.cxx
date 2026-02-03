@@ -102,7 +102,6 @@ Double_t y0, Double_t scale);
 #include "TGeoVolume.h"
 #include "TGeoPolygon.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
@@ -909,6 +908,16 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
       vert[icrt++] = z2;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check shape convexity
+
+Bool_t TGeoXtru::IsConvex() const
+{
+   ThreadData_t &td = GetThreadData();
+   return (fNz == 2 && td.fPoly->IsConvex());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the quadrilateral defined by VERT contains a coplanar POINT.
 

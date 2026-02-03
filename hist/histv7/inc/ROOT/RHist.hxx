@@ -62,6 +62,10 @@ Feedback is welcome!
 */
 template <typename BinContentType>
 class RHist final {
+   // For conversion, all other template instantiations must be a friend.
+   template <typename U>
+   friend class RHist;
+
    friend class RHistFillContext<BinContentType>;
 
    /// The histogram engine including the bin contents.
@@ -242,6 +246,22 @@ public:
    RHist Clone() const
    {
       RHist h(fEngine.Clone());
+      h.fStats = fStats;
+      return h;
+   }
+
+   /// Convert this histogram to a different bin content type.
+   ///
+   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
+   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
+   ///
+   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the converted object
+   template <typename U>
+   RHist<U> Convert() const
+   {
+      RHist<U> h(fEngine.template Convert<U>());
       h.fStats = fStats;
       return h;
    }

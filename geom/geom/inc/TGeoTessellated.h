@@ -23,8 +23,8 @@ public:
    using VertexVec_t = Tessellated::VertexVec_t;
 
 private:
-   int fIvert[4] = {0, 0, 0, 0};     // Vertex indices in the array
-   int fNvert = 0;                   // number of vertices (can be 3 or 4)
+   int fIvert[4] = {0, 0, 0, 0}; // Vertex indices in the array
+   int fNvert = 0;               // number of vertices (can be 3 or 4)
 
 private:
    void SetVertices(int nvert = 0, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
@@ -107,6 +107,7 @@ public:
    int GetNsegments() const { return fNseg; }
    int GetNvertices() const { return fNvert; }
    bool IsClosedBody() const { return fClosedBody; }
+   Bool_t IsConvex() const final { return kFALSE; }
    bool IsDefined() const { return fDefined; }
 
    const TGeoFacet &GetFacet(int i) const { return fFacets[i]; }

@@ -71,16 +71,16 @@ static const char *const kLongHelp = R"(
 Display ROOT files contents in the terminal.
 
 positional arguments:
-  FILE                  Input file
+  FILE                    Input file
 
 options:
-  -h, --help            show this help message and exit
-  -1, --oneColumn       Print content in one column
-  -l, --longListing     Use a long listing format.
-  -t, --treeListing     Print tree recursively and use a long listing format.
-  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
-  -r, --recursiveListing
-                        Traverse file recursively entering any TDirectory.
+  -h, --help              show this help message and exit
+  -1, --oneColumn         Print content in one column
+  -c, --allCycles         Force display of all objects' cycles
+  -l, --longListing       Use a long listing format.
+  -t, --treeListing       Print tree recursively and use a long listing format.
+  -R, --rntupleListing    Print RNTuples recursively and use a long listing format.
+  -r, --recursiveListing  Traverse file recursively entering any TDirectory.
 
 Examples:
 - rootls example.root
@@ -126,6 +126,7 @@ struct RootLsArgs {
       kTreeListing = 0x4,
       kRNTupleListing = 0x8,
       kRecursiveListing = 0x10,
+      kForceAllCycles = 0x20,
    };
 
    enum class EPrintUsage {
@@ -379,22 +380,41 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
                                 std::vector<NodeIdx_t>::const_iterator nodesBegin,
                                 std::vector<NodeIdx_t>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
-   const auto nNodes = std::distance(nodesBegin, nodesEnd);
+   const bool displayAllCycles = (flags & RootLsArgs::kForceAllCycles);
+
+   // Calculate number of nodes, min and max name length
+   std::size_t minElemWidth = std::numeric_limits<std::size_t>::max();
+   std::size_t maxElemWidth = 0;
+   std::vector<NodeIdx_t> uniqueNodes;
+   std::string_view prevNodeName;
+   for (auto it = nodesBegin; it != nodesEnd; ++it) {
+      NodeIdx_t nodeIdx = *it;
+      const auto &node = tree.fNodes[nodeIdx];
+      // De-duplicate node names (we only print one name even if the node has multiple cycles - unless we have the
+      // kForceAllCycles flag active)
+      if (!displayAllCycles && node.fName == prevNodeName)
+         continue;
+      uniqueNodes.push_back(nodeIdx);
+      auto elemWidth = node.fName.length();
+      if (displayAllCycles) {
+         // If we're displaying the cycles we need to keep that in mind for calculating the column widths.
+         const auto cycleLen = std::to_string(node.fCycle).length();
+         elemWidth += cycleLen + 1; // +1 to account for the ';'
+      }
+      minElemWidth = std::min(elemWidth, minElemWidth);
+      maxElemWidth = std::max(elemWidth, maxElemWidth);
+      prevNodeName = node.fName;
+   }
+
+   const auto nNodes = uniqueNodes.size();
    if (nNodes == 0)
       return;
 
-   // Calculate the min and max column size
    V2i terminalSize = GetTerminalSize();
    terminalSize.x -= indent;
-   const auto [minElemWidthIt, maxElemWidthIt] =
-      std::minmax_element(nodesBegin, nodesEnd, [&tree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
-         const auto &a = tree.fNodes[aIdx];
-         const auto &b = tree.fNodes[bIdx];
-         return a.fName.length() < b.fName.length();
-      });
    const int minCharsBetween = 2;
-   const auto minElemWidth = tree.fNodes[*minElemWidthIt].fName.length() + minCharsBetween;
-   const auto maxElemWidth = tree.fNodes[*maxElemWidthIt].fName.length() + minCharsBetween;
+   minElemWidth += minCharsBetween;
+   maxElemWidth += minCharsBetween;
 
    // Figure out how many columns do we need
    std::size_t nCols = 0;
@@ -416,7 +436,12 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
                if ((j % nCols) == colIdx) {
                   NodeIdx_t childIdx = nodesBegin[j];
                   const RootObjNode &child = tree.fNodes[childIdx];
-                  width = std::max<int>(width, child.fName.length() + minCharsBetween);
+                  auto nameLen = child.fName.length();
+                  if (displayAllCycles) {
+                     const auto cycleLen = std::to_string(child.fCycle).length();
+                     nameLen += cycleLen + 1; // +1 to account for the ';'
+                  }
+                  width = std::max<int>(width, nameLen + minCharsBetween);
                }
             }
 
@@ -444,8 +469,9 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
 
    auto curCol = 0u;
    for (auto i = 0u; i < nNodes; ++i) {
-      NodeIdx_t childIdx = nodesBegin[i];
+      NodeIdx_t childIdx = uniqueNodes[i];
       const auto &child = tree.fNodes[childIdx];
+
       if (curCol == 0) {
          PrintIndent(stream, indent);
       }
@@ -463,12 +489,12 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
       // - when the current column number reaches the max number of columns
       // - when we are in recursive mode and the item is a directory with children
       // - when we are in recursive mode and the NEXT item is a directory with children
-      
+
       const bool isDirWithRecursiveDisplay = isDir && (flags & RootLsArgs::kRecursiveListing) && child.fNChildren > 0;
 
       bool nextIsDirWithRecursiveDisplay = false;
       if ((flags & RootLsArgs::kRecursiveListing) && i < nNodes - 1) {
-         NodeIdx_t nextChildIdx = nodesBegin[i + 1];
+         NodeIdx_t nextChildIdx = uniqueNodes[i + 1];
          const auto &nextChild = tree.fNodes[nextChildIdx];
          nextIsDirWithRecursiveDisplay =
             nextChild.fNChildren > 0 && ClassInheritsFrom(nextChild.fClassName.c_str(), "TDirectory");
@@ -476,10 +502,11 @@ static void PrintNodesInColumns(std::ostream &stream, const RootObjTree &tree,
 
       const bool isExtremal = (((curCol + 1) % nCols) == 0) || (i == nNodes - 1) || isDirWithRecursiveDisplay ||
                               nextIsDirWithRecursiveDisplay;
+      auto nodeName = child.fName + (displayAllCycles ? ";" + std::to_string(child.fCycle) : "");
       if (!isExtremal) {
-         stream << std::left << std::setw(colWidths[curCol % nCols]) << child.fName;
+         stream << std::left << std::setw(colWidths[curCol % nCols]) << nodeName;
       } else {
-         stream << std::setw(1) << child.fName;
+         stream << std::setw(1) << nodeName;
       }
       stream << Color(kAnsiNone);
 
@@ -551,6 +578,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    opts.AddFlag({"-t", "--treeListing"});
    opts.AddFlag({"-R", "--rntupleListing"});
    opts.AddFlag({"-r", "--recursiveListing"});
+   opts.AddFlag({"-c", "--allCycles"});
 
    opts.Parse(args, nArgs);
    for (const auto &err : opts.GetErrors())
@@ -571,6 +599,7 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    outArgs.fFlags |= opts.GetSwitch("treeListing") * RootLsArgs::kTreeListing;
    outArgs.fFlags |= opts.GetSwitch("recursiveListing") * RootLsArgs::kRecursiveListing;
    outArgs.fFlags |= opts.GetSwitch("rntupleListing") * RootLsArgs::kRNTupleListing;
+   outArgs.fFlags |= opts.GetSwitch("allCycles") * RootLsArgs::kForceAllCycles;
 
    // Positional arguments
    auto flags = !!(outArgs.fFlags & RootLsArgs::kRecursiveListing) * EGetMatchingPathsFlags::kRecursive;
@@ -600,13 +629,14 @@ int main(int argc, char **argv)
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
 
-   // sort leaves by name
+   // sort leaves by namecycle
    for (auto &source : args.fSources) {
       std::sort(source.fObjectTree.fLeafList.begin(), source.fObjectTree.fLeafList.end(),
                 [&tree = source.fObjectTree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
                    const auto &a = tree.fNodes[aIdx];
                    const auto &b = tree.fNodes[bIdx];
-                   return a.fName < b.fName;
+                   // Note that we order by decreasing cycle, i.e. from most to least recent
+                   return (a.fName != b.fName) ? a.fName < b.fName : a.fCycle > b.fCycle;
                 });
    }
 

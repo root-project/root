@@ -1387,6 +1387,58 @@ class TestREGRESSION:
         with raises(cppyy.gbl.std.logic_error):
             foo.bar()
 
+    def test47_initializer_list_fail(self, capfd):
+        """Conversion to intializer_list requires default constructor"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace regression_test47 {
+        std::size_t size = 0;
+        struct IntWrapper { IntWrapper(int i) : fInt(i) {} int fInt; };
+        void f(std::initializer_list<IntWrapper> l) {}
+        void f(std::vector<IntWrapper> l) { size = l.size(); }
+        }""")
+
+        r47 = cppyy.gbl.regression_test47
+
+        assert r47.size == 0
+
+        r47.f([1])
+        assert r47.size == 1
+        (out, err) = capfd.readouterr()
+        assert out == ""
+        assert err == ""
+
+    @mark.xfail(run=False, condition=IS_MAC_ARM or IS_WINDOWS == 64, reason="LLVM JIT fails to catch exceptions")
+    def test49_overloads_with_runtime_errors(self):
+        """Regression test for https://github.com/root-project/root/issues/17497
+
+        See https://github.com/root-project/root/issues/7541 and
+        https://bugs.llvm.org/show_bug.cgi?id=49692 :
+        llvm JIT fails to catch exceptions on MacOS ARM, so we disable their testing
+        Also fails on Windows 64bit for the same reason
+        """
+        import cppyy
+
+        std = cppyy.gbl.std
+
+        cppyy.cppdef(
+            r"""
+        void fun(std::string_view, std::string_view){throw std::runtime_error("std::string_view overload");}
+        void fun(std::string_view, const std::vector<std::string> &){throw std::runtime_error("const std::vector<std::string> & overload");}
+        """
+        )
+
+        with raises(std.runtime_error):
+            cppyy.gbl.fun("", [])
+        with raises(std.runtime_error):
+            cppyy.gbl.fun(std.string_view("hello world"), std.vector[std.string]())
+        with raises(std.runtime_error):
+            cppyy.gbl.fun("", std.vector[std.string]())
+        with raises(std.runtime_error):
+            cppyy.gbl.fun(std.string_view("hello world"), [])
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-v', '-ra', __file__]))

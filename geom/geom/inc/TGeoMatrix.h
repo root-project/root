@@ -19,6 +19,7 @@
  *************************************************************************/
 
 #include "TNamed.h"
+#include "Math/Vector3D.h"
 
 //--- globals
 const Double_t kNullVector[3] = {0.0, 0.0, 0.0};
@@ -73,7 +74,7 @@ public:
    Bool_t IsRotAboutZ() const;
    void GetHomogenousMatrix(Double_t *hmat) const;
    const char *GetPointerName() const;
-
+   void GetWorldAxes(ROOT::Math::XYZVector &ax, ROOT::Math::XYZVector &ay, ROOT::Math::XYZVector &az) const;
    virtual Int_t GetByteCount() const;
    virtual const Double_t *GetTranslation() const = 0;
    virtual const Double_t *GetRotationMatrix() const = 0;
@@ -463,7 +464,7 @@ private:
 
 public:
    TGeoHMatrix();
-   TGeoHMatrix(const TGeoHMatrix &other) : TGeoHMatrix((TGeoMatrix &)other) {}
+   TGeoHMatrix(const TGeoHMatrix &other);
    TGeoHMatrix(const TGeoMatrix &matrix);
    TGeoHMatrix(const char *name);
    ~TGeoHMatrix() override;

@@ -18,7 +18,19 @@ if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
 
-ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist)
+ROOT_STANDARD_LIBRARY_PACKAGE(RFileTestIncludes
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/RFileTestIncludes.hxx
+                              SOURCES RFileTestIncludes.cxx
+                              LINKDEF RFileTestIncludesLinkDef.h
+                              DEPENDENCIES RIO Tree)
+configure_file(RFileTestIncludes.hxx . COPYONLY)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
+  add_custom_command(TARGET RFileTestIncludes POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRFileTestIncludes.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libRFileTestIncludes.dll)
+endif()
+ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist ROOTNTuple Tree RFileTestIncludes)
 if(pyroot)
   ROOT_ADD_PYUNITTEST(rfile_py rfile.py)
 endif()

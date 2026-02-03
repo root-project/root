@@ -159,10 +159,16 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
-from ROOT.libROOTPythonizations import GetBranchAttr, BranchPyz
-from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
+from ROOT._pythonization._memory_utils import (
+    _constructor_releasing_ownership,
+    _SetDirectory_SetOwnership,
+    _should_give_up_ownership,
+)
+from ROOT.libROOTPythonizations import BranchPyz, GetBranchAttr
+
 from . import pythonization
-from ROOT._pythonization._memory_utils import _should_give_up_ownership, _constructor_releasing_ownership, _SetDirectory_SetOwnership
+from ._rvec import _get_cpp_type_from_numpy_type
+
 
 # TTree iterator
 def _TTree__iter__(self):
@@ -181,27 +187,28 @@ def _pythonize_branch_addr(branch, addr_orig):
     """Helper for the SetBranchAddress pythonization, extracting the relevant
     address from a Python object if possible.
     """
-    import cppyy
     import ctypes
 
-    is_leaf_list = branch.IsA() is cppyy.gbl.TBranch.Class()
+    import ROOT
+
+    is_leaf_list = branch.IsA() is ROOT.TBranch.Class()
 
     if is_leaf_list:
         # If the branch is a leaf list, SetBranchAddress expects the
         # address of the object that has the corresponding data members.
-        return ctypes.c_void_p(cppyy.addressof(instance=addr_orig, byref=False))
+        return ctypes.c_void_p(ROOT._cppyy.addressof(instance=addr_orig, byref=False))
 
     # Otherwise, SetBranchAddress is expecting a pointer to the address of
     # the object, and the pointer needs to stay alive. Therefore, we create
     # a container for the pointer and cache it in the original cppyy proxy.
-    addr_view = cppyy.gbl.array["std::intptr_t", 1]([cppyy.addressof(instance=addr_orig, byref=False)])
+    addr_view = ROOT.array["std::intptr_t", 1]([ROOT._cppyy.addressof(instance=addr_orig, byref=False)])
 
     if not hasattr(addr_orig, "_set_branch_cached_pointers"):
         addr_orig._set_branch_cached_pointers = []
     addr_orig._set_branch_cached_pointers.append(addr_view)
 
     # Finally, we have to return the address of the container
-    return ctypes.c_void_p(cppyy.addressof(instance=addr_view, byref=False))
+    return ctypes.c_void_p(ROOT._cppyy.addressof(instance=addr_view, byref=False))
 
 
 def _get_cpp_type_from_array_typecode(typecode):
@@ -302,11 +309,11 @@ def _TTree__getattr__(self, key):
     key (str): The name of the branch to retrieve from the TTree object.
     """
 
-    import cppyy.ll
+    import ROOT
 
     out, cast_type = GetBranchAttr(self, key)
     if cast_type:
-        out = cppyy.ll.cast[cast_type](out)
+        out = ROOT._cppyy.ll.cast[cast_type](out)
     return out
 
 def _TTree_CloneTree(self, *args, **kwargs):
@@ -376,7 +383,7 @@ def pythonize_tchain(klass):
     klass.SetBranchAddress = _SetBranchAddress
 
 @pythonization("TNtuple")
-def pythonize_tchain(klass):
+def pythonize_tntuple(klass):
 
     # The constructor needs to be explicitly pythonized for derived classes.
     klass._cpp_constructor = klass.__init__
