@@ -401,9 +401,8 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
                     Cppyy::TCppType_t tcl = Cppyy::GetScope(clean);
                     if (tcl) {
                         typedefpointertoclassobject* tpc =
-                            PyObject_GC_New(typedefpointertoclassobject, &TypedefPointerToClass_Type);
+                            PyObject_New(typedefpointertoclassobject, &TypedefPointerToClass_Type);
                         tpc->fCppType = tcl;
-                        tpc->fDict = PyDict_New();
                         attr = (PyObject*)tpc;
                     }
                 }
