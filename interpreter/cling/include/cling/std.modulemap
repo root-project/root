@@ -239,7 +239,7 @@ module "std" [system] {
     export *
     header "memory"
   }
-  module "memory_resource" [optional] {
+  module "memory_resource" {
     requires cplusplus17
     export *
     header "memory_resource"
@@ -434,7 +434,7 @@ module "std" [system] {
     export *
     header "bits/basic_ios.h"
   }
-  module "bits/chrono.h" [optional] {
+  module "bits/chrono.h" {
     export *
     header "bits/chrono.h"
   }
@@ -518,14 +518,14 @@ module "std" [system] {
     export initializer_list
     header "bits/ranges_algobase.h"
   }
-  explicit module "bits_ranges_base_h" [optional] {
+  explicit module "bits_ranges_base_h" {
     requires cplusplus20
     export *
     export bits_stl_iterator_h
     export initializer_list
     header "bits/ranges_base.h"
   }
-  module "bits/ranges_util.h" [optional] {
+  module "bits/ranges_util.h" {
     requires cplusplus20
     export *
     export bits_invoke_h
@@ -546,11 +546,11 @@ module "std" [system] {
     export bits_stl_algobase_h
     header "bits/uniform_int_dist.h"
   }
-  module "bits/utility.h" [optional] {
+  module "bits/utility.h" {
     export *
     header "bits/utility.h"
   }
-  module "bits/uses_allocator_args.h" [optional] {
+  module "bits/uses_allocator_args.h" {
     requires cplusplus17
     export *
     header "bits/uses_allocator_args.h"
