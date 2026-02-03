@@ -47,10 +47,10 @@ jobs:
           fetch-depth: 1
 
       - name: Backport Commits
-        run: |
-          cd root && .github/workflows/utilities/backport_pr.py \ 
-          --comment "$COMMENT_BODY" \
-          --pull ${{ github.event.pull_request.number }} \
-          --requestor ${{ github.event.comment.user.login }} \
-          --pr-token ${{ secrets.PR_CREDENTIALS_TOKEN }} \
-          --push-token ${{ secrets.BOT_PUSH_CREDENTIALS_TOKEN }}
+        run: " cd root && .github/workflows/utilities/backport_pr.py
+                        --comment "$COMMENT_BODY"
+                        --pull ${{ github.event.pull_request.number }}
+                        --requestor ${{ github.event.comment.user.login }}
+                        --pr-token ${{ secrets.PR_CREDENTIALS_TOKEN }}
+                        --push-token ${{ secrets.BOT_PUSH_CREDENTIALS_TOKEN }}
+             "
