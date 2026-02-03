@@ -1025,9 +1025,15 @@ namespace cling {
   bool DeclUnloader::VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD) {
     bool Successful = true;
 
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
            E = FTD->loaded_spec_end(); I != E; ++I)
+#else
+    // Remove specializations, but do not invalidate the iterator!
+    for (FunctionTemplateDecl::spec_iterator I = FTD->spec_begin(),
+           E = FTD->spec_end(); I != E; ++I)
+#endif
       Successful &= VisitFunctionDecl(*I, /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
@@ -1038,9 +1044,15 @@ namespace cling {
   bool DeclUnloader::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
            E = CTD->loaded_spec_end(); I != E; ++I)
+#else
+    // Remove specializations:
+    for (ClassTemplateDecl::spec_iterator I = CTD->spec_begin(),
+           E = CTD->spec_end(); I != E; ++I)
+#endif
       Successful &=
           VisitClassTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
@@ -1083,10 +1095,17 @@ namespace cling {
   bool DeclUnloader::VisitVarTemplateDecl(VarTemplateDecl* VTD) {
     // VarTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (VarTemplateDecl::spec_iterator I = VTD->loaded_spec_begin(),
                                         E = VTD->loaded_spec_end();
          I != E; ++I)
+#else
+    // Remove specializations, but do not invalidate the iterator!
+    for (VarTemplateDecl::spec_iterator I = VTD->spec_begin(),
+                                        E = VTD->spec_end();
+         I != E; ++I)
+#endif
       Successful &=
           VisitVarTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
