@@ -7828,7 +7828,9 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    Preprocessor &PP = SemaR.getPreprocessor();
    Parser& P = const_cast<Parser&>(fInterpreter->getParser());
    Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#ifndef UPSTREAM_CLANG
    Parser::ParserCurTokRestoreRAII savedCurToken(P);
+#endif
    // After we have saved the token reset the current one to something which
    // is safe (semi colon usually means empty decl)
    Token& Tok = const_cast<Token&>(P.getCurToken());

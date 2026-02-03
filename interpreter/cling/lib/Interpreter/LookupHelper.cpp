@@ -47,7 +47,9 @@ namespace cling {
     // whether we need to do so here too or whether we need to also see the
     // "on-going" semantic information ... For now, we leave Sema untouched.
     clang::Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+#ifndef UPSTREAM_CLANG
     clang::Parser::ParserCurTokRestoreRAII fSavedCurToken;
+#endif
     ParserStateRAII ResetParserState;
     clang::Sema::SFINAETrap fSFINAETrap;
     void prepareForParsing(llvm::StringRef code, llvm::StringRef bufferName,
@@ -58,7 +60,9 @@ namespace cling {
                      LookupHelper::DiagSetting diagOnOff)
         : m_LH(LH), SaveIsRecursivelyRunning(LH.IsRecursivelyRunning),
           fCleanupRAII(LH.m_Parser->getPreprocessor()),
+#ifndef UPSTREAM_CLANG
           fSavedCurToken(*LH.m_Parser),
+#endif
           ResetParserState(*LH.m_Parser,
                            !LH.IsRecursivelyRunning /*skipToEOF*/),
           fSFINAETrap(m_LH.m_Parser->getActions()) {

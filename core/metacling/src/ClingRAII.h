@@ -58,7 +58,9 @@ namespace ROOT {
        };
 
        clang::Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+#ifndef UPSTREAM_CLANG
        clang::Parser::ParserCurTokRestoreRAII fSavedCurToken;
+#endif
        cling::ParserStateRAII fParserRAII;
 
        // Buffer the delayed infos when doing recursive parsing.
@@ -79,7 +81,9 @@ namespace ROOT {
 
        ParsingStateRAII(clang::Parser& parser, clang::Sema& sema):
           fCleanupRAII(sema.getPreprocessor()),
+#ifndef UPSTREAM_CLANG
           fSavedCurToken(parser),
+#endif
           fParserRAII(parser, false /*skipToEOF*/),
           fSemaInfoRAII(sema), fSemaExprCleanupsRAII(sema),
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),

@@ -140,7 +140,9 @@ namespace {
         FileInfos.push_back({std::move(Literal), Tok.getLocation()});
 
       clang::Parser& P = m_Interp.getParser();
+#ifndef UPSTREAM_CLANG
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
+#endif
       // After we have saved the token reset the current one to something
       // which is safe (semi colon usually means empty decl)
       Token& CurTok = const_cast<Token&>(P.getCurToken());

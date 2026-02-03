@@ -252,7 +252,9 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
          Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
          Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
          // We parsed 'include' token. Store it.
+#ifndef UPSTREAM_CLANG
          clang::Parser::ParserCurTokRestoreRAII fSavedCurToken(P);
+#endif
          // We provide our own way of handling the entire #include "file.c+"
          // After we have saved the token reset the current one to
          // something which is safe (semi colon usually means empty decl)
