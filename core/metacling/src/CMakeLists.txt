@@ -37,6 +37,10 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+if(upstream_clang)
+  target_compile_definitions(MetaCling PUBLIC UPSTREAM_CLANG)
+endif()
+
 # This directory contains files that include llvm, which can give warnings.
 if(NOT MSVC)
   target_compile_options(MetaCling PRIVATE -Wno-error)
