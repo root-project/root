@@ -20,8 +20,9 @@ This preprocessor relies on the metadata section of the notebook to
 find out about the notebook's language.
 """
 
-from IPython.nbconvert.preprocessors.base import Preprocessor
 import re
+
+from IPython.nbconvert.preprocessors.base import Preprocessor
 
 
 class CppHighlighter(Preprocessor):
@@ -67,7 +68,7 @@ class CppHighlighter(Preprocessor):
         try:
             if nb.metadata.kernelspec.language == "c++":
                 self.preprocess_cell = self._preprocess_cell_cpp
-        except:
+        except Exception:
             # if no language metadata, keep python as default
             pass
         return super(CppHighlighter, self).preprocess(nb, resources)

@@ -12,14 +12,12 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import queue
 from threading import Thread
 from time import sleep as timeSleep
-from sys import platform
-from os import path
-import queue
 
-from ROOT._jupyroot import helpers
 import ROOT.libROOTPythonizations as _lib
+from ROOT._jupyroot import helpers
 
 
 class IOHandler(object):
@@ -179,7 +177,8 @@ def RunAsyncAndPrint(executor, code, ioHandler, printFunction, displayFunction, 
         if not silent:
             printFunction(ioHandler)
             ioHandler.Clear()
-        if executor.HasFinished(): break
+        if executor.HasFinished():
+            break
         timeSleep(.1)
     executor.Wait()
     ioHandler.EndCapture()
