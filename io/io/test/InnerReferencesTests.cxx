@@ -122,7 +122,7 @@ TEST(TBufferFileInnerReferences, LargeOffsetsAndReferences)
    errors += ReadAndCheck(b, n0->IsA(), rn0.get()).fError;
    errors += ReadAndCheck(b, n1->IsA(), rn1.get()).fError;
    errors += ReadAndCheck(b, m1->IsA(), rm1.get()).fError;
-   if (0) { // These require implementing proper support for long range references.
+   if (1) { // These require implementing proper support for long range references.
       errors += ReadAndCheck(b, n2->IsA(), rn2.get()).fError;  // Reference over 1G
       errors += ReadAndCheck(b, m2->IsA(), rm2.get()).fError;  // Reference over 1G
       errors += ReadAndCheck(b, c1->IsA(), rc1.get()).fError;  // Class and reference over 1G
