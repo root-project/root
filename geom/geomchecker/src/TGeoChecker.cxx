@@ -1647,8 +1647,6 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
    fFullCheck = opt.Contains("f");
 
    Int_t ncand = 0;
-   Int_t nextr = 0;
-   // Bool_t conv = vol->GetShape()->IsConvex();
 
    // ---- EXTRUSIONS (only for daughters of a non-assembly volume)
    if (!is_assembly) {
@@ -1685,7 +1683,6 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
 
             next1.GetPath(path);
             ncand++;
-            nextr++;
             PushCandidate(out, TString::Format("%s extruded by: %s", vol->GetName(), path.Data()), (TGeoVolume *)vol,
                           node->GetVolume(), gGeoIdentity, next1.GetCurrentMatrix(), kFALSE, ovlp);
 
@@ -1693,9 +1690,6 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
          }
       }
    }
-
-   //   if (nextr > 0)
-   //      printf("extrusion cand for %s : %d  (convex = %d)\n", vol->GetName(), nextr, conv);
 
    // ---- OVERLAPS between daughters
    if (nd < 2)
@@ -1925,8 +1919,6 @@ Int_t TGeoChecker::EnumerateOverlapCandidates(const TGeoVolume *vol, Double_t ov
          }
       }
    }
-   //   if ((ncand - nextr) > 0)
-   //      printf("overlap cand for %s : %d\n", vol->GetName(), ncand - nextr);
    return ncand;
 }
 
