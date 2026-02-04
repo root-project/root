@@ -1,0 +1,172 @@
+\section{TMVA SOFIE \index{SOFIE}}
+\label{sec:sofie}
+
+ROOT/TMVA SOFIE (System for Optimized Fast Inference code Emit) generates C++ functions easily invokable for the fast inference of trained neural network models. It takes ONNX model files as inputs and produces C++ header files that can be included and utilized in a ``plug-and-go'' style.
+
+Code generation allows for better optimization of the inference graph. We noticed that for some standard deep learning models, the inference time can be significantly faster (up to 5x) than the one obtained using standard tools such as ONNXRuntime.
+
+\subsection{Prerequisite}
+
+\begin{itemize}
+    \item Protobuf 3.0 or higher (for input of ONNX model files)
+    \item BLAS or Eigen (for execution of the generated code for inference)
+\end{itemize}
+
+\subsection{Installation}
+
+Build ROOT with the CMake option \code{tmva-sofie} enabled.
+
+\begin{tmvacode}
+cmake ../root -Dtmva-sofie=ON
+make -j8
+\end{tmvacode}
+
+\subsection{Usage}
+SOFIE works in a parser-generator working architecture. With SOFIE, the user gets an ONNX, Keras and a PyTorch parser for translating models in respective formats into SOFIE's internal representation.
+
+From the ROOT command line, or in a ROOT macro, we can proceed with an ONNX model:
+
+\begin{tmvacode}
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+SOFIE::RModel model = parser.Parse("./example_model.onnx");
+model.Generate();
+model.OutputGenerated("./example_output.hxx");
+\end{tmvacode}
+
+A C++ header file and a \code{.dat} file containing the model weights will be generated. You can also use:
+
+\begin{tmvacode}
+model.PrintRequiredInputTensors();
+\end{tmvacode}
+
+to check the required size and type of input tensor for that particular model, and use:
+
+\begin{tmvacode}
+model.PrintInitializedTensors();
+\end{tmvacode}
+
+to check the tensors (weights) already included in the model.
+
+To use the generated inference code:
+
+\begin{tmvacode}
+#include "example_output.hxx"
+float input[INPUT_SIZE];
+std::vector<float> out = TMVA_SOFIE_example_model::infer(input);
+
+// Generated header file shall contain a Session class which requires 
+// initialization to load the corresponding weights.
+TMVA_SOFIE_example_model::Session s("example_model.dat")
+
+// Once instantiated the session object's infer method can be used
+std::vector<float> out = s.infer(input);
+\end{tmvacode}
+
+With the default settings, the weights are contained in a separate binary file, but if the user instead wants them to be in the generated header file itself, they can use appropriate generation options.
+
+\begin{tmvacode}
+model.Generate(Options::kNoWeightFile);
+\end{tmvacode}
+
+Other such options includes \code{Options::kNoSession} (for not generating the Session class, and instead keeping the infer function independent).
+SOFIE also supports generating inference code with RDataFrame as inputs.
+
+\subsection{Supported ONNX operators}
+
+Here is the list of supported ONNX operators.
+
+\begin{itemize}
+    \item Abs
+    \item Add
+    \item AveragePool
+    \item BatchNormalization
+    \item Cast
+    \item Concat
+    \item Constant
+    \item ConstantOfShape
+    \item Conv
+    \item ConvTranspose
+    \item Cos
+    \item Div
+    \item Einsum
+    \item Elu
+    \item Equal
+    \item Erf
+    \item Exp
+    \item Expand
+    \item EyeLike
+    \item Flatten
+    \item GRU
+    \item Gather
+    \item Gemm
+    \item GlobalAveragePool
+    \item Greater
+    \item GreaterOrEqual
+    \item Identity
+    \item If
+    \item LSTM
+    \item LayerNormalization
+    \item LeakyRelu
+    \item Less
+    \item LessOrEqual
+    \item Log
+    \item MatMul
+    \item Max
+    \item MaxPool
+    \item Mean
+    \item Min
+    \item Mul
+    \item Neg
+    \item Pad
+    \item Pow
+    \item RNN
+    \item RandomNormal
+    \item RandomNormalLike
+    \item RandomUniform
+    \item RandomUniformLike
+    \item Range
+    \item Reciprocal
+    \item ReduceMean
+    \item ReduceProd
+    \item ReduceSum
+    \item ReduceSumSquare
+    \item Relu
+    \item Reshape
+    \item ScatterElements
+    \item Selu
+    \item Shape
+    \item Sigmoid
+    \item Sin
+    \item Slice
+    \item Softmax
+    \item Split
+    \item Sqrt
+    \item Squeeze
+    \item Sub
+    \item Sum
+    \item Tanh
+    \item Tile
+    \item TopK
+    \item Transpose
+    \item Unsqueeze
+    \item Where
+\end{itemize}
+
+The above operators are supported for tensors of the following types:
+
+\begin{itemize}
+    \item float
+    \item double
+    \item int32
+    \item int64
+    \item bool (for comparison operators)
+\end{itemize}
+
+You can also check your model whether all operators are implemented by doing the following:
+
+\begin{tmvacode}
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+parser.CheckModel("example_model.ONNX");
+\end{tmvacode}
