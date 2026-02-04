@@ -12,9 +12,9 @@
 ################################################################################
 
 import sys
-from JupyROOT.helpers import utils
+from ROOT._jupyroot.helpers import utils
 if not 'win32' in sys.platform:
-    from JupyROOT.helpers import cppcompleter
+    from ROOT._jupyroot.helpers import cppcompleter
 
 # Check if we are in the IPython shell
 try:

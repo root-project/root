@@ -18,7 +18,7 @@ from glob import glob
 
 import importlib
 
-from JupyROOT.helpers.handlers import IOHandler, Poller, JupyROOTDeclarer, JupyROOTExecutor, JupyROOTDisplayer
+from ROOT._jupyroot.helpers.handlers import IOHandler, Poller, JupyROOTDeclarer, JupyROOTExecutor, JupyROOTDisplayer
 
 import ROOT
 
@@ -65,7 +65,7 @@ class MagicLoader(object):
          magics_path = os.path.join(os.path.dirname(__file__), "magics", "*.py")
          for file in glob(magics_path):
               if file != magics_path.replace("*.py","__init__.py"):
-                  module_prefix = "JupyROOT.kernel.magics."
+                  module_prefix = "ROOT._jupyroot.kernel.magics."
                   module_name = os.path.splitext(os.path.basename(file))[0]
                   module_path = module_prefix + module_name
                   try:
