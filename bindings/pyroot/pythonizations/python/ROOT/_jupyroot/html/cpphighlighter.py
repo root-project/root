@@ -1,7 +1,7 @@
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Author: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ################################################################################
 # Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
@@ -30,9 +30,9 @@ class CppHighlighter(Preprocessor):
     Detects and tags code cells that use the C++ language.
     """
 
-    magics = [ '%%cpp' ]
-    cpp = 'cpp'
-    python = 'python'
+    magics = ["%%cpp"]
+    cpp = "cpp"
+    python = "python"
 
     def __init__(self, config=None, **kw):
         super(CppHighlighter, self).__init__(config=config, **kw)
@@ -52,14 +52,14 @@ class CppHighlighter(Preprocessor):
     def _preprocess_cell_python(self, cell, resources, cell_index):
         # Mark %%cpp and %%dcl code cells as cpp
         if cell.cell_type == "code" and self.matches(cell.source, self.re_magic_language):
-            cell['metadata']['magics_language'] = self.cpp
+            cell["metadata"]["magics_language"] = self.cpp
 
         return cell, resources
 
     def _preprocess_cell_cpp(self, cell, resources, cell_index):
         # Mark all code cells as cpp
         if cell.cell_type == "code":
-            cell['metadata']['magics_language'] = self.cpp
+            cell["metadata"]["magics_language"] = self.cpp
 
         return cell, resources
 

@@ -610,7 +610,12 @@ class NotebookDrawer(object):
             options = ""
 
         thisJsCode = _jsCode.format(
-            jsCanvasWidth=width, jsCanvasHeight=height, jsonLength=len(json), jsonZip=jsonzip, jsDrawOptions=options, jsDivId=divId
+            jsCanvasWidth=width,
+            jsCanvasHeight=height,
+            jsonLength=len(json),
+            jsonZip=jsonzip,
+            jsDrawOptions=options,
+            jsDivId=divId,
         )
         return thisJsCode
 
