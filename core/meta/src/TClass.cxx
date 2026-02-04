@@ -6748,8 +6748,17 @@ void TClass::AdoptReferenceProxy(TVirtualRefProxy* proxy)
 /// Adopt the TMemberStreamer pointer to by p and use it to Stream non basic
 /// member name.
 
-void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
+bool TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
 {
+   // Too late to add member streamers!
+   if (fLastReadInfo && (*fLastReadInfo).IsCompiled()) {
+      Error("AdoptMemberStreamer",
+            "Cannot adopt member streamer for %s::%s: StreamerInfo for the class is already compiled.", GetName(),
+            name);
+      delete p;
+      return false;
+   }
+
    if (fRealData) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -6761,29 +6770,14 @@ void TClass::AdoptMemberStreamer(const char *name, TMemberStreamer *p)
             // If there is a TStreamerElement that took a pointer to the
             // streamer we should inform it!
             rd->AdoptStreamer(p);
-            return;
+            return true;
          }
       }
    }
 
-   Error("AdoptMemberStreamer","Cannot adope member streamer for %s::%s",GetName(), name);
+   Error("AdoptMemberStreamer", "Cannot adopt member streamer for %s::%s", GetName(), name);
    delete p;
-
-//  NOTE: This alternative was proposed but not is not used for now,
-//  One of the major difference with the code above is that the code below
-//  did not require the RealData to have been built
-//    if (!fData) return;
-//    const char *n = name;
-//    while (*n=='*') n++;
-//    TString ts(n);
-//    int i = ts.Index("[");
-//    if (i>=0) ts.Remove(i,999);
-//    TDataMember *dm = (TDataMember*)fData->FindObject(ts.Data());
-//    if (!dm) {
-//       Warning("SetStreamer","Can not find member %s::%s",GetName(),name);
-//       return;
-//    }
-//    dm->SetStreamer(p);
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

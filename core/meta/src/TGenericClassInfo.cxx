@@ -438,12 +438,11 @@ namespace Internal {
       fAlternate.push_back(alt);
    }
 
-   void TGenericClassInfo::AdoptMemberStreamer(const char *name, TMemberStreamer *strm)
+   bool TGenericClassInfo::AdoptMemberStreamer(const char *name, TMemberStreamer *strm)
    {
       if (fClass) {
          assert(fAdoptedMemberStreamers.empty());
-         fClass->AdoptMemberStreamer(name, strm);
-         return;
+         return fClass->AdoptMemberStreamer(name, strm);
       }
 
       auto [it, inserted] = fAdoptedMemberStreamers.emplace(name, strm);
@@ -451,6 +450,7 @@ namespace Internal {
          delete it->second;
          it->second = strm;
       }
+      return true;
    }
 
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)
