@@ -76,6 +76,22 @@ set(py_sources
   ROOT/_asan.py
   ROOT/_facade.py
   ROOT/__init__.py
+  ROOT/_jupyroot/__init__.py
+  ROOT/_jupyroot/helpers/__init__.py
+  ROOT/_jupyroot/helpers/cppcompleter.py
+  ROOT/_jupyroot/helpers/handlers.py
+  ROOT/_jupyroot/helpers/utils.py
+  ROOT/_jupyroot/html/__init__.py
+  ROOT/_jupyroot/html/cpphighlighter.py
+  ROOT/_jupyroot/kernel/__init__.py
+  ROOT/_jupyroot/kernel/rootkernel.py
+  ROOT/_jupyroot/kernel/utils.py
+  ROOT/_jupyroot/kernel/magics/__init__.py
+  ROOT/_jupyroot/kernel/magics/cppmagic.py
+  ROOT/_jupyroot/kernel/magics/jsrootmagic.py
+  ROOT/_jupyroot/magics/__init__.py
+  ROOT/_jupyroot/magics/cppmagic.py
+  ROOT/_jupyroot/magics/jsrootmagic.py
   ROOT/_numbadeclare.py
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py

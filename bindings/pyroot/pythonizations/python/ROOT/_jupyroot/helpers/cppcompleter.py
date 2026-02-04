@@ -13,7 +13,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from JupyROOT.helpers import utils
+from ROOT._jupyroot.helpers import utils
 import platform
 import ROOT
 

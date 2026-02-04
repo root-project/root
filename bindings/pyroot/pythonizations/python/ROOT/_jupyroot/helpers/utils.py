@@ -30,7 +30,7 @@ import ROOT
 from IPython import display, get_ipython
 from IPython.core.extensions import ExtensionManager
 
-from JupyROOT.helpers import handlers
+from ROOT._jupyroot.helpers import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -700,7 +700,7 @@ captures = []
 
 def loadMagicsAndCapturers():
     global captures
-    extNames = ["JupyROOT.magics." + name for name in ["cppmagic", "jsrootmagic"]]
+    extNames = ["ROOT._jupyroot.magics." + name for name in ["cppmagic", "jsrootmagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:

@@ -4,7 +4,7 @@ if(NOT MSVC OR win_broken_tests)
 # Do not run with classic build or if tests are vetoed
 if (pyroot AND NOT ROOT_CLASSIC_BUILD)
 
-set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
+set(MODULES_LOCATION ${ROOTSYS}/lib/ROOT/_jupyroot/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
 set(DOCTEST_LAUNCHER ${CMAKE_CURRENT_SOURCE_DIR}/doctest_launcher.py)
 

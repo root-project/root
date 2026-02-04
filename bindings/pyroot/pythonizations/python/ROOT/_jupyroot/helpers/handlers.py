@@ -18,7 +18,7 @@ from sys import platform
 from os import path
 import queue
 
-from JupyROOT import helpers
+from ROOT._jupyroot import helpers
 import ROOT.libROOTPythonizations as _lib
 
 

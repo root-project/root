@@ -111,7 +111,7 @@ def createKernelSpec():
          "argv": [
           "%s",
           "-m",
-          "JupyROOT.kernel.rootkernel",
+          "ROOT._jupyroot.kernel.rootkernel",
           "-f",
           "{connection_file}"
          ]
