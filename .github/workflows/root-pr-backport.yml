@@ -41,7 +41,7 @@ jobs:
         env:
             GH_TOKEN: ${{ github.token }}
         run: |
-          MERGED=$(gh pr view ${{ github.event.issue.number }} --json mergeCommit --jq '.mergeCommit.oid')
+          MERGED=$(gh pr view ${{ github.event.issue.number }} --json mergeCommit --jq '.mergeCommit.oid' --repo root-project/root)
           if [[ -z "$MERGED" ]]; then
             echo "PR was closed but not merged. Skipping."
             exit 1
