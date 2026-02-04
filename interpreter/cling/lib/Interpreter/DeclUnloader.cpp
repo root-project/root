@@ -1013,8 +1013,10 @@ namespace cling {
     if (!MI)
       return false;
 
+#ifndef UPSTREAM_CLANG
     // Remove the pair from the macros
     PP.removeMacro(MacroD.m_II, const_cast<MacroDirective*>(MacroD.m_MD));
+#endif
 
     return true;
   }
