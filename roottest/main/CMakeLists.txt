@@ -1,10 +1,12 @@
 configure_file(test.root . COPYONLY)
+configure_file(test2.root . COPYONLY)
 configure_file(simpleTree.root . COPYONLY)
 configure_file(multipleNameCycles.root . COPYONLY)
 configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
 configure_file(subdirs.root . COPYONLY)
 configure_file(nested.root . COPYONLY)
 configure_file(RNTuple.root . COPYONLY)
+configure_file(RootcpReplaceEntireFileCheck.C . COPYONLY)
 
 # We should explicitly use the Python executable from the Python version that
 # was used to build ROOT. Otherwise, we risk picking up a different Python
@@ -419,13 +421,13 @@ ROOTTEST_ADD_TEST(RootcpReplaceEntireFilePrepareInput
                   FIXTURES_SETUP main-RootcpReplaceEntireFilePrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(RootcpReplaceEntireFile
-                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --replace test.root copy_repl.root
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --replace test2.root copy_repl.root
                   FIXTURES_REQUIRED main-RootcpReplaceEntireFilePrepareInput-fixture
                   FIXTURES_SETUP main-RootcpReplaceEntireFile-fixture)
 
 ROOTTEST_ADD_TEST(RootcpReplaceEntireFileCheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -c1 copy_repl.root
-                  OUTREF RootcpReplaceEntireFile.ref
+                  COMMAND ${TOOLS_PREFIX}/root${exeext} -b -l -q RootcpReplaceEntireFileCheck.C\(\"copy_repl.root\"\)
+                  PASSRC 0
                   FIXTURES_REQUIRED main-RootcpReplaceEntireFile-fixture
                   FIXTURES_SETUP main-RootcpReplaceEntireFileCheckOutput-fixture
                   ENVIRONMENT ${test_env})
