@@ -13,14 +13,11 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import importlib
 import os
 from glob import glob
 
-import importlib
-
-from ROOT._jupyroot.helpers.handlers import IOHandler, Poller, JupyROOTDeclarer, JupyROOTExecutor, JupyROOTDisplayer
-
-import ROOT
+from ROOT._jupyroot.helpers.handlers import IOHandler, JupyROOTDeclarer, JupyROOTDisplayer, JupyROOTExecutor, Poller
 
 _ioHandler = None
 _Poller    = None

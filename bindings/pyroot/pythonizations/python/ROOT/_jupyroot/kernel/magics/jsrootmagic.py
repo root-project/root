@@ -12,9 +12,16 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT._jupyroot.helpers.utils import enableJSVis, disableJSVis, enableJSVisDebug, TBufferJSONErrorMessage, TBufferJSONAvailable
-
 from metakernel import Magic, option
+
+from ROOT._jupyroot.helpers.utils import (
+    TBufferJSONAvailable,
+    TBufferJSONErrorMessage,
+    disableJSVis,
+    enableJSVis,
+    enableJSVisDebug,
+)
+
 
 class JSRootMagics(Magic):
     def __init__(self, kernel):

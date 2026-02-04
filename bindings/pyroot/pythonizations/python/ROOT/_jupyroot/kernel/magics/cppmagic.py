@@ -13,9 +13,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+
 from metakernel import Magic, option
 
-import sys
 
 #NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong
 class CppMagics(Magic):

@@ -26,10 +26,10 @@ from datetime import datetime
 from hashlib import sha1
 from subprocess import check_output
 
-import ROOT
 from IPython import display, get_ipython
 from IPython.core.extensions import ExtensionManager
 
+import ROOT
 from ROOT._jupyroot.helpers import handlers
 
 # We want iPython to take over the graphics
