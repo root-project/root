@@ -22,13 +22,13 @@
 
 #include "ROOT/StringUtils.hxx"
 
-#include <array>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <set>
+#include <stack>
 #include <sstream>
 #include <unordered_map>
 
@@ -47,6 +47,43 @@ std::string doubleToString(double val)
    std::stringstream ss;
    ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
    return ss.str();
+}
+
+bool areMatching(char opening, char closing)
+{
+   return (opening == '(' && closing == ')') || (opening == '{' && closing == '}') ||
+          (opening == '[' && closing == ']') || (opening == '\"' && closing == '\"');
+}
+
+bool isBalanced(const TString &s)
+{
+   std::stack<char> i;
+   auto sLength = s.Length();
+   for (Ssiz_t c = 0; c < sLength; ++c) {
+      if (s[c] == '[' || s[c] == '{' || s[c] == '(') {
+         i.push(s[c]);
+      } else if (s[c] == ']' || s[c] == '}' || s[c] == ')') {
+         if (i.empty() || !areMatching(i.top(), s[c])) {
+            Error("TFormula", "Found unbalanced char %c (expected closing of %c) at index %d of %s", s[c], i.top(), c,
+                  s.Data());
+            return false;
+         } else
+            i.pop();
+      } else if (s[c] == '\"') {
+         if (i.empty())
+            i.push(s[c]);
+         else if (areMatching(i.top(), s[c]))
+            i.pop();
+         else {
+            i.push(s[c]);
+         }
+      }
+   }
+   if (!i.empty()) {
+      Error("TFormula", "String %s with %zu unbalanced chars.", s.Data(), i.size());
+      return false;
+   }
+   return true;
 }
 
 // In the interpreter, we must match the SIMD width used by compiled ROOT.
@@ -1860,6 +1897,12 @@ Bool_t TFormula::PrepareFormula(TString &formula)
 {
    fFuncs.clear();
    fReadyToExecute = false;
+
+   // Check for balanced parentheses
+   if (!isBalanced(formula)) {
+      return false;
+   }
+
    ExtractFunctors(formula);
 
    // update the expression with the new formula
