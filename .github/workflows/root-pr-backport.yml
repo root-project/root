@@ -60,6 +60,7 @@ jobs:
           path: root_bot
 
       - name: Backport Commits
+        token: ${{ secrets.ROOT_BOT_GITHUB_TOKEN }}
         run: "root_official/.github/workflows/utilities/backport_pr.py
                         --comment \"$COMMENT_BODY\"
                         --pull ${{ github.event.issue.number }}
