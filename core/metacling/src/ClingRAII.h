@@ -65,8 +65,10 @@ namespace ROOT {
 #endif
        cling::ParserStateRAII fParserRAII;
 
+#ifndef UPSTREAM_CLANG
        // Buffer the delayed infos when doing recursive parsing.
        clang::Sema::DelayedInfoRAII fSemaInfoRAII;
+#endif
 
        SemaExprCleanupsRAII fSemaExprCleanupsRAII;
 
@@ -91,7 +93,10 @@ namespace ROOT {
           fSavedCurToken(parser),
 #endif
           fParserRAII(parser, false /*skipToEOF*/),
-          fSemaInfoRAII(sema), fSemaExprCleanupsRAII(sema),
+#ifndef UPSTREAM_CLANG
+          fSemaInfoRAII(sema),
+#endif
+          fSemaExprCleanupsRAII(sema),
 #ifndef UPSTREAM_CLANG
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
