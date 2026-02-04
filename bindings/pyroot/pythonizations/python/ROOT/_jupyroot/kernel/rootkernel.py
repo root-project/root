@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Authors: Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
 #           Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #           Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ################################################################################
 # Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
@@ -33,35 +33,38 @@ from ROOT._jupyroot.kernel.utils import GetDeclarer, GetDisplayer, GetExecutor, 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
 
+
 def Debug(msg):
-     print('Kernel main: %r' % msg, file=sys.__stderr__)
+    print("Kernel main: %r" % msg, file=sys.__stderr__)
+
 
 class ROOTKernel(MetaKernel):
     # These two regexes are considered by the parser of the metakernel
     # there is no need to create one explicitly
-    identifier_regex = r'(?:\w(?:\w|\.|->|::|\d)*)'
-    func_call_regex = r'(?:\w(?:(?:\w|\.|->|::|\d))*)\([^\)\()]*\Z'
+    identifier_regex = r"(?:\w(?:\w|\.|->|::|\d)*)"
+    func_call_regex = r"(?:\w(?:(?:\w|\.|->|::|\d))*)\([^\)\()]*\Z"
 
-    implementation = 'ROOT'
-    implementation_version = '1.0'
-    language = 'c++'
-    language_version = '0.1'
-    language_info = {'name': 'c++',
-                     'codemirror_mode': 'text/x-c++src',
-                     'mimetype': ' text/x-c++src',
-                     'file_extension': '.C'}
+    implementation = "ROOT"
+    implementation_version = "1.0"
+    language = "c++"
+    language_version = "0.1"
+    language_info = {
+        "name": "c++",
+        "codemirror_mode": "text/x-c++src",
+        "mimetype": " text/x-c++src",
+        "file_extension": ".C",
+    }
     banner = "ROOT Kernel"
 
-    def __init__(self,**kwargs):
-
-        MetaKernel.__init__(self,**kwargs)
+    def __init__(self, **kwargs):
+        MetaKernel.__init__(self, **kwargs)
         setStyle()
         self.ioHandler = GetIOHandler()
-        self.Poller    = GetPoller()
-        self.Executor  = GetExecutor(self.Poller)
-        self.Declarer  = GetDeclarer(self.Poller) #required for %%cpp -d magic
+        self.Poller = GetPoller()
+        self.Executor = GetExecutor(self.Poller)
+        self.Declarer = GetDeclarer(self.Poller)  # required for %%cpp -d magic
         self.Displayer = GetDisplayer(self.Poller)
-        self.ACLiC     = invokeAclic
+        self.ACLiC = invokeAclic
         self.magicloader = MagicLoader(self)
         self.completer = CppCompleter()
         self.completer.activate()
@@ -70,54 +73,49 @@ class ROOTKernel(MetaKernel):
         self.Poller.Stop()
 
     def get_completions(self, info):
-        return self.completer._completeImpl(info['code'])
+        return self.completer._completeImpl(info["code"])
 
     def print_output(self, handler):
         streamDicts = handler.GetStreamsDicts()
         for streamDict in filter(lambda d: d is not None, streamDicts):
-            self.send_response(self.iopub_socket, 'stream', streamDict)
+            self.send_response(self.iopub_socket, "stream", streamDict)
 
     def do_execute_direct(self, code, silent=False):
-
         if not code.strip():
             return
 
-        status = 'ok'
+        status = "ok"
         try:
-            RunAsyncAndPrint(self.Executor,
-                             code,
-                             self.ioHandler,
-                             self.print_output,
-                             silent,
-                             .1)
+            RunAsyncAndPrint(self.Executor, code, self.ioHandler, self.print_output, silent, 0.1)
 
             Display(self.Displayer, self.Display)
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()
-            status = 'interrupted'
+            status = "interrupted"
             self.ioHandler.EndCapture()
         if not silent:
             self.print_output(self.ioHandler)
 
         traceback = None
-        reply = {'status': status,
-                'execution_count': self.execution_count,
-                'payload': [],
-                'user_expressions': {},
-                }
+        reply = {
+            "status": status,
+            "execution_count": self.execution_count,
+            "payload": [],
+            "user_expressions": {},
+        }
 
-        if status == 'interrupted':
+        if status == "interrupted":
             pass
-        elif status == 'error':
+        elif status == "error":
             err = {
-                'ename': 'ename',
-                'evalue': 'evalue',
-                'traceback': traceback,
+                "ename": "ename",
+                "evalue": "evalue",
+                "traceback": traceback,
             }
-            self.send_response(self.iopub_socket, 'error', err)
+            self.send_response(self.iopub_socket, "error", err)
             reply.update(err)
-        elif status == 'ok':
+        elif status == "ok":
             pass
         else:
             raise ValueError("Invalid status: %r" % status)
@@ -131,5 +129,6 @@ def main():
         from IPython.kernel.zmq.kernelapp import IPKernelApp
     IPKernelApp.launch_instance(kernel_class=ROOTKernel)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Copyright (c) 2016, ROOT Team.
 #  Authors: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ################################################################################
 # Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
@@ -25,17 +25,22 @@ class JSRootMagics(Magics):
 
     @line_magic
     @magic_arguments()
-    @argument('arg', nargs="?", default="on", help='Enable or disable JavaScript visualisation. Possible values: on (default), off')
-
+    @argument(
+        "arg",
+        nargs="?",
+        default="on",
+        help="Enable or disable JavaScript visualisation. Possible values: on (default), off",
+    )
     def jsroot(self, line):
-        '''Change the visualisation of plots from images to interactive JavaScript objects.'''
+        """Change the visualisation of plots from images to interactive JavaScript objects."""
         args = parse_argstring(self.jsroot, line)
-        if args.arg == 'on':
-           enableJSVis()
-        elif args.arg == 'off':
-           disableJSVis()
-        elif args.arg == 'debug':
-           enableJSVisDebug()
+        if args.arg == "on":
+            enableJSVis()
+        elif args.arg == "off":
+            disableJSVis()
+        elif args.arg == "debug":
+            enableJSVisDebug()
+
 
 def load_ipython_extension(ipython):
     ipython.register_magics(JSRootMagics)
