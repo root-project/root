@@ -64,7 +64,7 @@ bool isBalanced(const TString &s)
          i.push(s[c]);
       } else if (s[c] == ']' || s[c] == '}' || s[c] == ')') {
          if (i.empty() || !areMatching(i.top(), s[c])) {
-            Error("TFormula", "Found unbalanced char %c (expected closing of %c) at index %d of %s", s[c], i.top(), c,
+            Error("TFormula", "Found unbalanced char '%c' (expected closing of '%c') at index %d of '%s'", s[c], i.top(), c,
                   s.Data());
             return false;
          } else
@@ -80,7 +80,7 @@ bool isBalanced(const TString &s)
       }
    }
    if (!i.empty()) {
-      Error("TFormula", "String %s with %zu unbalanced chars.", s.Data(), i.size());
+      Error("TFormula", "String '%s' with %zu unbalanced chars.", s.Data(), i.size());
       return false;
    }
    return true;

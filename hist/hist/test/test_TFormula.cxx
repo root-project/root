@@ -102,8 +102,13 @@ TEST(TFormulaPolTest, CompoundExpressions)
 // https://github.com/root-project/root/issues/21104
 TEST(TFormula, SingleOpeningBracket)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TFormula", "String '[' with 1 unbalanced chars.");
    TFormula f1("f1", "[");
+   EXPECT_FALSE(f1.IsValid());
    EXPECT_EQ(f1.GetNdim(), 0);
+   diags.requiredDiag(kError, "TFormula", "String '(' with 1 unbalanced chars.");
    TFormula f2("f2", "(");
+   EXPECT_FALSE(f2.IsValid());
    EXPECT_EQ(f2.GetNdim(), 0);
 }
