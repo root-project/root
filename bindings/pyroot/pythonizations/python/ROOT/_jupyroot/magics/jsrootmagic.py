@@ -12,9 +12,11 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from IPython.core.magic import (Magics, magics_class, line_magic)
-from IPython.core.magic_arguments import (argument, magic_arguments, parse_argstring)
-from ROOT._jupyroot.helpers.utils import enableJSVis, disableJSVis, enableJSVisDebug
+from IPython.core.magic import Magics, line_magic, magics_class
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+
+from ROOT._jupyroot.helpers.utils import disableJSVis, enableJSVis, enableJSVisDebug
+
 
 @magics_class
 class JSRootMagics(Magics):

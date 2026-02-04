@@ -13,9 +13,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT._jupyroot.helpers import utils
 import platform
+
 import ROOT
+from ROOT._jupyroot.helpers import utils
 
 # Jit a wrapper for the ttabcom
 _TTabComHookCode = """
@@ -137,7 +138,8 @@ class CppCompleter(object):
         suggestions = [ str(s) for s in self._getSuggestions(line) ]
         suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
-        if not suggestions: return []
+        if not suggestions:
+            return []
         # Remove combinations of opening and closing brackets and just opening
         # brackets at the end of a line. Jupyter seems to expect functions
         # without these brackets to work properly. The brackets of'operator()'

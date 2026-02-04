@@ -23,14 +23,12 @@ try:
 except ImportError:
     raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
 
+
 import ROOT
-
-from ROOT._jupyroot.helpers.utils import setStyle, invokeAclic, GetDrawers
-from ROOT._jupyroot.helpers.handlers import RunAsyncAndPrint, Display
 from ROOT._jupyroot.helpers.cppcompleter import CppCompleter
-from ROOT._jupyroot.kernel.utils import GetIOHandler, GetPoller, GetExecutor, GetDeclarer, GetDisplayer, MagicLoader
-
-import IPython
+from ROOT._jupyroot.helpers.handlers import Display, RunAsyncAndPrint
+from ROOT._jupyroot.helpers.utils import invokeAclic, setStyle
+from ROOT._jupyroot.kernel.utils import GetDeclarer, GetDisplayer, GetExecutor, GetIOHandler, GetPoller, MagicLoader
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -76,7 +74,7 @@ class ROOTKernel(MetaKernel):
 
     def print_output(self, handler):
         streamDicts = handler.GetStreamsDicts()
-        for streamDict in filter(lambda d: None != d, streamDicts):
+        for streamDict in filter(lambda d: d is not None, streamDicts):
             self.send_response(self.iopub_socket, 'stream', streamDict)
 
     def do_execute_direct(self, code, silent=False):
