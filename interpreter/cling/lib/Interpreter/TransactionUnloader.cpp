@@ -174,10 +174,12 @@ namespace cling {
 
   bool
   TransactionUnloader::unloadModule(llvm::Module* M) {
+#ifndef UPSTREAM_CLANG
     for (auto& Func: M->functions())
       m_CodeGen->forgetGlobal(&Func);
     for (auto& Glob: M->globals())
       m_CodeGen->forgetGlobal(&Glob);
+#endif
     return true;
   }
 } // end namespace cling

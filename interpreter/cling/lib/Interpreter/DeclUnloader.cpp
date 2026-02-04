@@ -209,7 +209,9 @@ namespace {
           if ((*I)->getName() == "_Unwind_Resume")
             continue;
 
+#ifndef UPSTREAM_CLANG
           m_CodeGen->forgetGlobal(*I);
+#endif
           (*I)->eraseFromParent();
         }
         Changed = true;
