@@ -165,6 +165,6 @@ if _is_ipython:
 
     ip = get_ipython()
     if hasattr(ip, "kernel"):
-        import JupyROOT  # noqa: F401  # imported the side effect of setting up JupyROOT
+        from . import _jupyroot  # noqa: F401  # imported the side effect of setting up JupyROOT
 
         # from . import JsMVA
