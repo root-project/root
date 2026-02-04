@@ -31,26 +31,26 @@ jobs:
       issues: write
       pull-requests: write
     if: >-
+      (github.event.comment.author_association == 'MEMBER') &&
       (github.repository == 'root-project/root') &&
       !startswith(github.event.comment.body, '<!--IGNORE-->') &&
       contains(github.event.comment.body, '/backport to')
     steps:
-      - name: Checkout
+      - name: Checkout the official ROOT repo
         uses: actions/checkout@v5
         with:
-          repository: root-project/root
-          # GitHub stores the token used for checkout and uses it for pushes
-          # too, but we want to use a different token for pushing, so we need
-          # to disable persist-credentials here.
-          persist-credentials: false
-          path: "./root"
-          fetch-depth: 1
+          path: root_official
+
+      - name: Checkout the bot ROOT repo
+        uses: actions/checkout@v5
+        with:
+          repository: root-project-bot/root
+          token: ${{ secrets.ROOT_BOT_GITHUB_TOKEN }}
+          path: root_bot
 
       - name: Backport Commits
         run: " cd root && .github/workflows/utilities/backport_pr.py
                         --comment \"$COMMENT_BODY\"
                         --pull ${{ github.event.issue.number }}
                         --requestor ${{ github.event.comment.user.login }}
-                        --pr-token ${{ secrets.PR_CREDENTIALS_TOKEN }}
-                        --push-token ${{ secrets.BOT_PUSH_CREDENTIALS_TOKEN }}
              "

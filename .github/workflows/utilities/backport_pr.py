@@ -8,10 +8,17 @@ import os
 import shutil
 import sys
 
-PUBLIC_BOT_ROOT_REPO = f'https:/github.com/root-project-bot/root.git'
+BOT_REPO_DIR_NAME = "root_bot"
+# This is needed for adding the remote branch to apply the patch deriving from the PR
 OFFICIAL_ROOT_REPO = 'https://github.com/root-project/root'
+OFFICIAL_REPO_DIR_NAME = "root_official"
 
 def validateTargetBranches(brs):
+    '''
+    Verify the branches are floating point numbers
+    
+    :param brs: The branches as passed to the tool
+    '''
     for br in brs:
         try:
             brf = float(br)
@@ -24,8 +31,6 @@ def parse_args():
     parser.add_argument('--to', action='append', type=str, help='The target branches')
     parser.add_argument('--comment',             type=str, help='Comment that contains the info, e.g "/backport to 6.36, 6.42"')
     parser.add_argument('--requestor',           type=str, help='The requestor of the backport"')
-    parser.add_argument('--push-token',          type=str, help='The secret to push')
-    parser.add_argument('--pr-token',            type=str, help='The secret to open a PR')
 
     args = parser.parse_args()
 
@@ -55,9 +60,17 @@ def parse_args():
     
     validateTargetBranches(targetBranches)
 
-    return (args.push_token, args.pr_token, args.requestor, pullN, targetBranches)
+    return (args.requestor, pullN, targetBranches)
 
 def printFirstMessage(requestor, pullNumber, targetBranches):
+    '''
+    Prints a message useful for debugging, declaring what the script will do 
+    for what branches
+    
+    :param requestor: The user who would like to prepare a backport
+    :param pullNumber: The number of the PR to backport
+    :param targetBranches: The branches onto which the backport has to be prepared
+    '''
     nBranches = len(targetBranches)
     targetBranchesStr = ''
     plural = ''
@@ -70,132 +83,186 @@ def printFirstMessage(requestor, pullNumber, targetBranches):
     requestorInfo = f' requested by {requestor}' if requestor else ''
     printInfo(f'Preparing to backport PR #{pullNumber} to branch{plural} {targetBranchesStr} {requestorInfo}')
 
+def execCommandOfficialRepo(command):
+    '''
+    Execute a shell command in the official ROOT repo
+    
+    :param command: The command to execute
+    '''
+    return execCommand(command, OFFICIAL_REPO_DIR_NAME)
+
+def execCommandBotRepo(command):
+    '''
+    Execute a shell command in the bot ROOT repo
+    
+    :param command: The command to execute
+    '''
+    return execCommand(command, BOT_REPO_DIR_NAME)
+
 def shortBranchToRealBranch(shortBranchName):
+    '''
+    Translate branches of the form X.YZ to the names of the branches in the root repository.
+    For example, 6.40 will become v6-40-00-patches
+    
+    :param shortBranchName: The branch name in the form X.YZ, e.g. 6.38
+    '''
     major, minor = shortBranchName.split('.')
     return f'v{major}-{minor}-00-patches'
 
-def getPRTitle(pullNumber):
-    out = execCommand(f'gh pr view {pullNumber} --repo root-project/root')
-    titleLine = out.split('\n')[0]
-    _, title = titleLine.split('\t')
-    return title
-
-def createWorkdir(workdir):
-    if os.path.exists(workdir):
-        shutil.rmtree(workdir)
-    os.mkdir(workdir)
-
-def fetchPatch(pullNumber):
-    outname = f'../{pullNumber}.patch'
-    out = execCommand(f'gh pr diff {pullNumber} --patch > {outname}')
-    return os.path.abspath(outname)
-
-def parseJson(jsonStr, level1, level2):
+class OfficialROOTRepoPR:
     '''
-    A json of the type
-    {
-    "labels": [
-    {
-      "id": "MDU6TGFiZWwyMzM2MDQ5MDQw",
-      "name": "affects:master",
-      "description": "",
-      "color": "93e0ea"
-    },
-    {
-      "id": "LA_kwDOAKfCqc8AAAACEWlFOQ",
-      "name" ...
-    is returned.
+    A class that represents a PR to the Official ROOT repository 
     '''
-    json_object = json.loads(jsonStr)
-    return ','.join([ l[level2] for l in  json_object[level1] ])
+    def __init__(self, pullNumber):
+        self.pullNumber = pullNumber
+        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title')
+        self.PRJsonObject = json.loads(PRJsonStr)
 
-def getPRLabels(pullNumber):
-    jsonStr = execCommand(f'gh pr view {pullNumber} --json labels')
-    labels = parseJson(jsonStr, 'labels', 'name')
-    labels = f'pr:backport,{labels}'
-    printInfo(f'The label(s) of PR {pullNumber} is(are) {labels}')
-    return labels
+    def fetchPatch(self):
+        '''
+        Obtain the patch a PR to the root repo by its number.
+        A file is created called <#PR>.patch
+        
+        :param pullNumber: The number of the PR to the ROOT repo
+        '''
+        outname = os.path.join(os.getcwd(), f'{self.pullNumber}.patch')
+        out = execCommandOfficialRepo(f'gh pr diff {self.pullNumber} --patch > {outname}')
+        return outname
 
-def getPRAssignees(pullNumber):
-    jsonStr = execCommand(f'gh pr view {pullNumber} --json assignees')
-    assignees = parseJson(jsonStr, 'assignees', 'login')
-    printInfo(f'The assignee(s) of PR {pullNumber} is(are) {assignees}')
-    return assignees
+    def _parseJson(self, level1Label, level2Label=''):
+        '''
+        Obtain information from a json of the type returned by the GitHub interface as specified
+        by the level 1 and 2 labels.
+        The result is a comma separated list of strings.
 
-def authenticate(token):
-    execCommand(f'gh auth login --with-token', theInput=token)
+        A typical json returned has the following structure:
+        ```
+        {
+        "labels": [
+        {
+        "id": "MDU6TGFiZWwyMzM2MDQ5MDQw",
+        "name": "affects:master",
+        "description": "",
+        "color": "93e0ea"
+        },
+        {
+        "id": "LA_kwDOAKfCqc8AAAACEWlFOQ",
+        "name" ...
+        ```
+
+        :param jsonStr: The json as string
+        :param level1Label: The label of the first level of the json
+        :param level2Label: The label of the second level of the json
+        '''
+        if level2Label != '':
+            return ','.join([ l[level2Label] for l in  self.PRJsonObject[level1Label] ])
+        else:
+            return self.PRJsonObject[level1Label]
+
+    def getPRTitle(self):
+        '''
+        Obtain the name of a PR to the official ROOT repo by its number.
+        '''
+        return self._parseJson('title')
+    
+    def getPRLabels(self):
+        '''
+        Get the labels of a PR to the ROOT official repository as a comma separated list.
+        
+        :param pullNumber: The number of the PR to the ROOT repo
+        '''
+        labels = self._parseJson('labels', 'name')
+        labels = f'pr:backport,{labels}'
+        printInfo(f'The label(s) of PR {self.pullNumber} is(are) {labels}')
+        return labels
+
+    def getPRAssignees(self):
+        '''
+        Get the assignees of a PR to the ROOT official repository as a comma separated list.
+        
+        :param pullNumber: The number of the PR to the ROOT repo
+        '''
+        assignees = self._parseJson('assignees', 'login')
+        printInfo(f'The assignee(s) of PR {self.pullNumber} is(are) {assignees}')
+        return assignees
+
+    def postCommentAfterBP(self, bpPRUrlBranch):
+        '''
+        Post a clear message summarising what backports have been created
+        
+        :param pullNumber: The number of the PR to the ROOT repo
+        :param bpPRUrlBranch: The list of backport PRs numbers and branch names
+        '''
+        # We now prepare a clear message to post on the PR for which backports have been created...
+        prComment = 'This PR has been backported to'
+        if len(bpPRUrlBranch) == 1:
+            prUrl, brName = bpPRUrlBranch[0]
+            prComment += f' branch {brName}: {prUrl}'
+        else:
+            for prUrl, brName in bpPRUrlBranch:
+                prComment += f'\n   - Branch {brName}:#{prUrl}'
+        # ...and post it
+        execCommandOfficialRepo(f'gh pr comment {self.pullNumber} --body "{prComment}"')
+        return 0
 
 def principal():
-    push_token, pr_token, requestor, pullNumber, targetBranches = parse_args()
+    
+    # We first obtain the information from the parser
+    requestor, pullNumber, targetBranches = parse_args()
+    
+    # We declare what we are about to do, for clarity and debugging purposes
     printFirstMessage(requestor, pullNumber, targetBranches)
 
-    BOT_ROOT_REPO = f'https://x-access-token:{push_token}@github.com/root-project-bot/root.git'
-
-    # Get some information about the PR
-    authenticate(push_token)
-    assignees = getPRAssignees(pullNumber)
-    labels = getPRLabels(pullNumber)
-    patchName = fetchPatch(pullNumber)
-    prTitle = getPRTitle(pullNumber)
+    # We get some information about the PR
+    thePR = OfficialROOTRepoPR(pullNumber)
+    assignees = thePR.getPRAssignees()
+    labels = thePR.getPRLabels()
+    patchName = thePR.fetchPatch()
+    prTitle = thePR.getPRTitle()
     
-    # We start the automated procedure, assuming to be in a clean root repo
-    os.chdir('../')
-    workdir = f'./workdir_{pullNumber}'
-    
-    createWorkdir(workdir)
-    os.chdir(workdir)
-    
-    cloneCmd = 'git clone --depth 1'
-
-    execCommand(cmd=f'{cloneCmd} {BOT_ROOT_REPO}', replace=push_token)
-    
-    os.chdir('root')
-    execCommand(f'git remote add root_upstream {OFFICIAL_ROOT_REPO}')
-
     requestorInfo = f', requested by @{requestor}' if requestor else ''
     bpPRUrlBranch = []
 
     labelSwitch = '' if labels == '' else f'--label "{labels}"'
     assigneesSwitch = '' if assignees == '' else f'--assignee "{assignees}"'
 
-    execCommand(f'git config user.email "{requestor}@no-reply.github.com"')
-    execCommand(f'git config user.name "{requestor}"')
+    execCommandBotRepo(f'git config user.email "{requestor}@no-reply.github.com"')
+    execCommandBotRepo(f'git config user.name "{requestor}"')
+
+    # Before looping on the target branches to prepare the backport PRs, we 
+    # need to add the ROOT repo as remote to the bot repo.
+    if 'root_upstream' in execCommandBotRepo('git remote'):
+        execCommandBotRepo(f'git remote remove root_upstream')
+    execCommandBotRepo(f'git remote add root_upstream {OFFICIAL_ROOT_REPO}')
 
     # Now we loop on the target branches to create one PR for each of them
     for targetBranch in targetBranches:
-       printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')
-       realTargetBranch = shortBranchToRealBranch(targetBranch)
-       bpBranchName = f'BP_{targetBranch}_pull_{pullNumber}'
-       execCommand(f'git fetch root_upstream {realTargetBranch}')
-       execCommand(f'git checkout {realTargetBranch}')
-       execCommand(f'git checkout -b {bpBranchName}')
-       execCommand(f'git apply --check {patchName}')
-       execCommand(f'git am --keep-cr --signoff < {patchName}')
-       execCommand(f'git push --set-upstream origin {bpBranchName}')
-       authenticate(pr_token)
-       prUrl = execCommand('gh pr create --repo root-project/root ' \
-                                        f'--base {realTargetBranch} '\
-                                        f'--head root-project-bot:{bpBranchName} ' \
-                                        f'--title "[{targetBranch}] {prTitle}"  '\
-                                        f'--body "Backport of #{pullNumber}{requestorInfo}" '\
-                                        f'{labelSwitch} {assigneesSwitch} ' \
-                                        '-d')
-       bpPRUrlBranch.append((prUrl,targetBranch))       
+        printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')
+        realTargetBranch = shortBranchToRealBranch(targetBranch)
+        bpBranchName = f'BP_{targetBranch}_pull_{pullNumber}'
+        execCommandBotRepo(f'git fetch root_upstream {realTargetBranch}')
+        execCommandBotRepo(f'git checkout {realTargetBranch}')
+        if bpBranchName in execCommandBotRepo('git branch'):
+            execCommandBotRepo(f'git branch -D {bpBranchName}')
+        if bpBranchName in execCommandBotRepo('git ls-remote origin'):
+            execCommandBotRepo(f'git push -d origin {bpBranchName}')
+        execCommandBotRepo(f'git checkout -b {bpBranchName}')
+        execCommandBotRepo(f'git apply --check {patchName}')
+        execCommandBotRepo(f'git am --keep-cr --signoff < {patchName}')
+        execCommandBotRepo(f'git push --set-upstream origin {bpBranchName}')
+        prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
+                                               f'--base {realTargetBranch} '\
+                                               f'--head root-project-bot:{bpBranchName} ' \
+                                               f'--title "[{targetBranch}] {prTitle}"  '\
+                                               f'--body "Backport of #{pullNumber}{requestorInfo}" '\
+                                               f'{labelSwitch} {assigneesSwitch} ' \
+                                               '-d || echo \'\'')
+        bpPRUrlBranch.append((prUrl,targetBranch))       
 
     if bpPRUrlBranch == []:
         Exception('No backport succeeded!')
 
-    prComment = 'This PR has been backported to'
-    if len(bpPRUrlBranch) == 1:
-        prUrl, brName = bpPRUrlBranch[0]
-        prComment += f' branch {brName}: {prUrl}'
-    else:
-        for prUrl, brName in bpPRUrlBranch:
-            prComment += f'\n   - Branch {brName}:#{prUrl}'
-
-    authenticate(pr_token)
-    os.chdir('../../root') # we go back to the original root repo dir
-    execCommand(f'gh pr comment {pullNumber} --body "{prComment}"')
+    return thePR.postCommentAfterBP(bpPRUrlBranch)
 
 if __name__ == "__main__":
     sys.exit(principal())
