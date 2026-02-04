@@ -192,6 +192,9 @@ void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
 
    auto xVals = ctx.at(_pdfObsList[0]);
    _dataHist->weights(output.data(), xVals, _intOrder, true, _cdfBoundaries);
+   for (auto &ret : output) {
+      ret = std::max(ret, 0.0);
+   }
 }
 
 
