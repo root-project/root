@@ -115,19 +115,8 @@ class OfficialROOTRepoPR:
     '''
     def __init__(self, pullNumber):
         self.pullNumber = pullNumber
-        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title')
+        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title,commits,mergeCommit,baseRefName')
         self.PRJsonObject = json.loads(PRJsonStr)
-
-    def fetchPatch(self):
-        '''
-        Obtain the patch a PR to the root repo by its number.
-        A file is created called <#PR>.patch
-        
-        :param pullNumber: The number of the PR to the ROOT repo
-        '''
-        outname = os.path.join(os.getcwd(), f'{self.pullNumber}.patch')
-        out = execCommandOfficialRepo(f'gh pr diff {self.pullNumber} --patch > {outname}')
-        return outname
 
     def _parseJson(self, level1Label, level2Label=''):
         '''
@@ -155,9 +144,24 @@ class OfficialROOTRepoPR:
         :param level2Label: The label of the second level of the json
         '''
         if level2Label != '':
-            return ','.join([ l[level2Label] for l in  self.PRJsonObject[level1Label] ])
+            l1 = self.PRJsonObject[level1Label]
+            if isinstance(l1, dict):
+                return l1[level2Label]
+            else:
+                return ','.join([ l[level2Label] for l in  self.PRJsonObject[level1Label] ])
         else:
             return self.PRJsonObject[level1Label]
+
+    def getMergeCommit(self):
+        # We have a handle on the most recent commit merged. Its
+        # hash is the one in the target branch.
+        return self._parseJson('mergeCommit', 'oid')
+
+    def getBaseRefName(self):
+        return self._parseJson('baseRefName')
+
+    def getNCommits(self):
+        return len(self._parseJson('commits'))
 
     def getPRTitle(self):
         '''
@@ -217,8 +221,10 @@ def principal():
     thePR = OfficialROOTRepoPR(pullNumber)
     assignees = thePR.getPRAssignees()
     labels = thePR.getPRLabels()
-    patchName = thePR.fetchPatch()
     prTitle = thePR.getPRTitle()
+    mergeCommit = thePR.getMergeCommit()
+    nCommits = thePR.getNCommits()
+    baseRefName = thePR.getBaseRefName()
     
     requestorInfo = f', requested by @{requestor}' if requestor else ''
     bpPRUrlBranch = []
@@ -235,6 +241,10 @@ def principal():
         execCommandBotRepo(f'git remote remove root_upstream')
     execCommandBotRepo(f'git remote add root_upstream {OFFICIAL_ROOT_REPO}')
 
+    # We need to fetch the branch onto which the original PR was merged to have the
+    # hashes at our disposal.
+    execCommandBotRepo(f'git fetch --depth=8192 root_upstream {baseRefName}')
+
     # Now we loop on the target branches to create one PR for each of them
     for targetBranch in targetBranches:
         printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')
@@ -247,8 +257,7 @@ def principal():
         if bpBranchName in execCommandBotRepo('git ls-remote origin'):
             execCommandBotRepo(f'git push -d origin {bpBranchName}')
         execCommandBotRepo(f'git checkout -b {bpBranchName}')
-        execCommandBotRepo(f'git apply --check {patchName}')
-        execCommandBotRepo(f'git am --keep-cr --signoff < {patchName}')
+        execCommandBotRepo(f'git cherry-pick -x {mergeCommit}~{nCommits}..{mergeCommit}')
         execCommandBotRepo(f'git push --set-upstream origin {bpBranchName}')
         prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
                                                f'--base {realTargetBranch} '\
