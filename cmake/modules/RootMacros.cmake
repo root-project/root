@@ -1972,7 +1972,7 @@ function(ROOT_ADD_PYUNITTESTS name)
 
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${Python3_EXECUTABLE_DEV} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT PYTHONPATH=${pythonpaths_native})
 endfunction()
 
@@ -2032,9 +2032,9 @@ function(ROOT_ADD_PYUNITTEST name file)
   string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
 
   if(ARG_GENERIC)
-    set(test_cmd COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${file_name})
+    set(test_cmd COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/${file_name})
   else()
-    set(test_cmd COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v)
+    set(test_cmd COMMAND ${Python3_EXECUTABLE_DEV} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v)
   endif()
 
   set(test_name pyunittests${clean_name_with_path})
@@ -2951,7 +2951,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
-    set(command ${Python3_EXECUTABLE} ${realfp} ${PYROOT_EXTRAFLAGS})
+    set(command ${Python3_EXECUTABLE_DEV} ${realfp} ${PYROOT_EXTRAFLAGS})
 
   elseif(DEFINED ARG_MACRO)
     set(command ${root_cmd} ${ARG_MACRO})
@@ -2987,7 +2987,7 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
   if(MSVC)
     if(${realexec} MATCHES "[.]py" AND NOT ${realexec} MATCHES "[.]exe")
-      set(realexec ${Python3_EXECUTABLE} ${realexec})
+      set(realexec ${Python3_EXECUTABLE_DEV} ${realexec})
     else()
       set(realexec ${realexec})
     endif()

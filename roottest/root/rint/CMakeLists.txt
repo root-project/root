@@ -1,7 +1,7 @@
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386.*")
   # All platforms except of ARM/AARCH64
   ROOTTEST_ADD_TEST(TabCom
-                    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                    COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                     INPUT TabCom_input.txt
                     OUTCNV filterOpt.sh
                     OUTREF TabCom.oref
@@ -9,7 +9,7 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386
                     COPY_TO_BUILDDIR MyClass.h)
 
   ROOTTEST_ADD_TEST(BackslashNewline
-                    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                    COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                     INPUT BackslashNewline_input.txt)
 endif()
 
