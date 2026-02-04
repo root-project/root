@@ -5,7 +5,7 @@ ROOTTEST_ADD_TEST(dotLibraries
                   PASSREGEX "libRint")
 
 ROOTTEST_ADD_TEST(TabCom
-                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                   INPUT TabCom_input.txt
                   OUTCNV filterOpt.sh
                   OUTREF TabCom.oref
@@ -13,7 +13,7 @@ ROOTTEST_ADD_TEST(TabCom
                   COPY_TO_BUILDDIR MyClass.h)
 
 ROOTTEST_ADD_TEST(BackslashNewline
-                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                   INPUT BackslashNewline_input.txt)
 
 # issue 7626: ".> file" must redirect the output of the executed code to the
@@ -21,26 +21,26 @@ ROOTTEST_ADD_TEST(BackslashNewline
 # they never leak into the file). driveRedirect.py emits the content of the
 # redirected file; the reference contains only that output.
 ROOTTEST_ADD_TEST(Redirect
-                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveRedirect.py
+                  COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveRedirect.py
                   INPUT redirect_input.txt
                   OUTREF redirect.oref)
 
 # issue 6439
 if(dataframe)
   ROOTTEST_ADD_TEST(failedCompilationBadState_1
-                    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                    COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                     INPUT 6439_1_input.txt
                     FAILREGEX "You are probably missing the definition|Assertion")
 endif()
 
 ROOTTEST_ADD_TEST(failedCompilationBadState_2
-                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                   INPUT 6439_2_input.txt
                   FAILREGEX "You are probably missing the definition|Assertion")
 
 # issue 7970: The test disabled since the bug is still there on many platforms
 #ROOTTEST_ADD_TEST(failedCompilationBadState_3
-#                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+#                  COMMAND ${Python3_EXECUTABLE_DEV} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
 #                  INPUT 7970_input.txt
 #                  FAILREGEX "You are probably missing the definition|Assertion")
 endif()
