@@ -318,7 +318,9 @@ namespace cling {
                                            const llvm::Module& M,
                                            CodeGenerator& CG) {
     M.print(Out, /*AssemblyAnnotationWriter*/ nullptr);
+#ifndef UPSTREAM_CLANG
     CG.print(Out);
+#endif
   }
 
   void ClangInternalState::printMacroDefinitions(llvm::raw_ostream& Out,
