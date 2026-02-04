@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Authors: Danilo Piparo
 #           Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ################################################################################
 # Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
@@ -21,7 +21,7 @@ from ROOT._jupyroot import helpers
 
 
 class IOHandler(object):
-    r'''Class used to capture output from C/C++ libraries.
+    r"""Class used to capture output from C/C++ libraries.
     >>> import sys
     >>> h = IOHandler()
     >>> h.GetStdout()
@@ -31,7 +31,8 @@ class IOHandler(object):
     >>> h.GetStreamsDicts()
     (None, None)
     >>> del h
-    '''
+    """
+
     def __init__(self):
         _lib.JupyROOTExecutorHandler_Ctor()
 
@@ -51,17 +52,18 @@ class IOHandler(object):
         _lib.JupyROOTExecutorHandler_EndCapture()
 
     def GetStdout(self):
-       return _lib.JupyROOTExecutorHandler_GetStdout()
+        return _lib.JupyROOTExecutorHandler_GetStdout()
 
     def GetStderr(self):
-       return _lib.JupyROOTExecutorHandler_GetStderr()
+        return _lib.JupyROOTExecutorHandler_GetStderr()
 
     def GetStreamsDicts(self):
-       out = self.GetStdout()
-       err = self.GetStderr()
-       outDict = {'name': 'stdout', 'text': out} if out != "" else None
-       errDict = {'name': 'stderr', 'text': err} if err != "" else None
-       return outDict,errDict
+        out = self.GetStdout()
+        err = self.GetStderr()
+        outDict = {"name": "stdout", "text": out} if out != "" else None
+        errDict = {"name": "stderr", "text": err} if err != "" else None
+        return outDict, errDict
+
 
 class Poller(Thread):
     def __init__(self):
@@ -85,10 +87,11 @@ class Poller(Thread):
     def Stop(self):
         if self.is_alive():
             self.queue.put(None)
-            self.join() 
+            self.join()
+
 
 class Runner(object):
-    ''' Asynchrously run functions
+    """Asynchrously run functions
     >>> import time
     >>> def f(code):
     ...    print(code)
@@ -112,7 +115,8 @@ class Runner(object):
     >>> print(r.HasFinished())
     True
     >>> p.Stop()
-    '''
+    """
+
     def __init__(self, function, poller):
         self.function = function
         self.poller = poller
@@ -126,13 +130,14 @@ class Runner(object):
 
     def Wait(self):
         while self.poller.is_running:
-            timeSleep(.1)
+            timeSleep(0.1)
 
     def HasFinished(self):
         return not self.poller.is_running
 
+
 class JupyROOTDeclarer(Runner):
-    ''' Asynchrously execute declarations
+    """Asynchrously execute declarations
     >>> import ROOT
     >>> p = Poller(); p.start()
     >>> d = JupyROOTDeclarer(p)
@@ -141,21 +146,25 @@ class JupyROOTDeclarer(Runner):
     >>> ROOT.f()
     3
     >>> p.Stop()
-    '''
+    """
+
     def __init__(self, poller):
-       super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer, poller)
+        super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer, poller)
+
 
 class JupyROOTExecutor(Runner):
-    r''' Asynchrously execute process lines
+    r"""Asynchrously execute process lines
     >>> import ROOT
     >>> p = Poller(); p.start()
     >>> d = JupyROOTExecutor(p)
     >>> d.Run('cout << "Here am I" << endl;')
     1
     >>> p.Stop()
-    '''
+    """
+
     def __init__(self, poller):
-       super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor, poller)
+        super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor, poller)
+
 
 def display_drawables(displayFunction):
     drawers = helpers.utils.GetDrawers()
@@ -163,12 +172,15 @@ def display_drawables(displayFunction):
         for dobj in drawer.GetDrawableObjects():
             displayFunction(dobj)
 
-class JupyROOTDisplayer(Runner):
-    ''' Display all canvases'''
-    def __init__(self, poller):
-       super(JupyROOTDisplayer, self).__init__(display_drawables, poller)
 
-def RunAsyncAndPrint(executor, code, ioHandler, printFunction, displayFunction, silent = False, timeout = 0.1):
+class JupyROOTDisplayer(Runner):
+    """Display all canvases"""
+
+    def __init__(self, poller):
+        super(JupyROOTDisplayer, self).__init__(display_drawables, poller)
+
+
+def RunAsyncAndPrint(executor, code, ioHandler, printFunction, displayFunction, silent=False, timeout=0.1):
     ioHandler.Clear()
     ioHandler.InitCapture()
     executor.AsyncRun(code)
@@ -179,11 +191,11 @@ def RunAsyncAndPrint(executor, code, ioHandler, printFunction, displayFunction, 
             ioHandler.Clear()
         if executor.HasFinished():
             break
-        timeSleep(.1)
+        timeSleep(0.1)
     executor.Wait()
     ioHandler.EndCapture()
+
 
 def Display(displayer, displayFunction):
     displayer.AsyncRun(displayFunction)
     displayer.Wait()
-

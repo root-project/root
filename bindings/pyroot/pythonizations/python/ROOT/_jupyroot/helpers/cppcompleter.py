@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Author: Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 ################################################################################
 # Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
@@ -47,8 +47,9 @@ std::vector<std::string> _TTabComHook(const char* pattern){
 }
 """
 
+
 class CppCompleter(object):
-    '''
+    """
     Completer which interfaces to the TTabCom of ROOT. It is activated
     (deactivated) upon the load(unload) of the load of the extension.
 
@@ -96,7 +97,7 @@ class CppCompleter(object):
     >>> comp.deactivate()
     >>> for suggestion in comp._completeImpl("TG"):
     ...     print(suggestion)
-    '''
+    """
 
     def __init__(self):
         self.hook = None
@@ -107,7 +108,7 @@ class CppCompleter(object):
     def activate(self):
         self.active = True
         if self.firstActivation:
-            if platform.system() == 'Windows':
+            if platform.system() == "Windows":
                 dlOpenRint = 'gInterpreter->LoadFile("libRint.dll");'
             else:
                 utils.declareCppCode('#include "dlfcn.h"')
@@ -120,22 +121,22 @@ class CppCompleter(object):
     def deactivate(self):
         self.active = False
 
-    def _getSuggestions(self,line):
+    def _getSuggestions(self, line):
         if self.active:
             return self.hook(line)
         return []
 
-    def _getLastAccessorPos(self,line):
+    def _getLastAccessorPos(self, line):
         accessorPos = -1
         for accessor in self.accessors:
             tmpAccessorPos = line.rfind(accessor)
             if accessorPos < tmpAccessorPos:
-                accessorPos = tmpAccessorPos+len(accessor)
+                accessorPos = tmpAccessorPos + len(accessor)
         return accessorPos
 
     def _completeImpl(self, line):
-        line=line.split()[-1]
-        suggestions = [ str(s) for s in self._getSuggestions(line) ]
+        line = line.split()[-1]
+        suggestions = [str(s) for s in self._getSuggestions(line)]
         suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
         if not suggestions:
@@ -144,12 +145,12 @@ class CppCompleter(object):
         # brackets at the end of a line. Jupyter seems to expect functions
         # without these brackets to work properly. The brackets of'operator()'
         # must not be removed
-        suggestions = [sugg[:-2] if sugg[-2:] == '()' and sugg != 'operator()' else sugg for sugg in suggestions]
-        suggestions = [sugg[:-1] if sugg[-1:] == '(' else sugg for sugg in suggestions]
+        suggestions = [sugg[:-2] if sugg[-2:] == "()" and sugg != "operator()" else sugg for sugg in suggestions]
+        suggestions = [sugg[:-1] if sugg[-1:] == "(" else sugg for sugg in suggestions]
         # If a function signature is encountered, add an empty item to the
         # suggestions. Try to guess a function signature by an opening bracket
         # ignoring 'operator()'.
-        are_signatures = "(" in "".join(filter(lambda s: s != 'operator()', suggestions))
+        are_signatures = "(" in "".join(filter(lambda s: s != "operator()", suggestions))
         accessorPos = self._getLastAccessorPos(line)
         if are_signatures:
             suggestions = [" "] + suggestions
@@ -158,26 +159,27 @@ class CppCompleter(object):
             # suggestion already contains the variable name, this can happen if
             # e.g. there is only one valid completion
             if len(suggestions) > 1 or line[:accessorPos] != suggestions[0][:accessorPos]:
-                suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
+                suggestions = [line[:accessorPos] + sugg for sugg in suggestions]
         return suggestions
 
-    def complete(self, ip, event) :
-        '''
+    def complete(self, ip, event):
+        """
         Autocomplete interfacing to TTabCom. If an accessor of a scope is
         present in the line, the suggestions are prepended with the line.
         That's how completers work. For example:
         myGraph.Set<tab> will return "myGraph.Set+suggestion in the list of
         suggestions.
-        '''
+        """
         return self._completeImpl(event.line)
 
 
 _cppCompleter = CppCompleter()
 
+
 def load_ipython_extension(ipython):
     _cppCompleter.activate()
-    ipython.set_hook('complete_command', _cppCompleter.complete, re_key=r"[(.*)[\.,::,\->](.*)]|(.*)")
+    ipython.set_hook("complete_command", _cppCompleter.complete, re_key=r"[(.*)[\.,::,\->](.*)]|(.*)")
+
 
 def unload_ipython_extension(ipython):
     _cppCompleter.deactivate()
-
