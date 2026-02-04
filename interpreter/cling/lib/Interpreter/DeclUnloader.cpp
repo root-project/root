@@ -977,8 +977,10 @@ namespace cling {
           GVEraser.EraseGlobalValue(GV);
         }
       }
+#ifndef UPSTREAM_CLANG
       // DeferredDecls exist even without Module.
       m_CodeGen->forgetDecl(mangledName);
+#endif
     }
   }
 
