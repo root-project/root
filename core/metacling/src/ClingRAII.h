@@ -82,7 +82,9 @@ namespace ROOT {
 
        SemaParsingInitForAutoVarsRAII fSemaParsingInitForAutoVarsRAII;
 
+#ifndef UPSTREAM_CLANG
        clang::Sema::SavePendingInstantiationsRAII fPendingInstantiations;
+#endif
 
 
        ParsingStateRAII(clang::Parser& parser, clang::Sema& sema):
@@ -101,8 +103,10 @@ namespace ROOT {
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
 #endif
-          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars),
+          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+#ifndef UPSTREAM_CLANG
           fPendingInstantiations(sema)
+#endif
        {
           // After we have saved the token reset the current one to something which
           // is safe (semi colon usually means empty decl)
