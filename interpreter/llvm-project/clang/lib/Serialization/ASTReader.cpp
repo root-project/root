@@ -2050,13 +2050,6 @@ Token ASTReader::ReadToken(ModuleFile &M, const RecordDataImpl &Record,
       Tok.setIdentifierInfo(II);
   }
 
-  if (Tok.isLiteral()) {
-    const RecordData& RD = reinterpret_cast<const RecordData&>(Record);
-    std::string* Lit = new std::string(ReadString(RD, Idx));
-    TokenLiteralDataLoaded.push_back(Lit);
-    Tok.setLiteralData(Lit->c_str());
-  }
-
   return Tok;
 }
 
@@ -3090,10 +3083,9 @@ ASTReader::ReadControlBlock(ModuleFile &F,
       // All user input files reside at the index range [0, NumUserInputs), and
       // system input files reside at [NumUserInputs, NumInputs). For explicitly
       // loaded module files, ignore missing inputs.
-      bool Validate = !DisableValidation && F.Kind != MK_ExplicitModule &&
-        F.Kind != MK_PrebuiltModule;
+      if (!DisableValidation && F.Kind != MK_ExplicitModule &&
+          F.Kind != MK_PrebuiltModule) {
         bool Complain = (ClientLoadCapabilities & ARR_OutOfDate) == 0;
-        Complain &= Validate;
 
         // If we are reading a module, we will create a verification timestamp,
         // so we verify all input files.  Otherwise, verify only user input
@@ -3105,13 +3097,12 @@ ASTReader::ReadControlBlock(ModuleFile &F,
             F.Kind == MK_ImplicitModule)
           N = NumUserInputs;
 
-        for (unsigned I = 0; I < NumInputs; ++I) {
-          if (I == N)
-            Complain = false;
+        for (unsigned I = 0; I < N; ++I) {
           InputFile IF = getInputFile(F, I+1, Complain);
-          if (Validate && (!IF.getFile() || IF.isOutOfDate()))
+          if (!IF.getFile() || IF.isOutOfDate())
             return OutOfDate;
         }
+      }
 
       if (Listener)
         Listener->visitModuleFile(F.FileName, F.Kind);
@@ -10972,9 +10963,6 @@ ASTReader::ASTReader(Preprocessor &PP, InMemoryModuleCache &ModuleCache,
 ASTReader::~ASTReader() {
   if (OwnsDeserializationListener)
     delete DeserializationListener;
-  for (auto PStr: TokenLiteralDataLoaded) {
-     delete PStr;
-  }
 }
 
 IdentifierResolver &ASTReader::getIdResolver() {
