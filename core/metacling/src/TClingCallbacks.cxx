@@ -397,6 +397,7 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    if (!Index)
       return false;
 
+#ifndef UPSTREAM_CLANG
    // FIXME: We should load only the first available and rely on other callbacks
    // such as RequireCompleteType and LookupUnqualified to load all.
    GlobalModuleIndex::FileNameHitSet FoundModules;
@@ -428,6 +429,7 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
       }
       return true;
    }
+#endif
    return false;
 }
 

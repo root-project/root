@@ -1143,6 +1143,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
       }
       if (RecreateIndex) {
          cling::Interpreter::PushTransactionRAII deserRAII(&interp);
+#ifndef UPSTREAM_CLANG
          clang::GlobalModuleIndex::UserDefinedInterestingIDs IDs;
 
          struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
@@ -1205,6 +1206,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
                                                       CI.getPCHContainerReader(),
                                                       ModuleIndexPath,
                                                       &IDs));
+#endif
          ModuleManager->resetForReload();
          ModuleManager->loadGlobalIndex();
          GlobalIndex = ModuleManager->getGlobalIndex();
@@ -1276,8 +1278,10 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       GlobalIndex = CI.getASTReader()->getGlobalIndex();
 
       llvm::StringSet<> KnownModuleFileNames;
+#ifndef UPSTREAM_CLANG
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
+#endif
 
       std::vector<std::string> PendingModules;
       PendingModules.reserve(256);
