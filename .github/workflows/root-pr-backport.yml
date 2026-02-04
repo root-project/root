@@ -31,11 +31,20 @@ jobs:
       issues: write
       pull-requests: write
     if: >-
+      (github.event.issue.pull_request && github.event.issue.state == 'closed') &&
       (github.event.comment.author_association == 'MEMBER') &&
       (github.repository == 'root-project/root') &&
       !startswith(github.event.comment.body, '<!--IGNORE-->') &&
       contains(github.event.comment.body, '/backport to')
     steps:
+      - name: Verify Merge Status via API
+        run: |
+          MERGED=$(gh pr view ${{ github.event.issue.number }} --json merged --jq '.merged')
+          if [ "$MERGED" != "true" ]; then
+            echo "PR was closed but not merged. Skipping."
+            exit 1
+          fi
+
       - name: Checkout the official ROOT repo
         uses: actions/checkout@v5
         with:
@@ -49,7 +58,7 @@ jobs:
           path: root_bot
 
       - name: Backport Commits
-        run: " cd root && .github/workflows/utilities/backport_pr.py
+        run: "root_official/.github/workflows/utilities/backport_pr.py
                         --comment \"$COMMENT_BODY\"
                         --pull ${{ github.event.issue.number }}
                         --requestor ${{ github.event.comment.user.login }}
