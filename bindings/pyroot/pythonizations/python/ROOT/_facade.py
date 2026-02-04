@@ -25,7 +25,14 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = facade._cppyy.gbl.ROOT.GetROOT()
+
+    @property
+    def _gROOT(self):
+        gROOT = self.__dict__.get("_gROOT")
+        if gROOT is None:
+            gROOT = self._facade._cppyy.gbl.ROOT.GetROOT()
+            self.__dict__["_gROOT"] = gROOT
+        return gROOT
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -52,8 +59,6 @@ class ROOTFacade(types.ModuleType):
     def __init__(self, module, is_ipython):
         types.ModuleType.__init__(self, module.__name__)
 
-        self._cppyy = module.cppyy
-
         self.__all__ = module.__all__
         self.__name__ = module.__name__
         self.__file__ = module.__file__
@@ -65,23 +70,6 @@ class ROOTFacade(types.ModuleType):
 
         # Inject gROOT global
         self.gROOT = _gROOTWrapper(self)
-
-        # Expose some functionality from CPyCppyy extension module
-        self._cppyy_exports = [
-            "nullptr",
-            "bind_object",
-            "as_cobject",
-            "addressof",
-            "SetHeuristicMemoryPolicy",
-            "SetImplicitSmartPointerConversion",
-            "SetOwnership",
-        ]
-        for name in self._cppyy_exports:
-            setattr(self, name, getattr(self._cppyy._backend, name))
-        # For backwards compatibility
-        self.MakeNullPointer = partial(self.bind_object, 0)
-        self.BindObject = self.bind_object
-        self.AsCObject = self.as_cobject
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
@@ -157,8 +145,41 @@ class ROOTFacade(types.ModuleType):
             CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
+        """
+        Perform the final ROOT initialization.
+
+        This method is intentionally deferred and is the *only* place where
+        cppyy is imported and the C++ runtime is initialized. Delaying this
+        step avoids importing the heavy-weight cppyy machinery unless it is
+        actually required (for example, when accessing C++ ROOT symbols),
+        allowing Python-only ROOT submodules to be imported with minimal
+        overhead.
+        """
+        import cppyy
+        import cppyy.ll
+        import cppyy.types
+
         from ._application import PyROOTApplication
         from ._pythonization import _register_pythonizations, pythonization
+
+        self.__dict__["_cppyy"] = cppyy
+
+        # Expose some functionality from CPyCppyy extension module
+        cppyy_exports = [
+            "nullptr",
+            "bind_object",
+            "as_cobject",
+            "addressof",
+            "SetHeuristicMemoryPolicy",
+            "SetImplicitSmartPointerConversion",
+            "SetOwnership",
+        ]
+        for name in cppyy_exports:
+            self.__dict__[name] = getattr(cppyy._backend, name)
+        # For backwards compatibility
+        self.__dict__["MakeNullPointer"] = partial(cppyy._backend.bind_object, 0)
+        self.__dict__["BindObject"] = cppyy._backend.bind_object
+        self.__dict__["AsCObject"] = cppyy._backend.as_cobject
 
         # Trigger the addition of the pythonizations
         _register_pythonizations()

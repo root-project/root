@@ -185,6 +185,11 @@ Bool_t TPython::Initialize()
          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
          return false;
       }
+      // to trigger the lazy initialization of the C++ runtime
+      if (PyRun_SimpleString("ROOT.gInterpreter") != 0) {
+         std::cerr << "Error: initializing ROOT Python module failed." << std::endl;
+         return false;
+      }
 
       if (!gMainDict) {
 
