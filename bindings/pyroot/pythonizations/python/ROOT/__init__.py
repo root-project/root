@@ -8,17 +8,14 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+from __future__ import annotations
+
 import builtins
 import os
 import sys
 import types
 from importlib.abc import Loader, MetaPathFinder
 from importlib.machinery import ModuleSpec
-from typing import Optional, Union
-
-import cppyy
-import cppyy.ll
-import cppyy.types
 
 from . import _asan  # noqa: F401  # imported for side effects for setup specific to AddressSanitizer environments
 from ._facade import ROOTFacade
@@ -100,7 +97,7 @@ def _can_be_module(obj) -> bool:
     return False
 
 
-def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy.types.Scope]]:
+def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy.types.Scope]]:  # noqa: F821
     """
     Recursively looks up attributes of the ROOT facade, using a full module
     name, and return it if it can be used as a ROOT submodule. This is the case
