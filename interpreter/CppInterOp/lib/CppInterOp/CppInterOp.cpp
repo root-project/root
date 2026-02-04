@@ -74,7 +74,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
-#include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -3338,8 +3337,7 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   std::string MainExecutableName = sys::fs::getMainExecutable(nullptr, nullptr);
   std::string ResourceDir = MakeResourcesPath();
   llvm::Triple T(llvm::sys::getProcessTriple());
-  namespace fs = std::filesystem;
-  if ((!fs::is_directory(ResourceDir)) && (T.isOSDarwin() || T.isOSLinux()))
+  if ((!sys::fs::is_directory(ResourceDir)) && (T.isOSDarwin() || T.isOSLinux()))
     ResourceDir = DetectResourceDir();
 
   std::vector<const char*> ClingArgv = {"-resource-dir", ResourceDir.c_str(),
