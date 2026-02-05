@@ -19,15 +19,15 @@ from typing import Any, Dict, List, Tuple, TYPE_CHECKING, Union
 
 import ROOT
 
-from DistRDF._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
-from DistRDF.Backends import Utils
+from ._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
+from .Backends import Utils
 
-from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
-from DistRDF.PythonMergeables import SnapshotResult
+from .Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
+from .PythonMergeables import SnapshotResult
 
 # Type hints only
 if TYPE_CHECKING:
-    from DistRDF.Node import Node
+    from .Node import Node
 
 logger = logging.getLogger(__name__)
 

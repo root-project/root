@@ -159,7 +159,7 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
-from ROOT._pythonization._memory_utils import (
+from ._memory_utils import (
     _constructor_releasing_ownership,
     _SetDirectory_SetOwnership,
     _should_give_up_ownership,

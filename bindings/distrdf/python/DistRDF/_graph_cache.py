@@ -6,7 +6,7 @@ from typing import Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     import ROOT
-    from DistRDF.PythonMergeables import RDataFrameFutureResult
+    from .PythonMergeables import RDataFrameFutureResult
 
 
 @dataclass(frozen=True)
