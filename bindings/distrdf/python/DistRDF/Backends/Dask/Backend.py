@@ -321,10 +321,11 @@ class DaskBackend(Base.BaseBackend):
         cumulative_plots: Dict[int, Any] = {}
 
         # Collect all futures in batches that had arrived since the last iteration
-        for batch in as_completed(future_tasks, with_results=True).batches():
-            for future, result in batch:
-               merged_results = reducer(merged_results, result) if merged_results else result
-            
+        for batch in as_completed(future_tasks, with_results=False).batches():
+            for future in batch:
+                result = future.result()
+                merged_results = reducer(merged_results, result) if merged_results else result
+
             mergeables = merged_results.mergeables
             
             for pad_num, (drawable_id, (callbacks_list, index, operation_name)) in enumerate(drawables_info_dict.items(), start=1):
