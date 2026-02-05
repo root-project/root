@@ -8,7 +8,7 @@ from math import floor
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from DistRDF._graph_cache import ExecutionIdentifier
+    from ._graph_cache import ExecutionIdentifier
 
 import ROOT
 

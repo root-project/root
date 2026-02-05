@@ -21,7 +21,7 @@ from typing import Iterable, Set, Tuple
 import ROOT
 from ROOT._pythonization._rdataframe import AsNumpyResult, _clone_asnumpyresult
 
-from DistRDF.PythonMergeables import SnapshotResult
+from ..PythonMergeables import SnapshotResult
 
 logger = logging.getLogger(__name__)
 

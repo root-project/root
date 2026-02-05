@@ -166,12 +166,12 @@ Further examples can be found in the tutorials:
 \endpythondoc
 """
 
-from ROOT._pythonization._memory_utils import (
+from ._memory_utils import (
     _SetDirectory_SetOwnership,
     inject_clone_releasing_ownership,
     inject_constructor_releasing_ownership,
 )
-from ROOT._pythonization._uhi import _add_plotting_features, _add_serialization_features
+from ._uhi import _add_plotting_features, _add_serialization_features
 
 from . import pythonization
 
@@ -259,7 +259,7 @@ for klass in _th1_derived_classes_to_pythonize:
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-    from ROOT._pythonization._uhi import _add_indexing_features
+    from ._uhi import _add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul

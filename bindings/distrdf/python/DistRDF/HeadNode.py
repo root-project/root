@@ -14,14 +14,14 @@ from typing import TYPE_CHECKING, Callable, Deque, Dict, Iterable, List, Optiona
 
 import ROOT
 
-from DistRDF import ComputationGraphGenerator, Ranges, _graph_cache
-from DistRDF.Backends import Utils
-from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
-from DistRDF.Node import Node
-from DistRDF.Operation import Action, InstantAction, Operation
+from . import ComputationGraphGenerator, Ranges, _graph_cache
+from .Backends import Utils
+from .Backends.Base import distrdf_mapper, distrdf_reducer
+from .Node import Node
+from .Operation import Action, InstantAction, Operation
 
 if TYPE_CHECKING:
-    from DistRDF.Backends.Base import BaseBackend, TaskResult
+    from .Backends.Base import BaseBackend, TaskResult
 
 logger = logging.getLogger(__name__)
 
