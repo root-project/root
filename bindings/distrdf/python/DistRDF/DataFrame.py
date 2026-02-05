@@ -13,8 +13,7 @@ from __future__ import annotations
 
 import itertools
 import logging
-
-from typing import Any, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, List
 
 from . import Proxy
 from .Operation import SUPPORTED_OPERATIONS

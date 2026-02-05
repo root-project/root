@@ -31,7 +31,7 @@ br.Draw(block = True)
 \endpythondoc
 '''
 
-from . import pythonization, _run_root_event_loop
+from . import _run_root_event_loop, pythonization
 
 
 def _TBrowser_constructor(self, *args, block: bool = False):
