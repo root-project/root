@@ -37,6 +37,7 @@ class RSampleInfo {
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
    const ROOT::RDF::Experimental::RSample *fSample = nullptr; // non-owning
+   ULong64_t fTotalEntries = 0;                               // Number of entries in current file (if known).
 
    void ThrowIfNoSample() const
    {
@@ -48,8 +49,8 @@ class RSampleInfo {
 
 public:
    RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-               const ROOT::RDF::Experimental::RSample *sample = nullptr)
-      : fID(id), fEntryRange(entryRange), fSample(sample)
+               const ROOT::RDF::Experimental::RSample *sample = nullptr, ULong64_t totalEntries = 0)
+      : fID(id), fEntryRange(entryRange), fSample(sample), fTotalEntries{totalEntries}
    {
    }
    RSampleInfo() = default;
@@ -121,8 +122,13 @@ public:
    /// Multiple multi-threading tasks might process different entry ranges of the same sample.
    std::pair<ULong64_t, ULong64_t> EntryRange() const { return fEntryRange; }
 
-   /// @brief Return the number of entries of this sample that is being taken into consideration.
+   /// @brief Return the number of entries of this range of the sample.
    ULong64_t NEntries() const { return fEntryRange.second - fEntryRange.first; }
+
+   /// Return the total number of entries in the underlying dataset.
+   /// If the total number of entries is not known, the end of the current range is returned.
+   /// This can be larger than NEntries() if the sample is split in multiple ranges.
+   ULong64_t NEntriesTotal() const { return std::max(fTotalEntries, fEntryRange.second); }
 
    bool operator==(const RSampleInfo &other) const { return fID == other.fID; }
    bool operator!=(const RSampleInfo &other) const { return !(*this == other); }

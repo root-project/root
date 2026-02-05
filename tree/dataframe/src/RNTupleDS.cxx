@@ -917,14 +917,15 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
 
    if (sampleMap.empty())
       return ROOT::RDF::RSampleInfo(
-         ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry));
+         ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry), nullptr,
+         fPrincipalDescriptor.GetNEntries());
 
    if (sampleMap.find(ntupleID) == sampleMap.end())
       throw std::runtime_error("Full sample identifier '" + ntupleID + "' cannot be found in the available samples.");
 
    return ROOT::RDF::RSampleInfo(
       ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
-      sampleMap.at(ntupleID));
+      sampleMap.at(ntupleID), fPrincipalDescriptor.GetNEntries());
 }
 
 ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
