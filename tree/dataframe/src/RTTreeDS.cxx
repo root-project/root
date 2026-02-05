@@ -378,11 +378,11 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
    // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
    const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
    if (sampleMap.empty()) {
-      return RSampleInfo(id, range);
+      return RSampleInfo(id, range, nullptr, tree->GetEntries());
    } else {
       if (sampleMap.find(id) == sampleMap.end())
          throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
-      return RSampleInfo(id, range, sampleMap.at(id));
+      return RSampleInfo(id, range, sampleMap.at(id), tree->GetEntries());
    }
 }
 

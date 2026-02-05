@@ -739,11 +739,11 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
    const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
    if (fSampleMap.empty()) {
-      fSampleInfos[slot] = RSampleInfo(id, range);
+      fSampleInfos[slot] = RSampleInfo(id, range, nullptr, tree->GetEntries());
    } else {
       if (fSampleMap.find(id) == fSampleMap.end())
          throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
-      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
+      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id], tree->GetEntries());
    }
 }
 
