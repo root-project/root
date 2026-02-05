@@ -17,8 +17,8 @@ jobs:
 
     steps:
     - name: Update Visual Studio - Preview (Insiders)
+      if: github.event.schedule == '0  1 * * 3'
       shell: cmd
-      #run: "C:\\bin\\vs_update.bat"
       run: '"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installershell.exe" update --quiet --norestart --installpath "C:\Program Files\Microsoft Visual Studio\18\Insiders"'
 
     - name: Reboot
@@ -27,7 +27,7 @@ jobs:
       run: "shutdown /r"
 
   build-windows:
-    # if: github.event.schedule == '0  2 * * 3'
+    if: github.event.schedule == '0  2 * * 3'
 
     permissions:
       contents: read
