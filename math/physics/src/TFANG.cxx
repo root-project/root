@@ -1150,7 +1150,7 @@ Bool_t TFANG::GetPartialPhaseSpace(Long64_t nEvents, Double_t &phaseSpace, Doubl
    Double_t variance = (sumW2 / static_cast<Double_t>(nSuccess) - mean * mean);
 
    // Multiply by total solid angle factor
-   phaseSpace = totalOmega * mean;
+   phaseSpace = totalOmega * sumW / static_cast<Double_t>(nEvents);
    error = totalOmega * std::sqrt(variance / static_cast<Double_t>(nSuccess));
 
    return kTRUE;
