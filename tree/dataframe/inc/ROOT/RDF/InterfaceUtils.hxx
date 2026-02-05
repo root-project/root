@@ -198,6 +198,30 @@ BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experim
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(h, nSlots), columnList, std::move(prevNode), colRegister);
 }
+
+// Action for RHistEngine using FillAtomic without weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>> &h,
+            const unsigned int, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Hist,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistEngineFillHelper<BinContentType>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RHistEngine using FillAtomic with weights
+template <typename... ColTypes, typename BinContentType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>> &h,
+            const unsigned int, std::shared_ptr<PrevNodeType> prevNode, ActionTags::HistWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RHistEngineFillHelper<BinContentType, true>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(h), columnList, std::move(prevNode), colRegister);
+}
 #endif
 
 template <typename... ColTypes, typename PrevNodeType>
