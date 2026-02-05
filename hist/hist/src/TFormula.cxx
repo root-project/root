@@ -411,9 +411,9 @@ Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
    // }
    return false;
 }
+
 ////////////////////////////////////////////////////////////////////////////
-// check is given position is in a parameter name i.e. within "[ ]"
-////
+/// check if given position is in a parameter name i.e. within "[ ]"
 Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
 
    Bool_t foundOpenParenthesis = false;
@@ -1833,7 +1833,7 @@ void TFormula::HandleExponentiation(TString &formula)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Handle linear functions defined with the operator ++.
+/// Handle linear functions defined with the operator ++ (@ is the shorthand).
 
 void TFormula::HandleLinear(TString &formula)
 {
@@ -1866,7 +1866,7 @@ void TFormula::HandleLinear(TString &formula)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    Preprocessing of formula
-///    Replace all ** by ^, and removes spaces.
+///    Replace all ** by ^, all ++ by @, and removes spaces.
 ///    Handle also parametrized functions like polN,gaus,expo,landau
 ///    and exponentiation.
 ///    Similar functionality should be added here.
@@ -1881,7 +1881,7 @@ void TFormula::PreProcessFormula(TString &formula)
    HandleParamRanges(formula);
    HandleFunctionArguments(formula);
    HandleExponentiation(formula);
-   // "++" wil be dealt with Handle Linear
+   // "++" (now @ since we just called ReplaceAll a few lines above) will be dealt with HandleLinear
    HandleLinear(formula);
    // special case for "--" and "++"
    // ("++" needs to be written with whitespace that is removed before but then we re-add it again
