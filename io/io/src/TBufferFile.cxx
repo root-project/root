@@ -324,7 +324,7 @@ void TBufferFile::WriteCharStar(char *s)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set byte count at position cntpos in the buffer. Generate warning if
-/// count larger than kMaxMapCount. The count is excluded its own size.
+/// count larger than kMaxMapCount. The count is excluding its own size.
 /// \note If underflow or overflow, an Error ir raised (stricter checks in Debug mode)
 
 void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
