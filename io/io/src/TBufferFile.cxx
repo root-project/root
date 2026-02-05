@@ -15,6 +15,21 @@
 \ingroup IO
 
 The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
+
+Limits:
+Byte Count positions (refered to as `cntpos` or `startpos` in the code)
+   - Internally they are passed as a ULong64_t
+   - In legacy user code they are held in UInt_t variables (See type used in
+     TBufferFile::WriteVersion and TBufferFile::ReadVersion)
+   - The positions passed by value are limited to 4GB (kOverflowPosition)
+     and the positions are held in fByteCountStack but retrieved only when
+     higher than 4GB (kOverflowCount).
+Byte Count values:
+   - Internally they are passed as a ULong64_t
+   - In legacy user code they are held in UInt_t variables (See type used in
+     TBufferFile::WriteVersion and TBufferFile::ReadVersion)
+   - The values passed by value are limited to 1GB (kMaxMapCount)
+   - The values larger than kMaxMapCount are held in fByteCounts.
 */
 
 #include <cstring>
@@ -46,15 +61,18 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #include "Bswapcpy.h"
 #endif
 
+constexpr UInt_t kOverflowPosition   = 0xFFFFFFFF;
+constexpr UInt_t kOverflowCount      = 0xFFFFFFFF;
+constexpr UInt_t kMaxCountPosition   = 0xFFFFFFFE;   // We reserve the highest value to mark overflow positions
 
-const UInt_t kNewClassTag       = 0xFFFFFFFF;
-const UInt_t kClassMask         = 0x80000000;  // OR the class index with this
-const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
-const UInt_t kMaxMapCount       = 0x3FFFFFFE;  // last valid fMapCount and byte count
-const Version_t kByteCountVMask = 0x4000;      // OR the version byte count with this
-const Version_t kMaxVersion     = 0x3FFF;      // highest possible version number
-const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
-
+constexpr UInt_t kNewClassTag        = 0xFFFFFFFF;
+constexpr UInt_t kClassMask          = 0x80000000;   // OR the class index with this
+constexpr UInt_t kByteCountMask      = 0x40000000;   // OR the byte count with this
+constexpr UInt_t kMaxMapCount        = 0x3FFFFFFE;   // last valid fMapCount and byte count
+constexpr UInt_t kMaxRecordByteCount = kMaxMapCount; // last valid byte count
+constexpr Version_t kByteCountVMask  = 0x4000;       // OR the version byte count with this
+constexpr Version_t kMaxVersion      = 0x3FFF;       // highest possible version number
+constexpr Int_t  kMapOffset          = 2;   // first 2 map entries are taken by null obj and self obj
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,13 +341,13 @@ void TBufferFile::WriteCharStar(char *s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set byte count at position cntpos in the buffer. Generate warning if
-/// count larger than kMaxMapCount. The count is excluding its own size.
+/// Set byte count at position cntpos in the buffer.
+/// The count is excluding its own size.
 /// \note If underflow or overflow, an Error ir raised (stricter checks in Debug mode)
 
 void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 {
-   assert( cntpos <= kMaxUInt && (sizeof(UInt_t) + cntpos) <  static_cast<UInt_t>(fBufCur - fBuffer)
+   assert( cntpos <= kOverflowPosition && (sizeof(UInt_t) + cntpos) <  static_cast<UInt_t>(fBufCur - fBuffer)
         && (fBufCur >= fBuffer)
         && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
         && "Byte count position is after the end of the buffer");
@@ -341,14 +359,15 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    // This (of course) also requires that we do the 'same' to the WriteVersion
    // routines.
    R__ASSERT(!fByteCountStack.empty());
-   if (cntpos == kMaxInt) {
+   if (cntpos == kOverflowPosition) {
+      // The position is above 4GB but was cached using a 32 bit variable.
       cntpos = fByteCountStack.back();
    }
    fByteCountStack.pop_back();
    // if we are not in the same TKey chunk or if the cntpos is too large to fit in UInt_t
    // let's postpone the writing of the byte count
    const ULong64_t full_cnt = ULong64_t(fBufCur - fBuffer) - cntpos - sizeof(UInt_t);
-   if (full_cnt >= kMaxMapCount) {
+   if (full_cnt >= kMaxRecordByteCount) {
       fByteCounts[cntpos] = full_cnt;
       return;
    }
@@ -373,11 +392,11 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    } else
       tobuf(buf, cnt | kByteCountMask);
 
-   if (cnt >= kMaxMapCount) {
+   if (cnt >= kMaxRecordByteCount) {
       // NOTE: This should now be unreachable.
       Fatal("WriteByteCount",
             "Control flow error, code should be unreachable and wrote a bytecount that is too large (more than %d)",
-            kMaxMapCount);
+            kMaxRecordByteCount);
    }
 }
 
@@ -391,12 +410,13 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 
 Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char *classname)
 {
-   R__ASSERT(!fByteCountStack.empty());
-   if (startpos == kMaxInt) {
-      // The position is above 1GB and was cached using a 32 bit variable.
+   R__ASSERT(!fByteCountStack.empty() && startpos <= kOverflowPosition && bcnt <= kOverflowCount
+             && "Byte count stack is empty or invalid startpos/bcnt");
+   if (startpos == kOverflowPosition) {
+      // The position is above 4GB but was cached using a 32 bit variable.
       startpos = fByteCountStack.back();
    }
-   if (bcnt == kMaxInt) {
+   if (bcnt == kOverflowCount) {
       // in case we are checking a byte count for which we postponed
       // the writing because it was too large, we retrieve it now
       auto it = fByteCounts.find(startpos);
@@ -2992,7 +3012,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
    if (startpos) {
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
-      *startpos = full_startpos < kMaxInt ? UInt_t(full_startpos) : kMaxInt;
+      *startpos = full_startpos <= kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
       if (bcnt)
          fByteCountStack.push_back(full_startpos);
    }
@@ -3029,10 +3049,10 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          if (*bcnt == 0) {
             // The byte count was stored but is zero, this means the data
             // did not fit and thus we stored it in 'fByteCounts' instead.
-            // Mark this case by setting startpos to kMaxInt.
-            *bcnt = kMaxInt;
+            // Mark this case by setting startpos to kOverflowCount.
+            *bcnt = kOverflowCount;
             if (startpos)
-               *startpos = kMaxInt;
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3131,7 +3151,7 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
    if (startpos) {
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
-      *startpos = full_startpos < kMaxInt ? UInt_t(full_startpos) : kMaxInt;
+      *startpos = full_startpos < kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
       if (bcnt)
          fByteCountStack.push_back(full_startpos);
    }
@@ -3168,10 +3188,10 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
          if (*bcnt == 0) {
             // The byte count was stored but is zero, this means the data
             // did not fit and thus we stored it in 'fByteCounts' instead.
-            // Mark this case by setting startpos to kMaxInt.
-            *bcnt = kMaxInt;
+            // Mark this case by setting startpos to kOverflowCount.
+            *bcnt = kOverflowCount;
             if (startpos)
-               *startpos = kMaxInt;
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3357,7 +3377,7 @@ void TBufferFile::CheckCount(UInt_t offset)
    // support storing more than 1GB in a single TBufferFile.
    const bool bufferLimitedToMaxMapCount = false;
    if (bufferLimitedToMaxMapCount && IsWriting()) {
-      if (offset >= kMaxMapCount) {
+      if (offset > kMaxRecordByteCount) { // We have kMaxMapCount == kMaxRecordByteCount
          Error("CheckCount", "buffer offset too large (larger than %d)", kMaxMapCount);
          // exception
       }
@@ -3454,7 +3474,7 @@ UInt_t TBufferFile::ReserveByteCount()
    auto full_cntpos = fBufCur - fBuffer;
    fByteCountStack.push_back(full_cntpos);
    *this << (UInt_t)kByteCountMask; // placeholder for byte count
-   return full_cntpos < kMaxInt ? full_cntpos : kMaxInt;
+   return full_cntpos <= kMaxCountPosition ? full_cntpos : kOverflowPosition;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
