@@ -270,6 +270,9 @@ class DaskBackend(Base.BaseBackend):
         # Close the live visualization canvas canvas
         c.Close()    
 
+        # Make sure the context destructor is called: don't rely on Python garbage collection
+        backend_pad.__destruct__()
+
         return merged_results
                 
     def _setup_canvas(self, num_plots: int) -> ROOT.TCanvas:
