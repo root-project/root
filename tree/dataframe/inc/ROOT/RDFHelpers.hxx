@@ -391,8 +391,7 @@ public:
    void registerNewSample(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &id)
    {
       std::lock_guard<std::mutex> lock(fSampleNameToEventEntriesMutex);
-      fSampleNameToEventEntries[id.AsString()] =
-         std::max(id.EntryRange().second, fSampleNameToEventEntries[id.AsString()]);
+      fSampleNameToEventEntries[id.AsString()] = std::max(id.NEntriesTotal(), fSampleNameToEventEntries[id.AsString()]);
    }
 
    /// Thread-safe callback for RDataFrame.
