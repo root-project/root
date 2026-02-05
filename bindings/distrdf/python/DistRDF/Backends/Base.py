@@ -20,14 +20,14 @@ from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
-from DistRDF import Ranges
-from DistRDF.Backends import Utils
+from .. import Ranges
+from . import Utils
 
 # Type hints only
 if TYPE_CHECKING:
-    from DistRDF._graph_cache import ExecutionIdentifier
-    from DistRDF.HeadNode import TaskObjects
-    from DistRDF.Ranges import DataRange
+    from .._graph_cache import ExecutionIdentifier
+    from ..HeadNode import TaskObjects
+    from ..Ranges import DataRange
 
 
 def setup_mapper(initialization_fn: Callable, code_to_declare: str) -> None:    

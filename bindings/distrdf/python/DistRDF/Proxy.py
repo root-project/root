@@ -20,8 +20,8 @@ from typing import Any, List, Optional, Union
 
 import ROOT
 
-from DistRDF import Operation
-from DistRDF.Node import Node
+from . import Operation
+from .Node import Node
 
 logger = logging.getLogger(__name__)
 

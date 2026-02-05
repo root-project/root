@@ -9,7 +9,7 @@
 ################################################################################
 
 from . import pythonization
-from ROOT._pythonization._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
+from ._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
 
 
 @pythonization("TEntryList")

@@ -18,7 +18,7 @@ def RDataFrame(*args, **kwargs):
     Create an RDataFrame object that can run computations on a Dask cluster.
     """
 
-    from DistRDF.Backends.Dask import Backend
+    from . import Backend
     daskclient = kwargs.get("daskclient", None)
     executor = kwargs.get("executor", None)
     msg_warn = (

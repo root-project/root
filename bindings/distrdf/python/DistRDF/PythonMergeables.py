@@ -6,7 +6,7 @@ import ROOT
 from ROOT._pythonization._rdataframe import AsNumpyResult
 
 if TYPE_CHECKING:
-    from DistRDF.Backends.Base import BaseBackend
+    from .Backends.Base import BaseBackend
 
 
 class SnapshotResult(object):
