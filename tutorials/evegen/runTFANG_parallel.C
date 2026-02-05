@@ -617,7 +617,7 @@ void runTFANG()
    }
 
    std::cout << "nEvents = " << nEvents << std::endl;
-   std::cout << "Total Phase Space from parallel loop = " << sumW / nEvents
+   std::cout << "Total Phase Space from parallel loop = " << sumW / nLoop
              << " +/- " << TMath::Sqrt(variance / nEvents) << std::endl;
    std::cout << "Total Phase Space from GetPhaseSpace = " << phaseSpace
              << " +/- " << phaseSpaceErr << std::endl;
@@ -794,7 +794,7 @@ void runTFANG()
    variance = sumW2 / nEvents - mean * mean;
    std::cout << "\nTFANG Constrained Results:" << std::endl;
    std::cout << "  nEvents = " << nEvents << std::endl;
-   std::cout << "  Partial Phase Space from parallel loop = " << totalOmega * sumW / nEvents
+   std::cout << "  Partial Phase Space from parallel loop = " << totalOmega * sumW / nLoop
              << " +/- " << totalOmega * TMath::Sqrt(variance / nEvents) << std::endl;
    std::cout << "  Partial Phase Space from GetPartialPhaseSpace = " << phaseSpace
              << " +/- " << phaseSpaceErr << std::endl;
