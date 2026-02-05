@@ -92,6 +92,7 @@ void ROOT::Internal::RRawFile::EnsureOpen()
 
    OpenImpl();
    fIsOpen = true;
+   SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
@@ -200,6 +201,8 @@ void ROOT::Internal::RRawFile::SetBuffering(bool value)
    fIsBuffering = value;
    if (!fIsBuffering)
       fBufferSpace.reset();
+   if (fIsOpen)
+      SetDiscourageReadAheadImpl(!fIsBuffering);
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)
