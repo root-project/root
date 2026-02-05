@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import importlib.util
 import logging
 import textwrap
 import types
@@ -276,25 +277,21 @@ def RDataFrame(*args, **kwargs):
         )
 
     # Try to dispatch to the correct distributed scheduler implementation
-    try:
+    if importlib.util.find_spec("distributed") is not None:
         from distributed import Client
 
         from DistRDF.Backends.Dask import RDataFrame
 
         if isinstance(executor, Client):
             return RDataFrame(*args, **kwargs)
-    except ImportError:
-        pass
 
-    try:
+    if importlib.util.find_spec("pyspark") is not None:
         from pyspark import SparkContext
 
         from DistRDF.Backends.Spark import RDataFrame
 
         if isinstance(executor, SparkContext):
             return RDataFrame(*args, **kwargs)
-    except ImportError:
-        pass
 
     raise TypeError(
         f"The client object of type '{type(executor)}' is not a supported connection type for distributed RDataFrame."
