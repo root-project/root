@@ -36,6 +36,7 @@
 #ifdef R__HAS_ROOT7
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistConcurrentFiller.hxx>
+#include <ROOT/RHistEngine.hxx>
 #include <ROOT/RWeight.hxx>
 #endif
 
@@ -534,6 +535,53 @@ public:
          context->Flush();
       }
    }
+
+   std::string GetActionName() { return "Hist"; }
+};
+
+template <typename BinContentType, bool WithWeight = false>
+class R__CLING_PTRCHECK(off) RHistEngineFillHelper
+   : public ROOT::Detail::RDF::RActionImpl<RHistEngineFillHelper<BinContentType, WithWeight>> {
+public:
+   using Result_t = ROOT::Experimental::RHistEngine<BinContentType>;
+
+private:
+   std::shared_ptr<Result_t> fHist;
+
+public:
+   RHistEngineFillHelper(std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>> h) : fHist(h) {}
+   RHistEngineFillHelper(const RHistEngineFillHelper &) = delete;
+   RHistEngineFillHelper(RHistEngineFillHelper &&) = default;
+   RHistEngineFillHelper &operator=(const RHistEngineFillHelper &) = delete;
+   RHistEngineFillHelper &operator=(RHistEngineFillHelper &&) = default;
+   ~RHistEngineFillHelper() = default;
+
+   std::shared_ptr<Result_t> GetResultPtr() const { return fHist; }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   template <typename... ColumnTypes, const std::size_t... I>
+   void ExecWithWeight(const std::tuple<const ColumnTypes &...> &columnValues, std::index_sequence<I...>)
+   {
+      // Build a tuple of const references with the actual arguments, stripping the weight and avoiding copies.
+      std::tuple<const std::tuple_element_t<I, std::tuple<ColumnTypes...>> &...> args(std::get<I>(columnValues)...);
+      ROOT::Experimental::RWeight weight(std::get<sizeof...(ColumnTypes) - 1>(columnValues));
+      fHist->FillAtomic(args, weight);
+   }
+
+   template <typename... ColumnTypes>
+   void Exec(unsigned int, const ColumnTypes &...columnValues)
+   {
+      if constexpr (WithWeight) {
+         auto t = std::forward_as_tuple(columnValues...);
+         ExecWithWeight(t, std::make_index_sequence<sizeof...(ColumnTypes) - 1>());
+      } else {
+         fHist->FillAtomic(columnValues...);
+      }
+   }
+
+   void Finalize() {}
 
    std::string GetActionName() { return "Hist"; }
 };
