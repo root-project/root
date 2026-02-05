@@ -88,6 +88,13 @@ jobs:
     permissions:
       contents: read
 
+    concurrency:
+      # We need only one build cache update to run after merges to master
+      # The group name expands to something like
+      # "ROOT CI-20964/merge-mac26-21173435944", unless it's a build cache update, where it will be
+      # "ROOT CI-master     -mac26-update_build_cache", so only one of these jobs will run
+      group: ${{ github.workflow }}-${{ github.ref_name }}-${{ matrix.platform }}-${{ github.event_name == 'push' && 'update_build_cache' || github.run_id }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -158,6 +165,7 @@ jobs:
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
 
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
@@ -174,6 +182,7 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
+        shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
@@ -185,6 +194,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Nightly build
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
@@ -195,6 +205,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
@@ -370,8 +381,8 @@ jobs:
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2504
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: ubuntu2604
+            is_special: true
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON"]
           # Special builds
@@ -383,7 +394,7 @@ jobs:
             is_special: true
             property: march_native
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
-          - image: alma9
+          - image: alma10
             is_special: true
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]

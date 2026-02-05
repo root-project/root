@@ -317,6 +317,111 @@ static ItemGetter* GetGetter(PyObject* args)
     return getter;
 }
 
+namespace {
+
+void compileSpanHelpers()
+{
+   static bool compiled = false;
+
+   if (compiled)
+      return;
+
+   compiled = true;
+
+   auto code = R"(
+namespace __cppyy_internal {
+
+template <class T>
+struct ptr_iterator {
+   T *cur;
+   T *end;
+
+   ptr_iterator(T *c, T *e) : cur(c), end(e) {}
+
+   T &operator*() const { return *cur; }
+   ptr_iterator &operator++()
+   {
+      ++cur;
+      return *this;
+   }
+   bool operator==(const ptr_iterator &other) const { return cur == other.cur; }
+   bool operator!=(const ptr_iterator &other) const { return !(*this == other); }
+};
+
+template <class T>
+ptr_iterator<T> make_iter(T *begin, T *end)
+{
+   return {begin, end};
+}
+
+} // namespace __cppyy_internal
+
+// Note: for const span<T>, T is const-qualified here
+template <class T>
+auto __cppyy_internal_begin(T &s) noexcept
+{
+   return __cppyy_internal::make_iter(s.data(), s.data() + s.size());
+}
+
+// Note: for const span<T>, T is const-qualified here
+template <class T>
+auto __cppyy_internal_end(T &s) noexcept
+{
+   // end iterator = begin iterator with cur == end
+   return __cppyy_internal::make_iter(s.data() + s.size(), s.data() + s.size());
+}
+    )";
+   Cppyy::Compile(code, /*silent*/ true);
+}
+
+PyObject *spanBegin()
+{
+   static PyObject *pyFunc = nullptr;
+   if (!pyFunc) {
+      compileSpanHelpers();
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_begin");
+      if (!pyFunc) {
+         PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "
+                                          "'__cppyy_internal_begin' for std::span pythonization");
+      }
+   }
+   return pyFunc;
+}
+
+PyObject *spanEnd()
+{
+   static PyObject *pyFunc = nullptr;
+   if (!pyFunc) {
+      compileSpanHelpers();
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_end");
+      if (!pyFunc) {
+         PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "
+                                          "'__cppyy_internal_end' for std::span pythonization");
+      }
+   }
+   return pyFunc;
+}
+
+} // namespace
+
+static PyObject *SpanBegin(PyObject *self, PyObject *)
+{
+   auto begin = spanBegin();
+   if (!begin)
+      return nullptr;
+   return PyObject_CallOneArg(begin, self);
+}
+
+static PyObject *SpanEnd(PyObject *self, PyObject *)
+{
+   auto end = spanEnd();
+   if (!end)
+      return nullptr;
+   return PyObject_CallOneArg(end, self);
+}
+
 static bool FillVector(PyObject* vecin, PyObject* args, ItemGetter* getter)
 {
     Py_ssize_t sz = getter->size();
@@ -1816,6 +1921,21 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
 
 //- class name based pythonization -------------------------------------------
+
+    if (IsTemplatedSTLClass(name, "span")) {
+    // libstdc++ (GCC >= 15) implements std::span::iterator using a private
+    // nested tag type, which makes the iterator non-instantiable by
+    // CallFunc-generated wrappers (the return type cannot be named without
+    // violating access rules).
+    //
+    // To preserve correct Python iteration semantics, we replace begin()/end()
+    // for std::span to return a custom pointer-based iterator instead. This
+    // avoids relying on std::span::iterator while still providing a real C++
+    // iterator object that CPyCppyy can also wrap and expose via
+    // __iter__/__next__.
+        Utility::AddToClass(pyclass, "begin", (PyCFunction)SpanBegin, METH_NOARGS);
+        Utility::AddToClass(pyclass, "end", (PyCFunction)SpanEnd, METH_NOARGS);
+    }
 
     if (IsTemplatedSTLClass(name, "vector")) {
 

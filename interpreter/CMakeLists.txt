@@ -538,12 +538,12 @@ set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
 #---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
 if(testing)
-  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "Enable gtest in CppInterOp")
 else()
-  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "Enable gtest in CppInterOp")
 endif()
 
 add_subdirectory(CppInterOp)
-if(testing)
+if(CPPINTEROP_ENABLE_TESTING)
   set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()

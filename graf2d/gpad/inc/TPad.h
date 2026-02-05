@@ -377,6 +377,8 @@ public:
    TObject          *WaitPrimitive(const char *pname="", const char *emode="") override;
    Int_t             XtoAbsPixel(Double_t x) const override;
    Int_t             YtoAbsPixel(Double_t y) const override;
+   Int_t             HtoAbsPixel(Double_t y1, Double_t y2) const override;
+   Int_t             WtoAbsPixel(Double_t x1, Double_t x2) const override;
    Double_t          XtoPad(Double_t x) const override;
    Double_t          YtoPad(Double_t y) const override;
    Int_t             XtoPixel(Double_t x) const override;

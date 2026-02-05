@@ -9670,6 +9670,7 @@ void TTree::Streamer(TBuffer& b)
       fDirectory = nullptr;
       fCacheDoAutoInit = true;
       fCacheUserSet = false;
+      fNamesToBranches.clear();
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);

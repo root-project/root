@@ -127,6 +127,10 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
    if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
       fTraits |= kTraitTriviallyDestructible;
 
+   std::string renormalizedAlias;
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
+
    int i = 0;
    const auto *bases = fClass->GetListOfBases();
    assert(bases);
@@ -634,7 +638,7 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
      fNWritten(0)
 {
    if (!classp->GetCollectionProxy())
-      throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
+      throw RException(R__FAIL(std::string(classp->GetName()) + " has no associated collection proxy"));
    if (classp->Property() & kIsDefinedInStd) {
       static const std::vector<std::string> supportedStdTypes = {
          "std::set<", "std::unordered_set<", "std::multiset<", "std::unordered_multiset<",
@@ -650,15 +654,15 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
          throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
    }
 
+   std::string renormalizedAlias;
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
+
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
    fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("dictionary not available for type " +
-                               GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
@@ -699,7 +703,7 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       case EDataType::kFloat_t: itemField = std::make_unique<RField<Float_t>>("_0"); break;
       case EDataType::kDouble_t: itemField = std::make_unique<RField<Double_t>>("_0"); break;
       case EDataType::kBool_t: itemField = std::make_unique<RField<Bool_t>>("_0"); break;
-      default: throw RException(R__FAIL("unsupported value type"));
+      default: throw RException(R__FAIL("unsupported value type: " + std::to_string(fProxy->GetType())));
       }
    }
 
@@ -855,10 +859,9 @@ public:
 
 } // anonymous namespace
 
-ROOT::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias)
+ROOT::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className)
    : RStreamerField(fieldName, EnsureValidClass(className))
 {
-   fTypeAlias = typeAlias;
 }
 
 ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
@@ -867,6 +870,10 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
      fClass(classp),
      fIndex(0)
 {
+   std::string renormalizedAlias;
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
+
    fTraits |= kTraitTypeChecksum;
    // For RClassField, we only check for explicit constructors and destructors and then recursively combine traits from
    // all member subfields. For RStreamerField, we treat the class as a black box and additionally need to check for
@@ -884,7 +891,7 @@ void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName(), GetTypeAlias()));
+   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName()));
 }
 
 std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
