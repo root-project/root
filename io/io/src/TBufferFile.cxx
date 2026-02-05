@@ -415,6 +415,7 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       return 0;
 
    Long64_t offset = 0;
+   // End position is buffer location + start position + byte count + size of byte count field
    Longptr_t endpos = Longptr_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
 
    if (Longptr_t(fBufCur) != endpos) {
@@ -2800,6 +2801,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       bcnt = 0;
    } else {
       fVersion = 1;
+      // When objTag is not used, the caller is not interested in the byte
+      // count and will not (can not) call CheckByteCount.
       if (objTag)
          fByteCountStack.push_back(fBufCur - fBuffer);
       startpos = UInt_t(fBufCur-fBuffer);
@@ -2978,6 +2981,9 @@ void TBufferFile::SkipVersion(const TClass *cl)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read class version from I/O buffer.
+/// If passing startpos and bcnt, CheckByteCount must be called later with
+/// the same startpos and bcnt (this is needed to properly handle the byte
+/// count stack used to support very large buffers)
 
 Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
@@ -3108,6 +3114,15 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read class version from I/O buffer, when the caller knows for sure that
 /// there is no checksum written/involved.
+///
+/// This routine can be used from custom streamers when it is known that the
+/// class was always versioned (and thus never stored a checksum within the buffer).
+/// This allows to disambiguate the case where the class used to have a version
+/// number equal to zero and did not save a byte count and is now versioned.
+///
+/// When reading the version number being zero, without the byte count we have
+/// no way to guess whether the class was version un-versioned or had previously
+/// a version number equal to zero.
 
 Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 {
@@ -3430,9 +3445,8 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 /// Reserve space for a leading byte count and return the position where to
 /// store the byte count value.
 ///
-/// \param[in] mask The mask to apply to the placeholder value (default kByteCountMask)
 /// \return The position (cntpos) where the byte count should be stored later,
-///         or 0 if the position exceeds kMaxInt
+///         or kOverflowPosition if the position exceeds kMaxCountPosition
 
 UInt_t TBufferFile::ReserveByteCount()
 {
