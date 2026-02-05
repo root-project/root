@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <iomanip>
 #include <vector>
 #include <string>
 
@@ -806,6 +807,48 @@ TEST(RDFHelpers, Cleanup_After_Exception)
       << "An exception should have been thrown during the event loop.";
    EXPECT_EQ(SimpleActionHelper::fgRefVal, testVal)
       << "The Finalize method should have changed the value of testVal during the post-exception cleanup." << std::endl;
+}
+
+TEST(RDFHelpers, ProgressBarRestorePrecision)
+{
+   // Regression test for https://github.com/root-project/root/issues/21165
+   std::vector<double> values{13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1};
+   // To ensure that all values above are printed with full precision
+   std::cout << std::setprecision(8);
+
+   struct StreamRAII{
+      std::streambuf* fOldStreamBuf;
+      std::ostringstream fStrBuf;
+      StreamRAII() : fOldStreamBuf(std::cout.rdbuf()) {
+         std::cout.rdbuf(fStrBuf.rdbuf());
+      }
+      ~StreamRAII() {
+         std::cout.rdbuf(fOldStreamBuf);
+      }
+   };
+
+   {
+      StreamRAII raii;
+      for (auto v : values)
+         std::cout << v << ", ";
+      EXPECT_EQ(raii.fStrBuf.str(), "13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1, ");
+   }
+
+   {
+      // Just to run with the progress bar activated
+      StreamRAII raii;
+      ROOT::RDF::RNode d = ROOT::RDataFrame(1);
+      ROOT::RDF::Experimental::AddProgressBar(d);
+      d.Count().GetValue();
+   }
+
+   {
+      // Values after running with the progress bar should be printed the same way as before
+      StreamRAII raii;
+      for (auto v : values)
+         std::cout << v << ", ";
+      EXPECT_EQ(raii.fStrBuf.str(), "13922869, 13599, 277, 40003186, 68.5966, 999.008, 40107.1, ");
+   }
 }
 
 // The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.
