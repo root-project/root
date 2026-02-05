@@ -660,4 +660,33 @@ The list of issues addressed for this release is the following:
   * [[#19327](https://github.com/root-project/root/issues/19327)] - Build Fails on MacOS (ARM, 15)
   * [[#18782](https://github.com/root-project/root/issues/18782)] - Segfault in TTree::Branch with seemingly simple custom class
 
+## Release 6.36.08
+
+Published on February 6, 2026
+
+### Items addressed in this release
+
+This release features a few minor fixes.
+
+The list of issues addressed for this release is the following:
+
+  * [[#21070](https://github.com/root-project/root/issues/21070)] - RedirectServers - Server not redirected
+  * [[#21066](https://github.com/root-project/root/issues/21066)] - [RF] Crash doing HistFactory Workspace combination
+  * [[#21058](https://github.com/root-project/root/issues/21058)] - ROOT interpreter crashes when using `nlohmann::json`
+  * [[#20954](https://github.com/root-project/root/issues/20954)] - [Minuit2] Analytical Hessian indexing mismatch
+  * [[#20913](https://github.com/root-project/root/issues/20913)] - MIGRAD can call G2 even if HasG2 is set to false
+  * [[#20872](https://github.com/root-project/root/issues/20872)] - hadd crashes when already existing output file is used with remote file input paths
+  * [[#20860](https://github.com/root-project/root/issues/20860)] - Inconsistent information for histogram contours
+  * [[#20858](https://github.com/root-project/root/issues/20858)] - Make "LIST" draw option for contour plot work with "CONT1", "CONT2", and "CONT3" options
+  * [[#20831](https://github.com/root-project/root/issues/20831)] - New test failure with gcc 16 (possibly c++20 related)
+  * [[#20780](https://github.com/root-project/root/issues/20780)] - Font precision 3 doesn't work with divided canvas
+  * [[#20761](https://github.com/root-project/root/issues/20761)] - Chi2Test: Report residuals also for higher dimensions
+  * [[#20706](https://github.com/root-project/root/issues/20706)] - Segmentation violation in the TTree::Merge method for root >= v6.36.00
+  * [[#20665](https://github.com/root-project/root/issues/20665)] - Analytical Hessian is not made positive-definite during minimizer seeding in Minuit2
+  * [[#20643](https://github.com/root-project/root/issues/20643)] - thisroot.sh no longer remove previous version from the paths
+  * [[#20602](https://github.com/root-project/root/issues/20602)] - TGTextEntry spills text out of the text box on macOS but not on Ubuntu
+  * [[#20511](https://github.com/root-project/root/issues/20511)] - CMSSW DQM bin-by-bin comparison failed with ROOT 6.36
+  * [[#18837](https://github.com/root-project/root/issues/18837)] - [Python] Calling `std::span::begin()` broken with gcc15
+  * [[#18314](https://github.com/root-project/root/issues/18314)] - [ntuple] Heuristically reduce memory usage of buffered writing
+
 ## HEAD of the v6-36-00-patches branch
