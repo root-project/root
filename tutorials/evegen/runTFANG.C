@@ -202,7 +202,7 @@ void runTFANG()
    genFull.GetPhaseSpace(static_cast<Long64_t>(nLoop), phaseSpace, phaseSpaceErr);
 
    std::cout << "nEvents = " << nEvents << std::endl;
-   std::cout << "Total Phase Space from user loop= " << mean
+   std::cout << "Total Phase Space from user loop= " << sumW / nLoop
              << " +/- " << TMath::Sqrt(variance / nEvents) << std::endl;
    std::cout << "Total Phase Space from GetPhaseSpace = " << phaseSpace
              << " +/- " << phaseSpaceErr << std::endl;
@@ -389,7 +389,7 @@ void runTFANG()
    std::cout << "  nEvents = " << nEvents << std::endl;
    mean = sumW / nEvents;
    variance = sumW2 / nEvents - mean * mean;
-   std::cout << "  Partial Phase Space from user loop= " << totalOmega * mean
+   std::cout << "  Partial Phase Space from user loop= " << totalOmega * sumW / nLoop
              << " +/- " << totalOmega * TMath::Sqrt(variance / nEvents) << std::endl;
    std::cout << "  Partial Phase Space from GetPartialPhaseSpace = " <<phaseSpace            << " +/- " <<  phaseSpaceErr << std::endl;
    std::cout << "  hFangE[0]->Integral() = " << hFangE[0]->Integral() << std::endl;
