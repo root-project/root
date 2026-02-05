@@ -199,16 +199,27 @@ std::pair<std::size_t, std::chrono::seconds> ProgressHelper::RecordEvtCountAndTi
 namespace {
 
 struct RestoreStreamState {
-   RestoreStreamState(std::ostream &stream) : fStream(stream), fFlags(stream.flags()), fFillChar(stream.fill()) {}
+   RestoreStreamState(std::ostream &stream)
+      : fStream(stream),
+        fFlags(stream.flags()),
+        fFillChar(stream.fill()),
+        fPrecision{stream.precision()},
+        fWidth{stream.width()}
+   {
+   }
    ~RestoreStreamState()
    {
       fStream.flags(fFlags);
       fStream.fill(fFillChar);
+      fStream.precision(fPrecision);
+      fStream.width(fWidth);
    }
 
    std::ostream &fStream;
    std::ios_base::fmtflags fFlags;
    std::ostream::char_type fFillChar;
+   std::streamsize fPrecision;
+   std::streamsize fWidth;
 };
 
 /// Format std::chrono::seconds as `1:30m`.
