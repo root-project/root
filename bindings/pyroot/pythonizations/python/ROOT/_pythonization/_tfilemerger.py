@@ -10,6 +10,7 @@
 
 from . import pythonization
 
+
 def _TFileMergerExit(obj, exc_type, exc_val, exc_tb):
     """
     Close the merger's output file.

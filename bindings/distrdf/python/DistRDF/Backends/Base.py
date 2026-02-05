@@ -11,12 +11,11 @@
 ################################################################################
 from __future__ import annotations
 
+import hashlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
-import hashlib
-from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
-
+from typing import TYPE_CHECKING, Callable, Iterable, List, Optional, Union
 
 import ROOT
 

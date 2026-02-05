@@ -166,14 +166,13 @@ Further examples can be found in the tutorials:
 \endpythondoc
 """
 
+from . import pythonization
 from ._memory_utils import (
     _SetDirectory_SetOwnership,
     inject_clone_releasing_ownership,
     inject_constructor_releasing_ownership,
 )
 from ._uhi import _add_plotting_features, _add_serialization_features
-
-from . import pythonization
 
 # Multiplication by constant
 

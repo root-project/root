@@ -11,9 +11,9 @@
 ################################################################################
 from __future__ import annotations
 
+import importlib
 import pkgutil
 import types
-import importlib
 
 
 def build_backends_submodules(parentmodule: types.ModuleType) -> types.ModuleType:

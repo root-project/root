@@ -10,6 +10,7 @@
 
 from . import pythonization
 
+
 @pythonization("RDisplay", ns="ROOT::RDF")
 def pythonize_rdisplay(klass):
     """

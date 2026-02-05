@@ -159,14 +159,14 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
+from ROOT.libROOTPythonizations import BranchPyz, GetBranchAttr
+
+from . import pythonization
 from ._memory_utils import (
     _constructor_releasing_ownership,
     _SetDirectory_SetOwnership,
     _should_give_up_ownership,
 )
-from ROOT.libROOTPythonizations import BranchPyz, GetBranchAttr
-
-from . import pythonization
 from ._rvec import _get_cpp_type_from_numpy_type
 
 

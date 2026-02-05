@@ -5,7 +5,7 @@ from bisect import bisect_left
 from dataclasses import dataclass, field
 from itertools import accumulate
 from math import floor
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
     from ._graph_cache import ExecutionIdentifier

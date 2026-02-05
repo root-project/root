@@ -12,16 +12,14 @@
 from __future__ import annotations
 
 import logging
-
 from copy import deepcopy
 from functools import singledispatch
-from typing import Any, Dict, List, Tuple, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 import ROOT
 
-from ._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
+from ._graph_cache import _ACTIONS_REGISTER, ExecutionIdentifier
 from .Backends import Utils
-
 from .Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
 from .PythonMergeables import SnapshotResult
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import pickle
 import uuid
 import warnings
 from abc import ABC, abstractmethod
@@ -9,7 +8,6 @@ from collections import Counter, deque
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from itertools import zip_longest
 from typing import TYPE_CHECKING, Callable, Deque, Dict, Iterable, List, Optional, Union
 
 import ROOT

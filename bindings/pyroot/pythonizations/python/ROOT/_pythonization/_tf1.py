@@ -80,10 +80,12 @@ myFunction.SetParameters(myParams)
 
 from . import pythonization
 
+
 def _TF1_EvalPar(self, vars, params):
 
-    import ROOT
     import numpy
+
+    import ROOT
 
     x = numpy.ascontiguousarray(vars)
 
