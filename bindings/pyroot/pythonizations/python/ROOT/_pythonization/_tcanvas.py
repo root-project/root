@@ -32,7 +32,8 @@ c.SaveAs("canvas.root")
 \endpythondoc
 '''
 
-from . import pythonization, _run_root_event_loop
+from . import _run_root_event_loop, pythonization
+
 
 def _TCanvas_Update(self, block = False):
    """

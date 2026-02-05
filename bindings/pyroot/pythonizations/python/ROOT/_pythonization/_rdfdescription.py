@@ -10,6 +10,7 @@
 
 from . import pythonization
 
+
 @pythonization("RDFDescription", ns="ROOT::RDF")
 def pythonize_rdfdescription(klass):
     """

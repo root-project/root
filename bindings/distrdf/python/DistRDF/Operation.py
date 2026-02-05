@@ -46,7 +46,7 @@ class Histo(Action):
         # The histogram model can be passed as the keyword argument 'model'. All
         # Histo*D specializations have the same name for this argument. If it is
         # present, we know the execution can proceed safely.
-        if not "model" in self.kwargs:
+        if "model" not in self.kwargs:
             # If the keyword argument was not passed, we need to check the first
             # positional argument. In all Histo*D overload where it is present,
             # it is always the first argument.

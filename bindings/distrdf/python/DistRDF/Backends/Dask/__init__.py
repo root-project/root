@@ -10,6 +10,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 from __future__ import annotations
+
 import warnings
 
 
@@ -19,6 +20,7 @@ def RDataFrame(*args, **kwargs):
     """
 
     from . import Backend
+
     daskclient = kwargs.get("daskclient", None)
     executor = kwargs.get("executor", None)
     msg_warn = (

@@ -13,18 +13,22 @@ from __future__ import annotations
 
 import ntpath  # Filename from path (should be platform-independent)
 import warnings
-from typing import Any, Dict, List, Optional, Callable, TYPE_CHECKING, Union, Tuple
+from typing import TYPE_CHECKING, Any, Callable, List, Union
 
-from DistRDF import DataFrame
-from DistRDF import HeadNode
-from DistRDF.Backends import Base
-from DistRDF.Backends import Utils
+from DistRDF import DataFrame, HeadNode
+from DistRDF.Backends import Base, Utils
 
 try:
     import pyspark
 except ImportError:
-    raise ImportError(("cannot import module 'pyspark'. Refer to the Apache Spark documentation "
-                       "for installation instructions."))
+    raise ImportError(
+        ("cannot import module 'pyspark'. Refer to the Apache Spark documentation for installation instructions.")
+    )
+
+if TYPE_CHECKING:
+    import ROOT
+
+    from DistRDF import Ranges
 
 
 class SparkBackend(Base.BaseBackend):
@@ -78,16 +82,20 @@ class SparkBackend(Base.BaseBackend):
         """
         return self.sc.defaultParallelism
 
-    def ProcessAndMerge(self,
-                        ranges: List[Any],
-                        mapper: Callable[[Ranges.DataRange,
-                                        Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                                    Base.TaskObjects],
-                                        Callable[[ROOT.RDF.RNode, int], List],
-                                        Callable],
-                                        Base.TaskResult],
-                        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
-                        ) -> Base.TaskResult:
+    def ProcessAndMerge(
+        self,
+        ranges: List[Any],
+        mapper: Callable[
+            [
+                Ranges.DataRange,
+                Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]], Base.TaskObjects],
+                Callable[[ROOT.RDF.RNode, int], List],
+                Callable,
+            ],
+            Base.TaskResult,
+        ],
+        reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
+    ) -> Base.TaskResult:
         """
         Performs map-reduce using Spark framework.
 
@@ -111,7 +119,7 @@ class SparkBackend(Base.BaseBackend):
         shared_libraries = self.shared_libraries
         pcms = self.pcms
         files = self.files
-        
+
         def spark_mapper(current_range):
             """
             Gets the paths to the file(s) in the current executor, then
@@ -126,21 +134,15 @@ class SparkBackend(Base.BaseBackend):
                 complete with all headers needed for the analysis.
             """
             # Get and declare headers on each worker
-            headers_on_executor = [
-                pyspark.SparkFiles.get(ntpath.basename(filepath))
-                for filepath in headers
-            ]
+            headers_on_executor = [pyspark.SparkFiles.get(ntpath.basename(filepath)) for filepath in headers]
             Utils.distribute_headers(headers_on_executor)
 
             # Get and declare shared libraries on each worker
-            shared_libs_on_ex = [
-                pyspark.SparkFiles.get(ntpath.basename(filepath))
-                for filepath in shared_libraries
-            ]
+            shared_libs_on_ex = [pyspark.SparkFiles.get(ntpath.basename(filepath)) for filepath in shared_libraries]
             Utils.distribute_shared_libraries(shared_libs_on_ex)
 
             return mapper(current_range)
-        
+
         self.distribute_unique_paths(headers)
         self.distribute_unique_paths(shared_libraries)
         self.distribute_unique_paths(pcms)
@@ -154,7 +156,7 @@ class SparkBackend(Base.BaseBackend):
 
     def ProcessAndMergeLive(self, ranges, mapper, reducer, drawables_info_dict):
         """
-        Informs the user that the live visualization feature is not supported for the Spark backend 
+        Informs the user that the live visualization feature is not supported for the Spark backend
         and refers to ProcessAndMerge to proceed with the standard map-reduce workflow.
         """
         warnings.warn("The live visualization feature is not supported for the Spark backend. Skipping LiveVisualize.")

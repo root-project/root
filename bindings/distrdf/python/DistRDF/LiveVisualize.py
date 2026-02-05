@@ -10,11 +10,11 @@
 ################################################################################
 from __future__ import annotations
 
-from typing import Dict, Optional, Callable, Any
 import ast
 import inspect
 import warnings
-from functools import singledispatch, partial
+from functools import partial, singledispatch
+from typing import Any, Callable, Dict, Optional
 
 
 @singledispatch   

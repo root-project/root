@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Union
 
 import ROOT
 from ROOT._pythonization._rdataframe import AsNumpyResult
