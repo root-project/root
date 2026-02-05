@@ -15,6 +15,7 @@ class RRawFileMock : public RRawFile {
 public:
    std::string fContent;
    unsigned fNumReadAt;
+   bool fDiscourageReadAhead = false;
 
    RRawFileMock(const std::string &content, RRawFile::ROptions options)
      : RRawFile("", options), fContent(content), fNumReadAt(0) { }
@@ -39,6 +40,8 @@ public:
    }
 
    std::uint64_t GetSizeImpl() final { return fContent.size(); }
+
+   void SetDiscourageReadAheadImpl(bool val) final { fDiscourageReadAhead = val; }
 };
 
 } // anonymous namespace
@@ -271,4 +274,23 @@ TEST(RRawFileTFile, TFile)
    EXPECT_EQ(seek[1], 0);
    EXPECT_EQ(seek[2], 0);
    EXPECT_EQ(seek[3], 100);
+}
+
+TEST(RRawFile, Readahead)
+{
+   {
+      RRawFileMock mock("", ROOT::Internal::RRawFile::ROptions());
+      (void)mock.GetSize();
+      EXPECT_FALSE(mock.fDiscourageReadAhead);
+   }
+
+   {
+      RRawFileMock mock("", ROOT::Internal::RRawFile::ROptions());
+      mock.SetBuffering(false);
+      EXPECT_FALSE(mock.fDiscourageReadAhead);
+      (void)mock.GetSize();
+      EXPECT_TRUE(mock.fDiscourageReadAhead);
+      mock.SetBuffering(true);
+      EXPECT_FALSE(mock.fDiscourageReadAhead);
+   }
 }
