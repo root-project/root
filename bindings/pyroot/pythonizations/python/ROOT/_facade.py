@@ -232,6 +232,16 @@ class ROOTFacade(types.ModuleType):
         return getattr(self, name)
 
     def _setattr(self, name, val):
+        # Setting attributes of ROOT will also define variables in the C++
+        # runtime, so we generally require _finalSetup() in this method.
+        #
+        # Don't setup on submodule imports like `import ROOT._distrdf`,
+        # implying a setattr(ROOT, "_distdf", <Module instance>) inside Pythons
+        # importlib.
+        if isinstance(val, types.ModuleType):
+            self.__dict__[name] = val
+            return
+
         self._finalSetup()
 
         return setattr(self, name, val)
