@@ -2,6 +2,7 @@ set(histv7_headers
     ROOT/RAxes.hxx
     ROOT/RAxisVariant.hxx
     ROOT/RBinIndex.hxx
+    ROOT/RBinIndexMultiRange.hxx
     ROOT/RBinIndexRange.hxx
     ROOT/RBinWithError.hxx
     ROOT/RCategoricalAxis.hxx

@@ -4,6 +4,7 @@
 #include <ROOT/RAxes.hxx>
 #include <ROOT/RAxisVariant.hxx>
 #include <ROOT/RBinIndex.hxx>
+#include <ROOT/RBinIndexMultiRange.hxx>
 #include <ROOT/RBinIndexRange.hxx>
 #include <ROOT/RBinWithError.hxx>
 #include <ROOT/RCategoricalAxis.hxx>
@@ -19,6 +20,7 @@
 
 using ROOT::Experimental::RAxisVariant;
 using ROOT::Experimental::RBinIndex;
+using ROOT::Experimental::RBinIndexMultiRange;
 using ROOT::Experimental::RBinIndexRange;
 using ROOT::Experimental::RBinWithError;
 using ROOT::Experimental::RCategoricalAxis;
