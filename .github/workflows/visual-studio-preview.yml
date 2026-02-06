@@ -1,0 +1,71 @@
+name: 'Visual Studio - Preview'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0  1 * * 3'
+    - cron: '30 1 * * 3'
+    - cron: '0  2 * * 3'
+
+jobs:
+  update-visualstudio-preview:
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - preview
+
+    steps:
+    - name: Update Visual Studio - Preview (Insiders)
+      if: (github.event.schedule == '0  1 * * 3' || github.event_name == 'workflow_dispatch')
+      shell: cmd
+      run: '"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installershell.exe" update --quiet --norestart --installpath "C:\Program Files\Microsoft Visual Studio\18\Insiders"'
+
+    - name: Reboot
+      if: github.event.schedule == '30 1 * * 3'
+      shell: cmd
+      run: "shutdown /r"
+
+  build-windows:
+    if: github.event.schedule == '0  2 * * 3'
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+
+    name: Build Visual Studio - Preview (Insiders)
+
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - preview
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Wednesday build
+        if:   github.event_name == 'schedule'
+        shell: cmd
+        run: "C:\\setenv.bat x64 &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    Release
+                    --platform     windows10
+                    --incremental  false
+                    --binaries     false
+                    --base_ref     master
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture x64"
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test Results - Visual Studio Preview
+          path: C:/ROOT-CI/build/TestResults.xml
+
