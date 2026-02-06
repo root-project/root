@@ -43,7 +43,7 @@ class OperationReadTest(unittest.TestCase):
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.NodeProxy(hn)
-        func = node.Define  # noqa: avoid PEP8 F841
+        func = node.Define  # noqa: F841
         self.assertEqual(node._new_op_name, "Define")
 
     def test_args_read(self):
