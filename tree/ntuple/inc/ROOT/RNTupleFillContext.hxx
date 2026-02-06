@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -33,6 +34,7 @@ namespace ROOT {
 
 namespace Experimental {
 class RNTupleAttrSetWriter;
+class RNTupleAttrSetWriterHandle;
 }
 
 // clang-format off
@@ -84,6 +86,11 @@ private:
    bool fStagedClusterCommitting = false;
    /// Vector of currently staged clusters.
    std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
+
+   /// All the Attribute Sets created from this FillContext.
+   /// NOTE: this is a deque to keep pointers stable upon adding/removing, but have deterministic iteration at the
+   /// same time.
+   std::deque<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
