@@ -28,7 +28,7 @@ The interface allows convenient iteration over RBinIndex. If included, RBinIndex
 normal bins and RBinIndex::Overflow() is the last value.
 
 \code
-ROOT::Experimental::RRegularAxis axis(10, 0, 1);
+ROOT::Experimental::RRegularAxis axis(10, {5, 15});
 for (auto index : axis.GetNormalRange(2, 5)) {
    // Will iterate over [2, 3, 4]
 }
