@@ -1,335 +1,107 @@
-#include <numeric>
+constexpr auto modelHeaderSuffix = "_FromONNX.hxx";
+constexpr auto modelDataSuffix = "_FromONNX.dat";
+#include "test_helpers.h"
 
-#include "Linear_16_FromONNX.hxx"
 #include "input_models/references/Linear_16.ref.hxx"
-
-#include "Linear_32_FromONNX.hxx"
 #include "input_models/references/Linear_32.ref.hxx"
-
-#include "Linear_64_FromONNX.hxx"
 #include "input_models/references/Linear_64.ref.hxx"
-
-#include "LinearWithSelu_FromONNX.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
-
-#include "Sub_FromONNX.hxx"
 #include "input_models/references/Sub.ref.hxx"
-
-#include "Add_FromONNX.hxx"
 #include "input_models/references/Add.ref.hxx"
-
-#include "Mul_FromONNX.hxx"
 #include "input_models/references/Mul.ref.hxx"
-
-#include "Div_FromONNX.hxx"
 #include "input_models/references/Div.ref.hxx"
-
-#include "Cast_FromONNX.hxx"
 #include "input_models/references/Cast.ref.hxx"
-
-#include "ReduceMean_FromONNX.hxx"
 #include "input_models/references/ReduceMean.ref.hxx"
-
-#include "ReduceProd_FromONNX.hxx"
 #include "input_models/references/ReduceProd.ref.hxx"
-
-// hardcode reference
-#include "ReduceSum_FromONNX.hxx"
-
-#include "ReduceSumSquare_FromONNX.hxx"
-
-#include "Shape_FromONNX.hxx"
 #include "input_models/references/Shape.ref.hxx"
-
-#include "Constant_FromONNX.hxx"
 #include "input_models/references/Constant.ref.hxx"
-
-#include "TopK_FromONNX.hxx"
 #include "input_models/references/TopK.ref.hxx"
-
-#include "ComplexTopK_FromONNX.hxx"
 #include "input_models/references/ComplexTopK.ref.hxx"
-
-#include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
-
-#include "Tanh_FromONNX.hxx"
 #include "input_models/references/Tanh.ref.hxx"
-
-#include "Erf_FromONNX.hxx"
 #include "input_models/references/Erf.ref.hxx"
-
-#include "LinearWithSigmoid_FromONNX.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
-
-#include "ConvWithPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
-
-#include "ConvWithoutPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
-
-#include "ConvWithAutopadSameLower_FromONNX.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
-
-#include "ConvWithStridesPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
-
-#include "ConvWithStridesNoPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
-
-#include "ConvWithAsymmetricPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
-
-#include "MaxPool1d_FromONNX.hxx"
 #include "input_models/references/MaxPool1d.ref.hxx"
-
-#include "MaxPool2d_FromONNX.hxx"
 #include "input_models/references/MaxPool2d.ref.hxx"
-
-#include "MaxPool3d_FromONNX.hxx"
 #include "input_models/references/MaxPool3d.ref.hxx"
-
-#include "Max_FromONNX.hxx"
 #include "input_models/references/Max.ref.hxx"
-
-#include "MaxMultidirectionalBroadcast_FromONNX.hxx"
 #include "input_models/references/MaxMultidirectionalBroadcast.ref.hxx"
-
-#include "MinMultidirectionalBroadcast_FromONNX.hxx"
 #include "input_models/references/MinMultidirectionalBroadcast.ref.hxx"
-
-#include "MeanMultidirectionalBroadcast_FromONNX.hxx"
 #include "input_models/references/MeanMultidirectionalBroadcast.ref.hxx"
-
-#include "SumMultidirectionalBroadcast_FromONNX.hxx"
 #include "input_models/references/SumMultidirectionalBroadcast.ref.hxx"
-
-#include "AvgPool_FromONNX.hxx"
 #include "input_models/references/AvgPool.ref.hxx"
-
-#include "Pow_FromONNX.hxx"
 #include "input_models/references/Pow.ref.hxx"
-
-#include "Pow_broadcast_FromONNX.hxx"
 #include "input_models/references/Pow_broadcast.ref.hxx"
-
-#include "RNNBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
-
-#include "RNNBidirectional_FromONNX.hxx"
 #include "input_models/references/RNNBidirectional.ref.hxx"
-
-#include "RNNBidirectionalBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNBidirectionalBatchwise.ref.hxx"
-
-#include "RNNDefaults_FromONNX.hxx"
 #include "input_models/references/RNNDefaults.ref.hxx"
-
-#include "RNNSeqLength_FromONNX.hxx"
 #include "input_models/references/RNNSeqLength.ref.hxx"
-
-#include "RNNSequence_FromONNX.hxx"
 #include "input_models/references/RNNSequence.ref.hxx"
-
-#include "RNNSequenceBatchwise_FromONNX.hxx"
 #include "input_models/references/RNNSequenceBatchwise.ref.hxx"
-
-#include "LSTMBatchwise_FromONNX.hxx"
 #include "input_models/references/LSTMBatchwise.ref.hxx"
-
-#include "LSTMBidirectional_FromONNX.hxx"
 #include "input_models/references/LSTMBidirectional.ref.hxx"
-
-#include "LSTMDefaults_FromONNX.hxx"
 #include "input_models/references/LSTMDefaults.ref.hxx"
-
-#include "LSTMInitialBias_FromONNX.hxx"
 #include "input_models/references/LSTMInitialBias.ref.hxx"
-
-#include "LSTMPeepholes_FromONNX.hxx"
 #include "input_models/references/LSTMPeepholes.ref.hxx"
-
-#include "GRUBatchwise_FromONNX.hxx"
 #include "input_models/references/GRUBatchwise.ref.hxx"
-
-#include "GRUBidirectional_FromONNX.hxx"
 #include "input_models/references/GRUBidirectional.ref.hxx"
-
-#include "GRUDefaults_FromONNX.hxx"
 #include "input_models/references/GRUDefaults.ref.hxx"
-
-#include "GRUInitialBias_FromONNX.hxx"
 #include "input_models/references/GRUInitialBias.ref.hxx"
-
-#include "GRUSeqLength_FromONNX.hxx"
 #include "input_models/references/GRUSeqLength.ref.hxx"
-
-#include "Softmax1d_FromONNX.hxx"
 #include "input_models/references/Softmax1d.ref.hxx"
-
-#include "Softmax2d_FromONNX.hxx"
 #include "input_models/references/Softmax2d.ref.hxx"
-
-#include "Softmax3d_FromONNX.hxx"
 #include "input_models/references/Softmax3d.ref.hxx"
-
-#include "Softmax4d_FromONNX.hxx"
 #include "input_models/references/Softmax4d.ref.hxx"
-
-#include "ConvTranspose1d_FromONNX.hxx"
 #include "input_models/references/ConvTranspose1d.ref.hxx"
-
-#include "ConvTranspose2d_FromONNX.hxx"
 #include "input_models/references/ConvTranspose2d.ref.hxx"
-
-//#include "ConvTranspose3d_FromONNX.hxx"
-//#include "input_models/references/ConvTranspose3d.ref.hxx"
-
-#include "ConvTransposeBias2d_FromONNX.hxx"
+// #include "input_models/references/ConvTranspose3d.ref.hxx"
 #include "input_models/references/ConvTransposeBias2d.ref.hxx"
-
-#include "ConvTransposeBias2dBatched_FromONNX.hxx"
 #include "input_models/references/ConvTransposeBias2dBatched.ref.hxx"
-
-#include "Sqrt_FromONNX.hxx"
 #include "input_models/references/Sqrt.ref.hxx"
-
-#include "Reciprocal_FromONNX.hxx"
 #include "input_models/references/Reciprocal.ref.hxx"
-
-#include "Neg_FromONNX.hxx"
 #include "input_models/references/Neg.ref.hxx"
-
-#include "Exp_FromONNX.hxx"
 #include "input_models/references/Exp.ref.hxx"
-
-#include "AddBroadcast1_FromONNX.hxx"
 #include "input_models/references/AddBroadcast1.ref.hxx"
-
-#include "AddBroadcast2_FromONNX.hxx"
 #include "input_models/references/AddBroadcast2.ref.hxx"
-
-#include "AddBroadcast3_FromONNX.hxx"
 #include "input_models/references/AddBroadcast3.ref.hxx"
-
-#include "AddBroadcast4_FromONNX.hxx"
 #include "input_models/references/AddBroadcast4.ref.hxx"
-
-#include "AddBroadcast5_FromONNX.hxx"
 #include "input_models/references/AddBroadcast5.ref.hxx"
-
-#include "AddBroadcast6_FromONNX.hxx"
 #include "input_models/references/AddBroadcast6.ref.hxx"
-
-#include "AddBroadcast7_FromONNX.hxx"
 #include "input_models/references/AddBroadcast7.ref.hxx"
-
-#include "Concat_0D_FromONNX.hxx"
-
-#include "LayerNormalization2d_FromONNX.hxx"
 #include "input_models/references/LayerNormalization2d.hxx"
-
-#include "LayerNormalization4d_FromONNX.hxx"
 #include "input_models/references/LayerNormalization4d.hxx"
-
-#include "ExpandSameSize_FromONNX.hxx"
 #include "input_models/references/ExpandSameSize.ref.hxx"
-
-#include "ExpandDiffSize_FromONNX.hxx"
 #include "input_models/references/ExpandDiffSize.ref.hxx"
-
-#include "GatherAxis0_FromONNX.hxx"
 #include "input_models/references/GatherAxis0.ref.hxx"
-
-#include "GatherAxis1_FromONNX.hxx"
 #include "input_models/references/GatherAxis1.ref.hxx"
-
-#include "GatherAxis2_FromONNX.hxx"
 #include "input_models/references/GatherAxis2.ref.hxx"
-
-#include "GatherAxis3_FromONNX.hxx"
 #include "input_models/references/GatherAxis3.ref.hxx"
-
-#include "Gather2d_FromONNX.hxx"
 #include "input_models/references/Gather2d.ref.hxx"
-
-#include "GatherNegativeIndices_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
-
-#include "Slice_FromONNX.hxx"
 #include "input_models/references/Slice.ref.hxx"
-
-#include "Slice_Default_Axis_FromONNX.hxx"
 #include "input_models/references/Slice_Default_Axis.ref.hxx"
-
-#include "Slice_Default_Steps_FromONNX.hxx"
 #include "input_models/references/Slice_Default_Steps.ref.hxx"
-
-#include "Slice_Neg_FromONNX.hxx"
 #include "input_models/references/Slice_Neg.ref.hxx"
-
-#include "Log_FromONNX.hxx"
 #include "input_models/references/Log.ref.hxx"
-
-#include "Elu_FromONNX.hxx"
 #include "input_models/references/Elu.ref.hxx"
-
-#include "Equal_FromONNX.hxx"
 #include "input_models/references/Equal.ref.hxx"
-
-#include "LessOrEqual_FromONNX.hxx"
 #include "input_models/references/LessOrEqual.ref.hxx"
-
-#include "GreaterOrEqual_FromONNX.hxx"
 #include "input_models/references/GreaterOrEqual.ref.hxx"
-
-#include "Less_FromONNX.hxx"
 #include "input_models/references/Less.ref.hxx"
-
-#include "Greater_FromONNX.hxx"
 #include "input_models/references/Greater.ref.hxx"
-
-#include "EyeLike_FromONNX.hxx"
 #include "input_models/references/EyeLike.ref.hxx"
-#include "RangeFloat_FromONNX.hxx"
 #include "input_models/references/RangeFloat.ref.hxx"
-
-#include "RangeInt_FromONNX.hxx"
 #include "input_models/references/RangeInt.ref.hxx"
-
-#include "Tile5D_FromONNX.hxx"
 #include "input_models/references/Tile5D.ref.hxx"
 
-#include "Pad_FromONNX.hxx"
-
-#include "Where_FromONNX.hxx"
-
-#include "Sin_FromONNX.hxx"
-
-#include "Cos_FromONNX.hxx"
-#include "Abs_FromONNX.hxx"
-
-#include "Softplus_FromONNX.hxx"
-
-#include "Einsum_matmul_FromONNX.hxx"
-#include "Einsum_dotprod_FromONNX.hxx"
-#include "Einsum_3_FromONNX.hxx"
-#include "Einsum_4_FromONNX.hxx"
-
-#include "RandomUniform_FromONNX.hxx"
-#include "RandomNormal_FromONNX.hxx"
-
-#include "Split_0_FromONNX.hxx"
-#include "Split_1_FromONNX.hxx"
-#include "Split_2_FromONNX.hxx"
-
-#include "ScatterElements_FromONNX.hxx"
-
-#include "MatMul_Stacked_FromONNX.hxx"
-
 #include "gtest/gtest.h"
-
-constexpr float DEFAULT_TOLERANCE = 1e-3f;
 
 TEST(ONNX, Linear16)
 {
@@ -338,8 +110,8 @@ TEST(ONNX, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_16", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
@@ -359,8 +131,7 @@ TEST(ONNX, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear32RootFeacture::Session s("Linear_32_FromONNX.root");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_32", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
@@ -380,8 +151,7 @@ TEST(ONNX, Linear32)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_32::Session s("Linear_32_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_32", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
@@ -405,9 +175,8 @@ TEST(ONNX, Sub)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Sub::Session s("Sub_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input1.data(),input2.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sub", input1, input2);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
@@ -431,9 +200,8 @@ TEST(ONNX, Add)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Add::Session s("Add_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input1.data(),input2.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Add", input1, input2);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Add_ExpectedOutput::outputs) / sizeof(float));
@@ -457,9 +225,8 @@ TEST(ONNX, Mul)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Mul::Session s("Mul_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input1.data(),input2.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Mul", input1, input2);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Mul_ExpectedOutput::outputs) / sizeof(float));
@@ -483,9 +250,8 @@ TEST(ONNX, Div)
       std::vector<float> input2({
          2, 2
       });
-      TMVA_SOFIE_Div::Session s("Div_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input1.data(),input2.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Div", input1, input2);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
@@ -508,8 +274,7 @@ TEST(ONNX, Neg)
         -0.7077,  1.0645, -0.8607,  0.2085
       });
 
-      TMVA_SOFIE_Neg::Session s("Neg_FromONNX.dat");
-      std::vector<float> output = s.infer(input.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Neg", input);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Neg_ExpectedOutput::outputs) / sizeof(float));
@@ -531,8 +296,7 @@ TEST(ONNX, Elu)
         1.0, -2.0, 3.0, 0.5, -1.0, 2.0
       });
 
-      TMVA_SOFIE_Elu::Session s("Elu_FromONNX.dat");
-      std::vector<float> output = s.infer(input.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Elu", input);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Elu_ExpectedOutput::outputs) / sizeof(float));
@@ -551,9 +315,7 @@ TEST(ONNX, Constant)
 
    // Preparing the standard  input (none for Constant Op)
 
-   TMVA_SOFIE_Constant::Session s("Constant_FromONNX.dat");
-
-   auto output = s.infer();
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "Constant");
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Constant_ExpectedOutput::outputs) / sizeof(float));
@@ -580,21 +342,17 @@ TEST(ONNX, ComplexTopK)
         9.0000, 8.0000, 7.0000, 6.0000, 5.0000, 4.0000, 3.0000, 2.0000, 1.0000,
         5.0000, 4.0000, 3.0000, 2.0000, 1.0000, 6.0000, 7.0000, 8.0000, 9.0000 });
 
-   TMVA_SOFIE_ComplexTopK::Session s("ComplexTopK_FromONNX.dat");
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(TupleFloatInt64_t, "ComplexTopK", input);
    std::vector<float> values = std::get<0>(output);
    std::vector<int64_t> indexes = std::get<1>(output);
 
-   // Checking output size..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
-   std::cout<<values.size()<<" "<<sizeof(ComplexTopK_ExpectedOutput::values) / sizeof(float)<<std::endl;
-
+   // Checking output size
    EXPECT_EQ(values.size(), sizeof(ComplexTopK_ExpectedOutput::values) / sizeof(float));
 
 float *correct_values = ComplexTopK_ExpectedOutput::values;
 
 // Checking every output value, one by one
 for (size_t i = 0; i < values.size(); ++i) {
-    std::cout << "Output[" << i << "]: " << values[i] << ", Correct[" << i << "]: " << correct_values[i] << std::endl;
     EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
 }
 
@@ -606,7 +364,6 @@ float *correct_indexes = ComplexTopK_ExpectedOutput::indexes;
 
 // Checking every output value, one by one
 for (size_t i = 0; i < indexes.size(); ++i) {
-    std::cout << "Indexes[" << i << "]: " << indexes[i] << ", Correct[" << i << "]: " << correct_indexes[i] << std::endl;
     EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
 }
 
@@ -617,20 +374,18 @@ TEST(ONNX, TopK)
 
    // Preparing the standard all-ones input
    std::vector<float> input({9.0, 8.0, 4.5, 1.7, 2.9, 3.2, 4, 2.6, 7.4});
-   TMVA_SOFIE_TopK::Session s("TopK_FromONNX.dat");
-   auto output = s.infer(input.data());
+
+   ASSERT_INCLUDE_AND_RUN(TupleFloatInt64_t, "TopK", input);
    std::vector<float> values = std::get<0>(output);
    std::vector<int64_t> indexes = std::get<1>(output);
 
    // Checking output size
-   std::cout<<values.size()<<" "<<sizeof(TopK_ExpectedOutput::values) / sizeof(float)<<std::endl;
    EXPECT_EQ(values.size(), sizeof(TopK_ExpectedOutput::values) / sizeof(float));
 
    float *correct_values = TopK_ExpectedOutput::values;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < values.size(); ++i) {
-      std::cout << "Output[" << i << "]: " << values[i] << ", Correct[" << i << "]: " << correct_values[i] << std::endl;
       EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
    }
 
@@ -641,7 +396,6 @@ TEST(ONNX, TopK)
 
    // Checking every output value, one by one
    for (size_t i = 0; i < indexes.size(); ++i) {
-      std::cout << "Indexes[" << i << "]: " << indexes[i] << ", Correct[" << i << "]: " << correct_indexes[i] << std::endl;
       EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
    }
 }
@@ -656,8 +410,7 @@ TEST(ONNX, TopK)
         0.0, 0.0, 0.0
       });
 
-      TMVA_SOFIE_EyeLike::Session s("EyeLike_FromONNX.dat");
-      std::vector<float> output = s.infer(input.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "EyeLike", input);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(EyeLike_ExpectedOutput::output) / sizeof(float));
@@ -679,9 +432,7 @@ TEST(ONNX, Cast)
       1,2,3,4,5,6
    });
 
-   TMVA_SOFIE_Cast::Session s("Cast_FromONNX.dat");
-
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<double>, "Cast", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Cast_ExpectedOutput::outputs) / sizeof(float));
@@ -701,8 +452,7 @@ TEST(ONNX, Linear64)
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_64::Session s("Linear_64_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_64", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Linear_64_ExpectedOutput::all_ones) / sizeof(float));
@@ -723,8 +473,7 @@ TEST(ONNX, LinearWithSelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithSelu_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithSelu", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
@@ -748,9 +497,7 @@ TEST(ONNX, Tanh)
       1.3493,  0.8132,  1.7156, -0.8637, -0.1971,  0.0411, -0.5662, -0.2516
    });
 
-   TMVA_SOFIE_Tanh::Session s("Tanh_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Tanh", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Tanh_ExpectedOutput::outputs) / sizeof(float));
@@ -773,9 +520,7 @@ TEST(ONNX, Erf)
       1.5646, -1.4981,  0.4248, -0.8504
    });
 
-   TMVA_SOFIE_Erf::Session s("Erf_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Erf", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Erf_ExpectedOutput::outputs) / sizeof(float));
@@ -797,9 +542,7 @@ TEST(ONNX, Log)
      1, 2, 3, 4
    });
 
-   TMVA_SOFIE_Log::Session s("Log_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Log", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Log_ExpectedOutput::outputs) / sizeof(float));
@@ -823,9 +566,7 @@ TEST(ONNX, LinearWithLeakyRelu)
       0.7057, -0.3749, -0.3310,  0.0986, -0.1370,  0.0832, -1.6465, -0.2793
    });
 
-   TMVA_SOFIE_LinearWithLeakyRelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithLeakyRelu", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithLeakyRelu_ExpectedOutput::outputs) / sizeof(float));
@@ -846,8 +587,7 @@ TEST(ONNX, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSigmoid::Session s("LinearWithSigmoid_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithSigmoid", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));
@@ -868,8 +608,7 @@ TEST(ONNX, ConvWithPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithPadding::Session s("ConvWithPadding_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -890,8 +629,7 @@ TEST(ONNX, ConvWithoutPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithoutPadding::Session s("ConvWithoutPadding_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithoutPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithoutPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -912,8 +650,7 @@ TEST(ONNX, ConvWithAutopadSameLower)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithAutopadSameLower::Session s("ConvWithAutopadSameLower_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithAutopadSameLower", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAutopadSameLower_ExpectedOutput::all_ones) / sizeof(float));
@@ -934,8 +671,7 @@ TEST(ONNX, ConvWithStridesPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithStridesPadding::Session s("ConvWithStridesPadding_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithStridesPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -956,8 +692,7 @@ TEST(ONNX, ConvWithStridesNoPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithStridesNoPadding::Session s("ConvWithStridesNoPadding_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithStridesNoPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesNoPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -979,8 +714,7 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithAsymmetricPadding::Session s("ConvWithAsymmetricPadding_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithAsymmetricPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAsymmetricPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -1010,8 +744,7 @@ TEST(ONNX, MaxPool1d){
          -0.1657,  0.0649, -1.6066,  0.4162, -1.1525, -0.8184,  1.1324,
           -1.1086,  0.1061,  1.0071});
 
-   TMVA_SOFIE_MaxPool1d::Session s("MaxPool1d_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool1d", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool1d_ExpectedOutput::output) / sizeof(float));
 
@@ -1041,8 +774,7 @@ TEST(ONNX, MaxPool2d){
             0.8810,  0.8506,  0.4455
    });
 
-   TMVA_SOFIE_MaxPool2d::Session s("MaxPool2d_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool2d", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool2d_ExpectedOutput::output) / sizeof(float));
 
@@ -1073,8 +805,7 @@ TEST(ONNX, MaxPool3d){
             0.3842,  0.2428,  1.7924
    });
 
-   TMVA_SOFIE_MaxPool3d::Session s("MaxPool3d_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool3d", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool3d_ExpectedOutput::output) / sizeof(float));
 
@@ -1104,8 +835,7 @@ TEST(ONNX, AvgPool){
             0.2385,  0.3783, -1.0500
    });
 
-   TMVA_SOFIE_AvgPool::Session s("AvgPool_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AvgPool", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(AvgPool_ExpectedOutput::output) / sizeof(float));
 
@@ -1129,8 +859,7 @@ TEST(ONNX, Pow){
       4, 5, 6
    });
 
-   TMVA_SOFIE_Pow::Session s("Pow_FromONNX.dat");
-   std::vector<float> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pow", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_ExpectedOutput::outputs) / sizeof(float));
 
@@ -1154,8 +883,7 @@ TEST(ONNX, Pow_broadcast){
       2, 3, 4, 2, 3, 4
    });
 
-   TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcast_FromONNX.dat");
-   std::vector<float> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pow_broadcast", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_broadcast_ExpectedOutput::outputs) / sizeof(float));
 
@@ -1177,8 +905,7 @@ TEST(ONNX, Pow_broadcast){
       5, 5, 4
    });
 
-   TMVA_SOFIE_ReduceMean::Session s("ReduceMean_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMean", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceMean_ExpectedOutput::output) / sizeof(float));
 
@@ -1200,8 +927,7 @@ TEST(ONNX, Pow_broadcast){
       5, 5, 4
    });
 
-   TMVA_SOFIE_ReduceProd::Session s("ReduceProd_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceProd", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceProd_ExpectedOutput::output) / sizeof(float));
 
@@ -1228,8 +954,7 @@ TEST(ONNX, ReduceSum){
    // input tensor is shape [1,2,3]
    // output tensod is shape [1,1,1] and value = 24 (sum of all elements)
 
-   TMVA_SOFIE_ReduceSum::Session s("ReduceSum_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceSum", input);
    // Checking output size
    EXPECT_EQ(output.size(), 1);
 
@@ -1255,8 +980,7 @@ TEST(ONNX, ReduceSumSquare){
    // output should be [1,2] and [25+4+9, 25+25+16]
 
 
-   TMVA_SOFIE_ReduceSumSquare::Session s("ReduceSumSquare_FromONNX.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceSumSquare", input);
    // Checking output size
    EXPECT_EQ(output.size(), 2);
 
@@ -1279,9 +1003,8 @@ TEST(ONNX, Max)
       std::vector<float> input2({
          3.0, 0.0, 4.0
       });
-      TMVA_SOFIE_Max::Session s("Max_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input1.data(),input2.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Max", input1, input2);
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Max_ExpectedOutput::outputs) / sizeof(float));
@@ -1301,9 +1024,7 @@ TEST(ONNX, MaxMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcast_FromONNX.dat");
-
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MaxMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1321,9 +1042,7 @@ TEST(ONNX, MinMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcast_FromONNX.dat");
-
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MinMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MinMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1341,9 +1060,7 @@ TEST(ONNX, MeanMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcast_FromONNX.dat");
-
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MeanMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MeanMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1361,9 +1078,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcast_FromONNX.dat");
-
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "SumMultidirectionalBroadcast", a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(SumMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1382,8 +1097,7 @@ TEST(ONNX, Shape){
    // Preparing the input ( a tensor of shape [1,2,3])
    std::vector<float> input( {1,2,3,4,5,6} );
 
-   TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Shape", input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
 
@@ -1402,8 +1116,7 @@ TEST(ONNX, RNNBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNBatchwise::Session s("RNNBatchwise_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1428,8 +1141,7 @@ TEST(ONNX, RNNBidirectional)
    std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
                              0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
                              0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
-   TMVA_SOFIE_RNNBidirectional::Session s("RNNBidirectional_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1463,8 +1175,7 @@ TEST(ONNX, RNNBidirectionalBatchwise)
       0,    0.01, 0.06, 0.07, 0.12, 0.13,
       0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
       0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
-   TMVA_SOFIE_RNNBidirectionalBatchwise::Session s("RNNBidirectionalBatchwise_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNBidirectionalBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1496,8 +1207,7 @@ TEST(ONNX, RNNDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNDefaults::Session s("RNNDefaults_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1529,8 +1239,7 @@ TEST(ONNX, RNNSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNSeqLength::Session s("RNNSeqLength_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNSeqLength", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1570,8 +1279,7 @@ TEST(ONNX, RNNSequence)
       0.06,    0.087,  0.01,    0.3,  -0.001,
       0.0,     0.0,    0.0,     0.0,   0.0,
       0.0,     0.0,    0.0,     0.0,   0.0});
-   TMVA_SOFIE_RNNSequence::Session s("RNNSequence_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNSequence", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1611,8 +1319,7 @@ TEST(ONNX, RNNSequenceBatchwise)
       0.16,  -0.19,   0.003,  0.0,   0.0001,
       0.0,     0.0,   0.0,    0.0,   0.0,
       0.0,     0.0,   0.0,    0.0,   0.0});
-   TMVA_SOFIE_RNNSequenceBatchwise::Session s("RNNSequenceBatchwise_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNSequenceBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1644,8 +1351,7 @@ TEST(ONNX, LSTMBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMBatchwise::Session s("LSTMBatchwise_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "LSTMBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1675,8 +1381,7 @@ TEST(ONNX, LSTMBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMBidirectional::Session s("LSTMBidirectional_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "LSTMBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
    std::vector<float> output_yc = output[2];
@@ -1719,8 +1424,7 @@ TEST(ONNX, LSTMDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMDefaults::Session s("LSTMDefaults_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "LSTMDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1752,8 +1456,7 @@ TEST(ONNX, LSTMInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMInitialBias::Session s("LSTMInitialBias_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "LSTMInitialBias", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1785,8 +1488,7 @@ TEST(ONNX, LSTMPeepholes)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMPeepholes::Session s("LSTMPeepholes_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "LSTMPeepholes", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1817,8 +1519,7 @@ TEST(ONNX, GRUBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUBatchwise::Session s("GRUBatchwise_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "GRUBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1848,8 +1549,7 @@ TEST(ONNX, GRUBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUBidirectional::Session s("GRUBidirectional_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "GRUBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1879,8 +1579,7 @@ TEST(ONNX, GRUDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUDefaults::Session s("GRUDefaults_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "GRUDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1910,8 +1609,7 @@ TEST(ONNX, GRUInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUInitialBias::Session s("GRUInitialBias_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "GRUInitialBias", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1941,8 +1639,7 @@ TEST(ONNX, GRUSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUSeqLength::Session s("GRUSeqLength_FromONNX.dat");
-   std::vector<std::vector<float>> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "GRUSeqLength", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -1972,8 +1669,7 @@ TEST(ONNX, Softmax1d)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({-1., 0., 1.});
-   TMVA_SOFIE_Softmax1d::Session s("Softmax1d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax1d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax1d_ExpectedOutput::output) / sizeof(float));
 
@@ -1990,8 +1686,7 @@ TEST(ONNX, Softmax2d)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({-1., 0., 1.});
-   TMVA_SOFIE_Softmax2d::Session s("Softmax2d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax2d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax2d_ExpectedOutput::output) / sizeof(float));
 
@@ -2011,8 +1706,7 @@ TEST(ONNX, Softmax3d)
         -0.8939, -0.3674,  0.1763,  1.5804, -0.4687,  1.2253, -1.3488, -0.1000,
         -0.1262,  0.4962,  1.0870,  0.6905, -0.3451, -1.6981, -0.4688,  0.4468,
         -0.5479,  0.0650,  1.0446, -1.6249, -0.7190, -1.7520,  3.7753, -1.4939});
-   TMVA_SOFIE_Softmax3d::Session s("Softmax3d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax3d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax3d_ExpectedOutput::output) / sizeof(float));
 
@@ -2035,8 +1729,7 @@ TEST(ONNX, Softmax4d)
         -0.6153, -0.6274, -1.2304, -0.6757,  1.0178, -0.2379, -0.7912, -0.0165,
         -0.5423,  0.1459,  1.3585, -0.5005, -0.2187, -1.8181, -0.6642,  0.0287,
         -1.9103,  0.7984, -0.7860,  1.5134,  1.3873, -0.6462, -0.6354, -0.1335});
-   TMVA_SOFIE_Softmax4d::Session s("Softmax4d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softmax4d", input);
 
    EXPECT_EQ(output.size(), sizeof(Softmax4d_ExpectedOutput::output) / sizeof(float));
 
@@ -2055,8 +1748,7 @@ TEST(ONNX, ConvTranspose1d)
    // Preparing the standard all-ones input
    std::vector<float> input(3);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose1d::Session s("ConvTranspose1d_FromONNX.dat");
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTranspose1d", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvTranspose1d_ExpectedOutput::output) / sizeof(float));
@@ -2076,8 +1768,7 @@ TEST(ONNX, ConvTranspose2d)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose2d::Session s("ConvTranspose2d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTranspose2d", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvTranspose2d_ExpectedOutput::output) / sizeof(float));
@@ -2098,8 +1789,7 @@ TEST(ONNX, ConvTranspose3d)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTranspose3d", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvTranspose3d_ExpectedOutput::output) / sizeof(float));
@@ -2120,8 +1810,7 @@ TEST(ONNX, ConvTransposeBias2d)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTransposeBias2d::Session s("ConvTransposeBias2d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTransposeBias2d", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvTransposeBias2d_ExpectedOutput::output) / sizeof(float));
@@ -2141,8 +1830,7 @@ TEST(ONNX, ConvTransposeBias2dBatched)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTransposeBias2dBatched::Session s("ConvTransposeBias2dBatched_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTransposeBias2dBatched", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvTransposeBias2dBatched_ExpectedOutput::output) / sizeof(float));
@@ -2160,8 +1848,7 @@ TEST(ONNX, Sqrt)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({0.8344, 0.4716, 0.6226, 0.8448, 0.2483, 0.9467});
-   TMVA_SOFIE_Sqrt::Session s("Sqrt_FromONNX.data");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sqrt", input);
 
    EXPECT_EQ(output.size(), sizeof(Sqrt_ExpectedOutput::output) / sizeof(float));
 
@@ -2177,8 +1864,7 @@ TEST(ONNX, Reciprocal)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({1.2691, -1.2160,  0.6393, -0.4438,  0.8065,  0.2011});
-   TMVA_SOFIE_Reciprocal::Session s("Reciprocal_FromONNX.data");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Reciprocal", input);
 
    EXPECT_EQ(output.size(), sizeof(Reciprocal_ExpectedOutput::output) / sizeof(float));
 
@@ -2195,8 +1881,7 @@ TEST(ONNX, Exp)
 
    std::vector<float> input({1.46566453,  0.63334515,  2.4048165 ,  0.54468453,
       -1.41271672, -0.18609187,  0.2754482 ,  1.10615209,  0.88474389,  0.47531232});
-   TMVA_SOFIE_Exp::Session s("Exp_FromONNX.data");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Exp", input);
 
    EXPECT_EQ(output.size(), sizeof(Exp_ExpectedOutput::output) / sizeof(float));
 
@@ -2220,8 +1905,7 @@ TEST(ONNX, AddBroadcast1) {
                  0.50450593, -0.41265227, -0.22474539, -0.22362374, 0.00509674,
                  0.16927211, 1.06756969,  -0.81634773, 0.88467744,  0.78902059});
 
-   TMVA_SOFIE_AddBroadcast1::Session s("AddBroadcast1_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast1", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast1_ExpectedOutput::output) / sizeof(float));
@@ -2273,8 +1957,7 @@ TEST(ONNX, AddBroadcast2) {
         -6.20603382e-01, -1.04235434e+00, -1.32974691e+00, -1.35968049e-01,
         9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
 
-   TMVA_SOFIE_AddBroadcast2::Session s("AddBroadcast2_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast2", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast2_ExpectedOutput::output) / sizeof(float));
@@ -2321,8 +2004,7 @@ TEST(ONNX, AddBroadcast3) {
         0.96272832,  0.54303206,  -0.84973033, 0.28780329,  0.17027854,
         -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
 
-   TMVA_SOFIE_AddBroadcast3::Session s("AddBroadcast3_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast3", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast3_ExpectedOutput::output) / sizeof(float));
@@ -2344,8 +2026,8 @@ TEST(ONNX, AddBroadcast4) {
    // The shape of B is {2, 4}
    std::vector<float> B({0.50898894, -0.27829921, -0.68761628,  0.33186382,  0.57915535,
         0.406858  ,  1.4203833 ,  0.19857093});
-   TMVA_SOFIE_AddBroadcast4::Session s("AddBroadcast4_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast4", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast4_ExpectedOutput::output) / sizeof(float));
@@ -2372,8 +2054,7 @@ TEST(ONNX, AddBroadcast5) {
        -0.23466058, -0.5520268 , -0.13844847,  0.53055759,  0.17068648,
        -0.49491276, -1.4246271 , -0.99973914, -0.2571329});
 
-   TMVA_SOFIE_AddBroadcast5::Session s("AddBroadcast5_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast5", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast5_ExpectedOutput::output) / sizeof(float));
@@ -2407,8 +2088,7 @@ TEST(ONNX, AddBroadcast6) {
        -1.12947258,  1.61818821, -0.05826431, -1.47802183,  0.25637381,
        -0.1547858 ,  2.50788792,  0.30898059});
 
-   TMVA_SOFIE_AddBroadcast6::Session s("AddBroadcast6_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast6", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast6_ExpectedOutput::output) / sizeof(float));
@@ -2433,8 +2113,7 @@ TEST(ONNX, AddBroadcast7) {
        -4.86212681e-01, -6.88210109e-01, -6.77434705e-01,  3.67088873e-01,
         8.05744026e-04, -2.08031088e-01,  9.69779132e-01,  7.58373863e-01});
 
-   TMVA_SOFIE_AddBroadcast7::Session s("AddBroadcast7_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AddBroadcast7", A, B);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast7_ExpectedOutput::output) / sizeof(float));
@@ -2453,8 +2132,7 @@ TEST(ONNX, Concat0D) {
    // input
    std::vector<float> input({1.40519865e+00, -2.87660856e-01});
    std::vector<float> expected_output({1.40519865e+00, -2.87660856e-01, 1.40519865e+00, -2.87660856e-01});
-   TMVA_SOFIE_Concat_0D::Session s("Concat_0D_FromONNX.dat");
-   std::vector<float> actual_output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Concat_0D", input);
 
    // Checking the output size
    EXPECT_EQ(expected_output.size(), expected_output.size());
@@ -2462,8 +2140,8 @@ TEST(ONNX, Concat0D) {
    float* correct = expected_output.data();
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < actual_output.size(); i++) {
-      EXPECT_LE(std::abs(actual_output[i] - correct[i]), TOLERANCE);
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
@@ -2473,8 +2151,7 @@ TEST(ONNX, LayerNormalization2d) {
    // input
    std::vector<float> x(12);
    std::iota(x.begin(), x.end(), 0.);
-   TMVA_SOFIE_LayerNormalization2d::Session s("LayerNormalization2d_FromONNX.dat");
-   std::vector<float> output(s.infer(x.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LayerNormalization2d", x);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization2d_ExpectedOutput::output) / sizeof(float));
@@ -2493,8 +2170,7 @@ TEST(ONNX, LayerNormalization4d) {
    // input
    std::vector<float> x(120);
    std::iota(x.begin(), x.end(), 0.);
-   TMVA_SOFIE_LayerNormalization4d::Session s("LayerNormalization4d_FromONNX.dat");
-   std::vector<float> output(s.infer(x.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LayerNormalization4d", x);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization4d_ExpectedOutput::output) / sizeof(float));
@@ -2518,8 +2194,7 @@ TEST(ONNX, Equal){
       4.0, 2.0, 6.0
    });
 
-   TMVA_SOFIE_Equal::Session s("Equal_FromONNX.dat");
-   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Equal", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Equal_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2543,8 +2218,7 @@ TEST(ONNX, LessOrEqual){
       4.0, 2.0, 6.0
    });
 
-   TMVA_SOFIE_LessOrEqual::Session s("LessOrEqual_FromONNX.dat");
-   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "LessOrEqual", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LessOrEqual_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2568,8 +2242,7 @@ TEST(ONNX, GreaterOrEqual){
       4.0, 2.0, 6.0
    });
 
-   TMVA_SOFIE_GreaterOrEqual::Session s("GreaterOrEqual_FromONNX.dat");
-   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "GreaterOrEqual", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(GreaterOrEqual_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2593,8 +2266,7 @@ TEST(ONNX, Greater){
       4.0, 2.0, 6.0
    });
 
-   TMVA_SOFIE_Greater::Session s("Greater_FromONNX.dat");
-   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Greater", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Greater_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2618,8 +2290,7 @@ TEST(ONNX, Less){
       4.0, 2.0, 6.0
    });
 
-   TMVA_SOFIE_Less::Session s("Less_FromONNX.dat");
-   std::vector<std::uint8_t> output = s.infer(input1.data(),input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::uint8_t>, "Less", input1, input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Less_ExpectedOutput::outputs) / sizeof(bool));
 
@@ -2637,8 +2308,7 @@ TEST(ONNX, ExpandSameSize) {
 
    // input
    std::vector<float> input({0., 1., 2.});
-   TMVA_SOFIE_ExpandSameSize::Session s("ExpandSameSize_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ExpandSameSize", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(ExpandSameSize_ExpectedOutput::output) / sizeof(float));
@@ -2656,8 +2326,7 @@ TEST(ONNX, ExpandDiffSize) {
 
    // input
    std::vector<float> input({0., 1., 2.});
-   TMVA_SOFIE_ExpandDiffSize::Session s("ExpandDiffSize_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ExpandDiffSize", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(ExpandDiffSize_ExpectedOutput::output) / sizeof(float));
@@ -2676,8 +2345,7 @@ TEST(ONNX, GatherAxis0) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis0::Session s("GatherAxis0_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherAxis0", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis0_ExpectedOutput::output) / sizeof(float));
@@ -2696,8 +2364,7 @@ TEST(ONNX, GatherAxis1) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis1::Session s("GatherAxis1_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherAxis1", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis1_ExpectedOutput::output) / sizeof(float));
@@ -2716,8 +2383,7 @@ TEST(ONNX, GatherAxis2) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis2::Session s("GatherAxis2_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherAxis2", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis2_ExpectedOutput::output) / sizeof(float));
@@ -2736,8 +2402,7 @@ TEST(ONNX, GatherAxis3) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis3::Session s("GatherAxis3_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherAxis3", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherAxis3_ExpectedOutput::output) / sizeof(float));
@@ -2756,8 +2421,7 @@ TEST(ONNX, Gather2d) {
    // input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_Gather2d::Session s("Gather2d_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Gather2d", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(Gather2d_ExpectedOutput::output) / sizeof(float));
@@ -2776,8 +2440,7 @@ TEST(ONNX, GatherNegativeIndices) {
    // input
    std::vector<float> input(10);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherNegativeIndices::Session s("GatherNegativeIndices_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherNegativeIndices", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(GatherNegativeIndices_ExpectedOutput::output) / sizeof(float));
@@ -2794,8 +2457,7 @@ TEST(ONNX, Slice) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice::input;
-   TMVA_SOFIE_Slice::Session s("Slice.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Slice", input);
 
    EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
    float *correct = Slice::output;
@@ -2810,8 +2472,7 @@ TEST(ONNX, Slice_Default_Axis) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Default_Axis::input;
-   TMVA_SOFIE_Slice_Default_Axis::Session s("Slice_Default_Axis.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Slice_Default_Axis", input);
 
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Axis::output) / sizeof(float));
    float *correct = Slice_Default_Axis::output;
@@ -2826,8 +2487,7 @@ TEST(ONNX, Slice_Default_Steps) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Default_Steps::input;
-   TMVA_SOFIE_Slice_Default_Steps::Session s("Slice_Default_Steps.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Slice_Default_Steps", input);
 
    EXPECT_EQ(output.size(), sizeof(Slice_Default_Steps::output) / sizeof(float));
    float *correct = Slice_Default_Steps::output;
@@ -2842,8 +2502,7 @@ TEST(ONNX, Slice_Neg) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = Slice_Neg::input;
-   TMVA_SOFIE_Slice_Neg::Session s("Slice_Neg.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Slice_Neg", input);
 
    EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
    float *correct = Slice_Neg::output;
@@ -2857,11 +2516,10 @@ TEST(ONNX, RangeFloat) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // inputs
-   float start = 1.;
-   float limit = 10.;
-   float delta = 2.;
-   TMVA_SOFIE_RangeFloat::Session s("RangeFloat_FromONNX.dat",5);
-   std::vector<float> output(s.infer(&start, &limit, &delta));
+   std::vector<float> start{1.};
+   std::vector<float> limit{10.};
+   std::vector<float> delta{2.};
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeFloat", "\"RangeFloat_FromONNX.dat\", 5", start, limit, delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
@@ -2876,11 +2534,10 @@ TEST(ONNX, RangeFloat) {
 
 TEST(ONNX, RangeInt) {
    // inputs
-   int64_t start = 1;
-   int64_t limit = 10;
-   int64_t delta = 2;
-   TMVA_SOFIE_RangeInt::Session s("RangeInt_FromONNX.dat",5);
-   std::vector<int64_t> output(s.infer(&start, &limit, &delta));
+   std::vector<int64_t> start{1};
+   std::vector<int64_t> limit{10};
+   std::vector<int64_t> delta{2};
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeInt", "\"RangeInt_FromONNX.dat\", 5", start, limit, delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));
@@ -2915,8 +2572,7 @@ TEST(ONNX, Tile5D) {
       });
       // std::vector<size_t> repetitions({2, 1, 2, 1, 3});
 
-      TMVA_SOFIE_Tile5D::Session s("Tile5D_FromONNX.dat");
-      std::vector<float> output = s.infer(input_data.data());
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Tile5D", input_data);
 
       // EXPECT_EQ(output.size(), expected_output.size());
       EXPECT_EQ(output.size(), sizeof(Tile5D_ExpectedOutput::output) / sizeof(float));
@@ -2935,8 +2591,7 @@ TEST(ONNX, Pad) {
    std::vector<float> input = {1,2,3,4};
    std::vector<float> correct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 3,
        4, 0, 0, 0, 0, 0, 0, 0};
-   TMVA_SOFIE_Pad::Session s("Pad_FromONNX.dat");
-   std::vector<float> output(s.infer(input.data()));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Pad", input);
 
    // Checking the output size
    EXPECT_EQ(output.size(), correct.size());
@@ -2951,10 +2606,9 @@ TEST(ONNX, Where) {
    // test also the broadcast of boolean tensors
    std::vector<float> input1 = {1,2};
    std::vector<float> input2 = {3,4,5,6};
-   uint8_t cond[] = {true, false, true}; // need to pass arrays for booleans
+   std::vector<uint8_t> cond = {true, false, true};
    std::vector<float> correct = {1,2,5,6,1,2};
-   TMVA_SOFIE_Where::Session s("Where_FromONNX.dat");
-   std::vector<float> output(s.infer(input1.data(), input2.data(), cond));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Where", input1, input2, cond);
 
    // Checking the output size
    EXPECT_EQ(output.size(), correct.size());
@@ -2974,9 +2628,7 @@ TEST(ONNX, Sin)
      -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
    });
 
-   TMVA_SOFIE_Sin::Session s("Sin_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Sin", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), input.size());
@@ -2996,9 +2648,7 @@ TEST(ONNX, Cos)
      1.152504,-1.459324,0.691594,0.347690,-1.307323,1.832516,-1.261772,0.014224,1.311477,1.147405,-0.567206,-0.530606
    });
 
-   TMVA_SOFIE_Cos::Session s("Cos_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Cos", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), input.size());
@@ -3016,9 +2666,7 @@ TEST(ONNX, Abs)
    // Preparing the random input
    std::vector<float> input({1.,-2.,-3,4,-5.,6});
 
-   TMVA_SOFIE_Abs::Session s("Abs_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Abs", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), input.size());
@@ -3036,9 +2684,7 @@ TEST(ONNX, Softplus)
    // Preparing the random input
    std::vector<float> input({0.1,-0.2,0.3,-0.4,0.5,1.});
 
-   TMVA_SOFIE_Softplus::Session s("Softplus_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Softplus", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), input.size());
@@ -3056,9 +2702,7 @@ TEST(ONNX, Einsum_matmul)
    std::vector<float> input2{5, 6, 7, 8};
    std::vector<float> correct_output = {19, 22, 43, 50};
 
-   TMVA_SOFIE_Einsum_matmul::Session s("Einsum_matmul_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input1.data(), input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_matmul", input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 4);
@@ -3074,9 +2718,7 @@ TEST(ONNX, Einsum_dotprod)
    std::vector<float> input2{5, 6, 7};
    std::vector<float> correct_output {5 +  12 + 21};
 
-   TMVA_SOFIE_Einsum_dotprod::Session s("Einsum_dotprod_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input1.data(), input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_dotprod", input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 1);
@@ -3093,10 +2735,7 @@ TEST(ONNX, Einsum_3)
    std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<float> correct_output {66. , 87. , 108., 498.,  555., 612. };
 
-
-   TMVA_SOFIE_Einsum_3::Session s("Einsum_dotprod_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input1.data(), input2.data());
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "Einsum_3", "\"Einsum_dotprod_FromONNX.dat\"", input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 6);
@@ -3114,10 +2753,7 @@ TEST(ONNX, Einsum_4)
    std::vector<float> correct_output { 14., 32.,  50., 32.,  77.,  122.,
                                       266., 338., 410., 365., 464., 563. };
 
-
-   TMVA_SOFIE_Einsum_4::Session s("Einsum_4_FromONNX.dat");
-
-   std::vector<float> output = s.infer(input1.data(), input2.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Einsum_4", input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), 12);
@@ -3131,9 +2767,7 @@ TEST(ONNX, RandomUniform)
    // output of gRandom->Uniform(10,20) with seed 111 - > shape(2,3)
    std::vector<float> correct_output = {16.1217, 11.2076, 11.6907, 13.0179, 14.3606, 18.5391};
 
-   TMVA_SOFIE_RandomUniform::Session s("RandomUniform_FromONNX.dat");
-
-   std::vector<float> output = s.infer();
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomUniform");
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3148,9 +2782,7 @@ TEST(ONNX, RandomNormal)
     // output of gRandom->Gaus(1,3) with seed 111 - > shape(2,3)
    std::vector<float> correct_output = {-0.808389, -0.985581, 0.616354, 2.1887, 1.13927, -0.228048};
 
-   TMVA_SOFIE_RandomNormal::Session s("RandomNormal_FromONNX.dat");
-
-   std::vector<float> output = s.infer();
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomNormal");
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3166,9 +2798,7 @@ TEST(ONNX, Split_0)
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<std::vector<float>> correct_output ={ {1,2,3,4,5,6}, {7,8,9,10,11,12} };
 
-   TMVA_SOFIE_Split_0::Session s("Split_0_FromONNX.dat");
-
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_0", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3186,9 +2816,7 @@ TEST(ONNX, Split_1)
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<std::vector<float>> correct_output ={ {1,2,3,7,8,9}, {4,5,6,10,11,12} };
 
-   TMVA_SOFIE_Split_1::Session s("Split_1_FromONNX.dat");
-
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_1", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3206,9 +2834,7 @@ TEST(ONNX, Split_2)
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
    std::vector<std::vector<float>> correct_output ={ {1,2,4,5,7,8,10,11}, {3,6,9,12} };
 
-   TMVA_SOFIE_Split_2::Session s("Split_2_FromONNX.dat");
-
-   auto output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Split_2", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3228,9 +2854,7 @@ TEST(ONNX, ScatterElements)
    std::vector<float> updates = { 1, 1.1, 1.2, 2, 2.1, 2.2};
    std::vector<float> correct_output = {2, 1.1, 0., 1., 0., 2.2, 0., 2.1, 1.2 };
 
-   TMVA_SOFIE_ScatterElements::Session s("ScatterElements_FromONNX.dat");
-
-   auto output = s.infer(input.data(), indices.data(), updates.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterElements", input, indices, updates);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
@@ -3249,9 +2873,7 @@ TEST(ONNX, MatMul_Stacked)
    std::vector<float> correct_output = {8,18, 28,38};
 
    // model is dynamic , use N = 2
-   TMVA_SOFIE_MatMul_Stacked::Session s("MatMul_Stacked_FromONNX.dat", 2);
-
-   auto output = s.infer(2, input1.data(), input2.data());
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked", "\"MatMul_Stacked_FromONNX.dat\", 2", 2, input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
