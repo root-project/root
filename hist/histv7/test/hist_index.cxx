@@ -238,8 +238,8 @@ TEST(RBinIndexRange, Full)
    EXPECT_EQ(full.GetEnd(), invalid);
    EXPECT_EQ(std::distance(full.begin(), full.end()), 12);
 
-   const std::vector binIndexes(full.begin(), full.end());
-   ASSERT_EQ(binIndexes.size(), 12);
-   EXPECT_TRUE(binIndexes.front().IsUnderflow());
-   EXPECT_TRUE(binIndexes.back().IsOverflow());
+   const std::vector binIndices(full.begin(), full.end());
+   ASSERT_EQ(binIndices.size(), 12);
+   EXPECT_TRUE(binIndices.front().IsUnderflow());
+   EXPECT_TRUE(binIndices.back().IsOverflow());
 }
