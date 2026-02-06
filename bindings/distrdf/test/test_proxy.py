@@ -161,7 +161,7 @@ class AttrReadTest(unittest.TestCase):
         node.backend = None
         proxy = Proxy.NodeProxy(node)
         self.assertTrue(node.has_user_references)
-        proxy = None  # noqa: avoid PEP8 F841
+        proxy = None  # noqa: F841
         self.assertFalse(node.has_user_references)
 
     def test_return_value(self):
