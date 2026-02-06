@@ -1,98 +1,39 @@
-#include <numeric>
+constexpr auto modelHeaderSuffix = "_FromROOT.hxx";
+constexpr auto modelDataSuffix = "_FromROOT.root";
+#include "test_helpers.h"
 
-#include "Linear_16_FromROOT.hxx"
 #include "input_models/references/Linear_16.ref.hxx"
-
-// #include "Linear_32_FromROOT.hxx"
 // #include "input_models/references/Linear_32.ref.hxx"
-
-// #include "Linear_64_FromROOT.hxx"
 // #include "input_models/references/Linear_64.ref.hxx"
-
-#include "LinearWithSelu_FromROOT.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
-
-#include "LinearWithSigmoid_FromROOT.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
-
-#include "ConvWithPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
-
-#include "ConvWithoutPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
-
-#include "ConvWithAutopadSameLower_FromROOT.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
-
-#include "ConvWithStridesPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
-
-#include "ConvWithStridesNoPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
-
-#include "ConvWithAsymmetricPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
-
-#include "RNNBatchwise_FromROOT.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
-
-#include "RNNBidirectional_FromROOT.hxx"
 #include "input_models/references/RNNBidirectional.ref.hxx"
-
-#include "RNNBidirectionalBatchwise_FromROOT.hxx"
 #include "input_models/references/RNNBidirectionalBatchwise.ref.hxx"
-
-#include "RNNDefaults_FromROOT.hxx"
 #include "input_models/references/RNNDefaults.ref.hxx"
-
-#include "RNNSeqLength_FromROOT.hxx"
 #include "input_models/references/RNNSeqLength.ref.hxx"
-
-#include "RNNSequence_FromROOT.hxx"
 #include "input_models/references/RNNSequence.ref.hxx"
-
-#include "RNNSequenceBatchwise_FromROOT.hxx"
 #include "input_models/references/RNNSequenceBatchwise.ref.hxx"
-
-#include "LSTMBatchwise_FromROOT.hxx"
 #include "input_models/references/LSTMBatchwise.ref.hxx"
-
-#include "LSTMBidirectional_FromROOT.hxx"
 #include "input_models/references/LSTMBidirectional.ref.hxx"
-
-#include "LSTMDefaults_FromROOT.hxx"
 #include "input_models/references/LSTMDefaults.ref.hxx"
-
-#include "LSTMInitialBias_FromROOT.hxx"
 #include "input_models/references/LSTMInitialBias.ref.hxx"
-
-#include "LSTMPeepholes_FromROOT.hxx"
 #include "input_models/references/LSTMPeepholes.ref.hxx"
-
-#include "GRUBatchwise_FromROOT.hxx"
 #include "input_models/references/GRUBatchwise.ref.hxx"
-
-#include "GRUBidirectional_FromROOT.hxx"
 #include "input_models/references/GRUBidirectional.ref.hxx"
-
-#include "GRUDefaults_FromROOT.hxx"
 #include "input_models/references/GRUDefaults.ref.hxx"
-
-#include "GRUInitialBias_FromROOT.hxx"
 #include "input_models/references/GRUInitialBias.ref.hxx"
-
-#include "GRUSeqLength_FromROOT.hxx"
 #include "input_models/references/GRUSeqLength.ref.hxx"
-
-#include "RangeFloat_FromROOT.hxx"
 #include "input_models/references/RangeFloat.ref.hxx"
-
-#include "RangeInt_FromROOT.hxx"
 #include "input_models/references/RangeInt.ref.hxx"
 
 #include "gtest/gtest.h"
-
-constexpr float DEFAULT_TOLERANCE = 1e-3f;
 
 TEST(ROOT, Linear16)
 {
@@ -101,8 +42,8 @@ TEST(ROOT, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromROOT.root");
-   std::vector<float> output = s.infer(input.data());
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_16", input);
 
    // Testing the actual and expected output sizes
    EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
@@ -123,8 +64,7 @@ TEST(ROOT, Linear32)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_32::Session s("Linear_32_FromROOT.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_32", input);
 
    // Testing the actual and expected output sizes
    EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
@@ -145,8 +85,7 @@ TEST(ROOT, Linear64)
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_64::Session s("Linear_64_FromROOT.dat");
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Linear_64", input);
 
    // Testing the actual and expected output values
    EXPECT_EQ(output.size(), sizeof(Linear_64_ExpectedOutput::all_ones) / sizeof(float));
@@ -167,8 +106,7 @@ TEST(ROOT, LinearWithSelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSelu::Session s; // we don;t use weight file
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithSelu", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
@@ -189,8 +127,7 @@ TEST(ROOT, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSigmoid::Session s;  // we don't use weight file in this case
-   std::vector<float> output = s.infer(input.data());
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LinearWithSigmoid", input);
 
 
    // Checking output size
@@ -212,7 +149,7 @@ TEST(ROOT, ConvWithPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithPadding::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -225,7 +162,6 @@ TEST(ROOT, ConvWithPadding)
    }
 }
 
-
 TEST(ROOT, ConvWithoutPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -233,7 +169,7 @@ TEST(ROOT, ConvWithoutPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithoutPadding::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithoutPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithoutPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -254,7 +190,7 @@ TEST(ROOT, ConvWithAutopadSameLower)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithAutopadSameLower::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithAutopadSameLower", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAutopadSameLower_ExpectedOutput::all_ones) / sizeof(float));
@@ -275,7 +211,7 @@ TEST(ROOT, ConvWithStridesPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithStridesPadding::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithStridesPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -296,7 +232,7 @@ TEST(ROOT, ConvWithStridesNoPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithStridesNoPadding::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithStridesNoPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithStridesNoPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -317,7 +253,7 @@ TEST(DISABLED_ROOT, ConvWithAsymmetricPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   std::vector<float> output = TMVA_SOFIE_ConvWithAsymmetricPadding::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<float>, "ConvWithAsymmetricPadding", input);
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ConvWithAsymmetricPadding_ExpectedOutput::all_ones) / sizeof(float));
@@ -337,7 +273,7 @@ TEST(ROOT, RNNBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBatchwise::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -362,7 +298,7 @@ TEST(ROOT, RNNBidirectional)
    std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
                              0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
                              0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectional::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -396,7 +332,7 @@ TEST(ROOT, RNNBidirectionalBatchwise)
       0,    0.01, 0.06, 0.07, 0.12, 0.13,
       0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
       0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNBidirectionalBatchwise::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNBidirectionalBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -428,7 +364,7 @@ TEST(ROOT, RNNDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNDefaults::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -460,7 +396,7 @@ TEST(ROOT, RNNSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSeqLength::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNSeqLength", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -500,7 +436,7 @@ TEST(ROOT, RNNSequence)
       0.06,    0.087,  0.01,    0.3,  -0.001,
       0.0,     0.0,    0.0,     0.0,   0.0,
       0.0,     0.0,    0.0,     0.0,   0.0});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequence::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNSequence", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -540,7 +476,7 @@ TEST(ROOT, RNNSequenceBatchwise)
       0.16,  -0.19,   0.003,  0.0,   0.0001,
       0.0,     0.0,   0.0,    0.0,   0.0,
       0.0,     0.0,   0.0,    0.0,   0.0});
-   std::vector<std::vector<float>> output = TMVA_SOFIE_RNNSequenceBatchwise::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "RNNSequenceBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -572,7 +508,7 @@ TEST(ROOT, LSTMBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBatchwise::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "LSTMBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -602,7 +538,7 @@ TEST(ROOT, LSTMBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMBidirectional::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "LSTMBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
    std::vector<float> output_yc = output[2];
@@ -645,7 +581,7 @@ TEST(ROOT, LSTMDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMDefaults::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "LSTMDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -677,7 +613,7 @@ TEST(ROOT, LSTMInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMInitialBias::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "LSTMInitialBias", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -709,7 +645,7 @@ TEST(ROOT, LSTMPeepholes)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_LSTMPeepholes::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "LSTMPeepholes", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -739,7 +675,7 @@ TEST(ROOT, GRUBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUBatchwise::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "GRUBatchwise", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -769,7 +705,7 @@ TEST(ROOT, GRUBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUBidirectional::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "GRUBidirectional", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -799,7 +735,7 @@ TEST(ROOT, GRUDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUDefaults::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "GRUDefaults", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -829,7 +765,7 @@ TEST(ROOT, GRUInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUInitialBias::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "GRUInitialBias", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -859,7 +795,7 @@ TEST(ROOT, GRUSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   std::vector<std::vector<float>> output = TMVA_SOFIE_GRUSeqLength::infer(input.data());
+   ASSERT_INCLUDE_AND_RUN_NO_SESSION(std::vector<std::vector<float>>, "GRUSeqLength", input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
 
@@ -888,11 +824,10 @@ TEST(ROOT, RangeFloat) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // inputs
-   float start = 1.;
-   float limit = 10.;
-   float delta = 2.;
-   TMVA_SOFIE_RangeFloat::Session s("",5);
-   std::vector<float> output(s.infer(&start, &limit, &delta));
+   std::vector<float> start{1.};
+   std::vector<float> limit{10.};
+   std::vector<float> delta{2.};
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeFloat", "\"\", 5", start, limit, delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
@@ -907,11 +842,10 @@ TEST(ROOT, RangeFloat) {
 
 TEST(ROOT, RangeInt) {
    // inputs
-   int64_t start = 1;
-   int64_t limit = 10;
-   int64_t delta = 2;
-   TMVA_SOFIE_RangeInt::Session s("",5);
-   std::vector<int64_t> output(s.infer(&start, &limit, &delta));
+   std::vector<int64_t> start{1};
+   std::vector<int64_t> limit{10};
+   std::vector<int64_t> delta{2};
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeInt", "\"\", 5", start, limit, delta);
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));

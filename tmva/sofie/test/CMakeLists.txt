@@ -47,22 +47,15 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
 
 # Creating a Google Test
 if (BLAS_FOUND)  # we need BLAS for compiling the models
-  ROOTTEST_GENERATE_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
+  ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
     LIBRARIES
-      MathCore
-      ROOTTMVASofie
-      BLAS::BLAS
+      Core
       GTest::gtest
       GTest::gtest_main
-    FIXTURES_REQUIRED
-      sofie-compile-models-onnx
-    FIXTURES_SETUP
-      sofie-test-models-onnx-build
   )
-  target_include_directories(TestCustomModelsFromONNX PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   ROOTTEST_ADD_TEST(TestCustomModelsFromONNX
                     EXEC ./TestCustomModelsFromONNX
-                    FIXTURES_REQUIRED sofie-test-models-onnx-build)
+                    FIXTURES_REQUIRED sofie-compile-models-onnx)
 endif()
 
 # For testing serialisation of RModel object
@@ -83,21 +76,15 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ROOT
 
 if (BLAS_FOUND)
   # Creating a Google Test for Serialisation of RModel
-  ROOTTEST_GENERATE_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
+  ROOT_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
     LIBRARIES
-      ROOTTMVASofie
-      BLAS::BLAS
+      Core
       GTest::gtest
       GTest::gtest_main
-    FIXTURES_REQUIRED
-      sofie-compile-models-root
-    FIXTURES_SETUP
-      sofie-test-models-root-build
   )
-  target_include_directories(TestCustomModelsFromROOT PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   ROOTTEST_ADD_TEST(TestCustomModelsFromROOT
                     EXEC ./TestCustomModelsFromROOT
-                    FIXTURES_REQUIRED sofie-test-models-root-build)
+                    FIXTURES_REQUIRED sofie-compile-models-root)
 
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
