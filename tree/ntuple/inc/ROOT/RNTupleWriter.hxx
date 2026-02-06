@@ -38,6 +38,7 @@ namespace ROOT {
 class RNTupleWriteOptions;
 
 namespace Experimental {
+class RNTupleAttrSetWriterHandle;
 class RFile;
 
 /// Creates an RNTupleWriter that writes into the given `file`, appending to it. The RNTuple is written under the
@@ -125,6 +126,8 @@ class RNTupleWriter {
 private:
    RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
+   /// All the Attribute Sets created from this Writer.
+   std::vector<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
@@ -260,6 +263,11 @@ public:
    {
       return std::make_unique<ROOT::RNTupleModel::RUpdater>(*this);
    }
+
+   /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
+   /// The lifetime of the Attribute Set ends at the same time as the Writer's.
+   ROOT::Experimental::RNTupleAttrSetWriterHandle
+   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name);
 }; // class RNTupleWriter
 
 } // namespace ROOT
