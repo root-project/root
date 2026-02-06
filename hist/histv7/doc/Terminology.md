@@ -25,7 +25,8 @@ A *normal bin* is inside an axis and its index starts from 0.
 The *invalid bin index* is another special value.
 
 A *bin index range* is a range from `begin` (inclusive) to `end` (exclusive).
-For its purpose, the underflow bin is ordered before all normal bins while the overflow bin is placed after.
+In this context, the adjective *full* means that the range includes flow bins.
+For this purpose, the underflow bin is ordered before all normal bins while the overflow bin is placed after.
 As the `end` is exclusive, the invalid bin index is ordered last to make it possible to include the overflow bin.
 
 *Filling* a histogram means to add an entry to a histogram.

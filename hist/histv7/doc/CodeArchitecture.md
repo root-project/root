@@ -86,6 +86,12 @@ Objects of this type are passed by value; most notably to `GetBinContent`.
 A range of `RBinIndex` from `begin` (inclusive) to `end` (exclusive).
 The class exposes an iterator interface that can be used in range-based loops.
 
+### `RBinIndexMultiDimRange`
+
+A multidimensional composition of `RBinIndexRange`.
+The class exposes an iterator interface that can be used in range-based loops.
+The value type is a `std::vector<RBinIndex>`.
+
 ### `RHistAutoAxisFiller`
 
 A specialized class to automatically determine the axis interval during filling.
