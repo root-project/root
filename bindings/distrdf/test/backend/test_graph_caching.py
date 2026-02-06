@@ -3,10 +3,10 @@ import unittest
 from array import array
 
 import ROOT
-from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
-from DistRDF.Backends import Base
-from DistRDF.DataFrame import RDataFrame
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+from ROOT._distrdf.Backends import Base
+from ROOT._distrdf.DataFrame import RDataFrame
+from ROOT._distrdf.HeadNode import get_headnode
 
 
 def clear_caches():

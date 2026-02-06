@@ -3,7 +3,6 @@ import os
 import numpy
 import pytest
 import ROOT
-from DistRDF.Backends import Dask
 
 
 class TestReducerMerge:

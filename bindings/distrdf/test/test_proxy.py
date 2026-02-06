@@ -1,13 +1,11 @@
-from array import array
-import unittest
 import os
+import unittest
+from array import array
 
 import ROOT
-
-from DistRDF import Node
-from DistRDF import Proxy
-from DistRDF.Backends import Base
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf import Node, Proxy
+from ROOT._distrdf.Backends import Base
+from ROOT._distrdf.HeadNode import get_headnode
 
 
 def create_dummy_headnode(*args):

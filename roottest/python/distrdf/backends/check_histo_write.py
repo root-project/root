@@ -1,9 +1,7 @@
 import os
 
 import pytest
-
 import ROOT
-from DistRDF.Backends import Dask
 
 
 class TestDaskHistoWrite:
