@@ -115,7 +115,7 @@ class OfficialROOTRepoPR:
     '''
     def __init__(self, pullNumber):
         self.pullNumber = pullNumber
-        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title,commits,mergeCommit,baseRefName')
+        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title,commits,mergeCommit,baseRefName,author')
         self.PRJsonObject = json.loads(PRJsonStr)
 
     def _parseJson(self, level1Label, level2Label=''):
@@ -155,7 +155,10 @@ class OfficialROOTRepoPR:
     def getMergeCommit(self):
         # We have a handle on the most recent commit merged. Its
         # hash is the one in the target branch.
-        return self._parseJson('mergeCommit', 'oid')
+        if self._parseJson('mergeCommit'):
+            return self._parseJson('mergeCommit', 'oid')
+        else:
+            raise Exception(f'PR {self.pullNumber} does not seem to be merged.')
 
     def getBaseRefName(self):
         return self._parseJson('baseRefName')
@@ -163,38 +166,42 @@ class OfficialROOTRepoPR:
     def getNCommits(self):
         return len(self._parseJson('commits'))
 
-    def getPRTitle(self):
+    def getTitle(self):
         '''
         Obtain the name of a PR to the official ROOT repo by its number.
         '''
         return self._parseJson('title')
     
-    def getPRLabels(self):
+    def getLabels(self):
         '''
         Get the labels of a PR to the ROOT official repository as a comma separated list.
-        
-        :param pullNumber: The number of the PR to the ROOT repo
+
         '''
         labels = self._parseJson('labels', 'name')
         labels = f'pr:backport,{labels}'
         printInfo(f'The label(s) of PR {self.pullNumber} is(are) {labels}')
         return labels
 
-    def getPRAssignees(self):
+    def getAssignees(self):
         '''
         Get the assignees of a PR to the ROOT official repository as a comma separated list.
-        
-        :param pullNumber: The number of the PR to the ROOT repo
         '''
         assignees = self._parseJson('assignees', 'login')
         printInfo(f'The assignee(s) of PR {self.pullNumber} is(are) {assignees}')
         return assignees
 
+    def getAuthor(self):
+        '''
+        Get the author of a PR to the ROOT official repository.
+        '''
+        author = self._parseJson('author', 'login')
+        printInfo(f'The author of PR {self.pullNumber} is {author}')
+        return author
+
     def postCommentAfterBP(self, bpPRUrlBranch):
         '''
         Post a clear message summarising what backports have been created
-        
-        :param pullNumber: The number of the PR to the ROOT repo
+
         :param bpPRUrlBranch: The list of backport PRs numbers and branch names
         '''
         # We now prepare a clear message to post on the PR for which backports have been created...
@@ -219,14 +226,18 @@ def principal():
 
     # We get some information about the PR
     thePR = OfficialROOTRepoPR(pullNumber)
-    assignees = thePR.getPRAssignees()
-    labels = thePR.getPRLabels()
-    prTitle = thePR.getPRTitle()
+    assignees = thePR.getAssignees()
+    labels = thePR.getLabels()
+    prTitle = thePR.getTitle()
     mergeCommit = thePR.getMergeCommit()
     nCommits = thePR.getNCommits()
     baseRefName = thePR.getBaseRefName()
+    originalPRAuthor = thePR.getAuthor()
     
     requestorInfo = f', requested by @{requestor}' if requestor else ''
+    if originalPRAuthor!=requestor:
+        requestorInfo += f'\nFor your information @{originalPRAuthor}'
+
     bpPRUrlBranch = []
 
     labelSwitch = '' if labels == '' else f'--label "{labels}"'
@@ -262,8 +273,8 @@ def principal():
         prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
                                                f'--base {realTargetBranch} '\
                                                f'--head root-project-bot:{bpBranchName} ' \
-                                               f'--title "[{targetBranch}] {prTitle}"  '\
-                                               f'--body "Backport of #{pullNumber}{requestorInfo}" '\
+                                               f"--title '[{targetBranch}] {prTitle}'  "\
+                                               f"--body 'Backport of #{pullNumber}{requestorInfo}' "\
                                                f'{labelSwitch} {assigneesSwitch} ' \
                                                '-d || echo \'\'')
         bpPRUrlBranch.append((prUrl,targetBranch))       
