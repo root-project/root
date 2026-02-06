@@ -1,6 +1,6 @@
 self-hosted-runner:
   # Labels of self-hosted runner in array of strings.
-  labels: [mac14, mac15, mac26, mac-beta, cpu]
+  labels: [mac14, mac15, mac26, mac-beta, cpu, latest, preview]
 
 # Configuration variables in array of strings defined in your repository or
 # organization. `null` means disabling configuration variables check.
