@@ -414,11 +414,11 @@ class ROOTFacade(types.ModuleType):
         """
         local_rdf = self.__getattr__("RDataFrame")
         try:
-            import DistRDF
+            import ROOT._distrdf
 
             from ._pythonization._rdf_namespace import _rdataframe
 
-            return _rdataframe(local_rdf, DistRDF.RDataFrame)
+            return _rdataframe(local_rdf, ROOT._distrdf.RDataFrame)
         except ImportError:
             return local_rdf
 

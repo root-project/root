@@ -1,10 +1,10 @@
 import os
+import platform
 import unittest
 from array import array
-import platform
 
 import ROOT
-from DistRDF.HeadNode import get_headnode, EmptySourceHeadNode
+from ROOT._distrdf.HeadNode import EmptySourceHeadNode, get_headnode
 
 
 def create_dummy_headnode(*args):

@@ -1,8 +1,6 @@
 import pytest
-
 import ROOT
-
-import DistRDF
+import ROOT._distrdf
 
 
 class TestVariations:
@@ -103,7 +101,7 @@ class TestVariations:
         df = df.Define("x", "1")
         h = df.Histo1D(("h", "h", 1, 0, 10), "x")
 
-        variations = DistRDF.VariationsFor(h)
+        variations = ROOT._distrdf.VariationsFor(h)
 
         # Only the nominal action was booked, so the result map will only
         # have that key

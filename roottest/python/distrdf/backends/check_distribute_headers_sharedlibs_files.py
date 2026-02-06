@@ -1,10 +1,11 @@
-import ROOT
+import math
+import os
 import subprocess
 from pathlib import Path
-from distributed import get_worker
-import os
+
 import pytest
-import math
+import ROOT
+from distributed import get_worker
 
 
 class TestInterfaceHeadersLibrariesFiles:
@@ -267,7 +268,7 @@ class TestInterfaceHeadersLibrariesFiles:
     def setup_and_clean(self):
         self._create_shared_libs()
         yield
-        from DistRDF.Backends.Base import BaseBackend
+        from ROOT._distrdf.Backends.Base import BaseBackend
 
         BaseBackend.headers = set()
         BaseBackend.shared_libraries = set()

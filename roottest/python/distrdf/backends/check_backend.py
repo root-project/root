@@ -1,8 +1,8 @@
 import platform
 
-import DistRDF
 import pytest
 import ROOT
+import ROOT._distrdf
 
 
 class TestBackendInit:
@@ -18,12 +18,14 @@ class TestBackendInit:
         """
         connection, backend = payload
         if backend == "dask":
-            from DistRDF.Backends.Dask import Backend
+            from ROOT._distrdf.Backends.Dask import Backend
+
             backend = Backend.DaskBackend(daskclient=connection)
             assert backend.client is connection, f"{connection=}"
         elif backend == "spark":
-            from DistRDF.Backends.Spark import Backend
             import pyspark
+            from ROOT._distrdf.Backends.Spark import Backend
+
             backend = Backend.SparkBackend()
             assert isinstance(backend.sc, pyspark.SparkContext)
 
@@ -34,8 +36,8 @@ class TestBackendInit:
         """
         connection, backend = payload
         if backend == "spark":
-            from DistRDF.Backends.Spark import Backend
             import pyspark
+            from ROOT._distrdf.Backends.Spark import Backend
             backend = Backend.SparkBackend(sparkcontext=connection)
 
             assert isinstance(backend.sc, pyspark.SparkContext)
@@ -49,11 +51,11 @@ class TestBackendInit:
         """
         connection, backend = payload
         if backend == "dask":
-            from DistRDF.Backends.Dask import Backend
+            from ROOT._distrdf.Backends.Dask import Backend
             backend = Backend.DaskBackend(daskclient=connection)
             assert backend.optimize_npartitions() == 2
         elif backend == "spark":
-            from DistRDF.Backends.Spark import Backend
+            from ROOT._distrdf.Backends.Spark import Backend
             backend = Backend.SparkBackend(sparkcontext=connection)
             assert backend.optimize_npartitions() == 2
 
@@ -71,7 +73,7 @@ class TestInitialization:
         def returnNumber(n):
             return n
 
-        DistRDF.initialize(returnNumber, 123)
+        ROOT._distrdf.initialize(returnNumber, 123)
 
         df = ROOT.RDataFrame(10, executor=connection)
 
@@ -82,7 +84,7 @@ class TestInitialization:
 
     def test_initialization_method(self, payload):
         """
-        Check `DistRDF.initialize` with Dask backend. Defines an integer value
+        Check `ROOT._distrdf.initialize` with Dask backend. Defines an integer value
         to the ROOT interpreter. Check that this value is available in the
         worker processes.
         """
@@ -93,7 +95,7 @@ class TestInitialization:
             cpp_code = f"int userValue = {value};"
             ROOT.gInterpreter.ProcessLine(cpp_code)
 
-        DistRDF.initialize(init, 123)
+        ROOT._distrdf.initialize(init, 123)
         # Dask backend has a limited list of supported methods, so we use
         # Histo1D which is a supported action.
         # The code below creates an RDataFrame instance with one single entry

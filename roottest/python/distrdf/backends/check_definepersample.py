@@ -1,8 +1,7 @@
 import pytest
-
 import ROOT
+import ROOT._distrdf
 
-import DistRDF
 
 class TestDefinePerSample:
     """Check the working of merge operations in the reducer function."""
@@ -80,7 +79,7 @@ class TestDefinePerSample:
             #endif // distrdf_test_definepersample_withinitialization
             ''')
 
-        DistRDF.initialize(declare_definepersample_code)
+        ROOT._distrdf.initialize(declare_definepersample_code)
         connection, _ = payload
         df = ROOT.RDataFrame(self.maintreename, self.filenames, executor=connection)
         df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)")\
