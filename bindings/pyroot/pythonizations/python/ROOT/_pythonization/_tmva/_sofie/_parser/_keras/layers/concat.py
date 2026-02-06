@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasConcat(layer):
     finput = layer['layerInput']
     foutput = layer['layerOutput']

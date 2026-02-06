@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasSwish(layer):
     """
     Create a Keras-compatible swish activation operation using SOFIE framework.

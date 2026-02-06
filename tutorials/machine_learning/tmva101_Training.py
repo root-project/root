@@ -12,9 +12,8 @@
 ## \date August 2019
 ## \author Stefan Wunsch
 
-import ROOT
 import numpy as np
-
+import ROOT
 from tmva100_DataPreparation import variables
 
 

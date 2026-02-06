@@ -54,9 +54,9 @@ def is_accurate(tensor_a, tensor_b, tolerance=1e-2):
 
 def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
 
-    import tensorflow as tf
     import keras
     import numpy as np
+    import tensorflow as tf
 
     print("Tensorflow version: ", tf.__version__)
     print("Keras version: ", keras.__version__)

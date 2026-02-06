@@ -1,13 +1,27 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Model,Sequential
-from tensorflow.keras.layers import Input,Dense,Activation,ReLU,LeakyReLU,BatchNormalization,Conv2D,Reshape,Concatenate,Add,Subtract,Multiply
+from tensorflow.keras.layers import (
+    Activation,
+    Add,
+    BatchNormalization,
+    Concatenate,
+    Conv2D,
+    Dense,
+    Input,
+    LeakyReLU,
+    Multiply,
+    ReLU,
+    Reshape,
+    Subtract,
+)
+from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import SGD
+
 
 def generateFunctionalModel():
     input=Input(shape=(8,),batch_size=2)

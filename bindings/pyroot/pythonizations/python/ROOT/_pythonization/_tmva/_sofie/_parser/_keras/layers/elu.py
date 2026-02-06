@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasELU(layer):
     """
     Create a Keras-compatible exponential linear Unit (ELU) activation operation using SOFIE framework.

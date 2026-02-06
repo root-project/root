@@ -1,7 +1,7 @@
 def generate_keras_sequential(dst_dir):
 
-    from keras import models, layers, backend
     import numpy as np
+    from keras import layers, models
     from parser_test_function import is_channels_first_supported
 
     # Helper training function
