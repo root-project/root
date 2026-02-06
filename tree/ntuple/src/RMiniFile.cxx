@@ -16,6 +16,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
@@ -1222,7 +1223,8 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplRFile::ReserveBlobKey(size
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize)
+ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize,
+                                                     bool isAttributesRNTuple)
    : fNTupleName(name)
 {
    auto &fileSimple = fFile.emplace<RImplSimple>();
@@ -1230,6 +1232,11 @@ ROOT::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std:
    fNTupleAnchor.fMaxKeySize = maxKeySize;
    auto infoRNTuple = RNTuple::Class()->GetStreamerInfo();
    fStreamerInfoMap[infoRNTuple->GetNumber()] = infoRNTuple;
+   if (isAttributesRNTuple) {
+      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+      auto &builder = fAttrSetDescBuilder.emplace(Experimental::Internal::RNTupleAttrSetDescriptorBuilder{});
+      builder.SchemaVersion(kSchemaVersionMajor, kSchemaVersionMinor);
+   }
 }
 
 ROOT::Internal::RNTupleFileWriter::~RNTupleFileWriter() = default;
@@ -1270,7 +1277,8 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
    // RNTupleFileWriter::RImplSimple does its own buffering, turn off additional buffering from C stdio.
    std::setvbuf(fileStream, nullptr, _IONBF, 0);
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, options.GetMaxKeySize()));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      new RNTupleFileWriter(ntupleName, options.GetMaxKeySize(), /*isAttributesRNTuple=*/false));
    RImplSimple &fileSimple = std::get<RImplSimple>(writer->fFile);
    fileSimple.fFile = fileStream;
    fileSimple.fDirectIO = options.GetUseDirectIO();
@@ -1292,14 +1300,14 @@ ROOT::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::st
 
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirectory &fileOrDirectory,
-                                          std::uint64_t maxKeySize)
+                                          std::uint64_t maxKeySize, bool isAttributesRNTuple)
 {
    TFile *file = fileOrDirectory.GetFile();
    if (!file)
       throw RException(R__FAIL("invalid attempt to add an RNTuple to a directory that is not backed by a file"));
    assert(file->IsBinary());
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize, isAttributesRNTuple));
    auto &fileProper = writer->fFile.emplace<RImplTFile>();
    fileProper.fDirectory = &fileOrDirectory;
    return writer;
@@ -1309,7 +1317,8 @@ std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
                                           std::string_view ntupleDir, std::uint64_t maxKeySize)
 {
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
+   auto writer =
+      std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize, /*isAttributesRNTuple=*/false));
    auto &rfile = writer->fFile.emplace<RImplRFile>();
    rfile.fFile = &file;
    R__ASSERT(ntupleDir.empty() || ntupleDir[ntupleDir.size() - 1] == '/');
@@ -1318,10 +1327,12 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Exp
 }
 
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
-ROOT::Internal::RNTupleFileWriter::CloneWithDifferentName(std::string_view ntupleName) const
+ROOT::Internal::RNTupleFileWriter::CloneWithDifferentName(std::string_view ntupleName,
+                                                          const ROOT::RNTupleWriteOptions &opts) const
 {
    if (auto *file = std::get_if<RImplTFile>(&fFile)) {
-      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize);
+      const bool isForAttributes = ROOT::Internal::RNTupleWriteOptionsManip::GetIsForAttributes(opts);
+      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize, isForAttributes);
    }
    // TODO: support also non-TFile-based writers
    throw ROOT::RException(R__FAIL("cannot clone a non-TFile-based RNTupleFileWriter."));
@@ -1358,14 +1369,34 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
       fileProper->fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
       WriteStreamerInfoToFile(fileProper->fDirectory->GetFile());
       fileProper->fDirectory->GetFile()->Write();
+      if (fAttrSetDescBuilder) {
+         // If we're writing an attribute RNTuple we need to store its information for later retrieval by the
+         // main RNTuple.
+         auto key = static_cast<TKey *>(fileProper->fDirectory->GetListOfKeys()->FindObject(fNTupleName.c_str()));
+         R__ASSERT(key);
+         fAttrSetDescBuilder->Name(fNTupleName);
+         fAttrSetDescBuilder->AnchorLength(key->GetObjlen());
+         RNTupleLocator locator;
+         locator.SetType(RNTupleLocator::kTypeFile);
+         locator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
+         locator.SetPosition(key->GetSeekKey() + key->GetKeylen());
+         fAttrSetDescBuilder->AnchorLocator(locator);
+
+         // Remove the anchor's key from the directory's KeysList to disallow retrieving directly the
+         // attribute RNTuple from the TFile.
+         fileProper->fDirectory->GetListOfKeys()->Remove(key);
+      }
       return;
    } else if (auto fileRFile = std::get_if<RImplRFile>(&fFile)) {
       // Same as the case above but handled via RFile
       fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
       WriteStreamerInfoToFile(ROOT::Experimental::Internal::GetRFileTFile(*fileRFile->fFile));
       fileRFile->fFile->Flush();
+      R__ASSERT(!fAttrSetDescBuilder); // not implemented yet
       return;
    }
+
+   R__ASSERT(!fAttrSetDescBuilder); // not implemented yet
 
    // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
    auto &fileSimple = std::get<RImplSimple>(fFile);

@@ -56,6 +56,9 @@ inline constexpr std::size_t kRangeStartIndex = 0;
 inline constexpr std::size_t kRangeLenIndex = 1;
 inline constexpr std::size_t kUserModelIndex = 2;
 
+inline const std::uint16_t kSchemaVersionMajor = 1;
+inline const std::uint16_t kSchemaVersionMinor = 0;
+
 } // namespace RNTupleAttributes
 
 } // namespace Internal
@@ -210,6 +213,9 @@ public:
 
    /// Creates an REntry fit to pass to CommitRange(RNTupleAttrPendingRange range, REntry entry).
    std::unique_ptr<REntry> CreateAttrEntry() { return fUserModel->CreateEntry(); }
+
+   /// Commits the attributes written so far to disk and disables writing any new ones.
+   void Commit();
 };
 
 // clang-format off

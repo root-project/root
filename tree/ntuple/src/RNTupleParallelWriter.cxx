@@ -118,6 +118,16 @@ public:
    {
       throw ROOT::RException(R__FAIL("cloning a RPageSynchronizingSink is not implemented yet"));
    }
+
+   void CommitAttributeSet(RPageSink &) final
+   {
+      throw ROOT::RException(R__FAIL("committing attribute sets is not implemented yet for parallel writing"));
+   }
+
+   ROOT::Experimental::RNTupleAttrSetDescriptor BuildAttrSetDescriptor() final
+   {
+      throw ROOT::RException(R__FAIL("Attributes are not implemented yet for parallel writing"));
+   }
 };
 
 } // namespace

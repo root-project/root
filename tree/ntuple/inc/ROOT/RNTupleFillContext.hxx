@@ -35,7 +35,7 @@ namespace ROOT {
 namespace Experimental {
 class RNTupleAttrSetWriter;
 class RNTupleAttrSetWriterHandle;
-}
+} // namespace Experimental
 
 // clang-format off
 /**
@@ -117,6 +117,8 @@ private:
          FlushCluster();
       return status.GetLastEntrySize();
    }
+
+   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
 
    RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;

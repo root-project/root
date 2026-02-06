@@ -390,6 +390,11 @@ public:
    virtual std::unique_ptr<RPageSink>
    CloneWithDifferentName(std::string_view name, const RNTupleWriteOptions &opts) const = 0;
 
+   /// Given an external `attributeSink`, adds its information (name + locator) into the main RNTuple's descriptor.
+   /// The attribute set must have already been written to storage via RNTupleAttrSetWriter::Commit().
+   virtual void CommitAttributeSet(RPageSink & /*attributeSink*/) = 0;
+   virtual Experimental::RNTupleAttrSetDescriptor BuildAttrSetDescriptor() = 0;
+
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
@@ -542,6 +547,7 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
+   void CommitAttributeSet(RPageSink &attrSink) final;
    void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 

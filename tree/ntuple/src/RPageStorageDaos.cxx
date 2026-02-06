@@ -482,6 +482,11 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
 }
 
+ROOT::Experimental::RNTupleAttrSetDescriptor ROOT::Experimental::Internal::RPageSinkDaos::BuildAttrSetDescriptor()
+{
+   throw ROOT::RException(R__FAIL("Attributes are not implemented yet for DAOS"));
+}
+
 std::unique_ptr<ROOT::Internal::RPageSink>
 ROOT::Experimental::Internal::RPageSinkDaos::CloneWithDifferentName(std::string_view /*name*/,
                                                                     const ROOT::RNTupleWriteOptions & /*opts*/) const
