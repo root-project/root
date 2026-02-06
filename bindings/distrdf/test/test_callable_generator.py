@@ -1,7 +1,7 @@
 import unittest
 
-from DistRDF import ComputationGraphGenerator, HeadNode, Proxy
-from DistRDF.Backends import Base
+from ROOT._distrdf import ComputationGraphGenerator, HeadNode, Proxy
+from ROOT._distrdf.Backends import Base
 
 
 def create_dummy_headnode(*args):

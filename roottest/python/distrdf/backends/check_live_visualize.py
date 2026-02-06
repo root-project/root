@@ -1,10 +1,12 @@
-import os, threading, tempfile
+import os
+import tempfile
+import threading
 from functools import partial
+
 import pytest
-
-from DistRDF import LiveVisualize
-
 import ROOT
+from ROOT._distrdf import LiveVisualize
+
 
 # Callback functions
 def set_marker(graph):

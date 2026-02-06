@@ -1,7 +1,5 @@
 import pytest
-
 import ROOT
-from DistRDF.Backends import Dask
 
 
 def check_histograms(h_parent, h_friend):

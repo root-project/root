@@ -1,6 +1,6 @@
-import DistRDF
 import pytest
 import ROOT
+import ROOT._distrdf
 
 
 class TestFromSpec:
@@ -87,4 +87,3 @@ class TestFromSpec:
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
-    

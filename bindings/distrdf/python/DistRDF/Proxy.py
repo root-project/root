@@ -212,7 +212,7 @@ class ResultPtrProxy(Proxy):
         """
         Creates a node responsible to signal the creation of variations in the
         distributed computation graph, returning a specialized proxy to that
-        node. This function is usually called from DistRDF.VariationsFor.
+        node. This function is usually called from ROOT._distrdf.VariationsFor.
         """
         return ResultMapProxy(_create_new_node(self.proxied_node, Operation.create_op("VariationsFor")))
 

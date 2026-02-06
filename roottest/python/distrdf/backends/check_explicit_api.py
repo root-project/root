@@ -1,9 +1,9 @@
 import textwrap
 import warnings
 
-import DistRDF
 import pytest
 import ROOT
+import ROOT._distrdf
 
 
 class TestExplicitAPI:
@@ -23,7 +23,7 @@ class TestExplicitAPI:
         df = df.Define("x", "1")
         df1 = df.Vary("x", "ROOT::RVecI{-2,2}", ["down", "up"])
         h = df1.Histo1D(("name", "title", 10, -10, 10), "x")
-        histos = DistRDF.VariationsFor(h)
+        histos = ROOT._distrdf.VariationsFor(h)
 
         expectednames = ["nominal", "x:up", "x:down"]
         expectedmeans = [1, 2, -2]
@@ -56,7 +56,7 @@ class TestExplicitAPI:
         for proxy in histoproxies:
             assert proxy.proxied_node.value is None
 
-        DistRDF.RunGraphs(histoproxies)
+        ROOT._distrdf.RunGraphs(histoproxies)
 
         # After RunGraphs all histograms are correctly assigned to the
         # node objects

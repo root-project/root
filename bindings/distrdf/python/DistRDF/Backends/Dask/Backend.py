@@ -16,9 +16,8 @@ import os
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 
 import ROOT
-
-from DistRDF import DataFrame, HeadNode
-from DistRDF.Backends import Base, Utils
+from ROOT._distrdf import DataFrame, HeadNode
+from ROOT._distrdf.Backends import Base, Utils
 
 try:
     import dask
@@ -30,9 +29,8 @@ except ImportError:
 
 if TYPE_CHECKING:
     from dask_jobqueue import JobQueueCluster
-
-    from DistRDF import Ranges
-    from DistRDF._graph_cache import ExecutionIdentifier
+    from ROOT._distrdf import Ranges
+    from ROOT._distrdf._graph_cache import ExecutionIdentifier
 
 
 def get_total_cores_generic(client: Client) -> int:
@@ -396,7 +394,8 @@ class DaskBackend(Base.BaseBackend):
         """
 
         def remove_from_rdf_cache(exec_id: ExecutionIdentifier) -> None:
-            from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+            from ROOT._distrdf._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+
             _ACTIONS_REGISTER.pop(exec_id, None)
             _RDF_REGISTER.pop(exec_id, None)
 

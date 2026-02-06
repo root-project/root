@@ -15,8 +15,8 @@ import ntpath  # Filename from path (should be platform-independent)
 import warnings
 from typing import TYPE_CHECKING, Any, Callable, List, Union
 
-from DistRDF import DataFrame, HeadNode
-from DistRDF.Backends import Base, Utils
+from ROOT._distrdf import DataFrame, HeadNode
+from ROOT._distrdf.Backends import Base, Utils
 
 try:
     import pyspark
@@ -27,8 +27,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     import ROOT
-
-    from DistRDF import Ranges
+    from ROOT._distrdf import Ranges
 
 
 class SparkBackend(Base.BaseBackend):

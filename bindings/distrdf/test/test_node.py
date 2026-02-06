@@ -1,8 +1,8 @@
 import unittest
 
-from DistRDF import Node, Proxy
-from DistRDF.Backends import Base
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf import Node, Proxy
+from ROOT._distrdf.Backends import Base
+from ROOT._distrdf.HeadNode import get_headnode
 
 
 def create_dummy_headnode(*args):

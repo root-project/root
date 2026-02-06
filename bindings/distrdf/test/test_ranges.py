@@ -3,8 +3,8 @@ import unittest
 from collections import namedtuple
 
 import ROOT
-from DistRDF import Ranges
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf import Ranges
+from ROOT._distrdf.HeadNode import get_headnode
 
 # Use a dummy execution identifier to test for TTree-based clustered ranges
 Dummy = namedtuple("Dummy", ["rdf_uuid"])

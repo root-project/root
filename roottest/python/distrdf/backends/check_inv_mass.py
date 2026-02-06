@@ -1,10 +1,7 @@
 from collections import namedtuple
 
 import pytest
-
 import ROOT
-
-from DistRDF.Backends import Dask
 
 
 class TestDaskHistograms:

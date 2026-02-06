@@ -1,8 +1,7 @@
 import unittest
 
-from DistRDF import Operation
-
 import ROOT
+from ROOT._distrdf import Operation
 
 
 class ClassifyTest(unittest.TestCase):

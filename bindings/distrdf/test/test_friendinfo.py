@@ -3,7 +3,8 @@ import unittest
 from array import array
 
 import ROOT
-from DistRDF.HeadNode import get_headnode
+from ROOT._distrdf.HeadNode import get_headnode
+
 
 def create_dummy_headnode(*args):
     """Create dummy head node instance needed in the test"""
