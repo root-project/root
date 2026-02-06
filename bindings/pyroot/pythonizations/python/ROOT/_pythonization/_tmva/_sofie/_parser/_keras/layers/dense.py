@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasDense(layer):
     """
     Create a Keras-compatible dense (fully connected) layer operation using SOFIE framework.

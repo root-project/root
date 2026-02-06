@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasSoftmax(layer):
     """
     Create a Keras-compatible softmax activation operation using SOFIE framework.

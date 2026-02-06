@@ -8,8 +8,8 @@
 ### \macro_output
 ### \author Dante Niewenhuis
 
-import torch
 import ROOT
+import torch
 
 tree_name = "sig_tree"
 file_name = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"

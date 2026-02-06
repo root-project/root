@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasReLU(layer):
     """
     Create a Keras-compatible rectified linear unit (ReLU) activation operation using SOFIE framework.

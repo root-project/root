@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasTanh(layer):
     """
     Create a Keras-compatible hyperbolic tangent (tanh) activation operation using SOFIE framework.

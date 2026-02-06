@@ -29,8 +29,9 @@
 
 ## - The third argument is a string option defining some general configuration for the TMVA session. For example all TMVA output can be suppressed by removing the "!" (not) in front of the "Silent" argument in the option string
 
-import ROOT
 import os
+
+import ROOT
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
@@ -53,7 +54,7 @@ else:
 
 if useKeras:
     try:
-        import tensorflow
+        pass
     except:
         ROOT.Warning("TMVA_Higgs_Classification", "Skip using Keras since tensorflow is not available")
         useKeras = False
@@ -315,10 +316,9 @@ if useDL:
 if useKeras:
     ROOT.Info("TMVA_Higgs_Classification", "Building Deep Learning keras model")
     # create Keras model with 4 layers of 64 units and relu activations
-    import tensorflow
+    from tensorflow.keras.layers import Dense
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.optimizers import Adam
-    from tensorflow.keras.layers import Input, Dense
 
     model = Sequential()
     model.add(Dense(64, activation="relu", input_dim=7))
