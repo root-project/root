@@ -57,7 +57,7 @@ An object can have arbitrary dimensionality determined at run-time. The axis con
 RAxisVariant:
 \code
 std::vector<ROOT::Experimental::RAxisVariant> axes;
-axes.push_back(ROOT::Experimental::RRegularAxis(10, 5, 15));
+axes.push_back(ROOT::Experimental::RRegularAxis(10, {5, 15}));
 axes.push_back(ROOT::Experimental::RVariableBinAxis({1, 10, 100, 1000}));
 ROOT::Experimental::RHistEngine<int> hist(axes);
 // hist.GetNDimensions() will return 2
