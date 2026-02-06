@@ -1496,31 +1496,42 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_PYTHON_PACKAGE(pkgname
 #                       SOURCES source1.py source2.py
+#                       [SUBDIR subdirectory]
 #                      )
 #
 # Define a CMake target that copies Python sources to the build directory,
 # compiles them to byte code, and installs both sources and bytecode into the
-# configured Python install directory.
+# configured Python install directory. You can optionally pass a subdirectory
+# name if you don't want to install the package directly in the Python prefix.
+# This is useful if the Python package is a subpackage of another one.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_PYTHON_PACKAGE pkgname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "SOURCES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SUBDIR" "SOURCES" ${ARGN})
+
+  if(ARG_SUBDIR)
+    set(pkg_path_build "${localruntimedir}/${ARG_SUBDIR}")
+    set(pkg_path_install "${CMAKE_INSTALL_PYTHONDIR}/${ARG_SUBDIR}")
+  else()
+    set(pkg_path_build "${localruntimedir}")
+    set(pkg_path_install "${CMAKE_INSTALL_PYTHONDIR}")
+  endif()
 
   # Ensure output directory exists
-  file(MAKE_DIRECTORY ${localruntimedir}/${pkgname})
+  file(MAKE_DIRECTORY ${pkg_path_build})
 
   set(copy_commands)
   set(py_sources_in_source_dir)
-  set(py_sources_in_localruntimedir)
+  set(py_sources_in_build_tree)
   set(bytecode_dirs)
 
   foreach(py_source ${ARG_SOURCES})
     set(src ${CMAKE_CURRENT_SOURCE_DIR}/${py_source})
-    set(tgt ${localruntimedir}/${py_source})
+    set(tgt ${pkg_path_build}/${py_source})
 
     list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${tgt})
 
     list(APPEND py_sources_in_source_dir ${src})
-    list(APPEND py_sources_in_localruntimedir ${tgt})
+    list(APPEND py_sources_in_build_tree ${tgt})
 
     get_filename_component(pydir ${tgt} DIRECTORY)
 
@@ -1532,7 +1543,7 @@ function(ROOT_PYTHON_PACKAGE pkgname)
   list(REMOVE_DUPLICATES bytecode_dirs)
 
   add_custom_command(
-    OUTPUT ${py_sources_in_localruntimedir}
+    OUTPUT ${py_sources_in_build_tree}
     ${copy_commands}
     DEPENDS ${py_sources_in_source_dir}
     COMMENT "Copying ${pkgname} Python sources"
@@ -1543,15 +1554,15 @@ function(ROOT_PYTHON_PACKAGE pkgname)
   # Stamp file so CMake knows it doesn't need to re-compile. We can't set the
   # actual bytecode files as the OUTPUT of the custom command, because their
   # names are CPython implementation dependent and therefore not reliable.
-  set(bytecode_stamp ${localruntimedir}/${pkgname}/pybytecode.stamp)
+  set(bytecode_stamp ${pkg_path_build}/${pkgname}-pybytecode.stamp)
 
   # It's 10x faster to compile all in one go than in single invocations
   add_custom_command(
     OUTPUT ${bytecode_stamp}
-    COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_localruntimedir}
-    COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_localruntimedir}
+    COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_build_tree}
+    COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_build_tree}
     COMMAND ${CMAKE_COMMAND} -E touch ${bytecode_stamp}
-    DEPENDS ${py_sources_in_localruntimedir}
+    DEPENDS ${py_sources_in_build_tree}
     COMMENT "Compiling ${pkgname} Python sources"
   )
 
@@ -1561,8 +1572,8 @@ function(ROOT_PYTHON_PACKAGE pkgname)
   set_property(TARGET ${pkgname}Python APPEND PROPERTY ADDITIONAL_CLEAN_FILES ${bytecode_dirs})
 
   # Install Python sources and bytecode
-  install(DIRECTORY ${localruntimedir}/${pkgname}
-          DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
+  install(DIRECTORY ${pkg_path_build}/${pkgname}
+          DESTINATION ${pkg_path_install}
           COMPONENT libraries
           FILES_MATCHING
             PATTERN "*.py"
