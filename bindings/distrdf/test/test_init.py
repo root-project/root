@@ -9,7 +9,7 @@ class ImportDistRDFTest(TestCase):
     """Test status after importing DistRDF"""
 
     def test_implicit_import(self):
-        """Test that importing DistRDF does not implicitly import ROOT."""
-        self.assertFalse("ROOT" in sys.modules)
+        """Test that importing DistRDF does not imply initializing the C++ runtime."""
+        self.assertFalse("cppyy" in sys.modules)
         reload(DistRDF)
-        self.assertFalse("ROOT" in sys.modules)
+        self.assertFalse("cppyy" in sys.modules)
