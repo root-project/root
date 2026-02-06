@@ -35,6 +35,7 @@ ROOT_BUILD_INTERNAL_DIRNAME = "mock_site_packages"
 
 def _patch_root_init():
     warning_patch = '''
+
 import warnings
 import textwrap
 
@@ -48,7 +49,7 @@ This distribution of ROOT is in alpha stage. Feedback is welcome and appreciated
     with open(root_init_path) as init_file:
         full_init_text = init_file.read()
 
-    new_init_text = warning_patch + full_init_text
+    new_init_text = full_init_text + warning_patch
     with open(root_init_path, "w") as init_file:
         init_file.write(new_init_text)
 
