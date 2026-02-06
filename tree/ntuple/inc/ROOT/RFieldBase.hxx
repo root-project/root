@@ -62,6 +62,10 @@ CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, c
 
 } // namespace Internal
 
+namespace Experimental::Internal {
+struct RNTupleAttrEntryPair;
+}
+
 // clang-format off
 /**
 \class ROOT::RFieldBase
@@ -743,6 +747,7 @@ public:
 class RFieldBase::RValue final {
    friend class RFieldBase;
    friend class ROOT::REntry;
+   friend struct ROOT::Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue

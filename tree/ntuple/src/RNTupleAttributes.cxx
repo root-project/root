@@ -28,6 +28,28 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 }
 
 //
+//  RNTupleAttrEntryPair
+//
+std::size_t ROOT::Experimental::Internal::RNTupleAttrEntryPair::Append()
+{
+   std::size_t bytesWritten = 0;
+   // Write the meta entry values
+   bytesWritten += fMetaEntry.fValues[kRangeStartIndex].Append();
+   bytesWritten += fMetaEntry.fValues[kRangeLenIndex].Append();
+
+   // Bind the user model's memory to the meta model's subfields
+   const auto &userFields =
+      ROOT::Internal::GetFieldZeroOfModel(fMetaModel).GetMutableSubfields()[kUserModelIndex]->GetMutableSubfields();
+   assert(userFields.size() == fScopedEntry.fValues.size());
+   for (std::size_t i = 0; i < fScopedEntry.fValues.size(); ++i) {
+      std::shared_ptr<void> userPtr = fScopedEntry.fValues[i].GetPtr<void>();
+      auto value = userFields[i]->BindValue(userPtr);
+      bytesWritten += value.Append();
+   }
+   return bytesWritten;
+}
+
+//
 //  RNTupleAttrSetWriter
 //
 std::unique_ptr<ROOT::Experimental::RNTupleAttrSetWriter>
@@ -78,4 +100,34 @@ ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFill
      fRangeStartPtr(std::move(rangeStartPtr)),
      fRangeLenPtr(std::move(rangeLenPtr))
 {
+}
+
+ROOT::Experimental::RNTupleAttrPendingRange ROOT::Experimental::RNTupleAttrSetWriter::BeginRange()
+{
+   const auto start = fMainFillContext->GetNEntries();
+   return RNTupleAttrPendingRange{start, fFillContext.GetModel().GetModelId()};
+}
+
+void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrPendingRange pendingRange,
+                                                           REntry &entry)
+{
+   pendingRange.fWasCommitted = true;
+
+   if (pendingRange.GetModelId() != fFillContext.GetModel().GetModelId())
+      throw ROOT::RException(R__FAIL("Range passed to CommitRange() of AttributeSet '" + GetDescriptor().GetName() +
+                                     "' was not created by it or was already committed."));
+
+   // Get current entry number from the writer and use it as end of entry range
+   const auto end = fMainFillContext->GetNEntries();
+   auto &metaEntry = fFillContext.fModel->GetDefaultEntry();
+   R__ASSERT(end >= pendingRange.GetStart());
+   *fRangeStartPtr = pendingRange.GetStart();
+   *fRangeLenPtr = end - pendingRange.GetStart();
+   Internal::RNTupleAttrEntryPair pair{metaEntry, entry, *fFillContext.fModel};
+   fFillContext.FillImpl(pair);
+}
+
+void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrPendingRange pendingRange)
+{
+   CommitRange(std::move(pendingRange), fUserModel->GetDefaultEntry());
 }
