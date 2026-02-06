@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasPermute(layer):
     """
     Create a Keras-compatible permutation operation using SOFIE framework.

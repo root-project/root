@@ -1,6 +1,9 @@
-from cppyy import gbl as gbl_namespace
 import math
+
+from cppyy import gbl as gbl_namespace
+
 from .. import get_keras_version
+
 
 def MakeKerasConv(layer): 
     """

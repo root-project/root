@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasPooling(layer):
     """
     Create a Keras-compatible pooling layer operation using SOFIE framework.

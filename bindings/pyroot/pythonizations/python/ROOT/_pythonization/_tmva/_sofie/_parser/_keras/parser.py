@@ -1,30 +1,28 @@
-from ......_pythonization import pythonization
-from cppyy import gbl as gbl_namespace
 import os
 import time
 
-from .layers.permute import MakeKerasPermute
-from .layers.batchnorm import MakeKerasBatchNorm
-from .layers.layernorm import MakeKerasLayerNorm
-from .layers.reshape import MakeKerasReshape
-from .layers.flatten import MakeKerasFlatten
-from .layers.concat import MakeKerasConcat
-from .layers.swish import MakeKerasSwish
-from .layers.binary import MakeKerasBinary
-from .layers.softmax import MakeKerasSoftmax
-from .layers.tanh import MakeKerasTanh
-from .layers.identity import MakeKerasIdentity
-from .layers.relu import MakeKerasReLU
-from .layers.elu import MakeKerasELU
-from .layers.selu import MakeKerasSeLU
-from .layers.sigmoid import MakeKerasSigmoid
-from .layers.leaky_relu import MakeKerasLeakyRelu
-from .layers.pooling import MakeKerasPooling
-from .layers.rnn import MakeKerasRNN
-from .layers.dense import MakeKerasDense
-from .layers.conv import MakeKerasConv
+from cppyy import gbl as gbl_namespace
 
 from . import get_keras_version
+from .layers.batchnorm import MakeKerasBatchNorm
+from .layers.binary import MakeKerasBinary
+from .layers.concat import MakeKerasConcat
+from .layers.conv import MakeKerasConv
+from .layers.dense import MakeKerasDense
+from .layers.elu import MakeKerasELU
+from .layers.flatten import MakeKerasFlatten
+from .layers.layernorm import MakeKerasLayerNorm
+from .layers.leaky_relu import MakeKerasLeakyRelu
+from .layers.permute import MakeKerasPermute
+from .layers.pooling import MakeKerasPooling
+from .layers.relu import MakeKerasReLU
+from .layers.reshape import MakeKerasReshape
+from .layers.selu import MakeKerasSeLU
+from .layers.sigmoid import MakeKerasSigmoid
+from .layers.softmax import MakeKerasSoftmax
+from .layers.swish import MakeKerasSwish
+from .layers.tanh import MakeKerasTanh
+
 
 def MakeKerasActivation(layer):
     attributes = layer['layerAttributes']
@@ -227,7 +225,7 @@ def add_layer_into_RModel(rmodel, layer_data):
 
         # if there is an activation function after the layer
         if LayerActivation != 'linear':
-            if not LayerActivation in mapKerasLayer.keys():
+            if LayerActivation not in mapKerasLayer.keys():
                 raise Exception("TMVA.SOFIE - parsing keras activation function " + LayerActivation + " is not yet supported")
             outputs = layer_data['layerOutput']
             inputs = layer_data['layerInput']
@@ -408,7 +406,7 @@ class PyKeras:
 
             # Ignoring the input layer of the model
             if(fLayerType == "InputLayer"):
-                continue;
+                continue
 
             # Adding any required routines depending on the Layer types for generating inference code.
             if (fLayerType == "Dense"):
@@ -444,7 +442,7 @@ class PyKeras:
             fWeightTensorShape = []
 
             #IS IT BATCH SIZE? CHECK ONNX
-            if 'simple_rnn' in fWeightName or 'lstm' in fWeightName or ('gru' in fWeightName and not 'bias' in fWeightName):
+            if 'simple_rnn' in fWeightName or 'lstm' in fWeightName or ('gru' in fWeightName and 'bias' not in fWeightName):
                 fWeightTensorShape.append(1)
 
             # Building the shape vector and finding the tensor size

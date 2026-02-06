@@ -14,10 +14,10 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
+from os.path import exists
+
 import numpy as np
 import ROOT
-
-from os.path import exists
 
 # check if the input file exists
 modelFile = "HiggsModel.keras"

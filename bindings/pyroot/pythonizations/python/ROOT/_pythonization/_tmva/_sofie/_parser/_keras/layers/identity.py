@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasIdentity(layer):
     input = layer['layerInput']
     output = layer['layerOutput']

@@ -10,11 +10,12 @@ import ROOT
 # NumPys builtin openblas later, which will conflict with the system openblas.
 ROOT.gInterpreter.Load("libopenblaso.so")
 
-import numpy as np
-import graph_nets as gn
-from graph_nets import utils_tf
-import sonnet as snt
 import time
+
+import graph_nets as gn
+import numpy as np
+import sonnet as snt
+from graph_nets import utils_tf
 
 # defining graph properties
 num_nodes = 5

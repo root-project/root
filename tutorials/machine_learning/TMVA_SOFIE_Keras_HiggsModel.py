@@ -8,11 +8,13 @@
 ### \author Lorenzo Moneta
 
 
-import ROOT
 from os.path import exists
+
 import numpy as np
-from keras import models, layers
+import ROOT
+from keras import layers, models
 from sklearn.model_selection import train_test_split
+
 
 def CreateModel(nlayers = 4, nunits = 64):
    input = layers.Input(shape=(7,))

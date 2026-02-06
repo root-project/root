@@ -10,12 +10,9 @@
 ## \date August 2019
 ## \author Stefan Wunsch
 
+
 import ROOT
-import pickle
-
-from tmva100_DataPreparation import variables
 from tmva101_Training import load_data
-
 
 # Load data
 x, y_true, w = load_data("test_signal.root", "test_background.root")
@@ -29,7 +26,7 @@ bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
 y_pred = bdt.Compute(x)
 
 # Compute ROC using sklearn
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import auc, roc_curve
 
 false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_pred, sample_weight=w)
 score = auc(false_positive_rate, true_positive_rate)

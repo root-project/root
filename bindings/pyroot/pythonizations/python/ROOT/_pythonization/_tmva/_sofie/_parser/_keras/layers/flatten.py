@@ -1,5 +1,7 @@
 from cppyy import gbl as gbl_namespace
+
 from .. import get_keras_version
+
 
 def MakeKerasFlatten(layer):
     """

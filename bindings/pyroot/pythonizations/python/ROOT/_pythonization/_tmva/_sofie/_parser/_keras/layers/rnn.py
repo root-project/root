@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasRNN(layer): 
     """
     Create a Keras-compatible RNN (Recurrent Neural Network) layer operation using SOFIE framework.
@@ -36,7 +37,7 @@ def MakeKerasRNN(layer):
     
     # Check if the provided activation function is supported
     fPActivation = attributes['activation']
-    if not fPActivation.__name__ in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
+    if fPActivation.__name__ not in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator RNN does not yet support activation function " + fPActivation.__name__
         )
@@ -66,7 +67,7 @@ def MakeKerasRNN(layer):
         elif layer['layerType'] == "LSTM":
             #an additional activation function is required, the first given by the user, the second set to tanh as default
             fPRecurrentActivation = attributes['recurrent_activation']
-            if not fPActivation.__name__ in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
+            if fPActivation.__name__ not in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
                 raise RuntimeError(
                     "TMVA::SOFIE - Unsupported - Operator RNN does not yet support recurrent activation function " + fPActivation.__name__
                 )

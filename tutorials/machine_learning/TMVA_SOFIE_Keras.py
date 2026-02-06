@@ -9,9 +9,8 @@
 ### \author Sanjiban Sengupta and Lorenzo Moneta
 
 
+
 import ROOT
-import os
-import sys
 
 # Enable ROOT in batch mode (same effect as -nodraw)
 ROOT.gROOT.SetBatch(True)
@@ -20,10 +19,9 @@ ROOT.gROOT.SetBatch(True)
 # Step 1: Create and train a simple Keras model (via embedded Python)
 # -----------------------------------------------------------------------------
 
-import tensorflow as tf
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, Input, Activation, Softmax
 import numpy as np
+from tensorflow.keras.layers import Activation, Dense, Input, Softmax
+from tensorflow.keras.models import Model
 
 input=Input(shape=(4,),batch_size=2)
 x=Dense(32)(input)
@@ -48,8 +46,6 @@ model.summary()
 # -----------------------------------------------------------------------------
 
 import ROOT
-
-
 
 # Parse the ONNX model
 

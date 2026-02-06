@@ -22,10 +22,10 @@
 ## The difference between signal and background is in the gaussian width.
 ## The width for the background gaussian is slightly larger than the signal width by few % values
 
-import ROOT
-
-import os
 import importlib.util
+import os
+
+import ROOT
 
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
@@ -117,7 +117,7 @@ if (not hasCPU and not hasGPU) :
     useTMVACNN = False
     useTMVADNN = False
 
-if not "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
+if "tmva-pymva" not in ROOT.gROOT.GetConfigFeatures():
     useKerasCNN = False
     usePyTorchCNN = False
 else:
@@ -445,13 +445,11 @@ if useKerasCNN:
     ROOT.Info("TMVA_CNN_Classification", "Building convolutional keras model")
     # create python script which can be executed
     # create 2 conv2d layer + maxpool + dense
-    import tensorflow
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.optimizers import Adam
-
     # from keras.initializers import TruncatedNormal
     # from keras import initializations
-    from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape
+    from tensorflow.keras.layers import Conv2D, Dense, Flatten, MaxPooling2D, Reshape
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.optimizers import Adam
 
     # from keras.callbacks import ReduceLROnPlateau
     model = Sequential()

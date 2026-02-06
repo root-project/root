@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasSeLU(layer):
     """
     Create a Keras-compatible scaled exponential linear unit (SeLU) activation operation using SOFIE framework.

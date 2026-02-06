@@ -13,11 +13,13 @@
 ## \author Lorenzo Moneta
 
 
+import inspect
+
+import numpy as np
+import ROOT
 import torch
 import torch.nn as nn
-import ROOT
-import numpy as np
-import inspect
+
 
 def CreateAndTrainModel(modelName):
 
@@ -95,9 +97,9 @@ def ParseModel(modelFile, verbose=False):
       print("2weight",data)
 
    # Generating inference code
-   model.Generate();
+   model.Generate()
    #generate header file (and .dat file) with modelName+.hxx
-   model.OutputGenerated();
+   model.OutputGenerated()
    if (verbose) :
        model.PrintGenerated()
 

@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasLeakyRelu(layer):
     """
     Create a Keras-compatible Leaky ReLU activation operation using SOFIE framework.

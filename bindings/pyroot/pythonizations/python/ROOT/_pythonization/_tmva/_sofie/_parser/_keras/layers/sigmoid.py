@@ -1,5 +1,6 @@
 from cppyy import gbl as gbl_namespace
 
+
 def MakeKerasSigmoid(layer):
     """
     Create a Keras-compatible sigmoid activation operation using SOFIE framework.
