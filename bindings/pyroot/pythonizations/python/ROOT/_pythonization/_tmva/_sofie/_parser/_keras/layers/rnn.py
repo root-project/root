@@ -1,4 +1,4 @@
-def MakeKerasRNN(layer): 
+def MakeKerasRNN(layer):
     """
     Create a Keras-compatible RNN (Recurrent Neural Network) layer operation using SOFIE framework.
 
@@ -15,13 +15,13 @@ def MakeKerasRNN(layer):
     ROperator_RNN: A SOFIE framework operator representing the RNN layer operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-    
+
     # Extract required information from the layer dictionary
-    fLayerDType = layer['layerDType']
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    attributes = layer['layerAttributes']
-    direction = attributes['direction']
+    fLayerDType = layer["layerDType"]
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    attributes = layer["layerAttributes"]
+    direction = attributes["direction"]
     hidden_size = attributes["hidden_size"]
     layout = int(attributes["layout"])
     nameX = finput[0]
@@ -32,60 +32,128 @@ def MakeKerasRNN(layer):
         nameB = layer["layerWeight"][2]
     else:
         nameB = ""
-    
+
     # Check if the provided activation function is supported
-    fPActivation = attributes['activation']
-    if fPActivation.__name__ not in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
+    fPActivation = attributes["activation"]
+    if fPActivation.__name__ not in [
+        "relu",
+        "sigmoid",
+        "tanh",
+        "softsign",
+        "softplus",
+    ]:  # avoiding functions with parameters
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator RNN does not yet support activation function " + fPActivation.__name__
         )
-        
-    activations = [fPActivation.__name__[0].upper()+fPActivation.__name__[1:]]
 
-    #set default values
+    activations = [fPActivation.__name__[0].upper() + fPActivation.__name__[1:]]
+
+    # set default values
     activation_alpha = []
     activation_beta = []
     clip = 0.0
     nameY_h = ""
     nameInitial_h = ""
     name_seq_len = ""
-    
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        if layer['layerType'] == "SimpleRNN":
-            op =  SOFIE.ROperator_RNN['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
-        
-        elif layer['layerType'] == "GRU":
-            #an additional activation function is required, given by the user
-            activations.insert(0, attributes['recurrent_activation'].__name__[0].upper() + attributes['recurrent_activation'].__name__[1:])
-            
-            #new variable needed:
-            linear_before_reset = attributes['linear_before_reset']
-            op =  SOFIE.ROperator_GRU['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, linear_before_reset, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
-        
-        elif layer['layerType'] == "LSTM":
-            #an additional activation function is required, the first given by the user, the second set to tanh as default
-            fPRecurrentActivation = attributes['recurrent_activation']
-            if fPActivation.__name__ not in ['relu', 'sigmoid', 'tanh', 'softsign', 'softplus']: #avoiding functions with parameters
+
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        if layer["layerType"] == "SimpleRNN":
+            op = SOFIE.ROperator_RNN["float"](
+                activation_alpha,
+                activation_beta,
+                activations,
+                clip,
+                direction,
+                hidden_size,
+                layout,
+                nameX,
+                nameW,
+                nameR,
+                nameB,
+                name_seq_len,
+                nameInitial_h,
+                nameY,
+                nameY_h,
+            )
+
+        elif layer["layerType"] == "GRU":
+            # an additional activation function is required, given by the user
+            activations.insert(
+                0,
+                attributes["recurrent_activation"].__name__[0].upper()
+                + attributes["recurrent_activation"].__name__[1:],
+            )
+
+            # new variable needed:
+            linear_before_reset = attributes["linear_before_reset"]
+            op = SOFIE.ROperator_GRU["float"](
+                activation_alpha,
+                activation_beta,
+                activations,
+                clip,
+                direction,
+                hidden_size,
+                layout,
+                linear_before_reset,
+                nameX,
+                nameW,
+                nameR,
+                nameB,
+                name_seq_len,
+                nameInitial_h,
+                nameY,
+                nameY_h,
+            )
+
+        elif layer["layerType"] == "LSTM":
+            # an additional activation function is required, the first given by the user, the second set to tanh as default
+            fPRecurrentActivation = attributes["recurrent_activation"]
+            if fPActivation.__name__ not in [
+                "relu",
+                "sigmoid",
+                "tanh",
+                "softsign",
+                "softplus",
+            ]:  # avoiding functions with parameters
                 raise RuntimeError(
-                    "TMVA::SOFIE - Unsupported - Operator RNN does not yet support recurrent activation function " + fPActivation.__name__
+                    "TMVA::SOFIE - Unsupported - Operator RNN does not yet support recurrent activation function "
+                    + fPActivation.__name__
                 )
-            fPRecurrentActivationName = fPRecurrentActivation.__name__[0].upper()+fPRecurrentActivation.__name__[1:]
-            activations.insert(0,fPRecurrentActivationName)
-            activations.insert(2,'Tanh')            
-            
-            #new variables needed:
+            fPRecurrentActivationName = fPRecurrentActivation.__name__[0].upper() + fPRecurrentActivation.__name__[1:]
+            activations.insert(0, fPRecurrentActivationName)
+            activations.insert(2, "Tanh")
+
+            # new variables needed:
             input_forget = 0
             nameInitial_c = ""
-            nameP = "" #No peephole connections in keras LSTM model
+            nameP = ""  # No peephole connections in keras LSTM model
             nameY_c = ""
-            op =  SOFIE.ROperator_LSTM['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, input_forget, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameInitial_c, nameP, nameY, nameY_h, nameY_c)
-        
-        else: 
+            op = SOFIE.ROperator_LSTM["float"](
+                activation_alpha,
+                activation_beta,
+                activations,
+                clip,
+                direction,
+                hidden_size,
+                input_forget,
+                layout,
+                nameX,
+                nameW,
+                nameR,
+                nameB,
+                name_seq_len,
+                nameInitial_h,
+                nameInitial_c,
+                nameP,
+                nameY,
+                nameY_h,
+                nameY_c,
+            )
+
+        else:
             raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator RNN does not yet support operator type " + layer['layerType']
-        ) 
+                "TMVA::SOFIE - Unsupported - Operator RNN does not yet support operator type " + layer["layerType"]
+            )
         return op
     else:
-        raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator RNN does not yet support input type " + fLayerDType
-        )   
+        raise RuntimeError("TMVA::SOFIE - Unsupported - Operator RNN does not yet support input type " + fLayerDType)

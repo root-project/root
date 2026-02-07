@@ -15,16 +15,14 @@ def MakeKerasTanh(layer):
     ROperator_Tanh: A SOFIE framework operator representing the tanh activation operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-        
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_Tanh('float')(fLayerInputName, fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Tanh("float")(fLayerInputName, fLayerOutputName)
         return op
     else:
-        raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator Tanh does not yet support input type " + fLayerDType
-        )
+        raise RuntimeError("TMVA::SOFIE - Unsupported - Operator Tanh does not yet support input type " + fLayerDType)

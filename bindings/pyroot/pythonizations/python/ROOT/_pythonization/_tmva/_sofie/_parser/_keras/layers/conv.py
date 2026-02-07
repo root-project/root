@@ -3,7 +3,7 @@ import math
 from .. import get_keras_version
 
 
-def MakeKerasConv(layer): 
+def MakeKerasConv(layer):
     """
     Create a Keras-compatible convolutional layer operation using SOFIE framework.
 
@@ -14,22 +14,22 @@ def MakeKerasConv(layer):
 
     Parameters:
     layer (dict): A dictionary containing layer information including input, output,
-                  data type (must be float), weight and bias name, kernel size, dilations, padding and strides. 
+                  data type (must be float), weight and bias name, kernel size, dilations, padding and strides.
                   When padding is same (keep in the same dimensions), the padding shape is calculated.
 
     Returns:
     ROperator_Conv: A SOFIE framework operator representing the convolutional layer operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-    
+
     keras_version = get_keras_version()
-    
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    attributes = layer['layerAttributes']
+    attributes = layer["layerAttributes"]
     fWeightNames = layer["layerWeight"]
     fKernelName = fWeightNames[0]
     fBiasName = fWeightNames[1]
@@ -39,15 +39,15 @@ def MakeKerasConv(layer):
     fKerasPadding = str(attributes["padding"])
     fAttrStrides = attributes["strides"]
     fAttrPads = []
-    
-    if fKerasPadding == 'valid':
-        fAttrAutopad = 'VALID'
-    elif fKerasPadding == 'same':
-        fAttrAutopad = 'NOTSET'
-        if keras_version < '2.16':
-            fInputShape = attributes['_build_input_shape']
+
+    if fKerasPadding == "valid":
+        fAttrAutopad = "VALID"
+    elif fKerasPadding == "same":
+        fAttrAutopad = "NOTSET"
+        if keras_version < "2.16":
+            fInputShape = attributes["_build_input_shape"]
         else:
-            fInputShape = attributes['_build_shapes_dict']['input_shape']
+            fInputShape = attributes["_build_shapes_dict"]["input_shape"]
         inputHeight = fInputShape[1]
         inputWidth = fInputShape[2]
         outputHeight = math.ceil(float(inputHeight) / float(fAttrStrides[0]))
@@ -63,13 +63,19 @@ def MakeKerasConv(layer):
         raise RuntimeError(
             "TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding
         )
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_Conv['float'](fAttrAutopad, fAttrDilations, fAttrGroup, 
-                                                                  fAttrKernelShape, fAttrPads, fAttrStrides, 
-                                                                  fLayerInputName, fKernelName, fBiasName, 
-                                                                  fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Conv["float"](
+            fAttrAutopad,
+            fAttrDilations,
+            fAttrGroup,
+            fAttrKernelShape,
+            fAttrPads,
+            fAttrStrides,
+            fLayerInputName,
+            fKernelName,
+            fBiasName,
+            fLayerOutputName,
+        )
         return op
     else:
-        raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fLayerDType
-        )
+        raise RuntimeError("TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fLayerDType)

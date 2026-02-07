@@ -1,7 +1,7 @@
 from .. import get_keras_version
 
 
-def MakeKerasBatchNorm(layer): 
+def MakeKerasBatchNorm(layer):
     """
     Create a Keras-compatible batch normalization operation using SOFIE framework.
 
@@ -19,12 +19,12 @@ def MakeKerasBatchNorm(layer):
     ROperator_BatchNormalization: A SOFIE framework operator representing the batch normalization operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-    
+
     keras_version = get_keras_version()
-        
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    attributes = layer['layerAttributes']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    attributes = layer["layerAttributes"]
     gamma = attributes["gamma"]
     beta = attributes["beta"]
     moving_mean = attributes["moving_mean"]
@@ -32,8 +32,8 @@ def MakeKerasBatchNorm(layer):
     fLayerDType = layer["layerDType"]
     fNX = str(finput[0])
     fNY = str(foutput[0])
-    
-    if keras_version < '2.16':
+
+    if keras_version < "2.16":
         fNScale = gamma.name
         fNB = beta.name
         fNMean = moving_mean.name
@@ -43,12 +43,12 @@ def MakeKerasBatchNorm(layer):
         fNB = beta.path
         fNMean = moving_mean.path
         fNVar = moving_variance.path
-        
+
     epsilon = attributes["epsilon"]
     momentum = attributes["momentum"]
-    
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_BatchNormalization('float')(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
+
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_BatchNormalization("float")(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
     else:
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator BatchNormalization does not yet support input type " + fLayerDType

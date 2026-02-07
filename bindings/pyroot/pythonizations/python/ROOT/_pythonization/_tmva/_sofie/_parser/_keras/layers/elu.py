@@ -4,7 +4,7 @@ def MakeKerasELU(layer):
 
     This function takes a dictionary representing a layer and its attributes and
     constructs a Keras-compatible ELU activation operation using the SOFIE framework.
-    ELU is an activation function that modifies only the negative part of ReLU by 
+    ELU is an activation function that modifies only the negative part of ReLU by
     applying an exponential curve. It allows small negative values instead of zeros.
 
     Parameters:
@@ -16,20 +16,18 @@ def MakeKerasELU(layer):
     """
     from ROOT.TMVA.Experimental import SOFIE
 
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    attributes = layer['layerAttributes']
-    if 'alpha' in attributes.keys():
-        fAlpha = attributes['alpha']
+    attributes = layer["layerAttributes"]
+    if "alpha" in attributes.keys():
+        fAlpha = attributes["alpha"]
     else:
         fAlpha = 1.0
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_Elu('float')(fAlpha, fLayerInputName, fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Elu("float")(fAlpha, fLayerInputName, fLayerOutputName)
         return op
     else:
-        raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + fLayerDType
-        )
+        raise RuntimeError("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + fLayerDType)
