@@ -1,7 +1,5 @@
 import math
 
-from cppyy import gbl as gbl_namespace
-
 from .. import get_keras_version
 
 
@@ -22,6 +20,7 @@ def MakeKerasConv(layer):
     Returns:
     ROperator_Conv: A SOFIE framework operator representing the convolutional layer operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
     
     keras_version = get_keras_version()
     
@@ -64,8 +63,8 @@ def MakeKerasConv(layer):
         raise RuntimeError(
             "TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding
         )
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Conv['float'](fAttrAutopad, fAttrDilations, fAttrGroup, 
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Conv['float'](fAttrAutopad, fAttrDilations, fAttrGroup, 
                                                                   fAttrKernelShape, fAttrPads, fAttrStrides, 
                                                                   fLayerInputName, fKernelName, fBiasName, 
                                                                   fLayerOutputName)

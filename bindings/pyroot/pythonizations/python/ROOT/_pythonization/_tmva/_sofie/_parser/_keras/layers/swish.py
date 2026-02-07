@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasSwish(layer):
     """
     Create a Keras-compatible swish activation operation using SOFIE framework.
@@ -17,14 +14,15 @@ def MakeKerasSwish(layer):
     Returns:
     ROperator_Swish: A SOFIE framework operator representing the swish activation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
     
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Swish('float')(fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Swish('float')(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

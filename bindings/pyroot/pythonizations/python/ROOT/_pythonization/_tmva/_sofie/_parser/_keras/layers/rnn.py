@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasRNN(layer): 
     """
     Create a Keras-compatible RNN (Recurrent Neural Network) layer operation using SOFIE framework.
@@ -17,6 +14,7 @@ def MakeKerasRNN(layer):
     Returns:
     ROperator_RNN: A SOFIE framework operator representing the RNN layer operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
     
     # Extract required information from the layer dictionary
     fLayerDType = layer['layerDType']
@@ -52,9 +50,9 @@ def MakeKerasRNN(layer):
     nameInitial_h = ""
     name_seq_len = ""
     
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
         if layer['layerType'] == "SimpleRNN":
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_RNN['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
+            op =  SOFIE.ROperator_RNN['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
         
         elif layer['layerType'] == "GRU":
             #an additional activation function is required, given by the user
@@ -62,7 +60,7 @@ def MakeKerasRNN(layer):
             
             #new variable needed:
             linear_before_reset = attributes['linear_before_reset']
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_GRU['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, linear_before_reset, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
+            op =  SOFIE.ROperator_GRU['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, layout, linear_before_reset, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameY, nameY_h)
         
         elif layer['layerType'] == "LSTM":
             #an additional activation function is required, the first given by the user, the second set to tanh as default
@@ -80,7 +78,7 @@ def MakeKerasRNN(layer):
             nameInitial_c = ""
             nameP = "" #No peephole connections in keras LSTM model
             nameY_c = ""
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_LSTM['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, input_forget, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameInitial_c, nameP, nameY, nameY_h, nameY_c)
+            op =  SOFIE.ROperator_LSTM['float'](activation_alpha, activation_beta, activations, clip, direction, hidden_size, input_forget, layout, nameX, nameW, nameR, nameB, name_seq_len, nameInitial_h, nameInitial_c, nameP, nameY, nameY_h, nameY_c)
         
         else: 
             raise RuntimeError(

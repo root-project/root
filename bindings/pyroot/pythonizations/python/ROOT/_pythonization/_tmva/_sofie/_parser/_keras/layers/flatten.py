@@ -1,5 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
 from .. import get_keras_version
 
 
@@ -19,6 +17,7 @@ def MakeKerasFlatten(layer):
     Returns:
     ROperator_Reshape: A SOFIE framework operator representing the flattening operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
 
     keras_version = get_keras_version()
 
@@ -29,10 +28,10 @@ def MakeKerasFlatten(layer):
         flayername = attributes['_name']
     else:
         flayername = attributes['name']
-    fOpMode = gbl_namespace.TMVA.Experimental.SOFIE.ReshapeOpMode.Flatten
+    fOpMode = SOFIE.ReshapeOpMode.Flatten
     fLayerDType = layer['layerDType']
     fNameData = finput[0]
     fNameOutput = foutput[0]
     fNameShape = flayername + "_shape"
-    op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Reshape(fOpMode, 0, fNameData, fNameShape, fNameOutput)
+    op =  SOFIE.ROperator_Reshape(fOpMode, 0, fNameData, fNameShape, fNameOutput)
     return op

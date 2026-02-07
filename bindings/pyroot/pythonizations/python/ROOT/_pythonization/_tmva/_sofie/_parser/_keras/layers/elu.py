@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasELU(layer):
     """
     Create a Keras-compatible exponential linear Unit (ELU) activation operation using SOFIE framework.
@@ -17,6 +14,8 @@ def MakeKerasELU(layer):
     Returns:
     ROperator_Elu: A SOFIE framework operator representing the ELU activation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
+
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
@@ -27,8 +26,8 @@ def MakeKerasELU(layer):
         fAlpha = attributes['alpha']
     else:
         fAlpha = 1.0
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Elu('float')(fAlpha, fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Elu('float')(fAlpha, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasPermute(layer):
     """
     Create a Keras-compatible permutation operation using SOFIE framework.
@@ -17,6 +14,8 @@ def MakeKerasPermute(layer):
     Returns:
     ROperator_Transpose: A SOFIE framework operator representing the permutation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
+
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
@@ -24,12 +23,12 @@ def MakeKerasPermute(layer):
     fLayerOutputName = foutput[0]
     attributes = layer['layerAttributes']
     fAttributePermute = list(attributes["dims"])
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) == gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
+    if  SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
         if len(fAttributePermute) > 0:  
             fAttributePermute = [0] + fAttributePermute # for the batch dimension from the input
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fAttributePermute, fLayerInputName, fLayerOutputName) #gbl_namespace.TMVA.Experimental.SOFIE.fPermuteDims
+            op =  SOFIE.ROperator_Transpose('float')(fAttributePermute, fLayerInputName, fLayerOutputName) #SOFIE.fPermuteDims
         else:    
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fLayerInputName, fLayerOutputName)
+            op =  SOFIE.ROperator_Transpose('float')(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

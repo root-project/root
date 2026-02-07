@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasDense(layer):
     """
     Create a Keras-compatible dense (fully connected) layer operation using SOFIE framework.
@@ -17,6 +14,8 @@ def MakeKerasDense(layer):
     Returns:
     ROperator_Gemm: A SOFIE framework operator representing the dense layer operation.
     """  
+    from ROOT.TMVA.Experimental import SOFIE
+
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
@@ -29,8 +28,8 @@ def MakeKerasDense(layer):
     attr_beta  = 1.0
     attr_transA = 0
     attr_transB = 0
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Gemm['float'](attr_alpha, attr_beta, attr_transA, attr_transB, fLayerInputName, fKernelName, fBiasName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Gemm['float'](attr_alpha, attr_beta, attr_transA, attr_transB, fLayerInputName, fKernelName, fBiasName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

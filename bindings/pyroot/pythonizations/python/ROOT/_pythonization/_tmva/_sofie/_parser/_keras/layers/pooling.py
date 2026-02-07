@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasPooling(layer):
     """
     Create a Keras-compatible pooling layer operation using SOFIE framework.
@@ -17,6 +14,7 @@ def MakeKerasPooling(layer):
     Returns:
     ROperator_Pool: A SOFIE framework operator representing the pooling layer operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
     
     # Extract attributes from layer data
     fLayerDType = layer['layerDType']
@@ -25,7 +23,7 @@ def MakeKerasPooling(layer):
     fLayerType = layer['layerType']
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    pool_atrr = gbl_namespace.TMVA.Experimental.SOFIE.RAttributes_Pool()
+    pool_atrr = SOFIE.RAttributes_Pool()
     attributes = layer['layerAttributes']
     # Set default values for GlobalAveragePooling2D
     fAttrKernelShape = []
@@ -59,19 +57,19 @@ def MakeKerasPooling(layer):
     
     # Choose pooling type
     if 'Max' in fLayerType:
-        PoolMode =  gbl_namespace.TMVA.Experimental.SOFIE.PoolOpMode.MaxPool
+        PoolMode =  SOFIE.PoolOpMode.MaxPool
     elif 'AveragePool' in fLayerType:
-        PoolMode =  gbl_namespace.TMVA.Experimental.SOFIE.PoolOpMode.AveragePool
+        PoolMode =  SOFIE.PoolOpMode.AveragePool
     elif 'GlobalAverage' in fLayerType:
-        PoolMode =  gbl_namespace.TMVA.Experimental.SOFIE.PoolOpMode.GloabalAveragePool
+        PoolMode =  SOFIE.PoolOpMode.GloabalAveragePool
     else:
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator poolong does not yet support pooling type " + fLayerType
         )
     
     # Create operator
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Pool['float'](PoolMode, pool_atrr, fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Pool['float'](PoolMode, pool_atrr, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

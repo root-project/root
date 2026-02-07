@@ -1,5 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
 from .. import get_keras_version
 
 
@@ -20,6 +18,7 @@ def MakeKerasBatchNorm(layer):
     Returns:
     ROperator_BatchNormalization: A SOFIE framework operator representing the batch normalization operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
     
     keras_version = get_keras_version()
         
@@ -48,8 +47,8 @@ def MakeKerasBatchNorm(layer):
     epsilon = attributes["epsilon"]
     momentum = attributes["momentum"]
     
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_BatchNormalization('float')(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_BatchNormalization('float')(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
     else:
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator BatchNormalization does not yet support input type " + fLayerDType

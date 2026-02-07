@@ -1,8 +1,6 @@
 import os
 import time
 
-from cppyy import gbl as gbl_namespace
-
 from . import get_keras_version
 from .layers.batchnorm import MakeKerasBatchNorm
 from .layers.binary import MakeKerasBinary
@@ -89,6 +87,7 @@ def add_layer_into_RModel(rmodel, layer_data):
 
     Raises exception: If the provided layer type or activation function is not supported.
     """
+    from ROOT.TMVA.Experimental import SOFIE
 
     import numpy as np
 
@@ -116,7 +115,7 @@ def add_layer_into_RModel(rmodel, layer_data):
                 raise RuntimeError (
                     "Failed to extract build input shape from " + fLayerType + " layer"
                 )
-            TargetShape = [ gbl_namespace.TMVA.Experimental.SOFIE.ConvertShapeToLength(input_shape[1:])]
+            TargetShape = [ SOFIE.ConvertShapeToLength(input_shape[1:])]
             TargetShape = np.asarray(TargetShape)
 
         # since the AddInitializedTensor method in RModel requires unique pointer, we call a helper function
@@ -153,13 +152,13 @@ def add_layer_into_RModel(rmodel, layer_data):
         fLayerOutput = outputs[0]
         if fLayerType == 'GlobalAveragePooling2D':
             if layer_data['channels_last']:
-                op = gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0, 3, 1, 2], inputs[0], LayerName+"PreTrans")
+                op = SOFIE.ROperator_Transpose('float')([0, 3, 1, 2], inputs[0], LayerName+"PreTrans")
                 rmodel.AddOperatorReference(op)
                 inputs[0] = LayerName+"PreTrans"
             outputs[0] = LayerName+"Squeeze"
             rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
-            op = gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Reshape(
-                gbl_namespace.TMVA.Experimental.SOFIE.ReshapeOpMode.Squeeze,
+            op = SOFIE.ROperator_Reshape(
+                SOFIE.ReshapeOpMode.Squeeze,
                 [2, 3],
                 LayerName + "Squeeze",
                 fLayerOutput
@@ -183,26 +182,26 @@ def add_layer_into_RModel(rmodel, layer_data):
             fAttrPerm = list(range(0, num_input_shapes))
             fAttrPerm[1] = axis
             fAttrPerm[axis] = 1
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fAttrPerm, inputs[0],
+            op =  SOFIE.ROperator_Transpose('float')(fAttrPerm, inputs[0],
                                                                                      LayerName+"PreTrans")
             rmodel.AddOperatorReference(op)
             inputs[0] = LayerName + "PreTrans"
             outputs[0] = LayerName + "PostTrans"
             rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
-            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fAttrPerm, LayerName+"PostTrans",
+            op =  SOFIE.ROperator_Transpose('float')(fAttrPerm, LayerName+"PostTrans",
                                                                                      fLayerOutput)
             rmodel.AddOperatorReference(op)
 
         elif fLayerType == 'MaxPooling2D' or fLayerType == 'AveragePooling2D':
             if layer_data['channels_last']:
-                op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0],
+                op =  SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0],
                                                                                          LayerName+"PreTrans")
                 rmodel.AddOperatorReference(op)
                 inputs[0] = LayerName+"PreTrans"
                 outputs[0] = LayerName+"PostTrans"
             rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
             if layer_data['channels_last']:
-                op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,2,3,1],
+                op =  SOFIE.ROperator_Transpose('float')([0,2,3,1],
                                                                                     LayerName+"PostTrans", fLayerOutput)
                 rmodel.AddOperatorReference(op)
 
@@ -236,7 +235,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             # if the data format is channels last (can be set to channels first by the user).
             if fLayerType == 'Conv2D':
                 if layer_data['channels_last']:
-                    op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0], LayerName+"PreTrans")
+                    op =  SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0], LayerName+"PreTrans")
                     rmodel.AddOperatorReference(op)
                     inputs[0] = LayerName+"PreTrans"
                     layer_data["layerInput"] = inputs
@@ -247,7 +246,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             Activation_layer_input = LayerName+fLayerType
             if fLayerType == 'Conv2D':
                 if layer_data['channels_last']:
-                    op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,2,3,1], LayerName+fLayerType, LayerName+"PostTrans")
+                    op =  SOFIE.ROperator_Transpose('float')([0,2,3,1], LayerName+fLayerType, LayerName+"PostTrans")
                     rmodel.AddOperatorReference(op)
                     Activation_layer_input = LayerName + "PostTrans"
 
@@ -265,7 +264,7 @@ def add_layer_into_RModel(rmodel, layer_data):
                 outputs = layer_data['layerOutput']
                 fLayerOutput = outputs[0]
                 if layer_data['channels_last']:
-                    op = gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0], LayerName+"PreTrans")
+                    op = SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0], LayerName+"PreTrans")
                     rmodel.AddOperatorReference(op)
                     inputs[0] = LayerName+"PreTrans"
                     layer_data['layerInput'] = inputs
@@ -273,7 +272,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             rmodel.AddOperatorReference(mapKerasLayerWithActivation[fLayerType](layer_data))
             if fLayerType == 'Conv2D':
                 if layer_data['channels_last']:
-                    op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,2,3,1], LayerName+"PostTrans", fLayerOutput)
+                    op =  SOFIE.ROperator_Transpose('float')([0,2,3,1], LayerName+"PostTrans", fLayerOutput)
                     rmodel.AddOperatorReference(op)
         return rmodel
     else:
@@ -317,7 +316,7 @@ class PyKeras:
         gmt_time = time.gmtime(ttime)
         parsetime = time.asctime(gmt_time)
 
-        rmodel = gbl_namespace.TMVA.Experimental.SOFIE.RModel.RModel(filename_nodir, parsetime)
+        rmodel = SOFIE.RModel.RModel(filename_nodir, parsetime)
 
         print("PyKeras: parsing model ",filename)
 
@@ -436,7 +435,7 @@ class PyKeras:
         for weightIter in range(len(weight)):
             fWeightTensor = weight[weightIter]
             fWeightName = fWeightTensor['name']
-            fWeightDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fWeightTensor['dtype'])
+            fWeightDType = SOFIE.ConvertStringToType(fWeightTensor['dtype'])
             fWeightTensorValue = fWeightTensor['value']
             fWeightTensorSize = 1
             fWeightTensorShape = []
@@ -450,7 +449,7 @@ class PyKeras:
                 fWeightTensorShape.append(fWeightTensorValue.shape[j])
                 fWeightTensorSize *= fWeightTensorValue.shape[j]
 
-            if fWeightDType ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
+            if fWeightDType ==  SOFIE.ETensorType.FLOAT:
                 fWeightArray = fWeightTensorValue
 
                 # weights conversion format between keras and onnx for lstm: the order of the different
@@ -514,7 +513,7 @@ class PyKeras:
 
         if len(fPInputShape) == 1:
             inputName = fPInputs[0]
-            inputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fPInputDType[0])
+            inputDType = SOFIE.ConvertStringToType(fPInputDType[0])
             # convert ot a list to modify batch size
             inputShape = list(fPInputShape[0])
             #set the batch size in case of -1 or None as first value
@@ -525,7 +524,7 @@ class PyKeras:
         else:
             # Iterating through multiple input tensors
             for inputName, inputDType, inputShapeTuple in zip(fPInputs, fPInputDType, fPInputShape):
-                inputDType = gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(inputDType)
+                inputDType = SOFIE.ConvertStringToType(inputDType)
                 inputShape = list(inputShapeTuple)
                 if inputShape[0] is None or inputShape[0] <= 0:
                     inputShape[0] = batch_size

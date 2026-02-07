@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasTanh(layer):
     """
     Create a Keras-compatible hyperbolic tangent (tanh) activation operation using SOFIE framework.
@@ -17,14 +14,15 @@ def MakeKerasTanh(layer):
     Returns:
     ROperator_Tanh: A SOFIE framework operator representing the tanh activation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
         
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Tanh('float')(fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Tanh('float')(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(
