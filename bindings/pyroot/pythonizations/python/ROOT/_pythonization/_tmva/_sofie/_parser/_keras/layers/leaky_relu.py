@@ -15,27 +15,25 @@ def MakeKerasLeakyRelu(layer):
     ROperator_LeakyRelu: A SOFIE framework operator representing the Leaky ReLU activation operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-        
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    attributes = layer['layerAttributes']
-    
-    if 'alpha' in attributes.keys():
+    attributes = layer["layerAttributes"]
+
+    if "alpha" in attributes.keys():
         fAlpha = float(attributes["alpha"])
-    elif 'negative_slope' in attributes.keys():
-        fAlpha = float(attributes['negative_slope'])
-    elif 'activation' in attributes.keys():
+    elif "negative_slope" in attributes.keys():
+        fAlpha = float(attributes["negative_slope"])
+    elif "activation" in attributes.keys():
         fAlpha = 0.2
     else:
-        raise RuntimeError (
-            "Failed to extract alpha value from LeakyReLU"
-        )
-        
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_LeakyRelu('float')(fAlpha, fLayerInputName, fLayerOutputName)
+        raise RuntimeError("Failed to extract alpha value from LeakyReLU")
+
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_LeakyRelu("float")(fAlpha, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

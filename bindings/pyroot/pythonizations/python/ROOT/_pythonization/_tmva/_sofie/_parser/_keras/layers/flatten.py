@@ -21,16 +21,16 @@ def MakeKerasFlatten(layer):
 
     keras_version = get_keras_version()
 
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    attributes = layer['layerAttributes']
-    if keras_version < '2.16':
-        flayername = attributes['_name']
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    attributes = layer["layerAttributes"]
+    if keras_version < "2.16":
+        flayername = attributes["_name"]
     else:
-        flayername = attributes['name']
+        flayername = attributes["name"]
     fOpMode = SOFIE.ReshapeOpMode.Flatten
     fNameData = finput[0]
     fNameOutput = foutput[0]
     fNameShape = flayername + "_shape"
-    op =  SOFIE.ROperator_Reshape(fOpMode, 0, fNameData, fNameShape, fNameOutput)
+    op = SOFIE.ROperator_Reshape(fOpMode, 0, fNameData, fNameShape, fNameOutput)
     return op

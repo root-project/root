@@ -16,19 +16,21 @@ def MakeKerasPermute(layer):
     """
     from ROOT.TMVA.Experimental import SOFIE
 
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    attributes = layer['layerAttributes']
+    attributes = layer["layerAttributes"]
     fAttributePermute = list(attributes["dims"])
-    if  SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
-        if len(fAttributePermute) > 0:  
-            fAttributePermute = [0] + fAttributePermute # for the batch dimension from the input
-            op =  SOFIE.ROperator_Transpose('float')(fAttributePermute, fLayerInputName, fLayerOutputName) #SOFIE.fPermuteDims
-        else:    
-            op =  SOFIE.ROperator_Transpose('float')(fLayerInputName, fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        if len(fAttributePermute) > 0:
+            fAttributePermute = [0] + fAttributePermute  # for the batch dimension from the input
+            op = SOFIE.ROperator_Transpose("float")(
+                fAttributePermute, fLayerInputName, fLayerOutputName
+            )  # SOFIE.fPermuteDims
+        else:
+            op = SOFIE.ROperator_Transpose("float")(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(
