@@ -10,6 +10,9 @@ name: Backport PR
 
 permissions:
   contents: read
+  # These two to add labels
+  issues: write
+  pull-requests: write
 
 on:
   issue_comment:
