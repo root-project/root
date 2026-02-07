@@ -162,6 +162,9 @@ class ROOTFacade(types.ModuleType):
         from ._application import PyROOTApplication
         from ._pythonization import _register_pythonizations, pythonization
 
+        # signal policy: don't abort interpreter in interactive mode
+        cppyy._backend.SetGlobalSignalPolicy(not cppyy.gbl.ROOT.GetROOT().IsBatch())
+
         self.__dict__["_cppyy"] = cppyy
 
         # Expose some functionality from CPyCppyy extension module

@@ -172,8 +172,6 @@ struct module_state {
    PyObject *error;
 };
 
-using namespace CPyCppyy;
-
 #define GETSTATE(m) ((struct module_state *)PyModule_GetState(m))
 
 static int rootmodule_traverse(PyObject *m, visitproc visit, void *arg)
@@ -205,12 +203,6 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
 
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
-
-   // Make sure the interpreter is initialized once gROOT has been initialized
-   TInterpreter::Instance();
-
-   // signal policy: don't abort interpreter in interactive mode
-   CallContext::SetGlobalPolicy(CallContext::kProtected, !gROOT->IsBatch());
 
    return gRootModule;
 }
