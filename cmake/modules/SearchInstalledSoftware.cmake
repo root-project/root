@@ -1549,6 +1549,13 @@ endif()
 #---Check for protobuf-------------------------------------------------------------------
 
 if(tmva-sofie)
+  if(testing)
+    message(STATUS "Looking for BLAS as an optional testing dependency of TMVA-SOFIE")
+    find_package(BLAS)
+    if(NOT BLAS_FOUND)
+      message(WARNING "BLAS not found: TMVA-SOFIE will not be fully tested")
+    endif()
+  endif()
   message(STATUS "Looking for Protobuf")
   set(protobuf_MODULE_COMPATIBLE TRUE)
   find_package(Protobuf CONFIG)
