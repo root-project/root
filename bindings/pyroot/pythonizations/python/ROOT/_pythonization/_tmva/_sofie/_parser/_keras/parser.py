@@ -87,9 +87,8 @@ def add_layer_into_RModel(rmodel, layer_data):
 
     Raises exception: If the provided layer type or activation function is not supported.
     """
-    from ROOT.TMVA.Experimental import SOFIE
-
     import numpy as np
+    from ROOT.TMVA.Experimental import SOFIE
 
     keras_version = get_keras_version()
 
@@ -291,6 +290,7 @@ class PyKeras:
 
         import keras
         import numpy as np
+        from ROOT.TMVA.Experimental import SOFIE
 
         keras_version = get_keras_version()
 
@@ -457,7 +457,6 @@ class PyKeras:
                 if 'lstm' in fWeightName:
                     if 'kernel' in fWeightName:
                         units = int(fWeightArray.shape[1]/4)
-                        W_i = fWeightArray[:, :units].copy()
                         W_f = fWeightArray[:, units: units * 2].copy()
                         W_c = fWeightArray[:, units * 2: units * 3].copy()
                         W_o = fWeightArray[:, units * 3:].copy()
@@ -466,7 +465,6 @@ class PyKeras:
                         fWeightArray[:, units * 3:] = W_c
                     else: #bias
                         units = int(fWeightArray.shape[0]/4)
-                        W_i = fWeightArray[:units].copy()
                         W_f = fWeightArray[units: units * 2].copy()
                         W_c = fWeightArray[units * 2: units * 3].copy()
                         W_o = fWeightArray[units * 3:].copy()

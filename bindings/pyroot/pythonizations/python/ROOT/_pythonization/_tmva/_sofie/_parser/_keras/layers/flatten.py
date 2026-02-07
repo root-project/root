@@ -29,7 +29,6 @@ def MakeKerasFlatten(layer):
     else:
         flayername = attributes['name']
     fOpMode = SOFIE.ReshapeOpMode.Flatten
-    fLayerDType = layer['layerDType']
     fNameData = finput[0]
     fNameOutput = foutput[0]
     fNameShape = flayername + "_shape"
