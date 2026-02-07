@@ -16,14 +16,14 @@ def MakeKerasSoftmax(layer):
     ROperator_Softmax: A SOFIE framework operator representing the softmax activation operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-    
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_Softmax('float')(-1, fLayerInputName, fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Softmax("float")(-1, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

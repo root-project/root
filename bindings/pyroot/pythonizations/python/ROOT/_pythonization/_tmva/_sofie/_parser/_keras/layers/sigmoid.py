@@ -15,14 +15,14 @@ def MakeKerasSigmoid(layer):
     ROperator_Sigmoid: A SOFIE framework operator representing the sigmoid activation operation.
     """
     from ROOT.TMVA.Experimental import SOFIE
-        
-    finput = layer['layerInput']
-    foutput = layer['layerOutput']
-    fLayerDType = layer['layerDType']
+
+    finput = layer["layerInput"]
+    foutput = layer["layerOutput"]
+    fLayerDType = layer["layerDType"]
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
-        op =  SOFIE.ROperator_Sigmoid('float')(fLayerInputName, fLayerOutputName)
+    if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
+        op = SOFIE.ROperator_Sigmoid("float")(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(
