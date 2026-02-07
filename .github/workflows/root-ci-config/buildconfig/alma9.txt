@@ -1,4 +1,4 @@
+BLAS_LIBRARIES=/usr/lib64/libblas.so
 builtin_nlohmannjson=ON
 builtin_vdt=On
 tmva-sofie=On
-BLA_VENDOR=OpenBLAS
