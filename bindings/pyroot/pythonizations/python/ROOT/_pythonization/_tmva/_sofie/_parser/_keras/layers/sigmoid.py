@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasSigmoid(layer):
     """
     Create a Keras-compatible sigmoid activation operation using SOFIE framework.
@@ -17,14 +14,15 @@ def MakeKerasSigmoid(layer):
     Returns:
     ROperator_Sigmoid: A SOFIE framework operator representing the sigmoid activation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
         
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Sigmoid('float')(fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Sigmoid('float')(fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

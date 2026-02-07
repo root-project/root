@@ -1,6 +1,3 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasLeakyRelu(layer):
     """
     Create a Keras-compatible Leaky ReLU activation operation using SOFIE framework.
@@ -17,6 +14,7 @@ def MakeKerasLeakyRelu(layer):
     Returns:
     ROperator_LeakyRelu: A SOFIE framework operator representing the Leaky ReLU activation operation.
     """
+    from ROOT.TMVA.Experimental import SOFIE
         
     finput = layer['layerInput']
     foutput = layer['layerOutput']
@@ -36,8 +34,8 @@ def MakeKerasLeakyRelu(layer):
             "Failed to extract alpha value from LeakyReLU"
         )
         
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_LeakyRelu('float')(fAlpha, fLayerInputName, fLayerOutputName)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_LeakyRelu('float')(fAlpha, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

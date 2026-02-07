@@ -1,7 +1,6 @@
-from cppyy import gbl as gbl_namespace
-
-
 def MakeKerasConcat(layer):
+    from ROOT.TMVA.Experimental import SOFIE
+
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer["layerDType"]
@@ -9,8 +8,8 @@ def MakeKerasConcat(layer):
     input = [str(i) for i in finput]
     output = str(foutput[0])
     axis = int(attributes["axis"])
-    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
-        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Concat(input, axis, 0,  output)
+    if  SOFIE.ConvertStringToType(fLayerDType) ==  SOFIE.ETensorType.FLOAT:
+        op =  SOFIE.ROperator_Concat(input, axis, 0,  output)
     else:
         raise RuntimeError(
             "TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " + fLayerDType
