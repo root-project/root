@@ -212,6 +212,5 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    // signal policy: don't abort interpreter in interactive mode
    CallContext::SetGlobalPolicy(CallContext::kProtected, !gROOT->IsBatch());
 
-   Py_INCREF(gRootModule);
    return gRootModule;
 }
