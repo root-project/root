@@ -1,7 +1,16 @@
 # BasedOnStyle:  LLVM
 AccessModifierOffset: -3
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: None
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+  AlignCompound: true
+  PadOperators: true
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
 # This would be nice to have but seems to also (mis)align function parameters
 # AlignFunctionDeclarations: true
 AlignConsecutiveDeclarations:
