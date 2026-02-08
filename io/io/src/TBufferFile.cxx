@@ -2593,7 +2593,8 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    InitMap();
 
    // before reading object save start position
-   UInt_t startpos = UInt_t(fBufCur-fBuffer);
+   ULong64_t startpos = static_cast<ULong64_t>(fBufCur-fBuffer);
+   ULong64_t cntpos = startpos <= kMaxCountPosition ? startpos : kOverflowPosition;
 
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
@@ -2613,7 +2614,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
             Error("ReadObject", "got object of wrong class! requested %s but got %s",
                   clCast->GetName(), clRef->GetName());
 
-            CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
+            CheckByteCount(cntpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
             return 0; // We better return at this point
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
@@ -2628,7 +2629,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
-         CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
+         CheckByteCount(cntpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
          return 0;
       }
    }
@@ -2640,7 +2641,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       obj = (char *) (Longptr_t)fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = nullptr;
       if (obj) {
-         CheckByteCount(startpos, tag, (TClass *)nullptr);
+         CheckByteCount(cntpos, tag, (TClass *)nullptr);
          return (obj + baseOffset);
       }
    }
@@ -2652,7 +2653,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
          MapObject((void*)nullptr, nullptr, fMapCount);
-      CheckByteCount(startpos, tag, (TClass *)nullptr);
+      CheckByteCount(cntpos, tag, (TClass *)nullptr);
       return 0;
    }
 
@@ -2711,7 +2712,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       // let the object read itself
       clRef->Streamer( obj, *this, clOnfile );
 
-      CheckByteCount(startpos, tag, clRef);
+      CheckByteCount(cntpos, tag, clRef);
    }
 
    return obj+baseOffset;
