@@ -71,7 +71,7 @@ protected:
 
    Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
    void     CheckCount(UInt_t offset) override;
-   UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
+   UInt_t   CheckObject(ULong64_t offset, const TClass *cl, Bool_t readClass = kFALSE);
    UInt_t   ReserveByteCount();
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
@@ -112,7 +112,7 @@ public:
    char      *ReadString(char *s, Long64_t max) override;
    void       WriteString(const char *s) override;
 
-   TClass    *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) override;
+   TClass    *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) override;
    void       WriteClass(const TClass *cl) override;
 
    TObject   *ReadObject(const TClass *cl) override;
