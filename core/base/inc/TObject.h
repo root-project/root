@@ -34,27 +34,29 @@ class TTimer;
 
 namespace ROOT {
 namespace Internal {
-   bool DeleteChangesMemoryImpl();
-   void MarkTObjectAsNotOnHeap(TObject &obj);
-}}
+bool DeleteChangesMemoryImpl();
+void MarkTObjectAsNotOnHeap(TObject &obj);
+} // namespace Internal
+} // namespace ROOT
 
 class TObject {
    friend void ROOT::Internal::MarkTObjectAsNotOnHeap(TObject &obj);
 
 private:
-   UInt_t         fUniqueID;   ///< object unique identifier
-   UInt_t         fBits;       ///< bit field status word
+   UInt_t fUniqueID; ///< object unique identifier
+   UInt_t fBits;     ///< bit field status word
 
-   static Longptr_t fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
-   static Bool_t    fgObjectStat;  ///< if true keep track of objects in TObjectTable
+   static Longptr_t fgDtorOnly;   ///< object for which to call dtor only (i.e. no delete)
+   static Bool_t    fgObjectStat; ///< if true keep track of objects in TObjectTable
 
    static void AddToTObjectTable(TObject *);
 
 protected:
-   void MakeZombie() { fBits |= kZombie; }
+   void         MakeZombie() { fBits |= kZombie; }
    virtual void DoError(int level, const char *location, const char *fmt, va_list va) const;
 
-   static void SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs = "", Bool_t empty_line = kTRUE);
+   static void SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name,
+                                        const char *constructor_agrs = "", Bool_t empty_line = kTRUE);
 
    static TString SavePrimitiveVector(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Int_t flag = 0);
 
@@ -66,38 +68,38 @@ public:
    //----- in different class hierarchies (make sure there is no overlap in
    //----- any given hierarchy).
    enum EStatusBits {
-      kCanDelete        = BIT(0),   ///< if object in a list can be deleted
+      kCanDelete     = BIT(0), ///< if object in a list can be deleted
       // 2 is taken by TDataMember
-      kMustCleanup      = BIT(3),   ///< if object destructor must call RecursiveRemove()
-      kIsReferenced     = BIT(4),   ///< if object is referenced by a TRef or TRefArray
-      kHasUUID          = BIT(5),   ///< if object has a TUUID (its fUniqueID=UUIDNumber)
-      kCannotPick       = BIT(6),   ///< if object in a pad cannot be picked
+      kMustCleanup   = BIT(3), ///< if object destructor must call RecursiveRemove()
+      kIsReferenced  = BIT(4), ///< if object is referenced by a TRef or TRefArray
+      kHasUUID       = BIT(5), ///< if object has a TUUID (its fUniqueID=UUIDNumber)
+      kCannotPick    = BIT(6), ///< if object in a pad cannot be picked
       // 7 is taken by TAxis and TClass.
-      kNoContextMenu    = BIT(8),   ///< if object does not want context menu
+      kNoContextMenu = BIT(8), ///< if object does not want context menu
       // 9, 10 are taken by TH1, TF1, TAxis and a few others
       // 12 is taken by TAxis
-      kInvalidObject    = BIT(13)   ///< if object ctor succeeded but object should not be used
+      kInvalidObject = BIT(13) ///< if object ctor succeeded but object should not be used
    };
 
    enum EDeprecatedStatusBits {
-      kObjInCanvas      = BIT(3)   ///< for backward compatibility only, use kMustCleanup
+      kObjInCanvas = BIT(3) ///< for backward compatibility only, use kMustCleanup
    };
 
    //----- Private bits, clients can only test but not change them
    enum {
-      kIsOnHeap      = 0x01000000,    ///< object is on heap
-      kNotDeleted    = 0x02000000,    ///< object has not been deleted
-      kZombie        = 0x04000000,    ///< object ctor failed
-      kInconsistent  = 0x08000000,    ///< class overload Hash but does call RecursiveRemove in destructor
-  //  kCheckedHash   = 0x10000000,    ///< CheckedHash has check for the consistency of Hash/RecursiveRemove
-      kBitMask       = 0x00ffffff
+      kIsOnHeap     = 0x01000000, ///< object is on heap
+      kNotDeleted   = 0x02000000, ///< object has not been deleted
+      kZombie       = 0x04000000, ///< object ctor failed
+      kInconsistent = 0x08000000, ///< class overload Hash but does call RecursiveRemove in destructor
+      //  kCheckedHash   = 0x10000000,    ///< CheckedHash has check for the consistency of Hash/RecursiveRemove
+      kBitMask      = 0x00ffffff
    };
 
    //----- Write() options
    enum {
-      kSingleKey     = BIT(0),        ///< write collection with single key
-      kOverwrite     = BIT(1),        ///< overwrite existing object with same name
-      kWriteDelete   = BIT(2),        ///< write object, then delete previous key with same name
+      kSingleKey   = BIT(0), ///< write collection with single key
+      kOverwrite   = BIT(1), ///< overwrite existing object with same name
+      kWriteDelete = BIT(2), ///< write object, then delete previous key with same name
    };
 
 protected:
@@ -110,31 +112,30 @@ protected:
       ///< To take advantage of this feature the class needs to overload `TObject::Write`
       ///< and use this enum value accordingly.  (See `TTree::Write` and `TObject::Write`)
       ///< Do not use, this feature will be migrate to the Merge function (See TClass and TTree::Merge)
-      kOnlyPrepStep  = BIT(3)
+      kOnlyPrepStep = BIT(3)
    };
 
 public:
-
    TObject();
    TObject(const TObject &object) noexcept;
    TObject &operator=(const TObject &rhs) noexcept;
    virtual ~TObject();
 
-   virtual void        AppendPad(Option_t *option="");
+   virtual void        AppendPad(Option_t *option = "");
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
-   virtual void        Clear(Option_t * /*option*/ ="") { }
-           ULong_t     CheckedHash(); // Not virtual
-   virtual TObject    *Clone(const char *newname="") const;
+   virtual void        Clear(Option_t        */*option*/ = "") {}
+   ULong_t             CheckedHash(); // Not virtual
+   virtual TObject    *Clone(const char *newname = "") const;
    virtual Int_t       Compare(const TObject *obj) const;
    virtual void        Copy(TObject &object) const;
-   virtual void        Delete(Option_t *option=""); // *MENU*
+   virtual void        Delete(Option_t *option = ""); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void        Draw(Option_t *option="");
-   virtual void        DrawClass() const; // *MENU*
-   virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
-   virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, Int_t *error = nullptr);
+   virtual void        Draw(Option_t *option = "");
+   virtual void        DrawClass() const;                      // *MENU*
+   virtual TObject    *DrawClone(Option_t *option = "") const; // *MENU*
+   virtual void        Dump() const;                           // *MENU*
+   virtual void        Execute(const char *method, const char *params, Int_t *error = nullptr);
    virtual void        Execute(TMethod *method, TObjArray *params, Int_t *error = nullptr);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
@@ -147,7 +148,7 @@ public:
    virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
-           Bool_t      HasInconsistentHash() const;
+   Bool_t              HasInconsistentHash() const;
    virtual ULong_t     Hash() const;
    virtual Bool_t      InheritsFrom(const char *classname) const;
    virtual Bool_t      InheritsFrom(const TClass *cl) const;
@@ -159,20 +160,20 @@ public:
    R__ALWAYS_INLINE Bool_t IsOnHeap() const { return TestBit(kIsOnHeap); }
    R__ALWAYS_INLINE Bool_t IsZombie() const { return TestBit(kZombie); }
 
-   virtual Bool_t      Notify();
-   virtual void        ls(Option_t *option="") const;
-   virtual void        Paint(Option_t *option="");
-   virtual void        Pop();
-   virtual void        Print(Option_t *option="") const;
-   virtual Int_t       Read(const char *name);
-   virtual void        RecursiveRemove(TObject *obj);
-   virtual void        SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void        SetDrawOption(Option_t *option="");  // *MENU*
-   virtual void        SetUniqueID(UInt_t uid);
-   virtual void        UseCurrentStyle();
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
+   virtual Bool_t Notify();
+   virtual void   ls(Option_t *option = "") const;
+   virtual void   Paint(Option_t *option = "");
+   virtual void   Pop();
+   virtual void   Print(Option_t *option = "") const;
+   virtual Int_t  Read(const char *name);
+   virtual void   RecursiveRemove(TObject *obj);
+   virtual void   SaveAs(const char *filename = "", Option_t *option = "") const; // *MENU*
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   virtual void   SetDrawOption(Option_t *option = ""); // *MENU*
+   virtual void   SetUniqueID(UInt_t uid);
+   virtual void   UseCurrentStyle();
+   virtual Int_t  Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
+   virtual Int_t  Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
 
    /// IsDestructed
    ///
@@ -185,55 +186,55 @@ public:
    Bool_t IsDestructed() const { return !TestBit(kNotDeleted); }
 
    //----- operators
-   void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
-   void    *operator new[](size_t sz) { return TStorage::ObjectAllocArray(sz); }
-   void    *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
-   void    *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
-   void     operator delete(void *ptr);
-   void     operator delete[](void *ptr);
-   void     operator delete(void*, size_t);
-   void     operator delete[](void*, size_t);
-   void     operator delete(void *ptr, void *vp);
-   void     operator delete[](void *ptr, void *vp);
+   void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+   void *operator new[](size_t sz) { return TStorage::ObjectAllocArray(sz); }
+   void *operator new(size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
+   void *operator new[](size_t sz, void *vp) { return TStorage::ObjectAlloc(sz, vp); }
+   void  operator delete(void *ptr);
+   void  operator delete[](void *ptr);
+   void  operator delete(void *, size_t);
+   void  operator delete[](void *, size_t);
+   void  operator delete(void *ptr, void *vp);
+   void  operator delete[](void *ptr, void *vp);
 
    //----- bit manipulation
-   void     SetBit(UInt_t f, Bool_t set);
-   void     SetBit(UInt_t f) { fBits |= f & kBitMask; }
-   void     ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
-   R__ALWAYS_INLINE Bool_t TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
-   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
-   void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
+   void                    SetBit(UInt_t f, Bool_t set);
+   void                    SetBit(UInt_t f) { fBits |= f & kBitMask; }
+   void                    ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
+   R__ALWAYS_INLINE Bool_t TestBit(UInt_t f) const { return (Bool_t)((fBits & f) != 0); }
+   Int_t                   TestBits(UInt_t f) const { return (Int_t)(fBits & f); }
+   void                    InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
    //---- error handling
-   virtual void     Info(const char *method, const char *msgfmt, ...) const
+   virtual void Info(const char *method, const char *msgfmt, ...) const
 #if defined(__GNUC__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
+      __attribute__((format(printf, 3, 4))) /* 1 is the this pointer */
 #endif
-   ;
-   virtual void     Warning(const char *method, const char *msgfmt, ...) const
+      ;
+   virtual void Warning(const char *method, const char *msgfmt, ...) const
 #if defined(__GNUC__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
+      __attribute__((format(printf, 3, 4))) /* 1 is the this pointer */
 #endif
-   ;
-   virtual void     Error(const char *method, const char *msgfmt, ...) const
+      ;
+   virtual void Error(const char *method, const char *msgfmt, ...) const
 #if defined(__GNUC__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
+      __attribute__((format(printf, 3, 4))) /* 1 is the this pointer */
 #endif
-   ;
-   virtual void     SysError(const char *method, const char *msgfmt, ...) const
+      ;
+   virtual void SysError(const char *method, const char *msgfmt, ...) const
 #if defined(__GNUC__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
+      __attribute__((format(printf, 3, 4))) /* 1 is the this pointer */
 #endif
-   ;
-   virtual void     Fatal(const char *method, const char *msgfmt, ...) const
+      ;
+   virtual void Fatal(const char *method, const char *msgfmt, ...) const
 #if defined(__GNUC__)
-   __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
+      __attribute__((format(printf, 3, 4))) /* 1 is the this pointer */
 #endif
-   ;
+      ;
 
-   void     AbstractMethod(const char *method) const;
-   void     MayNotUse(const char *method) const;
-   void     Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
+   void AbstractMethod(const char *method) const;
+   void MayNotUse(const char *method) const;
+   void Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
 
    //---- static functions
    static Longptr_t GetDtorOnly();
@@ -244,7 +245,7 @@ public:
    friend class TClonesArray; // needs to reset kNotDeleted in fBits
    friend bool ROOT::Internal::DeleteChangesMemoryImpl();
 
-   ClassDef(TObject,1)  //Basic ROOT object
+   ClassDef(TObject, 1) // Basic ROOT object
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,9 +265,11 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
    fUniqueID = 0;
 
 #ifdef R__WIN32
-   if (R__unlikely(GetObjectStat())) TObject::AddToTObjectTable(this);
+   if (R__unlikely(GetObjectStat()))
+      TObject::AddToTObjectTable(this);
 #else
-   if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+   if (R__unlikely(fgObjectStat))
+      TObject::AddToTObjectTable(this);
 #endif
 }
 
@@ -288,9 +291,11 @@ inline TObject::TObject(const TObject &obj) noexcept
    fUniqueID = obj.fUniqueID; // when really unique don't copy
 
 #ifdef R__WIN32
-   if (R__unlikely(GetObjectStat())) TObject::AddToTObjectTable(this);
+   if (R__unlikely(GetObjectStat()))
+      TObject::AddToTObjectTable(this);
 #else
-   if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+   if (R__unlikely(fgObjectStat))
+      TObject::AddToTObjectTable(this);
 #endif
 }
 
@@ -302,10 +307,10 @@ inline TObject &TObject::operator=(const TObject &rhs) noexcept
    if (R__likely(this != &rhs)) {
       fUniqueID = rhs.fUniqueID; // when really unique don't copy
       if (IsOnHeap()) {          // test uses fBits so don't move next line
-         fBits = rhs.fBits;
+         fBits  = rhs.fBits;
          fBits |= kIsOnHeap;
       } else {
-         fBits = rhs.fBits;
+         fBits  = rhs.fBits;
          fBits &= ~kIsOnHeap;
       }
       fBits &= ~kIsReferenced;
@@ -313,7 +318,6 @@ inline TObject &TObject::operator=(const TObject &rhs) noexcept
    }
    return *this;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @brief Check and record whether this class has a consistent
@@ -368,28 +372,27 @@ inline Bool_t TObject::HasInconsistentHash() const
 // Only here for backward compatibility reasons.
 // For detailed description see TObject::EStatusBits above.
 enum EObjBits {
-   kCanDelete        = TObject::kCanDelete,
-   kMustCleanup      = TObject::kMustCleanup,
-   kObjInCanvas      = TObject::kObjInCanvas,
-   kIsReferenced     = TObject::kIsReferenced,
-   kHasUUID          = TObject::kHasUUID,
-   kCannotPick       = TObject::kCannotPick,
-   kNoContextMenu    = TObject::kNoContextMenu,
-   kInvalidObject    = TObject::kInvalidObject
+   kCanDelete     = TObject::kCanDelete,
+   kMustCleanup   = TObject::kMustCleanup,
+   kObjInCanvas   = TObject::kObjInCanvas,
+   kIsReferenced  = TObject::kIsReferenced,
+   kHasUUID       = TObject::kHasUUID,
+   kCannotPick    = TObject::kCannotPick,
+   kNoContextMenu = TObject::kNoContextMenu,
+   kInvalidObject = TObject::kInvalidObject
 };
 
 namespace cling {
-   std::string printValue(TObject *val);
+std::string printValue(TObject *val);
 }
 
 namespace ROOT {
 
 namespace Internal {
-   bool DeleteChangesMemory();
-} // Internal
+bool DeleteChangesMemory();
+} // namespace Internal
 
 namespace Detail {
-
 
 /// @brief Check if the TObject's memory has been deleted.
 /// @warning This should be only used for error mitigation as the answer is only
@@ -403,10 +406,12 @@ namespace Detail {
 ///    always returns false as the marker left by ~TObject will be overwritten.
 /// @param obj The memory to check
 /// @return true if the object has been destructed and it can be inferred that it has been deleted
-R__ALWAYS_INLINE bool HasBeenDeleted(const TObject *obj) {
+R__ALWAYS_INLINE bool HasBeenDeleted(const TObject *obj)
+{
    return !ROOT::Internal::DeleteChangesMemory() && obj->IsDestructed();
 }
 
-}} // ROOT::Details
+} // namespace Detail
+} // namespace ROOT
 
 #endif
