@@ -2216,7 +2216,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] columnList
    /// A list containing the names of the columns that will be passed when calling `Fill`.
-   ///  (N columns for unweighted filling, or N+1 columns for weighted filling)
+   /// \param[in] wName The name of the column that will provide the weights.
    /// \return the N-dimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -2229,19 +2229,42 @@ public:
    ///                                               {"col0", "col1", "col2", "col3"});
    /// ~~~
    ///
+   /// \note A column with event weights should not be passed as part of `columnList`, but instead be passed in the new
+   /// argument `wName`: `HistoND(model, cols, weightCol)`.
+   ///
    template <typename FirstColumn, typename... OtherColumns> // need FirstColumn to disambiguate overloads
-   RResultPtr<::THnD> HistoND(const THnDModel &model, const ColumnNames_t &columnList)
+   RResultPtr<::THnD> HistoND(const THnDModel &model, const ColumnNames_t &columnList, std::string_view wName = "")
    {
       std::shared_ptr<::THnD> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
+         const auto hDims = h->GetNdimensions();
+         decltype(hDims) nCols = columnList.size();
 
-         if (int(columnList.size()) == (h->GetNdimensions() + 1)) {
+         if (!wName.empty() && nCols == hDims + 1)
+            throw std::invalid_argument("The weight column was passed as an argument and at the same time the list of "
+                                        "input columns contains one column more than the number of dimensions of the "
+                                        "histogram. Call as 'HistoND(model, cols, weightCol)'.");
+
+         if (nCols == hDims + 1)
+            Warning("HistoND", "Passing the column with the weights as the last column in the list is deprecated. "
+                               "Instead, pass it as a separate argument, e.g. 'HistoND(model, cols, weightCol)'.");
+
+         if (!wName.empty() || nCols == hDims + 1)
             h->Sumw2();
-         } else if (int(columnList.size()) != h->GetNdimensions()) {
-            throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
-         }
+
+         if (nCols != hDims + 1 && nCols != hDims)
+            throw std::invalid_argument("Wrong number of columns for the specified number of histogram axes.");
+      }
+
+      if (!wName.empty()) {
+         // The action helper will invoke THnBase::Fill overload that performs weighted filling in case the number of
+         // passed arguments is one more the number of dimensions of the histogram.
+         ColumnNames_t userColumns = columnList;
+         userColumns.push_back(std::string{wName});
+         return CreateAction<RDFInternal::ActionTags::HistoND, FirstColumn, OtherColumns...>(userColumns, h, h,
+                                                                                             fProxiedPtr);
       }
       return CreateAction<RDFInternal::ActionTags::HistoND, FirstColumn, OtherColumns...>(columnList, h, h,
                                                                                           fProxiedPtr);
@@ -2251,7 +2274,7 @@ public:
    /// \brief Fill and return an N-dimensional histogram (*lazy action*).
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   ///  (N columns for unweighted filling, or N+1 columns for weighted filling)
+   /// \param[in] wName The name of the column that will provide the weights.
    /// \return the N-dimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -2264,18 +2287,41 @@ public:
    ///                                               {"col0", "col1", "col2", "col3"});
    /// ~~~
    ///
-   RResultPtr<::THnD> HistoND(const THnDModel &model, const ColumnNames_t &columnList)
+   /// \note A column with event weights should not be passed as part of `columnList`, but instead be passed in the new
+   /// argument `wName`: `HistoND(model, cols, weightCol)`.
+   ///
+   RResultPtr<::THnD> HistoND(const THnDModel &model, const ColumnNames_t &columnList, std::string_view wName = "")
    {
       std::shared_ptr<::THnD> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
+         const auto hDims = h->GetNdimensions();
+         decltype(hDims) nCols = columnList.size();
 
-         if (int(columnList.size()) == (h->GetNdimensions() + 1)) {
+         if (!wName.empty() && nCols == hDims + 1)
+            throw std::invalid_argument("The weight column was passed as an argument and at the same time the list of "
+                                        "input columns contains one column more than the number of dimensions of the "
+                                        "histogram. Call as 'HistoND(model, cols, weightCol)'.");
+
+         if (nCols == hDims + 1)
+            Warning("HistoND", "Passing the column with the weights as the last column in the list is deprecated. "
+                               "Instead, pass it as a separate argument, e.g. 'HistoND(model, cols, weightCol)'.");
+
+         if (!wName.empty() || nCols == hDims + 1)
             h->Sumw2();
-         } else if (int(columnList.size()) != h->GetNdimensions()) {
-            throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
-         }
+
+         if (nCols != hDims + 1 && nCols != hDims)
+            throw std::invalid_argument("Wrong number of columns for the specified number of histogram axes.");
+      }
+
+      if (!wName.empty()) {
+         // The action helper will invoke THnBase::Fill overload that performs weighted filling in case the number of
+         // passed arguments is one more the number of dimensions of the histogram.
+         ColumnNames_t userColumns = columnList;
+         userColumns.push_back(std::string{wName});
+         return CreateAction<RDFInternal::ActionTags::HistoND, RDFDetail::RInferredType>(userColumns, h, h, fProxiedPtr,
+                                                                                         userColumns.size());
       }
       return CreateAction<RDFInternal::ActionTags::HistoND, RDFDetail::RInferredType>(columnList, h, h, fProxiedPtr,
                                                                                       columnList.size());
@@ -2290,7 +2336,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] columnList
    /// A list containing the names of the columns that will be passed when calling `Fill`.
-   ///  (N columns for unweighted filling, or N+1 columns for weighted filling)
+   /// \param[in] wName The name of the column that will provide the weights.
    /// \return the N-dimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -2303,19 +2349,44 @@ public:
    ///                                               {"col0", "col1", "col2", "col3"});
    /// ~~~
    ///
+   /// \note A column with event weights should not be passed as part of `columnList`, but instead be passed in the new
+   /// argument `wName`: `HistoND(model, cols, weightCol)`.
+   ///
    template <typename FirstColumn, typename... OtherColumns> // need FirstColumn to disambiguate overloads
-   RResultPtr<::THnSparseD> HistoNSparseD(const THnSparseDModel &model, const ColumnNames_t &columnList)
+   RResultPtr<::THnSparseD>
+   HistoNSparseD(const THnSparseDModel &model, const ColumnNames_t &columnList, std::string_view wName = "")
    {
       std::shared_ptr<::THnSparseD> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
+         const auto hDims = h->GetNdimensions();
+         decltype(hDims) nCols = columnList.size();
 
-         if (int(columnList.size()) == (h->GetNdimensions() + 1)) {
+         if (!wName.empty() && nCols == hDims + 1)
+            throw std::invalid_argument("The weight column was passed as an argument and at the same time the list of "
+                                        "input columns contains one column more than the number of dimensions of the "
+                                        "histogram. Call as 'HistoNSparseD(model, cols, weightCol)'.");
+
+         if (nCols == hDims + 1)
+            Warning("HistoNSparseD",
+                    "Passing the column with the weights as the last column in the list is deprecated. "
+                    "Instead, pass it as a separate argument, e.g. 'HistoNSparseD(model, cols, weightCol)'.");
+
+         if (!wName.empty() || nCols == hDims + 1)
             h->Sumw2();
-         } else if (int(columnList.size()) != h->GetNdimensions()) {
-            throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
-         }
+
+         if (nCols != hDims + 1 && nCols != hDims)
+            throw std::invalid_argument("Wrong number of columns for the specified number of histogram axes.");
+      }
+
+      if (!wName.empty()) {
+         // The action helper will invoke THnBase::Fill overload that performs weighted filling in case the number of
+         // passed arguments is one more the number of dimensions of the histogram.
+         ColumnNames_t userColumns = columnList;
+         userColumns.push_back(std::string{wName});
+         return CreateAction<RDFInternal::ActionTags::HistoNSparseD, FirstColumn, OtherColumns...>(userColumns, h, h,
+                                                                                                   fProxiedPtr);
       }
       return CreateAction<RDFInternal::ActionTags::HistoNSparseD, FirstColumn, OtherColumns...>(columnList, h, h,
                                                                                                 fProxiedPtr);
@@ -2325,7 +2396,7 @@ public:
    /// \brief Fill and return a sparse N-dimensional histogram (*lazy action*).
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   ///  (N columns for unweighted filling, or N+1 columns for weighted filling)
+   /// \param[in] wName The name of the column that will provide the weights.
    /// \return the N-dimensional histogram wrapped in a RResultPtr.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -2338,18 +2409,43 @@ public:
    ///                                               {"col0", "col1", "col2", "col3"});
    /// ~~~
    ///
-   RResultPtr<::THnSparseD> HistoNSparseD(const THnSparseDModel &model, const ColumnNames_t &columnList)
+   /// \note A column with event weights should not be passed as part of `columnList`, but instead be passed in the new
+   /// argument `wName`: `HistoND(model, cols, weightCol)`.
+   ///
+   RResultPtr<::THnSparseD>
+   HistoNSparseD(const THnSparseDModel &model, const ColumnNames_t &columnList, std::string_view wName = "")
    {
       std::shared_ptr<::THnSparseD> h(nullptr);
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
+         const auto hDims = h->GetNdimensions();
+         decltype(hDims) nCols = columnList.size();
 
-         if (int(columnList.size()) == (h->GetNdimensions() + 1)) {
+         if (!wName.empty() && nCols == hDims + 1)
+            throw std::invalid_argument("The weight column was passed as an argument and at the same time the list of "
+                                        "input columns contains one column more than the number of dimensions of the "
+                                        "histogram. Call as 'HistoNSparseD(model, cols, weightCol)'.");
+
+         if (nCols == hDims + 1)
+            Warning("HistoNSparseD",
+                    "Passing the column with the weights as the last column in the list is deprecated. "
+                    "Instead, pass it as a separate argument, e.g. 'HistoNSparseD(model, cols, weightCol)'.");
+
+         if (!wName.empty() || nCols == hDims + 1)
             h->Sumw2();
-         } else if (int(columnList.size()) != h->GetNdimensions()) {
-            throw std::runtime_error("Wrong number of columns for the specified number of histogram axes.");
-         }
+
+         if (nCols != hDims + 1 && nCols != hDims)
+            throw std::invalid_argument("Wrong number of columns for the specified number of histogram axes.");
+      }
+
+      if (!wName.empty()) {
+         // The action helper will invoke THnBase::Fill overload that performs weighted filling in case the number of
+         // passed arguments is one more the number of dimensions of the histogram.
+         ColumnNames_t userColumns = columnList;
+         userColumns.push_back(std::string{wName});
+         return CreateAction<RDFInternal::ActionTags::HistoNSparseD, RDFDetail::RInferredType>(
+            userColumns, h, h, fProxiedPtr, userColumns.size());
       }
       return CreateAction<RDFInternal::ActionTags::HistoNSparseD, RDFDetail::RInferredType>(
          columnList, h, h, fProxiedPtr, columnList.size());
