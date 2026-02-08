@@ -528,7 +528,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if (NOT ${ARG_MODULE} STREQUAL ${library_target_name})
 #      message(AUTHOR_WARNING "The MODULE argument ${ARG_MODULE} and the deduced library name "
 #        "${library_target_name} mismatch. Deduction stem: ${dictionary}.")
-      set(library_target_name ${ARG_MODULE})
+      get_target_property(custom_name ${ARG_MODULE} OUTPUT_NAME)
+      if(NOT custom_name STREQUAL "custom_name-NOTFOUND")
+        # if the OUTPUT_NAME propery has been set, use that as library_target_name
+        set(library_target_name ${custom_name})
+      else()
+        set(library_target_name ${ARG_MODULE})
+      endif()
     endif()
   endif(ARG_MODULE)
 
