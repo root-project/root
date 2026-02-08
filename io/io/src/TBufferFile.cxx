@@ -3011,14 +3011,15 @@ void TBufferFile::SkipVersion(const TClass *cl)
 
 Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
+   assert((!startpos && !bcnt) || (startpos && bcnt)); // both or none should be set
+
    Version_t version;
 
    if (startpos) {
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos <= kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      if (bcnt)
-         fByteCountStack.push_back(full_startpos);
+      fByteCountStack.push_back(full_startpos);
    }
 
    // read byte count (older files don't have byte count)
@@ -3043,11 +3044,11 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       v.cnt = 0;
    }
    if (bcnt) {
+      // We also have (asserted) that (startpos != nullptr)
       if (!v.cnt) {
          // no byte count stored
          *bcnt = 0;
-         if (startpos) // Undo the push_back only if it happened.
-            fByteCountStack.pop_back();
+         fByteCountStack.pop_back();
       } else {
          *bcnt = (v.cnt & ~kByteCountMask);
          if (*bcnt == 0) {
@@ -3055,8 +3056,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            if (startpos)
-               *startpos = kOverflowPosition;
+            *startpos = kOverflowPosition;
          }
       }
    }
@@ -3153,14 +3153,15 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 
 Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 {
+   assert((!startpos && !bcnt) || (startpos && bcnt)); // both or none should be set
+
    Version_t version;
 
    if (startpos) {
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos < kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      if (bcnt)
-         fByteCountStack.push_back(full_startpos);
+      fByteCountStack.push_back(full_startpos);
    }
 
    // read byte count (older files don't have byte count)
@@ -3188,8 +3189,7 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       if (!v.cnt) {
          // no byte count stored
          *bcnt = 0;
-         if (startpos) // Undo the push_back only if it happened.
-            fByteCountStack.pop_back();
+         fByteCountStack.pop_back();
       } else {
          *bcnt = (v.cnt & ~kByteCountMask);
          if (*bcnt == 0) {
@@ -3197,8 +3197,7 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            if (startpos)
-               *startpos = kOverflowPosition;
+            *startpos = kOverflowPosition;
          }
       }
    }
