@@ -195,6 +195,7 @@ As part of this migration, the following build options are deprecated. From ROOT
 ## RDataFrame
 
 - The message shown in ROOT 6.38 to inform users about change of default compression setting used by Snapshot (was 101 before 6.38, became 505 in 6.38) is now removed.
+- Signatures of the HistoND and HistoNSparseD operations have been changed. Previously, the list of input column names was allowed to contain an extra column for events weights. This was done to align the logic with the THnBase::Fill method. But this signature was inconsistent with all other Histo* operations, which have a separate function argument that represents the column to get the weights from. Thus, HistoND and HistoNSparseD both now have a separate function argument for the weights. The previous signature is still supported, but deprecated: a warning will be raised if the user passes the column name of the weights as an extra element of the list of input column names. In a future version of ROOT this functionality will be removed. From now on, creating a (sparse) N-dim histogram with weights should be done by calling `HistoN[Sparse]D(histoModel, inputColumns, weightColumn)`.
 
 ## Python Interface
 
