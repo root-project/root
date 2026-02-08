@@ -648,7 +648,7 @@ void runTFANG()
       v3.SetXYZ(detPosX[i], detPosY[i], detPosZ[i]);
       v3Det.push_back(v3);
       radius = TMath::Sqrt(v3.Mag2() + detRadius[i] * detRadius[i]);
-      omega[i] = kTwoPi * radius * (radius - v3.R());
+      omega[i] = kTwoPi * (1-v3.R()/radius);  
       shape[i] = 0.0;
       totalOmega *= omega[i];
    }
