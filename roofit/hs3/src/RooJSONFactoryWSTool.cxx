@@ -581,9 +581,10 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!nllNode->has_child("data")) {
       throw std::runtime_error("likelihood node has no data attached!");
    }
+
    std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
    RooArgSet extConstraints;
-   for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
+   for (auto &nameNode : analysisNode["aux_distributions"].children()) {
       if (RooAbsArg *extConstraint = workspace.arg(nameNode.val())) {
          extConstraints.add(*extConstraint);
       }
