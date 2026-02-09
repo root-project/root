@@ -272,7 +272,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DISABLED_DetectResourceDir) {
     GTEST_SKIP() << "Test not run (Clang binary does not exist)";
 
   std::string DetectedPath = Cpp::DetectResourceDir(Clang.str().str().c_str());
-  EXPECT_STREQ(DetectedPath.c_str(), Cpp::GetResourceDir());
+  llvm::SmallString<256> absPath(Cpp::GetResourceDir());
+  EXPECT_TRUE(!llvm::sys::fs::make_absolute(absPath));
+  llvm::SmallString<256> realPath;
+  EXPECT_TRUE(!llvm::sys::fs::real_path(absPath, realPath));
+  EXPECT_STREQ(DetectedPath.c_str(), realPath.str().str().c_str());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DetectSystemCompilerIncludePaths) {
