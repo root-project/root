@@ -175,19 +175,6 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
 
-        if load_eager:
-            # TODO: overhead, check if we can improve the following lines
-            if sampling_type == "undersampling" and not replacement:
-                rdf_0 = rdataframes[0].Count().GetValue()
-                rdf_1 = rdataframes[1].Count().GetValue()
-                rdf_minor = min(rdf_0, rdf_1)
-                rdf_major = max(rdf_0, rdf_1)
-                if rdf_major < rdf_minor / sampling_ratio:
-                    raise ValueError(
-                        f"The sampling_ratio is too low: not enough entries in the majority class to sample from. \n \
-                        Choose sampling_ratio > {round(rdf_minor / rdf_major, 3)} or set replacement to False."
-                    )
-
         if not hasattr(rdataframes, "__iter__"):
             rdataframes = [rdataframes]
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
