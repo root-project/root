@@ -137,6 +137,7 @@ TEST(RCategoricalAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), categories.size());
    }
 
@@ -144,6 +145,7 @@ TEST(RCategoricalAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index0, indexBins);
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), categories.size());
    }
 
@@ -152,6 +154,7 @@ TEST(RCategoricalAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index1, index2);
       EXPECT_EQ(normal.GetBegin(), index1);
       EXPECT_EQ(normal.GetEnd(), index2);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 1);
    }
 
@@ -159,6 +162,7 @@ TEST(RCategoricalAxis, GetNormalRange)
       const auto empty = axis.GetNormalRange(index1, index1);
       EXPECT_EQ(empty.GetBegin(), index1);
       EXPECT_EQ(empty.GetEnd(), index1);
+      EXPECT_FALSE(empty.IsInvalid());
       EXPECT_EQ(empty.begin(), empty.end());
       EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
    }
@@ -181,6 +185,7 @@ TEST(RCategoricalAxis, GetFullRange)
       const auto full = axis.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex());
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), categories.size() + 1);
    }
 
@@ -189,6 +194,7 @@ TEST(RCategoricalAxis, GetFullRange)
       const auto full = axisNoOverflow.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex(categories.size()));
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), categories.size());
    }
 }
