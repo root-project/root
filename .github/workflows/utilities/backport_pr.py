@@ -274,9 +274,9 @@ def principal():
                                                f'--base {realTargetBranch} '\
                                                f'--head root-project-bot:{bpBranchName} ' \
                                                f"--title '[{targetBranch}] {prTitle}'  "\
-                                               f"--body 'Backport of #{pullNumber}{requestorInfo}' "\
-                                               f'{labelSwitch} {assigneesSwitch} ' \
-                                               '-d || echo \'\'')
+                                               f"--body Backport of #{pullNumber}{requestorInfo}' "\
+                                            #    f'{labelSwitch} {assigneesSwitch} ' \
+                                               '-d')
         bpPRUrlBranch.append((prUrl,targetBranch))       
 
     if bpPRUrlBranch == []:
