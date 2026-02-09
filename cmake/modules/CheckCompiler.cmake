@@ -264,10 +264,6 @@ if(gcctoolchain)
   endif()
 endif()
 
-if(gnuinstall)
-  set(R__HAVE_CONFIG 1)
-endif()
-
 #---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
 # Necessary to compile check_cxx_source_compiles this early
 include(CheckCXXSourceCompiles)

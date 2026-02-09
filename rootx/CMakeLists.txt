@@ -15,6 +15,10 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(root PRIVATE util procstat)
 endif()
 
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(root PRIVATE stdc++fs)
+endif()
+
 generateHeader(root
   ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
   ${CMAKE_BINARY_DIR}/ginclude/rootCommandLineOptionsHelp.h

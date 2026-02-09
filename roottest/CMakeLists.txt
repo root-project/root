@@ -86,11 +86,6 @@ else()
   message(FATAL_ERROR "-- Check for bitness: no support for ${CMAKE_SIZEOF_VOID_P}*8 bit processors.")
 endif()
 
-# Setup environment.
-if (gnuinstall)
-  set(ROOTTEST_ENVIRONMENT ROOTIGNOREPREFIX=1)
-endif()
-
 # Set some variables that customizes the behaviour of the ROOT macros
 set(CMAKE_ROOTTEST_DICT ON)
 
