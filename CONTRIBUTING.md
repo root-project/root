@@ -77,7 +77,7 @@ The commit message should be wrapped at 72 characters.
 
 The title of your PR follows the same principle as the commit summary. If your PR only involves one commit, you can
 reuse this summary. For non-functional changes (e.g. to the documentation) or changes for which you want to
-**temporarily** prevent Jenkins from being triggered (e.g., for a draft PR), use `[skip-CI]` as the first tag.
+**temporarily** prevent the Github CI from being triggered (e.g., for a draft PR), use `[skip-CI]` as the first tag.
 Note that for functional changes this tag needs to be removed and it has to pass the CI before merging to ensure
 the change does not break anything.
 
@@ -112,8 +112,7 @@ strongly encourage new developers to [run the tests](https://root.cern/for_devel
 _before_ submitting a pull request.
 
 ROOT has automated CI tests :cop: that are used for pull requests:
-- *Build and test*: a [Jenkins-based CI workflow](https://github.com/phsft-bot/build-configuration/blob/master/README.md)
-    as well as a GitHub Actions CI workflow tests PRs automatically; only a
+- *Build and test*: a GitHub Actions CI workflow tests PRs automatically; only a
     [project member](https://github.com/orgs/root-project/people) is allowed to initiate this build.
     The results are posted to the pull request.
     Compared to ROOT's nightly builds, PRs are tested with less tests, on less platforms.
