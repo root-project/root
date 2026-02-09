@@ -58,6 +58,12 @@ public:
    RBinIndex GetEnd() const { return fEnd; }
    // fNNormalBins is not exposed because it might be confusing for partial ranges.
 
+   bool IsInvalid() const
+   {
+      // fEnd can legally be invalid for full ranges including the overflow bin.
+      return fBegin.IsInvalid();
+   }
+
    friend bool operator==(const RBinIndexRange &lhs, const RBinIndexRange &rhs)
    {
       return lhs.fBegin == rhs.fBegin && lhs.fEnd == rhs.fEnd && lhs.fNNormalBins == rhs.fNNormalBins;

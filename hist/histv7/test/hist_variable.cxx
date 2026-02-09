@@ -266,6 +266,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange();
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -273,6 +274,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index0, indexBins);
       EXPECT_EQ(normal.GetBegin(), index0);
       EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
    }
 
@@ -281,6 +283,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto normal = axis.GetNormalRange(index1, index5);
       EXPECT_EQ(normal.GetBegin(), index1);
       EXPECT_EQ(normal.GetEnd(), index5);
+      EXPECT_FALSE(normal.IsInvalid());
       EXPECT_EQ(std::distance(normal.begin(), normal.end()), 4);
    }
 
@@ -288,6 +291,7 @@ TEST(RVariableBinAxis, GetNormalRange)
       const auto empty = axis.GetNormalRange(index1, index1);
       EXPECT_EQ(empty.GetBegin(), index1);
       EXPECT_EQ(empty.GetEnd(), index1);
+      EXPECT_FALSE(empty.IsInvalid());
       EXPECT_EQ(empty.begin(), empty.end());
       EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
    }
@@ -315,6 +319,7 @@ TEST(RVariableBinAxis, GetFullRange)
       const auto full = axis.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex::Underflow());
       EXPECT_EQ(full.GetEnd(), RBinIndex());
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
    }
 
@@ -323,6 +328,7 @@ TEST(RVariableBinAxis, GetFullRange)
       const auto full = axisNoFlowBins.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex(Bins));
+      EXPECT_FALSE(full.IsInvalid());
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
 }
