@@ -327,12 +327,9 @@ class ROOTFacade(types.ModuleType):
     @property
     def VecOps(self):
         ns = self._fallback_getattr("VecOps")
-        try:
-            from ._pythonization._rvec import _AsRVec
+        from ._pythonization._rvec import _AsRVec
 
-            ns.AsRVec = _AsRVec
-        except Exception:
-            raise Exception("Failed to pythonize the namespace VecOps")
+        ns.AsRVec = _AsRVec
         del type(self).VecOps
         return ns
 
@@ -403,6 +400,7 @@ class ROOTFacade(types.ModuleType):
             ns.Experimental.VariationsFor = _variationsfor(ns.Distributed.VariationsFor, ns.Experimental.VariationsFor)
             ns.Experimental.FromSpec = _fromspec(ns.Distributed.FromSpec, ns.Experimental.FromSpec)
         except ImportError:
+            # _rdf_namespace submodule not available (expected for dataframe=OFF)
             pass
 
         del type(self).RDF
@@ -422,41 +420,44 @@ class ROOTFacade(types.ModuleType):
 
             return _rdataframe(local_rdf, ROOT._distrdf.RDataFrame)
         except ImportError:
+            # _distrdf submodule not available (expected for dataframe=OFF)
             return local_rdf
 
     # Overload RooFit namespace
     @property
     def RooFit(self):
-        from ._pythonization._roofit import pythonize_roofit_namespace
-
         ns = self._fallback_getattr("RooFit")
         try:
-            pythonize_roofit_namespace(ns)
-        except Exception:
-            raise Exception("Failed to pythonize the namespace RooFit")
+            from ._pythonization._roofit import pythonize_roofit_namespace
+        except ImportError:
+            # _roofit submodule not available (expected for roofit=OFF)
+            del type(self).RooFit
+            return ns
+
+        pythonize_roofit_namespace(ns)
+
         del type(self).RooFit
         return ns
 
     # Overload TMVA namespace
     @property
     def TMVA(self):
-        # This line is needed to import the pythonizations in _tmva directory.
-        # The comment suppresses linter errors about unused imports.
-        from ._pythonization import _tmva  # noqa: F401
-        from ._pythonization._tmva._sofie._parser._keras.parser import PyKeras
-
         ns = self._fallback_getattr("TMVA")
-        setattr(ns.Experimental.SOFIE, "PyKeras", PyKeras)
-        hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
-        if hasRDF:
-            try:
-                from ._pythonization._tmva._rtensor import _AsRTensor
-                from ._pythonization._tmva._tree_inference import SaveXGBoost
+        try:
+            # This line is needed to import the pythonizations in _tmva directory.
+            # The comment suppresses linter errors about unused imports.
+            from ._pythonization import _tmva  # noqa: F401
+            from ._pythonization._tmva._rtensor import _AsRTensor
+            from ._pythonization._tmva._sofie._parser._keras.parser import PyKeras
+            from ._pythonization._tmva._tree_inference import SaveXGBoost
 
-                ns.Experimental.AsRTensor = _AsRTensor
-                ns.Experimental.SaveXGBoost = SaveXGBoost
-            except Exception:
-                raise Exception("Failed to pythonize the namespace TMVA")
+            setattr(ns.Experimental.SOFIE, "PyKeras", PyKeras)
+
+            ns.Experimental.AsRTensor = _AsRTensor
+            ns.Experimental.SaveXGBoost = SaveXGBoost
+        except ImportError:
+            # _tmva submodule not available (expected for tmva=OFF)
+            pass
         del type(self).TMVA
         return ns
 
@@ -498,12 +499,9 @@ class ROOTFacade(types.ModuleType):
         uhi_module = types.ModuleType("uhi")
         uhi_module.__file__ = "<module ROOT>"
         uhi_module.__package__ = self
-        try:
-            from ._pythonization._uhi import _add_module_level_uhi_helpers
+        from ._pythonization._uhi import _add_module_level_uhi_helpers
 
-            _add_module_level_uhi_helpers(uhi_module)
-        except ImportError:
-            raise Exception("Failed to pythonize the namespace uhi")
+        _add_module_level_uhi_helpers(uhi_module)
         return uhi_module
 
     @property
