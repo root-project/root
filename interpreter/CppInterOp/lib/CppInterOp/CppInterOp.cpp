@@ -62,6 +62,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
@@ -74,7 +75,6 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
-#include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -383,9 +383,7 @@ bool IsComplete(TCppScope_t scope) {
     QualType QT = QualType::getFromOpaquePtr(GetTypeFromScope(scope));
     clang::Sema& S = getSema();
     SourceLocation fakeLoc = GetValidSLoc(S);
-#ifdef CPPINTEROP_USE_CLING
-    cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif // CPPINTEROP_USE_CLING
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     return S.isCompleteType(fakeLoc, QT);
   }
 
@@ -799,8 +797,8 @@ TCppScope_t GetNamed(const std::string& name,
 #ifdef CPPINTEROP_USE_CLING
   if (Within)
     Within->getPrimaryContext()->buildLookup();
-  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
 #endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     return (TCppScope_t)(ND->getCanonicalDecl());
@@ -850,7 +848,7 @@ TCppScope_t GetBaseClass(TCppScope_t klass, TCppIndex_t ibase) {
 
   auto type = (CXXRD->bases_begin() + ibase)->getType();
   if (auto RT = type->getAs<RecordType>())
-    return (TCppScope_t)RT->getDecl();
+    return (TCppScope_t)RT->getDecl()->getCanonicalDecl();
 
   return 0;
 }
@@ -958,9 +956,7 @@ static void GetClassDecls(TCppScope_t klass,
     return;
 
   auto* CXXRD = dyn_cast<CXXRecordDecl>(D);
-#ifdef CPPINTEROP_USE_CLING
-  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif // CPPINTEROP_USE_CLING
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (CXXRD->hasDefinition())
     CXXRD = CXXRD->getDefinition();
   getSema().ForceDeclarationOfImplicitMembers(CXXRD);
@@ -1018,6 +1014,7 @@ TCppFunction_t GetDefaultConstructor(compat::Interpreter& interp,
     return nullptr;
 
   auto* CXXRD = (clang::CXXRecordDecl*)scope;
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   return interp.getCI()->getSema().LookupDefaultConstructor(CXXRD);
 }
 
@@ -1281,9 +1278,7 @@ BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
   auto& S = getSema();
   auto& C = S.getASTContext();
 
-#ifdef CPPINTEROP_USE_CLING
-  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   // The overload resolution interfaces in Sema require a list of expressions.
   // However, unlike handwritten C++, we do not always have a expression.
@@ -1655,7 +1650,8 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
       }
       if (auto* RD = llvm::dyn_cast<CXXRecordDecl>(FieldParentRecordDecl)) {
         // add in the offsets for the (multi level) base classes
-        while (BaseCXXRD != RD->getCanonicalDecl()) {
+        RD = RD->getCanonicalDecl();
+        while (BaseCXXRD != RD) {
           CXXRecordDecl* Parent = direction.at(RD);
           offset +=
               C.getASTRecordLayout(Parent).getBaseClassOffset(RD).getQuantity();
@@ -1679,9 +1675,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
       address = I.getAddressOfGlobal(GD);
     if (!address) {
       if (!VD->hasInit()) {
-#ifdef CPPINTEROP_USE_CLING
-        cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif // CPPINTEROP_USE_CLING
+        compat::SynthesizingCodeRAII RAII(&getInterp());
         getSema().InstantiateVariableDefinition(SourceLocation(), VD);
         VD = VD->getDefinition();
       }
@@ -2611,6 +2605,7 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
   //
   bool needInstantiation = false;
   const FunctionDecl* Definition = 0;
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (!FD->isDefined(Definition)) {
     FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
     switch (TK) {
@@ -3331,15 +3326,31 @@ void AddLibrarySearchPaths(const std::string& ResourceDir,
                                                  false, false);
   }
 }
+std::string ExtractArgument(const std::vector<const char*>& Args,
+                            const std::string& Arg) {
+  size_t I = 0;
+  for (auto i = Args.begin(); i != Args.end(); i++)
+    if ((++I < Args.size()) && (*i == Arg))
+      return *(++i);
+  return "";
+}
 } // namespace
 
 TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
                             const std::vector<const char*>& GpuArgs /*={}*/) {
   std::string MainExecutableName = sys::fs::getMainExecutable(nullptr, nullptr);
-  std::string ResourceDir = MakeResourcesPath();
+  // In some systems, CppInterOp cannot manually detect the correct resource.
+  // Then the -resource-dir passed by the user is assumed to be the correct
+  // location. Prioritising it over detecting it within CppInterOp. Extracting
+  // the resource-dir from the arguments is required because we set the
+  // necessary library search location explicitly below. Because by default,
+  // linker flags are ignored in repl (issue #748)
+  std::string ResourceDir = ExtractArgument(Args, "-resource-dir");
+  if (ResourceDir.empty())
+    ResourceDir = MakeResourcesPath();
   llvm::Triple T(llvm::sys::getProcessTriple());
-  namespace fs = std::filesystem;
-  if ((!fs::is_directory(ResourceDir)) && (T.isOSDarwin() || T.isOSLinux()))
+  if ((!sys::fs::is_directory(ResourceDir)) &&
+      (T.isOSDarwin() || T.isOSLinux()))
     ResourceDir = DetectResourceDir();
 
   std::vector<const char*> ClingArgv = {"-resource-dir", ResourceDir.c_str(),
@@ -3871,11 +3882,8 @@ TCppScope_t InstantiateTemplate(compat::Interpreter& I, TCppScope_t tmpl,
   }
 
   TemplateDecl* TmplD = static_cast<TemplateDecl*>(tmpl);
-
   // We will create a new decl, push a transaction.
-#ifdef CPPINTEROP_USE_CLING
-  cling::Interpreter::PushTransactionRAII RAII(&I);
-#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   return InstantiateTemplate(TmplD, TemplateArgs, S, instantiate_body);
 }
 
@@ -3934,9 +3942,7 @@ void GetAllCppNames(TCppScope_t scope, std::set<std::string>& names) {
   clang::DeclContext* DC;
   clang::DeclContext::decl_iterator decl;
 
-#ifdef CPPINTEROP_USE_CLING
-  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   if (auto* TD = dyn_cast_or_null<TagDecl>(D)) {
     DC = clang::TagDecl::castToDeclContext(TD);
@@ -4014,9 +4020,7 @@ bool IsTypeDerivedFrom(TCppType_t derived, TCppType_t base) {
   auto derivedType = clang::QualType::getFromOpaquePtr(derived);
   auto baseType = clang::QualType::getFromOpaquePtr(base);
 
-#ifdef CPPINTEROP_USE_CLING
-  cling::Interpreter::PushTransactionRAII RAII(&getInterp());
-#endif
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   return S.IsDerivedFrom(fakeLoc, derivedType, baseType);
 }
 
@@ -4035,6 +4039,7 @@ std::string GetFunctionArgDefault(TCppFunction_t func,
     std::string Result;
     llvm::raw_string_ostream OS(Result);
     Expr* DefaultArgExpr = nullptr;
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     if (PI->hasUninstantiatedDefaultArg())
       DefaultArgExpr = PI->getUninstantiatedDefaultArg();
     else
@@ -4120,6 +4125,7 @@ OperatorArity GetOperatorArity(TCppFunction_t op) {
 void GetOperator(TCppScope_t scope, Operator op,
                  std::vector<TCppFunction_t>& operators, OperatorArity kind) {
   Decl* D = static_cast<Decl*>(scope);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
     auto fn = [&operators, kind, op](const RecordDecl* RD) {
       ASTContext& C = RD->getASTContext();
@@ -4349,10 +4355,9 @@ void CodeComplete(std::vector<std::string>& Results, const char* code,
 }
 
 int Undo(unsigned N) {
+  compat::SynthesizingCodeRAII RAII(&getInterp());
 #ifdef CPPINTEROP_USE_CLING
-  auto& I = getInterp();
-  cling::Interpreter::PushTransactionRAII RAII(&I);
-  I.unload(N);
+  getInterp().unload(N);
   return compat::Interpreter::kSuccess;
 #else
   return getInterp().undo(N);
