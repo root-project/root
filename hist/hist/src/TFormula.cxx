@@ -1845,13 +1845,15 @@ void TFormula::HandleLinear(TString &formula)
    TString expandedFormula = "";
    int delimeterPos = 0;
    for(std::size_t iTerm = 0; iTerm < terms.size(); ++iTerm) {
-      // determine the position of the "@" operator in the formula
-      delimeterPos += terms[iTerm].size() + (iTerm == 0);
-      if(IsAParameterName(formula, delimeterPos)) {
-         // append the current term and the remaining formula unchanged to the expanded formula
-         expandedFormula += terms[iTerm];
-         expandedFormula += formula(delimeterPos, formula.Length() - (delimeterPos + 1));
-         break;
+      if (iTerm < terms.size() - 1) { // N terms, N - 1 @
+         // determine the position of the "@" operator in the formula
+         delimeterPos += terms[iTerm].size() + iTerm;
+         if(IsAParameterName(formula, delimeterPos)) {
+            // append the current term and the remaining formula unchanged to the expanded formula
+            expandedFormula += terms[iTerm];
+            expandedFormula += formula(delimeterPos, formula.Length() - delimeterPos);
+            break;
+         }
       }
       SetBit(kLinear, true);
       auto termName = std::string("__linear") + std::to_string(iTerm+1);
