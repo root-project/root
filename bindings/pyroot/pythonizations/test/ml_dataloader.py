@@ -4683,7 +4683,36 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 self.teardown_file(file_name2)
                 raise
 
+        def test_raises(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
+            define_rdf_major(num_of_entries_major, file_name1)
+            define_rdf_minor(num_of_entries_minor, file_name2)
+
+            df1 = ROOT.RDataFrame(tree_name, file_name1)
+            df2 = ROOT.RDataFrame(tree_name, file_name2)
+
+            with self.assertRaisesRegex(
+                Exception, r"The sampling_ratio is too low: not enough entries in the majority class to sample from."
+            ):
+                ROOT.Experimental.ML.CreateNumPyGenerators(
+                    [df1, df2],
+                    batch_size=size_of_batch,
+                    target=["b3", "b5"],
+                    weights="b1",
+                    validation_split=0.3,
+                    shuffle=False,
+                    drop_remainder=False,
+                    load_eager=True,
+                    sampling_type="undersampling",
+                    sampling_ratio=sampling_ratio,
+                    replacement=False,
+                )
+
+        # test the functionality with a proper sampling ratio
         test(batch_size, entries_in_rdf_major, entries_in_rdf_minor, sampling_ratio)
+
+        bad_sampling_ratio = round(max(min_allowed_sampling_ratio - 0.01, 0.01), 2)
+        # test that an error is raised when the sampling ratio is too low
+        test_raises(batch_size, entries_in_rdf_major, entries_in_rdf_minor, bad_sampling_ratio)
 
     def test14_big_data_replacement_true(self):
         file_name1 = "big_data_major.root"
