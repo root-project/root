@@ -77,6 +77,7 @@ SOURCES
   src/RNTupleProcessor.cxx
   src/RNTupleReader.cxx
   src/RNTupleSerialize.cxx
+  src/RNTupleTypes.cxx
   src/RNTupleUtils.cxx
   src/RNTupleWriteOptions.cxx
   src/RNTupleWriter.cxx
