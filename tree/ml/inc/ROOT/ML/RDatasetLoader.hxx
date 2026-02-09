@@ -155,8 +155,8 @@ public:
    /// \param[in] ValidationDataset Tensor for the validation dataset
    void SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &TrainingDataset, RFlat2DMatrix &ValidationDataset)
    {
-      std::size_t NumEntries = rdf.Count().GetValue();
       ROOT::RDF::RResultPtr<std::vector<ULong64_t>> Entries = rdf.Take<ULong64_t>("rdfentry_");
+      const std::size_t NumEntries = Entries->size();
 
       // add the last element in entries to not go out of range when filling chunks
       Entries->push_back((*Entries)[NumEntries - 1] + 1);
