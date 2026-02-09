@@ -123,19 +123,19 @@ public:
    }
 
    /// Construct an array of `nElements` container objects and return the base address of the array
-   virtual void *NewArray(Int_t nElements) const { return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements); }
+   virtual void *NewArray(Long64_t nElements) const { return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements); }
    /// Construct an array of `nElements` container objects at the address given by `arena`
-   virtual void *NewArray(Int_t nElements, void *arena) const
+   virtual void *NewArray(Long64_t nElements, void *arena) const
    {
       return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements, arena);
    }
    /// Construct an array of `nElements` container objects and return the base address of the array
-   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements) const
+   virtual TClass::ObjectPtr NewObjectArray(Long64_t nElements) const
    {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObjectArray(nElements);
    }
    /// Construct an array of `nElements` container objects at the address given by `arena`
-   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements, void *arena) const
+   virtual TClass::ObjectPtr NewObjectArray(Long64_t nElements, void *arena) const
    {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObjectArray(nElements, arena);
    }
