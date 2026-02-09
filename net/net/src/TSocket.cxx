@@ -804,59 +804,69 @@ Int_t TSocket::Recv(Int_t &status, Int_t &kind)
 /// Returns length of message in bytes (can be 0 if other side of connection
 /// is closed) or -1 in case of error or -4 in case a non-blocking socket
 /// would block (i.e. there is nothing to be read) or -5 if pipe broken
-/// or reset by peer (EPIPE || ECONNRESET). In those case mess == 0.
+/// or reset by peer (EPIPE || ECONNRESET). In those case mess == nullptr.
 
 Int_t TSocket::Recv(TMessage *&mess)
 {
    TSystem::ResetErrno();
 
    if (!IsValid()) {
-      mess = 0;
+      mess = nullptr;
       return -1;
    }
 
-oncemore:
-   ResetBit(TSocket::kBrokenConn);
    Int_t  n;
-   UInt_t len;
-   if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
-      if (n == 0 || n == -5) {
-         // Connection closed, reset or broken
-         MarkBrokenConnection();
+   while (1) {
+      ResetBit(TSocket::kBrokenConn);
+      UInt_t len;
+      if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
+         if (n == 0 || n == -5) {
+            // Connection closed, reset or broken
+            MarkBrokenConnection();
+         }
+         mess = nullptr;
+         return n;
       }
-      mess = 0;
-      return n;
-   }
-   len = net2host(len);  //from network to host byte order
+      len = net2host(len);  //from network to host byte order
 
-   ResetBit(TSocket::kBrokenConn);
-   char *buf = new char[len+sizeof(UInt_t)];
-   if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
-      if (n == 0 || n == -5) {
-         // Connection closed, reset or broken
-         MarkBrokenConnection();
+      ResetBit(TSocket::kBrokenConn);
+      char *buf = new char[len+sizeof(UInt_t)];
+      if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
+         if (n == 0 || n == -5) {
+            // Connection closed, reset or broken
+            MarkBrokenConnection();
+         }
+         delete [] buf;
+         mess = nullptr;
+         return n;
       }
-      delete [] buf;
-      mess = 0;
-      return n;
+
+      fBytesRecv  += n + sizeof(UInt_t);
+      fgBytesRecv += n + sizeof(UInt_t);
+
+      // `buf` becomes owned by the TMessage.
+      mess = new TMessage(buf, len+sizeof(UInt_t));
+
+      // receive any streamer infos
+      bool streamerInfoReceived = RecvStreamerInfos(mess);
+      if (streamerInfoReceived) {
+         // do another loop. No need to delete `mess` because RecvStreamerInfos already did it.
+         continue;
+      }
+
+      // receive any process ids
+      bool processIdReceived = RecvProcessIDs(mess);
+      if (processIdReceived) {
+         // do another loop. No need to delete `mess` because RecvProcessIDs already did it.
+         continue;
+      }
+
+      break;
    }
-
-   fBytesRecv  += n + sizeof(UInt_t);
-   fgBytesRecv += n + sizeof(UInt_t);
-
-   mess = new TMessage(buf, len+sizeof(UInt_t));
-
-   // receive any streamer infos
-   if (RecvStreamerInfos(mess))
-      goto oncemore;
-
-   // receive any process ids
-   if (RecvProcessIDs(mess))
-      goto oncemore;
 
    if (mess->What() & kMESS_ACK) {
       ResetBit(TSocket::kBrokenConn);
-      char ok[2] = { 'o', 'k' };
+      const char ok[2] = { 'o', 'k' };
       Int_t n2 = 0;
       if ((n2 = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
          if (n2 == -5) {
@@ -864,7 +874,7 @@ oncemore:
             MarkBrokenConnection();
          }
          delete mess;
-         mess = 0;
+         mess = nullptr;
          return n2;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);
