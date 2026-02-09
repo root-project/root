@@ -149,8 +149,8 @@ public:
    {
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
 
-      fNumEntries = f_rdf.Count().GetValue();
       fEntries = f_rdf.Take<ULong64_t>("rdfentry_");
+      fNumEntries = fEntries->size();
 
       // add the last element in entries to not go out of range when filling chunks
       fEntries->push_back((*fEntries)[fNumEntries - 1] + 1);
