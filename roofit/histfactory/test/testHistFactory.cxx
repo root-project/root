@@ -28,6 +28,7 @@
 
 #include "../../roofitcore/test/gtest_wrapper.h"
 
+#include <regex>
 #include <set>
 
 namespace {
@@ -709,3 +710,87 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(false, true), // non-uniform bins or not
                                           testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
+
+// Regression test for the HS3 importer's handling of "shapefactor" modifiers.
+// HistFactory's ShapeFactor is exported with type "shapesys" (the only
+// modifier type the writer ever emits for a ParamHistFunc), but valid HS3 JSON
+// may also use the dedicated "shapefactor" type for an unconstrained
+// ParamHistFunc - and the importer must accept it. This test starts from a
+// HistFactory model built with MakeModelAndMeasurementFast, rewrites the
+// modifier type to "shapefactor" in the JSON, and checks that the importer
+// recognises it. Without the fix in JSONFactories_HistFactory.cxx the import
+// throws "modifier ... of unknown type 'shapefactor'".
+TEST(HistFactory, HS3ImportShapeFactorModifier)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string inputFile = "TestHS3ShapeFactor.root";
+   {
+      TFile f(inputFile.c_str(), "RECREATE");
+      auto *data = new TH1D("data", "data", 2, 1, 2);
+      auto *signal = new TH1D("signal", "signal", 2, 1, 2);
+      auto *bkg = new TH1D("background", "background", 2, 1, 2);
+      data->SetBinContent(1, 220);
+      data->SetBinContent(2, 230);
+      signal->SetBinContent(1, 10);
+      signal->SetBinContent(2, 20);
+      bkg->SetBinContent(1, 200);
+      bkg->SetBinContent(2, 200);
+      for (auto *h : {data, signal, bkg})
+         f.WriteTObject(h);
+   }
+
+   Measurement meas("meas", "meas");
+   meas.SetOutputFilePrefix("HS3ShapeFactor");
+   meas.SetPOI("SigXsecOverSM");
+   meas.AddConstantParam("Lumi");
+   meas.SetLumi(1.0);
+   meas.SetLumiRelErr(0.10);
+
+   Channel chan("channel1");
+   chan.SetData("data", inputFile);
+
+   Sample sig("signal", "signal", inputFile);
+   sig.AddNormFactor("SigXsecOverSM", 1, 0, 3);
+   chan.AddSample(sig);
+
+   // ShapeFactor on the background: an unconstrained, bin-by-bin scaling.
+   // Make the gammas constant so that the workspace is well-defined for
+   // re-export (free shapefactor gammas have no constraints attached).
+   Sample bkg("background", "background", inputFile);
+   ShapeFactor sf;
+   sf.SetName("bkgShape");
+   sf.SetConstant(true);
+   bkg.AddShapeFactor(sf);
+   chan.AddSample(bkg);
+
+   meas.AddChannel(chan);
+   meas.CollectHistograms();
+
+   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+   ASSERT_NE(ws, nullptr);
+
+   const std::string js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+
+   // Rewrite the modifier type for "bkgShape" from "shapesys" to "shapefactor".
+   // The HistFactory exporter always writes "shapesys", but the importer should
+   // accept the more accurate "shapefactor" type as well.
+   const std::regex pattern{"\"name\":\"bkgShape\",\"parameters\":\\[([^\\]]*)\\],\"type\":\"shapesys\""};
+   const std::string jsShapeFactor =
+      std::regex_replace(js, pattern, "\"name\":\"bkgShape\",\"parameters\":[$1],\"type\":\"shapefactor\"");
+   ASSERT_NE(js, jsShapeFactor) << "Failed to substitute shapesys -> shapefactor in JSON";
+
+   RooWorkspace wsFromJson{"new"};
+   ASSERT_NO_THROW(RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(jsShapeFactor))
+      << "Importer rejected the 'shapefactor' modifier type";
+
+   // The imported workspace should expose the same ParamHistFunc gammas.
+   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_0"), nullptr);
+   EXPECT_NE(wsFromJson.var("gamma_bkgShape_bin_1"), nullptr);
+
+   // Re-exporting should give back the original JSON, since the writer emits
+   // type "shapesys" in both cases.
+   const std::string js2 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
+   EXPECT_EQ(js, js2) << "JSON -> WS -> JSON roundtrip changed the JSON";
+}
