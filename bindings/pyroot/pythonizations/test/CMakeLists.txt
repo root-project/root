@@ -13,6 +13,7 @@ endif()
 
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
+ROOT_ADD_PYUNITTEST(pyroot_root_no_implicit_cppyy root_no_implicit_cppyy.py)
 
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
