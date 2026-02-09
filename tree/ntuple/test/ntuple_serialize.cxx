@@ -380,22 +380,23 @@ TEST(RNTuple, SerializeLocator)
    locator.SetType(RNTupleLocator::kTypeDAOS);
    locator.SetPosition(RNTupleLocatorObject64{1337U});
    locator.SetNBytesOnStorage(420420U);
-   locator.SetReserved(0x5a);
+   locator.SetReserved(0);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
    EXPECT_EQ(locator.GetNBytesOnStorage(), 420420U);
-   EXPECT_EQ(locator.GetReserved(), 0x5a);
+   EXPECT_EQ(locator.GetReserved(), 0);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   locator.SetReserved(1);
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
    EXPECT_EQ(locator.GetNBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
-   EXPECT_EQ(locator.GetReserved(), 0x5a);
+   EXPECT_EQ(locator.GetReserved(), 1);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
