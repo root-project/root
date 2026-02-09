@@ -3736,7 +3736,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("\"$BuildDir","$BuildDir");
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
-   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir());
+   // Add relevant directories to RPATH:
+   // - Directory with all the ROOT libraries.
+   // - Directory where this shared library is being created. This enables creating multiple
+   //   libraries via ACLiC in the same session and have them depend on each other without
+   //   the need to set further environment variables.
+   cmd.ReplaceAll("$RPath", "-Wl,-rpath," + gROOT->GetSharedLibDir() + " -Wl,-rpath," + build_loc);
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
