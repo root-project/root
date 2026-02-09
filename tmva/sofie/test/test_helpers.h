@@ -70,22 +70,6 @@ runModel(std::string outputTypeName, std::string const &modelName, std::string s
       outputTypeName = "std::tuple<std::vector<float>, std::vector<int64_t>>";
    }
 
-   // Helper: map C++ type -> string used in interpreter
-   auto type_name = []<typename T>() {
-      if constexpr (std::is_same_v<T, int>)
-         return "int";
-      else if constexpr (std::is_same_v<T, std::vector<float>>)
-         return "std::vector<float>";
-      else if constexpr (std::is_same_v<T, std::vector<int>>)
-         return "std::vector<float>";
-      else if constexpr (std::is_same_v<T, std::vector<int64_t>>)
-         return "std::vector<int64_t>";
-      else if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
-         return "std::vector<uint8_t>";
-      else
-         static_assert(!sizeof(T), "Input type not supported");
-   };
-
    std::stringstream cmd;
 
    if (sessionArgs.empty()) {
@@ -104,15 +88,34 @@ runModel(std::string outputTypeName, std::string const &modelName, std::string s
    }
 
    // Emit all inputs to s.infer(...)
-   bool first = true;
-   (
-      [&] {
-         if (!first)
-            cmd << ", ";
-         first = false;
-         cmd << toInterpreter(inputs, type_name.template operator()<Ts>(), true);
-      }(),
-      ...);
+   if constexpr (sizeof...(Ts) > 0) {
+
+      // Helper: map C++ type -> string used in interpreter
+      auto type_name = []<typename T>() {
+         if constexpr (std::is_same_v<T, int>)
+            return "int";
+         else if constexpr (std::is_same_v<T, std::vector<float>>)
+            return "std::vector<float>";
+         else if constexpr (std::is_same_v<T, std::vector<int>>)
+            return "std::vector<float>";
+         else if constexpr (std::is_same_v<T, std::vector<int64_t>>)
+            return "std::vector<int64_t>";
+         else if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
+            return "std::vector<uint8_t>";
+         else
+            static_assert(!sizeof(T), "Input type not supported");
+      };
+
+      bool first = true;
+      (
+         [&] {
+            if (!first)
+               cmd << ", ";
+            first = false;
+            cmd << toInterpreter(inputs, type_name.template operator()<Ts>(), true);
+         }(),
+         ...);
+   }
 
    cmd << R"();
    std::swap(output, *)"
