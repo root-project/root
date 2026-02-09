@@ -47,6 +47,7 @@ During filling, it accepts an additional `double` value and accumulates its sum 
 
 *Slicing* means to extract a subset of the normal bins in each dimension.
 Bin contents of excluded normal bins are added to the flow bins.
+During slicing, operations allow to *rebin* a dimension or *sum* the sliced bins.
 
 A *snapshot* is a consistent clone of the histogram during concurrent filling.
 
