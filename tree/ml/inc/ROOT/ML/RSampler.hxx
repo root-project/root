@@ -103,6 +103,14 @@ public:
       fNumMajor = fDatasets[fMajor].GetRows();
       fNumMinor = fDatasets[fMinor].GetRows();
       fNumResampledMajor = static_cast<std::size_t>(fNumMinor / fSampleRatio);
+      if (!fReplacement && fNumResampledMajor > fNumMajor) {
+         auto minRatio = std::to_string(std::round(double(fNumMinor) / double(fNumMajor) * 100.0) / 100.0);
+         minRatio.erase(minRatio.find('.') + 3);
+         throw std::invalid_argument(
+            "The sampling_ratio is too low: not enough entries in the majority class to sample from.\n"
+            "Choose sampling_ratio > " +
+            minRatio + " or set replacement to True.");
+      }
       fNumEntries = fNumMinor + fNumResampledMajor;
    }
 
