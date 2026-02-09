@@ -216,6 +216,8 @@ namespace textinput {
       gExtKeyMap['[']['4']['~'] = InputData::kEIEnd;
       gExtKeyMap['[']['5']['~'] = InputData::kEIPgUp;
       gExtKeyMap['[']['6']['~'] = InputData::kEIPgDown;
+      gExtKeyMap['[']['7']['~'] = InputData::kEIHome; // urxvt
+      gExtKeyMap['[']['8']['~'] = InputData::kEIEnd;  // urxvt
       gExtKeyMap['[']['1'][';']['5']['A'].Set(InputData::kEIUp,
                                          InputData::kModCtrl);
       gExtKeyMap['[']['1'][';']['5']['B'].Set(InputData::kEIDown,
