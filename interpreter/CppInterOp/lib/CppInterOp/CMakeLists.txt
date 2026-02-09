@@ -54,10 +54,6 @@ if(NOT WIN32 AND NOT EMSCRIPTEN)
   list(APPEND link_libs dl)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-  list(APPEND link_libs stdc++fs)
-endif()
-
 # Get rid of libLLVM-X.so which is appended to the list of static libraries.
 if (LLVM_LINK_LLVM_DYLIB)
   set(new_libs ${link_libs})
