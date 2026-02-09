@@ -1748,6 +1748,20 @@ class TestSTLSTRING_VIEW:
         gc.collect()    # id.
 
         assert "Lorem ipsum dolor sit amet" in str(text)
+    
+    def  test03_string_view_pythonize(self):
+        """Pythonization of std::string_view"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        std::string_view s = "Hello, World!";
+        """)
+
+        from cppyy.gbl import s
+
+        assert(s == "Hello, World!")
+        assert(str(s) == "Hello, World!")
 
 
 class TestSTLDEQUE:
