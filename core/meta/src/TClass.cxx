@@ -5323,8 +5323,9 @@ TClass::ObjectPtr TClass::NewObject(void *arena, ENewType defConstructor) const
 /// The class must have a default constructor. For meaning of
 /// defConstructor, see TClass::IsCallingNew().
 
-void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
+void *TClass::NewArray(Long64_t nElements, ENewType defConstructor) const
 {
+   R__ASSERT(nElements >= 0 && "Possible corruption of the heap: negative number of elements requested in TClass::NewObjectArray");
    auto obj = NewObjectArray(nElements, defConstructor);
    if (obj.GetPtr() && obj.GetAllocator()) {
       // Register the object for special handling in the destructor.
@@ -5339,8 +5340,9 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 /// The class must have a default constructor. For meaning of
 /// defConstructor, see TClass::IsCallingNew().
 
-TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstructor) const
+TClass::ObjectPtr TClass::NewObjectArray(Long64_t nElements, ENewType defConstructor) const
 {
+   R__ASSERT(nElements >= 0 && "Possible corruption of the heap: negative number of elements requested in TClass::NewObjectArray");
    ObjectPtr p;
 
    if (fNewArray) {
@@ -5425,8 +5427,9 @@ TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, ENewType defConstruct
 /// The class must have a default constructor. For meaning of
 /// defConstructor, see TClass::IsCallingNew().
 
-void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) const
+void *TClass::NewArray(Long64_t nElements, void *arena, ENewType defConstructor) const
 {
+   R__ASSERT(nElements >= 0 && "Possible corruption of the heap: negative number of elements requested in TClass::NewObjectArray");
    auto obj = NewObjectArray(nElements, arena, defConstructor);
    if (obj.GetPtr() && obj.GetAllocator()) {
       // Register the object for special handling in the destructor.
@@ -5440,8 +5443,9 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
 /// The class must have a default constructor. For meaning of
 /// defConstructor, see TClass::IsCallingNew().
 
-TClass::ObjectPtr TClass::NewObjectArray(Long_t nElements, void *arena, ENewType defConstructor) const
+TClass::ObjectPtr TClass::NewObjectArray(Long64_t nElements, void *arena, ENewType defConstructor) const
 {
+   R__ASSERT(nElements >= 0 && "Possible corruption of the heap: negative number of elements requested in TClass::NewObjectArray");
    ObjectPtr p;
 
    if (fNewArray) {
