@@ -29,26 +29,30 @@ class BaseGenerator:
     def get_template(
         self,
         x_rdf: ROOT.RDF.RNode,
-        columns: list[str] = list(),
-        max_vec_sizes: dict[str, int] = dict(),
+        columns: list[str] | None = None,
+        max_vec_sizes: dict[str, int] | None = None,
     ) -> Tuple[str, list[int]]:
         """
         Generate a template for the DataLoader based on the given
         RDataFrame and columns.
 
         Args:
-            rdataframe (RNode): RDataFrame or RNode object.
-            columns (list[str]): Columns that should be loaded.
+            x_rdf (RNode): RDataFrame or RNode object.
+            columns (list[str], optional): Columns that should be loaded.
                                  Defaults to loading all columns
                                  in the given RDataFrame
-            max_vec_sizes (list[int]): The length of each vector based column.
+            max_vec_sizes (dict[str, int], optional):
+                                 Mapping from vector column name
+                                 to the maximum size of the vector.
+                                 Required when using vector based columns.
 
         Returns:
-            template (str): Template for the DataLoader
+            Tuple[str, list[int]]: Template string for the DataLoader and list of max vector sizes
         """
-
         if not columns:
             columns = x_rdf.GetColumnNames()
+        if max_vec_sizes is None:
+            max_vec_sizes = {}
 
         template_string = ""
 
@@ -83,14 +87,14 @@ class BaseGenerator:
 
     def __init__(
         self,
-        rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),
+        rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None = None,
         batch_size: int = 0,
         chunk_size: int = 0,
         block_size: int = 0,
-        columns: list[str] = list(),
-        max_vec_sizes: dict[str, int] = dict(),
+        columns: list[str] | None = None,
+        max_vec_sizes: dict[str, int] | None = None,
         vec_padding: int = 0,
-        target: str | list[str] = list(),
+        target: str | list[str] | None = None,
         weights: str = "",
         validation_split: float = 0.0,
         max_chunks: int = 0,
@@ -101,67 +105,78 @@ class BaseGenerator:
         sampling_type: str = "",
         sampling_ratio: float = 1.0,
         replacement: bool = False,
-    ):
-        """Wrapper around the Cpp DataLoader
+    ) -> None:
+        """Wrapper around the C++ DataLoader
 
         Args:
-        rdataframe (RNode): Name of RNode object.
-        batch_size (int): Size of the returned chunks.
-        chunk_size (int):
-            The size of the chunks loaded from the ROOT file. Higher chunk size
-            results in better randomization, but also higher memory usage.
-        block_size (int):
-            The size of the blocks of consecutive entries from the dataframe.
-            A chunk is build up from multiple blocks. Lower block size results in
-            a better randomization, but also higher memory usage.
-        columns (list[str], optional):
-            Columns to be returned. If not given, all columns are used.
-        max_vec_sizes (dict[std, int], optional):
-            Size of each column that consists of vectors.
-            Required when using vector based columns.
-        vec_padding (int):
-            Value to pad vectors with if the vector is smaller
-            than the given max vector length. Defaults is 0
-        target (str|list[str], optional):
-            Column(s) used as target.
-        weights (str, optional):
-            Column used to weight events.
-            Can only be used when a target is given.
-        validation_split (float, optional):
-            The ratio of batches being kept for validation.
-            Value has to be between 0 and 1. Defaults to 0.0.
-        max_chunks (int, optional):
-            The number of chunks that should be loaded for an epoch.
-            If not given, the whole file is used.
-        shuffle (bool):
-            Batches consist of random events and are shuffled every epoch.
-            Defaults to True.
-        drop_remainder (bool):
-            Drop the remainder of data that is too small to compose full batch.
-            Defaults to True.
-        set_seed (int):
-            For reproducibility: Set the seed for the random number generator used
-            to split the dataset into training and validation and shuffling of the chunks
-            Defaults to 0 which means that the seed is set to the random device.
-        load_eager (bool):
-            Load the full dataframe(s) into memory (True) or
-            load chunks from the dataframe into memory (False).
-            Defuaults to False.
-        sampling_type (str):
-            Describes the mode of sampling from the minority and majority dataframes.
-            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
-            For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
-            where the dataframe with the most entries is the majority dataframe
-            and the dataframe with the fewest entries is the minority dataframe.
-        sampling_ratio (float):
-            Ratio of minority and majority entries in the resampled dataset.
-            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
-        replacement (bool):
-            Whether the sampling is with (True) or without (False) replacement.
-            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
+            rdataframes (ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None):
+                RDataFrame or list of RDataFrames to load from.
+            batch_size (int):
+                Number of entries per batch returned by the generator.
+            chunk_size (int):
+                The size of the chunks loaded from the ROOT file. Higher chunk size
+                results in better randomization, but also higher memory usage.
+            block_size (int):
+                The size of the blocks of consecutive entries from the dataframe.
+                A chunk is built up from multiple blocks. Lower block size results in
+                a better randomization, but also higher memory usage.
+            columns (list[str] | None):
+                Names of columns to load. If not given, all columns are used.
+            max_vec_sizes (dict[str, int] | None):
+                Mapping from vector column name to the maximum size of the vector.
+                Required when using vector based columns.
+            vec_padding (int):
+                Value used to pad vectors with if the vector is smaller
+                than the given max vector length. Defaults to 0.
+            target (str | list[str] | None):
+                Name or list of names of target column(s).
+            weights (str):
+                Column used to weight events.
+                Can only be used when a target is given.
+            validation_split (float):
+                The ratio of batches being kept for validation.
+                Value has to be between 0 and 1. Defaults to 0.0.
+            max_chunks (int):
+                The number of chunks that should be loaded for an epoch.
+                If not given, the whole file is used.
+            shuffle (bool):
+                Batches consist of random events and are shuffled every epoch.
+                Defaults to True.
+            drop_remainder (bool):
+                Drop the remainder of data that is too small to compose full batch.
+                Defaults to True.
+            set_seed (int):
+                For reproducibility: Set the seed for the random number generator used
+                to split the dataset into training and validation and shuffling of the chunks
+                Defaults to 0 which means that the seed is set to the random device.
+            load_eager (bool):
+                If True, load the full dataset(s) into memory.
+                If False, load data lazily in chunks. Defaults to False.
+            sampling_type (str):
+                Describes the mode of sampling from the minority and majority dataframes.
+                Supported values are ``"undersampling"`` and ``"oversampling"``. Requires ``load_eager=True``.
+                Defaults to ``""``.
+                For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
+                where the dataframe with the most entries is the majority dataframe
+                and the dataframe with the fewest entries is the minority dataframe.
+            sampling_ratio (float):
+                Ratio of minority and majority entries in the resampled dataset.
+                Requires ``load_eager=True`` and ``sampling_type="undersampling"`` or ``"oversampling"``. Defaults to 1.0.
+            replacement (bool):
+                Whether the sampling is with (True) or without (False) replacement.
+                Requires ``load_eager=True`` and ``sampling_type="undersampling"``. Defaults to False.
         """
 
         from ROOT import RDF
+
+        if rdataframes is None:
+            rdataframes = []
+        if columns is None:
+            columns = []
+        if max_vec_sizes is None:
+            max_vec_sizes = {}
+        if target is None or target == "":
+            target = []
 
         if not load_eager and chunk_size < batch_size:
             raise ValueError(
@@ -185,7 +200,7 @@ class BaseGenerator:
         self.target_columns = target
         self.weights_column = weights
 
-        template, max_vec_sizes_list = self.get_template(rdataframes[0], columns, max_vec_sizes)
+        template, max_vec_sizes_list = self.get_template(self.noded_rdfs[0], columns, max_vec_sizes)
 
         self.num_columns = len(self.all_columns)
         self.batch_size = batch_size
@@ -661,14 +676,14 @@ class ValidationDataLoader:
 
 
 def CreateNumPyGenerators(
-    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None = None,
     batch_size: int = 0,
     chunk_size: int = 0,
     block_size: int = 0,
-    columns: list[str] = list(),
-    max_vec_sizes: dict[str, int] = dict(),
+    columns: list[str] | None = None,
+    max_vec_sizes: dict[str, int] | None = None,
     vec_padding: int = 0,
-    target: str | list[str] = list(),
+    target: str | list[str] | None = None,
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -679,41 +694,46 @@ def CreateNumPyGenerators(
     sampling_type: str = "",
     sampling_ratio: float = 1.0,
     replacement: bool = False,
-) -> Tuple[TrainDataLoader, ValidationDataLoader]:
+) -> Tuple[TrainDataLoader, ValidationDataLoader | None]:
     """
     Return two batch generators based on the given ROOT file and tree or RDataFrame
     The first generator returns training batches, while the second generator
     returns validation batches
 
     Args:
-        rdataframe (RNode): Name of RNode object.
-        batch_size (int): Size of the returned chunks.
+        rdataframes (ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None):
+            RDataFrame or list of RDataFrames to load from.
+        batch_size (int):
+            Number of entries per batch returned by the generator.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
         block_size (int):
             The size of the blocks of consecutive entries from the dataframe.
-            A chunk is build up from multiple blocks. Lower block size results in
+            A chunk is built up from multiple blocks. Lower block size results in
             a better randomization, but also higher memory usage.
-        columns (list[str], optional):
-            Columns to be returned. If not given, all columns are used.
-        max_vec_sizes (list[int], optional):
-            Size of each column that consists of vectors.
-            Required when using vector based columns
-        target (str|list[str], optional):
-            Column(s) used as target.
-        weights (str, optional):
+        columns (list[str] | None):
+            Names of columns to load. If not given, all columns are used.
+        max_vec_sizes (dict[str, int] | None):
+            Mapping from vector column name to the maximum size of the vector.
+            Required when using vector based columns.
+        vec_padding (int):
+            Value used to pad vectors with if the vector is smaller
+            than the given max vector length. Defaults to 0.
+        target (str | list[str] | None):
+            Name or list of names of target column(s).
+        weights (str):
             Column used to weight events.
-            Can only be used when a target is given
-        validation_split (float, optional):
+            Can only be used when a target is given.
+        validation_split (float):
             The ratio of batches being kept for validation.
-            Value has to be from 0.0 to 1.0. Defaults to 0.0.
-        max_chunks (int, optional):
+            Value has to be between 0 and 1. Defaults to 0.0.
+        max_chunks (int):
             The number of chunks that should be loaded for an epoch.
-            If not given, the whole file is used
+            If not given, the whole file is used.
         shuffle (bool):
-            randomize the training batches every epoch.
-            Defaults to True
+            Batches consist of random events and are shuffled every epoch.
+            Defaults to True.
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
@@ -728,25 +748,25 @@ def CreateNumPyGenerators(
             to split the dataset into training and validation and shuffling of the chunks
             Defaults to 0 which means that the seed is set to the random device.
         load_eager (bool):
-            Load the full dataframe(s) into memory (True) or
-            load chunks from the dataframe into memory (False).
-            Defuaults to False.
+            If True, load the full dataset(s) into memory.
+            If False, load data lazily in chunks. Defaults to False.
         sampling_type (str):
             Describes the mode of sampling from the minority and majority dataframes.
-            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            Supported values are ``"undersampling"`` and ``"oversampling"``. Requires ``load_eager=True``.
+            Defaults to ``""``.
             For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
             where the dataframe with the most entries is the majority dataframe
             and the dataframe with the fewest entries is the minority dataframe.
         sampling_ratio (float):
             Ratio of minority and majority entries in the resampled dataset.
-            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"`` or ``"oversampling"``. Defaults to 1.0.
         replacement (bool):
             Whether the sampling is with (True) or without (False) replacement.
-            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"``. Defaults to False.
 
     Returns:
         TrainDataLoader or
-            Tuple[TrainDataLoader, ValidationDataLoader]:
+            Tuple[TrainDataLoader, ValidationDataLoader | None]:
             If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
@@ -754,6 +774,14 @@ def CreateNumPyGenerators(
             batches are loaded during the training. Before training, the
             validation generator will return no batches.
     """
+    if rdataframes is None:
+        rdataframes = []
+    if columns is None:
+        columns = []
+    if max_vec_sizes is None:
+        max_vec_sizes = {}
+    if target is None or target == "":
+        target = []
 
     base_generator = BaseGenerator(
         rdataframes,
@@ -787,14 +815,14 @@ def CreateNumPyGenerators(
 
 
 def CreateTFDatasets(
-    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None = None,
     batch_size: int = 0,
     chunk_size: int = 0,
     block_size: int = 0,
-    columns: list[str] = list(),
-    max_vec_sizes: dict[str, int] = dict(),
+    columns: list[str] | None = None,
+    max_vec_sizes: dict[str, int] | None = None,
     vec_padding: int = 0,
-    target: str | list[str] = list(),
+    target: str | list[str] | None = None,
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -805,41 +833,46 @@ def CreateTFDatasets(
     sampling_type: str = "",
     sampling_ratio: float = 1.0,
     replacement: bool = False,
-) -> Tuple[tf.data.Dataset, tf.data.Dataset]:
+) -> Tuple[tf.data.Dataset, tf.data.Dataset | None]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
     The first generator returns training batches, while the second generator
     returns validation batches
 
     Args:
-        rdataframe (RNode): Name of RNode object.
-        batch_size (int): Size of the returned chunks.
+        rdataframes (ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None):
+            RDataFrame or list of RDataFrames to load from.
+        batch_size (int):
+            Number of entries per batch returned by the generator.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
         block_size (int):
             The size of the blocks of consecutive entries from the dataframe.
-            A chunk is build up from multiple blocks. Lower block size results in
+            A chunk is built up from multiple blocks. Lower block size results in
             a better randomization, but also higher memory usage.
-        columns (list[str], optional):
-            Columns to be returned. If not given, all columns are used.
-        max_vec_sizes (list[int], optional):
-            Size of each column that consists of vectors.
-            Required when using vector based columns
-        target (str|list[str], optional):
-            Column(s) used as target.
-        weights (str, optional):
+        columns (list[str] | None):
+            Names of columns to load. If not given, all columns are used.
+        max_vec_sizes (dict[str, int] | None):
+            Mapping from vector column name to the maximum size of the vector.
+            Required when using vector based columns.
+        vec_padding (int):
+            Value used to pad vectors with if the vector is smaller
+            than the given max vector length. Defaults to 0.
+        target (str | list[str] | None):
+            Name or list of names of target column(s).
+        weights (str):
             Column used to weight events.
-            Can only be used when a target is given
-        validation_split (float, optional):
+            Can only be used when a target is given.
+        validation_split (float):
             The ratio of batches being kept for validation.
-            Value has to be from 0.0 to 1.0. Defaults to 0.0.
-        max_chunks (int, optional):
+            Value has to be between 0 and 1. Defaults to 0.0.
+        max_chunks (int):
             The number of chunks that should be loaded for an epoch.
-            If not given, the whole file is used
+            If not given, the whole file is used.
         shuffle (bool):
-            randomize the training batches every epoch.
-            Defaults to True
+            Batches consist of random events and are shuffled every epoch.
+            Defaults to True.
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
@@ -854,25 +887,25 @@ def CreateTFDatasets(
             to split the dataset into training and validation and shuffling of the chunks
             Defaults to 0 which means that the seed is set to the random device.
         load_eager (bool):
-            Load the full dataframe(s) into memory (True) or
-            load chunks from the dataframe into memory (False).
-            Defuaults to False.
+            If True, load the full dataset(s) into memory.
+            If False, load data lazily in chunks. Defaults to False.
         sampling_type (str):
             Describes the mode of sampling from the minority and majority dataframes.
-            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            Supported values are ``"undersampling"`` and ``"oversampling"``. Requires ``load_eager=True``.
+            Defaults to ``""``.
             For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
             where the dataframe with the most entries is the majority dataframe
             and the dataframe with the fewest entries is the minority dataframe.
         sampling_ratio (float):
             Ratio of minority and majority entries in the resampled dataset.
-            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"`` or ``"oversampling"``. Defaults to 1.0.
         replacement (bool):
             Whether the sampling is with (True) or without (False) replacement.
-            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"``. Defaults to False.
 
     Returns:
         TrainDataLoader or
-            Tuple[TrainDataLoader, ValidationDataLoader]:
+            Tuple[TrainDataLoader, ValidationDataLoader  | None]:
             If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
@@ -881,6 +914,15 @@ def CreateTFDatasets(
             validation generator will return no batches.
     """
     import tensorflow as tf
+
+    if rdataframes is None:
+        rdataframes = []
+    if columns is None:
+        columns = []
+    if max_vec_sizes is None:
+        max_vec_sizes = {}
+    if target is None or target == "":
+        target = []
 
     base_generator = BaseGenerator(
         rdataframes,
@@ -910,11 +952,11 @@ def CreateTFDatasets(
     num_target_columns = len(train_generator.target_columns)
 
     # No target and weights given
-    if target == "":
+    if not base_generator.target_given:
         batch_signature = tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32)
 
     # Target given, no weights given
-    elif weights == "":
+    elif not base_generator.weights_given:
         batch_signature = (
             tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32),
             tf.TensorSpec(shape=(batch_size, num_target_columns), dtype=tf.float32),
@@ -953,14 +995,14 @@ def CreateTFDatasets(
 
 
 def CreatePyTorchGenerators(
-    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] = list(),
+    rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None = None,
     batch_size: int = 0,
     chunk_size: int = 0,
     block_size: int = 0,
-    columns: list[str] = list(),
-    max_vec_sizes: dict[str, int] = dict(),
+    columns: list[str] | None = None,
+    max_vec_sizes: dict[str, int] | None = None,
     vec_padding: int = 0,
-    target: str | list[str] = list(),
+    target: str | list[str] | None = None,
     weights: str = "",
     validation_split: float = 0.0,
     max_chunks: int = 0,
@@ -971,41 +1013,46 @@ def CreatePyTorchGenerators(
     sampling_type: str = "",
     sampling_ratio: float = 1.0,
     replacement: bool = False,
-) -> Tuple[TrainDataLoader, ValidationDataLoader]:
+) -> Tuple[TrainDataLoader, ValidationDataLoader | None]:
     """
     Return two Tensorflow Datasets based on the given ROOT file and tree or RDataFrame
     The first generator returns training batches, while the second generator
     returns validation batches
 
     Args:
-        rdataframe (RNode): Name of RNode object.
-        batch_size (int): Size of the returned chunks.
+        rdataframes (ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None):
+            RDataFrame or list of RDataFrames to load from.
+        batch_size (int):
+            Number of entries per batch returned by the generator.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
         block_size (int):
             The size of the blocks of consecutive entries from the dataframe.
-            A chunk is build up from multiple blocks. Lower block size results in
+            A chunk is built up from multiple blocks. Lower block size results in
             a better randomization, but also higher memory usage.
-        columns (list[str], optional):
-            Columns to be returned. If not given, all columns are used.
-        max_vec_sizes (list[int], optional):
-            Size of each column that consists of vectors.
-            Required when using vector based columns
-        target (str|list[str], optional):
-            Column(s) used as target.
-        weights (str, optional):
+        columns (list[str] | None):
+            Names of columns to load. If not given, all columns are used.
+        max_vec_sizes (dict[str, int] | None):
+            Mapping from vector column name to the maximum size of the vector.
+            Required when using vector based columns.
+        vec_padding (int):
+            Value used to pad vectors with if the vector is smaller
+            than the given max vector length. Defaults to 0.
+        target (str | list[str] | None):
+            Name or list of names of target column(s).
+        weights (str):
             Column used to weight events.
-            Can only be used when a target is given
-        validation_split (float, optional):
+            Can only be used when a target is given.
+        validation_split (float):
             The ratio of batches being kept for validation.
-            Value has to be from 0.0 to 1.0. Defaults to 0.0.
-        max_chunks (int, optional):
+            Value has to be between 0 and 1. Defaults to 0.0.
+        max_chunks (int):
             The number of chunks that should be loaded for an epoch.
-            If not given, the whole file is used
+            If not given, the whole file is used.
         shuffle (bool):
-            randomize the training batches every epoch.
-            Defaults to True
+            Batches consist of random events and are shuffled every epoch.
+            Defaults to True.
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
@@ -1020,25 +1067,25 @@ def CreatePyTorchGenerators(
             to split the dataset into training and validation and shuffling of the chunks
             Defaults to 0 which means that the seed is set to the random device.
         load_eager (bool):
-            Load the full dataframe(s) into memory (True) or
-            load chunks from the dataframe into memory (False).
-            Defuaults to False.
+            If True, load the full dataset(s) into memory.
+            If False, load data lazily in chunks. Defaults to False.
         sampling_type (str):
             Describes the mode of sampling from the minority and majority dataframes.
-            Options: 'undersampling' and 'oversampling'. Requires load_eager = True. Defaults to ''.
+            Supported values are ``"undersampling"`` and ``"oversampling"``. Requires ``load_eager=True``.
+            Defaults to ``""``.
             For 'undersampling' and 'oversampling' it requires a list of exactly two dataframes as input,
             where the dataframe with the most entries is the majority dataframe
             and the dataframe with the fewest entries is the minority dataframe.
         sampling_ratio (float):
             Ratio of minority and majority entries in the resampled dataset.
-            Requires load_eager = True and sampling_type = 'undersampling' or 'oversampling'. Defaults to 1.0.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"`` or ``"oversampling"``. Defaults to 1.0.
         replacement (bool):
             Whether the sampling is with (True) or without (False) replacement.
-            Requires load_eager = True and sampling_type = 'undersampling'. Defaults to False.
+            Requires ``load_eager=True`` and ``sampling_type="undersampling"``. Defaults to False.
 
     Returns:
         TrainDataLoader or
-            Tuple[TrainDataLoader, ValidationDataLoader]:
+            Tuple[TrainDataLoader, ValidationDataLoader | None]:
             If validation split is 0, return TrainDataLoader.
 
             Otherwise two generators are returned. One used to load training
@@ -1046,6 +1093,16 @@ def CreatePyTorchGenerators(
             batches are loaded during the training. Before training, the
             validation generator will return no batches.
     """
+
+    if rdataframes is None:
+        rdataframes = []
+    if columns is None:
+        columns = []
+    if max_vec_sizes is None:
+        max_vec_sizes = {}
+    if target is None or target == "":
+        target = []
+
     base_generator = BaseGenerator(
         rdataframes,
         batch_size,
