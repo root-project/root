@@ -1086,8 +1086,10 @@ ROOT::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locato
       break;
    default:
       if (locator.GetType() == ROOT::Internal::kTestLocatorType) {
-         // For the testing locator, use the same payload as Object64. We're not gonna really read it back anyway.
-         size += SerializeLocatorPayloadObject64(locator, payloadp);
+         // For the testing locator, use the same payload format as Object64. We won't read it back anyway.
+         RNTupleLocator dummy;
+         dummy.SetType(RNTupleLocator::kTypeDAOS);
+         size += SerializeLocatorPayloadObject64(dummy, payloadp);
          locatorType = 0x7e;
       } else {
          return R__FAIL("locator has unknown type");
