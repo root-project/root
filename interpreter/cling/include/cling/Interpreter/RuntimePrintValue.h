@@ -15,6 +15,7 @@
 #endif
 
 #include <cling/Interpreter/Visibility.h>
+#include <cling/Utils/Output.h>
 
 #if __cplusplus >= 201703L
 #include <filesystem>
@@ -152,7 +153,12 @@ namespace cling {
 
 #ifdef __cpp_lib_source_location
   CLING_LIB_EXPORT
-  std::string printValue(const std::source_location* location);
+  std::string printValue(const std::source_location* location) {
+    cling::ostrstream strm;
+    strm << location->file_name() << ":" << location->line() << ":"
+         << location->function_name();
+    return strm.str().str();
+  }
 #endif
 
   // cling::Value
