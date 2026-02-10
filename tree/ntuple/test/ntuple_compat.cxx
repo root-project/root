@@ -383,13 +383,11 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
 }
 
 class RPageSinkTestLocator : public RPageSinkFile {
-   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t)
+   ROOT::RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage & /* sealedPage */, std::size_t)
    {
-      auto payload = ROOT::RNTupleLocatorObject64{0x420};
       RNTupleLocator result;
-      result.SetPosition(payload);
       result.SetType(ROOT::Internal::kTestLocatorType);
-      result.SetNBytesOnStorage(sealedPage.GetDataSize());
+      // Don't set position and nbytes, we won't read it back anyway
       return result;
    }
 
