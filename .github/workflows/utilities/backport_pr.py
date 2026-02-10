@@ -5,7 +5,7 @@ from common import printError, printWarning, printInfo, execCommand
 import argparse
 import json
 import os
-import shutil
+import shlex
 import sys
 
 BOT_REPO_DIR_NAME = "root_bot"
@@ -178,7 +178,9 @@ class OfficialROOTRepoPR:
 
         '''
         labels = self._parseJson('labels', 'name')
-        labels = f'pr:backport,{labels}'
+        if labels:
+            labels+=f','
+        labels += 'pr:backport'
         printInfo(f'The label(s) of PR {self.pullNumber} is(are) {labels}')
         return labels
 
@@ -216,8 +218,19 @@ class OfficialROOTRepoPR:
         execCommandOfficialRepo(f'gh pr comment {self.pullNumber} --body "{prComment}"')
         return 0
 
+def checkForVars():
+    if not "PR_TOKEN" in os.environ:
+        printWarning("Environment variable PR_TOKEN not found. The backported PR will not have assignees and labels.")
+
+def escapeQuotes(s):
+    s = s.replace('\"','\\\"')
+    s = s.replace('`','\\`')
+    return s
+
 def principal():
     
+    checkForVars()
+
     # We first obtain the information from the parser
     requestor, pullNumber, targetBranches = parse_args()
     
@@ -228,20 +241,20 @@ def principal():
     thePR = OfficialROOTRepoPR(pullNumber)
     assignees = thePR.getAssignees()
     labels = thePR.getLabels()
-    prTitle = thePR.getTitle()
+    prTitle = escapeQuotes(thePR.getTitle())
     mergeCommit = thePR.getMergeCommit()
     nCommits = thePR.getNCommits()
     baseRefName = thePR.getBaseRefName()
     originalPRAuthor = thePR.getAuthor()
     
-    requestorInfo = f', requested by @{requestor}' if requestor else ''
+    requestorInfo = f', requested by @{requestor}.' if requestor else ''
     if originalPRAuthor!=requestor:
-        requestorInfo += f'\nFor your information @{originalPRAuthor}'
+        requestorInfo += f' For your information @{originalPRAuthor}'
 
     bpPRUrlBranch = []
 
-    labelSwitch = '' if labels == '' else f'--label "{labels}"'
-    assigneesSwitch = '' if assignees == '' else f'--assignee "{assignees}"'
+    labelSwitch = '' if labels == '' else f'--add-label "{labels}"'
+    assigneesSwitch = '' if assignees == '' else f'--add-assignee "{assignees}"'
 
     execCommandBotRepo(f'git config user.email "{requestor}@no-reply.github.com"')
     execCommandBotRepo(f'git config user.name "{requestor}"')
@@ -273,10 +286,10 @@ def principal():
         prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
                                                f'--base {realTargetBranch} '\
                                                f'--head root-project-bot:{bpBranchName} ' \
-                                               f"--title '[{targetBranch}] {prTitle}'  "\
-                                               f"--body 'Backport of #{pullNumber}{requestorInfo}' "\
-                                            #    f'{labelSwitch} {assigneesSwitch} ' \
-                                               '-d')
+                                               f'--title "[{targetBranch}] {prTitle}"  '\
+                                               f"--body 'Backport of #{pullNumber}{requestorInfo}'")
+        execCommandBotRepo('GH_TOKEN=$PR_TOKEN gh pr edit --repo root-project/root ' \
+                                                f'{labelSwitch} {assigneesSwitch}')
         bpPRUrlBranch.append((prUrl,targetBranch))       
 
     if bpPRUrlBranch == []:
