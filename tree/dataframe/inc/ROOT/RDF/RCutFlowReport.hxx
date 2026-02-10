@@ -55,7 +55,8 @@ private:
 
 public:
    using const_iterator = typename std::vector<TCutInfo>::const_iterator;
-   void Print();
+   void Print() const;
+   std::string AsString() const;
    const TCutInfo &operator[](std::string_view cutName);
    const TCutInfo &At(std::string_view cutName) { return operator[](cutName); }
    const_iterator begin() const { return fCutInfos.begin(); }
