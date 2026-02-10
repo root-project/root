@@ -2205,8 +2205,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<text1<<std::endl;
+      Error("PaintLatex1", "%s\n==> ", fError, text1);
       return 0;
    }
    fError = nullptr;
@@ -2274,8 +2273,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
    if (fError) {
-      std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<text<<std::endl;
+      Error("PaintLatex1", "%s\n==> ", fError, text);
    } else {
       fShow = kTRUE;
       newSpec.fSize = size;
@@ -2571,8 +2569,7 @@ Double_t TLatex::GetXsize()
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<GetTitle()<<std::endl;
+      Error("GetXsize", "%s\n==> ", fError, GetTitle());
       return 0;
    }
    fError = nullptr;
@@ -2603,8 +2600,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<GetTitle()<<std::endl;
+      Error("GetBoundingBox", "%s\n==> ", fError, GetTitle());
       return;
    }
    fError = nullptr;
@@ -2659,8 +2655,7 @@ Double_t TLatex::GetYsize()
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
-      std::cout<<"==> "<<GetTitle()<<std::endl;
+      Error("GetYsize", "%s\n==> ", fError, GetTitle());
       return 0;
    }
    fError = nullptr;
