@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <variant>
 
 class TDirectory;
 class TFileMergeInfo;
