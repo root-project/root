@@ -402,7 +402,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    fFileName = fname;
    fStream = new std::ofstream(fFileName.Data(),std::ios::out);
    if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
-      printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fFileName.Data());
+      Error("Open", "Cannot open file: %s", fFileName.Data());
       return;
    }
    gVirtualPS = this;
@@ -472,21 +472,21 @@ void TPostScript::Close(Option_t *)
       // Rename the file fFileName
       TString tmpname = TString::Format("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
       if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
-         Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
+         Error("Close", "Cannot open temporary file: %s", tmpname.Data());
          return;
       }
 
       // Reopen the file fFileName
       fStream = new std::ofstream(fFileName.Data(),std::ios::out);
       if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
-         Error("Text", "Cannot open file: %s\n", fFileName.Data());
+         Error("Close", "Cannot open file: %s", fFileName.Data());
          return;
       }
 
       // Embed the fonts at the right place
       FILE *sg = fopen(tmpname.Data(),"r");
       if (!sg) {
-         Error("Text", "Cannot open file: %s\n", tmpname.Data());
+         Error("Close", "Cannot open file: %s", tmpname.Data());
          return;
       }
       char line[255];
