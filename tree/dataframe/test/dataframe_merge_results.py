@@ -54,6 +54,7 @@ class RDataFrameMergeResults(unittest.TestCase):
 
         self.assertAlmostEqual(deser_deser1.GetValue(), mergedmean)
 
+
     def test_pickle_histo1d(self):
         """Merge two histograms, pickle and merge again."""
 
