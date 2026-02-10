@@ -478,17 +478,23 @@ When using the options 2 or 3 above, the labels are automatically
 
  The same histogram can be drawn with different options in different pads.
  When a histogram drawn in a pad is deleted, the histogram is
- automatically removed from the pad or pads where it was drawn.
- If a histogram is drawn in a pad, then filled again, the new status
+ automatically removed from all pads where it was drawn.
+ If a histogram is drawn in a pad, then modified, the new status
  of the histogram will be automatically shown in the pad next time
  the pad is updated. One does not need to redraw the histogram.
  To draw the current version of a histogram in a pad, one can use
 ~~~ {.cpp}
         h->DrawCopy();
 ~~~
- This makes a clone (see Clone below) of the histogram. Once the clone
- is drawn, the original histogram may be modified or deleted without
- affecting the aspect of the clone.
+ DrawCopy() is also useful when a temporary histogram should be drawn, for
+ example in
+~~~ {.cpp}
+  void drawHisto() {
+     TH1D histo("histo", "An example histogram", 10, 0, 10);
+     // ...
+     histo.DrawCopy();
+  } // histo goes out of scope here, but the copy stays visible
+~~~
 
  One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
  value for the maximum or the minimum scale on the plot. (For 1-D
@@ -3027,18 +3033,16 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 /// Histograms are drawn via the THistPainter class. Each histogram has
 /// a pointer to its own painter (to be usable in a multithreaded program).
 /// The same histogram can be drawn with different options in different pads.
-/// When a histogram drawn in a pad is deleted, the histogram is
-/// automatically removed from the pad or pads where it was drawn.
-/// If a histogram is drawn in a pad, then filled again, the new status
-/// of the histogram will be automatically shown in the pad next time
-/// the pad is updated. One does not need to redraw the histogram.
-/// To draw the current version of a histogram in a pad, one can use
-/// `h->DrawCopy();`
-/// This makes a clone of the histogram. Once the clone is drawn, the original
-/// histogram may be modified or deleted without affecting the aspect of the
-/// clone.
-/// By default, TH1::Draw clears the current pad.
+/// If a histogram is updated after it has been drawn, the updated data will
+/// be shown the next time the pad is updated. One does not need to
+/// redraw the histogram.
 ///
+/// When a histogram is deleted, the histogram is **automatically removed from
+/// all pads where it was drawn**. If a histogram should be modified or deleted
+/// without affecting what is drawn, it should be drawn using DrawCopy().
+///
+/// By default, TH1::Draw clears the current pad. Passing the option "SAME", the
+/// histogram will be drawn on top of what's in the pad.
 /// One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
 /// value for the maximum or the minimum scale on the plot.
 ///
@@ -3090,13 +3094,31 @@ void TH1::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this histogram and Draw in the current pad.
 ///
-/// Once the histogram is drawn into the pad, any further modification
-/// using graphics input will be made on the copy of the histogram,
-/// and not to the original object.
-/// By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
-/// you want to draw a histogram with the same name
+/// Once the histogram is drawn into the pad, the original and its drawn copy can be modified or deleted without
+/// affecting each other. The copied histogram will be owned by the pad, and is deleted when the pad is cleared.
 ///
-/// See Draw for the list of options
+/// DrawCopy() is useful if the original histogram is a temporary, e.g. from code such as
+/// ~~~ {.cpp}
+/// void someFunction(...) {
+///    TH1D histogram(...);
+///    histogram.DrawCopy();
+///
+///    // or equivalently
+///    std::unique_ptr<TH1F> histogram(...);
+///    histogram->DrawCopy();
+/// }
+/// ~~~
+/// If Draw() has been used, the histograms would disappear from the canvas at the end of this function.
+///
+/// By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
+/// you want to draw a histogram with the same name.
+///
+/// See Draw() for the list of options.
+///
+/// In contrast to TObject::DrawClone(), DrawCopy
+/// - Ignores `gROOT->SetSelectedPad()`.
+/// - Does not register the histogram to any directory.
+/// - And can cycle through a colour palette when multiple objects are drawn with auto colouring.
 
 TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
 {
