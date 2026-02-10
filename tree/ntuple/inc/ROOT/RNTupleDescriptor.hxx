@@ -445,14 +445,19 @@ public:
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange,
                                          const ROOT::Internal::RColumnElementBase &element, std::size_t pageSize);
 
-      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
-      /// up to and including a given index. Used for binary search in Find().
-      std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
-
-      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
 
+      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
+      /// up to and including a given index. Used for binary search in Find().
+      /// This vector is only created if fPageInfos has at least kLargeRangeThreshold elements.
+      std::unique_ptr<std::vector<ROOT::NTupleSize_t>> fCumulativeNElements;
+
+      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
+
    public:
+      /// Create the fCumulativeNElements only when its needed, i.e. when there are many pages to search through.
+      static constexpr std::size_t kLargeRangeThreshold = 10;
+
       RPageRange() = default;
       RPageRange(const RPageRange &other) = delete;
       RPageRange &operator=(const RPageRange &other) = delete;
@@ -464,7 +469,9 @@ public:
          RPageRange clone;
          clone.fPhysicalColumnId = fPhysicalColumnId;
          clone.fPageInfos = fPageInfos;
-         clone.fCumulativeNElements = fCumulativeNElements;
+         if (fCumulativeNElements) {
+            clone.fCumulativeNElements = std::make_unique<std::vector<ROOT::NTupleSize_t>>(*fCumulativeNElements);
+         }
          return clone;
       }
 
