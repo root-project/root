@@ -363,31 +363,31 @@ public:
    // the page belongs
    struct RPageInfo {
    private:
-      /// The sum of the elements of all the pages must match the corresponding `fNElements` field in `fColumnRanges`
-      std::uint32_t fNElements = std::uint32_t(-1);
       /// The meaning of `fLocator` depends on the storage backend.
       RNTupleLocator fLocator;
+      /// The sum of the elements of all the pages must match the corresponding `fNElements` field in `fColumnRanges`
+      std::uint32_t fNElements = std::uint32_t(-1);
       /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
       bool fHasChecksum = false;
 
    public:
       RPageInfo() = default;
       RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
-         : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+         : fLocator(locator), fNElements(nElements), fHasChecksum(hasChecksum)
       {
       }
 
       bool operator==(const RPageInfo &other) const
       {
-         return fNElements == other.fNElements && fLocator == other.fLocator;
+         return fLocator == other.fLocator && fNElements == other.fNElements;
       }
-
-      std::uint32_t GetNElements() const { return fNElements; }
-      void SetNElements(std::uint32_t n) { fNElements = n; }
 
       const RNTupleLocator &GetLocator() const { return fLocator; }
       RNTupleLocator &GetLocator() { return fLocator; }
       void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+      std::uint32_t GetNElements() const { return fNElements; }
+      void SetNElements(std::uint32_t n) { fNElements = n; }
 
       bool HasChecksum() const { return fHasChecksum; }
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
