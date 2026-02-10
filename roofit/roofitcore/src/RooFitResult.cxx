@@ -61,12 +61,7 @@ using std::ostream, std::string, std::pair, std::vector, std::setw;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
 
-RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title)
-{
-   if (name)
-      appendToDir(this, true);
-}
-
+RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -99,10 +94,8 @@ RooFitResult::RooFitResult(const RooFitResult &other)
      _Lt = std::make_unique<TMatrix>(*other._Lt);
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
-  if (other._GC) _GC = new TVectorD(*other._GC) ;
-
-  if (GetName())
-    appendToDir(this, true);
+  if (other._GC)
+     _GC = new TVectorD(*other._GC);
 }
 
 

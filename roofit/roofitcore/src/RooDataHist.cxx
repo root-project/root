@@ -124,7 +124,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgSe
 
   registerWeightArraysToDataStore();
 
-  appendToDir(this,true) ;
   TRACE_CREATE;
 }
 
@@ -354,9 +353,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   } else {
 
     // Initialize empty
-    initialize() ;
-    appendToDir(this,true) ;
-
+    initialize();
   }
 
   registerWeightArraysToDataStore();
@@ -377,8 +374,7 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
   adjustBinning(vars, histo, offset) ;
 
   // Initialize internal data structure
-  initialize() ;
-  appendToDir(this,true) ;
+  initialize();
 
   // Define x,y,z as 1st, 2nd and 3rd observable
   RooRealVar* xvar = static_cast<RooRealVar*>(_vars.find(vars.at(0)->GetName())) ;
@@ -533,9 +529,8 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
 
   // Initialize internal data structure
   if (!init) {
-    initialize() ;
-    appendToDir(this,true) ;
-    init = true ;
+     initialize();
+     init = true;
   }
 
   // Define x,y,z as 1st, 2nd and 3rd observable
@@ -644,7 +639,6 @@ void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &index
    }
 
    initialize();
-   appendToDir(this, true);
 
    for (const auto &diter : dmap) {
       std::string const &label = diter.first;
@@ -904,8 +898,6 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   }
 
   registerWeightArraysToDataStore();
-
- appendToDir(this,true) ;
 }
 
 

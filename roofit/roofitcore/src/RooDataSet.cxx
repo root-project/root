@@ -374,8 +374,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
     }
 
-    appendToDir(this,true) ;
-
     // Initialize RooDataSet with optional weight variable
     initialize(nullptr) ;
 
@@ -450,8 +448,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
     }
 
-    appendToDir(this,true) ;
-
     // Initialize RooDataSet with optional weight variable
     initialize(wgtVarName);
 
@@ -523,11 +519,9 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooAbsData(other,newname), RooDirItem()
 {
-  appendToDir(this,true) ;
-  initialize(other._wgtVar?other._wgtVar->GetName():nullptr);
-  TRACE_CREATE;
+   initialize(other._wgtVar ? other._wgtVar->GetName() : nullptr);
+   TRACE_CREATE;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
