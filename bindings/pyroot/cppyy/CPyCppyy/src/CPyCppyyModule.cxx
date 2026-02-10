@@ -36,6 +36,8 @@ PyObject* Instance_FromVoidPtr(
 #include <vector>
 
 
+std::map<Cppyy::TCppType_t, Cppyy::TCppType_t> TypeReductionMap;
+
 // Note: as of py3.11, dictionary objects no longer carry a function pointer for
 // the lookup, so it can no longer be shimmed and "from cppyy.interactive import *"
 // thus no longer works.
@@ -222,13 +224,23 @@ static PyTypeObject PyDefault_t_Type = {
 
 namespace {
 
-struct {
-   PyObject_HEAD
-} _CPyCppyy_NullPtrStruct{PyObject_HEAD_INIT(&PyNullPtr_t_Type)};
+PyObject _CPyCppyy_NullPtrStruct = {_PyObject_EXTRA_INIT
+// In 3.12.0-beta this field was changed from a ssize_t to a union
+#if PY_VERSION_HEX >= 0x30c00b1
+                                    {1},
+#else
+                                    1,
+#endif
+                                    &PyNullPtr_t_Type};
 
-struct {
-   PyObject_HEAD
-} _CPyCppyy_DefaultStruct{PyObject_HEAD_INIT(&PyDefault_t_Type)};
+PyObject _CPyCppyy_DefaultStruct = {_PyObject_EXTRA_INIT
+// In 3.12.0-beta this field was changed from a ssize_t to a union
+#if PY_VERSION_HEX >= 0x30c00b1
+                                    {1},
+#else
+                                    1,
+#endif
+                                    &PyDefault_t_Type};
 
 // TODO: refactor with Converters.cxx
 struct CPyCppyy_tagCDataObject {       // non-public (but stable)
@@ -447,7 +459,7 @@ static PyObject* SetCppLazyLookup(PyObject*, PyObject* args)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
+static PyObject* MakeCppTemplateClass(PyObject* /* self */, PyObject* args)
 {
 // Create a binding for a templated class instantiation.
 
@@ -457,14 +469,31 @@ static PyObject* MakeCppTemplateClass(PyObject*, PyObject* args)
         PyErr_Format(PyExc_TypeError, "too few arguments for template instantiation");
         return nullptr;
     }
+    PyObject *cppscope = PyTuple_GET_ITEM(args, 0);
+    void * tmpl = PyLong_AsVoidPtr(cppscope);
 
 // build "< type, type, ... >" part of class name (modifies pyname)
-    const std::string& tmpl_name =
-        Utility::ConstructTemplateArgs(PyTuple_GET_ITEM(args, 0), args, nullptr, Utility::kNone, 1);
-    if (!tmpl_name.size())
-        return nullptr;
+    std::vector<Cpp::TemplateArgInfo> types =
+        Utility::GetTemplateArgsTypes(cppscope, args, nullptr, Utility::kNone, 1);
+    if (PyErr_Occurred())
+      return nullptr;
 
-    return CreateScopeProxy(tmpl_name);
+    Cppyy::TCppScope_t scope = 
+        Cppyy::InstantiateTemplate(tmpl, types.data(), types.size());
+    for (Cpp::TemplateArgInfo i: types) {
+        if (i.m_IntegralValue)
+            std::free((void*)i.m_IntegralValue);
+    }
+
+    if (!scope) {
+      PyErr_Format(PyExc_TypeError,
+                   "Template instantiation failed: '%s' with args: '%s\n'",
+                   Cppyy::GetScopedFinalName(cppscope).c_str(),
+                   CPyCppyy_PyText_AsString(PyObject_Repr(args)));
+      return nullptr;
+    }
+
+    return CreateScopeProxy(scope);
 }
 
 //----------------------------------------------------------------------------
@@ -673,7 +702,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     }
 
 // convert 2nd argument first (used for both pointer value and instance cases)
-    Cppyy::TCppType_t cast_type = 0;
+    Cppyy::TCppScope_t cast_type = 0;
     PyObject* arg1 = PyTuple_GET_ITEM(args, 1);
     if (!CPyCppyy_PyText_Check(arg1)) {          // not string, then class
         if (CPPScope_Check(arg1))
@@ -684,7 +713,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         Py_INCREF(arg1);
 
     if (!cast_type && arg1) {
-        cast_type = (Cppyy::TCppType_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
+        cast_type = (Cppyy::TCppScope_t)Cppyy::GetScope(CPyCppyy_PyText_AsString(arg1));
         Py_DECREF(arg1);
     }
 
@@ -701,7 +730,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
     // if this instance's class has a relation to the requested one, calculate the
     // offset, erase if from any caches, and update the pointer and type
         CPPInstance* arg0_pyobj = (CPPInstance*)arg0;
-        Cppyy::TCppType_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
+        Cppyy::TCppScope_t cur_type = arg0_pyobj->ObjectIsA(false /* check_smart */);
 
         bool isPython = CPPScope_Check(arg1) && \
             (((CPPClass*)arg1)->fFlags & CPPScope::kIsPython);
@@ -712,12 +741,12 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
         }
 
         int direction = 0;
-        Cppyy::TCppType_t base = 0, derived = 0;
-        if (Cppyy::IsSubtype(cast_type, cur_type)) {
+        Cppyy::TCppScope_t base = 0, derived = 0;
+        if (Cppyy::IsSubclass(cast_type, cur_type)) {
             derived = cast_type;
             base    = cur_type;
             direction = -1;      // down-cast
-        } else if (Cppyy::IsSubtype(cur_type, cast_type)) {
+        } else if (Cppyy::IsSubclass(cur_type, cast_type)) {
             base    = cast_type;
             derived = cur_type;
             direction =  1;      // up-cast
@@ -777,7 +806,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
 
 // not a pre-existing object; get the address and bind
     void* addr = nullptr;
-    if (arg0 != gNullPtrObject) {
+    if (arg0 != &_CPyCppyy_NullPtrStruct) {
         addr = CPyCppyy_PyCapsule_GetPointer(arg0, nullptr);
         if (PyErr_Occurred()) {
             PyErr_Clear();
@@ -891,7 +920,9 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("ss"), &reducable, &reduced))
         return nullptr;
 
-    Cppyy::AddTypeReducer(reducable, reduced);
+    Cppyy::TCppType_t reducable_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reducable));
+    Cppyy::TCppType_t reduced_type = Cppyy::GetTypeFromScope(Cppyy::GetScope(reduced));
+    TypeReductionMap[reducable_type] = reduced_type;
 
     Py_RETURN_NONE;
 }
@@ -1051,6 +1082,8 @@ static struct PyModuleDef moduledef = {
 };
 #endif
 
+
+#define CPYCPPYY_INIT_ERROR return nullptr
 namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
@@ -1089,7 +1122,7 @@ PyObject* Init()
     gThisModule = Py_InitModule(const_cast<char*>("libcppyy"), gCPyCppyyMethods);
 #endif
     if (!gThisModule)
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // keep gThisModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
@@ -1103,58 +1136,58 @@ PyObject* Init()
 
 // inject meta type
     if (!Utility::InitProxy(gThisModule, &CPPScope_Type, "CPPScope"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPInstance_Type, "CPPInstance"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject exception object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPExcInstance_Type, "CPPExcInstance"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject method proxy type
     if (!Utility::InitProxy(gThisModule, &CPPOverload_Type, "CPPOverload"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject template proxy type
     if (!Utility::InitProxy(gThisModule, &TemplateProxy_Type, "TemplateProxy"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject property proxy type
     if (!Utility::InitProxy(gThisModule, &CPPDataMember_Type, "CPPDataMember"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject custom data types
 #if PY_VERSION_HEX < 0x03000000
     if (!Utility::InitProxy(gThisModule, &RefFloat_Type, "Double"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
     if (!Utility::InitProxy(gThisModule, &RefInt_Type, "Long"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 #endif
 
     if (!Utility::InitProxy(gThisModule, &CustomInstanceMethod_Type, "InstanceMethod"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
     if (!Utility::InitProxy(gThisModule, &TupleOfInstances_Type, "InstanceArray"))
-       return nullptr;
+       CPYCPPYY_INIT_ERROR;
 
     if (!Utility::InitProxy(gThisModule, &LowLevelView_Type, "LowLevelView"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
     if (!Utility::InitProxy(gThisModule, &PyNullPtr_t_Type, "nullptr_t"))
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // custom iterators
     if (PyType_Ready(&InstanceArrayIter_Type) < 0)
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
     if (PyType_Ready(&IndexIter_Type) < 0)
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
     if (PyType_Ready(&VectorIter_Type) < 0)
-        return nullptr;
+        CPYCPPYY_INIT_ERROR;
 
 // inject identifiable nullptr and default
     gNullPtrObject = (PyObject*)&_CPyCppyy_NullPtrStruct;
@@ -1178,6 +1211,12 @@ PyObject* Init()
     gAbrtException = PyErr_NewException((char*)"cppyy.ll.AbortSignal", cppfatal, nullptr);
     PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
 
+// policy labels
+    PyModule_AddObject(gThisModule, (char*)"kMemoryHeuristics",
+        PyInt_FromLong((int)CallContext::kUseHeuristics));
+    PyModule_AddObject(gThisModule, (char*)"kMemoryStrict",
+        PyInt_FromLong((int)CallContext::kUseStrict));
+
 // gbl namespace is injected in cppyy.py
 
 // create the memory regulator
@@ -1185,8 +1224,8 @@ PyObject* Init()
 
 #if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);
-#endif
     return gThisModule;
+#endif
 }
 
 } // namespace CPyCppyy

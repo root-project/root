@@ -69,6 +69,7 @@ struct CallContext {
         kUseHeuristics               = 0x000100, // if method applies heuristics memory policy
         kImplicitSmartPtrConversion  = 0x000200, // enable implicit conversion to smart pointers
         kReleaseGIL                  = 0x000400, // if method should release the GIL
+        kUseStrict                   = 0x000600, // if method applies strict memory policy
         kSetLifeLine                 = 0x000800, // if return value is part of 'this'
         kNeverLifeLine               = 0x001000, // if the return value is never part of 'this'
         kPyException                 = 0x002000, // Python exception during method execution
@@ -78,6 +79,10 @@ struct CallContext {
         kIsPseudoFunc                = 0x020000, // internal, used for introspection
     };
 
+// memory handling
+    static ECallFlags sMemoryPolicy;
+    static bool SetMemoryPolicy(ECallFlags e);
+
 // Policies about memory handling and signal safety
     static bool SetGlobalPolicy(ECallFlags e, bool enabled);
 
@@ -85,6 +90,10 @@ struct CallContext {
 
     void AddTemporary(PyObject* pyobj);
     void Cleanup();
+
+// signal safety
+    static ECallFlags sSignalPolicy;
+    static bool SetGlobalSignalPolicy(bool setProtected);
 
     Parameter* GetArgs(size_t sz) {
         if (sz != (size_t)-1) fNArgs = sz;
@@ -149,6 +158,15 @@ inline bool ReleasesGIL(CallContext* ctxt) {
 inline bool UseStrictOwnership() {
     using CC = CPyCppyy::CallContext;
     return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
+}
+
+inline bool UseStrictOwnership(CallContext* ctxt) {
+    if (ctxt && (ctxt->fFlags & CallContext::kUseStrict))
+        return true;
+    if (ctxt && (ctxt->fFlags & CallContext::kUseHeuristics))
+        return false;
+
+    return CallContext::sMemoryPolicy == CallContext::kUseStrict;
 }
 
 template<CallContext::ECallFlags F>

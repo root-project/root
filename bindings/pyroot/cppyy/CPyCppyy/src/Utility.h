@@ -3,7 +3,6 @@
 
 // Standard
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -40,6 +39,9 @@ PyCallable* FindBinaryOperator(const std::string& lcname, const std::string& rcn
 enum ArgPreference { kNone, kPointer, kReference, kValue };
 std::string ConstructTemplateArgs(
     PyObject* pyname, PyObject* tpArgs, PyObject* args = nullptr, ArgPreference = kNone, int argoff = 0, int* pcnt = nullptr);
+std::vector<Cpp::TemplateArgInfo> GetTemplateArgsTypes(
+    PyObject* scope, PyObject* tpArgs, PyObject* args = nullptr, ArgPreference = kNone, int argoff = 0, int* pcnt = nullptr);
+
 std::string CT2CppNameS(PyObject* pytc, bool allow_voidp);
 inline PyObject* CT2CppName(PyObject* pytc, const char* cpd, bool allow_voidp)
 {
@@ -96,23 +98,22 @@ PyObject* PyErr_Occurred_WithGIL();
 
 // helpers for collecting/maintaining python exception data
 struct PyError_t {
-   struct PyObjectDeleter {
-      void operator()(PyObject *obj) { Py_XDECREF(obj); }
-   };
-#if PY_VERSION_HEX < 0x030c0000
-   std::unique_ptr<PyObject, PyObjectDeleter> fType;
-   std::unique_ptr<PyObject, PyObjectDeleter> fTrace;
-#endif
-   std::unique_ptr<PyObject, PyObjectDeleter> fValue;
-   bool fIsCpp = false;
-};
+    PyError_t(bool is_cpp = false) : fIsCpp(is_cpp) { fType = fValue = fTrace = 0; }
 
-PyError_t FetchPyError();
-void RestorePyError(PyError_t &error);
+    static void Clear(PyError_t& e)
+    {
+    // Remove exception information.
+        Py_XDECREF(e.fType); Py_XDECREF(e.fValue); Py_XDECREF(e.fTrace);
+        e.fType = e.fValue = e.fTrace = 0;
+    }
+
+    PyObject *fType, *fValue, *fTrace;
+    bool fIsCpp;
+};
 
 size_t FetchError(std::vector<PyError_t>&, bool is_cpp = false);
 void SetDetailedException(
-    std::vector<PyError_t>&& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
+    std::vector<PyError_t>& errors /* clears */, PyObject* topmsg /* steals ref */, PyObject* defexc);
 
 // setup Python API for callbacks
 bool IncludePython();

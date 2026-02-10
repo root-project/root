@@ -274,7 +274,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.
@@ -431,7 +431,6 @@ static PyMethodDef op_methods[] = {
     {(char*)nullptr, nullptr, 0, nullptr}
 };
 
-
 //= CPyCppyy object proxy construction/destruction ===========================
 static CPPInstance* op_new(PyTypeObject* subtype, PyObject*, PyObject*)
 {
@@ -489,6 +488,10 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     bool flipit = false;
     PyObject* binop = op == Py_EQ ? klass->fOperators->fEq : klass->fOperators->fNe;
     if (!binop) {
+        binop = op == Py_EQ ? klass->fOperators->fNe : klass->fOperators->fEq;
+        if (binop) flipit = true;
+    }
+    if (!binop) {
         const char* cppop = op == Py_EQ ? "==" : "!=";
         PyCallable* pyfunc = FindBinaryOperator(self, obj, cppop);
         if (pyfunc) binop = (PyObject*)CPPOverload_New(cppop, pyfunc);
@@ -499,11 +502,6 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self, PyObject* o
     // sets the operator to Py_None if not found, indicating that search was done
         if (op == Py_EQ) klass->fOperators->fEq = binop;
         else klass->fOperators->fNe = binop;
-    }
-
-    if (binop == Py_None) {  // can try !== or !!= as alternatives
-        binop = op == Py_EQ ? klass->fOperators->fNe : klass->fOperators->fEq;
-        if (binop && binop != Py_None) flipit = true;
     }
 
     if (!binop || binop == Py_None) return nullptr;
@@ -537,8 +535,8 @@ static inline void* cast_actual(void* obj) {
     if (((CPPInstance*)obj)->fFlags & CPPInstance::kIsActual)
         return address;
 
-    Cppyy::TCppType_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
-    Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
+    Cppyy::TCppScope_t klass = ((CPPClass*)Py_TYPE((PyObject*)obj))->fCppType;
+    Cppyy::TCppScope_t clActual = klass /* XXX: Cppyy::GetActualClass(klass, address) */;
     if (clActual && clActual != klass) {
         intptr_t offset = Cppyy::GetBaseOffset(
              clActual, klass, address, -1 /* down-cast */, true /* report errors */);
@@ -703,7 +701,7 @@ static Py_hash_t op_hash(CPPInstance* self)
         return h;
     }
 
-    Cppyy::TCppScope_t stdhash = Cppyy::GetScope("std::hash<"+Cppyy::GetScopedFinalName(self->ObjectIsA())+">");
+    Cppyy::TCppScope_t stdhash = Cppyy::GetFullScope("std::hash<"+Cppyy::GetScopedFinalName(self->ObjectIsA())+">");
     if (stdhash) {
         PyObject* hashcls = CreateScopeProxy(stdhash);
         PyObject* dct = PyObject_GetAttr(hashcls, PyStrings::gDict);
@@ -734,7 +732,7 @@ static Py_hash_t op_hash(CPPInstance* self)
 //----------------------------------------------------------------------------
 static PyObject* op_str_internal(PyObject* pyobj, PyObject* lshift, bool isBound)
 {
-    static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetScope("std::ostringstream");
+    static Cppyy::TCppScope_t sOStringStreamID = Cppyy::GetFullScope("std::ostringstream");
     std::ostringstream s;
     PyObject* pys = BindCppObjectNoCast(&s, sOStringStreamID);
     Py_INCREF(pys);
@@ -795,7 +793,7 @@ static PyObject* op_str(CPPInstance* self)
             // normal lookup failed; attempt lazy install of global operator<<(ostream&, type&)
                 std::string rcname = Utility::ClassName((PyObject*)self);
                 Cppyy::TCppScope_t rnsID = Cppyy::GetScope(TypeManip::extract_namespace(rcname));
-                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream", rcname, "<<", rnsID);
+                PyCallable* pyfunc = Utility::FindBinaryOperator("std::ostream&", rcname, "<<", rnsID);
                 if (!pyfunc)
                      continue;
 

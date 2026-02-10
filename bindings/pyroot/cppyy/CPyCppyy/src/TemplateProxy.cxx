@@ -76,11 +76,9 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     std::string proto = "";
 
 #if PY_VERSION_HEX >= 0x03080000
-// adjust arguments for self if this is a rebound (global) function
+// adjust arguments for self if this is a rebound global function
     bool isNS = (((CPPScope*)fTI->fPyClass)->fFlags & CPPScope::kIsNamespace);
-    if (!isNS && CPyCppyy_PyArgs_GET_SIZE(args, nargsf) && \
-            (!fSelf ||
-            (fSelf == Py_None && !Cppyy::IsStaticTemplate(((CPPScope*)fTI->fPyClass)->fCppType, fname)))) {
+    if (!isNS && !fSelf && CPyCppyy_PyArgs_GET_SIZE(args, nargsf)) {
         args   += 1;
         nargsf -= 1;
     }
@@ -142,12 +140,6 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             } else
                 PyErr_Clear();
 
-            if (!bArgSet && (Py_TYPE(itemi) == &TemplateProxy_Type)) {
-                TemplateProxy *tp = (TemplateProxy*)itemi;
-                PyObject *tmpl_name = CPyCppyy_PyText_FromFormat("decltype(%s%s)", tp->fTI->fCppName.c_str(), tp->fTemplateArgs ? CPyCppyy_PyText_AsString(tp->fTemplateArgs) : "");
-                PyTuple_SET_ITEM(tpArgs, i, tmpl_name);
-                bArgSet = true;
-            }
             if (!bArgSet) {
             // normal case (may well fail)
                 PyErr_Clear();
@@ -432,7 +424,8 @@ static int tpp_doc_set(TemplateProxy* pytmpl, PyObject *val, void *)
 //= CPyCppyy template proxy callable behavior ================================
 
 #define TPPCALL_RETURN                                                       \
-{ errors.clear();                                                            \
+{ if (!errors.empty())                                                       \
+      std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);\
   return result; }
 
 static inline std::string targs2str(TemplateProxy* pytmpl)
@@ -639,7 +632,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
         PyObject* topmsg = CPyCppyy_PyText_FromFormat(
             "Could not find \"%s\" (set cppyy.set_debug() for C++ errors):", CPyCppyy_PyText_AsString(pyfullname));
         Py_DECREF(pyfullname);
-        Utility::SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
+        Utility::SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
 
         return nullptr;
     }
@@ -680,7 +673,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
 // error reporting is fraud, given the numerous steps taken, but more details seems better
     if (!errors.empty()) {
         PyObject* topmsg = CPyCppyy_PyText_FromString("Template method resolution failed:");
-        Utility::SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
+        Utility::SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
     } else {
         PyErr_Format(PyExc_TypeError, "cannot resolve method template call for \'%s\'",
             pytmpl->fTI->fCppName.c_str());
@@ -748,21 +741,6 @@ static int tpp_setuseffi(CPPOverload*, PyObject*, void*)
     return 0;                 // dummy (__useffi__ unused)
 }
 
-//-----------------------------------------------------------------------------
-static PyObject* tpp_gettemplateargs(TemplateProxy* self, void*) {
-    if (!self->fTemplateArgs) {
-        Py_RETURN_NONE;
-    }
-
-    Py_INCREF(self->fTemplateArgs);
-    return self->fTemplateArgs;
-}
-
-//-----------------------------------------------------------------------------
-static int tpp_settemplateargs(TemplateProxy*, PyObject*, void*) {
-    PyErr_SetString(PyExc_AttributeError, "__template_args__ is read-only");
-    return -1;
-}
 
 //----------------------------------------------------------------------------
 static PyMappingMethods tpp_as_mapping = {
@@ -773,9 +751,7 @@ static PyGetSetDef tpp_getset[] = {
     {(char*)"__doc__", (getter)tpp_doc, (setter)tpp_doc_set, nullptr, nullptr},
     {(char*)"__useffi__", (getter)tpp_getuseffi, (setter)tpp_setuseffi,
       (char*)"unused", nullptr},
-    {(char*)"__template_args__", (getter)tpp_gettemplateargs, (setter)tpp_settemplateargs,
-      (char*)"the template arguments for this method", nullptr},
-    {(char*)nullptr,   nullptr,         nullptr, nullptr, nullptr},
+    {(char*)nullptr,   nullptr,         nullptr, nullptr, nullptr}
 };
 
 
@@ -806,7 +782,6 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
 {
 // Select and call a specific C++ overload, based on its signature.
     const char* sigarg = nullptr;
-    const char* tmplarg = nullptr;
     PyObject* sigarg_tuple = nullptr;
     int want_const = -1;
 
@@ -837,11 +812,6 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
         scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
         cppmeth = Cppyy::GetMethodTemplate(
             scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size()-2));
-    } else if (PyArg_ParseTuple(args, const_cast<char*>("ss:__overload__"), &sigarg, &tmplarg)) {
-        scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
-        std::string full_name = std::string(pytmpl->fTI->fCppName) + "<" + tmplarg + ">";
-
-        cppmeth = Cppyy::GetMethodTemplate(scope, full_name, sigarg);
     } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"), &sigarg_tuple, &want_const)) {
         PyErr_Clear();
         want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
@@ -880,11 +850,17 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     }
 
 // else attempt instantiation
+    PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
+    PyErr_Fetch(&pytype, &pyvalue, &pytrace);
+
     if (!cppmeth) {
+        PyErr_Restore(pytype, pyvalue, pytrace);
         return nullptr;
     }
 
-    PyErr_Clear();
+    Py_XDECREF(pytype);
+    Py_XDECREF(pyvalue);
+    Py_XDECREF(pytrace);
 
     // TODO: the next step should be consolidated with Instantiate()
     PyCallable* meth = nullptr;

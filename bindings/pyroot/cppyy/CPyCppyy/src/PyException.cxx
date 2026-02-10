@@ -28,17 +28,8 @@ CPyCppyy::PyException::PyException()
     PyGILState_STATE state = PyGILState_Ensure();
 #endif
 
-#if PY_VERSION_HEX >= 0x030c0000
-    PyObject *pyvalue = PyErr_GetRaisedException();
-    PyObject *pytype = pyvalue ? (PyObject *)Py_TYPE(pyvalue) : nullptr;
-    PyObject* traceback = pyvalue ? PyException_GetTraceback(pyvalue) : nullptr;
-#else
     PyObject* pytype = nullptr, *pyvalue = nullptr, *pytrace = nullptr;
     PyErr_Fetch(&pytype, &pyvalue, &pytrace);
-    PyObject* traceback = pytrace; // to keep the original unchanged
-    Py_XINCREF(traceback);
-#endif
-
     if (pytype && pyvalue) {
         const char* tname = PyExceptionClass_Name(pytype);
         if (tname) {
@@ -54,6 +45,9 @@ CPyCppyy::PyException::PyException()
            Py_DECREF(msg);
         }
     }
+
+    PyObject* traceback = pytrace; // to keep the original unchanged
+    Py_XINCREF(traceback);
 
     std::string locName;
     std::string locFile;
@@ -94,11 +88,7 @@ CPyCppyy::PyException::PyException()
 
     Py_XDECREF(traceback);
 
-#if PY_VERSION_HEX >= 0x030c0000
-    PyErr_SetRaisedException(pyvalue);
-#else
     PyErr_Restore(pytype, pyvalue, pytrace);
-#endif
 
     if (fMsg.empty())
         fMsg = "python exception";

@@ -14,7 +14,7 @@ class CPPInstance;
 
 class CPPDataMember {
 public:
-    void Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata);
+    void Set(Cppyy::TCppScope_t scope, Cppyy::TCppScope_t var);
     void Set(Cppyy::TCppScope_t scope, const std::string& name, void* address);
 
     std::string GetName();
@@ -25,6 +25,7 @@ public:                 // public, as the python C-API works with C structs
     intptr_t           fOffset;
     long               fFlags;
     Converter*         fConverter;
+    Cppyy::TCppScope_t fScope;
     Cppyy::TCppScope_t fEnclosingScope;
     PyObject*          fDescription;
     PyObject*          fDoc;
@@ -55,12 +56,12 @@ inline bool CPPDataMember_CheckExact(T* object)
 
 //- creation -----------------------------------------------------------------
 inline CPPDataMember* CPPDataMember_New(
-    Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
+    Cppyy::TCppScope_t scope, Cppyy::TCppScope_t var)
 {
 // Create an initialize a new property descriptor, given the C++ datum.
     CPPDataMember* pyprop =
         (CPPDataMember*)CPPDataMember_Type.tp_new(&CPPDataMember_Type, nullptr, nullptr);
-    pyprop->Set(scope, idata);
+    pyprop->Set(scope, var);
     return pyprop;
 }
 

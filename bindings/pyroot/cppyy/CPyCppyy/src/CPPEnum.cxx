@@ -19,9 +19,9 @@ static PyObject* pytype_from_enum_type(const std::string& enum_type)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* pyval_from_enum(const std::string& enum_type, PyObject* pytype,
-        PyObject* btype, Cppyy::TCppEnum_t etype, Cppyy::TCppIndex_t idata) {
-    long long llval = Cppyy::GetEnumDataValue(etype, idata);
+PyObject* CPyCppyy::pyval_from_enum(const std::string& enum_type, PyObject* pytype,
+        PyObject* btype, Cppyy::TCppScope_t enum_constant) {
+    long long llval = Cppyy::GetEnumDataValue(enum_constant);
 
     if (enum_type == "bool") {
         PyObject* result = (bool)llval ? Py_True : Py_False;
@@ -45,13 +45,14 @@ static PyObject* pyval_from_enum(const std::string& enum_type, PyObject* pytype,
     if (!bval)
         return nullptr;      // e.g. when out of range for small integers
 
-    PyObject* args = PyTuple_New(1);
-    PyTuple_SET_ITEM(args, 0, bval);
-    PyObject* result = ((PyTypeObject*)btype)->tp_new((PyTypeObject*)pytype, args, nullptr);
-    Py_DECREF(args);
-    return result;
+    if (pytype && btype) {
+        PyObject* args = PyTuple_New(1);
+        PyTuple_SET_ITEM(args, 0, bval);
+        bval = ((PyTypeObject*)btype)->tp_new((PyTypeObject*)pytype, args, nullptr);
+        Py_DECREF(args);
+    }
+    return bval;
 }
-
 
 //- enum methods -------------------------------------------------------------
 static int enum_setattro(PyObject* /* pyclass */, PyObject* /* pyname */, PyObject* /* pyval */)
@@ -66,6 +67,8 @@ static PyObject* enum_repr(PyObject* self)
 {
     using namespace CPyCppyy;
 
+    PyObject* kls_scope = PyObject_GetAttr((PyObject*)Py_TYPE(self), PyStrings::gThisModule);
+    if (!kls_scope) PyErr_Clear();
     PyObject* kls_cppname = PyObject_GetAttr((PyObject*)Py_TYPE(self), PyStrings::gCppName);
     if (!kls_cppname) PyErr_Clear();
     PyObject* obj_cppname = PyObject_GetAttr(self, PyStrings::gCppName);
@@ -74,7 +77,7 @@ static PyObject* enum_repr(PyObject* self)
 
     PyObject* repr = nullptr;
     if (kls_cppname && obj_cppname && obj_str) {
-        const std::string resolved = Cppyy::ResolveEnum(CPyCppyy_PyText_AsString(kls_cppname));
+        const std::string resolved = Cppyy::ResolveEnum(PyLong_AsVoidPtr(kls_scope));
         repr = CPyCppyy_PyText_FromFormat("(%s::%s) : (%s) %s",
             CPyCppyy_PyText_AsString(kls_cppname), CPyCppyy_PyText_AsString(obj_cppname),
             resolved.c_str(), CPyCppyy_PyText_AsString(obj_str));
@@ -144,12 +147,12 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
 
     CPPEnum* pyenum = nullptr;
 
-    const std::string& ename = scope == Cppyy::gGlobalScope ? name : Cppyy::GetScopedFinalName(scope)+"::"+name;
-    Cppyy::TCppEnum_t etype = Cppyy::GetEnum(scope, name);
+    Cppyy::TCppScope_t etype = scope;
+    const std::string& ename = Cppyy::GetScopedFinalName(scope);
     if (etype) {
     // create new enum type with labeled values in place, with a meta-class
     // to make sure the enum values are read-only
-        const std::string& resolved = Cppyy::ResolveEnum(ename);
+        const std::string& resolved = Cppyy::ResolveEnum(etype);
         PyObject* pyside_type = pytype_from_enum_type(resolved);
         PyObject* pymetabases = PyTuple_New(1);
         PyObject* btype = (PyObject*)Py_TYPE(pyside_type);
@@ -169,12 +172,14 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
     // create the __cpp_name__ for templates
         PyObject* dct = PyDict_New();
         PyObject* pycppname = CPyCppyy_PyText_FromString(ename.c_str());
+        PyObject* pycppscope = PyLong_FromVoidPtr(etype);
         PyDict_SetItem(dct, PyStrings::gCppName, pycppname);
+        PyDict_SetItem(dct, PyStrings::gThisModule, pycppscope);
         Py_DECREF(pycppname);
         PyObject* pyresolved = CPyCppyy_PyText_FromString(resolved.c_str());
         PyDict_SetItem(dct, PyStrings::gUnderlying, pyresolved);
         Py_DECREF(pyresolved);
-
+    
     // add the __module__ to allow pickling
         std::string modname = TypeManip::extract_namespace(ename);
         TypeManip::cppscope_to_pyscope(modname);      // :: -> .
@@ -196,15 +201,15 @@ CPyCppyy::CPPEnum* CPyCppyy::CPPEnum_New(const std::string& name, Cppyy::TCppSco
         ((PyTypeObject*)pyenum)->tp_str  = ((PyTypeObject*)pyside_type)->tp_repr;
 
     // collect the enum values
-        Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(etype);
+        std::vector<Cppyy::TCppScope_t> econstants = Cppyy::GetEnumConstants(etype);
         bool values_ok = true;
-        for (Cppyy::TCppIndex_t idata = 0; idata < ndata; ++idata) {
-            PyObject* val = pyval_from_enum(resolved, pyenum, pyside_type, etype, idata);
+        for (auto *econstant : econstants) {
+            PyObject* val = pyval_from_enum(resolved, pyenum, pyside_type, econstant);
             if (!val) {
                 values_ok = false;
                 break;
             }
-            const std::string& dname = Cppyy::GetEnumDataName(etype, idata);
+            const std::string& dname = Cppyy::GetFinalName(econstant);
             PyObject* pydname = CPyCppyy_PyText_FromString(dname.c_str());
             PyObject_SetAttr(pyenum, pydname, val);
             Py_DECREF(pydname);
