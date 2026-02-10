@@ -314,6 +314,7 @@ void TObject::DrawClass() const
 /// Draw a clone of this object in the current selected pad with:
 /// `gROOT->SetSelectedPad(c1)`.
 /// If pad was not selected - `gPad` will be used.
+/// \note For histograms, use the more specialised TH1::DrawCopy().
 
 TObject *TObject::DrawClone(Option_t *option) const
 {
