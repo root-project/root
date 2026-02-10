@@ -208,7 +208,21 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
 ROOT::RClusterDescriptor::RPageInfoExtended
 ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) const
 {
-   const auto N = fCumulativeNElements.size();
+   if (!fCumulativeNElements) {
+      // Small range, just iterate through fPageInfos
+      NTupleSize_t pageNumber = 0;
+      NTupleSize_t firstInPage = 0;
+      for (const auto &pi : fPageInfos) {
+         if (firstInPage + pi.GetNElements() > idxInCluster) {
+            return RPageInfoExtended{pi, firstInPage, pageNumber};
+         }
+         pageNumber++;
+         firstInPage += pi.GetNElements();
+      }
+      R__ASSERT(false);
+   }
+
+   const auto N = fCumulativeNElements->size();
    R__ASSERT(N > 0);
    R__ASSERT(N == fPageInfos.size());
 
@@ -217,12 +231,12 @@ ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) cons
    std::size_t midpoint = N;
    while (left <= right) {
       midpoint = (left + right) / 2;
-      if (fCumulativeNElements[midpoint] <= idxInCluster) {
+      if ((*fCumulativeNElements)[midpoint] <= idxInCluster) {
          left = midpoint + 1;
          continue;
       }
 
-      if ((midpoint == 0) || (fCumulativeNElements[midpoint - 1] <= idxInCluster))
+      if ((midpoint == 0) || ((*fCumulativeNElements)[midpoint - 1] <= idxInCluster))
          break;
 
       right = midpoint - 1;
@@ -230,7 +244,7 @@ ROOT::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) cons
    R__ASSERT(midpoint < N);
 
    auto pageInfo = fPageInfos[midpoint];
-   decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
+   decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : (*fCumulativeNElements)[midpoint - 1];
    R__ASSERT(firstInPage <= idxInCluster);
    R__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
@@ -975,12 +989,16 @@ ROOT::RResult<ROOT::RClusterDescriptor> ROOT::Internal::RClusterDescriptorBuilde
       if (fCluster.fColumnRanges.count(pr.first) == 0) {
          return R__FAIL("missing column range");
       }
-      pr.second.fCumulativeNElements.clear();
-      pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
-      ROOT::NTupleSize_t sum = 0;
-      for (const auto &pi : pr.second.fPageInfos) {
-         sum += pi.GetNElements();
-         pr.second.fCumulativeNElements.emplace_back(sum);
+      pr.second.fCumulativeNElements.reset();
+      const auto nPages = pr.second.fPageInfos.size();
+      if (nPages > RClusterDescriptor::RPageRange::kLargeRangeThreshold) {
+         pr.second.fCumulativeNElements = std::make_unique<std::vector<NTupleSize_t>>();
+         pr.second.fCumulativeNElements->reserve(nPages);
+         ROOT::NTupleSize_t sum = 0;
+         for (const auto &pi : pr.second.fPageInfos) {
+            sum += pi.GetNElements();
+            pr.second.fCumulativeNElements->emplace_back(sum);
+         }
       }
    }
    RClusterDescriptor result;
