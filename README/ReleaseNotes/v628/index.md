@@ -995,15 +995,27 @@ List of issues solved:
 * [[#10178](https://github.com/root-project/root/issues/10178)] - [cling] crash / compilation exception after undo
 * [[#11746](https://github.com/root-project/root/issues/11746)] - TH2::Fill(const char *namex, const char *namey, Double_t w) doesn't update fTsumwxy
 
-## HEAD of the v6-28-00-patches branch
+## Release 6.28/14
 
-The next patch release removes the `RooPower` and `RooExpPoly` classes from this release branch.
+Published on February 12, 2026
+
+### Bugs and Issues fixed in this release
+
+This release comes with some minor fixes, for example for TMVA. Moreover, it addresses the following problems:
+
+* [[CVE-2026-24811]](https://nvd.nist.gov/vuln/detail/CVE-2026-24811)] and [[CVE-2026-24812]](https://nvd.nist.gov/vuln/detail/CVE-2026-24812)]
+* [[#15118](https://github.com/root-project/root/issues/15118)] - jsoninterface does not build if provided with RapidYAML
+* [[#15621](https://github.com/root-project/root/issues/15621)] - Buffer overflow in TBranch::Init
+* [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
+* [[#15511](https://github.com/root-project/root/issues/15511)] - Possible memory corruption in cling
+* [[#15511](https://github.com/root-project/root/issues/14964)] - ROOT-HEAD fails with "cling interactive line includer >>>: fatal error: module file '[snip]/Vc.pcm' not found: module file not found
+
+This patch release removes the `RooPower` and `RooExpPoly` classes from this release branch.
 It is an unfortunate but unavoidable change: different classes with the same name were used in the CMS collaboration since at least the Higgs discovery.
 This name collision caused massive problems in backwards compatibility and was blocking CMS from picking up ROOT 6.28+ for statistical analysis.
 These classes were only introduced with ROOT 6.28.00 and were not widely advertised, so you should not be affected by this removal.
 If you were using one of these classes, please copy the sources from a previous ROOT tag in your analysis as a temporary solution, and report this unsupported usecase by opening a GitHub issue.
-Based on the feedback to this patch release, the `RooPower` and `RooExpPoly` classes will either be removed or renamed in the upcoming ROOT 6.32.
+Based on the feedback to this patch release, the `RooPower` and `RooExpPoly` classes will either be removed or renamed in ROOT 6.32.
 
-These changes will be part of a future 6.28/14.
-
+## HEAD of the v6-28-00-patches branch
 - None so far.
