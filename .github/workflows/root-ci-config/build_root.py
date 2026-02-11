@@ -102,6 +102,9 @@ def main():
         ctest_custom_flags = options_dict['ROOT_CTEST_CUSTOM_FLAGS']
         options_dict.pop('ROOT_CTEST_CUSTOM_FLAGS') # we do not want a -D called like that
 
+    if args.clingtests_only:
+        options_dict['clingtest'] = "ON"
+
     options = build_utils.cmake_options_from_dict(options_dict)
     print("Full build options")
     for key, val in sorted(options_dict.items()):
@@ -165,7 +168,7 @@ def main():
         # Delete all the .gcda files produces by an artefact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
-    build(options, args.buildtype)
+    build(options, args.buildtype, args.clingtests_only)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
@@ -177,7 +180,7 @@ def main():
     if args.binaries:
         create_binaries(args.buildtype)
 
-    if testing:
+    if testing and not args.clingtests_only:
         extra_ctest_flags = ''
         if WINDOWS:
             extra_ctest_flags += '--repeat until-pass:5 '
@@ -191,7 +194,7 @@ def main():
     if args.coverage:
         create_coverage_xml()
 
-    if testing and ctest_returncode != 0:
+    if testing and not args.clingtests_only and ctest_returncode != 0:
         handle_test_failure(ctest_returncode)
 
     print_trace()
@@ -220,6 +223,7 @@ def parse_args():
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--clingtests_only", default="false",   help="Run only clingtests")
     parser.add_argument("--coverage",        default="false",   help="Create Coverage report in XML")
     parser.add_argument("--sha",             default=None,      help="sha that triggered the event")
     parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
@@ -236,6 +240,7 @@ def parse_args():
 
     # Set argument to True if matched
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
+    args.clingtests_only = args.clingtests_only.lower() in ('yes', 'true', '1', 'on')
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
 
@@ -429,20 +434,23 @@ def dump_requested_config(options):
 
 
 @github_log_group("Build")
-def cmake_build(buildtype):
+def cmake_build(buildtype, clingtests_only = False):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
     parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
-    result = subprocess_with_log(f"""
-        cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
-    """)
+    command = f"""
+        cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}"""
+    if clingtests_only:
+        command += " --target check-cling"
+
+    result = subprocess_with_log(command)
 
     if result != 0:
         die(result, "Failed to build")
 
 
-def build(options, buildtype):
+def build(options, buildtype, clingtests_only = False):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
         result = subprocess_with_log(f"mkdir {builddir}")
@@ -457,7 +465,7 @@ def build(options, buildtype):
 
     dump_requested_config(options)
 
-    cmake_build(buildtype)
+    cmake_build(buildtype, clingtests_only)
 
 
 @github_log_group("Create binary packages")

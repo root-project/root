@@ -1,0 +1,117 @@
+name: 'Cling Test CI'
+
+on:
+  pull_request:
+    paths:
+      - 'interpreter/cling/**'
+      - '.github/workflows/cling-test.yml'
+
+env:
+  PYTHONUNBUFFERED: true
+  OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
+  GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-cling:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Specify image + (optional) build option overrides
+        #
+        # Available images: https://github.com/root-project/root-ci-images
+        # Common configs: {Release,Debug,RelWithDebInfo)
+        # Build options: https://root.cern/install/build_from_source/#all-build-options
+        include:
+          - image: alma10
+            platform_config: alma10-minimal
+
+    runs-on:
+      - self-hosted
+      - linux
+      - ${{ matrix.architecture == null && 'x64' || matrix.architecture }}
+      - ${{ matrix.extra-runs-on == null && 'cpu' || matrix.extra-runs-on }}
+
+    name: Cling Tests
+
+    container:
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # KEEP IN SYNC WITH env key below
+      options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
+      volumes:
+        - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
+      env:
+        CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
+        CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
+
+    steps:
+      - name: Configure large ccache
+        if: ${{ matrix.is_special }}
+        run: |
+          ccache -o max_size=5G
+          ccache -p || true
+          ccache -s || true
+
+      - name: Configure small ccache
+        if: ${{ !matrix.is_special }}
+        run: |
+          ccache -o max_size=1.5G
+          ccache -p || true
+          ccache -s || true
+
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
+
+      - name: Pull Request Build
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.image }}
+                    --dockeropts      \"$CONTAINER_OPTIONS\"
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
+                    --clingtests_only true
+              "
+
+      - name: ccache info (post)
+        run: |
+          ccache -s || true
