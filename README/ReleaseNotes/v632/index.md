@@ -909,3 +909,15 @@ Published on November 25, 2025
 ### Items addressed in this release
 
 This branch includes one bugfix ([[#20083](https://github.com/root-project/root/issues/20083)] - TTreeIndex fails under Valgrind due to long double emulation) and adds the support for the new new Apple XCode 26.2.
+
+## Release 6.32.22
+
+Published on February 12, 2026
+
+### Items addressed in this release
+
+This release comes with some minor fixes for SOFIE, the `h2root` command and TMVA. Moreover, it addresses the following problems:
+
+* [[CVE-2026-24811]](https://nvd.nist.gov/vuln/detail/CVE-2026-24811)] and [[CVE-2026-24812]](https://nvd.nist.gov/vuln/detail/CVE-2026-24812)]
+* [[#20831](https://github.com/root-project/root/issues/20831)] - New test failure with gcc 16 (possibly c++20 related)
+* [[ROOT-10728](https://its.cern.ch/jira/browse/ROOT-10728)] - TClass::CanSplit() should automatically return 0 if a base class has a custom streamer.
