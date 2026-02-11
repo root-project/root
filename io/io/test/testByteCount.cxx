@@ -1,6 +1,14 @@
+#include "TBufferFile.h"
+#include "TExMap.h"
+
+#include <iostream>
+#include <vector>
+
+
+int testByteCount()
 {
    int errors = 0;
-   int expectedByteCounts = 1;
+   unsigned int expectedByteCounts = 1;
 
    // TBufferFile currently reject size larger than 2GB.
    // SetBufferOffset does not check against the size,
