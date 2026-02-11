@@ -37,6 +37,9 @@ The following people have contributed to this new version:
 * The headers in `RooStats/HistFactory` for data classes related to the measurement definition were merged into the `RooStats/HistFactory/Measurement.h` header to simplify usage and development. For now, the whole set of header files is kept for backwards compatibility, but the empty headers will be removed in ROOT 7.
 * The `TROOT::GetSourceDir()` method is deprecated and will be removed in ROOT 6.42. It stopped making sense because the ROOT source is generally not shipped alongside ROOT in the `src/` subdirectory anymore.
 * Using the `rpath` build option - deprecated and without effect since ROOT 6.38 - is now scheduled to give configuration errors starting from ROOT 6.42.
+* `TDirectory::AddDirectoryStatus()` and `TDirectory::AddDirectory()` have been deprecated. These functions were meant to replace TH1::AddDirectoryStatus(), but
+  never had any effect on ROOT. The associated bit TDirectory::fgAddDirectory was deprecated as well. Although users can set and read the bit, its usage should be
+  stopped completely to avoid any confusion. The bit and functions will be removed in ROOT 7.
 
 ## Removals
 
