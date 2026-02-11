@@ -325,6 +325,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TGraphPolargram", true},
                             {"TPave", true},
                             {"TGaxis"},
+                            {"TEfficiency"},
                             {"TPave", true},
                             {"TButton", true},
                             {"TSlider", true},
