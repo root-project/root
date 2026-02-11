@@ -127,7 +127,7 @@ enum compareOptions {
 int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptDebug;
 
-Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swicth off in case of debugging)
+Bool_t cleanHistos = kTRUE;   // delete histogram after testing (switch off in case of debugging)
 
 const double defaultErrorLimit = 1.E-10;
 
@@ -142,7 +142,7 @@ const char* refFileName = "./stressHistogram.5.18.00.root";
 
 TRandom2 r;
 // set to zero if want to run different numbers every time
-const int initialSeed = 0;
+int initialSeed = 0;
 
 
 
@@ -181,7 +181,6 @@ bool testAdd1()
    TH1D* h2 = new TH1D("t1D1_h2", "h2-Title", numberOfBins, minRange, maxRange);
    TH1D* h3 = new TH1D("t1D1_h3", "h3=c1*h1+c2*h2", numberOfBins, minRange, maxRange);
 
-   h1->Sumw2();h2->Sumw2();h3->Sumw2();
 
    FillHistograms(h1, h3, 1.0, c1);
    FillHistograms(h2, h3, 1.0, c2);
@@ -11106,6 +11105,11 @@ int stressHistogram(int testNumber = 0)
 
    // Test 7
    // Add Tests
+   // for adding we do not need to set by default Sumw2
+   // we test that automatically is set
+   bool globalSumw2 = TH1::GetDefaultSumw2();
+   if (globalSumw2) TH1::SetDefaultSumw2(false);
+
    const unsigned int numberOfAdds = 22;
    pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1,
                                                  testAdd2,    testAddProfile2,
@@ -11125,6 +11129,8 @@ int stressHistogram(int testNumber = 0)
    struct TTestSuite addTestSuite = { numberOfAdds,
                                       "Add tests for 1D, 2D and 3D Histograms and Profiles..............",
                                       addTestPointer };
+
+   if (globalSumw2) TH1::SetDefaultSumw2(true);
 
    // Test 8
    // Multiply Tests
@@ -11911,6 +11917,21 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
            << " | " << fabs( stats1[0] - stats2[0] )
            << " " << differents
            << std::endl;
+   // check the sum of weights (excluding underflows/overflows)
+   differents += (bool) equals( h1->GetSumOfWeights(), h2->GetSumOfWeights(), 100*ERRORLIMIT);
+   if ( debug )
+      std::cout << "Sum Of Weigths(2): " <<  h1->GetSumOfWeights()  << " " <<  h2->GetSumOfWeights()
+           << " | " << fabs(  h2->GetSumOfWeights() -  h1->GetSumOfWeights() )
+           << " " << differents
+           << std::endl;
+   // check the sum of all weights (including underflows/overflows)
+   differents += (bool) equals( h1->GetSumOfAllWeights(true), h2->GetSumOfAllWeights(true), 100*ERRORLIMIT);
+   if ( debug )
+      std::cout << "Sum Of All Weigths (with u/o): " <<  h1->GetSumOfAllWeights(true)  << " " <<  h2->GetSumOfAllWeights(true)
+           << " | " << fabs(  h2->GetSumOfAllWeights(true) -  h1->GetSumOfAllWeights(true) )
+           << " " << differents
+           << std::endl;
+
 
    if (TMath::AreEqualRel(stats1[0], h1->GetEffectiveEntries() , 1.E-12) ) {
       // unweighted histograms - check also number of entries
@@ -11920,6 +11941,16 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
               << " | " << fabs( h1->GetEntries() - h2->GetEntries() )
               << " " << differents
               << std::endl;
+
+      // check that the number of entries is equal to sum of all weights
+      // this is not valid for TProfiles
+      if (!h1->InheritsFrom(TProfile::Class()) && !h1->InheritsFrom(TProfile2D::Class()) && !h1->InheritsFrom(TProfile3D::Class())) {
+         differents += (bool) equals( h1->GetEntries(), h2->GetSumOfAllWeights(true), 100*ERRORLIMIT);
+         if (debug)
+            std::cout << "Entries vs Sum of All Weights: " << h1->GetEntries() << " " << h2->GetSumOfAllWeights(true)
+             << " | " << fabs( h1->GetEntries() - h2->GetSumOfAllWeights(true) )
+            << " " << differents  << std::endl;
+      }
    }
 
    // Number of Effective Entries

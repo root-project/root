@@ -967,11 +967,13 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
       return (iret >= 0);
    }
 
-   //    Create Sumw2 if h1 has Sumw2 set
+   // Create Sumw2 if h1 has Sumw2 set
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
+   // In addition, create Sumw2 if is not a simple addition, otherwise errors will not be correctly computed
+   if (fSumw2.fN == 0 && c1 != 1.0) Sumw2();
 
-   //   - Add statistics
-   Double_t entries = TMath::Abs( GetEntries() + c1 * h1->GetEntries() );
+   //   - Add statistics (for c1=1)
+   Double_t entries = GetEntries() + h1->GetEntries();
 
    // statistics can be preserved only in case of positive coefficients
    // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
@@ -1048,7 +1050,15 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
          else        s1[i] += c1*s2[i];
       }
       PutStats(s1);
-      SetEntries(entries);
+      if (c1 == 1.0)
+         SetEntries(entries);
+      else {
+         // compute entries as effective entries in case of
+         // weights different than 1
+         double sumw2 = 0;
+         double sumw = GetSumOfAllWeights(true, &sumw2);
+         if (sumw2 > 0) SetEntries( sumw*sumw/sumw2);
+      }
    }
    return kTRUE;
 }
@@ -1133,7 +1143,8 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
-
+   // Create also Sumw2 if not a simple addition (c1 = 1, c2 = 1)
+   if (fSumw2.fN == 0 && (c1 != 1.0 || c2 != 1.0)) Sumw2();
    //   - Add statistics
    Double_t nEntries = TMath::Abs( c1*h1->GetEntries() + c2*h2->GetEntries() );
 
@@ -1240,9 +1251,18 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       ResetStats();
    }
    else {
-      // update statistics (do here to avoid changes by SetBinContent)  FIXME remove???
+      // update statistics
       PutStats(s3);
-      SetEntries(nEntries);
+      // previous entries are correct only if c1=1 and c2=1
+      if (c1 == 1.0 && c2 == 1.0)
+         SetEntries(nEntries);
+      else {
+         // compute entries as effective entries in case of
+         // weights different than 1
+         double sumw2 = 0;
+         double sumw = GetSumOfAllWeights(true, &sumw2);
+         if (sumw2 > 0) SetEntries( sumw*sumw/sumw2);
+      }
    }
 
    return kTRUE;
@@ -7959,32 +7979,47 @@ void TH1::ResetStats()
    fEntries = 1; // to force re-calculation of the statistics in TH1::GetStats
    GetStats(stats);
    PutStats(stats);
-   fEntries = TMath::Abs(fTsumw);
-   // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
-   if (fSumw2.fN > 0 && fTsumw > 0 && stats[1] > 0 ) fEntries = stats[0]*stats[0]/ stats[1];
+   // histogram entries should include always underflows and overflows
+   if (GetStatOverflowsBehaviour() && !fXaxis.TestBit(TAxis::kAxisRange))
+      fEntries = TMath::Abs(fTsumw);
+   else {
+      Double_t sumw2 = 0;
+      Double_t * p_sumw2 = (fSumw2.fN > 0) ? &sumw2 : nullptr;
+      fEntries = GetSumOfAllWeights(true, p_sumw2);
+      // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
+      if (p_sumw2 && sumw2 > 0) fEntries = fEntries*fEntries/ sumw2;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the sum of all weights
+/// Return the sum of all weights and optionally also the sum of weight squares
 /// \param includeOverflow true to include under/overflows bins, false to exclude those.
 /// \note Different from TH1::GetSumOfWeights, that always excludes those
 
-Double_t TH1::GetSumOfAllWeights(const bool includeOverflow) const
+Double_t TH1::GetSumOfAllWeights(const bool includeOverflow, Double_t * sumWeightSquare) const
 {
    if (fBuffer) const_cast<TH1*>(this)->BufferEmpty();
 
    const Int_t start = (includeOverflow ? 0 : 1);
    const Int_t lastX = fXaxis.GetNbins() + (includeOverflow ? 1 : 0);
-   const Int_t lastY = fYaxis.GetNbins() + (includeOverflow ? 1 : 0);
-   const Int_t lastZ = fZaxis.GetNbins() + (includeOverflow ? 1 : 0);
+   const Int_t lastY = (fDimension > 1) ? (fYaxis.GetNbins() + (includeOverflow ? 1 : 0)) : start;
+   const Int_t lastZ = (fDimension > 2) ? (fZaxis.GetNbins() + (includeOverflow ? 1 : 0)) : start;
    Double_t sum =0;
+   Double_t sum2 = 0;
    for(auto binz = start; binz <= lastZ; binz++) {
       for(auto biny = start; biny <= lastY; biny++) {
          for(auto binx = start; binx <= lastX; binx++) {
             const auto bin = GetBin(binx, biny, binz);
-            sum += RetrieveBinContent(bin);
+            sum +=  RetrieveBinContent(bin);
+            if (sumWeightSquare && fSumw2.fN > 0) sum2 += GetBinErrorSqUnchecked(bin);
          }
       }
+   }
+   if (sumWeightSquare) {
+      if (fSumw2.fN > 0)
+         *sumWeightSquare = sum2;
+      else
+         *sumWeightSquare = sum;
    }
    return sum;
 }
