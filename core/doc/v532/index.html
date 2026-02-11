@@ -6,14 +6,14 @@
 <ul>
 <li>
 On MacOS X move to a more secure way of building. We will now always use
-the --enable-explicitlink ./configure option which will cause a shared lib
+the <tt>--enable-explicitlink</tt> ./configure option which will cause a shared lib
 or executable to be linked with all its dependent libraries. The OSX linker
 is quite good and processing this extended set of libraries for each link
 does cost only 3s extra time for all 100+ shared libs (13s instead of 10s).
 Not much for the extra security. In addition we went back to the default
-linker option "-undefined error", so you will get an error if symbols
+linker option <tt>"-undefined error"</tt>, so you will get an error if symbols
 are unresolved. Shared libs are also linked with the option
-"-Wl,-dead_strip_dylibs" which tells the linker to remove any shared lib
+<tt>"-Wl,-dead_strip_dylibs"</tt> which tells the linker to remove any shared lib
 which is not used to resolve any symbols (this should
 solve the long standing issue of ACliC linking all previously created
 shared libs even when not needed).
@@ -23,10 +23,10 @@ shared libs even when not needed).
 <h4>Linux</h4>
 <ul>
 <li>
-Make --enable-explictlink the default on linux too (was already the case for:
+Make <tt>--enable-explicitlink</tt> the default on Linux too (was already the case for:
 macosx, freebsd, openbsd, aix and win32). This adds some extra time to
 the link stage, which can be recuperated by using the newer, much faster,
-gold linker. In addition we added the linker option "-Wl,--no-undefined",
+gold linker. In addition we added the linker option <tt>"-Wl,--no-undefined"</tt>,
 so you will get an error if symbols are unresolved.
 Explicit linking is required by newer distributions, like Ubuntu 11.10,
 that require all dependent shared libs to be specified when linking. They
@@ -38,9 +38,7 @@ any symbols (equivalent to the MacOS X build changes described above).
 <a name="core"></a>
 <h3>Core Libraries</h3>
 
-
 <h4>TClonesArray</h4>
-
 <ul>
 <li>Introduce <tt>TClonesArray::ConstructedAt</tt> which
 always returns an already constructed object.   If the slot is being used for the
@@ -86,7 +84,6 @@ So far it supports only one type of queue - FIFO.
 </ul>
 
 <h4>Thread library</h4>
-
 <ul>
 <li>Reduces risk of internal dead lock by using a private internal lock to protect the internals of TThread, rather than using TThread::Lock
 </li>
@@ -113,7 +110,7 @@ single entry point to query the type based on its name, conveniently combining
 TDataType and TClass queries. It does name normalization (removing std etc).
 </li>
 <li>Add the ability to explicitly forbid (or allow) the splitting of a class
-(<tt>TClass::SetSplit</tt>) so that user can inforce the use of a custom streamer in all possible split cases.
+(<tt>TClass::SetSplit</tt>) so that user can enforce the use of a custom streamer in all possible split cases.
 </li>
 <li>Resolve several issues with the creation of StreamerInfo for abstract classes.
 </li>
@@ -136,5 +133,3 @@ The Modern style has now a transparent background for the histogram title.
 <li>If home directory is not correctly set in pw file or user is not known, use the HOME shell variable to find the desired home directory.
 </li>
 </ul>
-
-
