@@ -5,7 +5,7 @@
 #include <vector>
 
 
-int testByteCount()
+int unittestByteCount()
 {
    int errors = 0;
    unsigned int expectedByteCounts = 1;
@@ -123,4 +123,105 @@ int testByteCount()
 
    std::cerr << "The end.\n";
    return errors;
+}
+
+struct LargeByteCountsFixture {
+   std::size_t fSize{0};
+   void resize(size_t size) {
+      fSize = size;
+   }
+   void Streamer(TBuffer &b) {
+      // Bare minimum to trigger the large byte count mechanism,
+      // we don't care about the content of the data.
+      if (b.IsReading()) {
+         b >> fSize;
+         b.SetBufferOffset(b.GetCurrent() - b.Buffer() + fSize);
+      } else {
+         b << fSize;
+         b.SetBufferOffset(b.GetCurrent() - b.Buffer() + fSize);
+      }
+   }
+};
+
+#ifdef __ROOTCLING__
+#pragma link C++ class LargeByteCountsFixture-;
+#endif
+
+int readAndCheck(const std::string &msg, TBufferFile &b, size_t expected_size)
+{
+   // Same as b >> ptr;
+   auto obj = b.ReadObjectAny(TClass::GetClass(typeid(LargeByteCountsFixture)));
+   if (!obj) {
+      std::cerr << msg << ": Failed to read back the object\n";
+      return 1;
+   } else {
+      auto* readFixture = static_cast<LargeByteCountsFixture*>(obj);
+      if (readFixture->fSize != expected_size ) {
+         std::cerr << msg << ": The size of the data vectors do not match the original ones\n";
+         delete readFixture;
+         return 1;
+      }
+      delete readFixture;
+   }
+   return 0;
+}
+
+
+char *DoNothingAllocator(char* input, size_t, size_t)
+{
+   // We 'could' check that the requested memory in under what we
+   // preallocated.
+   return input;
+}
+
+int testReadWriteObjectAny()
+{
+   int errors = 0;
+
+   // TBufferFile currently reject size larger than 2GB.
+   // SetBufferOffset does not check against the size,
+   // so we can provide and use a larger buffer.
+   std::vector<char> databuffer{};
+   databuffer.reserve(8 * 1024 * 1024 * 1024ll);
+   TBufferFile b(TBuffer::kWrite, 8 * 1024 * 1024 * 1024ll - 100, databuffer.data(), false /* don't adopt */, DoNothingAllocator);
+
+   LargeByteCountsFixture fixture;
+   fixture.resize(100); // Small object, should be written with the regular byte count mechanism.
+
+   auto startPos = b.GetCurrent() - b.Buffer();
+   b.WriteObject(&fixture, false /* cacheReuse */);
+   b.SetReadMode();
+   b.SetBufferOffset(startPos);
+
+   errors += readAndCheck("Small object written in regular section", b, 100);
+
+   // Large object, should be written with the large byte count mechanism
+   b.SetWriteMode();
+   startPos = b.GetCurrent() - b.Buffer();
+   fixture.resize(1024 * 1024 * 256); // 1GB of data
+   b.WriteObject(&fixture, false /* cacheReuse */);
+   b.SetReadMode();
+   b.SetBufferOffset(startPos);
+   errors += readAndCheck("Large object written in regular section", b, 1024 * 1024 * 256);
+
+   // Large object written in long range section, should be written with
+   // the large byte count mechanism
+   b.SetWriteMode();
+   b.SetBufferOffset(4 * 1024 * 1024 * 1024ll + 100);
+   startPos = b.GetCurrent() - b.Buffer();
+   fixture.resize(1024 * 1024 * 256); // 1GB of data
+   b.WriteObject(&fixture, false /* cacheReuse */);
+   b.SetReadMode();
+   b.SetBufferOffset(startPos);
+   errors += readAndCheck("Large object written in long range section", b, 1024 * 1024 * 256);
+
+   return errors;
+}
+
+
+int testByteCount()
+{
+   int res = unittestByteCount();
+   res += testReadWriteObjectAny();
+   return res;
 }
