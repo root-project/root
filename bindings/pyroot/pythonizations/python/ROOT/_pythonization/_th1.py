@@ -11,6 +11,19 @@
 r"""
 \pythondoc TH1
 
+## Drawing histograms in Python
+
+Drawing histograms is done via TH1::Draw(). Note that in interactive scripts,TCanvas::Draw() can be
+made blocking to interactively show it on the screen before continuing execution.
+\code{.py}
+c = ROOT.TCanvas()
+h = ROOT.TH1D("h1", "h1", 100, -5, 5)
+h.FillRandom("gaus", 10000)
+h.Draw("")
+
+c.Draw(block=True)
+\endcode
+
 ## Fitting histograms in Python
 
 One-dimensional histograms can be fit in [Python](https://root.cern/manual/python) with a similar syntax as in C++.
