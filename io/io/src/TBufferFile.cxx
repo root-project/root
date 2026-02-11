@@ -347,7 +347,8 @@ void TBufferFile::WriteCharStar(char *s)
 
 void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 {
-   assert( cntpos <= kOverflowPosition && (sizeof(UInt_t) + cntpos) <  static_cast<UInt_t>(fBufCur - fBuffer)
+   assert( (cntpos == kOverflowPosition ||
+            (cntpos < kOverflowPosition && (sizeof(UInt_t) + cntpos) <  static_cast<ULong64_t>(fBufCur - fBuffer)))
         && (fBufCur >= fBuffer)
         && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
         && "Byte count position is after the end of the buffer");
