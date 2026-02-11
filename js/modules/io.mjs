@@ -976,7 +976,7 @@ function readMapElement(buf) {
 /** @summary create member entry for streamer element
   * @desc used for reading of data
   * @private */
-function createMemberStreamer(element, file) {
+function createMemberStreamer(element, file, no_string) {
    const member = {
       name: element.fName, type: element.fType,
       fArrayLength: element.fArrayLength,
@@ -1042,6 +1042,7 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kInt:
       case kOffsetL + kCounter:
       case kOffsetL + kDouble:
+      case kOffsetL + kChar:
       case kOffsetL + kUChar:
       case kOffsetL + kShort:
       case kOffsetL + kUShort:
@@ -1054,36 +1055,35 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kFloat:
          if (element.fArrayDim < 2) {
             member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
-            };
+            if ((member.type !== kOffsetL + kChar) || no_string) {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
+               };
+            } else {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readFastString(this.arrlength);
+               };
+            }
          } else {
-            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.minus1 = true;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
-                  buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
-            };
-         }
-         break;
-      case kOffsetL + kChar:
-         if (element.fArrayDim < 2) {
-            member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastString(this.arrlength);
-            };
-         } else {
-            member.minus1 = true; // one dimension used for char*
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
-                  buf2.readFastString(handle.arrlength));
-            };
+            if ((member.type !== kOffsetL + kChar) || no_string) {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                     buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
+               };
+            } else {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                     buf2.readFastString(handle.arrlength));
+               };
+            }
          }
          break;
       case kOffsetP + kBool:
       case kOffsetP + kInt:
       case kOffsetP + kDouble:
+      case kOffsetP + kChar:
       case kOffsetP + kUChar:
       case kOffsetP + kShort:
       case kOffsetP + kUShort:
@@ -1095,15 +1095,15 @@ function createMemberStreamer(element, file) {
       case kOffsetP + kLong64:
       case kOffsetP + kFloat:
          member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
-         };
-         break;
-      case kOffsetP + kChar:
-         member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
-         };
+         if ((member.type !== kOffsetP + kChar) || no_string) {
+            member.func = function(buf, obj) {
+               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
+            };
+         } else {
+            member.func = function(buf, obj) {
+               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
+            };
+         }
          break;
       case kDouble32:
       case kOffsetL + kDouble32:

@@ -2488,7 +2488,7 @@ async function treeProcess(tree, selector, args) {
             elem.fArrayDim = 1;
             elem.fMaxIndex[0] = 10; // 10 if artificial number, will be replaced during reading
 
-            item.arrmember = createMemberStreamer(elem, handle.file);
+            item.arrmember = createMemberStreamer(elem, handle.file, true);
          }
       }
    } else

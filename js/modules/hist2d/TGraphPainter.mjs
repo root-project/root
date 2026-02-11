@@ -75,11 +75,14 @@ class TGraphPainter extends ObjectPainter {
          return true;
 
       let is_normal = false;
-      if (check_axis !== 'y')
-         is_normal ||= (histo.fXaxis.fXmin !== 0.0011) || (histo.fXaxis.fXmax !== 1.1);
+      if (check_axis !== 'y') {
+         is_normal ||= ((histo.fXaxis.fXmin !== 0.0011) && (histo.fXaxis.fXmin !== 0)) ||
+                       ((histo.fXaxis.fXmax !== 1.1) && (histo.fXaxis.fXmax !== 1));
+      }
 
       if (check_axis !== 'x') {
-         is_normal ||= (histo.fYaxis.fXmin !== 0.0011) || (histo.fYaxis.fXmax !== 1.1) ||
+         is_normal ||= ((histo.fYaxis.fXmin !== 0.0011) && (histo.fYaxis.fXmin !== 0)) ||
+                       ((histo.fYaxis.fXmax !== 1.1) && (histo.fYaxis.fXmax !== 1)) ||
                        (histo.fMinimum !== 0.0011) || (histo.fMaximum !== 1.1);
       }
 
