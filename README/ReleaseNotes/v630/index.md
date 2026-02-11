@@ -759,6 +759,20 @@ This name collision caused massive problems in backwards compatibility and was b
 These classes were only introduced with ROOT 6.28.00 and were not widely advertised, so you should not be affected by this removal.
 If you were using one of these classes, please copy the sources from a previous ROOT tag in your analysis as a temporary solution, and report this unsupported usecase by opening a GitHub issue.
 
+## Release 6.30.10
+
+Published on February 12, 2026
+
+### Issues addressed in this release
+
+This release comes with some minor fixes for SOFIE and histograms. Moreover, it addresses the following problems:
+
+* [[CVE-2026-24811]](https://nvd.nist.gov/vuln/detail/CVE-2026-24811)] and [[CVE-2026-24812]](https://nvd.nist.gov/vuln/detail/CVE-2026-24812)]
+* [[#16654](https://github.com/root-project/root/issues/16654)] - Cannot compile ROOT master with Ubuntu 24.10 with gcc 14 (Ubuntu 14.2.0-4ubuntu2)
+* [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with TH1::SetBuffer and TH1::Sumw2
+* [[ROOT-7991](https://its.cern.ch/jira/browse/ROOT-7991)] - THnSparse::ProjectionND yields disfunctional histogram
+* [[ROOT-8238](https://its.cern.ch/jira/browse/ROOT-8238)] - TPrincipal tries to make histograms with nbin=0
+
 ## HEAD of the v6-30-00-patches branch
 
 - None so far.
