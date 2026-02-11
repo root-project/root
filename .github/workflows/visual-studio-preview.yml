@@ -58,6 +58,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --binaries     false
+                    --vs_update    true
                     --base_ref     master
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture x64"
