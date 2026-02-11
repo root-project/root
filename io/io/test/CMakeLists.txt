@@ -41,6 +41,10 @@ endif()
 #  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
 #endif()
 
+ROOTTEST_COMPILE_MACRO(testByteCount.cxx
+                       FIXTURES_SETUP io-io-tobj-fixture)
+
 ROOTTEST_ADD_TEST(testLargeByteCounts
-                  MACRO testByteCount.C
-                  OUTREF testByteCount.ref)
+                  MACRO testByteCount.cxx+
+                  OUTREF testByteCount.ref
+                  FIXTURES_REQUIRED io-io-tobj-fixture)
