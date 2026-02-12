@@ -113,10 +113,10 @@ private:
    TString      fPlugin;    // plugin library which should contain fClass
    TString      fCtor;      // ctor used to instantiate object of fClass
    TString      fOrigin;    // origin of plugin handler definition
-   TMethodCall *fCallEnv;   //!ctor method call environment
-   TFunction   *fMethod;    //!ctor method or global function
+   TMethodCall *fCallEnv;   ///<!ctor method call environment
+   TFunction   *fMethod;    ///<!ctor method or global function
    std::vector<std::string> fArgTupleTypeInfo; // Cached type_info name for fast comparison
-   AtomicInt_t  fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok, 0 fCallEnv not setup yet.
+   AtomicInt_t  fCanCall;   ///<!if 1 fCallEnv is ok, -1 fCallEnv is not ok, 0 fCallEnv not setup yet.
    Bool_t       fIsMacro;   // plugin is a macro and not a library
    Bool_t       fIsGlobal;  // plugin ctor is a global function
    std::once_flag fLoadStatusFlag; // plugin is loaded
@@ -259,8 +259,8 @@ class TPluginManager : public TObject {
 
 private:
    TList      *fHandlers;     // list of plugin handlers
-   THashTable *fBasesLoaded;  //! table of base classes already checked or loaded
-   Bool_t      fReadingDirs;  //! true if we are running LoadHandlersFromPluginDirs
+   THashTable *fBasesLoaded;  ///<! table of base classes already checked or loaded
+   Bool_t      fReadingDirs;  ///<! true if we are running LoadHandlersFromPluginDirs
 
    TPluginManager(const TPluginManager &) = delete;
    TPluginManager& operator=(const TPluginManager &) = delete;

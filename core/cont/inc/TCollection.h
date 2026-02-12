@@ -114,7 +114,7 @@ public:
       };
    };
 
-   mutable TErrorLock fLock; //! Special 'lock' to detect multiple access to a collection.
+   mutable TErrorLock fLock; ///<! Special 'lock' to detect multiple access to a collection.
 
 #define R__COLLECTION_WRITE_GUARD() TCollection::TErrorLock::WriteGuard wg(fLock, this, __PRETTY_FUNCTION__)
 #define R__COLLECTION_READ_GUARD() TCollection::TErrorLock::ReadGuard rg(fLock, this, __PRETTY_FUNCTION__)

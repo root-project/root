@@ -88,11 +88,11 @@ can be replaced with the simpler and exception safe:
 
    class TContext  {
    private:
-      std::atomic<TDirectory*> fDirectory{nullptr}; //! Pointer to the previous current directory.
-      std::atomic<bool> fActiveDestructor{false};   //! Set to true during the destructor execution
-      std::atomic<bool> fDirectoryWait{false};      //! Set to true if a TDirectory might still access this object.
-      TContext   *fPrevious{nullptr};               //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
-      TContext   *fNext{nullptr};                   //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      std::atomic<TDirectory*> fDirectory{nullptr}; ///<! Pointer to the previous current directory.
+      std::atomic<bool> fActiveDestructor{false};   ///<! Set to true during the destructor execution
+      std::atomic<bool> fDirectoryWait{false};      ///<! Set to true if a TDirectory might still access this object.
+      TContext   *fPrevious{nullptr};               ///<! Pointer to the next TContext in the implied list of context pointing to fPrevious.
+      TContext   *fNext{nullptr};                   ///<! Pointer to the next TContext in the implied list of context pointing to fPrevious.
 
       TContext(TContext&) = delete;
       TContext& operator=(TContext&) = delete;

@@ -57,7 +57,7 @@ public:
 private:
    Int_t              fArgc;            //Number of com   mand line arguments
    char             **fArgv;            //Command line arguments
-   TApplicationImp   *fAppImp;          //!Window system specific application implementation
+   TApplicationImp   *fAppImp;          ///<!Window system specific application implementation
    std::atomic<bool>  fIsRunning;       //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;   //When true return from Run()
    Bool_t             fNoLog;           //Do not process logon and logoff macros

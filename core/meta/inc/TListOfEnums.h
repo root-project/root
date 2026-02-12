@@ -37,12 +37,12 @@ private:
    friend class TProtoClass;
    friend class TROOT;
 
-   TClass    *fClass; //! Context of this list.  Not owned.
+   TClass    *fClass; ///<! Context of this list.  Not owned.
 
-   TExMap    *fIds;      //! Map from DeclId_t to TEnum*
-   THashList *fUnloaded; //! Holder of TEnum for unloaded Enums.
-   Bool_t     fIsLoaded; //! Mark whether Load was executed.
-   ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
+   TExMap    *fIds;      ///<! Map from DeclId_t to TEnum*
+   THashList *fUnloaded; ///<! Holder of TEnum for unloaded Enums.
+   Bool_t     fIsLoaded; ///<! Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; ///<! Represent interpreter state when we last did a full load.
 
    TListOfEnums(const TListOfEnums&) = delete;
    TListOfEnums& operator=(const TListOfEnums&) = delete;

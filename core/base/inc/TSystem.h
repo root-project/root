@@ -282,11 +282,11 @@ public:
    };
 
 protected:
-   TFdSet          *fReadmask{nullptr};         //!Files that should be checked for read events
-   TFdSet          *fWritemask{nullptr};        //!Files that should be checked for write events
-   TFdSet          *fReadready{nullptr};        //!Files with reads waiting
-   TFdSet          *fWriteready{nullptr};       //!Files with writes waiting
-   TFdSet          *fSignals{nullptr};          //!Signals that were trapped
+   TFdSet          *fReadmask{nullptr};         ///<!Files that should be checked for read events
+   TFdSet          *fWritemask{nullptr};        ///<!Files that should be checked for write events
+   TFdSet          *fReadready{nullptr};        ///<!Files with reads waiting
+   TFdSet          *fWriteready{nullptr};       ///<!Files with writes waiting
+   TFdSet          *fSignals{nullptr};          ///<!Signals that were trapped
    Int_t            fNfd{0};                    //Number of fd's in masks
    Int_t            fMaxrfd{-1};                //Largest fd in read mask
    Int_t            fMaxwfd{-1};                //Largest fd in write mask

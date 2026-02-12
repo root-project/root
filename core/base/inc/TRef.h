@@ -32,7 +32,7 @@ class TObjArray;
 class TRef : public TObject {
 
 protected:
-   TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
+   TProcessID       *fPID;     ///<!Pointer to ProcessID when TRef was written
 
    static TObjArray  *fgExecs;  //List of execs
    static TObject    *fgObject; //In: this, Out: pointer to object (used by Action on Demand)
