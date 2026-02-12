@@ -354,7 +354,7 @@ CPyCppyy::CPPMethod::CPPMethod(
     fArgsRequired(-1)
 {
    Cppyy::TCppType_t result = Cppyy::ResolveType(Cppyy::GetMethodReturnType(fMethod));
-    if (TypeReductionMap.contains(result))
+    if (TypeReductionMap.find(result) != TypeReductionMap.end())
         fMethod = Cppyy::ReduceReturnType(fMethod, TypeReductionMap[result]);
     if (result && Cppyy::IsLambdaClass(result))
         fMethod = Cppyy::AdaptFunctionForLambdaReturn(fMethod);
