@@ -18,15 +18,15 @@ class TSQLColumnInfo : public TNamed {
 
 protected:
    // Database specific fields
-   TString  fTypeName;   //! sql type name, as reported by DB. Should be as much as close to declaration of column in CREATE TABLE query
+   TString  fTypeName;   ///<! sql type name, as reported by DB. Should be as much as close to declaration of column in CREATE TABLE query
 
    // Database independent fields
-   Int_t    fSQLType;    //! datatype code (see TSQLServer::ESQLDataTypes constants), -1 if not defeined
-   Int_t    fSize;       //! size of column in bytes, -1 if not defing
-   Int_t    fLength;     //! datatype length definition, for instance VARCHAR(len) or FLOAT(len), -1 if not defined
-   Int_t    fScale;      //! datatype scale factor, used for instance in NUMBER(len,scale) definition. -1 if not defined
-   Int_t    fSigned;     //! if datatype signed or not, 0 - kFALSE, 1 - kTRUE, -1 - unknown
-   Bool_t   fNullable;   //! identify if value can be NULL
+   Int_t    fSQLType;    ///<! datatype code (see TSQLServer::ESQLDataTypes constants), -1 if not defeined
+   Int_t    fSize;       ///<! size of column in bytes, -1 if not defing
+   Int_t    fLength;     ///<! datatype length definition, for instance VARCHAR(len) or FLOAT(len), -1 if not defined
+   Int_t    fScale;      ///<! datatype scale factor, used for instance in NUMBER(len,scale) definition. -1 if not defined
+   Int_t    fSigned;     ///<! if datatype signed or not, 0 - kFALSE, 1 - kTRUE, -1 - unknown
+   Bool_t   fNullable;   ///<! identify if value can be NULL
 
 public:
    TSQLColumnInfo();

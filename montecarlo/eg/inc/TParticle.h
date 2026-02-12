@@ -49,7 +49,7 @@ protected:
   Double_t       fPolarTheta;           // Polar angle of polarisation
   Double_t       fPolarPhi;             // azymutal angle of polarisation
 
-  mutable TParticlePDG* fParticlePDG;   //! reference to the particle record in PDG database
+  mutable TParticlePDG* fParticlePDG;   ///<! reference to the particle record in PDG database
   //----------------------------------------------------------------------------
   //  functions
   //----------------------------------------------------------------------------

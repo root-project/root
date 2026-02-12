@@ -25,10 +25,10 @@ struct SQLite3_Stmt_t {
 class TSQLiteStatement : public TSQLStatement {
 
 private:
-   SQLite3_Stmt_t       *fStmt{nullptr};     //! executed statement
-   Int_t                 fWorkingMode{0};    //! 1 - setting parameters, 2 - retrieving results
-   Int_t                 fNumPars{0};        //! Number of bindable / gettable parameters
-   Int_t                 fIterationCount{0}; //! Iteration count
+   SQLite3_Stmt_t       *fStmt{nullptr};     ///<! executed statement
+   Int_t                 fWorkingMode{0};    ///<! 1 - setting parameters, 2 - retrieving results
+   Int_t                 fNumPars{0};        ///<! Number of bindable / gettable parameters
+   Int_t                 fIterationCount{0}; ///<! Iteration count
 
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSetMode() const { return fWorkingMode==2; }
