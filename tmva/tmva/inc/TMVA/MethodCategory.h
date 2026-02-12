@@ -132,7 +132,7 @@ namespace TMVA {
 
       void InitCircularTree(const DataSetInfo& dsi);
 
-      TTree *                    fCatTree; //! needed in conjunction with TTreeFormulas for evaluation category expressions
+      TTree *                    fCatTree; ///<! needed in conjunction with TTreeFormulas for evaluation category expressions
       std::vector<TTreeFormula*> fCatFormulas;
 
       DataSetManager* fDataSetManager; // DSMTEST

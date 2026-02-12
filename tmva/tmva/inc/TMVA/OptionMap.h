@@ -35,7 +35,7 @@ namespace TMVA {
        protected:
            TString fName;
            std::map<TString,TString> fOptMap; //
-           TMVA::MsgLogger fLogger;                 //!
+           TMVA::MsgLogger fLogger;                 ///<!
            class Binding
            {
            private:
@@ -90,7 +90,7 @@ namespace TMVA {
 
 
            };
-           Binding fBinder;     //!
+           Binding fBinder;     ///<!
        public:
            OptionMap(const TString options="",const TString name="Option"):fName(name),fLogger(name.Data()),fBinder(fOptMap,""){
                ParseOption(options);

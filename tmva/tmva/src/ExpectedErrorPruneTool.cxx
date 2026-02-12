@@ -99,7 +99,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
         dt->ApplyValidationSample(validationSample);
         Double_t weights = dt->GetSumWeights(validationSample);
         // set the initial prune strength
-        fPruneStrength = 1.0e-3; //! FIXME somehow make this automatic, it depends strongly on the tree structure
+        fPruneStrength = 1.0e-3; ///<! FIXME somehow make this automatic, it depends strongly on the tree structure
         // better to set it too small, it will be increased automatically
         fDeltaPruneStrength = 1.0e-5;
         Int_t nnodes = this->CountNodes((DecisionTreeNode*)dt->GetRoot());
