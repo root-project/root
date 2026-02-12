@@ -5472,7 +5472,7 @@ void TPad::Print(const char *filename, Option_t *option)
       if (titlePos != kNPOS) {
          gVirtualPS->SetTitle(opt.Data()+titlePos+6);
          opt.Replace(titlePos,opt.Length(),"pdf");
-      } else {
+      } else if (!ccloseb) {
          gVirtualPS->SetTitle("PDF");
       }
       if (mustClose) {
