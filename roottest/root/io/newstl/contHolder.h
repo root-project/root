@@ -103,7 +103,7 @@ public:
    TEST_CONT<std::string>         fString;
    TEST_CONT<std::string*>        fPtrString;
 #if defined(R__NO_NESTED_CONST_STRING)
-   TEST_CONT<const std::string*>  fPtrConstString; //!  this version of ROOT does not support nested const string
+   TEST_CONT<const std::string*>  fPtrConstString; ///<!  this version of ROOT does not support nested const string
 #else
    TEST_CONT<const std::string*>  fPtrConstString;
 #endif
@@ -122,19 +122,19 @@ public:
 #endif
 
 #if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
-   TEST_CONT<THelper*>         fPtrTHelperDerived; //!
-   TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  //!
+   TEST_CONT<THelper*>         fPtrTHelperDerived; ///<!
+   TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  ///<!
 #else
    TEST_CONT<THelper*>         fPtrTHelperDerived;
    TEST_CONT<HelperClassDef*>  fPtrHelperDerived;
 #endif
 
 #if defined(R__NO_NESTED_CONTAINER)
-   TEST_CONT<TEST_CONT<Helper> > fNested;  //! this version of ROOT does not support nested container
-   TEST_CONT<std::vector<Helper> >    fNestedV; //!
-   TEST_CONT<std::list<Helper> >      fNestedL; //!
-   TEST_CONT<std::deque<Helper> >     fNestedD; //!
-   TEST_CONT<TEST_CONT<Helper> >*fNestedPtr;//!
+   TEST_CONT<TEST_CONT<Helper> > fNested;  ///<! this version of ROOT does not support nested container
+   TEST_CONT<std::vector<Helper> >    fNestedV; ///<!
+   TEST_CONT<std::list<Helper> >      fNestedL; ///<!
+   TEST_CONT<std::deque<Helper> >     fNestedD; ///<!
+   TEST_CONT<TEST_CONT<Helper> >*fNestedPtr;///<!
 #else
    TEST_CONT<TEST_CONT<Helper> > fNested;  //
    TEST_CONT<std::vector<Helper> >    fNestedV; //

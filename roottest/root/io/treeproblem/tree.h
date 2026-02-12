@@ -17,8 +17,8 @@ const Int_t kMaxfoo = 3;
 
 class tree {
 public :
-  TTree          *fChain;   //!pointer to the analyzed TTree or TChain
-  Int_t           fCurrent; //!current Tree number in a TChain
+  TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
+  Int_t           fCurrent; ///<!current Tree number in a TChain
 
    //Declaration of leaves types
   Int_t           foo_;
@@ -27,10 +27,10 @@ public :
   Int_t           foo_fFoo[kMaxfoo];     //[foo_]
 
    //List of branches
-  TBranch        *b_foo_;                //!
-  TBranch        *b_foo_fUniqueID;       //!
-  TBranch        *b_foo_fBits;           //!
-  TBranch        *b_foo_fFoo;            //!
+  TBranch        *b_foo_;                ///<!
+  TBranch        *b_foo_fUniqueID;       ///<!
+  TBranch        *b_foo_fBits;           ///<!
+  TBranch        *b_foo_fFoo;            ///<!
 
   tree(TTree *tree=0);
   ~tree();

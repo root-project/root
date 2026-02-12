@@ -86,10 +86,10 @@ public:
    int virt;
    vector<int> list;
    vector<RootPCfix*> list2;
-   vector<helper<float>* > list3; //!
-   vector<helper<float*> > list4; //!
-   vector<vector<float*> > list5; //!
-   vector<vector<float>* > list6; //!
+   vector<helper<float>* > list3; ///<!
+   vector<helper<float*> > list4; ///<!
+   vector<vector<float*> > list5; ///<!
+   vector<vector<float>* > list6; ///<!
    typedef double value;
    value vv;
    std::string s;
@@ -148,7 +148,7 @@ public:
    RootPCtemp() : RootPCellID("none",0),temp(0) {}
    RootPCtemp(T n) :  RootPCellID("template",n),temp(66) {}
    T temp;
-   vector<RootPCtemp<T>*> list;//!
+   vector<RootPCtemp<T>*> list;///<!
    void Print() const override
    {
      RootPCellID::Print();
@@ -162,10 +162,10 @@ public:
    RootPCtempObj(T n) :  RootPCellID("template",+55),temp(0),temp2(0) {}
    RootPCtempObj(const RootPCtempObj &) : RootPCellID("none",0),temp(),temp2()  {}
 
-   T *temp; //!
+   T *temp; ///<!
    typedef T *value;
-   value temp2; //!
-   vector<RootPCtempObj<T>*> list;//!
+   value temp2; ///<!
+   vector<RootPCtempObj<T>*> list;///<!
    void Print() const override
    {
      RootPCellID::Print();

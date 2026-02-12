@@ -11,9 +11,9 @@ class DataTObject : public TObject {
 public:
   int i;    //
   float j;  //
-  int k;    //!
-  int l;    //!
-  int m;    //!
+  int k;    ///<!
+  int l;    ///<!
+  int m;    ///<!
   DataTObject() {}
   DataTObject(int ii,float ij) : i(ii),j(ij) {}
   ~DataTObject() override {}
@@ -23,11 +23,11 @@ public:
 
 struct DataObject  {
 public:
-  int i;    //!
-  int j;    //!
-  int k;    //!
-  int l;    //!
-  int m;    //!
+  int i;    ///<!
+  int j;    ///<!
+  int k;    ///<!
+  int l;    ///<!
+  int m;    ///<!
   DataObject() {}
   virtual ~DataObject() {}
   virtual void release() {}

@@ -18,7 +18,7 @@ private:
    int ver;
    std::vector<int> fArray;
    int inOneOnly; // !
-   bool transientMember; //!
+   bool transientMember; ///<!
 
    ClassDefOverride(MyClass, 1)
 };

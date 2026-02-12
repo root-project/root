@@ -12,7 +12,7 @@ struct SubContent {
 };
 
 struct Content {
-   int fBefore = 0;     //!
+   int fBefore = 0;     ///<!
    SubContent fSubObj;
    float fAfter = 0;
    ClassDef(Content, 2);
