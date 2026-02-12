@@ -20,8 +20,8 @@
 class TGeoPgon : public TGeoPcon {
 public:
    struct ThreadData_t {
-      Int_t *fIntBuffer;    //![fNedges+4] temporary int buffer array
-      Double_t *fDblBuffer; //![fNedges+4] temporary double buffer array
+      Int_t *fIntBuffer;    ///<![fNedges+4] temporary int buffer array
+      Double_t *fDblBuffer; ///<![fNedges+4] temporary double buffer array
 
       ThreadData_t();
       ~ThreadData_t();
@@ -33,9 +33,9 @@ public:
 protected:
    // data members
    Int_t fNedges;                                   // number of edges (at least one)
-   mutable std::vector<ThreadData_t *> fThreadData; //! Navigation data per thread
-   mutable Int_t fThreadSize;                       //! Size for the navigation data array
-   mutable std::mutex fMutex;                       //! Mutex for thread data
+   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
+   mutable Int_t fThreadSize;                       ///<! Size for the navigation data array
+   mutable std::mutex fMutex;                       ///<! Mutex for thread data
 
    // internal utility methods
    Int_t GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi,

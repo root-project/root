@@ -63,11 +63,11 @@ private:
    int fNfacets = 0;                      // Number of facets
    int fNvert = 0;                        // Number of vertices
    int fNseg = 0;                         // Number of segments
-   bool fDefined = false;                 //! Shape fully defined
+   bool fDefined = false;                 ///<! Shape fully defined
    bool fClosedBody = false;              // The faces are making a closed body
    std::vector<Vertex_t> fVertices;       // List of vertices
    std::vector<TGeoFacet> fFacets;        // List of facets
-   std::multimap<long, int> fVerticesMap; //! Temporary map used to deduplicate vertices
+   std::multimap<long, int> fVerticesMap; ///<! Temporary map used to deduplicate vertices
 
    TGeoTessellated(const TGeoTessellated &) = delete;
    TGeoTessellated &operator=(const TGeoTessellated &) = delete;

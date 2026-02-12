@@ -25,9 +25,9 @@ class TGeoMatrix;
 class TGeoPatternFinder : public TObject {
 public:
    struct ThreadData_t {
-      TGeoMatrix *fMatrix; //! generic matrix
-      Int_t fCurrent;      //! current division element
-      Int_t fNextIndex;    //! index of next node
+      TGeoMatrix *fMatrix; ///<! generic matrix
+      Int_t fCurrent;      ///<! current division element
+      Int_t fNextIndex;    ///<! index of next node
 
       ThreadData_t();
       ~ThreadData_t();
@@ -49,9 +49,9 @@ protected:
    Int_t fDivIndex;     // index of first div. node
    TGeoVolume *fVolume; // volume to which applies
 
-   mutable std::vector<ThreadData_t *> fThreadData; //! Vector of thread private transient data
-   mutable Int_t fThreadSize;                       //! Size of the thread vector
-   mutable std::mutex fMutex;                       //! Mutex for thread data
+   mutable std::vector<ThreadData_t *> fThreadData; ///<! Vector of thread private transient data
+   mutable Int_t fThreadSize;                       ///<! Size of the thread vector
+   mutable std::mutex fMutex;                       ///<! Mutex for thread data
 
 protected:
    TGeoPatternFinder(const TGeoPatternFinder &);
@@ -330,7 +330,7 @@ public:
 class TGeoPatternCylPhi : public TGeoPatternFinder {
 private:
    // data members
-   Double_t *fSinCos = nullptr; //![2*fNdivisions] table of sines/cosines
+   Double_t *fSinCos = nullptr; ///<![2*fNdivisions] table of sines/cosines
 
 protected:
    TGeoPatternCylPhi(const TGeoPatternCylPhi &pfc) : TGeoPatternFinder(pfc), fSinCos(pfc.fSinCos)
@@ -422,7 +422,7 @@ public:
 /// a spherical phi divison pattern
 class TGeoPatternSphPhi : public TGeoPatternFinder {
 private:
-   Double_t *fSinCos = nullptr; //! Sincos table
+   Double_t *fSinCos = nullptr; ///<! Sincos table
 
 protected:
    TGeoPatternSphPhi(const TGeoPatternSphPhi &pfc) = delete;

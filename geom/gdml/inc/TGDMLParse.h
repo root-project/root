@@ -43,9 +43,9 @@ public:
    TGeoMatrix *GetMatrix();
 
 private:
-   const char *fNameS;  //! reflected solid name
-   const char *fSolid;  //! solid name being reflected
-   TGeoMatrix *fMatrix; //! matrix of reflected solid
+   const char *fNameS;  ///<! reflected solid name
+   const char *fSolid;  ///<! solid name being reflected
+   TGeoMatrix *fMatrix; ///<! matrix of reflected solid
 
    ClassDefOverride(TGDMLRefl, 0) // helper class used for the storage of reflected solids
 };
@@ -205,23 +205,23 @@ private:
    typedef std::map<std::string, double> FracMap;
    typedef std::map<std::string, double> ConstMap;
 
-   PosMap fposmap;             //! Map containing position names and the TGeoTranslation for it
-   RotMap frotmap;             //! Map containing rotation names and the TGeoRotation for it
-   SclMap fsclmap;             //! Map containing scale names and the TGeoScale for it
-   IsoMap fisomap;             //! Map containing isotope names and the TGeoIsotope for it
-   EleMap felemap;             //! Map containing element names and the TGeoElement for it
-   MatMap fmatmap;             //! Map containing material names and the TGeoMaterial for it
-   MedMap fmedmap;             //! Map containing medium names and the TGeoMedium for it
-   MixMap fmixmap;             //! Map containing mixture names and the TGeoMixture for it
-   SolMap fsolmap;             //! Map containing solid names and the TGeoShape for it
-   VolMap fvolmap;             //! Map containing volume names and the TGeoVolume for it
-   PvolMap fpvolmap;           //! Map containing placed volume names and the TGeoNode for it
-   ReflectionsMap freflectmap; //! Map containing reflection names and the Solid name ir references to
-   ReflSolidMap freflsolidmap; //! Map containing reflection names and the TGDMLRefl for it - containing refl matrix
-   ReflVolMap freflvolmap;     //! Map containing reflected volume names and the solid ref for it
-   FileMap ffilemap;           //! Map containing files parsed during entire parsing, with their world volume name
-   ConstMap fconsts;           //! Map containing values of constants declared in the file
-   MatrixMap fmatrices;        //! Map containing matrices defined in the GDML file
+   PosMap fposmap;             ///<! Map containing position names and the TGeoTranslation for it
+   RotMap frotmap;             ///<! Map containing rotation names and the TGeoRotation for it
+   SclMap fsclmap;             ///<! Map containing scale names and the TGeoScale for it
+   IsoMap fisomap;             ///<! Map containing isotope names and the TGeoIsotope for it
+   EleMap felemap;             ///<! Map containing element names and the TGeoElement for it
+   MatMap fmatmap;             ///<! Map containing material names and the TGeoMaterial for it
+   MedMap fmedmap;             ///<! Map containing medium names and the TGeoMedium for it
+   MixMap fmixmap;             ///<! Map containing mixture names and the TGeoMixture for it
+   SolMap fsolmap;             ///<! Map containing solid names and the TGeoShape for it
+   VolMap fvolmap;             ///<! Map containing volume names and the TGeoVolume for it
+   PvolMap fpvolmap;           ///<! Map containing placed volume names and the TGeoNode for it
+   ReflectionsMap freflectmap; ///<! Map containing reflection names and the Solid name ir references to
+   ReflSolidMap freflsolidmap; ///<! Map containing reflection names and the TGDMLRefl for it - containing refl matrix
+   ReflVolMap freflvolmap;     ///<! Map containing reflected volume names and the solid ref for it
+   FileMap ffilemap;           ///<! Map containing files parsed during entire parsing, with their world volume name
+   ConstMap fconsts;           ///<! Map containing values of constants declared in the file
+   MatrixMap fmatrices;        ///<! Map containing matrices defined in the GDML file
 
    ClassDefOverride(TGDMLParse, 0) // imports GDML using DOM and binds it to ROOT
 };

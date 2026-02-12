@@ -26,8 +26,8 @@ protected:
    Int_t fNconvex{0};              // number of points of the outscribed convex polygon
    Int_t *fInd{nullptr};           //[fNvert] list of vertex indices
    Int_t *fIndc{nullptr};          //[fNconvex] indices of vertices of the outscribed convex polygon
-   Double_t *fX{nullptr};          //! pointer to list of current X coordinates of vertices
-   Double_t *fY{nullptr};          //! pointer to list of current Y coordinates of vertices
+   Double_t *fX{nullptr};          ///<! pointer to list of current X coordinates of vertices
+   Double_t *fY{nullptr};          ///<! pointer to list of current Y coordinates of vertices
    TObjArray *fDaughters{nullptr}; // list of concave daughters
 private:
    void ConvexCheck(); // force convexity checking

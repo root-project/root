@@ -58,16 +58,16 @@ private:
    TGeoManager *fGeoManager; // pointer to geometry manager
    TGeoVolume *fVsafe;       // volume to which a safety sphere node was added
    Bool_t fFullCheck;        // Full overlap checking
-   Double_t *fVal1;          //! Array of number of crossings per volume.
-   Double_t *fVal2;          //! Array of timing per volume.
-   Bool_t *fFlags;           //! Array of flags per volume.
-   TStopwatch *fTimer;       //! Timer
-   TGeoNode *fSelectedNode;  //! Selected node for overlap checking
-   Int_t fNchecks;           //! Number of checks for current volume
+   Double_t *fVal1;          ///<! Array of number of crossings per volume.
+   Double_t *fVal2;          ///<! Array of timing per volume.
+   Bool_t *fFlags;           ///<! Array of flags per volume.
+   TStopwatch *fTimer;       ///<! Timer
+   TGeoNode *fSelectedNode;  ///<! Selected node for overlap checking
+   Int_t fNchecks;           ///<! Number of checks for current volume
 
    mutable std::shared_mutex fMeshCacheMutex;
-   std::unordered_map<const TGeoShape *, MeshPointsEntry> fMeshPointsCache; //! Internal map shape->mesh points
-   MeshPolicyStamp fMeshPolicyStamp; //! policy stamp for points cache invalidation
+   std::unordered_map<const TGeoShape *, MeshPointsEntry> fMeshPointsCache; ///<! Internal map shape->mesh points
+   MeshPolicyStamp fMeshPolicyStamp; ///<! policy stamp for points cache invalidation
 
    // methods
    void CleanPoints(Double_t *points, Int_t &numPoints) const;
