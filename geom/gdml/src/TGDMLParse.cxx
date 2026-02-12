@@ -1290,7 +1290,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 
 XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int z)
 {
-   //! Map to hold fractions while being processed
+   ///<! Map to hold fractions while being processed
    typedef FracMap::iterator fractions;
    //  typedef FracMap::iterator i;
    FracMap fracmap;

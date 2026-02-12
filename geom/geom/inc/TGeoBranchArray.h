@@ -24,7 +24,7 @@ protected:
    Int_t fLevel;            // Branch depth
    Int_t fMaxLevel;         // Array length
    TGeoHMatrix fMatrix;     // Global matrix (owned)
-   TGeoNode **fArray;       //![fMaxLevel+1] Array of nodes
+   TGeoNode **fArray;       ///<![fMaxLevel+1] Array of nodes
    TGeoNode *fRealArray[1]; // Beginning address of the array of nodes
 
 private:

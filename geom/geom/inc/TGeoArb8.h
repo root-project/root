@@ -26,7 +26,7 @@ protected:
    };
    // data members
    Double_t fDz{0};           // half length in Z
-   Double_t *fTwist{nullptr}; //! [4] tangents of twist angles
+   Double_t *fTwist{nullptr}; ///<! [4] tangents of twist angles
    Double_t fXY[8][2];        // list of vertices
 
    TGeoArb8(const TGeoArb8 &) = delete;

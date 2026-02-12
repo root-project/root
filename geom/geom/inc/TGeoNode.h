@@ -43,8 +43,8 @@ protected:
    Int_t fNumber = 0;                       // copy number
    Int_t fNovlp = 0;                        // number of overlaps
    Int_t *fOverlaps = nullptr;              //[fNovlp] list of indices for overlapping brothers
-   TGeoExtension *fUserExtension = nullptr; //! Transient user-defined extension to volumes
-   TGeoExtension *fFWExtension = nullptr;   //! Transient framework-defined extension to volumes
+   TGeoExtension *fUserExtension = nullptr; ///<! Transient user-defined extension to volumes
+   TGeoExtension *fFWExtension = nullptr;   ///<! Transient framework-defined extension to volumes
 
    void CopyOverlaps(Int_t *ovlp, Int_t novlp);
 

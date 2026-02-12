@@ -45,19 +45,19 @@ protected:
    TObjArray *fNodes;                // array of nodes inside this volume
    TGeoShape *fShape;                // shape
    TGeoMedium *fMedium;              // tracking medium
-   static TGeoMedium *fgDummyMedium; //! dummy medium
+   static TGeoMedium *fgDummyMedium; ///<! dummy medium
    TGeoPatternFinder *fFinder;       // finder object for divisions
    TGeoVoxelFinder *fVoxels;         // finder object for bounding boxes
-   TGeoManager *fGeoManager;         //! pointer to TGeoManager owning this volume
+   TGeoManager *fGeoManager;         ///<! pointer to TGeoManager owning this volume
 
-   TObject *fField;               //! just a hook for now
-   TString fOption;               //! option - if any
+   TObject *fField;               ///<! just a hook for now
+   TString fOption;               ///<! option - if any
    Int_t fNumber;                 //  volume serial number in the list of volumes
    Int_t fNtotal;                 // total number of physical nodes
    Int_t fRefCount;               // reference counter
    Char_t fTransparency;          // transparency setting
-   TGeoExtension *fUserExtension; //! Transient user-defined extension to volumes
-   TGeoExtension *fFWExtension;   //! Transient framework-defined extension to volumes
+   TGeoExtension *fUserExtension; ///<! Transient user-defined extension to volumes
+   TGeoExtension *fFWExtension;   ///<! Transient framework-defined extension to volumes
 
 private:
    TGeoVolume(const TGeoVolume &) = delete;
@@ -317,8 +317,8 @@ public:
 class TGeoVolumeAssembly : public TGeoVolume {
 public:
    struct ThreadData_t {
-      Int_t fCurrent; //! index of current selected node
-      Int_t fNext;    //! index of next node to be entered
+      Int_t fCurrent; ///<! index of current selected node
+      Int_t fNext;    ///<! index of next node to be entered
 
       ThreadData_t();
       ~ThreadData_t();
@@ -329,9 +329,9 @@ public:
    void CreateThreadData(Int_t nthreads) override;
 
 protected:
-   mutable std::vector<ThreadData_t *> fThreadData; //! Thread specific data vector
-   mutable Int_t fThreadSize;                       //! Thread vector size
-   mutable std::mutex fMutex;                       //! Mutex for concurrent operations
+   mutable std::vector<ThreadData_t *> fThreadData; ///<! Thread specific data vector
+   mutable Int_t fThreadSize;                       ///<! Thread vector size
+   mutable std::mutex fMutex;                       ///<! Mutex for concurrent operations
 
 private:
    TGeoVolumeAssembly(const TGeoVolumeAssembly &) = delete;
