@@ -59,7 +59,7 @@ public:
    ClassDef(TPyReturn, 1) // Python morphing return object
 
 private:
-   PyObject *fPyObject; //! actual python object
+   PyObject *fPyObject; ///<! actual python object
 };
 
 #endif

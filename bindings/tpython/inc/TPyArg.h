@@ -49,7 +49,7 @@ public:
    ClassDef(TPyArg, 1) // Python morphing argument type
 
 private:
-   mutable PyObject *fPyObject; //! converted C++ value as python object
+   mutable PyObject *fPyObject; ///<! converted C++ value as python object
 };
 
 #endif
