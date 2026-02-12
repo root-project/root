@@ -122,8 +122,8 @@ public:
 
 
 protected:
-   LogicalShapeMap_t      fLogicalShapes;  //!
-   PhysicalShapeMap_t     fPhysicalShapes; //!
+   LogicalShapeMap_t      fLogicalShapes;  ///<!
+   PhysicalShapeMap_t     fPhysicalShapes; ///<!
 
    virtual void DestroyPhysicalInternal(PhysicalShapeMapIt_t pit);
 
@@ -132,8 +132,8 @@ protected:
    void ReleaseGLCtxIdentity();
 
    // Smart Refresh -- will go in this version
-   Bool_t                    fInSmartRefresh;    //!
-   mutable LogicalShapeMap_t fSmartRefreshCache; //!
+   Bool_t                    fInSmartRefresh;    ///<!
+   mutable LogicalShapeMap_t fSmartRefreshCache; ///<!
 
    // State that requires recreation of display-lists
    Float_t                   fLastPointSizeScale;

@@ -1414,7 +1414,7 @@ Bool_t TGHtml::HandleButton(Event_t *event)
          uri = ResolveUri(uri);
          if (uri) {
             MouseDown(uri);
-            //!!delete[] uri;
+            // delete[] uri;
          }
       }
       fMenu->EndMenu(dummy);
@@ -1450,7 +1450,7 @@ Bool_t TGHtml::HandleMotion(Event_t *event)
       fLastUri = uri;
       if (uri) uri = ResolveUri(uri);
       MouseOver(uri);
-      //!!if (uri) delete [] uri;
+      // if (uri) delete [] uri;
    }
 
    return kTRUE;

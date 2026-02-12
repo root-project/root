@@ -55,11 +55,11 @@ private:
    // For axis aligned 2 verticies would suffice.
    // Rest could be calculated on demand - however speed more important
    // than memory considerations
-   TGLVertex3              fVertex[8];  //! the 8 bounding box vertices
-   Double_t                fVolume;     //! box volume - cached for speed
-   Double_t                fDiagonal;   //! max box diagonal - cached for speed
-   TGLVector3              fAxes[3];    //! box axes in global frame - cached for speed
-   TGLVector3              fAxesNorm[3];//! normalised box axes in global frame - cached for speed
+   TGLVertex3              fVertex[8];  ///<! the 8 bounding box vertices
+   Double_t                fVolume;     ///<! box volume - cached for speed
+   Double_t                fDiagonal;   ///<! max box diagonal - cached for speed
+   TGLVector3              fAxes[3];    ///<! box axes in global frame - cached for speed
+   TGLVector3              fAxesNorm[3];///<! normalised box axes in global frame - cached for speed
 
    // Methods
    void     UpdateCache();

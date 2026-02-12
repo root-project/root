@@ -441,7 +441,7 @@ protected:
 
    Drawable_t fSelectedDrawable;
 
-   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; ///<!
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;

@@ -80,13 +80,13 @@ protected:
    List_t           fParents;              //  List of parents.
    List_t           fChildren;             //  List of children.
    TEveCompound    *fCompound;             //  Compound this object belongs to.
-   TEveElement     *fVizModel;             //! Element used as model from VizDB.
+   TEveElement     *fVizModel;             ///<! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
-   Int_t            fNumChildren;          //!
-   Int_t            fParentIgnoreCnt;      //! Counter for parents that are ignored in ref-counting.
-   Int_t            fTopItemCnt;           //! Counter for top-level list-tree items that prevent automatic destruction.
-   Int_t            fDenyDestroy;          //! Deny-destroy count.
+   Int_t            fNumChildren;          ///<!
+   Int_t            fParentIgnoreCnt;      ///<! Counter for parents that are ignored in ref-counting.
+   Int_t            fTopItemCnt;           ///<! Counter for top-level list-tree items that prevent automatic destruction.
+   Int_t            fDenyDestroy;          ///<! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt;  //  Auto-destruct when ref-count reaches zero.
 
    Bool_t           fRnrSelf;                 //  Render this element.
@@ -99,10 +99,10 @@ protected:
    Color_t         *fMainColorPtr;         //  Pointer to main-color variable.
    TEveTrans       *fMainTrans;            //  Pointer to main transformation matrix.
 
-   sLTI_t           fItems;                //! Set of list-tree-items.
+   sLTI_t           fItems;                ///<! Set of list-tree-items.
 
    TRef             fSource;               //  External object that is represented by this element.
-   void            *fUserData;             //! Externally assigned and controlled user data.
+   void            *fUserData;             ///<! Externally assigned and controlled user data.
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
@@ -310,10 +310,10 @@ public:
 
 protected:
    Bool_t  fPickable;
-   Bool_t  fSelected;             //!
-   Bool_t  fHighlighted;          //!
-   Short_t fImpliedSelected;      //!
-   Short_t fImpliedHighlighted;   //!
+   Bool_t  fSelected;             ///<!
+   Bool_t  fHighlighted;          ///<!
+   Short_t fImpliedSelected;      ///<!
+   Short_t fImpliedHighlighted;   ///<!
 
    enum ECompoundSelectionColorBits
    {
@@ -398,8 +398,8 @@ public:
    };
 
 protected:
-   UChar_t      fChangeBits;  //!
-   Char_t       fDestructing; //!
+   UChar_t      fChangeBits;  ///<!
+   Char_t       fDestructing; ///<!
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }

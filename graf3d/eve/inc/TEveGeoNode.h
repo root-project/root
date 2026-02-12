@@ -37,8 +37,8 @@ protected:
    TGeoNode *fNode;
    TEveGeoShapeExtract* DumpShapeTree(TEveGeoNode* geon, TEveGeoShapeExtract* parent=nullptr, Bool_t leafs_only=kFALSE);
 
-   static Int_t                  fgCSGExportNSeg;  //!
-   static std::list<TGeoShape*>  fgTemporaryStore; //!
+   static Int_t                  fgCSGExportNSeg;  ///<!
+   static std::list<TGeoShape*>  fgTemporaryStore; ///<!
 
 public:
    TEveGeoNode(TGeoNode* node);
