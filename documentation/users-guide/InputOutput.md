@@ -1188,8 +1188,8 @@ simple example of a class with diverse data members.
 ``` {.cpp}
 class Event : public TObject {
 private:
-   TDirectory    *fTransient;            //! current directory
-   Float_t     fPt;                   //! transient value
+   TDirectory    *fTransient;            ///<! current directory
+   Float_t     fPt;                   ///<! transient value
 char           fType[20];
 Int_t          fNtrack;
 Int_t          fNseg;
@@ -1234,7 +1234,7 @@ and its contents into the buffer `R__b`. The `Streamer `calls
 method reads the information from buffer `R__b` into the `Event`
 object.
 
-### Transient Data Members (//!)
+### Transient Data Members (///<!)
 
 
 To prevent a data member from being written to the file, insert a "`!`"
@@ -1246,8 +1246,8 @@ not persistent.
 ``` {.cpp}
 class Event : public TObject {
 private:
-   TDirectory    *fTransient; //! current directory
-   Float_t fPt;               //! transient value
+   TDirectory    *fTransient; ///<! current directory
+   Float_t fPt;               ///<! transient value
 ...
 ```
 
@@ -1895,7 +1895,7 @@ a "`!`" after the comment marks. For example the pointer \*`fPainter` of
 a **`TH1`** is not persistent:
 
 ``` {.cpp}
-   TVirtualHistPainter* fPainter //!pointer to histogram painter
+   TVirtualHistPainter* fPainter ///<!pointer to histogram painter
 ```
 
 ### The TStreamerElement Class

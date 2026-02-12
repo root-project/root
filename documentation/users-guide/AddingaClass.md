@@ -602,7 +602,7 @@ class SClass : public TObject {
    private:
       Float_t   fX;         //x position in centimeters
       Float_t   fY;         //y position in centimeters
-      Int_t     fTempValue; //! temporary state value
+      Int_t     fTempValue; ///<! temporary state value
    public:
       SClass()             { fX = fY = -1; }
       void Print() const;
@@ -637,7 +637,7 @@ Interpreter". The `ShowMembers` and `Streamer` method, as well as the
 add a `!` as the first character in the comments of the field:
 
 ``` {.cpp}
-Int_t     fTempValue; //! temporary state value
+Int_t     fTempValue; ///<! temporary state value
 ```
 
 ### The LinkDef.h File

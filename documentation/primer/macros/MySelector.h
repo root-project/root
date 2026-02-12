@@ -17,7 +17,7 @@
 
 class MySelector : public TSelector {
 public :
-   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
 
@@ -28,10 +28,10 @@ public :
    Float_t         Pressure;
 
    // List of branches
-   TBranch        *b_Potential;   //!
-   TBranch        *b_Current;   //!
-   TBranch        *b_Temperature;   //!
-   TBranch        *b_Pressure;   //!
+   TBranch        *b_Potential;   ///<!
+   TBranch        *b_Current;   ///<!
+   TBranch        *b_Temperature;   ///<!
+   TBranch        *b_Pressure;   ///<!
 
    MySelector(TTree * /*tree*/ =0) : fChain(0) { }
    virtual ~MySelector() { }
