@@ -18,14 +18,18 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set (ROOFITMORE_HEADERS
+  RooFitMoreLib.h
+  RooLegendre.h
+  RooMathMoreReg.h
+  RooSpHarmonic.h
+  RooNonCentralChiSquare.h
+  RooHypatia2.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
-    RooFitMoreLib.h
-    RooLegendre.h
-    RooMathMoreReg.h
-    RooSpHarmonic.h
-    RooNonCentralChiSquare.h
-    RooHypatia2.h
+    ${ROOFITMORE_HEADERS}
   SOURCES
     src/RooFitMoreLib.cxx
     src/RooAdaptiveGaussKronrodIntegrator1D.cxx
@@ -64,6 +68,24 @@ target_link_libraries(RooFitMore PRIVATE ${GSL_LIBRARIES})
 # In RooFit, the errno side effect is not needed, anyway:
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitMore PUBLIC -fno-math-errno)
+endif()
+
+set(RELATIVE_INC_HEADERS ${ROOFITMORE_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      RooFitMore
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+          inc/LinkDef.h
+          src/BracketAdapters.h
+          src/RooAdaptiveGaussKronrodIntegrator1D.h
+          src/RooGaussKronrodIntegrator1D.h
+  )
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
