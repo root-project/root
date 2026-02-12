@@ -46,7 +46,7 @@ public:
 private:
    UChar_t ParseStagePriority(Option_t *opt);
 
-   ClassDefOverride(TNetXNGFileStager, 0) //! Interface to a 'XRD' staging
+   ClassDefOverride(TNetXNGFileStager, 0) ///<! Interface to a 'XRD' staging
 };
 
 #endif

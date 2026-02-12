@@ -20,10 +20,10 @@ class TSQLColumnInfo;
 class TSQLTableInfo : public TNamed {
 
 protected:
-   TList*    fColumns;    //! list of TSQLColumnInfo objects, describing each table column
-   TString   fEngine;     //! SQL tables engine name
-   TString   fCreateTime; //! table creation time
-   TString   fUpdateTime; //! table update time
+   TList*    fColumns;    ///<! list of TSQLColumnInfo objects, describing each table column
+   TString   fEngine;     ///<! SQL tables engine name
+   TString   fCreateTime; ///<! table creation time
+   TString   fUpdateTime; ///<! table update time
 
 public:
    TSQLTableInfo();
