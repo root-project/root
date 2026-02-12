@@ -1,6 +1,7 @@
 #include "hist_test.hxx"
 
 #include <array>
+#include <iterator>
 #include <stdexcept>
 #include <tuple>
 #include <variant>
@@ -308,4 +309,35 @@ TEST(RAxes, ComputeGlobalIndexInvalidArgumentType)
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple("1", 2, "a")), std::invalid_argument);
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, "2", "a")), std::invalid_argument);
    EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, 2, 3)), std::invalid_argument);
+}
+
+TEST(RAxes, GetFullMultiDimRange)
+{
+   static constexpr std::size_t BinsX = 20;
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
+   static constexpr std::size_t BinsY = 30;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < BinsY; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(BinsY);
+   const RVariableBinAxis variableBinAxis(bins);
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis categoricalAxis(categories);
+   const RAxes axes({regularAxis, variableBinAxis, categoricalAxis});
+
+   const auto nBins = axes.ComputeTotalNBins();
+   const auto range = axes.GetFullMultiDimRange();
+   EXPECT_EQ(std::distance(range.begin(), range.end()), nBins);
+
+   // Consistency check: the multidimensional range should traverse the bins in order of their global indices.
+   auto it = range.begin();
+   for (std::uint64_t bin = 0; bin < nBins; bin++) {
+      const auto &indices = *it;
+      const auto globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, bin);
+      EXPECT_TRUE(globalIndex.fValid);
+      it++;
+   }
+   EXPECT_EQ(it, range.end());
 }
