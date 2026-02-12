@@ -118,6 +118,10 @@ TEST(RAxes, ComputeGlobalIndex)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
@@ -128,6 +132,10 @@ TEST(RAxes, ComputeGlobalIndex)
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {RBinIndex::Underflow(), 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {RBinIndex::Underflow(), 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
       EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
@@ -142,6 +150,10 @@ TEST(RAxes, ComputeGlobalIndex)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, RBinIndex::Overflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
@@ -152,6 +164,10 @@ TEST(RAxes, ComputeGlobalIndex)
       EXPECT_TRUE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, 2, RBinIndex::Overflow()};
       globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
       EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
    }
@@ -182,6 +198,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, Expected);
       EXPECT_TRUE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, Expected);
+      EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
@@ -191,6 +211,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       EXPECT_FALSE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {RBinIndex::Underflow(), 2, 2};
       globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {RBinIndex::Underflow(), 2, 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
    }
@@ -204,6 +228,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, RBinIndex::Overflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
    }
 
    {
@@ -213,6 +241,10 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
       EXPECT_FALSE(globalIndex.fValid);
       const std::array<RBinIndex, 3> indices = {1, 2, RBinIndex::Overflow()};
       globalIndex = axes.ComputeGlobalIndex(indices);
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
+      const std::vector<RBinIndex> indicesV = {1, 2, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indicesV);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
    }
@@ -244,6 +276,17 @@ TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
    EXPECT_THROW(axes2.ComputeGlobalIndex(indices1), std::invalid_argument);
    EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indices2));
    EXPECT_THROW(axes2.ComputeGlobalIndex(indices3), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV1 = {1};
+   const std::vector<RBinIndex> indicesV2 = {1, 2};
+   const std::vector<RBinIndex> indicesV3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(axes1.ComputeGlobalIndex(indicesV1));
+   EXPECT_THROW(axes1.ComputeGlobalIndex(indicesV2), std::invalid_argument);
+
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indicesV1), std::invalid_argument);
+   EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indicesV2));
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indicesV3), std::invalid_argument);
 }
 
 TEST(RAxes, ComputeGlobalIndexInvalidArgumentType)
