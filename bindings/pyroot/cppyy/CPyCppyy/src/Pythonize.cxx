@@ -376,7 +376,7 @@ PyObject *spanBegin()
    static PyObject *pyFunc = nullptr;
    if (!pyFunc) {
       compileSpanHelpers();
-      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::GetGlobalScope());
       pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_begin");
       if (!pyFunc) {
          PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "
@@ -391,7 +391,7 @@ PyObject *spanEnd()
    static PyObject *pyFunc = nullptr;
    if (!pyFunc) {
       compileSpanHelpers();
-      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::gGlobalScope);
+      PyObject *py_ns = CPyCppyy::GetScopeProxy(Cppyy::GetGlobalScope());
       pyFunc = PyObject_GetAttrString(py_ns, "__cppyy_internal_end");
       if (!pyFunc) {
          PyErr_Format(PyExc_RuntimeError, "cppyy internal error: failed to locate helper "

@@ -294,27 +294,28 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
     PyObject *evalue = nullptr;
     PyObject *etrace = nullptr;
 
-    PyObject *etype = nullptr, *evalue = nullptr;
-    if (PyErr_Occurred()) {
-        PyObject* etrace = nullptr;
-
+if (PyErr_Occurred()) {
         PyErr_Fetch(&etype, &evalue, &etrace);
-
-        if (evalue) {
-            PyObject* descr = PyObject_Str(evalue);
-            if (descr) {
-                details = CPyCppyy_PyText_AsString(descr);
-                Py_DECREF(descr);
-            }
-        }
-
-        Py_XDECREF(etrace);
     }
+#endif
+
+    const bool isCppExc = evalue && PyType_IsSubtype((PyTypeObject*)etype, &CPPExcInstance_Type);
+ // If the error is not a CPPExcInstance, the error from Python itself is
+ // already complete and messing with it would only make it less informative.
+ // Just restore and return.
+     if (evalue && !isCppExc) {
+#if PY_VERSION_HEX >= 0x030c0000
+        PyErr_SetRaisedException(evalue);
+#else
+        PyErr_Restore(etype, evalue, etrace);
+#endif
+        return;
+     }
 
     PyObject* doc = GetDocString();
-    PyObject* errtype = etype;
-    if (!errtype)
-        errtype = PyExc_TypeError;
+    const char* cdoc = CPyCppyy_PyText_AsString(doc);
+    const char* cmsg = msg ? CPyCppyy_PyText_AsString(msg) : nullptr;
+    PyObject* errtype = etype ? etype : PyExc_TypeError;
     PyObject* pyname = PyObject_GetAttr(errtype, PyStrings::gName);
     const char* cname = pyname ? CPyCppyy_PyText_AsString(pyname) : "Exception";
 
@@ -329,24 +330,17 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
         if (msg) {
             topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: %s | ", cdoc, cname, cmsg);
         } else {
-            PyErr_Format(errtype, "%s =>\n    %s: %s",
-                CPyCppyy_PyText_AsString(doc), cname, details.c_str());
+            topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: ", cdoc, cname);
         }
-    } else {
-        Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
-        if (msg) {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                "%s =>\n    %s: %s | ", CPyCppyy_PyText_AsString(doc), cname, CPyCppyy_PyText_AsString(msg));
-        } else {
-            ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
-                 "%s =>\n    %s: ", CPyCppyy_PyText_AsString(doc), cname);
-        }
-        PyErr_SetObject(errtype, evalue);
+        // restore the updated error
+#if PY_VERSION_HEX >= 0x030c0000
+        PyErr_SetRaisedException(evalue);
+#else
+        PyErr_Restore(etype, evalue, etrace);
+#endif
     }
 
     Py_XDECREF(pyname);
-    Py_XDECREF(evalue);
-    Py_XDECREF(etype);
     Py_DECREF(doc);
     Py_XDECREF(msg);
 }
@@ -1071,6 +1065,71 @@ PyObject* CPyCppyy::CPPMethod::GetSignature(bool fa)
 {
 // construct python string from the method's signature
     return CPyCppyy_PyText_FromString(GetSignatureString(fa).c_str());
+}
+
+
+/**
+ * @brief Returns a tuple with the names of the input parameters of this method.
+ *
+ * For example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * ('a', 'b', 'c')
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureNames()
+{
+   // Build a tuple of the argument names for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *signature_names = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argname_cpp = Cppyy::GetMethodArgName(fMethod, iarg);
+      PyObject *argname_py = CPyCppyy_PyText_FromString(argname_cpp.c_str());
+      PyTuple_SET_ITEM(signature_names, iarg, argname_py);
+   }
+
+   return signature_names;
+}
+
+/**
+ * @brief Returns a dictionary with the types of the signature of this method.
+ *
+ * This dictionary will store both the return type and the input parameter
+ * types of this method, respectively with keys "return_type" and
+ * "input_types", for example given a function with prototype:
+ *
+ * double foo(int a, float b, double c)
+ *
+ * this function returns:
+ *
+ * {'input_types': ('int', 'float', 'double'), 'return_type': 'double'}
+ */
+PyObject *CPyCppyy::CPPMethod::GetSignatureTypes()
+{
+
+   PyObject *signature_types_dict = PyDict_New();
+
+   // Insert the return type first
+   std::string return_type = GetReturnTypeName();
+   PyObject *return_type_py = CPyCppyy_PyText_FromString(return_type.c_str());
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("return_type"), return_type_py);
+
+   // Build a tuple of the argument types for this signature.
+   int argcount = GetMaxArgs();
+   PyObject *parameter_types = PyTuple_New(argcount);
+
+   for (int iarg = 0; iarg < argcount; ++iarg) {
+      const std::string &argtype_cpp = Cppyy::GetMethodArgTypeAsString(fMethod, iarg);
+      PyObject *argtype_py = CPyCppyy_PyText_FromString(argtype_cpp.c_str());
+      PyTuple_SET_ITEM(parameter_types, iarg, argtype_py);
+   }
+
+   PyDict_SetItem(signature_types_dict, CPyCppyy_PyText_FromString("input_types"), parameter_types);
+
+   return signature_types_dict;
 }
 
 //----------------------------------------------------------------------------

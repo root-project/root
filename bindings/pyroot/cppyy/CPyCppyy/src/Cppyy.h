@@ -36,14 +36,23 @@ typedef unsigned long long PY_ULONG_LONG;
 typedef long double PY_LONG_DOUBLE;
 #endif
 
-namespace Cpp {
-    struct TemplateArgInfo {
-      void* m_Type;
-      const char* m_IntegralValue;
-      TemplateArgInfo(void* type, const char* integral_value = nullptr)
-        : m_Type(type), m_IntegralValue(integral_value) {}
-    };
-} // end namespace Cpp
+// FIXME: We should not duplicate these definitions here and in CppInterOp.h
+// The current setup relies on finding an identical symbol definition in
+// libcppyybackend.so which is fragile and requires updating both locations when
+// changing. Ideally we should have the ability to set/get the template arg info
+// provided through some factory methods in CppInterOp API, so the clients can
+// rely completely on opaque pointers like we do for the rest of the argument
+// types.
+namespace CppImpl {
+struct TemplateArgInfo {
+  void* m_Type;
+  const char* m_IntegralValue;
+  TemplateArgInfo(void* type, const char* integral_value = nullptr)
+      : m_Type(type), m_IntegralValue(integral_value) {}
+};
+} // namespace CppImpl
+
+namespace Cpp = CppImpl;
 
 namespace Cppyy {
 
@@ -117,8 +126,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsPointerType(TCppType_t type);
 
-    CPPYY_IMPORT
-    TCppScope_t gGlobalScope;      // for fast access
+    // CPPYY_IMPORT
+    // TCppScope_t gGlobalScope;      // for fast access
 
 // memory management ---------------------------------------------------------
     CPPYY_IMPORT
