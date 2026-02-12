@@ -159,7 +159,7 @@ public:
 };
 
 class TXMLEntity : public TNamed {
-   Bool_t fSystem; //!  is system (file)
+   Bool_t fSystem; ///<!  is system (file)
 public:
    TXMLEntity() : TNamed(), fSystem(kFALSE) {}
    TXMLEntity(const TString &name, const TString &value, Bool_t sys) : TNamed(name, value), fSystem(sys) {}
@@ -181,7 +181,7 @@ protected:
    Int_t fTotalPos;
    Int_t fCurrentLine;
 
-   TObjArray fEntities; //! array of TXMLEntity
+   TObjArray fEntities; ///<! array of TXMLEntity
 
 public:
    char *fCurrent;

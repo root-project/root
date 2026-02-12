@@ -101,13 +101,13 @@ protected:
    Bool_t StoreTString(TSqlRegistry *reg);
    Bool_t RecognizeTString(const char *&value);
 
-   TSQLStructure *fParent{nullptr}; //!
-   Int_t fType{0};                  //!
-   const void *fPointer{nullptr};   //!
-   TString fValue;                  //!
-   Int_t fArrayIndex{-1};           //!
-   Int_t fRepeatCnt{0};             //!
-   TObjArray fChilds;               //!
+   TSQLStructure *fParent{nullptr}; ///<!
+   Int_t fType{0};                  ///<!
+   const void *fPointer{nullptr};   ///<!
+   TString fValue;                  ///<!
+   Int_t fArrayIndex{-1};           ///<!
+   Int_t fRepeatCnt{0};             ///<!
+   TObjArray fChilds;               ///<!
 
 public:
    TSQLStructure() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
