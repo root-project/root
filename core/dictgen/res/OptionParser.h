@@ -261,13 +261,13 @@ class Option;
  */
 enum ArgStatus
 {
-  //! The option does not take an argument.
+  /// The option does not take an argument.
   ARG_NONE,
-  //! The argument is acceptable for the option.
+  /// The argument is acceptable for the option.
   ARG_OK,
-  //! The argument is not acceptable but that's non-fatal because the option's argument is optional.
+  /// The argument is not acceptable but that's non-fatal because the option's argument is optional.
   ARG_IGNORE,
-  //! The argument is not acceptable and that's fatal.
+  /// The argument is not acceptable and that's fatal.
   ARG_ILLEGAL
 };
 
@@ -903,13 +903,13 @@ private:
  */
 struct Arg
 {
-  //! @brief For options that don't take an argument: Returns ARG_NONE.
+  /// @brief For options that don't take an argument: Returns ARG_NONE.
   static ArgStatus None(const Option&, bool)
   {
     return ARG_NONE;
   }
 
-  //! @brief Returns ARG_OK if the argument is attached and ARG_IGNORE otherwise.
+  /// @brief Returns ARG_OK if the argument is attached and ARG_IGNORE otherwise.
   static ArgStatus Optional(const Option& option, bool)
   {
     if (option.arg && option.name[option.namelen] != 0)
@@ -978,7 +978,7 @@ struct Stats
     add(gnu, usage, argc, argv, min_abbr_len, single_minus_longopt);
   }
 
-  //! @brief Stats(...) with non-const argv.
+  /// @brief Stats(...) with non-const argv.
   Stats(bool gnu, const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
         bool single_minus_longopt = false) :
       buffer_max(1), options_max(1) // 1 more than necessary as sentinel
@@ -986,7 +986,7 @@ struct Stats
     add(gnu, usage, argc, const_cast<const char**>(argv), min_abbr_len, single_minus_longopt);
   }
 
-  //! @brief POSIX Stats(...) (gnu==false).
+  /// @brief POSIX Stats(...) (gnu==false).
   Stats(const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
         bool single_minus_longopt = false) :
       buffer_max(1), options_max(1) // 1 more than necessary as sentinel
@@ -994,7 +994,7 @@ struct Stats
     add(false, usage, argc, argv, min_abbr_len, single_minus_longopt);
   }
 
-  //! @brief POSIX Stats(...) (gnu==false) with non-const argv.
+  /// @brief POSIX Stats(...) (gnu==false) with non-const argv.
   Stats(const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
         bool single_minus_longopt = false) :
       buffer_max(1), options_max(1) // 1 more than necessary as sentinel
@@ -1014,21 +1014,21 @@ struct Stats
   void add(bool gnu, const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
            bool single_minus_longopt = false);
 
-  //! @brief add() with non-const argv.
+  /// @brief add() with non-const argv.
   void add(bool gnu, const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
     add(gnu, usage, argc, const_cast<const char**>(argv), min_abbr_len, single_minus_longopt);
   }
 
-  //! @brief POSIX add() (gnu==false).
+  /// @brief POSIX add() (gnu==false).
   void add(const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
     add(false, usage, argc, argv, min_abbr_len, single_minus_longopt);
   }
 
-  //! @brief POSIX add() (gnu==false) with non-const argv.
+  /// @brief POSIX add() (gnu==false) with non-const argv.
   void add(const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
@@ -1060,10 +1060,10 @@ private:
  */
 class Parser
 {
-  int op_count; //!< @internal @brief see optionsCount()
-  int nonop_count; //!< @internal @brief see nonOptionsCount()
-  const char** nonop_args; //!< @internal @brief see nonOptions()
-  bool err; //!< @internal @brief see error()
+  int op_count; ///< @internal @brief see optionsCount()
+  int nonop_count; ///< @internal @brief see nonOptionsCount()
+  const char** nonop_args; ///< @internal @brief see nonOptions()
+  bool err; ///< @internal @brief see error()
 public:
 
   /**
@@ -1085,7 +1085,7 @@ public:
     parse(gnu, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
-  //! @brief Parser(...) with non-const argv.
+  /// @brief Parser(...) with non-const argv.
   Parser(bool gnu, const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[],
          int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1) :
       op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
@@ -1093,7 +1093,7 @@ public:
     parse(gnu, usage, argc, const_cast<const char**>(argv), options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
-  //! @brief POSIX Parser(...) (gnu==false).
+  /// @brief POSIX Parser(...) (gnu==false).
   Parser(const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[], int min_abbr_len = 0,
          bool single_minus_longopt = false, int bufmax = -1) :
       op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
@@ -1101,7 +1101,7 @@ public:
     parse(false, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
-  //! @brief POSIX Parser(...) (gnu==false) with non-const argv.
+  /// @brief POSIX Parser(...) (gnu==false) with non-const argv.
   Parser(const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[], int min_abbr_len = 0,
          bool single_minus_longopt = false, int bufmax = -1) :
       op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
@@ -1168,21 +1168,21 @@ public:
   void parse(bool gnu, const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[],
              int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1);
 
-  //! @brief parse() with non-const argv.
+  /// @brief parse() with non-const argv.
   void parse(bool gnu, const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[],
              int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
   {
     parse(gnu, usage, argc, const_cast<const char**>(argv), options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
-  //! @brief POSIX parse() (gnu==false).
+  /// @brief POSIX parse() (gnu==false).
   void parse(const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[],
              int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
   {
     parse(false, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
-  //! @brief POSIX parse() (gnu==false) with non-const argv.
+  /// @brief POSIX parse() (gnu==false) with non-const argv.
   void parse(const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[], int min_abbr_len = 0,
              bool single_minus_longopt = false, int bufmax = -1)
   {
@@ -1441,7 +1441,7 @@ class Parser::StoreOptionAction: public Parser::Action
   Parser& parser;
   Option* options;
   Option* buffer;
-  int bufmax; //! Number of slots in @c buffer. @c -1 means "large enough".
+  int bufmax; ///< Number of slots in @c buffer. @c -1 means "large enough".
 public:
   /**
    * @brief Creates a new StoreOption action.
@@ -1936,17 +1936,17 @@ struct PrintUsageImplementation
    */
   class LinePartIterator
   {
-    const Descriptor* tablestart; //!< The 1st descriptor of the current table.
-    const Descriptor* rowdesc; //!< The Descriptor that contains the current row.
-    const char* rowstart; //!< Ptr to 1st character of current row within rowdesc->help.
-    const char* ptr; //!< Ptr to current part within the current row.
-    int col; //!< Index of current column.
-    int len; //!< Length of the current part (that ptr points at) in BYTES
-    int screenlen; //!< Length of the current part in screen columns (taking narrow/wide chars into account).
-    int max_line_in_block; //!< Greatest index of a line within the block. This is the number of \\v within the cell with the most \\vs.
-    int line_in_block; //!< Line index within the current cell of the current part.
-    int target_line_in_block; //!< Line index of the parts we should return to the user on this iteration.
-    bool hit_target_line; //!< Flag whether we encountered a part with line index target_line_in_block in the current cell.
+    const Descriptor* tablestart; ///< The 1st descriptor of the current table.
+    const Descriptor* rowdesc; ///< The Descriptor that contains the current row.
+    const char* rowstart; ///< Ptr to 1st character of current row within rowdesc->help.
+    const char* ptr; ///< Ptr to current part within the current row.
+    int col; ///< Index of current column.
+    int len; ///< Length of the current part (that ptr points at) in BYTES
+    int screenlen; ///< Length of the current part in screen columns (taking narrow/wide chars into account).
+    int max_line_in_block; ///< Greatest index of a line within the block. This is the number of \\v within the cell with the most \\vs.
+    int line_in_block; ///< Line index within the current cell of the current part.
+    int target_line_in_block; ///< Line index of the parts we should return to the user on this iteration.
+    bool hit_target_line; ///< Flag whether we encountered a part with line index target_line_in_block in the current cell.
 
     /**
      * @brief Determines the byte and character lengths of the part at @ref ptr and
@@ -1978,7 +1978,7 @@ struct PrintUsageImplementation
     }
 
   public:
-    //! @brief Creates an iterator for @c usage.
+    /// @brief Creates an iterator for @c usage.
     LinePartIterator(const Descriptor usage[]) :
     tablestart(usage), rowdesc(nullptr), rowstart(nullptr), ptr(nullptr), col(-1), len(0), screenlen(0), max_line_in_block(0), line_in_block(0),
         target_line_in_block(0), hit_target_line(true)
@@ -2211,7 +2211,7 @@ struct PrintUsageImplementation
    */
   class LineWrapper
   {
-    static const int bufmask = 15; //!< Must be a power of 2 minus 1.
+    static const int bufmask = 15; ///< Must be a power of 2 minus 1.
     /**
      * @brief Ring buffer for length component of pair (data, length).
      */
@@ -2231,8 +2231,8 @@ struct PrintUsageImplementation
      * @brief The width of the column to line wrap.
      */
     int width;
-    int head; //!< @brief index for next write
-    int tail; //!< @brief index for next read - 1 (i.e. increment tail BEFORE read)
+    int head; ///< @brief index for next write
+    int tail; ///< @brief index for next read - 1 (i.e. increment tail BEFORE read)
 
     /**
      * @brief Multiple methods of LineWrapper may decide to flush part of the buffer to
@@ -2260,7 +2260,7 @@ struct PrintUsageImplementation
       head = (head + 1) & bufmask;
     }
 
-    //! @brief Call BEFORE reading ...buf[tail].
+    /// @brief Call BEFORE reading ...buf[tail].
     void buf_next()
     {
       tail = (tail + 1) & bufmask;

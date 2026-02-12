@@ -434,7 +434,7 @@ TList *TQObject::GetListOfClassSignals() const
 
    qcl = dynamic_cast<TQClass*>(IsA());
 
-   return qcl ? qcl->fListOfSignals : nullptr; //!!
+   return qcl ? qcl->fListOfSignals : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

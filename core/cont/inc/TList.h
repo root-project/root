@@ -43,10 +43,10 @@ public:
 protected:
    using TObjLinkWeakPtr_t = std::weak_ptr<TObjLink>;
 
-   TObjLinkPtr_t     fFirst;     //! pointer to first entry in linked list
-   TObjLinkPtr_t     fLast;      //! pointer to last entry in linked list
-   TObjLinkWeakPtr_t fCache;     //! cache to speedup sequential calling of Before() and After() functions
-   Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
+   TObjLinkPtr_t     fFirst;     ///<! pointer to first entry in linked list
+   TObjLinkPtr_t     fLast;      ///<! pointer to last entry in linked list
+   TObjLinkWeakPtr_t fCache;     ///<! cache to speedup sequential calling of Before() and After() functions
+   Bool_t     fAscending; ///<! sorting order (when calling Sort() or for TSortedList)
 
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;

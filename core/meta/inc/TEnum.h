@@ -34,8 +34,8 @@ class TEnum : public TDictionary {
 
 private:
    THashList    fConstantList;            // List of constants the enum type
-   ClassInfo_t *fInfo  = nullptr;         //!Interpreter information, owned by TEnum
-   TClass      *fClass = nullptr;         //!Owning class
+   ClassInfo_t *fInfo  = nullptr;         ///<!Interpreter information, owned by TEnum
+   TClass      *fClass = nullptr;         ///<!Owning class
    std::string  fQualName;                // Fully qualified type name
    EDataType    fUnderlyingType = kInt_t; // Type (size) used to store the enum in memory
 
