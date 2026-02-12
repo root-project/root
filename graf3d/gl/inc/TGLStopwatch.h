@@ -33,9 +33,9 @@ class TGLStopwatch
 {
 private:
    // Fields
-   Double_t        fStart;           //! start time (millisec)
-   Double_t        fEnd;             //! end time (millisec)
-   Double_t        fLastRun;         //! time of last run (milisec)
+   Double_t        fStart;           ///<! start time (millisec)
+   Double_t        fEnd;             ///<! end time (millisec)
+   Double_t        fLastRun;         ///<! time of last run (milisec)
 
    // Methods
    Double_t GetClock(void)      const;

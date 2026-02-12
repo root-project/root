@@ -114,7 +114,7 @@ public:
    };
 
 protected:
-   RExceptionHandler        *fExcHandler{nullptr};   //!< exception handler
+   RExceptionHandler        *fExcHandler{nullptr};   ///<!< exception handler
 
    TMap                     *fVizDB{nullptr};
    Bool_t                    fVizDBReplace{kFALSE};

@@ -387,8 +387,8 @@ class TGLLine3
 {
 private:
    // Fields
-   TGLVertex3 fVertex; //! Start vertex of line
-   TGLVector3 fVector; //! Vector of line from fVertex
+   TGLVertex3 fVertex; ///<! Start vertex of line
+   TGLVector3 fVector; ///<! Vector of line from fVertex
 
 public:
    TGLLine3(const TGLVertex3 & start, const TGLVertex3 & end);
@@ -422,8 +422,8 @@ class TGLRect
 {
 private:
    // Fields
-   Int_t    fX, fY;           //! Corner
-   Int_t    fWidth, fHeight;  //! Positive width/height
+   Int_t    fX, fY;           ///<! Corner
+   Int_t    fWidth, fHeight;  ///<! Positive width/height
 
 public:
    TGLRect();

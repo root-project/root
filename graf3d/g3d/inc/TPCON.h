@@ -33,8 +33,8 @@ const Int_t kDiv = 20;               //default number of divisions
 class TPCON : public TShape {
 protected:
    // Internal cache
-   mutable Double_t   *fSiTab;       //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
-   mutable Double_t   *fCoTab;       //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+   mutable Double_t   *fSiTab;       ///<! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
+   mutable Double_t   *fCoTab;       ///<! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
    Float_t     fPhi1;        // lower phi limit
    Float_t     fDphi1;       // range in phi

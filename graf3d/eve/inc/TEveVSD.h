@@ -22,30 +22,30 @@ class TEveVSD : public TObject
    TEveVSD& operator=(const TEveVSD&); // Not implemented
 
 protected:
-   TFile             *fFile;        //!
-   TDirectory        *fDirectory;   //!
+   TFile             *fFile;        ///<!
+   TDirectory        *fDirectory;   ///<!
 
-   Int_t              fBuffSize;    //!
-   Int_t              fVerbose;     //!
+   Int_t              fBuffSize;    ///<!
+   Int_t              fVerbose;     ///<!
 
 public:
-   TTree*             fTreeK;       //! Kinematics.
-   TTree*             fTreeH;       //! Hits.
-   TTree*             fTreeC;       //! Clusters.
-   TTree*             fTreeR;       //! Reconstructed tracks.
-   TTree*             fTreeKK;      //! Kinks.
-   TTree*             fTreeV0;      //! VO's.
-   TTree*             fTreeCC;      //! Cascades.
-   TTree*             fTreeGI;      //! Sim-Rec cross references.
+   TTree*             fTreeK;       ///<! Kinematics.
+   TTree*             fTreeH;       ///<! Hits.
+   TTree*             fTreeC;       ///<! Clusters.
+   TTree*             fTreeR;       ///<! Reconstructed tracks.
+   TTree*             fTreeKK;      ///<! Kinks.
+   TTree*             fTreeV0;      ///<! VO's.
+   TTree*             fTreeCC;      ///<! Cascades.
+   TTree*             fTreeGI;      ///<! Sim-Rec cross references.
 
-   TEveMCTrack        fK,  *fpK;    //!
-   TEveHit            fH,  *fpH;    //!
-   TEveCluster        fC,  *fpC;    //!
-   TEveRecTrack       fR,  *fpR;    //!
-   TEveRecKink        fKK, *fpKK;   //!
-   TEveRecV0          fV0, *fpV0;   //!
-   TEveRecCascade     fCC, *fpCC;   //!
-   TEveMCRecCrossRef  fGI, *fpGI;   //!
+   TEveMCTrack        fK,  *fpK;    ///<!
+   TEveHit            fH,  *fpH;    ///<!
+   TEveCluster        fC,  *fpC;    ///<!
+   TEveRecTrack       fR,  *fpR;    ///<!
+   TEveRecKink        fKK, *fpKK;   ///<!
+   TEveRecV0          fV0, *fpV0;   ///<!
+   TEveRecCascade     fCC, *fpCC;   ///<!
+   TEveMCRecCrossRef  fGI, *fpGI;   ///<!
 
 public:
    TEveVSD(const char* name="TEveVSD", const char* title="");

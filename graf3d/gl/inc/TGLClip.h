@@ -85,7 +85,7 @@ public:
 class TGLClipPlane : public TGLClip
 {
 private:
-   static const float fgColor[4];   //! Fixed color of clip plane
+   static const float fgColor[4];   ///<! Fixed color of clip plane
 
 public:
    TGLClipPlane();
@@ -113,7 +113,7 @@ public:
 class TGLClipBox : public TGLClip
 {
 private:
-   static const float fgColor[4];   //! Fixed color of clip box
+   static const float fgColor[4];   ///<! Fixed color of clip box
 
 public:
    TGLClipBox();
@@ -145,7 +145,7 @@ private:
 protected:
    TGLClipPlane          *fClipPlane;
    TGLClipBox            *fClipBox;
-   TGLClip               *fCurrentClip;  //! the current clipping shape
+   TGLClip               *fCurrentClip;  ///<! the current clipping shape
 
    Bool_t                 fAutoUpdate;
    Bool_t                 fShowClip;

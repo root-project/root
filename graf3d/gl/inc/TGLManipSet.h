@@ -28,10 +28,10 @@ private:
    TGLManipSet& operator=(const TGLManipSet&) = delete;
 
 protected:
-   TGLManip  *fManip[3]; //! manipulator store
-   EManip     fType;     //! current manipulator
+   TGLManip  *fManip[3]; ///<! manipulator store
+   EManip     fType;     ///<! current manipulator
 
-   Bool_t     fDrawBBox; //! also draw bounding-box around physical
+   Bool_t     fDrawBBox; ///<! also draw bounding-box around physical
 
 public:
    TGLManipSet();
