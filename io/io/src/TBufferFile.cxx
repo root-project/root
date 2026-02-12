@@ -2603,6 +2603,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
 
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
+   // ReadClass will push on fByteCountStack if needed.
    TClass *clRef = ReadClass(clCast, &tag);
    TClass *clOnfile = nullptr;
    Int_t baseOffset = 0;
@@ -2830,7 +2831,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       // When objTag is not used, the caller is not interested in the byte
       // count and will not (can not) call CheckByteCount.
       if (objTag)
-         fByteCountStack.push_back(fBufCur - fBuffer);
+         fByteCountStack.push_back(fBufCur - fBuffer - sizeof(UInt_t));
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
