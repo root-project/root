@@ -273,8 +273,8 @@ protected:
       typedef std::map<Point, Vb::Info, K::Less_xy_2>              PointWithInfoMap;
       typedef Data_access< PointWithInfoMap, double >              Value_access;
 
-   Delaunay fCGALdelaunay; //! CGAL delaunay triangulation object
-   PointWithInfoMap fNormalizedPoints; //! Normalized function values
+   Delaunay fCGALdelaunay; ///<! CGAL delaunay triangulation object
+   PointWithInfoMap fNormalizedPoints; ///<! Normalized function values
 
 #endif //HAS_CGAL
 

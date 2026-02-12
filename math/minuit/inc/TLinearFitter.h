@@ -158,24 +158,24 @@ private:
    TVectorD     fTValues;        //T-Values of parameters
    TVectorD     fParSign;        //significance levels of parameters
    TMatrixDSym  fDesign;         //matrix AtA
-   TMatrixDSym  fDesignTemp;     //! temporary matrix, used for num.stability
-   TMatrixDSym  fDesignTemp2;    //!
-   TMatrixDSym  fDesignTemp3;    //!
+   TMatrixDSym  fDesignTemp;     ///<! temporary matrix, used for num.stability
+   TMatrixDSym  fDesignTemp2;    ///<!
+   TMatrixDSym  fDesignTemp3;    ///<!
 
    TVectorD     fAtb;            //vector Atb
-   TVectorD     fAtbTemp;        //! temporary vector, used for num.stability
-   TVectorD     fAtbTemp2;       //!
-   TVectorD     fAtbTemp3;       //!
+   TVectorD     fAtbTemp;        ///<! temporary vector, used for num.stability
+   TVectorD     fAtbTemp2;       ///<!
+   TVectorD     fAtbTemp3;       ///<!
 
-   static std::map<TString,TFormula*>   fgFormulaMap;  //! map of basis functions and formula
+   static std::map<TString,TFormula*>   fgFormulaMap;  ///<! map of basis functions and formula
    TObjArray    fFunctions;      //array of basis functions
    TVectorD     fY;              //the values being fit
    Double_t     fY2;             //sum of square of y, used for chisquare
-   Double_t     fY2Temp;         //! temporary variable used for num.stability
+   Double_t     fY2Temp;         ///<! temporary variable used for num.stability
    TMatrixD     fX;              //values of x
    TVectorD     fE;              //the errors if they are known
    TFormula     *fInputFunction; //the function being fit
-   Double_t     fVal[1000];      //! temporary
+   Double_t     fVal[1000];      ///<! temporary
 
    Int_t        fNpoints;        //number of points
    Int_t        fNfunctions;     //number of basis functions

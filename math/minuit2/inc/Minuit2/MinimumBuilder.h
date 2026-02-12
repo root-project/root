@@ -56,7 +56,7 @@ private:
    int fPrintLevel;
    int fStorageLevel;
 
-   MnTraceObject *fTracer; //! tracer object (it is managed by user)
+   MnTraceObject *fTracer; ///<! tracer object (it is managed by user)
 };
 
 } // namespace Minuit2
