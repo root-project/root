@@ -57,7 +57,7 @@ public:
     operator PyObject*() const;
 
 private:
-    PyObject* fPyObject;            //! actual python object
+    PyObject* fPyObject;            ///<! actual python object
 };
 
 } // namespace CPyCppyy
