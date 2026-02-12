@@ -51,8 +51,8 @@ protected:
    TString           fBasicUrl;         // basic url without authentication and options
    TUrl              fUrlOrg;           // save original url in case of temp redirection
    TString           fBasicUrlOrg;      // save original url in case of temp redirection
-   void             *fFullCache;        //! complete content of the file, some http server may return complete content
-   Long64_t          fFullCacheSize;    //! size of the cached content
+   void             *fFullCache;        ///<! complete content of the file, some http server may return complete content
+   Long64_t          fFullCacheSize;    ///<! size of the cached content
 
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default

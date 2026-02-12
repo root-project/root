@@ -45,7 +45,7 @@ private:
    Int_t      fMode;        // binary or ascii file transfer mode
    Long64_t   fRestartAt;   // restart transmission at specified offset
    TString    fCurrentFile; // file currently being get or put
-   TSocket   *fSocket;      //! connection to rootd
+   TSocket   *fSocket;      ///<! connection to rootd
    Long64_t   fBytesWrite;  // number of bytes sent
    Long64_t   fBytesRead;   // number of bytes received
    Bool_t     fDir;         // Indicates if a remote directory is open
