@@ -23,14 +23,14 @@ protected:
    Double_t *fRmin = nullptr; //[fNz] pointer to array of inner radii
    Double_t *fRmax = nullptr; //[fNz] pointer to array of outer radii
    Double_t *fZ = nullptr;    //[fNz] pointer to array of Z planes positions
-   Bool_t fFullPhi = false;   //! Full phi range flag
-   Double_t fC1 = 0;          //! Cosine of phi1
-   Double_t fS1 = 0;          //! Sine of phi1
-   Double_t fC2 = 0;          //! Cosine of phi1+dphi
-   Double_t fS2 = 0;          //! Sine of phi1+dphi
-   Double_t fCm = 0;          //! Cosine of (phi1+phi2)/2
-   Double_t fSm = 0;          //! Sine of (phi1+phi2)/2
-   Double_t fCdphi = 0;       //! Cosine of dphi
+   Bool_t fFullPhi = false;   ///<! Full phi range flag
+   Double_t fC1 = 0;          ///<! Cosine of phi1
+   Double_t fS1 = 0;          ///<! Sine of phi1
+   Double_t fC2 = 0;          ///<! Cosine of phi1+dphi
+   Double_t fS2 = 0;          ///<! Sine of phi1+dphi
+   Double_t fCm = 0;          ///<! Cosine of (phi1+phi2)/2
+   Double_t fSm = 0;          ///<! Sine of (phi1+phi2)/2
+   Double_t fCdphi = 0;       ///<! Cosine of dphi
 
    // methods
    TGeoPcon(const TGeoPcon &) = delete;

@@ -351,7 +351,7 @@ TGeoManager::TGeoManager()
       fSkinSurfaces = nullptr;
       fBorderSurfaces = nullptr;
       memset(fPdgId, 0, 1024 * sizeof(Int_t));
-      //   TObjArray            *fNavigators;       //! list of navigators
+      //   TObjArray            *fNavigators;       ///<! list of navigators
       fCurrentTrack = nullptr;
       fCurrentVolume = nullptr;
       fTopVolume = nullptr;
