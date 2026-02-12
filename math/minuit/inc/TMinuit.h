@@ -161,7 +161,7 @@ public:
         Bool_t       fLnewmn;           //true if the previous process has unexpectedly improved FCN
         Bool_t       fLphead;           //true if a heading should be put out for the next parameter definition
         Bool_t       fGraphicsMode;     //true if graphics mode on (default)
-        char         *fChpt;            //!Character to be plotted at the X,Y contour positions
+        char         *fChpt;            ///<!Character to be plotted at the X,Y contour positions
         TString      *fCpnam;           //[fMaxpar2] Array of parameters names
         TString      fCfrom;            //
         TString      fCstatu;           //
@@ -175,7 +175,7 @@ public:
         TObject      *fObjectFit;       //Pointer to object being fitted
         TObject      *fPlot;            //Pointer to TGraph object created by mncont
         TMethodCall  *fMethodCall;      //Pointer to MethodCall in case of interpreted function
-        void         (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag); //!
+        void         (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag); ///<!
 
 // methods performed on TMinuit class
 public:
