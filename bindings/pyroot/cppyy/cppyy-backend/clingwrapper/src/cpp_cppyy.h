@@ -10,12 +10,11 @@
 #include <vector>
 #include <stddef.h>
 #include <stdint.h>
-#include <iostream>
 
 #include "callcontext.h"
-// some more types; assumes Cppyy.h follows Python.h
+#include "precommondefs.h"
 
-// using CppFinal 
+// some more types; assumes Cppyy.h follows Python.h
 #ifndef PY_LONG_LONG
 #ifdef _WIN32
 typedef __int64 PY_LONG_LONG;
@@ -57,8 +56,6 @@ namespace Cppyy {
     typedef intptr_t                TCppFuncAddr_t;
 
 // // direct interpreter access -------------------------------------------------
-    // RPY_EXPORTED
-    // void AddSearchPath(const char* dir, bool isUser = true, bool prepend = false); 
     RPY_EXPORTED
     bool Compile(const std::string& code, bool silent = false);
     RPY_EXPORTED
@@ -81,6 +78,10 @@ namespace Cppyy {
     TCppType_t GetReferencedType(TCppType_t type, bool rvalue = false);
     RPY_EXPORTED
     std::string ResolveEnum(TCppScope_t enum_scope);
+    RPY_EXPORTED
+    bool IsLValueReferenceType(TCppType_t type);
+    RPY_EXPORTED
+    bool IsRValueReferenceType(TCppType_t type);
     RPY_EXPORTED
     bool IsClassType(TCppType_t type);
     RPY_EXPORTED
@@ -301,6 +302,8 @@ namespace Cppyy {
     RPY_EXPORTED
     std::string GetMethodPrototype(TCppMethod_t, bool show_formal_args);
     RPY_EXPORTED
+    std::string GetDoxygenComment(TCppScope_t scope, bool strip_markers = true);
+    RPY_EXPORTED
     bool        IsConstMethod(TCppMethod_t);
 // // Templated method/function reflection information ------------------------------------
     RPY_EXPORTED
@@ -340,6 +343,8 @@ namespace Cppyy {
     bool IsDestructor(TCppMethod_t method);
     RPY_EXPORTED
     bool IsStaticMethod(TCppMethod_t method);
+    RPY_EXPORTED
+    bool IsExplicit(TCppMethod_t method);
 
 // // data member reflection information ----------------------------------------
     // GetNumDatamembers is unused.
@@ -406,5 +411,6 @@ namespace Cppyy {
     RPY_EXPORTED
     void        DumpScope(TCppScope_t scope);
 } // namespace Cppyy
+
 
 #endif // !CPYCPPYY_CPPYY_H
