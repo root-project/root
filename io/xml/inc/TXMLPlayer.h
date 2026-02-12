@@ -45,9 +45,9 @@ protected:
    void WriteSTLarg(std::ostream &fs, const char *accname, int argtyp, Bool_t isargptr, TClass *argcl);
    Bool_t ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL *el, Bool_t isWriting);
 
-   TString fGetterName; //!  buffer for name of getter method
-   TString fSetterName; //!  buffer for name of setter method
-   TXMLSetup fXmlSetup; //!  buffer for xml names conversion
+   TString fGetterName; ///<!  buffer for name of getter method
+   TString fSetterName; ///<!  buffer for name of setter method
+   TXMLSetup fXmlSetup; ///<!  buffer for xml names conversion
 
    ClassDefOverride(TXMLPlayer, 1) // Generation of external xml streamers
 };

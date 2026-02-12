@@ -39,7 +39,7 @@ protected:
    void DisplayError(Int_t error, Int_t linenumber);
    XMLDocPointer_t ParseStream(TXMLInputStream *input);
 
-   Bool_t fSkipComments; //! if true, do not create comments nodes in document during parsing
+   Bool_t fSkipComments; ///<! if true, do not create comments nodes in document during parsing
 
 public:
    TXMLEngine();
