@@ -167,6 +167,40 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(v2.GetMaximum(), 7.9999990);
 }
 
+TEST(TH1, RegistrationToTDirectory_ImplicitOwnershipOn)
+{
+   TH1D histo1("histo1", "Test Histogram", 10, 0, 10);
+   auto histo2 = std::make_unique<TH1D>("histo2", "Test Histogram", 10, 0, 10);
+   TH1D *histo3 = new TH1D("histo3", "Test Histogram", 10, 0, 10);
+
+   {
+      TDirectory dir("dir", "Test Directory");
+      histo3->SetDirectory(&dir);
+
+      dir.cd();
+
+      TH1D histo4("histo4", "Test Histogram", 10, 0, 10);
+      auto histo5 = std::make_unique<TH1D>("histo5", "Test Histogram", 10, 0, 10);
+
+      EXPECT_EQ(dir.Get<TH1D>("histo1"), nullptr);
+      EXPECT_EQ(dir.Get<TH1D>("histo2"), nullptr);
+      EXPECT_EQ(dir.Get<TH1D>("histo3"), histo3);
+      EXPECT_EQ(dir.Get<TH1D>("histo4"), &histo4);
+      EXPECT_EQ(dir.Get<TH1D>("histo5"), histo5.get());
+
+      histo5.reset();
+
+      EXPECT_EQ(dir.Get<TH1D>("histo1"), nullptr);
+      EXPECT_EQ(dir.Get<TH1D>("histo2"), nullptr);
+      EXPECT_EQ(dir.Get<TH1D>("histo3"), histo3);
+      EXPECT_EQ(dir.Get<TH1D>("histo4"), &histo4);
+      EXPECT_EQ(dir.Get<TH1D>("histo5"), nullptr);
+   }
+
+   EXPECT_STREQ(histo1.GetName(), "histo1");
+   EXPECT_STREQ(histo2->GetName(), "histo2");
+}
+
 TEST(TAxis, BinComputation_FPAccuracy)
 {
    // Example from 1703c54
