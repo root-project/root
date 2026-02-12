@@ -108,7 +108,7 @@ public:
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
   Int_t _ipOrder ; // Interpolation order for cache histograms
 
   std::string cacheNameSuffix(const RooArgSet& nset) const ;

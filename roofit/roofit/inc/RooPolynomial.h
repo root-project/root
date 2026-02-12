@@ -49,7 +49,7 @@ protected:
    RooListProxy _coefList;
    Int_t _lowestOrder = 1;
 
-   mutable std::vector<double> _wksp; //! do not persist
+   mutable std::vector<double> _wksp; ///<! do not persist
 
    /// Evaluation
    double evaluate() const override;

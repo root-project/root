@@ -30,7 +30,7 @@
 class RooLinearCombination : public RooAbsReal {
   RooListProxy _actualVars;
   std::vector<RooFit::SuperFloat> _coefficients;
-  mutable RooArgSet *_nset; //!
+  mutable RooArgSet *_nset; ///<!
 
 public:
   RooLinearCombination();

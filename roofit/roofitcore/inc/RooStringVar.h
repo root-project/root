@@ -73,7 +73,7 @@ protected:
 
 private:
   std::string _string;
-  std::string* _stringAddr; //! Required to connect to TTree branch
+  std::string* _stringAddr; ///<! Required to connect to TTree branch
   ClassDefOverride(RooStringVar,2) // String-valued variable
 };
 
