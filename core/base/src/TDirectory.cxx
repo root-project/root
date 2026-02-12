@@ -32,8 +32,6 @@
 #include <algorithm>
 #include <limits>
 
-Bool_t TDirectory::fgAddDirectory = kTRUE;
-
 const Int_t  kMaxLen = 2048;
 
 static std::atomic_flag *GetCurrentDirectoryLock()
@@ -163,6 +161,15 @@ TDirectory::TContext::~TContext()
    while(fDirectoryWait);
 }
 
+// Mask deprecation warnings to allow for deprecating the fgAddDirectory bit.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : C4996)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the value returned by TDirectory::AddDirectoryStatus().
 /// \deprecated This function is not used in ROOT.
@@ -180,6 +187,12 @@ Bool_t TDirectory::AddDirectoryStatus()
 {
    return fgAddDirectory;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to this directory.

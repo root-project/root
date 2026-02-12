@@ -153,7 +153,8 @@ protected:
    std::atomic<size_t> fContextPeg{0};  ///<! Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  ///<! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
-   static Bool_t fgAddDirectory;        ///<! \deprecated This flag has no effect in ROOT.
+   [[deprecated]]
+   inline static Bool_t fgAddDirectory = false; ///<! \deprecated This flag has no effect in ROOT.
 
           Bool_t  cd1(const char *path);
    static Bool_t  Cd1(const char *path);
