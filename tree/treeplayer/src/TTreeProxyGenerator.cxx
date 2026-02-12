@@ -1793,9 +1793,9 @@ namespace Internal {
 
       fprintf(hf, "class %s : public TSelector, public %s_Interface {\n", classname.Data(), scriptfunc.Data());
       fprintf(hf, "public :\n");
-      fprintf(hf, "   TTree          *fChain;         //!pointer to the analyzed TTree or TChain\n");
-      fprintf(hf, "   TH1            *htemp;          //!pointer to the histogram\n");
-      fprintf(hf, "   TBranchProxyDirector fDirector; //!Manages the proxys\n\n");
+      fprintf(hf, "   TTree          *fChain;         ///<!pointer to the analyzed TTree or TChain\n");
+      fprintf(hf, "   TH1            *htemp;          ///<!pointer to the histogram\n");
+      fprintf(hf, "   TBranchProxyDirector fDirector; ///<!Manages the proxys\n\n");
 
       fprintf(hf, "   // Optional User methods\n");
       fprintf(hf, "   TClass         *fClass;    // Pointer to this class's description\n");

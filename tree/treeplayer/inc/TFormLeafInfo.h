@@ -499,10 +499,10 @@ public:
 
 class TFormLeafInfoCast : public TFormLeafInfo {
 public:
-   TClass *fCasted;     //! Pointer to the class we are trying to case to
-   TString fCastedName; //! Name of the class we are casting to.
-   bool    fGoodCast;   //! Marked by ReadValue.
-   bool    fIsTObject;  //! Indicated whether the fClass inherits from TObject.
+   TClass *fCasted;     ///<! Pointer to the class we are trying to case to
+   TString fCastedName; ///<! Name of the class we are casting to.
+   bool    fGoodCast;   ///<! Marked by ReadValue.
+   bool    fIsTObject;  ///<! Indicated whether the fClass inherits from TObject.
 
    TFormLeafInfoCast(TClass* classptr = nullptr, TClass* casted = nullptr);
    TFormLeafInfoCast(const TFormLeafInfoCast& orig);

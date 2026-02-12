@@ -78,8 +78,8 @@ protected:
    struct IOPos {
       IOPos(Long64_t pos, Int_t len) : fPos(pos), fLen(len) {}
 
-      Long64_t fPos{0}; //! Position in file of cache entry.
-      Int_t fLen{0};    //! Length of cache entry.
+      Long64_t fPos{0}; ///<! Position in file of cache entry.
+      Int_t fLen{0};    ///<! Length of cache entry.
    };
 
    struct MissCache {

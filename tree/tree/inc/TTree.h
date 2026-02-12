@@ -127,7 +127,7 @@ protected:
    /// Object to be notified when loading a Tree.
    /// TTree::LoadTree() and TChain::LoadTree() will call fNotify->Notify().
    /// Usually points to a TNotifyLink if this is a TChain.
-   TObject       *fNotify;                //!
+   TObject       *fNotify;                ///<!
    TDirectory    *fDirectory;             ///<! Pointer to directory holding this tree
    TObjArray      fBranches;              ///<  List of Branches
    TObjArray      fLeaves;                ///<  Direct pointers to individual branch leaves
