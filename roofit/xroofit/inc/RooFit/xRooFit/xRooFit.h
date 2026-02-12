@@ -118,7 +118,7 @@ public:
       StoredFitResult(const std::shared_ptr<RooFitResult> &_fr);
 
    public:
-      std::shared_ptr<RooFitResult> fr; //!
+      std::shared_ptr<RooFitResult> fr; ///<!
       ClassDefOverride(StoredFitResult, 0)
    };
 

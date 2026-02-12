@@ -210,7 +210,7 @@ public:
     std::map<TString,ClassRelInfo> _c2fmap ; // List of contained classes
     std::map<TString,ClassFiles> _fmap ; // List of contained files
     std::map<TString,ExtraHeader> _ehmap ; // List of extra header files
-    bool _compiledOK ; //! Flag indicating that classes compiled OK
+    bool _compiledOK ; ///<! Flag indicating that classes compiled OK
 
     ClassDefOverride(CodeRepo,2) ; // Code repository for RooWorkspace
   } ;
@@ -233,7 +233,7 @@ public:
   protected:
     friend class RooWorkspace ;
     void InternalAppend(TObject* obj) ;
-    RooWorkspace* _wspace ; //! do not persist
+    RooWorkspace* _wspace ; ///<! do not persist
 
     ClassDefOverride(WSDir,1) ; // TDirectory representation of RooWorkspace
   } ;

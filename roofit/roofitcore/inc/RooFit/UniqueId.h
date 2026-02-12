@@ -30,7 +30,7 @@ namespace RooFit {
 ///    UniqueId<MyClass> const& uniqueId() const { return _uniqueId; }
 ///
 /// private:
-///    const UniqueId<MyClass> _uniqueId; //! should be non-persistent
+///    const UniqueId<MyClass> _uniqueId; ///<! should be non-persistent
 ///
 /// };
 /// ~~~

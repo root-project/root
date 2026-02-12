@@ -305,7 +305,7 @@ class RooSTLRefCountList {
 
     Container_t _storage;
     std::vector<UInt_t> _refCount;
-    mutable std::vector<T*> _orderedStorage; //!
+    mutable std::vector<T*> _orderedStorage; ///<!
     mutable unsigned long _renameCounterForLastSorting = 0; ///<!
 
     // It is expensive to access the RooNameReg instance to get the counter for

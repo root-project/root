@@ -42,7 +42,7 @@ protected:
   std::vector<Int_t>    _catRef ;    ///< Reference values for categories
   bool       _checkVal = false;           ///< Check contents as well if true
 
-  bool        _init = false; //!
+  bool        _init = false; ///<!
 
   double evaluate() const override { return 1 ; }
 

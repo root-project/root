@@ -503,25 +503,25 @@ public:
    };
    static InteractiveObject *gIntObj;
 
-   mutable std::shared_ptr<TObject> fComp; //!
+   mutable std::shared_ptr<TObject> fComp; ///<!
    int fTimes = 1;      // when the same comp appears multiple times in a parent node, this is increased to reflect that
    int fBinNumber = -1; // used by 'bin' nodes (a node that refers to a specific bin of a parent)
-   std::shared_ptr<xRooNode> fParent; //!
+   std::shared_ptr<xRooNode> fParent; ///<!
    std::string fFolder;               // folder to put this node in when 'organising' the parent
 
    void SetRange(const char *range, double low = std::numeric_limits<double>::quiet_NaN(),
                  double high = std::numeric_limits<double>::quiet_NaN()); // *MENU*
    const char *GetRange() const;
-   mutable std::string fRange; //! only here so can have char* GetRange return so can return nullptr for no range set
-                               //! (required for RooCategory)
+   mutable std::string fRange; ///<! only here so can have char* GetRange return so can return nullptr for no range set
+                               ///<! (required for RooCategory)
 
    mutable std::shared_ptr<TAxis>
-      fXAxis; //! appears that if was fXaxis then dialog box for SetXaxis will take as current value
+      fXAxis; ///<! appears that if was fXaxis then dialog box for SetXaxis will take as current value
 
    mutable bool fInterrupted = false;
 
    bool fAcquirer = false; // if true, when acquiring will go into objects memory rather than pass onto parent
-   std::shared_ptr<xRooNode> fProvider; //! like a parent but only for use by getObject
+   std::shared_ptr<xRooNode> fProvider; ///<! like a parent but only for use by getObject
 
    std::shared_ptr<xRooNode> parentPdf() const; // find first parent that is a pdf
 

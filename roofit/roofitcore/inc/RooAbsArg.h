@@ -568,7 +568,7 @@ protected:
 
    RooRefArray _proxyList; // list of proxies
 
-   std::vector<RooAbsCache *> _cacheList; //! list of caches
+   std::vector<RooAbsCache *> _cacheList; ///<! list of caches
 
    // Proxy management
    friend class RooArgProxy;
@@ -587,7 +587,7 @@ protected:
    // Attribute list
    std::set<std::string> _boolAttrib;                // Boolean attributes
    std::map<std::string, std::string> _stringAttrib; // String attributes
-   std::set<std::string> _boolAttribTransient;       //! Transient boolean attributes (not copied in ctor)
+   std::set<std::string> _boolAttribTransient;       ///<! Transient boolean attributes (not copied in ctor)
 
    void printAttribList(std::ostream &os) const;
 
@@ -618,12 +618,12 @@ protected:
       std::vector<RooAbsProxy *> cache;
       bool isDirty = true;
    };
-   ProxyListCache _proxyListCache; //! cache of the list of proxies. Avoids type casting.
+   ProxyListCache _proxyListCache; ///<! cache of the list of proxies. Avoids type casting.
 
    // Debug stuff
    static bool _verboseDirty; // Static flag controlling verbose messaging for dirty state changes
    static bool _inhibitDirty; // Static flag controlling global inhibit of dirty state propagation
-   bool _deleteWatch = false; //! Delete watch flag
+   bool _deleteWatch = false; ///<! Delete watch flag
 
    bool inhibitDirty() const;
 
@@ -645,21 +645,21 @@ protected:
    mutable bool _fast = false;        // Allow fast access mode in getVal() and proxies
 
    // Owned components
-   RooArgSet *_ownedComponents = nullptr; //! Set of owned component
+   RooArgSet *_ownedComponents = nullptr; ///<! Set of owned component
 
-   mutable bool _prohibitServerRedirect = false; //! Prohibit server redirects -- Debugging tool
+   mutable bool _prohibitServerRedirect = false; ///<! Prohibit server redirects -- Debugging tool
 
-   mutable RooExpensiveObjectCache *_eocache{nullptr}; //! Pointer to global cache manager for expensive components.
+   mutable RooExpensiveObjectCache *_eocache{nullptr}; ///<! Pointer to global cache manager for expensive components.
 
-   mutable const TNamed *_namePtr = nullptr; //! De-duplicated name pointer, equal for all objects with the same name.
-   bool _isConstant = false; //! Cached isConstant status
+   mutable const TNamed *_namePtr = nullptr; ///<! De-duplicated name pointer, equal for all objects with the same name.
+   bool _isConstant = false; ///<! Cached isConstant status
 
-   mutable bool _localNoInhibitDirty = false; //! Prevent 'AlwaysDirty' mode for this node
+   mutable bool _localNoInhibitDirty = false; ///<! Prevent 'AlwaysDirty' mode for this node
 
-   mutable RooWorkspace *_myws = nullptr; //! In which workspace do I live, if any
+   mutable RooWorkspace *_myws = nullptr; ///<! In which workspace do I live, if any
 
-   std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to
-                                                                     //! retrieve its result in the run context
+   std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); ///<! Set by the RooFitDriver for this arg to
+                                                                     ///<! retrieve its result in the run context
 
    /// \cond ROOFIT_INTERNAL
    // Legacy streamers need the following statics:

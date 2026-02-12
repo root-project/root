@@ -47,7 +47,7 @@ private:
         return list;
       }
   };
-  mutable RooObjCacheManager _cacheMgr; //!
+  mutable RooObjCacheManager _cacheMgr; ///<!
 
   ClassDefOverride(RooJeffreysPrior,2) // Sum of RooAbsReal objects
 };
