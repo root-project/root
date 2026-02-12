@@ -7,7 +7,7 @@
 // NOTE: Need to add a test where the (nested) data member is (essentially) renamed
 
 struct RefVectorMemberPointersHolder {
-   std::vector<long> fTransient;  //!  NOTE: with the rule and not transient, it does not work (offset is 9999 and rule is not run)
+   std::vector<long> fTransient;  ///<!  NOTE: with the rule and not transient, it does not work (offset is 9999 and rule is not run)
    void resize(size_t s) {
       fTransient.resize(s);
    }
@@ -18,7 +18,7 @@ struct RefVectorMemberPointersHolder {
 
 struct RefVectorBase {
    long fID = 0;
-   std::vector<long> fTransient; //!  works.
+   std::vector<long> fTransient; ///<!  works.
    RefVectorMemberPointersHolder fHolder; // might fail
    void resize(size_t s) {
       fHolder.resize(s);
@@ -53,7 +53,7 @@ struct Values {
 struct LowData {
    long fLong = 0;
    float fFloat = 0;
-   char fPadding[256];  //!
+   char fPadding[256];  ///<!
    RefVector fProblems;
    RefVector fLoose;
    RefVector fTight;
@@ -84,8 +84,8 @@ struct Fine {
 
 struct HighData {
    std::vector<Fine> fFine;
-   std::vector<LowData> fPersLowData;  //!
-   std::vector<LowData> fLowData;      //! 'new' in CMSSSW has 2 of this.
+   std::vector<LowData> fPersLowData;  ///<!
+   std::vector<LowData> fLowData;      ///<! 'new' in CMSSSW has 2 of this.
 
    HighData(size_t s = 0) {
       fFine.resize(s);
@@ -114,7 +114,7 @@ struct HighData {
 struct PersHighData {
    std::vector<Fine> fFine;
    std::vector<LowData> fPersLowData;  //
-   std::vector<LowData> fLowData;      //! 'new' in CMSSSW has 2 of this.
+   std::vector<LowData> fLowData;      ///<! 'new' in CMSSSW has 2 of this.
 
    PersHighData(size_t s = 0) {
       fPersLowData.resize(s);

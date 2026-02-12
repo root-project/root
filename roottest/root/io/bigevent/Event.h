@@ -108,18 +108,18 @@ private:
    template2< template1< int > > fTemplateMember;
 
    map<TString,TList*>       fMapList;         // STL map
-   map<TString,TString*>     fMapTString;      //!STL map
-   map<EventHeader,TString*> fMapHeaderP;      //!STL map
-   map<EventHeader,TString>  fMapHeader;       //!STL map
-   map<EventHeader,string>   fMapHeaderst;     //!STL map
+   map<TString,TString*>     fMapTString;      ///<!STL map
+   map<EventHeader,TString*> fMapHeaderP;      ///<!STL map
+   map<EventHeader,TString>  fMapHeader;       ///<!STL map
+   map<EventHeader,string>   fMapHeaderst;     ///<!STL map
    map<TAxis*,int>          *fMapTAxisp;       //pointer to STL map
    set<TAxis*>               fSetTAxis;        //STL set
    set<TAxis*>              *fSetTAxisp;       //pointer to STL set
    multimap<TNamed*,int>     fMultiMapTNamedp; //STL multimap
    multiset<TAxis*>         *fMultiSetTAxisp;  //pointer to STL multiset
-   vector<vector<TAxis *> >  fVectAxis;       //!STL vector of vectors of TAxis*
-   map<string,vector<int> >  fMapString;      //!STL map of string/vector
-   deque<pair<float,float> > fDequePair;      //!STL deque of pair
+   vector<vector<TAxis *> >  fVectAxis;       ///<!STL vector of vectors of TAxis*
+   map<string,vector<int> >  fMapString;      ///<!STL map of string/vector
+   deque<pair<float,float> > fDequePair;      ///<!STL deque of pair
    string                    fString;          //C++ standard string
    string                   *fStringp;         //pointer to standard C++ string
    TString                  *fTstringp;        //[fNvertex] array of TString

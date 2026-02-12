@@ -9,7 +9,7 @@ class Unversioned {
 public:
    Unversioned(int seed = 4) : fCached(seed) {}
 
-   int fCached; //!
+   int fCached; ///<!
    void Print() {
       cout << "Unversioned::fCached: " << fCached << endl;
    }
@@ -19,11 +19,11 @@ class ACache {
 protected:
    int  x;
    int  y;
-   bool zcalc; //! Transient value indicating whether z was cached.
-   int  z;     //! Transient value calculated from x and y
+   bool zcalc; ///<! Transient value indicating whether z was cached.
+   int  z;     ///<! Transient value calculated from x and y
    char c;     //  It is x+y
    TObjArray *persist; // Only the objects that need to be saved.
-   TObjArray *all;     //! All objects (owner of the objects).
+   TObjArray *all;     ///<! All objects (owner of the objects).
    int  fN;      // Size of fArray
    int *fArray;  //[fN] An array of int that will become an array of char.
    float fValues[3];  // An array of float that will become array of double.

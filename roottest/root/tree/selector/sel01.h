@@ -17,7 +17,7 @@
 
 class sel01 : public TSelector {
 public :
-   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 
    // Declaration of leave types
  //Event           *event;
@@ -31,13 +31,13 @@ public :
    TRef            fWebHistogram;
 
    // List of branches
-   TBranch        *b_event_fType;   //!
-   TBranch        *b_event_fNtrack;   //!
-   TBranch        *b_event_fNseg;   //!
-   TBranch        *b_event_fNvertex;   //!
-   TBranch        *b_event_fFlag;   //!
-   TBranch        *b_event_fLastTrack;   //!
-   TBranch        *b_event_fWebHistogram;   //!
+   TBranch        *b_event_fType;   ///<!
+   TBranch        *b_event_fNtrack;   ///<!
+   TBranch        *b_event_fNseg;   ///<!
+   TBranch        *b_event_fNvertex;   ///<!
+   TBranch        *b_event_fFlag;   ///<!
+   TBranch        *b_event_fLastTrack;   ///<!
+   TBranch        *b_event_fWebHistogram;   ///<!
 
    sel01(TTree * /*tree*/ =0) { }
    ~sel01() override { }

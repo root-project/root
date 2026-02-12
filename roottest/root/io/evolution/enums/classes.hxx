@@ -121,9 +121,9 @@ inline void CalArray<Flags>::Streamer(TBuffer &R__b)
 class Event {
 public:
    PadFlags mMainFlag = PadFlags::kTwo;
-   char mCanary1 = 101; //!
+   char mCanary1 = 101; ///<!
    PadFlags mSecondFlag = PadFlags::kOne;
-   char mCanary2 = 102; //!
+   char mCanary2 = 102; ///<!
    std::vector<CalArray<PadFlags>> mData;
    std::vector<PadFlags> mFlags;
 };

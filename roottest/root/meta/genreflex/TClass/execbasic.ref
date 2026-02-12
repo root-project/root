@@ -145,7 +145,7 @@ Class category: foreign.
   * int* m_arr2 [ isPtr isBasic "[m_arrSize]" ]
   * int* m_arr3 [ isPtr isBasic "[m_arrSize]" ]
   * int* m_arr4 [ isPtr isBasic "[m_arrSize]" ]
-  * int m_transient1 [ isBasic isTransient "!This member is transient" ]
+  * int m_transient1 [ isBasic isTransient "!This member is transient and Doxygen will get confused, thinking it documents m_transient2, but I/O will work fine" ]
   * int m_transient2 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]
   * int m_transient3 [ isBasic isTransient "!This member is transient" ]
   * int m_transient4 [ isBasic isTransient "!This member is transient and we use doxygen comments" ]

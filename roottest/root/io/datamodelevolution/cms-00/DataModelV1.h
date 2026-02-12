@@ -15,7 +15,7 @@ namespace CMS {
    public:
       struct Transient {
          Transient() : fCached(false) {}
-         bool fCached; //!
+         bool fCached; ///<!
       };
 
       ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
@@ -30,14 +30,14 @@ class ClassAIns
 public:
    struct Transient {
       Transient() : fCached(false) {}
-      bool fCached; //!
+      bool fCached; ///<!
    };
 
    ClassAIns(): m_a( 12 ), m_b( 32.23 ) {}
 private:
    int    m_a;
    double m_b;
-   ClassAIns::Transient m_cache; //!
+   ClassAIns::Transient m_cache; ///<!
 };
 
 class ClassABase
@@ -181,9 +181,9 @@ private:
    //std::vector<LHCb::LHCbID>       m_lhcbIDs;              ///< Container of (sorted) LHCbIDs
    //std::vector<LHCb::State*>       m_states;               ///< Container with pointers to all the states
    //std::vector<LHCb::Measurement*> m_measurements;         ///< Container of Measurements
-   //Gaudi::TrackProjectionMatrix    m_projections;      //! ///< the projection matrix
-   Node                              m_nothing;          //! ///< Just for testing
-   std::vector<LHCb::Node*>          m_nodes;            //! ///< Container of Nodes
+   //Gaudi::TrackProjectionMatrix    m_projections;      ///<! ///< the projection matrix
+   Node                              m_nothing;          ///<! ///< Just for testing
+   std::vector<LHCb::Node*>          m_nodes;            ///<! ///< Container of Nodes
    Gaudi::TrackProjectionMatrixMis   m_projections_file;     ///< the projection matrix
    //ExtraInfo                       m_extraInfo;            ///< Additional pattern recognition information. Do not access directly, use *Info() methods instead.
    //SmartRefVector<LHCb::Track>     m_ancestors;            ///< Ancestor tracks that created this one

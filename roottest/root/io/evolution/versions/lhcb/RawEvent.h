@@ -56,7 +56,7 @@ namespace LHCb
      */
     struct Bank  {
       int           m_len;      // Bank length
-      char          m_owns;     //! transient data member: ownership flag
+      char          m_owns;     ///<! transient data member: ownership flag
       unsigned int* m_buff;     //[m_len]
       /// Default constructor
       Bank() : m_len(0), m_owns(1), m_buff(0) {}
@@ -95,9 +95,9 @@ namespace LHCb
      */
     const std::vector<LHCb::RawBank*> &  mapBanks(LHCb::RawBank::BankType bankType);
 
-    std::map<LHCb::RawBank::BankType,std::vector<LHCb::RawBank*> > m_eventMap; //! transient Map with RawBanks (values) for each bank type  
+    std::map<LHCb::RawBank::BankType,std::vector<LHCb::RawBank*> > m_eventMap; ///<! transient Map with RawBanks (values) for each bank type  
     std::vector<Bank>                                  m_banks;    // Vector with persistent bank structure
-    bool                                               m_mapped;   //! transient
+    bool                                               m_mapped;   ///<! transient
   }; // class RawEvent
 } // namespace LHCb
 

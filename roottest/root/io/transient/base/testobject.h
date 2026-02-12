@@ -13,7 +13,7 @@ protected:
     Double_t lStorage;
 
    std::map<int,First*>  fFirst;
-   std::map<int,Second*> fSecond; //!
+   std::map<int,Second*> fSecond; ///<!
 public:
     TestObj();
     virtual ~TestObj() {};

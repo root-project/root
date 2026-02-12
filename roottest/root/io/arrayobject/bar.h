@@ -70,11 +70,11 @@ public:
   foo   *fp [2]; //
   foo    f  [2]; //
 
-  foobj *fov;    //! fixed size is not supported [2]
+  foobj *fov;    ///<! fixed size is not supported [2]
   int    vop;
   foobj *fvop;   //[vop]
 
-  foo   *fv;     //! fixed size is not supported [2]
+  foo   *fv;     ///<! fixed size is not supported [2]
   int    vp;
   foo  *fvp;     //[vp]
 #endif

@@ -14,7 +14,7 @@ private:
    int* m_arr2; ///<[m_arrSize]
    int* m_arr3; // [m_arrSize]
    int* m_arr4; ///<      [m_arrSize]
-   int m_transient1; //!This member is transient
+   int m_transient1; //!This member is transient and Doxygen will get confused, thinking it documents m_transient2, but I/O will work fine
    int m_transient2; ///<!This member is transient and we use doxygen comments
    int m_transient3; //  !This member is transient
    int m_transient4; ///<   !This member is transient and we use doxygen comments

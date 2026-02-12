@@ -5525,7 +5525,7 @@ class TObjArray;
 class TRef : public TObject {
 
 protected:
-   TProcessID       *fPID;     //!Pointer to ProcessID when TRef was written
+   TProcessID       *fPID;     ///<!Pointer to ProcessID when TRef was written
 
    static TObjArray  *fgExecs;  //List of execs
    static TObject    *fgObject; //Pointer to object (set in Action on Demand)
@@ -15569,10 +15569,10 @@ class TList : public TSeqCollection {
 friend  class TListIter;
 
 protected:
-   TObjLink  *fFirst;     //! pointer to first entry in linked list
-   TObjLink  *fLast;      //! pointer to last entry in linked list
-   TObjLink  *fCache;     //! cache to speedup sequential calling of Before() and After() functions
-   Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
+   TObjLink  *fFirst;     ///<! pointer to first entry in linked list
+   TObjLink  *fLast;      ///<! pointer to last entry in linked list
+   TObjLink  *fCache;     ///<! cache to speedup sequential calling of Before() and After() functions
+   Bool_t     fAscending; ///<! sorting order (when calling Sort() or for TSortedList)
 
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;
@@ -16025,7 +16025,7 @@ friend class TFile;
 friend class TDirectory;
 
 protected:
-   UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
+   UInt_t    fUUIDIndex;             ///<!index in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
    UShort_t  fTimeMid;               // middle 16 time bits
    UShort_t  fTimeHiAndVersion;      // high 12 time bits + 4 UUID version bits
@@ -16424,9 +16424,9 @@ protected:
    TString     fOption;           //File options
    Char_t      fUnits;            //Number of bytes for file pointers
    TList      *fFree;             //Free segments linked list table
-   TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
-   TCache     *fCache;            //!Page cache used to reduce number of small I/O's
-   TObjArray  *fProcessIDs;       //!Array of pointers to TProcessIDs
+   TArrayC    *fClassIndex;       ///<!Index of TStreamerInfo classes written to this file
+   TCache     *fCache;            ///<!Page cache used to reduce number of small I/O's
+   TObjArray  *fProcessIDs;       ///<!Array of pointers to TProcessIDs
 
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
@@ -16744,7 +16744,7 @@ string oName;
 string dName;
 string fName;
 
-mutable ooRunObj *pObjContainingNameScopes; //! Transient
+mutable ooRunObj *pObjContainingNameScopes; ///<! Transient
 private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   opiRefBase  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   opiRefBase  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooRefBase.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 134; } 
 };
 
@@ -16816,8 +16816,8 @@ static multimap<uint32, ooObj *> readObjects;
 static vector<opiRefBase *> objects;
 static vector<TFile *> filesToClose;
 
-bool doUpdate;          //! Transient
-TDirectory *tDirectory; //! Transient
+bool doUpdate;          ///<! Transient
+TDirectory *tDirectory; ///<! Transient
 private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 60; } 
 };
 
@@ -20250,7 +20250,7 @@ multimap<string, opiRefBase> & GetScopesContainingName();
 
 protected:
 
-ooRunObj *pNameScope; //! Transient
+ooRunObj *pNameScope; ///<! Transient
 
 private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooCollObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooCollObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooCollObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 29; } 
 };
