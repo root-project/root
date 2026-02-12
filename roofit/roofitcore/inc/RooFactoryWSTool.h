@@ -187,7 +187,7 @@ protected:
   static std::map<std::string,IFace*>& hooks() ;
   static std::map<std::string,IFace*>* _hooks ;
 
-  RooWorkspace* _ws ; //! Associated workspace
+  RooWorkspace* _ws ; ///<! Associated workspace
 
   void clearError() { _errorCount = 0 ; }
   Int_t errorCount() { return _errorCount ; }

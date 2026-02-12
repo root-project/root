@@ -105,7 +105,7 @@ public:
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 
 
-  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
   AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr) const ;
   void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues=true) const ;
 

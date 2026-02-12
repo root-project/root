@@ -107,7 +107,7 @@ namespace RooStats {
      std::pair<double, int> minimizeNLL(std::string const &prefix);
 
       RooAbsPdf* fPdf = nullptr;
-      std::unique_ptr<RooAbsReal> fNll; //!
+      std::unique_ptr<RooAbsReal> fNll; ///<!
       const RooArgSet* fCachedBestFitParams = nullptr;
       RooAbsData* fLastData = nullptr;
       LimitType fLimitType = twoSided;

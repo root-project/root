@@ -54,7 +54,7 @@ protected:
 private:
   // how far you have to go out in a Gaussian until it is smaller than the
   // machine precision
-  static const double _nSigma; //!
+  static const double _nSigma; ///<!
 
   Int_t _nEvents = 0;
   double *_dataPts = nullptr;  //[_nEvents]

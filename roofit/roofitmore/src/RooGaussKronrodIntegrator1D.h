@@ -52,13 +52,13 @@ protected:
       _x[0] = xx;
       return _x.data();
    }
-   std::vector<double> _x; //! do not persist
+   std::vector<double> _x; ///<! do not persist
 
    double _epsAbs; // Absolute precision
    double _epsRel; // Relative precision
 
-   mutable double _xmin; //! Lower integration bound
-   mutable double _xmax; //! Upper integration bound
+   mutable double _xmin; ///<! Lower integration bound
+   mutable double _xmax; ///<! Upper integration bound
 };
 
 #endif

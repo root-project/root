@@ -78,7 +78,7 @@ protected:
       RooArgList _ownedList ;
       RooArgList containedArgs(Action) override ;
   };
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
 
   double calculate(const RooArgList& partIntList) const;
