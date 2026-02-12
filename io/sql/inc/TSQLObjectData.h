@@ -79,21 +79,21 @@ protected:
    Int_t GetNumClassFields();
    const char *GetClassFieldName(Int_t n);
 
-   TSQLClassInfo *fInfo;        //!
-   Long64_t fObjId;             //!
-   Bool_t fOwner;               //!
-   TSQLResult *fClassData;      //!
-   TSQLResult *fBlobData;       //!
-   TSQLStatement *fBlobStmt;    //!
-   Int_t fLocatedColumn;        //!
-   TSQLRow *fClassRow;          //!
-   TSQLRow *fBlobRow;           //!
-   const char *fLocatedField;   //!
-   const char *fLocatedValue;   //!
-   Bool_t fCurrentBlob;         //!
+   TSQLClassInfo *fInfo;        ///<!
+   Long64_t fObjId;             ///<!
+   Bool_t fOwner;               ///<!
+   TSQLResult *fClassData;      ///<!
+   TSQLResult *fBlobData;       ///<!
+   TSQLStatement *fBlobStmt;    ///<!
+   Int_t fLocatedColumn;        ///<!
+   TSQLRow *fClassRow;          ///<!
+   TSQLRow *fBlobRow;           ///<!
+   const char *fLocatedField;   ///<!
+   const char *fLocatedValue;   ///<!
+   Bool_t fCurrentBlob;         ///<!
    const char *fBlobPrefixName; ///<! name prefix in current blob row
    const char *fBlobTypeName;   ///<! name type (without prefix) in current blob row
-   TObjArray *fUnpack;          //!
+   TObjArray *fUnpack;          ///<!
 
    ClassDefOverride(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
 };

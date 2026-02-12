@@ -127,9 +127,9 @@ protected:
    Bool_t fUseDtd{kFALSE};
    Bool_t fUseNamespaces{kFALSE};
 
-   Int_t fRefCounter{0}; //!  counter , used to build id of xml references
+   Int_t fRefCounter{0}; ///<!  counter , used to build id of xml references
 
-   TString fStrBuf; //!  buffer, used in XmlDefineClass() function
+   TString fStrBuf; ///<!  buffer, used in XmlDefineClass() function
 
    static TString fgNameSpaceBase;
 

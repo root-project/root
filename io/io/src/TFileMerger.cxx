@@ -801,7 +801,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    target->cd();
 
    oldkeyname = keyname;
-   //!!if the object is a tree, it is stored in globChain...
+   // if the object is a tree, it is stored in globChain...
    if (cl->InheritsFrom(TDirectory::Class())) {
       // printf("cas d'une directory\n");
 
