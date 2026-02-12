@@ -445,8 +445,8 @@ namespace TMVA {
       void                  DisableWriting(Bool_t setter){ fModelPersistence = setter?kFALSE:kTRUE; }//DEPRECATED
 
     protected:
-      mutable const Event *fTmpEvent; //! temporary event when testing on a different DataSet than the own one
-      DataSet *fTmpData =  nullptr; //! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
+      mutable const Event *fTmpEvent; ///<! temporary event when testing on a different DataSet than the own one
+      DataSet *fTmpData =  nullptr; ///<! temporary dataset used when evaluating on a different data (used by MethodCategory::GetMvaValues)
        // helper variables for JsMVA
        IPythonInteractive *fInteractive = nullptr;
        bool fExitFromTraining = false;
@@ -607,7 +607,7 @@ namespace TMVA {
 
 
       // data sets
-      DataSetInfo&     fDataSetInfo;         //! the data set information (sometimes needed)
+      DataSetInfo&     fDataSetInfo;         ///<! the data set information (sometimes needed)
 
       Double_t         fSignalReferenceCut;  // minimum requirement on the MVA output to declare an event signal-like
       Double_t         fSignalReferenceCutOrientation;  // minimum requirement on the MVA output to declare an event signal-like
