@@ -190,11 +190,11 @@ private:
    std::vector<Double_t> fEvents;       ///< Original data storage
    std::vector<Double_t> fEventWeights; ///< Original data weights
 
-   TF1* fPDF;             //! Output Kernel Density Estimation PDF function
-   TF1* fUpperPDF;        //! Output Kernel Density Estimation upper confidence interval PDF function
-   TF1* fLowerPDF;        //! Output Kernel Density Estimation lower confidence interval PDF function
-   TF1* fApproximateBias; //! Output Kernel Density Estimation approximate bias
-   TGraphErrors* fGraph;  //! Graph with the errors
+   TF1* fPDF;             ///<! Output Kernel Density Estimation PDF function
+   TF1* fUpperPDF;        ///<! Output Kernel Density Estimation upper confidence interval PDF function
+   TF1* fLowerPDF;        ///<! Output Kernel Density Estimation lower confidence interval PDF function
+   TF1* fApproximateBias; ///<! Output Kernel Density Estimation approximate bias
+   TGraphErrors* fGraph;  ///<! Graph with the errors
 
    EKernelType fKernelType;
    EIteration fIteration;
