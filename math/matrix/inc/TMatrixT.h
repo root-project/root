@@ -41,7 +41,7 @@ template<class Element> class TMatrixT : public TMatrixTBase<Element> {
 
 protected:
 
-   Element  fDataStack[TMatrixTBase<Element>::kSizeMax]; //! data container
+   Element  fDataStack[TMatrixTBase<Element>::kSizeMax]; ///<! data container
    Element *fElements;                                   //[fNelems] elements themselves
 
    Element *New_m   (Int_t size);

@@ -20,10 +20,10 @@ class TTree;
 
 class TSPlot: public TObject {
 protected:
-   TMatrixD fXvar;           //!
-   TMatrixD fYvar;           //!
-   TMatrixD fYpdf;           //!
-   TMatrixD fPdfTot;         //!
+   TMatrixD fXvar;           ///<!
+   TMatrixD fYvar;           ///<!
+   TMatrixD fYpdf;           ///<!
+   TMatrixD fPdfTot;         ///<!
    TMatrixD fMinmax;         //mins and maxs of variables for histogramming
    TMatrixD fSWeights;       //computed sWeights
 
@@ -32,7 +32,7 @@ protected:
    TObjArray fYpdfHists;     //histograms of pdfs
    TObjArray fSWeightsHists; //histograms of weighted variables
 
-   TTree    *fTree = nullptr;     //!
+   TTree    *fTree = nullptr;     ///<!
    TString* fTreename = nullptr;  //The name of the data tree
    TString* fVarexp = nullptr;    //Variables used for splot
    TString* fSelection = nullptr; //Selection on the tree

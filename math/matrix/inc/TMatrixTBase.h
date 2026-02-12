@@ -97,7 +97,7 @@ protected:
    Element  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
 
-   Bool_t   fIsOwner;             //!default kTRUE, when Use array kFALSE
+   Bool_t   fIsOwner;             ///<!default kTRUE, when Use array kFALSE
 
    static  void DoubleLexSort (Int_t n,Int_t *first,Int_t *second,Element *data);
    static  void IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,

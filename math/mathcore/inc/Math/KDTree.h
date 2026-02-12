@@ -119,9 +119,9 @@ namespace ROOT
            BaseNode& operator=(const BaseNode& ) {return *this;}
 
            //links to adjacent nodes
-           BaseNode*                 fParent;     //!pointer to parent node
-           BaseNode*                 fLeftChild;  //!pointer to left child
-           BaseNode*                 fRightChild; //!pointer to right child
+           BaseNode*                 fParent;     ///<!pointer to parent node
+           BaseNode*                 fLeftChild;  ///<!pointer to left child
+           BaseNode*                 fRightChild; ///<!pointer to right child
         };
 
         class HeadNode : public BaseNode

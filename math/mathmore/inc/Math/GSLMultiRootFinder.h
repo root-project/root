@@ -284,7 +284,7 @@ namespace Math {
     bool fUseDerivAlgo; // algorithm using derivative
 
     GSLMultiRootBaseSolver * fSolver;
-    std::vector<ROOT::Math::IMultiGenFunction *> fFunctions;   //! transient Vector of the functions
+    std::vector<ROOT::Math::IMultiGenFunction *> fFunctions;   ///<! transient Vector of the functions
 
 
  };

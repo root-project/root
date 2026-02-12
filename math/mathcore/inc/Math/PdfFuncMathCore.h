@@ -581,7 +581,7 @@ namespace Math {
   inline double uniform_pdf(double x, double a, double b, double x0 = 0) {
     // Inlined to enable clad-auto-derivation for this function.
 
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! when a=b
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! when a=b
 
     if ((x-x0) < b && (x-x0) >= a)
       return 1.0/(b - a);

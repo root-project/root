@@ -303,8 +303,8 @@ namespace Math {
 
    private:
 
-      Engine * fEngine;   //! random number generator engine
-      RandomFunctionsImpl<EngineBaseType> fImpl;   //! instance of the class implementing the functions
+      Engine * fEngine;   ///<! random number generator engine
+      RandomFunctionsImpl<EngineBaseType> fImpl;   ///<! instance of the class implementing the functions
 
 
   };
