@@ -7,6 +7,8 @@
 
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
+#include "RBinIndexMultiRange.hxx"
+#include "RBinIndexRange.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
@@ -186,6 +188,18 @@ public:
    RLinearizedIndex ComputeGlobalIndex(const std::vector<RBinIndex> &indices) const
    {
       return ComputeGlobalIndexImpl(indices);
+   }
+
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiRange GetFullRange() const
+   {
+      std::vector<RBinIndexRange> ranges;
+      for (auto &&axis : fAxes) {
+         ranges.push_back(axis.GetFullRange());
+      }
+      return RBinIndexMultiRange(std::move(ranges));
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
