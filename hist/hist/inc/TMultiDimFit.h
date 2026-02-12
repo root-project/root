@@ -98,7 +98,7 @@ protected:
    Int_t        fBinVarX;              ///< Number of bin in independent variables
    Int_t        fBinVarY;              ///< Number of bin in dependent variables
 
-   TVirtualFitter* fFitter;            //! Fit object (MINUIT)
+   TVirtualFitter* fFitter;            ///<! Fit object (MINUIT)
 
    EMDFPolyType fPolyType;             ///< Type of polynomials to use
    Bool_t       fShowCorrelation;      ///< print correlation matrix
