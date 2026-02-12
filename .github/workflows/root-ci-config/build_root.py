@@ -171,7 +171,7 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and not args.vs_update:
+    if not pull_request and not args.incremental and args.upload_artifacts:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
@@ -231,7 +231,7 @@ def parse_args():
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
     parser.add_argument("--overrides",       default=None,      help="Override build options using a syntax like 'A=1 B=2'", nargs="*")
-    parser.add_argument("--vs_update",       default="false",   help="Build after update of Visual Studio")
+    parser.add_argument("--upload_artifacts", default="true",   help="Whether to upload binary artifacts")
 
     args = parser.parse_args()
 

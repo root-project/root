@@ -54,14 +54,14 @@ jobs:
         shell: cmd
         run: "C:\\setenv.bat x64 &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype    Release
-                    --platform     windows10
-                    --incremental  false
-                    --binaries     false
-                    --vs_update    true
-                    --base_ref     master
-                    --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture x64"
+                    --buildtype        Release
+                    --platform         windows10
+                    --incremental      false
+                    --binaries         false
+                    --upload_artifacts false
+                    --base_ref         master
+                    --repository       ${{ github.server_url }}/${{ github.repository }}
+                    --architecture     x64"
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
