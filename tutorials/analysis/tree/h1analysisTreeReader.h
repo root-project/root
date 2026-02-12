@@ -11,31 +11,31 @@
 
 class h1analysisTreeReader : public TSelector {
 public:
-   TTreeReader                  myTreeReader;//!
+   TTreeReader                  myTreeReader;///<!
 
-   TTreeReaderValue<Float_t>    fPtds_d; //!
-   TTreeReaderValue<Float_t>    fEtads_d; //!
-   TTreeReaderValue<Float_t>    fDm_d; //!
-   TTreeReaderValue<Int_t>      fIk; //!
-   TTreeReaderValue<Int_t>      fIpi; //!
-   TTreeReaderValue<Int_t>      fIpis; //!
-   TTreeReaderValue<Float_t>    fPtd0_d; //!
-   TTreeReaderValue<Float_t>    fMd0_d; //!
-   TTreeReaderValue<Float_t>    fRpd0_t; //!
-   TTreeReaderArray<Int_t>      fNhitrp; //!
-   TTreeReaderArray<Float_t>    fRstart; //!
-   TTreeReaderArray<Float_t>    fRend; //!
-   TTreeReaderArray<Float_t>    fNlhk; //!
-   TTreeReaderArray<Float_t>    fNlhpi; //!
-   TTreeReaderValue<Int_t>      fNjets; //!
+   TTreeReaderValue<Float_t>    fPtds_d; ///<!
+   TTreeReaderValue<Float_t>    fEtads_d; ///<!
+   TTreeReaderValue<Float_t>    fDm_d; ///<!
+   TTreeReaderValue<Int_t>      fIk; ///<!
+   TTreeReaderValue<Int_t>      fIpi; ///<!
+   TTreeReaderValue<Int_t>      fIpis; ///<!
+   TTreeReaderValue<Float_t>    fPtd0_d; ///<!
+   TTreeReaderValue<Float_t>    fMd0_d; ///<!
+   TTreeReaderValue<Float_t>    fRpd0_t; ///<!
+   TTreeReaderArray<Int_t>      fNhitrp; ///<!
+   TTreeReaderArray<Float_t>    fRstart; ///<!
+   TTreeReaderArray<Float_t>    fRend; ///<!
+   TTreeReaderArray<Float_t>    fNlhk; ///<!
+   TTreeReaderArray<Float_t>    fNlhpi; ///<!
+   TTreeReaderValue<Int_t>      fNjets; ///<!
 
-   TH1F                         *hdmd;//!
-   TH2F                         *h2;//!
+   TH1F                         *hdmd;///<!
+   TH2F                         *h2;///<!
 
-   Bool_t                        useList;//!
-   Bool_t                        fillList;//!
-   TEntryList                   *elist;//!
-   Long64_t                      fProcessed;//!
+   Bool_t                        useList;///<!
+   Bool_t                        fillList;///<!
+   TEntryList                   *elist;///<!
+   Long64_t                      fProcessed;///<!
 
    h1analysisTreeReader(TTree* /*tree*/=nullptr) :
       myTreeReader(),

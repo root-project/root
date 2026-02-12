@@ -54,8 +54,8 @@ class TMsgList : public TNamed {
       TList      fMsgs;         //  list messages, stored as TObjString
       Int_t      fLimit = 1000; //  max number of stored messages
       Long64_t   fCounter = 0;  //  current message id
-      TList      fSelect;       //! temporary list used for selection
-      TObjString fStrCounter;   //! current id stored in the string
+      TList      fSelect;       ///<! temporary list used for selection
+      TObjString fStrCounter;   ///<! current id stored in the string
 
    public:
 
