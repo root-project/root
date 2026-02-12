@@ -150,7 +150,7 @@ public:
 
 protected:
    TNDArrayT<Double_t> fSumw2; // bin error, lazy allocation happens in TNDArrayT
-   mutable std::vector<Int_t> fCoordBuf; //! Temporary buffer
+   mutable std::vector<Int_t> fCoordBuf; ///<! Temporary buffer
 
    ClassDefOverride(THn, 1); //Base class for multi-dimensional histogram
 };

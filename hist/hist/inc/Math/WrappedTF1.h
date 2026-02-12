@@ -157,7 +157,7 @@ namespace ROOT {
          bool fLinear;                 // flag for linear functions
          bool fPolynomial;             // flag for polynomial functions
          TF1 *fFunc;                   // pointer to ROOT function
-         mutable double fX[1];         //! cached vector for x value (needed for TF1::EvalPar signature)
+         mutable double fX[1];         ///<! cached vector for x value (needed for TF1::EvalPar signature)
          //std::vector<double> fParams;  //  cached vector with parameter values
 
       };
