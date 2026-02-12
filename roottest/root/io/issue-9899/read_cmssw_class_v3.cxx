@@ -15,7 +15,7 @@ struct RefVectorMemberPointersHolder {
 
 struct RefVectorBase {
    long fID = 0;
-   std::vector<long> fTransient; //!  works.
+   std::vector<long> fTransient; ///<!  works.
    RefVectorMemberPointersHolder fHolder; // might fail
    void resize(size_t s) {
       fTransient.resize(s);
@@ -53,7 +53,7 @@ struct Values {
 struct LowData {
    long fLong = 0;
    float fFloat = 0;
-   char fPadding[256];  //!
+   char fPadding[256];  ///<!
    RefVector fProblems;
    RefVector fLoose;
    RefVector fTight;

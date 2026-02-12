@@ -19,7 +19,7 @@ namespace Name
   class SkyMap
   {
   private:
-     std::vector<std::pair<Name::Sk,float> > vssb1; //!
+     std::vector<std::pair<Name::Sk,float> > vssb1; ///<!
      std::vector<float > vssb2; //
      std::vector<std::vector<float>::iterator > vssb3; 
   public:

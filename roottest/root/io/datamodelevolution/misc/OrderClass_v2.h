@@ -16,7 +16,7 @@ public:
 private:
    int ver;
    int fArray[2];
-   bool transientMember; //!
+   bool transientMember; ///<!
 
    ClassDefOverride(MyClass, 2)
 };

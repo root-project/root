@@ -67,7 +67,7 @@ int execROOT10804() {
   // FIXME: can be resolved now that the payload has been parsed.
   // And that shows that the test needs to check *one* type name only,
   // before parsing the payload.
-  //!!! check_not("Outer::Inline::Template<Float16_t>");
+  // !!! check_not("Outer::Inline::Template<Float16_t>");
 
   // Double32_t won't get a demangled alternate name,
   // only as-written-in-selection.xml
@@ -75,7 +75,7 @@ int execROOT10804() {
   // FIXME: can be resolved now that the payload has been parsed.
   // And that shows that the test needs to check *one* type name only,
   // before parsing the payload.
-  //!!! check_not("Outer::Container<Outer::Inline::Template<Double32_t>>");
+  // !!! check_not("Outer::Container<Outer::Inline::Template<Double32_t>>");
 
   // Cross-check: not selected.
   check_not("Outer::Container<int>");

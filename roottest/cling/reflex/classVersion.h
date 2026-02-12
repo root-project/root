@@ -21,7 +21,7 @@ class ReallyNoDict {
 };
 
 class FromTObject: public TObject {
-   ReallyNoDict fTransientByComment; //! this is intended to be transient
+   ReallyNoDict fTransientByComment; ///<! this is intended to be transient
    ReallyNoDict fTransientBySelection; // this is intended to be transient, marked by selection.xml
 
    ClassDef(FromTObject, 13);

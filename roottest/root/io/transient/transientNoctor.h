@@ -19,7 +19,7 @@ public:
 
 class MyClass {
 public:
-   Transient2 fMember; //!
+   Transient2 fMember; ///<!
 
    MyClass() : fMember(0) {}
 

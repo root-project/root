@@ -5,7 +5,7 @@
 
 class Holder {
 public:
-   std::atomic<const void*> fCache; //!
+   std::atomic<const void*> fCache; ///<!
 
    ClassDef(Holder,2);
 };

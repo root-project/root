@@ -85,7 +85,7 @@ public:
    std::TEST_MAP<std::string, int>         fString;
    std::TEST_MAP<std::string*, int, PtrCmp<std::string> >        fPtrString;
 #if defined(R__NO_NESTED_CONST_STRING)
-   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //!  this version of ROOT does not support nested const string
+   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; ///<!  this version of ROOT does not support nested const string
 #else
    std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //
 #endif
@@ -105,10 +105,10 @@ public:
 
 
 #if defined(R__NO_NESTED_CONTAINER)
-   std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> > fNested;  //! this version of ROOT does not support nested container
-   std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> >*fNestedPtr;  //! this version of ROOT does not support nested container
-   std::TEST_MAP<std::string, std::vector<Helper> > fNestedV; //!
-   std::TEST_MAP<std::string, std::deque<Helper > > fNestedD; //!
+   std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> > fNested;  ///<! this version of ROOT does not support nested container
+   std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> >*fNestedPtr;  ///<! this version of ROOT does not support nested container
+   std::TEST_MAP<std::string, std::vector<Helper> > fNestedV; ///<!
+   std::TEST_MAP<std::string, std::deque<Helper > > fNestedD; ///<!
 #else
    std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> > fNested;  //
    std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> >*fNestedPtr;  //
