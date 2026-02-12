@@ -220,7 +220,7 @@ private:
    };
 
 protected:
-   Rep_t          fRep;           //! String data
+   Rep_t          fRep;           ///<! String data
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);

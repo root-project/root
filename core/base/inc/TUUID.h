@@ -42,7 +42,7 @@ class TDatime;
 class TUUID {
 
 protected:
-   UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
+   UInt_t    fUUIDIndex;             ///<!index in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
    UShort_t  fTimeMid;               // middle 16 time bits
    UShort_t  fTimeHiAndVersion;      // high 12 time bits + 4 UUID version bits

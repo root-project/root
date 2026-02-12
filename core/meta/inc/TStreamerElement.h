@@ -34,16 +34,16 @@ protected:
    Int_t            fArrayLength;     //cumulative size of all array dims
    Int_t            fArrayDim;        //number of array dimensions
    Int_t            fMaxIndex[5];     //Maximum array index for array dimension "dim"
-   Int_t            fOffset;          //!element offset in class
-   Int_t            fTObjectOffset;   //!base offset for TObject if the element inherits from it
-   Int_t            fNewType;         //!new element type when reading
+   Int_t            fOffset;          ///<!element offset in class
+   Int_t            fTObjectOffset;   ///<!base offset for TObject if the element inherits from it
+   Int_t            fNewType;         ///<!new element type when reading
    TString          fTypeName;        //Data type name of data member
-   TClass          *fClassObject;     //!pointer to class of object
-   TClass          *fNewClass;        //!new element class when reading
-   TMemberStreamer *fStreamer;        //!pointer to element Streamer
-   Double_t         fXmin;            //!Minimum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fXmax;            //!Maximum of data member if a range is specified  [xmin,xmax,nbits]
-   Double_t         fFactor;          //!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
+   TClass          *fClassObject;     ///<!pointer to class of object
+   TClass          *fNewClass;        ///<!new element class when reading
+   TMemberStreamer *fStreamer;        ///<!pointer to element Streamer
+   Double_t         fXmin;            ///<!Minimum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fXmax;            ///<!Maximum of data member if a range is specified  [xmin,xmax,nbits]
+   Double_t         fFactor;          ///<!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
 
    friend class TStreamerSTL;
 
@@ -150,13 +150,13 @@ private:
 
 protected:
    Int_t             fBaseVersion;    //version number of the base class (used during memberwise streaming)
-   UInt_t           &fBaseCheckSum;   //!checksum of the base class (used during memberwise streaming)
-   TClass           *fBaseClass;      //!pointer to base class
-   TClass           *fNewBaseClass;   //!pointer to new base class if renamed
-   ClassStreamerFunc_t     fStreamerFunc;     //!Pointer to a wrapper around a custom streamer member function.
-   ClassConvStreamerFunc_t fConvStreamerFunc; //!Pointer to a wrapper around a custom convertion streamer member function.
-   TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
-   TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
+   UInt_t           &fBaseCheckSum;   ///<!checksum of the base class (used during memberwise streaming)
+   TClass           *fBaseClass;      ///<!pointer to base class
+   TClass           *fNewBaseClass;   ///<!pointer to new base class if renamed
+   ClassStreamerFunc_t     fStreamerFunc;     ///<!Pointer to a wrapper around a custom streamer member function.
+   ClassConvStreamerFunc_t fConvStreamerFunc; ///<!Pointer to a wrapper around a custom convertion streamer member function.
+   TVirtualStreamerInfo *fStreamerInfo; ///<!Pointer to the current StreamerInfo for the baset class.
+   TString               fErrorMsg;     ///<!Error message in case of checksum/version mismatch.
 
    void InitStreaming(Bool_t isTransient);
 
@@ -200,7 +200,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //!pointer to basic type counter
+   TStreamerBasicType *fCounter;        ///<!pointer to basic type counter
 
 public:
 
@@ -237,7 +237,7 @@ protected:
    Int_t               fCountVersion;   //version number of the class with the counter
    TString             fCountName;      //name of data member holding the array count
    TString             fCountClass;     //name of the class with the counter
-   TStreamerBasicType *fCounter;        //!pointer to basic type counter
+   TStreamerBasicType *fCounter;        ///<!pointer to basic type counter
 
 public:
 
@@ -268,7 +268,7 @@ private:
    TStreamerBasicType&operator=(const TStreamerBasicType&) = delete;
 
 protected:
-   Int_t             fCounter;     //!value of data member when referenced by an array
+   Int_t             fCounter;     ///<!value of data member when referenced by an array
 
 public:
 
@@ -448,8 +448,8 @@ private:
    TStreamerArtificial&operator=(const TStreamerArtificial&) = delete;
 
 protected:
-   ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!
-   ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; //!
+   ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    ///<!
+   ROOT::TSchemaRule::ReadRawFuncPtr_t  fReadRawFunc; ///<!
 
 public:
 

@@ -46,9 +46,9 @@ private:
    TBaseClass&operator=(const TBaseClass &) = delete;
 
 private:
-   BaseClassInfo_t    *fInfo;      //!pointer to CINT base class info
+   BaseClassInfo_t    *fInfo;      ///<!pointer to CINT base class info
    TClassRef           fClassPtr;  // pointer to the base class TClass
-   TClass             *fClass;     //!pointer to parent class
+   TClass             *fClass;     ///<!pointer to parent class
    AtomicInt_t         fDelta;     // BaseClassInfo_t offset (INT_MAX if unset)
    mutable AtomicInt_t fProperty;  // BaseClassInfo_t's properties
    Int_t               fSTLType;   // cache of IsSTLContainer()

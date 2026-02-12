@@ -17,7 +17,7 @@
 class TAttBBox
 {
 protected:
-   Float_t*  fBBox;   //! Dynamic Float_t[6] X(min,max), Y(min,max), Z(min,max)
+   Float_t*  fBBox;   ///<! Dynamic Float_t[6] X(min,max), Y(min,max), Z(min,max)
 
    void BBoxInit(Float_t infinity=1e6);
    void BBoxZero(Float_t epsilon=0, Float_t x=0, Float_t y=0, Float_t z=0);

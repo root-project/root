@@ -51,7 +51,7 @@ class TVirtualPad : public TObject, public TAttLine, public TAttFill,
                     public TAttPad, public TQObject {
 
 protected:
-   Bool_t         fResizing;         //!true when resizing the pad
+   Bool_t         fResizing;         ///<!true when resizing the pad
 
    void  *GetSender() override { return this; }  //used to set gTQSender
 
