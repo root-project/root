@@ -179,6 +179,15 @@ public:
       return ComputeGlobalIndexImpl(indices);
    }
 
+   /// Compute the global index for all axes.
+   ///
+   /// \param[in] indices the vector of RBinIndex
+   /// \return the global index that may be invalid
+   RLinearizedIndex ComputeGlobalIndex(const std::vector<RBinIndex> &indices) const
+   {
+      return ComputeGlobalIndexImpl(indices);
+   }
+
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RAxes"); }
 };
