@@ -83,6 +83,15 @@ def printFirstMessage(requestor, pullNumber, targetBranches):
     requestorInfo = f' requested by {requestor}' if requestor else ''
     printInfo(f'Preparing to backport PR #{pullNumber} to branch{plural} {targetBranchesStr} {requestorInfo}')
 
+def getWorkflowRunUrl():
+    if not "GITHUB_SERVER_URL" in os.environ:
+        return ''
+    urlElements = (os.environ["GITHUB_SERVER_URL"], 
+                   os.environ["GITHUB_REPOSITORY"], 
+                   "actions/runs", 
+                   os.environ["GITHUB_RUN_ID"])
+    return '/'.join(urlElements)
+
 def execCommandOfficialRepo(command):
     '''
     Execute a shell command in the official ROOT repo
@@ -200,21 +209,12 @@ class OfficialROOTRepoPR:
         printInfo(f'The author of PR {self.pullNumber} is {author}')
         return author
 
-    def postCommentAfterBP(self, bpPRUrlBranch):
+    def postComment(self, prComment):
         '''
-        Post a clear message summarising what backports have been created
+        Post a comment on the PR
 
-        :param bpPRUrlBranch: The list of backport PRs numbers and branch names
+        :param comment: The comment
         '''
-        # We now prepare a clear message to post on the PR for which backports have been created...
-        prComment = 'This PR has been backported to'
-        if len(bpPRUrlBranch) == 1:
-            prUrl, brName = bpPRUrlBranch[0]
-            prComment += f' branch {brName}: {prUrl}'
-        else:
-            for prUrl, brName in bpPRUrlBranch:
-                prComment += f'\n   - Branch {brName}:#{prUrl}'
-        # ...and post it
         execCommandOfficialRepo(f'gh pr comment {self.pullNumber} --body "{prComment}"')
         return 0
 
@@ -271,31 +271,50 @@ def principal():
 
     # Now we loop on the target branches to create one PR for each of them
     for targetBranch in targetBranches:
-        printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')
+        printInfo(f'--------- Backporting PR {pullNumber} to branch {targetBranch}')        
         realTargetBranch = shortBranchToRealBranch(targetBranch)
-        bpBranchName = f'BP_{targetBranch}_pull_{pullNumber}'
-        execCommandBotRepo(f'git fetch root_upstream {realTargetBranch}')
-        execCommandBotRepo(f'git checkout {realTargetBranch}')
-        if bpBranchName in execCommandBotRepo('git branch'):
-            execCommandBotRepo(f'git branch -D {bpBranchName}')
-        if bpBranchName in execCommandBotRepo('git ls-remote origin'):
-            execCommandBotRepo(f'git push -d origin {bpBranchName}')
-        execCommandBotRepo(f'git checkout -b {bpBranchName}')
-        execCommandBotRepo(f'git cherry-pick -x {mergeCommit}~{nCommits}..{mergeCommit}')
-        execCommandBotRepo(f'git push --set-upstream origin {bpBranchName}')
-        prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
-                                               f'--base {realTargetBranch} '\
-                                               f'--head root-project-bot:{bpBranchName} ' \
-                                               f'--title "[{targetBranch}] {prTitle}"  '\
-                                               f"--body 'Backport of #{pullNumber}{requestorInfo}'")
-        execCommandBotRepo('GH_TOKEN=$PR_TOKEN gh pr edit --repo root-project/root ' \
-                                                f'{labelSwitch} {assigneesSwitch}')
+        bpBranchName = f'BP_{targetBranch}_pull_{pullNumber}'        
+        try:
+            execCommandBotRepo(f'git fetch root_upstream {realTargetBranch}')
+            execCommandBotRepo(f'git checkout {realTargetBranch}')
+            if bpBranchName in execCommandBotRepo('git branch'):
+                execCommandBotRepo(f'git branch -D {bpBranchName}')
+            if bpBranchName in execCommandBotRepo('git ls-remote origin'):
+                execCommandBotRepo(f'git push -d origin {bpBranchName}')
+            execCommandBotRepo(f'git checkout -b {bpBranchName}')
+            execCommandBotRepo(f'git cherry-pick -x {mergeCommit}~{nCommits}..{mergeCommit}')
+            execCommandBotRepo(f'git push --set-upstream origin {bpBranchName}')
+            prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
+                                                f'--base {realTargetBranch} '\
+                                                f'--head root-project-bot:{bpBranchName} ' \
+                                                f'--title "[{targetBranch}] {prTitle}"  '\
+                                                f"--body 'Backport of #{pullNumber}{requestorInfo}'")
+            execCommandBotRepo('GH_TOKEN=$PR_TOKEN gh pr edit --repo root-project/root ' \
+                                                    f'{labelSwitch} {assigneesSwitch}')
+        except:
+            wflowUrl = getWorkflowRunUrl()
+            if wflowUrl:
+                prComment = f'Something went wrong with the backport to {targetBranch}: '
+                if requestor:
+                    prComment += f'@{requestor} '
+                prComment += f'please see [the logs]({wflowUrl})'
+                thePR.postComment(prComment)
+            raise
         bpPRUrlBranch.append((prUrl,targetBranch))       
 
     if bpPRUrlBranch == []:
         Exception('No backport succeeded!')
 
-    return thePR.postCommentAfterBP(bpPRUrlBranch)
+    # Let's write a clear message as a comment to communicate everything went well
+    prComment = 'This PR has been backported to'
+    if len(bpPRUrlBranch) == 1:
+        prUrl, brName = bpPRUrlBranch[0]
+        prComment += f' branch {brName}: {prUrl}'
+    else:
+        for prUrl, brName in bpPRUrlBranch:
+            prComment += f'\n   - Branch {brName}:#{prUrl}'
+
+    return thePR.postComment(prComment)
 
 if __name__ == "__main__":
     sys.exit(principal())
