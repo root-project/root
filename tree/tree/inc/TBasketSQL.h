@@ -35,9 +35,9 @@ private:
    TBasketSQL& operator=(const TBasketSQL&); // TBasketSQL objects are not copiable.
 
 protected:
-   TSQLResult **fResultPtr;    //!
-   TSQLRow    **fRowPtr;       //!
-   TString      *fInsertQuery; //!
+   TSQLResult **fResultPtr;    ///<!
+   TSQLRow    **fRowPtr;       ///<!
+   TString      *fInsertQuery; ///<!
 
 public:
    TBasketSQL();

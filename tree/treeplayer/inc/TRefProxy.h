@@ -27,7 +27,7 @@ class TFormLeafInfoReference;
 
 class TRefProxy : public TVirtualRefProxy  {
 protected:
-   TClassRef fClass;    //! Pointer to the reference class (TRef::Class())
+   TClassRef fClass;    ///<! Pointer to the reference class (TRef::Class())
 
 public:
    /// Default constructor
