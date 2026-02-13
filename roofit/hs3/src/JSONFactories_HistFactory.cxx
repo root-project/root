@@ -202,26 +202,28 @@ ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
    RooArgList gammas;
    for (std::size_t i = 0; i < n; ++i) {
       const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i];
-      auto* e = dynamic_cast<RooAbsReal*>(ws.obj(name.c_str()));
-      if(e) gammas.add(*e);
-      else gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
+      auto *e = dynamic_cast<RooAbsReal *>(ws.obj(name.c_str()));
+      if (e)
+         gammas.add(*e);
+      else
+         gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
    }
 
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
 
-   if(vals.size() > 0){
-     if (constraintType != "Const") {
-       auto constraintsInfo = createGammaConstraints(
-						     gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
-       for (auto const &term : constraintsInfo.constraints) {
-         ws.import(*term, RooFit::RecycleConflictNodes());
-         constraints.add(*ws.pdf(term->GetName()));
-       }
-     } else {
-       for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
-         gamma->setConstant(true);
-       }
-     }
+   if (vals.size() > 0) {
+      if (constraintType != "Const") {
+         auto constraintsInfo = createGammaConstraints(
+            gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
+         for (auto const &term : constraintsInfo.constraints) {
+            ws.import(*term, RooFit::RecycleConflictNodes());
+            constraints.add(*ws.pdf(term->GetName()));
+         }
+      } else {
+         for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
+            gamma->setConstant(true);
+         }
+      }
    }
 
    return phf;
@@ -383,17 +385,18 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funcName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
-	    if(mod["data"].has_child("vals")){
-	      for (const auto &v : mod["data"]["vals"].children()) {
-		vals.push_back(v.val_double());
-	      }
-	    }
+            if (mod["data"].has_child("vals")) {
+               for (const auto &v : mod["data"]["vals"].children()) {
+                  vals.push_back(v.val_double());
+               }
+            }
             std::vector<std::string> parnames;
             for (const auto &v : mod["parameters"].children()) {
                parnames.push_back(v.val());
             }
             if (vals.empty() && parnames.empty()) {
-               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname + "' with neither values nor parameters!");
+               RooJSONFactoryWSTool::error("unable to instantiate shapesys '" + sysname +
+                                           "' with neither values nor parameters!");
             }
             std::string constraint(mod.has_child("constraint_type") ? mod["constraint_type"].val()
                                    : mod.has_child("constraint")    ? mod["constraint"].val()
