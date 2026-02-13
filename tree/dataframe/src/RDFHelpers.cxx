@@ -295,7 +295,7 @@ void ProgressHelper::PrintProgressAndStats(std::ostream &stream, std::size_t cur
    buffer << "[";
    if (fUseShellColours)
       buffer << "\033[35m";
-   buffer << "Elapsed: " << elapsedSeconds << "  ";
+   buffer << "Elapsed: " << elapsedSeconds.count() << "  ";
    if (fUseShellColours)
       buffer << "\033[0m";
    buffer << "files: " << currentFileIdx << " / " << fTotalFiles << "  ";
@@ -337,7 +337,7 @@ void ProgressHelper::PrintProgressAndStats(std::ostream &stream, std::size_t cur
          remainingSeconds =
             std::chrono::seconds{static_cast<long long>(elapsedSeconds.count() / completion - elapsedSeconds.count())};
       }
-      buffer << "  remaining ca.: " << remainingSeconds;
+      buffer << "  remaining ca.: " << remainingSeconds.count();
 
       if (fUseShellColours)
          buffer << "\033[0m";
@@ -367,7 +367,7 @@ void ProgressHelper::PrintStatsFinal() const
    if (fUseShellColours)
       stream << "\033[35m";
    stream << "["
-          << "Total elapsed time: " << elapsedSeconds << "  ";
+          << "Total elapsed time: " << elapsedSeconds.count() << "  ";
    if (fUseShellColours)
       stream << "\033[0m";
    stream << "processed files: " << fTotalFiles << "  ";
