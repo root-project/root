@@ -60,6 +60,14 @@ GetCollectionInfo(const std::string &typeName)
               ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ECollectionType::kStdArray};
    }
 
+   // Find TYPE from std::vector<TYPE>
+   if (auto pos = beginType.find("vector<"); pos != std::string::npos) {
+      const auto begin = typeName.find_first_of('<', pos) + 1;
+      const auto end = typeName.find_last_of('>');
+      const auto innerTypeName = typeName.substr(begin, end - begin);
+      return {true, innerTypeName, ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ECollectionType::kStdVector};
+   }
+
    return {false, "", ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ECollectionType::kRVec};
 }
 
