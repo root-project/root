@@ -30,23 +30,23 @@ private:
 
 protected:
    enum EDrag        {
-// clang++ (-Wshadow) complains about shadowing GuiTypes.h global enum ECursor. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global enum ECursor. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kMove,
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
       kResize,
-// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kNone };
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
    enum ENameStack   { kMoveID, kEditID, kDeleteID, kResizeID };

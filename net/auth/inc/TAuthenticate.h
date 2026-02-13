@@ -57,13 +57,13 @@ friend class TSocket;
 
 public:
    enum ESecurity {
-// clang++ (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kClear,
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
       kUnsupported, kKrb5, kGlobus, kSSH, kRfio }; // type of authentication

@@ -47,13 +47,13 @@ public:
       enum EStatusFlags {
          kIsObject    = BIT(0),    // member is object
          kIsTransient = BIT(1),    // data member is transient
-// clang++ (-Wshadow) complains about shadowing TDictionary.h global enum EProperty. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing TDictionary.h global enum EProperty. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
          kIsPointer   = BIT(2),    // data member is a pointer
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
          kBitMask     = 0x000000ff

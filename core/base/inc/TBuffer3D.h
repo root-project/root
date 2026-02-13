@@ -47,13 +47,13 @@ public:
    static UInt_t DecCSLevel();
 
    enum ESection {
-// clang++ (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
                    kNone            = BIT(0),
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
                    kCore            = BIT(1),

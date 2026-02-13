@@ -51,13 +51,13 @@ public:
 
 protected:
    enum ESocketErrors {
-// clang++ (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kInvalid = -1,
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
      kInvalidStillInList = -2

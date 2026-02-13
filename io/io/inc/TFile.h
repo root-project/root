@@ -278,13 +278,13 @@ public:
    enum { kStartBigFile  = 2000000000 };
    /// File type
    enum EFileType {
-// clang++ (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kDefault = 0,
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
       kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };

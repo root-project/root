@@ -103,8 +103,8 @@ protected:
 
    /// TBranch status bits
    enum EStatusBits {
-// clang++ (-Wshadow) does not like this shadowing of global variables in this header. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) does not like this shadowing of global variables in this header. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
@@ -113,7 +113,7 @@ protected:
       kBranchObject = ::kBranchObject, ///< Branch is a TObject*
       kBranchAny    = ::kBranchAny,    ///< Branch is an object*
       // kMapObject    = ::kMapObject;    ///< kBranchObject | kBranchAny;
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
       kAutoDelete   = BIT(15),

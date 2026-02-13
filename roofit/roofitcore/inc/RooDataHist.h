@@ -262,13 +262,13 @@ public:
   mutable std::vector<std::vector<double> > _binbounds;     ///<! list of bin bounds per dimension
 
   enum CacheSumState_t{
-// clang++ (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum EFpeMask. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kInvalid = 0,
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
      kNoBinCorrection = 1, kCorrectForBinSize = 2, kInverseBinCorr = 3};

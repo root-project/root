@@ -34,13 +34,13 @@ protected:
 
 public:
    enum ERegionType { kRectangle,
-// clang++ (-Wshadow) complains about shadowing Buttons.h global enum EEditMode. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing Buttons.h global enum EEditMode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kEllipse };
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
 

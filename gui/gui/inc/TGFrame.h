@@ -511,13 +511,13 @@ public:
                     UInt_t options = kVerticalFrame);
 
    enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom,
-// clang++ (-Wshadow) complains about shadowing GuiTypes.h global enum ECursor. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global enum ECursor. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
                      kTopLeft, kTopRight, kBottomLeft, kBottomRight };
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
    virtual void    CenterOnParent(Bool_t croot = kTRUE, EPlacement pos = kCenter);

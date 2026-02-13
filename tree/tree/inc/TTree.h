@@ -252,13 +252,13 @@ protected:
       kGetFriendAlias       = BIT(7),
       kGetLeaf              = BIT(8),
       kLoadTree             = BIT(9),
-// clang++ (-Wshadow) complains about shadowing TError.h global variable kPrint. Let's silence warning:
-#if defined(__clang__)
+// clang++ <v20 (-Wshadow) complains about shadowing TError.h global variable kPrint. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wshadow"
 #endif
       kPrint                = BIT(10),
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 20
 #pragma clang diagnostic pop
 #endif
       kRemoveFriend         = BIT(11),
