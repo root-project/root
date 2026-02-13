@@ -209,3 +209,39 @@ TEST(RSliceBinIndexMapper, MapSliceRebin)
       EXPECT_EQ(mapped[0].GetIndex(), (i - 1) / 2);
    }
 }
+
+TEST(RSliceBinIndexMapper, MapSum)
+{
+   const RSliceBinIndexMapper mapper({RSliceSpec::ROperationSum{}});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 0);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(0);
+
+   // All indices should be summed...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+   }
+}
+
+TEST(RSliceBinIndexMapper, MapProjection)
+{
+   const RSliceBinIndexMapper mapper({RSliceSpec{}, RSliceSpec::ROperationSum{}});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 1);
+   std::vector<RBinIndex> original(2);
+   std::vector<RBinIndex> mapped(1);
+
+   for (auto index0 : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex::Overflow()}) {
+      original[0] = index0;
+      // The second dimension should be projected...
+      for (auto index1 : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex::Overflow()}) {
+         original[1] = index1;
+         // Reset mapped index, to be sure it's correctly set...
+         mapped[0] = RBinIndex();
+         bool success = mapper.Map(original, mapped);
+         EXPECT_TRUE(success);
+         EXPECT_EQ(mapped[0], index0);
+      }
+   }
+}
