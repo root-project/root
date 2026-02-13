@@ -166,3 +166,46 @@ TEST(RSliceBinIndexMapper, MapSliceFull)
       EXPECT_EQ(mapped[0], index);
    }
 }
+
+TEST(RSliceBinIndexMapper, MapRebin)
+{
+   const RSliceBinIndexMapper mapper({RSliceSpec::ROperationRebin(/*nGroup=*/2)});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 1);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(1);
+
+   // Underflow and overflow indices should be mapped to themselves...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_EQ(mapped[0], index);
+   }
+
+   // Normal bins are merged according to nGroup...
+   for (std::uint64_t i = 0; i < 4; i++) {
+      original[0] = RBinIndex(i);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      ASSERT_TRUE(mapped[0].IsNormal());
+      EXPECT_EQ(mapped[0].GetIndex(), i / 2);
+   }
+}
+
+TEST(RSliceBinIndexMapper, MapSliceRebin)
+{
+   const auto range = CreateBinIndexRange(RBinIndex(1), RBinIndex(4), 0);
+   const RSliceBinIndexMapper mapper({RSliceSpec(range, RSliceSpec::ROperationRebin(/*nGroup=*/2))});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 1);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(1);
+
+   // Contained normal bins are first shifted and then merged according to nGroup...
+   for (std::uint64_t i = 1; i < 4; i++) {
+      original[0] = RBinIndex(i);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      ASSERT_TRUE(mapped[0].IsNormal());
+      EXPECT_EQ(mapped[0].GetIndex(), (i - 1) / 2);
+   }
+}
