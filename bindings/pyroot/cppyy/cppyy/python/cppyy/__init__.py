@@ -90,11 +90,6 @@ sys.modules['cppyy.gbl.std'] = gbl.std
 _e = gbl.std.exception
 
 
-#- enable auto-loading -------------------------------------------------------
-try:    gbl.cling.runtime.gCling.EnableAutoLoading()
-except: pass
-
-
 #- external typemap ----------------------------------------------------------
 from . import _typemap
 _typemap.initialize(_backend)               # also creates (u)int8_t mapper

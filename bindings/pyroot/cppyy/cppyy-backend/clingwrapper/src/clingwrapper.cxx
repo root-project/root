@@ -836,6 +836,13 @@ Cppyy::TCppScope_t Cppyy::GetUnderlyingScope(TCppScope_t scope)
 Cppyy::TCppScope_t Cppyy::GetScope(const std::string& name,
                                    TCppScope_t parent_scope)
 {
+// CppInterOp directly looks at the AST which is not enough.
+// We require lazy module loading that ROOT relies on, so we do it here first.
+// Use TClass::GetClass to trigger auto-loading of dictionaries and
+// modules.
+    if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
+        TClass::GetClass(name.c_str(), true /* load */, true /* silent */);
+
     if (Cppyy::TCppScope_t scope = Cpp::GetScope(name, parent_scope))
       return scope;
     if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
@@ -933,8 +940,16 @@ Cppyy::TCppScope_t Cppyy::GetActualClass(TCppScope_t klass, TCppObject_t obj) {
     std::string mangled_name = typ->name();
     std::string demangled_name = Cpp::Demangle(mangled_name);
 
-    if (TCppScope_t scope = Cppyy::GetScope(demangled_name))
-        return scope;
+    if (TCppScope_t scope = Cppyy::GetScope(demangled_name)) {
+    // Only return the derived type if it has a complete definition in the
+    // interpreter. Internal classes like TCling have no public header and
+    // no dictionary, so their CXXRecordDecl has no DefinitionData.
+    // returning them crashes when querying bases/offsets. Fall back
+    // to the declared base type instead (equivalent to a
+    // clActual->GetClassInfo() guard).
+        if (Cpp::IsComplete(scope))
+            return scope;
+    }
 
     return klass;
 }
@@ -1474,9 +1489,13 @@ bool Cppyy::GetSmartPtrInfo(
 // type offsets --------------------------------------------------------------
 ptrdiff_t Cppyy::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
     TCppObject_t address, int direction, bool rerror)
-{
+{   
+    // Either base or derived class is incomplete, treat silently
+    if (!Cpp::IsComplete(derived) || !Cpp::IsComplete(base))
+        return rerror ? (ptrdiff_t)-1 : 0;
+
     intptr_t offset = Cpp::GetBaseClassOffset(derived, base);
-    
+
     if (offset == -1)   // Cling error, treat silently
         return rerror ? (ptrdiff_t)offset : 0;
 
