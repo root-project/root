@@ -31,12 +31,77 @@ ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReade
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader() = default;
 
-void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(Long64_t entry)
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdArray(Long64_t entry)
 {
    if (entry == fLastEntry)
-      return &fRVec; // we already pointed our fRVec to the right address
+      return fRVec.data(); // We return the RVec we already created
 
    auto &readerArray = *fTreeArray;
+   // GetSize is called here to trigger actual reading of the branch proxy, which also sets the appropriate read status
+   const auto readerArraySize = readerArray.GetSize();
+
+   // The reader could not read an array, signal this back to the node requesting the value
+   if (R__unlikely(readerArray.GetReadStatus() == ROOT::Internal::TTreeReaderValueBase::EReadStatus::kReadError))
+      return nullptr;
+
+   // std::array storage should always be contiguous
+   assert(readerArray.IsContiguous() && "std::array storage should always be contiguous");
+
+   if (readerArraySize > 0) {
+      // trigger loading of the contents of the TTreeReaderArray
+      // the address of the first element in the reader array is not necessarily equal to
+      // the address returned by the GetAddress method
+      RVec<Byte_t> rvec(readerArray.At(0), readerArraySize);
+      swap(fRVec, rvec);
+   } else {
+      fRVec.clear();
+   }
+
+   fLastEntry = entry;
+   return fRVec.data();
+}
+
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadStdVector(Long64_t entry)
+{
+   if (entry == fLastEntry)
+      return &fStdVector; // We return the std::vector we already created
+
+   auto &readerArray = *fTreeArray;
+   // GetSize is called here to trigger actual reading of the branch proxy, which also sets the appropriate read status
+   const auto readerArraySize = readerArray.GetSize();
+
+   // The reader could not read an array, signal this back to the node requesting the value
+   if (R__unlikely(readerArray.GetReadStatus() == ROOT::Internal::TTreeReaderValueBase::EReadStatus::kReadError))
+      return nullptr;
+
+   // There is no zero-copy constructor for std::vector, so we need to copy the data in any case.
+   if (readerArraySize > 0) {
+      // Caching the value type size since GetValueSize might be expensive.
+      if (fValueSize == 0)
+         fValueSize = readerArray.GetValueSize();
+      assert(fValueSize > 0 && "Could not retrieve size of collection value type.");
+      // Array is not contiguous, make a full copy of it.
+      fStdVector.clear();
+      fStdVector.reserve(readerArraySize * fValueSize);
+      for (std::size_t i{0}; i < readerArraySize; i++) {
+         auto val = readerArray.At(i);
+         std::copy(val, val + fValueSize, std::back_inserter(fStdVector));
+      }
+   } else {
+      fStdVector.clear();
+   }
+
+   fLastEntry = entry;
+   return &fStdVector;
+}
+
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadRVec(Long64_t entry)
+{
+   if (entry == fLastEntry)
+      return &fRVec; // We return the RVec we already created
+
+   auto &readerArray = *fTreeArray;
+   // GetSize is called here to trigger actual reading of the branch proxy, which also sets the appropriate read status
    const auto readerArraySize = readerArray.GetSize();
 
    // The reader could not read an array, signal this back to the node requesting the value
@@ -90,11 +155,20 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(Long64_t entry
          fRVec.clear();
       }
    }
+
    fLastEntry = entry;
+   return &fRVec;
+}
+
+void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::GetImpl(Long64_t entry)
+{
    if (fCollectionType == ECollectionType::kStdArray)
-      return fRVec.data();
-   else
-      return &fRVec;
+      return ReadStdArray(entry);
+
+   if (fCollectionType == ECollectionType::kStdVector)
+      return ReadStdVector(entry);
+
+   return ReadRVec(entry);
 }
 
 ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::RTreeUntypedArrayColumnReader(TTreeReader &r,
