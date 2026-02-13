@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <iostream>
 #include <set>
+#include <sstream>
 
 #include <numeric>
 
@@ -76,21 +77,24 @@ struct RestoreStreamState {
    std::ostream &fStream;
    std::ios fPreservedState{nullptr};
 };
-} // namespace
 
 /// Format std::chrono::seconds as `1:30m`.
-std::ostream &operator<<(std::ostream &stream, std::chrono::seconds elapsedSeconds)
+std::string prettyPrint(std::chrono::seconds const &elapsedSeconds)
 {
-   RestoreStreamState restore(stream);
+   std::stringstream str;
    auto h = std::chrono::duration_cast<std::chrono::hours>(elapsedSeconds);
    auto m = std::chrono::duration_cast<std::chrono::minutes>(elapsedSeconds - h);
    auto s = (elapsedSeconds - h - m).count();
 
    if (h.count() > 0)
-      stream << h.count() << ':' << std::setw(2) << std::right << std::setfill('0');
-   stream << m.count() << ':' << std::setw(2) << std::right << std::setfill('0') << s;
-   return stream << (h.count() > 0 ? 'h' : 'm');
+      str << h.count() << ':' << std::setw(2) << std::right << std::setfill('0');
+   str << m.count() << ':' << std::setw(2) << std::right << std::setfill('0') << s;
+   str << (h.count() > 0 ? 'h' : 'm');
+
+   return str.str();
 }
+
+} // namespace
 
 using ROOT::RDF::RResultHandle;
 
@@ -295,7 +299,7 @@ void ProgressHelper::PrintProgressAndStats(std::ostream &stream, std::size_t cur
    buffer << "[";
    if (fUseShellColours)
       buffer << "\033[35m";
-   buffer << "Elapsed: " << elapsedSeconds.count() << "  ";
+   buffer << "Elapsed: " << prettyPrint(elapsedSeconds) << "  ";
    if (fUseShellColours)
       buffer << "\033[0m";
    buffer << "files: " << currentFileIdx << " / " << fTotalFiles << "  ";
@@ -337,7 +341,7 @@ void ProgressHelper::PrintProgressAndStats(std::ostream &stream, std::size_t cur
          remainingSeconds =
             std::chrono::seconds{static_cast<long long>(elapsedSeconds.count() / completion - elapsedSeconds.count())};
       }
-      buffer << "  remaining ca.: " << remainingSeconds.count();
+      buffer << "  remaining ca.: " << prettyPrint(remainingSeconds);
 
       if (fUseShellColours)
          buffer << "\033[0m";
@@ -367,7 +371,7 @@ void ProgressHelper::PrintStatsFinal() const
    if (fUseShellColours)
       stream << "\033[35m";
    stream << "["
-          << "Total elapsed time: " << elapsedSeconds.count() << "  ";
+          << "Total elapsed time: " << prettyPrint(elapsedSeconds) << "  ";
    if (fUseShellColours)
       stream << "\033[0m";
    stream << "processed files: " << fTotalFiles << "  ";
