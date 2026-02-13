@@ -97,6 +97,9 @@ public:
             if (index.IsNormal()) {
                index = RBinIndex(index.GetIndex() / opRebin->GetNGroup());
             }
+         } else if (sliceSpec.GetOperationSum() != nullptr) {
+            // This dimension disappears, go to the next one.
+            continue;
          }
 
          mapped[mappedPos] = index;
