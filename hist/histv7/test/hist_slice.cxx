@@ -245,3 +245,42 @@ TEST(RSliceBinIndexMapper, MapProjection)
       }
    }
 }
+
+TEST(RSliceBinIndexMapper, MapSliceSum)
+{
+   const auto range = CreateBinIndexRange(RBinIndex(1), RBinIndex(2), 0);
+   const RSliceBinIndexMapper mapper({RSliceSpec(range, RSliceSpec::ROperationSum{})});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 0);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(0);
+
+   // Cut indices should be discarded...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex(2), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_FALSE(success);
+   }
+
+   {
+      // Contained normal bins are summed...
+      original[0] = RBinIndex(1);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+   }
+}
+
+TEST(RSliceBinIndexMapper, MapSliceFullSum)
+{
+   const auto range = CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), 1);
+   const RSliceBinIndexMapper mapper({RSliceSpec(range, RSliceSpec::ROperationSum{})});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 0);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(0);
+
+   // All indices should be summed...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+   }
+}

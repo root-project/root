@@ -75,15 +75,23 @@ public:
 
          const RSliceSpec &sliceSpec = fSliceSpecs[i];
          const auto &range = sliceSpec.GetRange();
+         bool contained = true;
          if (!range.IsInvalid()) {
-            // For the moment, we only need to look at normal indices. Underflow and overflow indices map to themselves.
-            if (index.IsNormal()) {
+            // Underflow and overflow indices map to themselves, but they may not actually be contained in the range.
+            // This is important for the sum operation below.
+            if (index.IsUnderflow()) {
+               contained = range.GetBegin().IsUnderflow();
+            } else if (index.IsOverflow()) {
+               contained = range.GetEnd().IsInvalid();
+            } else if (index.IsNormal()) {
                const auto &begin = range.GetBegin();
                const auto &end = range.GetEnd();
                if (begin.IsNormal() && index < begin) {
                   index = RBinIndex::Underflow();
+                  contained = false;
                } else if (end.IsNormal() && index >= end) {
                   index = RBinIndex::Overflow();
+                  contained = false;
                } else if (begin.IsNormal()) {
                   // This normal bin is contained in the range. Its index must be shifted according to the begin of the
                   // range.
@@ -98,7 +106,11 @@ public:
                index = RBinIndex(index.GetIndex() / opRebin->GetNGroup());
             }
          } else if (sliceSpec.GetOperationSum() != nullptr) {
-            // This dimension disappears, go to the next one.
+            // This dimension disappears. If there is a range and the index is not contained, discard it.
+            if (!contained) {
+               return false;
+            }
+            // Otherwise got to the next dimension.
             continue;
          }
 
