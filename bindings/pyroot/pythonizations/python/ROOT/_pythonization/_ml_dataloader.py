@@ -3,6 +3,7 @@
 # Author: Nopphakorn Subsa-Ard, King Mongkut's University of Technology Thonburi (KMUTT) (TH) 08/2024
 # Author: Vincenzo Eduardo Padulano, CERN 10/2024
 # Author: Martin Føll, University of Oslo (UiO) & CERN 01/2026
+# Author: Silia Taider, CERN 02/2026
 
 ################################################################################
 # Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.                      #
@@ -501,6 +502,8 @@ class BaseGenerator:
 class LoadingThreadContext:
     def __init__(self, base_generator: BaseGenerator):
         self.base_generator = base_generator
+        # init loading thread
+        self.base_generator.Activate()
         # create training batches from the first chunk
         self.base_generator.CreateTrainBatches()
 
@@ -509,7 +512,7 @@ class LoadingThreadContext:
 
     def __exit__(self, type, value, traceback):
         self.base_generator.DeActivateTrainingEpoch()
-        return True
+        return False
 
 
 class TrainDataLoader:
@@ -593,6 +596,8 @@ class TrainDataLoader:
 class LoadingThreadContextVal:
     def __init__(self, base_generator: BaseGenerator):
         self.base_generator = base_generator
+        # init loading thread
+        self.base_generator.Activate()
         # create validation batches from the first chunk
         self.base_generator.CreateValidationBatches()
 
@@ -601,7 +606,7 @@ class LoadingThreadContextVal:
 
     def __exit__(self, type, value, traceback):
         self.base_generator.DeActivateValidationEpoch()
-        return True
+        return False
 
 
 class ValidationDataLoader:
@@ -668,7 +673,6 @@ class ValidationDataLoader:
             while True:
                 batch = self.base_generator.GetValidationBatch()
                 if batch is None:
-                    self.base_generator.DeActivateValidationEpoch()
                     break
                 yield self.conversion_function(batch)
 
