@@ -775,7 +775,7 @@ Cppyy::TCppType_t Cppyy::GetType(const std::string &name, bool enable_slow_looku
     std::string id = "__Cppyy_GetType_" + std::to_string(var_count++);
     std::string using_clause = "using " + id + " = __typeof__(" + name + ");\n";
 
-    if (!Cpp::Declare(using_clause.c_str(), /*silent=*/false)) {
+    if (!Cpp::Declare(using_clause.c_str(), /*silent=*/true)) {
       TCppScope_t lookup = Cpp::GetNamed(id, 0);
       TCppType_t lookup_ty = Cpp::GetTypeFromScope(lookup);
       return Cpp::GetCanonicalType(lookup_ty);
