@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from common import printError, printWarning, printInfo, execCommand
+from common import printWarning, printInfo, execCommand
 
 import argparse
 import json
 import os
-import shlex
 import sys
 
 BOT_REPO_DIR_NAME = "root_bot"
@@ -39,6 +38,7 @@ def parse_args():
     pullN = 0
     comm = args.comment
     if comm:
+        comm = comm.lower()
         commBeginning = '/backport to '
         for line in comm.splitlines():
             # the comment is of the type "/backport to 6.32, 6.40..."
@@ -100,13 +100,13 @@ def execCommandOfficialRepo(command):
     '''
     return execCommand(command, OFFICIAL_REPO_DIR_NAME)
 
-def execCommandBotRepo(command):
+def execCommandBotRepo(command, env=os.environ):
     '''
     Execute a shell command in the bot ROOT repo
     
     :param command: The command to execute
     '''
-    return execCommand(command, BOT_REPO_DIR_NAME)
+    return execCommand(command, BOT_REPO_DIR_NAME, theEnv=env)
 
 def shortBranchToRealBranch(shortBranchName):
     '''
@@ -124,7 +124,8 @@ class OfficialROOTRepoPR:
     '''
     def __init__(self, pullNumber):
         self.pullNumber = pullNumber
-        PRJsonStr = execCommandOfficialRepo(f'gh pr view {pullNumber} --json labels,assignees,title,commits,mergeCommit,baseRefName,author')
+        PRJsonStr = execCommandOfficialRepo(['gh', 'pr', 'view', 
+                                             str(pullNumber), '--json', 'labels,assignees,title,commits,mergeCommit,baseRefName,author'])
         self.PRJsonObject = json.loads(PRJsonStr)
 
     def _parseJson(self, level1Label, level2Label=''):
@@ -215,11 +216,12 @@ class OfficialROOTRepoPR:
 
         :param comment: The comment
         '''
-        execCommandOfficialRepo(f'gh pr comment {self.pullNumber} --body "{prComment}"')
+        execCommandOfficialRepo(['gh', 'pr', 'comment', str(self.pullNumber), '--body', prComment])
         return 0
 
 def checkForVars():
     if not "PR_TOKEN" in os.environ:
+        os.environ["PR_TOKEN"]=""
         printWarning("Environment variable PR_TOKEN not found. The backported PR will not have assignees and labels.")
 
 def escapeQuotes(s):
@@ -253,21 +255,25 @@ def principal():
 
     bpPRUrlBranch = []
 
-    labelSwitch = '' if labels == '' else f'--add-label "{labels}"'
-    assigneesSwitch = '' if assignees == '' else f'--add-assignee "{assignees}"'
+    labelSwitch = [] if labels == '' else ['--add-label', f'"{labels}"']
+    assigneesSwitch = [] if assignees == '' else ['--add-assignee', f'"{assignees}"']
 
-    execCommandBotRepo(f'git config user.email "{requestor}@no-reply.github.com"')
-    execCommandBotRepo(f'git config user.name "{requestor}"')
+    execCommandBotRepo(['git', 'config', 'user.email', f'{requestor}@no-reply.github.com'])
+    execCommandBotRepo(['git', 'config', 'user.name', f'{requestor}'])
 
     # Before looping on the target branches to prepare the backport PRs, we 
     # need to add the ROOT repo as remote to the bot repo.
-    if 'root_upstream' in execCommandBotRepo('git remote'):
-        execCommandBotRepo(f'git remote remove root_upstream')
-    execCommandBotRepo(f'git remote add root_upstream {OFFICIAL_ROOT_REPO}')
+    if 'root_upstream' in execCommandBotRepo(['git', 'remote']):
+        execCommandBotRepo(['git', 'remote', 'remove', 'root_upstream'])
+    execCommandBotRepo(['git', 'remote', 'add', 'root_upstream', OFFICIAL_ROOT_REPO])
 
     # We need to fetch the branch onto which the original PR was merged to have the
     # hashes at our disposal.
-    execCommandBotRepo(f'git fetch --depth=8192 root_upstream {baseRefName}')
+    execCommandBotRepo(['git', 'fetch', '--depth=8192', 'root_upstream', baseRefName])
+
+    # Prepare the custom env for adding labels and assignees
+    prEditEnv = os.environ | {'GH_TOKEN': os.environ['PR_TOKEN']}
+
 
     # Now we loop on the target branches to create one PR for each of them
     for targetBranch in targetBranches:
@@ -275,22 +281,25 @@ def principal():
         realTargetBranch = shortBranchToRealBranch(targetBranch)
         bpBranchName = f'BP_{targetBranch}_pull_{pullNumber}'        
         try:
-            execCommandBotRepo(f'git fetch root_upstream {realTargetBranch}')
-            execCommandBotRepo(f'git checkout {realTargetBranch}')
-            if bpBranchName in execCommandBotRepo('git branch'):
-                execCommandBotRepo(f'git branch -D {bpBranchName}')
-            if bpBranchName in execCommandBotRepo('git ls-remote origin'):
-                execCommandBotRepo(f'git push -d origin {bpBranchName}')
-            execCommandBotRepo(f'git checkout -b {bpBranchName}')
-            execCommandBotRepo(f'git cherry-pick -x {mergeCommit}~{nCommits}..{mergeCommit}')
-            execCommandBotRepo(f'git push --set-upstream origin {bpBranchName}')
-            prUrl = execCommandBotRepo('gh pr create --repo root-project/root ' \
-                                                f'--base {realTargetBranch} '\
-                                                f'--head root-project-bot:{bpBranchName} ' \
-                                                f'--title "[{targetBranch}] {prTitle}"  '\
-                                                f"--body 'Backport of #{pullNumber}{requestorInfo}'")
-            execCommandBotRepo('GH_TOKEN=$PR_TOKEN gh pr edit --repo root-project/root ' \
-                                                    f'{labelSwitch} {assigneesSwitch}')
+            execCommandBotRepo(['git', 'fetch', 'root_upstream', realTargetBranch])
+            execCommandBotRepo(['git', 'checkout', realTargetBranch])
+            if bpBranchName in execCommandBotRepo(['git', 'branch']):
+                execCommandBotRepo(['git', 'branch', '-D', bpBranchName])
+            if bpBranchName in execCommandBotRepo(['git', 'ls-remote', 'origin']):
+                execCommandBotRepo(['git', 'push', '-d', 'origin', bpBranchName])
+            execCommandBotRepo(['git', 'checkout', '-b', bpBranchName])
+            execCommandBotRepo(['git', 'cherry-pick', '-x', f'{mergeCommit}~{nCommits}..{mergeCommit}'])
+            execCommandBotRepo(['git', 'push', '--set-upstream', 'origin', bpBranchName])
+            prUrl = execCommandBotRepo(['gh', 'pr', 'create', 
+                                        '--repo',   'root-project/root',
+                                        '--base',  f'{realTargetBranch}',
+                                        '--head',  f'root-project-bot:{bpBranchName}',
+                                        '--title', f'[{targetBranch}] {prTitle}',
+                                        '--body',  f'Backport of #{pullNumber}{requestorInfo}'])
+            execCommandBotRepo(['gh', 'pr', 'edit', 
+                                 '--repo', 'root-project/root'] + \
+                               labelSwitch + assigneesSwitch , 
+                               env = prEditEnv)
         except:
             wflowUrl = getWorkflowRunUrl()
             if wflowUrl:
