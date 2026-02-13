@@ -77,7 +77,8 @@ public:
    enum class ECollectionType {
       kRVec,
       kStdArray,
-      kRVecBool
+      kRVecBool,
+      kStdVector
    };
 
    RTreeUntypedArrayColumnReader(TTreeReader &r, std::string_view colName, std::string_view valueTypeName,
@@ -99,6 +100,9 @@ private:
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
    RVec<Byte_t> fRVec{};
 
+   /// When the user explicitly requests std::vector<T>, we use this std::vector as a stable storage.
+   std::vector<Byte_t> fStdVector{};
+
    Long64_t fLastEntry = -1;
 
    /// The size of the collection value type.
@@ -108,6 +112,10 @@ private:
    bool fCopyWarningPrinted = false;
 
    void *GetImpl(Long64_t entry) override;
+
+   void *ReadStdArray(Long64_t entry);
+   void *ReadStdVector(Long64_t entry);
+   void *ReadRVec(Long64_t entry);
 };
 
 class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
