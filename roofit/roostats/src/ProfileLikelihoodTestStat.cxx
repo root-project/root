@@ -308,18 +308,18 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-	     R__LOG_DEBUG("    ----> Doing a re-scan first");
+	//         std::cout << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimizer,"Scan");
          if (tries == 2) {
             if (fStrategy == 0 ) {
-	           R__LOG_DEBUG("    ----> trying with strategy = 1");
+	      //               std::cout << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-	   		R__LOG_DEBUG("    ----> trying with improve");
+	   //            std::cout << "    ----> trying with improve" << std::endl;
             minimizer = "Minuit";
             algorithm = "migradimproved";
          }
