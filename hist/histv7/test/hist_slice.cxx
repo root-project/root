@@ -108,3 +108,61 @@ TEST(RSliceBinIndexMapper, MapFull)
       EXPECT_EQ(mapped[0], index);
    }
 }
+
+TEST(RSliceBinIndexMapper, MapSliceNormal)
+{
+   const auto range = CreateBinIndexRange(RBinIndex(1), RBinIndex(2), 0);
+   const RSliceBinIndexMapper mapper({range});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 1);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(1);
+
+   // Underflow and overflow indices should be mapped to themselves...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_EQ(mapped[0], index);
+   }
+
+   {
+      // This should be mapped to the underflow bin...
+      original[0] = RBinIndex(0);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_TRUE(mapped[0].IsUnderflow());
+   }
+
+   {
+      // Contained normal bins are shifted...
+      original[0] = RBinIndex(1);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_EQ(mapped[0], RBinIndex(0));
+   }
+
+   {
+      // This should be mapped to the overflow bin...
+      original[0] = RBinIndex(2);
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_TRUE(mapped[0].IsOverflow());
+   }
+}
+
+TEST(RSliceBinIndexMapper, MapSliceFull)
+{
+   const auto range = CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), 1);
+   const RSliceBinIndexMapper mapper({range});
+   ASSERT_EQ(mapper.GetMappedDimensionality(), 1);
+   std::vector<RBinIndex> original(1);
+   std::vector<RBinIndex> mapped(1);
+
+   // Each index should be mapped to itself...
+   for (auto index : {RBinIndex::Underflow(), RBinIndex(0), RBinIndex::Overflow()}) {
+      original[0] = index;
+      bool success = mapper.Map(original, mapped);
+      EXPECT_TRUE(success);
+      EXPECT_EQ(mapped[0], index);
+   }
+}
