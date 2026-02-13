@@ -170,8 +170,54 @@ TEST(TH1, Normalize)
    EXPECT_FLOAT_EQ(v2.GetMaximum(), 7.9999990);
 }
 
+TEST(TH1, RegistrationToTDirectory_ImplicitOwnershipOff)
+{
+   const bool oldSetting = ROOT::Experimental::ObjectAutoRegistrationEnabled();
+   ROOT::Experimental::DisableObjectAutoRegistration();
+
+   TH1D histo1("histo1", "Test Histogram", 10, 0, 10);
+   auto histo2 = std::make_unique<TH1D>("histo2", "Test Histogram", 10, 0, 10);
+   TH1D *histo3 = new TH1D("histo3", "Test Histogram", 10, 0, 10);
+
+   {
+      TDirectory dir("dir", "Test Directory");
+      histo3->SetDirectory(&dir);
+
+      dir.cd();
+
+      TH1D histo4("histo4", "Test Histogram", 10, 0, 10);
+      auto histo5 = std::make_unique<TH1D>("histo5", "Test Histogram", 10, 0, 10);
+
+      EXPECT_EQ(dir.GetList()->GetSize(), 1);
+      EXPECT_EQ(dir.Get<TH1D>("histo3"), histo3);
+
+      EXPECT_EQ(histo1.GetDirectory(), nullptr);
+      EXPECT_EQ(histo2->GetDirectory(), nullptr);
+      EXPECT_EQ(histo3->GetDirectory(), &dir);
+      EXPECT_EQ(histo4.GetDirectory(), nullptr);
+      EXPECT_EQ(histo5->GetDirectory(), nullptr);
+
+      histo5.reset();
+
+      EXPECT_EQ(dir.GetList()->GetSize(), 1);
+      EXPECT_EQ(dir.Get<TH1D>("histo3"), histo3);
+   }
+
+   EXPECT_STREQ(histo1.GetName(), "histo1");
+   EXPECT_STREQ(histo2->GetName(), "histo2");
+
+   EXPECT_EQ(histo1.GetDirectory(), nullptr);
+   EXPECT_EQ(histo2->GetDirectory(), nullptr);
+
+   if (oldSetting)
+      ROOT::Experimental::EnableObjectAutoRegistration();
+}
+
 TEST(TH1, RegistrationToTDirectory_ImplicitOwnershipOn)
 {
+   const bool ownershipDisabledBefore = !ROOT::Experimental::ObjectAutoRegistrationEnabled();
+   ROOT::Experimental::EnableObjectAutoRegistration();
+
    TH1D histo1("histo1", "Test Histogram", 10, 0, 10);
    auto histo2 = std::make_unique<TH1D>("histo2", "Test Histogram", 10, 0, 10);
    TH1D *histo3 = new TH1D("histo3", "Test Histogram", 10, 0, 10);
@@ -213,6 +259,9 @@ TEST(TH1, RegistrationToTDirectory_ImplicitOwnershipOn)
 
    EXPECT_EQ(histo1.GetDirectory(), gROOT);
    EXPECT_EQ(histo2->GetDirectory(), gROOT);
+
+   if (ownershipDisabledBefore)
+      ROOT::Experimental::DisableObjectAutoRegistration();
 }
 
 TEST(TAxis, BinComputation_FPAccuracy)
