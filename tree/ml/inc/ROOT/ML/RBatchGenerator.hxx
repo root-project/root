@@ -3,6 +3,7 @@
 // Author: Nopphakorn Subsa-Ard, King Mongkut's University of Technology Thonburi (KMUTT) (TH) 08/2024
 // Author: Vincenzo Eduardo Padulano, CERN 10/2024
 // Author: Martin Føll, University of Oslo (UiO) & CERN 01/2026
+// Author: Silia Taider, CERN 02/2026
 
 /*************************************************************************
  * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
@@ -69,14 +70,14 @@ private:
 
    std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
 
-   std::vector<ROOT::RDF::RNode> f_rdfs;
+   std::vector<ROOT::RDF::RNode> fRdfs;
 
    std::unique_ptr<std::thread> fLoadingThread;
+   std::condition_variable fLoadingCondition;
+   std::mutex fLoadingMutex;
 
-   std::size_t fTrainingChunkNum;
-   std::size_t fValidationChunkNum;
-
-   std::mutex fIsActiveMutex;
+   std::size_t fTrainingChunkNum{0};
+   std::size_t fValidationChunkNum{0};
 
    bool fDropRemainder;
    bool fShuffle;
@@ -108,10 +109,8 @@ private:
    RFlat2DMatrix fSampledTrainingDataset;
    RFlat2DMatrix fSampledValidationDataset;
 
-   RFlat2DMatrix fTrainTensor;
    RFlat2DMatrix fTrainChunkTensor;
 
-   RFlat2DMatrix fValidationTensor;
    RFlat2DMatrix fValidationChunkTensor;
 
 public:
@@ -122,7 +121,7 @@ public:
                    bool dropRemainder = true, const std::size_t setSeed = 0, bool loadEager = false,
                    std::string sampleType = "", float sampleRatio = 1.0, bool replacement = false)
 
-      : f_rdfs(rdfs),
+      : fRdfs(rdfs),
         fCols(cols),
         fVecSizes(vecSizes),
         fChunkSize(chunkSize),
@@ -142,7 +141,7 @@ public:
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
 
       if (fLoadEager) {
-         fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(f_rdfs, fValidationSplit, fCols, fVecSizes,
+         fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(fRdfs, fValidationSplit, fCols, fVecSizes,
                                                                     vecPadding, fShuffle, fSetSeed);
          // split the datasets and extract the training and validation datasets
          fDatasetLoader->SplitDatasets();
@@ -172,7 +171,7 @@ public:
       }
 
       else {
-         fChunkLoader = std::make_unique<RChunkLoader<Args...>>(f_rdfs[0], fChunkSize, fBlockSize, fValidationSplit,
+         fChunkLoader = std::make_unique<RChunkLoader<Args...>>(fRdfs[0], fChunkSize, fBlockSize, fValidationSplit,
                                                                 fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
 
          // split the dataset into training and validation sets
@@ -186,10 +185,10 @@ public:
          fNumValidationChunks = fChunkLoader->GetNumValidationChunks();
       }
 
-      fTrainingBatchLoader =
-         std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes, fNumTrainingEntries, fDropRemainder);
-      fValidationBatchLoader =
-         std::make_unique<RBatchLoader>(fBatchSize, fCols, fVecSizes, fNumValidationEntries, fDropRemainder);
+      fTrainingBatchLoader = std::make_unique<RBatchLoader>(fBatchSize, fCols, fLoadingMutex, fLoadingCondition,
+                                                            fVecSizes, fNumTrainingEntries, fDropRemainder);
+      fValidationBatchLoader = std::make_unique<RBatchLoader>(fBatchSize, fCols, fLoadingMutex, fLoadingCondition,
+                                                              fVecSizes, fNumValidationEntries, fDropRemainder);
    }
 
    ~RBatchGenerator() { DeActivate(); }
@@ -197,54 +196,214 @@ public:
    void DeActivate()
    {
       {
-         std::lock_guard<std::mutex> lock(fIsActiveMutex);
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         if (!fIsActive)
+            return;
          fIsActive = false;
       }
 
-      fTrainingBatchLoader->DeActivate();
-      fValidationBatchLoader->DeActivate();
+      fLoadingCondition.notify_all();
 
       if (fLoadingThread) {
          if (fLoadingThread->joinable()) {
             fLoadingThread->join();
          }
       }
+
+      fLoadingThread.reset();
    }
 
    /// \brief Activate the loading process by starting the batchloader, and
    /// spawning the loading thread.
    void Activate()
    {
-      if (fIsActive)
-         return;
-
       {
-         std::lock_guard<std::mutex> lock(fIsActiveMutex);
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         if (fIsActive)
+            return;
+
          fIsActive = true;
       }
 
-      fTrainingBatchLoader->Activate();
-      fValidationBatchLoader->Activate();
-      // fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
+      if (fLoadEager) {
+         return;
+      }
+
+      fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
    }
 
-   void ActivateEpoch() { fEpochActive = true; }
+   void ActivateEpoch()
+   {
+      std::lock_guard<std::mutex> lock(fLoadingMutex);
+      fEpochActive = true;
+   }
 
-   void DeActivateEpoch() { fEpochActive = false; }
+   void DeActivateEpoch()
+   {
+      std::lock_guard<std::mutex> lock(fLoadingMutex);
+      fEpochActive = false;
+   }
 
-   void ActivateTrainingEpoch() { fTrainingEpochActive = true; }
+   void ActivateTrainingEpoch()
+   {
+      {
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         fTrainingEpochActive = true;
+         fTrainingChunkNum = 0;
+      }
 
-   void DeActivateTrainingEpoch() { fTrainingEpochActive = false; }
+      fTrainingBatchLoader->Activate();
+      fLoadingCondition.notify_all();
+   }
 
-   void ActivateValidationEpoch() { fValidationEpochActive = true; }
+   void DeActivateTrainingEpoch()
+   {
+      {
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         fTrainingEpochActive = false;
+      }
 
-   void DeActivateValidationEpoch() { fValidationEpochActive = false; }
+      fTrainingBatchLoader->Reset();
+      fTrainingBatchLoader->DeActivate();
+      fLoadingCondition.notify_all();
+   }
+
+   void ActivateValidationEpoch()
+   {
+      {
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         fValidationEpochActive = true;
+         fValidationChunkNum = 0;
+      }
+
+      fValidationBatchLoader->Activate();
+      fLoadingCondition.notify_all();
+   }
+
+   void DeActivateValidationEpoch()
+   {
+      {
+         std::lock_guard<std::mutex> lock(fLoadingMutex);
+         fValidationEpochActive = false;
+      }
+
+      fValidationBatchLoader->Reset();
+      fValidationBatchLoader->DeActivate();
+      fLoadingCondition.notify_all();
+   }
+
+   void LoadChunks()
+   {
+      // Set minimum number of batches to keep in the queue before producer goes to work.
+      // This is to ensure that the producer will get a chance to work if the consumer is too fast and drains the queue
+      // quickly. With this, the maximum queue size will be approximately fChunkSize*1.5.
+      // TODO(staider): this is a heuristic that can be improved, by taking into consideration a "maximum number of
+      // batches in memory" set by the user.
+      const std::size_t kMinQueuedBatches = std::max<std::size_t>(1, (fChunkSize / fBatchSize) / 2);
+
+      std::unique_lock<std::mutex> lock(fLoadingMutex);
+
+      while (true) {
+         // Wait until we have work or shutdown
+         fLoadingCondition.wait(lock, [&] {
+            return !fIsActive || (fTrainingEpochActive && fTrainingChunkNum < fNumTrainingChunks) ||
+                   (fValidationEpochActive && fValidationChunkNum < fNumValidationChunks);
+         });
+
+         if (!fIsActive)
+            break;
+
+         // Validation queue below watermark and producer not done
+         auto validationEmpty = [&] {
+            if (!fValidationEpochActive || fValidationChunkNum >= fNumValidationChunks)
+               return false;
+            if (fValidationBatchLoader->isProducerDone())
+               return false;
+            return fValidationBatchLoader->GetNumBatchQueue() < kMinQueuedBatches;
+         };
+
+         // TRAINING
+         if (fTrainingEpochActive) {
+            while (true) {
+               // Stop conditions (shutdown or epoch end)
+               if (!fIsActive || !fTrainingEpochActive)
+                  break;
+
+               // End-of-epoch: signal consumers
+               if (fTrainingChunkNum >= fNumTrainingChunks) {
+                  fTrainingBatchLoader->MarkProducerDone();
+                  break;
+               }
+
+               // Give validation a chance if it is hungry
+               if (validationEmpty())
+                  break;
+
+               // If queue is not empty, wait until it drains below watermark, or validation needs data, or we are
+               // deactivated The extra validation check is for the case of prefetching, where we request data for the
+               // next training epoch while validation is active and might need data
+               if (fTrainingBatchLoader->GetNumBatchQueue() >= kMinQueuedBatches) {
+                  fLoadingCondition.wait(lock, [&] {
+                     return !fIsActive || !fTrainingEpochActive ||
+                            fTrainingBatchLoader->GetNumBatchQueue() < kMinQueuedBatches || validationEmpty();
+                  });
+                  continue;
+               }
+
+               // Claim chunk under lock
+               const std::size_t chunkIdx = fTrainingChunkNum++;
+               const bool isLastTrainChunk = (chunkIdx == fNumTrainingChunks - 1);
+
+               // Release lock while working
+               lock.unlock();
+               fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, chunkIdx);
+               fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, isLastTrainChunk);
+               lock.lock();
+            }
+         }
+
+         // VALIDATION
+         if (fValidationEpochActive) {
+            while (true) {
+               // Stop conditions (shutdown or epoch end)
+               if (!fIsActive || !fValidationEpochActive)
+                  break;
+
+               // End-of-epoch: signal consumers
+               if (fValidationChunkNum >= fNumValidationChunks) {
+                  fValidationBatchLoader->MarkProducerDone();
+                  break;
+               }
+
+               // If queue is not hungry, wait until it drains below watermark, or we are deactivated
+               if (fValidationBatchLoader->GetNumBatchQueue() >= kMinQueuedBatches) {
+                  fLoadingCondition.wait(lock, [&] {
+                     return !fIsActive || !fValidationEpochActive ||
+                            fValidationBatchLoader->GetNumBatchQueue() < kMinQueuedBatches;
+                  });
+                  continue;
+               }
+
+               // Claim chunk under lock
+               const std::size_t chunkIdx = fValidationChunkNum++;
+               const bool isLastValidationChunk = (chunkIdx == fNumValidationChunks - 1);
+
+               // Release lock while working
+               lock.unlock();
+               fChunkLoader->LoadValidationChunk(fValidationChunkTensor, chunkIdx);
+               fValidationBatchLoader->CreateBatches(fValidationChunkTensor, isLastValidationChunk);
+               lock.lock();
+            }
+         }
+      }
+   }
 
    /// \brief Create training batches by first loading a chunk (see RChunkLoader) and split it into batches (see
    /// RBatchLoader)
    void CreateTrainBatches()
    {
-      fTrainingEpochActive = true;
+      fTrainingBatchLoader->Activate();
+
       if (fLoadEager) {
          if (fSampleType == "") {
             fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
@@ -254,15 +413,10 @@ public:
             fTrainingSampler->Sampler(fSampledTrainingDataset);
          }
 
-         fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, 1);
-      }
-
-      else {
+         fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, true);
+         fTrainingBatchLoader->MarkProducerDone();
+      } else {
          fChunkLoader->CreateTrainingChunksIntervals();
-         fTrainingChunkNum = 0;
-         fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, fTrainingChunkNum);
-         fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, fNumTrainingChunks);
-         fTrainingChunkNum++;
       }
    }
 
@@ -270,7 +424,8 @@ public:
    /// (see RBatchLoader)
    void CreateValidationBatches()
    {
-      fValidationEpochActive = true;
+      fValidationBatchLoader->Activate();
+
       if (fLoadEager) {
          if (fSampleType == "") {
             fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
@@ -280,32 +435,18 @@ public:
             fValidationSampler->Sampler(fSampledValidationDataset);
          }
 
-         fValidationBatchLoader->CreateBatches(fSampledValidationDataset, 1);
+         fValidationBatchLoader->CreateBatches(fSampledValidationDataset, true);
+         fValidationBatchLoader->MarkProducerDone();
       }
 
       else {
          fChunkLoader->CreateValidationChunksIntervals();
-         fValidationChunkNum = 0;
-         fChunkLoader->LoadValidationChunk(fValidationChunkTensor, fValidationChunkNum);
-         fValidationBatchLoader->CreateBatches(fValidationChunkTensor, fNumValidationChunks);
-         fValidationChunkNum++;
       }
    }
 
    /// \brief Loads a training batch from the queue
    RFlat2DMatrix GetTrainBatch()
    {
-      if (!fLoadEager) {
-         auto batchQueue = fTrainingBatchLoader->GetNumBatchQueue();
-
-         // load the next chunk if the queue is empty
-         if (batchQueue < 1 && fTrainingChunkNum < fNumTrainingChunks) {
-            fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, fTrainingChunkNum);
-            std::size_t lastTrainingBatch = fNumTrainingChunks - fTrainingChunkNum;
-            fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, lastTrainingBatch);
-            fTrainingChunkNum++;
-         }
-      }
       // Get next batch if available
       return fTrainingBatchLoader->GetBatch();
    }
@@ -313,17 +454,6 @@ public:
    /// \brief Loads a validation batch from the queue
    RFlat2DMatrix GetValidationBatch()
    {
-      if (!fLoadEager) {
-         auto batchQueue = fValidationBatchLoader->GetNumBatchQueue();
-
-         // load the next chunk if the queue is empty
-         if (batchQueue < 1 && fValidationChunkNum < fNumValidationChunks) {
-            fChunkLoader->LoadValidationChunk(fValidationChunkTensor, fValidationChunkNum);
-            std::size_t lastValidationBatch = fNumValidationChunks - fValidationChunkNum;
-            fValidationBatchLoader->CreateBatches(fValidationChunkTensor, lastValidationBatch);
-            fValidationChunkNum++;
-         }
-      }
       // Get next batch if available
       return fValidationBatchLoader->GetBatch();
    }
@@ -334,10 +464,23 @@ public:
    std::size_t TrainRemainderRows() { return fTrainingBatchLoader->GetNumRemainderRows(); }
    std::size_t ValidationRemainderRows() { return fValidationBatchLoader->GetNumRemainderRows(); }
 
-   bool IsActive() { return fIsActive; }
-   bool TrainingIsActive() { return fTrainingEpochActive; }
-   /// \brief Returns the next batch of validation data if available.
-   /// Returns empty RTensor otherwise.
+   bool IsActive()
+   {
+      std::lock_guard<std::mutex> lock(fLoadingMutex);
+      return fIsActive;
+   }
+
+   bool IsTrainingActive()
+   {
+      std::lock_guard<std::mutex> lock(fLoadingMutex);
+      return fTrainingEpochActive;
+   }
+
+   bool IsValidationActive()
+   {
+      std::lock_guard<std::mutex> lock(fLoadingMutex);
+      return fValidationEpochActive;
+   }
 };
 
 } // namespace ROOT::Experimental::Internal::ML
