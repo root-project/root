@@ -73,6 +73,26 @@ public:
             throw std::invalid_argument("invalid bin index passed to RSliceBinIndexMapper::Map");
          }
 
+         const RSliceSpec &sliceSpec = fSliceSpecs[i];
+         const auto &range = sliceSpec.GetRange();
+         if (!range.IsInvalid()) {
+            // For the moment, we only need to look at normal indices. Underflow and overflow indices map to themselves.
+            if (index.IsNormal()) {
+               const auto &begin = range.GetBegin();
+               const auto &end = range.GetEnd();
+               if (begin.IsNormal() && index < begin) {
+                  index = RBinIndex::Underflow();
+               } else if (end.IsNormal() && index >= end) {
+                  index = RBinIndex::Overflow();
+               } else if (begin.IsNormal()) {
+                  // This normal bin is contained in the range. Its index must be shifted according to the begin of the
+                  // range.
+                  index -= begin.GetIndex();
+                  assert(!index.IsInvalid());
+               }
+            }
+         }
+
          mapped[mappedPos] = index;
          mappedPos++;
       }
