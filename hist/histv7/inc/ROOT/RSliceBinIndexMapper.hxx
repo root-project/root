@@ -93,6 +93,12 @@ public:
             }
          }
 
+         if (auto *opRebin = sliceSpec.GetOperationRebin()) {
+            if (index.IsNormal()) {
+               index = RBinIndex(index.GetIndex() / opRebin->GetNGroup());
+            }
+         }
+
          mapped[mappedPos] = index;
          mappedPos++;
       }
