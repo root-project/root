@@ -14,6 +14,9 @@
 #include "ROOT/TTreeProcessorMP.hxx"
 #include "TMPWorkerTree.h"
 
+#include <thread>
+static const std::thread::id MAIN_THREAD_ID = std::this_thread::get_id();
+
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::TTreeProcessorMP
@@ -102,6 +105,14 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &e
    if (jFirst > 0) {
       Warning("Process", "support for generic 'first entry' (jFirst > 0) not implemented yet - ignoring");
       jFirst = 0;
+   }
+
+   // Warn about forking of already threaded program
+   if (std::this_thread::get_id() != MAIN_THREAD_ID) {
+      Warning("Process",
+              "multiprocessing from an already multi-threaded program "
+              "(first thread '%zu' vs current thread id '%zu') might lead to inefficient forking",
+              std::hash<std::thread::id>{}(MAIN_THREAD_ID), std::hash<std::thread::id>{}(std::this_thread::get_id()));
    }
 
    //prepare environment
