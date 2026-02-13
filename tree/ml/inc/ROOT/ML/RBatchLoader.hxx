@@ -3,6 +3,7 @@
 // Author: Nopphakorn Subsa-Ard, King Mongkut's University of Technology Thonburi (KMUTT) (TH) 08/2024
 // Author: Vincenzo Eduardo Padulano, CERN 10/2024
 // Author: Martin Føll, University of Oslo (UiO) & CERN 05/2025
+// Author: Silia Taider, CERN 02/2026
 
 /*************************************************************************
  * Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.               *
@@ -28,7 +29,7 @@
 
 namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::Experimental::Internal::ML::RBatchLoader
+ \class ROOT::Experimental::Internal::ML::RBatchLoader
 
 \brief Building and loading the batches from loaded chunks in RChunkLoader
 
@@ -41,6 +42,8 @@ private:
    std::size_t fBatchSize;
    // needed for calculating the total number of batch columns when vectors columns are present
    std::vector<std::string> fCols;
+   std::mutex &fLock;
+   std::condition_variable &fCV;
    std::vector<std::size_t> fVecSizes;
    std::size_t fSumVecSizes;
    std::size_t fNumColumns;
@@ -53,9 +56,7 @@ private:
    std::size_t fLeftoverBatchSize;
 
    bool fIsActive = false;
-
-   std::mutex fBatchLock;
-   std::condition_variable fBatchCondition;
+   bool fProducerDone = true;
 
    // queues of flattened tensors (rows * cols)
    std::queue<std::unique_ptr<RFlat2DMatrix>> fBatchQueue;
@@ -68,11 +69,17 @@ private:
    std::unique_ptr<RFlat2DMatrix> fSecondaryLeftoverBatch;
 
 public:
-   RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols,
-                const std::vector<std::size_t> &vecSizes = {}, std::size_t numEntries = 0, bool dropRemainder = false)
-      : fBatchSize(batchSize), fCols(cols), fVecSizes(vecSizes), fNumEntries(numEntries), fDropRemainder(dropRemainder)
+   RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols, std::mutex &sharedMutex,
+                std::condition_variable &sharedCV, const std::vector<std::size_t> &vecSizes = {},
+                std::size_t numEntries = 0, bool dropRemainder = false)
+      : fBatchSize(batchSize),
+        fCols(cols),
+        fLock(sharedMutex),
+        fCV(sharedCV),
+        fVecSizes(vecSizes),
+        fNumEntries(numEntries),
+        fDropRemainder(dropRemainder)
    {
-
       fSumVecSizes = std::accumulate(fVecSizes.begin(), fVecSizes.end(), 0);
       fNumColumns = fCols.size() + fSumVecSizes - fVecSizes.size();
 
@@ -87,9 +94,7 @@ public:
 
       if (fDropRemainder) {
          fNumBatches = fNumFullBatches;
-      }
-
-      else {
+      } else {
          fNumBatches = fNumFullBatches + fNumLeftoverBatches;
       }
 
@@ -97,25 +102,32 @@ public:
       fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
    }
 
-public:
+   /// \brief Activate the batchloader. This means that batches can be created and loaded.
    void Activate()
    {
       {
-         std::lock_guard<std::mutex> lock(fBatchLock);
+         std::lock_guard<std::mutex> lock(fLock);
+         if (fIsActive)
+            return;
          fIsActive = true;
+         fProducerDone = false;
       }
-      fBatchCondition.notify_all();
+
+      fCV.notify_all();
    }
 
    /// \brief DeActivate the batchloader. This means that no more batches are created.
-   /// Batches can still be returned if they are already loaded
+   /// Batches can still be returned if they are already loaded.
    void DeActivate()
    {
       {
-         std::lock_guard<std::mutex> lock(fBatchLock);
+         std::lock_guard<std::mutex> lock(fLock);
+         if (!fIsActive)
+            return;
          fIsActive = false;
       }
-      fBatchCondition.notify_all();
+
+      fCV.notify_all();
    }
 
    /// \brief Return a batch of data as a unique pointer.
@@ -132,26 +144,36 @@ public:
       return batch;
    }
 
-   /// \brief Loading the batch from the queue
+   /// \brief Loading the batch from the queue.
    /// \return Batch
    RFlat2DMatrix GetBatch()
    {
+      std::unique_lock<std::mutex> lock(fLock);
+
+      // Wait until:
+      //  - there is data in the queue
+      //  - or producer declares "done"
+      //  - or we are deactivated
+      fCV.wait(lock, [&] { return !fBatchQueue.empty() || fProducerDone || !fIsActive; });
 
       if (fBatchQueue.empty()) {
+         // producer done and no queued data -> end-of-epoch signal
          fCurrentBatch = std::make_unique<RFlat2DMatrix>();
          return *fCurrentBatch;
       }
 
       fCurrentBatch = std::move(fBatchQueue.front());
       fBatchQueue.pop();
+      // Notify the loading thread that the queue has drained
+      fCV.notify_all();
 
       return *fCurrentBatch;
    }
 
    /// \brief Creating the batches from a chunk and add them to the queue.
    /// \param[in] chunkTensor Tensor with the data from the chunk
-   /// \param[in] lastbatch Check if the batch in the chunk is the last one
-   void CreateBatches(RFlat2DMatrix &chunkTensor, std::size_t lastbatch)
+   /// \param[in] isLastBatch Check if the batch in the chunk is the last one
+   void CreateBatches(RFlat2DMatrix &chunkTensor, bool isLastBatch)
    {
       std::size_t ChunkSize = chunkTensor.GetRows();
       std::size_t NumCols = chunkTensor.GetCols();
@@ -163,7 +185,6 @@ public:
 
       // fill the full batches from the chunk into a vector
       for (std::size_t i = 0; i < Batches; i++) {
-         // Fill a batch
          batches.emplace_back(CreateBatch(chunkTensor, i));
       }
 
@@ -183,7 +204,7 @@ public:
          std::copy(LeftoverBatch.GetData(), LeftoverBatch.GetData() + (LeftoverBatchSize * fNumColumns),
                    fPrimaryLeftoverBatch->GetData() + (PrimaryLeftoverSize * NumCols));
 
-         // copy LeftoverBatch to end of fPrimaryLeftoverBatch and add it to the batch vector
+         // copy LeftoverBatch to end of fPrimaryLeftoverBatch and add it to the batch
          if (emptySlots == LeftoverBatchSize) {
             auto copy = std::make_unique<RFlat2DMatrix>(fBatchSize, fNumColumns);
             std::copy(fPrimaryLeftoverBatch->GetData(), fPrimaryLeftoverBatch->GetData() + (fBatchSize * fNumColumns),
@@ -198,7 +219,7 @@ public:
 
       // copy LeftoverBatch to both fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
       else if (emptySlots < LeftoverBatchSize) {
-         // copy the first part of LeftoverBatch to end of fPrimaryLeftoverTrainingBatch
+          // copy the first part of LeftoverBatch to end of fPrimaryLeftoverTrainingBatch
          fPrimaryLeftoverBatch->Resize(fBatchSize, NumCols);
          std::copy(LeftoverBatch.GetData(), LeftoverBatch.GetData() + (emptySlots * NumCols),
                    fPrimaryLeftoverBatch->GetData() + (PrimaryLeftoverSize * NumCols));
@@ -216,14 +237,12 @@ public:
 
          // exchange fPrimaryLeftoverBatch and fSecondaryLeftoverBatch
          *fPrimaryLeftoverBatch = *fSecondaryLeftoverBatch;
-
          // reset fSecondaryLeftoverTrainingBatch
          fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
       }
 
       // copy the content of fPrimaryLeftoverBatch to the leftover batch from the chunk
-      if (lastbatch == 1) {
-
+      if (isLastBatch) {
          if (fDropRemainder == false && fLeftoverBatchSize > 0) {
             auto copy = std::make_unique<RFlat2DMatrix>(fLeftoverBatchSize, fNumColumns);
             std::copy(fPrimaryLeftoverBatch->GetData(),
@@ -235,12 +254,42 @@ public:
          fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
       }
 
-      // append the batches from the batch vector from the chunk to the training batch queue
-      for (std::size_t i = 0; i < batches.size(); i++) {
-         fBatchQueue.push(std::move(batches[i]));
+      {
+         std::lock_guard<std::mutex> lock(fLock);
+         for (std::size_t i = 0; i < batches.size(); i++) {
+            fBatchQueue.push(std::move(batches[i]));
+         }
       }
+
+      fCV.notify_all();
    }
 
+   /// \brief Reset the batchloader state.
+   void Reset()
+   {
+      {
+         std::lock_guard<std::mutex> lock(fLock);
+
+         while (!fBatchQueue.empty()) {
+            fBatchQueue.pop();
+         }
+
+         fCurrentBatch.reset();
+         fPrimaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
+         fSecondaryLeftoverBatch = std::make_unique<RFlat2DMatrix>();
+      }
+
+      fCV.notify_all();
+   }
+
+   /// \brief Signal that the producer has finished pushing all batches for this epoch.
+   void MarkProducerDone()
+   {
+      fProducerDone = true;
+      fCV.notify_all();
+   }
+
+   bool isProducerDone() { return fProducerDone; }
    std::size_t GetNumBatches() { return fNumBatches; }
    std::size_t GetNumEntries() { return fNumEntries; }
    std::size_t GetNumRemainderRows() { return fLeftoverBatchSize; }
