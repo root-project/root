@@ -5,6 +5,7 @@
 #include <TObject.h>
 #include <TRef.h>
 #include <TRotation.h>
+#include <TBuffer.h>
 #include <TVirtualStreamerInfo.h>
 
 #include <memory>
@@ -465,4 +466,33 @@ TEST(RNTuple, StreamerInfoRecords)
          EXPECT_EQ(std::get<1>(t)[0], field->GetClass()->GetName());
       }
    }
+}
+
+// Detect custom streamers set on class members at runtime via TClass::SetMemberStreamer.
+TEST(RNTuple, MemberWithCustomStreamer)
+{
+   auto cl = TClass::GetClass("MemberWithCustomStreamer");
+   ASSERT_NE(cl, nullptr);
+
+   // CanSplit() should be true initially (it only checks compile-time properties)
+   EXPECT_TRUE(cl->CanSplit());
+
+   // Without member streamer: field creation succeeds
+   RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap();
+
+   // Set a custom streamer on the "fCustom" member at runtime
+   cl->SetMemberStreamer("fCustom", [](TBuffer &b, void *obj, Int_t) {
+      int *val = static_cast<int *>(obj);
+      if (b.IsReading()) {
+         b >> *val;
+      } else {
+         b << *val;
+      }
+   });
+
+   // CanSplit() remains true because you can still split (in TTree) even if a data member has a custom member.
+   EXPECT_TRUE(cl->CanSplit());
+
+   // After setting member streamer: field creation should throw
+   EXPECT_THROW(RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap(), ROOT::RException);
 }
