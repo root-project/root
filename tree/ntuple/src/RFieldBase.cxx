@@ -13,6 +13,7 @@
 #include <TClass.h>
 #include <TClassEdit.h>
 #include <TEnum.h>
+#include <TRealData.h>
 
 #include <sstream>
 #include <string>
@@ -505,8 +506,24 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             // rather than from TClass. This might be desirable in the future, but for now in this
             // situation we rely on field emulation instead.
             else if (cl->GetState() >= TClass::kInterpreted) {
-               if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
-                   ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+               bool useStreamerField =
+                  ROOT::Internal::GetRNTupleSerializationMode(cl) ==
+                  ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode;
+               // If any member has a custom streamer set via TClass::SetMemberStreamer/AdoptMemberStreamer,
+               // the class cannot be split and must use a streamer field.
+               if (!useStreamerField) {
+                  if (auto realDataList = cl->GetListOfRealData()) {
+                     TIter next(realDataList);
+                     TRealData *rd;
+                     while ((rd = static_cast<TRealData *>(next()))) {
+                        if (rd->GetStreamer()) {
+                           useStreamerField = true;
+                           break;
+                        }
+                     }
+                  }
+               }
+               if (useStreamerField) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
                } else {
                   result = std::make_unique<RClassField>(fieldName, typeName);
