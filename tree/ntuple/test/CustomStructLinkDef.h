@@ -176,4 +176,6 @@
 #pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
    "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
 
+#pragma link C++ class MemberWithCustomStreamer+;
+
 #endif

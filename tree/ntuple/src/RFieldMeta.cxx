@@ -186,6 +186,19 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
        ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
       throw RException(R__FAIL(GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
    }
+   // Detect custom streamers set on individual members at runtime via
+   // TClass::SetMemberStreamer() or TClass::AdoptMemberStreamer().
+   // CanSplit() only checks for custom streamers set at compile time (fHasCustomStreamerMember),
+   // but runtime streamers are stored in TRealData and must be checked here.
+   if (!fClass->GetListOfRealData()) {
+      fClass->BuildRealData();
+   }
+   for (auto realMember : ROOT::Detail::TRangeStaticCast<TRealData>(*fClass->GetListOfRealData())) {
+      if (realMember->GetStreamer()) {
+         throw RException(R__FAIL(std::string(GetTypeName()) + " has member " + realMember->GetName() +
+                                  " with a custom streamer; not supported natively in RNTuple"));
+      }
+   }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
