@@ -185,7 +185,7 @@ def main():
         if benchmark:
             extra_ctest_flags = ' -R "^rootbench-" '
         if ctest_custom_flags:
-            extra_ctest_flags += ctest_custom_flags
+            extra_ctest_flags += " " + ctest_custom_flags
         ctest_returncode = run_ctest(extra_ctest_flags)
 
     if args.coverage:
