@@ -303,25 +303,26 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
    int status;
+   auto &msg = RooMsgService::instance();
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimizer,algorithm);
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         std::cout << "    ----> Doing a re-scan first" << std::endl;
+	msg.log(nullptr, RooFit::DEBUG, RooFit::Minimization) << " ----> Doing a re-scan first\n";
          minim.minimize(minimizer,"Scan");
          if (tries == 2) {
             if (fStrategy == 0 ) {
-               std::cout << "    ----> trying with strategy = 1" << std::endl;
-               minim.setStrategy(1);
+	      msg.log(nullptr, RooFit::DEBUG, RooFit::Minimization) << "    ----> trying with strategy = 1\n";
+	      minim.setStrategy(1);
             }
             else
-               tries++; // skip this trial if strategy is already 1
+	      tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            std::cout << "    ----> trying with improve" << std::endl;
-            minimizer = "Minuit";
-            algorithm = "migradimproved";
+	   msg.log(nullptr, RooFit::DEBUG, RooFit::Minimization) << "    ----> trying with improve\n";
+	   minimizer = "Minuit";
+	   algorithm = "migradimproved";
          }
       }
    }
