@@ -321,15 +321,15 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
     if (!isCppExc) {
     // this is the case where no Python error has occurred yet, and we set a new
     // error with context info
-        PyErr_Format(errtype, "%s =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
+        PyErr_Format(errtype, "Failed to call \"%s\" =>\n    %s: %s", cdoc, cname, cmsg ? cmsg : "");
     } else {
     // augment the top message with context information
         PyObject *&topMessage = ((CPPExcInstance*)evalue)->fTopMessage;
         Py_XDECREF(topMessage);
         if (msg) {
-            topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: %s | ", cdoc, cname, cmsg);
+            topMessage = CPyCppyy_PyText_FromFormat("Failed to call \"%s\" =>\n    %s: %s | ", cdoc, cname, cmsg);
         } else {
-            topMessage = CPyCppyy_PyText_FromFormat("%s =>\n    %s: ", cdoc, cname);
+            topMessage = CPyCppyy_PyText_FromFormat("Failed to call \"%s\" =>\n    %s: ", cdoc, cname);
         }
         // restore the updated error
 #if PY_VERSION_HEX >= 0x030c0000

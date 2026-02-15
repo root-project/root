@@ -27,3 +27,14 @@ TClingDelegateDiagnosticPrinter::HandleDiagnostic(clang::DiagnosticsEngine::Leve
    TextDiagnosticPrinter::HandleDiagnostic(Level, Info);
    fHandler(Level, fOS.str());
 }
+
+TClingRedirectDiagnosticPrinter::TClingRedirectDiagnosticPrinter(std::ostream &os, clang::DiagnosticOptions *DiagOpts,
+                                                                 clang::LangOptions &LangOpts, bool enableColors,
+                                                                 unsigned int indent)
+   : TextDiagnosticPrinter(fOS, DiagOpts), fOS_out(os), fOS(fOS_out)
+{
+   // Required to initialize the internal `clang::TextDiagnostic` instance.
+   TextDiagnosticPrinter::BeginSourceFile(LangOpts, nullptr);
+   fOS.enable_colors(enableColors);
+   fOS.indent(indent);
+}

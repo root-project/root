@@ -378,7 +378,8 @@ CPyCppyy::PyCallable* CPyCppyy::Utility::FindBinaryOperator(
             else { fname << "not_implemented<"; }
             fname << lcname << ", " << rcname << ">";
             proto << "const " << lcname << "&, const " << rcname;
-            Cppyy::TCppMethod_t method = Cppyy::GetMethodTemplate(s_intern, fname.str(), proto.str());
+            std::ostringstream diagnostics;
+            Cppyy::TCppMethod_t method = Cppyy::GetMethodTemplate(s_intern, fname.str(), proto.str(), diagnostics);
             if (method) pyfunc = new CPPFunction(s_intern, method);
         }
     }

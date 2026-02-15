@@ -12,7 +12,7 @@
 
 // Standard
 #include <algorithm>
-
+#include <sstream>
 
 namespace CPyCppyy {
 
@@ -184,9 +184,11 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             proto = name_v1.substr(1, name_v1.size()-2);
     }
 
-// the following causes instantiation as necessary
+    std::ostringstream diagnostics;
+
+    // the following causes instantiation as necessary
     Cppyy::TCppScope_t scope = ((CPPClass*)fTI->fPyClass)->fCppType;
-    Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fname, proto);
+    Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fname, proto, diagnostics);
     if (cppmeth) {    // overload stops here
     // A successful instantiation needs to be cached to pre-empt future instantiations. There
     // are two names involved, the original asked (which may be partial) and the received.
@@ -210,12 +212,14 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
                 pos = proto.find("initializer_list", pos + 6);
             }
 
-            Cppyy::TCppMethod_t m2 = Cppyy::GetMethodTemplate(scope, fname, proto);
+            std::ostringstream diagnostics2;
+            Cppyy::TCppMethod_t m2 = Cppyy::GetMethodTemplate(scope, fname, proto, diagnostics2);
             if (m2 && m2 != cppmeth) {
-            // replace if the new method with vector was found; otherwise just continue
-            // with the previously found method with initializer_list.
-                cppmeth = m2;
-                resname = Cppyy::GetMethodFullName(cppmeth);
+               // replace if the new method with vector was found; otherwise just continue
+               // with the previously found method with initializer_list.
+               cppmeth = m2;
+               resname = Cppyy::GetMethodFullName(cppmeth);
+               diagnostics = std::move(diagnostics2);
             }
         }
 
@@ -233,6 +237,10 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             Py_DECREF(pyol);
             Py_DECREF(pycachename);
             Py_DECREF(dct);
+
+            PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"\n%s", fname.c_str(), proto.c_str(),
+                         diagnostics.str().c_str());
+
             return nullptr;
         }
 
@@ -304,10 +312,19 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         PyObject* pymeth =
             CPPOverload_Type.tp_descr_get(pyol, bNeedsRebind ? fSelf : nullptr, (PyObject*)&CPPOverload_Type);
         Py_DECREF(pyol);
+        // check if diagnostics contains only spaces since this can happen as a result of clang indenting
+        const bool emptydiag = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
+        if (!emptydiag) {
+           std::ostringstream warnmsg;
+           warnmsg << "Compiler warnings during instantiation of \"" << fname << "(" << proto << ")\"\n"
+                   << diagnostics.str();
+           PyErr_WarnEx(PyExc_Warning, warnmsg.str().c_str(), 1);
+        }
         return pymeth;
     }
 
-    PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"", fname.c_str(), proto.c_str());
+    PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"\n%s", fname.c_str(), proto.c_str(),
+                 diagnostics.str().c_str());
     return nullptr;
 }
 
@@ -814,6 +831,8 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
     Cppyy::TCppMethod_t cppmeth = (Cppyy::TCppMethod_t) 0;
     std::string proto;
 
+    std::ostringstream diagnostics;
+
     if (PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const)) {
         want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
 
@@ -836,12 +855,12 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
 
         scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
         cppmeth = Cppyy::GetMethodTemplate(
-            scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size()-2));
+            scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size()-2), diagnostics);
     } else if (PyArg_ParseTuple(args, const_cast<char*>("ss:__overload__"), &sigarg, &tmplarg)) {
         scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
         std::string full_name = std::string(pytmpl->fTI->fCppName) + "<" + tmplarg + ">";
 
-        cppmeth = Cppyy::GetMethodTemplate(scope, full_name, sigarg);
+        cppmeth = Cppyy::GetMethodTemplate(scope, full_name, sigarg, diagnostics);
     } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"), &sigarg_tuple, &want_const)) {
         PyErr_Clear();
         want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
@@ -872,8 +891,8 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
         proto.push_back('>');
 
         scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
-        cppmeth = Cppyy::GetMethodTemplate(
-            scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size()-2));
+        cppmeth =
+           Cppyy::GetMethodTemplate(scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size() - 2), diagnostics);
     } else {
         PyErr_Format(PyExc_TypeError, "Unexpected arguments to __overload__");
         return nullptr;
@@ -881,10 +900,21 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
 
 // else attempt instantiation
     if (!cppmeth) {
-        return nullptr;
+       PyErr_Format(PyExc_TypeError, "Failed in template overload resolution \"%s(%s)\"\n%s",
+                    pytmpl->fTI->fCppName.c_str(), proto.c_str(), diagnostics.str().c_str());
+       return nullptr;
     }
 
     PyErr_Clear();
+
+    const bool emptydiag = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
+    if (!emptydiag) {
+       std::ostringstream warnmsg;
+       warnmsg << "Compiler warnings during template overload resolution of \"" << pytmpl->fTI->fCppName << "(" << proto
+               << ")\"\n"
+               << diagnostics.str();
+       PyErr_WarnEx(PyExc_Warning, warnmsg.str().c_str(), 1);
+    }
 
     // TODO: the next step should be consolidated with Instantiate()
     PyCallable* meth = nullptr;
