@@ -789,7 +789,7 @@ void TParallelCoord::SaveEntryLists(const char* filename, bool overwrite)
    if (sfile.IsNull())
       sfile.Form("%s_parallelcoord_entries.root", fTree->GetName());
 
-   TDirectory *savedir = gDirectory;
+   TDirectory::TContext ctx;
    TFile *f = TFile::Open(sfile.Data());
    if (f) {
       Warning("SaveEntryLists", "%s already exists.", sfile.Data());
@@ -800,12 +800,10 @@ void TParallelCoord::SaveEntryLists(const char* filename, bool overwrite)
    } else {
       f = new TFile(sfile.Data(), "CREATE");
    }
-   gDirectory = f;
    fInitEntries->Write("initentries");
    fCurrentEntries->Write("currententries");
    f->Close();
    delete f;
-   gDirectory = savedir;
    Info("SaveEntryLists", "File \"%s\" written.", sfile.Data());
 }
 
@@ -897,6 +895,7 @@ void TParallelCoord::SaveTree(const char* filename, bool overwrite)
    if (sfile.IsNull())
       sfile.Form("%s.root",fTree->GetName());
 
+   TDirectory::TContext ctx;
    TFile* f = TFile::Open(sfile.Data());
    if (f) {
       Warning("SaveTree","%s already exists.", sfile.Data());
@@ -906,7 +905,6 @@ void TParallelCoord::SaveTree(const char* filename, bool overwrite)
    } else {
       f = new TFile(sfile.Data(),"CREATE");
    }
-   gDirectory = f;
    fTree->Write(fTreeName.Data());
    fTreeFileName = sfile;
    Info("SaveTree", "File \"%s\" written.",sfile.Data());
