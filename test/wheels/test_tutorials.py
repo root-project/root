@@ -15,6 +15,7 @@ tutorial_dir = pathlib.Path(str(ROOT.gROOT.GetTutorialDir()))
 subdirs = ["analysis/dataframe", "analysis/tree", "hist", "io/ntuple", "roofit/roofit"]
 
 SKIP_TUTORIALS = {
+    "ntpl011_global_temperatures.C",  # requires RCanvas, not supported yet in ROOT wheels
     "distrdf004_dask_lxbatch.py",  # only works on lxplus
     "_SQlite",  # requires SQLite, not supported yet in ROOT wheels
     "h1analysisProxy.C",  # helper macro, not meant to run standalone
