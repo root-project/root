@@ -5,6 +5,7 @@
 #include "TLeaf.h"
 #include "TROOT.h"
 #include "TTree.h"
+#include "TTreePerfStats.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
@@ -570,3 +571,21 @@ TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
       EXPECT_EQ(v1.GetSetupStatus(), ROOT::Internal::TTreeReaderValueBase::ESetupStatus::kSetupMatchButEntryBeyondEnd);
    }
 }
+
+
+#ifdef R__USE_IMT
+// Check the warning emitted to address ROOT-10972
+TEST(TTreePerfStats, WarnWithIMT)
+{
+
+   auto fName = "file_ROOT-10972.root";
+   TFile f(fName, "RECREATE");
+   auto tPtr = MakeTree();
+   ROOT::EnableImplicitMT();
+   ROOT::TestSupport::CheckDiagsRAII diags{kWarning, "TTreePerfStats::TTreePerfStats",
+                                           "Results obtained with ImplicitMT enabled are not reliable."};
+   TTreePerfStats("tps", tPtr.get());
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fName);
+}
+#endif
