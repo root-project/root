@@ -2615,13 +2615,17 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void)didAddSubview:(NSView *)subview
 {
-    self.clipsToBounds = YES;
+    [super didAddSubview:subview];
+    self.wantsLayer = YES;
+    self.layer.masksToBounds = YES;
 }
 
 //______________________________________________________________________________
 - (void)willRemoveSubview:(NSView *)subview
 {
-    self.clipsToBounds = self.subviews.count > 1;
+    [super willRemoveSubview:subview];
+    self.wantsLayer = YES;
+    self.layer.masksToBounds = self.subviews.count > 1;
 }
 
 //______________________________________________________________________________
