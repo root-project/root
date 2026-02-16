@@ -445,6 +445,7 @@ void RooCategory::Streamer(TBuffer &R__b)
       installLegacySharedProp(props);
       // props was allocated by I/O system, we cannot delete here in case it gets reused
 
+      R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
     } else if (R__v == 2) {
       RooAbsCategoryLValue::Streamer(R__b);
 
@@ -453,6 +454,7 @@ void RooCategory::Streamer(TBuffer &R__b)
       props->Streamer(R__b);
       installLegacySharedProp(props.get());
 
+      R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
     } else {
       // Starting at v3, ranges are shared using a shared pointer, which cannot be read by ROOT's I/O.
       // Instead, ranges are written as a normal pointer, and here we restore the sharing.
@@ -460,8 +462,6 @@ void RooCategory::Streamer(TBuffer &R__b)
       installSharedRange(std::unique_ptr<RangeMap_t>(_rangesPointerForIO));
       _rangesPointerForIO = nullptr;
     }
-
-    R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
 
   } else {
     // Since we cannot write shared pointers yet, assign the shared ranges to a normal pointer,
