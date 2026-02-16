@@ -2811,11 +2811,9 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    R__ASSERT(IsReading());
 
    // read byte count and/or tag (older files don't have byte count)
-   TClass *cl;
    if (fBufCur < fBuffer || fBufCur > fBufMax) {
       fBufCur = fBufMax;
-      cl = (TClass*)-1;
-      return cl;
+      return (TClass*)-1;
    }
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
@@ -2838,6 +2836,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       return 0;
    }
 
+   TClass *cl;
    if (tag == kNewClassTag) {
 
       // got a new class description followed by a new object
