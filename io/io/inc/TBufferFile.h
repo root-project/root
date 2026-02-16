@@ -53,7 +53,12 @@ protected:
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
    using ByteCountLocator_t = std::size_t; // This might become a pair<chunk_number, local_offset> if we implement chunked keys
-   using ByteCountStack_t = std::vector<ByteCountLocator_t>;
+   struct ByteCountLocationInfo {
+      ByteCountLocator_t locator; ///< Position where the byte count value is stored
+      const TClass* cl;         ///< Class for which the byte count is reserved
+      const TClass* alt;
+   };
+   using ByteCountStack_t = std::vector<ByteCountLocationInfo>;
    ByteCountStack_t fByteCountStack; ///<! Stack to keep track of byte count storage positions
 
    using ByteCount_t = std::uint64_t; ///< Type used to store byte count values, can be changed to uint32_t if we implement chunked keys
@@ -72,7 +77,7 @@ protected:
    Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
    void     CheckCount(UInt_t offset) override;
    UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
-   UInt_t   ReserveByteCount();
+   UInt_t   ReserveByteCount(const TClass *cl);
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
