@@ -201,7 +201,31 @@ As part of this migration, the following build options are deprecated. From ROOT
 
 ## Python Interface
 
-ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
+- ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
+
+### UHI
+#### Backwards incompatible changes
+- `TH1.values()` now returns a **read-only** NumPy array by default. Previously it returned a writable array that allowed modifying histogram contents implicitly.
+- To modify the histogram buffer, you must now explicitly request it:
+```python
+h.values(writable=True)[0] = 42
+```
+- When the histogram storage allows it, `TH1.values()` returns a zero-copy view.
+For histogram types that cannot expose their memory layout (`TH*C` and `TProfile*`), `.values()` returns a copy.
+In these cases passing `writable=True` is not supported and raises a `TypeError`.
+
+#### New features
+- ```TH1.values(flow=True)``` now exposes underflow/ overflow bins when requested.
+- ROOT histograms now support **UHI serialization** via intermediate representations with the methods ```_to_uhi_``` and ```_from_uhi_```
+- Example usage:
+```python
+h = ROOT.TH1D("h", "h", 10, -5, 5)
+h[...] = np.arange(10)
+
+json_str = json.dumps(h, default=uhi.io.json.default)
+
+h_from_uhi = ROOT.TH1D(json.loads(json_str, , object_hook=uhi.io.json.object_hook))
+```
 
 ## ROOT executable
 
