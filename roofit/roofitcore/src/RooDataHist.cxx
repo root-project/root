@@ -2352,7 +2352,6 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 
     if (R__v > 2) {
       R__b.ReadClassBuffer(RooDataHist::Class(),this,R__v,R__s,R__c);
-      R__b.CheckByteCount(R__s, R__c, RooDataHist::IsA());
       initialize(nullptr, false);
     } else {
 
