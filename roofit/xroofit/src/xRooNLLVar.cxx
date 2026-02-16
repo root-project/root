@@ -2438,10 +2438,10 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
       for (size_t i = 0; i < nnToys; i++) {
          int seed = RooRandom::randomGenerator()->Integer(std::numeric_limits<uint32_t>::max());
          auto toy = ((alt) ? generateAlt(seed) : generateNull(seed));
-         TDirectory *tmp = gDirectory;
-         gDirectory = nullptr; // disables any saving of fit results for toys
-         toys.push_back(std::make_tuple(seed, toy.pll().first, 1.));
-         gDirectory = tmp;
+         {
+            TDirectory::TContext ctx{nullptr}; // disables any saving of fit results for toys
+            toys.push_back(std::make_tuple(seed, toy.pll().first, 1.));
+         }
          (alt ? altToysAdded : toysAdded)++;
          if (std::isnan(std::get<1>(toys.back())))
             nans++;
