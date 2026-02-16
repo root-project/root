@@ -585,9 +585,12 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       if (R__v > 3) {
          if (TestBit(kHasRange)) GetRange(GetTitle(),fXmin,fXmax,fFactor);
       }
-      //R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
       R__b.ClassEnd(TStreamerElement::Class());
+      // Dubious reset to the expected end it was added as part the commit
+      // log "Several protections added in case of multiple files being read/updated
+      // in parallel."
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+      R__b.CheckByteCount(R__s, R__c, TStreamerElement::Class());
 
       ResetBit(TStreamerElement::kCache);
       ResetBit(TStreamerElement::kWrite);
@@ -876,6 +879,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       }
       R__b.ClassEnd(TStreamerBase::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+      R__b.CheckByteCount(R__s, R__c, TStreamerBase::Class());
    } else {
       R__b.WriteClassBuffer(TStreamerBase::Class(),this);
    }
@@ -1045,7 +1049,11 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
       R__b >> fCountVersion;
       fCountName.Streamer(R__b);
       fCountClass.Streamer(R__b);
+      // Dubious reset to the expected end it was added as part the commit
+      // log "Several protections added in case of multiple files being read/updated
+      // in parallel."
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+      R__b.CheckByteCount(R__s, R__c, TStreamerBasicPointer::Class());
    } else {
       R__b.WriteClassBuffer(TStreamerBasicPointer::Class(),this);
    }
@@ -1167,7 +1175,11 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
       R__b >> fCountVersion;
       fCountName.Streamer(R__b);
       fCountClass.Streamer(R__b);
+      // Dubious reset to the expected end it was added as part the commit
+      // log "Several protections added in case of multiple files being read/updated
+      // in parallel."
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+      R__b.CheckByteCount(R__s, R__c, TStreamerLoop::Class());
    } else {
       R__b.WriteClassBuffer(TStreamerLoop::Class(),this);
    }
