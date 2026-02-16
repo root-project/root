@@ -204,10 +204,8 @@ void TRootSnifferFull::CreateMemFile()
    if (fMemFile)
       return;
 
-   TDirectory *olddir = gDirectory;
-   gDirectory = nullptr;
-   TFile *oldfile = gFile;
-   gFile = nullptr;
+   TDirectory::TContext dirCtx{nullptr};
+   TFile::TContext fileCtx{nullptr};
 
    fMemFile = new TMemFile("dummy.file", "RECREATE");
    gROOT->GetListOfFiles()->Remove(fMemFile);
@@ -239,9 +237,6 @@ void TRootSnifferFull::CreateMemFile()
    fMemFile->WriteStreamerInfo();
 
    fSinfo = fMemFile->GetStreamerInfoList();
-
-   gDirectory = olddir;
-   gFile = oldfile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,10 +289,8 @@ Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::strin
    // ensure that memfile exists
    CreateMemFile();
 
-   TDirectory *olddir = gDirectory;
-   gDirectory = nullptr;
-   TFile *oldfile = gFile;
-   gFile = nullptr;
+   TDirectory::TContext dirCtx{nullptr};
+   TFile::TContext fileCtx{nullptr};
 
    TObject *obj = (TObject *)obj_ptr;
 
@@ -312,9 +305,6 @@ Bool_t TRootSnifferFull::ProduceBinary(const std::string &path, const std::strin
    delete fSinfo;
    fMemFile->WriteStreamerInfo();
    fSinfo = fMemFile->GetStreamerInfoList();
-
-   gDirectory = olddir;
-   gFile = oldfile;
 
    res.resize(sbuf->Length());
    std::copy((const char *)sbuf->Buffer(), (const char *)sbuf->Buffer() + sbuf->Length(), res.begin());
@@ -351,10 +341,8 @@ Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::str
          store_name = obj_name;
    }
 
-   TDirectory *olddir = gDirectory;
-   gDirectory = nullptr;
-   TFile *oldfile = gFile;
-   gFile = nullptr;
+   TDirectory::TContext dirCtx{nullptr};
+   TFile::TContext fileCtx{nullptr};
 
    {
       TMemFile memfile("dummy.file", "RECREATE");
@@ -366,9 +354,6 @@ Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::str
       res.resize(memfile.GetSize());
       memfile.CopyTo(res.data(), memfile.GetSize());
    }
-
-   gDirectory = olddir;
-   gFile = oldfile;
 
    return kTRUE;
 }
