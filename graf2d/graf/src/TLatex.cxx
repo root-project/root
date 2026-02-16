@@ -2205,7 +2205,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      Error("PaintLatex1", "%s\n==> ", fError, text1);
+      Error("PaintLatex1", "%s\n==> %s", fError, text1);
       return 0;
    }
    fError = nullptr;
@@ -2273,7 +2273,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
    if (fError) {
-      Error("PaintLatex1", "%s\n==> ", fError, text);
+      Error("PaintLatex1", "%s\n==> %s", fError, text);
    } else {
       fShow = kTRUE;
       newSpec.fSize = size;
@@ -2569,7 +2569,7 @@ Double_t TLatex::GetXsize()
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      Error("GetXsize", "%s\n==> ", fError, GetTitle());
+      Error("GetXsize", "%s\n==> %s", fError, GetTitle());
       return 0;
    }
    fError = nullptr;
@@ -2600,7 +2600,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      Error("GetBoundingBox", "%s\n==> ", fError, GetTitle());
+      Error("GetBoundingBox", "%s\n==> %s", fError, GetTitle());
       return;
    }
    fError = nullptr;
@@ -2655,7 +2655,7 @@ Double_t TLatex::GetYsize()
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
-      Error("GetYsize", "%s\n==> ", fError, GetTitle());
+      Error("GetYsize", "%s\n==> %s", fError, GetTitle());
       return 0;
    }
    fError = nullptr;
