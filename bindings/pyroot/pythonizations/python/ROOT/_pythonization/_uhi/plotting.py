@@ -124,7 +124,14 @@ def _shape(hist: Any, flow: bool = True) -> Tuple[int, ...]:
     return tuple(_get_axis_len(hist, i, flow) for i in range(hist.GetDimension()))
 
 
-def _values_default(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
+def _values_default(self, flow=False, *, writable: bool = False) -> np.typing.NDArray[Any]:  # noqa: F821
+    """
+    Return a zero copy view on the histogram bin contents.
+
+    Params:
+        - flow: whether to include underflow/overflow bins
+        - writable: whether the returned array should be writable (default: False)
+    """
     import numpy as np
 
     llv = self.GetArray()
@@ -138,11 +145,27 @@ def _values_default(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
         # exclude underflow/overflow
         slices = tuple([slice(1, -1)] * len(_shape(self)))
 
-    return reshaped[slices]
+    out = reshaped[slices]
+    out.setflags(write=writable)
+
+    return out
 
 
 # Special case for TH*C and TProfile*
-def _values_by_copy(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
+def _values_by_copy(self, flow=False, *, writable: bool = False) -> np.typing.NDArray[Any]:  # noqa: F821
+    """
+    Return bin contents as a numpy array by copy.
+
+    Params:
+        - flow: whether to include underflow/overflow bins
+        - writable: whether the returned array should be writable (default: False).
+        For this histogram type, the returned array is always a copy, so writable=True is not supported and will raise a TypeError.
+    """
+    if writable:
+        raise TypeError(
+            "values(writable=True) is not supported for this histogram type, it cannot return a writable view into the histogram"
+        )
+
     from itertools import product
 
     import numpy as np
@@ -151,7 +174,10 @@ def _values_by_copy(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
     dimensions = [range(offset, _get_axis_len(self, axis, flow=flow) + offset) for axis in range(self.GetDimension())]
     bin_combinations = product(*dimensions)
 
-    return np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(_shape(self, flow=flow))
+    out = np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(_shape(self, flow=flow))
+    out.setflags(write=writable)
+
+    return out
 
 
 def _variances(self, flow=False) -> np.typing.NDArray[Any]:  # noqa: F821
