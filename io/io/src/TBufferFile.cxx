@@ -362,7 +362,13 @@ void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
    R__ASSERT(!fByteCountStack.empty());
    if (cntpos == kOverflowPosition) {
       // The position is above 4GB but was cached using a 32 bit variable.
-      cntpos = fByteCountStack.back();
+      cntpos = fByteCountStack.back().locator;
+   } else {
+      // This assert allows to reject cases that used to be valid (missing or
+      // redundant call to SetByteCount) but are now an error because the
+      // position is passed through a stack (and redundantly via the argument
+      // for 'small' buffers).
+      R__ASSERT(cntpos == fByteCountStack.back().locator && "Byte count position on stack does not match the passed cntpos");
    }
    fByteCountStack.pop_back();
    // if we are not in the same TKey chunk or if the cntpos is too large to fit in UInt_t
@@ -413,9 +419,45 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
 {
    R__ASSERT(!fByteCountStack.empty() && startpos <= kOverflowPosition && bcnt <= kOverflowCount
              && "Byte count stack is empty or invalid startpos/bcnt");
+   auto classMatcher = [](const TClass *stackClass, const TClass *passedClass, const char *passedClassName) {
+      return !stackClass
+          || (!passedClass && !passedClassName)
+          || (passedClass && passedClass == stackClass)
+          || (passedClassName && stackClass->GetName() && strcmp(passedClassName, stackClass->GetName()) == 0);
+   };
    if (startpos == kOverflowPosition) {
       // The position is above 4GB but was cached using a 32 bit variable.
-      startpos = fByteCountStack.back();
+      startpos = fByteCountStack.back().locator;
+      // See below
+      R__ASSERT((fByteCountStack.back().cl == nullptr || clss == fByteCountStack.back().cl)
+                && "Class on the byte count position stack does not match the passed class");
+   } else {
+      // This assert allows to reject cases that used to be valid (missing or
+      // redundant call to SetByteCount) but are now an error because the
+      // position is passed through a stack (and redundantly via the argument
+      // for 'small' buffers).
+     const auto stackClass = fByteCountStack.back().cl;
+     const auto altStackClass = fByteCountStack.back().alt;
+     const bool classMatches = classMatcher(stackClass, clss, classname) ||
+         classMatcher(altStackClass, clss, classname);
+      if (startpos != fByteCountStack.back().locator) {
+         const char *stackClassName = stackClass ? stackClass->GetName() : "not specified";
+         const char *passedClassName = clss ? clss->GetName() : classname ? classname : "not specified";
+         Fatal("CheckByteCount",
+               "Incorrect Streamer Function.\n\tByte count position stack mismatch: expected %zu but got %llu.\n\tClass on stack is %s, passed class is %s",
+               fByteCountStack.back().locator, startpos,
+               stackClassName ? stackClassName : "nullptr", passedClassName ? passedClassName : "nullptr");
+      } else if (!classMatches) {
+         const char *stackClassName = stackClass ? stackClass->GetName() : nullptr;
+         const char *passedClassName = clss ? clss->GetName() : classname;
+         if (classMatcher(stackClass, clss, classname)) {
+            // In case the mismatch comes from the alt class.
+            stackClassName = altStackClass ? altStackClass->GetName() : nullptr;
+         }
+         Fatal("CheckByteCount",
+               "Incorrect Streamer Function.\n\tClass mismatch for byte count position %llu: expected %s but got %s",
+               startpos, stackClassName ? stackClassName : "nullptr", passedClassName ? passedClassName : "nullptr");
+      }
    }
    if (bcnt == kOverflowCount) {
       // in case we are checking a byte count for which we postponed
@@ -2770,7 +2812,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          }
 
          // reserve space for leading byte count
-         UInt_t cntpos = ReserveByteCount();
+         UInt_t cntpos = ReserveByteCount(actualClass);
 
          // write class of object first
          Int_t mapsize = fMap->Capacity(); // The slot depends on the capacity and WriteClass might induce an increase.
@@ -2825,7 +2867,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       // When objTag is not used, the caller is not interested in the byte
       // count and will not (can not) call CheckByteCount.
       if (objTag)
-         fByteCountStack.push_back(fBufCur - fBuffer - sizeof(UInt_t));
+         // Note: the actual class is set later on.
+         fByteCountStack.push_back({fBufCur - fBuffer - sizeof(UInt_t), clReq, nullptr});
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
@@ -2884,7 +2927,11 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    }
 
    // return bytecount in objTag
-   if (objTag) *objTag = (bcnt & ~kByteCountMask);
+   if (objTag) {
+      *objTag = (bcnt & ~kByteCountMask);
+      if (cl)
+        fByteCountStack.back().alt = cl;
+   }
 
    // case of unknown class
    if (!cl) cl = (TClass*)-1;
@@ -3017,7 +3064,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos <= kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      fByteCountStack.push_back(full_startpos);
+      fByteCountStack.push_back({(size_t)full_startpos, cl, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3156,7 +3203,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos < kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      fByteCountStack.push_back(full_startpos);
+      // TODO: Extend ReadVersionNoCheckSum to take the class pointer.
+      fByteCountStack.push_back({(size_t)full_startpos, nullptr, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3281,7 +3329,7 @@ UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
-      cntpos = ReserveByteCount();
+      cntpos = ReserveByteCount(cl);
    }
 
    Version_t version = cl->GetClassVersion();
@@ -3310,7 +3358,7 @@ UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
-      cntpos = ReserveByteCount();
+      cntpos = ReserveByteCount(cl);
    }
 
    Version_t version = cl->GetClassVersion();
@@ -3466,14 +3514,15 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 /// Reserve space for a leading byte count and return the position where to
 /// store the byte count value.
 ///
+/// \param[in] cl The class for which we are reserving the byte count, used for error reporting.
 /// \return The position (cntpos) where the byte count should be stored later,
 ///         or kOverflowPosition if the position exceeds kMaxCountPosition
 
-UInt_t TBufferFile::ReserveByteCount()
+UInt_t TBufferFile::ReserveByteCount(const TClass *cl)
 {
    // reserve space for leading byte count
-   auto full_cntpos = fBufCur - fBuffer;
-   fByteCountStack.push_back(full_cntpos);
+   size_t full_cntpos = fBufCur - fBuffer;
+   fByteCountStack.push_back({full_cntpos, cl, nullptr});
    *this << (UInt_t)kByteCountMask; // placeholder for byte count
    return full_cntpos <= kMaxCountPosition ? full_cntpos : kOverflowPosition;
 }
