@@ -68,7 +68,12 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
       return {};
    }
 
-   size_t GetEntriesNumber() { return std::get<0>(fColumns)->size(); }
+   size_t GetEntriesNumber()
+   {
+      if constexpr (sizeof...(ColumnTypes) > 0)
+         return std::get<0>(fColumns)->size();
+      return 0;
+   }
    template <std::size_t... S>
    void SetEntryHelper(unsigned int slot, ULong64_t entry, std::index_sequence<S...>)
    {

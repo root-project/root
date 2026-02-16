@@ -16,6 +16,13 @@
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
 
+TEST(Cache, Empty)
+{
+   ROOT::RDataFrame df(5);
+   auto cached = df.Cache<>({});
+   EXPECT_EQ(*cached.Count(), 0);
+}
+
 TEST(Cache, FundType)
 {
    ROOT::RDataFrame tdf(5);
