@@ -1221,7 +1221,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                         }
                      }
                   }
-                  b.CheckByteCount(start,count,aElement->GetFullName());
+                  b.CheckByteCount(start, count, aElement->GetClass());
                   continue;
                }
                if (pstreamer == 0) {
