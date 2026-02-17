@@ -5,7 +5,6 @@
   <class pattern="Genfun::A*"         />
   <class pattern="IGsl*"              />
   <class pattern="Gsl*"               />
-  <class pattern="Gsl*"               />
   </selection>
 
   <exclusion>

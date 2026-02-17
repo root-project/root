@@ -1,6 +1,10 @@
 #ifndef MYCLASS_H
 #define MYCLASS_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class MyClass1+;
+#endif
+
 #include <string>
 #include <vector>
 #include <map>
