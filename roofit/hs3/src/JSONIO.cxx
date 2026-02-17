@@ -82,27 +82,19 @@ ExportKeysMap &exportKeys()
    return _exportKeys;
 }
 
-void ExporterLoader::load() {
-  for (auto it = top.begin(); it != top.end(); ) {
-    auto node = top.extract(it++); // erase current entry; advance iterator first
-    registerExporter(
-      TClass::GetClass(node.key().c_str()),
-      std::move(node.mapped()),
-      true
-    );
-  }
+void ExporterLoader::load()
+{
+   for (auto it = top.begin(); it != top.end();) {
+      auto node = top.extract(it++); // erase current entry; advance iterator first
+      registerExporter(TClass::GetClass(node.key().c_str()), std::move(node.mapped()), true);
+   }
 
-  for (auto it = bottom.begin(); it != bottom.end(); ) {
-    auto node = bottom.extract(it++);
-    registerExporter(
-      TClass::GetClass(node.key().c_str()),
-      std::move(node.mapped()),
-      false
-    );
-  }
+   for (auto it = bottom.begin(); it != bottom.end();) {
+      auto node = bottom.extract(it++);
+      registerExporter(TClass::GetClass(node.key().c_str()), std::move(node.mapped()), false);
+   }
 }
 
-  
 bool registerImporter(const std::string &key, std::unique_ptr<const Importer> f, bool topPriority)
 {
    auto &vec = importers()[key];
@@ -117,13 +109,13 @@ bool registerExporter(const TClass *key, std::unique_ptr<const Exporter> f, bool
    return true;
 }
 
-bool registerExporter(const std::string& key, std::unique_ptr<const Exporter> f, bool topPriority)
+bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f, bool topPriority)
 {
    auto &m = topPriority ? loader().top : loader().bottom;
-   m.insert_or_assign(key,std::move(f));
+   m.insert_or_assign(key, std::move(f));
    return true;
 }
-  
+
 int removeImporters(const std::string &needle)
 {
    int n = 0;

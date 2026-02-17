@@ -82,12 +82,12 @@ ExportMap &exporters();
 ImportExpressionMap &importExpressions();
 ExportKeysMap &exportKeys();
 
-struct ExporterLoader{
-  std::map<std::string, std::unique_ptr<const Exporter>> top;
-  std::map<std::string, std::unique_ptr<const Exporter>> bottom;  
-  void load();
+struct ExporterLoader {
+   std::map<std::string, std::unique_ptr<const Exporter>> top;
+   std::map<std::string, std::unique_ptr<const Exporter>> bottom;
+   void load();
 };
-ExporterLoader& loader();
+ExporterLoader &loader();
 
 template <class T>
 static bool registerImporter(const std::string &key, bool topPriority = true)
@@ -100,14 +100,14 @@ static bool registerExporter(const TClass *key, bool topPriority = true)
    return registerExporter(key, std::make_unique<T>(), topPriority);
 }
 template <class T>
-static bool registerExporter(const std::string& key, bool topPriority = true)
+static bool registerExporter(const std::string &key, bool topPriority = true)
 {
    return registerExporter(key, std::make_unique<T>(), topPriority);
-}  
+}
 
 bool registerImporter(const std::string &key, std::unique_ptr<const Importer> f, bool topPriority = true);
 bool registerExporter(const TClass *key, std::unique_ptr<const Exporter> f, bool topPriority = true);
-bool registerExporter(const std::string& key, std::unique_ptr<const Exporter> f, bool topPriority = true);  
+bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f, bool topPriority = true);
 int removeImporters(const std::string &needle);
 int removeExporters(const std::string &needle);
 void printImporters();
