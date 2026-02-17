@@ -42,7 +42,7 @@ public:
    TSpline const &spline() const { return *_spline; }
    bool logx() const { return _logx; }
    bool logy() const { return _logy; }
-  
+
 protected:
    double evaluate() const override;
 

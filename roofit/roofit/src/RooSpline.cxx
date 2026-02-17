@@ -133,10 +133,11 @@ double RooSpline::evaluate() const
 /// Return the order of the spline
 int RooSpline::order() const
 {
-  // RooSpline currently doesn’t store the order explicitly, so infer from TSpline dynamic type.
-  // (Constructor uses TSpline3 for order=3 and TSpline5 for order=5.)
-  if (dynamic_cast<TSpline5 const *>(_spline.get())) return 5;
-  if (dynamic_cast<TSpline3 const *>(_spline.get())) return 3;
-  return 3; // reasonable default / forward compatibility
+   // RooSpline currently doesn’t store the order explicitly, so infer from TSpline dynamic type.
+   // (Constructor uses TSpline3 for order=3 and TSpline5 for order=5.)
+   if (dynamic_cast<TSpline5 const *>(_spline.get()))
+      return 5;
+   if (dynamic_cast<TSpline3 const *>(_spline.get()))
+      return 3;
+   return 3; // reasonable default / forward compatibility
 }
-
