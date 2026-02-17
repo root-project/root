@@ -69,6 +69,8 @@ protected:
    Int_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
                               { return TObject::Write(name, opt, bufsize); }
 
+   virtual UInt_t ReserveByteCount(const TClass *) = 0;
+
 public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum EStatusBits {
@@ -125,6 +127,28 @@ public:
    virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss) = 0;
    virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname) = 0;
    virtual void       SetByteCount(ULong64_t cntpos, Bool_t packInVersion = kFALSE)= 0;
+   class ByteCountWriter {
+      TBuffer      &fBuffer;
+      Bool_t        fPackInVersion;
+      ULong64_t     fCntPos;
+   public:
+      ByteCountWriter() = delete;
+      ByteCountWriter(const ByteCountWriter&) = delete;
+      ByteCountWriter& operator=(const ByteCountWriter&) = delete;
+      ByteCountWriter(ByteCountWriter&&) = delete;
+      ByteCountWriter& operator=(ByteCountWriter&&) = delete;
+
+      ByteCountWriter(TBuffer &buf, const TClass *cl, Bool_t packInVersion = kFALSE) : fBuffer(buf), fPackInVersion(packInVersion) {
+         // We could split ReserveByteCount in a 32bit version that uses
+         // the ByteCountStack and another version that always returns the
+         // long range position.  For now keep it 'simpler' by always using
+         // the stack.
+         fCntPos = fBuffer.ReserveByteCount(cl);
+      }
+      ~ByteCountWriter() {
+         fBuffer.SetByteCount(fCntPos, fPackInVersion);
+      }
+   };
 
    virtual void       SkipVersion(const TClass *cl = nullptr) = 0;
    virtual Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) = 0;
