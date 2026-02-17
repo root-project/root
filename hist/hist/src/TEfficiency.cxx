@@ -1511,7 +1511,8 @@ void TEfficiency::Build(const char* name,const char* title)
    SetTitle(title);
 
    SetStatisticOption(kDefStatOpt);
-   SetDirectory(gDirectory);
+   if (TH1::AddDirectoryStatus())
+      SetDirectory(gDirectory);
 
    SetBit(kPosteriorMode,false);
    SetBit(kShortestInterval,false);
