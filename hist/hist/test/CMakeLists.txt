@@ -32,10 +32,7 @@ ROOT_ADD_GTEST(testTF1Simple test_tf1_simple.cxx LIBRARIES Hist RIO)
 ROOT_ADD_GTEST(testTF1DrawCopy test_tf1_drawcopy.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_TProfile test_TProfile.cxx LIBRARIES Hist)
 
-if(fftw3)
-  ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
-endif()
-
+ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF3 test_tf3.cxx LIBRARIES Hist)
 
