@@ -2516,7 +2516,14 @@ void TUnixSystem::StackTrace()
                if (name[0] != '/') noPath = kTRUE;
                if (name.Contains(".so") || name.Contains(".sl")) noShare = kFALSE;
                if (noShare) offset = addr;
-               if (noPath)  name = "`which " + name + "`";
+               if (noPath) {
+                  char *fullpath = noShare ? Which(Getenv("PATH"), name, kExecutePermission)
+                                           : Which(GetDynamicPath(), name, kReadPermission);
+                  if (fullpath) {
+                     name = fullpath;
+                     delete [] fullpath;
+                  }
+               }
                snprintf(buffer, sizeof(buffer), "%s -e %s 0x%016lx", addr2line, name.Data(), offset);
 #endif
                if (FILE *pf = ::popen(buffer, "r")) {
