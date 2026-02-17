@@ -2612,7 +2612,26 @@ void TBufferFile::SkipObjectAny()
 {
    UInt_t start, count;
    ReadVersion(&start, &count);
-   SetBufferOffset(start+count+sizeof(UInt_t));
+   if (count == kOverflowPosition)
+      SetBufferOffset(start+ fByteCountStack.back().locator + sizeof(UInt_t));
+   else
+      SetBufferOffset(start+count+sizeof(UInt_t));
+   // The byte count location is pushed on the stack only if there is
+   // actually a byte count.
+   if (count)
+      fByteCountStack.pop_back();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Skip any kind of object from buffer
+
+void TBufferFile::SkipObjectAny(Long64_t start, UInt_t count)
+{
+   if (count == kOverflowPosition)
+      SetBufferOffset(start + fByteCountStack.back().locator + sizeof(UInt_t));
+   else
+      SetBufferOffset(start + count + sizeof(UInt_t));
+   fByteCountStack.pop_back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
