@@ -854,3 +854,40 @@ TEST(CreateNLL, CombineStyleConstraints)
    const double refNllVal = -nChannels * (std::log(proba / nChannels) + std::log(proba));
    EXPECT_FLOAT_EQ(nll->getVal(), refNllVal);
 }
+
+// Check that RooAbsArg::setData() works for codegen likelihoods.
+TEST(CreateNLL, ResetDataCodegen)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[0., -10, 10], mean[1., -10, 10], sigma[3., 0.1, 10.])");
+
+   auto &x = *ws.var("x");
+   auto &gauss = *ws.pdf("gauss");
+
+   int nEvents = 1000;
+
+   RooArgSet obs{x};
+
+   std::unique_ptr<RooDataSet> data{gauss.generate(obs, nEvents)};
+
+   // Use the "codegen_no_grad" backend, so that the generated code is used
+   // also for the nominal function.
+   std::unique_ptr<RooAbsReal> nll{gauss.createNLL(*data, RooFit::EvalBackend("codegen_no_grad"))};
+
+   double nll1Val = nll->getVal();
+
+   // Duplicate all events, so we can make an easy check: the NLL value after
+   // resetting the data should just be twice the original NLL value.
+   for (int i = 0; i < nEvents; ++i) {
+      obs.assign(*data->get(i));
+      data->add(obs);
+   }
+
+   nll->setData(*data);
+
+   double nll2Val = nll->getVal();
+
+   EXPECT_FLOAT_EQ(nll2Val, 2 * nll1Val);
+}
