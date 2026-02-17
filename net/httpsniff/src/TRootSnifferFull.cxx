@@ -342,7 +342,10 @@ Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::str
    }
 
    TDirectory::TContext dirCtx{nullptr};
-   TFile::TContext fileCtx{nullptr};
+   struct RestoreGFile {
+      TFile *oldFile{gFile};
+      ~RestoreGFile() { gFile = oldFile; }
+   } restoreGFile;
 
    {
       TMemFile memfile("dummy.file", "RECREATE");
