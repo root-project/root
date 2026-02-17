@@ -1511,6 +1511,15 @@ void TBufferXML::SkipObjectAny()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Skip any kind of object from buffer
+/// Actually skip only one node on current level of xml structure
+
+void TBufferXML::SkipObjectAny(Long64_t, UInt_t)
+{
+   ShiftStack("skipobjectany");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
 
 void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)

@@ -2589,6 +2589,7 @@ void *TBufferJSON::ReadObjectAny(const TClass *expectedClass)
 /// Skip any kind of object from buffer
 
 void TBufferJSON::SkipObjectAny() {}
+void TBufferJSON::SkipObjectAny(Long64_t, UInt_t) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer

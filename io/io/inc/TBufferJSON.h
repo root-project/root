@@ -109,6 +109,7 @@ public:
 
    void *ReadObjectAny(const TClass *clCast) final;
    void SkipObjectAny() final;
+   void SkipObjectAny(Long64_t start, UInt_t bytecount) final;
 
    // these methods used in streamer info to indicate currently streamed element,
    void IncrementLevel(TVirtualStreamerInfo *) final;

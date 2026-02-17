@@ -77,6 +77,7 @@ public:
 
    void *ReadObjectAny(const TClass *clCast) final;
    void SkipObjectAny() final;
+   void SkipObjectAny(Long64_t start, UInt_t bytecount) final;
 
    void IncrementLevel(TVirtualStreamerInfo *) final;
    void SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type) final;
