@@ -23,6 +23,8 @@ protected:
    TBufferText();
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
+   UInt_t ReserveByteCount(const TClass *) override { return 0; }
+
 public:
    ~TBufferText() override;
 
