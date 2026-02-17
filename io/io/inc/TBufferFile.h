@@ -77,7 +77,7 @@ protected:
    Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
    void     CheckCount(UInt_t offset) override;
    UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
-   UInt_t   ReserveByteCount(const TClass *cl);
+   UInt_t   ReserveByteCount(const TClass *cl) override;
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
