@@ -320,7 +320,7 @@ void codegenImpl(RooAddition &arg, CodegenContext &ctx)
             result += '+';
          continue;
       }
-      result += ctx.buildFunction(*component, ctx.outputSizes()) + "(params, obs, xlArr)";
+      result += ctx.buildFunction(*component, ctx.dependsOnData()) + "(params, obs, xlArr)";
       ++i;
       if (i < arg.list().size())
          result += '+';

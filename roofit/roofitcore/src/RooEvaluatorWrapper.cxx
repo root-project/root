@@ -30,6 +30,7 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 #include <RooSimultaneous.h>
 
 #include "RooFit/BatchModeDataHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include <TInterpreter.h>
 
@@ -118,38 +119,6 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    return false;
 }
 
-bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
-{
-   // To make things easiear for RooFit, we only support resetting with
-   // datasets that have the same structure, e.g. the same columns and global
-   // observables. This is anyway the usecase: resetting same-structured data
-   // when iterating over toys.
-   constexpr auto errMsg = "Error in RooAbsReal::setData(): only resetting with same-structured data is supported.";
-
-   _data = &data;
-   bool isInitializing = _paramSet.empty();
-   const std::size_t oldSize = _dataSpans.size();
-
-   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
-   _dataSpans =
-      RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, dynamic_cast<RooSimultaneous const *>(_pdf),
-                                                 skipZeroWeights, _takeGlobalObservablesFromData, _vectorBuffers);
-   if (!isInitializing && _dataSpans.size() != oldSize) {
-      coutE(DataHandling) << errMsg << std::endl;
-      throw std::runtime_error(errMsg);
-   }
-   for (auto const &item : _dataSpans) {
-      const char *name = item.first->GetName();
-      _evaluator->setInput(name, item.second, false);
-      if (_paramSet.find(name)) {
-         coutE(DataHandling) << errMsg << std::endl;
-         throw std::runtime_error(errMsg);
-      }
-   }
-   return true;
-}
-
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
 /// The observables can be accessed as obs[i + j], where i represents the observable position and j
@@ -179,22 +148,15 @@ public:
       return _func(_gradientVarBuffer.data(), _observables.data(), _xlArr.data());
    }
 
+   void loadData(RooAbsData const &data, RooSimultaneous const *simPdf);
+
 private:
    void updateGradientVarBuffer() const;
-
-   std::map<RooFit::Detail::DataKey, std::span<const double>>
-   loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf);
 
    void buildFuncAndGradFunctors();
 
    using Func = double (*)(double *, double const *, double const *);
    using Grad = void (*)(double *, double const *, double const *, double *);
-
-   struct ObsInfo {
-      ObsInfo(std::size_t i, std::size_t n) : idx{i}, size{n} {}
-      std::size_t idx = 0;
-      std::size_t size = 0;
-   };
 
    RooArgList _params;
    std::string _funcName;
@@ -203,7 +165,7 @@ private:
    bool _hasGradient = false;
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
-   std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
+   std::unordered_map<RooFit::Detail::DataKey, std::size_t> _obsInfos;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
 };
@@ -221,21 +183,58 @@ void replaceAll(std::string &str, const std::string &from, const std::string &to
    }
 }
 
+auto getDependsOnData(RooAbsReal &obj, RooArgSet const &dataObs)
+{
+   RooArgSet serverSet;
+   RooHelpers::getSortedComputationGraph(obj, serverSet);
+
+   std::unordered_set<RooFit::Detail::DataKey> dependsOnData;
+   for (RooAbsArg *arg : dataObs) {
+      dependsOnData.insert(arg);
+   }
+
+   for (RooAbsArg *arg : serverSet) {
+      if (arg->getAttribute("__obs__")) {
+         dependsOnData.insert(arg);
+      }
+      for (RooAbsArg *server : arg->servers()) {
+         if (server->isValueServer(*arg)) {
+            if (dependsOnData.find(server) != dependsOnData.end() && !arg->isReducerNode()) {
+               dependsOnData.insert(arg);
+               break;
+            }
+         }
+      }
+   }
+
+   return dependsOnData;
+}
+
 } // namespace
 
 RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf,
                                RooArgSet const &paramSet)
 {
-   // Load the parameters and observables.
-   auto spans = loadParamsAndData(paramSet, data, simPdf);
+   // Load the observables from the dataset
+   if (data) {
+      loadData(*data, simPdf);
+   }
+
+   // Define the parameters
+   for (auto *param : paramSet) {
+      if (_obsInfos.find(param) == _obsInfos.end()) {
+         _params.add(*param);
+      }
+   }
+   _gradientVarBuffer.resize(_params.size());
+
+   // Figure out which part of the computation graph depends on data
+   std::unordered_set<RooFit::Detail::DataKey> dependsOnData;
+   if (data) {
+      dependsOnData = getDependsOnData(obj, *data->get());
+   }
 
    // Set up the code generation context
-   std::map<RooFit::Detail::DataKey, std::size_t> nodeOutputSizes =
-      RooFit::BatchModeDataHelpers::determineOutputSizes(obj, [&spans](RooFit::Detail::DataKey key) -> int {
-         auto found = spans.find(key);
-         return found != spans.end() ? found->second.size() : -1;
-      });
-
    RooFit::Experimental::CodegenContext ctx;
 
    // First update the result variable of params in the compute graph to in[<position>].
@@ -247,21 +246,14 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
 
    for (auto const &item : _obsInfos) {
       const char *obsName = item.first->GetName();
-      // If the observable is scalar, set name to the start idx. else, store
-      // the start idx and later set the the name to obs[start_idx + curr_idx],
-      // here curr_idx is defined by a loop producing parent node.
-      if (item.second.size == 1) {
-         ctx.addResult(obsName, "obs[" + std::to_string(item.second.idx) + "]");
-      } else {
-         ctx.addResult(obsName, "obs");
-         ctx.addVecObs(obsName, item.second.idx);
-      }
+      ctx.addResult(obsName, "obs");
+      ctx.addVecObs(obsName, item.second);
    }
 
    // Declare the function and create its derivative.
    auto print = [](std::string const &msg) { oocoutI(nullptr, Fitting) << msg << std::endl; };
    ROOT::Math::Util::TimingScope timingScope(print, "Function JIT time:");
-   _funcName = ctx.buildFunction(obj, nodeOutputSizes);
+   _funcName = ctx.buildFunction(obj, dependsOnData);
 
    // Make sure the codegen implementations are known to the interpreter
    gInterpreter->Declare("#include <RooFit/CodegenImpl.h>\n");
@@ -270,7 +262,7 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
       std::stringstream errorMsg;
       std::string debugFileName = "_codegen_" + _funcName + ".cxx";
       errorMsg << "Function " << _funcName << " could not be compiled. See above for details. Full code dumped to file "
-               << debugFileName << "for debugging";
+               << debugFileName << " for debugging";
       {
          std::ofstream outFile;
          outFile.open(debugFileName.c_str());
@@ -286,36 +278,33 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    _collectedFunctions = ctx.collectedFunctions();
 }
 
-std::map<RooFit::Detail::DataKey, std::span<const double>>
-RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf)
+void RooFuncWrapper::loadData(RooAbsData const &data, RooSimultaneous const *simPdf)
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   std::map<RooFit::Detail::DataKey, std::span<const double>> spans;
+   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", simPdf, true, false, vectorBuffers);
 
-   if (data) {
-      spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
-   }
-
+   _observables.clear();
+   // The first elements contain the sizes of the packed observable arrays
+   std::size_t total = 0;
+   _observables.reserve(2 * spans.size());
    std::size_t idx = 0;
    for (auto const &item : spans) {
+      _obsInfos.emplace(item.first, idx);
+      _observables.push_back(total + 2 * spans.size());
+      _observables.push_back(item.second.size());
+      total += item.second.size();
+      idx += 1;
+   }
+   idx = 0;
+   for (auto const &item : spans) {
       std::size_t n = item.second.size();
-      _obsInfos.emplace(item.first, ObsInfo{idx, n});
       _observables.reserve(_observables.size() + n);
       for (std::size_t i = 0; i < n; ++i) {
          _observables.push_back(item.second[i]);
       }
       idx += n;
    }
-
-   for (auto *param : paramSet) {
-      if (spans.find(param) == spans.end()) {
-         _params.add(*param);
-      }
-   }
-   _gradientVarBuffer.resize(_params.size());
-
-   return spans;
 }
 
 void RooFuncWrapper::createGradient()
@@ -492,6 +481,41 @@ double RooEvaluatorWrapper::evaluate() const
                                           : RooFit::EvalContext::OffsetMode::WithOffset);
 
    return _evaluator->run()[0];
+}
+
+bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
+{
+   // To make things easier for RooFit, we only support resetting with
+   // datasets that have the same structure, e.g. the same columns and global
+   // observables. This is anyway the usecase: resetting same-structured data
+   // when iterating over toys.
+   constexpr auto errMsg = "Error in RooAbsReal::setData(): only resetting with same-structured data is supported.";
+
+   _data = &data;
+   bool isInitializing = _paramSet.empty();
+   const std::size_t oldSize = _dataSpans.size();
+
+   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+   bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
+   auto simPdf = dynamic_cast<RooSimultaneous const *>(_pdf);
+   _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, simPdf, skipZeroWeights,
+                                                           _takeGlobalObservablesFromData, _vectorBuffers);
+   if (!isInitializing && _dataSpans.size() != oldSize) {
+      coutE(DataHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+   for (auto const &item : _dataSpans) {
+      const char *name = item.first->GetName();
+      _evaluator->setInput(name, item.second, false);
+      if (_paramSet.find(name)) {
+         coutE(DataHandling) << errMsg << std::endl;
+         throw std::runtime_error(errMsg);
+      }
+   }
+   if (_funcWrapper) {
+      _funcWrapper->loadData(*_data, simPdf);
+   }
+   return true;
 }
 
 void RooEvaluatorWrapper::createFuncWrapper()
