@@ -1,11 +1,16 @@
 #include "TF1.h"
 #include "TF1NormSum.h"
+
+#include "TError.h"
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "TPluginManager.h"
+#include "TROOT.h"
 
 #include "gtest/gtest.h"
-#include <cmath>
+#include "ROOT/TestSupport.hxx"
 
+#include <cmath>
 #include <iostream>
 
 class MyClass {
@@ -41,7 +46,7 @@ void coeffNamesGeneric(TString &formula, TObjArray *coeffNames)
 }
 
 // Test that the NSUM names are copied correctly
-void test_nsumCoeffNames()
+TEST(TF1, NsumCoeffNames)
 {
    TObjArray *coeffNames = new TObjArray();
    coeffNames->SetOwner(kTRUE);
@@ -58,7 +63,8 @@ void test_nsumCoeffNames()
 }
 
 // Test that the NSUM is normalized as we'd expect
-void test_normalization() {
+TEST(TF1, Normalization)
+{
    double xmin = -5;
    double xmax = 5;
    TF1 n0("n0", "NSUM(.5 * gaus, .5 * (x+[0])**2)", xmin, xmax);
@@ -116,9 +122,37 @@ void voigtHelper(double sigma, double lg)
       EXPECT_NEAR(conv.Eval(x), myvoigt.Eval(x), .01 * conv.Eval(x));
 }
 
-// Test that we can change the range of TF1NormSum and TF1Convolution
-void test_setRange()
+// Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
+// Check that the values match to within 1%
+TEST(TF1, ConvVoigt)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kError, "TVirtualFFT::FFT", "handler not found");
+   diags.optionalDiag(kWarning, "TF1Convolution::MakeFFTConv",
+                      "Cannot use FFT, probably FFTW package is not available. Switch to numerical convolution");
+
+   {
+      // Try to load the FFTW plugin. On failure, skip the test.
+      R__LOCKGUARD(gROOTMutex);
+
+      TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT", "fftwc2c");
+      if (!h || h->LoadPlugin() == -1)
+         GTEST_SKIP() << "Didn't find the FFTW plugin";
+   }
+
+   voigtHelper(.1, 1);
+   voigtHelper(1, .1);
+   voigtHelper(1, 1);
+}
+
+// Test that we can change the range of TF1NormSum and TF1Convolution
+TEST(TF1, SetRange)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kError, "TVirtualFFT::FFT", "handler not found");
+   diags.optionalDiag(kWarning, "TF1Convolution::MakeFFTConv",
+                      "Cannot use FFT, probably FFTW package is not available. Switch to numerical convolution");
+
    // Define TF1 using NSUM
    TF1 f1("f1", "NSUM([sg] * gaus, [bg] * expo)", 0, 1);
    f1.SetParameters(1, 1, 0, 1, 1);
@@ -128,6 +162,9 @@ void test_setRange()
    f1.SetRange(-5, 5);
    EXPECT_NEAR(f1.Integral(-5, 5), 2, delta);
 
+#ifdef R__HAS_MATHMORE
+   // The following relies on GSL integrators, which are only available with MathMore
+
    // now same thing with CONV
    TF1 f2("f2", "CONV(gaus, breitwigner)", 0, 1);
    f2.SetParameters(1, 1, 1, 1, 1, 1);
@@ -136,89 +173,52 @@ void test_setRange()
    // By reducing the tolerance, we get rid of a GSL warning, which was picked up by the log checkers.
    constexpr double tolerance = 1.E-6;
    EXPECT_NEAR(f2.Integral(-20, 20, tolerance), 2.466, .005);
+#endif
 }
 
 // Test that we can copy and clone TF1 objects based on NSUM and CONV
-void test_copyClone()
+TEST(TF1, CopyClone)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kError, "TVirtualFFT::FFT", "handler not found");
+   diags.optionalDiag(kWarning, "TF1Convolution::MakeFFTConv",
+                      "Cannot use FFT, probably FFTW package is not available. Switch to numerical convolution");
+
    // Define original TF1 using NSUM
-   TF1 *f1 = new TF1("f1", "NSUM(gaus, expo)", -5, 5);
-   f1->SetParameters(1, 1, 0, 1, 1);
+   TF1 f1("f1", "NSUM(gaus, expo)", -5, 5);
+   f1.SetParameters(1, 1, 0, 1, 1);
 
    // Make copy and test
-   TF1 *f2 = new TF1();
-   f1->Copy(*f2);
+   TF1 f2;
+   f1.Copy(f2);
    for (double x = -5; x < 5; x += .5)
-      EXPECT_NEAR(f1->Eval(x), f2->Eval(x), delta);
+      EXPECT_NEAR(f1.Eval(x), f2.Eval(x), delta);
 
    // Make clone and test
-   TF1 *f3 = (TF1 *)f1->Clone();
+   std::unique_ptr<TF1> f3{dynamic_cast<TF1 *>(f1.Clone())};
    for (double x = -5; x < 5; x += .5)
-      EXPECT_NEAR(f1->Eval(x), f3->Eval(x), delta);
-
-   delete f1;
-   delete f2;
-   delete f3;
+      EXPECT_NEAR(f1.Eval(x), f3->Eval(x), delta);
 
    // Same thing for CONV
 
    // Define original TF1 using NSUM
-   TF1 *f4 = new TF1("f4", "CONV(gaus, breitwigner)", -15, 15);
-   f4->SetParameters(1, 1, 1, 1, 1, 1);
+   TF1 f4("f4", "CONV(gaus, breitwigner)", -15, 15);
+   f4.SetParameters(1, 1, 1, 1, 1, 1);
 
    // Make copy
-   TF1 *f5 = new TF1();
-   f4->Copy(*f5);
+   TF1 f5;
+   f4.Copy(f5);
    for (double x = -5; x < 5; x += .5)
-      EXPECT_NEAR(f4->Eval(x), f5->Eval(x), delta);
+      EXPECT_NEAR(f4.Eval(x), f5.Eval(x), delta);
 
    // Make clone
-   TF1 *f6 = (TF1 *)f4->Clone();
+   std::unique_ptr<TF1> f6{dynamic_cast<TF1 *>(f4.Clone())};
    for (double x = -5; x < 5; x += .5)
-      EXPECT_NEAR(f4->Eval(x), f6->Eval(x), delta);
-
-   delete f4;
-   delete f5;
-   delete f6;
-}
-
-// Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
-// Check that the values match to within 1%
-void test_convVoigt()
-{
-   voigtHelper(.1, 1);
-   voigtHelper(1, .1);
-   voigtHelper(1, 1);
-}
-
-TEST(TF1, NsumCoeffNames)
-{
-   test_nsumCoeffNames();
-}
-
-TEST(TF1, Normalization)
-{
-   test_normalization();
-}
-
-TEST(TF1, ConvVoigt)
-{
-   test_convVoigt();
-}
-
-TEST(TF1, SetRange)
-{
-   test_setRange();
-}
-
-TEST(TF1, CopyClone)
-{
-   test_copyClone();
+      EXPECT_NEAR(f4.Eval(x), f6->Eval(x), delta);
 }
 
 TEST(TF1, Constructors)
 {
-
    MyClass testObj, testObjConst;
    double x = 1;
    double p = 1;
