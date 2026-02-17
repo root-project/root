@@ -24,6 +24,7 @@
 #pragma link C++ class RooPowerSum+ ;
 #pragma link C++ class RooGaussExpTails+ ;
 #pragma link C++ class RooGaussian+ ;
+#pragma link C++ class RooStudentT+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;
 #pragma link C++ class RooGaussModel+ ;
