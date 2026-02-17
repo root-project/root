@@ -135,6 +135,23 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast) = 0;
    virtual void       SkipObjectAny() = 0;
+   /** \brief Skip, based on a known start position and byte count, to the end of the current object.
+    *
+    * \warning Advanced use only.
+    *
+    * This overload exists primarily for error handling within a Streamer.
+    *
+    * A typical use case is a Streamer with a flow like:
+    *   - Read version and bytecount
+    *   - Start reading the data
+    *   - Detect an error (e.g. missing some information for a CollectionProxy)
+    *   - Properly set the cursor to the end of the object to allow reading to continue.
+    *
+    * Because the actual byte count information for \e large byte counts is kept only on the
+    * internal byte-count stack, there are only two viable options to support this use case:
+    * provide this overload, or make the stack accessible (e.g. via a getter).
+    */
+   virtual void       SkipObjectAny(Long64_t start, UInt_t bytecount) = 0;
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo* info) = 0;
    virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;
