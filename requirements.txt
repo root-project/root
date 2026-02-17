@@ -5,15 +5,15 @@ numpy
 pandas
 
 # TMVA: SOFIE
-dm-sonnet # used for GNNs
-graph_nets
+dm-sonnet ; python_version < "3.14" # used for GNNs
+graph_nets ; python_version < "3.14"
 onnx
 onnxscript
 packaging
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow
+tensorflow ; python_version < "3.14"
 torch
 xgboost
 
