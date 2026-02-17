@@ -228,8 +228,8 @@ struct RNTupleLocatorHelper<RNTupleLocatorObject64> {
 /// Note that we use a representation optimized for memory consumption that slightly differs from the on-disk
 /// representation.
 class RNTupleLocator {
-   friend class Internal::RNTupleLocatorHelper<std::uint64_t>;
-   friend class Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
+   friend struct Internal::RNTupleLocatorHelper<std::uint64_t>;
+   friend struct Internal::RNTupleLocatorHelper<RNTupleLocatorObject64>;
 
 public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
