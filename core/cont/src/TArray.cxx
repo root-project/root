@@ -90,18 +90,16 @@ void TArray::WriteArray(TBuffer &b, const TArray *a)
       b << (UInt_t) 0;
 
    } else {
+      TClass *cl = a->IsA();
 
       // Reserve space for leading byte count
-      UInt_t cntpos = UInt_t(b.Length());
-      b.SetBufferOffset(Int_t(cntpos+sizeof(UInt_t)));
+      TBuffer::ByteCountWriter bcnt(b, cl);
 
-      TClass *cl = a->IsA();
       b.WriteClass(cl);
 
-      ((TArray *)a)->Streamer(b);
+      const_cast<TArray *>(a)->Streamer(b);
 
-      // Write byte count
-      b.SetByteCount(cntpos);
+      // The byte count is written automatically by the ByteCountWriter destructor
    }
 }
 
