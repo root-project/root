@@ -40,7 +40,7 @@ const Double_t kDefConfLevel = 0.682689492137; // 1 sigma
 const TEfficiency::EStatOption kDefStatOpt = TEfficiency::kFCP;
 const Double_t kDefWeight = 1;
 
-
+// clang-format off
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TEfficiency
     \ingroup Hist
@@ -96,8 +96,8 @@ events with different weights were filled in the same histogram.
 If you start a new analysis, it is highly recommended to use the TEfficiency class
 from the beginning. You can then use one of the constructors for fixed or
 variable bin size and your desired dimension. These constructors append the
-created TEfficiency object to the current directory. So it will be written
-automatically to a file during the next TFile::Write command.
+created TEfficiency object to the current directory if TH1::AddDirectoryStatus() is
+true. It will be written automatically to a file during the next TFile::Write command.
 
 Example: create a two-dimensional TEfficiency object with
 - name = "eff"
@@ -116,8 +116,9 @@ to construct the TEfficiency object. The histograms "passed" and "total" have
 to fulfill the conditions mentioned in TEfficiency::CheckConsistency, otherwise the construction will fail.
 As the histograms already exist, the new TEfficiency is by default **not** attached
 to the current directory to avoid duplication of data. If you want to store the
-new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
-This also applies to TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
+new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using
+TEfficiency::SetDirectory. This also applies to TEfficiency objects created by the copy constructor
+TEfficiency::TEfficiency(const TEfficiency& rEff).
 
 \anchor EFF02a
 ### Example 1
@@ -131,7 +132,8 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
 {
   pEff = new TEfficiency(h_pass,h_total);
   // this will write the TEfficiency object to "myfile.root"
-  // AND pEff will be attached to the current directory
+  // AND pEff will be attached to the current directory if
+  // TH1::AddDirectoryStatus() is true.
   pEff->Write();
 }
 ~~~~~~~~~~~~~~~
@@ -155,15 +157,15 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
 ~~~~~~~~~~~~~~~
 
 In case you already have two filled histograms and you only want to
-plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)
-to create a graph object.
+plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1*
+total,Option_t* opt) to create a graph object.
 
 \anchor EFF03
 ## III. Filling with events
-You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z) method.
-The "bPassed" boolean flag indicates whether the current event is good
-(both histograms are filled) or not (only TEfficiency::fTotalHistogram is filled).
-The x, y and z variables determine the bin which is filled. For lower dimensions, the z- or even the y-value may be omitted.
+You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)
+method. The "bPassed" boolean flag indicates whether the current event is good (both histograms are filled) or not (only
+TEfficiency::fTotalHistogram is filled). The x, y and z variables determine the bin which is filled. For lower
+dimensions, the z- or even the y-value may be omitted.
 
 Begin_Macro(source)
 {
@@ -540,11 +542,11 @@ p_{2} = \frac{\sigma_{2}}{\sigma_{1} + \sigma_{2}} = \frac{N_{2}w_{2}}{N_{1}w_{1
 ### VI.1 Information about the internal histograms
 The methods TEfficiency::GetPassedHistogram and TEfficiency::GetTotalHistogram
 return a constant pointer to the internal histograms. They can be used to
-obtain information about the internal histograms (e.g., the binning, number of passed / total events in a bin, mean values...).
-One can obtain a clone of the internal histograms by calling TEfficiency::GetCopyPassedHisto or TEfficiency::GetCopyTotalHisto.
-The returned histograms are completely independent from the current
-TEfficiency object. By default, they are not attached to a directory to
-avoid the duplication of data and the user is responsible for deleting them.
+obtain information about the internal histograms (e.g., the binning, number of passed / total events in a bin, mean
+values...). One can obtain a clone of the internal histograms by calling TEfficiency::GetCopyPassedHisto or
+TEfficiency::GetCopyTotalHisto. The returned histograms are completely independent from the current TEfficiency object.
+By default, they are not attached to a directory to avoid the duplication of data and the user is responsible for
+deleting them.
 
 
 ~~~~~~~~~~~~~~~{.cpp}
@@ -682,6 +684,7 @@ Begin_Macro(source)
 End_Macro
 
 */
+// clang-format on
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -1503,7 +1506,8 @@ Double_t TEfficiency::BetaMode(Double_t a,Double_t b)
 /// Notes:
 /// - calls: SetName(name), SetTitle(title)
 /// - set the statistic option to the default (kFCP)
-/// - appends this object to the current directory SetDirectory(gDirectory)
+/// - appends this object to the current directory SetDirectory(gDirectory) if
+///   TH1::AddDirectoryStatus() is active.
 
 void TEfficiency::Build(const char* name,const char* title)
 {
@@ -3481,9 +3485,11 @@ void TEfficiency::SetConfidenceLevel(Double_t level)
 /// directory (if it exists) and a new reference to this TEfficiency object is
 /// added to the given directory.
 ///
-/// Notes: - If the given directory is 0, the TEfficiency object does not
-///         belong to any directory and will not be written to file during the
-///         next TFile::Write() command.
+/// Notes:
+///  - If the given directory is nullptr, the TEfficiency object does not
+///    belong to any directory and will not be written to file during the
+///    next TFile::Write() command. This also means that the user has ownership
+///    of this object.
 
 void TEfficiency::SetDirectory(TDirectory* dir)
 {
