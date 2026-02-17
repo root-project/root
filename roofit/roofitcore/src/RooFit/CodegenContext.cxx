@@ -164,30 +164,31 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
    std::string idx = "loopIdx" + std::to_string(loopLevel);
 
    std::vector<TNamed const *> vars;
-   // set the results of the vector observables
+
+   // Set the results of the vector observables.
+   // TODO: we are using the size of the first loop variable to the the number
+   // of iterations, but it should be made sure that all loop vars are either
+   // scalar or have the same size.
+   int firstObsIdx = -1;
    for (auto const &it : _vecObsIndices) {
       if (!in->dependsOn(it.first))
          continue;
 
       vars.push_back(it.first);
-      _nodeNames[it.first] = "obs[" + std::to_string(it.second) + " + " + idx + "]";
+      _nodeNames[it.first] = "obs[static_cast<int>(obs[" + std::to_string(2 * it.second) + "]) + " + idx + "]";
+      if (firstObsIdx == -1) {
+         firstObsIdx = it.second;
+      }
    }
 
-   // TODO: we are using the size of the first loop variable to the the number
-   // of iterations, but it should be made sure that all loop vars are either
-   // scalar or have the same size.
-   std::size_t numEntries = 1;
-   for (auto &it : vars) {
-      std::size_t n = outputSize(it);
-      if (n > 1 && numEntries > 1 && n != numEntries) {
-         throw std::runtime_error("Trying to loop over variables with different sizes!");
-      }
-      numEntries = std::max(n, numEntries);
+   if (firstObsIdx == -1) {
+      throw std::runtime_error("Trying to loop over variables that are not observables!");
    }
 
    // Make sure that the name of this variable doesn't clash with other stuff
    addToCodeBody(in, "#pragma clad checkpoint loop\n");
-   addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
+   addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < obs[" + std::to_string(2 * firstObsIdx + 1) + "]; " + idx +
+                        "++) {\n");
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
 }
@@ -313,7 +314,7 @@ void CodegenContext::popScope()
 
 bool CodegenContext::isScopeIndependent(RooAbsArg const *in) const
 {
-   return !in->isReducerNode() && outputSize(in->namePtr()) == 1;
+   return !in->isReducerNode() && _dependsOnData.find(in) == _dependsOnData.end();
 }
 
 /// @brief Register a function that is only know to the interpreter to the context.
@@ -327,11 +328,11 @@ void CodegenContext::collectFunction(std::string const &name)
 /// @param returnExpr The string representation of what the squashed function should return, usually the head node.
 /// @return The name of the declared function.
 std::string
-CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes)
+CodegenContext::buildFunction(RooAbsArg const &arg, std::unordered_set<RooFit::Detail::DataKey> const &dependsOnData)
 {
    CodegenContext ctx;
    ctx.pushScope(); // push our global scope.
-   ctx._nodeOutputSizes = outputSizes;
+   ctx._dependsOnData = dependsOnData;
    ctx._vecObsIndices = _vecObsIndices;
    // We only want to take over parameters and observables
    for (auto const &item : _nodeNames) {
