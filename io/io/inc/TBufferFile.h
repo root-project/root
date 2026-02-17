@@ -102,6 +102,7 @@ public:
 
    void      *ReadObjectAny(const TClass* cast) override;
    void       SkipObjectAny() override;
+   void       SkipObjectAny(Long64_t start, UInt_t bytecount) override;
 
    void       IncrementLevel(TVirtualStreamerInfo* info) override;
    void       SetStreamerElementNumber(TStreamerElement*,Int_t) override {}

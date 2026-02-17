@@ -135,6 +135,7 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast) = 0;
    virtual void       SkipObjectAny() = 0;
+   virtual void       SkipObjectAny(Long64_t start, UInt_t bytecount) = 0;
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo* info) = 0;
    virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;
