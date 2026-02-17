@@ -192,6 +192,8 @@ As part of this migration, the following build options are deprecated. From ROOT
 
 ## RooFit
 
+- A new RooAbsPdf has been added: `RooStudentT`, which describes the location-scale student's t-distribution.
+
 ## RDataFrame
 
 - The message shown in ROOT 6.38 to inform users about change of default compression setting used by Snapshot (was 101 before 6.38, became 505 in 6.38) is now removed.

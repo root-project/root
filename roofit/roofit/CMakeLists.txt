@@ -70,6 +70,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooPyBind.h
     RooSpline.h
     RooStepFunction.h
+    RooStudentT.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
     RooTMathReg.h
@@ -134,6 +135,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooPolynomial.cxx
     src/RooSpline.cxx
     src/RooStepFunction.cxx
+    src/RooStudentT.cxx
     src/RooTFnBinding.cxx
     src/RooTFnPdfBinding.cxx
     src/RooTMathReg.cxx
