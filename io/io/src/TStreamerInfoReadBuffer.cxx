@@ -1279,7 +1279,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      // and the collection is always empty,
                      // So let's skip the rest (which requires the StreamerInfo of the valueClass ... which we do not have)
 
-                     b.SetBufferOffset(start+count+sizeof(UInt_t));
+                     b.SkipObjectAny(start, count);
                      continue;
                   }
 
