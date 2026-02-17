@@ -96,12 +96,6 @@ class TTreeCloner {
    UInt_t FillCache(UInt_t from);
    void RestoreCache();
 
-private:
-   TTreeCloner(const TTreeCloner&) = delete;
-   TTreeCloner &operator=(const TTreeCloner&) = delete;
-
-   TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Option_t *method, UInt_t options = EClonerOptions::kNone);
-
 public:
    enum EClonerOptions {
 // clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
@@ -118,8 +112,16 @@ public:
       kNoFileCache = BIT(3)
    };
 
-   TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = EClonerOptions::kNone);
-   TTreeCloner(TTree *from, TDirectory *newdirectory, Option_t *method, UInt_t options = EClonerOptions::kNone);
+private:
+   TTreeCloner(const TTreeCloner&) = delete;
+   TTreeCloner &operator=(const TTreeCloner&) = delete;
+
+   TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);
+
+public:
+
+   TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
+   TTreeCloner(TTree *from, TDirectory *newdirectory, Option_t *method, UInt_t options = kNone);
    virtual ~TTreeCloner();
 
    void   CloseOutWriteBaskets();
