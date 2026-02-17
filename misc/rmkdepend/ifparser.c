@@ -94,7 +94,9 @@ static const char *parse_number(IfParser *g, const char *cp, long *valp)
    if (!isdigit(*cp))
       return CALLFUNC(g, handle_error)(g, cp, "number");
 
-   *valp = strtol(cp, &cp, 0);
+   char *endp;
+   *valp = strtol(cp, &endp, 0);
+   cp = endp;
    /* skip trailing qualifiers */
    while (*cp == 'U' || *cp == 'u' || *cp == 'L' || *cp == 'l') cp++;
 #if 0
