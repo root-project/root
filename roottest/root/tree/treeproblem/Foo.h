@@ -8,6 +8,10 @@
 #ifndef TREEPROBLEM_Foo
 #define TREEPROBLEM_Foo
 
+#ifdef __ROOTCLING__
+#pragma link C++ class Foo+;
+#endif
+
 #include "TObject.h"
 
 class Foo : public TObject

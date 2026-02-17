@@ -1,5 +1,11 @@
 ROOTTEST_ADD_TESTDIRS()
 
+# Issue #5174
+ROOTTEST_ADD_TEST(noClassSelected
+                  COMMAND ${ROOT_rootcling_CMD} -f root_5174.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/root_5174.h
+                  PASSRC 1
+                  ERRREF noClassSelected.eref)
+
 # issue #13543
 ROOTTEST_GENERATE_DICTIONARY(xmlusedByRootclingDict
                              Classy.h

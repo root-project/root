@@ -1760,59 +1760,6 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
-                     std::string &code_for_parser)
-{
-   code_for_parser += "#ifdef __CLING__\n\n";
-   code_for_parser += "#pragma link off all globals;\n";
-   code_for_parser += "#pragma link off all classes;\n";
-   code_for_parser += "#pragma link off all functions;\n\n";
-
-   for (std::string& arg : InputFiles) {
-      char trail[3];
-      int nostr = 0, noinp = 0, bcnt = 0, l = arg.length() - 1;
-      for (int j = 0; j < 3; j++) {
-         if (arg[l] == '-') {
-            arg[l] = '\0';
-            nostr = 1;
-            l--;
-         }
-         if (arg[l] == '!') {
-            arg[l] = '\0';
-            noinp = 1;
-            l--;
-         }
-         if (arg[l] == '+') {
-            arg[l] = '\0';
-            bcnt = 1;
-            l--;
-         }
-      }
-      if (nostr || noinp) {
-         trail[0] = 0;
-         if (nostr) strlcat(trail, "-", 3);
-         if (noinp) strlcat(trail, "!", 3);
-      }
-      if (bcnt) {
-         strlcpy(trail, "+", 3);
-         if (nostr)
-            ROOT::TMetaUtils::Error(nullptr, "option + mutual exclusive with -\n");
-      }
-      llvm::SmallString<256> filestem = llvm::sys::path::filename(arg);
-      llvm::sys::path::replace_extension(filestem, "");
-
-      code_for_parser += "#pragma link C++ class ";
-      code_for_parser += filestem.str().str();
-      if (nostr || noinp || bcnt)
-         code_for_parser += trail;
-      code_for_parser += ";\n";
-   }
-
-   code_for_parser += "\n#endif\n";
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Find file name in path specified via -I statements to Cling.
 /// Return false if the file can not be found.
 /// If the file is found, set pname to the full path name and return true.
@@ -4563,11 +4510,6 @@ int RootClingMain(int argc,
       return 1;
    }
 
-   if (linkdef.empty()) {
-      // Generate autolinkdef
-      GenerateLinkdef(gOptDictionaryHeaderFiles, interpPragmaSource);
-   }
-
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    string main_dictname(gOptDictionaryFileName.getValue());
@@ -4717,6 +4659,12 @@ int RootClingMain(int argc,
    // Speed up the operations with rules
    selectionRules.FillCache();
    selectionRules.Optimize();
+
+   // Addresses ROOT-5174
+   if (gBuildingROOT? 0 : 2 >= selectionRules.Size() && !gOptCxxModule && !isGenreflex) {
+      ROOT::TMetaUtils::Error(nullptr, "No selection rules specified and creation of C++ module not requested: did you forget to specify a selection file or to request the creation of a C++ module?\n");
+      return 1;
+   }
 
    if (isGenreflex){
       if (0 != selectionRules.CheckDuplicates()){

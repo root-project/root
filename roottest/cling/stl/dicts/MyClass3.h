@@ -1,6 +1,10 @@
 #ifndef MYCLASS_H
 #define MYCLASS_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class MyClass3+;
+#endif
+
 #include <vector>
 
 #include "Rtypes.h"

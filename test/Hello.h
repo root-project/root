@@ -18,6 +18,10 @@
 #ifndef HELLO_H
 #define HELLO_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class Hello+;
+#endif
+
 #include <TTimer.h>
 #include <TCanvas.h>
 #include <TText.h>

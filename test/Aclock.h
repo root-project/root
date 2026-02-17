@@ -15,6 +15,10 @@
 #ifndef ACLOCK_H
 #define ACLOCK_H
 
+#ifdef __ROOTCLING__
+#pragma link C++ class Aclock+;
+#endif
+
 #include <TTimer.h>
 #include <TCanvas.h>
 #include <TPolyLine.h>
