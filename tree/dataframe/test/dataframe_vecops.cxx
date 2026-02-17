@@ -83,7 +83,9 @@ void MakeTreeWithBools(const std::string &treename, const std::string &fname)
    var_arr[1] = false;
    arr[0] = true;
    arr[1] = false;
-   vec = {true, false};
+   vec.resize(n);
+   vec[0] = true;
+   vec[1] = false;
    t.Fill();
 
    n = 1000;
