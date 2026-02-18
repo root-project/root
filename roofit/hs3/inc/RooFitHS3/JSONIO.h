@@ -76,18 +76,10 @@ using ExportMap = std::map<TClass const *, std::vector<std::unique_ptr<const Exp
 using ExportKeysMap = std::map<TClass const *, ExportKeys>;
 using ImportExpressionMap = std::map<const std::string, ImportExpression>;
 
-void setupKeys();
 ImportMap &importers();
 ExportMap &exporters();
 ImportExpressionMap &importExpressions();
 ExportKeysMap &exportKeys();
-
-struct ExporterLoader {
-   std::map<std::string, std::unique_ptr<const Exporter>> top;
-   std::map<std::string, std::unique_ptr<const Exporter>> bottom;
-   void load();
-};
-ExporterLoader &loader();
 
 template <class T>
 static bool registerImporter(const std::string &key, bool topPriority = true)
