@@ -23,7 +23,7 @@ public:
    void Fill(unsigned long seed) {
       T obj;
       for(size_t i = 0; i < seed; ++i) {
-         obj.SetName(TString::Format("name%zu_%lu",i,seed));
+         obj.SetName(TString::Format("name%zu_%lu", i, seed));
          obj.fId = i;
          fValues.push_back(obj);
       }
@@ -43,7 +43,7 @@ public:
    void Fill(unsigned long seed) {
       Content obj;
       for(size_t i = 0; i < seed; ++i) {
-         obj.SetName(TString::Format("name%zu_%lu",i,seed));
+         obj.SetName(TString::Format("name%zu_%lu", i, seed));
          obj.fId = i;
          fValues.push_back(obj);
       }
