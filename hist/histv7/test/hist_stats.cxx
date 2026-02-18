@@ -98,6 +98,10 @@ TEST(RHistStats, DisableDimension)
    stats.Fill(4, 5, 6, RWeight(1));
 
    EXPECT_EQ(stats.GetNEntries(), 4);
+   EXPECT_THROW(stats.ComputeMean(1), std::invalid_argument);
+   EXPECT_THROW(stats.ComputeVariance(1), std::invalid_argument);
+   EXPECT_THROW(stats.ComputeSkewness(1), std::invalid_argument);
+   EXPECT_THROW(stats.ComputeKurtosis(1), std::invalid_argument);
 }
 
 TEST(RHistStats, Add)
