@@ -92,6 +92,18 @@ ROOTTEST_ADD_TEST(NameCyclesRootls2
                   OUTREF MultipleNameCyclesRootls2.ref
                   ENVIRONMENT ${test_env})
 
+ROOTTEST_ADD_TEST(NameCyclesRootls3
+                  # You might wonder, dear reader, why am I putting exactly 19 backslashes before the semicolon.
+                  # It does look funny and arbitrary, but empyrical tests have proven that any fewer than that will
+                  # cause CMake to split the string into multiple arguments, which breaks the test.
+                  # Quoting in any form doesn't seem to work either, but this, for some reason, does.
+                  # Let's therefore keep this here as a precious little mystery in the otherwise deterministic
+                  # world of programming and as a prayer to Ba'Al the Soul-Eater: may he watch over our code for many
+                  # decades to come. https://xkcd.com/1638/
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -c multipleNameCycles.root:tree\\\\\\\\\\\\\\\\\\\;2
+                  OUTREF MultipleNameCyclesRootls3.ref
+                  ENVIRONMENT ${test_env})
+
 ROOTTEST_ADD_TEST(RecursiveRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -lr subdirs.root
                   OUTREF RecursiveRootls.ref
