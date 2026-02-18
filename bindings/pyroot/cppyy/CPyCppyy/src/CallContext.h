@@ -69,7 +69,6 @@ struct CallContext {
         kUseHeuristics               = 0x000100, // if method applies heuristics memory policy
         kImplicitSmartPtrConversion  = 0x000200, // enable implicit conversion to smart pointers
         kReleaseGIL                  = 0x000400, // if method should release the GIL
-        kUseStrict                   = 0x000600, // if method applies strict memory policy
         kSetLifeLine                 = 0x000800, // if return value is part of 'this'
         kNeverLifeLine               = 0x001000, // if the return value is never part of 'this'
         kPyException                 = 0x002000, // Python exception during method execution
@@ -77,6 +76,7 @@ struct CallContext {
         kProtected                   = 0x008000, // if method should return on signals
         kUseFFI                      = 0x010000, // not implemented
         kIsPseudoFunc                = 0x020000, // internal, used for introspection
+        kUseStrict                   = 0x040000, // if method applies strict memory policy
     };
 
 // memory handling
