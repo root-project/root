@@ -1076,7 +1076,6 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 
    auto &collectionNode = (*_rootnodeOutput)[dynamic_cast<RooAbsPdf const *>(&func) ? "distributions" : "functions"];
 
-   RooFit::JSONIO::loader().load();
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
 
