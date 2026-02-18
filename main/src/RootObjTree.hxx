@@ -106,6 +106,7 @@ enum EGetMatchingPathsFlags {
    /// Recurse into subdirectories when matching objects
    kRecursive = 1 << 0,
    kIgnoreFailedMatches = 1 << 1,
+   kOpenFilesAsWritable = 1 << 2,
 };
 
 /// Given a file and a "path pattern", returns a RootSource containing the tree of matched objects.
