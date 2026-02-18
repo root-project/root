@@ -240,7 +240,7 @@ public:
    double ComputeMean(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -266,7 +266,7 @@ public:
    double ComputeVariance(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -310,7 +310,7 @@ public:
    double ComputeSkewness(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -347,7 +347,7 @@ public:
    double ComputeKurtosis(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
