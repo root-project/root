@@ -29,8 +29,6 @@ Classes for describing the input data for fitting
 #include <algorithm>
 #include <vector>
 #include <cassert>
-#include <iostream>
-
 
 namespace ROOT {
 
