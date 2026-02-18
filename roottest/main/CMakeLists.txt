@@ -126,8 +126,6 @@ ROOTTEST_ADD_TEST(RootlsRNTuple
 
 #########################################################################
 
-if(pyroot)
-
 ROOTTEST_ADD_TEST(ROOT_8197
                   MACRO ROOT_8197.C
                   OUTREF ROOT_8197.ref
@@ -163,7 +161,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
                   FIXTURES_SETUP main-SimpleRootrm1PrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(SimpleRootrm1
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} victim1.root:hpx
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} victim1.root:hpx
                   FIXTURES_REQUIRED main-SimpleRootrm1PrepareInput-fixture
                   FIXTURES_SETUP main-SimpleRootrm1-fixture)
 
@@ -175,7 +173,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm1CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm1Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r victim1.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r victim1.root
                   FIXTURES_REQUIRED main-SimpleRootrm1CheckOutput-fixture)
 
 
@@ -185,7 +183,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm2PrepareInput
                   FIXTURES_SETUP main-SimpleRootrm2PrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(SimpleRootrm2
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} victim2.root:hp*
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} victim2.root:hp*
                   FIXTURES_REQUIRED main-SimpleRootrm2PrepareInput-fixture
                   FIXTURES_SETUP main-SimpleRootrm2-fixture)
 
@@ -197,7 +195,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm2CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm2Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r victim2.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r victim2.root
                   FIXTURES_REQUIRED main-SimpleRootrm2CheckOutput-fixture)
 
 
@@ -207,7 +205,7 @@ ROOTTEST_ADD_TEST(SimpleRootrm3PrepareInput
                   FIXTURES_SETUP main-SimpleRootrm3PrepareInput-fixture)
 
 ROOTTEST_ADD_TEST(SimpleRootrm3
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r victim3.root:tof/plane0
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r victim3.root:tof/plane0
                   FIXTURES_REQUIRED main-SimpleRootrm3PrepareInput-fixture
                   FIXTURES_SETUP main-SimpleRootrm3-fixture)
 
@@ -219,9 +217,11 @@ ROOTTEST_ADD_TEST(SimpleRootrm3CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootrm3Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r victim3.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r victim3.root
                   FIXTURES_REQUIRED main-SimpleRootrm3CheckOutput-fixture)
 #########################################################################
+
+if(pyroot)
 
 ############################# ROOMKDIR TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
@@ -241,7 +241,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r target1.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r target1.root
                   FIXTURES_REQUIRED main-SimpleRootmkdir1CheckOutput-fixture)
 
 
@@ -263,7 +263,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r target2.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r target2.root
                   FIXTURES_REQUIRED main-SimpleRootmkdir2CheckOutput-fixture)
 
 
@@ -285,7 +285,7 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r target3.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r target3.root
                   FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
 #########################################################################
 
@@ -307,7 +307,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp1CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp1Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy1.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy1.root
                   FIXTURES_REQUIRED main-SimpleRootcp1CheckOutput-fixture)
 
 
@@ -329,7 +329,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp2CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp2Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy2.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy2.root
                   FIXTURES_REQUIRED main-SimpleRootcp2CheckOutput-fixture)
 
 
@@ -351,7 +351,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp3CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp3Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy3.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy3.root
                   FIXTURES_REQUIRED main-SimpleRootcp3CheckOutput-fixture)
 
 
@@ -372,7 +372,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp4CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp4Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy4.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy4.root
                   FIXTURES_REQUIRED main-SimpleRootcp4CheckOutput-fixture)
 
 
@@ -394,7 +394,7 @@ ROOTTEST_ADD_TEST(SimpleRootcp5CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootcp5Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy5.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy5.root
                   FIXTURES_REQUIRED main-SimpleRootcp5CheckOutput-fixture)
 
 ROOTTEST_ADD_TEST(RootcpReplaceRecursivePrepareInput
@@ -420,7 +420,7 @@ ROOTTEST_ADD_TEST(RootcpReplaceRecursiveCheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(RootcpReplaceRecursiveClean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_replace_recursive.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy_replace_recursive.root
                   FIXTURES_REQUIRED main-RootcpReplaceRecursiveCheckOutput-fixture)
 
 
@@ -445,7 +445,7 @@ ROOTTEST_ADD_TEST(RootcpReplaceEntireFileCheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(RootcpReplaceEntireFileClean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_repl.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy_repl.root
                   FIXTURES_REQUIRED main-RootcpReplaceEntireFileCheckOutput-fixture)
 
 if(davix)
@@ -461,7 +461,7 @@ ROOTTEST_ADD_TEST(RootcpReadRemoteCheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(RootcpReadRemoteClean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r copy_remote.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r copy_remote.root
                   FIXTURES_REQUIRED main-RootcpReadRemoteCheckOutput-fixture)
 endif()
 
@@ -485,7 +485,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv1CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv1Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move1.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r move1.root
                   FIXTURES_REQUIRED main-SimpleRootmv1CheckOutput-fixture)
 
 
@@ -507,7 +507,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv2CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv2Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move2.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r move2.root
                   FIXTURES_REQUIRED main-SimpleRootmv2CheckOutput-fixture)
 
 
@@ -529,7 +529,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv3CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv3Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move3.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r move3.root
                   FIXTURES_REQUIRED main-SimpleRootmv3CheckOutput-fixture)
 
 
@@ -550,7 +550,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv4CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv4Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move4.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r move4.root
                   FIXTURES_REQUIRED main-SimpleRootmv4CheckOutput-fixture)
 
 
@@ -571,7 +571,7 @@ ROOTTEST_ADD_TEST(SimpleRootmv5CheckOutput
                   ENVIRONMENT ${test_env})
 
 ROOTTEST_ADD_TEST(SimpleRootmv5Clean
-                  COMMAND ${PY_TOOLS_PREFIX}/rootrm${pyext} -r move5.root
+                  COMMAND ${TOOLS_PREFIX}/rootrm_cxx${pyext} -r move5.root
                   FIXTURES_REQUIRED main-SimpleRootmv5CheckOutput-fixture)
 
 
