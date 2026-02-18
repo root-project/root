@@ -45,6 +45,10 @@ else()
   set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION} )
 endif()
 
+if (NOT DEFINED ROOT_root_CMD)
+  set(ROOT_root_CMD $<TARGET_FILE:root.exe>)
+endif()
+
 include(CMakeParseArguments)
 
 #---------------------------------------------------------------------------------------------------
