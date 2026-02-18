@@ -78,7 +78,7 @@ protected:
     value_type fData[sz];
 
 public:
-    static const size_t size() { return sz; }
+    static size_t size() { return sz; }
     value_type& operator[](ptrdiff_t i) { return fData[i]; }
 };
 
