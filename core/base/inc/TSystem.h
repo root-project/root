@@ -276,7 +276,17 @@ public:
 class TSystem : public TNamed {
 
 public:
-   enum EAclicMode { kDefault, kDebug, kOpt };
+   enum EAclicMode {
+// clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kDefault,
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
+      kDebug, kOpt };
    enum EAclicProperties {
       kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created sub-directories
    };

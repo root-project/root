@@ -47,7 +47,15 @@ protected :
    virtual const TMatrixDBase &GetDecompMatrix() const = 0;
 
    enum EMatrixDecompStat {
+// clang++ <v20 (-Wshadow) complains about shadowing Getline.h global enum EGetLineMode. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
       kInit       = BIT(14),
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
       kPatternSet = BIT(15),
       kValuesSet  = BIT(16),
       kMatrixSet  = BIT(17),

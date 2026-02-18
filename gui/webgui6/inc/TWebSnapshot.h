@@ -31,7 +31,15 @@ protected:
 public:
 
    enum {
-     kNone = 0,        ///< dummy
+// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
+      kNone = 0,        ///< dummy
+#if defined(__clang__) && __clang_major__ < 20
+#pragma clang diagnostic pop
+#endif
      kObject = 1,      ///< object itself
      kSVG = 2,         ///< list of SVG primitives
      kSubPad = 3,      ///< subpad
