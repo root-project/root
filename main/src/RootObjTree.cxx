@@ -77,7 +77,11 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
          // where pattern filtering applies.
          // In all other cases, we check if the key name matches the pattern and skip it if it doesn't.
          if (cur->fNesting < patternSplits.size()) {
-            if (MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
+            const auto &patternSplit = patternSplits[cur->fNesting];
+            const bool hasCycle = patternSplit.rfind(';') != std::string_view::npos;
+            const auto nameCycle =
+               std::string(key->GetName()) + (hasCycle ? ';' + std::to_string(key->GetCycle()) : "");
+            if (MatchesGlob(nameCycle, patternSplits[cur->fNesting]))
                patternWasMatchedAtLeastOnce[cur->fNesting] = true;
             else
                continue;
