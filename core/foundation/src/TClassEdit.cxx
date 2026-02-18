@@ -1598,16 +1598,16 @@ static void ResolveTypedefImpl(const char *tname,
    }
    // In Windows, we might have 'class const ...' as name,
    // (never 'const class ...'), so skip the leading 'class ', if any
-   if (strncmp(tname+cursor,"class ",6) == 0) {
+   if (cursor < len && strncmp(tname+cursor,"class ",6) == 0) {
       cursor += 6;
    }
-   if (strncmp(tname+cursor,"const ",6) == 0) {
+   if (cursor < len && strncmp(tname+cursor,"const ",6) == 0) {
       cursor += 6;
       if (modified) result += "const ";
       constprefix = true;
    }
 
-   if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
+   if (len > 2 && cursor < len && strncmp(tname+cursor,"::",2) == 0) {
       cursor += 2;
    }
 
@@ -1754,7 +1754,7 @@ static void ResolveTypedefImpl(const char *tname,
             while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
+            if (next < len && strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
             {
                // A first const after the type needs to be move in the front.
                if (!modified) {
@@ -1790,7 +1790,7 @@ static void ResolveTypedefImpl(const char *tname,
             if (tname[cursor] != ' ') end_of_type = cursor;
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0) {
+            if (next < len && strncmp(tname+next,"const",5) == 0) {
                if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   next += 5;
                }
@@ -1799,7 +1799,7 @@ static void ResolveTypedefImpl(const char *tname,
                    (tname[next] == ' ' || tname[next] == '*' || tname[next] == '&')) {
                ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
-               if (strncmp(tname+next,"const",5) == 0) {
+               if (next < len && strncmp(tname+next,"const",5) == 0) {
                   if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>'|| tname[next+5] == ')' || tname[next+5] == '[') {
                      next += 5;
                   }
