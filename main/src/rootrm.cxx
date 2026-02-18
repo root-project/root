@@ -146,11 +146,15 @@ static void RemoveNode(const RootSource &src, NodeIdx_t nodeIdx, const RootRmArg
          // delete the entire file.
          src.fObjectTree.fFile->Close();
          gSystem->Unlink(src.fFileName.c_str());
-      } else if (node.fDir) {
-         // delete the entire directory
-         node.fDir->GetMotherDir()->Delete((node.fName + ";*").c_str());
       } else {
-         // delete a single object
+         if (node.fDir) {
+            // Reset the kIsDirectoryFile bit to allow deleting the directory key (normally not allowed).
+            // Two considerations:
+            // 1. we need to use BIT(14) because TKey::kIsDirectoryFile is private;
+            // 2. this is safe to do because we're not gonna read the directory anymore until the end of the program,
+            //    so we can circumvent the safety measure imposed by TKey for directories.
+            node.fKey->ResetBit(BIT(14));
+         }
          Option_t *opt = GetLogVerbosity() > 2 ? "v" : "";
          node.fKey->Delete(opt);
       }
