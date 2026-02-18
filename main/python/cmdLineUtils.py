@@ -1177,33 +1177,3 @@ def rootPrint(
 
 # End of ROOTPRINT
 ##########
-
-##########
-# ROOTRM
-
-
-def _removeObjects(fileName, pathSplitList, interactive=False, recursive=False):
-    retcode = 0
-    rootFile = openROOTFile(fileName, "update")
-    if not rootFile:
-        return 1
-    for pathSplit in pathSplitList:
-        retcode += deleteRootObject(rootFile, pathSplit, interactive, recursive)
-    rootFile.Close()
-    return retcode
-
-
-def rootRm(sourceList, interactive=False, recursive=False):
-    # Check arguments
-    if sourceList == []:
-        return 1
-
-    # Loop on the root files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _removeObjects(fileName, pathSplitList, interactive, recursive)
-    return retcode
-
-
-# End of ROOTRM
-##########
