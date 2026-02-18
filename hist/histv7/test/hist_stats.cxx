@@ -104,6 +104,32 @@ TEST(RHistStats, DisableDimension)
    EXPECT_THROW(stats.ComputeKurtosis(1), std::invalid_argument);
 }
 
+TEST(RHistStats, Taint)
+{
+   RHistStats stats(1);
+   stats.Taint();
+   EXPECT_TRUE(stats.IsTainted());
+
+   // Modifications are still possible.
+   stats.Add(stats);
+   stats.Fill(1);
+   stats.Scale(2.0);
+
+   // Any read access will throw.
+   EXPECT_THROW(stats.GetNEntries(), std::logic_error);
+   EXPECT_THROW(stats.GetSumW(), std::logic_error);
+   EXPECT_THROW(stats.GetSumW2(), std::logic_error);
+   EXPECT_THROW(stats.GetDimensionStats(), std::logic_error);
+   EXPECT_THROW(stats.ComputeMean(), std::logic_error);
+   EXPECT_THROW(stats.ComputeVariance(), std::logic_error);
+   EXPECT_THROW(stats.ComputeSkewness(), std::logic_error);
+   EXPECT_THROW(stats.ComputeKurtosis(), std::logic_error);
+
+   // Clear resets the object, including its taint status.
+   stats.Clear();
+   EXPECT_NO_THROW(stats.GetNEntries());
+}
+
 TEST(RHistStats, Add)
 {
    RHistStats statsA(3);
