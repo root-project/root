@@ -221,74 +221,6 @@ ROOTTEST_ADD_TEST(SimpleRootrm3Clean
                   FIXTURES_REQUIRED main-SimpleRootrm3CheckOutput-fixture)
 #########################################################################
 
-if(pyroot)
-
-############################# ROOMKDIR TESTS ############################
-ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target1.root
-                  FIXTURES_SETUP main-SimpleRootmkdir1PrepareInput-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir1
-                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} target1.root:new_directory
-                  FIXTURES_REQUIRED main-SimpleRootmkdir1PrepareInput-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir1-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target1.root
-                  OUTREF SimpleRootmkdir.ref
-                  FIXTURES_REQUIRED main-SimpleRootmkdir1-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir1CheckOutput-fixture
-                  ENVIRONMENT ${test_env})
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
-                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target1.root
-                  FIXTURES_REQUIRED main-SimpleRootmkdir1CheckOutput-fixture)
-
-
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir2PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target2.root
-                  FIXTURES_SETUP main-SimpleRootmkdir2PrepareInput-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir2
-                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} target2.root:dir1 target2.root:dir2
-                  FIXTURES_REQUIRED main-SimpleRootmkdir2PrepareInput-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir2-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target2.root
-                  OUTREF SimpleRootmkdir2.ref
-                  FIXTURES_REQUIRED main-SimpleRootmkdir2-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir2CheckOutput-fixture
-                  ENVIRONMENT ${test_env})
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
-                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target2.root
-                  FIXTURES_REQUIRED main-SimpleRootmkdir2CheckOutput-fixture)
-
-
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir3PrepareInput
-                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target3.root
-                  FIXTURES_SETUP main-SimpleRootmkdir3PrepareInput-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir3
-                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} -p target3.root:aa/bb/cc
-                  FIXTURES_REQUIRED main-SimpleRootmkdir3PrepareInput-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir3-fixture)
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target3.root:aa/bb
-                  OUTREF SimpleRootmkdir3.ref
-                  FIXTURES_REQUIRED main-SimpleRootmkdir3-fixture
-                  FIXTURES_SETUP main-SimpleRootmkdir3CheckOutput-fixture
-                  ENVIRONMENT ${test_env})
-
-ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
-                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target3.root
-                  FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
-#########################################################################
-
 ############################# ROOTCP TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootcp1PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root copy1.root
@@ -465,6 +397,74 @@ ROOTTEST_ADD_TEST(RootcpReadRemoteClean
                   FIXTURES_REQUIRED main-RootcpReadRemoteCheckOutput-fixture)
 endif()
 
+#########################################################################
+
+if(pyroot)
+
+############################# ROOMKDIR TESTS ############################
+ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target1.root
+                  FIXTURES_SETUP main-SimpleRootmkdir1PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir1
+                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} target1.root:new_directory
+                  FIXTURES_REQUIRED main-SimpleRootmkdir1PrepareInput-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir1-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target1.root
+                  OUTREF SimpleRootmkdir.ref
+                  FIXTURES_REQUIRED main-SimpleRootmkdir1-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir1CheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir1Clean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target1.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir1CheckOutput-fixture)
+
+
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir2PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target2.root
+                  FIXTURES_SETUP main-SimpleRootmkdir2PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir2
+                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} target2.root:dir1 target2.root:dir2
+                  FIXTURES_REQUIRED main-SimpleRootmkdir2PrepareInput-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir2-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target2.root
+                  OUTREF SimpleRootmkdir2.ref
+                  FIXTURES_REQUIRED main-SimpleRootmkdir2-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir2CheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir2Clean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target2.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir2CheckOutput-fixture)
+
+
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir3PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root target3.root
+                  FIXTURES_SETUP main-SimpleRootmkdir3PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir3
+                  COMMAND ${PY_TOOLS_PREFIX}/rootmkdir${pyext} -p target3.root:aa/bb/cc
+                  FIXTURES_REQUIRED main-SimpleRootmkdir3PrepareInput-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir3-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target3.root:aa/bb
+                  OUTREF SimpleRootmkdir3.ref
+                  FIXTURES_REQUIRED main-SimpleRootmkdir3-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir3CheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target3.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
 #########################################################################
 
 ############################# ROOMV TESTS ############################
