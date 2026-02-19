@@ -31,6 +31,16 @@ void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
    auto nums = ctx.at(_pdf);
    auto integralSpan = ctx.at(_normIntegral);
 
+   if (ctx.config(this).takeLog()) {
+      auto output = ctx.output();
+      for (std::size_t i = 0; i < output.size(); ++i) {
+         double num = nums.size() > 1 ? nums[i] : nums[0];
+         double den = integralSpan.size() > 1 ? integralSpan[i] : integralSpan[0];
+         output[i] = num - den;
+      }
+      return;
+   }
+
    // We use the extraArgs as output parameter to count evaluation errors.
    std::array<double, 3> extraArgs{0.0, 0.0, 0.0};
 
