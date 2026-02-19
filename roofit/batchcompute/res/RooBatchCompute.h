@@ -64,9 +64,13 @@ public:
    void setNThreads(int nThreads) { _nThreads = nThreads; }
    int nThreads() const { return _nThreads; }
 
+   bool takeLog() const { return _takeLog; }
+   void setTakeLog(bool takeLog) { _takeLog = takeLog; }
+
 private:
    CudaInterface::CudaStream *_cudaStream = nullptr;
    int _nThreads = 1;
+   bool _takeLog = false;
 };
 
 enum class Architecture {
@@ -97,6 +101,7 @@ enum Computer {
    Gamma,
    GaussModelExpBasis,
    Gaussian,
+   LogGaussian,
    Identity,
    Johnson,
    Landau,
