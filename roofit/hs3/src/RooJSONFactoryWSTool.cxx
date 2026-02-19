@@ -1234,16 +1234,18 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    auto it = importers.find(functype);
    bool ok = false;
    if (it != importers.end()) {
-     for (auto &imp : it->second) {
-       try {
-	 ok = imp->importArg(this, p);
-       } catch (const std::exception& e) {
-	 std::stringstream ss;
-	 ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*imp).name() << " emitted and error: " << e.what() << std::endl;
-	 RooJSONFactoryWSTool::error(ss.str());
-       } 
-       if (ok) break;
-     }
+      for (auto &imp : it->second) {
+         try {
+            ok = imp->importArg(this, p);
+         } catch (const std::exception &e) {
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*imp).name()
+               << " emitted and error: " << e.what() << std::endl;
+            RooJSONFactoryWSTool::error(ss.str());
+         }
+         if (ok)
+            break;
+      }
    }
    if (!ok) { // generic import using the factory expressions
       auto expr = factoryExpressions.find(functype);
