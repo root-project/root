@@ -1,5 +1,8 @@
 #include "hist_test.hxx"
 
+#include <cstdint>
+#include <iterator>
+#include <random>
 #include <tuple>
 #include <type_traits>
 #include <variant>
@@ -53,6 +56,31 @@ TEST(RHist, Constructor)
    EXPECT_EQ(hist.GetNDimensions(), 2);
    hist = RHist<int>(regularAxis, regularAxis, regularAxis);
    EXPECT_EQ(hist.GetNDimensions(), 3);
+}
+
+TEST(RHist, GetFullRange)
+{
+   static constexpr std::size_t Bins = 20;
+   RHist<double> hist(Bins, {0, Bins});
+
+   std::mt19937 gen;
+   std::uniform_real_distribution<double> distX(0, Bins);
+   std::uniform_real_distribution<double> distW(0.8, 1.2);
+   static constexpr std::uint64_t Entries = 1000;
+   for (std::uint64_t i = 0; i < Entries; i++) {
+      hist.Fill(distX(gen), RWeight(distW(gen)));
+   }
+   ASSERT_EQ(hist.GetNEntries(), Entries);
+
+   auto range = hist.GetFullRange();
+   EXPECT_EQ(std::distance(range.begin(), range.end()), Bins + 2);
+
+   double sumW = 0;
+   for (auto &&indices : range) {
+      sumW += hist.GetBinContent(indices);
+   }
+   // Numerical differences with EXPECT_DOUBLE_EQ
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW(), sumW);
 }
 
 TEST(RHist, Add)

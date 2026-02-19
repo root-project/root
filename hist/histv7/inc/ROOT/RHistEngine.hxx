@@ -241,6 +241,11 @@ public:
       return GetBinContent(indices);
    }
 
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiRange GetFullRange() const { return fAxes.GetFullRange(); }
+
    /// Add all bin contents of another histogram.
    ///
    /// Throws an exception if the axes configurations are not identical.

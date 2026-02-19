@@ -232,6 +232,11 @@ public:
       return fEngine.GetBinContent(args...);
    }
 
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiRange GetFullRange() const { return fEngine.GetFullRange(); }
+
    /// Add all bin contents and statistics of another histogram.
    ///
    /// Throws an exception if the axes configurations are not identical.
