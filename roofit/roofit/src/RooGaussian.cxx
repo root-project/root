@@ -61,10 +61,27 @@ double RooGaussian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gaussian distribution.
-void RooGaussian::doEval(RooFit::EvalContext & ctx) const
+void RooGaussian::doEval(RooFit::EvalContext &ctx) const
 {
-  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gaussian, ctx.output(),
-          {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
+   auto config = ctx.config(this);
+   if (config.takeLog()) {
+      auto output = ctx.output();
+      if (output.size() == 1) {
+         // If the ouput size is just one, which is common for constraints,
+         // calling into RooBatchCompute is not worth its overhead.
+         const double arg = ctx.at(x)[0] - ctx.at(mean)[0];
+         const double sig = ctx.at(sigma)[0];
+         output[0] = -0.5 * arg * arg / (sig * sig);
+      } else {
+         RooBatchCompute::compute(ctx.config(this), RooBatchCompute::LogGaussian, output,
+                                  {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
+      }
+      config.setTakeLog(false);
+      ctx.setConfig(this, config);
+      return;
+   }
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gaussian, ctx.output(),
+                            {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

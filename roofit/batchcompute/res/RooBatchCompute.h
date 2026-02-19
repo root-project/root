@@ -58,8 +58,12 @@ public:
    void setCudaStream(CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
    CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 
+   bool takeLog() const { return _takeLog; }
+   void setTakeLog(bool takeLog) { _takeLog = takeLog; }
+
 private:
    CudaInterface::CudaStream *_cudaStream = nullptr;
+   bool _takeLog = false;
 };
 
 enum class Architecture {
@@ -90,6 +94,7 @@ enum Computer {
    Gamma,
    GaussModelExpBasis,
    Gaussian,
+   LogGaussian,
    Identity,
    Johnson,
    Landau,

@@ -31,10 +31,12 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
 #include <RooAbsReal.h>
-#include <RooRealVar.h>
 #include <RooBatchCompute.h>
+#include <RooConstraintSum.h>
+#include <RooFit/Detail/RooNormalizedPdf.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
+#include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
 #include <RooBatchCompute.h>
@@ -220,6 +222,41 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
    syncDataTokens();
 
+   auto expectNClinets = [](RooAbsArg const &arg, std::size_t nClients) {
+      if (arg.clients().size() != nClients) {
+         std::stringstream ss;
+         ss << "RooFit::Evaluator: pdf \"" << arg.GetName()
+            << "\" is used both in the main likelihood and as a constraint!";
+         const std::string errorMsg = ss.str();
+         oocoutE(&arg, FastEvaluations) << errorMsg << std::endl;
+         throw std::runtime_error(errorMsg);
+      }
+   };
+
+   for (NodeInfo &info : _nodes) {
+      if (!dynamic_cast<RooConstraintSum const *>(info.absArg)) {
+         continue;
+      }
+      for (RooAbsArg *server : info.absArg->servers()) {
+         if (!dynamic_cast<RooAbsPdf const *>(server)) {
+            continue;
+         }
+         // Sanity check: pdfs that serve a RooConstraintSum should have no other clients
+         expectNClinets(*server, 1);
+         RooBatchCompute::Config cfg;
+         cfg.setTakeLog(true);
+         _evalContextCPU.setConfig(server, cfg);
+         if (auto normPdf = dynamic_cast<RooFit::Detail::RooNormalizedPdf const *>(server)) {
+            // If this is a normalized pdf, we also request the log of the pdf
+            // value and normalization integral
+            expectNClinets(normPdf->pdf(), 2); // two clients: the integral, and the RooNormalizedPdf
+            expectNClinets(normPdf->normIntegral(), 1);
+            _evalContextCPU.setConfig(&normPdf->pdf(), cfg);
+            _evalContextCPU.setConfig(&normPdf->normIntegral(), cfg);
+         }
+      }
+   }
+
    if (_useGPU) {
       // create events and streams for every node
       for (auto &info : _nodes) {
@@ -395,7 +432,16 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       }
    } else {
       auto nodeAbsReal = static_cast<RooAbsReal const *>(node);
+      auto configOrig = _evalContextCPU.config(nodeAbsReal);
       nodeAbsReal->doEval(_evalContextCPU);
+      if (_evalContextCPU.config(nodeAbsReal).takeLog()) {
+         for (auto &x : _evalContextCPU.output()) {
+            x = std::log(x);
+         }
+      }
+      if (configOrig.takeLog()) {
+         _evalContextCPU.setConfig(nodeAbsReal, configOrig);
+      }
    }
    _evalContextCPU.resetVectorBuffers();
    _evalContextCPU.enableVectorBuffers(false);

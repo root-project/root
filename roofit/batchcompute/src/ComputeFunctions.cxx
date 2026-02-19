@@ -470,6 +470,18 @@ __rooglobal__ void computeGaussian(Batches &batches)
    }
 }
 
+__rooglobal__ void computeLogGaussian(Batches &batches)
+{
+   auto x = batches.args[0];
+   auto mean = batches.args[1];
+   auto sigma = batches.args[2];
+   for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
+      const double arg = x[i] - mean[i];
+      const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
+      batches.output[i] = arg * arg * halfBySigmaSq;
+   }
+}
+
 __rooglobal__ void computeIdentity(Batches &batches)
 {
    for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
@@ -938,6 +950,7 @@ std::vector<void (*)(Batches &)> getFunctions()
            computeGamma,
            computeGaussModelExpBasis,
            computeGaussian,
+           computeLogGaussian,
            computeIdentity,
            computeJohnson,
            computeLandau,
