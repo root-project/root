@@ -84,7 +84,7 @@ static void Read()
 
    for (auto idx : reader->GetEntryRange()) {
       reader->LoadEntry(idx);
-      std::cout << "[0] Real16: " << *myReal16 << ", Real32Trunc: " << *myReal32Trunc
+      std::cout << "[" << idx << "] Real16: " << *myReal16 << ", Real32Trunc: " << *myReal32Trunc
                 << ", Real32Quant: " << *myReal32Quant << "\n";
    }
 }
