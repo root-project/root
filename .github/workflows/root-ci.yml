@@ -473,17 +473,9 @@ jobs:
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
 
     steps:
-      - name: Configure large ccache
-        if: ${{ matrix.is_special }}
+      - name: Configure ccache
         run: |
-          ccache -o max_size=5G
-          ccache -p || true
-          ccache -s || true
-
-      - name: Configure small ccache
-        if: ${{ !matrix.is_special }}
-        run: |
-          ccache -o max_size=1.5G
+          ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -p || true
           ccache -s || true
 
