@@ -183,6 +183,7 @@ TEST(TF1, CopyClone)
    diags.optionalDiag(kError, "TVirtualFFT::FFT", "handler not found");
    diags.optionalDiag(kWarning, "TF1Convolution::MakeFFTConv",
                       "Cannot use FFT, probably FFTW package is not available. Switch to numerical convolution");
+   diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class pair<TString,int> is available");
 
    // Define original TF1 using NSUM
    TF1 f1("f1", "NSUM(gaus, expo)", -5, 5);
