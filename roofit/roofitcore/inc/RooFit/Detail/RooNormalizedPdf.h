@@ -69,6 +69,7 @@ public:
       return _pdf->createExpectedEventsFunc(&_normSet);
    }
 
+   bool canOptimizeLogarithm() const override { return true; }
    bool canComputeBatchWithCuda() const override { return true; }
 
    RooAbsPdf const &pdf() const { return *_pdf; }

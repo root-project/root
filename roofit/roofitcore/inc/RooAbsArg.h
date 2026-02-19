@@ -510,8 +510,10 @@ public:
       return false;
    };
 
-   virtual bool canComputeBatchWithCuda() const { return false; }
+   /// Information to expose to the RooFit::Evaluator for optimized evaluation:
+   virtual bool canOptimizeLogarithm() const { return false; }
    virtual bool isReducerNode() const { return false; }
+   virtual bool canComputeBatchWithCuda() const { return false; }
 
    virtual void applyWeightSquared(bool flag);
 

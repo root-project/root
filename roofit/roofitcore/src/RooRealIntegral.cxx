@@ -44,6 +44,7 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
 #include <RooFitImplHelpers.h>
+#include <RooBatchCompute.h>
 
 #include <iostream>
 #include <memory>
@@ -1109,6 +1110,17 @@ void RooRealIntegral::setCacheAllNumeric(Int_t ndim)
 Int_t RooRealIntegral::getCacheAllNumeric()
 {
    return _cacheAllNDim;
+}
+
+void RooRealIntegral::doEval(RooFit::EvalContext &ctx) const
+{
+   RooAbsReal::doEval(ctx);
+   if (ctx.config(this).takeLog()) {
+      auto output = ctx.output();
+      for (std::size_t i = 0; i < output.size(); ++i) {
+         output[i] = std::log(output[i]);
+      }
+   }
 }
 
 std::unique_ptr<RooAbsArg>

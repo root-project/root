@@ -28,6 +28,7 @@ arguments.
 
 
 #include "RooConstraintSum.h"
+#include "RooBatchCompute.h"
 #include "RooAbsData.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
@@ -78,12 +79,17 @@ double RooConstraintSum::evaluate() const
   return sum;
 }
 
+/// Evaluate with the vectorizing CPU backend.
 void RooConstraintSum::doEval(RooFit::EvalContext &ctx) const
 {
    double sum(0);
 
    for (const auto comp : _set1) {
-      sum -= std::log(ctx.at(comp)[0]);
+      // We only need to take the logarithm if the server didn't do it already:
+      if (!ctx.config(comp).takeLog())
+         sum -= std::log(ctx.at(comp)[0]);
+      else
+         sum -= ctx.at(comp)[0];
    }
 
    ctx.output()[0] = sum;
