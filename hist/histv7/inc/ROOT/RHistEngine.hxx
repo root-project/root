@@ -8,6 +8,7 @@
 #include "RAxes.hxx"
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
+#include "RBinIndexMultiDimRange.hxx"
 #include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
@@ -240,6 +241,11 @@ public:
       std::array<RBinIndex, sizeof...(A)> indices{args...};
       return GetBinContent(indices);
    }
+
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiDimRange GetFullMultiDimRange() const { return fAxes.GetFullMultiDimRange(); }
 
    /// Add all bin contents of another histogram.
    ///
