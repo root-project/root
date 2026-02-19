@@ -81,6 +81,17 @@ TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
    EXPECT_THROW(engine2.GetBinContent(1), std::invalid_argument);
    EXPECT_NO_THROW(engine2.GetBinContent(1, 2));
    EXPECT_THROW(engine2.GetBinContent(1, 2, 3), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV1 = {1};
+   const std::vector<RBinIndex> indicesV2 = {1, 2};
+   const std::vector<RBinIndex> indicesV3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(engine1.GetBinContent(indicesV1));
+   EXPECT_THROW(engine1.GetBinContent(indicesV2), std::invalid_argument);
+
+   EXPECT_THROW(engine2.GetBinContent(indicesV1), std::invalid_argument);
+   EXPECT_NO_THROW(engine2.GetBinContent(indicesV2));
+   EXPECT_THROW(engine2.GetBinContent(indicesV3), std::invalid_argument);
 }
 
 TEST(RHistEngine, GetBinContentNotFound)
@@ -90,6 +101,9 @@ TEST(RHistEngine, GetBinContentNotFound)
    const RHistEngine<int> engine({axis});
 
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV = {Bins};
+   EXPECT_THROW(engine.GetBinContent(indicesV), std::invalid_argument);
 }
 
 TEST(RHistEngine, SetBinContent)
