@@ -898,6 +898,11 @@ namespace cling {
         SM.getFileManager().getVirtualFileRef(source_name.str(), InputSize,
                                               0 /* mod time*/);
     SM.overrideFileContents(FE, std::move(MB));
+
+    // Ensure HeaderFileInfo exists before lookup to prevent assertion
+    HeaderSearch& HS = PP.getHeaderSearchInfo();
+    HS.getFileInfo(FE);
+
     FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
 
     // NewLoc only used for diags.
