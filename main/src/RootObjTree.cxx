@@ -31,7 +31,7 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
       (flags & kOpenFilesAsWritable) ? "UPDATE_WITHOUT_GLOBALREGISTRATION" : "READ_WITHOUT_GLOBALREGISTRATION";
    nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), fileMode));
    if (!nodeTree.fFile || nodeTree.fFile->IsZombie()) {
-      source.fErrors.push_back("Failed to open file");
+      source.fErrors.push_back("Failed to open file '" + std::string(fileName) + "'");
       return source;
    }
 
