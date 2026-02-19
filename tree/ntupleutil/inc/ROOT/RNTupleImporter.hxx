@@ -201,6 +201,18 @@ private:
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
    };
 
+   /// Transform a TClonesArray("CustomClass") to a std::vector<CustomClass>
+   struct RTClonesArrayTransformation : public RImportTransformation {
+      RTClonesArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
+      ~RTClonesArrayTransformation() override = default;
+      // Rule of five
+      RTClonesArrayTransformation(const RTClonesArrayTransformation &) = delete;
+      RTClonesArrayTransformation &operator=(const RTClonesArrayTransformation &) = delete;
+      RTClonesArrayTransformation(RTClonesArrayTransformation &&) = delete;
+      RTClonesArrayTransformation &operator=(RTClonesArrayTransformation &&) = delete;
+      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
+   };
+
    RNTupleImporter() = default;
 
    std::unique_ptr<TFile> fSourceFile;

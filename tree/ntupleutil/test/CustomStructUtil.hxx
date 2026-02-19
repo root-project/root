@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <TObject.h>
+
 struct BaseUtil {
    int base;
 };
@@ -85,6 +87,23 @@ struct ComplexStructUtil : BaseUtil {
    {
       return base == other.base && pt == other.pt && tracks == other.tracks;
    }
+};
+
+struct CustomStructObj final : public TObject {
+   int fInt;
+   float fFloat = 0.0;
+   std::vector<float> fVecFl;
+   std::vector<std::vector<float>> fVecVecFl;
+   std::string fStr;
+
+   CustomStructObj() = default;
+   CustomStructObj(int a1, float a2, const std::vector<float> &a3, const std::vector<std::vector<float>> &a4,
+                   const std::string &a5)
+      : fInt(a1), fFloat(a2), fVecFl(a3), fVecVecFl(a4), fStr(a5)
+   {
+   }
+
+   ClassDefNV(CustomStructObj, 1);
 };
 
 #endif

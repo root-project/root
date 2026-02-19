@@ -11,4 +11,6 @@
 #pragma link C++ class ComplexStructUtil + ;
 #pragma link C++ class std::vector < BaseUtil> + ;
 
+#pragma link C++ class CustomStructObj+;
+
 #endif
