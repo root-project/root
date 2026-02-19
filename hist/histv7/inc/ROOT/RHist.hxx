@@ -7,6 +7,7 @@
 
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
+#include "RBinIndexMultiDimRange.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RHistEngine.hxx"
 #include "RHistStats.hxx"
@@ -231,6 +232,11 @@ public:
    {
       return fEngine.GetBinContent(args...);
    }
+
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiDimRange GetFullMultiDimRange() const { return fEngine.GetFullMultiDimRange(); }
 
    /// Add all bin contents and statistics of another histogram.
    ///
