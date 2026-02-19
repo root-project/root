@@ -33,6 +33,8 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsReal.h>
 #include <RooRealVar.h>
 #include <RooBatchCompute.h>
+#include <RooConstraintSum.h>
+#include <RooFit/Detail/RooNormalizedPdf.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
 #include <RooSimultaneous.h>
@@ -220,6 +222,50 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    }
 
    syncDataTokens();
+
+   // This is an optimization for Gaussian constraint terms, of which there are
+   // many in big fits. To Avoid taking the the exponential and then the
+   // logarithm for the constraint term, we request that all normalized pdfs
+   // that have only the RooConstraintSum as a value client are evaluating
+   // their logarithms, which the RooConstrantSum::doEval() then assumes.
+   // Note that we don't need to consider the GPU evaluation path here, because
+   // scalar terms like the constraints are always evaluated on the CPU.
+   for (NodeInfo &info : _nodes) {
+      if (!dynamic_cast<RooConstraintSum const *>(info.absArg)) {
+         continue;
+      }
+      for (RooAbsArg *server : info.absArg->servers()) {
+         if (!server->canOutputLogarithm()) {
+            continue;
+         }
+         // If the pdf has clients other than the RooConstraintSum, we can't do
+         // the log optimization.
+         if (server->clients().size() != 1) {
+            continue;
+         }
+         auto &outputsLogarithm = _evalContextCPU._outputsLogarithm;
+         if (auto normPdf = dynamic_cast<RooFit::Detail::RooNormalizedPdf const *>(server)) {
+            // If this is a normalized pdf, we also request the log of the pdf
+            // value and normalization integral.
+            // Disable the optimization if the computation graph doesn't have
+            // the expected structure, for safety. The unnormalized pdf has two
+            // clients: the integral, and the RooNormalizedPdf.
+            bool const canOptimizePdf = normPdf->pdf().canOutputLogarithm() && normPdf->pdf().clients().size() == 2;
+            bool const canOptimizeNormIntegral =
+               normPdf->normIntegral().canOutputLogarithm() && normPdf->normIntegral().clients().size() == 1;
+            // If the servers can't be optimized, no gain in optimizing the
+            // normalized pdf.
+            if (!canOptimizePdf || !canOptimizeNormIntegral) {
+               continue;
+            }
+            // Only now set the flags, such that the log optimization for
+            // the normalized pdf and its servers is enabled atomically.
+            outputsLogarithm[normPdf->pdf().dataToken()] = true;
+            outputsLogarithm[normPdf->normIntegral().dataToken()] = true;
+         }
+         outputsLogarithm[server->dataToken()] = true;
+      }
+   }
 
    if (_useGPU) {
       // Create the single CUDA stream on which all GPU computations and data
@@ -728,7 +774,7 @@ void Evaluator::print(std::ostream &os)
 {
    std::cout << "--- RooFit BatchMode evaluation ---\n";
 
-   std::vector<int> widths{9, 37, 20, 9, 10, 20};
+   std::vector<int> widths{9, 37, 20, 9, 10, 4, 20};
 
    auto printElement = [&](int iCol, auto const &t) {
       const char separator = ' ';
@@ -755,7 +801,8 @@ void Evaluator::print(std::ostream &os)
    printElement(2, "Class");
    printElement(3, "Size");
    printElement(4, "From Data");
-   printElement(5, "1st value");
+   printElement(5, "Log");
+   printElement(6, "1st value");
    std::cout << "\n";
 
    printHorizontalRow();
@@ -772,7 +819,8 @@ void Evaluator::print(std::ostream &os)
       printElement(2, node->ClassName());
       printElement(3, nodeInfo.outputSize);
       printElement(4, nodeInfo.fromArrayInput);
-      printElement(5, span[0]);
+      printElement(5, _evalContextCPU.outputsLogarithm(node));
+      printElement(6, span[0]);
 
       std::cout << "\n";
    }

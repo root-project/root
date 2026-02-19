@@ -83,6 +83,7 @@ void EvalContext::resize(std::size_t n)
 {
    _cfgs.resize(n);
    _ctx.resize(n);
+   _outputsLogarithm.resize(n);
 }
 
 /// \brief Sets the output value with an offset.

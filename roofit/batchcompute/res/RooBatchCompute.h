@@ -97,6 +97,7 @@ enum Computer {
    Gamma,
    GaussModelExpBasis,
    Gaussian,
+   LogGaussian,
    Identity,
    Johnson,
    Landau,

@@ -71,7 +71,11 @@ public:
 
    void enableBinOffsetting(bool on = true) { _doBinOffset = on; }
 
-   void setSimCount(int simCount) { _simCount = simCount; }
+   void setSimCount(int simCount)
+   {
+      _simCount = simCount;
+      _logSimCount = std::log(static_cast<double>(simCount));
+   }
 
    enum class FuncMode {
       Pdf,
@@ -118,6 +122,7 @@ private:
    FuncMode _funcMode = FuncMode::Pdf;
    RooDataHist::ErrorType _chi2ErrorType = RooDataHist::Expected;
    int _simCount = 1;
+   double _logSimCount = 0.;
    std::string _prefix;
    std::vector<double> _binw;
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
