@@ -770,8 +770,8 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    }
    volume->SetNumber(uid);
    if (!fHashVolumes) {
-      fHashVolumes = new THashList(256);
-      fHashGVolumes = new THashList(256);
+      fHashVolumes = new THashList(256,3);
+      fHashGVolumes = new THashList(256,3);
    }
    TObjArray *list = fVolumes;
    if (!volume->GetShape() || volume->IsRunTime() || volume->IsVolumeMulti()) {
@@ -1558,8 +1558,8 @@ void TGeoManager::CloseGeometry(Option_t *option)
       if (!fHashVolumes) {
          Int_t nvol = fVolumes->GetEntriesFast();
          Int_t ngvol = fGVolumes->GetEntriesFast();
-         fHashVolumes = new THashList(nvol + 1);
-         fHashGVolumes = new THashList(ngvol + 1);
+         fHashVolumes = new THashList(nvol + 1, 3);
+         fHashGVolumes = new THashList(ngvol + 1, 3);
          Int_t i;
          for (i = 0; i < ngvol; i++)
             fHashGVolumes->AddLast(fGVolumes->At(i));
@@ -2995,8 +2995,8 @@ TGeoVolume *TGeoManager::FindVolumeFast(const char *name, Bool_t multi)
    if (!fHashVolumes) {
       Int_t nvol = fVolumes->GetEntriesFast();
       Int_t ngvol = fGVolumes->GetEntriesFast();
-      fHashVolumes = new THashList(nvol + 1);
-      fHashGVolumes = new THashList(ngvol + 1);
+      fHashVolumes = new THashList(nvol + 1, 3);
+      fHashGVolumes = new THashList(ngvol + 1, 3);
       Int_t i;
       for (i = 0; i < ngvol; i++)
          fHashGVolumes->AddLast(fGVolumes->At(i));
