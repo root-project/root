@@ -34,11 +34,12 @@ positional arguments:
   FILE:path             File(s) and path of objects to remove
 
 options:
+  -f, --force           ignore nonexistent files and arguments, never prompt
   -h, --help            show this help message and exit
   -i, --interactive     prompt before deleting each object
-  -n, --dry-run         show what would be removed, but don't actually remove anything
+  -n, --dry-run         show what would be removed, but don't actually remove anything. Implies `-v`.
   -r, --recursive       recurse inside directories
-  -v, --verbose         be verbose
+  -v, --verbose         be verbose (can be repeated for increased verbosity)
 
 examples:
 - rootrm example.root:hist
@@ -64,6 +65,7 @@ struct RootRmArgs {
    bool fInteractive = false;
    bool fRecursive = false;
    bool fDryRun = false;
+   bool fForce = false;
    std::vector<std::string> fSources;
 };
 
@@ -74,6 +76,7 @@ static RootRmArgs ParseArgs(const char **args, int nArgs)
    RootRmArgs outArgs;
 
    RCmdLineOpts opts;
+   opts.AddFlag({"-f", "--force"});
    opts.AddFlag({"-h", "--help"});
    opts.AddFlag({"-i", "--interactive"});
    opts.AddFlag({"-n", "--dry-run"});
@@ -95,6 +98,7 @@ static RootRmArgs ParseArgs(const char **args, int nArgs)
       return outArgs;
    }
 
+   outArgs.fForce = opts.GetSwitch("force");
    outArgs.fInteractive = opts.GetSwitch("interactive");
    outArgs.fRecursive = opts.GetSwitch("recursive");
    outArgs.fDryRun = opts.GetSwitch("dry-run");
@@ -106,6 +110,11 @@ static RootRmArgs ParseArgs(const char **args, int nArgs)
    outArgs.fSources = opts.GetArgs();
    if (outArgs.fSources.size() < 1)
       outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kShort;
+
+   if (outArgs.fForce && outArgs.fInteractive) {
+      Err() << "-i and -f flags are mutually exclusive.\n";
+      outArgs.fPrintHelp = RootRmArgs::EPrintUsage::kShort;
+   }
 
    return outArgs;
 }
@@ -121,7 +130,8 @@ static bool PromptForRemoval(std::string_view fileName, std::string_view objName
    return answer == 'y' || answer == 'Y';
 }
 
-static void RemoveNode(const RootSource &src, NodeIdx_t nodeIdx, const RootRmArgs &args)
+// Returns true if the entire file was deleted.
+static bool RemoveNode(RootSource &src, NodeIdx_t nodeIdx, const RootRmArgs &args)
 {
    // nodeIdx must be in range because it always comes from a RootObjTree.
    assert(nodeIdx < src.fObjectTree.fNodes.size());
@@ -134,18 +144,22 @@ static void RemoveNode(const RootSource &src, NodeIdx_t nodeIdx, const RootRmArg
          Err() << "cannot remove '" << node.fName << "': is a ROOT file. Use -r to remove it.\n";
       else
          Err() << "cannot remove '" << node.fName << "': is a directory. Use -r to remove it.\n";
-      return;
+      return false;
    }
 
    const bool doRemove = !args.fInteractive || PromptForRemoval(src.fFileName, objName);
    if (!doRemove)
-      return;
+      return false;
 
    if (!args.fDryRun) {
       if (nodeIsRootFile) {
          // delete the entire file.
-         src.fObjectTree.fFile->Close();
-         gSystem->Unlink(src.fFileName.c_str());
+         src.fObjectTree.fFile.reset();
+         const auto res = gSystem->Unlink(src.fFileName.c_str());
+         if (res < 0 && !args.fForce) {
+            Err() << "failed to remove '" << src.fFileName << "': " << gSystem->GetErrorStr() << "\n";
+         }
+         return res == 0;
       } else {
          if (node.fDir) {
             // Reset the kIsDirectoryFile bit to allow deleting the directory key (normally not allowed).
@@ -161,6 +175,7 @@ static void RemoveNode(const RootSource &src, NodeIdx_t nodeIdx, const RootRmArg
    }
 
    Info(2) << "removed '" << NodeFullPath(src.fObjectTree, nodeIdx, ENodeFullPathOpt::kIncludeFilename) << "'\n";
+   return false;
 }
 
 int main(int argc, char **argv)
@@ -192,10 +207,20 @@ int main(int argc, char **argv)
    }
 
    const std::uint32_t flags = kOpenFilesAsWritable | (args.fRecursive * EGetMatchingPathsFlags::kRecursive);
+   std::vector<std::string_view> filesDeleted;
    bool errors = false;
    for (const auto &[srcFname, srcPattern] : sourcesFileAndPattern) {
+      // If we already deleted this file, drop this source referring to it.
+      if (std::find(filesDeleted.begin(), filesDeleted.end(), srcFname) != filesDeleted.end()) {
+         continue;
+      }
+
       auto src = ROOT::CmdLine::GetMatchingPathsInFile(srcFname, srcPattern, flags);
       if (!src.fErrors.empty()) {
+         // ignore errors with -f flag
+         if (args.fForce)
+            continue;
+
          for (const auto &err : src.fErrors)
             Err() << err << "\n";
 
@@ -208,10 +233,16 @@ int main(int argc, char **argv)
 
       // Iterate all objects we need to remove
       for (auto nodeIdx : src.fObjectTree.fLeafList) {
-         RemoveNode(src, nodeIdx, args);
+         if (RemoveNode(src, nodeIdx, args)) {
+            filesDeleted.push_back(srcFname);
+            break;
+         }
       }
       for (auto nodeIdx : src.fObjectTree.fDirList) {
-         RemoveNode(src, nodeIdx, args);
+         if (RemoveNode(src, nodeIdx, args)) {
+            filesDeleted.push_back(srcFname);
+            break;
+         }
       }
    }
 
