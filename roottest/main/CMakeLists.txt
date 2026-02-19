@@ -131,31 +131,7 @@ ROOTTEST_ADD_TEST(ROOT_8197
                   OUTREF ROOT_8197.ref
                   ENVIRONMENT ${test_env})
 
-# We compare the output of some tests against ref. files, and we don't want to
-# get noise for Python warnings (for example the warning that the GIL is
-# activated because the ROOT Python bindings don't support free threading yet).
-set(test_env PYTHONWARNINGS=ignore)
-
-############################## PATTERN TESTS ############################
-set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
-ROOTTEST_ADD_TEST(SimplePattern1
-                  COMMAND ${TESTPATTERN_EXE} test.root
-                  OUTREF SimplePattern.ref
-                  ENVIRONMENT ${test_env})
-
-ROOTTEST_ADD_TEST(SimplePattern2
-                  COMMAND ${TESTPATTERN_EXE} test.root:tof
-                  OUTREF SimplePattern2.ref
-                  ENVIRONMENT ${test_env})
-
-ROOTTEST_ADD_TEST(SimplePattern3
-                  COMMAND ${TESTPATTERN_EXE} test.root:*
-                  OUTREF SimplePattern3.ref
-                  ENVIRONMENT ${test_env})
-#########################################################################
-
-
-############################## ROORM TESTS ##############################
+############################## ROOTRM TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
                   COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root victim1.root
                   FIXTURES_SETUP main-SimpleRootrm1PrepareInput-fixture)
@@ -219,6 +195,26 @@ ROOTTEST_ADD_TEST(SimpleRootrm3CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootrm3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r victim3.root
                   FIXTURES_REQUIRED main-SimpleRootrm3CheckOutput-fixture)
+
+ROOTTEST_ADD_TEST(RootrmFileAndObjectPrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootcp${exeext} --recreate -r test.root rootrmFileAndObject.root
+                  FIXTURES_SETUP main-RootrmFileAndObjectPrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(RootrmFileAndObject
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r rootrmFileAndObject.root rootrmFileAndObject.root:tof/plane0
+                  FIXTURES_REQUIRED main-RootrmFileAndObjectPrepareInput-fixture
+                  FIXTURES_SETUP main-RootrmFileAndObject-fixture)
+
+ROOTTEST_ADD_TEST(RootrmFileAndObjectCheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} rootrmFileAndObject.root
+                  PASSRC 1 # file should have been removed
+                  FIXTURES_REQUIRED main-RootrmFileAndObject-fixture
+                  FIXTURES_SETUP main-RootrmFileAndObjectCheckOutput-fixture
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(RootrmFileAndObjectClean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -rf rootrmFileAndObject.root
+                  FIXTURES_REQUIRED main-RootrmFileAndObjectCheckOutput-fixture)
 #########################################################################
 
 ############################# ROOTCP TESTS ############################
@@ -400,6 +396,30 @@ endif()
 #########################################################################
 
 if(pyroot)
+
+# We compare the output of some tests against ref. files, and we don't want to
+# get noise for Python warnings (for example the warning that the GIL is
+# activated because the ROOT Python bindings don't support free threading yet).
+set(test_env PYTHONWARNINGS=ignore)
+
+############################## PATTERN TESTS ############################
+set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
+ROOTTEST_ADD_TEST(SimplePattern1
+                  COMMAND ${TESTPATTERN_EXE} test.root
+                  OUTREF SimplePattern.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimplePattern2
+                  COMMAND ${TESTPATTERN_EXE} test.root:tof
+                  OUTREF SimplePattern2.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimplePattern3
+                  COMMAND ${TESTPATTERN_EXE} test.root:*
+                  OUTREF SimplePattern3.ref
+                  ENVIRONMENT ${test_env})
+#########################################################################
+
 
 ############################# ROOMKDIR TESTS ############################
 ROOTTEST_ADD_TEST(SimpleRootmkdir1PrepareInput
