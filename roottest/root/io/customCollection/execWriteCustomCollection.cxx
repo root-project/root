@@ -23,7 +23,7 @@ public:
    void Fill(unsigned long seed) {
       T obj;
       for(size_t i = 0; i < seed; ++i) {
-         obj.SetName(TString::Format("name%lu_%lu",i,seed));
+         obj.SetName(TString::Format("name%zu_%lu", i, seed));
          obj.fId = i;
          fValues.push_back(obj);
       }
@@ -31,8 +31,7 @@ public:
 
    void Print() {
       for(size_t i = 0; i < fValues.size(); ++i) {
-         printf("values: %lu / %lu : %s\n",
-                i, fValues.size(), fValues[i].GetName());
+         printf("values: %zu / %zu : %s\n", i, fValues.size(), fValues[i].GetName());
       }
    }
 };
@@ -44,7 +43,7 @@ public:
    void Fill(unsigned long seed) {
       Content obj;
       for(size_t i = 0; i < seed; ++i) {
-         obj.SetName(TString::Format("name%lu_%lu",i,seed));
+         obj.SetName(TString::Format("name%zu_%lu", i, seed));
          obj.fId = i;
          fValues.push_back(obj);
       }
@@ -52,8 +51,7 @@ public:
 
    void Print() {
       for(size_t i = 0; i < fValues.size(); ++i) {
-         printf("values: %lu / %lu : %s\n",
-                i, fValues.size(), fValues[i].GetName());
+         printf("values: %zu / %zu : %s\n", i, fValues.size(), fValues[i].GetName());
       }
    }
 };
