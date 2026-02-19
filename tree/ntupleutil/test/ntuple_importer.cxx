@@ -4,6 +4,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TChain.h>
+#include <TString.h>
 
 #include <cstdio>
 #include <string>
@@ -784,4 +785,39 @@ TEST(RNTUpleImporter, TClonesArray)
    EXPECT_EQ(ca->size(), 2);
    check_customstructobj_eq(ca->at(0), refFirst);
    check_customstructobj_eq(ca->at(1), refSecond);
+}
+
+TEST(RNTupleImporter, TString)
+{
+   FileRaii fileGuard("test_ntuple_importer_tstring.root");
+   const auto nEntries = 5;
+   std::vector<std::string> ref(nEntries);
+   for (auto i = 0; i < nEntries; i++) {
+      ref[i] = "string_" + std::to_string(i);
+   }
+   {
+      auto f = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "recreate");
+      auto t = std::make_unique<TTree>("tree", "tree");
+      TString mystr{};
+      t->Branch("str", &mystr);
+      for (const auto &str : ref) {
+         mystr = str;
+         t->Fill();
+      }
+      f->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetNTupleName("ntuple");
+   importer->SetIsQuiet(true);
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), nEntries);
+
+   auto mystr = reader->GetModel().GetDefaultEntry().GetPtr<std::string>("str");
+   for (auto i = 0; i < nEntries; i++) {
+      reader->LoadEntry(i);
+      EXPECT_EQ(*mystr, ref[i]);
+   }
 }

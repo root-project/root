@@ -213,6 +213,18 @@ private:
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
    };
 
+   // Transform a TString into a std::string
+   struct RTStringTransformation : public RImportTransformation {
+      RTStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
+      ~RTStringTransformation() override = default;
+      // Rule of five
+      RTStringTransformation(const RTStringTransformation &) = delete;
+      RTStringTransformation &operator=(const RTStringTransformation &) = delete;
+      RTStringTransformation(RTStringTransformation &&) = delete;
+      RTStringTransformation &operator=(RTStringTransformation &&) = delete;
+      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
+   };
+
    RNTupleImporter() = default;
 
    std::unique_ptr<TFile> fSourceFile;

@@ -33,6 +33,7 @@
 #include <TLeafC.h>
 #include <TLeafElement.h>
 #include <TLeafObject.h>
+#include <TString.h>
 
 #include <cassert>
 #include <cstdint>
@@ -100,6 +101,15 @@ ROOT::Experimental::RNTupleImporter::RTClonesArrayTransformation::Transform(cons
    // std::vector<T> when reading
    *reinterpret_cast<std::vector<std::byte> *>(field.fFieldBuffer) = dest;
 
+   return RResult<void>::Success();
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::RNTupleImporter::RTStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
+{
+   auto TStringBufPtr = reinterpret_cast<TString **>(branch.fBranchBuffer.get());
+   auto TStringPtr = *TStringBufPtr;
+   *reinterpret_cast<std::string *>(field.fFieldBuffer) = *TStringPtr;
    return RResult<void>::Success();
 }
 
@@ -269,6 +279,12 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
                std::make_unique<RTClonesArrayTransformation>(fImportBranches.size(), fImportFields.size()));
          }
 
+         if (fieldType == "TString") {
+            fieldType = "std::string";
+            fImportTransformations.emplace_back(
+               std::make_unique<RTStringTransformation>(fImportBranches.size(), fImportFields.size()));
+         }
+
          if (isFixedSizeArray)
             fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
@@ -295,7 +311,7 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
                branchBufferSize = sizeof(void *) * countval;
                // For TClonesArray, we create a value so that we can fill its buffer with the contents copied from the
                // TTree branch
-               if (isTClonesArray) {
+               if (isTClonesArray || fieldType == "TString") {
                   f.fValue = std::make_unique<ROOT::RFieldBase::RValue>(field->CreateValue());
                   f.fFieldBuffer = f.fValue->GetPtr<void>().get();
                }
