@@ -630,7 +630,13 @@ int main(int argc, char **argv)
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
 
    // sort leaves by namecycle
+   bool errors = false;
    for (auto &source : args.fSources) {
+      if (!source.fErrors.empty()) {
+         errors = true;
+         for (const auto &err : source.fErrors)
+            Err() << err << "\n";
+      }
       std::sort(source.fObjectTree.fLeafList.begin(), source.fObjectTree.fLeafList.end(),
                 [&tree = source.fObjectTree](NodeIdx_t aIdx, NodeIdx_t bIdx) {
                    const auto &a = tree.fNodes[aIdx];
@@ -641,4 +647,6 @@ int main(int argc, char **argv)
    }
 
    RootLs(args);
+
+   return errors;
 }
