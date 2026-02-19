@@ -15,6 +15,7 @@
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooSpline.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
@@ -531,5 +532,28 @@ TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
    ws1.import(mc);
 
    int status = validate(ws1, "mc");
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooSpline)
+{
+   // Observable must be called "x" because validate() assumes that convention.
+   RooWorkspace ws;
+
+   // Use an observable with bins to enable the per-bin closure check.
+   auto *x = ws.factory("x[0,10]");
+   ASSERT_NE(x, nullptr);
+   ws.var("x")->setBins(50);
+
+   // Define knots. Keep it simple but nontrivial (nonlinear).
+   const std::vector<double> x0{0.0, 1.5, 3.0, 6.0, 10.0};
+   const std::vector<double> y0{1.0, 2.0, 1.0, 4.0, 3.0};
+
+   RooSpline spline{"spline", "spline", *ws.var("x"), x0, y0, /*order=*/3, /*logx=*/false, /*logy=*/false};
+
+   // Import the object into the workspace and validate JSON IO.
+   ws.import(spline, RooFit::Silence());
+
+   const int status = validate(ws, "spline", /*exact=*/true);
    EXPECT_EQ(status, 0);
 }
