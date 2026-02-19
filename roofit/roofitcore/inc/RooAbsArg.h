@@ -492,6 +492,13 @@ public:
       return false;
    };
 
+   // Information to expose to the RooFit::Evaluator for optimized evaluation:
+
+   /// Whether doEval() can output the logarithm of the value instead of the
+   /// value. It then has to do so if `ctx.outputsLogarithm(this)` is true. A
+   /// derived class that overrides doEval() without supporting this must also
+   /// override this function to return false.
+   virtual bool canOutputLogarithm() const { return false; }
    virtual bool canComputeBatchWithCuda() const { return false; }
    virtual bool isReducerNode() const { return false; }
 

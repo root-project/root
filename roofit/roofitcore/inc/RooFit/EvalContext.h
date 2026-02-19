@@ -109,6 +109,13 @@ public:
 
    RooBatchCompute::Config config(RooAbsArg const *arg) const;
 
+   /// Whether the output of the given node is the logarithm of its value. See
+   /// RooAbsArg::canOutputLogarithm().
+   bool outputsLogarithm(RooAbsArg const *arg) const
+   {
+      return arg->hasDataToken() && _outputsLogarithm[arg->dataToken()];
+   }
+
    /// A counter that is incremented every time new input data is loaded into
    /// the evaluation context. Reducer nodes can use it as a cache
    /// invalidation key for quantities that only depend on the input data,
@@ -142,6 +149,7 @@ private:
    std::vector<std::vector<double>> _buffers;
    std::size_t _bufferIdx = 0;
    std::vector<RooBatchCompute::Config> _cfgs;
+   std::vector<bool> _outputsLogarithm;
    std::vector<std::function<void()>> _deferredActions;
 };
 
