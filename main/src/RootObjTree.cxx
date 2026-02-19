@@ -8,6 +8,7 @@
 #include "wildcards.hpp"
 
 #include <TFile.h>
+#include <TSystem.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -27,11 +28,19 @@ ROOT::CmdLine::GetMatchingPathsInFile(std::string_view fileName, std::string_vie
    ROOT::CmdLine::RootSource source;
    source.fFileName = fileName;
    auto &nodeTree = source.fObjectTree;
-   const char *fileMode =
-      (flags & kOpenFilesAsWritable) ? "UPDATE_WITHOUT_GLOBALREGISTRATION" : "READ_WITHOUT_GLOBALREGISTRATION";
-   nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), fileMode));
+   const char *fileMode = "READ_WITHOUT_GLOBALREGISTRATION";
+   const std::string fileNameStr { fileName };
+   if (flags & kOpenFilesAsWritable) {
+      // There is no way to open a file for writing only if the file already exists, so we need to manually check first.
+      if (gSystem->AccessPathName(fileNameStr.c_str(), kWritePermission)) {
+         source.fErrors.push_back("File '" + fileNameStr + "' does not exist or is not writable.");
+         return source;
+      }
+      fileMode = "UPDATE_WITHOUT_GLOBALREGISTRATION";
+   }
+   nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(fileNameStr.c_str(), fileMode));
    if (!nodeTree.fFile || nodeTree.fFile->IsZombie()) {
-      source.fErrors.push_back("Failed to open file '" + std::string(fileName) + "'");
+      source.fErrors.push_back("Failed to open file '" + fileNameStr + "'");
       return source;
    }
 
