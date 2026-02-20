@@ -240,6 +240,8 @@ public:
 
    const std::string &GetTypeName(std::string_view fieldName) const { return GetTypeName(GetToken(fieldName)); }
 
+   bool HasField(std::string_view fieldName) const { return fFieldName2Token.count(std::string(fieldName)) > 0; }
+
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 

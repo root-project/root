@@ -802,6 +802,8 @@ TEST(REntry, Basics)
    model->Freeze();
 
    auto e = model->CreateEntry();
+   EXPECT_TRUE(e->HasField("pt"));
+   EXPECT_FALSE(e->HasField("PT"));
    EXPECT_EQ(e->GetModelId(), model->GetModelId());
    EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
    for (const auto &v : *e) {
