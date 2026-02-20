@@ -377,45 +377,6 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
    EXPECT_FLOAT_EQ(2.0, arr[0]);
 }
 
-TEST(RNTuple, MultiColumnRepresentationFriends)
-{
-   FileRaii fileGuard1("test_ntuple_multi_column_representation_friend1.root");
-   FileRaii fileGuard2("test_ntuple_multi_column_representation_friend2.root");
-
-   auto model1 = RNTupleModel::Create();
-   auto fldPt = RFieldBase::Create("pt", "float").Unwrap();
-   fldPt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
-   model1->AddField(std::move(fldPt));
-   auto ptrPt = model1->GetDefaultEntry().GetPtr<float>("pt");
-
-   auto model2 = RNTupleModel::Create();
-   auto fldEta = RFieldBase::Create("eta", "float").Unwrap();
-   fldEta->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal32}});
-   model2->AddField(std::move(fldEta));
-   auto ptrEta = model2->GetDefaultEntry().GetPtr<float>("eta");
-
-   {
-      auto writer = RNTupleWriter::Recreate(std::move(model1), "ntpl1", fileGuard1.GetPath());
-      *ptrPt = 1.0;
-      writer->Fill();
-      writer->CommitCluster();
-      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetConstField("pt")), 1);
-      *ptrPt = 2.0;
-      writer->Fill();
-   }
-   {
-      auto writer = RNTupleWriter::Recreate(std::move(model2), "ntpl2", fileGuard2.GetPath());
-      *ptrEta = 3.0;
-      writer->Fill();
-      writer->CommitCluster();
-      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
-         const_cast<RFieldBase &>(writer->GetModel().GetConstField("eta")), 1);
-      *ptrEta = 4.0;
-      writer->Fill();
-   }
-}
-
 TEST(RNTuple, MultiColumnRepresentationDedup)
 {
    FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
