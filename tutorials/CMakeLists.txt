@@ -130,7 +130,6 @@ if (NOT dataframe)
     # RNTuple tutorials depending on RDataFrame
     list(APPEND dataframe_veto io/ntuple/ntpl004_dimuon.C)
     list(APPEND dataframe_veto io/ntuple/ntpl008_import.C)
-    list(APPEND dataframe_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
 if(NOT sqlite)
@@ -147,7 +146,6 @@ if(NOT davix)
         legacy/multicore/mp104_processH1.C analysis/parallel/mp_processSelector.C)
     list(APPEND davix_veto io/ntuple/ntpl004_dimuon.C)
     list(APPEND davix_veto io/ntuple/ntpl008_import.C)
-    list(APPEND davix_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
 if(NOT sycl)
@@ -423,8 +421,6 @@ else()
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ hist/histv7/*.C visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx visualisation/rcanvas/*.py visualisation/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
-  # This depends on RCanvas
-  list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
 #---These do not run with minimal
