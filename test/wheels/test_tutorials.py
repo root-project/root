@@ -17,7 +17,6 @@ subdirs = ["analysis/dataframe", "analysis/tree", "hist", "io/ntuple", "roofit/r
 SKIP_TUTORIALS = {
     "ntpl004_dimuon.C",  # requires reading remote data via HTTP
     "ntpl008_import.C",  # requires reading remote data via HTTP
-    "ntpl011_global_temperatures.C",  # requires reading remote data via HTTP
     "distrdf004_dask_lxbatch.py",  # only works on lxplus
     "_SQlite",  # requires SQLite, not supported yet in ROOT wheels
     "h1analysisProxy.C",  # helper macro, not meant to run standalone
