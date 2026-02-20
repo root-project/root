@@ -28,7 +28,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 #CALLROOTEXE += -e "\#define ClingWorkAroundFunctionForwardDeclarations"
 
 # AutoParsing issues
-CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
+#CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
 #CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse" #see https://sft.its.cern.ch/jira/browse/ROOT-6319
 #CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseDeclaration"
 #CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseTooPrecise"
@@ -114,7 +114,7 @@ ClingWorkAroundTClassUpdateDouble32 = yes      # See https://sft.its.cern.ch/jir
 #ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862
 ClingWorkAroundProxyConfusion = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-6000
 
-ClingWorkAroundAutoParseUsingNamespace = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-6317
+#ClingWorkAroundAutoParseUsingNamespace = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-6317
 #ClingWorkAroundAutoParseRecurse = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6319
 #ClingWorkAroundAutoParseDeclaration = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
 #ClingWorkAroundAutoParseTooPrecise = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-6321

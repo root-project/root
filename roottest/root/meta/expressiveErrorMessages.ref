@@ -24,9 +24,6 @@ Error in <TInterpreter::AutoParse>: Error parsing payload code for class AexprMs
 #ifndef ClingWorkAroundMissingAutoLoadingForTemplates
   #define ClingWorkAroundMissingAutoLoadingForTemplates 1
 #endif
-#ifndef ClingWorkAroundAutoParseUsingNamespace
-  #define ClingWorkAroundAutoParseUsingNamespace 1
-#endif
 #ifndef ClingWorkAroundTClassUpdateDouble32
   #define ClingWorkAroundTClassUpdateDouble32 1
 #endif
