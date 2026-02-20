@@ -254,7 +254,6 @@ if(NOT MSVC OR win_broken_tests)
 
   ROOTTEST_ADD_TEST(fork
                     EXEC ${CMAKE_CURRENT_BINARY_DIR}/fork
-                    COPY_TO_BUILDDIR commands1.txt commands2.txt
                     FAILREGEX "Error in" "cannot load any more object with static TLS"
                     FIXTURES_REQUIRED root-multicore-fork-fixture
                                       root-multicore-tsenumstest-fixture
