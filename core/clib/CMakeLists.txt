@@ -8,10 +8,26 @@
 # CMakeLists.txt file for building ROOT core/clib package
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+set(CLIB_HEADERS
   strlcpy.h
   snprintf.h
   strtok.h
+)
+
+set(RELATIVE_INC_HEADERS ${CLIB_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+set(CLIB_RES_HEADERS
+  mmalloc.h
+  mmconfig.h
+  mmprivate.h
+)
+
+set(RELATIVE_RES_HEADERS ${CLIB_RES_HEADERS})
+list(TRANSFORM RELATIVE_RES_HEADERS PREPEND res/)
+
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
+  ${CLIB_HEADERS}
 )
 
 ROOT_OBJECT_LIBRARY(Clib
@@ -30,6 +46,19 @@ ROOT_OBJECT_LIBRARY(Clib
   src/strlcat.c
   src/strlcpy.c
 )
+
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Clib
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ res/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+          ${RELATIVE_RES_HEADERS}
+  )
+endif()
 
 target_include_directories(Clib
   PUBLIC

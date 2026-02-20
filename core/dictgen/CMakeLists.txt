@@ -27,6 +27,36 @@ ROOT_OBJECT_LIBRARY(Dictgen
   XMLReader.cxx
 )
 
+set(DICTGEN_HEADERS
+  BaseSelectionRule.h
+  ClassSelectionRule.h
+  cygpath.h
+  DictSelectionReader.h
+  LinkdefReader.h
+  OptionParser.h
+  rootcling_impl.h
+  Scanner.h
+  SelectionRules.h
+  TModuleGenerator.h
+  VariableSelectionRule.h
+  XMLReader.h
+)
+
+set(RELATIVE_RES_HEADERS ${DICTGEN_HEADERS})
+list(TRANSFORM RELATIVE_RES_HEADERS PREPEND res/)
+
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Dictgen
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS res/
+      FILES
+          ${RELATIVE_RES_HEADERS}
+  )
+endif()
+
 # This directory contains files that include llvm, which can give warnings.
 if(NOT MSVC)
   target_compile_options(Dictgen PRIVATE -Wno-error)

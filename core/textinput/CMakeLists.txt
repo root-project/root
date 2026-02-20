@@ -36,4 +36,38 @@ target_include_directories(Core
     src
 )
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Core
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          inc/Getline.h
+          src/Getline_color.h
+          src/textinput/Callbacks.h
+          src/textinput/Callbacks.h
+          src/textinput/Color.h
+          src/textinput/Display.h
+          src/textinput/Editor.h
+          src/textinput/History.h
+          src/textinput/InputData.h
+          src/textinput/KeyBinding.h
+          src/textinput/Range.h
+          src/textinput/Reader.h
+          src/textinput/SignalHandler.h
+          src/textinput/StreamReader.h
+          src/textinput/StreamReaderUnix.h
+          src/textinput/StreamReaderWin.h
+          src/textinput/TerminalConfigUnix.h
+          src/textinput/TerminalDisplay.h
+          src/textinput/TerminalDisplayUnix.h
+          src/textinput/TerminalDisplayWin.h
+          src/textinput/Text.h
+          src/textinput/TextInputContext.h
+          src/textinput/TextInput.h
+  )
+endif()
+
 ROOT_INSTALL_HEADERS()
