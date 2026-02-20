@@ -62,14 +62,12 @@ public:
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
    bool hasGradient() const override;
-
    void gradient(double *out) const override;
-
    void generateGradient();
-
    void setUseGeneratedFunctionCode(bool);
-
    void writeDebugMacro(std::string const &) const;
+
+   std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModes(RooAbsArg::OperMode opMode);
 
 protected:
    double evaluate() const override;

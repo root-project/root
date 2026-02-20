@@ -229,6 +229,7 @@ private:
    void fillCorrMatrix(RooFitResult &fitRes);
    void updateErrors();
 
+   RooAbsReal &_function;
    ROOT::Fit::FitConfig _config;                      ///< fitter configuration (options and parameter settings)
    std::unique_ptr<FitResult> _result;                ///<! pointer to the object containing the result of the fit
    std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! pointer to used minimizer

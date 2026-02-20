@@ -40,26 +40,29 @@ automatic PDF optimization.
 #include "RooMinimizer.h"
 
 #include "RooAbsMinimizerFcn.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
 #include "RooAbsReal.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooSentinel.h"
-#include "RooMsgService.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
 #include "RooCategory.h"
-#include "RooMultiPdf.h"
-#include "RooPlot.h"
-#include "RooHelpers.h"
-#include "RooMinimizerFcn.h"
-#include "RooFitResult.h"
+#include "RooDataSet.h"
+#include "RooEvaluatorWrapper.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
+#include "RooFitResult.h"
+#include "RooHelpers.h"
+#include "RooMinimizerFcn.h"
+#include "RooMsgService.h"
+#include "RooMultiPdf.h"
+#include "RooPlot.h"
+#include "RooRealVar.h"
+#include "RooSentinel.h"
 #ifdef ROOFIT_MULTIPROCESS
 #include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
+
+#include "RooFitImplHelpers.h"
 
 #include <Fit/BasicFCN.h>
 #include <Math/Minimizer.h>
@@ -120,6 +123,22 @@ void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vecto
    }
 }
 
+// The RooEvaluatorWrapper uses its own logic to decide what needs to be
+// re-evaluated. We can therefore disable the regular dirty state propagation
+// temporarily during minimization. However, some RooAbsArgs shared with other
+// regular RooFit computation graphs outside the minimized likelihood, so we
+// have to make sure that the operation mode is reset after the minimization.
+//
+// This should be called before running any routine via the _minimizer data
+// member. The RAII object should only be destructed after the routine is done.
+std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModesDirty(RooAbsReal &function)
+{
+   if (auto *wrapper = dynamic_cast<RooFit::Experimental::RooEvaluatorWrapper *>(&function)) {
+      return wrapper->setOperModes(RooAbsArg::ADirty);
+   }
+   return {};
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +154,7 @@ void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vecto
 /// value of the input function.
 
 /// Constructor that accepts all configuration in struct with RooAbsReal likelihood
-RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
+RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _function{function}, _cfg(cfg)
 {
    initMinimizerFirstPart();
    auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
@@ -689,6 +708,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    n[4] = n5;
    n[5] = n6;
 
+   auto operModeRAII = setOperModesDirty(_function);
    for (int ic = 0; ic < 6; ic++) {
       if (n[ic] > 0) {
 
@@ -903,6 +923,8 @@ bool RooMinimizer::fitFCN()
    // fit a user provided FCN function
    // create fit parameter settings
 
+   auto operModeRAII = setOperModesDirty(_function);
+
    // Check number of parameters
    unsigned int npar = getNPar();
    if (npar == 0) {
@@ -1042,6 +1064,8 @@ bool RooMinimizer::calculateHessErrors()
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
 
+   auto operModeRAII = setOperModesDirty(_function);
+
    // update  minimizer (recreate if not done or if name has changed
    if (!updateMinimizerOptions()) {
       coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error re-initializing the minimizer" << std::endl;
@@ -1075,6 +1099,8 @@ bool RooMinimizer::calculateMinosErrors()
    // normally Minos errors are computed just after the minimization
    // (in DoMinimization) aftewr minimizing if the
    //  FitConfig::MinosErrors() flag is set
+
+   auto operModeRAII = setOperModesDirty(_function);
 
    // update  minimizer (but cannot re-create in this case). Must use an existing one
    if (!updateMinimizerOptions(false)) {
