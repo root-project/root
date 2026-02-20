@@ -91,6 +91,7 @@ public:
    virtual void VisitVectorField(const ROOT::RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const ROOT::RRVecField &field) { VisitField(field); }
+   virtual void VisitLeafCountArrayField(const RLeafCountArrayField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
@@ -245,6 +246,7 @@ public:
    void VisitVectorField(const ROOT::RVectorField &field) final;
    void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) final;
    void VisitRVecField(const ROOT::RRVecField &field) final;
+   void VisitLeafCountArrayField(const RLeafCountArrayField &field) final;
    void VisitBitsetField(const ROOT::RBitsetField &field) final;
    void VisitNullableField(const ROOT::RNullableField &field) final;
    void VisitEnumField(const ROOT::REnumField &field) final;

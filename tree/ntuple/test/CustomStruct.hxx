@@ -460,4 +460,28 @@ struct ExampleMC {
 };
 } // namespace v2
 
+struct LeafCountInClassBase {
+   Int_t fSize = 0;
+};
+
+struct LeafCountInClass : public LeafCountInClassBase {
+   unsigned char *fPayload1 = nullptr; //[fSize];
+   unsigned char *fPayload2 = nullptr; //[fSize];
+};
+
+struct LeafCountInClassFail1 {
+   int fSize = 0;
+   unsigned char *fPayload = nullptr; //[fTypo];
+};
+
+struct LeafCountInClassFail2 {
+   char fSize = 0;                    // wrong count leaf type
+   unsigned char *fPayload = nullptr; //[fSize];
+};
+
+struct LeafCountInClassFail3 {
+   unsigned char *fPayload = nullptr; //[fSize];
+   int fSize = 0;                     // declared after the array
+};
+
 #endif
