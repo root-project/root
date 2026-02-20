@@ -45,6 +45,8 @@ public:
 
    void setOffsetMode(RooFit::EvalContext::OffsetMode);
 
+   std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModes(RooAbsArg::OperMode opMode);
+
 private:
    void processVariable(NodeInfo &nodeInfo);
    void processCategory(NodeInfo &nodeInfo);
