@@ -41,10 +41,10 @@ void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val)
 void ROOT::RFieldZero::Attach(std::unique_ptr<RFieldBase> child)
 {
    const std::string childName = child->GetFieldName();
-   if (fSubFieldNames.count(childName) > 0)
+   if (fSubfieldNames.count(childName) > 0)
       throw RException(R__FAIL("duplicate field name: " + childName));
    RFieldBase::Attach(std::move(child), "");
-   fSubFieldNames.insert(childName);
+   fSubfieldNames.insert(childName);
 }
 
 ROOT::RFieldZero::RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
@@ -57,7 +57,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /
    auto result = std::make_unique<RFieldZero>();
    for (auto &f : fSubfields) {
       result->Attach(f->Clone(f->GetFieldName()));
-      result->fSubFieldNames.insert(f->GetFieldName());
+      result->fSubfieldNames.insert(f->GetFieldName());
    }
    return result;
 }

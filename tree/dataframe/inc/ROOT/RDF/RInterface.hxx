@@ -1480,7 +1480,7 @@ public:
       auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
 
       if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
-         RDFInternal::RemoveRNTupleSubFields(selectedColumns);
+         RDFInternal::RemoveRNTupleSubfields(selectedColumns);
       }
 
       return Snapshot(treename, filename, selectedColumns, options);
