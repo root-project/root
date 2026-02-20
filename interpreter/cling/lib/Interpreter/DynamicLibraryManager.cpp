@@ -393,6 +393,7 @@ namespace cling {
     if (!insRes.second)
       return kLoadLibAlreadyLoaded;
     m_LoadedLibraries.insert(canonicalLoadedLib);
+    m_OpenDyLibs.push_back(dyLibHandle);
     return kLoadLibSuccess;
   }
 
@@ -424,6 +425,9 @@ namespace cling {
 
     m_DyLibs.erase(dyLibHandle);
     m_LoadedLibraries.erase(canonicalLoadedLib);
+    auto it = std::find(m_OpenDyLibs.rbegin(), m_OpenDyLibs.rend(),
+                        dyLibHandle);
+    *it = (DyLibHandle) -1; // Invalidate
   }
 
   bool DynamicLibraryManager::isLibraryLoaded(llvm::StringRef fullPath) const {
