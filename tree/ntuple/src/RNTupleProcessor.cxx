@@ -508,8 +508,8 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetProtoModel(std::unique_ptr<ROO
       fProtoModel->RegisterSubfield(field->GetQualifiedFieldName());
 
       if (field->GetTypeName() == "RAuxiliaryProcessorField") {
-         for (const auto &auxSubField : field->GetConstSubfields()) {
-            fProtoModel->RegisterSubfield(auxSubField->GetQualifiedFieldName());
+         for (const auto &auxSubfield : field->GetConstSubfields()) {
+            fProtoModel->RegisterSubfield(auxSubfield->GetQualifiedFieldName());
          }
       }
    }

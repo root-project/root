@@ -1011,7 +1011,7 @@ void RemoveDuplicates(ColumnNames_t &columnNames)
       columnNames.end());
 }
 
-void RemoveRNTupleSubFields(ColumnNames_t &columnNames)
+void RemoveRNTupleSubfields(ColumnNames_t &columnNames)
 {
    ColumnNames_t parentFields;
 

@@ -69,7 +69,7 @@ class RFieldZero final : public RFieldBase {
    /// This flag is reset on Clone().
    bool fAllowFieldSubstitutions = false;
 
-   std::unordered_set<std::string> fSubFieldNames; ///< Efficient detection of duplicate field names
+   std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -137,12 +137,12 @@ public:
 /// The field for a class with dictionary
 class RClassField : public RFieldBase {
 private:
-   enum ESubFieldRole {
+   enum ESubfieldRole {
       kBaseClass,
       kDataMember,
    };
-   struct RSubFieldInfo {
-      ESubFieldRole fRole;
+   struct RSubfieldInfo {
+      ESubfieldRole fRole;
       std::size_t fOffset;
    };
    // Information to read into the staging area a field that is used as an input to an I/O customization rule
@@ -166,7 +166,7 @@ private:
 
    TClass *fClass;
    /// Additional information kept for each entry in `fSubfields`
-   std::vector<RSubFieldInfo> fSubfieldsInfo;
+   std::vector<RSubfieldInfo> fSubfieldsInfo;
    std::size_t fMaxAlignment = 1;
 
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
@@ -182,7 +182,7 @@ private:
 private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, TClass *classp);
-   void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
+   void Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info);
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.

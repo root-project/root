@@ -58,7 +58,7 @@ void CheckDoubleSubfieldName(SubfieldCollectionT &&items)
 
 } // anonymous namespace
 
-TEST(RNTuple, SubFieldName)
+TEST(RNTuple, SubfieldName)
 {
    CheckSingleSubfieldName<ROOT::RAtomicField>();
    CheckSingleSubfieldName<ROOT::RVectorField>();

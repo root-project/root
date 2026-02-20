@@ -301,7 +301,7 @@ TEST(RNTuple, ModelExtensionProjectComplex)
    EXPECT_EQ(refVec, aliasVec(1));
 }
 
-TEST(RNTuple, ModelExtensionSubFields)
+TEST(RNTuple, ModelExtensionSubfields)
 {
    FileRaii fileGuard("test_ntuple_modelext_cluster_boundaries.root");
    CustomStruct refStruct{42.0, {1., 2., 3.}, {{4., 5.}, {}, {6.}}, "foo"};
