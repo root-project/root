@@ -95,6 +95,11 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND tmva_veto machine_learning/tmva100_DataPreparation.py
                         machine_learning/tmva101_Training.py
                         machine_learning/tmva102_Testing.py)
+  # RNTuple MT tutorials are flaky on Windows
+  list(APPEND ntuple_veto io/ntuple/ntpl007_mtFill.C
+                          io/ntuple/ntpl013_staged.C
+                          io/ntuple/ntpl014_framework.C
+                          io/ntuple/ntpl017_shared_reader.C)
 endif()
 
 # TODO: fix the problem and re-enable the tutorial test. The rf615 tutorial
@@ -521,6 +526,7 @@ set(all_veto hsimple.C
              ${dataframe_veto}
              ${davix_veto}
              ${minimal_veto}
+             ${ntuple_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
@@ -735,12 +741,6 @@ foreach(t ${tutorials})
     set_tests_properties(tutorial-${tname} PROPERTIES PROCESSORS ${NProcessors})
   endif()
 endforeach()
-
-if(root7 AND MSVC)
-  # This test should take 15-25 seconds but fails (timeout) often in the CI on Windows,
-  # so decrease its timeout to 2 minutes to prevent waiting hours to complete the tests
-  set_tests_properties(tutorial-io-ntuple-ntpl013_staged PROPERTIES TIMEOUT 120)
-endif()
 
 #---Loop over all MPI tutorials and define the corresponding test---------
 foreach(t ${mpi_tutorials})
