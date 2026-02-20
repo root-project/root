@@ -1,52 +1,53 @@
-#include <cstdio>
-#include <unistd.h>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include "TInterpreter.h"
-#include "TSystem.h"
+
+#include <unistd.h>
+#include <sstream>
+#include <iostream>
+#include <sys/wait.h>
 
 // A simple program that tests forking.
 
-// Suppress the output of roofit
-class outputRAII{
-public:
-   outputRAII(){
-     printf("Filtering out RooFit banner\n");
-      oldCoutStreamBuf = std::cout.rdbuf();
-      std::cout.rdbuf( strCout.rdbuf() );
-   }
-   ~outputRAII(){
-   std::cout.rdbuf( oldCoutStreamBuf );
+constexpr auto commandsChild = R"(
+gDebug=1;
+TH1F h1("h","",100,0,1);
+std::vector<std::list<TGraph>> v;
+h1.GetNbinsX();
+)";
+
+constexpr auto commandsParent = R"(
+gDebug=1;
+TH1F h1("h","",100,0,1);
+std::vector<std::list<TGraph>> v;
+std::set<TString> stringset;
+stringset.size();
+v.size();
+)";
+
+bool injectInCling(const char *commandSequence)
+{
+   bool success = true;
+
    std::string line;
-   while(std::getline(strCout,line,'\n')){
-      if (line.find("Wouter") != std::string::npos &&
-          line.find("NIKHEF") != std::string::npos &&
-          line.find("sourceforge") != std::string::npos){
-         printf("Unexpected output line: %s\n ", line.c_str());
+   std::stringstream commandStream(commandSequence);
+   while (commandStream.good()) {
+      std::getline(commandStream, line);
+      TInterpreter::EErrorCode errorCode = TInterpreter::kNoError;
+
+      gInterpreter->ProcessLine(line.c_str(), &errorCode);
+
+      if (errorCode != TInterpreter::kNoError) {
+         std::cerr << "Interpreter returned error " << errorCode << " for line\n\t" << line << "\n";
+         success = false;
       }
    }
-   }
-private:
-   std::stringstream strCout;
-   std::streambuf* oldCoutStreamBuf;
-};
 
-void injectInCling(const char* filename){
-
-   std::string line;
-   std::ifstream infile;
-   infile.open (filename);
-   while(!infile.eof()){
-      std::getline(infile,line);
-//      printf("%s\n", line.c_str());
-       gInterpreter->ProcessLine(line.c_str());
-   }
+   return success;
 }
 
 int main()
 {
-   printf("Starting\n");
+   bool success = true;
+   std::cout << "Starting\n";
 
    gInterpreter->ProcessLine("TGraph g;");
 
@@ -54,22 +55,26 @@ int main()
 
    if (pid == 0){
       // child process
-      outputRAII out;
-      injectInCling("commands1.txt");
-   }
-   else if (pid > 0){
+      success &= injectInCling(commandsChild);
+   } else if (pid > 0) {
       // parent process
-      outputRAII out;
-      injectInCling("commands2.txt");
-   }
-   else{
+      success &= injectInCling(commandsParent);
+
+      int status = 0;
+      wait(&status);
+
+      if (WIFEXITED(status)) {
+         int exit_status = WEXITSTATUS(status);
+         if (exit_status != 0) {
+            std::cerr << "Child exited with status " << exit_status << "\n";
+            return 2;
+         }
+      }
+   } else {
       // fork failed
-      printf("fork() failed!\n");
-      return 1;
+      std::cerr << "fork() failed!\n";
+      return 3;
    }
 
-   printf("Program with finished\n");
-
-
-   return 0;
+   return success ? 0 : 1;
 }
