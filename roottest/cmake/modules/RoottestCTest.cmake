@@ -33,7 +33,6 @@ add_definitions(
   -DClingWorkAroundMissingSmartInclude
   -DClingWorkAroundNoDotInclude
   -DClingWorkAroundMissingAutoLoadingForTemplates
-  -DClingWorkAroundAutoParseUsingNamespace
   -DClingWorkAroundTClassUpdateDouble32
   -DClingWorkAroundAutoParseDeclaration
   -DClingWorkAroundMissingUnloading
@@ -50,7 +49,6 @@ set(ClingWorkAroundUnnamedInclude                   TRUE)      # See https://sft
 set(ClingWorkAroundMissingSmartInclude              TRUE)      # disabled in Makefile-based?
 set(ClingWorkAroundNoDotInclude                     TRUE)      # See trello card about .include
 set(ClingWorkAroundMissingAutoLoadingForTemplates   TRUE)      # See: https://sft.its.cern.ch/jira/browse/ROOT-4786
-set(ClingWorkAroundAutoParseUsingNamespace          TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-6317
 set(ClingWorkAroundTClassUpdateDouble32             TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
 set(ClingWorkAroundAutoParseDeclaration             TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
 set(ClingWorkAroundMissingUnloading                 TRUE)      # disabled in Makefile-based?
