@@ -71,8 +71,9 @@ public:
    void generateHessian();
 
    void setUseGeneratedFunctionCode(bool);
-
    void writeDebugMacro(std::string const &) const;
+
+   std::stack<std::unique_ptr<ChangeOperModeRAII>> setOperModes(RooAbsArg::OperMode opMode);
 
 protected:
    double evaluate() const override;
