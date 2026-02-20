@@ -208,7 +208,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
       auto subField =
          RFieldBase::Create(std::string(kPrefixInherited) + "_" + std::to_string(i), c->GetName()).Unwrap();
       fTraits &= subField->GetTraits();
-      Attach(std::move(subField), RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
+      Attach(std::move(subField), RSubfieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
       i++;
    }
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
@@ -249,7 +249,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
       }
 
       fTraits &= subField->GetTraits();
-      Attach(std::move(subField), RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
+      Attach(std::move(subField), RSubfieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
    fTraits |= kTraitTypeChecksum;
 }
@@ -266,7 +266,7 @@ ROOT::RClassField::~RClassField()
    }
 }
 
-void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info)
+void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info)
 {
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubfieldsInfo.push_back(info);
