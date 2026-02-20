@@ -770,8 +770,8 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
    }
    volume->SetNumber(uid);
    if (!fHashVolumes) {
-      fHashVolumes = new THashList(256,3);
-      fHashGVolumes = new THashList(256,3);
+      fHashVolumes = new THashList(256, 3);
+      fHashGVolumes = new THashList(256, 3);
    }
    TObjArray *list = fVolumes;
    if (!volume->GetShape() || volume->IsRunTime() || volume->IsVolumeMulti()) {
