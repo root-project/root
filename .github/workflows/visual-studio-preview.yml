@@ -50,7 +50,7 @@ jobs:
           ref: master
 
       - name: Wednesday build
-        if:   github.event_name == 'schedule'
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         shell: cmd
         run: "C:\\setenv.bat x64 &&
               python .github/workflows/root-ci-config/build_root.py
