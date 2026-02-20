@@ -593,6 +593,8 @@ public:
       RegisterClass("TGeoVolume", "sap-icon://product", "libROOTGeoBrowseProvider");
       RegisterClass("TGeoNode", "sap-icon://product", "libROOTGeoBrowseProvider");
 
+      RegisterClass("RooWorkspace", "sap-icon://list", "libROOTFitWorkspaceProvider");
+
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);
       });
