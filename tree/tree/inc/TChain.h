@@ -86,6 +86,7 @@ public:
    TFriendElement *AddFriend(TTree* chain, const char* alias = "", bool warn = false) override;
    void      Browse(TBrowser*) override;
    virtual void      CanDeleteRefs(bool flag = true);
+   virtual TTree    *CopyTree(const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
    virtual void      CreatePackets();
    void      DirectoryAutoAdd(TDirectory *) override;
    Long64_t  Draw(const char* varexp, const TCut& selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;
