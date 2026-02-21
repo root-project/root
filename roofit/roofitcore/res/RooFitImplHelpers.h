@@ -11,9 +11,14 @@
 #ifndef RooFit_RooFitImplHelpers_h
 #define RooFit_RooFitImplHelpers_h
 
-#include <RooMsgService.h>
 #include <RooAbsArg.h>
+#include <RooAbsPdf.h>
 #include <RooAbsReal.h>
+#include <RooMsgService.h>
+
+#include "../../batchcompute/res/RooNaNPacker.h"
+
+#include <TMath.h>
 
 #include <sstream>
 #include <string>
@@ -103,6 +108,33 @@ std::string makeValidVarName(std::string const &in);
 void replaceAll(std::string &inOut, std::string_view what, std::string_view with);
 
 std::string makeSliceCutString(RooArgSet const &sliceDataSet);
+
+// Inlined because this is called inside RooAbsPdf::getValV(), and therefore
+// performance critical.
+inline double normalizeWithNaNPacking(RooAbsPdf const &pdf, double rawVal, double normVal)
+{
+
+   if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
+      // Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
+      pdf.logEvalError(msg.c_str());
+      return RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
+   }
+
+   if (rawVal < 0.) {
+      std::stringstream ss;
+      ss << "p.d.f value is less than zero (" << rawVal << "), trying to recover";
+      pdf.logEvalError(ss.str().c_str());
+      return RooNaNPacker::packFloatIntoNaN(-rawVal);
+   }
+
+   if (TMath::IsNaN(rawVal)) {
+      pdf.logEvalError("p.d.f value is Not-a-Number");
+      return rawVal;
+   }
+
+   return (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
+}
 
 } // namespace RooFit::Detail
 

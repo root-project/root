@@ -123,6 +123,7 @@
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
 #include "RooUniformBinning.h"
+#include "RooFitImplHelpers.h"
 
 #include "TClass.h"
 #include "TComplex.h"
@@ -204,15 +205,6 @@ void RooFFTConvPdf_doFFT(int n, double *input1, double *input2, double *output)
 } // namespace
 
 #endif
-
-class NaNPackingNormalizer {
-public:
-   double getVal(RooAbsPdf const &pdf, double normVal)
-   {
-      double rawVal = pdf.getVal();
-      return pdf.normalizeWithNaNPacking(rawVal, normVal);
-   };
-};
 
 using std::endl, std::string, std::ostream;
 
@@ -718,8 +710,10 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
   while(zeroBin<0) zeroBin+= N2 ;
 
   // To mimic exactly the normalization code in RooAbsPdf::getValV()
-  NaNPackingNormalizer npn;
-
+  auto getPdfVal = [&]() {
+     double rawVal = pdf.getVal();
+     return RooFit::Detail::normalizeWithNaNPacking(pdf, rawVal, normVal);
+  };
 
   // First scan hist into temp array
   std::vector<double> tmp(N2);
@@ -730,7 +724,7 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // Sample entire extended range (N2 samples)
     for (k=0 ; k<N2 ; k++) {
       histX->setBin(k) ;
-      tmp[k] = npn.getVal(pdf, normVal);
+      tmp[k] = getPdfVal();
     }
     break ;
 
@@ -739,16 +733,16 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // bins with p.d.f. value at respective boundary
     {
       histX->setBin(0) ;
-      double val = npn.getVal(pdf, normVal);
+      double val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
    tmp[k] = val ;
       }
       for (k=0 ; k<N ; k++) {
    histX->setBin(k) ;
-   tmp[k+Nbuf] = npn.getVal(pdf, normVal);
+   tmp[k+Nbuf] = getPdfVal();
       }
       histX->setBin(N-1) ;
-      val = npn.getVal(pdf, normVal);
+      val = getPdfVal();
       for (k=0 ; k<Nbuf ; k++) {
    tmp[N+Nbuf+k] = val ;
       }
@@ -760,13 +754,13 @@ std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, doub
     // bins with mirror image of sampled range
     for (k=0 ; k<N ; k++) {
       histX->setBin(k) ;
-      tmp[k+Nbuf] = npn.getVal(pdf, normVal);
+      tmp[k+Nbuf] = getPdfVal();
     }
     for (k=1 ; k<=Nbuf ; k++) {
       histX->setBin(k) ;
-      tmp[Nbuf-k] = npn.getVal(pdf, normVal);
+      tmp[Nbuf-k] = getPdfVal();
       histX->setBin(N-k) ;
-      tmp[Nbuf+N+k-1] = npn.getVal(pdf, normVal);
+      tmp[Nbuf+N+k-1] = getPdfVal();
     }
     break ;
   }
