@@ -82,10 +82,7 @@ protected:
       // still need it to support printing of the object.
       return getValV(nullptr);
    }
-   double getValV(const RooArgSet * /*normSet*/) const override
-   {
-      return normalizeWithNaNPacking(_pdf->getVal(), _normIntegral->getVal());
-   };
+   double getValV(const RooArgSet * normSet) const override;
 
 private:
    RooTemplateProxy<RooAbsPdf> _pdf;

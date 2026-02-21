@@ -13,6 +13,7 @@
 #include "RooFit/Detail/RooNormalizedPdf.h"
 
 #include "RooBatchCompute.h"
+#include "RooFitImplHelpers.h"
 
 #include <array>
 
@@ -49,6 +50,11 @@ void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
    for (std::size_t i = 0; i < nEvalErrorsType2; ++i) {
       logEvalError("p.d.f value is Not-a-Number");
    }
+}
+
+double RooNormalizedPdf::getValV(const RooArgSet * /*normSet*/) const
+{
+   return normalizeWithNaNPacking(*_pdf, _pdf->getVal(), _normIntegral->getVal());
 }
 
 } // namespace RooFit::Detail

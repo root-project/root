@@ -453,7 +453,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
-    RooBatchCompute
     ${EXTRA_LIBRARIES}
   DEPENDENCIES
     Core
@@ -464,6 +463,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
+    RooBatchCompute
     ${EXTRA_DEPENDENCIES}
   LINKDEF
     inc/LinkDef.h
