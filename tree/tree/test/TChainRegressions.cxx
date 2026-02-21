@@ -5,9 +5,22 @@
 #include <TEntryList.h>
 #include <TDirectory.h>
 
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 class TTreeCache;
+
+// ROOT-10778
+TEST(TChain, CopyTreeWithFriends)
+{
+   TChain ch1("chain1");
+   TChain ch2("chain2");
+   ch1.AddFriend(&ch2);
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TChain::CopyTree",
+                      "TChain::CopyTree is not supported if the TChain instance has friends.");
+   ch1.CopyTree("");
+}
 
 // https://its.cern.ch/jira/browse/ROOT-7973
 TEST(TChain, WrongCacheReadTwoTrees)
