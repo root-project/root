@@ -16,7 +16,14 @@ if(NOT WIN32)
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
 endif()
+
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+
+if(NOT MSVC)
+  ROOT_EXECUTABLE(root rmain.cxx LIBRARIES Core Rint)
+endif()
+
+
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
