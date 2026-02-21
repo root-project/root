@@ -286,34 +286,6 @@ RooAbsPdf::~RooAbsPdf()
 }
 
 
-double RooAbsPdf::normalizeWithNaNPacking(double rawVal, double normVal) const {
-
-    if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
-      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
-      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
-      logEvalError(msg.c_str());
-      clearValueAndShapeDirty();
-      return RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
-    }
-
-    if (rawVal < 0.) {
-       std::stringstream ss;
-       ss << "p.d.f value is less than zero (" << rawVal << "), trying to recover";
-       logEvalError(ss.str().c_str());
-       clearValueAndShapeDirty();
-       return RooNaNPacker::packFloatIntoNaN(-rawVal);
-    }
-
-    if (TMath::IsNaN(rawVal)) {
-      logEvalError("p.d.f value is Not-a-Number");
-      clearValueAndShapeDirty();
-      return rawVal;
-    }
-
-    return (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current value, normalized by integrating over
 /// the observables in `nset`. If `nset` is 0, the unnormalized value
@@ -354,7 +326,7 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
     // Evaluate denominator
     const double normVal = _norm->getVal();
 
-    _value = normalizeWithNaNPacking(rawVal, normVal);
+    _value = RooFit::Detail::normalizeWithNaNPacking(*this, rawVal, normVal);
 
     clearValueAndShapeDirty();
   }
