@@ -288,8 +288,7 @@ RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const
 
 } // namespace RooHelpers
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 /// Transform a string into a valid C++ variable name by replacing forbidden
 /// characters with underscores.
@@ -335,8 +334,7 @@ std::string makeSliceCutString(RooArgSet const &sliceDataSet)
    return cutString.str();
 }
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
 
 namespace {
 
