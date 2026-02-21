@@ -296,6 +296,8 @@ protected:
     return RooFit::getUniqueId(normSet).value() == _normSetId;
   }
 
+  friend class NaNPackingNormalizer;
+
   double normalizeWithNaNPacking(double rawVal, double normVal) const;
 
   RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;

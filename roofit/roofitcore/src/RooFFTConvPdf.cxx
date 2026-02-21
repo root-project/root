@@ -205,6 +205,15 @@ void RooFFTConvPdf_doFFT(int n, double *input1, double *input2, double *output)
 
 #endif
 
+class NaNPackingNormalizer {
+public:
+   double getVal(RooAbsPdf const &pdf, double normVal)
+   {
+      double rawVal = pdf.getVal();
+      return pdf.normalizeWithNaNPacking(rawVal, normVal);
+   };
+};
+
 using std::endl, std::string, std::ostream;
 
 
@@ -399,6 +408,14 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
     pdf2Clone.reset(clonePdf2) ;
   }
 
+  // Cache normalization integral values, since we know they don't change for
+  // the given normalization set in this cache object. When using this cache,
+  // we evaluate the pdfs without normalization set and then do the
+  // normalization manually using these cached values. This has less overhead
+  // compared to letting RooAbsPdf::getVal(normSet) figure out if the normSet
+  // has changed and get the caching right.
+  normVal1 = pdf1Clone->getNorm(hist()->get());
+  normVal2 = pdf2Clone->getNorm(hist()->get());
 
   // Attach cloned pdf to all original parameters of self
   RooArgSet convObsSet{*convObs};
@@ -579,8 +596,9 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 
   RooRealVar* histX = static_cast<RooRealVar*>(cacheHist.get()->find(_x.arg().GetName())) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.scanBinning) ;
-  std::vector<double> input1 = scanPdf(const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg())),*aux.pdf1Clone,cacheHist,slicePos,N,N2,binShift1,_shift1) ;
-  std::vector<double> input2 = scanPdf(const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg())),*aux.pdf2Clone,cacheHist,slicePos,N,N2,binShift2,_shift2) ;
+  RooRealVar &xVar = const_cast<RooRealVar &>(static_cast<RooRealVar const&>(_x.arg()));
+  std::vector<double> input1 = scanPdf(xVar,*aux.pdf1Clone,aux.normVal1,cacheHist,slicePos,N,N2,binShift1,_shift1) ;
+  std::vector<double> input2 = scanPdf(xVar,*aux.pdf2Clone,aux.normVal2,cacheHist,slicePos,N,N2,binShift2,_shift2) ;
   if (_bufStrat==Extend) histX->setBinning(*aux.histBinning) ;
 
 #ifndef ROOFIT_MATH_FFTW3
@@ -662,8 +680,9 @@ void RooFFTConvPdf::fillCacheSlice(FFTCacheElem& aux, const RooArgSet& slicePos)
 /// The return value is an array of doubles of length N2 with the sampled values. The caller takes ownership
 /// of the array
 
-std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos,
-              Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const
+std::vector<double> RooFFTConvPdf::scanPdf(RooRealVar &obs, RooAbsPdf &pdf, double normVal, const RooDataHist &hist,
+                                           const RooArgSet &slicePos, Int_t &N, Int_t &N2, Int_t &zeroBin,
+                                           double shift) const
 {
 
   RooRealVar* histX = static_cast<RooRealVar*>(hist.get()->find(obs.GetName())) ;
@@ -698,6 +717,10 @@ std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, con
   while(zeroBin>=N2) zeroBin-= N2 ;
   while(zeroBin<0) zeroBin+= N2 ;
 
+  // To mimic exactly the normalization code in RooAbsPdf::getValV()
+  NaNPackingNormalizer npn;
+
+
   // First scan hist into temp array
   std::vector<double> tmp(N2);
   Int_t k(0) ;
@@ -707,7 +730,7 @@ std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, con
     // Sample entire extended range (N2 samples)
     for (k=0 ; k<N2 ; k++) {
       histX->setBin(k) ;
-      tmp[k] = pdf.getVal(hist.get()) ;
+      tmp[k] = npn.getVal(pdf, normVal);
     }
     break ;
 
@@ -716,16 +739,16 @@ std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, con
     // bins with p.d.f. value at respective boundary
     {
       histX->setBin(0) ;
-      double val = pdf.getVal(hist.get()) ;
+      double val = npn.getVal(pdf, normVal);
       for (k=0 ; k<Nbuf ; k++) {
    tmp[k] = val ;
       }
       for (k=0 ; k<N ; k++) {
    histX->setBin(k) ;
-   tmp[k+Nbuf] = pdf.getVal(hist.get()) ;
+   tmp[k+Nbuf] = npn.getVal(pdf, normVal);
       }
       histX->setBin(N-1) ;
-      val = pdf.getVal(hist.get()) ;
+      val = npn.getVal(pdf, normVal);
       for (k=0 ; k<Nbuf ; k++) {
    tmp[N+Nbuf+k] = val ;
       }
@@ -737,13 +760,13 @@ std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, con
     // bins with mirror image of sampled range
     for (k=0 ; k<N ; k++) {
       histX->setBin(k) ;
-      tmp[k+Nbuf] = pdf.getVal(hist.get()) ;
+      tmp[k+Nbuf] = npn.getVal(pdf, normVal);
     }
     for (k=1 ; k<=Nbuf ; k++) {
       histX->setBin(k) ;
-      tmp[Nbuf-k] = pdf.getVal(hist.get()) ;
+      tmp[Nbuf-k] = npn.getVal(pdf, normVal);
       histX->setBin(N-k) ;
-      tmp[Nbuf+N+k-1] = pdf.getVal(hist.get()) ;
+      tmp[Nbuf+N+k-1] = npn.getVal(pdf, normVal);
     }
     break ;
   }

@@ -79,7 +79,7 @@ public:
 
   void calcParams() ;
 
-  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
+  std::vector<double>  scanPdf(RooRealVar& obs, RooAbsPdf& pdf, double normVal, const RooDataHist& hist, const RooArgSet& slicePos, Int_t& N, Int_t& N2, Int_t& zeroBin, double shift) const ;
 
   class FFTCacheElem : public PdfCacheElem {
   public:
@@ -93,6 +93,9 @@ public:
 
     std::unique_ptr<RooAbsPdf> pdf1Clone;
     std::unique_ptr<RooAbsPdf> pdf2Clone;
+
+    double normVal1 = 0.0;
+    double normVal2 = 0.0;
 
     std::unique_ptr<RooAbsBinning> histBinning;
     std::unique_ptr<RooAbsBinning> scanBinning;
