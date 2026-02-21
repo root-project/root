@@ -752,6 +752,24 @@ void TChain::CanDeleteRefs(bool flag /* = true */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy a tree with selection.
+///
+/// See the documentation of TTree::CopyTree
+///
+/// ### Known limitations for TChain
+///   - This method is not supported if used on an instance with friends
+
+TTree* TChain::CopyTree(const char* selection, Option_t* option /* = 0 */, Long64_t nentries /* = TTree::kMaxEntries */, Long64_t firstentry /* = 0 */)
+{
+   // A clear error for ROOT-10778
+   if (GetListOfFriends()) {
+      Error("CopyTree","TChain::CopyTree is not supported if the TChain instance has friends.");
+      return nullptr;
+   }
+   return this->TTree::CopyTree(selection, option, nentries, firstentry);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Initialize the packet descriptor string.
 
 void TChain::CreatePackets()
