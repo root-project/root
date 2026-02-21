@@ -1263,6 +1263,8 @@ void TEntryList::SetTree(const char *treename, const char *filename)
             elist->fBlocks = fBlocks;
             fBlocks = nullptr;
             elist->fNBlocks = fNBlocks;
+            elist->fLastIndexQueried = fLastIndexQueried;
+            elist->fLastIndexReturned = fLastIndexReturned;
             fLists->Add(elist);
             elist = new TEntryList("", "", treename, fn.Data());
             if (elist->GetDirectory()) {
