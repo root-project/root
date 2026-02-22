@@ -439,16 +439,23 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
 ///                          need to be copied from the `_coefList` elements to
 ///                          the `_coefCache`. True by default.
 
-void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues) const
+void RooAddPdf::updateCoefficients(AddCacheElem &cache, const RooArgSet *nset, bool syncCoefValues) const
 {
-  _coefCache.resize(_pdfList.size());
-  if(syncCoefValues) {
-    for(std::size_t i = 0; i < _coefList.size(); ++i) {
-      _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
-    }
-  }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
-                                    _refCoefNorm, _allExtendable, _coefErrCount);
+   _coefCache.resize(_pdfList.size());
+   if (syncCoefValues) {
+      for (std::size_t i = 0; i < _coefList.size(); ++i) {
+         _coefCache[i] = static_cast<RooAbsReal const &>(_coefList[i]).getVal(nset);
+      }
+   }
+   if (_allExtendable) {
+      for (std::size_t i = 0; i < _pdfList.size(); ++i) {
+         auto &pdf = static_cast<RooAbsPdf &>(_pdfList[i]);
+         _coefCache[i] = pdf.expectedEvents(!_refCoefNorm.empty() ? &_refCoefNorm : nset);
+      }
+   }
+
+   RooAddHelpers::updateCoefficients(*this, _pdfList.size(), _coefCache, _haveLastCoef || _allExtendable, cache,
+                                     _coefErrCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
