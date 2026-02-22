@@ -385,7 +385,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooNumIntConfig.cxx
     src/RooNumIntFactory.cxx
     src/RooNumRunningInt.cxx
-    src/RooNumber.cxx
     src/RooObjCacheManager.cxx
     src/RooParamBinning.cxx
     src/RooPlot.cxx
