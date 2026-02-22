@@ -59,24 +59,37 @@ RooAICRegistry::RooAICRegistry(UInt_t size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
-  : _clArr(other._clArr), _asArr1(other._clArr.size(), nullptr), _asArr2(other._clArr.size(), nullptr),
-    _asArr3(other._clArr.size(), nullptr), _asArr4(other._clArr.size(), nullptr)
+RooAICRegistry::RooAICRegistry(const RooAICRegistry &other)
 {
-  // Copy code-list array if other PDF has one
-  UInt_t size = other._clArr.size();
-  if (size) {
-    _asArr1.resize(size, nullptr);
-    _asArr2.resize(size, nullptr);
-    _asArr3.resize(size, nullptr);
-    _asArr4.resize(size, nullptr);
-    for(UInt_t i = 0; i < size; ++i) {
-      _asArr1[i] = makeSnapshot(other._asArr1[i]);
-      _asArr2[i] = makeSnapshot(other._asArr2[i]);
-      _asArr3[i] = makeSnapshot(other._asArr3[i]);
-      _asArr4[i] = makeSnapshot(other._asArr4[i]);
-    }
-  }
+   copyImpl(other);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy assignment
+
+RooAICRegistry &RooAICRegistry::operator=(const RooAICRegistry &other)
+{
+   // Delete code list array, if allocated
+   for (unsigned int i = 0; i < _clArr.size(); ++i) {
+      if (_asArr1[i]) {
+         delete _asArr1[i];
+         _asArr1[i] = nullptr;
+      }
+      if (_asArr2[i]) {
+         delete _asArr2[i];
+         _asArr2[i] = nullptr;
+      }
+      if (_asArr3[i]) {
+         delete _asArr3[i];
+         _asArr3[i] = nullptr;
+      }
+      if (_asArr4[i]) {
+         delete _asArr4[i];
+         _asArr4[i] = nullptr;
+      }
+   }
+   copyImpl(other);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,6 +105,28 @@ RooAICRegistry::~RooAICRegistry()
     if (_asArr4[i]) delete   _asArr4[i];
   }
 }
+
+
+void RooAICRegistry::copyImpl(const RooAICRegistry &other)
+{
+   _clArr = other._clArr;
+
+   // Copy code-list array if other PDF has one
+   UInt_t size = other._clArr.size();
+   if (size) {
+      _asArr1.resize(size, nullptr);
+      _asArr2.resize(size, nullptr);
+      _asArr3.resize(size, nullptr);
+      _asArr4.resize(size, nullptr);
+      for (UInt_t i = 0; i < size; ++i) {
+         _asArr1[i] = makeSnapshot(other._asArr1[i]);
+         _asArr2[i] = makeSnapshot(other._asArr2[i]);
+         _asArr3[i] = makeSnapshot(other._asArr3[i]);
+         _asArr4[i] = makeSnapshot(other._asArr4[i]);
+      }
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get size of _clArr vector

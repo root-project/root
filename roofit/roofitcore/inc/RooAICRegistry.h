@@ -27,7 +27,10 @@ class RooAICRegistry {
 
 public:
   RooAICRegistry(UInt_t size = 10) ;
-  RooAICRegistry(const RooAICRegistry& other) ;
+  RooAICRegistry(const RooAICRegistry &other);
+  RooAICRegistry &operator=(const RooAICRegistry &other);
+  RooAICRegistry(RooAICRegistry &&other) = default;
+  RooAICRegistry &operator=(RooAICRegistry &&other) = default;
   virtual ~RooAICRegistry() ;
 
   Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = nullptr, RooArgSet* set2 = nullptr,
@@ -38,6 +41,9 @@ public:
   const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1,
                                       pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const ;
   size_t size() const;
+
+private:
+  void copyImpl(const RooAICRegistry &other);
 
 protected:
 
