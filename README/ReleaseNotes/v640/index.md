@@ -195,6 +195,12 @@ As part of this migration, the following build options are deprecated. From ROOT
 ## RooFit
 
 - A new RooAbsPdf has been added: `RooStudentT`, which describes the location-scale student's t-distribution.
+- The `RooNumber::setRangeEpsRel()` and `RooNumber::setRangeEpsAbs()` have been
+  introduced 2 years ago in 48637270a9113aa to customize range check behavior
+  to be like before ROOT 6.28, but this has not been proven necessary. Instead,
+  looking up the static variables with the epsilon values incurred significant
+  overhead in `RooAbsRealLValue::inRange()`, which is visible in many-parameter
+  fits. Therefore, these functions are removed.
 
 ## RDataFrame
 
