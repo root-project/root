@@ -37,17 +37,17 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 
 #include "Riostream.h"
 
-#include "RooExtendPdf.h"
 #include "RooArgList.h"
-#include "RooRealVar.h"
-#include "RooFormulaVar.h"
-#include "RooNameReg.h"
 #include "RooConstVar.h"
+#include "RooExtendPdf.h"
+#include "RooFormulaVar.h"
+#include "RooMsgService.h"
+#include "RooNameReg.h"
 #include "RooProduct.h"
 #include "RooRatio.h"
-#include "RooMsgService.h"
+#include "RooRealVar.h"
 
-
+#include "RooFitImplHelpers.h"
 
 using std::endl;
 
@@ -162,6 +162,9 @@ std::unique_ptr<RooAbsReal> RooExtendPdf::createExpectedEventsFunc(const RooArgS
    }
 
    auto name = std::string(GetName()) + "_expectedEvents";
+   if (nset) {
+      name += "[" + RooHelpers::getColonSeparatedNameString(*nset, ',') + "]";
+   }
    auto out = std::make_unique<RooProduct>(name.c_str(), name.c_str(), prodList);
    if(rangeFactor) {
       out->addOwnedComponents(std::move(rangeFactor));
