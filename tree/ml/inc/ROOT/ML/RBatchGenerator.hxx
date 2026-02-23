@@ -40,7 +40,7 @@ namespace ROOT::Experimental::ML {
 
 namespace ROOT::Experimental::Internal::ML {
 /**
-\class ROOT::Experimental::Internal::ML::RBatchGenerator
+ \class ROOT::Experimental::Internal::ML::RBatchGenerator
 \brief
 
 In this class, the processes of loading chunks (see RChunkLoader) and creating batches from those chunks (see
@@ -70,7 +70,7 @@ private:
 
    std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
 
-   std::vector<ROOT::RDF::RNode> f_rdfs;
+   std::vector<ROOT::RDF::RNode> fRdfs;
 
    std::unique_ptr<std::thread> fLoadingThread;
    std::condition_variable fLoadingCondition;
@@ -121,7 +121,7 @@ public:
                    bool dropRemainder = true, const std::size_t setSeed = 0, bool loadEager = false,
                    std::string sampleType = "", float sampleRatio = 1.0, bool replacement = false)
 
-      : f_rdfs(rdfs),
+      : fRdfs(rdfs),
         fCols(cols),
         fVecSizes(vecSizes),
         fChunkSize(chunkSize),
@@ -141,7 +141,7 @@ public:
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
 
       if (fLoadEager) {
-         fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(f_rdfs, fValidationSplit, fCols, fVecSizes,
+         fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(fRdfs, fValidationSplit, fCols, fVecSizes,
                                                                     vecPadding, fShuffle, fSetSeed);
          // split the datasets and extract the training and validation datasets
          fDatasetLoader->SplitDatasets();
@@ -171,7 +171,7 @@ public:
       }
 
       else {
-         fChunkLoader = std::make_unique<RChunkLoader<Args...>>(f_rdfs[0], fChunkSize, fBlockSize, fValidationSplit,
+         fChunkLoader = std::make_unique<RChunkLoader<Args...>>(fRdfs[0], fChunkSize, fBlockSize, fValidationSplit,
                                                                 fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
 
          // split the dataset into training and validation sets
@@ -231,18 +231,6 @@ public:
       fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunks, this);
    }
 
-   void ActivateEpoch()
-   {
-      std::lock_guard<std::mutex> lock(fLoadingMutex);
-      fEpochActive = true;
-   }
-
-   void DeActivateEpoch()
-   {
-      std::lock_guard<std::mutex> lock(fLoadingMutex);
-      fEpochActive = false;
-   }
-
    /// \brief Activate the training epoch by starting the batchloader.
    void ActivateTrainingEpoch()
    {
@@ -293,13 +281,15 @@ public:
    }
 
    /// \brief Main loop for loading chunks and creating batches.
-   /// The producer (loading thread) will keep loading chunks and creating batches until the end of the epoch is reached, or the generator is deactivated.
+   /// The producer (loading thread) will keep loading chunks and creating batches until the end of the epoch is
+   /// reached, or the generator is deactivated.
    void LoadChunks()
    {
       // Set minimum number of batches to keep in the queue before producer goes to work.
-      // This is to ensure that the producer will get a chance to work if the consumer is too fast and drains the queue quickly.
-      // With this, the maximum queue size will be approximately fChunkSize*1.5.
-      // TODO(staider): improve this heuristic by taking into consideration a "maximum number of batches in memory" set by the user.
+      // This is to ensure that the producer will get a chance to work if the consumer is too fast and drains the queue
+      // quickly. With this, the maximum queue size will be approximately fChunkSize*1.5.
+      // TODO(staider): improve this heuristic by taking into consideration a "maximum number of batches in memory" set
+      // by the user.
       const std::size_t kMinQueuedBatches = std::max<std::size_t>(1, (fChunkSize / fBatchSize) / 2);
 
       std::unique_lock<std::mutex> lock(fLoadingMutex);
@@ -336,9 +326,10 @@ public:
                   break;
                }
 
-               // In the case of training prefetching, we could start requesting data for the next training loop while validation is active and might need data.
-               // To avoid getting stuck in the training loop, we check if the validation queue is below watermark and if so, we break out of the training loop.
-               if (validationEmpty()){
+               // In the case of training prefetching, we could start requesting data for the next training loop while
+               // validation is active and might need data. To avoid getting stuck in the training loop, we check if the
+               // validation queue is below watermark and if so, we break out of the training loop.
+               if (validationEmpty()) {
                   break;
                }
 
@@ -356,8 +347,9 @@ public:
                const std::size_t chunkIdx = fTrainingChunkNum++;
                const bool isLastTrainChunk = (chunkIdx == fNumTrainingChunks - 1);
 
-               // Release lock while reading and loading data to allow the consumer to access the queue freely in parallel.
-               // The loading thread re-acquires the lock in CreateBatches when it needs to push batches to the queue.
+               // Release lock while reading and loading data to allow the consumer to access the queue freely in
+               // parallel. The loading thread re-acquires the lock in CreateBatches when it needs to push batches to
+               // the queue.
                lock.unlock();
                fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, chunkIdx);
                fTrainingBatchLoader->CreateBatches(fTrainChunkTensor, isLastTrainChunk);
