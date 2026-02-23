@@ -21,8 +21,8 @@ add_test(NAME roottest-cling-dict-ROOT-8096-build
 #                                  --target  ${targetname_libgen}${fast})
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
 if(GeneratorNeedsBuildSerialization)
-   set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-   set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+   set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+   set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
 
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)

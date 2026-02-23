@@ -12,6 +12,6 @@ ROOTTEST_LINKER_LIBRARY(stldictTest TEST MyClass1.cpp MyClass2.cpp MyClass3.cpp
 ROOT_ADD_TEST(roottest-cling-stl-dicts-build 
               COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target stldictTest${fast} -- ${always-make})
 if(GeneratorNeedsBuildSerialization)
-    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    set_property(TEST roottest-cling-stl-dicts-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()

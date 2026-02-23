@@ -20,6 +20,6 @@ add_test(NAME ${GENERATE_DICTIONARY_TEST}
                                     --target ${dictname}${fast}
                                     -- ${always-make})
 if(GeneratorNeedsBuildSerialization)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    set_property(TEST ${GENERATE_DICTIONARY_TEST} APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
