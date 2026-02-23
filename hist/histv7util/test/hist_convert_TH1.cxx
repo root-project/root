@@ -100,6 +100,27 @@ TEST(ConvertToTH1I, RHist)
    EXPECT_EQ(stats[3], 2470);
 }
 
+TEST(ConvertToTH1I, RHistSetBinContentTainted)
+{
+   static constexpr std::size_t Bins = 20;
+   RHist<int> hist(Bins, {0, Bins});
+   hist.SetBinContent(RBinIndex(1), 42);
+   ASSERT_TRUE(hist.GetStats().IsTainted());
+
+   auto th1i = ConvertToTH1I(hist);
+   ASSERT_TRUE(th1i);
+
+   EXPECT_EQ(th1i->GetBinContent(2), 42);
+
+   EXPECT_EQ(th1i->GetEntries(), 0);
+   Double_t stats[4];
+   th1i->GetStats(stats);
+   EXPECT_EQ(stats[0], 0);
+   EXPECT_EQ(stats[1], 0);
+   EXPECT_EQ(stats[2], 0);
+   EXPECT_EQ(stats[3], 0);
+}
+
 TEST(ConvertToTH1C, RHistEngine)
 {
    static constexpr std::size_t Bins = 20;
