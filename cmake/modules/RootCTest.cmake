@@ -60,7 +60,7 @@ endforeach()
 # - Use a RESOURCE_LOCK on all tests that invoke ninja, so no two tests will invoke ninja in parallel
 if(GeneratorNeedsBuildSerialization)
   add_test(NAME cmake-build-all
-      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR})
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config ${build_configuration})
   set_tests_properties(cmake-build-all PROPERTIES
       RESOURCE_LOCK CMAKE_BUILD
       FIXTURES_SETUP CMAKE_BUILD_ALL
