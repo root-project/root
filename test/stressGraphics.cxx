@@ -3772,6 +3772,7 @@ void hbars()
    TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");
    hDiv->SetStats(0);
    TH1F *hDivFR = (TH1F*)hDiv->Clone("hDivFR");
+   hDivFR->SetDirectory(gDirectory);
    T->Draw("Division>>hDivFR","Nation==\"FR\"","goff");
    hDiv->SetBarWidth(0.45);
    hDiv->SetBarOffset(0.1);

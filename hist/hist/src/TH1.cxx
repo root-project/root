@@ -742,11 +742,13 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: cannot be inlined on Windows/NT.
+/// Check whether TH1-derived classes are owned by the current gDirectory.
+/// \note ROOT::Experimental::IsImplicitObjectOwnershipEnabled() might lead to this
+/// setting being always off, since it has higher precedence.
 
 Bool_t TH1::AddDirectoryStatus()
 {
-   return fgAddDirectory;
+   return ROOT::Experimental::IsImplicitObjectOwnershipEnabled() && fgAddDirectory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1255,16 +1257,19 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the flag controlling the automatic add of histograms in memory
+/// Sets the flag controlling the automatic add of histograms in memory.
 ///
 /// By default (fAddDirectory = kTRUE), histograms are automatically added
-/// to the list of objects in memory.
+/// to the current directory (gDirectory).
 /// Note that one histogram can be removed from its support directory
 /// by calling h->SetDirectory(nullptr) or h->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
-/// NOTE that this is a static function. To call it, use;
-/// TH1::AddDirectory
+/// This is a static function. To call it, use `TH1::AddDirectory`
+///
+/// \note When ROOT::Experimental::IsImplicitOwnershipEnabled() is off, AddDirectory is
+/// without effect.
+///
 
 void TH1::AddDirectory(Bool_t add)
 {
@@ -2730,7 +2735,7 @@ void TH1::Copy(TObject &obj) const
    // will be added to gDirectory independently of the fDirectory stored.
    // and if the AddDirectoryStatus() is false it will not be added to
    // any directory (fDirectory = nullptr)
-   if (fgAddDirectory && gDirectory) {
+   if (AddDirectoryStatus() && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
@@ -2786,16 +2791,13 @@ TObject* TH1::Clone(const char* newname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the automatic addition of the histogram to the given directory
+/// Callback to perform the automatic addition of the histogram to the given directory.
 ///
-/// Note this function is called in place when the semantic requires
-/// this object to be added to a directory (I.e. when being read from
-/// a TKey or being Cloned)
+/// This callback is called when a TKey is read or an object is being Cloned.
 
 void TH1::DirectoryAutoAdd(TDirectory *dir)
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   if (addStatus) {
+   if (fgAddDirectory) {
       SetDirectory(dir);
       if (dir) {
          ResetBit(kCanDelete);

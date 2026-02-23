@@ -6,13 +6,14 @@
 #include "THStack.h"
 #include "TTree.h"
 
-void createInputs(int n = 2) 
+void createInputs(int n = 2)
 {
    for(UInt_t i = 0; i < (UInt_t)n; ++i ) {
       TFile *file = TFile::Open(TString::Format("input%d.root",i),"RECREATE");
       TH1F * h = new TH1F("h1","",10,0,100);
+      h->SetDirectory(file);
       h->Fill(10.5); h->Fill(20.5);
- 
+
       Int_t nbins[5];
       Double_t xmin[5];
       Double_t xmax[5];
@@ -23,7 +24,7 @@ void createInputs(int n = 2)
       Double_t coord[5] = {0.5, 1.5, 2.5, 3.5, 4.5};
       sparse->Fill(coord);
       sparse->Write();
-      
+
       THStack *stack = new THStack("stack","");
       h = new TH1F("hs_1","",10,0,100);
       h->Fill(10.5); h->Fill(20.5);
@@ -40,9 +41,9 @@ void createInputs(int n = 2)
       gr->SetPoint(0,1,1);
       gr->SetPoint(1,2,2);
       gr->SetPoint(2,3,3);
-      
+
       gr->Write();
-      
+
       TTree *tree = new TTree("tree","simplistic tree");
       Int_t data = 0;
       tree->Branch("data",&data);
@@ -50,7 +51,7 @@ void createInputs(int n = 2)
          data = l;
          tree->Fill();
       }
-      
+
       file->Write();
       delete file;
    }
@@ -83,7 +84,7 @@ bool check(int n = 2) {
       Error("execFileMerger","h1 not added properly");
       result = false;
    }
-   
+
    THnSparseF *sparse; file->GetObject("sparse",sparse);
    if (!sparse) {
       Error("execFileMerger","sparse is missing\n");
@@ -103,7 +104,7 @@ bool check(int n = 2) {
          result = false;
       }
    }
-   
+
    THStack *stack; file->GetObject("stack",stack);
    if (!stack) {
       Error("execFileMerger","stack is missing\n");
@@ -135,18 +136,18 @@ bool check(int n = 2) {
    }
    if (gr->GetN() != ( n * 3)) {
       Error("execFileMerger","exgraph not added properly n=%d rather than %d",gr->GetN(),n*3);
-      result = false;            
+      result = false;
    } else {
       for(Int_t k = 0; k < gr->GetN(); ++k) {
          double x,y;
          gr->GetPoint(k,x,y);
          if ( x != ( (k%3)+1 ) ||  y != ( (k%3)+1 ) ) {
             Error("execFileMerger","exgraph not added properly");
-            result = false;            
+            result = false;
          }
       }
    }
-   
+
    TTree *tree; file->GetObject("tree",tree);
    if (!tree) {
       Error("execFileMerger","tree is missing\n");
@@ -154,14 +155,14 @@ bool check(int n = 2) {
    }
    if (tree->GetEntries() != n*2) {
       Error("execFileMerger","tree does not have the expected number of entries: %lld rather than %d",tree->GetEntries(),n*2);
-      result = false;            
+      result = false;
    } else {
       if ( tree->GetEntries("data==1") != n ) {
          Error("execFileMerger","tree does not have the expected data. We got %lld entries with 'data==1' rather than %d",tree->GetEntries("data==1"),n);
          tree->Scan();
          result = false;
       }
-   }   
+   }
    return result;
 }
 

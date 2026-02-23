@@ -4,4 +4,4 @@ std::vector<std::list<TGraph>> v;
 std::set<TString> stringset;
 THtml h;
 //gInterpreter->SetClassAutoparsing(false);
-h.LoadAllLibs();
+h1.LoadAllLibs();
