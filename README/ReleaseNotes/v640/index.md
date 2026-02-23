@@ -22,6 +22,7 @@ The following people have contributed to this new version:
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Stephan Hageboeck, CERN/EP-SFT,\
  Aaron Jomy, CERN/EP-SFT,\
+ David Lange, CERN and Princeton,\
  Sergey Linev, GSI Darmstadt,\
  Lorenzo Moneta, CERN/EP-SFT,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
@@ -69,6 +70,8 @@ The following people have contributed to this new version:
 - `rootcling` fails if no selection rule is specified and if the creation of a C++ module is not requested.
 
 ## Geometry
+
+* The list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
 
 ### Extensible color schemes for geometry visualization
 ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.
