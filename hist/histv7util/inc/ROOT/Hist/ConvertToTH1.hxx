@@ -79,6 +79,9 @@ std::unique_ptr<TH1S> ConvertToTH1S(const RHist<short> &hist);
 
 /// Convert a one-dimensional histogram to TH1I.
 ///
+/// If the RHistStats are tainted, for example after setting bin contents, the number of entries and the total sum of
+/// weights will be unset.
+///
 /// Throws an exception if the histogram has more than one dimension.
 ///
 /// \param[in] hist the RHist to convert
