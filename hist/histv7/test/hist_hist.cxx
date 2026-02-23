@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iterator>
 #include <random>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <variant>
@@ -81,6 +82,31 @@ TEST(RHist, GetFullMultiDimRange)
    }
    // Numerical differences with EXPECT_DOUBLE_EQ
    EXPECT_FLOAT_EQ(hist.GetStats().GetSumW(), sumW);
+}
+
+TEST(RHist, SetBinContent)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+
+   {
+      RHist<int> hist(axis);
+      ASSERT_FALSE(hist.GetStats().IsTainted());
+      hist.SetBinContent(RBinIndex(1), 42);
+      EXPECT_EQ(hist.GetBinContent(RBinIndex(1)), 42);
+      EXPECT_TRUE(hist.GetStats().IsTainted());
+      EXPECT_THROW(hist.GetNEntries(), std::logic_error);
+   }
+
+   {
+      RHist<int> hist(axis);
+      ASSERT_FALSE(hist.GetStats().IsTainted());
+      const std::array<RBinIndex, 1> indices = {2};
+      hist.SetBinContent(indices, 42);
+      EXPECT_EQ(hist.GetBinContent(indices), 42);
+      EXPECT_TRUE(hist.GetStats().IsTainted());
+      EXPECT_THROW(hist.GetNEntries(), std::logic_error);
+   }
 }
 
 TEST(RHist, Add)
