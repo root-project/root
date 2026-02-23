@@ -3628,6 +3628,17 @@ public:
         gf["char[]"] =                      (cf_t)+[](cdims_t d) { return new NonConstCStringArrayConverter{d, true}; };
         gf["signed char*"] =                gf["char*"];
         gf["wchar_t*"] =                    (cf_t)+[](cdims_t) { return new WCStringConverter{}; };
+     // TODO: The libc++ library that is used most prominently by Apple for
+     // macOS is using the _Nonnull Clang attribute for some of its string
+     // constructors (_LIBCPP_DIAGNOSE_NULLPTR is a preprocessor macro that
+     // resolves to _Nullable). The cppyy backend doesn't strip away such Clang
+     // attributes, so the wchar_t* converter fails to match. To make the
+     // construction of std::wstring work on macOS, we are explicitly creating
+     // a converter for the wchar_t*_Nonnull type here, but we should try to
+     // find a more general solution for dealing with Clang attributes.
+     // [1] https://clang.llvm.org/docs/AttributeReference.html#id656
+     // [2] https://github.com/llvm/llvm-project/blob/2078da43e25a4623cab2d0d60decddf709aaea28/libcxx/include/string#L1061
+        gf["wchar_t*_Nonnull"] =            (cf_t)+[](cdims_t) { return new WCStringConverter{}; };
         gf["char16_t*"] =                   (cf_t)+[](cdims_t) { return new CString16Converter{}; };
         gf["char16_t[]"] =                  (cf_t)+[](cdims_t d) { return new CString16Converter{dims2stringsz(d)}; };
         gf["char32_t*"] =                   (cf_t)+[](cdims_t) { return new CString32Converter{}; };
