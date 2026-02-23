@@ -422,7 +422,7 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     )
 endif()
 
-add_definitions( -D_GNU_SOURCE -DCLING_VERSION=${CLING_VERSION})
+add_definitions( -DUPSTREAM_CLANG -D_GNU_SOURCE -DCLING_VERSION=${CLING_VERSION})
 
 option(CLING_INCLUDE_TESTS
        "Generate build targets for the Cling unit tests."

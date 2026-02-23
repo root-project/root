@@ -352,14 +352,9 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
       return nullptr;
     }
 
-    if (!LookupCtx->isDependentContext()) {
-      if (RequireCompleteDeclContext(*SS, LookupCtx)) {
-        return nullptr;
-      } else if (TagDecl* TD = dyn_cast<TagDecl>(LookupCtx)) {
-        // Update the DeclContext to point to the Tag definition.
-        LookupCtx = TD->getDefinition();
-      }
-    }
+    if (!LookupCtx->isDependentContext() &&
+        RequireCompleteDeclContext(*SS, LookupCtx))
+      return nullptr;
   }
 
   // In the case where we know that the identifier is a class name, we know that
@@ -16924,28 +16919,6 @@ bool Sema::CheckEnumRedeclaration(SourceLocation EnumLoc, bool IsScoped,
       return true;
     }
   } else if (IsFixed != Prev->isFixed()) {
-    // Determine whether this is a cling fwd decl.
-    auto hasFwdDeclAnnotation = [](const Decl *Prev) -> bool {
-      for(auto attr = Prev->specific_attr_begin<AnnotateAttr>(),
-               end = Prev->specific_attr_end<AnnotateAttr> ();
-          attr != end;
-          ++attr)
-      {
-        if (!attr->isInherited()) {
-          llvm::StringRef annotation = attr->getAnnotation();
-          assert(!annotation.empty() && "Empty annotation!");
-          if (annotation.starts_with("$clingAutoload$")) {
-            // autoload annotation.
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    if (hasFwdDeclAnnotation(Prev))
-      return false;
-
     Diag(EnumLoc, diag::err_enum_redeclare_fixed_mismatch)
       << Prev->isFixed();
     Diag(Prev->getLocation(), diag::note_previous_declaration);

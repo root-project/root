@@ -318,13 +318,17 @@ namespace cling {
                                            const llvm::Module& M,
                                            CodeGenerator& CG) {
     M.print(Out, /*AssemblyAnnotationWriter*/ nullptr);
+#ifndef UPSTREAM_CLANG
     CG.print(Out);
+#endif
   }
 
   void ClangInternalState::printMacroDefinitions(llvm::raw_ostream& Out,
                                                 const clang::Preprocessor& PP) {
     stdstrstream contentsOS;
+#ifndef UPSTREAM_CLANG
     PP.printMacros(contentsOS);
+#endif
     Out << "Ordered Alphabetically:\n";
     std::vector<std::string> elems;
     {

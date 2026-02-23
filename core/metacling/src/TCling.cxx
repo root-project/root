@@ -1143,6 +1143,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
       }
       if (RecreateIndex) {
          cling::Interpreter::PushTransactionRAII deserRAII(&interp);
+#ifndef UPSTREAM_CLANG
          clang::GlobalModuleIndex::UserDefinedInterestingIDs IDs;
 
          struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
@@ -1205,6 +1206,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
                                                       CI.getPCHContainerReader(),
                                                       ModuleIndexPath,
                                                       &IDs));
+#endif
          ModuleManager->resetForReload();
          ModuleManager->loadGlobalIndex();
          GlobalIndex = ModuleManager->getGlobalIndex();
@@ -1276,8 +1278,10 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       GlobalIndex = CI.getASTReader()->getGlobalIndex();
 
       llvm::StringSet<> KnownModuleFileNames;
+#ifndef UPSTREAM_CLANG
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
+#endif
 
       std::vector<std::string> PendingModules;
       PendingModules.reserve(256);
@@ -7823,12 +7827,18 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    }
 
    // Save state of the PP
+#ifndef UPSTREAM_CLANG
    Sema &SemaR = fInterpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
    Preprocessor &PP = SemaR.getPreprocessor();
+#endif
    Parser& P = const_cast<Parser&>(fInterpreter->getParser());
+#ifndef UPSTREAM_CLANG
    Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
+#ifndef UPSTREAM_CLANG
    Parser::ParserCurTokRestoreRAII savedCurToken(P);
+#endif
    // After we have saved the token reset the current one to something which
    // is safe (semi colon usually means empty decl)
    Token& Tok = const_cast<Token&>(P.getCurToken());
@@ -7838,8 +7848,10 @@ TObject* TCling::GetObjectAddress(const char *Name, void *&LookupCtx)
    // the DeclContext assumes that we drill down always.
    // We have to be on the global context. At that point we are in a
    // wrapper function so the parent context must be the global.
+#ifndef UPSTREAM_CLANG
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                           SemaR.TUScope);
+#endif
 
    TObject* specObj = gROOT->FindSpecialObject(Name, LookupCtx);
    if (specObj) {

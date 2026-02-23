@@ -140,21 +140,27 @@ namespace {
         FileInfos.push_back({std::move(Literal), Tok.getLocation()});
 
       clang::Parser& P = m_Interp.getParser();
+#ifndef UPSTREAM_CLANG
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
+#endif
       // After we have saved the token reset the current one to something
       // which is safe (semi colon usually means empty decl)
       Token& CurTok = const_cast<Token&>(P.getCurToken());
       CurTok.setKind(tok::semi);
 
+#ifndef UPSTREAM_CLANG
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+#endif
       // We can't PushDeclContext, because we go up and the routine that
       // pops the DeclContext assumes that we drill down always.
       // We have to be on the global context. At that point we are in a
       // wrapper function so the parent context must be the global.
+#ifndef UPSTREAM_CLANG
       TranslationUnitDecl* TU =
       m_Interp.getCI()->getASTContext().getTranslationUnitDecl();
       Sema::ContextAndScopeRAII pushedDCAndS(m_Interp.getSema(),
                                             TU, m_Interp.getSema().TUScope);
+#endif
       Interpreter::PushTransactionRAII pushedT(&m_Interp);
 
       for (const LibraryFileInfo& FI : FileInfos) {

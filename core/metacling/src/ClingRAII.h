@@ -57,12 +57,18 @@ namespace ROOT {
           }
        };
 
+#ifndef UPSTREAM_CLANG
        clang::Preprocessor::CleanupAndRestoreCacheRAII fCleanupRAII;
+#endif
+#ifndef UPSTREAM_CLANG
        clang::Parser::ParserCurTokRestoreRAII fSavedCurToken;
+#endif
        cling::ParserStateRAII fParserRAII;
 
+#ifndef UPSTREAM_CLANG
        // Buffer the delayed infos when doing recursive parsing.
        clang::Sema::DelayedInfoRAII fSemaInfoRAII;
+#endif
 
        SemaExprCleanupsRAII fSemaExprCleanupsRAII;
 
@@ -70,22 +76,37 @@ namespace ROOT {
        // the DeclContext assumes that we drill down always.
        // We have to be on the global context. At that point we are in a
        // wrapper function so the parent context must be the global.
+#ifndef UPSTREAM_CLANG
        clang::Sema::ContextAndScopeRAII fPushedDCAndS;
+#endif
 
        SemaParsingInitForAutoVarsRAII fSemaParsingInitForAutoVarsRAII;
 
+#ifndef UPSTREAM_CLANG
        clang::Sema::SavePendingInstantiationsRAII fPendingInstantiations;
+#endif
 
 
        ParsingStateRAII(clang::Parser& parser, clang::Sema& sema):
+#ifndef UPSTREAM_CLANG
           fCleanupRAII(sema.getPreprocessor()),
+#endif
+#ifndef UPSTREAM_CLANG
           fSavedCurToken(parser),
+#endif
           fParserRAII(parser, false /*skipToEOF*/),
-          fSemaInfoRAII(sema), fSemaExprCleanupsRAII(sema),
+#ifndef UPSTREAM_CLANG
+          fSemaInfoRAII(sema),
+#endif
+          fSemaExprCleanupsRAII(sema),
+#ifndef UPSTREAM_CLANG
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
-          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars),
+#endif
+          fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)
+#ifndef UPSTREAM_CLANG
           fPendingInstantiations(sema)
+#endif
        {
           // After we have saved the token reset the current one to something which
           // is safe (semi colon usually means empty decl)

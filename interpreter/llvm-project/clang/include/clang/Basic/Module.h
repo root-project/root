@@ -399,9 +399,6 @@ public:
   LLVM_PREFERRED_TYPE(bool)
   unsigned NoUndeclaredIncludes : 1;
 
-  /// Whether the submodule is allowed to have missing headers.
-  unsigned IsOptional: 1;
-
   /// Whether this module came from a "private" module map, found next
   /// to a regular (public) module map.
   LLVM_PREFERRED_TYPE(bool)

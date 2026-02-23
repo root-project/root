@@ -160,11 +160,11 @@ namespace cling {
       T->setState(Transaction::kRolledBack);
     else
       T->setState(Transaction::kRolledBackWithErrors);
-
+#ifndef UPSTREAM_CLANG
     // Release the input_line_X file unless verifying diagnostics.
     if (!m_Interp->getCI()->getDiagnosticOpts().VerifyDiagnostics)
       m_Sema->getSourceManager().invalidateCache(T->getBufferFID());
-
+#endif
     return Successful;
   }
 
@@ -174,10 +174,12 @@ namespace cling {
 
   bool
   TransactionUnloader::unloadModule(llvm::Module* M) {
+#ifndef UPSTREAM_CLANG
     for (auto& Func: M->functions())
       m_CodeGen->forgetGlobal(&Func);
     for (auto& Glob: M->globals())
       m_CodeGen->forgetGlobal(&Glob);
+#endif
     return true;
   }
 } // end namespace cling

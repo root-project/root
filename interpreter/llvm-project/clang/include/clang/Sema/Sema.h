@@ -1183,7 +1183,6 @@ protected:
   friend class ASTReader;
   friend class ASTDeclReader;
   friend class ASTWriter;
-  friend class ::cling::DeclUnloader;
 
 private:
   std::optional<std::unique_ptr<DarwinSDKInfo>> CachedDarwinSDKInfo;
@@ -2732,7 +2731,7 @@ public:
 
 public:
   // Marks SS invalid if it represents an incomplete type.
-  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *&DC);
+  bool RequireCompleteDeclContext(CXXScopeSpec &SS, DeclContext *DC);
   // Complete an enum decl, maybe without a scope spec.
   bool RequireCompleteEnumDecl(EnumDecl *D, SourceLocation L,
                                CXXScopeSpec *SS = nullptr);
@@ -3059,27 +3058,6 @@ public:
   /// A cache of the flags available in enumerations with the flag_bits
   /// attribute.
   mutable llvm::DenseMap<const EnumDecl *, llvm::APInt> FlagBitsCache;
-
-  class DelayedInfoRAII {
-    Sema &S;
-    SmallVector<std::pair<const CXXMethodDecl*, const CXXMethodDecl*>, 2>
-      DelayedOverridingExceptionSpecChecks;
-    SmallVector<std::pair<FunctionDecl*, FunctionDecl*>, 2>
-      DelayedEquivalentExceptionSpecChecks;
-  public:
-    DelayedInfoRAII(Sema& S): S(S) {
-      std::swap(S.DelayedOverridingExceptionSpecChecks,
-                DelayedOverridingExceptionSpecChecks);
-      std::swap(S.DelayedEquivalentExceptionSpecChecks,
-                DelayedEquivalentExceptionSpecChecks);
-    }
-    ~DelayedInfoRAII() {
-      std::swap(S.DelayedOverridingExceptionSpecChecks,
-                DelayedOverridingExceptionSpecChecks);
-      std::swap(S.DelayedEquivalentExceptionSpecChecks,
-                DelayedEquivalentExceptionSpecChecks);
-    }
-  };
 
   /// WeakUndeclaredIdentifiers - Identifiers contained in \#pragma weak before
   /// declared. Rare. May alias another identifier, declared or undeclared.
@@ -11344,8 +11322,8 @@ public:
   bool CheckTemplateParameterList(TemplateParameterList *NewParams,
                                   TemplateParameterList *OldParams,
                                   TemplateParamListContext TPC,
-                                  SkipBodyInfo *SkipBody = nullptr,
-                                  bool Complain = true);
+                                  SkipBodyInfo *SkipBody = nullptr);
+
   /// Match the given template parameter lists to the given scope
   /// specifier, returning the template parameter list that applies to the
   /// name.
@@ -13135,39 +13113,6 @@ public:
       bool SkipForSpecialization = false,
       bool ForDefaultArgumentSubstitution = false);
 
-  /// A RAII object to temporarily push a decl context and scope.
-  class ContextAndScopeRAII {
-  private:
-    Sema &S;
-    DeclContext *SavedContext;
-    Scope *SavedScope;
-    ProcessingContextState SavedContextState;
-    QualType SavedCXXThisTypeOverride;
-
-  public:
-    ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
-        : S(S), SavedContext(S.CurContext), SavedScope(S.CurScope),
-          SavedContextState(S.DelayedDiagnostics.pushUndelayed()),
-          SavedCXXThisTypeOverride(S.CXXThisTypeOverride) {
-      assert(ContextToPush && "pushing null context");
-      S.CurContext = ContextToPush;
-      S.CurScope = ScopeToPush;
-    }
-
-    void pop() {
-      if (!SavedContext)
-        return;
-      S.CurContext = SavedContext;
-      S.CurScope = SavedScope;
-      S.DelayedDiagnostics.popUndelayed(SavedContextState);
-      S.CXXThisTypeOverride = SavedCXXThisTypeOverride;
-      SavedContext = 0;
-      SavedScope = 0;
-    }
-
-    ~ContextAndScopeRAII() { pop(); }
-  };
-
   /// RAII object to handle the state changes required to synthesize
   /// a function body.
   class SynthesizedFunctionScope {
@@ -13660,25 +13605,6 @@ public:
     Sema &S;
     std::deque<PendingImplicitInstantiation>
         SavedPendingLocalImplicitInstantiations;
-  };
-
-  class SavePendingInstantiationsRAII {
-  public:
-    SavePendingInstantiationsRAII(Sema &S)
-        : SavedPendingLocalImplicitInstantiations(S), S(S) {
-      SavedPendingInstantiations.swap(S.PendingInstantiations);
-    }
-
-    ~SavePendingInstantiationsRAII() {
-      assert(S.PendingInstantiations.empty() &&
-             "there shouldn't be any pending instantiations");
-      SavedPendingInstantiations.swap(S.PendingInstantiations);
-    }
-
-  private:
-    LocalEagerInstantiationScope SavedPendingLocalImplicitInstantiations;
-    Sema &S;
-    std::deque<PendingImplicitInstantiation> SavedPendingInstantiations;
   };
 
   /// Records and restores the CurFPFeatures state on entry/exit of compound

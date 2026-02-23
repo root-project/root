@@ -209,7 +209,9 @@ namespace {
           if ((*I)->getName() == "_Unwind_Resume")
             continue;
 
+#ifndef UPSTREAM_CLANG
           m_CodeGen->forgetGlobal(*I);
+#endif
           (*I)->eraseFromParent();
         }
         Changed = true;
@@ -445,6 +447,7 @@ namespace cling {
   using namespace clang;
 
   void DeclUnloader::resetDefinitionData(TagDecl* decl) {
+#ifndef UPSTREAM_CLANG
     auto canon = dyn_cast<CXXRecordDecl>(decl->getCanonicalDecl());
     assert(canon && "Only CXXRecordDecl have DefinitionData");
     for (auto iter = canon->getMostRecentDecl(); iter;
@@ -453,6 +456,7 @@ namespace cling {
       assert(declcxx && "Only CXXRecordDecl have DefinitionData");
       declcxx->DefinitionData = nullptr;
     }
+#endif
   }
 
   ///\brief Removes given declaration from the chain of redeclarations.
@@ -493,12 +497,14 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
+#ifndef UPSTREAM_CLANG
     SourceManager& SM = m_Sema->getSourceManager();
     for (FileIDs::iterator I = m_FilesToUncache.begin(),
            E = m_FilesToUncache.end(); I != E; ++I) {
       // We need to reset the cache
       SM.invalidateCache(*I);
     }
+#endif
   }
 
   void DeclUnloader::CollectFilesToUncache(SourceLocation Loc) {
@@ -971,8 +977,10 @@ namespace cling {
           GVEraser.EraseGlobalValue(GV);
         }
       }
+#ifndef UPSTREAM_CLANG
       // DeferredDecls exist even without Module.
       m_CodeGen->forgetDecl(mangledName);
+#endif
     }
   }
 
@@ -1007,8 +1015,10 @@ namespace cling {
     if (!MI)
       return false;
 
+#ifndef UPSTREAM_CLANG
     // Remove the pair from the macros
     PP.removeMacro(MacroD.m_II, const_cast<MacroDirective*>(MacroD.m_MD));
+#endif
 
     return true;
   }
@@ -1023,9 +1033,15 @@ namespace cling {
   bool DeclUnloader::VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD) {
     bool Successful = true;
 
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
            E = FTD->loaded_spec_end(); I != E; ++I)
+#else
+    // Remove specializations, but do not invalidate the iterator!
+    for (FunctionTemplateDecl::spec_iterator I = FTD->spec_begin(),
+           E = FTD->spec_end(); I != E; ++I)
+#endif
       Successful &= VisitFunctionDecl(*I, /*RemoveSpec=*/false);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
@@ -1036,9 +1052,15 @@ namespace cling {
   bool DeclUnloader::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
            E = CTD->loaded_spec_end(); I != E; ++I)
+#else
+    // Remove specializations:
+    for (ClassTemplateDecl::spec_iterator I = CTD->spec_begin(),
+           E = CTD->spec_end(); I != E; ++I)
+#endif
       Successful &=
           VisitClassTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
@@ -1081,10 +1103,17 @@ namespace cling {
   bool DeclUnloader::VisitVarTemplateDecl(VarTemplateDecl* VTD) {
     // VarTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
+#ifndef UPSTREAM_CLANG
     // Remove specializations, but do not invalidate the iterator!
     for (VarTemplateDecl::spec_iterator I = VTD->loaded_spec_begin(),
                                         E = VTD->loaded_spec_end();
          I != E; ++I)
+#else
+    // Remove specializations, but do not invalidate the iterator!
+    for (VarTemplateDecl::spec_iterator I = VTD->spec_begin(),
+                                        E = VTD->spec_end();
+         I != E; ++I)
+#endif
       Successful &=
           VisitVarTemplateSpecializationDecl(*I, /*RemoveSpec=*/false);
 
