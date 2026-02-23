@@ -12,6 +12,7 @@ gDebug=1;
 TH1F h1("h","",100,0,1);
 std::vector<std::list<TGraph>> v;
 h1.GetNbinsX();
+gSystem->LoadAllLibraries()
 )";
 
 constexpr auto commandsParent = R"(
