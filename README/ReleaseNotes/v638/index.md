@@ -530,3 +530,11 @@ More than 250 items were addressed for this release:
   * [[ROOT-5567](https://its.cern.ch/jira/browse/5567)] - FindBranch fails where GetBranch succeeds if the branch name contains [
   * [[ROOT-5430](https://its.cern.ch/jira/browse/5430)] - TUrl inconsistently handles local path with double slashes at beginning
   * [[ROOT-3709](https://its.cern.ch/jira/browse/3709)] - Crash when writing object with schema rule
+
+## Release 6.38.02
+
+Some of the work in preparation for ROOT 6.40 was backported to the 6.38 series. For example, the list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
+
+Moreover several items were addressed.
+
+### Items addressed in this release
