@@ -62,10 +62,10 @@ if(GeneratorNeedsBuildSerialization)
   if (${build_configuration})
     set(cmake_build_all_select_config --config ${build_configuration})
   endif()
-  add_test(NAME ninja-build-all
+  add_test(NAME cmake-build-all
       COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${cmake_build_all_select_config})
-  set_tests_properties(ninja-build-all PROPERTIES
-      RESOURCE_LOCK NINJA_BUILD
-      FIXTURES_SETUP NINJA_BUILD_ALL
+  set_tests_properties(cmake-build-all PROPERTIES
+      RESOURCE_LOCK CMAKE_BUILD
+      FIXTURES_SETUP CMAKE_BUILD_ALL
       RUN_SERIAL True)
 endif()
