@@ -209,6 +209,64 @@ public:
       return fEngine.GetBinContent(args...);
    }
 
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHist<int> hist({/* two dimensions */});
+   /// std::array<ROOT::Experimental::RBinIndex, 2> indices = {3, 5};
+   /// int value = /* ... */;
+   /// hist.SetBinContent(indices, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of indices does not match the axis configuration or the bin is not found.
+   ///
+   /// \warning Setting the bin content will taint the global histogram statistics. Attempting to access its values, for
+   /// example calling GetNEntries(), will throw exceptions.
+   ///
+   /// \param[in] indices the array of indices for each axis
+   /// \param[in] value the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const A &... args) const "variadic function template overload" accepting arguments
+   /// directly
+   template <std::size_t N, typename V>
+   void SetBinContent(const std::array<RBinIndex, N> &indices, const V &value)
+   {
+      fEngine.SetBinContent(indices, value);
+      fStats.Taint();
+   }
+
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHist<int> hist({/* two dimensions */});
+   /// int value = /* ... */;
+   /// hist.SetBinContent(ROOT::Experimental::RBinIndex(3), ROOT::Experimental::RBinIndex(5), value);
+   /// // ... or construct the RBinIndex arguments implicitly from integers:
+   /// hist.SetBinContent(3, 5, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration or the bin is not found.
+   ///
+   /// \warning Setting the bin content will taint the global histogram statistics. Attempting to access its values, for
+   /// example calling GetNEntries(), will throw exceptions.
+   ///
+   /// \param[in] args the arguments for each axis and the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const std::array<RBinIndex, N> &indices, const V &value) const "function overload"
+   /// accepting `std::array`
+   template <typename... A>
+   void SetBinContent(const A &...args)
+   {
+      fEngine.SetBinContent(args...);
+      fStats.Taint();
+   }
+
    /// Add all bin contents and statistics of another histogram.
    ///
    /// Throws an exception if the axes configurations are not identical.
