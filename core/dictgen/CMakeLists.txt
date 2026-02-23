@@ -63,7 +63,6 @@ set_target_properties(Dictgen PROPERTIES
   VISIBILITY_INLINES_HIDDEN "ON"
 )
 
-CHECK_CXX_COMPILER_FLAG("-fno-rtti" CXX_HAS_fno_rtti)
 if(CXX_HAS_fno_rtti)
     set_source_files_properties(src/rootcling_impl.cxx   PROPERTIES COMPILE_FLAGS "-fno-rtti")
     set_source_files_properties(src/LinkdefReader.cxx    PROPERTIES COMPILE_FLAGS "-fno-rtti")
