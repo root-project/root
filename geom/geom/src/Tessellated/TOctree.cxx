@@ -406,14 +406,10 @@ Double_t TOctree::DistFromOutside(const ROOT::Math::XYZVector &origin, const ROO
    size_t counter = 0;
 
    while (counter < size) {
-      // If you sit on the triangle, ignore it
-      if (triangleIntersections[counter].fDistance < TGeoShape::Tolerance()) {
-         ++counter;
-      } else if (triangleIntersections[counter].fDirDotNormal > TGeoTriangle::sAccuracy) {
-
-         ++counter;
+      if (triangleIntersections[counter].fDirDotNormal <= TGeoShape::Tolerance()) {
+         return triangleIntersections[counter].fDistance - 2 * TGeoShape::Tolerance();
       } else {
-         return triangleIntersections[counter].fDistance;
+         ++counter;
       }
    }
 
@@ -445,6 +441,13 @@ Double_t TOctree::DistanceInDirection(const ROOT::Math::XYZVector &origin, const
    fOrigin = origin;
    fDirection = direction.Unit();
    fOriginInside = isorigininside;
+
+   if (!isorigininside) {
+      ROOT::Math::XYZVector tmpoffset{direction * -1};
+      tmpoffset *= (2 * TGeoShape::Tolerance()) / TMath::Sqrt(tmpoffset.Mag2());
+      ROOT::Math::XYZVector newpoint = origin + tmpoffset;
+      fOrigin = newpoint;
+   }
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> triangleIntersections;
    FindClosestFacePoint(fOrigin, fDirection, triangleIntersections);
    std::sort(std::begin(triangleIntersections), std::end(triangleIntersections));

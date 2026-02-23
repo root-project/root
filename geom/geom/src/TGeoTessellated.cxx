@@ -254,9 +254,13 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t
       return result;
    }
 
+   ROOT::Math::XYZVector tmpoffset{dir * -1};
+   tmpoffset *= (2 * TGeoShape::Tolerance()) / TMath::Sqrt(tmpoffset.Mag2());
+   ROOT::Math::XYZVector newpoint = point + tmpoffset;
+
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
    std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
-   fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
+   fMesh->FindClosestIntersectedTriangles(newpoint, dir, fUsedTriangles, indir, oppdir);
    size_t size = indir.size();
    size_t counter = 0;
 
