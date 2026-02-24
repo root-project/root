@@ -59,5 +59,5 @@ void hist007_TH1_liveupdate()
       }
    }
    slider->SetRange(0., 1.);
-   c1->Modified();
+   c1->ModifiedUpdate();
 }
