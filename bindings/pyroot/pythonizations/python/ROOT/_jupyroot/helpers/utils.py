@@ -199,11 +199,25 @@ def enableJSVis(flag=True):
 
 def addVisualObject(object, kind="none", option=""):
     global _visualObjects
-    _visualObjects.append({ "object": object, "kind": kind, "option": option })
+    if kind == "tfile":
+        _visualObjects.append(NotebookDrawerFile(object, option))
 
 
 def _getPlatform():
     return sys.platform
+
+
+def _getUniqueDivId():
+    """
+    Every DIV containing a JavaScript snippet must be unique in the
+    notebook. This method provides a unique identifier.
+    With the introduction of JupyterLab, multiple Notebooks can exist
+    simultaneously on the same HTML page. In order to ensure a unique
+    identifier with the UID throughout all open Notebooks the UID is
+    generated as a timestamp.
+    """
+    return "root_plot_" + str(int(round(time.time() * 1000)))
+
 
 
 def _getLibExtension(thePlatform):
@@ -498,10 +512,11 @@ def GetRCanvasDrawers():
 
 def GetVisualDrawers():
     global _visualObjects
-    res = [NotebookDrawer(entry.get('object'), entry.get('kind'), entry.get('option')) for entry in _visualObjects]
+    res = []
+    for obj in _visualObjects:
+        res.append(obj)
     _visualObjects.clear()
     return res
-
 
 def GetGeometryDrawers():
     if not hasattr(ROOT, "gGeoManager"):
@@ -511,7 +526,7 @@ def GetGeometryDrawers():
     vol = ROOT.gGeoManager.GetUserPaintVolume()
     if not vol:
         return []
-    return [NotebookDrawer(vol, "geom")]
+    return [NotebookDrawerGeometry(vol)]
 
 
 def GetDrawers():
@@ -539,6 +554,158 @@ class CaptureDrawnPrimitives(object):
         self.shell.events.register("post_execute", self._post_execute)
 
 
+class NotebookDrawerBase(object):
+
+    def __init__(self, theObject):
+        self.drawObject = theObject
+
+    def GetDrawableObjects(self):
+        return []
+
+    def Draw(self):
+        arr = self.GetDrawableObjects()
+        for obj in arr:
+            display.display(obj)
+
+
+class NotebookDrawerFile(NotebookDrawerBase):
+
+    def __init__(self, theObject, theOption=""):
+       super().__init__(theObject)
+       self.drawOption = theOption
+
+    def _getFileJsCode(self):
+        sz = self.drawObject.GetSize()
+        if sz > 10000000 and self.drawOption != "force":
+            return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show file nevertheless"
+
+        # create plain buffer and get pointer on it
+        u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
+        addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
+
+        if self.drawObject.ReadBuffer(addrc, 0, sz):
+           return f"Fail to read file {self.drawObject.GetName()} buffer of size {sz}"
+
+        base64 = ROOT.TBase64.Encode(addrc, sz)
+
+        id = _getUniqueDivId()
+
+        drawHtml = _jsFullWidthDiv.format(
+            jsDivId=id,
+            jsCanvasHeight=_jsCanvasHeight
+        )
+
+        browseFileCode = _jsBrowseFileCode.format(
+            jsDivId=id,
+            fileBase64=base64
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=browseFileCode
+        )
+
+        return thisJsCode
+
+    def GetDrawableObjects(self):
+        code = self._getFileJsCode()
+        return [display.HTML(code)]
+
+
+
+class NotebookDrawerJson(NotebookDrawerBase):
+    """
+    Base class to create JSROOT drawing for the arbitrary object based on json.
+    """
+
+    def _canJsDisplay(self):
+        return TBufferJSONAvailable()
+
+    def _canPngDisplay(self):
+        return True
+
+    def _getWidth(self):
+        return _jsCanvasWidth
+
+    def _getHeight(self):
+        return _jsCanvasHeight
+
+    def _getJson(self):
+        return ROOT.TBufferJSON.ConvertToJSON(self.drawObject, 23).Data()
+
+    def _getJsOptions(self):
+        return ""
+
+    def _getJsCode(self):
+        width = self._getWidth()
+        height = self._getHeight()
+        json = self._getJson()
+        options = self._getJsOptions()
+
+        if not json:
+            return f"Class {self.drawObject.ClassName()} not supported yet"
+
+        zip = ROOT.TBufferJSON.zipJSON(json)
+
+        id = _getUniqueDivId()
+
+        drawHtml = _jsFixedSizeDiv.format(
+            jsDivId=id,
+            jsCanvasWidth=width,
+            jsCanvasHeight=height
+        )
+
+        drawJsonCode = _jsDrawJsonCode.format(
+            jsDivId=id,
+            jsonLength=len(json),
+            jsonZip=zip,
+            jsDrawOptions=options
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=drawJsonCode
+        )
+        return thisJsCode
+
+
+    def _getPngImage(self):
+        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        c1 = ROOT.TCanvas("__tmp_draw_image_canvas__", "", self._getWidth(), self._getHeight())
+        c1.Clear()
+        with _setIgnoreLevel(ROOT.kError):
+            self.drawObject.Draw()
+            c1.SaveAs(ofile.name)
+        img = display.Image(filename=ofile.name, format="png", embed=True)
+        ofile.close()
+        os.unlink(ofile.name)
+        return img
+
+
+    def GetDrawableObjects(self):
+        global _enableJSVis
+        if self._canJsDisplay() and _enableJSVis:
+            code = self._getJsCode()
+            return [display.HTML(code)]
+        if self._canPngDisplay():
+            return [self._getPngImage()]
+        return []
+
+
+
+class NotebookDrawerGeometry(NotebookDrawerJson):
+
+    def __del__(self):
+        self.drawObject.GetGeoManager().SetUserPaintVolume(ROOT.nullptr)
+
+    def _getJsOptions(self):
+        return "all"
+
+
+
+
 class NotebookDrawer(object):
     """
     Capture the canvas which is drawn and decide if it should be displayed using
@@ -550,15 +717,9 @@ class NotebookDrawer(object):
         self.drawOption = option
         self.isRCanvas = False
         self.isCanvas = False
-        self.isFile = False
-        self.isGeom = False
         self.drawableId = str(ROOT.AddressOf(theObject)[0])
-        if kind == "tfile":
-            self.isFile = True
-        elif kind == "rcanvas":
+        if kind == "rcanvas":
             self.isRCanvas = True
-        elif kind == "geom":
-            self.isGeom = True
         elif kind == "tcanvas":
             self.isCanvas = True
 
@@ -569,8 +730,6 @@ class NotebookDrawer(object):
         elif self.isCanvas:
             self.drawableObject.ResetDrawn()
             self.drawableObject.ResetUpdated()
-        elif self.isGeom:
-            self.drawableObject.GetGeoManager().SetUserPaintVolume(ROOT.nullptr)
 
     def _getListOfPrimitivesNamesAndTypes(self):
         """
@@ -581,27 +740,12 @@ class NotebookDrawer(object):
         primitivesNames = map(lambda p: p.ClassName(), primitives)
         return sorted(primitivesNames)
 
-    def _getUniqueDivId(self):
-        """
-        Every DIV containing a JavaScript snippet must be unique in the
-        notebook. This method provides a unique identifier.
-        With the introduction of JupyterLab, multiple Notebooks can exist
-        simultaneously on the same HTML page. In order to ensure a unique
-        identifier with the UID throughout all open Notebooks the UID is
-        generated as a timestamp.
-        """
-        return "root_plot_" + str(int(round(time.time() * 1000)))
-
     def _canJsDisplay(self):
         # returns true if js-based drawing should be used
         if not TBufferJSONAvailable():
             return False
         # RCanvas clways displayed with jsroot
         if self.isRCanvas:
-            return True
-        if self.isFile:
-            return True
-        if self.isGeom:
             return True
         # check if jsroot was disabled
         if not _enableJSVis:
@@ -623,44 +767,7 @@ class NotebookDrawer(object):
                     return False
         return True
 
-    def _getFileJsCode(self):
-        sz = self.drawableObject.GetSize()
-        if sz > 10000000 and self.drawOption != "force":
-            return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show file nevertheless"
-
-        # create plain buffer and get pointer on it
-        u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
-        addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
-
-        if self.drawableObject.ReadBuffer(addrc, 0, sz):
-           return f"Fail to read file {self.drawableObject.GetName()} buffer of size {sz}"
-
-        base64 = ROOT.TBase64.Encode(addrc, sz)
-
-        id = self._getUniqueDivId()
-
-        drawHtml = _jsFullWidthDiv.format(
-            jsDivId=id,
-            jsCanvasHeight=_jsCanvasHeight
-        )
-
-        browseFileCode = _jsBrowseFileCode.format(
-            jsDivId=id,
-            fileBase64=base64
-        )
-
-        thisJsCode = _jsCode.format(
-            jsDivId=id,
-            jsDivHtml=drawHtml,
-            jsDrawCode=browseFileCode
-        )
-
-        return thisJsCode
-
     def _getJsCode(self):
-        if self.isFile:
-            return self._getFileJsCode()
-
         options = ""
         width = _jsCanvasWidth
         height = _jsCanvasHeight
@@ -679,15 +786,12 @@ class NotebookDrawer(object):
                width = self.drawableObject.GetWindowWidth()
            if self.drawableObject.GetWindowHeight() > 0:
                height = self.drawableObject.GetWindowHeight()
-        elif self.isGeom:
-           json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 23).Data()
-           options = "all"
         else:
            return f"Class {self.drawableObject.ClassName()} not supported yet"
 
         zip = ROOT.TBufferJSON.zipJSON(json)
 
-        id = self._getUniqueDivId()
+        id = _getUniqueDivId()
 
         drawHtml = _jsFixedSizeDiv.format(
             jsDivId=id,
@@ -717,8 +821,6 @@ class NotebookDrawer(object):
             return self.drawableObject.GetName() + self.drawableId
         if self.isRCanvas:
             return self.drawableObject.GetUID()
-        if self.isFile:
-            return "File" + self.drawableId
         # all other objects do not support update and can be ignored
         return ""
 
