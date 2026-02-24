@@ -70,8 +70,7 @@ for i in range( 10000 ):
       if slider:
          slider.SetRange( 0, float(i) / 10000. )
 
-      c1.Modified()
-      c1.Update()
+      c1.ModifiedUpdate()
 
 # Destroy member functions cache.
 for name in histos:
