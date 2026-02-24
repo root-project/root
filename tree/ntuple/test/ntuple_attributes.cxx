@@ -102,10 +102,60 @@ TEST(RNTupleAttributes, BasicReadingWriting)
       EXPECT_EQ(ntuple, nullptr);
    }
 
+   /// Reading
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 1);
    for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
       EXPECT_EQ(attrSetIt.GetName(), "AttrSet1");
+   }
+
+   auto attrSetReader = reader->OpenAttributeSet("AttrSet1");
+   EXPECT_EQ(attrSetReader->GetNEntries(), 1);
+   auto pAttr = attrSetReader->GetModel().GetDefaultEntry().GetPtr<std::string>("attr");
+   {
+      int nAttrs = 0;
+      // iterate all attributes
+      for (auto idx : attrSetReader->GetAttributes()) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      int nAttrs = 0;
+      // attributes containing entry 99
+      for (auto idx : attrSetReader->GetAttributes(99)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry 100 (no entry)
+      auto iter = attrSetReader->GetAttributes(100);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      // attributes contained in entry range 50-200 (no entry)
+      auto iter = attrSetReader->GetAttributesInRange(50, 200);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      int nAttrs = 0;
+      // attributes contained in entry range 0-1000
+      for (auto idx : attrSetReader->GetAttributesInRange(0, 1000)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry range 200-300 (no entry)
+      auto iter = attrSetReader->GetAttributesContainingRange(200, 300);
+      EXPECT_EQ(iter.begin(), iter.end());
    }
 }
 
@@ -201,13 +251,13 @@ TEST(RNTupleAttributes, MultipleSets)
 
       auto attrModel1 = RNTupleModel::Create();
       auto pInt1 = attrModel1->MakeField<int>("int");
-      auto attrSet1 = writer->CreateAttributeSet(attrModel1->Clone(), "MyAttrSet1");
+      auto attrSet1 = writer->CreateAttributeSet(std::move(attrModel1), "MyAttrSet1");
 
       auto attrModel2 = RNTupleModel::Create();
       auto pString2 = attrModel2->MakeField<std::string>("string");
       auto attrOpts2 = ROOT::RNTupleWriteOptions();
       attrOpts2.SetCompression(404);
-      auto attrSet2 = writer->CreateAttributeSet(attrModel2->Clone(), "MyAttrSet2", &attrOpts2);
+      auto attrSet2 = writer->CreateAttributeSet(std::move(attrModel2), "MyAttrSet2", &attrOpts2);
 
       auto attrRange2 = attrSet2->BeginRange();
       for (int i = 0; i < 100; ++i) {
@@ -265,6 +315,56 @@ TEST(RNTupleAttributes, MultipleSets)
 
       if (++nHeader == 3)
          break;
+   }
+
+   // check attribute ranges
+   auto attrEntry1 = attrSetReader1->CreateEntry();
+   auto pAttrInt = attrEntry1->GetPtr<int>("int");
+   auto attrEntry2 = attrSetReader2->CreateEntry();
+   auto pAttrString = attrEntry2->GetPtr<std::string>("string");
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader1->GetAttributesInRange(0, 1000)) {
+         auto range = attrSetReader1->LoadEntry(idx, *attrEntry1);
+         EXPECT_EQ(*pAttrInt, idx);
+         EXPECT_EQ(range.GetStart(), idx);
+         EXPECT_EQ(range.GetLength(), 1);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 100);
+   }
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader1->GetAttributes(42)) {
+         auto range = attrSetReader1->LoadEntry(idx, *attrEntry1);
+         EXPECT_EQ(*pAttrInt, 42);
+         EXPECT_EQ(range.GetStart(), 42);
+         EXPECT_EQ(range.GetLength(), 1);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader2->GetAttributes()) {
+         auto range = attrSetReader2->LoadEntry(idx, *attrEntry2);
+         EXPECT_EQ(*pAttrString, "Run 1");
+         EXPECT_EQ(range.GetStart(), 0);
+         EXPECT_EQ(range.GetLength(), 100);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      for (auto idx : attrSetReader2->GetAttributes()) {
+         // Reading into the wrong entry
+         try {
+            attrSetReader2->LoadEntry(idx, *attrEntry1);
+            FAIL() << "reading into an unrelated entry should fail";
+         } catch (const ROOT::RException &ex) {
+            EXPECT_THAT(ex.what(), testing::HasSubstr("mismatch between entry and model"));
+         }
+      }
    }
 }
 
