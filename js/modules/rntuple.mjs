@@ -1,8 +1,41 @@
 import { isStr, isObject } from './core.mjs';
-import { R__unzip } from './io.mjs';
+import { R__unzip, TBuffer } from './io.mjs';
 import { TDrawSelector, treeDraw } from './tree.mjs';
 
-const LITTLE_ENDIAN = true;
+// ENTupleColumnType - supported column types
+
+const kBit = 0x00,
+      kByte = 0x01,
+      kChar = 0x02,
+      kInt8 = 0x03,
+      kUInt8 = 0x04,
+      kInt16 = 0x05,
+      kUInt16 = 0x06,
+      kInt32 = 0x07,
+      kUInt32 = 0x08,
+      kInt64 = 0x09,
+      kUInt64 = 0x0A,
+      kReal16 = 0x0B,
+      kReal32 = 0x0C,
+      kReal64 = 0x0D,
+      kIndex32 = 0x0E,
+      kIndex64 = 0x0F,
+      kSwitch = 0x10,
+      kSplitInt16 = 0x11,
+      kSplitUInt16 = 0x12,
+      kSplitInt32 = 0x13,
+      kSplitUInt32 = 0x14,
+      kSplitInt64 = 0x15,
+      kSplitUInt64 = 0x16,
+      kSplitReal16 = 0x17,
+      kSplitReal32 = 0x18,
+      kSplitReal64 = 0x19,
+      kSplitIndex32 = 0x1A,
+      kSplitIndex64 = 0x1B,
+      kReal32Trunc = 0x1C,
+      kReal32Quant = 0x1D,
+      LITTLE_ENDIAN = true;
+
 class RBufferReader {
 
    constructor(buffer) {
@@ -114,195 +147,98 @@ class RBufferReader {
 
 }
 
-const ENTupleColumnType = {
-   kBit: 0x00,
-   kByte: 0x01,
-   kChar: 0x02,
-   kInt8: 0x03,
-   kUInt8: 0x04,
-   kInt16: 0x05,
-   kUInt16: 0x06,
-   kInt32: 0x07,
-   kUInt32: 0x08,
-   kInt64: 0x09,
-   kUInt64: 0x0A,
-   kReal16: 0x0B,
-   kReal32: 0x0C,
-   kReal64: 0x0D,
-   kIndex32: 0x0E,
-   kIndex64: 0x0F,
-   kSwitch: 0x10,
-   kSplitInt16: 0x11,
-   kSplitUInt16: 0x12,
-   kSplitInt32: 0x13,
-   kSplitUInt32: 0x14,
-   kSplitInt64: 0x15,
-   kSplitUInt64: 0x16,
-   kSplitReal16: 0x17,
-   kSplitReal32: 0x18,
-   kSplitReal64: 0x19,
-   kSplitIndex32: 0x1A,
-   kSplitIndex64: 0x1B,
-   kReal32Trunc: 0x1C,
-   kReal32Quant: 0x1D
-};
 
-
-/**
- * @summary Rearrange bytes from split format to normal format (row-wise) for decoding
- */
-function recontructUnsplitBuffer(blob, columnDescriptor) {
-   const { coltype } = columnDescriptor;
-
-   if (
-      coltype === ENTupleColumnType.kSplitUInt16 ||
-        coltype === ENTupleColumnType.kSplitUInt32 ||
-        coltype === ENTupleColumnType.kSplitUInt64 ||
-        coltype === ENTupleColumnType.kSplitReal16 ||
-        coltype === ENTupleColumnType.kSplitReal32 ||
-        coltype === ENTupleColumnType.kSplitReal64 ||
-        coltype === ENTupleColumnType.kSplitIndex32 ||
-        coltype === ENTupleColumnType.kSplitIndex64 ||
-        coltype === ENTupleColumnType.kSplitInt16 ||
-        coltype === ENTupleColumnType.kSplitInt32 ||
-        coltype === ENTupleColumnType.kSplitInt64
-   ) {
-      // Determine byte size based on column type
-      let byteSize;
-      switch (coltype) {
-         case ENTupleColumnType.kSplitReal64:
-         case ENTupleColumnType.kSplitInt64:
-         case ENTupleColumnType.kSplitUInt64:
-         case ENTupleColumnType.kSplitIndex64:
-            byteSize = 8;
-            break;
-         case ENTupleColumnType.kSplitReal32:
-         case ENTupleColumnType.kSplitInt32:
-         case ENTupleColumnType.kSplitIndex32:
-         case ENTupleColumnType.kSplitUInt32:
-            byteSize = 4;
-            break;
-         case ENTupleColumnType.kSplitInt16:
-         case ENTupleColumnType.kSplitUInt16:
-         case ENTupleColumnType.kSplitReal16:
-            byteSize = 2;
-            break;
-         default:
-            throw new Error(`Unsupported split coltype: ${coltype} (0x${coltype.toString(16).padStart(2, '0')})`);
-      }
-
-      const splitView = new DataView(blob.buffer, blob.byteOffset, blob.byteLength),
-            count = blob.byteLength / byteSize,
-            outBuffer = new ArrayBuffer(blob.byteLength),
-            outBytes = new Uint8Array(outBuffer);
-
-      for (let i = 0; i < count; ++i) {
-         for (let b = 0; b < byteSize; ++b) {
-            const splitIndex = b * count + i,
-                  byte = splitView.getUint8(splitIndex),
-                  writeIndex = i * byteSize + b;
-            outBytes[writeIndex] = byte;
-         }
-      }
-
-      // Return updated blob and remapped coltype
-      const newBlob = outBuffer;
-      let newColtype;
-      switch (coltype) {
-         case ENTupleColumnType.kSplitUInt16:
-            newColtype = ENTupleColumnType.kUInt16;
-            break;
-         case ENTupleColumnType.kSplitUInt32:
-            newColtype = ENTupleColumnType.kUInt32;
-            break;
-         case ENTupleColumnType.kSplitUInt64:
-            newColtype = ENTupleColumnType.kUInt64;
-            break;
-         case ENTupleColumnType.kSplitIndex32:
-            newColtype = ENTupleColumnType.kIndex32;
-            break;
-         case ENTupleColumnType.kSplitIndex64:
-            newColtype = ENTupleColumnType.kIndex64;
-            break;
-         case ENTupleColumnType.kSplitReal16:
-            newColtype = ENTupleColumnType.kReal16;
-            break;
-         case ENTupleColumnType.kSplitReal32:
-            newColtype = ENTupleColumnType.kReal32;
-            break;
-         case ENTupleColumnType.kSplitReal64:
-            newColtype = ENTupleColumnType.kReal64;
-            break;
-         case ENTupleColumnType.kSplitInt16:
-            newColtype = ENTupleColumnType.kInt16;
-            break;
-         case ENTupleColumnType.kSplitInt32:
-            newColtype = ENTupleColumnType.kInt32;
-            break;
-         case ENTupleColumnType.kSplitInt64:
-            newColtype = ENTupleColumnType.kInt64;
-            break;
-         default:
-            throw new Error(`Unsupported split coltype for reassembly: ${coltype}`);
-      }
-
-      return { blob: newBlob, coltype: newColtype };
+/** @summary Rearrange bytes from split format to normal format (row-wise) for decoding
+ * @private */
+function recontructUnsplitBuffer(view, coltype) {
+   // Determine byte size based on column type
+   let byteSize;
+   switch (coltype) {
+      case kSplitReal64:
+      case kSplitInt64:
+      case kSplitUInt64:
+      case kSplitIndex64:
+         byteSize = 8;
+         break;
+      case kSplitReal32:
+      case kSplitInt32:
+      case kSplitIndex32:
+      case kSplitUInt32:
+         byteSize = 4;
+         break;
+      case kSplitInt16:
+      case kSplitUInt16:
+      case kSplitReal16:
+         byteSize = 2;
+         break;
+      default:
+         return view;
    }
 
-   // If no split type, return original blob and coltype
-   return { blob, coltype };
-}
+   const count = view.byteLength / byteSize,
+         outBuffer = new ArrayBuffer(view.byteLength),
+         outView = new DataView(outBuffer);
 
-
-/**
- * @summary Decode a reconstructed index buffer (32- or 64-bit deltas to absolute indices)
- */
-function DecodeDeltaIndex(blob, coltype) {
-   let deltas, result;
-
-   if (coltype === ENTupleColumnType.kIndex32) {
-      deltas = new Int32Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 4);
-      result = new Int32Array(deltas.length);
-   } else if (coltype === ENTupleColumnType.kIndex64) {
-      deltas = new BigInt64Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 8);
-      result = new BigInt64Array(deltas.length);
-   } else
-      throw new Error(`DecodeDeltaIndex: unsupported column type ${coltype}`);
-
-   if (deltas.length > 0)
-      result[0] = deltas[0];
-   for (let i = 1; i < deltas.length; ++i)
-      result[i] = result[i - 1] + deltas[i];
-
-   return { blob: result, coltype };
-}
-
-/**
- * @summary Decode a reconstructed signed integer buffer using ZigZag encoding
-  */
-function decodeZigzag(blob, coltype) {
-   let zigzag, result;
-
-   if (coltype === ENTupleColumnType.kInt16) {
-      zigzag = new Uint16Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 2);
-      result = new Int16Array(zigzag.length);
-   } else if (coltype === ENTupleColumnType.kInt32) {
-      zigzag = new Uint32Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 4);
-      result = new Int32Array(zigzag.length);
-   } else if (coltype === ENTupleColumnType.kInt64) {
-      zigzag = new BigUint64Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 8);
-      result = new BigInt64Array(zigzag.length);
-   } else
-      throw new Error(`decodeZigzag: unsupported column type ${coltype}`);
-
-   for (let i = 0; i < zigzag.length; ++i) {
-      // ZigZag decode: (x >>> 1) ^ (-(x & 1))
-      const x = zigzag[i];
-      result[i] = (x >>> 1) ^ (-(x & 1));
+   for (let i = 0; i < count; ++i) {
+      for (let b = 0; b < byteSize; ++b) {
+         const splitIndex = b * count + i,
+               byte = view.getUint8(splitIndex),
+               writeIndex = i * byteSize + b;
+         outView.setUint8(writeIndex, byte);
+      }
    }
 
-   return { blob: result, coltype };
+   return outView;
 }
+
+/** @summary Decode a 32 bit intex buffer
+ * @private */
+function decodeIndex32(view) {
+   for (let o = 0, prev = 0; o < view.byteLength; o += 4) {
+      const v = prev + view.getInt32(o, LITTLE_ENDIAN);
+      view.setInt32(o, v, LITTLE_ENDIAN);
+      prev = v;
+   }
+}
+
+/** @summary Decode a 64 bit intex buffer
+ * @private */
+function decodeIndex64(view, shift) {
+   for (let o = 0, prev = 0n; o < view.byteLength; o += (8 + shift)) {
+      const v = prev + view.getBigInt64(o, LITTLE_ENDIAN);
+      view.setBigInt64(o, v, LITTLE_ENDIAN);
+      prev = v;
+   }
+}
+
+
+/** @summary Decode a reconstructed 16bit signed integer buffer using ZigZag encoding
+ * @private */
+function decodeZigzag16(view) {
+   for (let o = 0; o < view.byteLength; o += 2) {
+      const x = view.getUint16(o, LITTLE_ENDIAN);
+      view.setInt16(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
+   }
+}
+
+/** @summary Decode a reconstructed 32bit signed integer buffer using ZigZag encoding
+ * @private */
+function decodeZigzag32(view) {
+   for (let o = 0; o < view.byteLength; o += 4) {
+      const x = view.getUint32(o, LITTLE_ENDIAN);
+      view.setInt32(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
+   }
+}
+
+/** @summary Decode a reconstructed 64bit signed integer buffer using ZigZag encoding
+ * @private */
+function decodeZigzag64(view) {
+   for (let o = 0; o < view.byteLength; o += 8) {
+      const x = view.getUint64(o, LITTLE_ENDIAN);
+      view.setInt64(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
+   }
+}
+
 
 // Envelope Types
 // TODO: Define usage logic for envelope types in future
@@ -326,13 +262,9 @@ class RNTupleDescriptorBuilder {
          return;
 
       const reader = new RBufferReader(header_blob),
-
             payloadStart = reader.offset,
             // Read the envelope metadata
-            {
-               envelopeLength
-            } = this._readEnvelopeMetadata(reader),
-
+            { envelopeLength } = this._readEnvelopeMetadata(reader),
             // Seek to end of envelope to get checksum
             checksumPos = payloadStart + envelopeLength - 8,
             currentPos = reader.offset;
@@ -363,7 +295,6 @@ class RNTupleDescriptorBuilder {
       // Read the envelope metadata
       this._readEnvelopeMetadata(reader);
 
-
       // Feature flag(32 bits)
       this._readFeatureFlags(reader);
       // Header checksum (64-bit xxhash3)
@@ -372,7 +303,6 @@ class RNTupleDescriptorBuilder {
          throw new Error('RNTuple corrupted: header checksum does not match footer checksum.');
 
       const schemaExtensionSize = reader.readS64();
-
       if (schemaExtensionSize < 0)
          throw new Error('Schema extension frame is not a record frame, which is unexpected.');
 
@@ -383,10 +313,8 @@ class RNTupleDescriptorBuilder {
       this._readClusterGroups(reader);
    }
 
-
    _readEnvelopeMetadata(reader) {
       const typeAndLength = reader.readU64(),
-
             // Envelope metadata
             // The 16 bits are the envelope type ID, and the 48 bits are the envelope length
             envelopeType = Number(typeAndLength & 0xFFFFn),
@@ -412,7 +340,6 @@ class RNTupleDescriptorBuilder {
       this.extraTypeInfo = (this.extraTypeInfo || []).concat(newExtra);
    }
 
-
    _readFeatureFlags(reader) {
       this.featureFlags = [];
       while (true) {
@@ -432,14 +359,12 @@ class RNTupleDescriptorBuilder {
             fieldListSize = reader.readS64(), // signed 64-bit
             fieldListIsList = fieldListSize < 0;
 
-
       if (!fieldListIsList)
          throw new Error('Field list frame is not a list frame, which is required.');
 
       const fieldListCount = reader.readU32(), // number of field entries
-         // List frame: list of field record frames
+            fieldDescriptors = []; // List frame: list of field record frames
 
-            fieldDescriptors = [];
       for (let i = 0; i < fieldListCount; ++i) {
          const recordStart = BigInt(reader.offset),
                fieldRecordSize = reader.readS64(),
@@ -448,7 +373,6 @@ class RNTupleDescriptorBuilder {
                parentFieldId = reader.readU32(),
                structRole = reader.readU16(),
                flags = reader.readU16(),
-
                fieldName = reader.readString(),
                typeName = reader.readString(),
                typeAlias = reader.readString(),
@@ -465,7 +389,6 @@ class RNTupleDescriptorBuilder {
 
          if (flags & kFlagHasTypeChecksum)
             checksum = reader.readU32();
-
 
          fieldDescriptors.push({
             fieldVersion,
@@ -515,7 +438,6 @@ class RNTupleDescriptorBuilder {
             maxValue = reader.readF64();
          }
 
-
          const column = {
             coltype,
             bitsOnStorage,
@@ -540,6 +462,7 @@ class RNTupleDescriptorBuilder {
       reader.seek(Number(startOffset - columnListSize));
       return columnDescriptors;
    }
+
    _readAliasColumn(reader) {
       const startOffset = BigInt(reader.offset),
             aliasColumnListSize = reader.readS64(),
@@ -562,6 +485,7 @@ class RNTupleDescriptorBuilder {
       reader.seek(Number(startOffset - aliasColumnListSize));
       return aliasColumns;
    }
+
    _readExtraTypeInformation(reader) {
       const startOffset = BigInt(reader.offset),
             extraTypeInfoListSize = reader.readS64(),
@@ -571,7 +495,6 @@ class RNTupleDescriptorBuilder {
          throw new Error('Extra type info frame is not a list frame, which is required.');
 
       const entryCount = reader.readU32(),
-
             extraTypeInfo = [];
       for (let i = 0; i < entryCount; ++i) {
          const recordStart = BigInt(reader.offset),
@@ -587,6 +510,7 @@ class RNTupleDescriptorBuilder {
       reader.seek(Number(startOffset - extraTypeInfoListSize));
       return extraTypeInfo;
    }
+
    _readClusterGroups(reader) {
       const startOffset = BigInt(reader.offset),
             clusterGroupListSize = reader.readS64(),
@@ -594,9 +518,8 @@ class RNTupleDescriptorBuilder {
       if (!isList)
          throw new Error('Cluster group frame is not a list frame');
 
-      const groupCount = reader.readU32(),
-
-            clusterGroups = [];
+      const groupCount = reader.readU32();
+      this.clusterGroups = [];
 
       for (let i = 0; i < groupCount; ++i) {
          const recordStart = BigInt(reader.offset),
@@ -605,24 +528,12 @@ class RNTupleDescriptorBuilder {
                entrySpan = reader.readU64(),
                numClusters = reader.readU32(),
                pageListLength = reader.readU64(),
-
-
-            // Locator method to get the page list locator offset
-               pageListLocator = this._readLocator(reader),
-
-
-               group = {
-                  minEntry,
-                  entrySpan,
-                  numClusters,
-                  pageListLocator,
-                  pageListLength
-               };
-         clusterGroups.push(group);
+               // Locator method to get the page list locator offset
+               pageListLocator = this._readLocator(reader);
+         this.clusterGroups.push({ minEntry, entrySpan, numClusters, pageListLocator, pageListLength });
          reader.seek(Number(recordStart + clusterRecordSize));
       }
       reader.seek(Number(startOffset - clusterGroupListSize));
-      this.clusterGroups = clusterGroups;
    }
 
    _readLocator(reader) {
@@ -631,11 +542,9 @@ class RNTupleDescriptorBuilder {
          throw new Error('Non-standard locators (T=1) not supported yet');
       const size = sizeAndType,
             offset = reader.readU64(); // 8 bytes: offset
-      return {
-         size,
-         offset
-      };
+      return { size, offset };
    }
+
    deserializePageList(page_list_blob) {
       if (!page_list_blob)
          throw new Error('deserializePageList: received an invalid or empty page list blob');
@@ -652,39 +561,34 @@ class RNTupleDescriptorBuilder {
             clusterSummaryListSize = reader.readS64();
       if (clusterSummaryListSize >= 0)
          throw new Error('Expected a list frame for cluster summaries');
-      const clusterSummaryCount = reader.readU32(),
-
-            clusterSummaries = [];
+      const clusterSummaryCount = reader.readU32();
+      this.clusterSummaries = [];
 
       for (let i = 0; i < clusterSummaryCount; ++i) {
          const recordStart = BigInt(reader.offset),
                clusterSummaryRecordSize = reader.readS64(),
                firstEntry = reader.readU64(),
                combined = reader.readU64(),
-               flags = combined >> 56n;
+               flags = combined >> 56n,
+               numEntries = Number(combined & 0x00FFFFFFFFFFFFFFn);
          if (flags & 0x01n)
             throw new Error('Cluster summary uses unsupported sharded flag (0x01)');
-         const numEntries = Number(combined & 0x00FFFFFFFFFFFFFFn);
-         clusterSummaries.push({
-            firstEntry,
-            numEntries,
-            flags
-         });
+         this.clusterSummaries.push({ firstEntry, numEntries, flags });
          reader.seek(Number(recordStart + clusterSummaryRecordSize));
       }
       reader.seek(Number(listStartOffset - clusterSummaryListSize));
-      this.clusterSummaries = clusterSummaries;
       this._readNestedFrames(reader);
 
-      /* const checksumPagelist = */ reader.readU64();
+      reader.readU64(); // checksumPagelist
    }
 
    _readNestedFrames(reader) {
-      const clusterPageLocations = [],
-            numListClusters = reader.readS64();
+      const numListClusters = reader.readS64(),
+            numRecordCluster = reader.readU32();
       if (numListClusters >= 0)
          throw new Error('Expected list frame for clusters');
-      const numRecordCluster = reader.readU32();
+
+      this.pageLocations = [];
 
       for (let i = 0; i < numRecordCluster; ++i) {
          const outerListSize = reader.readS64();
@@ -706,7 +610,6 @@ class RNTupleDescriptorBuilder {
                const numElementsWithBit = reader.readS32(),
                      hasChecksum = numElementsWithBit < 0,
                      numElements = BigInt(Math.abs(Number(numElementsWithBit))),
-
                      locator = this._readLocator(reader);
                pages.push({
                   numElements,
@@ -716,11 +619,8 @@ class RNTupleDescriptorBuilder {
             }
 
             const elementOffset = reader.readS64(),
-                  isSuppressed = elementOffset < 0;
-
-            let compression = null;
-            if (!isSuppressed)
-               compression = reader.readU32();
+                  isSuppressed = elementOffset < 0,
+                  compression = isSuppressed ? null : reader.readU32();
 
             columns.push({
                pages,
@@ -730,113 +630,43 @@ class RNTupleDescriptorBuilder {
             });
          }
 
-         clusterPageLocations.push(columns);
+         this.pageLocations.push(columns);
       }
-
-      this.pageLocations = clusterPageLocations;
    }
 
-   // Example Of Deserializing Page Content
-   deserializePage(blob, columnDescriptor, pageInfo) {
-      const originalColtype = columnDescriptor.coltype,
-            {
-               coltype
-            } = recontructUnsplitBuffer(blob, columnDescriptor);
-      let {
-         blob: processedBlob
-      } = recontructUnsplitBuffer(blob, columnDescriptor);
-
-
-      // Handle split index types
-      if (originalColtype === ENTupleColumnType.kSplitIndex32 || originalColtype === ENTupleColumnType.kSplitIndex64) {
-         const {
-            blob: decodedArray
-         } = DecodeDeltaIndex(processedBlob, coltype);
-         processedBlob = decodedArray;
+   /** @summary Search field by name
+    * @private */
+   findField(name) {
+      for (let n = 0; n < this.fieldDescriptors.length; ++n) {
+         const field = this.fieldDescriptors[n];
+         if (field.fieldName === name)
+            return field;
       }
+   }
 
-      // Handle Split Signed Int types
-      if (originalColtype === ENTupleColumnType.kSplitInt16 || originalColtype === ENTupleColumnType.kSplitInt32 || originalColtype === ENTupleColumnType.kSplitInt64) {
-         const {
-            blob: decodedArray
-         } = decodeZigzag(processedBlob, coltype);
-         processedBlob = decodedArray;
+   /** @summary Return all childs of specified field
+    * @private */
+   findChildFields(field) {
+      const indx = this.fieldDescriptors.indexOf(field), res = [];
+      for (let n = 0; n < this.fieldDescriptors.length; ++n) {
+         const fld = this.fieldDescriptors[n];
+         if ((fld !== field) && (fld.parentFieldId === indx))
+            res.push(fld);
       }
+      return res;
+   }
 
-      const reader = new RBufferReader(processedBlob),
-            values = [],
-
-            // Use numElements from pageInfo parameter
-            numValues = Number(pageInfo.numElements),
-            // Helper for all simple types
-            extractValues = (readFunc) => {
-               for (let i = 0; i < numValues; ++i)
-                  values.push(readFunc());
-            };
-      switch (coltype) {
-         case ENTupleColumnType.kBit: {
-            let bitCount = 0;
-            const totalBitsInBuffer = processedBlob.byteLength * 8;
-            if (totalBitsInBuffer < numValues)
-               throw new Error(`kBit: Not enough bits in buffer (${totalBitsInBuffer}) for numValues (${numValues})`);
-
-            for (let byteIndex = 0; byteIndex < processedBlob.byteLength; ++byteIndex) {
-               const byte = reader.readU8();
-
-               // Extract 8 bits from this byte
-               for (let bitPos = 0; bitPos < 8 && bitCount < numValues; ++bitPos, ++bitCount) {
-                  const bitValue = (byte >>> bitPos) & 1,
-                        boolValue = bitValue === 1;
-                  values.push(boolValue);
-               }
-            }
-            break;
-         }
-
-         case ENTupleColumnType.kReal64:
-            extractValues(reader.readF64.bind(reader));
-            break;
-         case ENTupleColumnType.kReal32:
-            extractValues(reader.readF32.bind(reader));
-            break;
-         case ENTupleColumnType.kInt64:
-            extractValues(reader.readS64.bind(reader));
-            break;
-         case ENTupleColumnType.kUInt64:
-            extractValues(reader.readU64.bind(reader));
-            break;
-         case ENTupleColumnType.kInt32:
-            extractValues(reader.readS32.bind(reader));
-            break;
-         case ENTupleColumnType.kUInt32:
-            extractValues(reader.readU32.bind(reader));
-            break;
-         case ENTupleColumnType.kInt16:
-            extractValues(reader.readS16.bind(reader));
-            break;
-         case ENTupleColumnType.kUInt16:
-            extractValues(reader.readU16.bind(reader));
-            break;
-         case ENTupleColumnType.kInt8:
-            extractValues(reader.readS8.bind(reader));
-            break;
-         case ENTupleColumnType.kUInt8:
-         case ENTupleColumnType.kByte:
-            extractValues(reader.readU8.bind(reader));
-            break;
-         case ENTupleColumnType.kChar:
-            extractValues(() => String.fromCharCode(reader.readS8()));
-            break;
-         case ENTupleColumnType.kIndex32:
-            extractValues(reader.readS32.bind(reader));
-            break;
-         case ENTupleColumnType.kIndex64:
-            extractValues(reader.readS64.bind(reader));
-            break;
-         default:
-            throw new Error(`Unsupported column type: ${columnDescriptor.coltype}`);
+   /** @summary Return array of columns for specified field
+    * @private */
+   findColumns(field) {
+      const res = [];
+      if (!field)
+         return res;
+      for (const colDesc of this.columnDescriptors) {
+         if (this.fieldDescriptors[colDesc.fieldId] === field)
+            res.push(colDesc);
       }
-      return values;
+      return res;
    }
 
 } // class RNTupleDescriptorBuilder
@@ -847,15 +677,15 @@ class RNTupleDescriptorBuilder {
 async function readHeaderFooter(tuple) {
    // if already read - return immediately, make possible to call several times
    if (tuple?.builder)
-      return true;
+      return tuple.builder;
 
-   if (!tuple.$file)
-      return false;
+   if (!tuple?.$file)
+      return null;
 
    // request header and footer buffers from the file
    return tuple.$file.readBuffer([tuple.fSeekHeader, tuple.fNBytesHeader, tuple.fSeekFooter, tuple.fNBytesFooter]).then(blobs => {
       if (blobs?.length !== 2)
-         return false;
+         throw new Error('Failure reading header or footer blobs');
 
       // Handle both compressed and uncompressed cases
       const processBlob = (blob, uncompressedSize) => {
@@ -868,253 +698,896 @@ async function readHeaderFooter(tuple) {
       return Promise.all([
          processBlob(blobs[0], tuple.fLenHeader),
          processBlob(blobs[1], tuple.fLenFooter)
-      ]).then(unzip_blobs => {
-         const [header_blob, footer_blob] = unzip_blobs;
-         if (!header_blob || !footer_blob)
-            return false;
+      ]);
+   }).then(unzip_blobs => {
+      const [header_blob, footer_blob] = unzip_blobs;
+      if (!header_blob || !footer_blob)
+         throw new Error('Failure when uncompress header and footer blobs');
 
-         tuple.builder = new RNTupleDescriptorBuilder;
-         tuple.builder.deserializeHeader(header_blob);
-         tuple.builder.deserializeFooter(footer_blob);
+      tuple.builder = new RNTupleDescriptorBuilder;
+      tuple.builder.deserializeHeader(header_blob);
+      tuple.builder.deserializeFooter(footer_blob);
 
-         // Build fieldToColumns mapping
-         tuple.fieldToColumns = {};
-         for (const colDesc of tuple.builder.columnDescriptors) {
-            const fieldDesc = tuple.builder.fieldDescriptors[colDesc.fieldId],
-                  fieldName = fieldDesc.fieldName;
-            if (!tuple.fieldToColumns[fieldName])
-               tuple.fieldToColumns[fieldName] = [];
-            tuple.fieldToColumns[fieldName].push(colDesc);
-         }
+      // Deserialize Page List
+      const group = tuple.builder.clusterGroups?.[0];
+      if (!group || !group.pageListLocator)
+         throw new Error('No valid cluster group or page list locator found');
 
-         // Deserialize Page List
-         const group = tuple.builder.clusterGroups?.[0];
-         if (!group || !group.pageListLocator)
-            throw new Error('No valid cluster group or page list locator found');
+      const offset = Number(group.pageListLocator.offset),
+            size = Number(group.pageListLocator.size);
 
-         const offset = Number(group.pageListLocator.offset),
-               size = Number(group.pageListLocator.size),
-               uncompressedSize = Number(group.pageListLength);
+      return tuple.$file.readBuffer([offset, size]);
+   }).then(page_list_blob => {
+      if (!(page_list_blob instanceof DataView))
+         throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
 
-         return tuple.$file.readBuffer([offset, size]).then(page_list_blob => {
-            if (!(page_list_blob instanceof DataView))
-               throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
+      const group = tuple.builder.clusterGroups?.[0],
+            uncompressedSize = Number(group.pageListLength);
 
-            // Check if page list data is uncompressed
-            if (page_list_blob.byteLength === uncompressedSize) {
-               // Data is uncompressed, use directly
-               tuple.builder.deserializePageList(page_list_blob);
-               return true;
-            }
-            // Attempt to decompress the page list
-            return R__unzip(page_list_blob, uncompressedSize).then(unzipped_blob => {
-               if (!(unzipped_blob instanceof DataView))
-                  throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
+      // Check if page list data is uncompressed
+      if (page_list_blob.byteLength === uncompressedSize)
+         return page_list_blob;
 
-               tuple.builder.deserializePageList(unzipped_blob);
-               return true;
-            });
-         });
-      });
+      // Attempt to decompress the page list
+      return R__unzip(page_list_blob, uncompressedSize);
+   }).then(unzipped_blob => {
+      if (!(unzipped_blob instanceof DataView))
+         throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
+
+      tuple.builder.deserializePageList(unzipped_blob);
+      return tuple.builder;
    }).catch(err => {
       console.error('Error during readHeaderFooter execution:', err);
-      throw err;
+      return null;
    });
 }
 
-function readEntry(rntuple, fieldName, entryIndex) {
-   const builder = rntuple.builder,
-         field = builder.fieldDescriptors.find(f => f.fieldName === fieldName),
-         fieldData = rntuple._clusterData[fieldName];
 
-   if (!field)
-      throw new Error(`No descriptor for field ${fieldName}`);
-   if (!fieldData)
-      throw new Error(`No data for field ${fieldName}`);
+/** @class Base class to read columns/fields from RNtuple
+ * @private */
 
-   // Detect and decode string fields
-   if (Array.isArray(fieldData) && fieldData.length === 2) {
-      const [offsets, payload] = fieldData,
-            start = entryIndex === 0 ? 0 : Number(offsets[entryIndex - 1]),
-            end = Number(offsets[entryIndex]),
-            decoded = payload.slice(start, end).join(''); // Convert to string
-      return decoded;
+class ReaderItem {
+
+   constructor(column, name) {
+      this.column = null;
+      this.name = name;
+      this.id = -1;
+      this.coltype = 0;
+      this.sz = 0;
+      this.simple = true;
+      this.page = -1; // current page for the reading
+
+      if (column?.coltype !== undefined) {
+         this.column = column;
+         this.id = column.index;
+         this.coltype = column.coltype;
+
+         // special handling of split types
+         if ((this.coltype >= kSplitInt16) && (this.coltype <= kSplitIndex64)) {
+            this.coltype -= (kSplitInt16 - kInt16);
+            this.simple = false;
+         }
+      } else if (column?.length)
+         this.items = column;
    }
 
-   // Fallback: primitive type (e.g. int, float)
-   return fieldData[0][entryIndex];
-}
+   cleanup() {
+      this.views = null;
+      this.view = null;
+      this.view_len = 0;
+   }
 
-/** @summary Return field name for specified branch index
- * @desc API let use field name in selector or field object itself */
-function getSelectorFieldName(selector, i) {
-   const br = selector.getBranch(i);
-   return isStr(br) ? br : br?.fieldName;
-}
-
-// Read and process the next data cluster from the RNTuple
-function readNextCluster(rntuple, selector) {
-   const builder = rntuple.builder;
-
-   // Add validation
-   if (!builder.clusterSummaries || builder.clusterSummaries.length === 0)
-      throw new Error('No cluster summaries available - possibly incomplete file reading');
-
-   const clusterIndex = selector.currentCluster,
-         clusterSummary = builder.clusterSummaries[clusterIndex],
-      // Gather all pages for this cluster from selected fields only
-         pages = [],
-      // Collect only selected field names from selector
-         selectedFields = [];
-
-   for (let i = 0; i < selector.numBranches(); ++i)
-      selectedFields.push(getSelectorFieldName(selector, i));
-
-   // For each selected field, collect its columns' pages
-   for (const fieldName of selectedFields) {
-      const columns = rntuple.fieldToColumns[fieldName];
-      if (!columns)
-         throw new Error(`Selected field '${fieldName}' not found in RNTuple`);
-
-      for (const colDesc of columns) {
-         const colEntry = builder.pageLocations[clusterIndex]?.[colDesc.index];
-
-         // When the data is missing or broken
-         if (!colEntry || !colEntry.pages)
-            throw new Error(`No pages for column ${colDesc.index} in cluster ${clusterIndex}`);
-
-         for (const page of colEntry.pages)
-            pages.push({ page, colDesc, fieldName });
+   init_o() {
+      this.o = 0;
+      this.o2 = 0; // for bit count
+      if (this.column && this.views?.length) {
+         this.view = this.views.shift();
+         this.view_len = this.view.byteLength;
       }
    }
 
-   selector.currentCluster++;
+   reset_extras() {}
 
-   // Early exit if no pages to read (i.e., no selected fields matched)
-   if (pages.length === 0) {
-      selector.Terminate(false);
-      return Promise.resolve();
+   shift_o(sz) {
+      this.o += sz;
+      while ((this.o >= this.view_len) && this.view_len) {
+         this.o -= this.view_len;
+         if (this.views.length) {
+            this.view = this.views.shift();
+            this.view_len = this.view.byteLength;
+         } else {
+            this.view = null;
+            this.view_len = 0;
+         }
+      }
    }
 
-   // Build flat array of [offset, size, offset, size, ...] to read pages
-   const dataToRead = pages.flatMap(p =>
-      [Number(p.page.locator.offset), Number(p.page.locator.size)]
-   );
+   shift(entries) {
+      if (this.sz && this.simple)
+         this.shift_o(this.sz * entries);
+      else {
+         while (entries-- > 0)
+            this.func({});
+      }
+   }
 
-   return rntuple.$file.readBuffer(dataToRead).then(blobsRaw => {
-      const blobs = Array.isArray(blobsRaw) ? blobsRaw : [blobsRaw],
-            unzipPromises = blobs.map((blob, idx) => {
-               const { page, colDesc } = pages[idx],
-                     colEntry = builder.pageLocations[clusterIndex][colDesc.index], // Access column entry
-                     numElements = Number(page.numElements),
-                     elementSize = colDesc.bitsOnStorage / 8;
+   /** @summary Simple column with fixed element size - no vectors, no strings */
+   is_simple() { return this.sz && this.simple; }
 
-               // Check if data is compressed
-               if (colEntry.compression === 0)
-                  return Promise.resolve(blob); // Uncompressed: use blob directly
-               const expectedSize = numElements * elementSize;
+   set_not_simple() {
+      this.simple = false;
+      this.items?.forEach(item => item.set_not_simple());
+   }
 
-               // Special handling for boolean fields
-               if (colDesc.coltype === ENTupleColumnType.kBit) {
-                  const expectedBoolSize = Math.ceil(numElements / 8);
-                  if (blob.byteLength === expectedBoolSize)
-                     return Promise.resolve(blob);
-                  // Try decompression but catch errors for boolean fields
-                  return R__unzip(blob, expectedBoolSize).catch(err => {
-                     throw new Error(`Failed to unzip boolean page ${idx}: ${err.message}`);
-                  });
+   assignReadFunc() {
+      switch (this.coltype) {
+         case kBit: {
+            this.func = function(obj) {
+               if (this.o2 === 0)
+                  this.byte = this.view.getUint8(this.o);
+               obj[this.name] = ((this.byte >>> this.o2++) & 1) === 1;
+               if (this.o2 === 8) {
+                  this.o2 = 0;
+                  this.shift_o(1);
                }
-
-               // If the blob is already the expected size, treat as uncompressed
-               if (blob.byteLength === expectedSize)
-                  return Promise.resolve(blob);
-
-               // Try decompression
-               return R__unzip(blob, expectedSize).then(result => {
-                  if (!result)
-                     return blob; // Fallback to original blob
-                  return result;
-               }).catch(err => {
-                  throw new Error(`Failed to unzip page ${idx}: ${err.message}`);
-               });
-            });
-
-      return Promise.all(unzipPromises).then(unzipBlobs => {
-         rntuple._clusterData = {}; // store deserialized data per field
-
-         for (let i = 0; i < unzipBlobs.length; ++i) {
-            const blob = unzipBlobs[i];
-            // Ensure blob is a DataView
-            if (!(blob instanceof DataView))
-               throw new Error(`Invalid blob type for page ${i}: ${Object.prototype.toString.call(blob)}`);
-            const {
-               page,
-               colDesc
-            } = pages[i],
-                  field = builder.fieldDescriptors[colDesc.fieldId],
-                  values = builder.deserializePage(blob, colDesc, page);
-
-            // Support multiple representations (e.g., string fields with offsets + payload)
-            if (!rntuple._clusterData[field.fieldName])
-               rntuple._clusterData[field.fieldName] = [];
-
-            // splitting string fields into offset and payload components
-            if (field.typeName === 'std::string') {
-               if (
-                  colDesc.coltype === ENTupleColumnType.kIndex64 ||
-                        colDesc.coltype === ENTupleColumnType.kIndex32 ||
-                        colDesc.coltype === ENTupleColumnType.kSplitIndex64 ||
-                        colDesc.coltype === ENTupleColumnType.kSplitIndex32
-               ) // Index64/Index32
-                  rntuple._clusterData[field.fieldName][0] = values; // Offsets
-               else if (colDesc.coltype === ENTupleColumnType.kChar)
-                  rntuple._clusterData[field.fieldName][1] = values; // Payload
-               else
-                  throw new Error(`Unsupported column type for string field: ${colDesc.coltype}`);
-            } else
-               rntuple._clusterData[field.fieldName][0] = values;
+            };
+            break;
          }
-
-         // Ensure string fields have ending offset for proper reconstruction of the last entry
-         for (const fieldName of selectedFields) {
-            const field = builder.fieldDescriptors.find(f => f.fieldName === fieldName),
-                  colData = rntuple._clusterData[fieldName];
-            if (field.typeName === 'std::string') {
-               if (!Array.isArray(colData) || colData.length !== 2)
-                  throw new Error(`String field '${fieldName}' must have 2 columns`);
-               if (colData[0].length !== builder.clusterSummaries[clusterIndex].numEntries)
-                  throw new Error(`Malformed string field '${fieldName}': missing final offset`);
+         case kReal64:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getFloat64(this.o, LITTLE_ENDIAN);
+               this.shift_o(8);
+            };
+            this.sz = 8;
+            break;
+         case kReal32:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getFloat32(this.o, LITTLE_ENDIAN);
+               this.shift_o(4);
+            };
+            this.sz = 4;
+            break;
+         case kReal16:
+            this.func = function(obj) {
+               const value = this.view.getUint16(this.o, LITTLE_ENDIAN);
+               this.shift_o(2);
+               // reimplementing of HalfToFloat
+               let fbits = (value & 0x8000) << 16,
+                   abs = value & 0x7FFF;
+               if (abs) {
+                  fbits |= 0x38000000 << (abs >= 0x7C00 ? 1 : 0);
+                  for (; abs < 0x400; abs <<= 1, fbits -= 0x800000);
+                  fbits += abs << 13;
+               }
+               this.buf.setUint32(0, fbits, true);
+               obj[this.name] = this.buf.getFloat32(0, true);
+            };
+            this.sz = 2;
+            this.buf = new DataView(new ArrayBuffer(4), 0);
+            break;
+         case kReal32Trunc:
+            this.buf = new DataView(new ArrayBuffer(4), 0);
+         case kReal32Quant:
+            this.nbits = this.column.bitsOnStorage;
+            if (!this.buf) {
+               this.factor = (this.column.maxValue - this.column.minValue) / ((1 << this.nbits) - 1);
+               this.min = this.column.minValue;
             }
-         }
 
-         const numEntries = clusterSummary.numEntries;
-         for (let i = 0; i < numEntries; ++i) {
-            for (let b = 0; b < selector.numBranches(); ++b) {
-               const fieldName = getSelectorFieldName(selector, b),
-                     tgtName = selector.nameOfBranch(b),
-                     values = rntuple._clusterData[fieldName];
+            this.func = function(obj) {
+               let res = 0, len = this.nbits;
+               // extract nbits from the stream
+               while (len > 0) {
+                  if (this.o2 === 0) {
+                     this.byte = this.view.getUint8(this.o);
+                     this.o2 = 8; // number of bits in the value
+                  }
+                  const pos = this.nbits - len; // extracted bits
+                  if (len >= this.o2) {
+                     res |= (this.byte & ((1 << this.o2) - 1)) << pos; // get all remaining bits
+                     len -= this.o2;
+                     this.o2 = 0;
+                     this.shift_o(1);
+                  } else {
+                     res |= (this.byte & ((1 << len) - 1)) << pos; // get only len bits from the value
+                     this.o2 -= len;
+                     this.byte >>= len;
+                     len = 0;
+                  }
+               }
+               if (this.buf) {
+                  this.buf.setUint32(0, res << (32 - this.nbits), true);
+                  obj[this.name] = this.buf.getFloat32(0, true);
+               } else
+                  obj[this.name] = res * this.factor + this.min;
+            };
+            break;
+         case kInt64:
+         case kIndex64:
+            this.func = function(obj) {
+               // FIXME: let process BigInt in the TTree::Draw
+               obj[this.name] = Number(this.view.getBigInt64(this.o, LITTLE_ENDIAN));
+               this.shift_o(8);
+            };
+            this.sz = 8;
+            break;
+         case kUInt64:
+            this.func = function(obj) {
+               // FIXME: let process BigInt in the TTree::Draw
+               obj[this.name] = Number(this.view.getBigUint64(this.o, LITTLE_ENDIAN));
+               this.shift_o(8);
+            };
+            this.sz = 8;
+            break;
+         case kSwitch:
+            this.func = function(obj) {
+               // index not used in std::variant, may be in some other usecases
+               // obj[this.name] = Number(this.view.getBigInt64(this.o, LITTLE_ENDIAN));
+               this.shift_o(8); // skip value, not used yet
+               obj[this.name] = this.view.getInt32(this.o, LITTLE_ENDIAN);
+               this.shift_o(4);
+            };
+            this.sz = 12;
+            break;
+         case kInt32:
+         case kIndex32:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getInt32(this.o, LITTLE_ENDIAN);
+               this.shift_o(4);
+            };
+            this.sz = 4;
+            break;
+         case kUInt32:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getUint32(this.o, LITTLE_ENDIAN);
+               this.shift_o(4);
+            };
+            this.sz = 4;
+            break;
+         case kInt16:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getInt16(this.o, LITTLE_ENDIAN);
+               this.shift_o(2);
+            };
+            this.sz = 2;
+            break;
+         case kUInt16:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getUint16(this.o, LITTLE_ENDIAN);
+               this.shift_o(2);
+            };
+            this.sz = 2;
+            break;
+         case kInt8:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getInt8(this.o);
+               this.shift_o(1);
+            };
+            this.sz = 1;
+            break;
+         case kUInt8:
+         case kByte:
+            this.func = function(obj) {
+               obj[this.name] = this.view.getUint8(this.o);
+               this.shift_o(1);
+            };
+            this.sz = 1;
+            break;
+         case kChar:
+            this.func = function(obj) {
+               obj[this.name] = String.fromCharCode(this.view.getInt8(this.o));
+               this.shift_o(1);
+            };
+            this.sz = 1;
+            break;
+         default:
+            throw new Error(`Unsupported column type: ${this.coltype}`);
+      }
+   }
 
-               if (!values)
-                  throw new Error(`Missing values for selected field: ${fieldName}`);
-               selector.tgtobj[tgtName] = readEntry(rntuple, fieldName, i);
-            }
-            selector.Process();
-         }
+   readStr(len) {
+      let s = '';
+      while (len-- > 0) {
+         s += String.fromCharCode(this.view.getInt8(this.o));
+         this.shift_o(1);
+      }
+      return s;
+   }
 
-         selector.Terminate(true);
+   collectPages(cluster_locations, dataToRead, itemsToRead, pagesToRead, emin, emax, elist) {
+      // no pages without real column id
+      if (!this.column || (this.id < 0))
+         return;
+
+      const pages = cluster_locations[this.id].pages;
+
+      this.views = new Array(pages.length);
+
+      let e0 = 0;
+      for (let p = 0; p < pages.length; ++p) {
+         const page = pages[p],
+               e1 = e0 + Number(page.numElements),
+               margin = this._is_offset_item ? 1 : 0, // offset for previous entry has to be read as well
+               is_inside = (e, beg, end) => (e >= beg) && (e < end + margin);
+         let is_entries_inside = false;
+         if (elist?.length)
+            elist.forEach(e => { is_entries_inside ||= is_inside(e, e0, e1); });
+         else
+            is_entries_inside = is_inside(e0, emin, emax) || is_inside(e1, emin, emax) || is_inside(emin, e0, e1) || is_inside(emax, e0, e1);
+
+         if (!this.is_simple() || is_entries_inside) {
+            itemsToRead.push(this);
+            dataToRead.push(Number(page.locator.offset), page.locator.size);
+            pagesToRead.push(p);
+            this.views[p] = null; // placeholder, filled after request
+         } else
+            this.views[p] = { byteLength: this.sz * Number(page.numElements) }; // dummy entry only to allow proper navigation
+
+         e0 = e1;
+      }
+   }
+
+   async unzipBlob(blob, cluster_locations, page_indx) {
+      const colEntry = cluster_locations[this.id], // Access column entry
+            numElements = Number(colEntry.pages[page_indx].numElements),
+            elementSize = this.column.bitsOnStorage / 8,
+            expectedSize = Math.ceil(numElements * elementSize);
+
+      // Check if data is compressed
+      if ((colEntry.compression === 0) || (blob.byteLength === expectedSize))
+         return blob; // Uncompressed: use blob directly
+
+      // Try decompression
+      return R__unzip(blob, expectedSize).then(result => {
+         return result || blob; // Fallback to original blob ??
+      }).catch(err => {
+         throw new Error(`Failed to unzip page ${page_indx} for column ${this.id}: ${err.message}`);
       });
-   });
+   }
+
+   reconstructBlob(rawblob, page_indx) {
+      if (!(rawblob instanceof DataView))
+         throw new Error(`Invalid blob type for column ${this.id}: ${Object.prototype.toString.call(rawblob)}`);
+
+      const originalColtype = this.column.coltype,
+            view = recontructUnsplitBuffer(rawblob, originalColtype);
+
+      // Handle split index types
+      switch (originalColtype) {
+         case kSplitIndex32: decodeIndex32(view); break;
+         case kSplitIndex64: decodeIndex64(view, 0); break;
+         case kSwitch: decodeIndex64(view, 4); break;
+         case kSplitInt16: decodeZigzag16(view); break;
+         case kSplitInt32: decodeZigzag32(view); break;
+         case kSplitInt64: decodeZigzag64(view); break;
+      }
+
+      this.views[page_indx] = view;
+   }
+
 }
 
-// TODO args can later be used to filter fields, limit entries, etc.
-// Create reader and deserialize doubles from the buffer
-function rntupleProcess(rntuple, selector, args) {
-   return readHeaderFooter(rntuple).then(() => {
-      selector.Begin();
-      selector.currentCluster = 0;
-      return readNextCluster(rntuple, selector, args);
+
+/** @class reading std::string field
+ * @private */
+
+class StringReaderItem extends ReaderItem {
+
+   constructor(items, name) {
+      super(items, name);
+      items[0]._is_offset_item = true;
+      items[1].set_not_simple();
+      this.off0 = 0;
+   }
+
+   reset_extras() {
+      this.off0 = 0;
+   }
+
+   func(tgtobj) {
+      const tmp = {};
+      this.items[0].func(tmp);
+      const off = Number(tmp.len);
+      tgtobj[this.name] = this.items[1].readStr(off - this.off0);
+      this.off0 = off;
+   }
+
+   shift(entries) {
+      this.items[0].shift(entries - 1);
+      const tmp = {};
+      this.items[0].func(tmp);
+      const off = Number(tmp.len);
+      this.items[1].shift_o(off - this.off0);
+      this.off0 = off;
+   }
+
+}
+
+/** @class reading Streamed field
+ * @private */
+
+class StreamedReaderItem extends ReaderItem {
+
+   constructor(items, name, file, classname) {
+      super(items, name);
+      items[0]._is_offset_item = true;
+      items[1].set_not_simple();
+      this.file = file;
+      this.classname = classname;
+      this.off0 = 0;
+   }
+
+   reset_extras() {
+      this.off0 = 0;
+   }
+
+   func(tgtobj) {
+      const tmp = {}, res = {};
+      this.items[0].func(tmp);
+      const off = Number(tmp.len),
+            buf = new TBuffer(this.items[1].view, this.items[1].o, this.file, this.items[1].o + off - this.off0);
+
+      // TODO: if by chance object splited between two pages
+      if (this.items[1].view.byteLength < this.items[1].o + off - this.off0)
+         console.error('FAILURE - buffer is splitted, need to be read from next page');
+
+      buf.classStreamer(res, this.classname);
+
+      this.items[1].shift_o(off - this.off0);
+      this.off0 = off;
+      tgtobj[this.name] = res;
+   }
+
+   shift(entries) {
+      this.items[0].shift(entries - 1);
+      const tmp = {};
+      this.items[0].func(tmp);
+      const off = Number(tmp.len);
+      this.items[1].shift_o(off - this.off0);
+      this.off0 = off;
+   }
+
+}
+
+
+/** @class reading of std::array<T,N>
+ * @private */
+
+class ArrayReaderItem extends ReaderItem {
+
+   constructor(items, tgtname, arrsize) {
+      super(items, tgtname);
+      this.arrsize = arrsize;
+      items[0].set_not_simple();
+   }
+
+   func(tgtobj) {
+      const arr = [], tmp = {};
+      let len = this.arrsize;
+      while (len-- > 0) {
+         this.items[0].func(tmp);
+         arr.push(tmp.value);
+      }
+      tgtobj[this.name] = arr;
+   }
+
+   shift(entries) {
+      this.items[0].shift(entries * this.arrsize);
+   }
+
+}
+
+
+/** @class reading of std::bitset<N>
+ * @desc large numbers with more than 48 bits converted to BigInt
+ * @private */
+
+class BitsetReaderItem extends ReaderItem {
+
+   constructor(items, tgtname, size) {
+      super(items, tgtname);
+      this.size = size;
+      items[0].set_not_simple();
+      this.bigint = size > 48;
+   }
+
+   func(tgtobj) {
+      const tmp = {};
+      let len = 0, res = this.bigint ? 0n : 0;
+      while (len < this.size) {
+         this.items[0].func(tmp);
+         if (tmp.bit) {
+            if (this.bigint)
+               res |= (1n << BigInt(len));
+            else
+               res |= 1 << len;
+         }
+         len++;
+      }
+      tgtobj[this.name] = res;
+   }
+
+   shift(entries) {
+      this.items[0].shift(entries * this.size);
+   }
+
+}
+
+
+/** @class reading std::vector and other kinds of collections
+ * @private */
+
+class CollectionReaderItem extends ReaderItem {
+
+   constructor(items, tgtname) {
+      super(items, tgtname);
+      this.off0 = 0;
+      items[0]._is_offset_item = true;
+      items[1].set_not_simple();
+   }
+
+   reset_extras() {
+      this.off0 = 0;
+   }
+
+   func(tgtobj) {
+      const arr = [], tmp = {};
+      this.items[0].func(tmp);
+      const off = Number(tmp.len);
+      let len = off - this.off0;
+      while (len-- > 0) {
+         this.items[1].func(tmp);
+         arr.push(tmp.val);
+      }
+      tgtobj[this.name] = arr;
+      this.off0 = off;
+   }
+
+   shift(entries) {
+      const tmp = {};
+      this.items[0].shift(entries - 1);
+      this.items[0].func(tmp);
+      const off = Number(tmp.len);
+      this.items[1].shift(off - this.off0);
+      this.off0 = off;
+   }
+
+}
+
+/** @class reading std::variant field
+  * @private */
+
+class VariantReaderItem extends ReaderItem {
+
+   constructor(items, tgtname) {
+      super(items, tgtname);
+      this.set_not_simple();
+   }
+
+   func(tgtobj) {
+      const tmp = {};
+      this.items[0].func(tmp);
+      const id = tmp.switch;
+      if (id === 0)
+         tgtobj[this.name] = null; // set null
+      else if (Number.isInteger(id) && (id > 0) && (id < this.items.length))
+         this.items[id].func(tgtobj);
+   }
+
+}
+
+
+/** @class reading std::tuple<> field
+  * @private */
+
+class TupleReaderItem extends ReaderItem {
+
+   func(tgtobj) {
+      const tuple = {};
+      this.items.forEach(item => item.func(tuple));
+      tgtobj[this.name] = tuple;
+   }
+
+   shift(entries) {
+      this.items.forEach(item => item.shift(entries));
+   }
+
+}
+
+/** @class reading custom class field
+  * @private */
+
+class CustomClassReaderItem extends ReaderItem {
+
+   constructor(items, tgtname, classname) {
+      super(items, tgtname);
+      this.classname = classname;
+      this.set_not_simple();
+   }
+
+   func(tgtobj) {
+      const obj = { _typename: this.classname };
+      this.items.forEach(item => item.func(obj));
+      tgtobj[this.name] = obj;
+   }
+
+   shift(entries) {
+      this.items.forEach(item => item.shift(entries));
+   }
+
+}
+
+
+/** @class reading std::pair field
+ * @private */
+
+class PairReaderItem extends ReaderItem {
+
+   func(tgtobj) {
+      const res = {};
+      this.items[0].func(res);
+      this.items[1].func(res);
+      tgtobj[this.name] = res;
+   }
+
+   shift(entries) {
+      this.items[0].shift(entries);
+      this.items[1].shift(entries);
+   }
+
+}
+
+
+async function rntupleProcess(rntuple, selector, args = {}) {
+   const handle = {
+      rntuple, // keep rntuple reference
+      file: rntuple.$file, // keep file reference
+      selector, // reference on selector
+      columns: [], // list of ReaderItem with real columns for reading
+      items: [], // list of ReaderItem producing output fields
+      current_cluster: 0, // current cluster to process
+      current_cluster_first_entry: 0, // first entry in current cluster
+      current_cluster_last_entry: 0, // last entry in current cluster
+      current_entry: 0, // current processed entry
+      process_arrays: false, // one can process all branches as arrays
+      firstentry: 0,  // first entry in the rntuple
+      lastentry: 0    // last entry in the rntuple
+   };
+
+   function readNextPortion(builder, inc_cluster) {
+      let do_again = true, numClusterEntries, locations;
+
+      while (do_again) {
+         if (inc_cluster) {
+            handle.current_cluster++;
+            handle.current_cluster_first_entry = handle.current_cluster_last_entry;
+         }
+
+         locations = builder.pageLocations[handle.current_cluster];
+         if (!locations) {
+            selector.Terminate(true);
+            return selector;
+         }
+
+         numClusterEntries = builder.clusterSummaries[handle.current_cluster].numEntries;
+
+         handle.current_cluster_last_entry = handle.current_cluster_first_entry + numClusterEntries;
+
+         do_again = inc_cluster && handle.process_entries &&
+                    (handle.process_entries[handle.process_entries_indx] >= handle.current_cluster_last_entry);
+      }
+
+      // calculate entries which can be extracted from the cluster
+      let emin, emax;
+      const dataToRead = [], itemsToRead = [], pagesToRead = [], elist = [];
+
+      if (handle.process_entries) {
+         let i = handle.process_entries_indx;
+         while ((i < handle.process_entries.length) && (handle.process_entries[i] < handle.current_cluster_last_entry))
+            elist.push(handle.process_entries[i++] - handle.current_cluster_first_entry);
+         emin = elist[0];
+         emax = elist[elist.length - 1];
+      } else {
+         emin = handle.current_entry - handle.current_cluster_first_entry;
+         emax = Math.min(numClusterEntries, handle.process_max - handle.current_cluster_first_entry);
+      }
+
+      // loop over all columns and request required pages
+      handle.columns.forEach(item => item.collectPages(locations, dataToRead, itemsToRead, pagesToRead, emin, emax, elist));
+
+      return rntuple.$file.readBuffer(dataToRead).then(blobsRaw => {
+         const blobs = Array.isArray(blobsRaw) ? blobsRaw : [blobsRaw],
+               unzipPromises = blobs.map((blob, idx) => itemsToRead[idx].unzipBlob(blob, locations, pagesToRead[idx]));
+         return Promise.all(unzipPromises);
+      }).then(unzipBlobs => {
+         unzipBlobs.map((rawblob, idx) => itemsToRead[idx].reconstructBlob(rawblob, pagesToRead[idx]));
+
+         // reset reading pointer after all buffers are there
+         handle.columns.forEach(item => item.init_o());
+         handle.items.forEach(item => item.reset_extras());
+
+         let skip_entries = handle.current_entry - handle.current_cluster_first_entry;
+
+         while (handle.current_entry < handle.current_cluster_last_entry) {
+            for (let i = 0; i < handle.items.length; ++i) {
+               if (skip_entries > 0)
+                  handle.items[i].shift(skip_entries);
+               handle.items[i].func(selector.tgtobj);
+            }
+            skip_entries = 0;
+
+            selector.Process(handle.current_entry);
+
+            if (handle.process_entries) {
+               if (++handle.process_entries_indx >= handle.process_entries.length) {
+                  selector.Terminate(true);
+                  return selector;
+               }
+               const prev_entry = handle.current_entry;
+               handle.current_entry = handle.process_entries[handle.process_entries_indx];
+               skip_entries = handle.current_entry - prev_entry - 1;
+            } else if (++handle.current_entry >= handle.process_max) {
+               selector.Terminate(true);
+               return selector;
+            }
+         }
+
+         return readNextPortion(builder, true);
+      });
+   }
+
+   function addColumnReadout(column, tgtname) {
+      const item = new ReaderItem(column, tgtname);
+      item.assignReadFunc();
+      handle.columns.push(item);
+      return item;
+   }
+
+   function addFieldReading(builder, field, tgtname) {
+      const columns = builder.findColumns(field),
+            childs = builder.findChildFields(field);
+      if (!columns?.length) {
+         if ((childs.length === 2) && (field.typeName.indexOf('std::pair') === 0)) {
+            const item1 = addFieldReading(builder, childs[0], 'first'),
+                  item2 = addFieldReading(builder, childs[1], 'second');
+            return new PairReaderItem([item1, item2], tgtname);
+         }
+
+         if ((childs.length === 1) && (field.typeName.indexOf('std::array') === 0)) {
+            const item1 = addFieldReading(builder, childs[0], 'value');
+            return new ArrayReaderItem([item1], tgtname, Number(field.arraySize));
+         }
+
+         if ((childs.length === 1) && (field.typeName.indexOf('std::atomic') === 0))
+            return addFieldReading(builder, childs[0], tgtname);
+
+
+         if ((childs.length > 0) && (field.typeName.indexOf('std::tuple') === 0)) {
+            const items = [];
+            for (let i = 0; i < childs.length; ++i)
+               items.push(addFieldReading(builder, childs[i], `_${i}`));
+            return new TupleReaderItem(items, tgtname);
+         }
+
+         // this is custom class which is decomposed on several fields
+         if ((childs.length > 0) && field.checksum && field.typeName) {
+            const items = [];
+            for (let i = 0; i < childs.length; ++i)
+               items.push(addFieldReading(builder, childs[i], childs[i].fieldName));
+            return new CustomClassReaderItem(items, tgtname, field.typeName);
+         }
+
+         throw new Error(`No columns found for field '${field.fieldName}' in RNTuple`);
+      }
+
+      if ((columns.length === 2) && (field.typeName === 'std::string')) {
+         const itemlen = addColumnReadout(columns[0], 'len'),
+               itemstr = addColumnReadout(columns[1], 'str');
+         return new StringReaderItem([itemlen, itemstr], tgtname);
+      }
+
+      if ((columns.length === 1) && (field.typeName.indexOf('std::bitset') === 0)) {
+         const itembit = addColumnReadout(columns[0], 'bit');
+         return new BitsetReaderItem([itembit], tgtname, Number(field.arraySize));
+      }
+
+      if ((columns.length === 2) && field.checksum && field.typeName) {
+         if (!handle.file.getStreamer(field.typeName, { checksum: field.checksum }))
+            throw new Error(`No streamer for type '${field.typeName}' checksum ${field.checksum}`);
+
+         const itemlen = addColumnReadout(columns[0], 'len'),
+               itemb = addColumnReadout(columns[1], 'b');
+         return new StreamedReaderItem([itemlen, itemb], tgtname, handle.file, field.typeName);
+      }
+
+      let is_stl = false;
+      ['vector', 'map', 'unordered_map', 'multimap', 'unordered_multimap', 'set', 'unordered_set', 'multiset', 'unordered_multiset'].forEach(name => {
+         if (field.typeName.indexOf('std::' + name) === 0)
+            is_stl = true;
+      });
+
+      if ((childs.length === 1) && is_stl) {
+         const itemlen = addColumnReadout(columns[0], 'len'),
+               itemval = addFieldReading(builder, childs[0], 'val');
+         return new CollectionReaderItem([itemlen, itemval], tgtname);
+      }
+
+      if ((childs.length > 0) && (field.typeName.indexOf('std::variant') === 0)) {
+         const items = [addColumnReadout(columns[0], 'switch')];
+         for (let i = 0; i < childs.length; ++i)
+            items.push(addFieldReading(builder, childs[i], tgtname));
+         return new VariantReaderItem(items, tgtname);
+      }
+
+      return addColumnReadout(columns[0], tgtname);
+   }
+
+   return readHeaderFooter(rntuple).then(builder => {
+      if (!builder)
+         throw new Error('Not able to read header for the RNtuple');
+
+      for (let i = 0; i < selector.numBranches(); ++i) {
+         const br = selector.getBranch(i),
+               name = isStr(br) ? br : br?.fieldName,
+               tgtname = selector.nameOfBranch(i);
+         if (!name)
+            throw new Error(`Not able to extract name for field ${i}`);
+
+         const field = builder.findField(name);
+         if (!field)
+            throw new Error(`Field ${name} not found`);
+
+         const item = addFieldReading(builder, field, tgtname);
+         handle.items.push(item);
+      }
+
+      // calculate number of entries
+      builder.clusterSummaries.forEach(summary => { handle.lastentry += summary.numEntries; });
+
+      if (handle.firstentry >= handle.lastentry)
+         throw new Error('Not able to find entries in the RNtuple');
+
+      // select range of entries to process
+      handle.process_min = handle.firstentry;
+      handle.process_max = handle.lastentry;
+
+      if (args.elist) {
+         args.firstentry = args.elist.at(0);
+         args.numentries = args.elist.at(-1) - args.elist.at(0) + 1;
+         handle.process_entries = args.elist;
+         handle.process_entries_indx = 0;
+         handle.process_arrays = false; // do not use arrays process for selected entries
+      }
+
+      if (Number.isInteger(args.firstentry) && (args.firstentry > handle.firstentry) && (args.firstentry < handle.lastentry))
+         handle.process_min = args.firstentry;
+
+      if (Number.isInteger(args.numentries) && (args.numentries > 0))
+         handle.process_max = Math.min(handle.process_max, handle.process_min + args.numentries);
+
+      // first check from which cluster one should start
+      for (let indx = 0, emin = 0; indx < builder.clusterSummaries.length; ++indx) {
+         const summary = builder.clusterSummaries[indx],
+               emax = emin + summary.numEntries;
+         if ((handle.process_min >= emin) && (handle.process_min < emax)) {
+            handle.current_cluster = indx;
+            handle.current_cluster_first_entry = emin;
+            break;
+         }
+         emin = emax;
+      }
+
+      if (handle.current_cluster < 0)
+         throw new Error(`Not able to find cluster for entry ${handle.process_min} in the RNtuple`);
+
+      handle.current_entry = handle.process_min;
+
+      selector.Begin(rntuple);
+
+      return readNextPortion(builder);
    }).then(() => selector);
 }
+
 
 class TDrawSelectorTuple extends TDrawSelector {
 
@@ -1128,11 +1601,7 @@ class TDrawSelectorTuple extends TDrawSelector {
 
    /** @summary Search for field in tuple
      * @desc TODO: Can be more complex when name includes extra parts referencing member or collection size or more  */
-   findBranch(tuple, name) {
-      return tuple.builder?.fieldDescriptors.find(field => {
-         return field.fieldName === name;
-      });
-   }
+   findBranch(tuple, name) { return tuple.builder?.findField(name); }
 
    /** @summary Returns true if field can be used as array */
    isArrayBranch(/* tuple, br */) { return false; }
@@ -1162,8 +1631,8 @@ async function rntupleDraw(rntuple, args) {
    args.SelectorClass = TDrawSelectorTuple;
    args.processFunction = rntupleProcess;
 
-   return readHeaderFooter(rntuple).then(res_header_footer => {
-      return res_header_footer ? treeDraw(rntuple, args) : null;
+   return readHeaderFooter(rntuple).then(builder => {
+      return builder ? treeDraw(rntuple, args) : null;
    });
 }
 
@@ -1174,12 +1643,10 @@ async function rntupleDraw(rntuple, args) {
 async function tupleHierarchy(tuple_node, tuple) {
    tuple_node._childs = [];
    // tuple_node._tuple = tuple;  // set reference, will be used later by RNTuple::Draw
-
-   return readHeaderFooter(tuple).then(res => {
-      if (!res)
-         return res;
-
-      tuple.builder?.fieldDescriptors.forEach(field => {
+   return readHeaderFooter(tuple).then(builder => {
+      builder?.fieldDescriptors.forEach((field, indx) => {
+         if (field.parentFieldId !== indx)
+            return;
          const item = {
             _name: field.fieldName,
             _typename: 'ROOT::RNTupleField', // pseudo class name, used in draw.mjs
@@ -1188,14 +1655,11 @@ async function tupleHierarchy(tuple_node, tuple) {
             $tuple: tuple, // reference on tuple, need for drawing
             $field: field
          };
-
          item._obj = item;
-
          tuple_node._childs.push(item);
       });
-
-      return true;
+      return Boolean(builder);
    });
 }
 
-export { tupleHierarchy, readHeaderFooter, RBufferReader, rntupleProcess, readEntry, rntupleDraw };
+export { tupleHierarchy, readHeaderFooter, RBufferReader, rntupleProcess, rntupleDraw };

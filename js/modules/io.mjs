@@ -46,7 +46,13 @@ const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObj
       StlNames = ['', 'vector', 'list', 'deque', 'map', 'multimap', 'set', 'multiset', 'bitset'],
 
       // TObject bits
-      kIsReferenced = BIT(4), kHasUUID = BIT(5);
+      kIsReferenced = BIT(4), kHasUUID = BIT(5),
+
+      // gap in http which can be merged into single http request
+      kMinimalHttpGap = 128,
+
+      // temporary name assigned for file derived from binary buffer
+      kTmpFileName = 'localfile.root';
 
 
 /** @summary Custom streamers for root classes
@@ -976,7 +982,7 @@ function readMapElement(buf) {
 /** @summary create member entry for streamer element
   * @desc used for reading of data
   * @private */
-function createMemberStreamer(element, file) {
+function createMemberStreamer(element, file, no_string) {
    const member = {
       name: element.fName, type: element.fType,
       fArrayLength: element.fArrayLength,
@@ -1042,6 +1048,7 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kInt:
       case kOffsetL + kCounter:
       case kOffsetL + kDouble:
+      case kOffsetL + kChar:
       case kOffsetL + kUChar:
       case kOffsetL + kShort:
       case kOffsetL + kUShort:
@@ -1054,36 +1061,35 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kFloat:
          if (element.fArrayDim < 2) {
             member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
-            };
+            if ((member.type !== kOffsetL + kChar) || no_string) {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
+               };
+            } else {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readFastString(this.arrlength);
+               };
+            }
          } else {
-            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.minus1 = true;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
-                  buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
-            };
-         }
-         break;
-      case kOffsetL + kChar:
-         if (element.fArrayDim < 2) {
-            member.arrlength = element.fArrayLength;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readFastString(this.arrlength);
-            };
-         } else {
-            member.minus1 = true; // one dimension used for char*
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
-                  buf2.readFastString(handle.arrlength));
-            };
+            if ((member.type !== kOffsetL + kChar) || no_string) {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                     buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
+               };
+            } else {
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                     buf2.readFastString(handle.arrlength));
+               };
+            }
          }
          break;
       case kOffsetP + kBool:
       case kOffsetP + kInt:
       case kOffsetP + kDouble:
+      case kOffsetP + kChar:
       case kOffsetP + kUChar:
       case kOffsetP + kShort:
       case kOffsetP + kUShort:
@@ -1095,21 +1101,20 @@ function createMemberStreamer(element, file) {
       case kOffsetP + kLong64:
       case kOffsetP + kFloat:
          member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
-         };
-         break;
-      case kOffsetP + kChar:
-         member.cntname = element.fCountName;
-         member.func = function(buf, obj) {
-            obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
-         };
+         if ((member.type !== kOffsetP + kChar) || no_string) {
+            member.func = function(buf, obj) {
+               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
+            };
+         } else {
+            member.func = function(buf, obj) {
+               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
+            };
+         }
          break;
       case kDouble32:
       case kOffsetL + kDouble32:
       case kOffsetP + kDouble32:
          member.double32 = true;
-      // eslint-disable-next-line  no-fallthrough
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
@@ -1117,20 +1122,17 @@ function createMemberStreamer(element, file) {
             member.factor = 1 / element.fFactor;
             member.min = element.fXmin;
             member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
-         } else
-            if ((element.fXmin === 0) && member.double32)
-               member.read = function(buf) { return buf.ntof(); };
-            else {
-               member.nbits = Math.round(element.fXmin);
-               if (member.nbits === 0)
-                  member.nbits = 12;
-               member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
-               member.read = function(buf) {
-                  const theExp = buf.ntou1(), theMan = buf.ntou2();
-                  this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
-                  return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
-               };
-            }
+         } else if ((element.fXmin === 0) && member.double32)
+            member.read = function(buf) { return buf.ntof(); };
+         else {
+            member.nbits = Math.round(element.fXmin) || 12;
+            member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
+            member.read = function(buf) {
+               const theExp = buf.ntou1(), theMan = buf.ntou2();
+               this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
+               return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
+            };
+         }
 
          member.readarr = function(buf, len) {
             const arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
@@ -1141,23 +1143,21 @@ function createMemberStreamer(element, file) {
 
          if (member.type < kOffsetL)
             member.func = function(buf, obj) { obj[this.name] = this.read(buf); };
-         else
-            if (member.type > kOffsetP) {
-               member.cntname = element.fCountName;
-               member.func = function(buf, obj) {
-                  obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
-               };
-            } else
-               if (element.fArrayDim < 2) {
-                  member.arrlength = element.fArrayLength;
-                  member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
-               } else {
-                  member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-                  member.minus1 = true;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.readNdimArray(this, (buf2, handle) => handle.readarr(buf2, handle.arrlength));
-                  };
-               }
+         else if (member.type > kOffsetP) {
+            member.cntname = element.fCountName;
+            member.func = function(buf, obj) {
+               obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
+            };
+         } else if (element.fArrayDim < 2) {
+            member.arrlength = element.fArrayLength;
+            member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
+         } else {
+            member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+            member.minus1 = true;
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.readNdimArray(this, (buf2, handle) => handle.readarr(buf2, handle.arrlength));
+            };
+         }
          break;
 
       case kAnyP:
@@ -2999,8 +2999,14 @@ class TFile {
          this.fAcceptRanges = false;
       }
 
-      const pos = Math.max(this.fURL.lastIndexOf('/'), this.fURL.lastIndexOf('\\'));
-      this.fFileName = pos >= 0 ? this.fURL.slice(pos + 1) : this.fURL;
+      this.assignFileName(this.fURL);
+   }
+
+   assignFileName(url) {
+      if (isStr(url)) {
+         const pos = Math.max(url.lastIndexOf('/'), url.lastIndexOf('\\'));
+         this.fFileName = (pos >= 0) && (pos < url.length - 2) ? url.slice(pos + 1) : url;
+      }
    }
 
    /** @summary Set timeout for File instance
@@ -3039,6 +3045,63 @@ class TFile {
      * @private */
    async _open() { return this.readKeys(); }
 
+   /** @summary check if requested segments can be reordered or merged
+    * @private */
+   #checkNeedReorder(place) {
+      let res = false, resort = false;
+      for (let n = 0; n < place.length - 2; n += 2) {
+         if (place[n] > place[n + 2])
+            res = resort = true;
+         if (place[n] + place[n + 1] > place[n + 2] - kMinimalHttpGap)
+            res = true;
+      }
+      if (!res) {
+         return {
+            place,
+            blobs: [],
+            expectedSize(indx) { return this.place[indx + 1]; },
+            addBuffer(indx, buf, o) {
+               this.blobs[indx / 2] = new DataView(buf, o, this.place[indx + 1]);
+            }
+         };
+      }
+
+      res = { place, reorder: [], place_new: [], blobs: [] };
+
+      for (let n = 0; n < place.length; n += 2)
+         res.reorder.push({ pos: place[n], len: place[n + 1], indx: [n] });
+
+      if (resort)
+         res.reorder.sort((a, b) => { return a.pos - b.pos; });
+
+      for (let n = 0; n < res.reorder.length - 1; n++) {
+         const curr = res.reorder[n],
+               next = res.reorder[n + 1];
+         if (curr.pos + curr.len + kMinimalHttpGap > next.pos) {
+            curr.indx.push(...next.indx);
+            curr.len = next.pos + next.len - curr.pos;
+            res.reorder.splice(n + 1, 1); // remove segment
+            n--;
+         }
+      }
+
+      res.reorder.forEach(elem => res.place_new.push(elem.pos, elem.len));
+
+      res.expectedSize = function(indx) {
+         return this.reorder[indx / 2].len;
+      };
+
+      res.addBuffer = function(indx, buf, o) {
+         const elem = this.reorder[indx / 2],
+               pos0 = elem.pos;
+         elem.indx.forEach(indx0 => {
+            this.blobs[indx0 / 2] = new DataView(buf, o + this.place[indx0] - pos0, this.place[indx0 + 1]);
+         });
+      };
+
+      return res;
+   }
+
    /** @summary read buffer(s) from the file
     * @return {Promise} with read buffers
     * @private */
@@ -3046,10 +3109,13 @@ class TFile {
       if ((this.fFileContent !== null) && !filename && (!this.fAcceptRanges || this.fFileContent.canExtract(place)))
          return this.fFileContent.extract(place);
 
+      const reorder = this.#checkNeedReorder(place);
+      if (reorder?.place_new)
+         place = reorder?.place_new;
+
       let resolveFunc, rejectFunc;
 
       const file = this, first_block = (place[0] === 0) && (place.length === 2),
-            blobs = [], // array of requested segments
             promise = new Promise((resolve, reject) => {
                resolveFunc = resolve;
                rejectFunc = reject;
@@ -3075,12 +3141,15 @@ class TFile {
          }
       }
 
-      function send_new_request(increment) {
-         if (increment) {
+      function send_new_request(arg) {
+         if (arg === 'noranges') {
+            file.fMaxRanges = 1;
+            last = Math.min(last, first + file.fMaxRanges * 2);
+         } else if (arg) {
             first = last;
             last = Math.min(first + file.fMaxRanges * 2, place.length);
             if (first >= place.length)
-               return resolveFunc(blobs);
+               return resolveFunc(reorder.blobs.length === 1 ? reorder.blobs[0] : reorder.blobs);
          }
 
          let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
@@ -3097,16 +3166,13 @@ class TFile {
 
          // when read first block, allow to read more - maybe ranges are not supported and full file content will be returned
          if (file.fAcceptRanges && first_block)
-            totalsz = Math.max(totalsz, 1e7);
+            totalsz = Math.max(totalsz, 1e5);
 
-         return createHttpRequest(fullurl, 'buf', read_callback, undefined, true).then(xhr => {
+         return createHttpRequest(fullurl, 'buf', read_callback, undefined, true, file.fTimeout).then(xhr => {
             if (file.fAcceptRanges) {
                xhr.setRequestHeader('Range', ranges);
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
-
-            if (file.fTimeout)
-               xhr.timeout = file.fTimeout;
 
             if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
@@ -3215,70 +3281,34 @@ class TFile {
 
          // if only single segment requested, return result as is
          if (last - first === 2) {
-            const b = new DataView(res);
-            if (place.length === 2)
-               return resolveFunc(b);
-            blobs.push(b);
+            reorder.addBuffer(first, res, 0);
             return send_new_request(true);
          }
 
          // object to access response data
-         const hdr = this.getResponseHeader('Content-Type'),
-               ismulti = isStr(hdr) && (hdr.indexOf('multipart') >= 0),
-               view = new DataView(res);
+         const hdr = this.getResponseHeader('Content-Type');
 
-         if (!ismulti) {
-            // server may returns simple buffer, which combines all segments together
-
-            const hdr_range = this.getResponseHeader('Content-Range');
-            let segm_start = 0, segm_last = -1;
-
-            if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
-               const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
-               if (parts.length === 3) {
-                  segm_start = Number.parseInt(parts[0]);
-                  segm_last = Number.parseInt(parts[1]);
-                  if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
-                     segm_start = 0;
-                     segm_last = -1;
-                  }
-               }
-            }
-
-            let canbe_single_segment = (segm_start <= segm_last);
-            for (let n = first; n < last; n += 2) {
-               if ((place[n] < segm_start) || (place[n] + place[n + 1] - 1 > segm_last))
-                  canbe_single_segment = false;
-            }
-
-            if (canbe_single_segment) {
-               for (let n = first; n < last; n += 2)
-                  blobs.push(new DataView(res, place[n] - segm_start, place[n + 1]));
-               return send_new_request(true);
-            }
-
-            if ((file.fMaxRanges === 1) || !first)
-               return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
-
-            file.fMaxRanges = 1;
-            last = Math.min(last, file.fMaxRanges * 2);
-
-            return send_new_request();
+         if (!isStr(hdr) || (hdr.indexOf('multipart') < 0)) {
+            console.error('Did not found multipart in content-type - fallback to single range request');
+            return send_new_request('noranges');
          }
 
          // multipart messages requires special handling
 
          const indx = hdr.indexOf('boundary=');
-         let boundary = '', n = first, o = 0, normal_order = true;
-         if (indx > 0) {
-            boundary = hdr.slice(indx + 9);
-            if ((boundary[0] === '"') && (boundary.at(-1) === '"'))
-               boundary = boundary.slice(1, boundary.length - 1);
-            boundary = '--' + boundary;
-         } else
-            console.error('Did not found boundary id in the response header');
+         if (indx <= 0) {
+            console.error('Did not found boundary id in the response header - fallback to single range request');
+            return send_new_request('noranges');
+         }
 
-         while (n < last) {
+         let boundary = hdr.slice(indx + 9);
+         if ((boundary[0] === '"') && (boundary.at(-1) === '"'))
+            boundary = boundary.slice(1, boundary.length - 1);
+         boundary = '--' + boundary;
+
+         const view = new DataView(res);
+
+         for (let n = first, o = 0; n < last; n += 2) {
             let code1, code2 = view.getUint8(o), nline = 0, line = '',
                 finish_header = false, segm_start = 0, segm_last = -1;
 
@@ -3297,6 +3327,7 @@ class TFile {
                      if (parts.length === 3) {
                         segm_start = Number.parseInt(parts[0]);
                         segm_last = Number.parseInt(parts[1]);
+                        // TODO: check for consistency
                         if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                            segm_start = 0;
                            segm_last = -1;
@@ -3319,44 +3350,16 @@ class TFile {
                o++;
             }
 
-            if (!finish_header)
-               return rejectFunc(Error('Cannot decode header in multipart message'));
+            const segm_size = segm_last - segm_start + 1;
 
-            if (segm_start > segm_last) {
-               // fall-back solution, believe that segments same as requested
-               blobs.push(new DataView(res, o, place[n + 1]));
-               o += place[n + 1];
-               n += 2;
-            } else if (normal_order) {
-               const n0 = n;
-               while ((n < last) && (place[n] >= segm_start) && (place[n] + place[n + 1] - 1 <= segm_last)) {
-                  blobs.push(new DataView(res, o + place[n] - segm_start, place[n + 1]));
-                  n += 2;
-               }
-
-               if (n > n0)
-                  o += (segm_last - segm_start + 1);
-               else
-                  normal_order = false;
+            if (!finish_header || (segm_size <= 0) || (reorder.expectedSize(n) !== segm_size)) {
+               console.error('Failure decoding multirange header - fallback to single range request');
+               return send_new_request('noranges');
             }
 
-            if (!normal_order) {
-               // special situation when server reorder segments in the reply
-               let isany = false;
-               for (let n1 = n; n1 < last; n1 += 2) {
-                  if ((place[n1] >= segm_start) && (place[n1] + place[n1 + 1] - 1 <= segm_last)) {
-                     blobs[n1 / 2] = new DataView(res, o + place[n1] - segm_start, place[n1 + 1]);
-                     isany = true;
-                  }
-               }
-               if (!isany)
-                  return rejectFunc(Error(`Provided fragment ${segm_start} - ${segm_last} out of requested multi-range request`));
+            reorder.addBuffer(n, res, o);
 
-               while (blobs[n / 2])
-                  n += 2;
-
-               o += (segm_last - segm_start + 1);
-            }
+            o += segm_size;
          }
 
          send_new_request(true);
@@ -3655,10 +3658,14 @@ class TFile {
          // this part typically read from the header, no need to optimize
          return this.readBuffer([this.fBEGIN, Math.max(300, nbytes)]);
       }).then(blob3 => {
-         const buf3 = new TBuffer(blob3, 0, this);
+         const buf3 = new TBuffer(blob3, 0, this),
+               key = buf3.readTKey();
 
-         // keep only title from TKey data
-         this.fTitle = buf3.readTKey().fTitle;
+         this.fTitle = key.fTitle;
+         if (this.fURL === kTmpFileName) {
+            this.fURL = this.fFullURL = key.fName;
+            this.assignFileName(key.fName);
+         }
 
          buf3.locate(this.fNbytesName);
 
@@ -3979,9 +3986,8 @@ class TNodejsFile extends TFile {
       super(null);
       this.fUseStampPar = false;
       this.fEND = 0;
-      this.fFullURL = filename;
-      this.fURL = filename;
-      this.fFileName = filename;
+      this.fFullURL = this.fURL = filename;
+      this.assignFileName(filename);
    }
 
    /** @summary Open file in node.js
@@ -4059,6 +4065,7 @@ class FileProxy {
    getFileName() { return ''; }
    getFileSize() { return 0; }
    async readBuffer(/* pos, sz */) { return null; }
+   closeFile() {}
 
 } // class FileProxy
 
@@ -4085,12 +4092,8 @@ class TProxyFile extends TFile {
          if (!res)
             return false;
          this.fEND = this.proxy.getFileSize();
-         this.fFullURL = this.fURL = this.fFileName = this.proxy.getFileName();
-         if (isStr(this.fFileName)) {
-            const p = this.fFileName.lastIndexOf('/');
-            if ((p > 0) && (p < this.fFileName.length - 4))
-               this.fFileName = this.fFileName.slice(p + 1);
-         }
+         this.fFullURL = this.fURL = this.proxy.getFileName();
+         this.assignFileName(this.fURL);
          return this.readKeys();
       });
    }
@@ -4117,6 +4120,15 @@ class TProxyFile extends TFile {
       for (let k = 0; k < place.length; k += 2)
          arr.push(this.proxy.readBuffer(place[k], place[k + 1]));
       return Promise.all(arr);
+   }
+
+   /** @summary Fully cleanup TProxyFile data
+     * @private */
+   delete() {
+      super.delete();
+      if (isFunc(this.proxy?.closeFile))
+         this.proxy.closeFile();
+      delete this.proxy;
    }
 
 } // class TProxyFile
@@ -4153,7 +4165,7 @@ function openFile(arg, opts) {
       file = new TProxyFile(arg);
 
    if (!file && isObject(arg) && (arg instanceof ArrayBuffer)) {
-      file = new TFile('localfile.root');
+      file = new TFile(kTmpFileName);
       file.assignFileContent(arg);
    }
 

@@ -1685,7 +1685,6 @@ function createMatrix(matrix) {
          break;
       case 'TGeoGenTrans':
          scale = matrix.fScale; // no break, translation and rotation follows
-      // eslint-disable-next-line  no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
          rotation = matrix.fRotation?.fRotationMatrix;
@@ -2071,7 +2070,6 @@ createGeometry = function(shape, limit = 0) {
          case clTGeoHalfSpace:
             if (limit < 0)
                return 1; // half space if just plane used in composite
-         // eslint-disable-next-line  no-fallthrough
          default:
             geoWarn(`unsupported shape type ${shape._typename}`);
       }
@@ -2211,7 +2209,6 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoTrd2:
          info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
-      // eslint-disable-next-line  no-fallthrough
       case clTGeoTrd1:
          info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`);
          break;
@@ -2222,7 +2219,6 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-      // eslint-disable-next-line  no-fallthrough
       case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
@@ -2230,7 +2226,6 @@ function provideObjectInfo(obj) {
       case clTGeoCtub:
       case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-      // eslint-disable-next-line  no-fallthrough
       case clTGeoEltu:
       case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
@@ -2271,7 +2266,6 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoGtra:
          info.push(`TwistAngle=${conv(shape.fTwistAngle)}`);
-      // eslint-disable-next-line  no-fallthrough
       case clTGeoTrap:
          info.push(`Phi=${conv(shape.fPhi)} Theta=${conv(shape.fTheta)}`);
          break;

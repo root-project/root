@@ -6,7 +6,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '7/11/2025',
+version_date = '23/02/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -249,6 +249,8 @@ settings = {
    Render3DBatch: constants.Render3D.Default,
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants.Embed3D.Default,
+   /** @summary Use `resvg-js` backend for converting SVGs in node.js */
+   UseResvgJs: true,
    /** @summary Default canvas width */
    CanvasWidth: 1200,
    /** @summary Default canvas height */
@@ -355,6 +357,10 @@ settings = {
      * @desc Allows to retry files reading if original URL fails
      * @private */
    FilesRemap: { 'https://root.cern/': 'https://root-eos.web.cern.ch/' },
+   /** @summary THttpServer read timeout in ms
+     * @desc Configures timeout for requests to THttpServer
+     * @default 0 */
+   ServerTimeout: 0,
    /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
    WithCredentials: false,
    /** @summary Skip streamer infos from the GUI */
@@ -957,13 +963,22 @@ function findFunction(name) {
 
 /** @summary Method to create http request, without promise can be used only in browser environment
   * @private */
-function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise) {
+function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise, tmout) {
+   function handle_error(xhr, message, code, abort_reason) {
+      if (!xhr.did_abort) {
+         xhr.did_abort = abort_reason || true;
+         xhr.abort();
+      }
+      if (!xhr.did_error || abort_reason)
+         console.warn(message);
+      if (!xhr.did_error) {
+         xhr.did_error = true;
+         xhr.error_callback(Error(message), code);
+      }
+   }
    function configureXhr(xhr) {
       xhr.http_callback = isFunc(user_accept_callback) ? user_accept_callback.bind(xhr) : () => {};
-      xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) {
-         console.warn(err.message);
-         this.http_callback(null);
-      }.bind(xhr);
+      xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function() { this.http_callback(null); };
 
       if (!kind)
          kind = 'buf';
@@ -999,11 +1014,8 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
 
       if (settings.HandleWrongHttpResponse && (method === 'GET') && isFunc(xhr.addEventListener)) {
          xhr.addEventListener('progress', function(oEvent) {
-            if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
-               this.did_abort = true;
-               this.abort();
-               this.error_callback(Error(`Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`), 598);
-            }
+            if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size))
+               handle_error(this, `Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`, 598);
          }.bind(xhr));
       }
 
@@ -1013,11 +1025,8 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
 
          if ((this.readyState === 2) && this.expected_size) {
             const len = parseInt(this.getResponseHeader('Content-Length'));
-            if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
-               this.did_abort = 'large';
-               this.abort();
-               return this.error_callback(Error(`Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`), 599);
-            }
+            if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse)
+               return handle_error(this, `Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`, 599, 'large');
          }
 
          if (this.readyState !== 4)
@@ -1026,7 +1035,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
          if ((this.status !== 200) && (this.status !== 206) && !browser.qt6 &&
              // in these special cases browsers not always set status
              !((this.status === 0) && ((url.indexOf('file://') === 0) || (url.indexOf('blob:') === 0))))
-               return this.error_callback(Error(`Fail to load url ${url}`), this.status);
+               return handle_error(this, `Fail to load url ${url}`, this.status);
 
          if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') === 'gzip')) {
             // special handling of gzip JSON objects in Node.js
@@ -1069,6 +1078,11 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       if (nodejs && (method === 'GET') && (kind === 'object') && (url.indexOf('.json.gz') > 0)) {
          xhr.nodejs_checkzip = true;
          xhr.responseType = 'arraybuffer';
+      }
+
+      if (tmout && Number.isFinite(tmout)) {
+         xhr.timeout = tmout;
+         xhr.ontimeout = function() { handle_error(this, `Request ${url} timeout set ${tmout} ms`, 600, 'timeout'); };
       }
 
       return xhr;

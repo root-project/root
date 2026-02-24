@@ -9,7 +9,7 @@ export * from './base/BasePainter.mjs';
 
 export * from './base/ObjectPainter.mjs';
 
-export { getColor, extendRootColors, createRootColors } from './base/colors.mjs';
+export { getColor, extendRootColors, createRootColors, setColorPalette, getColorPalette } from './base/colors.mjs';
 
 export { THREE } from './base/base3d.mjs';
 
