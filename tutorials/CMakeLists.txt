@@ -422,6 +422,10 @@ if(root7)
     list(APPEND root7_veto visualisation/rcanvas/df105.py)
     list(APPEND root7_veto visualisation/rcanvas/rbox.py)
   endif()
+  if(NOT xrootd)
+    list(APPEND root7_veto hist/histv7/hist102_NanoAODDimuonAnalysis.C)
+    list(APPEND root7_veto hist/histv7/hist103_NanoAODHiggsAnalysis.C)
+  endif()
 else()
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto analysis/dataframe/df013_InspectAnalysis.C)
@@ -648,6 +652,7 @@ set (machine_learning-keras-ApplicationClassificationKeras-depends tutorial-mach
 #--List long-running tutorials to label them as "longtest"
 set (long_running
      analysis/dataframe/df10[2-7]*
+     hist/histv7/hist10[203]*
      analysis/parallel/mp_processSelector.C)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
