@@ -55,25 +55,49 @@ _jsNotDrawableClassesPatterns = ["TEve*"]
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
-_jsCode = """
+_jsFixedSizeDiv = """
 <div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
+</div>
+"""
+
+_jsFullWidthDiv = """
+<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
+   <div id="{jsDivId}">
+   </div>
+</div>
+"""
+
+_jsDrawJsonCode = """
+Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
+   const obj = Core.parse(json);
+   Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
+}});
+"""
+
+_jsBrowseFileCode = """
+const binaryString = atob('{fileBase64}');
+const bytes = new Uint8Array(binaryString.length);
+for (let i = 0; i < binaryString.length; i++)
+   bytes[i] = binaryString.charCodeAt(i);
+Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
+"""
+
+_jsCode = """
+{jsDivHtml}
 </div>
 <script>
    function process_{jsDivId}() {{
-      function drawPlot(Core) {{
+      function execCode(Core) {{
          Core.settings.HandleKeys = false;
-         Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
-            const obj = Core.parse(json);
-            Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
-         }});
+         {jsDrawCode}
       }}
-      const servers = ['/static/', 'https://root.cern/js/7.10.0/', 'https://jsroot.gsi.de/7.10.0/'],
+      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
-         drawPlot(JSROOT);
+         execCode(JSROOT);
       else if (typeof requirejs !== 'undefined') {{
          servers.forEach((s,i) => {{ servers[i] = s + path; }});
-         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  drawPlot);
+         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  execCode);
       }} else {{
          const config = document.getElementById('jupyter-config-data');
          if (config)
@@ -81,7 +105,7 @@ _jsCode = """
          else
             servers.shift();
          function loadJsroot() {{
-            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => drawPlot(JSROOT));
+            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => execCode(JSROOT));
          }}
          loadJsroot();
       }}
@@ -159,16 +183,13 @@ def RCanvasAvailable():
     return True
 
 
-def _initializeJSVis():
+def initializeJSVis():
     global _enableJSVis
     jupyter_jsroot = ROOT.gEnv.GetValue("Jupyter.JSRoot", "on").lower()
     if jupyter_jsroot not in {"on", "off"}:
         print(f"Invalid Jupyter.JSRoot value '{jupyter_jsroot}' in .rootrc. Using default 'on'.")
         jupyter_jsroot = "on"
     _enableJSVis = jupyter_jsroot == "on"
-
-
-_initializeJSVis()
 
 
 def enableJSVis(flag=True):
@@ -616,13 +637,24 @@ class NotebookDrawer(object):
 
         base64 = ROOT.TBase64.Encode(addrc, sz)
 
-        divId = self._getUniqueDivId()
+        id = self._getUniqueDivId()
 
-        thisJsCode = _jsFileCode.format(
-            jsCanvasHeight=_jsCanvasHeight,
-            jsDivId=divId,
+        drawHtml = _jsFullWidthDiv.format(
+            jsDivId=id,
+            jsCanvasHeight=_jsCanvasHeight
+        )
+
+        browseFileCode = _jsBrowseFileCode.format(
+            jsDivId=id,
             fileBase64=base64
         )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=browseFileCode
+        )
+
         return thisJsCode
 
     def _getJsCode(self):
@@ -655,13 +687,25 @@ class NotebookDrawer(object):
 
         zip = ROOT.TBufferJSON.zipJSON(json)
 
-        thisJsCode = _jsCode.format(
+        id = self._getUniqueDivId()
+
+        drawHtml = _jsFixedSizeDiv.format(
+            jsDivId=id,
             jsCanvasWidth=width,
-            jsCanvasHeight=height,
+            jsCanvasHeight=height
+        )
+
+        drawJsonCode = _jsDrawJsonCode.format(
+            jsDivId=id,
             jsonLength=len(json),
             jsonZip=zip,
-            jsDrawOptions=options,
-            jsDivId=self._getUniqueDivId(),
+            jsDrawOptions=options
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=drawJsonCode
         )
         return thisJsCode
 
@@ -781,6 +825,7 @@ def enableCppHighlighting():
 
 def iPythonize():
     setStyle()
+    initializeJSVis()
     loadMagicsAndCapturers()
     declareProcessLineWrapper()
     # enableCppHighlighting()
