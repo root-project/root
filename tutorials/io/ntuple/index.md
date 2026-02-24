@@ -18,3 +18,6 @@ RNTuple is the evolution of TTree, offering better performance and new, more rob
 | ntpl013_staged.C | Apply staged cluster committing to multithreaded writing with the RNTupleParallelWriter |
 | ntpl014_framework.C | Use the various (more advanced) RNTuple interfaces to write data in the context of a framework |
 | ntpl015_processor_join.C | Join the entries from two RNTuples on a common field value and read it using the RNTupleProcessor |
+| ntpl016_streaming_vector.C | A special purpose container that reads large vectors piece-wise |
+| ntpl017_shared_reader.C | Efficient multi-threaded reading when multiple threads share a single reader |
+| ntpl018_low_precision_floats.C | Creating low-precision floating point fields |
