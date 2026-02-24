@@ -5503,7 +5503,11 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.ClassMember("fElements","TObjArray*");
          R__b >> fElements;
          R__b.ClassEnd(TStreamerInfo::Class());
+         // Dubious reset to the expected end it was added as part the commit
+         // log "Several protections added in case of multiple files being read/updated
+         // in parallel."
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
+         R__b.CheckByteCount(R__s, R__c, TStreamerInfo::Class());
          ResetBit(kIsCompiled);
          ResetBit(kBuildOldUsed);
          ResetBit(kBuildRunning);

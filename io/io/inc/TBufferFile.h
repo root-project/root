@@ -53,7 +53,17 @@ protected:
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
    using ByteCountLocator_t = std::size_t; // This might become a pair<chunk_number, local_offset> if we implement chunked keys
-   using ByteCountStack_t = std::vector<ByteCountLocator_t>;
+   struct ByteCountLocationInfo {
+      ///< Position where the byte count value is stored
+      ByteCountLocator_t locator;
+      ///< Class for which the byte count is reserved.  Usually this is the
+      ///< the base class or type of the pointer.
+      const TClass* cl;
+      ///< Alternative class that might used.  Usually this is the derived
+      ///< class or the actual type of the object.
+      const TClass* alt;
+   };
+   using ByteCountStack_t = std::vector<ByteCountLocationInfo>;
    ByteCountStack_t fByteCountStack; ///<! Stack to keep track of byte count storage positions
 
    using ByteCount_t = std::uint64_t; ///< Type used to store byte count values, can be changed to uint32_t if we implement chunked keys
@@ -72,7 +82,7 @@ protected:
    Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
    void     CheckCount(UInt_t offset) override;
    UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
-   UInt_t   ReserveByteCount();
+   UInt_t   ReserveByteCount(const TClass *cl) override;
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
@@ -97,6 +107,7 @@ public:
 
    void      *ReadObjectAny(const TClass* cast) override;
    void       SkipObjectAny() override;
+   void       SkipObjectAny(Long64_t start, UInt_t bytecount) override;
 
    void       IncrementLevel(TVirtualStreamerInfo* info) override;
    void       SetStreamerElementNumber(TStreamerElement*,Int_t) override {}

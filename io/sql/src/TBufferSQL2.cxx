@@ -863,6 +863,14 @@ void TBufferSQL2::SkipObjectAny()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Skip any kind of object from buffer
+/// Actually skip only one node on current level of xml structure
+
+void TBufferSQL2::SkipObjectAny(Long64_t, UInt_t)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
 
 void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)

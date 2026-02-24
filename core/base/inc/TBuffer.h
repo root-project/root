@@ -69,6 +69,15 @@ protected:
    Int_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
                               { return TObject::Write(name, opt, bufsize); }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Reserve space for a leading byte count and return the position where to
+   /// store the byte count value.
+   ///
+   /// \param[in] cl The class for which we are reserving the byte count, used for error reporting.
+   /// \return The position (cntpos) where the byte count should be stored later,
+   ///         or kOverflowPosition if the position exceeds kMaxCountPosition
+   virtual UInt_t ReserveByteCount(const TClass *) = 0;
+
 public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum EStatusBits {
@@ -126,6 +135,58 @@ public:
    virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname) = 0;
    virtual void       SetByteCount(ULong64_t cntpos, Bool_t packInVersion = kFALSE)= 0;
 
+   /// \class TBuffer::ByteCountWriter
+   /// \ingroup Base
+   /// \brief RAII helper to automatically write the byte count for an object
+   /// to be used in the rare case where writing the class version number
+   /// and the byte count are decoupled.
+   ///
+   /// `ByteCountWriter` encapsulates the  pattern:
+   /// 1. Reserve space for a leading byte count with ReserveByteCount().
+   /// 2. Stream the object content.
+   /// 3. Finalize the byte count with SetByteCount().
+   ///
+   /// \note Create the instance as a local variable and keep it alive until all
+   ///       the bytes that should be counted have been written to the buffer.
+   ///
+   /// ### Example
+   /// \code{.cpp}
+   /// void MyClass::Streamer(TBuffer &b)
+   /// {
+   ///    if (b.IsWriting()) {
+   ///       // Reserve space for the byte count and auto-finalize on scope exit.
+   ///       TBuffer::ByteCountWriter bcnt(b, MyClass::Class());
+   ///
+   ///       b.WriteClass(MyClass::Class());
+   ///       // ... stream members ...
+   ///    } else {
+   ///       // ... read members ...
+   ///    }
+   /// }
+   /// \endcode
+   class ByteCountWriter {
+      TBuffer      &fBuffer;
+      Bool_t        fPackInVersion;
+      ULong64_t     fCntPos;
+   public:
+      ByteCountWriter() = delete;
+      ByteCountWriter(const ByteCountWriter&) = delete;
+      ByteCountWriter& operator=(const ByteCountWriter&) = delete;
+      ByteCountWriter(ByteCountWriter&&) = delete;
+      ByteCountWriter& operator=(ByteCountWriter&&) = delete;
+
+      ByteCountWriter(TBuffer &buf, const TClass *cl, Bool_t packInVersion = kFALSE) : fBuffer(buf), fPackInVersion(packInVersion) {
+         // We could split ReserveByteCount in a 32bit version that uses
+         // the ByteCountStack and another version that always returns the
+         // long range position.  For now keep it 'simpler' by always using
+         // the stack.
+         fCntPos = fBuffer.ReserveByteCount(cl);
+      }
+      ~ByteCountWriter() {
+         fBuffer.SetByteCount(fCntPos, fPackInVersion);
+      }
+   };
+
    virtual void       SkipVersion(const TClass *cl = nullptr) = 0;
    virtual Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) = 0;
    virtual Version_t  ReadVersionNoCheckSum(UInt_t *start = nullptr, UInt_t *bcnt = nullptr) = 0;
@@ -135,6 +196,7 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast) = 0;
    virtual void       SkipObjectAny() = 0;
+   virtual void       SkipObjectAny(Long64_t start, UInt_t bytecount) = 0;
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo* info) = 0;
    virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;

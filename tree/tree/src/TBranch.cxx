@@ -3096,10 +3096,8 @@ void TBranch::Streamer(TBuffer& b)
             fBasketSeek [fWriteBasket] = fBasketSeek [fWriteBasket-1];
 
          }
-         // Check Byte Count is not needed since it was done in ReadBuffer
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(false);
-         b.CheckByteCount(R__s, R__c, TBranch::IsA());
          if (IsA() == TBranch::Class()) {
             if (fNleaves == 0) {
                fReadLeaves = &TBranch::ReadLeaves0Impl;

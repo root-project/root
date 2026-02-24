@@ -41,6 +41,21 @@ endif()
 #  ROOT_ADD_TEST(io-io-test-TMapFileTest COMMAND TMapFileTest complete)
 #endif()
 
-ROOTTEST_ADD_TEST(testLargeByteCounts
-                  MACRO testByteCount.C
-                  OUTREF testByteCount.ref)
+# Detect bitness.
+# FIXME: This is also done in roottest/CMakeLists.txt which is included 'too late' for
+# the tests here.  We should unify this logic and do it only once.
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(_64BIT 1)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+  set(_32BIT 1)
+endif()
+
+if(NOT _32BIT)
+  ROOTTEST_COMPILE_MACRO(testByteCount.cxx
+                        FIXTURES_SETUP io-io-tobj-fixture)
+
+  ROOTTEST_ADD_TEST(testLargeByteCounts
+                    MACRO testByteCount.cxx+
+                    OUTREF testByteCount.ref
+                    FIXTURES_REQUIRED io-io-tobj-fixture)
+endif()
