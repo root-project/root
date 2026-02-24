@@ -2691,7 +2691,12 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    if (hasArray) onerow += "* Instance ";
    for (ui=0;ui<ncols;ui++) {
       TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
-      onerow += Form(numbFormat.Data(),var[ui]->PrintValue(-1));
+      TString varName = var[ui]->PrintValue(-1);
+      if (Int_t(varName.size()) > colSizes[ui]) {
+         varName.Resize(std::max(1, colSizes[ui] - 3));
+         varName += "...";
+      }
+      onerow += Form(numbFormat.Data(), varName.Data());
    }
    if (fScanRedirect)
       out<<onerow.Data()<<"*"<<std::endl;
