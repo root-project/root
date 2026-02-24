@@ -111,6 +111,20 @@ def _TFileExit(obj, exc_type, exc_val, exc_tb):
     obj.Close()
     return False
 
+def _TFile_Draw(self, option: str = ""):
+   """
+   Draw the file.
+   In the jupyter notebook redirects to display of HTML page
+   """
+
+   import ROOT
+
+   if hasattr(ROOT, "_jupyroot"):
+      ROOT._jupyroot.helpers.utils.addVisualObject(self, "tfile", option)
+   else:
+      self._Draw(option)
+
+
 
 @pythonization('TFile')
 def pythonize_tfile(klass):
@@ -134,3 +148,8 @@ def pythonize_tfile(klass):
     # These make TFile usable in a `with` statement as a context manager
     klass.__enter__ = lambda tfile: tfile
     klass.__exit__ = _TFileExit
+
+    # Pythonization for draw method
+    klass._Draw = klass.Draw
+    klass.Draw = _TFile_Draw
+
