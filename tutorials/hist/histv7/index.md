@@ -16,3 +16,5 @@ A second set of tutorials demonstrates usage with RDataFrame.
 | **Tutorial** | **Description** |
 |---|---|
 | hist101_RDataFrame_Hist.C | Filling RHist using RDataFrame. |
+| hist102_NanoAODDimuonAnalysis.C | Analyze dimuon mass spectrum with RDataFrame and RHist. |
+| hist103_NanoAODHiggsAnalysis.C | Reconstruct the Higgs boson with RDataFrame and RHist. |
