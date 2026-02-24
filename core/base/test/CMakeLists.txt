@@ -27,6 +27,25 @@ ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreColorTests TColorTests.cxx LIBRARIES Core)
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_HOST_SYSTEM_VERSION VERSION_GREATER_EQUAL 25.4)
+  set_tests_properties(gtest-core-base-CoreColorTests PROPERTIES DISABLED True)
+  file(GENERATE
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/run_until_failure
+    CONTENT
+"import subprocess
+for _ in range(100):
+    try:
+        subprocess.run(['$<TARGET_FILE:CoreColorTests>'], check=True)
+    except subprocess.CalledProcessError as e:
+        print('This test is expected to fail with a stack corruption: ', e)
+        exit(123)
+print('This test was expected to fail with a stack corruption. Check if it got fixed.')
+exit(1)"
+    TARGET CoreColorTests)
+
+  add_test(NAME CoreColor_RunUntilFailure COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/run_until_failure)
+  set_tests_properties(CoreColor_RunUntilFailure PROPERTIES SKIP_RETURN_CODE 123)
+endif()
 
 configure_file(Foo.C Foo.C COPYONLY)
 ROOT_ADD_GTEST(IncludePathTest IncludePathTest.cxx LIBRARIES Core)
