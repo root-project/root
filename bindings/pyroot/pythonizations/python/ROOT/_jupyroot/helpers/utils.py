@@ -21,6 +21,7 @@ import re
 import sys
 import tempfile
 import time
+import ctypes
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import sha1
@@ -39,6 +40,8 @@ cppMIME = "text/x-c++src"
 
 # Keep display handle for canvases to be able update them
 _canvasHandles = {}
+
+_visualObjects = []
 
 _jsMagicHighlight = """
 Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
@@ -84,6 +87,47 @@ _jsCode = """
    process_{jsDivId}();
 </script>
 """
+
+
+_jsFileCode = """
+<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
+   <div id="{jsDivId}">
+   </div>
+</div>
+<script>
+   function process_{jsDivId}() {{
+      function showFile(Core) {{
+         Core.settings.HandleKeys = false;
+         const binaryString = atob('{fileBase64}');
+         const bytes = new Uint8Array(binaryString.length);
+         for (let i = 0; i < binaryString.length; i++)
+            bytes[i] = binaryString.charCodeAt(i);
+         Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
+      }}
+      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
+            path = 'build/jsroot';
+      if (typeof JSROOT !== 'undefined')
+         showFile(JSROOT);
+      else if (typeof requirejs !== 'undefined') {{
+         servers.forEach((s,i) => {{ servers[i] = s + path; }});
+         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  showFile);
+      }} else {{
+         const config = document.getElementById('jupyter-config-data');
+         if (config)
+            servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
+         else
+            servers.shift();
+         function loadJsroot() {{
+            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => showFile(JSROOT));
+         }}
+         loadJsroot();
+      }}
+   }}
+   process_{jsDivId}();
+</script>
+"""
+
+
 
 TBufferJSONErrorMessage = "The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
 
@@ -152,6 +196,11 @@ def disableJSVisDebug():
     global _enableJSVisDebug
     _enableJSVis = False
     _enableJSVisDebug = False
+
+
+def addVisualObject(object, kind="none", option=""):
+    global _visualObjects
+    _visualObjects.append({ "object": object, "kind": kind, "option": option })
 
 
 def _getPlatform():
@@ -439,58 +488,41 @@ class StreamCapture(object):
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
-    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
+    return [NotebookDrawer(can, "tcanvas") for can in lOfC if can.IsDrawn() or can.IsUpdated()]
 
 
 def GetRCanvasDrawers():
     if not RCanvasAvailable():
         return []
     lOfC = ROOT.Experimental.RCanvas.GetCanvases()
-    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
+    return [NotebookDrawer(can.__smartptr__().get(), "rcanvas") for can in lOfC if can.IsShown() or can.IsUpdated()]
+
+def GetVisualDrawers():
+    global _visualObjects
+    res = [NotebookDrawer(entry.get('object'), entry.get('kind'), entry.get('option')) for entry in _visualObjects]
+    _visualObjects.clear()
+    return res
 
 
-def GetGeometryDrawer():
+def GetGeometryDrawers():
     if not hasattr(ROOT, "gGeoManager"):
-        return
+        return []
     if not ROOT.gGeoManager:
-        return
-    if not ROOT.gGeoManager.GetUserPaintVolume():
-        return
-    vol = ROOT.gGeoManager.GetTopVolume()
-    if vol:
-        return NotebookDrawer(vol)
+        return []
+    vol = ROOT.gGeoManager.GetUserPaintVolume()
+    if not vol:
+        return []
+    return [NotebookDrawer(vol, "geom")]
 
 
 def GetDrawers():
-    drawers = GetCanvasDrawers() + GetRCanvasDrawers()
-    geometryDrawer = GetGeometryDrawer()
-    if geometryDrawer:
-        drawers.append(geometryDrawer)
-    return drawers
-
-
-def DrawGeometry():
-    drawer = GetGeometryDrawer()
-    if drawer:
-        drawer.Draw()
-
-
-def DrawCanvases():
-    drawers = GetCanvasDrawers()
-    for drawer in drawers:
-        drawer.Draw()
-
-
-def DrawRCanvases():
-    rdrawers = GetRCanvasDrawers()
-    for drawer in rdrawers:
-        drawer.Draw()
+    return GetCanvasDrawers() + GetRCanvasDrawers() + GetVisualDrawers() + GetGeometryDrawers()
 
 
 def NotebookDraw():
-    DrawGeometry()
-    DrawCanvases()
-    DrawRCanvases()
+    drawers = GetDrawers()
+    for drawer in drawers:
+        drawer.Draw()
 
 
 class CaptureDrawnPrimitives(object):
@@ -514,15 +546,22 @@ class NotebookDrawer(object):
     jsROOT.
     """
 
-    def __init__(self, theObject):
+    def __init__(self, theObject, kind="none", option=""):
         self.drawableObject = theObject
+        self.drawOption = option
         self.isRCanvas = False
         self.isCanvas = False
+        self.isFile = False
+        self.isGeom = False
         self.drawableId = str(ROOT.AddressOf(theObject)[0])
-        if hasattr(self.drawableObject, "ResolveSharedPtrs"):
+        if kind == "tfile":
+            self.isFile = True
+        elif kind == "rcanvas":
             self.isRCanvas = True
-        else:
-            self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
+        elif kind == "geom":
+            self.isGeom = True
+        elif kind == "tcanvas":
+            self.isCanvas = True
 
     def __del__(self):
         if self.isRCanvas:
@@ -531,8 +570,8 @@ class NotebookDrawer(object):
         elif self.isCanvas:
             self.drawableObject.ResetDrawn()
             self.drawableObject.ResetUpdated()
-        else:
-            ROOT.gGeoManager.SetUserPaintVolume(None)
+        elif self.isGeom:
+            self.drawableObject.GetGeoManager().SetUserPaintVolume(ROOT.nullptr)
 
     def _getListOfPrimitivesNamesAndTypes(self):
         """
@@ -561,6 +600,10 @@ class NotebookDrawer(object):
         # RCanvas clways displayed with jsroot
         if self.isRCanvas:
             return True
+        if self.isFile:
+            return True
+        if self.isGeom:
+            return True
         # check if jsroot was disabled
         if not _enableJSVis:
             return False
@@ -581,41 +624,66 @@ class NotebookDrawer(object):
                     return False
         return True
 
-    def _getJsCode(self):
-        # produce JSON for the canvas
-        if self.isRCanvas:
-            json = self.drawableObject.CreateJSON()
-        else:
-            json = produceCanvasJson(self.drawableObject).Data()
+    def _getFileJsCode(self):
+        sz = self.drawableObject.GetSize()
+        if sz > 10000000 and self.drawOption != "force":
+            return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show file nevertheless"
+
+        # create plain buffer and get pointer on it
+        u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
+        addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
+
+        if self.drawableObject.ReadBuffer(addrc, 0, sz):
+           return f"Fail to read file {self.drawableObject.GetName()} buffer of size {sz}"
+
+        base64 = ROOT.TBase64.Encode(addrc, sz)
 
         divId = self._getUniqueDivId()
 
+        thisJsCode = _jsFileCode.format(
+            jsCanvasHeight=_jsCanvasHeight,
+            jsDivId=divId,
+            fileBase64=base64
+        )
+        return thisJsCode
+
+    def _getJsCode(self):
+        if self.isFile:
+            return self._getFileJsCode()
+
+        options = ""
         width = _jsCanvasWidth
         height = _jsCanvasHeight
-        jsonzip = ROOT.TBufferJSON.zipJSON(json)
-        options = "all"
+        json = ""
 
-        if self.isCanvas:
-            if self.drawableObject.GetWindowWidth() > 0:
-                width = self.drawableObject.GetWindowWidth()
-            if self.drawableObject.GetWindowHeight() > 0:
-                height = self.drawableObject.GetWindowHeight()
-            options = ""
-
+        # produce JSON for the draw object
         if self.isRCanvas:
-            if self.drawableObject.GetWidth() > 0:
-                width = self.drawableObject.GetWidth()
-            if self.drawableObject.GetHeight() > 0:
-                height = self.drawableObject.GetHeight()
-            options = ""
+           json = self.drawableObject.CreateJSON()
+           if self.drawableObject.GetWidth() > 0:
+               width = self.drawableObject.GetWidth()
+           if self.drawableObject.GetHeight() > 0:
+               height = self.drawableObject.GetHeight()
+        elif self.isCanvas:
+           json = produceCanvasJson(self.drawableObject).Data()
+           if self.drawableObject.GetWindowWidth() > 0:
+               width = self.drawableObject.GetWindowWidth()
+           if self.drawableObject.GetWindowHeight() > 0:
+               height = self.drawableObject.GetWindowHeight()
+        elif self.isGeom:
+           json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 23).Data()
+           options = "all"
+        else:
+           return f"Class {self.drawableObject.ClassName()} not supported yet"
+
+        zip = ROOT.TBufferJSON.zipJSON(json)
 
         thisJsCode = _jsCode.format(
             jsCanvasWidth=width,
             jsCanvasHeight=height,
             jsonLength=len(json),
-            jsonZip=jsonzip,
+            jsonZip=zip,
             jsDrawOptions=options,
-            jsDivId=divId,
+            jsDivId=self._getUniqueDivId(),
         )
         return thisJsCode
 
@@ -627,6 +695,8 @@ class NotebookDrawer(object):
             return self.drawableObject.GetName() + self.drawableId
         if self.isRCanvas:
             return self.drawableObject.GetUID()
+        if self.isFile:
+            return "File" + self.drawableId
         # all other objects do not support update and can be ignored
         return ""
 
@@ -660,26 +730,26 @@ class NotebookDrawer(object):
         return img
 
     def _pngDisplay(self):
-        global _canvasHandles
-        name = self._getDrawId()
-        updated = self._getUpdated()
-        img = self._getPngImage()
-        if updated and name and (name in _canvasHandles):
-            _canvasHandles[name].update(img)
-        elif name:
-            _canvasHandles[name] = display.display(img, display_id=True)
-        else:
-            display.display(img)
+        if self.isCanvas or self.isRCanvas:
+           global _canvasHandles
+           name = self._getDrawId()
+           updated = self._getUpdated()
+           img = self._getPngImage()
+           if updated and name and (name in _canvasHandles):
+               _canvasHandles[name].update(img)
+           elif name:
+               _canvasHandles[name] = display.display(img, display_id=True)
+           else:
+               display.display(img)
 
     def _display(self):
         if _enableJSVisDebug:
             self._pngDisplay()
             self._jsDisplay()
+        elif self._canJsDisplay():
+            self._jsDisplay()
         else:
-            if self._canJsDisplay():
-                self._jsDisplay()
-            else:
-                self._pngDisplay()
+            self._pngDisplay()
 
     def GetDrawableObjects(self):
         if _enableJSVisDebug:
