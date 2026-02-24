@@ -2885,9 +2885,10 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
       fVersion = 1;
       // When objTag is not used, the caller is not interested in the byte
       // count and will not (can not) call CheckByteCount.
-      if (objTag)
+      if (objTag) {
          // Note: the actual class is set later on.
          fByteCountStack.push_back({fBufCur - fBuffer - sizeof(UInt_t), clReq, nullptr});
+      }
       startpos = UInt_t(fBufCur-fBuffer);
       *this >> tag;
    }
