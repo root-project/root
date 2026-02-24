@@ -8,7 +8,7 @@ if(NOT testsupport)
   return()
 endif()
 
-set(libname TestSupport)
+set(libname ${libprefix}TestSupport)
 set(header_dir ROOT/)
 
 add_library(${libname} OBJECT src/TestSupport.cxx)
@@ -27,5 +27,5 @@ install(TARGETS ${libname}
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
 # Make it usable inside and outside of ROOT under a single name if somebody writes their own tests using ROOT_ADD_GTEST
-add_library(ROOT::${libname} ALIAS ${libname})
+add_library(ROOT::TestSupport ALIAS ${libname})
 
