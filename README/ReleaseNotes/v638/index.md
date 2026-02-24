@@ -532,9 +532,49 @@ More than 250 items were addressed for this release:
   * [[ROOT-3709](https://its.cern.ch/jira/browse/3709)] - Crash when writing object with schema rule
 
 ## Release 6.38.02
+Published on February 25, 2026
 
-Some of the work in preparation for ROOT 6.40 was backported to the 6.38 series. For example, the list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
-
-Moreover several items were addressed.
+Besides the numerous fixes, forty of them, some of the work in preparation for ROOT 6.40 was backported to the 6.38 series. For example, the list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
 
 ### Items addressed in this release
+
+  * [[#21244](https://github.com/root-project/root/issues/21244)] - TPad Print() Title option issue
+  * [[#21173](https://github.com/root-project/root/issues/21173)] - TLegend header drawn in different position with jsroot and more than 1 column
+  * [[#21165](https://github.com/root-project/root/issues/21165)] - RDataFrame progress bar changes stream output precision
+  * [[#21159](https://github.com/root-project/root/issues/21159)] - [RF] Unexpected result with RooFFTConvPDF after ROOT 6.32
+  * [[#21080](https://github.com/root-project/root/issues/21080)] - Bad interference for TH1.Fit and EnableImplicitMT
+  * [[#21070](https://github.com/root-project/root/issues/21070)] - RedirectServers - Server not redirected
+  * [[#21066](https://github.com/root-project/root/issues/21066)] - [RF] Crash doing HistFactory Workspace combination
+  * [[#21058](https://github.com/root-project/root/issues/21058)] - ROOT interpreter crashes when using `nlohmann::json`
+  * [[#20954](https://github.com/root-project/root/issues/20954)] - [Minuit2] Analytical Hessian indexing mismatch
+  * [[#20913](https://github.com/root-project/root/issues/20913)] - MIGRAD can call G2 even if HasG2 is set to false
+  * [[#20904](https://github.com/root-project/root/issues/20904)] - [RF] RooWorkspace::data returns null pointer if the workspace contains 52 or more datasets
+  * [[#20894](https://github.com/root-project/root/issues/20894)] - ProfileLikelihood calculator defines wrongly the tolerance
+  * [[#20872](https://github.com/root-project/root/issues/20872)] - hadd crashes when already existing output file is used with remote file input paths
+  * [[#20860](https://github.com/root-project/root/issues/20860)] - Inconsistent information for histogram contours
+  * [[#20858](https://github.com/root-project/root/issues/20858)] - Make "LIST" draw option for contour plot work with "CONT1", "CONT2", and "CONT3" options
+  * [[#20834](https://github.com/root-project/root/issues/20834)] - c++20 related test filure on ix86 (32 bit intel)
+  * [[#20831](https://github.com/root-project/root/issues/20831)] - New test failure with gcc 16 (possibly c++20 related)
+  * [[#20786](https://github.com/root-project/root/issues/20786)] - thisroot.sh can set incorrect ROOTSYS
+  * [[#20779](https://github.com/root-project/root/issues/20779)] - [CMake] pyroot fails due to missing rpaths in cppyy (macOS, gnuinstall)
+  * [[#20761](https://github.com/root-project/root/issues/20761)] - Chi2Test: Report residuals also for higher dimensions
+  * [[#20706](https://github.com/root-project/root/issues/20706)] - Segmentation violation in the TTree::Merge method for root >= v6.36.00
+  * [[#20703](https://github.com/root-project/root/issues/20703)] - ROOT::Fit::FitResult fixed / bound parameter states not updated
+  * [[#20674](https://github.com/root-project/root/issues/20674)] - .rootlogon.C ignored when running TRootBrowser
+  * [[#20665](https://github.com/root-project/root/issues/20665)] - Analytical Hessian is not made positive-definite during minimizer seeding in Minuit2
+  * [[#20650](https://github.com/root-project/root/issues/20650)] - root 6.38.00 can load incompatible old libcppyy_backend.so
+  * [[#20619](https://github.com/root-project/root/issues/20619)] - fRC increased twice in TGDMLParse
+  * [[#20602](https://github.com/root-project/root/issues/20602)] - TGTextEntry spills text out of the text box on macOS but not on Ubuntu
+  * [[#20586](https://github.com/root-project/root/issues/20586)] - MVSC fails compiling Minuit2 with OpenMP enabled
+  * [[#20511](https://github.com/root-project/root/issues/20511)] - CMSSW DQM bin-by-bin comparison failed with ROOT 6.36
+  * [[#20383](https://github.com/root-project/root/issues/20383)] - [RF] Broken rf501_simultaneouspdf.py  in dev3/nighlies
+  * [[#20356](https://github.com/root-project/root/issues/20356)] - Auxiliaries of volumes are not exportet in gdml
+  * [[#20267](https://github.com/root-project/root/issues/20267)] - TMVA.Experimental.SaveXGBoost and feature names
+  * [[#18837](https://github.com/root-project/root/issues/18837)] - [Python] Calling `std::span::begin()` broken with gcc15
+  * [[#18718](https://github.com/root-project/root/issues/18718)] - [RF] Regression in ranged fits with RooSimultaneous due to new likelihood evaluation
+  * [[#18314](https://github.com/root-project/root/issues/18314)] - [ntuple] Heuristically reduce memory usage of buffered writing
+  * [[#17697](https://github.com/root-project/root/issues/17697)] - pyroot can trigger clang assertion failure on enum with value too big to fit in int64_t
+  * [[#16064](https://github.com/root-project/root/issues/16064)] - [PyROOT] Type `UInt64_t`/`unsigned long long` can cause problems in template resolutions
+  * [[#15872](https://github.com/root-project/root/issues/15872)] - [PyROOT] The cppyy version inside ROOT doesn't support `long long`
+  * [[#7167](https://github.com/root-project/root/issues/7167)] - [TTreeProcessorMP] Warn if Process is called from a multi-thread program
+  * [[ROOT-8842](https://its.cern.ch/jira/browse/8842)] - TTreeReaderFast crashes reading flat TTree
