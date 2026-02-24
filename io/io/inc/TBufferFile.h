@@ -54,8 +54,13 @@ protected:
 
    using ByteCountLocator_t = std::size_t; // This might become a pair<chunk_number, local_offset> if we implement chunked keys
    struct ByteCountLocationInfo {
-      ByteCountLocator_t locator; ///< Position where the byte count value is stored
-      const TClass* cl;         ///< Class for which the byte count is reserved
+      ///< Position where the byte count value is stored
+      ByteCountLocator_t locator;
+      ///< Class for which the byte count is reserved.  Usually this is the
+      ///< the base class or type of the pointer.
+      const TClass* cl;
+      ///< Alternative class that might used.  Usually this is the derived
+      ///< class or the actual type of the object.
       const TClass* alt;
    };
    using ByteCountStack_t = std::vector<ByteCountLocationInfo>;
