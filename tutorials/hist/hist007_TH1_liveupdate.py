@@ -80,7 +80,6 @@ del histos
 # Done, finalized and trigger an update.
 slider.SetRange( 0, 1 )
 total.Draw( 'sameaxis' ) # to redraw axis hidden by the fill area
-c1.Modified()
-c1.Update()
+c1.ModifiedUpdate()
 
 gBenchmark.Show( 'hsum' )
