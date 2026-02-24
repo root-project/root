@@ -413,6 +413,8 @@ if(root7)
   if(NOT dataframe)
     list(APPEND root7_veto visualisation/rcanvas/df104.py)
     list(APPEND root7_veto visualisation/rcanvas/df105.py)
+    file(GLOB histv7_dataframe_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ hist/histv7/hist1*.C)
+    list(APPEND root7_veto ${histv7_dataframe_files})
   endif()
   if(MSVC AND NOT win_broken_tests)
     #---EOS is not supported on Windows
