@@ -52,6 +52,10 @@ TEST_P(RDFHist, Regular)
    for (auto index : axis.GetNormalRange()) {
       EXPECT_EQ(hist->GetBinContent(index), 1.0);
    }
+
+   // The one-dimensional specialization returns the same type.
+   hist = dfX.Hist</*BinContentType=*/double, double>(10, {5.0, 15.0}, "x");
+   EXPECT_EQ(hist->GetNEntries(), 10);
 }
 
 TEST_P(RDFHist, RegularJit)
@@ -65,6 +69,10 @@ TEST_P(RDFHist, RegularJit)
    for (auto index : axis.GetNormalRange()) {
       EXPECT_EQ(hist->GetBinContent(index), 1.0);
    }
+
+   // The one-dimensional specialization returns the same type.
+   hist = dfX.Hist(10, {5.0, 15.0}, "x");
+   EXPECT_EQ(hist->GetNEntries(), 10);
 }
 
 TEST_P(RDFHist, MultiDim)
@@ -306,6 +314,10 @@ TEST_P(RDFHist, Weight)
       EXPECT_FLOAT_EQ(bin.fSum, weight);
       EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
    }
+
+   // The one-dimensional specialization returns the same type.
+   hist = dfXW.Hist</*BinContentType=*/RBinWithError, double, double>(10, {5.0, 15.0}, "x", "w");
+   EXPECT_EQ(hist->GetNEntries(), 10);
 }
 
 TEST_P(RDFHist, WeightJit)
@@ -322,6 +334,10 @@ TEST_P(RDFHist, WeightJit)
       EXPECT_FLOAT_EQ(bin.fSum, weight);
       EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
    }
+
+   // The one-dimensional specialization returns the same type.
+   hist = dfXW.Hist(10, {5.0, 15.0}, "x", "w");
+   EXPECT_EQ(hist->GetNEntries(), 10);
 }
 
 TEST_P(RDFHist, PtrWeight)

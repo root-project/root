@@ -2453,6 +2453,32 @@ public:
 
 #ifdef R__HAS_ROOT7
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional RHist (*lazy action*).
+   /// \tparam BinContentType The bin content type of the returned RHist.
+   /// \param[in] nNormalBins The returned histogram will be constructed using this number of normal bins.
+   /// \param[in] interval The axis interval of the constructed histogram (lower end inclusive, upper end exclusive).
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto myHist = myDf.Hist(10, {5, 15}, "col0");
+   /// ~~~
+   template <typename BinContentType = double, typename V = RDFDetail::RInferredType>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::uint64_t nNormalBins, std::pair<double, double> interval, std::string_view vName)
+   {
+      std::shared_ptr h = std::make_shared<ROOT::Experimental::RHist<BinContentType>>(nNormalBins, interval);
+
+      const ColumnNames_t columnList = {std::string(vName)};
+
+      return Hist<V>(h, columnList);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return an RHist (*lazy action*).
    /// \tparam BinContentType The bin content type of the returned RHist.
    /// \param[in] axes The returned histogram will be constructed using these axes.
@@ -2513,6 +2539,34 @@ public:
 
       return CreateAction<RDFInternal::ActionTags::Hist, ColumnType, ColumnTypes...>(columnList, h, h, fProxiedPtr,
                                                                                      columnList.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional RHist with weights (*lazy action*).
+   /// \tparam BinContentType The bin content type of the returned RHist.
+   /// \param[in] nNormalBins The returned histogram will be constructed using this number of normal bins.
+   /// \param[in] interval The axis interval of the constructed histogram (lower end inclusive, upper end exclusive).
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the histogram wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto myHist = myDf.Hist(10, {5, 15}, "col0", "colW");
+   /// ~~~
+   template <typename BinContentType = ROOT::Experimental::RBinWithError, typename V = RDFDetail::RInferredType,
+             typename W = RDFDetail::RInferredType>
+   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
+   Hist(std::uint64_t nNormalBins, std::pair<double, double> interval, std::string_view vName, std::string_view wName)
+   {
+      std::shared_ptr h = std::make_shared<ROOT::Experimental::RHist<BinContentType>>(nNormalBins, interval);
+
+      const ColumnNames_t columnList = {std::string(vName)};
+
+      return Hist<V, W>(h, columnList, wName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
