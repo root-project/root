@@ -15,7 +15,7 @@
 from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ROOT._jupyroot.helpers.utils import disableJSVis, enableJSVis, enableJSVisDebug
+from ROOT._jupyroot.helpers.utils import enableJSVis
 
 
 @magics_class
@@ -35,11 +35,9 @@ class JSRootMagics(Magics):
         """Change the visualisation of plots from images to interactive JavaScript objects."""
         args = parse_argstring(self.jsroot, line)
         if args.arg == "on":
-            enableJSVis()
+            enableJSVis(True)
         elif args.arg == "off":
-            disableJSVis()
-        elif args.arg == "debug":
-            enableJSVisDebug()
+            enableJSVis(False)
 
 
 def load_ipython_extension(ipython):

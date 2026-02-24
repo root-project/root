@@ -38,6 +38,8 @@ ROOT.gROOT.SetBatch()
 
 cppMIME = "text/x-c++src"
 
+_enableJSVis = True
+
 # Keep display handle for canvases to be able update them
 _canvasHandles = {}
 
@@ -167,35 +169,11 @@ def _initializeJSVis():
 
 
 _initializeJSVis()
-_enableJSVisDebug = False
 
 
-def enableJSVis():
-    if not TBufferJSONAvailable():
-        return
+def enableJSVis(flag=True):
     global _enableJSVis
-    _enableJSVis = True
-
-
-def disableJSVis():
-    global _enableJSVis
-    _enableJSVis = False
-
-
-def enableJSVisDebug():
-    if not TBufferJSONAvailable():
-        return
-    global _enableJSVis
-    global _enableJSVisDebug
-    _enableJSVis = True
-    _enableJSVisDebug = True
-
-
-def disableJSVisDebug():
-    global _enableJSVis
-    global _enableJSVisDebug
-    _enableJSVis = False
-    _enableJSVisDebug = False
+    _enableJSVis = flag and TBufferJSONAvailable()
 
 
 def addVisualObject(object, kind="none", option=""):
@@ -743,18 +721,12 @@ class NotebookDrawer(object):
                display.display(img)
 
     def _display(self):
-        if _enableJSVisDebug:
-            self._pngDisplay()
-            self._jsDisplay()
-        elif self._canJsDisplay():
-            self._jsDisplay()
+        if self._canJsDisplay():
+           self._jsDisplay()
         else:
-            self._pngDisplay()
+           self._pngDisplay()
 
     def GetDrawableObjects(self):
-        if _enableJSVisDebug:
-            return [self._getJsDiv(), self._getPngImage()]
-
         if self._canJsDisplay():
             return [self._getJsDiv()]
         else:
@@ -799,9 +771,6 @@ TInterpreter::EErrorCode ProcessLineWrapper(const char* line) {
 
 def enhanceROOTModule():
     ROOT.enableJSVis = enableJSVis
-    ROOT.disableJSVis = disableJSVis
-    ROOT.enableJSVisDebug = enableJSVisDebug
-    ROOT.disableJSVisDebug = disableJSVisDebug
 
 
 def enableCppHighlighting():

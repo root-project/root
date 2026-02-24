@@ -17,9 +17,7 @@ from metakernel import Magic, option
 from ROOT._jupyroot.helpers.utils import (
     TBufferJSONAvailable,
     TBufferJSONErrorMessage,
-    disableJSVis,
-    enableJSVis,
-    enableJSVisDebug,
+    enableJSVis
 )
 
 
@@ -32,12 +30,9 @@ class JSRootMagics(Magic):
         """Change the visualisation of plots from images to interactive JavaScript objects."""
         if args == "on" or args == "":
             self.printErrorIfNeeded()
-            enableJSVis()
+            enableJSVis(True)
         elif args == "off":
-            disableJSVis()
-        elif args == "debug":
-            self.printErrorIfNeeded()
-            enableJSVisDebug()
+            enableJSVis(False)
 
     def printErrorIfNeeded(self):
         if not TBufferJSONAvailable():
