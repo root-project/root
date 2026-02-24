@@ -83,3 +83,4 @@ total.Draw( 'sameaxis' ) # to redraw axis hidden by the fill area
 c1.ModifiedUpdate()
 
 gBenchmark.Show( 'hsum' )
+c1.Draw(block=True)
