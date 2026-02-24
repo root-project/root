@@ -540,7 +540,7 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
+            gen_train = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
                 chunk_size=9,
@@ -1622,7 +1622,7 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
+            gen_train = ROOT.Experimental.ML.CreateNumPyGenerators(
                 dff, batch_size=3, target="b2", validation_split=0, shuffle=False, drop_remainder=False, load_eager=True
             )
 
@@ -2784,7 +2784,7 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             dff1 = df1.Filter("b1 % 2 == 0", "name")
             dff2 = df2.Filter("b1 % 2 == 0", "name")
 
-            gen_train, _ = ROOT.Experimental.ML.CreateNumPyGenerators(
+            gen_train = ROOT.Experimental.ML.CreateNumPyGenerators(
                 [dff1, dff2],
                 batch_size=3,
                 target="b2",

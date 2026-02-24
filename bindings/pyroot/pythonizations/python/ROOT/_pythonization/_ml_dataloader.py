@@ -271,14 +271,17 @@ class BaseGenerator:
         atexit.register(self.DeActivate)
 
     @property
-    def is_active(self):
+    def isActive(self):
         return self.generator.IsActive()
 
-    def is_training_active(self):
-        return self.generator.TrainingIsActive()
+    def isTrainingActive(self):
+        return self.generator.IsTrainingActive()
+
+    def isValidationActive(self):
+        return self.generator.IsValidationActive()
 
     def Activate(self):
-        """Initialize the generator to be used for a loop"""
+        """Initialize the generator to be used for a loop, this spawns the loading thread"""
         self.generator.Activate()
 
     def DeActivate(self):
@@ -286,27 +289,27 @@ class BaseGenerator:
         self.generator.DeActivate()
 
     def ActivateTrainingEpoch(self):
-        """Activate the generator"""
+        """Activate the training epoch of the generator"""
         self.generator.ActivateTrainingEpoch()
 
     def ActivateValidationEpoch(self):
-        """Activate the generator"""
+        """Activate the validation epoch of the generator"""
         self.generator.ActivateValidationEpoch()
 
     def DeActivateTrainingEpoch(self):
-        """Deactivate the generator"""
+        """Deactivate the training epoch of the generator"""
         self.generator.DeActivateTrainingEpoch()
 
     def DeActivateValidationEpoch(self):
-        """Deactivate the generator"""
+        """Deactivate the validation epoch of the generator"""
         self.generator.DeActivateValidationEpoch()
 
     def CreateTrainBatches(self):
-        """Deactivate the generator"""
+        """Create the first training batches from the first chunk"""
         self.generator.CreateTrainBatches()
 
     def CreateValidationBatches(self):
-        """Deactivate the generator"""
+        """Create the first validation batches from the first chunk"""
         self.generator.CreateValidationBatches()
 
     def GetSample(self):
@@ -509,10 +512,10 @@ class LoadingThreadContext:
 
     def __enter__(self):
         self.base_generator.ActivateTrainingEpoch()
+        return self
 
     def __exit__(self, type, value, traceback):
         self.base_generator.DeActivateTrainingEpoch()
-        return True
 
 
 class TrainDataLoader:
@@ -603,10 +606,10 @@ class LoadingThreadContextVal:
 
     def __enter__(self):
         self.base_generator.ActivateValidationEpoch()
+        return self
 
     def __exit__(self, type, value, traceback):
         self.base_generator.DeActivateValidationEpoch()
-        return True
 
 
 class ValidationDataLoader:
@@ -811,7 +814,7 @@ def CreateNumPyGenerators(
     train_generator = TrainDataLoader(base_generator, base_generator.ConvertBatchToNumpy)
 
     if validation_split == 0.0:
-        return train_generator, None
+        return train_generator
 
     validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToNumpy)
 
@@ -950,7 +953,6 @@ def CreateTFDatasets(
     )
 
     train_generator = TrainDataLoader(base_generator, base_generator.ConvertBatchToTF)
-    validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToTF)
 
     num_train_columns = len(train_generator.train_columns)
     num_target_columns = len(train_generator.target_columns)
@@ -985,6 +987,8 @@ def CreateTFDatasets(
 
     if validation_split == 0.0:
         return ds_train
+
+    validation_generator = ValidationDataLoader(base_generator, base_generator.ConvertBatchToTF)
 
     ds_validation = tf.data.Dataset.from_generator(validation_generator, output_signature=batch_signature)
 
