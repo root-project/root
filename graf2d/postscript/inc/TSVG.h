@@ -77,6 +77,7 @@ public:
    void  SetTextColor(Color_t cindex=1) override;
    void  Text(Double_t x, Double_t y, const char *string)  override;
    void  Text(Double_t, Double_t, const wchar_t *) override {}
+   void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t, Double_t, const wchar_t *) {}
    void  WriteReal(Float_t r, Bool_t space=kTRUE) override;

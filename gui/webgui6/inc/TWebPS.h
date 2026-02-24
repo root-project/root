@@ -57,6 +57,7 @@ public:
    void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
    void Text(Double_t x, Double_t y, const char *str) override;
    void Text(Double_t x, Double_t y, const wchar_t *str) override;
+   void TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
 
 private:
    //Let's make this clear:
