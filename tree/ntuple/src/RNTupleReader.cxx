@@ -15,6 +15,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleAttrReading.hxx>
 #include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -365,4 +366,21 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
                                fSource->GetSharedDescriptorGuard()->GetName() + "'"));
    }
    return fieldId;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>
+ROOT::RNTupleReader::OpenAttributeSet(std::string_view attrSetName, const ROOT::RNTupleReadOptions &readOpts)
+{
+   auto attrSets = GetDescriptor().GetAttrSetIterable();
+   const auto it =
+      std::find_if(attrSets.begin(), attrSets.end(), [&](const auto &d) { return d.GetName() == attrSetName; });
+   if (it == attrSets.end())
+      throw ROOT::RException(R__FAIL(std::string("No such attribute set: ") + std::string(attrSetName)));
+
+   auto attrSource = fSource->OpenWithDifferentAnchor({it->GetAnchorLocator(), it->GetAnchorLength()}, readOpts);
+   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), readOpts));
+   R__ASSERT(newReader);
+   auto attrSetReader = std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>(
+      new ROOT::Experimental::RNTupleAttrSetReader(std::move(newReader), it->GetSchemaVersionMajor()));
+   return attrSetReader;
 }
