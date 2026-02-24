@@ -78,14 +78,20 @@ TGraph2DErrors::TGraph2DErrors() {}
 TGraph2DErrors::TGraph2DErrors(Int_t n)
                : TGraph2D(n)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEX = new Double_t[n];
-   fEY = new Double_t[n];
-   fEZ = new Double_t[n];
+   if (n>0) {
+      fEX = new Double_t[n];
+      fEY = new Double_t[n];
+      fEZ = new Double_t[n];
+   } else {
+      fEX = nullptr;
+      fEY = nullptr;
+      fEZ = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       fEX[i] = 0;
@@ -102,14 +108,20 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                                Double_t *ex, Double_t *ey, Double_t *ez, Option_t *)
                :TGraph2D(n, x, y, z)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEX = new Double_t[n];
-   fEY = new Double_t[n];
-   fEZ = new Double_t[n];
+   if (n>0) {
+      fEX = new Double_t[n];
+      fEY = new Double_t[n];
+      fEZ = new Double_t[n];
+   } else {
+      fEX = nullptr;
+      fEY = nullptr;
+      fEZ = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       if (ex) fEX[i] = ex[i];
