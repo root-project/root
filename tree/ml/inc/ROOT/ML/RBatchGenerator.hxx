@@ -19,20 +19,17 @@
 #include "ROOT/ML/RFlat2DMatrix.hxx"
 #include "ROOT/ML/RFlat2DMatrixOperators.hxx"
 #include "ROOT/ML/RSampler.hxx"
-#include "ROOT/RDF/RDatasetSpec.hxx"
-
 #include "ROOT/ML/RDatasetLoader.hxx"
 #include "ROOT/ML/RChunkLoader.hxx"
 #include "ROOT/ML/RBatchLoader.hxx"
-#include "TROOT.h"
+#include "ROOT/RDF/InterfaceUtils.hxx"
 
-#include <cmath>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <random>
 #include <thread>
-#include <variant>
 #include <vector>
+#include <string>
 
 // Empty namespace to create a hook for the Pythonization
 namespace ROOT::Experimental::ML {
