@@ -82,17 +82,26 @@ TGraph2DAsymmErrors::TGraph2DAsymmErrors() {}
 TGraph2DAsymmErrors::TGraph2DAsymmErrors(Int_t n)
                : TGraph2D(n)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DAsymmErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEXlow  = new Double_t[n];
-   fEXhigh = new Double_t[n];
-   fEYlow  = new Double_t[n];
-   fEYhigh = new Double_t[n];
-   fEZlow  = new Double_t[n];
-   fEZhigh = new Double_t[n];
+   if (n>0) {
+      fEXlow  = new Double_t[n];
+      fEXhigh = new Double_t[n];
+      fEYlow  = new Double_t[n];
+      fEYhigh = new Double_t[n];
+      fEZlow  = new Double_t[n];
+      fEZhigh = new Double_t[n];
+   } else {
+      fEXlow  = nullptr;
+      fEXhigh = nullptr;
+      fEYlow  = nullptr;
+      fEYhigh = nullptr;
+      fEZlow  = nullptr;
+      fEZhigh = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       fEXlow[i]  = 0;
@@ -111,17 +120,26 @@ TGraph2DAsymmErrors::TGraph2DAsymmErrors(Int_t n)
 TGraph2DAsymmErrors::TGraph2DAsymmErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z, Double_t *exl, Double_t *exh, Double_t *eyl, Double_t *eyh, Double_t *ezl, Double_t *ezh,  Option_t *)
                :TGraph2D(n, x, y, z)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2DAsymmErrorsErrors", "Invalid number of points (%d)", n);
       return;
    }
 
-   fEXlow  = new Double_t[n];
-   fEXhigh = new Double_t[n];
-   fEYlow  = new Double_t[n];
-   fEYhigh = new Double_t[n];
-   fEZlow  = new Double_t[n];
-   fEZhigh = new Double_t[n];
+   if (n>0) {
+      fEXlow  = new Double_t[n];
+      fEXhigh = new Double_t[n];
+      fEYlow  = new Double_t[n];
+      fEYhigh = new Double_t[n];
+      fEZlow  = new Double_t[n];
+      fEZhigh = new Double_t[n];
+   } else {
+      fEXlow  = nullptr;
+      fEXhigh = nullptr;
+      fEYlow  = nullptr;
+      fEYhigh = nullptr;
+      fEZlow  = nullptr;
+      fEZhigh = nullptr;
+   }
 
    for (Int_t i=0;i<n;i++) {
       if (exl) fEXlow[i]  = exl[i];
