@@ -418,8 +418,6 @@ protected:
 
    /// Allow parents to mark their childs as artificial fields (used in class and record fields)
    static void CallSetArtificialOn(RFieldBase &other) { other.SetArtificial(); }
-   /// Allow class fields to adjust the type alias of their members
-   static void SetTypeAliasOf(RFieldBase &other, const std::string &alias) { other.fTypeAlias = alias; }
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
