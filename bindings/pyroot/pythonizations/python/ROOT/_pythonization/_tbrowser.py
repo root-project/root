@@ -36,10 +36,16 @@ from . import _run_root_event_loop, pythonization
 
 def _TBrowser_constructor(self, *args, block: bool = False):
 
-   self._original_constructor(*args)
+   import ROOT
 
-   if block:
-      _run_root_event_loop()
+   if hasattr(ROOT, "_jupyroot"):
+      lst = ROOT.gROOT.GetListOfFiles()
+      if lst.GetSize() > 0:
+         ROOT._jupyroot.helpers.utils.addVisualObject(lst, "files")
+   else:
+      self._original_constructor(*args)
+      if block:
+         _run_root_event_loop()
 
 
 def _TBrowser_Draw(self, option: str = "", block: bool = False):
@@ -52,11 +58,17 @@ def _TBrowser_Draw(self, option: str = "", block: bool = False):
    * The script is running not in ipython notebooks.
    """
 
-   self._Draw(option)
+   import ROOT
 
-   # run loop if block flag is set
-   if block:
-      _run_root_event_loop()
+   if hasattr(ROOT, "_jupyroot"):
+      lst = ROOT.gROOT.GetListOfFiles()
+      if lst.GetSize() > 0:
+         ROOT._jupyroot.helpers.utils.addVisualObject(lst, "files", option)
+   else:
+      self._Draw(option)
+      # run loop if block flag is set
+      if block:
+         _run_root_event_loop()
 
 
 @pythonization('TBrowser')

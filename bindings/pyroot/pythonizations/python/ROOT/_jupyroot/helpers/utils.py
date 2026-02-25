@@ -74,12 +74,19 @@ Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
 }});
 """
 
-_jsBrowseFileCode = """
-const binaryString = atob('{fileBase64}');
-const bytes = new Uint8Array(binaryString.length);
-for (let i = 0; i < binaryString.length; i++)
-   bytes[i] = binaryString.charCodeAt(i);
-Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
+_jsBrowseFilesCode = """
+const arr = [ {fileBase64} ], blobs = [];
+for(let n = 0; n < arr.length; ++n) {{
+   const binaryString = atob(arr[n]),
+         bytes = new Uint8Array(binaryString.length);
+   for (let i = 0; i < binaryString.length; i++)
+      bytes[i] = binaryString.charCodeAt(i);
+   blobs.push(bytes.buffer);
+}}
+const next_file = h => {{
+   return !blobs.length ? null : h.openRootFile(blobs.shift()).then(() => next_file(h));
+}};
+Core.buildGUI('{jsDivId}','notebook').then(next_file);
 """
 
 _jsCode = """
@@ -200,7 +207,9 @@ def enableJSVis(flag=True):
 def addVisualObject(object, kind="none", option=""):
     global _visualObjects
     if kind == "tfile":
-        _visualObjects.append(NotebookDrawerFile(object, option))
+        _visualObjects.append(NotebookDrawerFiles([object], option))
+    elif kind == "files":
+        _visualObjects.append(NotebookDrawerFiles(object, option))
     else:
         _visualObjects.append(NotebookDrawerJson(object))
 
@@ -503,7 +512,7 @@ class CaptureDrawnPrimitives(object):
 
 
 
-class NotebookDrawerFile(object):
+class NotebookDrawerFiles(object):
     """
     Special drawer for TFile - shows files hierarchy with possibility to draw objects
     """
@@ -513,18 +522,30 @@ class NotebookDrawerFile(object):
        self.drawOption = theOption
 
     def _getFileJsCode(self):
-        sz = self.drawObject.GetSize()
-        if sz > 10000000 and self.drawOption != "force":
-            return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show file nevertheless"
+        totalsz = 0
+        totalbase64 = ""
+        for file in self.drawObject:
+            sz = file.GetSize()
+            if sz > 10000000 and self.drawOption != "force":
+               return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show it disregard of file size"
 
-        # create plain buffer and get pointer on it
-        u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
-        addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
+            totalsz += sz
+            if totalsz > 10000000 and self.drawOption != "force":
+               return f"Total file sizes {totalsz} too large for JSROOT display. Use 'force' draw option to show them disregard file size"
 
-        if self.drawObject.ReadBuffer(addrc, 0, sz):
-           return f"Fail to read file {self.drawObject.GetName()} buffer of size {sz}"
+            # create plain buffer and get pointer on it
+            u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
+            addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
 
-        base64 = ROOT.TBase64.Encode(addrc, sz)
+            if file.ReadBuffer(addrc, 0, sz):
+                return f"Fail to read file {file.GetName()} buffer of size {sz}"
+
+            base64 = ROOT.TBase64.Encode(addrc, sz)
+
+            if len(totalbase64) > 0:
+                totalbase64 = totalbase64 + ", "
+
+            totalbase64 = totalbase64 + "'" + base64 + "'"
 
         id = _getUniqueDivId()
 
@@ -533,9 +554,9 @@ class NotebookDrawerFile(object):
             jsCanvasHeight=_jsCanvasHeight
         )
 
-        browseFileCode = _jsBrowseFileCode.format(
+        browseFileCode = _jsBrowseFilesCode.format(
             jsDivId=id,
-            fileBase64=base64
+            fileBase64=totalbase64
         )
 
         thisJsCode = _jsCode.format(
