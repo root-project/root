@@ -132,6 +132,8 @@ _array_interface_dtype_map = {
 
 def _get_cpp_type_from_numpy_type(dtype):
     cpptypes = {
+        "i1": "signed char",
+        "u1": "unsigned char",
         "i2": "Short_t",
         "u2": "UShort_t",
         "i4": "int",
@@ -159,7 +161,8 @@ def _AsRVec(arr):
     This function returns an RVec which adopts the memory of the given
     PyObject. The RVec takes the data pointer and the size from the array
     interface dictionary.
-    Note that for arrays of strings, the input strings are copied into the RVec.
+    Note that for arrays of strings and int8, the input data is copied into the RVec
+    rather than adopted.
     """
     import math
 
@@ -181,7 +184,7 @@ def _AsRVec(arr):
     typestr = interface["typestr"]
     dtype = typestr[1:]
 
-    # Construct an RVec of strings
+    # Construct an RVec of strings by copying the input array
     if dtype == "O" or dtype.startswith("U"):
         underlying_object_types = {type(elem) for elem in arr}
         if len(underlying_object_types) > 1:
@@ -195,6 +198,11 @@ def _AsRVec(arr):
             return ROOT.VecOps.RVec["std::string"](arr)
         else:
             raise TypeError("Cannot create an RVec from a numpy array of data type object.")
+
+    # Construct an RVec of int8 by copying the input array
+    # RVec<signed char> does not expose the ptr+size contructor
+    if dtype == "i1":
+        return ROOT.VecOps.RVec["signed char"](arr)
 
     if len(typestr) != 3:
         raise RuntimeError(
