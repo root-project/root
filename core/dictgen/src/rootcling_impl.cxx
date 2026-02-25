@@ -4130,10 +4130,6 @@ int RootClingMain(int argc,
 #endif
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-fmodules-embed-all-files");
-   clingArgs.push_back("-Xclang");
-   clingArgs.push_back("-main-file-name");
-   clingArgs.push_back("-Xclang");
-   clingArgs.push_back((dictname + ".h").c_str());
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
