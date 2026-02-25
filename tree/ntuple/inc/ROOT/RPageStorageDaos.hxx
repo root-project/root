@@ -42,10 +42,6 @@ using ntuple_index_t = std::uint32_t;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
-enum EDaosLocatorFlags {
-   // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
-   kCagedPage = 0x01,
-};
 
 // clang-format off
 /**
@@ -119,7 +115,6 @@ private:
 
    RDaosNTupleAnchor fNTupleAnchor;
    ntuple_index_t fNTupleIndex{0};
-   uint32_t fCageSizeLimit{};
 
 protected:
    using RPagePersistentSink::InitImpl;
