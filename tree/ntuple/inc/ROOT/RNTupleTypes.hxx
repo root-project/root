@@ -253,7 +253,7 @@ private:
    static constexpr std::uint64_t kMaskReservedBit = 1ull << 60;
 
    /// To save memory, we use the most significant bits to store the locator type (file, DAOS, zero page,
-   /// unkown, kTestLocatorType) as well as the one "reserved bit" that we currently process, the DAOS cage bit.
+   /// unkown, kTestLocatorType) as well as one "reserved bit" that can be used in future locators.
    /// Consequently, we can only store sizes up to 60 bits (1 EB), which in practice won't be an issue.
    std::uint64_t fFlagsAndNBytes = 0;
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`;
@@ -272,7 +272,7 @@ public:
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
    ELocatorType GetType() const;
-   /// The only currently supported reserved bit is the DAOS cage bit.
+   /// We currently only support one of the 8 available reserved bits (none are used so far).
    std::uint8_t GetReserved() const { return (fFlagsAndNBytes & kMaskReservedBit) > 0; }
 
    void SetNBytesOnStorage(std::uint64_t nBytesOnStorage);
