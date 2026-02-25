@@ -3,6 +3,7 @@
 #include "TChain.h"
 #include "TFile.h"
 #include "TLeaf.h"
+#include "ROOT/TProcessExecutor.hxx"
 #include "TROOT.h"
 #include "TTree.h"
 #include "TTreePerfStats.h"
@@ -15,6 +16,7 @@
 #include "ROOT/TestSupport.hxx"
 #include "ROOT/InternalTreeUtils.hxx" // GetFileNamesFromTree
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 
 #include "RErrorIgnoreRAII.hxx"
@@ -572,6 +574,73 @@ TEST(TTreeReaderBasic, ZeroEntriesTreeCheckValueStatus)
    }
 }
 
+#ifndef MSVC
+// Issue #10524
+// We need multiprocessing, therefore excluded on Win
+struct Cleanup_10524_RAII{
+   std::vector<std::string> fToClean;
+   Cleanup_10524_RAII(const std::vector<std::string> &toClean):fToClean(toClean){}
+   ~Cleanup_10524_RAII(){
+      namespace fs = std::filesystem;
+      for (auto &&entry : fs::directory_iterator("./")){
+         for (auto &&pattern : fToClean){
+            const auto entryAsStr = entry.path().filename().string();
+            if (entryAsStr.rfind(pattern, 0) == 0) {
+               std::remove(entryAsStr.c_str());
+            }
+         }
+      }
+      
+   }
+};
+TEST(TTreeReaderBasic, WarnNoDict)
+{
+   using rareType = std::map<std::string, bool>;
+   auto c = TClass::GetClass(typeid(rareType));
+   auto const rareTypeName = c->GetName();
+   // Let's check if we have a dict for it, if yes, we
+   // error out because the test needs to be modified.
+   if (c->HasDictionary()) {
+      throw std::runtime_error("The type used for the test has a dictionary while it should not.");
+   }
+
+   const auto fName = "10524_file.root";
+   const auto tName = "t";
+   const auto colName = "col";
+
+   Cleanup_10524_RAII cleanupRAII({fName, "AutoDict_"});
+
+   // Create the input file in a separate process.
+   // This is necessary because we want to create a dictionary but not have it at disposal
+   // for the read
+   const auto pid = getpid();
+   auto createFile = [&]() {
+      if (pid == getpid()) {
+         throw std::runtime_error("The creation of the tree is not happening in a separate process");
+      }
+      gInterpreter->GenerateDictionary(rareTypeName, "map;string");
+      TFile f(fName, "RECREATE");
+      auto t = new TTree(tName, "test tree");
+      rareType o;
+      t->Branch(colName, &o);
+      t->Write();
+      f.Close();
+      return 0;
+   };
+
+   ROOT::TProcessExecutor pe(1);
+   pe.Map(createFile,1);
+
+   // OK, now we can read
+   TFile f(fName);
+   auto t = f.Get<TTree>(tName);
+   TTreeReader r(t);
+   ROOT::TestSupport::CheckDiagsRAII diags{
+      kError, "TTreeReaderValueBase",
+      "is an instance of an stl collection and does not have a compiled CollectionProxy.", false};
+   TTreeReaderValue<rareType> rv(r, colName);
+}
+#endif
 
 #ifdef R__USE_IMT
 // Check the warning emitted to address ROOT-10972
