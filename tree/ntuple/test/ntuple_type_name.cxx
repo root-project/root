@@ -310,13 +310,11 @@ TEST(RNTuple, TypeNameTemplatesNestedAlias)
    ASSERT_EQ(2, hashSubfields.size());
    EXPECT_EQ("fHash", hashSubfields[0]->GetFieldName());
    EXPECT_EQ("std::string", hashSubfields[0]->GetTypeName());
-   EXPECT_EQ("EdmHash<1>::value_type", hashSubfields[0]->GetTypeAlias());
+   EXPECT_EQ("", hashSubfields[0]->GetTypeAlias());
 
    EXPECT_EQ("fHash2", hashSubfields[1]->GetFieldName());
    EXPECT_EQ("std::string", hashSubfields[1]->GetTypeName());
-   // FIXME: This should really be EdmHash<1>::value_typeT<EdmHash<1>::value_type>, but this is the value we get from
-   // TDataMember::GetFullTypeName right now...
-   EXPECT_EQ("value_typeT<EdmHash<1>::value_type>", hashSubfields[1]->GetTypeAlias());
+   EXPECT_EQ("", hashSubfields[1]->GetTypeAlias());
 }
 
 TEST(RNTuple, ContextDependentTypeNames)
@@ -330,28 +328,34 @@ TEST(RNTuple, ContextDependentTypeNames)
       auto model = RNTupleModel::Create();
       auto fieldBase = RFieldBase::Create("foo", "DerivedWithTypedef").Unwrap();
       model->AddField(std::move(fieldBase));
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      auto entry = ntuple->GetModel().CreateBareEntry();
-      auto ptr = std::make_unique<DerivedWithTypedef>();
-      entry->BindRawPtr("foo", ptr.get());
-      for (auto i = 0; i < 10; ++i) {
-         ptr->m.push_back(i);
-         ntuple->Fill(*entry);
-         ptr->m.clear();
-      }
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-      EXPECT_EQ(reader->GetNEntries(), 10);
 
       const auto &desc = reader->GetDescriptor();
       const auto fooId = desc.FindFieldId("foo");
       const auto baseId = desc.GetFieldDescriptor(fooId).GetLinkIds()[0];
       {
-         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m", fooId));
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m1", fooId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::vector<double>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "std::vector<Double32_t>");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m2", fooId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::vector<std::int64_t>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m3", fooId));
          EXPECT_EQ(fdesc.GetTypeName(), "std::vector<std::int32_t>");
-         EXPECT_EQ(fdesc.GetTypeAlias(), "MyVec<std::int32_t>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m4", fooId));
+         EXPECT_EQ(fdesc.GetTypeName(), "CustomStruct::VectorWrapper<std::int64_t>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "CustomStruct::VectorWrapper<Long64_t>");
       }
       {
          const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("a", baseId));

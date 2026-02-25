@@ -16,6 +16,7 @@
 #pragma link C++ class CustomAtomicNotLockFree+;
 
 #pragma link C++ class CustomStruct+;
+#pragma link C++ class CustomStruct::VectorWrapper<Long64_t>+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;
 #pragma link C++ class DerivedWithTypedef + ;
