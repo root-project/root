@@ -1876,21 +1876,21 @@ class HierarchyPainter extends BasePainter {
    /** @summary alternative context menu, used in the object inspector
      * @private */
    direct_contextmenu(evnt, elem) {
-      evnt.preventDefault();
       const itemname = d3_select(elem.parentNode.parentNode).attr('item'),
             hitem = this.findItem(itemname);
-      if (!hitem)
+      if (!hitem || !isFunc(this.fill_context))
          return;
 
-      if (isFunc(this.fill_context)) {
-         createMenu(evnt, this).then(menu => {
-            this.fill_context(menu, hitem);
-            if (menu.size() > 0) {
-               menu.tree_node = elem.parentNode;
-               menu.show();
-            }
-         });
-      }
+      evnt.preventDefault();
+      evnt.stopPropagation();
+
+      createMenu(evnt, this).then(menu => {
+         this.fill_context(menu, hitem);
+         if (menu.size() > 0) {
+            menu.tree_node = elem.parentNode;
+            menu.show();
+         }
+      });
    }
 
    /** @summary Fills settings menu items
@@ -1936,11 +1936,12 @@ class HierarchyPainter extends BasePainter {
    /** @summary Handle context menu in the hierarchy
      * @private */
    tree_contextmenu(evnt, elem) {
-      evnt.preventDefault();
       const itemname = d3_select(elem.parentNode.parentNode).attr('item'),
             hitem = this.findItem(itemname);
       if (!hitem)
          return;
+      evnt.preventDefault();
+      evnt.stopPropagation();
 
       const onlineprop = this.getOnlineProp(itemname),
             fileprop = this.getFileProp(itemname);
@@ -2905,8 +2906,9 @@ class HierarchyPainter extends BasePainter {
          if ((hitem._more === false) || (!hitem._parent && hitem._childs))
             return;
 
-         if (hitem._childs && hitem._isopen) {
-            hitem._isopen = false;
+         // for the file expand always just toggle isopen flag
+         if (hitem._childs && (hitem._isopen || hitem._file)) {
+            hitem._isopen = !hitem._isopen;
             if (!silent)
                this.updateTreeNode(hitem, d3cont);
             return;
