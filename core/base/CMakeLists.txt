@@ -228,7 +228,15 @@ if(ROOT_NEED_STDCXXFS)
 endif()
 
 # This code about the LIB_CORE_NAME define is important for TROOT::GetSharedLibDir()
-set(full_core_filename $<TARGET_FILE_NAME:Core>)
+# On Linux, dl_iterate_phdr reports loaded libraries by their SONAME
+# (e.g. libCore.so.6.38), not their full filename (libCore.so.6.38.02).
+# On macOS, _dyld_get_image_name returns the actual filename.
+# LIB_CORE_NAME must match what the dynamic linker reports.
+if(soversion AND NOT APPLE)
+  set(full_core_filename $<TARGET_SONAME_FILE_NAME:Core>)
+else()
+  set(full_core_filename $<TARGET_FILE_NAME:Core>)
+endif()
 
 # Absolue CMAKE_INSTALL_<dir> paths are discouraged in CMake, but some
 # packagers use them anyway. So we support it.
