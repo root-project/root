@@ -501,14 +501,14 @@ class StreamCapture(object):
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
-    return [NotebookDrawer(can, "tcanvas") for can in lOfC if can.IsDrawn() or can.IsUpdated()]
+    return [NotebookDrawerTCanvas(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
 
 
 def GetRCanvasDrawers():
     if not RCanvasAvailable():
         return []
     lOfC = ROOT.Experimental.RCanvas.GetCanvases()
-    return [NotebookDrawer(can.__smartptr__().get(), "rcanvas") for can in lOfC if can.IsShown() or can.IsUpdated()]
+    return [NotebookDrawerRCanvas(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
 
 def GetVisualDrawers():
     global _visualObjects
@@ -536,7 +536,7 @@ def GetDrawers():
 def NotebookDraw():
     drawers = GetDrawers()
     for drawer in drawers:
-        drawer.Draw()
+        drawer.Draw(display.display)
 
 
 class CaptureDrawnPrimitives(object):
@@ -554,24 +554,12 @@ class CaptureDrawnPrimitives(object):
         self.shell.events.register("post_execute", self._post_execute)
 
 
-class NotebookDrawerBase(object):
-
-    def __init__(self, theObject):
-        self.drawObject = theObject
-
-    def GetDrawableObjects(self):
-        return []
-
-    def Draw(self):
-        arr = self.GetDrawableObjects()
-        for obj in arr:
-            display.display(obj)
 
 
-class NotebookDrawerFile(NotebookDrawerBase):
+class NotebookDrawerFile(object):
 
     def __init__(self, theObject, theOption=""):
-       super().__init__(theObject)
+       self.drawObject = theObject
        self.drawOption = theOption
 
     def _getFileJsCode(self):
@@ -608,16 +596,19 @@ class NotebookDrawerFile(NotebookDrawerBase):
 
         return thisJsCode
 
-    def GetDrawableObjects(self):
+    def Draw(self, displayFunction):
         code = self._getFileJsCode()
-        return [display.HTML(code)]
+        displayFunction(display.HTML(code))
 
 
 
-class NotebookDrawerJson(NotebookDrawerBase):
+class NotebookDrawerJson(object):
     """
-    Base class to create JSROOT drawing for the arbitrary object based on json.
+    Generic class to create JSROOT drawing for the arbitrary object based on json conversion.
     """
+
+    def __init__(self, theObject):
+       self.drawObject = theObject
 
     def _canJsDisplay(self):
         return TBufferJSONAvailable()
@@ -670,28 +661,31 @@ class NotebookDrawerJson(NotebookDrawerBase):
         )
         return thisJsCode
 
+    def _getCanvas(self):
+        c1 = ROOT.TCanvas("__tmp_draw_image_canvas__", "", self._getWidth(), self._getHeight())
+        c1.Add(self.drawObject)
+        return c1
 
     def _getPngImage(self):
         ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-        c1 = ROOT.TCanvas("__tmp_draw_image_canvas__", "", self._getWidth(), self._getHeight())
-        c1.Clear()
+        canv = self._getCanvas()
         with _setIgnoreLevel(ROOT.kError):
-            self.drawObject.Draw()
-            c1.SaveAs(ofile.name)
+            canv.SaveAs(ofile.name)
         img = display.Image(filename=ofile.name, format="png", embed=True)
         ofile.close()
         os.unlink(ofile.name)
         return img
 
 
-    def GetDrawableObjects(self):
+    def Draw(self, displayFunction):
         global _enableJSVis
-        if self._canJsDisplay() and _enableJSVis:
+        if _enableJSVis and self._canJsDisplay():
             code = self._getJsCode()
-            return [display.HTML(code)]
-        if self._canPngDisplay():
-            return [self._getPngImage()]
-        return []
+            displayFunction(display.HTML(code))
+        elif self._canPngDisplay():
+            displayFunction(self._getPngImage())
+        else:
+            displayFunction(display.HTML(f"Drawing of {self.drawObject.ClassName()} is not implemented"))
 
 
 
@@ -703,59 +697,67 @@ class NotebookDrawerGeometry(NotebookDrawerJson):
     def _getJsOptions(self):
         return "all"
 
+    def _canPngDisplay(self):
+        return False
 
 
 
-class NotebookDrawer(object):
+class NotebookDrawerCanvBase(NotebookDrawerJson):
     """
-    Capture the canvas which is drawn and decide if it should be displayed using
-    jsROOT.
+    Base class for TCanvas/RCanvas drawing. It includes live update of the canvas
     """
 
-    def __init__(self, theObject, kind="none", option=""):
-        self.drawableObject = theObject
-        self.drawOption = option
-        self.isRCanvas = False
-        self.isCanvas = False
-        self.drawableId = str(ROOT.AddressOf(theObject)[0])
-        if kind == "rcanvas":
-            self.isRCanvas = True
-        elif kind == "tcanvas":
-            self.isCanvas = True
+    def _getCanvasId(self):
+        return ""
+
+    def _getUpdated(self):
+        return False
+
+    def _getCanvas(self):
+        return self.drawObject
+
+    def Draw(self, displayFunction):
+        global _enableJSVis
+        canvid = self._getCanvasId()
+        code = ""
+        if _enableJSVis and self._canJsDisplay():
+            code = display.HTML(self._getJsCode())
+        elif self._canPngDisplay():
+            code = self._getPngImage()
+        else:
+            displayFunction(display.HTML(f"Drawing of {self.drawObject.ClassName()} is not implemented"))
+
+        global _canvasHandles
+        name = self._getCanvasId()
+        updated = self._getUpdated()
+        if updated and name and (name in _canvasHandles):
+            _canvasHandles[name].update(code)
+        elif name:
+            _canvasHandles[name] = displayFunction(code, display_id=True)
+        else:
+            displayFunction(code)
+
+
+
+class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
 
     def __del__(self):
-        if self.isRCanvas:
-            self.drawableObject.ClearShown()
-            self.drawableObject.ClearUpdated()
-        elif self.isCanvas:
-            self.drawableObject.ResetDrawn()
-            self.drawableObject.ResetUpdated()
+        self.drawObject.ResetDrawn()
+        self.drawObject.ResetUpdated()
 
-    def _getListOfPrimitivesNamesAndTypes(self):
-        """
-        Get the list of primitives in the pad, recursively descending into
-        histograms and graphs looking for fitted functions.
-        """
-        primitives = self.drawableObject.GetListOfPrimitives()
-        primitivesNames = map(lambda p: p.ClassName(), primitives)
-        return sorted(primitivesNames)
+    def _getCanvasId(self):
+        return self.drawObject.GetName() + str(ROOT.AddressOf(self.drawObject)[0])
+
+    def _getUpdated(self):
+       return self.drawObject.IsUpdated()
 
     def _canJsDisplay(self):
-        # returns true if js-based drawing should be used
         if not TBufferJSONAvailable():
             return False
-        # RCanvas clways displayed with jsroot
-        if self.isRCanvas:
+        if TWebCanvasAvailable():
             return True
-        # check if jsroot was disabled
-        if not _enableJSVis:
-            return False
-        # geometry can be drawn, TWebCanvas also can be used
-        if not self.isCanvas or TWebCanvasAvailable():
-            return True
-
-        # to be optimised
-        primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
+        primitives = self.drawObject.GetListOfPrimitives()
+        primitivesTypesNames = sorted(map(lambda p: p.ClassName(), primitives))
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
                 if fnmatch.fnmatch(primitiveTypeName, unsupportedPattern):
@@ -767,120 +769,45 @@ class NotebookDrawer(object):
                     return False
         return True
 
-    def _getJsCode(self):
-        options = ""
-        width = _jsCanvasWidth
-        height = _jsCanvasHeight
-        json = ""
+    def _getWidth(self):
+        if self.drawObject.GetWindowWidth() > 0:
+            return self.drawObject.GetWindowWidth()
+        return _jsCanvasWidth
 
-        # produce JSON for the draw object
-        if self.isRCanvas:
-           json = self.drawableObject.CreateJSON()
-           if self.drawableObject.GetWidth() > 0:
-               width = self.drawableObject.GetWidth()
-           if self.drawableObject.GetHeight() > 0:
-               height = self.drawableObject.GetHeight()
-        elif self.isCanvas:
-           json = produceCanvasJson(self.drawableObject).Data()
-           if self.drawableObject.GetWindowWidth() > 0:
-               width = self.drawableObject.GetWindowWidth()
-           if self.drawableObject.GetWindowHeight() > 0:
-               height = self.drawableObject.GetWindowHeight()
-        else:
-           return f"Class {self.drawableObject.ClassName()} not supported yet"
+    def _getHeight(self):
+        if self.drawObject.GetWindowHeight() > 0:
+            return self.drawObject.GetWindowHeight()
+        return _jsCanvasHeight
 
-        zip = ROOT.TBufferJSON.zipJSON(json)
+    def _getJson(self):
+        return produceCanvasJson(self.drawObject).Data()
 
-        id = _getUniqueDivId()
 
-        drawHtml = _jsFixedSizeDiv.format(
-            jsDivId=id,
-            jsCanvasWidth=width,
-            jsCanvasHeight=height
-        )
+class NotebookDrawerRCanvas(NotebookDrawerCanvBase):
 
-        drawJsonCode = _jsDrawJsonCode.format(
-            jsDivId=id,
-            jsonLength=len(json),
-            jsonZip=zip,
-            jsDrawOptions=options
-        )
+    def __del__(self):
+        self.drawObject.ClearShown()
+        self.drawObject.ClearUpdated()
 
-        thisJsCode = _jsCode.format(
-            jsDivId=id,
-            jsDivHtml=drawHtml,
-            jsDrawCode=drawJsonCode
-        )
-        return thisJsCode
-
-    def _getJsDiv(self):
-        return display.HTML(self._getJsCode())
-
-    def _getDrawId(self):
-        if self.isCanvas:
-            return self.drawableObject.GetName() + self.drawableId
-        if self.isRCanvas:
-            return self.drawableObject.GetUID()
-        # all other objects do not support update and can be ignored
-        return ""
+    def _getCanvasId(self):
+        return self.drawObject.GetUID()
 
     def _getUpdated(self):
-        if self.isCanvas:
-            return self.drawableObject.IsUpdated()
-        if self.isRCanvas:
-            return self.drawableObject.IsUpdated()
-        return False
+        return self.drawObject.IsUpdated()
 
-    def _jsDisplay(self):
-        global _canvasHandles
-        name = self._getDrawId()
-        updated = self._getUpdated()
-        jsdiv = self._getJsDiv()
-        if name and (name in _canvasHandles) and updated:
-            _canvasHandles[name].update(jsdiv)
-        elif name:
-            _canvasHandles[name] = display.display(jsdiv, display_id=True)
-        else:
-            display.display(jsdiv)
-        return 0
+    def _getWidth(self):
+        if self.drawObject.GetWidth() > 0:
+            return self.drawObject.GetWidth()
+        return _jsCanvasWidth
 
-    def _getPngImage(self):
-        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-        with _setIgnoreLevel(ROOT.kError):
-            self.drawableObject.SaveAs(ofile.name)
-        img = display.Image(filename=ofile.name, format="png", embed=True)
-        ofile.close()
-        os.unlink(ofile.name)
-        return img
+    def _getHeight(self):
+        if self.drawObject.GetHeight() > 0:
+            return self.drawObject.GetHeight()
+        return _jsCanvasHeight
 
-    def _pngDisplay(self):
-        if self.isCanvas or self.isRCanvas:
-           global _canvasHandles
-           name = self._getDrawId()
-           updated = self._getUpdated()
-           img = self._getPngImage()
-           if updated and name and (name in _canvasHandles):
-               _canvasHandles[name].update(img)
-           elif name:
-               _canvasHandles[name] = display.display(img, display_id=True)
-           else:
-               display.display(img)
+    def _getJson(self):
+        return self.drawObject.CreateJSON()
 
-    def _display(self):
-        if self._canJsDisplay():
-           self._jsDisplay()
-        else:
-           self._pngDisplay()
-
-    def GetDrawableObjects(self):
-        if self._canJsDisplay():
-            return [self._getJsDiv()]
-        else:
-            return [self._getPngImage()]
-
-    def Draw(self):
-        self._display()
-        return 0
 
 
 def setStyle():
