@@ -13,9 +13,9 @@ namespace SOFIE {
 
 /*! \class ROperator_InstanceNormalization
     \brief Implementation of the ONNX InstanceNormalization operator.
-    
-    Normalizes the input tensor across spatial dimensions independently for each 
-    feature channel and each instance in a batch. 
+
+    Normalizes the input tensor across spatial dimensions independently for each
+    feature channel and each instance in a batch.
 */
 template <typename T>
 class ROperator_InstanceNormalization final : public ROperator {
@@ -30,19 +30,25 @@ private:
 public:
    ROperator_InstanceNormalization() : fEpsilon(1e-5) {}
 
-   ROperator_InstanceNormalization(float epsilon, std::string nameInput, std::string nameScale, std::string nameBias, std::string nameOutput)
-      : fEpsilon(epsilon), fNInput(UTILITY::Clean_name(nameInput)),
-        fNScale(UTILITY::Clean_name(nameScale)), fNBias(UTILITY::Clean_name(nameBias)),
-        fNOutput(UTILITY::Clean_name(nameOutput)) {
+   ROperator_InstanceNormalization(float epsilon, std::string nameInput, std::string nameScale, std::string nameBias,
+                                   std::string nameOutput)
+      : fEpsilon(epsilon),
+        fNInput(UTILITY::Clean_name(nameInput)),
+        fNScale(UTILITY::Clean_name(nameScale)),
+        fNBias(UTILITY::Clean_name(nameBias)),
+        fNOutput(UTILITY::Clean_name(nameOutput))
+   {
       fInputTensorNames = {fNInput, fNScale, fNBias};
       fOutputTensorNames = {fNOutput};
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputShapes) override {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputShapes) override
+   {
       return {inputShapes[0]};
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel &model) override
+   {
       if (!model.CheckIfTensorAlreadyExist(fNInput)) {
          throw std::runtime_error("TMVA SOFIE InstanceNormalization Op: Input Tensor not found");
       }
@@ -50,13 +56,15 @@ public:
       model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNInput), fShape);
    }
 
-   std::string Generate(std::string) override {
+   std::string Generate(std::string) override
+   {
       std::stringstream out;
       size_t rank = fShape.size();
       size_t N = fShape[0];
       size_t C = fShape[1];
       size_t spatial_size = 1;
-      for (size_t i = 2; i < rank; ++i) spatial_size *= fShape[i];
+      for (size_t i = 2; i < rank; ++i)
+         spatial_size *= fShape[i];
 
       out << "\t// InstanceNormalization\n";
       out << "\t{\n";
@@ -95,7 +103,7 @@ public:
    }
 };
 
-}
-}
-}
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 #endif

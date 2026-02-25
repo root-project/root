@@ -92,15 +92,17 @@ extern ParserFuncSignature ParseScatterElements;
 // -----------------------------------------------------------------------------
 // InstanceNormalization
 // -----------------------------------------------------------------------------
-std::unique_ptr<ROperator> ParseInstanceNormalization(RModelParser_ONNX& parser, const onnx::NodeProto& node) {
+std::unique_ptr<ROperator> ParseInstanceNormalization(RModelParser_ONNX &parser, const onnx::NodeProto &node)
+{
    float epsilon = 1e-5; // Default ONNX epsilon
    for (int i = 0; i < node.attribute_size(); i++) {
-      const auto& attr = node.attribute(i);
-      if (attr.name() == "epsilon") epsilon = attr.f();
+      const auto &attr = node.attribute(i);
+      if (attr.name() == "epsilon")
+         epsilon = attr.f();
    }
    // Inputs: X (0), scale (1), B (2)
-   return std::make_unique<ROperator_InstanceNormalization<float>>(
-      epsilon, node.input(0), node.input(1), node.input(2), node.output(0));
+   return std::make_unique<ROperator_InstanceNormalization<float>>(epsilon, node.input(0), node.input(1), node.input(2),
+                                                                   node.output(0));
 }
 
 // Declaration of fused operators

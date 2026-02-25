@@ -9,20 +9,20 @@
 
 using namespace TMVA::Experimental::SOFIE;
 
-int main() {
+int main()
+{
    std::cout << "Running InstanceNormalization Test..." << std::endl;
 
    RModel model;
-   std::vector<size_t> inputShape = {1, 2, 2, 2}; 
+   std::vector<size_t> inputShape = {1, 2, 2, 2};
    std::vector<size_t> paramShape = {2};
 
    model.AddIntermediateTensor("Input", ETensorType::FLOAT, inputShape);
    model.AddIntermediateTensor("Scale", ETensorType::FLOAT, paramShape);
    model.AddIntermediateTensor("Bias", ETensorType::FLOAT, paramShape);
 
-   auto op = std::make_shared<ROperator_InstanceNormalization<float>>(
-      1e-5, "Input", "Scale", "Bias", "Output");
-   
+   auto op = std::make_shared<ROperator_InstanceNormalization<float>>(1e-5, "Input", "Scale", "Bias", "Output");
+
    op->Initialize(model);
    std::string code = op->Generate("InstanceNormTest");
 
