@@ -201,6 +201,8 @@ def addVisualObject(object, kind="none", option=""):
     global _visualObjects
     if kind == "tfile":
         _visualObjects.append(NotebookDrawerFile(object, option))
+    else:
+        _visualObjects.append(NotebookDrawerJson(object))
 
 
 def _getPlatform():
@@ -368,61 +370,6 @@ def invokeAclic(cell):
         processCppCode(".L %s+" % fileName)
 
 
-def produceCanvasJson(canvas):
-    if canvas.IsUpdated() and not canvas.IsDrawn():
-        canvas.Draw()
-
-    if TWebCanvasAvailable():
-        return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 23, True)
-
-    # Add extra primitives to canvas with custom colors, palette, gStyle
-
-    prim = canvas.GetListOfPrimitives()
-
-    style = ROOT.gStyle
-    colors = ROOT.gROOT.GetListOfColors()
-    palette = None
-
-    # always provide gStyle object
-    if prim.FindObject(style):
-        style = None
-    else:
-        prim.Add(style)
-
-    cnt = 0
-    for n in range(colors.GetLast() + 1):
-        if colors.At(n):
-            cnt = cnt + 1
-
-    # add all colors if there are more than 598 colors defined
-    if cnt < 599 or prim.FindObject(colors):
-        colors = None
-    else:
-        prim.Add(colors)
-
-    if colors:
-        pal = ROOT.TColor.GetPalette()
-        palette = ROOT.TObjArray()
-        palette.SetName("CurrentColorPalette")
-        for i in range(pal.GetSize()):
-            palette.Add(colors.At(pal[i]))
-        prim.Add(palette)
-
-    ROOT.TColor.DefinedColors()
-
-    canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 23)
-
-    # Cleanup primitives after conversion
-    if style is not None:
-        prim.Remove(style)
-    if colors is not None:
-        prim.Remove(colors)
-    if palette is not None:
-        prim.Remove(palette)
-
-    return canvas_json
-
-
 transformers = []
 
 
@@ -557,6 +504,9 @@ class CaptureDrawnPrimitives(object):
 
 
 class NotebookDrawerFile(object):
+    """
+    Special drawer for TFile - shows files hierarchy with possibility to draw objects
+    """
 
     def __init__(self, theObject, theOption=""):
        self.drawObject = theObject
@@ -685,11 +635,14 @@ class NotebookDrawerJson(object):
         elif self._canPngDisplay():
             displayFunction(self._getPngImage())
         else:
-            displayFunction(display.HTML(f"Drawing of {self.drawObject.ClassName()} is not implemented"))
+            displayFunction(display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} class is not implemented"))
 
 
 
 class NotebookDrawerGeometry(NotebookDrawerJson):
+    """
+    Drawer for geometry - png is not works with it.
+    """
 
     def __del__(self):
         self.drawObject.GetGeoManager().SetUserPaintVolume(ROOT.nullptr)
@@ -704,7 +657,8 @@ class NotebookDrawerGeometry(NotebookDrawerJson):
 
 class NotebookDrawerCanvBase(NotebookDrawerJson):
     """
-    Base class for TCanvas/RCanvas drawing. It includes live update of the canvas
+    Base class for TCanvas/RCanvas drawing.
+    Implementst specific Draw function where canvas update is handled
     """
 
     def _getCanvasId(self):
@@ -717,17 +671,15 @@ class NotebookDrawerCanvBase(NotebookDrawerJson):
         return self.drawObject
 
     def Draw(self, displayFunction):
-        global _enableJSVis
-        canvid = self._getCanvasId()
+        global _enableJSVis, _canvasHandles
         code = ""
         if _enableJSVis and self._canJsDisplay():
             code = display.HTML(self._getJsCode())
         elif self._canPngDisplay():
             code = self._getPngImage()
         else:
-            displayFunction(display.HTML(f"Drawing of {self.drawObject.ClassName()} is not implemented"))
+            code = display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} is implemented")
 
-        global _canvasHandles
         name = self._getCanvasId()
         updated = self._getUpdated()
         if updated and name and (name in _canvasHandles):
@@ -740,6 +692,9 @@ class NotebookDrawerCanvBase(NotebookDrawerJson):
 
 
 class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
+    """
+    Drawer of TCanvas.
+    """
 
     def __del__(self):
         self.drawObject.ResetDrawn()
@@ -780,10 +735,64 @@ class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
         return _jsCanvasHeight
 
     def _getJson(self):
-        return produceCanvasJson(self.drawObject).Data()
+        if self.drawObject.IsUpdated() and not self.drawObject.IsDrawn():
+            self.drawObject.Draw()
+
+        if TWebCanvasAvailable():
+            return ROOT.TWebCanvas.CreateCanvasJSON(self.drawObject, 23, True).Data()
+
+        # Add extra primitives to canvas with custom colors, palette, gStyle
+
+        prim = self.drawObject.GetListOfPrimitives()
+
+        style = ROOT.gStyle
+        colors = ROOT.gROOT.GetListOfColors()
+        palette = None
+
+        # always provide gStyle object
+        if prim.FindObject(style):
+            style = None
+        else:
+            prim.Add(style)
+
+        cnt = 0
+        for n in range(colors.GetLast() + 1):
+            if colors.At(n):
+                cnt = cnt + 1
+
+        # add all colors if there are more than 598 colors defined
+        if cnt < 599 or prim.FindObject(colors):
+            colors = None
+        else:
+            prim.Add(colors)
+
+        if colors:
+            pal = ROOT.TColor.GetPalette()
+            palette = ROOT.TObjArray()
+            palette.SetName("CurrentColorPalette")
+            for i in range(pal.GetSize()):
+                palette.Add(colors.At(pal[i]))
+            prim.Add(palette)
+
+        ROOT.TColor.DefinedColors()
+
+        canvas_json = ROOT.TBufferJSON.ConvertToJSON(self.drawObject, 23)
+
+        # Cleanup primitives after conversion
+        if style is not None:
+            prim.Remove(style)
+        if colors is not None:
+            prim.Remove(colors)
+        if palette is not None:
+            prim.Remove(palette)
+
+        return canvas_json.Data()
 
 
 class NotebookDrawerRCanvas(NotebookDrawerCanvBase):
+    """
+    Drawer of RCanvas.
+    """
 
     def __del__(self):
         self.drawObject.ClearShown()
