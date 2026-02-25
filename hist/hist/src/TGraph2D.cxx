@@ -598,7 +598,7 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
 
 void TGraph2D::Build(Int_t n)
 {
-   if (n <= 0) {
+   if (n < 0) {
       Error("TGraph2D", "Invalid number of points (%d)", n);
       return;
    }
@@ -609,12 +609,18 @@ void TGraph2D::Build(Int_t n)
    fNpy       = 40;
    fDirectory = nullptr;
    fHistogram = nullptr;
-   fDelaunay = nullptr;
+   fDelaunay  = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   fX         = new Double_t[fSize];
-   fY         = new Double_t[fSize];
-   fZ         = new Double_t[fSize];
+   if (n>0) {
+      fX = new Double_t[fSize];
+      fY = new Double_t[fSize];
+      fZ = new Double_t[fSize];
+   } else {
+      fX = nullptr;
+      fY = nullptr;
+      fZ = nullptr;
+   }
    fZout      = 0;
    fMaxIter   = 100000;
    fFunctions = new TList;
