@@ -169,8 +169,7 @@ class JupyROOTExecutor(Runner):
 def display_drawables(displayFunction):
     drawers = helpers.utils.GetDrawers()
     for drawer in drawers:
-        for dobj in drawer.GetDrawableObjects():
-            displayFunction(dobj)
+        drawer.Draw(displayFunction)
 
 
 class JupyROOTDisplayer(Runner):
