@@ -743,6 +743,43 @@ class TestMULTIDIMARRAYS:
             assert len(ns.str_array[i]) == 7
             assert ns.str_array[i].as_string() == v
 
+    def test06_fixed_multidim_array_itemsize(self):
+        """conversion of fixed-length array low level views into NumPy arrays"""
+        import cppyy
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip("numpy is not installed")
+
+        cases = [
+            ("float", np.float32, (3, 5)),
+            ("int", np.intc, (2, 6)),
+            ("short", np.short, (5, 3)),
+            ("unsigned char", np.ubyte, (4, 4)),
+            ("int32_t", np.int32, (2, 8)),
+            ("uint16_t", np.uint16, (7, 3)),
+        ]
+
+        for cpp_type, np_dtype, (rows, cols) in cases:
+            tag = cpp_type.replace(" ", "_")
+            cppyy.cppdef(f"""
+                struct cpp_arr_{tag} {{
+                    {cpp_type} a[{rows}][{cols}];
+                }};
+            """)
+            s = getattr(cppyy.gbl, f"cpp_arr_{tag}")()
+
+            itemsize = np.dtype(np_dtype).itemsize
+            mv = memoryview(s.a)
+            assert mv.ndim == 2
+            assert mv.shape == (rows, cols)
+            assert mv.itemsize == itemsize
+            assert mv.strides == (cols * itemsize, itemsize)
+
+            arr = np.array(s.a, dtype=np_dtype)
+            assert arr.shape == (rows, cols)
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
