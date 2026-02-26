@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 
