@@ -118,36 +118,36 @@ hbars.svg
 <text xml:space="preserve" x="45" y="48" fill="black" font-size="7.9" font-family="Helvetica" font-weight="bold">PT
 </text>
 <path d="M75,278h -13" fill="none" stroke="black"/>
-<path d="M506,278h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,262h -13" fill="none" stroke="black"/>
-<path d="M506,262h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,246h -13" fill="none" stroke="black"/>
-<path d="M506,246h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,230h -13" fill="none" stroke="black"/>
-<path d="M506,230h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,214h -13" fill="none" stroke="black"/>
-<path d="M506,214h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,197h -13" fill="none" stroke="black"/>
-<path d="M506,197h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,181h -13" fill="none" stroke="black"/>
-<path d="M506,181h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,165h -13" fill="none" stroke="black"/>
-<path d="M506,165h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,149h -13" fill="none" stroke="black"/>
-<path d="M506,149h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,133h -13" fill="none" stroke="black"/>
-<path d="M506,133h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,117h -13" fill="none" stroke="black"/>
-<path d="M506,117h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,101h -13" fill="none" stroke="black"/>
-<path d="M506,101h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,85h -13" fill="none" stroke="black"/>
-<path d="M506,85h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,69h -13" fill="none" stroke="black"/>
-<path d="M506,69h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,53h -13" fill="none" stroke="black"/>
-<path d="M506,53h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M75,36h -13" fill="none" stroke="black"/>
+<path d="M506,278h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,262h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,246h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,230h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,214h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,197h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,181h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,165h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,149h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,133h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,117h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,101h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,85h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,69h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M506,53h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M506,36h -444" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <g transform="rotate(-90,31,71)">
 <text xml:space="preserve" x="31" y="71" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">Nation
