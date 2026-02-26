@@ -19,6 +19,10 @@ on:
 
 jobs:
   update-visualstudio-latest:
+    if: ${{ github.event.schedule == '0  1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Update') }}
+
+    name: Update Visual Studio - Latest
+
     runs-on:
       - self-hosted
       - windows
@@ -26,13 +30,23 @@ jobs:
       - latest
 
     steps:
-    - name: Update Visual Studio - Latest
-      if: ${{ github.event.schedule == '0  1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Update') }}
+    - name: Update Visual Studio
       shell: cmd
       run: "C:\\bin\\vs_update.bat"
 
+  reboot-after-update:
+    if: ${{ github.event.schedule == '30 1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
+
+    name: Reboot after update
+
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - latest
+
+    steps:
     - name: Reboot
-      if: ${{ github.event.schedule == '30 1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
       shell: cmd
       run: "shutdown /r"
 
