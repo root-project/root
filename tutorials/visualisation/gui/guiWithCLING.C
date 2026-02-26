@@ -131,10 +131,10 @@ void MyApplication::DoEnteredCommand()
    if (strlen(command)) {
       // form temporary file path
       prompt = ((TRint *)gROOT->GetApplication())->GetPrompt();
-      FILE *cintout = fopen(fName.Data(), "a+t");
-      if (cintout) {
-         fputs(Form("%s%s\n", prompt.Data(), command), cintout);
-         fclose(cintout);
+      FILE *clingout = fopen(fName.Data(), "a+t");
+      if (clingout) {
+         fputs(Form("%s%s\n", prompt.Data(), command), clingout);
+         fclose(clingout);
       }
       gSystem->RedirectOutput(fName.Data(), "a");
       gROOT->ProcessLine(command);

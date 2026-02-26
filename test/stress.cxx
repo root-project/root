@@ -55,7 +55,7 @@
 // Test 13 : Test merging files of a chain......................... OK
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
-// Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
+// Test 16 : Cling test (3 nested loops) with LHCb trigger......... OK
 // Test 17 : Test mkdir............................................ OK
 // ******************************************************************
 //*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
@@ -269,7 +269,7 @@ void Bprint(Int_t id, const char *title)
 ///One function "f1form" will be computed by the TFormula class
 ///The second function "f1int" will be
 ///   - compiled when running in batch mode
-///   - interpreted by CINT when running in interactive mode
+///   - interpreted by Cling when running in interactive mode
 
 void stress1()
 {
@@ -320,7 +320,7 @@ void stress1()
    Double_t rint = TMath::Abs(f1form->Integral(-8,6) - 1923.74578);
 
    //Some slight differences are authorized to take into account
-   //different math libraries used by the compiler, CINT and TFormula
+   //different math libraries used by the compiler, Cling and TFormula
    Bool_t OK = kTRUE;
    if (hdiff > 0.1 || pdifftot > 2.e-3 || rint > 10) OK = kFALSE;
    if (OK) printf("OK\n");
@@ -1490,7 +1490,7 @@ void stress16()
 // A canvas with subpads containing the results is sent to Postscript.
 // We check graphics results by counting the number of lines in the ps file.
 
-   Bprint(16,"CINT test (3 nested loops) with LHCb trigger");
+   Bprint(16,"Cling test (3 nested loops) with LHCb trigger");
 
    const int nbuf    = 153;    // buffer size
    const int nlev    = 4;      // number of trigger levels
