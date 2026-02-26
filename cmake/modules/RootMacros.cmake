@@ -655,7 +655,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # NOTE: DEPFILE is used instead of IMPLICIT_DEPENDS because IMPLICIT_DEPENDS
   # only works with Unix Makefiles and has issues with cross-directory dependencies.
   # DEPFILE works with all generators (Ninja, Unix Makefiles, etc.)
-  set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.d)
+  set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.depfile)
 
   if(ARG_MODULE)
     set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
