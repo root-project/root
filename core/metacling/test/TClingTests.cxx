@@ -435,3 +435,9 @@ TEST_F(TClingTests, UndeclaredIdentifierCrash)
    diagRAII.requiredDiag(kError, "cling", expectedError, false);
    gInterpreter->ProcessLine("for(i=0; i < 0;); // the second usage of `i` was enough to get a segfault");
 }
+
+TEST_F(TClingTests, TupleEmpty)
+{
+   auto cl = TClass::GetClass("tuple<>");
+   EXPECT_TRUE(cl);
+}

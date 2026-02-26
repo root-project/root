@@ -4017,6 +4017,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    {
       // Check if we can produce the tuple
       auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
+      if (iter->empty()) {                            // skip empty template parameter list
+         iter++;
+      }
       auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
       auto deleter = [](TypeInfo_t *type) {
          gInterpreter->TypeInfo_Delete(type);
@@ -4054,6 +4057,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       case ETupleOrdering::kAscending: {
          unsigned int nMember = 0;
          auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
+         if (iter->empty()) {                            // skip empty template parameter list
+            iter++;
+         }
          auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
          auto sep = ':';
          while (iter != theEnd) {
@@ -4068,6 +4074,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       case ETupleOrdering::kDescending: {
          unsigned int nMember = tupleContent.fElements.size() - 3;
          auto iter = tupleContent.fElements.rbegin() + 1; // skip the 'stars'.
+         if (iter->empty()) {                             // skip empty template parameter list
+            iter++;
+         }
          auto theEnd = tupleContent.fElements.rend() - 1; // Skip the template name (tuple).
          auto sep = ':';
          while (iter != theEnd) {

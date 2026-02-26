@@ -456,17 +456,15 @@ namespace Templates {
    EXPECT_EQ(names.count("Nc"), 0);
    EXPECT_EQ(names.count("Nd"), 0);
 
-   //[1]: See comment in TClingCXXRecMethIter::InstantiateTemplateWithDefaults()
-   // handling parameter packs.
    EXPECT_EQ(names.count("Ya<int>"), 1);
-   //EXPECT_EQ(names.count("Yb"), 1); //[1]
+   EXPECT_EQ(names.count("Yb<>"), 1);
    EXPECT_EQ(names.count("Yc<12>"), 1);
    EXPECT_EQ(names.count("Yd1<Templates::TypeArg>"), 1);
    EXPECT_EQ(names.count("Yd2<Templates::TemplateArg>"), 1);
    EXPECT_EQ(names.count("Ye<int>"), 1);
    EXPECT_EQ(names.count("Yf<int>"), 1);
-   //EXPECT_EQ(names.count("Yg<int>"), 1); //[1]
-   //EXPECT_EQ(names.count("Yh<int, int>"), 1); //[1]
+   EXPECT_EQ(names.count("Yg<int>"), 1);
+   EXPECT_EQ(names.count("Yh<int, int>"), 1);
 
    // These do a lookup / overload set, and can materialize functions (like Yb)
    // that the enumeration above failed to catch; see overriding

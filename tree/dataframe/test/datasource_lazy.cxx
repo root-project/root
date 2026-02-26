@@ -66,6 +66,14 @@ TEST(RLazyDS, Constructor)
    }
 }
 
+TEST(RLazyDS, Empty)
+{
+   RLazyDS<> lazy;
+   for (auto &&range : lazy.GetEntryRanges()) {
+      EXPECT_EQ(range.first, 0);
+      EXPECT_EQ(range.second, 0);
+   }
+}
 
 TEST(RLazyDS, RangesOneSlot)
 {
