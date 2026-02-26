@@ -251,9 +251,14 @@ std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
       // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
       colType = ComposeRVecTypeName(colType);
    } else if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() > 1) {
-      // we do not know how to deal with this branch
-      throw std::runtime_error("TTree leaf " + colName +
-                               " has both a leaf count and a static length. This is not supported.");
+      // This case is encountered when a branch is a collection (e.g. std::vector) of a user-defined class which has
+      // a data member that is a fixed-size array. Here, 'leaf' is said data member, and the user could read it
+      // partially as std::vector<std::array<T, N>>. We expose it as ROOT::RVec<std::array<T, N>> for consistency with
+      // other collection types.
+      // WARNING: Currently this considers only the possibility of a 1-dim array, as TLeaf does not expose information
+      // to get all dimension lengths of a multi-dim array.
+      auto valueType = colType;
+      colType = "ROOT::VecOps::RVec<std::array<" + valueType + ", " + std::to_string(leaf->GetLenStatic()) + ">>";
    }
 
    return colType;

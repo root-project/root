@@ -107,7 +107,9 @@ bool IsCPContiguous(const TVirtualCollectionProxy &cp)
 
 UInt_t GetCPValueSize(const TVirtualCollectionProxy &cp)
 {
-   // This works only if the collection proxy value type is a fundamental type
+   if (auto cl = cp.GetValueClass())
+      return cl->Size();
+
    auto &&eDataType = cp.GetType();
    auto *tDataType = TDataType::GetDataType(eDataType);
    return tDataType ? tDataType->Size() : 0;
@@ -645,7 +647,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 
    if (!myLeaf) {
       TString branchActualTypeName;
-      const char *nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType);
+      StreamerElementArrayInfo arrInfo;
+      const char *nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType, arrInfo);
       if (nonCollTypeName) {
          Error("TTreeReaderArrayBase::CreateContentProxy()",
                "The branch %s contains data of type %s, which should be accessed through a TTreeReaderValue< %s >.",
@@ -671,7 +674,52 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          return;
       }
 
-      auto matchingDataType = [](TDictionary *left, TDictionary *right) -> bool {
+      auto matchingArrayInfo = [](TDictionary *requestedDict, const StreamerElementArrayInfo &info) {
+         // Support the case of a data member of a class being a std::array (or generally an n-dim fixed size array)
+         // In this case the 'left' TDictionary has been requested as a TClass (e.g. std::array<int, 3>) and thus
+         // will not be a TDataType, but the 'right' TDictionary will be retrieved as a TDataType (e.g. int), because
+         // of how the fixed-size array data member is streamed.
+         // The 'right' TDictionary in this case refers to a TBranchElement representing the data member. We already
+         // gathered the array info by accessing the TStreamerElement of the TBranchElement, now we need to do the same
+         // for the 'left' TDictionary, which represents what the user requested.
+         auto cl = dynamic_cast<TClass *>(requestedDict);
+         if (!cl)
+            return false;
+         auto streamerInfo = cl->GetStreamerInfo();
+         if (!streamerInfo)
+            return false;
+
+         auto streamerElements = streamerInfo->GetElements();
+         if (!streamerElements)
+            return false;
+
+         // We don't know what to do when there is more than one streamer element
+         if (streamerElements->GetEntries() > 1)
+            return false;
+
+         auto streamerElement = dynamic_cast<TStreamerElement *>(streamerElements->At(0));
+         if (!streamerElement)
+            return false;
+
+         int dataTypeCode{};
+         if (auto *dataType = gROOT->GetType(streamerElement->GetTypeNameBasic()))
+            dataTypeCode = dataType->GetType();
+
+         auto checkArrayDims = [&]() {
+            for (int i = 0; i < info.fArrayNDims; i++) {
+               if (info.fArrayDims[i] != streamerElement->GetMaxIndex(i))
+                  return false;
+            }
+            return true;
+         };
+
+         return streamerElement->GetArrayDim() == info.fArrayNDims &&
+                streamerElement->GetArrayLength() == info.fArrayCumulativeLength && checkArrayDims() &&
+                dataTypeCode == info.fTDataTypeCode;
+      };
+
+      auto matchingDataType = [&matchingArrayInfo](TDictionary *left, TDictionary *right,
+                                                   const StreamerElementArrayInfo &info) -> bool {
          if (left == right)
             return true;
          if (!left || !right)
@@ -687,6 +735,22 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          if ((left_datatype && right_enum && left_datatype->GetType() == right_enum->GetUnderlyingType()) ||
              (right_datatype && left_enum && right_datatype->GetType() == left_enum->GetUnderlyingType()))
             return true;
+
+         // Allow reading nested std::array data members of top-level std::vector<Class> types. The user has requested
+         // e.g. TTreeReaderArray<std::array<int, 3>> and we allow partial reading of the std::vector<Class> as a
+         // collection of std::array<int, 3>
+         if (matchingArrayInfo(left, info))
+            return true;
+
+         // Allow reading a std::array data member of a top-level class branch when requesting a TTreeReaderArray
+         // of the same type as the std::array data type (e.g. branch contains std::array<int, 3> and user requests
+         // TTreeReaderArray<int>). In this case the 'left' dictionary is going to be a TDataType of int.
+         if (left_datatype) {
+            auto typeCode = left_datatype->GetType();
+            if (typeCode > 0 && typeCode == info.fTDataTypeCode)
+               return true;
+         }
+
          if (!left_datatype || !right_datatype)
             return false;
          auto l = left_datatype->GetType();
@@ -698,7 +762,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
                     (l == kFloat16_t && r == kFloat_t) || (l == kFloat_t && r == kFloat16_t));
       };
 
-      if (!matchingDataType(fDict, branchActualType)) {
+      if (!matchingDataType(fDict, branchActualType, arrInfo)) {
          Error("TTreeReaderArrayBase::CreateContentProxy()",
                "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
                fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
@@ -930,7 +994,8 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch *branch, TLeaf *myLea
 /// In all other cases, NULL is returned.
 
 const char *ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBranch *branch, TString &contentTypeName,
-                                                                           TDictionary *&dict)
+                                                                           TDictionary *&dict,
+                                                                           StreamerElementArrayInfo &arrInfo)
 {
    dict = nullptr;
    contentTypeName = "";
@@ -999,6 +1064,17 @@ const char *ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
                contentTypeName = TDataType::GetTypeName(dtData);
                return nullptr;
             }
+            // Fill information about the data member being an n-dim array
+            auto streamerEl = brElement->GetInfo()->GetElement(brElement->GetID());
+            if (streamerEl) {
+               arrInfo.fArrayNDims = streamerEl->GetArrayDim();
+               arrInfo.fArrayCumulativeLength = streamerEl->GetArrayLength();
+               if (auto *datatype = gROOT->GetType(streamerEl->GetTypeNameBasic())) {
+                  arrInfo.fTDataTypeCode = datatype->GetType();
+               }
+               for (int i = 0; i < arrInfo.fArrayNDims; ++i)
+                  arrInfo.fArrayDims[i] = streamerEl->GetMaxIndex(i);
+            }
             return nullptr;
          } else if (ExpectedTypeRet == 1) {
             int brID = brElement->GetID();
@@ -1026,6 +1102,16 @@ const char *ROOT::Internal::TTreeReaderArrayBase::GetBranchContentDataType(TBran
 
          if (id >= 0) {
             TStreamerElement *element = (TStreamerElement *)streamerInfo->GetElements()->At(id);
+            // Fill information about the data member being an n-dim array
+            if (element) {
+               arrInfo.fArrayNDims = element->GetArrayDim();
+               arrInfo.fArrayCumulativeLength = element->GetArrayLength();
+               if (auto *datatype = gROOT->GetType(element->GetTypeNameBasic())) {
+                  arrInfo.fTDataTypeCode = datatype->GetType();
+               }
+               for (int i = 0; i < arrInfo.fArrayNDims; ++i)
+                  arrInfo.fArrayDims[i] = element->GetMaxIndex(i);
+            }
 
             if (element->IsA() == TStreamerSTL::Class()) {
                TClass *myClass = brElement->GetCurrentClass();

@@ -26,6 +26,14 @@ Base class of TTreeReaderArray.
 */
 
 class TTreeReaderArrayBase : public TTreeReaderValueBase {
+   struct StreamerElementArrayInfo {
+      int fArrayNDims{};               // Number of dimensions of the n-dim array
+      int fArrayCumulativeLength{};    // Total length of the n-dim array as if it were flattened
+      int fTDataTypeCode{};            // A number representing the value type of the array, queried via TDataType.
+      std::array<int, 5> fArrayDims{}; // Length of each dimension of the n-dim array. Max 5 dimensions, aligned with
+                                       // TStreamerElement::fMaxIndex
+   };
+
 public:
    TTreeReaderArrayBase(TTreeReader *reader, const char *branchname, TDictionary *dict)
       : TTreeReaderValueBase(reader, branchname, dict)
@@ -48,7 +56,8 @@ protected:
    bool GetBranchAndLeaf(TBranch *&branch, TLeaf *&myLeaf, TDictionary *&branchActualType,
                          bool suppressErrorsForMissingBranch = false);
    void SetImpl(TBranch *branch, TLeaf *myLeaf);
-   const char *GetBranchContentDataType(TBranch *branch, TString &contentTypeName, TDictionary *&dict);
+   const char *GetBranchContentDataType(TBranch *branch, TString &contentTypeName, TDictionary *&dict,
+                                        StreamerElementArrayInfo &arrInfo);
 
    std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
