@@ -312,8 +312,8 @@ protected:
   virtual bool syncNormalization(const RooArgSet* dset, bool adjustProxies=true) const ;
 
   mutable double _rawValue = 0;
-  mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
-  mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
+  mutable RooAbsReal* _norm = nullptr; ///<! Normalization integral (owned by _normMgr)
+  mutable RooArgSet const* _normSet = nullptr; ///<! Normalization set with for above integral
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -322,7 +322,7 @@ protected:
     RooArgList containedArgs(Action) override { return RooArgList(*_norm) ; }
     std::unique_ptr<RooAbsReal> _norm;
   } ;
-  mutable RooObjCacheManager _normMgr ; //! The cache manager
+  mutable RooObjCacheManager _normMgr ; ///<! The cache manager
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                    bool nameChange, bool isRecursiveStep) override;

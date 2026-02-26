@@ -137,21 +137,21 @@ namespace ROOT {
          static void ProcessDeclaration( TObjArray* array, const TString& list );
 
          TString                      fVersion;        //  Source version string
-         mutable std::vector<std::pair<Int_t, Int_t> >* fVersionVect;    //! Source version vector (for searching purposes)
+         mutable std::vector<std::pair<Int_t, Int_t> >* fVersionVect;    ///<! Source version vector (for searching purposes)
          TString                      fChecksum;       //  Source checksum string
-         mutable std::vector<UInt_t>* fChecksumVect;   //! Source checksum vector (for searching purposes)
+         mutable std::vector<UInt_t>* fChecksumVect;   ///<! Source checksum vector (for searching purposes)
          TString                      fSourceClass;    //  Source class
          TString                      fTargetClass;    //  Target class, this is the owner of this rule object.
          TString                      fTarget;         //  Target data mamber string
-         mutable TObjArray*           fTargetVect;     //! Target data member vector (for searching purposes)
+         mutable TObjArray*           fTargetVect;     ///<! Target data member vector (for searching purposes)
          TString                      fSource;         //  Source data member string
-         mutable TObjArray*           fSourceVect;     //! Source data member vector (for searching purposes)
+         mutable TObjArray*           fSourceVect;     ///<! Source data member vector (for searching purposes)
          TString                      fInclude;        //  Includes string
-         mutable TObjArray*           fIncludeVect;    //! Includes vector
+         mutable TObjArray*           fIncludeVect;    ///<! Includes vector
          TString                      fCode;           //  User specified code snippet
          Bool_t                       fEmbed;          //  Value determining if the rule should be embedded
-         ReadFuncPtr_t                fReadFuncPtr;    //! Conversion function pointer for read rule
-         ReadRawFuncPtr_t             fReadRawFuncPtr; //! Conversion function pointer for readraw rule
+         ReadFuncPtr_t                fReadFuncPtr;    ///<! Conversion function pointer for read rule
+         ReadRawFuncPtr_t             fReadRawFuncPtr; ///<! Conversion function pointer for readraw rule
          RuleType_t                   fRuleType;       //  Type of the rule
          TString                      fAttributes;     //  Attributes to be applied to the member (like Owner/NotOwner)
 

@@ -26,7 +26,7 @@
 class THbookKey : public TNamed {
 
 protected:
-   THbookFile    *fDirectory;   //!pointer to the Hbook file
+   THbookFile    *fDirectory;   ///<!pointer to the Hbook file
    Int_t          fID;          //hbook identifier
 
 public:

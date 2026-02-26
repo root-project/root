@@ -78,9 +78,9 @@ private:
    TProcessID& operator=(const TProcessID &ref) = delete;
 
 protected:
-   std::atomic_int    fCount;                           //!Reference count to this object (from TFile)
-   ROOT::Internal::TAtomicPointer<TObjArray*> fObjects; //!Array pointing to the referenced objects
-   std::atomic_flag   fLock;                            //!Spin lock for initialization of fObjects
+   std::atomic_int    fCount;                           ///<!Reference count to this object (from TFile)
+   ROOT::Internal::TAtomicPointer<TObjArray*> fObjects; ///<!Array pointing to the referenced objects
+   std::atomic_flag   fLock;                            ///<!Spin lock for initialization of fObjects
 
    static TProcessID *fgPID;      //Pointer to current session ProcessID
    static TObjArray  *fgPIDs;     //Table of ProcessIDs

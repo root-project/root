@@ -40,7 +40,7 @@ private:
    TContextMenu& operator=(const TContextMenu&) = delete; // TContextMenu can not be copied since we do not know the actual type of the TContextMenuImp (and it can not be 'Cloned')
 
 protected:
-   TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation
+   TContextMenuImp *fContextMenuImp;      ///<!Context menu system specific implementation
    TFunction       *fSelectedMethod;      //selected method
    TObject         *fSelectedObject;      //selected object
    TObject         *fCalledObject;        //object to call

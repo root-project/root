@@ -541,8 +541,8 @@ private:
    TString _label;                                         ///< Plot label for objects value
    bool _forceNumInt = false;                              ///< Force numerical integration if flag set
    std::unique_ptr<RooNumIntConfig> _specIntegratorConfig; // Numeric integrator configuration specific for this object
-   TreeReadBuffer *_treeReadBuffer = nullptr;              //! A buffer for reading values from trees
-   bool _selectComp = true;                                //! Component selection flag for RooAbsPdf::plotCompOn
+   TreeReadBuffer *_treeReadBuffer = nullptr;              ///<! A buffer for reading values from trees
+   bool _selectComp = true;                                ///<! Component selection flag for RooAbsPdf::plotCompOn
    mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
 
    static bool _globalSelectComp; // Global activation switch for component selection

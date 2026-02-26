@@ -125,8 +125,8 @@ namespace TMVA {
       DataSet* Data() { return fDataSetInfo.GetDataSet(); }
 
       DataSetInfo&          fDataSetInfo;                     // pointer to the datasetinfo
-      TList                 fTransformations;                 //! list of transformations
-      std::vector< Int_t >  fTransformationsReferenceClasses; //! reference classes for the transformations
+      TList                 fTransformations;                 ///<! list of transformations
+      std::vector< Int_t >  fTransformationsReferenceClasses; ///<! reference classes for the transformations
       std::vector<std::vector<TMVA::TransformationHandler::VariableStat> >  fVariableStats; // first the variables, then the targets
 
       Int_t                 fNumC;               ///< number of categories (#classes +1)

@@ -48,9 +48,9 @@ R__EXTERN void *gTQSender;   // the latest sender object
 class TQObject {
 
 protected:
-   TList   *fListOfSignals;        //! list of signals from this object
-   TList   *fListOfConnections;    //! list of connections to this object
-   Bool_t   fSignalsBlocked;       //! flag used for suppression of signals
+   TList   *fListOfSignals;        ///<! list of signals from this object
+   TList   *fListOfConnections;    ///<! list of connections to this object
+   Bool_t   fSignalsBlocked;       ///<! flag used for suppression of signals
 
    static Bool_t fgAllSignalsBlocked;  // flag used for suppression of all signals
 

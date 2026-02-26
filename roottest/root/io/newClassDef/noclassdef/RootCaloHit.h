@@ -160,8 +160,8 @@ public:
    RootPCellID      myArr[3];
    RootPCtemp<int> *myArrFix[4];
    int index;
-   RootPCellID    **myArrVar;    //![index]  WAITING on Vicktor's implementation [index]
-   RootPCellID     *objVarArr;   //![index]  Not implemented yet ... will it ever?
+   RootPCellID    **myArrVar;    ///<![index]  WAITING on Vicktor's implementation [index]
+   RootPCellID     *objVarArr;   ///<![index]  Not implemented yet ... will it ever?
    RootPCnoRequestedDict     mynocell;
    RootPCellID     *mycellnull;
    RootPCellID     *mycellfix; //
@@ -186,22 +186,22 @@ public:
    RootPCobject     myobjarr[2];    //
    RootPCobject2    myobjarr2[2];   //
 #else
-   RootPCobject     myobj;          //!
-   RootPCobject2    myobj2;         //!
-   RootPCellID     *myobjp;         //!
-   RootPCellID     *myobj2p;        //!
-   RootPCobject    *myobjSt;        //!->
-   RootPCobject2   *myobj2St;       //!->
-   TObject         *mytobjp;        //!
-   TObject         *mytobj2p;       //!
-   TObject         *mytobjSt;       //!->
-   TObject         *mytobj2St;      //!->
+   RootPCobject     myobj;          ///<!
+   RootPCobject2    myobj2;         ///<!
+   RootPCellID     *myobjp;         ///<!
+   RootPCellID     *myobj2p;        ///<!
+   RootPCobject    *myobjSt;        ///<!->
+   RootPCobject2   *myobj2St;       ///<!->
+   TObject         *mytobjp;        ///<!
+   TObject         *mytobj2p;       ///<!
+   TObject         *mytobjSt;       ///<!->
+   TObject         *mytobj2St;      ///<!->
 
-   RootPCobject    *myobjdp;         //!
-   RootPCobject2   *myobj2dp;        //!
+   RootPCobject    *myobjdp;         ///<!
+   RootPCobject2   *myobj2dp;        ///<!
 
-   RootPCobject     myobjarr[2];     //!
-   RootPCobject2    myobjarr2[2];    //!
+   RootPCobject     myobjarr[2];     ///<!
+   RootPCobject2    myobjarr2[2];    ///<!
 #endif
 
    ClassDefOverride(RootCaloHit,1)

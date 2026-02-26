@@ -59,10 +59,10 @@ protected:
    Float_t           fWidth;
    Float_t           fHeight;
 
-   Int_t             fMouseX, fMouseY; //! last mouse position
-   EDrag             fDrag;            //!
-   Float_t           fDrawW,  fDrawH;  //! width and height when drawing
-   Float_t           fTextSizeDrag;    //! text-size at start of drag
+   Int_t             fMouseX, fMouseY; ///<! last mouse position
+   EDrag             fDrag;            ///<!
+   Float_t           fDrawW,  fDrawH;  ///<! width and height when drawing
+   Float_t           fTextSizeDrag;    ///<! text-size at start of drag
 
    TGLVector3        fPointer;         // picked location in 3D space
    Bool_t            fActive;          // active item identifier

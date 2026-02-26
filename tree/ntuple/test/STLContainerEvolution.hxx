@@ -33,7 +33,7 @@ struct std::hash<std::pair<short int, short int>> {
 template <typename T>
 struct CollectionProxy {
    using ValueType = T;
-   std::vector<T> v; //!
+   std::vector<T> v; ///<!
 };
 
 #endif

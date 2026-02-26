@@ -34,7 +34,7 @@ friend class TObjArrayIter;
 friend class TClonesArray;
 
 protected:
-   TObject     **fCont;        //!Array contents
+   TObject     **fCont;        ///<!Array contents
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 

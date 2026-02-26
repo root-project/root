@@ -146,7 +146,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
       if ( obj ) {
          target->cd();
 
-         //!!if the object is a tree, it is stored in globChain...
+         ///<!!if the object is a tree, it is stored in globChain...
          if(obj->IsA()->InheritsFrom( TTree::Class() ))
             globChain->Merge(target->GetFile(),0,"keep");
          else

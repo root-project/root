@@ -61,7 +61,7 @@ public:
    std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
-   mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
+   mutable RooObjCacheManager _normIntMgr; ///<! The integration cache manager
 
    bool _haveLastCoef;
 

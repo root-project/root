@@ -130,7 +130,7 @@ public:
    PyObject *Dispatch(const char *name, const TList *attr);
 
 private:
-   PyObject *fCallable; //! callable object to be dispatched
+   PyObject *fCallable; ///<! callable object to be dispatched
 };
 
 #endif

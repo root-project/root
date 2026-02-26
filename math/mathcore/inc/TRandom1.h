@@ -37,7 +37,7 @@ protected:
   const Int_t     fIntModulus;
   static Int_t    fgNumEngines;
   static Int_t    fgMaxIndex;
-  const UInt_t   *fTheSeeds;           //! Temporary array of seed values (transient)
+  const UInt_t   *fTheSeeds;           ///<! Temporary array of seed values (transient)
   const Double_t  fMantissaBit24;
   const Double_t  fMantissaBit12;
 

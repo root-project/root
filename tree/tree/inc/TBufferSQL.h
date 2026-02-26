@@ -32,9 +32,9 @@ class TBufferSQL final : public TBufferFile {
 private:
    std::vector<Int_t>::const_iterator fIter;
 
-   std::vector<Int_t>  *fColumnVec{nullptr};   //!
-   TString             *fInsertQuery{nullptr}; //!
-   TSQLRow            **fRowPtr{nullptr};      //!
+   std::vector<Int_t>  *fColumnVec{nullptr};   ///<!
+   TString             *fInsertQuery{nullptr}; ///<!
+   TSQLRow            **fRowPtr{nullptr};      ///<!
 
    // TBuffer objects cannot be copied or assigned
    TBufferSQL(const TBufferSQL &);        // not implemented

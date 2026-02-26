@@ -70,8 +70,8 @@ protected:
 
    TString        fMajorName;               // Index major name
    TString        fMinorName;               // Index minor name
-   TTreeFormula  *fMajorFormulaParent;      //! Pointer to major TreeFormula in Parent tree (if any)
-   TTreeFormula  *fMinorFormulaParent;      //! Pointer to minor TreeFormula in Parent tree (if any)
+   TTreeFormula  *fMajorFormulaParent;      ///<! Pointer to major TreeFormula in Parent tree (if any)
+   TTreeFormula  *fMinorFormulaParent;      ///<! Pointer to minor TreeFormula in Parent tree (if any)
    std::vector<TChainIndexEntry> fEntries;  // descriptions of indices of trees in the chain.
 
    std::pair<TVirtualIndex*, Int_t> GetSubTreeIndex(Long64_t major, Long64_t minor) const;

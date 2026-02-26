@@ -97,7 +97,7 @@ protected:
     int yz = 0;
     int xyz = 0;
   };
-  mutable NumBins _numBinsPerDim; //!
+  mutable NumBins _numBinsPerDim; ///<!
   mutable RooDataHist _dataSet;
 
   Int_t getCurrentBin() const;

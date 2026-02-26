@@ -54,7 +54,7 @@ template <class T> struct SmartRefVector : public std::vector<SmartRef<T> > {
 };
 
 struct DataObject  {
-  int f; //! transient
+  int f; ///<! transient
   DataObject() : f(0) {}
   virtual ~DataObject() {}
 };

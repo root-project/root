@@ -104,7 +104,7 @@ protected:
   double    _z ;
 
   void syncMuVec() const ;
-  mutable TVectorD _muVec ; //! Do not persist
+  mutable TVectorD _muVec ; ///<! Do not persist
 
   double evaluate() const override ;
 

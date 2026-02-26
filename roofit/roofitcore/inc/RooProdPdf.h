@@ -171,7 +171,7 @@ private:
 
   std::unique_ptr<CacheElem> createCacheElem(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const;
 
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;

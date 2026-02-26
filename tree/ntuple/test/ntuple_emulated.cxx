@@ -516,7 +516,7 @@ TEST(RNTupleEmulated, CollectionProxy)
          template <typename T>
          struct StructWithCollectionProxyForEmuTest {
             using ValueType = T;
-            std::vector<T> v; //! do not accidentally store via RClassField
+            std::vector<T> v; ///<! do not accidentally store via RClassField
          };
 
          // Copypasted from SimpleCollectionProxy.hxx

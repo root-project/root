@@ -104,7 +104,7 @@ protected:
    REvePointSet **fBins{nullptr};       //  Pointers to subjugated REvePointSet's.
    Int_t          fDefPointSetCapacity; //  Default capacity of subjugated REvePointSet's.
    Int_t          fNBins;               //  Number of subjugated REvePointSet's.
-   Int_t          fLastBin;             //! Index of the last filled REvePointSet.
+   Int_t          fLastBin;             ///<! Index of the last filled REvePointSet.
    Double_t       fMin, fCurMin;        //  Overall and current minimum value of the separating quantity.
    Double_t       fMax, fCurMax;        //  Overall and current maximum value of the separating quantity.
    Double_t       fBinWidth;            //  Separating quantity bin-width.

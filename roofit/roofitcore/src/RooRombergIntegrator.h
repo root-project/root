@@ -84,7 +84,7 @@ protected:
 
    // Numerical integrator workspace
    std::vector<double> _wksp; ///<! Integrator workspace
-   std::vector<double> _x;    //! do not persist
+   std::vector<double> _x;    ///<! do not persist
 };
 
 #endif

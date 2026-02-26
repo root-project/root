@@ -18,7 +18,7 @@ public:
 template <typename T>
 class DataVectorTmplt {
 public:
-   std::vector<T> fValues; //!
+   std::vector<T> fValues; ///<!
 
    void Fill(unsigned long seed) {
       T obj;
@@ -38,7 +38,7 @@ public:
 
 class DataVectorConcrete {
 public:
-   std::vector<Content> fValues; //!
+   std::vector<Content> fValues; ///<!
 
    void Fill(unsigned long seed) {
       Content obj;

@@ -39,8 +39,7 @@ class TFileInfoMeta;
 class TFileInfo : public TNamed {
 
 private:
-   TUrl            *fCurrentUrl;     //! current URL to access the file, points to URL
-                                     //  in the fUrlList or 0, if the list end is reached
+   TUrl            *fCurrentUrl;     ///<! current URL to access the file, points to URL in the fUrlList or 0, if the list end is reached
    TList           *fUrlList;        // list of file URLs
    Long64_t         fSize;           // file size
    TUUID           *fUUID;           //-> uuid of the referenced file

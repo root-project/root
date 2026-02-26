@@ -75,49 +75,49 @@ private:
 
 protected:
    // External handles
-   TVirtualPad   *fPad;         //! external pad - remove replace with signal
+   TVirtualPad   *fPad;         ///<! external pad - remove replace with signal
 
    // GUI Handles
-   TContextMenu  *fContextMenu; //!
+   TContextMenu  *fContextMenu; ///<!
 
    // Cameras
    // TODO: Put in vector and allow external creation
-   TGLPerspectiveCamera fPerspectiveCameraXOZ; //!
-   TGLPerspectiveCamera fPerspectiveCameraYOZ; //!
-   TGLPerspectiveCamera fPerspectiveCameraXOY; //!
-   TGLOrthoCamera       fOrthoXOYCamera;       //!
-   TGLOrthoCamera       fOrthoXOZCamera;       //!
-   TGLOrthoCamera       fOrthoZOYCamera;       //!
-   TGLOrthoCamera       fOrthoZOXCamera;       //!
-   TGLOrthoCamera       fOrthoXnOYCamera;      //!
-   TGLOrthoCamera       fOrthoXnOZCamera;      //!
-   TGLOrthoCamera       fOrthoZnOYCamera;      //!
-   TGLOrthoCamera       fOrthoZnOXCamera;      //!
-   TGLCamera           *fCurrentCamera;        //!
-   TGLAutoRotator      *fAutoRotator;          //!
+   TGLPerspectiveCamera fPerspectiveCameraXOZ; ///<!
+   TGLPerspectiveCamera fPerspectiveCameraYOZ; ///<!
+   TGLPerspectiveCamera fPerspectiveCameraXOY; ///<!
+   TGLOrthoCamera       fOrthoXOYCamera;       ///<!
+   TGLOrthoCamera       fOrthoXOZCamera;       ///<!
+   TGLOrthoCamera       fOrthoZOYCamera;       ///<!
+   TGLOrthoCamera       fOrthoZOXCamera;       ///<!
+   TGLOrthoCamera       fOrthoXnOYCamera;      ///<!
+   TGLOrthoCamera       fOrthoXnOZCamera;      ///<!
+   TGLOrthoCamera       fOrthoZnOYCamera;      ///<!
+   TGLOrthoCamera       fOrthoZnOXCamera;      ///<!
+   TGLCamera           *fCurrentCamera;        ///<!
+   TGLAutoRotator      *fAutoRotator;          ///<!
 
    // Stereo
-   Bool_t               fStereo;               //! use stereo rendering
-   Bool_t               fStereoQuadBuf;        //! draw quad buffer or left/right stereo in left/right half of window
-   Float_t              fStereoZeroParallax;   //! position of zero-parallax plane: 0 - near clipping plane, 1 - far clipping plane
-   Float_t              fStereoEyeOffsetFac;   //!
-   Float_t              fStereoFrustumAsymFac; //!
+   Bool_t               fStereo;               ///<! use stereo rendering
+   Bool_t               fStereoQuadBuf;        ///<! draw quad buffer or left/right stereo in left/right half of window
+   Float_t              fStereoZeroParallax;   ///<! position of zero-parallax plane: 0 - near clipping plane, 1 - far clipping plane
+   Float_t              fStereoEyeOffsetFac;   ///<!
+   Float_t              fStereoFrustumAsymFac; ///<!
 
    // Lights
-   TGLLightSet         *fLightSet;             //!
+   TGLLightSet         *fLightSet;             ///<!
    // Clipping
-   TGLClipSet          *fClipSet;              //!
+   TGLClipSet          *fClipSet;              ///<!
    // Selected physical
-   TGLSelectRecord      fCurrentSelRec;        //! select record in use as selected
-   TGLSelectRecord      fSelRec;               //! select record from last select (should go to context)
-   TGLSelectRecord      fSecSelRec;            //! select record from last secondary select (should go to context)
-   TGLManipSet         *fSelectedPShapeRef;    //!
+   TGLSelectRecord      fCurrentSelRec;        ///<! select record in use as selected
+   TGLSelectRecord      fSelRec;               ///<! select record from last select (should go to context)
+   TGLSelectRecord      fSecSelRec;            ///<! select record from last secondary select (should go to context)
+   TGLManipSet         *fSelectedPShapeRef;    ///<!
    // Overlay
-   TGLOverlayElement   *fCurrentOvlElm;        //! current overlay element
-   TGLOvlSelectRecord   fOvlSelRec;            //! select record from last overlay select
+   TGLOverlayElement   *fCurrentOvlElm;        ///<! current overlay element
+   TGLOvlSelectRecord   fOvlSelRec;            ///<! select record from last overlay select
 
-   TGEventHandler      *fEventHandler;         //! event handler
-   TGedEditor          *fGedEditor;            //! GED editor
+   TGEventHandler      *fEventHandler;         ///<! event handler
+   TGedEditor          *fGedEditor;            ///<! GED editor
    TGLPShapeObj        *fPShapeWrap;
 
    // Mouse ineraction
@@ -132,35 +132,35 @@ protected:
    EDragAction          fDragAction;
 
    // Redraw timer
-   TGLRedrawTimer      *fRedrawTimer;        //! timer for triggering redraws
-   Float_t              fMaxSceneDrawTimeHQ; //! max time for scene rendering at high LOD (in ms)
-   Float_t              fMaxSceneDrawTimeLQ; //! max time for scene rendering at high LOD (in ms)
+   TGLRedrawTimer      *fRedrawTimer;        ///<! timer for triggering redraws
+   Float_t              fMaxSceneDrawTimeHQ; ///<! max time for scene rendering at high LOD (in ms)
+   Float_t              fMaxSceneDrawTimeLQ; ///<! max time for scene rendering at high LOD (in ms)
 
-   TGLRect        fViewport;       //! viewport - drawn area
-   TGLColorSet    fDarkColorSet;   //! color-set with dark background
-   TGLColorSet    fLightColorSet;  //! color-set with light background
-   Float_t        fPointScale;     //! size scale for points
-   Float_t        fLineScale;      //! width scale for lines
-   Bool_t         fSmoothPoints;   //! smooth point edge rendering
-   Bool_t         fSmoothLines;    //! smooth line edge rendering
-   Int_t          fAxesType;       //! axes type
-   Bool_t         fAxesDepthTest;  //! remove guides hidden-lines
-   Bool_t         fReferenceOn;    //! reference marker on?
-   TGLVertex3     fReferencePos;   //! reference position
-   Bool_t         fDrawCameraCenter; //! reference marker on?
-   TGLCameraOverlay  *fCameraOverlay; //! markup size of viewport in scene units
+   TGLRect        fViewport;       ///<! viewport - drawn area
+   TGLColorSet    fDarkColorSet;   ///<! color-set with dark background
+   TGLColorSet    fLightColorSet;  ///<! color-set with light background
+   Float_t        fPointScale;     ///<! size scale for points
+   Float_t        fLineScale;      ///<! width scale for lines
+   Bool_t         fSmoothPoints;   ///<! smooth point edge rendering
+   Bool_t         fSmoothLines;    ///<! smooth line edge rendering
+   Int_t          fAxesType;       ///<! axes type
+   Bool_t         fAxesDepthTest;  ///<! remove guides hidden-lines
+   Bool_t         fReferenceOn;    ///<! reference marker on?
+   TGLVertex3     fReferencePos;   ///<! reference position
+   Bool_t         fDrawCameraCenter; ///<! reference marker on?
+   TGLCameraOverlay  *fCameraOverlay; ///<! markup size of viewport in scene units
 
-   Bool_t         fSmartRefresh;   //! cache logicals during scene rebuilds
+   Bool_t         fSmartRefresh;   ///<! cache logicals during scene rebuilds
 
    // Debug tracing (for scene rebuilds)
-   Bool_t         fDebugMode;            //! debug mode (forced rebuild + draw scene/frustum/interest boxes)
-   Bool_t         fIsPrinting;           //!
-   TString        fPictureFileName;      //! default file-name for SavePicture()
-   Float_t        fFader;                //! fade the view (0 - no fade/default, 1 - full fade/no rendering done)
+   Bool_t         fDebugMode;            ///<! debug mode (forced rebuild + draw scene/frustum/interest boxes)
+   Bool_t         fIsPrinting;           ///<!
+   TString        fPictureFileName;      ///<! default file-name for SavePicture()
+   Float_t        fFader;                ///<! fade the view (0 - no fade/default, 1 - full fade/no rendering done)
 
-   static TGLColorSet fgDefaultColorSet;                 //! a shared, default color-set
-   static Bool_t      fgUseDefaultColorSetForNewViewers; //! name says it all
-   static Float_t     fgAxisLabelScale; //! allow simple guide axes labels to be scaled relative to scene units
+   static TGLColorSet fgDefaultColorSet;                 ///<! a shared, default color-set
+   static Bool_t      fgUseDefaultColorSetForNewViewers; ///<! name says it all
+   static Float_t     fgAxisLabelScale; ///<! allow simple guide axes labels to be scaled relative to scene units
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
@@ -183,8 +183,8 @@ protected:
 
 protected:
    TGLWidget          *fGLWidget;
-   Int_t               fGLDevice; //!for embedded gl viewer
-   TGLContextIdentity *fGLCtxId;  //!for embedded gl viewer
+   Int_t               fGLDevice; ///<!for embedded gl viewer
+   TGLContextIdentity *fGLCtxId;  ///<!for embedded gl viewer
 
    // Updata/camera-reset behaviour
    Bool_t           fIgnoreSizesOnUpdate;      // ignore sizes of bounding-boxes on update

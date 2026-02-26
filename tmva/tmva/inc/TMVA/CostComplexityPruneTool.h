@@ -83,7 +83,7 @@ namespace TMVA {
       // optimize the pruning sequence
       void Optimize( DecisionTree* dt, Double_t weights );
 
-      mutable MsgLogger* fLogger; //! output stream to save logging information
+      mutable MsgLogger* fLogger; ///<! output stream to save logging information
       MsgLogger& Log() const { return *fLogger; }
 
    };

@@ -140,8 +140,7 @@ private:
    Int_t   fWidth;      // board width
    Bool_t  fIsDropped;  // kTRUE when piece stopped
 
-   TetrisBoxPtr *fBoard;   //! 2d array of pointers to Tetrisboxes,
-                           // if pointer is 0 - the cell is empty
+   TetrisBoxPtr *fBoard;   ///<! 2d array of pointers to Tetrisboxes, if pointer is 0 - the cell is empty
    Int_t  fFilledLines;    // number of non empty lines in pad
 
    void   AllAboveLinesDown(Int_t line)    // assume that line is empty

@@ -3364,7 +3364,7 @@ Bool_t TGCocoa::MakeOpenGLContextCurrent(Handle_t ctxID, Window_t windowID)
          Util::NSScopeGuard<QuartzWindow> winGuard(fakeWindow);
 
          fakeView = fakeWindow.fContentView;
-         [fakeView setHidden : NO];//!
+         [fakeView setHidden : NO];
 
          fPimpl->SetFakeGLWindow(fakeWindow);//Can throw.
          winGuard.Release();

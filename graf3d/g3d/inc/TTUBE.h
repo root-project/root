@@ -41,8 +41,8 @@ protected:
    Float_t fAspectRatio; // defines  (the ellipse semi-axis in Y)/(the ellipse semi-axis in X)
 
    // Internal cache
-   mutable Double_t   *fSiTab;   //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
-   mutable Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+   mutable Double_t   *fSiTab;   ///<! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
+   mutable Double_t   *fCoTab;   ///<! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
    TTUBE(const TTUBE&);
    TTUBE& operator=(const TTUBE&);

@@ -66,15 +66,15 @@ private:
    Int_t fIdBranch[100];        // current branch of indices
    TString fPath;               // path for current branch
    TGeoNode *fTop;              // top node
-   TGeoNode *fNode;             //! current node
-   TGeoHMatrix *fMatrix;        //! current matrix
+   TGeoNode *fNode;             ///<! current node
+   TGeoHMatrix *fMatrix;        ///<! current matrix
    TObjArray *fStack;           // stack of cache states
    TGeoHMatrix **fMatrixBranch; // current branch of global matrices
    TGeoHMatrix **fMPB;          // pre-built matrices
    TGeoNode **fNodeBranch;      // current branch of nodes
    TGeoStateInfo **fInfoBranch; // current branch of nodes
-   TGeoStateInfo *fPWInfo;      //! State info for the parallel world
-   Int_t *fNodeIdArray;         //! array of node id's
+   TGeoStateInfo *fPWInfo;      ///<! State info for the parallel world
+   Int_t *fNodeIdArray;         ///<! array of node id's
 
    TGeoNodeCache(const TGeoNodeCache &) = delete;
    TGeoNodeCache &operator=(const TGeoNodeCache &) = delete;

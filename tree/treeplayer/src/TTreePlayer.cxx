@@ -869,12 +869,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (opt.Contains("selector")) {
       fprintf(fp,"class %s : public TSelector {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain\n");
    } else {
       fprintf(fp,"class %s {\n",cppClassName.Data());
       fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
-      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
+      fprintf(fp,"   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   Int_t           fCurrent; ///<!current Tree number in a TChain\n");
    }
 
    fprintf(fp,"\n// Fixed size dimensions of array or collections stored in the TTree if any.\n");
@@ -1107,7 +1107,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
-      fprintf(fp,"   TBranch        *b_%s;   //!\n",R__GetBranchPointerName(leaf).Data());
+      fprintf(fp,"   TBranch        *b_%s;   ///<!\n",R__GetBranchPointerName(leaf).Data());
    }
 
 // generate class member functions prototypes
