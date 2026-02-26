@@ -35,7 +35,7 @@ private:
       kObjIsPersistent = BIT(2)
    };
 
-   DataMemberInfo_t   *fInfo;         //!pointer to CINT data member info
+   DataMemberInfo_t   *fInfo;         //!pointer to Cling data member info
    TClass             *fClass;        //!pointer to the class
    TDataType          *fDataType;     //!pointer to data basic type descriptor
 

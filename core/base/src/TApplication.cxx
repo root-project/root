@@ -1727,7 +1727,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
 
 #if 0
-      // delete the ROOT dictionary since CINT will destroy all objects
+      // delete the ROOT dictionary since Cling will destroy all objects
       // referenced by the dictionary classes (TClass et. al.)
       gROOT->GetListOfClasses()->Delete();
       // fall through
