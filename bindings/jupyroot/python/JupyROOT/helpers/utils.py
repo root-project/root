@@ -62,7 +62,7 @@ _jsCode = """
             Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
          }});
       }}
-      const servers = ['/static/', 'https://root.cern/js/7.10.0/', 'https://jsroot.gsi.de/7.10.0/'],
+      const servers = ['/static/', 'https://root.cern/js/7.10.3/', 'https://jsroot.gsi.de/7.10.3/'],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
          drawPlot(JSROOT);
