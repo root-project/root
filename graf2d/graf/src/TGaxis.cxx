@@ -1669,11 +1669,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
          Double_t ytick = mside ? 0. : -atick[ltick];
          if (optionNoopt && !optionInt) {
-            Rotate(xtick,ytick,cosphi,sinphi,x0,y0,xpl2,ypl2);
-            Rotate(xtick,atick[ltick],cosphi,sinphi,x0,y0,xpl1,ypl1);
+            Rotate(xtick,ytick,cosphi,sinphi,x0,y0, xpl2,ypl2);
+            Rotate(xtick,atick[ltick],cosphi,sinphi,x0,y0, xpl1,ypl1);
          } else {
-            Rotate(xtick,ytick,cosphi,sinphi,xx0,yy0,xpl2,ypl2);
-            Rotate(xtick,atick[ltick],cosphi,sinphi,xx0,yy0,xpl1,ypl1);
+            Rotate(xtick,ytick,cosphi,sinphi,xx0,yy0, xpl2,ypl2);
+            Rotate(xtick,atick[ltick],cosphi,sinphi,xx0,yy0, xpl1,ypl1);
          }
          if (optionVert) {
             if ((x0 != x1) && (y0 != y1)) {
@@ -1681,8 +1681,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   xpl1 = xpl2;
                   if (cosphi > 0) ypl1 = ypl2 + atick[ltick];
                   else            ypl1 = ypl2 - atick[ltick];
-               }
-               else {
+               } else {
                   xpl1 = 0.5*(xpl1 + xpl2);
                   xpl2 = xpl1;
                   ypl1 = 0.5*(ypl1 + ypl2) + atick[ltick];
@@ -1691,27 +1690,15 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             }
          }
          if (!drawGridOnly) {
-            if (!optionArrow) {
+            Bool_t paint_tick = kTRUE;
+            if (optionArrow == 1)
+               paint_tick = (x1 != x0) ? (xpl2 < x1) : (ypl2 < y1);
+            else if (optionArrow == 2)
+               paint_tick = (x1 != x0) ? (xpl1 > x0) : (ypl1 > y0);
+            else if (optionArrow == 3)
+               paint_tick = (x1 != x0) ? (xpl1 > x0 && xpl2 < x1) : (ypl1 > y0 && ypl2 < y1);
+            if (paint_tick)
                PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-            } else if (optionArrow == 1) {
-               if (x1 != x0) {
-                  if (xpl2 < x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               } else {
-                  if (ypl2 < y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               }
-            } else if (optionArrow == 2) {
-               if (x1 != x0) {
-                  if (xpl1 > x0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               } else {
-                  if (ypl1 > y0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               }
-            } else if (optionArrow == 3) {
-               if (x1 != x0) {
-                  if (xpl1 > x0 && xpl2 < x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               } else {
-                  if (ypl1 > y0 && ypl2 < y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               }
-            }
          }
 
          if (optionGrid && (ltick == 0)) {
