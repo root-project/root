@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <functional>
 #include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator_HardSigmoid.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -37,7 +38,7 @@ extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
 extern ParserFuncSignature ParseMean;
 extern ParserFuncSignature ParseSum;
-//Comparision Operators
+// Comparision Operators
 extern ParserFuncSignature ParseEq;
 extern ParserFuncSignature ParseLess;
 extern ParserFuncSignature ParseLessEq;
@@ -102,40 +103,40 @@ struct RModelParser_ONNX::OperatorsMapImpl {
 };
 
 // helper function to get initialized tensor data
-template<typename T>
-struct ExtractDataFromTP {
-};
+template <typename T>
+struct ExtractDataFromTP {};
 // trait function to extract data from TensorProto
-template<>
+template <>
 struct ExtractDataFromTP<float> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
-      tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(),
-                                                            static_cast<float *>(data));
+   static void Copy(onnx::TensorProto *tensor, void *data)
+   {
+      tensor->mutable_float_data()->ExtractSubrange(0, tensor->float_data_size(), static_cast<float *>(data));
    }
 };
-template<>
+template <>
 struct ExtractDataFromTP<double> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
-      tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(),
-                                                            static_cast<double *>(data));
+   static void Copy(onnx::TensorProto *tensor, void *data)
+   {
+      tensor->mutable_double_data()->ExtractSubrange(0, tensor->double_data_size(), static_cast<double *>(data));
    }
 };
-template<>
+template <>
 struct ExtractDataFromTP<int32_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
-      tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(),
-                                                            static_cast<int32_t *>(data));
+   static void Copy(onnx::TensorProto *tensor, void *data)
+   {
+      tensor->mutable_int32_data()->ExtractSubrange(0, tensor->int32_data_size(), static_cast<int32_t *>(data));
    }
 };
-template<>
+template <>
 struct ExtractDataFromTP<int64_t> {
-   static void Copy(onnx::TensorProto * tensor, void * data) {
-      tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(),
-                                                            static_cast<int64_t *>(data));
+   static void Copy(onnx::TensorProto *tensor, void *data)
+   {
+      tensor->mutable_int64_data()->ExtractSubrange(0, tensor->int64_data_size(), static_cast<int64_t *>(data));
    }
 };
-template<typename T>
-std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, size_t length) {
+template <typename T>
+std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t length)
+{
    std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
 
    if (!tensorproto->raw_data().empty()) {
@@ -143,8 +144,8 @@ std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, 
       std::memcpy(data.get(), tensorproto->raw_data().c_str(), length * sizeof(T));
 #else
       for (std::size_t k = 0; k < length; ++k)
-         (reinterpret_cast<typename RByteSwap<sizeof(T)>::value_type *>(data.get()))[k] =
-            RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(T)>::value_type *>(tensorproto->raw_data().c_str()))[k]);
+         (reinterpret_cast<typename RByteSwap<sizeof(T)>::value_type *>(data.get()))[k] = RByteSwap<sizeof(T)>::bswap(
+            (reinterpret_cast<const typename RByteSwap<sizeof(T)>::value_type *>(tensorproto->raw_data().c_str()))[k]);
 #endif
    } else {
       ExtractDataFromTP<T>::Copy(tensorproto, data.get());
@@ -153,7 +154,8 @@ std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, 
 }
 
 // Constructor of the parser
-RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
+RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>())
+{
    // Register operators
    // Unary operators
    RegisterOperator("Sqrt", ParseSqrt);
@@ -176,7 +178,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Min", ParseMin);
    RegisterOperator("Mean", ParseMean);
    RegisterOperator("Sum", ParseSum);
-   //Comparision Operators
+   // Comparision Operators
    RegisterOperator("Equal", ParseEq);
    RegisterOperator("Less", ParseLess);
    RegisterOperator("LessOrEqual", ParseLessEq);
@@ -222,6 +224,32 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Gather", ParseGather);
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
+
+   // HardSigmoid operator with inline lambda registration
+   RegisterOperator("HardSigmoid", [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+      // Initialize defaults before attribute loop (ONNX spec: alpha=0.2, beta=0.5)
+      float alpha = 0.2f;
+      float beta = 0.5f;
+      for (int i = 0; i < nodeproto.attribute_size(); i++) {
+         const auto &attr = nodeproto.attribute(i);
+         if (attr.name() == "alpha") {
+            alpha = attr.f();
+         } else if (attr.name() == "beta") {
+            beta = attr.f();
+         }
+      }
+      auto input_name = nodeproto.input(0);
+      if (!parser.IsRegisteredTensorType(input_name)) {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser HardSigmoid op has input tensor " + input_name +
+                                  " but its type is not yet registered");
+      }
+      std::string output_name = nodeproto.output(0);
+      auto op = std::make_unique<ROperator_HardSigmoid<float>>(input_name, output_name, alpha, beta);
+      if (!parser.IsRegisteredTensorType(output_name)) {
+         parser.RegisterTensorType(output_name, parser.GetTensorType(input_name));
+      }
+      return op;
+   });
    RegisterOperator("EyeLike", ParseEyeLike);
    RegisterOperator("Range", ParseRange);
    RegisterOperator("TopK", ParseTopK);
@@ -279,11 +307,13 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 }
 
 // Parse an operator
-std::unique_ptr<ROperator>
-RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes, const std::vector<int> & children)
+std::unique_ptr<ROperator> RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto,
+                                                            const std::vector<size_t> &nodes,
+                                                            const std::vector<int> &children)
 {
    if (i >= nodes.size())
-      throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
+      throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) +
+                               " is >=  " + std::to_string(nodes.size()));
    int idx = nodes[i];
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
@@ -291,22 +321,22 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
       std::cout << "Parsing operator " << op_type << std::endl;
 
    // skip already fused operators
-   if (fFusedOperators[idx]) return nullptr;
+   if (fFusedOperators[idx])
+      return nullptr;
 
    // try to fuse with following operator in case it is not last one
    if (children.size() == 1) {
       int idx2 = children.front();
       if (op_type == "MatMul") {
-        // Fuse MatMul and Add
+         // Fuse MatMul and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
             fFusedOperators[idx2] = true;
             return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
-         }
-         else {
+         } else {
             return ParseMatMul(*this, graphproto.node(idx));
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
-      // Fuse Conv or ConvTranspose without bias and Add
+         // Fuse Conv or ConvTranspose without bias and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
             if (nodeproto.op_type() == "Conv") {
                fFusedOperators[idx2] = true;
@@ -329,8 +359,6 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
          }
       }
    }
-
-
 
    auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
@@ -356,7 +384,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
    const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
 
-
    std::time_t ttime = std::time(0);
    std::tm *gmt_time = std::gmtime(&ttime);
    std::string parsetime(std::asctime(gmt_time));
@@ -377,14 +404,15 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    return rmodel;
 }
 
-std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filename) {
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filename)
+{
 
    GOOGLE_PROTOBUF_VERIFY_VERSION;
    auto model = std::make_unique<onnx::ModelProto>();
 
    std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!model->ParseFromIstream(&input)) {
-      std::cerr << "TMVA::SOFIE - Failed to open onnx file " <<  filename << std::endl;
+      std::cerr << "TMVA::SOFIE - Failed to open onnx file " << filename << std::endl;
       return std::unique_ptr<onnx::ModelProto>();
    }
 
@@ -394,23 +422,24 @@ std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filen
    }
    google::protobuf::ShutdownProtobufLibrary();
    return model;
-
 }
 
-void RModelParser_ONNX::CheckGraph(const onnx::GraphProto & graph, int & level, std::map<std::string, int> & missingOperators) {
+void RModelParser_ONNX::CheckGraph(const onnx::GraphProto &graph, int &level,
+                                   std::map<std::string, int> &missingOperators)
+{
    if (fVerbose)
       std::cout << "\n" << graph.name() << " Graph operator list\n";
    for (int i = 0; i < graph.node_size(); i++) {
-      const auto & node = graph.node(i);
-      const std::string opType =  node.op_type();
+      const auto &node = graph.node(i);
+      const std::string opType = node.op_type();
       if (fVerbose) {
-         std::cout << "\tOperator " << i << " : " << opType << " (" << node.name() << "), " << graph.node(i).input_size()
-                      << " inputs : {";
-            for (int j = 0; j < graph.node(i).input_size(); j++) {
-               std::cout << graph.node(i).input(j);
-               if (j < graph.node(i).input_size() - 1)
-                  std::cout << ", ";
-            }
+         std::cout << "\tOperator " << i << " : " << opType << " (" << node.name() << "), "
+                   << graph.node(i).input_size() << " inputs : {";
+         for (int j = 0; j < graph.node(i).input_size(); j++) {
+            std::cout << graph.node(i).input(j);
+            if (j < graph.node(i).input_size() - 1)
+               std::cout << ", ";
+         }
          std::cout << " }" << std::endl;
       }
       // check if operator exists
@@ -418,9 +447,9 @@ void RModelParser_ONNX::CheckGraph(const onnx::GraphProto & graph, int & level, 
          missingOperators[opType] = level;
       // see if sub-graph exists as node attributes
       for (int j = 0; j < node.attribute_size(); j++) {
-         const auto & attribute = node.attribute(j);
+         const auto &attribute = node.attribute(j);
          if (attribute.has_g()) {
-            const auto & subGraph = attribute.g();
+            const auto &subGraph = attribute.g();
             level += 1;
             CheckGraph(subGraph, level, missingOperators);
          }
@@ -428,14 +457,16 @@ void RModelParser_ONNX::CheckGraph(const onnx::GraphProto & graph, int & level, 
    }
 }
 
-bool RModelParser_ONNX::CheckModel(std::string filename, bool verbose) {
+bool RModelParser_ONNX::CheckModel(std::string filename, bool verbose)
+{
 
    fVerbose = verbose;
    auto model = LoadModel(filename);
-   if (!model) return false;
+   if (!model)
+      return false;
 
    const onnx::GraphProto &graph = model->graph();
-    // Initial operator order
+   // Initial operator order
    if (fVerbose)
       std::cout << "\nModel operator list " << model->producer_name() << "\n";
 
@@ -445,7 +476,7 @@ bool RModelParser_ONNX::CheckModel(std::string filename, bool verbose) {
 
    if (!missingOperators.empty()) {
       std::cout << "List of missing operators for model loaded from file " << filename << std::endl;
-      for (auto & op : missingOperators) {
+      for (auto &op : missingOperators) {
          std::cout << op.first << "  " << op.second << std::endl;
       }
       return false;
@@ -454,7 +485,7 @@ bool RModelParser_ONNX::CheckModel(std::string filename, bool verbose) {
    return true;
 }
 
-void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto & graph, std::string  graphName)
+void RModelParser_ONNX::ParseONNXGraph(RModel &rmodel, const onnx::GraphProto &graph, std::string graphName)
 {
    bool verbose = fVerbose;
 
@@ -497,14 +528,14 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          Dim dim;
          if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
              onnx::TensorShapeProto_Dimension::ValueCase::kDimValue) {
-             int dim_value = valueinfoproto.type().tensor_type().shape().dim(j).dim_value();
-             dim.dim = dim_value;
-             // case input dim is -1 - set a parametric shape
-             if (dim_value < 0) {
+            int dim_value = valueinfoproto.type().tensor_type().shape().dim(j).dim_value();
+            dim.dim = dim_value;
+            // case input dim is -1 - set a parametric shape
+            if (dim_value < 0) {
                dim.isParam = true;
                existParam = true;
                dim.param = UTILITY::Clean_name(input_name) + "_size";
-             }
+            }
          } else if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
                     onnx::TensorShapeProto_Dimension::ValueCase::kDimParam) {
             dim.isParam = true;
@@ -563,28 +594,36 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       switch (tensor_type) {
       case ETensorType::FLOAT: {
          std::shared_ptr<void> data = GetInitializedTensorData<float>(tensorproto, fLength);
-         if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         if (verbose)
+            std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape)
+                      << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
       case ETensorType::DOUBLE: {
          std::shared_ptr<void> data = GetInitializedTensorData<double>(tensorproto, fLength);
-         if (verbose) std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         if (verbose)
+            std::cout << "add DOUBLE initialized tensor " << input_name << " shape " << ConvertShapeToString(shape)
+                      << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::DOUBLE, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
       case ETensorType::INT32: {
          std::shared_ptr<void> data = GetInitializedTensorData<int32_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         if (verbose)
+            std::cout << "add INT32 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape)
+                      << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::INT32, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
       case ETensorType::INT64: {
          std::shared_ptr<void> data = GetInitializedTensorData<int64_t>(tensorproto, fLength);
-         if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         if (verbose)
+            std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape)
+                      << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
          allInitializedTensors[input_name] = i;
          break;
@@ -639,16 +678,16 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
                existInputs &= (allInputs.find(name) != allInputs.end() ||
                                allInitializedTensors.find(name) != allInitializedTensors.end());
                if (fVerbose) {
-                  std::cout << "\t\t input " << name << " "
-                     << bool(allInputs.find(name) != allInputs.end()) << "  " <<
-                     bool(allInitializedTensors.find(name) != allInitializedTensors.end()) << "  " <<
-                     existInputs << std::endl;
+                  std::cout << "\t\t input " << name << " " << bool(allInputs.find(name) != allInputs.end()) << "  "
+                            << bool(allInitializedTensors.find(name) != allInitializedTensors.end()) << "  "
+                            << existInputs << std::endl;
                }
             }
          }
          if (!existInputs) {
             if (fVerbose) {
-               std::cout << "skip node " << graph.node(i).op_type() << "  " << graph.node(i).name() << " inputs are not existing ";
+               std::cout << "skip node " << graph.node(i).op_type() << "  " << graph.node(i).name()
+                         << " inputs are not existing ";
                for (int j = 0; j < input_size; j++) {
                   std::cout << graph.node(i).input(j) << " ";
                }
@@ -659,24 +698,26 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
 
          // adding node to the currectly ordered list
          if (verbose)
-            std::cout << "===> New node " << graph.node(i).op_type() << "  " << graph.node(i).name() << " order " << i << std::endl;
+            std::cout << "===> New node " << graph.node(i).op_type() << "  " << graph.node(i).name() << " order " << i
+                      << std::endl;
 
          nodesOrder.push_back(i);
          foundNodes[i] = true;
          // register the outputs
          for (int j = 0; j < graph.node(i).output_size(); j++) {
-            if (fVerbose) std::cout << "\toutput : " << graph.node(i).output(j) << std::endl;
+            if (fVerbose)
+               std::cout << "\toutput : " << graph.node(i).output(j) << std::endl;
             allInputs[graph.node(i).output(j)] = i;
          }
       }
       // no increment in nodes - something wrong
       if (nodesOrder.size() == psize) {
          int ilast = nodesOrder.back();
-         std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name() << std::endl;
+         std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name()
+                   << std::endl;
          throw std::runtime_error("TMVA::SOFIE - cannot find a new node ");
       }
    } while ((int)nodesOrder.size() < graph.node_size());
-
 
    // find list of children for each operator (used for fusing oiperators)
    std::vector<std::vector<int>> nodesChildren(graph.node_size());
@@ -684,12 +725,13 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    for (int k = 0; k < graph.node_size(); k++) {
       int i = nodesOrder[k];
       // compute the number of output for the operators
-      if (graph.node(i).output_size() > 0) nodesChildren[i].reserve(graph.node(i).output_size());
-      for (const auto& output_name : graph.node(i).output()) {
+      if (graph.node(i).output_size() > 0)
+         nodesChildren[i].reserve(graph.node(i).output_size());
+      for (const auto &output_name : graph.node(i).output()) {
          // loop on all nodes
          for (int l = k; l < graph.node_size(); l++) {
             int j = nodesOrder[l];
-            for (const auto& input_name : graph.node(j).input()) {
+            for (const auto &input_name : graph.node(j).input()) {
                if (input_name == output_name)
                   nodesChildren[i].push_back(j);
             }
@@ -702,16 +744,18 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       std::cout << "\nGraph operator list (re-ordered)\n";
       for (int k = 0; k < graph.node_size(); k++) {
          int i = nodesOrder[k];
-         std::cout << "\tOperator " << i << " : " << graph.node(i).op_type() << " , " << graph.node(i).name() << " input tensors : {";
-            for (int j = 0; j < graph.node(i).input_size(); j++) {
+         std::cout << "\tOperator " << i << " : " << graph.node(i).op_type() << " , " << graph.node(i).name()
+                   << " input tensors : {";
+         for (int j = 0; j < graph.node(i).input_size(); j++) {
             std::cout << graph.node(i).input(j);
             if (j < graph.node(i).input_size() - 1)
                std::cout << ", ";
          }
          std::cout << " } ";
          std::cout << " children : {";
-         for ( const auto & ichild : nodesChildren[i]) {
-            std::cout << " [ " << ichild << " " << graph.node(ichild).op_type() << " , " << graph.node(ichild).name() << "]";
+         for (const auto &ichild : nodesChildren[i]) {
+            std::cout << " [ " << ichild << " " << graph.node(ichild).op_type() << " , " << graph.node(ichild).name()
+                      << "]";
          }
          std::cout << "}" << std::endl;
       }
