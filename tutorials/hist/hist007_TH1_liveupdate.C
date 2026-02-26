@@ -55,10 +55,9 @@ void hist007_TH1_liveupdate()
          }
          if (slider)
             slider->SetRange(0., 1. * i / 10000.);
-         c1->Modified();
-         c1->Update();
+         c1->ModifiedUpdate();
       }
    }
    slider->SetRange(0., 1.);
-   c1->Modified();
+   c1->ModifiedUpdate();
 }
