@@ -2322,6 +2322,12 @@ class THistPainter extends ObjectPainter {
       return cntr;
    }
 
+   /** @summary Reset contour object
+    * @private */
+   resetContour() {
+      this.#contour = undefined;
+   }
+
    /** @summary Return Z-scale ranges to create contour */
    #getContourRanges(main, fp) {
       const o = this.getOptions(),
@@ -2902,7 +2908,7 @@ class THistPainter extends ObjectPainter {
          this.maxbin = this.minbin = 0;
 
       // force recalculation of z levels
-      this.#contour = undefined;
+      this.resetContour();
 
       if (args.zrange)
          Object.assign(res, this.#getContourRanges(this.getMainPainter(), this.getFramePainter()));

@@ -3,7 +3,7 @@ import { BIT, settings, isArrayProto, isRootCollection, isObject, isFunc, isStr,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
-         kUChar, kUShort, kUInt,
+         kUChar, kUShort, kUInt, kULong, kLong,
          kLong64, kULong64, kBool, kFloat16,
          kOffsetL, kOffsetP, kObject, kAny, kObjectp, kTString,
          kStreamer, kStreamLoop, kSTLp, kSTL, kBaseClass, clTBasket,
@@ -1822,6 +1822,7 @@ async function treeProcess(tree, selector, args) {
          case 'TLeafS': datakind = leaf.fIsUnsigned ? kUShort : kShort; break;
          case 'TLeafI': datakind = leaf.fIsUnsigned ? kUInt : kInt; break;
          case 'TLeafL': datakind = leaf.fIsUnsigned ? kULong64 : kLong64; break;
+         case 'TLeafG': datakind = leaf.fIsUnsigned ? kULong : kLong; break;
          case 'TLeafC': datakind = kTString; break;
          default: return null;
       }
@@ -2470,7 +2471,7 @@ async function treeProcess(tree, selector, args) {
 
       for (let k = 0; k < handle.arr.length; ++k) {
          const elem = handle.arr[k];
-         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar))
+         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar) || (elem.type === kFloat16) || (elem.type === kDouble32))
             handle.process_arrays = false;
       }
 
