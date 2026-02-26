@@ -367,7 +367,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
    if (radius > 0)
       dl[0] = dl[1] = dl[2] = radius;
 
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // Disable directory registration for histograms
    TH1F *hnew = new TH1F("hnew", "Precision pushing", 30, -20., 10.);
    TH1F *hold = new TH1F("hold", "Precision pulling", 30, -20., 10.);
    TH2F *hplotS = new TH2F("hplotS", "Problematic points", 100, -dl[0], dl[0], 100, -dl[1], dl[1]);
