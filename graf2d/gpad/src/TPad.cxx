@@ -4752,6 +4752,44 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments
+/// Provided arrays should have 2*n elements
+/// IMPORTANT! Provided arrays can be modified after function call!
+
+void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   if (n < 1)
+      return;
+
+   Double_t xmin,xmax,ymin,ymax;
+   Bool_t mustClip = kTRUE;
+   if (TestBit(TGraph::kClipFrame)) {
+      xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+      if (option && *option == 'C') mustClip = kFALSE;
+   }
+
+   for (Int_t i = 0; i < 2*n; i+=2) {
+      Int_t iclip = 0;
+      if (mustClip) {
+         iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+         if (iclip == 2)
+            continue;
+      }
+
+      if (!gPad->IsBatch() && GetPainter())
+         GetPainter()->DrawLine(x[i], y[i], x[i + 1], y[i + 1]);
+
+      if (gVirtualPS)
+         gVirtualPS->DrawPS(2, &x[i], &y[i]);
+   }
+
+   Modified();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint text in CurrentPad World coordinates.
 
 void TPad::PaintText(Double_t x, Double_t y, const char *text)
