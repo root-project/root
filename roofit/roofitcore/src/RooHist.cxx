@@ -632,10 +632,9 @@ bool RooHist::hasIdenticalBinning(const RooHist& other) const
 bool RooHist::isIdentical(const RooHist& other, double tol, bool verbose) const
 {
   // Make temporary TH1s output of RooHists to perform Kolmogorov test
-  TH1::AddDirectory(false) ;
+  TDirectory::TContext ctx{nullptr}; // No self-registration to directories
   TH1F h_self("h_self","h_self",GetN(),0,1) ;
-  TH1F h_other("h_other","h_other",GetN(),0,1) ;
-  TH1::AddDirectory(true) ;
+  TH1F h_other("h_other", "h_other", GetN(), 0, 1);
 
   for (Int_t i=0 ; i<GetN() ; i++) {
     h_self.SetBinContent(i+1,GetY()[i]) ;
