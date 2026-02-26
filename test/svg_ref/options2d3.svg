@@ -3827,54 +3827,54 @@ options2d3.svg
 </text>
 <path d="M317,180h 218" fill="none" stroke="black"/>
 <path d="M317,175v 4.7" fill="none" stroke="black"/>
-<path d="M317,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M322,178v 2.3" fill="none" stroke="black"/>
 <path d="M328,178v 2.3" fill="none" stroke="black"/>
 <path d="M333,178v 2.3" fill="none" stroke="black"/>
 <path d="M339,178v 2.3" fill="none" stroke="black"/>
 <path d="M344,175v 4.7" fill="none" stroke="black"/>
-<path d="M344,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M350,178v 2.3" fill="none" stroke="black"/>
 <path d="M355,178v 2.3" fill="none" stroke="black"/>
 <path d="M360,178v 2.3" fill="none" stroke="black"/>
 <path d="M366,178v 2.3" fill="none" stroke="black"/>
 <path d="M371,175v 4.7" fill="none" stroke="black"/>
-<path d="M371,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M377,178v 2.3" fill="none" stroke="black"/>
 <path d="M382,178v 2.3" fill="none" stroke="black"/>
 <path d="M388,178v 2.3" fill="none" stroke="black"/>
 <path d="M393,178v 2.3" fill="none" stroke="black"/>
 <path d="M398,175v 4.7" fill="none" stroke="black"/>
-<path d="M398,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M404,178v 2.3" fill="none" stroke="black"/>
 <path d="M409,178v 2.3" fill="none" stroke="black"/>
 <path d="M415,178v 2.3" fill="none" stroke="black"/>
 <path d="M420,178v 2.3" fill="none" stroke="black"/>
 <path d="M426,175v 4.7" fill="none" stroke="black"/>
-<path d="M426,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M431,178v 2.3" fill="none" stroke="black"/>
 <path d="M437,178v 2.3" fill="none" stroke="black"/>
 <path d="M442,178v 2.3" fill="none" stroke="black"/>
 <path d="M447,178v 2.3" fill="none" stroke="black"/>
 <path d="M453,175v 4.7" fill="none" stroke="black"/>
-<path d="M453,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M458,178v 2.3" fill="none" stroke="black"/>
 <path d="M464,178v 2.3" fill="none" stroke="black"/>
 <path d="M469,178v 2.3" fill="none" stroke="black"/>
 <path d="M475,178v 2.3" fill="none" stroke="black"/>
 <path d="M480,175v 4.7" fill="none" stroke="black"/>
-<path d="M480,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M486,178v 2.3" fill="none" stroke="black"/>
 <path d="M491,178v 2.3" fill="none" stroke="black"/>
 <path d="M496,178v 2.3" fill="none" stroke="black"/>
 <path d="M502,178v 2.3" fill="none" stroke="black"/>
 <path d="M507,175v 4.7" fill="none" stroke="black"/>
-<path d="M507,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M513,178v 2.3" fill="none" stroke="black"/>
 <path d="M518,178v 2.3" fill="none" stroke="black"/>
 <path d="M524,178v 2.3" fill="none" stroke="black"/>
 <path d="M529,178v 2.3" fill="none" stroke="black"/>
 <path d="M535,175v 4.7" fill="none" stroke="black"/>
+<path d="M317,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M344,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M371,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M398,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M426,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M453,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M480,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M507,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M535,24v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="317" y="187" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
@@ -3904,54 +3904,54 @@ options2d3.svg
 </text>
 <path d="M317,180v -156" fill="none" stroke="black"/>
 <path d="M323,180h -6.5" fill="none" stroke="black"/>
-<path d="M535,180h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,176h -3.3" fill="none" stroke="black"/>
 <path d="M320,172h -3.3" fill="none" stroke="black"/>
 <path d="M320,168h -3.3" fill="none" stroke="black"/>
 <path d="M320,164h -3.3" fill="none" stroke="black"/>
 <path d="M323,161h -6.5" fill="none" stroke="black"/>
-<path d="M535,161h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,157h -3.3" fill="none" stroke="black"/>
 <path d="M320,153h -3.3" fill="none" stroke="black"/>
 <path d="M320,149h -3.3" fill="none" stroke="black"/>
 <path d="M320,145h -3.3" fill="none" stroke="black"/>
 <path d="M323,141h -6.5" fill="none" stroke="black"/>
-<path d="M535,141h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,137h -3.3" fill="none" stroke="black"/>
 <path d="M320,133h -3.3" fill="none" stroke="black"/>
 <path d="M320,129h -3.3" fill="none" stroke="black"/>
 <path d="M320,125h -3.3" fill="none" stroke="black"/>
 <path d="M323,121h -6.5" fill="none" stroke="black"/>
-<path d="M535,121h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,117h -3.3" fill="none" stroke="black"/>
 <path d="M320,114h -3.3" fill="none" stroke="black"/>
 <path d="M320,110h -3.3" fill="none" stroke="black"/>
 <path d="M320,106h -3.3" fill="none" stroke="black"/>
 <path d="M323,102h -6.5" fill="none" stroke="black"/>
-<path d="M535,102h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,98h -3.3" fill="none" stroke="black"/>
 <path d="M320,94h -3.3" fill="none" stroke="black"/>
 <path d="M320,90h -3.3" fill="none" stroke="black"/>
 <path d="M320,86h -3.3" fill="none" stroke="black"/>
 <path d="M323,82h -6.5" fill="none" stroke="black"/>
-<path d="M535,82h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,78h -3.3" fill="none" stroke="black"/>
 <path d="M320,74h -3.3" fill="none" stroke="black"/>
 <path d="M320,71h -3.3" fill="none" stroke="black"/>
 <path d="M320,67h -3.3" fill="none" stroke="black"/>
 <path d="M323,63h -6.5" fill="none" stroke="black"/>
-<path d="M535,63h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,59h -3.3" fill="none" stroke="black"/>
 <path d="M320,55h -3.3" fill="none" stroke="black"/>
 <path d="M320,51h -3.3" fill="none" stroke="black"/>
 <path d="M320,47h -3.3" fill="none" stroke="black"/>
 <path d="M323,43h -6.5" fill="none" stroke="black"/>
-<path d="M535,43h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,39h -3.3" fill="none" stroke="black"/>
 <path d="M320,35h -3.3" fill="none" stroke="black"/>
 <path d="M320,31h -3.3" fill="none" stroke="black"/>
 <path d="M320,28h -3.3" fill="none" stroke="black"/>
 <path d="M323,24h -6.5" fill="none" stroke="black"/>
+<path d="M535,180h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,161h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,141h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,121h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,102h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,82h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,63h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,43h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M535,24h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="311" y="184" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
@@ -5057,54 +5057,54 @@ options2d3.svg
 </text>
 <path d="M33,384h 218" fill="none" stroke="black"/>
 <path d="M33,379v 4.7" fill="none" stroke="black"/>
-<path d="M33,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M39,381v 2.3" fill="none" stroke="black"/>
 <path d="M44,381v 2.3" fill="none" stroke="black"/>
 <path d="M50,381v 2.3" fill="none" stroke="black"/>
 <path d="M55,381v 2.3" fill="none" stroke="black"/>
 <path d="M61,379v 4.7" fill="none" stroke="black"/>
-<path d="M61,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M66,381v 2.3" fill="none" stroke="black"/>
 <path d="M71,381v 2.3" fill="none" stroke="black"/>
 <path d="M77,381v 2.3" fill="none" stroke="black"/>
 <path d="M82,381v 2.3" fill="none" stroke="black"/>
 <path d="M88,379v 4.7" fill="none" stroke="black"/>
-<path d="M88,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M93,381v 2.3" fill="none" stroke="black"/>
 <path d="M99,381v 2.3" fill="none" stroke="black"/>
 <path d="M104,381v 2.3" fill="none" stroke="black"/>
 <path d="M110,381v 2.3" fill="none" stroke="black"/>
 <path d="M115,379v 4.7" fill="none" stroke="black"/>
-<path d="M115,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M120,381v 2.3" fill="none" stroke="black"/>
 <path d="M126,381v 2.3" fill="none" stroke="black"/>
 <path d="M131,381v 2.3" fill="none" stroke="black"/>
 <path d="M137,381v 2.3" fill="none" stroke="black"/>
 <path d="M142,379v 4.7" fill="none" stroke="black"/>
-<path d="M142,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M148,381v 2.3" fill="none" stroke="black"/>
 <path d="M153,381v 2.3" fill="none" stroke="black"/>
 <path d="M159,381v 2.3" fill="none" stroke="black"/>
 <path d="M164,381v 2.3" fill="none" stroke="black"/>
 <path d="M169,379v 4.7" fill="none" stroke="black"/>
-<path d="M169,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M175,381v 2.3" fill="none" stroke="black"/>
 <path d="M180,381v 2.3" fill="none" stroke="black"/>
 <path d="M186,381v 2.3" fill="none" stroke="black"/>
 <path d="M191,381v 2.3" fill="none" stroke="black"/>
 <path d="M197,379v 4.7" fill="none" stroke="black"/>
-<path d="M197,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M202,381v 2.3" fill="none" stroke="black"/>
 <path d="M208,381v 2.3" fill="none" stroke="black"/>
 <path d="M213,381v 2.3" fill="none" stroke="black"/>
 <path d="M218,381v 2.3" fill="none" stroke="black"/>
 <path d="M224,379v 4.7" fill="none" stroke="black"/>
-<path d="M224,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M229,381v 2.3" fill="none" stroke="black"/>
 <path d="M235,381v 2.3" fill="none" stroke="black"/>
 <path d="M240,381v 2.3" fill="none" stroke="black"/>
 <path d="M246,381v 2.3" fill="none" stroke="black"/>
 <path d="M251,379v 4.7" fill="none" stroke="black"/>
+<path d="M33,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M61,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M88,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M115,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M142,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M169,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M197,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M224,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M251,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="33" y="391" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
@@ -5134,54 +5134,54 @@ options2d3.svg
 </text>
 <path d="M33,384v -156" fill="none" stroke="black"/>
 <path d="M40,384h -6.5" fill="none" stroke="black"/>
-<path d="M251,384h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,380h -3.3" fill="none" stroke="black"/>
 <path d="M37,376h -3.3" fill="none" stroke="black"/>
 <path d="M37,372h -3.3" fill="none" stroke="black"/>
 <path d="M37,368h -3.3" fill="none" stroke="black"/>
 <path d="M40,364h -6.5" fill="none" stroke="black"/>
-<path d="M251,364h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,360h -3.3" fill="none" stroke="black"/>
 <path d="M37,356h -3.3" fill="none" stroke="black"/>
 <path d="M37,352h -3.3" fill="none" stroke="black"/>
 <path d="M37,349h -3.3" fill="none" stroke="black"/>
 <path d="M40,345h -6.5" fill="none" stroke="black"/>
-<path d="M251,345h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,341h -3.3" fill="none" stroke="black"/>
 <path d="M37,337h -3.3" fill="none" stroke="black"/>
 <path d="M37,333h -3.3" fill="none" stroke="black"/>
 <path d="M37,329h -3.3" fill="none" stroke="black"/>
 <path d="M40,325h -6.5" fill="none" stroke="black"/>
-<path d="M251,325h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,321h -3.3" fill="none" stroke="black"/>
 <path d="M37,317h -3.3" fill="none" stroke="black"/>
 <path d="M37,313h -3.3" fill="none" stroke="black"/>
 <path d="M37,309h -3.3" fill="none" stroke="black"/>
 <path d="M40,306h -6.5" fill="none" stroke="black"/>
-<path d="M251,306h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,302h -3.3" fill="none" stroke="black"/>
 <path d="M37,298h -3.3" fill="none" stroke="black"/>
 <path d="M37,294h -3.3" fill="none" stroke="black"/>
 <path d="M37,290h -3.3" fill="none" stroke="black"/>
 <path d="M40,286h -6.5" fill="none" stroke="black"/>
-<path d="M251,286h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,282h -3.3" fill="none" stroke="black"/>
 <path d="M37,278h -3.3" fill="none" stroke="black"/>
 <path d="M37,274h -3.3" fill="none" stroke="black"/>
 <path d="M37,270h -3.3" fill="none" stroke="black"/>
 <path d="M40,266h -6.5" fill="none" stroke="black"/>
-<path d="M251,266h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,263h -3.3" fill="none" stroke="black"/>
 <path d="M37,259h -3.3" fill="none" stroke="black"/>
 <path d="M37,255h -3.3" fill="none" stroke="black"/>
 <path d="M37,251h -3.3" fill="none" stroke="black"/>
 <path d="M40,247h -6.5" fill="none" stroke="black"/>
-<path d="M251,247h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M37,243h -3.3" fill="none" stroke="black"/>
 <path d="M37,239h -3.3" fill="none" stroke="black"/>
 <path d="M37,235h -3.3" fill="none" stroke="black"/>
 <path d="M37,231h -3.3" fill="none" stroke="black"/>
 <path d="M40,227h -6.5" fill="none" stroke="black"/>
+<path d="M251,384h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,364h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,345h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,325h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,306h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,286h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,266h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M251,247h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M251,227h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="28" y="387" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
@@ -6287,54 +6287,54 @@ options2d3.svg
 </text>
 <path d="M317,384h 218" fill="none" stroke="black"/>
 <path d="M317,379v 4.7" fill="none" stroke="black"/>
-<path d="M317,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M322,381v 2.3" fill="none" stroke="black"/>
 <path d="M328,381v 2.3" fill="none" stroke="black"/>
 <path d="M333,381v 2.3" fill="none" stroke="black"/>
 <path d="M339,381v 2.3" fill="none" stroke="black"/>
 <path d="M344,379v 4.7" fill="none" stroke="black"/>
-<path d="M344,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M350,381v 2.3" fill="none" stroke="black"/>
 <path d="M355,381v 2.3" fill="none" stroke="black"/>
 <path d="M360,381v 2.3" fill="none" stroke="black"/>
 <path d="M366,381v 2.3" fill="none" stroke="black"/>
 <path d="M371,379v 4.7" fill="none" stroke="black"/>
-<path d="M371,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M377,381v 2.3" fill="none" stroke="black"/>
 <path d="M382,381v 2.3" fill="none" stroke="black"/>
 <path d="M388,381v 2.3" fill="none" stroke="black"/>
 <path d="M393,381v 2.3" fill="none" stroke="black"/>
 <path d="M398,379v 4.7" fill="none" stroke="black"/>
-<path d="M398,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M404,381v 2.3" fill="none" stroke="black"/>
 <path d="M409,381v 2.3" fill="none" stroke="black"/>
 <path d="M415,381v 2.3" fill="none" stroke="black"/>
 <path d="M420,381v 2.3" fill="none" stroke="black"/>
 <path d="M426,379v 4.7" fill="none" stroke="black"/>
-<path d="M426,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M431,381v 2.3" fill="none" stroke="black"/>
 <path d="M437,381v 2.3" fill="none" stroke="black"/>
 <path d="M442,381v 2.3" fill="none" stroke="black"/>
 <path d="M447,381v 2.3" fill="none" stroke="black"/>
 <path d="M453,379v 4.7" fill="none" stroke="black"/>
-<path d="M453,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M458,381v 2.3" fill="none" stroke="black"/>
 <path d="M464,381v 2.3" fill="none" stroke="black"/>
 <path d="M469,381v 2.3" fill="none" stroke="black"/>
 <path d="M475,381v 2.3" fill="none" stroke="black"/>
 <path d="M480,379v 4.7" fill="none" stroke="black"/>
-<path d="M480,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M486,381v 2.3" fill="none" stroke="black"/>
 <path d="M491,381v 2.3" fill="none" stroke="black"/>
 <path d="M496,381v 2.3" fill="none" stroke="black"/>
 <path d="M502,381v 2.3" fill="none" stroke="black"/>
 <path d="M507,379v 4.7" fill="none" stroke="black"/>
-<path d="M507,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M513,381v 2.3" fill="none" stroke="black"/>
 <path d="M518,381v 2.3" fill="none" stroke="black"/>
 <path d="M524,381v 2.3" fill="none" stroke="black"/>
 <path d="M529,381v 2.3" fill="none" stroke="black"/>
 <path d="M535,379v 4.7" fill="none" stroke="black"/>
+<path d="M317,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M344,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M371,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M398,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M426,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M453,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M480,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M507,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M535,227v 156" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="317" y="391" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
@@ -6364,54 +6364,54 @@ options2d3.svg
 </text>
 <path d="M317,384v -156" fill="none" stroke="black"/>
 <path d="M323,384h -6.5" fill="none" stroke="black"/>
-<path d="M535,384h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,380h -3.3" fill="none" stroke="black"/>
 <path d="M320,376h -3.3" fill="none" stroke="black"/>
 <path d="M320,372h -3.3" fill="none" stroke="black"/>
 <path d="M320,368h -3.3" fill="none" stroke="black"/>
 <path d="M323,364h -6.5" fill="none" stroke="black"/>
-<path d="M535,364h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,360h -3.3" fill="none" stroke="black"/>
 <path d="M320,356h -3.3" fill="none" stroke="black"/>
 <path d="M320,352h -3.3" fill="none" stroke="black"/>
 <path d="M320,349h -3.3" fill="none" stroke="black"/>
 <path d="M323,345h -6.5" fill="none" stroke="black"/>
-<path d="M535,345h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,341h -3.3" fill="none" stroke="black"/>
 <path d="M320,337h -3.3" fill="none" stroke="black"/>
 <path d="M320,333h -3.3" fill="none" stroke="black"/>
 <path d="M320,329h -3.3" fill="none" stroke="black"/>
 <path d="M323,325h -6.5" fill="none" stroke="black"/>
-<path d="M535,325h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,321h -3.3" fill="none" stroke="black"/>
 <path d="M320,317h -3.3" fill="none" stroke="black"/>
 <path d="M320,313h -3.3" fill="none" stroke="black"/>
 <path d="M320,309h -3.3" fill="none" stroke="black"/>
 <path d="M323,306h -6.5" fill="none" stroke="black"/>
-<path d="M535,306h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,302h -3.3" fill="none" stroke="black"/>
 <path d="M320,298h -3.3" fill="none" stroke="black"/>
 <path d="M320,294h -3.3" fill="none" stroke="black"/>
 <path d="M320,290h -3.3" fill="none" stroke="black"/>
 <path d="M323,286h -6.5" fill="none" stroke="black"/>
-<path d="M535,286h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,282h -3.3" fill="none" stroke="black"/>
 <path d="M320,278h -3.3" fill="none" stroke="black"/>
 <path d="M320,274h -3.3" fill="none" stroke="black"/>
 <path d="M320,270h -3.3" fill="none" stroke="black"/>
 <path d="M323,266h -6.5" fill="none" stroke="black"/>
-<path d="M535,266h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,263h -3.3" fill="none" stroke="black"/>
 <path d="M320,259h -3.3" fill="none" stroke="black"/>
 <path d="M320,255h -3.3" fill="none" stroke="black"/>
 <path d="M320,251h -3.3" fill="none" stroke="black"/>
 <path d="M323,247h -6.5" fill="none" stroke="black"/>
-<path d="M535,247h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M320,243h -3.3" fill="none" stroke="black"/>
 <path d="M320,239h -3.3" fill="none" stroke="black"/>
 <path d="M320,235h -3.3" fill="none" stroke="black"/>
 <path d="M320,231h -3.3" fill="none" stroke="black"/>
 <path d="M323,227h -6.5" fill="none" stroke="black"/>
+<path d="M535,384h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,364h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,345h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,325h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,306h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,286h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,266h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M535,247h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M535,227h -218" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="311" y="387" fill="black" font-size="7.7" font-family="Helvetica" font-weight="bold">4
 </text>
