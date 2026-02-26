@@ -100,18 +100,6 @@ if(NOT shared)
   endif()
 endif()
 
-
-#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
-if(cocoa)
-  if(APPLE)
-    set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
-    set(builtin_freetype ON CACHE BOOL "Enabled because needed for Cocoa graphics (${builtin_freetype_description})" FORCE)
-  else()
-    message(STATUS "Cocoa option can only be enabled on MacOSX platform")
-    set(cocoa OFF CACHE BOOL "Disabled because only available on MacOSX (${cocoa_description})" FORCE)
-  endif()
-endif()
-
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
@@ -283,6 +271,18 @@ if(builtin_freetype)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
   set(FREETYPE_TARGET FREETYPE)
+endif()
+
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
+# Note that this check happens *after* the above check for FreeType because that
+# library is needed for builds on Apple with Cocoa graphics
+if(cocoa)
+  if(APPLE)
+    set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
+  else()
+    message(STATUS "Cocoa option can only be enabled on MacOSX platform")
+    set(cocoa OFF CACHE BOOL "Disabled because only available on MacOSX (${cocoa_description})" FORCE)
+  endif()
 endif()
 
 #---Check for PCRE-------------------------------------------------------------------
