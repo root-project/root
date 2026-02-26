@@ -177,15 +177,18 @@ TEST(RBinIndexRange, ConstructorCreate)
    const RBinIndexRange invalid;
    EXPECT_TRUE(invalid.GetBegin().IsInvalid());
    EXPECT_TRUE(invalid.GetEnd().IsInvalid());
+   EXPECT_TRUE(invalid.IsInvalid());
 
    const auto index0 = RBinIndex(0);
    const auto range0 = CreateBinIndexRange(index0, index0, 0);
    EXPECT_EQ(range0.GetBegin(), index0);
    EXPECT_EQ(range0.GetEnd(), index0);
+   EXPECT_FALSE(range0.IsInvalid());
 
    const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 1);
    EXPECT_EQ(range01.GetBegin(), index0);
    EXPECT_EQ(range01.GetEnd(), RBinIndex(1));
+   EXPECT_FALSE(range01.IsInvalid());
 }
 
 TEST(RBinIndexRange, Equality)

@@ -14,6 +14,8 @@ set(histv7_headers
     ROOT/RHistUtils.hxx
     ROOT/RLinearizedIndex.hxx
     ROOT/RRegularAxis.hxx
+    ROOT/RSliceBinIndexMapper.hxx
+    ROOT/RSliceSpec.hxx
     ROOT/RVariableBinAxis.hxx
     ROOT/RWeight.hxx
 )
