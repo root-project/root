@@ -169,6 +169,16 @@ void TVirtualPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *)
       PaintLine(x[i], y[i], x[i+1], y[i+1]);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments in NDC coordinates
+/// Provided arrays should have 2*n elements
+
+void TVirtualPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
+{
+   for (Int_t i = 0; i < 2*n; i += 2)
+      PaintLineNDC(u[i], v[i], u[i+1], v[i+1]);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Does nothing, unless you implement your own picking.
