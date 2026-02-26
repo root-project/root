@@ -1324,8 +1324,7 @@ void RooPlot::Streamer(TBuffer &R__b)
   // Custom streamer, needed for backward compatibility
 
   if (R__b.IsReading()) {
-    const bool oldAddDir = TH1::AddDirectoryStatus();
-    TH1::AddDirectory(false);
+    TDirectory::TContext ctx{nullptr}; // No self-registration to directories
 
     // The default c'tor might have registered this with a TDirectory.
     // Streaming the TNamed will make this not retrievable anymore, so
@@ -1363,7 +1362,6 @@ void RooPlot::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, RooPlot::IsA());
     }
 
-    TH1::AddDirectory(oldAddDir);
     if (_dir)
       _dir->Append(this);
 
