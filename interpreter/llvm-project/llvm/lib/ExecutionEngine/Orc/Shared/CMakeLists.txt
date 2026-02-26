@@ -1,5 +1,7 @@
 add_llvm_component_library(LLVMOrcShared
   AllocationActions.cpp
+  LibraryResolver.cpp
+  LibraryScanner.cpp
   MachOObjectFormat.cpp
   ObjectFormats.cpp
   OrcError.cpp
