@@ -2890,8 +2890,9 @@ class HierarchyPainter extends BasePainter {
          if ((hitem._more === false) || (!hitem._parent && hitem._childs))
             return;
 
-         if (hitem._childs && hitem._isopen) {
-            hitem._isopen = false;
+         // for the file expand always just toggle isopen flag
+         if (hitem._childs && (hitem._isopen || hitem._file)) {
+            hitem._isopen = !hitem._isopen;
             if (!silent)
                this.updateTreeNode(hitem, d3cont);
             return;

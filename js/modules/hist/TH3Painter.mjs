@@ -396,6 +396,9 @@ class TH3Painter extends THistPainter {
       const histo = this.getHisto(),
             fp = this.getFramePainter();
 
+      // ensure proper colors
+      this.resetContour();
+
       let use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, exclude_content = -1,
           logv = this.getPadPainter()?.getRootPad()?.fLogv,

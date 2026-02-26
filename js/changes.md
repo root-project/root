@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+## Changes in 7.10.3
+1. Fix - add `TLeafG` support in `TTree` #397
+2. Fix - reset contour while drawing `TH3`
+3. Fix - fix kFloat16/kDouble32 processing in `TTree`
+
+
 ## Changes in 7.10.2
 1. Fix - correctly process `TLeafB` arrays in tree draw #384
 2. Fix - better detect default ranges in `TGraph` histogram
