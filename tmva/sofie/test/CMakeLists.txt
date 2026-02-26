@@ -176,3 +176,11 @@ ROOT_ADD_TEST(tmva-sofie-EmitGNN COMMAND emitGNN)
 
 ROOT_EXECUTABLE(EmitGraphIndependent GNN/EmitGraphIndependent.cxx LIBRARIES ROOTTMVASofie)
 ROOT_ADD_TEST(tmva-sofie-EmitGraphIndependent COMMAND EmitGraphIndependent)
+
+# --- InstanceNormalization Test ---
+add_executable(test_instancenorm test_InstanceNormalization.cxx)
+target_include_directories(test_instancenorm PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../inc 
+    ${CMAKE_SOURCE_DIR}/tmva/tmva/inc 
+    ${CMAKE_BINARY_DIR}/include)
+target_link_libraries(test_instancenorm PRIVATE ROOTTMVASofie Core)
