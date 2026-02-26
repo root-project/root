@@ -325,16 +325,16 @@ void Evaluator::updateOutputSizes()
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
       info.isDirty = true;
-
-      // In principle we don't need dirty flag propagation because the driver
-      // takes care of deciding which node needs to be re-evaluated. However,
-      // disabling it also for scalar mode results in very long fitting times
-      // for specific models (test 14 in stressRooFit), which still needs to be
-      // understood. TODO.
-      if (!info.isScalar()) {
+      // We don't need dirty flag propagation because the evaluator takes care
+      // of deciding what needs to be re-evaluated. We can disable the regular
+      // dirty state propagation. However, fundamental variables like
+      // RooRealVars and RooCategories are usually shared with other
+      // computation graphs outside the evaluator, so they can't be mutated.
+      // See also the code of the RooMinimizer, which ensures that dirty state
+      // propagation is temporarily disabled during minimization to really
+      // eliminate any overhead from the dirty flag propagation.
+      if (!info.absArg->isFundamental()) {
          setOperMode(info.absArg, RooAbsArg::ADirty);
-      } else {
-         setOperMode(info.absArg, info.originalOperMode);
       }
    }
 
@@ -630,6 +630,19 @@ void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    if (opMode != arg->operMode()) {
       _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
    }
+}
+
+// Change the operation modes of all RooAbsArgs in the computation graph.
+// The changes are reset when the returned RAII object goes out of scope.
+std::stack<std::unique_ptr<ChangeOperModeRAII>> Evaluator::setOperModes(RooAbsArg::OperMode opMode)
+{
+   std::stack<std::unique_ptr<ChangeOperModeRAII>> out{};
+   for (auto &info : _nodes) {
+      if (opMode != info.absArg->operMode()) {
+         out.emplace(std::make_unique<ChangeOperModeRAII>(info.absArg, opMode));
+      }
+   }
+   return out;
 }
 
 void Evaluator::print(std::ostream &os)

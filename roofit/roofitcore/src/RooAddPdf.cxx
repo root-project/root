@@ -160,7 +160,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPd
                      bool recursiveFractions)
    : RooAddPdf(name, title)
 {
-  setRecursiveFraction(recursiveFractions);
+  _recursive = recursiveFractions;
 
   if (inPdfList.size()>inCoefList.size()+1 || inPdfList.size()<inCoefList.size()) {
     std::stringstream errorMsg;
@@ -257,7 +257,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPd
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList &inPdfList)
    : RooAddPdf(name, title)
 {
-  setAllExtendable(true);
+  _allExtendable = true;
 
   // Constructor with N PDFs
   for (const auto pdfArg : inPdfList) {
@@ -439,16 +439,23 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
 ///                          need to be copied from the `_coefList` elements to
 ///                          the `_coefCache`. True by default.
 
-void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, bool syncCoefValues) const
+void RooAddPdf::updateCoefficients(AddCacheElem &cache, const RooArgSet *nset, bool syncCoefValues) const
 {
-  _coefCache.resize(_pdfList.size());
-  if(syncCoefValues) {
-    for(std::size_t i = 0; i < _coefList.size(); ++i) {
-      _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
-    }
-  }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
-                                    _refCoefNorm, _allExtendable, _coefErrCount);
+   _coefCache.resize(_pdfList.size());
+   if (syncCoefValues) {
+      for (std::size_t i = 0; i < _coefList.size(); ++i) {
+         _coefCache[i] = static_cast<RooAbsReal const &>(_coefList[i]).getVal(nset);
+      }
+   }
+   if (_allExtendable) {
+      for (std::size_t i = 0; i < _pdfList.size(); ++i) {
+         auto &pdf = static_cast<RooAbsPdf &>(_pdfList[i]);
+         _coefCache[i] = pdf.expectedEvents(!_refCoefNorm.empty() ? &_refCoefNorm : nset);
+      }
+   }
+
+   RooAddHelpers::updateCoefficients(*this, _pdfList.size(), _coefCache, _haveLastCoef || _allExtendable, cache,
+                                     _coefErrCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,9 +580,8 @@ void RooAddPdf::doEval(RooFit::EvalContext & ctx) const
   std::vector<std::span<const double>> pdfs;
   std::vector<double> coefs;
   AddCacheElem* cache = getProjCache(nullptr);
-  // We don't sync the coefficient values from the _coefList to the _coefCache
-  // because we have already done it using the ctx.
-  updateCoefficients(*cache, nullptr, /*syncCoefValues=*/false);
+  RooAddHelpers::updateCoefficients(*this, _pdfList.size(), _coefCache, _haveLastCoef || _allExtendable, *cache,
+                                    _coefErrCount);
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo)
   {
@@ -698,7 +704,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   }
 
   // Retrieve analytical integration subCodes and set of observabels integrated over
-  RooArgSet* intSet ;
+  RooArgSet* intSet = nullptr;
   const std::vector<Int_t>& subCode = _codeReg.retrieve(code-1,intSet) ;
   if (subCode.empty()) {
     std::stringstream errorMsg;
@@ -966,7 +972,30 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    // Make sure _refCoefNorm is defined
    materializeRefCoefNormFromAttribute();
 
-   auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(Clone())};
+   // Instead of cloning this RooAddPdf directly, we have to massage it a bit.
+   // In the case of extended pdfs, the coefficients should be set to functions
+   // representing the expected number of events, so we don't have to fall back
+   // to legacy code paths that don't support evaluation with the
+   // RooFit::EvalContext, like RooAbsPdf::expectedEvents().
+   RooArgList coefListNew;
+   if (_allExtendable) {
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
+         coefListNew.addOwned(pdf->createExpectedEventsFunc(!_refCoefNorm.empty() ? &_refCoefNorm : &normSet));
+      }
+   } else {
+      coefListNew.add(coefList());
+   }
+   auto newArg = std::make_unique<RooAddPdf>(GetName(), GetTitle(), pdfList(), coefListNew, _recursive);
+   // Copy some other info that the RooAddPdf copy constructor would otherwise take care of.
+   newArg->setNormRange(normRange());
+   newArg->_codeReg = _codeReg;
+   if (!_refCoefNorm.empty()) {
+      newArg->fixCoefNormalization(_refCoefNorm);
+   }
+   if (_refCoefRangeName) {
+      newArg->fixCoefRange(getCoefRange());
+   }
+
    ctx.markAsCompiled(*newArg);
 
    // If we set the normalization ranges of the component pdfs to the

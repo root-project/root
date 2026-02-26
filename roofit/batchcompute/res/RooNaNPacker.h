@@ -13,7 +13,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROONANPACKER_H
 #define ROOFIT_BATCHCOMPUTE_ROONANPACKER_H
 
-#include <RooBatchComputeTypes.h>
+#include "./RooBatchComputeTypes.h"
 
 #include <TError.h>
 

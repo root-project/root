@@ -80,6 +80,43 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy assignment
+
+RooAICRegistry &RooAICRegistry::operator=(const RooAICRegistry& other)
+{
+  // Delete code list array, if allocated
+  for (unsigned int i = 0; i < _clArr.size(); ++i) {
+    if (_asArr1[i]) { delete   _asArr1[i]; _asArr1[i] = nullptr; }
+    if (_asArr2[i]) { delete   _asArr2[i]; _asArr2[i] = nullptr; }
+    if (_asArr3[i]) { delete   _asArr3[i]; _asArr3[i] = nullptr; }
+    if (_asArr4[i]) { delete   _asArr4[i]; _asArr4[i] = nullptr; }
+  }
+
+  _clArr = other._clArr;
+  _asArr1.resize(other._clArr.size());
+  _asArr2.resize(other._clArr.size());
+  _asArr3.resize(other._clArr.size());
+  _asArr4.resize(other._clArr.size());
+
+  // Copy code-list array if other PDF has one
+  UInt_t size = other._clArr.size();
+  if (size) {
+    _asArr1.resize(size, nullptr);
+    _asArr2.resize(size, nullptr);
+    _asArr3.resize(size, nullptr);
+    _asArr4.resize(size, nullptr);
+    for(UInt_t i = 0; i < size; ++i) {
+      _asArr1[i] = makeSnapshot(other._asArr1[i]);
+      _asArr2[i] = makeSnapshot(other._asArr2[i]);
+      _asArr3[i] = makeSnapshot(other._asArr3[i]);
+      _asArr4[i] = makeSnapshot(other._asArr4[i]);
+    }
+  }
+
+  return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooAICRegistry::~RooAICRegistry()

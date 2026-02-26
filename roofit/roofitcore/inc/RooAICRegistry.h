@@ -28,6 +28,7 @@ class RooAICRegistry {
 public:
   RooAICRegistry(UInt_t size = 10) ;
   RooAICRegistry(const RooAICRegistry& other) ;
+  RooAICRegistry& operator=(const RooAICRegistry& other) ;
   virtual ~RooAICRegistry() ;
 
   Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = nullptr, RooArgSet* set2 = nullptr,

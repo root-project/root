@@ -321,7 +321,10 @@ if not single_canvas:
 
 
 # Use ROOT's minimizer to compute the minimum and display the results
-for nll in [nll_gauss, nllr_learned, nll_morph]:
+# TODO: nll_morph should be fitted last, but since the other likelihoods are
+# fitted without the legacy backend, which has side effects on the dirty state
+# propagation, fitting nll_morph in the end will be slow.
+for nll in [nll_morph, nll_gauss, nllr_learned]:
     minimizer = ROOT.RooMinimizer(nll)
     minimizer.setErrorLevel(0.5)
     minimizer.setPrintLevel(-1)
