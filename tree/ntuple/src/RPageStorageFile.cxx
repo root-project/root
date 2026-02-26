@@ -437,6 +437,12 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPage(ROOT::DescriptorId_t physic
                                                      RNTupleLocalIndex localIndex, RSealedPage &sealedPage)
 {
    const auto clusterId = localIndex.GetClusterId();
+   //  Set total file size on first page load (when metrics are enabled)
+   if (!fFileSizeSet && fCounters) {
+      fCounters->fTotalFileSize.SetValue(fFile->GetSize());
+      fFileSizeSet = true;
+   }
+
 
    ROOT::RClusterDescriptor::RPageInfo pageInfo;
    {
@@ -466,6 +472,12 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
                                                                        const RClusterInfo &clusterInfo,
                                                                        ROOT::NTupleSize_t idxInCluster)
 {
+   // Set total file size on first page load
+   if (!fFileSizeSet && fCounters) {
+      fCounters->fTotalFileSize.SetValue(fFile->GetSize());
+      fFileSizeSet = true;
+   }
+
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
    const auto pageInfo = clusterInfo.fPageInfo;
@@ -493,8 +505,15 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       {
          RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
-                            pageInfo.GetLocator().GetPosition<std::uint64_t>());
+         auto offset = pageInfo.GetLocator().GetPosition<std::uint64_t>();
+         // Track seek distance
+         if (fLastOffset != 0) {
+            std::int64_t diff = static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset);
+            std::uint64_t distance = (diff >= 0) ? diff : -diff;
+            fCounters->fSumSkip.Add(distance);
+         }
+         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(), offset);
+         fLastOffset = offset + sealedPage.GetBufferSize();
       }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
@@ -513,6 +532,16 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
       ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
+      
+      // Track seek distance based on page location even when using cluster pool
+      auto offset = pageInfo.GetLocator().GetPosition<std::uint64_t>();
+      if (fLastOffset != 0) {
+         std::int64_t diff = static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset);
+         std::uint64_t distance = (diff >= 0) ? diff : -diff;
+         fCounters->fSumSkip.Add(distance);
+      }
+      fLastOffset = offset + sealedPage.GetBufferSize();
+      
       sealedPage.SetBuffer(onDiskPage->GetAddress());
    }
 

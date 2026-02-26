@@ -542,6 +542,30 @@ void ROOT::Internal::RPageSource::EnableDefaultMetrics(const std::string &prefix
                                                      }
                                                   }
                                                   return {false, -1.};
+                                               }),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter *>("sumSkip", "B", "cumulative seek distance"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter *>("totalFileSize", "B", "total file size"),
+      *fMetrics.MakeCounter<RNTupleCalcPerf *>("randomness", "", "ratio of seek distance to bytes read", fMetrics,
+                                               [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+                                                  if (const auto sumSkip = metrics.GetLocalCounter("sumSkip")) {
+                                                     if (const auto szRead = metrics.GetLocalCounter("szReadPayload")) {
+                                                        if (auto payload = szRead->GetValueAsInt()) {
+                                                           return {true, (1. * sumSkip->GetValueAsInt()) / payload};
+                                                        }
+                                                     }
+                                                  }
+                                                  return {false, -1.};
+                                               }),
+      *fMetrics.MakeCounter<RNTupleCalcPerf *>("sparseness", "", "ratio of bytes read to total file size", fMetrics,
+                                               [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+                                                  if (const auto szRead = metrics.GetLocalCounter("szReadPayload")) {
+                                                     if (const auto fileSize = metrics.GetLocalCounter("totalFileSize")) {
+                                                        if (auto total = fileSize->GetValueAsInt()) {
+                                                           return {true, (1. * szRead->GetValueAsInt()) / total};
+                                                        }
+                                                     }
+                                                  }
+                                                  return {false, -1.};
                                                })});
 }
 
