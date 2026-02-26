@@ -34,6 +34,8 @@
 #include "Math/GenVector/BoostY.h"
 #include "Math/GenVector/BoostZ.h"
 
+#include <algorithm>
+
 namespace ROOT {
 
   namespace Math {
