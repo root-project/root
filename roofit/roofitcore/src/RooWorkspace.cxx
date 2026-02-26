@@ -1935,9 +1935,8 @@ bool RooWorkspace::import(TObject const& object, const char* aliasName, bool rep
     return true ;
   }
 
-  TH1::AddDirectory(false) ;
-  auto wrapper = new RooTObjWrap(object.Clone()) ;
-  TH1::AddDirectory(true) ;
+  TDirectory::TContext ctx{nullptr}; // No self-registration to directories
+  auto wrapper = new RooTObjWrap(object.Clone());
   wrapper->setOwning(true) ;
   wrapper->SetName(aliasName) ;
   wrapper->SetTitle(aliasName) ;
