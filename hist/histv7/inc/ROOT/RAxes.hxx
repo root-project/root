@@ -7,6 +7,8 @@
 
 #include "RAxisVariant.hxx"
 #include "RBinIndex.hxx"
+#include "RBinIndexMultiRange.hxx"
+#include "RBinIndexRange.hxx"
 #include "RCategoricalAxis.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
@@ -135,13 +137,11 @@ public:
       return ComputeGlobalIndexImpl<sizeof...(A)>(args);
    }
 
-   /// Compute the global index for all axes.
-   ///
-   /// \param[in] indices the array of RBinIndex
-   /// \return the global index that may be invalid
-   template <std::size_t N>
-   RLinearizedIndex ComputeGlobalIndex(const std::array<RBinIndex, N> &indices) const
+private:
+   template <typename Container>
+   RLinearizedIndex ComputeGlobalIndexImpl(const Container &indices) const
    {
+      const auto N = indices.size();
       if (N != fAxes.size()) {
          throw std::invalid_argument("invalid number of indices passed to ComputeGlobalIndex");
       }
@@ -168,6 +168,38 @@ public:
          globalIndex += linIndex.fIndex;
       }
       return {globalIndex, true};
+   }
+
+public:
+   /// Compute the global index for all axes.
+   ///
+   /// \param[in] indices the array of RBinIndex
+   /// \return the global index that may be invalid
+   template <std::size_t N>
+   RLinearizedIndex ComputeGlobalIndex(const std::array<RBinIndex, N> &indices) const
+   {
+      return ComputeGlobalIndexImpl(indices);
+   }
+
+   /// Compute the global index for all axes.
+   ///
+   /// \param[in] indices the vector of RBinIndex
+   /// \return the global index that may be invalid
+   RLinearizedIndex ComputeGlobalIndex(const std::vector<RBinIndex> &indices) const
+   {
+      return ComputeGlobalIndexImpl(indices);
+   }
+
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiRange GetFullRange() const
+   {
+      std::vector<RBinIndexRange> ranges;
+      for (auto &&axis : fAxes) {
+         ranges.push_back(axis.GetFullRange());
+      }
+      return RBinIndexMultiRange(std::move(ranges));
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

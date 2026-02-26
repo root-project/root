@@ -1,6 +1,8 @@
 #include "hist_test.hxx"
 
 #include <array>
+#include <iterator>
+#include <random>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -81,6 +83,17 @@ TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
    EXPECT_THROW(engine2.GetBinContent(1), std::invalid_argument);
    EXPECT_NO_THROW(engine2.GetBinContent(1, 2));
    EXPECT_THROW(engine2.GetBinContent(1, 2, 3), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV1 = {1};
+   const std::vector<RBinIndex> indicesV2 = {1, 2};
+   const std::vector<RBinIndex> indicesV3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(engine1.GetBinContent(indicesV1));
+   EXPECT_THROW(engine1.GetBinContent(indicesV2), std::invalid_argument);
+
+   EXPECT_THROW(engine2.GetBinContent(indicesV1), std::invalid_argument);
+   EXPECT_NO_THROW(engine2.GetBinContent(indicesV2));
+   EXPECT_THROW(engine2.GetBinContent(indicesV3), std::invalid_argument);
 }
 
 TEST(RHistEngine, GetBinContentNotFound)
@@ -90,6 +103,31 @@ TEST(RHistEngine, GetBinContentNotFound)
    const RHistEngine<int> engine({axis});
 
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV = {Bins};
+   EXPECT_THROW(engine.GetBinContent(indicesV), std::invalid_argument);
+}
+
+TEST(RHistEngine, GetFullRange)
+{
+   static constexpr std::size_t Bins = 20;
+   RHistEngine<int> engine(Bins, {0, Bins});
+
+   std::mt19937 gen;
+   std::uniform_real_distribution<double> dist(0, Bins);
+   static constexpr std::size_t Entries = 1000;
+   for (std::size_t i = 0; i < Entries; i++) {
+      engine.Fill(dist(gen));
+   }
+
+   auto range = engine.GetFullRange();
+   EXPECT_EQ(std::distance(range.begin(), range.end()), Bins + 2);
+
+   int entries = 0;
+   for (auto &&indices : range) {
+      entries += engine.GetBinContent(indices);
+   }
+   EXPECT_EQ(entries, Entries);
 }
 
 TEST(RHistEngine, SetBinContent)

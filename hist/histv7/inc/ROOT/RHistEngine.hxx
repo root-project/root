@@ -186,6 +186,39 @@ public:
    ///
    /// \code
    /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
+   /// std::vector<ROOT::Experimental::RBinIndex> indices = {3, 5};
+   /// int content = hist.GetBinContent(indices);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of indices does not match the axis configuration or the bin is not found.
+   ///
+   /// \param[in] indices the vector of indices for each axis
+   /// \return the bin content
+   /// \par See also
+   /// the \ref GetBinContent(const A &... args) const "variadic function template overload" accepting arguments
+   /// directly
+   const BinContentType &GetBinContent(const std::vector<RBinIndex> &indices) const
+   {
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (indices.size() != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of indices passed to GetBinContent");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndex(indices);
+      if (!index.fValid) {
+         throw std::invalid_argument("bin not found in GetBinContent");
+      }
+      assert(index.fIndex < fBinContents.size());
+      return fBinContents[index.fIndex];
+   }
+
+   /// Get the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
    /// int content = hist.GetBinContent(ROOT::Experimental::RBinIndex(3), ROOT::Experimental::RBinIndex(5));
    /// // ... or construct the RBinIndex arguments implicitly from integers:
    /// content = hist.GetBinContent(3, 5);
@@ -199,14 +232,19 @@ public:
    /// \param[in] args the arguments for each axis
    /// \return the bin content
    /// \par See also
-   /// the \ref GetBinContent(const std::array<RBinIndex, N> &indices) const "function overload" accepting
-   /// `std::array`
+   /// the function overloads accepting \ref GetBinContent(const std::array<RBinIndex, N> &indices) const "`std::array`"
+   /// or \ref GetBinContent(const std::vector<RBinIndex> &indices) const "`std::vector`"
    template <typename... A>
    const BinContentType &GetBinContent(const A &...args) const
    {
       std::array<RBinIndex, sizeof...(A)> indices{args...};
       return GetBinContent(indices);
    }
+
+   /// Get the multidimensional range of all bins.
+   ///
+   /// \return the multidimensional range
+   RBinIndexMultiRange GetFullRange() const { return fAxes.GetFullRange(); }
 
    /// Add all bin contents of another histogram.
    ///

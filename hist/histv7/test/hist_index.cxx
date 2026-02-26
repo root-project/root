@@ -243,3 +243,120 @@ TEST(RBinIndexRange, Full)
    EXPECT_TRUE(binIndices.front().IsUnderflow());
    EXPECT_TRUE(binIndices.back().IsOverflow());
 }
+
+TEST(RBinIndexMultiRange, Constructor)
+{
+   const RBinIndexMultiRange invalid;
+   EXPECT_TRUE(invalid.GetRanges().empty());
+
+   const auto index0 = RBinIndex(0);
+   const auto range0 = CreateBinIndexRange(index0, index0, 0);
+   const RBinIndexMultiRange multiRange0({range0});
+   ASSERT_EQ(multiRange0.GetRanges().size(), 1);
+   EXPECT_EQ(multiRange0.GetRanges()[0], range0);
+
+   const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 1);
+   const std::vector<RBinIndexRange> ranges = {range0, range01};
+   const RBinIndexMultiRange multiRange001(ranges);
+   ASSERT_EQ(multiRange001.GetRanges().size(), 2);
+   EXPECT_EQ(multiRange001.GetRanges()[0], range0);
+   EXPECT_EQ(multiRange001.GetRanges()[1], range01);
+}
+
+TEST(RBinIndexMultiRange, Equality)
+{
+   const auto index0 = RBinIndex(0);
+   const auto range0 = CreateBinIndexRange(index0, index0, 0);
+   const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 1);
+
+   const RBinIndexMultiRange invalid;
+   const RBinIndexMultiRange multiRange({range0});
+   const RBinIndexMultiRange multiRange0({range0});
+   const RBinIndexMultiRange multiRange001({range0, range01});
+
+   EXPECT_NE(invalid, multiRange);
+   EXPECT_EQ(multiRange, multiRange0);
+   EXPECT_NE(multiRange, multiRange001);
+}
+
+TEST(RBinIndexMultiRange, Invalid)
+{
+   const RBinIndexMultiRange invalid;
+   EXPECT_EQ(invalid.begin(), invalid.end());
+   EXPECT_EQ(std::distance(invalid.begin(), invalid.end()), 0);
+}
+
+// For one-dimensional iteration, the behavior should be identical to RBinIndexRange.
+TEST(RBinIndexMultiRange, Empty)
+{
+   const auto index0 = RBinIndex(0);
+   const auto empty = CreateBinIndexRange(index0, index0, 0);
+   ASSERT_EQ(empty.begin(), empty.end());
+   const RBinIndexMultiRange emptyMulti({empty});
+   EXPECT_EQ(emptyMulti.begin(), emptyMulti.end());
+   EXPECT_EQ(std::distance(emptyMulti.begin(), emptyMulti.end()), 0);
+}
+
+TEST(RBinIndexMultiRange, Normal)
+{
+   const auto index0 = RBinIndex(0);
+   const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 0);
+   const RBinIndexMultiRange normal({range01});
+   EXPECT_EQ(std::distance(normal.begin(), normal.end()), 1);
+
+   auto normalIt = normal.begin();
+   auto &indices = *normalIt;
+   ASSERT_EQ(indices.size(), 1);
+   EXPECT_TRUE(indices[0].IsNormal());
+   EXPECT_EQ(indices[0], index0);
+   normalIt++;
+   EXPECT_EQ(normalIt, normal.end());
+}
+
+TEST(RBinIndexMultiRange, Full)
+{
+   const auto underflow = RBinIndex::Underflow();
+   const RBinIndex invalid;
+   const auto full = CreateBinIndexRange(underflow, invalid, /*nNormalBins=*/10);
+   const RBinIndexMultiRange fullMulti({full});
+   EXPECT_EQ(std::distance(fullMulti.begin(), fullMulti.end()), 12);
+
+   const std::vector values(fullMulti.begin(), fullMulti.end());
+   ASSERT_EQ(values.size(), 12);
+   ASSERT_EQ(values.front().size(), 1);
+   EXPECT_TRUE(values.front()[0].IsUnderflow());
+   ASSERT_EQ(values.back().size(), 1);
+   EXPECT_TRUE(values.back()[0].IsOverflow());
+}
+
+TEST(RBinIndexMultiRange, Multi)
+{
+   const auto index0 = RBinIndex(0);
+   const auto normal = CreateBinIndexRange(index0, RBinIndex(10), 0);
+   const auto underflow = RBinIndex::Underflow();
+   const RBinIndex invalid;
+   const auto full = CreateBinIndexRange(underflow, invalid, /*nNormalBins=*/10);
+   const RBinIndexMultiRange multi({normal, full});
+   EXPECT_EQ(std::distance(multi.begin(), multi.end()), 120);
+
+   const std::vector values(multi.begin(), multi.end());
+   ASSERT_EQ(values.size(), 120);
+   ASSERT_EQ(values[0].size(), 2);
+   EXPECT_EQ(values[0][0], index0);
+   EXPECT_EQ(values[0][1], underflow);
+   ASSERT_EQ(values[1].size(), 2);
+   EXPECT_EQ(values[1][0], index0);
+   EXPECT_EQ(values[1][1], index0);
+   ASSERT_EQ(values.back().size(), 2);
+   EXPECT_EQ(values.back()[0], RBinIndex(9));
+   EXPECT_TRUE(values.back()[1].IsOverflow());
+}
+
+TEST(RBinIndexMultiRange, MultiEmpty)
+{
+   const auto normal = CreateBinIndexRange(RBinIndex(0), RBinIndex(10), 0);
+   const auto empty = CreateBinIndexRange(RBinIndex(0), RBinIndex(0), 0);
+   const RBinIndexMultiRange multi({normal, empty, normal});
+   EXPECT_EQ(multi.begin(), multi.end());
+   EXPECT_EQ(std::distance(multi.begin(), multi.end()), 0);
+}
