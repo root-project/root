@@ -1093,8 +1093,9 @@ static inline CPyCppyy::LowLevelView* CreateLowLevelViewT(
         llp->fConverter = llp->fElemCnv;
     } else {
     // multi-dim array; sub-views are projected by using more LLViews
-        view.len        = nx * sizeof(void*);
-        view.itemsize   = sizeof(void*);
+        const size_t elemsize = isfix ? sizeof(T) : sizeof(void*);
+        view.len      = nx * elemsize;
+        view.itemsize = elemsize;
         for (Py_ssize_t idim = 1; idim < view.ndim; ++idim)
             view.shape[idim] = shape[idim];
 
