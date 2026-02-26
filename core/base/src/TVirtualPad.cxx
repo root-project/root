@@ -159,6 +159,18 @@ Bool_t TVirtualPad::PadInHighlightMode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments
+/// Provided arrays should have 2*n elements
+/// IMPORTANT! Provided arrays can be modified after function call!
+
+void TVirtualPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *)
+{
+   for (Int_t i = 0; i < 2*n; i += 2)
+      PaintLine(x[i], y[i], x[i+1], y[i+1]);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Does nothing, unless you implement your own picking.
 /// When complex object containing sub-objects (which can be picked)
 /// is painted in a pad, this "top-level" object is pushed into
