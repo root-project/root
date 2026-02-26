@@ -4790,6 +4790,32 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint N individual segments in NDC coordinates
+/// Provided arrays should have 2*n elements
+/// IMPORTANT! Provided arrays can be modified after function call!
+
+void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
+{
+   for (Int_t i = 0; i < 2*n; i+=2) {
+      if (!gPad->IsBatch() && GetPainter())
+         GetPainter()->DrawLineNDC(u[i], v[i], u[i + 1], v[i + 1]);
+
+      if (gVirtualPS) {
+         Double_t xw[2], yw[2];
+         xw[0] = fX1 + u[i]*(fX2 - fX1);
+         xw[1] = fX1 + u[i + 1]*(fX2 - fX1);
+         yw[0] = fY1 + v[i]*(fY2 - fY1);
+         yw[1] = fY1 + v[i + 1]*(fY2 - fY1);
+         gVirtualPS->DrawPS(2, xw, yw);
+      }
+   }
+
+   Modified();
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint text in CurrentPad World coordinates.
 
 void TPad::PaintText(Double_t x, Double_t y, const char *text)
