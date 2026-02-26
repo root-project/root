@@ -13,6 +13,7 @@
 #include "DeclUnloader.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Diagnostics.h"
 #include "cling/Utils/ParserStateRAII.h"
 
 #include "clang/AST/ASTContext.h"
@@ -1113,23 +1114,6 @@ namespace cling {
     }
 
     //
-    //  Tell the diagnostic engine to ignore all diagnostics.
-    //
-    bool OldSuppressAllDiagnostics
-      = S.getDiagnostics().getSuppressAllDiagnostics();
-    S.getDiagnostics().setSuppressAllDiagnostics(
-        diagOnOff == LookupHelper::NoDiagnostics);
-
-    struct ResetDiagSuppression {
-      bool _Old;
-      Sema& _S;
-      ResetDiagSuppression(Sema &S, bool Old): _Old(Old), _S(S) {}
-      ~ResetDiagSuppression() {
-        _S.getDiagnostics().setSuppressAllDiagnostics(_Old);
-      }
-    } DiagSuppressionRAII(S, OldSuppressAllDiagnostics);
-
-    //
     //  Construct the overload candidate set.
     //
     OverloadCandidateSet Candidates(FuncNameInfo.getLoc(),
@@ -1216,8 +1200,11 @@ namespace cling {
             S.InstantiateFunctionDefinition(SourceLocation(), TheDecl,
                                             true /*recursive instantiation*/);
           }
-          if (TheDecl->isInvalidDecl()) {
-            // if the decl is invalid try to clean up
+          if (TheDecl->isInvalidDecl() &&
+              !S.getDiagnostics().hasErrorOccurred()) {
+            // if the decl is invalid try to clean up (unless an error occurred,
+            // in which case this will be handled instead by the failed
+            // transaction)
             UnloadDecl(&S, const_cast<FunctionDecl*>(TheDecl));
             return 0;
           }
@@ -1538,11 +1525,27 @@ namespace cling {
        // Lookup failed.
        return 0;
     }
-    return functionSelector(foundDC,objectIsConst,GivenArgs,
-                            Result,
-                            FuncNameInfo,
-                            FuncTemplateArgs,
-                            Context, P, S, diagOnOff);
+
+    //  Suppress printing of diagnostics (we cannot simply ignore them
+    // since then it would not be possible to check for errors programmatically
+    // either)
+
+    utils::DiagnosticsStore ds(S.getDiagnostics(), false, /*Own*/
+                               diagOnOff ==
+                                   LookupHelper::WithDiagnostics /*Report*/);
+
+    auto res = functionSelector(foundDC, objectIsConst, GivenArgs, Result,
+                                FuncNameInfo, FuncTemplateArgs, Context, P, S,
+                                diagOnOff);
+
+    if (S.getDiagnostics().hasErrorOccurred()) {
+      auto* transaction =
+          const_cast<Transaction*>(Interp->getCurrentTransaction());
+      transaction->setIssuedDiags(Transaction::kErrors);
+      return 0;
+    }
+
+    return res;
   }
 
   template <typename DigestArgsInput, typename returnType>
@@ -1824,8 +1827,11 @@ namespace cling {
           if (!fdecl->isDefined())
             S.InstantiateFunctionDefinition(loc, fdecl,
                                             true /*recursive instantiation*/);
-          if (fdecl->isInvalidDecl()) {
-            // if the decl is invalid try to clean up
+          if (fdecl->isInvalidDecl() &&
+              !S.getDiagnostics().hasErrorOccurred()) {
+            // if the decl is invalid try to clean up (unless an error occurred,
+            // in which case this will be handled instead by the failed
+            // transaction)
             UnloadDecl(&S, fdecl);
             return 0;
           }
