@@ -394,8 +394,8 @@ void THStack::BuildStack()
    Int_t nhists = fHists->GetSize();
    if (!nhists) return;
    fStack = new TObjArray(nhists);
-   Bool_t add = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
    TH1 *h = (TH1*)fHists->At(0)->Clone();
    fStack->Add(h);
    for (Int_t i=1;i<nhists;i++) {
@@ -406,7 +406,6 @@ void THStack::BuildStack()
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
    }
-   TH1::AddDirectory(add);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,8 +863,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
    }
    else                   themin = fMinimum;
    if (!fHistogram) {
-      Bool_t add = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
+      TDirectory::TContext ctx{nullptr}; // No self-registration to directories
       h = (TH1*)fHists->At(0);
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
@@ -900,7 +898,6 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       }
       fHistogram->SetStats(false);
       fHistogram->Sumw2(kFALSE);
-      TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());
    }

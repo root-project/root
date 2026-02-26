@@ -3178,8 +3178,8 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
       Error("DrawNormalized","Sum of weights is null. Cannot normalize histogram: %s",GetName());
       return nullptr;
    }
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+
+   TDirectory::TContext ctx{nullptr};
    TH1 *h = (TH1*)Clone();
    h->SetBit(kCanDelete);
    // in case of drawing with error options - scale correctly the error
@@ -3193,7 +3193,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    if (TMath::Abs(fMaximum+1111) > 1e-3) h->SetMaximum(fMaximum*norm/sum);
    if (TMath::Abs(fMinimum+1111) > 1e-3) h->SetMinimum(fMinimum*norm/sum);
    h->Draw(opt);
-   TH1::AddDirectory(addStatus);
+
    return h;
 }
 
@@ -4384,11 +4384,10 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
    asym->SetTitle(title);
 
    asym->Sumw2();
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+
+   TDirectory::TContext ctx{nullptr};
    TH1 *top    = (TH1*)asym->Clone();
    TH1 *bottom = (TH1*)asym->Clone();
-   TH1::AddDirectory(addStatus);
 
    // form the top and bottom of the asymmetry, and then divide:
    top->Add(h1,h2,1,-c2);
