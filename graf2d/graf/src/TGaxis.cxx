@@ -1653,6 +1653,16 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             nticks1 = TMath::Min(Int_t(axis_length1/dxtick + epsilon), 1000);
       }
 
+      std::vector<Double_t> ticksx, ticksy, gridx, gridy;
+      if (!drawGridOnly) {
+         ticksx.reserve(nticks + nticks0 + nticks1);
+         ticksy.reserve(nticks + nticks0 + nticks1);
+      }
+      if (optionGrid) {
+         gridx.reserve((nticks + nticks0 + nticks1) / nn2 + 2);
+         gridy.reserve((nticks + nticks0 + nticks1) / nn2 + 2);
+      }
+
       auto draw_tick = [&](int indx, double xtick, double xf) {
          int ltick;
          if (indx % nn2 == 0)
@@ -1697,8 +1707,12 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                paint_tick = (x1 != x0) ? (xpl1 > x0) : (ypl1 > y0);
             else if (optionArrow == 3)
                paint_tick = (x1 != x0) ? (xpl1 > x0 && xpl2 < x1) : (ypl1 > y0 && ypl2 < y1);
-            if (paint_tick)
-               PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            if (paint_tick) {
+               ticksx.push_back(xpl1);
+               ticksx.push_back(xpl2);
+               ticksy.push_back(ypl1);
+               ticksy.push_back(ypl2);
+            }
          }
 
          if (optionGrid && (ltick == 0)) {
@@ -1709,7 +1723,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                Rotate(xtick,0,cosphi,sinphi,xx0,yy0, xpl2,ypl2);
                Rotate(xtick,grid_side*gridlength,cosphi,sinphi,xx0,yy0, xpl1,ypl1);
             }
-            linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            gridx.push_back(xpl1);
+            gridx.push_back(xpl2);
+            gridy.push_back(ypl1);
+            gridy.push_back(ypl2);
          }
       };
 
@@ -1721,6 +1738,18 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
       for (k = 1; k <= nticks1; k++)
          draw_tick(k, Double_t(nticks-1 + k) * dxtick, binHigh + Double_t(k)*dxtick);
+
+      // paint ticks all together with one command
+      if (ticksx.size() > 0) {
+         TAttLine::Modify();
+         gPad->PaintSegmentsNDC(ticksx.size() / 2, ticksx.data(), ticksy.data());
+      }
+
+      // paint grid lines all together after ticks
+      if (gridx.size() > 0) {
+         linegrid.TAttLine::Modify();
+         gPad->PaintSegmentsNDC(gridx.size() / 2, gridx.data(), gridy.data());
+      }
    }
 
 // Draw the numeric labels if needed...
