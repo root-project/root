@@ -2083,6 +2083,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
       }
 
       if (!out && !child.fComp) {
+         TDirectory::TContext ctx{nullptr}; // No self-registration of histograms to directories
          std::shared_ptr<RooAbsArg> _func;
          // a null node .. so create either a new RooProduct or RooHistFunc if has observables (or no deps but has
          // x-axis)
@@ -2091,11 +2092,8 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             if (_obs.empty()) {
                // using X axis to construct hist
                auto _ax = dynamic_cast<Axis2 *>(GetXaxis());
-               auto t = TH1::AddDirectoryStatus();
-               TH1::AddDirectory(false);
                auto h =
                   std::make_unique<TH1D>(child.GetName(), child.GetTitle(), _ax->GetNbins(), _ax->binning()->array());
-               TH1::AddDirectory(t);
                h->GetXaxis()->SetName(TString::Format("%s;%s", _ax->GetParent()->GetName(), _ax->GetName()));
                // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
                _func = std::dynamic_pointer_cast<RooAbsArg>(acquire(xRooNode(*h).convertForAcquisition(*this)));
@@ -2110,11 +2108,8 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
                      break;
                   }
                }
-               auto t = TH1::AddDirectoryStatus();
-               TH1::AddDirectory(false);
                auto h = std::make_unique<TH1D>(child.GetName(), child.GetTitle(), _x->numBins(binningName),
                                                _x->getBinningPtr(binningName)->array());
-               TH1::AddDirectory(t);
                h->GetXaxis()->SetName(
                   TString::Format("%s;%s", dynamic_cast<TObject *>(_x)->GetName(), binningName.Data()));
                // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
@@ -4511,16 +4506,13 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
          if (auto ax = GetXaxis(); ax) {
             std::shared_ptr<TH1D> h;
             auto _b = dynamic_cast<Axis2 *>(ax)->binning();
-            auto t = TH1::AddDirectoryStatus();
-            TH1::AddDirectory(false);
+            TDirectory::TContext ctx{nullptr}; // No self-registration to directories
             if (_b->isUniform()) {
                h.reset(new TH1D(GetName(), GetTitle(), _b->numBins(), _b->lowBound(), _b->highBound()));
             } else {
                h.reset(new TH1D(GetName(), GetTitle(), _b->numBins(), _b->array()));
             }
             h->SetOption("nostyle"); // don't transfer style when added
-            h->SetDirectory(nullptr);
-            TH1::AddDirectory(t);
             h->GetXaxis()->SetName(TString::Format("%s;%s", ax->GetParent()->GetName(), ax->GetName()));
             fComp = h;
          }
@@ -8578,9 +8570,8 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
    }
 
    TObject *vv = rar;
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
 
-   auto t = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(false);
    TH1 *h = nullptr;
    if (!v) {
       if (binStart != -1 || binEnd != -1) { // allow v to stay nullptr if doing integral (binStart=binEnd=-1)
@@ -8682,7 +8673,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
    if (auto o = dynamic_cast<TObject *>(v); o && !setTitle) {
       h->GetXaxis()->SetTitle(o->GetTitle());
    }
-   TH1::AddDirectory(t);
+
    if (v) {
       if (h->GetXaxis()->IsAlphanumeric()) {
          // store the variable name in the TimeFormat property as well, b.c. alphanumeric requires axis name to be
@@ -10843,10 +10834,9 @@ void xRooNode::Draw(Option_t *opt)
       auto _axis = (doHorizontal ? histCopy->GetYaxis() : histCopy->GetXaxis());
 
       /*
-            auto t = TH1::AddDirectoryStatus();
-            TH1::AddDirectory(false);
+            TDirectory::TContext ctx{nullptr}; // No self-registration to directories
             auto hist = new TH1F(TString::Format(".%s_pullFrame", GetName()), fr->GetTitle(), std::max(graph->GetN(),
-         1), -0.5, std::max(graph->GetN(), 1) - 0.5); hist->SetStats(false); TH1::AddDirectory(t);
+         1), -0.5, std::max(graph->GetN(), 1) - 0.5); hist->SetStats(false);
             hist->SetBit(kCanDelete);
             */
       //      auto hist = graph->GetHistogram();
