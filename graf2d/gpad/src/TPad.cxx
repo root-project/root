@@ -4762,7 +4762,7 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       return;
 
    Double_t xmin,xmax,ymin,ymax;
-   Bool_t mustClip = kTRUE;
+   Bool_t mustClip = kTRUE, isAny = kFALSE;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
    } else {
@@ -4770,20 +4770,25 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       if (option && *option == 'C') mustClip = kFALSE;
    }
 
-   for (Int_t i = 0; i < 2*n; i+=2) {
-      Int_t iclip = 0;
-      if (mustClip) {
-         iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
+   if (!mustClip)
+      isAny = kTRUE;
+   else {
+      for (Int_t i = 0; i < 2*n; i+=2) {
+         Int_t iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
          if (iclip == 2)
-            continue;
+            x[i] = y[i] = x[i+1] = y[i+1] = 0;
+         else
+            isAny = kTRUE;
       }
-
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawLine(x[i], y[i], x[i + 1], y[i + 1]);
-
-      if (gVirtualPS)
-         gVirtualPS->DrawPS(2, &x[i], &y[i]);
    }
+
+   if (isAny && !gPad->IsBatch() && GetPainter())
+      GetPainter()->DrawSegments(n, x, y);
+
+   if (isAny && gVirtualPS)
+      for (Int_t i = 0; i < 2*n; i+=2)
+         if ((x[i] != x[i+1]) || (y[i] != y[i+1]))
+            gVirtualPS->DrawPS(2, &x[i], &y[i]);
 
    Modified();
 }
@@ -4796,12 +4801,12 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
-   for (Int_t i = 0; i < 2*n; i+=2) {
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawLineNDC(u[i], v[i], u[i + 1], v[i + 1]);
+   if (!gPad->IsBatch() && GetPainter())
+      GetPainter()->DrawSegmentsNDC(n, u, v);
 
-      if (gVirtualPS) {
-         Double_t xw[2], yw[2];
+   if (gVirtualPS) {
+      Double_t  xw[2], yw[2];
+      for (Int_t i = 0; i < 2*n; i+=2) {
          xw[0] = fX1 + u[i]*(fX2 - fX1);
          xw[1] = fX1 + u[i + 1]*(fX2 - fX1);
          yw[0] = fY1 + v[i]*(fY2 - fY1);
@@ -4812,7 +4817,6 @@ void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 
    Modified();
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
