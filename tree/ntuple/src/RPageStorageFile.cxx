@@ -43,7 +43,10 @@
 #include <functional>
 #include <mutex>
 
+using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
+using ROOT::Experimental::Detail::RNTupleCalcPerf;
+using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RCluster;
 using ROOT::Internal::RClusterPool;
@@ -303,6 +306,46 @@ ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, co
         std::make_unique<RClusterPool>(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(opts)))
 {
    EnableDefaultMetrics("RPageSourceFile");
+   fFileCounters = std::make_unique<RFileCounters>(RFileCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter *>("szSkip", "B",
+                                                    "cumulative seek distance (excluding header/footer reads)"),
+      *fMetrics.MakeCounter<RNTupleCalcPerf *>(
+         "szFile", "B", "total file size", fMetrics,
+         [this](const RNTupleMetrics &) -> std::pair<bool, double> {
+            if (fFileSize > 0)
+               return {true, static_cast<double>(fFileSize)};
+            return {false, -1.};
+         }),
+      *fMetrics.MakeCounter<RNTupleCalcPerf *>(
+         "randomness", "",
+         "ratio of seek distance to bytes read (excluding file structure reads)", fMetrics,
+         [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szSkip = metrics.GetLocalCounter("szSkip")) {
+               if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+                  if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                     auto totalRead = szReadPayload->GetValueAsInt() + szReadOverhead->GetValueAsInt();
+                     if (totalRead > 0) {
+                        return {true, (1. * szSkip->GetValueAsInt()) / totalRead};
+                     }
+                  }
+               }
+            }
+            return {false, -1.};
+         }),
+      *fMetrics.MakeCounter<RNTupleCalcPerf *>(
+         "sparseness", "",
+         "ratio of bytes read to total file size (excluding file structure reads)", fMetrics,
+         [this](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (fFileSize > 0) {
+               if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+                  if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                     auto totalRead = szReadPayload->GetValueAsInt() + szReadOverhead->GetValueAsInt();
+                     return {true, (1. * totalRead) / fFileSize};
+                  }
+               }
+            }
+            return {false, -1.};
+         })});
 }
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
@@ -430,6 +473,9 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
    // For the page reads, we rely on the I/O scheduler to define the read requests
    fFile->SetBuffering(false);
 
+   // Set file size once after buffering is turned off
+   fFileSize = fFile->GetSize();
+
    return desc;
 }
 
@@ -493,8 +539,15 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       {
          RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
-                            pageInfo.GetLocator().GetPosition<std::uint64_t>());
+         const auto offset = pageInfo.GetLocator().GetPosition<std::uint64_t>();
+         // Track seek distance (excluding file structure reads)
+         if (fLastOffset != 0 && fFileCounters) {
+            const auto distance = static_cast<std::uint64_t>(std::abs(
+               static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
+            fFileCounters->fSzSkip.Add(distance);
+         }
+         fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(), offset);
+         fLastOffset = offset + sealedPage.GetBufferSize();
       }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
@@ -698,6 +751,19 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
                nBatch = i;
                break;
             }
+         }
+      }
+
+      // Track seek distance for each read request (excluding file structure reads)
+      if (fFileCounters) {
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            const auto offset = readRequests[iReq + i].fOffset;
+            if (fLastOffset != 0) {
+               const auto distance = static_cast<std::uint64_t>(std::abs(
+                  static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
+               fFileCounters->fSzSkip.Add(distance);
+            }
+            fLastOffset = offset + readRequests[iReq + i].fSize;
          }
       }
 

@@ -145,6 +145,19 @@ private:
    std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
+   /// Tracks the last read offset for seek distance calculation
+   std::uint64_t fLastOffset = 0;
+
+   /// File-specific I/O performance counters
+   struct RFileCounters {
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSzSkip;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fSzFile;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fRandomness;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fSparseness;
+   };
+   std::unique_ptr<RFileCounters> fFileCounters;
+   /// Total file size, set once in AttachImpl()
+   std::int64_t fFileSize = 0;
 
    RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
