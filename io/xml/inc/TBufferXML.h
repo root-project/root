@@ -228,10 +228,8 @@ protected:
    void SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    void SetXML(TXMLEngine *xml) { fXML = xml; }
 
-   void XmlWriteBlock(XMLNodePointer_t node);
    XMLNodePointer_t XmlWriteAny(const void *obj, const TClass *cl);
 
-   void XmlReadBlock(XMLNodePointer_t node);
    void *XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl);
 
    TXMLStackObj *PushStack(XMLNodePointer_t current, Bool_t simple = kFALSE);
