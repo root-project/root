@@ -69,6 +69,10 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
 template <typename Hist>
 void ConvertGlobalStatistics(Hist &h, const RHistStats &stats)
 {
+   if (stats.IsTainted()) {
+      return;
+   }
+
    h.SetEntries(stats.GetNEntries());
 
    Double_t hStats[4] = {

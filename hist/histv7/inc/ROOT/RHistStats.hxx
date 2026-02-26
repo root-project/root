@@ -114,6 +114,15 @@ private:
    double fSumW2 = 0.0;
    /// The sums per dimension
    std::vector<RDimensionStats> fDimensionStats;
+   /// Whether this object is tainted
+   bool fTainted = false;
+
+   void ThrowIfTainted() const
+   {
+      if (fTainted) {
+         throw std::logic_error("statistics are tainted");
+      }
+   }
 
 public:
    /// Construct a statistics object.
@@ -129,9 +138,21 @@ public:
 
    std::size_t GetNDimensions() const { return fDimensionStats.size(); }
 
-   std::uint64_t GetNEntries() const { return fNEntries; }
-   double GetSumW() const { return fSumW; }
-   double GetSumW2() const { return fSumW2; }
+   std::uint64_t GetNEntries() const
+   {
+      ThrowIfTainted();
+      return fNEntries;
+   }
+   double GetSumW() const
+   {
+      ThrowIfTainted();
+      return fSumW;
+   }
+   double GetSumW2() const
+   {
+      ThrowIfTainted();
+      return fSumW2;
+   }
 
    /// Get the statistics object for one dimension.
    ///
@@ -141,6 +162,8 @@ public:
    /// \return the statistics object
    const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const
    {
+      ThrowIfTainted();
+
       const RDimensionStats &stats = fDimensionStats.at(dim);
       if (!stats.fEnabled) {
          throw std::invalid_argument("dimension is disabled");
@@ -157,6 +180,13 @@ public:
 
    bool IsEnabled(std::size_t dim) const { return fDimensionStats.at(dim).fEnabled; }
 
+   /// Taint this statistics object.
+   ///
+   /// It can still be filled, but any read access will throw until Clear() is called.
+   void Taint() { fTainted = true; }
+
+   bool IsTainted() const { return fTainted; }
+
    /// Add all entries from another statistics object.
    ///
    /// Throws an exception if the number of dimensions are not identical.
@@ -164,6 +194,8 @@ public:
    /// \param[in] other another statistics object
    void Add(const RHistStats &other)
    {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
       if (fDimensionStats.size() != other.fDimensionStats.size()) {
          throw std::invalid_argument("number of dimensions not identical in Add");
       }
@@ -178,6 +210,7 @@ public:
             fDimensionStats[i].Add(other.fDimensionStats[i]);
          }
       }
+      fTainted |= other.fTainted;
    }
 
    /// Add all entries from another statistics object using atomic instructions.
@@ -187,6 +220,8 @@ public:
    /// \param[in] other another statistics object that must not be modified during the operation
    void AddAtomic(const RHistStats &other)
    {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
       if (fDimensionStats.size() != other.fDimensionStats.size()) {
          throw std::invalid_argument("number of dimensions not identical in Add");
       }
@@ -201,6 +236,7 @@ public:
             fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
          }
       }
+      fTainted |= other.fTainted;
    }
 
    /// Clear this statistics object.
@@ -212,6 +248,7 @@ public:
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
          fDimensionStats[i].Clear();
       }
+      fTainted = false;
    }
 
    /// Compute the number of effective entries.
@@ -223,6 +260,7 @@ public:
    /// \return the number of effective entries
    double ComputeNEffectiveEntries() const
    {
+      ThrowIfTainted();
       if (fSumW2 == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -240,7 +278,7 @@ public:
    double ComputeMean(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -266,7 +304,7 @@ public:
    double ComputeVariance(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -310,7 +348,7 @@ public:
    double ComputeSkewness(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -347,7 +385,7 @@ public:
    double ComputeKurtosis(std::size_t dim = 0) const
    {
       // First get the statistics, which includes checking the argument.
-      auto &stats = fDimensionStats.at(dim);
+      auto &stats = GetDimensionStats(dim);
       if (fSumW == 0) {
          return std::numeric_limits<double>::signaling_NaN();
       }
@@ -495,6 +533,8 @@ public:
    /// \param[in] factor the scale factor
    void Scale(double factor)
    {
+      // NB: this method does *not* call ThrowIfTainted() to allow scaling RHist which may contain a tainted statistics
+      // object.
       fSumW *= factor;
       fSumW2 *= factor * factor;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
