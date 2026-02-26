@@ -13,15 +13,24 @@
 #ifndef HistFactoryImplHelpers_h
 #define HistFactoryImplHelpers_h
 
-#include <RooStats/HistFactory/Measurement.h>
-
 #include <RooGlobalFunc.h>
 #include <RooWorkspace.h>
 
 #include <ROOT/RSpan.hxx>
 
-namespace RooStats {
-namespace HistFactory {
+namespace RooStats::HistFactory {
+
+namespace Constraint {
+
+enum Type {
+   Gaussian,
+   Poisson
+};
+std::string Name(Type type);
+Type GetType(const std::string &Name);
+
+} // namespace Constraint
+
 namespace Detail {
 
 namespace MagicConstants {
@@ -49,15 +58,13 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<const double
 
 struct CreateGammaConstraintsOutput {
    std::vector<std::unique_ptr<RooAbsPdf>> constraints;
-   std::vector<RooRealVar*> globalObservables;
+   std::vector<RooRealVar *> globalObservables;
 };
 
-CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramList,
-                                                    std::span<const double> relSigmas, double minSigma,
-                                                    Constraint::Type type);
+CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramList, std::span<const double> relSigmas,
+                                                    double minSigma, Constraint::Type type);
 
 } // namespace Detail
-} // namespace HistFactory
-} // namespace RooStats
+} // namespace RooStats::HistFactory
 
 #endif

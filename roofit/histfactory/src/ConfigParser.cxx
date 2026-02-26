@@ -1253,6 +1253,15 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
     else if( attrName == TString( "Name" ) ) {
       shapeFactor.SetName( attrVal );
     }
+    else if( attrName == TString( "Val" ) ) {
+      shapeFactor.SetVal( toDouble(attrVal) );
+    }
+    else if( attrName == TString( "Min" ) ) {
+      shapeFactor.SetMin( toDouble(attrVal) );
+    }
+    else if( attrName == TString( "Max" ) ) {
+      shapeFactor.SetMax( toDouble(attrVal) );
+    }
     else if( attrName == TString( "Const" ) ) {
       shapeFactor.SetConstant( CheckTrueFalse(attrVal, "ShapeFactor" ) );
     }
