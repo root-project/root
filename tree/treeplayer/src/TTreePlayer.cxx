@@ -2699,6 +2699,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          varName.Resize(std::max(1, colSizes[ui] - 3));
          varName += "...";
       }
+      // varName will be truncated further if necessary here (ie if colSizes[ui]<=3)
       onerow += Form(numbFormat.Data(), varName.Data());
    }
    if (fScanRedirect)
