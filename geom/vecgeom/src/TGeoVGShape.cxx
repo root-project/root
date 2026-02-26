@@ -375,23 +375,16 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
       TGeoTessellated const *const tsl = static_cast<TGeoTessellated const *>(shape);
       unplaced_volume = GeoManager::MakeInstance<UnplacedTessellated>();
       auto vtsl = static_cast<UnplacedTessellated *>(unplaced_volume);
-
-      for (auto i = 0; i < tsl->GetNfacets(); ++i) {
-         auto const &facet = tsl->GetFacet(i);
-         int nvert = facet.GetNvert();
-         auto const &v0 = tsl->GetVertex(facet[0]);
-         auto const &v1 = tsl->GetVertex(facet[1]);
-         auto const &v2 = tsl->GetVertex(facet[2]);
-         if (nvert == 3) {
-            vtsl->AddTriangularFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
-                                     Vector3D(v2[0], v2[1], v2[2]));
-         } else if (nvert == 4) {
-            auto const &v3 = tsl->GetVertex(facet[3]);
-            vtsl->AddQuadrilateralFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
-                                        Vector3D(v2[0], v2[1], v2[2]), Vector3D(v3[0], v3[1], v3[2]));
-         } else {
-            return nullptr; // should never happen
-         }
+      const Tessellated::TGeoTriangleMesh *mesh = tsl->GetTriangleMesh();
+      for (auto i = 0; i < mesh->GetNumberOfTriangles(); ++i) {
+         auto const &facet = mesh->TriangleAt(i);
+         auto const &v0 = facet.Point(0);
+         auto const &v1 = facet.Point(1);
+         auto const &v2 = facet.Point(2);
+         
+         vtsl->AddTriangularFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
+                                  Vector3D(v2[0], v2[1], v2[2]));
+        
       }
       vtsl->Close();
    }

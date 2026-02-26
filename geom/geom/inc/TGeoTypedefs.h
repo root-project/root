@@ -14,6 +14,7 @@
 
 /// Typedefs used by the geometry group
 #include <vector>
+#include "TGeoVector3.h"
 
 namespace Tessellated {
 

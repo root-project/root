@@ -114,6 +114,9 @@ When most solids or volumes are added to the geometry they
 #include "TGeoSystemOfUnits.h"
 #include "TGeant4SystemOfUnits.h"
 
+#include "TGeoTypedefs.h"
+#include "Tessellated/TGeoMeshLoading.h"
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -4311,6 +4314,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    auto tsl = new TGeoTessellated(NameShort(name));
+   Tessellated::MeshBuilder tslbuilder;
    TGeoTranslation *pos = nullptr;
    Tessellated::Vertex_t vertices[4];
 
@@ -4326,7 +4330,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
          vertices[2] += vertices[0] + vertices[1];
          vertices[1] += vertices[0];
       }
-      tsl->AddFacet(vertices[0], vertices[1], vertices[2]);
+      tslbuilder.AddFacet(vertices[0], vertices[1], vertices[2]);
    };
 
    auto AddQuadrangularFacet = [&](bool relative) {
@@ -4335,7 +4339,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
          vertices[2] += vertices[0] + vertices[1];
          vertices[1] += vertices[0];
       }
-      tsl->AddFacet(vertices[0], vertices[1], vertices[2], vertices[3]);
+      tslbuilder.AddFacet(vertices[0], vertices[1], vertices[2], vertices[3]);
    };
 
    // Get facet attributes
@@ -4436,7 +4440,11 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
       }
       child = gdml->GetNext(child);
    }
-   tsl->CloseShape(false);
+   auto mesh = tslbuilder.CreateMesh();
+   if (!mesh->CheckClosure(false, false)) {
+      Fatal("Tessellated", "Mesh is not closed");
+   }
+   tsl->SetMesh(std::move(mesh));
 
    fsolmap[local_name.Data()] = tsl;
 
