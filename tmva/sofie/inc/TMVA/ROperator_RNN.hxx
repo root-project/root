@@ -49,6 +49,8 @@ template <typename T> class ROperator_RNN final : public ROperator {
 
    std::string fType; ///< Type of the tensors
 
+   int fCounter = 0;
+
  public:
    /*! Default constructor of ROperator_RNN */
    ROperator_RNN() {}

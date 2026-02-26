@@ -34,8 +34,13 @@ private:
    std::vector<std::string> fDimShapeNames; // parameter names used to define the shapes
    std::vector<std::string> fOutputTensorNames;
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
+   std::vector<std::string> fDataMembers;
+   std::vector<std::string> fPointerMemberNames;
 
-
+   inline std::string AddTensorMember(std::string const &name) {
+       fPointerMemberNames.push_back(name);
+       return "tensor_" + name;
+   }
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
@@ -62,6 +67,11 @@ public:
    std::vector<size_t> GetTensorShape(const std::string & name) const;
    std::vector<Dim> GetDimTensorShape(const std::string & name) const;
    std::vector<Dim> GetDynamicTensorShape(const std::string & name) const ;
+
+   inline std::string AddDataMember(std::string const &name) {
+       fDataMembers.push_back(name);
+       return name;
+   }
 
    // get the values for the tensor representing a shape
    const std::vector<Dim> & GetShapeTensorValues(const std::string & tensor_name) const;

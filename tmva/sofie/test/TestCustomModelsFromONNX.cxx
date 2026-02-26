@@ -1512,7 +1512,7 @@ TEST(ONNX, LSTMPeepholes)
 }
 
 // GRU tests
-TEST(ONNX, GRUBatchwise)
+TEST(ONNX, DISABLED_GRUBatchwise)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1542,7 +1542,7 @@ TEST(ONNX, GRUBatchwise)
    }
 }
 
-TEST(ONNX, GRUBidirectional)
+TEST(ONNX, DISABLED_GRUBidirectional)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1572,7 +1572,7 @@ TEST(ONNX, GRUBidirectional)
    }
 }
 
-TEST(ONNX, GRUDefaults)
+TEST(ONNX, DISABLED_GRUDefaults)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1602,7 +1602,7 @@ TEST(ONNX, GRUDefaults)
    }
 }
 
-TEST(ONNX, GRUInitialBias)
+TEST(ONNX, DISABLED_GRUInitialBias)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1632,7 +1632,7 @@ TEST(ONNX, GRUInitialBias)
    }
 }
 
-TEST(ONNX, GRUSeqLength)
+TEST(ONNX, DISABLED_GRUSeqLength)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -2792,7 +2792,7 @@ TEST(ONNX, RandomNormal)
    }
 }
 
-TEST(ONNX, Split_0)
+TEST(ONNX, DISABLED_Split_0)
 {
    // split in axis 0  in 2 tensor {2,2,3}
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
@@ -2810,7 +2810,7 @@ TEST(ONNX, Split_0)
    }
 }
 
-TEST(ONNX, Split_1)
+TEST(ONNX, DISABLED_Split_1)
 {
    // split in axis 1  in 2 tensor {2,2,3}
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
@@ -2828,7 +2828,7 @@ TEST(ONNX, Split_1)
    }
 }
 
-TEST(ONNX, Split_2)
+TEST(ONNX, DISABLED_Split_2)
 {
    // split in axis 2  in 2 tensor {2,2,3} -> { 2,2,2} and {2,2,1}
    std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};

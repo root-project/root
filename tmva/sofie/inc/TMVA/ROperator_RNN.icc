@@ -34,6 +34,15 @@ auto ROperator_RNN<T>::ShapeInference(std::vector<std::vector<size_t>> input)
    }
 }
 
+namespace Internal {
+
+inline int &rnnCounter() {
+   static int counter = 0;
+   return counter;
+}
+
+}
+
 template <typename T>
 auto ROperator_RNN<T>::Initialize(RModel& model)
 -> void {
@@ -183,13 +192,26 @@ auto ROperator_RNN<T>::Initialize(RModel& model)
    }
    // Add needed standard library headers
    model.AddNeededStdLib("cmath");
+
+   // Register session data members
+   fCounter = Internal::rnnCounter()++;
+   std::string opName = "op_rnn" + std::to_string(fCounter);
+   if (fAttrLayout != 0) {
+      model.AddDataMember("fVec_" + opName + "_input");
+      model.AddDataMember("fVec_" + opName + "_initial_hidden_state");
+   }
+   model.AddDataMember("fVec_" + opName + "_feedforward");
+
+   if (fAttrLayout != 0 || fNY.empty()) {
+      model.AddDataMember("fVec_" + opName + "_hidden_state");
+   }
 }
 
 // generate code for Session data members (e.g. internal vectors)
 template <typename T>
-std::string ROperator_RNN<T>::GenerateSessionMembersCode(std::string opName)
+std::string ROperator_RNN<T>::GenerateSessionMembersCode(std::string /*opName*/)
 {
-   opName = "op_" + opName;
+   std::string opName = "op_rnn" + std::to_string(fCounter);
    std::stringstream out;
 
    size_t num_directions = fShapeW[0];
@@ -218,9 +240,10 @@ std::string ROperator_RNN<T>::GenerateSessionMembersCode(std::string opName)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename T>
-auto ROperator_RNN<T>::Generate(std::string OpName)
+auto ROperator_RNN<T>::Generate(std::string /*OpName*/)
 -> std::string {
-	OpName = "op_" + OpName;
+	//OpName = "op_" + OpName;
+    std::string OpName = "op_rnn" + std::to_string(fCounter);
 	std::stringstream out;
 
 	size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];

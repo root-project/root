@@ -88,6 +88,8 @@ public:
          for (auto & p : fParams)
             std::cout << p.first << " : " << p.second << std::endl;
       }
+
+      model.AddDataMember("fRndmEngine");
    }
    // generate declaration code for random number generators
    std::string GenerateDeclCode() override {
