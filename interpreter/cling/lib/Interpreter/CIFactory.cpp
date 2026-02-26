@@ -1478,7 +1478,7 @@ namespace {
     }
 
     llvm::Triple TheTriple(llvm::sys::getProcessTriple());
-    clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
+    clang::driver::Driver Drvr(ClingBin, TheTriple.getTriple(), *Diags);
     //Drvr.setWarnMissingInput(false);
     Drvr.setCheckInputsExist(false); // think foo.C(12)
     llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
