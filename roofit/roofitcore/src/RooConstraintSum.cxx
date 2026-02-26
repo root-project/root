@@ -83,7 +83,7 @@ void RooConstraintSum::doEval(RooFit::EvalContext &ctx) const
    double sum(0);
 
    for (const auto comp : _set1) {
-      sum -= std::log(ctx.at(comp)[0]);
+      sum -= ctx.at(comp)[0];
    }
 
    ctx.output()[0] = sum;
