@@ -326,7 +326,7 @@ More than 250 items were addressed for this release:
   * [[#19768](https://github.com/root-project/root/issues/19768)] - JSON output and infinity.
   * [[#19706](https://github.com/root-project/root/issues/19706)] - Crash when exiting Python interpreter after using `ROOT.RDF.FromNumpy`
   * [[#19687](https://github.com/root-project/root/issues/19687)] - Enable test roottest/root/treeformula/array/nonsplit.C
-  * [[#19650](https://github.com/root-project/root/issues/19650)] - [tree] missing staged data in I/O rules of split vector<T> --> vector<U>
+  * [[#19650](https://github.com/root-project/root/issues/19650)] - [tree] missing staged data in I/O rules of split vector&lt;T&gt; --&gt; vector&lt;U&gt;
   * [[#19592](https://github.com/root-project/root/issues/19592)] - No Constant Properties exported for Optical surfaces
   * [[#19568](https://github.com/root-project/root/issues/19568)] - Ineffective `TMatrixTSym` symmetry check during construction
   * [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
