@@ -1200,7 +1200,10 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::RegisterVariedColumn(uns
                                                                              std::string const &variationName)
 {
    if (columnIndex == originalColumnIndex) {
-      fBranchData[columnIndex].fVariationIndex = variationIndex; // The base column has variations
+      // This is a nominal column, but it participates in variations.
+      // It always needs to be written, but we still need to create a mask bit to mark when nominal is invalid.
+      assert(variationIndex == 0);
+      fBranchData[columnIndex].fVariationIndex = 0;
       fOutputHandle->RegisterBranch(fBranchData[columnIndex].fOutputBranchName, variationIndex);
    } else if (columnIndex >= fBranchData.size()) {
       // First task, need to create branches
@@ -1245,15 +1248,20 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(unsigned int /*slot
    for (std::size_t i = 0; i < values.size(); i++) {
       const auto variationIndex = fBranchData[i].fVariationIndex;
       if (variationIndex < 0) {
-         // Branch without variations
+         // Branch without variations, it always needs to be written
          SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
-      } else if (filterPassed[variationIndex]) {
-         // Branch with variations
-         const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
-         if (!fundamentalType) {
-            SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+      } else {
+         // Nominal will always be written, systematics only if needed
+         if (variationIndex == 0 || filterPassed[variationIndex]) {
+            const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
+            if (!fundamentalType) {
+               SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+            }
          }
-         fOutputHandle->SetMaskBit(variationIndex);
+
+         if (filterPassed[variationIndex]) {
+            fOutputHandle->SetMaskBit(variationIndex);
+         }
       }
    }
 

@@ -53,7 +53,8 @@ void checkOutput(TTree &tree, std::vector<std::string> const &systematics, F &&a
          ASSERT_GT(tree.GetEntry(i), 0);
 
          EXPECT_EQ(x, -1 * y);
-         if (!activeCuts(x, y)) {
+         if (!activeCuts(x, y) && !sysName.empty()) {
+            // Branches with systematics should be zeroed when cuts don't pass
             EXPECT_EQ(x, X_t{});
             EXPECT_EQ(y, Y_t{});
          }
@@ -98,7 +99,7 @@ TEST(RDFVarySnapshot, SimpleRDFWithFilters)
       for (const auto branchName : {"x", "y", "x__xVar_0", "x__xVar_1", "y__xVar_0", "y__xVar_0"})
          EXPECT_NE(tree->FindBranch(branchName), nullptr) << branchName;
 
-      checkOutput<float, double>(*tree, std::vector<std::string>{"__xVar_0", "__xVar_1"}, cuts);
+      checkOutput<float, double>(*tree, std::vector<std::string>{"", "__xVar_0", "__xVar_1"}, cuts);
 
       if (HasFailure()) {
          tree->Print();
@@ -264,50 +265,59 @@ TEST(RDFVarySnapshot, Bitmask)
          if (HasFailure())
             break;
       }
+   }
 
-      // Test that the Masked column reader works
-      {
-         SCOPED_TRACE("Usage of bitmask in RDF");
-         auto rdf = ROOT::RDataFrame(treename, filename);
+   // Test that the Masked column reader works
+   {
+      SCOPED_TRACE("Usage of bitmask in RDF");
+      auto rdf = ROOT::RDataFrame(treename, filename);
 
-         auto filterAvailable = rdf.FilterAvailable("x");
-         auto meanX = filterAvailable.Mean<int>("x");
-         auto meanY = filterAvailable.Mean<int>("y");
-         auto count = filterAvailable.Count();
+      auto filterAvailable = rdf.FilterAvailable("x");
+      auto meanX = filterAvailable.Mean<int>("x");
+      auto meanY = filterAvailable.Mean<int>("y");
+      auto count = filterAvailable.Count();
 
-         EXPECT_EQ(count.GetValue(), 3ull); // 0, 6, 12
-         EXPECT_EQ(meanX.GetValue(), 6.);
-         EXPECT_EQ(meanY.GetValue(), -6.);
+      EXPECT_EQ(count.GetValue(), 3ull); // 0, 6, 12
+      EXPECT_EQ(meanX.GetValue(), 6.);
+      EXPECT_EQ(meanY.GetValue(), -6.);
 
-         // Test reading invalid columns
-         auto mean = rdf.Mean<int>("x");
-         EXPECT_THROW(mean.GetValue(), std::out_of_range);
+      // Test reading invalid columns
+      auto mean = rdf.Mean<int>("x");
+      EXPECT_THROW(mean.GetValue(), std::out_of_range);
 
-         for (unsigned int systematicIndex : {0, 1, 100}) {
-            const std::string systematic = "__xVar_" + std::to_string(systematicIndex);
-            auto filterAv = rdf.FilterAvailable("x" + systematic);
-            auto meanX_sys = filterAv.Mean("x" + systematic);
-            auto meanY_sys = filterAv.Mean("y" + systematic);
-            auto count_sys = filterAv.Count();
+      for (unsigned int systematicIndex : {0, 1, 100}) {
+         const std::string systematic = "__xVar_" + std::to_string(systematicIndex);
+         auto filterAv = rdf.FilterAvailable("x" + systematic);
+         auto meanX_sys = filterAv.Mean("x" + systematic);
+         auto meanY_sys = filterAv.Mean("y" + systematic);
+         auto count_sys = filterAv.Count();
 
-            std::vector<int> expect(N);
-            std::iota(expect.begin(), expect.end(), systematicIndex);
+         std::vector<int> expect(N);
+         std::iota(expect.begin(), expect.end(), systematicIndex);
 
-            const auto nVal = std::count_if(expect.begin(), expect.end(), [](int v) { return v % 6 == 0; });
-            // gcc8.5 on alma8 doesn't support transform_reduce, nor reduce
-            // const int sum = std::transform_reduce(expect.begin(), expect.end(), 0, std::plus<>(),
-            //                                          [](int v) { return v % 6 == 0 ? v : 0; });
-            std::transform(expect.begin(), expect.end(), expect.begin(), [](int v) { return v % 6 == 0 ? v : 0; });
-            const int sum = std::accumulate(expect.begin(), expect.end(), 0);
+         const auto nVal = std::count_if(expect.begin(), expect.end(), [](int v) { return v % 6 == 0; });
+         // gcc8.5 on alma8 doesn't support transform_reduce, nor reduce
+         // const int sum = std::transform_reduce(expect.begin(), expect.end(), 0, std::plus<>(),
+         //                                          [](int v) { return v % 6 == 0 ? v : 0; });
+         std::transform(expect.begin(), expect.end(), expect.begin(), [](int v) { return v % 6 == 0 ? v : 0; });
+         const int sum = std::accumulate(expect.begin(), expect.end(), 0);
 
-            ASSERT_EQ(count_sys.GetValue(), nVal) << "systematic: " << systematic;
-            EXPECT_EQ(meanX_sys.GetValue(), sum / nVal) << "systematic: " << systematic;
-            EXPECT_EQ(meanY_sys.GetValue(), -1. * sum / nVal) << "systematic: " << systematic;
-         }
+         ASSERT_EQ(count_sys.GetValue(), nVal) << "systematic: " << systematic;
+         EXPECT_EQ(meanX_sys.GetValue(), sum / nVal) << "systematic: " << systematic;
+         EXPECT_EQ(meanY_sys.GetValue(), -1. * sum / nVal) << "systematic: " << systematic;
       }
+   }
 
-      if (HasFailure()) {
-         tree->Scan("entry:x:y:x__xVar_0:y__xVar_0:x__xVar_1:y__xVar_1:x__xVar_2:y__xVar_2");
+   if (HasFailure()) {
+      TFile file(filename, "READ");
+      std::unique_ptr<TTree> tree{file.Get<TTree>(treename.data())};
+      ASSERT_NE(tree, nullptr);
+      tree->Scan("entry:R_rdf_mask_testTree_0:x:y:x__xVar_0:y__xVar_0:x__xVar_1:y__xVar_1:x__xVar_2:y__xVar_2");
+
+      auto map = file.Get<std::unordered_map<std::string, std::pair<std::string, unsigned int>>>(
+         ("R_rdf_column_to_bitmask_mapping_" + treename).c_str());
+      for (auto const &[name, mapping] : *map) {
+         std::cout << std::setw(20) << name << " --> " << mapping.first << "  " << mapping.second << "\n";
       }
    }
 }
@@ -422,15 +432,16 @@ TEST(RDFVarySnapshot, SnapshotCollections)
                : ((systematicName.find("xVariation_0") != std::string::npos) ? entry + 1 : entry * 3);
          const bool passCuts = (originalX % 2 == 0) || originalX == 5;
 
-         if (passCuts)
+         if (passCuts || systematicName.empty()) {
             EXPECT_EQ(x, originalX) << "sys:'" << systematicName << "' originalX: " << originalX << " event: " << event;
-         else
+            ASSERT_EQ(y->size(), 4) << "sys:'" << systematicName << "' entry: " << entry << " originalX: " << originalX
+                                    << " event: " << event;
+            for (unsigned int i = 0; i < y->size(); ++i) {
+               EXPECT_EQ((*y)[i], x + i);
+            }
+         } else {
             EXPECT_EQ(x, 0) << "sys:'" << systematicName << "' originalX: " << originalX << " event: " << event;
-
-         ASSERT_EQ(y->size(), passCuts ? 4 : 0)
-            << "sys:'" << systematicName << "' entry: " << entry << " originalX: " << originalX << " event: " << event;
-         for (unsigned int i = 0; i < y->size(); ++i) {
-            EXPECT_EQ((*y)[i], x + i);
+            ASSERT_EQ(y->size(), 0);
          }
       }
       tree->ResetBranchAddresses();
@@ -555,7 +566,8 @@ TEST(RDFVarySnapshot, IncludeDependentColumns_JIT)
    TFile file(fileName);
    auto tree = file.Get<TTree>("Events");
    ASSERT_NE(tree, nullptr);
-   tree->Scan();
+   if (verbose)
+      tree->Scan();
 
    double Muon_pt, Muon_pt_up, Muon_pt_down;
    double Muon_2pt, Muon_2pt_up, Muon_2pt_down;
@@ -575,5 +587,77 @@ TEST(RDFVarySnapshot, IncludeDependentColumns_JIT)
       EXPECT_EQ(0.5 * Muon_2pt, Muon_2pt_down);
       EXPECT_EQ(2. * Muon_pt, Muon_pt_up);
       EXPECT_EQ(2. * Muon_2pt, Muon_2pt_up);
+   }
+}
+
+TEST(RDFVarySnapshot, TwoVaryExpressions)
+{
+   constexpr auto filename = "VarySnapshot_TwoVaryExpressions.root";
+   RemoveFileRAII(filename);
+   constexpr unsigned int N = 10;
+   ROOT::RDF::RSnapshotOptions options;
+   options.fOverwriteIfExists = true;
+   options.fIncludeVariations = true;
+
+   auto cuts = [](float x, float y) { return (x < 20 || x > 30) && (y < 600 || y > 700); };
+
+   auto snap = ROOT::RDataFrame(N)
+                  .Define("x", [](ULong64_t e) -> float { return 10.f * e; }, {"rdfentry_"})
+                  .Define("y", [](ULong64_t e) -> float { return 100.f * e; }, {"rdfentry_"})
+                  .Vary(
+                     "x", [](float x) { return ROOT::RVecF{x - 0.5f, x + 0.5f}; }, {"x"}, {"down", "up"}, "xVar")
+                  .Vary(
+                     "y", [](float y) { return ROOT::RVecF{y - 0.5f, y + 0.5f}; }, {"y"}, {"down", "up"}, "yVar")
+                  .Filter(cuts, {"x", "y"})
+                  .Snapshot("t", filename, {"x", "y"}, options);
+
+   {
+      std::unique_ptr<TFile> file{TFile::Open(filename)};
+      auto tree = file->Get<TTree>("t");
+
+      EXPECT_EQ(tree->GetEntries(), 10);
+      EXPECT_EQ(tree->GetNbranches(), 7); // 6 branches for x/y with variations, bitmask
+      for (const auto branchName : {"x", "y", "x__xVar_down", "x__xVar_up", "y__yVar_down", "y__yVar_up"})
+         EXPECT_NE(tree->FindBranch(branchName), nullptr) << branchName;
+
+      for (std::string combos : {"x:y", "x__xVar_down:y", "x__xVar_up:y", "x:y__yVar_down", "x:y__yVar_up"}) {
+         const auto xName = combos.substr(0, combos.find(':'));
+         const auto yName = combos.substr(combos.find(':') + 1);
+
+         float x;
+         float y;
+         ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress(xName.c_str(), &x)) << xName;
+         ASSERT_EQ(TTree::kMatch, tree->SetBranchAddress(yName.c_str(), &y)) << yName;
+
+         for (unsigned int i = 0; i < tree->GetEntries(); ++i) {
+            ASSERT_GT(tree->GetEntry(i), 0);
+            const float expectedX = i * 10.f - (xName.find("xVar_down") != std::string::npos) * 0.5f +
+                                    (xName.find("xVar_up") != std::string::npos) * 0.5f;
+            const float expectedY = i * 100.f - (yName.find("yVar_down") != std::string::npos) * 0.5f +
+                                    (yName.find("yVar_up") != std::string::npos) * 0.5f;
+
+            if (cuts(expectedX, expectedY)) {
+               EXPECT_EQ(x, expectedX) << "entry:" << i << " (" << xName << "=" << expectedX << ", " << yName << "="
+                                       << expectedY << ")";
+               EXPECT_EQ(y, expectedY) << "entry:" << i << " (" << xName << "=" << expectedX << ", " << yName << "="
+                                       << expectedY << ")";
+               EXPECT_TRUE(cuts(x, y)) << "entry:" << i << " (" << xName << "=" << expectedX << ", " << yName << "="
+                                       << expectedY << ")";
+            }
+         }
+
+         tree->ResetBranchAddresses();
+         if (HasFailure())
+            break;
+      }
+
+      if (verbose || HasFailure()) {
+         auto map = file->Get<std::unordered_map<std::string, std::pair<std::string, unsigned int>>>(
+            "R_rdf_column_to_bitmask_mapping_t");
+         for (auto const &[name, mapping] : *map) {
+            std::cout << std::setw(20) << name << " --> " << mapping.first << "  " << mapping.second << "\n";
+         }
+         printTree(*tree);
+      }
    }
 }
