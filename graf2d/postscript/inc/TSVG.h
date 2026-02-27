@@ -32,6 +32,8 @@ protected:
    static Int_t fgLineCap;        ///< Appearance of line caps
 
    void PrintPath(Bool_t convert, Int_t n, Double_t *xs, Double_t *ys, Bool_t close_path = kTRUE);
+   void PrintLineStyleOnEndOfPath();
+   void PrintLineJointAttributes();
    template<class T>
    void PrintPolyMarker(Int_t n, T *x, T* y);
 
@@ -55,6 +57,7 @@ public:
    void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
    void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void  DrawSegments(Int_t n, Double_t *xw, Double_t *yw) override;
    Bool_t IsCompact() const { return fCompact; }
    void  Initialize();
    void  MovePS(Double_t x, Double_t y);
