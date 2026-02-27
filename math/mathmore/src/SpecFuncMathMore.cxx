@@ -482,5 +482,10 @@ double digamma(double x)
    return gsl_sf_psi(x);
 }
 
+double trigamma(double x)
+{
+   return gsl_sf_psi_1(x);
+}
+
 } // namespace Math
 } // namespace ROOT

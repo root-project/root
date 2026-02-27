@@ -34,8 +34,7 @@
 
 #include <stdexcept>
 
-namespace clad {
-namespace custom_derivatives {
+namespace clad::custom_derivatives {
 namespace TMath {
 template <typename T>
 ValueAndPushforward<T, T> Abs_pushforward(T x, T d_x)
@@ -222,8 +221,7 @@ ValueAndPushforward<Double_t, Double_t> Ln10_pushforward()
 #endif
 } // namespace TMath
 
-namespace ROOT {
-namespace Math {
+namespace ROOT::Math {
 
 inline void landau_pdf_pullback(double x, double xi, double x0, double d_out, double *d_x, double *d_xi, double *d_x0)
 {
@@ -1092,13 +1090,16 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
    }
 }
 
+inline ValueAndPushforward<double, double> digamma_pushforward(double x, double d_x)
+{
+   return {::ROOT::Math::digamma(x), ::ROOT::Math::trigamma(x) * d_x};
+}
+
 #endif // R__HAS_MATHMORE
 
-} // namespace Math
-} // namespace ROOT
+} // namespace ROOT::Math
 
-} // namespace custom_derivatives
-} // namespace clad
+} // namespace clad::custom_derivatives
 
 // Forward declare BLAS functions.
 extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
