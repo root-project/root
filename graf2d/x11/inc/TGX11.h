@@ -168,6 +168,7 @@ public:
    void      DrawFillArea(Int_t n, TPoint *xy) override;
    void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
    void      DrawPolyLine(Int_t n, TPoint *xy) override;
+   void      DrawLinesSegments(Int_t n, TPoint *xy) override;
    void      DrawPolyMarker(Int_t n, TPoint *xy) override;
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
