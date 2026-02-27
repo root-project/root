@@ -4786,9 +4786,7 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       GetPainter()->DrawSegments(n, x, y);
 
    if (isAny && gVirtualPS)
-      for (Int_t i = 0; i < 2*n; i+=2)
-         if ((x[i] != x[i+1]) || (y[i] != y[i+1]))
-            gVirtualPS->DrawPS(2, &x[i], &y[i]);
+      gVirtualPS->DrawSegments(n, x, y);
 
    Modified();
 }
@@ -4805,14 +4803,12 @@ void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
       GetPainter()->DrawSegmentsNDC(n, u, v);
 
    if (gVirtualPS) {
-      Double_t  xw[2], yw[2];
-      for (Int_t i = 0; i < 2*n; i+=2) {
-         xw[0] = fX1 + u[i]*(fX2 - fX1);
-         xw[1] = fX1 + u[i + 1]*(fX2 - fX1);
-         yw[0] = fY1 + v[i]*(fY2 - fY1);
-         yw[1] = fY1 + v[i + 1]*(fY2 - fY1);
-         gVirtualPS->DrawPS(2, xw, yw);
+      // recalculate values into normal coordiantes
+      for (Int_t i = 0; i < 2*n; i++) {
+         u[i] = fX1 + u[i]*(fX2 - fX1);
+         v[i] = fY1 + v[i]*(fY2 - fY1);
       }
+      gVirtualPS->DrawSegments(n, u, v);
    }
 
    Modified();
