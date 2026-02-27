@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/RModel_Base.hxx
    TMVA/RModel.hxx
    TMVA/ROperator.hxx
+   TMVA/ROperator_Basic_Is.hxx
    TMVA/ROperator_BasicUnary.hxx
    TMVA/ROperator_BasicBinary.hxx
    TMVA/ROperator_BasicNary.hxx

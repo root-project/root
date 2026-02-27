@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/RModelParser_ONNX.cxx
     src/ParseBasicUnary.cxx
     src/ParseBasicBinary.cxx
+    src/ParseBasicIs.cxx
     src/ParseBatchNormalization.cxx
     src/ParseCast.cxx
     src/ParseConcat.cxx
