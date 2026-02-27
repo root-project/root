@@ -391,8 +391,14 @@ public:
   virtual void doEval(RooFit::EvalContext &) const;
 
   virtual bool hasGradient() const { return false; }
+  virtual bool hasHessian() const { return false; }
   virtual void gradient(double *) const {
     if(!hasGradient()) throw std::runtime_error("RooAbsReal::gradient(double *) not implemented by this class!");
+  }
+  virtual void hessian(double *) const
+  {
+     if (!hasHessian())
+        throw std::runtime_error("RooAbsReal::hessian(double *) not implemented by this class!");
   }
 
   // PlotOn with command list

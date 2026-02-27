@@ -1128,7 +1128,7 @@ bool RooMinimizer::calculateMinosErrors()
 void RooMinimizer::initMinimizer()
 {
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _fcn->initMinimizer(*_minimizer);
+   _fcn->initMinimizer(*_minimizer, this);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {

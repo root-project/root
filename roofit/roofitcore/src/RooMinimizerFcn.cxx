@@ -68,6 +68,9 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    } else {
       _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
    }
+   if (context->_cfg.useHessian) {
+      _hessianOutput.resize(_allParams.size() * _allParams.size());
+   }
 }
 
 void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
@@ -179,9 +182,57 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
    return changedSet;
 }
 
-void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim)
+bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) const
+{
+   // Set the parameter values for this iteration
+   for (unsigned index = 0; index < getNDim(); index++) {
+      if (_logfile)
+         (*_logfile) << x[index] << " ";
+      SetPdfParamVal(index, x[index]);
+   }
+
+   _funct->hessian(_hessianOutput.data());
+
+   std::size_t m = _allParamsInit.size();
+   std::size_t n = getNDim();
+   std::size_t iAll = 0;
+   std::size_t iFloating = 0;
+   for (RooAbsArg *param_i : _allParamsInit) {
+      if (!treatAsConstant(*param_i)) {
+         std::size_t jAll = 0;
+         std::size_t jFloating = 0;
+         for (RooAbsArg *param_j : _allParamsInit) {
+            if (!treatAsConstant(*param_j)) {
+               out[iFloating * n + jFloating] = _hessianOutput[iAll * m + jAll];
+               ++jFloating;
+            }
+            ++jAll;
+         }
+         ++iFloating;
+      }
+      ++iAll;
+   }
+
+   // Optional logging
+   if (cfg().verbose) {
+      std::cout << "\n    hessian = " << std::endl;
+      for (std::size_t i = 0; i < getNDim(); ++i) {
+         for (std::size_t j = 0; j < getNDim(); ++j) {
+            std::cout << out[i * n + j] << ", ";
+         }
+         std::cout << std::endl;
+      }
+   }
+   return true;
+}
+
+void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer *context)
 {
    minim.SetFunction(*_multiGenFcn);
+   if (context->_cfg.useHessian && _funct->hasHessian()) {
+      minim.SetHessianFunction(
+         std::bind(&RooMinimizerFcn::evaluateHessian, this, std::placeholders::_1, std::placeholders::_2));
+   }
 }
 
 /// \endcond
