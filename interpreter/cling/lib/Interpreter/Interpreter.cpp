@@ -333,12 +333,15 @@ namespace cling {
 
     m_IncrParser->SetTransformers(parentInterp);
 
-    if (!TSCtx->getContext()) {
-      // Never true, but don't tell the compiler.
-      // Force symbols needed by runtime to be included in binaries.
-      // Prevents stripping the symbol due to dead-code optimization.
-      internal::symbol_requester();
-    }
+    // Do we need this?
+    TSCtx->withContextDo([](llvm::LLVMContext *Ctx) {
+      if (!Ctx) {
+        // Never true, but don't tell the compiler.
+        // Force symbols needed by runtime to be included in binaries.
+        // Prevents stripping the symbol due to dead-code optimization.
+        internal::symbol_requester();
+      }
+    });
   }
 
   ///\brief Constructor for the child Interpreter.
