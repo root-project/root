@@ -839,88 +839,12 @@ ratioplot.svg
 <path d="M58,232h 451" fill="none" stroke="black" stroke-dasharray=" 3.0, 3.0"/>
 <path d="M58,231h 451" fill="none" stroke="black" stroke-dasharray=" 3.0, 3.0"/>
 <path d="M58,172h 451" fill="none" stroke="black"/>
-<path d="M58,166v 6.2" fill="none" stroke="black"/>
-<path d="M67,169v 3.1" fill="none" stroke="black"/>
-<path d="M76,169v 3.1" fill="none" stroke="black"/>
-<path d="M85,169v 3.1" fill="none" stroke="black"/>
-<path d="M94,169v 3.1" fill="none" stroke="black"/>
-<path d="M103,166v 6.2" fill="none" stroke="black"/>
-<path d="M112,169v 3.1" fill="none" stroke="black"/>
-<path d="M122,169v 3.1" fill="none" stroke="black"/>
-<path d="M131,169v 3.1" fill="none" stroke="black"/>
-<path d="M140,169v 3.1" fill="none" stroke="black"/>
-<path d="M149,166v 6.2" fill="none" stroke="black"/>
-<path d="M158,169v 3.1" fill="none" stroke="black"/>
-<path d="M167,169v 3.1" fill="none" stroke="black"/>
-<path d="M176,169v 3.1" fill="none" stroke="black"/>
-<path d="M185,169v 3.1" fill="none" stroke="black"/>
-<path d="M194,166v 6.2" fill="none" stroke="black"/>
-<path d="M203,169v 3.1" fill="none" stroke="black"/>
-<path d="M212,169v 3.1" fill="none" stroke="black"/>
-<path d="M221,169v 3.1" fill="none" stroke="black"/>
-<path d="M230,169v 3.1" fill="none" stroke="black"/>
-<path d="M239,166v 6.2" fill="none" stroke="black"/>
-<path d="M248,169v 3.1" fill="none" stroke="black"/>
-<path d="M257,169v 3.1" fill="none" stroke="black"/>
-<path d="M266,169v 3.1" fill="none" stroke="black"/>
-<path d="M275,169v 3.1" fill="none" stroke="black"/>
-<path d="M284,166v 6.2" fill="none" stroke="black"/>
-<path d="M293,169v 3.1" fill="none" stroke="black"/>
-<path d="M302,169v 3.1" fill="none" stroke="black"/>
-<path d="M311,169v 3.1" fill="none" stroke="black"/>
-<path d="M320,169v 3.1" fill="none" stroke="black"/>
-<path d="M329,166v 6.2" fill="none" stroke="black"/>
-<path d="M338,169v 3.1" fill="none" stroke="black"/>
-<path d="M347,169v 3.1" fill="none" stroke="black"/>
-<path d="M356,169v 3.1" fill="none" stroke="black"/>
-<path d="M365,169v 3.1" fill="none" stroke="black"/>
-<path d="M374,166v 6.2" fill="none" stroke="black"/>
-<path d="M383,169v 3.1" fill="none" stroke="black"/>
-<path d="M392,169v 3.1" fill="none" stroke="black"/>
-<path d="M401,169v 3.1" fill="none" stroke="black"/>
-<path d="M410,169v 3.1" fill="none" stroke="black"/>
-<path d="M419,166v 6.2" fill="none" stroke="black"/>
-<path d="M428,169v 3.1" fill="none" stroke="black"/>
-<path d="M437,169v 3.1" fill="none" stroke="black"/>
-<path d="M446,169v 3.1" fill="none" stroke="black"/>
-<path d="M455,169v 3.1" fill="none" stroke="black"/>
-<path d="M464,166v 6.2" fill="none" stroke="black"/>
-<path d="M474,169v 3.1" fill="none" stroke="black"/>
-<path d="M483,169v 3.1" fill="none" stroke="black"/>
-<path d="M492,169v 3.1" fill="none" stroke="black"/>
-<path d="M501,169v 3.1" fill="none" stroke="black"/>
-<path d="M510,166v 6.2" fill="none" stroke="black"/>
+<path d="M58,166v 6.2M67,169v 3.1M76,169v 3.1M85,169v 3.1M94,169v 3.1M103,166v 6.2M112,169v 3.1M122,169v 3.1M131,169v 3.1M140,169v 3.1M149,166v 6.2M158,169v 3.1M167,169v 3.1M176,169v 3.1M185,169v 3.1M194,166v 6.2M203,169v 3.1M212,169v 3.1M221,169v
+ 3.1M230,169v 3.1M239,166v 6.2M248,169v 3.1M257,169v 3.1M266,169v 3.1M275,169v 3.1M284,166v 6.2M293,169v 3.1M302,169v 3.1M311,169v 3.1M320,169v 3.1M329,166v 6.2M338,169v 3.1M347,169v 3.1M356,169v 3.1M365,169v 3.1M374,166v 6.2M383,169v 3.1M392,169v
+ 3.1M401,169v 3.1M410,169v 3.1M419,166v 6.2M428,169v 3.1M437,169v 3.1M446,169v 3.1M455,169v 3.1M464,166v 6.2M474,169v 3.1M483,169v 3.1M492,169v 3.1M501,169v 3.1M510,166v 6.2" fill="none" stroke="black"/>
 <path d="M58,172v -153" fill="none" stroke="black"/>
-<path d="M68,172h -10" fill="none" stroke="black"/>
-<path d="M63,167h -5.0" fill="none" stroke="black"/>
-<path d="M63,161h -5.0" fill="none" stroke="black"/>
-<path d="M63,156h -5.0" fill="none" stroke="black"/>
-<path d="M68,151h -10" fill="none" stroke="black"/>
-<path d="M63,146h -5.0" fill="none" stroke="black"/>
-<path d="M63,141h -5.0" fill="none" stroke="black"/>
-<path d="M63,136h -5.0" fill="none" stroke="black"/>
-<path d="M68,130h -10" fill="none" stroke="black"/>
-<path d="M63,125h -5.0" fill="none" stroke="black"/>
-<path d="M63,120h -5.0" fill="none" stroke="black"/>
-<path d="M63,115h -5.0" fill="none" stroke="black"/>
-<path d="M68,110h -10" fill="none" stroke="black"/>
-<path d="M63,105h -5.0" fill="none" stroke="black"/>
-<path d="M63,99h -5.0" fill="none" stroke="black"/>
-<path d="M63,94h -5.0" fill="none" stroke="black"/>
-<path d="M68,89h -10" fill="none" stroke="black"/>
-<path d="M63,84h -5.0" fill="none" stroke="black"/>
-<path d="M63,79h -5.0" fill="none" stroke="black"/>
-<path d="M63,74h -5.0" fill="none" stroke="black"/>
-<path d="M68,68h -10" fill="none" stroke="black"/>
-<path d="M63,63h -5.0" fill="none" stroke="black"/>
-<path d="M63,58h -5.0" fill="none" stroke="black"/>
-<path d="M63,53h -5.0" fill="none" stroke="black"/>
-<path d="M68,48h -10" fill="none" stroke="black"/>
-<path d="M63,43h -5.0" fill="none" stroke="black"/>
-<path d="M63,37h -5.0" fill="none" stroke="black"/>
-<path d="M63,32h -5.0" fill="none" stroke="black"/>
-<path d="M68,27h -10" fill="none" stroke="black"/>
-<path d="M63,22h -5.0" fill="none" stroke="black"/>
+<path d="M68,172h -10M63,167h -5.0M63,161h -5.0M63,156h -5.0M68,151h -10M63,146h -5.0M63,141h -5.0M63,136h -5.0M68,130h -10M63,125h -5.0M63,120h -5.0M63,115h -5.0M68,110h -10M63,105h -5.0M63,99h -5.0M63,94h -5.0M68,89h -10M63,84h -5.0M63,79h
+ -5.0M63,74h -5.0M68,68h -10M63,63h -5.0M63,58h -5.0M63,53h -5.0M68,48h -10M63,43h -5.0M63,37h -5.0M63,32h -5.0M68,27h -10M63,22h -5.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="50" y="176" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="45" y="155" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">20
@@ -938,57 +862,9 @@ ratioplot.svg
 <text xml:space="preserve" x="39" y="31" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">140
 </text>
 <path d="M58,235h 451" fill="none" stroke="black"/>
-<path d="M58,229v 6.2" fill="none" stroke="black"/>
-<path d="M67,232v 3.1" fill="none" stroke="black"/>
-<path d="M76,232v 3.1" fill="none" stroke="black"/>
-<path d="M85,232v 3.1" fill="none" stroke="black"/>
-<path d="M94,232v 3.1" fill="none" stroke="black"/>
-<path d="M103,229v 6.2" fill="none" stroke="black"/>
-<path d="M112,232v 3.1" fill="none" stroke="black"/>
-<path d="M122,232v 3.1" fill="none" stroke="black"/>
-<path d="M131,232v 3.1" fill="none" stroke="black"/>
-<path d="M140,232v 3.1" fill="none" stroke="black"/>
-<path d="M149,229v 6.2" fill="none" stroke="black"/>
-<path d="M158,232v 3.1" fill="none" stroke="black"/>
-<path d="M167,232v 3.1" fill="none" stroke="black"/>
-<path d="M176,232v 3.1" fill="none" stroke="black"/>
-<path d="M185,232v 3.1" fill="none" stroke="black"/>
-<path d="M194,229v 6.2" fill="none" stroke="black"/>
-<path d="M203,232v 3.1" fill="none" stroke="black"/>
-<path d="M212,232v 3.1" fill="none" stroke="black"/>
-<path d="M221,232v 3.1" fill="none" stroke="black"/>
-<path d="M230,232v 3.1" fill="none" stroke="black"/>
-<path d="M239,229v 6.2" fill="none" stroke="black"/>
-<path d="M248,232v 3.1" fill="none" stroke="black"/>
-<path d="M257,232v 3.1" fill="none" stroke="black"/>
-<path d="M266,232v 3.1" fill="none" stroke="black"/>
-<path d="M275,232v 3.1" fill="none" stroke="black"/>
-<path d="M284,229v 6.2" fill="none" stroke="black"/>
-<path d="M293,232v 3.1" fill="none" stroke="black"/>
-<path d="M302,232v 3.1" fill="none" stroke="black"/>
-<path d="M311,232v 3.1" fill="none" stroke="black"/>
-<path d="M320,232v 3.1" fill="none" stroke="black"/>
-<path d="M329,229v 6.2" fill="none" stroke="black"/>
-<path d="M338,232v 3.1" fill="none" stroke="black"/>
-<path d="M347,232v 3.1" fill="none" stroke="black"/>
-<path d="M356,232v 3.1" fill="none" stroke="black"/>
-<path d="M365,232v 3.1" fill="none" stroke="black"/>
-<path d="M374,229v 6.2" fill="none" stroke="black"/>
-<path d="M383,232v 3.1" fill="none" stroke="black"/>
-<path d="M392,232v 3.1" fill="none" stroke="black"/>
-<path d="M401,232v 3.1" fill="none" stroke="black"/>
-<path d="M410,232v 3.1" fill="none" stroke="black"/>
-<path d="M419,229v 6.2" fill="none" stroke="black"/>
-<path d="M428,232v 3.1" fill="none" stroke="black"/>
-<path d="M437,232v 3.1" fill="none" stroke="black"/>
-<path d="M446,232v 3.1" fill="none" stroke="black"/>
-<path d="M455,232v 3.1" fill="none" stroke="black"/>
-<path d="M464,229v 6.2" fill="none" stroke="black"/>
-<path d="M474,232v 3.1" fill="none" stroke="black"/>
-<path d="M483,232v 3.1" fill="none" stroke="black"/>
-<path d="M492,232v 3.1" fill="none" stroke="black"/>
-<path d="M501,232v 3.1" fill="none" stroke="black"/>
-<path d="M510,229v 6.2" fill="none" stroke="black"/>
+<path d="M58,229v 6.2M67,232v 3.1M76,232v 3.1M85,232v 3.1M94,232v 3.1M103,229v 6.2M112,232v 3.1M122,232v 3.1M131,232v 3.1M140,232v 3.1M149,229v 6.2M158,232v 3.1M167,232v 3.1M176,232v 3.1M185,232v 3.1M194,229v 6.2M203,232v 3.1M212,232v 3.1M221,232v
+ 3.1M230,232v 3.1M239,229v 6.2M248,232v 3.1M257,232v 3.1M266,232v 3.1M275,232v 3.1M284,229v 6.2M293,232v 3.1M302,232v 3.1M311,232v 3.1M320,232v 3.1M329,229v 6.2M338,232v 3.1M347,232v 3.1M356,232v 3.1M365,232v 3.1M374,229v 6.2M383,232v 3.1M392,232v
+ 3.1M401,232v 3.1M410,232v 3.1M419,229v 6.2M428,232v 3.1M437,232v 3.1M446,232v 3.1M455,232v 3.1M464,229v 6.2M474,232v 3.1M483,232v 3.1M492,232v 3.1M501,232v 3.1M510,229v 6.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="55" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="102" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">1
@@ -1012,40 +888,8 @@ ratioplot.svg
 <text xml:space="preserve" x="504" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M58,235v -50" fill="none" stroke="black"/>
-<path d="M68,229h -10" fill="none" stroke="black"/>
-<path d="M63,228h -5.0" fill="none" stroke="black"/>
-<path d="M63,226h -5.0" fill="none" stroke="black"/>
-<path d="M63,225h -5.0" fill="none" stroke="black"/>
-<path d="M68,223h -10" fill="none" stroke="black"/>
-<path d="M63,222h -5.0" fill="none" stroke="black"/>
-<path d="M63,221h -5.0" fill="none" stroke="black"/>
-<path d="M63,219h -5.0" fill="none" stroke="black"/>
-<path d="M68,218h -10" fill="none" stroke="black"/>
-<path d="M63,216h -5.0" fill="none" stroke="black"/>
-<path d="M63,215h -5.0" fill="none" stroke="black"/>
-<path d="M63,213h -5.0" fill="none" stroke="black"/>
-<path d="M68,212h -10" fill="none" stroke="black"/>
-<path d="M63,210h -5.0" fill="none" stroke="black"/>
-<path d="M63,209h -5.0" fill="none" stroke="black"/>
-<path d="M63,207h -5.0" fill="none" stroke="black"/>
-<path d="M68,206h -10" fill="none" stroke="black"/>
-<path d="M63,205h -5.0" fill="none" stroke="black"/>
-<path d="M63,203h -5.0" fill="none" stroke="black"/>
-<path d="M63,202h -5.0" fill="none" stroke="black"/>
-<path d="M68,200h -10" fill="none" stroke="black"/>
-<path d="M63,199h -5.0" fill="none" stroke="black"/>
-<path d="M63,197h -5.0" fill="none" stroke="black"/>
-<path d="M63,196h -5.0" fill="none" stroke="black"/>
-<path d="M68,194h -10" fill="none" stroke="black"/>
-<path d="M63,193h -5.0" fill="none" stroke="black"/>
-<path d="M63,191h -5.0" fill="none" stroke="black"/>
-<path d="M63,190h -5.0" fill="none" stroke="black"/>
-<path d="M68,188h -10" fill="none" stroke="black"/>
-<path d="M63,231h -5.0" fill="none" stroke="black"/>
-<path d="M63,232h -5.0" fill="none" stroke="black"/>
-<path d="M63,234h -5.0" fill="none" stroke="black"/>
-<path d="M63,187h -5.0" fill="none" stroke="black"/>
-<path d="M63,186h -5.0" fill="none" stroke="black"/>
+<path d="M68,229h -10M63,228h -5.0M63,226h -5.0M63,225h -5.0M68,223h -10M63,222h -5.0M63,221h -5.0M63,219h -5.0M68,218h -10M63,216h -5.0M63,215h -5.0M63,213h -5.0M68,212h -10M63,210h -5.0M63,209h -5.0M63,207h -5.0M68,206h -10M63,205h -5.0M63,203h
+ -5.0M63,202h -5.0M68,200h -10M63,199h -5.0M63,197h -5.0M63,196h -5.0M68,194h -10M63,193h -5.0M63,191h -5.0M63,190h -5.0M68,188h -10M63,231h -5.0M63,232h -5.0M63,234h -5.0M63,187h -5.0M63,186h -5.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="50" y="234" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">2
 </text>
 <text xml:space="preserve" x="50" y="228" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">4
@@ -1063,154 +907,18 @@ ratioplot.svg
 <text xml:space="preserve" x="45" y="193" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">16
 </text>
 <path d="M510,172v -153" fill="none" stroke="black"/>
-<path d="M500,172h 10" fill="none" stroke="black"/>
-<path d="M505,167h 5.0" fill="none" stroke="black"/>
-<path d="M505,161h 5.0" fill="none" stroke="black"/>
-<path d="M505,156h 5.0" fill="none" stroke="black"/>
-<path d="M500,151h 10" fill="none" stroke="black"/>
-<path d="M505,146h 5.0" fill="none" stroke="black"/>
-<path d="M505,141h 5.0" fill="none" stroke="black"/>
-<path d="M505,136h 5.0" fill="none" stroke="black"/>
-<path d="M500,130h 10" fill="none" stroke="black"/>
-<path d="M505,125h 5.0" fill="none" stroke="black"/>
-<path d="M505,120h 5.0" fill="none" stroke="black"/>
-<path d="M505,115h 5.0" fill="none" stroke="black"/>
-<path d="M500,110h 10" fill="none" stroke="black"/>
-<path d="M505,105h 5.0" fill="none" stroke="black"/>
-<path d="M505,99h 5.0" fill="none" stroke="black"/>
-<path d="M505,94h 5.0" fill="none" stroke="black"/>
-<path d="M500,89h 10" fill="none" stroke="black"/>
-<path d="M505,84h 5.0" fill="none" stroke="black"/>
-<path d="M505,79h 5.0" fill="none" stroke="black"/>
-<path d="M505,74h 5.0" fill="none" stroke="black"/>
-<path d="M500,68h 10" fill="none" stroke="black"/>
-<path d="M505,63h 5.0" fill="none" stroke="black"/>
-<path d="M505,58h 5.0" fill="none" stroke="black"/>
-<path d="M505,53h 5.0" fill="none" stroke="black"/>
-<path d="M500,48h 10" fill="none" stroke="black"/>
-<path d="M505,43h 5.0" fill="none" stroke="black"/>
-<path d="M505,37h 5.0" fill="none" stroke="black"/>
-<path d="M505,32h 5.0" fill="none" stroke="black"/>
-<path d="M500,27h 10" fill="none" stroke="black"/>
-<path d="M505,22h 5.0" fill="none" stroke="black"/>
+<path d="M500,172h 10M505,167h 5.0M505,161h 5.0M505,156h 5.0M500,151h 10M505,146h 5.0M505,141h 5.0M505,136h 5.0M500,130h 10M505,125h 5.0M505,120h 5.0M505,115h 5.0M500,110h 10M505,105h 5.0M505,99h 5.0M505,94h 5.0M500,89h 10M505,84h 5.0M505,79h
+ 5.0M505,74h 5.0M500,68h 10M505,63h 5.0M505,58h 5.0M505,53h 5.0M500,48h 10M505,43h 5.0M505,37h 5.0M505,32h 5.0M500,27h 10M505,22h 5.0" fill="none" stroke="black"/>
 <path d="M510,235v -50" fill="none" stroke="black"/>
-<path d="M500,229h 10" fill="none" stroke="black"/>
-<path d="M505,228h 5.0" fill="none" stroke="black"/>
-<path d="M505,226h 5.0" fill="none" stroke="black"/>
-<path d="M505,225h 5.0" fill="none" stroke="black"/>
-<path d="M500,223h 10" fill="none" stroke="black"/>
-<path d="M505,222h 5.0" fill="none" stroke="black"/>
-<path d="M505,221h 5.0" fill="none" stroke="black"/>
-<path d="M505,219h 5.0" fill="none" stroke="black"/>
-<path d="M500,218h 10" fill="none" stroke="black"/>
-<path d="M505,216h 5.0" fill="none" stroke="black"/>
-<path d="M505,215h 5.0" fill="none" stroke="black"/>
-<path d="M505,213h 5.0" fill="none" stroke="black"/>
-<path d="M500,212h 10" fill="none" stroke="black"/>
-<path d="M505,210h 5.0" fill="none" stroke="black"/>
-<path d="M505,209h 5.0" fill="none" stroke="black"/>
-<path d="M505,207h 5.0" fill="none" stroke="black"/>
-<path d="M500,206h 10" fill="none" stroke="black"/>
-<path d="M505,205h 5.0" fill="none" stroke="black"/>
-<path d="M505,203h 5.0" fill="none" stroke="black"/>
-<path d="M505,202h 5.0" fill="none" stroke="black"/>
-<path d="M500,200h 10" fill="none" stroke="black"/>
-<path d="M505,199h 5.0" fill="none" stroke="black"/>
-<path d="M505,197h 5.0" fill="none" stroke="black"/>
-<path d="M505,196h 5.0" fill="none" stroke="black"/>
-<path d="M500,194h 10" fill="none" stroke="black"/>
-<path d="M505,193h 5.0" fill="none" stroke="black"/>
-<path d="M505,191h 5.0" fill="none" stroke="black"/>
-<path d="M505,190h 5.0" fill="none" stroke="black"/>
-<path d="M500,188h 10" fill="none" stroke="black"/>
-<path d="M505,231h 5.0" fill="none" stroke="black"/>
-<path d="M505,232h 5.0" fill="none" stroke="black"/>
-<path d="M505,234h 5.0" fill="none" stroke="black"/>
-<path d="M505,187h 5.0" fill="none" stroke="black"/>
-<path d="M505,186h 5.0" fill="none" stroke="black"/>
+<path d="M500,229h 10M505,228h 5.0M505,226h 5.0M505,225h 5.0M500,223h 10M505,222h 5.0M505,221h 5.0M505,219h 5.0M500,218h 10M505,216h 5.0M505,215h 5.0M505,213h 5.0M500,212h 10M505,210h 5.0M505,209h 5.0M505,207h 5.0M500,206h 10M505,205h 5.0M505,203h
+ 5.0M505,202h 5.0M500,200h 10M505,199h 5.0M505,197h 5.0M505,196h 5.0M500,194h 10M505,193h 5.0M505,191h 5.0M505,190h 5.0M500,188h 10M505,231h 5.0M505,232h 5.0M505,234h 5.0M505,187h 5.0M505,186h 5.0" fill="none" stroke="black"/>
 <path d="M58,172h 451" fill="none" stroke="black"/>
-<path d="M58,166v 6.2" fill="none" stroke="black"/>
-<path d="M67,169v 3.1" fill="none" stroke="black"/>
-<path d="M76,169v 3.1" fill="none" stroke="black"/>
-<path d="M85,169v 3.1" fill="none" stroke="black"/>
-<path d="M94,169v 3.1" fill="none" stroke="black"/>
-<path d="M103,166v 6.2" fill="none" stroke="black"/>
-<path d="M112,169v 3.1" fill="none" stroke="black"/>
-<path d="M122,169v 3.1" fill="none" stroke="black"/>
-<path d="M131,169v 3.1" fill="none" stroke="black"/>
-<path d="M140,169v 3.1" fill="none" stroke="black"/>
-<path d="M149,166v 6.2" fill="none" stroke="black"/>
-<path d="M158,169v 3.1" fill="none" stroke="black"/>
-<path d="M167,169v 3.1" fill="none" stroke="black"/>
-<path d="M176,169v 3.1" fill="none" stroke="black"/>
-<path d="M185,169v 3.1" fill="none" stroke="black"/>
-<path d="M194,166v 6.2" fill="none" stroke="black"/>
-<path d="M203,169v 3.1" fill="none" stroke="black"/>
-<path d="M212,169v 3.1" fill="none" stroke="black"/>
-<path d="M221,169v 3.1" fill="none" stroke="black"/>
-<path d="M230,169v 3.1" fill="none" stroke="black"/>
-<path d="M239,166v 6.2" fill="none" stroke="black"/>
-<path d="M248,169v 3.1" fill="none" stroke="black"/>
-<path d="M257,169v 3.1" fill="none" stroke="black"/>
-<path d="M266,169v 3.1" fill="none" stroke="black"/>
-<path d="M275,169v 3.1" fill="none" stroke="black"/>
-<path d="M284,166v 6.2" fill="none" stroke="black"/>
-<path d="M293,169v 3.1" fill="none" stroke="black"/>
-<path d="M302,169v 3.1" fill="none" stroke="black"/>
-<path d="M311,169v 3.1" fill="none" stroke="black"/>
-<path d="M320,169v 3.1" fill="none" stroke="black"/>
-<path d="M329,166v 6.2" fill="none" stroke="black"/>
-<path d="M338,169v 3.1" fill="none" stroke="black"/>
-<path d="M347,169v 3.1" fill="none" stroke="black"/>
-<path d="M356,169v 3.1" fill="none" stroke="black"/>
-<path d="M365,169v 3.1" fill="none" stroke="black"/>
-<path d="M374,166v 6.2" fill="none" stroke="black"/>
-<path d="M383,169v 3.1" fill="none" stroke="black"/>
-<path d="M392,169v 3.1" fill="none" stroke="black"/>
-<path d="M401,169v 3.1" fill="none" stroke="black"/>
-<path d="M410,169v 3.1" fill="none" stroke="black"/>
-<path d="M419,166v 6.2" fill="none" stroke="black"/>
-<path d="M428,169v 3.1" fill="none" stroke="black"/>
-<path d="M437,169v 3.1" fill="none" stroke="black"/>
-<path d="M446,169v 3.1" fill="none" stroke="black"/>
-<path d="M455,169v 3.1" fill="none" stroke="black"/>
-<path d="M464,166v 6.2" fill="none" stroke="black"/>
-<path d="M474,169v 3.1" fill="none" stroke="black"/>
-<path d="M483,169v 3.1" fill="none" stroke="black"/>
-<path d="M492,169v 3.1" fill="none" stroke="black"/>
-<path d="M501,169v 3.1" fill="none" stroke="black"/>
-<path d="M510,166v 6.2" fill="none" stroke="black"/>
+<path d="M58,166v 6.2M67,169v 3.1M76,169v 3.1M85,169v 3.1M94,169v 3.1M103,166v 6.2M112,169v 3.1M122,169v 3.1M131,169v 3.1M140,169v 3.1M149,166v 6.2M158,169v 3.1M167,169v 3.1M176,169v 3.1M185,169v 3.1M194,166v 6.2M203,169v 3.1M212,169v 3.1M221,169v
+ 3.1M230,169v 3.1M239,166v 6.2M248,169v 3.1M257,169v 3.1M266,169v 3.1M275,169v 3.1M284,166v 6.2M293,169v 3.1M302,169v 3.1M311,169v 3.1M320,169v 3.1M329,166v 6.2M338,169v 3.1M347,169v 3.1M356,169v 3.1M365,169v 3.1M374,166v 6.2M383,169v 3.1M392,169v
+ 3.1M401,169v 3.1M410,169v 3.1M419,166v 6.2M428,169v 3.1M437,169v 3.1M446,169v 3.1M455,169v 3.1M464,166v 6.2M474,169v 3.1M483,169v 3.1M492,169v 3.1M501,169v 3.1M510,166v 6.2" fill="none" stroke="black"/>
 <path d="M58,172v -153" fill="none" stroke="black"/>
-<path d="M68,172h -10" fill="none" stroke="black"/>
-<path d="M63,167h -5.0" fill="none" stroke="black"/>
-<path d="M63,161h -5.0" fill="none" stroke="black"/>
-<path d="M63,156h -5.0" fill="none" stroke="black"/>
-<path d="M68,151h -10" fill="none" stroke="black"/>
-<path d="M63,146h -5.0" fill="none" stroke="black"/>
-<path d="M63,141h -5.0" fill="none" stroke="black"/>
-<path d="M63,136h -5.0" fill="none" stroke="black"/>
-<path d="M68,130h -10" fill="none" stroke="black"/>
-<path d="M63,125h -5.0" fill="none" stroke="black"/>
-<path d="M63,120h -5.0" fill="none" stroke="black"/>
-<path d="M63,115h -5.0" fill="none" stroke="black"/>
-<path d="M68,110h -10" fill="none" stroke="black"/>
-<path d="M63,105h -5.0" fill="none" stroke="black"/>
-<path d="M63,99h -5.0" fill="none" stroke="black"/>
-<path d="M63,94h -5.0" fill="none" stroke="black"/>
-<path d="M68,89h -10" fill="none" stroke="black"/>
-<path d="M63,84h -5.0" fill="none" stroke="black"/>
-<path d="M63,79h -5.0" fill="none" stroke="black"/>
-<path d="M63,74h -5.0" fill="none" stroke="black"/>
-<path d="M68,68h -10" fill="none" stroke="black"/>
-<path d="M63,63h -5.0" fill="none" stroke="black"/>
-<path d="M63,58h -5.0" fill="none" stroke="black"/>
-<path d="M63,53h -5.0" fill="none" stroke="black"/>
-<path d="M68,48h -10" fill="none" stroke="black"/>
-<path d="M63,43h -5.0" fill="none" stroke="black"/>
-<path d="M63,37h -5.0" fill="none" stroke="black"/>
-<path d="M63,32h -5.0" fill="none" stroke="black"/>
-<path d="M68,27h -10" fill="none" stroke="black"/>
-<path d="M63,22h -5.0" fill="none" stroke="black"/>
+<path d="M68,172h -10M63,167h -5.0M63,161h -5.0M63,156h -5.0M68,151h -10M63,146h -5.0M63,141h -5.0M63,136h -5.0M68,130h -10M63,125h -5.0M63,120h -5.0M63,115h -5.0M68,110h -10M63,105h -5.0M63,99h -5.0M63,94h -5.0M68,89h -10M63,84h -5.0M63,79h
+ -5.0M63,74h -5.0M68,68h -10M63,63h -5.0M63,58h -5.0M63,53h -5.0M68,48h -10M63,43h -5.0M63,37h -5.0M63,32h -5.0M68,27h -10M63,22h -5.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="50" y="176" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="45" y="155" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">20
@@ -1228,57 +936,9 @@ ratioplot.svg
 <text xml:space="preserve" x="39" y="31" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">140
 </text>
 <path d="M58,235h 451" fill="none" stroke="black"/>
-<path d="M58,229v 6.2" fill="none" stroke="black"/>
-<path d="M67,232v 3.1" fill="none" stroke="black"/>
-<path d="M76,232v 3.1" fill="none" stroke="black"/>
-<path d="M85,232v 3.1" fill="none" stroke="black"/>
-<path d="M94,232v 3.1" fill="none" stroke="black"/>
-<path d="M103,229v 6.2" fill="none" stroke="black"/>
-<path d="M112,232v 3.1" fill="none" stroke="black"/>
-<path d="M122,232v 3.1" fill="none" stroke="black"/>
-<path d="M131,232v 3.1" fill="none" stroke="black"/>
-<path d="M140,232v 3.1" fill="none" stroke="black"/>
-<path d="M149,229v 6.2" fill="none" stroke="black"/>
-<path d="M158,232v 3.1" fill="none" stroke="black"/>
-<path d="M167,232v 3.1" fill="none" stroke="black"/>
-<path d="M176,232v 3.1" fill="none" stroke="black"/>
-<path d="M185,232v 3.1" fill="none" stroke="black"/>
-<path d="M194,229v 6.2" fill="none" stroke="black"/>
-<path d="M203,232v 3.1" fill="none" stroke="black"/>
-<path d="M212,232v 3.1" fill="none" stroke="black"/>
-<path d="M221,232v 3.1" fill="none" stroke="black"/>
-<path d="M230,232v 3.1" fill="none" stroke="black"/>
-<path d="M239,229v 6.2" fill="none" stroke="black"/>
-<path d="M248,232v 3.1" fill="none" stroke="black"/>
-<path d="M257,232v 3.1" fill="none" stroke="black"/>
-<path d="M266,232v 3.1" fill="none" stroke="black"/>
-<path d="M275,232v 3.1" fill="none" stroke="black"/>
-<path d="M284,229v 6.2" fill="none" stroke="black"/>
-<path d="M293,232v 3.1" fill="none" stroke="black"/>
-<path d="M302,232v 3.1" fill="none" stroke="black"/>
-<path d="M311,232v 3.1" fill="none" stroke="black"/>
-<path d="M320,232v 3.1" fill="none" stroke="black"/>
-<path d="M329,229v 6.2" fill="none" stroke="black"/>
-<path d="M338,232v 3.1" fill="none" stroke="black"/>
-<path d="M347,232v 3.1" fill="none" stroke="black"/>
-<path d="M356,232v 3.1" fill="none" stroke="black"/>
-<path d="M365,232v 3.1" fill="none" stroke="black"/>
-<path d="M374,229v 6.2" fill="none" stroke="black"/>
-<path d="M383,232v 3.1" fill="none" stroke="black"/>
-<path d="M392,232v 3.1" fill="none" stroke="black"/>
-<path d="M401,232v 3.1" fill="none" stroke="black"/>
-<path d="M410,232v 3.1" fill="none" stroke="black"/>
-<path d="M419,229v 6.2" fill="none" stroke="black"/>
-<path d="M428,232v 3.1" fill="none" stroke="black"/>
-<path d="M437,232v 3.1" fill="none" stroke="black"/>
-<path d="M446,232v 3.1" fill="none" stroke="black"/>
-<path d="M455,232v 3.1" fill="none" stroke="black"/>
-<path d="M464,229v 6.2" fill="none" stroke="black"/>
-<path d="M474,232v 3.1" fill="none" stroke="black"/>
-<path d="M483,232v 3.1" fill="none" stroke="black"/>
-<path d="M492,232v 3.1" fill="none" stroke="black"/>
-<path d="M501,232v 3.1" fill="none" stroke="black"/>
-<path d="M510,229v 6.2" fill="none" stroke="black"/>
+<path d="M58,229v 6.2M67,232v 3.1M76,232v 3.1M85,232v 3.1M94,232v 3.1M103,229v 6.2M112,232v 3.1M122,232v 3.1M131,232v 3.1M140,232v 3.1M149,229v 6.2M158,232v 3.1M167,232v 3.1M176,232v 3.1M185,232v 3.1M194,229v 6.2M203,232v 3.1M212,232v 3.1M221,232v
+ 3.1M230,232v 3.1M239,229v 6.2M248,232v 3.1M257,232v 3.1M266,232v 3.1M275,232v 3.1M284,229v 6.2M293,232v 3.1M302,232v 3.1M311,232v 3.1M320,232v 3.1M329,229v 6.2M338,232v 3.1M347,232v 3.1M356,232v 3.1M365,232v 3.1M374,229v 6.2M383,232v 3.1M392,232v
+ 3.1M401,232v 3.1M410,232v 3.1M419,229v 6.2M428,232v 3.1M437,232v 3.1M446,232v 3.1M455,232v 3.1M464,229v 6.2M474,232v 3.1M483,232v 3.1M492,232v 3.1M501,232v 3.1M510,229v 6.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="55" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="102" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">1
@@ -1302,40 +962,8 @@ ratioplot.svg
 <text xml:space="preserve" x="504" y="244" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M58,235v -50" fill="none" stroke="black"/>
-<path d="M68,229h -10" fill="none" stroke="black"/>
-<path d="M63,228h -5.0" fill="none" stroke="black"/>
-<path d="M63,226h -5.0" fill="none" stroke="black"/>
-<path d="M63,225h -5.0" fill="none" stroke="black"/>
-<path d="M68,223h -10" fill="none" stroke="black"/>
-<path d="M63,222h -5.0" fill="none" stroke="black"/>
-<path d="M63,221h -5.0" fill="none" stroke="black"/>
-<path d="M63,219h -5.0" fill="none" stroke="black"/>
-<path d="M68,218h -10" fill="none" stroke="black"/>
-<path d="M63,216h -5.0" fill="none" stroke="black"/>
-<path d="M63,215h -5.0" fill="none" stroke="black"/>
-<path d="M63,213h -5.0" fill="none" stroke="black"/>
-<path d="M68,212h -10" fill="none" stroke="black"/>
-<path d="M63,210h -5.0" fill="none" stroke="black"/>
-<path d="M63,209h -5.0" fill="none" stroke="black"/>
-<path d="M63,207h -5.0" fill="none" stroke="black"/>
-<path d="M68,206h -10" fill="none" stroke="black"/>
-<path d="M63,205h -5.0" fill="none" stroke="black"/>
-<path d="M63,203h -5.0" fill="none" stroke="black"/>
-<path d="M63,202h -5.0" fill="none" stroke="black"/>
-<path d="M68,200h -10" fill="none" stroke="black"/>
-<path d="M63,199h -5.0" fill="none" stroke="black"/>
-<path d="M63,197h -5.0" fill="none" stroke="black"/>
-<path d="M63,196h -5.0" fill="none" stroke="black"/>
-<path d="M68,194h -10" fill="none" stroke="black"/>
-<path d="M63,193h -5.0" fill="none" stroke="black"/>
-<path d="M63,191h -5.0" fill="none" stroke="black"/>
-<path d="M63,190h -5.0" fill="none" stroke="black"/>
-<path d="M68,188h -10" fill="none" stroke="black"/>
-<path d="M63,231h -5.0" fill="none" stroke="black"/>
-<path d="M63,232h -5.0" fill="none" stroke="black"/>
-<path d="M63,234h -5.0" fill="none" stroke="black"/>
-<path d="M63,187h -5.0" fill="none" stroke="black"/>
-<path d="M63,186h -5.0" fill="none" stroke="black"/>
+<path d="M68,229h -10M63,228h -5.0M63,226h -5.0M63,225h -5.0M68,223h -10M63,222h -5.0M63,221h -5.0M63,219h -5.0M68,218h -10M63,216h -5.0M63,215h -5.0M63,213h -5.0M68,212h -10M63,210h -5.0M63,209h -5.0M63,207h -5.0M68,206h -10M63,205h -5.0M63,203h
+ -5.0M63,202h -5.0M68,200h -10M63,199h -5.0M63,197h -5.0M63,196h -5.0M68,194h -10M63,193h -5.0M63,191h -5.0M63,190h -5.0M68,188h -10M63,231h -5.0M63,232h -5.0M63,234h -5.0M63,187h -5.0M63,186h -5.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="50" y="234" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">2
 </text>
 <text xml:space="preserve" x="50" y="228" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">4
@@ -1353,68 +981,8 @@ ratioplot.svg
 <text xml:space="preserve" x="45" y="193" fill="black" font-size="9.9" font-family="Helvetica" font-weight="bold">16
 </text>
 <path d="M510,172v -153" fill="none" stroke="black"/>
-<path d="M500,172h 10" fill="none" stroke="black"/>
-<path d="M505,167h 5.0" fill="none" stroke="black"/>
-<path d="M505,161h 5.0" fill="none" stroke="black"/>
-<path d="M505,156h 5.0" fill="none" stroke="black"/>
-<path d="M500,151h 10" fill="none" stroke="black"/>
-<path d="M505,146h 5.0" fill="none" stroke="black"/>
-<path d="M505,141h 5.0" fill="none" stroke="black"/>
-<path d="M505,136h 5.0" fill="none" stroke="black"/>
-<path d="M500,130h 10" fill="none" stroke="black"/>
-<path d="M505,125h 5.0" fill="none" stroke="black"/>
-<path d="M505,120h 5.0" fill="none" stroke="black"/>
-<path d="M505,115h 5.0" fill="none" stroke="black"/>
-<path d="M500,110h 10" fill="none" stroke="black"/>
-<path d="M505,105h 5.0" fill="none" stroke="black"/>
-<path d="M505,99h 5.0" fill="none" stroke="black"/>
-<path d="M505,94h 5.0" fill="none" stroke="black"/>
-<path d="M500,89h 10" fill="none" stroke="black"/>
-<path d="M505,84h 5.0" fill="none" stroke="black"/>
-<path d="M505,79h 5.0" fill="none" stroke="black"/>
-<path d="M505,74h 5.0" fill="none" stroke="black"/>
-<path d="M500,68h 10" fill="none" stroke="black"/>
-<path d="M505,63h 5.0" fill="none" stroke="black"/>
-<path d="M505,58h 5.0" fill="none" stroke="black"/>
-<path d="M505,53h 5.0" fill="none" stroke="black"/>
-<path d="M500,48h 10" fill="none" stroke="black"/>
-<path d="M505,43h 5.0" fill="none" stroke="black"/>
-<path d="M505,37h 5.0" fill="none" stroke="black"/>
-<path d="M505,32h 5.0" fill="none" stroke="black"/>
-<path d="M500,27h 10" fill="none" stroke="black"/>
-<path d="M505,22h 5.0" fill="none" stroke="black"/>
+<path d="M500,172h 10M505,167h 5.0M505,161h 5.0M505,156h 5.0M500,151h 10M505,146h 5.0M505,141h 5.0M505,136h 5.0M500,130h 10M505,125h 5.0M505,120h 5.0M505,115h 5.0M500,110h 10M505,105h 5.0M505,99h 5.0M505,94h 5.0M500,89h 10M505,84h 5.0M505,79h
+ 5.0M505,74h 5.0M500,68h 10M505,63h 5.0M505,58h 5.0M505,53h 5.0M500,48h 10M505,43h 5.0M505,37h 5.0M505,32h 5.0M500,27h 10M505,22h 5.0" fill="none" stroke="black"/>
 <path d="M510,235v -50" fill="none" stroke="black"/>
-<path d="M500,229h 10" fill="none" stroke="black"/>
-<path d="M505,228h 5.0" fill="none" stroke="black"/>
-<path d="M505,226h 5.0" fill="none" stroke="black"/>
-<path d="M505,225h 5.0" fill="none" stroke="black"/>
-<path d="M500,223h 10" fill="none" stroke="black"/>
-<path d="M505,222h 5.0" fill="none" stroke="black"/>
-<path d="M505,221h 5.0" fill="none" stroke="black"/>
-<path d="M505,219h 5.0" fill="none" stroke="black"/>
-<path d="M500,218h 10" fill="none" stroke="black"/>
-<path d="M505,216h 5.0" fill="none" stroke="black"/>
-<path d="M505,215h 5.0" fill="none" stroke="black"/>
-<path d="M505,213h 5.0" fill="none" stroke="black"/>
-<path d="M500,212h 10" fill="none" stroke="black"/>
-<path d="M505,210h 5.0" fill="none" stroke="black"/>
-<path d="M505,209h 5.0" fill="none" stroke="black"/>
-<path d="M505,207h 5.0" fill="none" stroke="black"/>
-<path d="M500,206h 10" fill="none" stroke="black"/>
-<path d="M505,205h 5.0" fill="none" stroke="black"/>
-<path d="M505,203h 5.0" fill="none" stroke="black"/>
-<path d="M505,202h 5.0" fill="none" stroke="black"/>
-<path d="M500,200h 10" fill="none" stroke="black"/>
-<path d="M505,199h 5.0" fill="none" stroke="black"/>
-<path d="M505,197h 5.0" fill="none" stroke="black"/>
-<path d="M505,196h 5.0" fill="none" stroke="black"/>
-<path d="M500,194h 10" fill="none" stroke="black"/>
-<path d="M505,193h 5.0" fill="none" stroke="black"/>
-<path d="M505,191h 5.0" fill="none" stroke="black"/>
-<path d="M505,190h 5.0" fill="none" stroke="black"/>
-<path d="M500,188h 10" fill="none" stroke="black"/>
-<path d="M505,231h 5.0" fill="none" stroke="black"/>
-<path d="M505,232h 5.0" fill="none" stroke="black"/>
-<path d="M505,234h 5.0" fill="none" stroke="black"/>
-<path d="M505,187h 5.0" fill="none" stroke="black"/>
-<path d="M505,186h 5.0" fill="none" stroke="black"/></svg>
+<path d="M500,229h 10M505,228h 5.0M505,226h 5.0M505,225h 5.0M500,223h 10M505,222h 5.0M505,221h 5.0M505,219h 5.0M500,218h 10M505,216h 5.0M505,215h 5.0M505,213h 5.0M500,212h 10M505,210h 5.0M505,209h 5.0M505,207h 5.0M500,206h 10M505,205h 5.0M505,203h
+ 5.0M505,202h 5.0M500,200h 10M505,199h 5.0M505,197h 5.0M505,196h 5.0M500,194h 10M505,193h 5.0M505,191h 5.0M505,190h 5.0M500,188h 10M505,231h 5.0M505,232h 5.0M505,234h 5.0M505,187h 5.0M505,186h 5.0" fill="none" stroke="black"/></svg>

@@ -13418,57 +13418,11 @@ tf3.svg
 <path d="M60,379l 164, 136v -272l -164, -136" fill="none" stroke="black"/>
 <path d="M224,515l 283, -79v -272l -283, 79" fill="none" stroke="black"/>
 <path d="M224,515l 283, -79" fill="none" stroke="black"/>
-<path d="M227,524l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M231,518l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M237,516l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M242,515l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M248,513l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M255,516l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M259,510l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M265,508l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M271,507l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M276,505l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M283,508l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M288,502l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M293,501l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M299,499l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M305,497l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M312,500l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M316,494l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M322,493l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M327,491l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M333,490l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M340,492l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M344,486l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M350,485l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M356,483l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M361,482l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M368,484l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M373,479l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M378,477l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M384,475l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M390,474l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M397,476l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M401,471l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M407,469l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M412,468l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M418,466l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M425,469l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M429,463l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M435,461l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M441,460l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M446,458l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M453,461l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M458,455l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M463,453l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M469,452l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M475,450l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M482,453l -2.5, -8.2" fill="none" stroke="black"/>
-<path d="M486,447l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M492,446l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M497,444l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M503,442l -1.2, -4.1" fill="none" stroke="black"/>
-<path d="M510,445l -2.5, -8.2" fill="none" stroke="black"/>
+<path d="M227,524l -2.5, -8.2M231,518l -1.2, -4.1M237,516l -1.2, -4.1M242,515l -1.2, -4.1M248,513l -1.2, -4.1M255,516l -2.5, -8.2M259,510l -1.2, -4.1M265,508l -1.2, -4.1M271,507l -1.2, -4.1M276,505l -1.2, -4.1M283,508l -2.5, -8.2M288,502l -1.2,
+ -4.1M293,501l -1.2, -4.1M299,499l -1.2, -4.1M305,497l -1.2, -4.1M312,500l -2.5, -8.2M316,494l -1.2, -4.1M322,493l -1.2, -4.1M327,491l -1.2, -4.1M333,490l -1.2, -4.1M340,492l -2.5, -8.2M344,486l -1.2, -4.1M350,485l -1.2, -4.1M356,483l -1.2,
+ -4.1M361,482l -1.2, -4.1M368,484l -2.5, -8.2M373,479l -1.2, -4.1M378,477l -1.2, -4.1M384,475l -1.2, -4.1M390,474l -1.2, -4.1M397,476l -2.5, -8.2M401,471l -1.2, -4.1M407,469l -1.2, -4.1M412,468l -1.2, -4.1M418,466l -1.2, -4.1M425,469l -2.5,
+ -8.2M429,463l -1.2, -4.1M435,461l -1.2, -4.1M441,460l -1.2, -4.1M446,458l -1.2, -4.1M453,461l -2.5, -8.2M458,455l -1.2, -4.1M463,453l -1.2, -4.1M469,452l -1.2, -4.1M475,450l -1.2, -4.1M482,453l -2.5, -8.2M486,447l -1.2, -4.1M492,446l -1.2,
+ -4.1M497,444l -1.2, -4.1M503,442l -1.2, -4.1M510,445l -2.5, -8.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="224" y="542" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="254" y="534" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">1
@@ -13492,57 +13446,11 @@ tf3.svg
 <text xml:space="preserve" x="502" y="463" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M224,515l -164, -136" fill="none" stroke="black"/>
-<path d="M220,520l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M219,515l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M215,512l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M212,510l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M209,507l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M203,506l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M202,501l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M199,499l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M196,496l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M192,493l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M187,493l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M186,488l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M183,485l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M179,482l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M176,480l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M171,479l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M170,474l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M166,471l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M163,469l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M160,466l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M154,466l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M153,461l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M150,458l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M147,455l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M143,452l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M138,452l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M137,447l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M134,444l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M130,442l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M127,439l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M122,438l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M120,433l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M117,431l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M114,428l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M111,425l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M105,425l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M104,420l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M101,417l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M98,414l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M94,412l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M89,411l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M88,406l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M84,403l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M81,401l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M78,398l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M73,398l 4.3, -4.7" fill="none" stroke="black"/>
-<path d="M71,393l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M68,390l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M65,387l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M62,384l 2.1, -2.4" fill="none" stroke="black"/>
-<path d="M56,384l 4.3, -4.7" fill="none" stroke="black"/>
+<path d="M220,520l 4.3, -4.7M219,515l 2.1, -2.4M215,512l 2.1, -2.4M212,510l 2.1, -2.4M209,507l 2.1, -2.4M203,506l 4.3, -4.7M202,501l 2.1, -2.4M199,499l 2.1, -2.4M196,496l 2.1, -2.4M192,493l 2.1, -2.4M187,493l 4.3, -4.7M186,488l 2.1, -2.4M183,485l
+ 2.1, -2.4M179,482l 2.1, -2.4M176,480l 2.1, -2.4M171,479l 4.3, -4.7M170,474l 2.1, -2.4M166,471l 2.1, -2.4M163,469l 2.1, -2.4M160,466l 2.1, -2.4M154,466l 4.3, -4.7M153,461l 2.1, -2.4M150,458l 2.1, -2.4M147,455l 2.1, -2.4M143,452l 2.1, -2.4M138,452l
+ 4.3, -4.7M137,447l 2.1, -2.4M134,444l 2.1, -2.4M130,442l 2.1, -2.4M127,439l 2.1, -2.4M122,438l 4.3, -4.7M120,433l 2.1, -2.4M117,431l 2.1, -2.4M114,428l 2.1, -2.4M111,425l 2.1, -2.4M105,425l 4.3, -4.7M104,420l 2.1, -2.4M101,417l 2.1, -2.4M98,414l
+ 2.1, -2.4M94,412l 2.1, -2.4M89,411l 4.3, -4.7M88,406l 2.1, -2.4M84,403l 2.1, -2.4M81,401l 2.1, -2.4M78,398l 2.1, -2.4M73,398l 4.3, -4.7M71,393l 2.1, -2.4M68,390l 2.1, -2.4M65,387l 2.1, -2.4M62,384l 2.1, -2.4M56,384l 4.3, -4.7" fill="none"
+ stroke="black"/>
 <text xml:space="preserve" x="201" y="538" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="187" y="524" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">1
@@ -13566,57 +13474,9 @@ tf3.svg
 <text xml:space="preserve" x="26" y="402" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M60,379v -272" fill="none" stroke="black"/>
-<path d="M52,379h 8.5" fill="none" stroke="black"/>
-<path d="M56,374h 4.3" fill="none" stroke="black"/>
-<path d="M56,368h 4.3" fill="none" stroke="black"/>
-<path d="M56,363h 4.3" fill="none" stroke="black"/>
-<path d="M56,358h 4.3" fill="none" stroke="black"/>
-<path d="M52,352h 8.5" fill="none" stroke="black"/>
-<path d="M56,347h 4.3" fill="none" stroke="black"/>
-<path d="M56,341h 4.3" fill="none" stroke="black"/>
-<path d="M56,336h 4.3" fill="none" stroke="black"/>
-<path d="M56,330h 4.3" fill="none" stroke="black"/>
-<path d="M52,325h 8.5" fill="none" stroke="black"/>
-<path d="M56,319h 4.3" fill="none" stroke="black"/>
-<path d="M56,314h 4.3" fill="none" stroke="black"/>
-<path d="M56,309h 4.3" fill="none" stroke="black"/>
-<path d="M56,303h 4.3" fill="none" stroke="black"/>
-<path d="M52,298h 8.5" fill="none" stroke="black"/>
-<path d="M56,292h 4.3" fill="none" stroke="black"/>
-<path d="M56,287h 4.3" fill="none" stroke="black"/>
-<path d="M56,281h 4.3" fill="none" stroke="black"/>
-<path d="M56,276h 4.3" fill="none" stroke="black"/>
-<path d="M52,271h 8.5" fill="none" stroke="black"/>
-<path d="M56,265h 4.3" fill="none" stroke="black"/>
-<path d="M56,260h 4.3" fill="none" stroke="black"/>
-<path d="M56,254h 4.3" fill="none" stroke="black"/>
-<path d="M56,249h 4.3" fill="none" stroke="black"/>
-<path d="M52,243h 8.5" fill="none" stroke="black"/>
-<path d="M56,238h 4.3" fill="none" stroke="black"/>
-<path d="M56,232h 4.3" fill="none" stroke="black"/>
-<path d="M56,227h 4.3" fill="none" stroke="black"/>
-<path d="M56,222h 4.3" fill="none" stroke="black"/>
-<path d="M52,216h 8.5" fill="none" stroke="black"/>
-<path d="M56,211h 4.3" fill="none" stroke="black"/>
-<path d="M56,205h 4.3" fill="none" stroke="black"/>
-<path d="M56,200h 4.3" fill="none" stroke="black"/>
-<path d="M56,194h 4.3" fill="none" stroke="black"/>
-<path d="M52,189h 8.5" fill="none" stroke="black"/>
-<path d="M56,183h 4.3" fill="none" stroke="black"/>
-<path d="M56,178h 4.3" fill="none" stroke="black"/>
-<path d="M56,173h 4.3" fill="none" stroke="black"/>
-<path d="M56,167h 4.3" fill="none" stroke="black"/>
-<path d="M52,162h 8.5" fill="none" stroke="black"/>
-<path d="M56,156h 4.3" fill="none" stroke="black"/>
-<path d="M56,151h 4.3" fill="none" stroke="black"/>
-<path d="M56,145h 4.3" fill="none" stroke="black"/>
-<path d="M56,140h 4.3" fill="none" stroke="black"/>
-<path d="M52,134h 8.5" fill="none" stroke="black"/>
-<path d="M56,129h 4.3" fill="none" stroke="black"/>
-<path d="M56,124h 4.3" fill="none" stroke="black"/>
-<path d="M56,118h 4.3" fill="none" stroke="black"/>
-<path d="M56,113h 4.3" fill="none" stroke="black"/>
-<path d="M52,107h 8.5" fill="none" stroke="black"/>
+<path d="M52,379h 8.5M56,374h 4.3M56,368h 4.3M56,363h 4.3M56,358h 4.3M52,352h 8.5M56,347h 4.3M56,341h 4.3M56,336h 4.3M56,330h 4.3M52,325h 8.5M56,319h 4.3M56,314h 4.3M56,309h 4.3M56,303h 4.3M52,298h 8.5M56,292h 4.3M56,287h 4.3M56,281h 4.3M56,276h
+ 4.3M52,271h 8.5M56,265h 4.3M56,260h 4.3M56,254h 4.3M56,249h 4.3M52,243h 8.5M56,238h 4.3M56,232h 4.3M56,227h 4.3M56,222h 4.3M52,216h 8.5M56,211h 4.3M56,205h 4.3M56,200h 4.3M56,194h 4.3M52,189h 8.5M56,183h 4.3M56,178h 4.3M56,173h 4.3M56,167h
+ 4.3M52,162h 8.5M56,156h 4.3M56,151h 4.3M56,145h 4.3M56,140h 4.3M52,134h 8.5M56,129h 4.3M56,124h 4.3M56,118h 4.3M56,113h 4.3M52,107h 8.5" fill="none" stroke="black"/>
 <text xml:space="preserve" x="40" y="387" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="43" y="360" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">1

@@ -22,56 +22,9 @@ th2_axlabels.svg
 <text xml:space="preserve" x="14" y="25" fill="black" font-size="22" font-family="Helvetica" font-weight="bold">h2
 </text>
 <path d="M57,490h 454" fill="none" stroke="black"/>
-<path d="M80,477v 13" fill="none" stroke="black"/>
-<path d="M89,483v 6.5" fill="none" stroke="black"/>
-<path d="M98,483v 6.5" fill="none" stroke="black"/>
-<path d="M107,483v 6.5" fill="none" stroke="black"/>
-<path d="M116,483v 6.5" fill="none" stroke="black"/>
-<path d="M125,477v 13" fill="none" stroke="black"/>
-<path d="M134,483v 6.5" fill="none" stroke="black"/>
-<path d="M143,483v 6.5" fill="none" stroke="black"/>
-<path d="M152,483v 6.5" fill="none" stroke="black"/>
-<path d="M162,483v 6.5" fill="none" stroke="black"/>
-<path d="M171,477v 13" fill="none" stroke="black"/>
-<path d="M180,483v 6.5" fill="none" stroke="black"/>
-<path d="M189,483v 6.5" fill="none" stroke="black"/>
-<path d="M198,483v 6.5" fill="none" stroke="black"/>
-<path d="M207,483v 6.5" fill="none" stroke="black"/>
-<path d="M216,477v 13" fill="none" stroke="black"/>
-<path d="M225,483v 6.5" fill="none" stroke="black"/>
-<path d="M234,483v 6.5" fill="none" stroke="black"/>
-<path d="M243,483v 6.5" fill="none" stroke="black"/>
-<path d="M252,483v 6.5" fill="none" stroke="black"/>
-<path d="M261,477v 13" fill="none" stroke="black"/>
-<path d="M270,483v 6.5" fill="none" stroke="black"/>
-<path d="M279,483v 6.5" fill="none" stroke="black"/>
-<path d="M289,483v 6.5" fill="none" stroke="black"/>
-<path d="M298,483v 6.5" fill="none" stroke="black"/>
-<path d="M307,477v 13" fill="none" stroke="black"/>
-<path d="M316,483v 6.5" fill="none" stroke="black"/>
-<path d="M325,483v 6.5" fill="none" stroke="black"/>
-<path d="M334,483v 6.5" fill="none" stroke="black"/>
-<path d="M343,483v 6.5" fill="none" stroke="black"/>
-<path d="M352,477v 13" fill="none" stroke="black"/>
-<path d="M361,483v 6.5" fill="none" stroke="black"/>
-<path d="M370,483v 6.5" fill="none" stroke="black"/>
-<path d="M379,483v 6.5" fill="none" stroke="black"/>
-<path d="M388,483v 6.5" fill="none" stroke="black"/>
-<path d="M397,477v 13" fill="none" stroke="black"/>
-<path d="M406,483v 6.5" fill="none" stroke="black"/>
-<path d="M415,483v 6.5" fill="none" stroke="black"/>
-<path d="M425,483v 6.5" fill="none" stroke="black"/>
-<path d="M434,483v 6.5" fill="none" stroke="black"/>
-<path d="M443,477v 13" fill="none" stroke="black"/>
-<path d="M452,483v 6.5" fill="none" stroke="black"/>
-<path d="M461,483v 6.5" fill="none" stroke="black"/>
-<path d="M470,483v 6.5" fill="none" stroke="black"/>
-<path d="M479,483v 6.5" fill="none" stroke="black"/>
-<path d="M488,477v 13" fill="none" stroke="black"/>
-<path d="M71,483v 6.5" fill="none" stroke="black"/>
-<path d="M62,483v 6.5" fill="none" stroke="black"/>
-<path d="M497,483v 6.5" fill="none" stroke="black"/>
-<path d="M506,483v 6.5" fill="none" stroke="black"/>
+<path d="M80,477v 13M89,483v 6.5M98,483v 6.5M107,483v 6.5M116,483v 6.5M125,477v 13M134,483v 6.5M143,483v 6.5M152,483v 6.5M162,483v 6.5M171,477v 13M180,483v 6.5M189,483v 6.5M198,483v 6.5M207,483v 6.5M216,477v 13M225,483v 6.5M234,483v 6.5M243,483v
+ 6.5M252,483v 6.5M261,477v 13M270,483v 6.5M279,483v 6.5M289,483v 6.5M298,483v 6.5M307,477v 13M316,483v 6.5M325,483v 6.5M334,483v 6.5M343,483v 6.5M352,477v 13M361,483v 6.5M370,483v 6.5M379,483v 6.5M388,483v 6.5M397,477v 13M406,483v 6.5M415,483v
+ 6.5M425,483v 6.5M434,483v 6.5M443,477v 13M452,483v 6.5M461,483v 6.5M470,483v 6.5M479,483v 6.5M488,477v 13M71,483v 6.5M62,483v 6.5M497,483v 6.5M506,483v 6.5" fill="none" stroke="black"/>
 <text xml:space="preserve" x="76" y="510" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">1
 </text>
 <text xml:space="preserve" x="82" y="510" fill="#00ff00" font-size="20" font-family="Helvetica" font-weight="bold">2nd label
@@ -93,56 +46,9 @@ th2_axlabels.svg
 <text xml:space="preserve" x="477" y="510" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M57,490v -435" fill="none" stroke="black"/>
-<path d="M71,468h -14" fill="none" stroke="black"/>
-<path d="M64,459h -6.8" fill="none" stroke="black"/>
-<path d="M64,451h -6.8" fill="none" stroke="black"/>
-<path d="M64,442h -6.8" fill="none" stroke="black"/>
-<path d="M64,433h -6.8" fill="none" stroke="black"/>
-<path d="M71,424h -14" fill="none" stroke="black"/>
-<path d="M64,416h -6.8" fill="none" stroke="black"/>
-<path d="M64,407h -6.8" fill="none" stroke="black"/>
-<path d="M64,398h -6.8" fill="none" stroke="black"/>
-<path d="M64,390h -6.8" fill="none" stroke="black"/>
-<path d="M71,381h -14" fill="none" stroke="black"/>
-<path d="M64,372h -6.8" fill="none" stroke="black"/>
-<path d="M64,363h -6.8" fill="none" stroke="black"/>
-<path d="M64,355h -6.8" fill="none" stroke="black"/>
-<path d="M64,346h -6.8" fill="none" stroke="black"/>
-<path d="M71,337h -14" fill="none" stroke="black"/>
-<path d="M64,329h -6.8" fill="none" stroke="black"/>
-<path d="M64,320h -6.8" fill="none" stroke="black"/>
-<path d="M64,311h -6.8" fill="none" stroke="black"/>
-<path d="M64,303h -6.8" fill="none" stroke="black"/>
-<path d="M71,294h -14" fill="none" stroke="black"/>
-<path d="M64,285h -6.8" fill="none" stroke="black"/>
-<path d="M64,276h -6.8" fill="none" stroke="black"/>
-<path d="M64,268h -6.8" fill="none" stroke="black"/>
-<path d="M64,259h -6.8" fill="none" stroke="black"/>
-<path d="M71,250h -14" fill="none" stroke="black"/>
-<path d="M64,242h -6.8" fill="none" stroke="black"/>
-<path d="M64,233h -6.8" fill="none" stroke="black"/>
-<path d="M64,224h -6.8" fill="none" stroke="black"/>
-<path d="M64,215h -6.8" fill="none" stroke="black"/>
-<path d="M71,207h -14" fill="none" stroke="black"/>
-<path d="M64,198h -6.8" fill="none" stroke="black"/>
-<path d="M64,189h -6.8" fill="none" stroke="black"/>
-<path d="M64,181h -6.8" fill="none" stroke="black"/>
-<path d="M64,172h -6.8" fill="none" stroke="black"/>
-<path d="M71,163h -14" fill="none" stroke="black"/>
-<path d="M64,155h -6.8" fill="none" stroke="black"/>
-<path d="M64,146h -6.8" fill="none" stroke="black"/>
-<path d="M64,137h -6.8" fill="none" stroke="black"/>
-<path d="M64,128h -6.8" fill="none" stroke="black"/>
-<path d="M71,120h -14" fill="none" stroke="black"/>
-<path d="M64,111h -6.8" fill="none" stroke="black"/>
-<path d="M64,102h -6.8" fill="none" stroke="black"/>
-<path d="M64,94h -6.8" fill="none" stroke="black"/>
-<path d="M64,85h -6.8" fill="none" stroke="black"/>
-<path d="M71,76h -14" fill="none" stroke="black"/>
-<path d="M64,477h -6.8" fill="none" stroke="black"/>
-<path d="M64,485h -6.8" fill="none" stroke="black"/>
-<path d="M64,67h -6.8" fill="none" stroke="black"/>
-<path d="M64,59h -6.8" fill="none" stroke="black"/>
+<path d="M71,468h -14M64,459h -6.8M64,451h -6.8M64,442h -6.8M64,433h -6.8M71,424h -14M64,416h -6.8M64,407h -6.8M64,398h -6.8M64,390h -6.8M71,381h -14M64,372h -6.8M64,363h -6.8M64,355h -6.8M64,346h -6.8M71,337h -14M64,329h -6.8M64,320h -6.8M64,311h
+ -6.8M64,303h -6.8M71,294h -14M64,285h -6.8M64,276h -6.8M64,268h -6.8M64,259h -6.8M71,250h -14M64,242h -6.8M64,233h -6.8M64,224h -6.8M64,215h -6.8M71,207h -14M64,198h -6.8M64,189h -6.8M64,181h -6.8M64,172h -6.8M71,163h -14M64,155h -6.8M64,146h
+ -6.8M64,137h -6.8M64,128h -6.8M71,120h -14M64,111h -6.8M64,102h -6.8M64,94h -6.8M64,85h -6.8M71,76h -14M64,477h -6.8M64,485h -6.8M64,67h -6.8M64,59h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="47" y="476" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">1
 </text>
 <text xml:space="preserve" x="44" y="433" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">2

@@ -11,47 +11,12 @@ gmultierrors.svg
 <path d="M57,346l 1.000, -1.000h 452v -306l 1.000, -1.000v 308h -454z" fill="#a9a9a9"/>
 <rect x="57" y="38" width="454" height="308" fill="none" stroke="black"/>
 <path d="M57,346h 454" fill="none" stroke="black"/>
-<path d="M120,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M202,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M284,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M366,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M448,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M120,38v 308M202,38v 308M284,38v 308M366,38v 308M448,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M57,346v -308" fill="none" stroke="black"/>
-<path d="M511,320h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,275h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,229h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,183h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,137h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,92h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M511,46h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,320h -454M511,275h -454M511,229h -454M511,183h -454M511,137h -454M511,92h -454M511,46h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M57,346h 454" fill="none" stroke="black"/>
-<path d="M120,337v 9.2" fill="none" stroke="black"/>
-<path d="M136,341v 4.6" fill="none" stroke="black"/>
-<path d="M153,341v 4.6" fill="none" stroke="black"/>
-<path d="M169,341v 4.6" fill="none" stroke="black"/>
-<path d="M185,341v 4.6" fill="none" stroke="black"/>
-<path d="M202,337v 9.2" fill="none" stroke="black"/>
-<path d="M218,341v 4.6" fill="none" stroke="black"/>
-<path d="M235,341v 4.6" fill="none" stroke="black"/>
-<path d="M251,341v 4.6" fill="none" stroke="black"/>
-<path d="M268,341v 4.6" fill="none" stroke="black"/>
-<path d="M284,337v 9.2" fill="none" stroke="black"/>
-<path d="M300,341v 4.6" fill="none" stroke="black"/>
-<path d="M317,341v 4.6" fill="none" stroke="black"/>
-<path d="M333,341v 4.6" fill="none" stroke="black"/>
-<path d="M350,341v 4.6" fill="none" stroke="black"/>
-<path d="M366,337v 9.2" fill="none" stroke="black"/>
-<path d="M383,341v 4.6" fill="none" stroke="black"/>
-<path d="M399,341v 4.6" fill="none" stroke="black"/>
-<path d="M415,341v 4.6" fill="none" stroke="black"/>
-<path d="M432,341v 4.6" fill="none" stroke="black"/>
-<path d="M448,337v 9.2" fill="none" stroke="black"/>
-<path d="M103,341v 4.6" fill="none" stroke="black"/>
-<path d="M87,341v 4.6" fill="none" stroke="black"/>
-<path d="M70,341v 4.6" fill="none" stroke="black"/>
-<path d="M465,341v 4.6" fill="none" stroke="black"/>
-<path d="M481,341v 4.6" fill="none" stroke="black"/>
-<path d="M498,341v 4.6" fill="none" stroke="black"/>
+<path d="M120,337v 9.2M136,341v 4.6M153,341v 4.6M169,341v 4.6M185,341v 4.6M202,337v 9.2M218,341v 4.6M235,341v 4.6M251,341v 4.6M268,341v 4.6M284,337v 9.2M300,341v 4.6M317,341v 4.6M333,341v 4.6M350,341v 4.6M366,337v 9.2M383,341v 4.6M399,341v
+ 4.6M415,341v 4.6M432,341v 4.6M448,337v 9.2M103,341v 4.6M87,341v 4.6M70,341v 4.6M465,341v 4.6M481,341v 4.6M498,341v 4.6" fill="none" stroke="black"/>
 <text xml:space="preserve" x="116" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="199" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
@@ -63,39 +28,8 @@ gmultierrors.svg
 <text xml:space="preserve" x="444" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
 </text>
 <path d="M57,346v -308" fill="none" stroke="black"/>
-<path d="M71,320h -14" fill="none" stroke="black"/>
-<path d="M64,311h -6.8" fill="none" stroke="black"/>
-<path d="M64,302h -6.8" fill="none" stroke="black"/>
-<path d="M64,293h -6.8" fill="none" stroke="black"/>
-<path d="M64,284h -6.8" fill="none" stroke="black"/>
-<path d="M71,275h -14" fill="none" stroke="black"/>
-<path d="M64,265h -6.8" fill="none" stroke="black"/>
-<path d="M64,256h -6.8" fill="none" stroke="black"/>
-<path d="M64,247h -6.8" fill="none" stroke="black"/>
-<path d="M64,238h -6.8" fill="none" stroke="black"/>
-<path d="M71,229h -14" fill="none" stroke="black"/>
-<path d="M64,220h -6.8" fill="none" stroke="black"/>
-<path d="M64,211h -6.8" fill="none" stroke="black"/>
-<path d="M64,201h -6.8" fill="none" stroke="black"/>
-<path d="M64,192h -6.8" fill="none" stroke="black"/>
-<path d="M71,183h -14" fill="none" stroke="black"/>
-<path d="M64,174h -6.8" fill="none" stroke="black"/>
-<path d="M64,165h -6.8" fill="none" stroke="black"/>
-<path d="M64,156h -6.8" fill="none" stroke="black"/>
-<path d="M64,146h -6.8" fill="none" stroke="black"/>
-<path d="M71,137h -14" fill="none" stroke="black"/>
-<path d="M64,128h -6.8" fill="none" stroke="black"/>
-<path d="M64,119h -6.8" fill="none" stroke="black"/>
-<path d="M64,110h -6.8" fill="none" stroke="black"/>
-<path d="M64,101h -6.8" fill="none" stroke="black"/>
-<path d="M71,92h -14" fill="none" stroke="black"/>
-<path d="M64,82h -6.8" fill="none" stroke="black"/>
-<path d="M64,73h -6.8" fill="none" stroke="black"/>
-<path d="M64,64h -6.8" fill="none" stroke="black"/>
-<path d="M64,55h -6.8" fill="none" stroke="black"/>
-<path d="M71,46h -14" fill="none" stroke="black"/>
-<path d="M64,330h -6.8" fill="none" stroke="black"/>
-<path d="M64,339h -6.8" fill="none" stroke="black"/>
+<path d="M71,320h -14M64,311h -6.8M64,302h -6.8M64,293h -6.8M64,284h -6.8M71,275h -14M64,265h -6.8M64,256h -6.8M64,247h -6.8M64,238h -6.8M71,229h -14M64,220h -6.8M64,211h -6.8M64,201h -6.8M64,192h -6.8M71,183h -14M64,174h -6.8M64,165h -6.8M64,156h
+ -6.8M64,146h -6.8M71,137h -14M64,128h -6.8M64,119h -6.8M64,110h -6.8M64,101h -6.8M71,92h -14M64,82h -6.8M64,73h -6.8M64,64h -6.8M64,55h -6.8M71,46h -14M64,330h -6.8M64,339h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="49" y="327" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
 </text>
 <text xml:space="preserve" x="41" y="327" fill="black" font-size="15" font-family="Times">&#8722;

@@ -16,43 +16,9 @@ tscatter.svg
 <text xml:space="preserve" x="20" y="24" fill="black" font-size="24" font-family="Helvetica" font-weight="bold">Scatter plot title
 </text>
 <path d="M57,495h 431" fill="none" stroke="black"/>
-<path d="M68,482v 13" fill="none" stroke="black"/>
-<path d="M80,489v 6.3" fill="none" stroke="black"/>
-<path d="M92,489v 6.3" fill="none" stroke="black"/>
-<path d="M103,489v 6.3" fill="none" stroke="black"/>
-<path d="M115,489v 6.3" fill="none" stroke="black"/>
-<path d="M127,482v 13" fill="none" stroke="black"/>
-<path d="M138,489v 6.3" fill="none" stroke="black"/>
-<path d="M150,489v 6.3" fill="none" stroke="black"/>
-<path d="M161,489v 6.3" fill="none" stroke="black"/>
-<path d="M173,489v 6.3" fill="none" stroke="black"/>
-<path d="M185,482v 13" fill="none" stroke="black"/>
-<path d="M196,489v 6.3" fill="none" stroke="black"/>
-<path d="M208,489v 6.3" fill="none" stroke="black"/>
-<path d="M220,489v 6.3" fill="none" stroke="black"/>
-<path d="M231,489v 6.3" fill="none" stroke="black"/>
-<path d="M243,482v 13" fill="none" stroke="black"/>
-<path d="M255,489v 6.3" fill="none" stroke="black"/>
-<path d="M266,489v 6.3" fill="none" stroke="black"/>
-<path d="M278,489v 6.3" fill="none" stroke="black"/>
-<path d="M289,489v 6.3" fill="none" stroke="black"/>
-<path d="M301,482v 13" fill="none" stroke="black"/>
-<path d="M313,489v 6.3" fill="none" stroke="black"/>
-<path d="M324,489v 6.3" fill="none" stroke="black"/>
-<path d="M336,489v 6.3" fill="none" stroke="black"/>
-<path d="M348,489v 6.3" fill="none" stroke="black"/>
-<path d="M359,482v 13" fill="none" stroke="black"/>
-<path d="M371,489v 6.3" fill="none" stroke="black"/>
-<path d="M383,489v 6.3" fill="none" stroke="black"/>
-<path d="M394,489v 6.3" fill="none" stroke="black"/>
-<path d="M406,489v 6.3" fill="none" stroke="black"/>
-<path d="M418,482v 13" fill="none" stroke="black"/>
-<path d="M429,489v 6.3" fill="none" stroke="black"/>
-<path d="M441,489v 6.3" fill="none" stroke="black"/>
-<path d="M452,489v 6.3" fill="none" stroke="black"/>
-<path d="M464,489v 6.3" fill="none" stroke="black"/>
-<path d="M476,482v 13" fill="none" stroke="black"/>
-<path d="M487,489v 6.3" fill="none" stroke="black"/>
+<path d="M68,482v 13M80,489v 6.3M92,489v 6.3M103,489v 6.3M115,489v 6.3M127,482v 13M138,489v 6.3M150,489v 6.3M161,489v 6.3M173,489v 6.3M185,482v 13M196,489v 6.3M208,489v 6.3M220,489v 6.3M231,489v 6.3M243,482v 13M255,489v 6.3M266,489v 6.3M278,489v
+ 6.3M289,489v 6.3M301,482v 13M313,489v 6.3M324,489v 6.3M336,489v 6.3M348,489v 6.3M359,482v 13M371,489v 6.3M383,489v 6.3M394,489v 6.3M406,489v 6.3M418,482v 13M429,489v 6.3M441,489v 6.3M452,489v 6.3M464,489v 6.3M476,482v 13M487,489v 6.3" fill="none"
+ stroke="black"/>
 <text xml:space="preserve" x="57" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">20
 </text>
 <text xml:space="preserve" x="115" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">30
@@ -72,45 +38,9 @@ tscatter.svg
 <text xml:space="preserve" x="432" y="538" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">X title
 </text>
 <path d="M57,495v -440" fill="none" stroke="black"/>
-<path d="M71,459h -14" fill="none" stroke="black"/>
-<path d="M64,448h -6.8" fill="none" stroke="black"/>
-<path d="M64,436h -6.8" fill="none" stroke="black"/>
-<path d="M64,425h -6.8" fill="none" stroke="black"/>
-<path d="M64,413h -6.8" fill="none" stroke="black"/>
-<path d="M71,402h -14" fill="none" stroke="black"/>
-<path d="M64,390h -6.8" fill="none" stroke="black"/>
-<path d="M64,379h -6.8" fill="none" stroke="black"/>
-<path d="M64,367h -6.8" fill="none" stroke="black"/>
-<path d="M64,356h -6.8" fill="none" stroke="black"/>
-<path d="M71,344h -14" fill="none" stroke="black"/>
-<path d="M64,333h -6.8" fill="none" stroke="black"/>
-<path d="M64,321h -6.8" fill="none" stroke="black"/>
-<path d="M64,310h -6.8" fill="none" stroke="black"/>
-<path d="M64,298h -6.8" fill="none" stroke="black"/>
-<path d="M71,287h -14" fill="none" stroke="black"/>
-<path d="M64,275h -6.8" fill="none" stroke="black"/>
-<path d="M64,264h -6.8" fill="none" stroke="black"/>
-<path d="M64,252h -6.8" fill="none" stroke="black"/>
-<path d="M64,241h -6.8" fill="none" stroke="black"/>
-<path d="M71,229h -14" fill="none" stroke="black"/>
-<path d="M64,218h -6.8" fill="none" stroke="black"/>
-<path d="M64,207h -6.8" fill="none" stroke="black"/>
-<path d="M64,195h -6.8" fill="none" stroke="black"/>
-<path d="M64,184h -6.8" fill="none" stroke="black"/>
-<path d="M71,172h -14" fill="none" stroke="black"/>
-<path d="M64,161h -6.8" fill="none" stroke="black"/>
-<path d="M64,149h -6.8" fill="none" stroke="black"/>
-<path d="M64,138h -6.8" fill="none" stroke="black"/>
-<path d="M64,126h -6.8" fill="none" stroke="black"/>
-<path d="M71,115h -14" fill="none" stroke="black"/>
-<path d="M64,103h -6.8" fill="none" stroke="black"/>
-<path d="M64,92h -6.8" fill="none" stroke="black"/>
-<path d="M64,80h -6.8" fill="none" stroke="black"/>
-<path d="M64,69h -6.8" fill="none" stroke="black"/>
-<path d="M71,57h -14" fill="none" stroke="black"/>
-<path d="M64,471h -6.8" fill="none" stroke="black"/>
-<path d="M64,482h -6.8" fill="none" stroke="black"/>
-<path d="M64,494h -6.8" fill="none" stroke="black"/>
+<path d="M71,459h -14M64,448h -6.8M64,436h -6.8M64,425h -6.8M64,413h -6.8M71,402h -14M64,390h -6.8M64,379h -6.8M64,367h -6.8M64,356h -6.8M71,344h -14M64,333h -6.8M64,321h -6.8M64,310h -6.8M64,298h -6.8M71,287h -14M64,275h -6.8M64,264h -6.8M64,252h
+ -6.8M64,241h -6.8M71,229h -14M64,218h -6.8M64,207h -6.8M64,195h -6.8M64,184h -6.8M71,172h -14M64,161h -6.8M64,149h -6.8M64,138h -6.8M64,126h -6.8M71,115h -14M64,103h -6.8M64,92h -6.8M64,80h -6.8M64,69h -6.8M71,57h -14M64,471h -6.8M64,482h
+ -6.8M64,494h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="32" y="467" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">55
 </text>
 <text xml:space="preserve" x="32" y="410" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">60
@@ -387,16 +317,7 @@ tscatter.svg
 <rect x="491" y="57" width="26" height="1.7" fill="#f9f710" fill-opacity="0.60"/>
 <rect x="491" y="55" width="26" height="1.7" fill="#f9f90e" fill-opacity="0.60"/>
 <path d="M516,495v -440" fill="none" stroke="black"/>
-<path d="M503,472h 14" fill="none" stroke="black"/>
-<path d="M503,425h 14" fill="none" stroke="black"/>
-<path d="M503,379h 14" fill="none" stroke="black"/>
-<path d="M503,333h 14" fill="none" stroke="black"/>
-<path d="M503,286h 14" fill="none" stroke="black"/>
-<path d="M503,240h 14" fill="none" stroke="black"/>
-<path d="M503,194h 14" fill="none" stroke="black"/>
-<path d="M503,148h 14" fill="none" stroke="black"/>
-<path d="M503,101h 14" fill="none" stroke="black"/>
-<path d="M503,55h 14" fill="none" stroke="black"/>
+<path d="M503,472h 14M503,425h 14M503,379h 14M503,333h 14M503,286h 14M503,240h 14M503,194h 14M503,148h 14M503,101h 14M503,55h 14" fill="none" stroke="black"/>
 <text xml:space="preserve" x="519" y="480" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">20
 </text>
 <text xml:space="preserve" x="519" y="433" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">40
