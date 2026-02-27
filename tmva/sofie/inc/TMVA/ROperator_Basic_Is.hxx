@@ -4,6 +4,7 @@
 #include <TMVA/ROperator.hxx>
 #include <TMVA/RModel.hxx>
 #include <TMVA/SOFIE_common.hxx>
+#include <cmath>
 
 namespace TMVA {
 namespace Experimental {
@@ -18,21 +19,25 @@ template<>
 struct IsOpTraits<EBasicIsOperator::kIsInf> {
    static std::string Name() { return "IsInf"; }
    static std::string Op(const std::string &x) { return "std::isinf(" + x + ")"; }
+   static bool Impl(float x) { return std::isinf(x);}
 };
 template<>
 struct IsOpTraits<EBasicIsOperator::kIsInfPos> {
    static std::string Name() { return "IsInfPos"; }
    static std::string Op(const std::string &x) { return "(std::isinf(" + x + ") && " + x + "> 0)"; }
+   static bool Impl(float x) { return std::isinf(x) && x > 0;}
 };
 template<>
 struct IsOpTraits<EBasicIsOperator::kIsInfNeg> {
    static std::string Name() { return "IsInfNeg"; }
    static std::string Op(const std::string &x) { return "(std::isinf(" + x + ") && " + x + "< 0)"; }
+   static bool Impl(float x) { return std::isinf(x) && x < 0;}
 };
 template<>
 struct IsOpTraits<EBasicIsOperator::kIsNaN> {
    static std::string Name() { return "IsInf"; }
    static std::string Op(const std::string &x) { return "std::isnan(" + x + ")"; }
+   static bool Impl(float x) { return std::isnan(x);}
 };
 
 
@@ -62,7 +67,7 @@ public:
       }
       fShapeX = model.GetDimTensorShape(fNX);
       fShapeY = fShapeX;
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      model.AddIntermediateTensor(fNY, ETensorType::BOOL, fShapeY);
    }
 
    std::string Generate(std::string opName) override
