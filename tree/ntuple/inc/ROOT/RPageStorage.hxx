@@ -650,6 +650,10 @@ protected:
       ROOT::Experimental::Detail::RNTupleCalcPerf &fBandwidthUnzip;
       ROOT::Experimental::Detail::RNTupleCalcPerf &fFractionReadOverhead;
       ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fSumSkip;
+      ROOT::Experimental::Detail::RNTupleAtomicCounter &fTotalFileSize;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fRandomness;
+      ROOT::Experimental::Detail::RNTupleCalcPerf &fSparseness;
    };
 
    /// Keeps track of the requested physical column IDs and their in-memory target type via a column element identifier.

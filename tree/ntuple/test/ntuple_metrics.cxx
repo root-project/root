@@ -112,3 +112,48 @@ TEST(Metrics, RNTupleWriter)
    // one page for the int field, one for the float field
    EXPECT_EQ(2, page_counter->GetValueAsInt());
 }
+
+TEST(Metrics, IOMetrics)
+{
+   std::string rootFileName{"test_ntuple_io_metrics.root"};
+   FileRaii fileGuard(rootFileName);
+
+   {
+      auto model = RNTupleModel::Create();
+      auto int_field = model->MakeField<int>("ints");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", rootFileName);
+      for (int i = 0; i < 1000; ++i) {
+         *int_field = i;
+         ntuple->Fill();
+      }
+      ntuple->CommitCluster();
+   }
+
+   {
+      auto ntupleReader = RNTupleReader::Open("ntuple", rootFileName);
+      EXPECT_FALSE(ntupleReader->GetMetrics().IsEnabled());
+      ntupleReader->EnableMetrics();
+      EXPECT_TRUE(ntupleReader->GetMetrics().IsEnabled());
+
+      auto view = ntupleReader->GetView<int>("ints");
+      for (auto i : *ntupleReader) {
+         (void)view(i);
+      }
+
+      auto metrics = ntupleReader->GetMetrics();
+      auto* randomness = metrics.GetCounter("RNTupleReader.RPageSourceFile.randomness");
+      auto* sparseness = metrics.GetCounter("RNTupleReader.RPageSourceFile.sparseness");
+      auto* sumSkip = metrics.GetCounter("RNTupleReader.RPageSourceFile.sumSkip");
+      auto* totalFileSize = metrics.GetCounter("RNTupleReader.RPageSourceFile.totalFileSize");
+
+      ASSERT_NE(randomness, nullptr);
+      ASSERT_NE(sparseness, nullptr);
+      ASSERT_NE(sumSkip, nullptr);
+      ASSERT_NE(totalFileSize, nullptr);
+
+      EXPECT_GE(randomness->GetValue(), 0.0);
+      EXPECT_GE(sparseness->GetValue(), 0.0);
+      EXPECT_GE(sumSkip->GetValueAsInt(), 0);
+      EXPECT_GT(totalFileSize->GetValueAsInt(), 0);
+   }
+}

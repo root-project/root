@@ -154,6 +154,10 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
+   /// Tracks the last read offset for seek distance calculation
+   std::uint64_t fLastOffset = 0;
+   /// Flag to track if total file size has been set (set lazily on first page load when metrics are enabled)
+   bool fFileSizeSet = false;
 
    RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
