@@ -2283,8 +2283,6 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
     else
       callbuf << "((" << class_name << "*)obj)->";
 
-    if (op_flag)
-      callbuf << class_name << "::";
   } else if (isa<NamedDecl>(get_non_transparent_decl_context(FD))) {
     // This is a namespace member.
     if (op_flag || N <= 1)

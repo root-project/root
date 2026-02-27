@@ -4,6 +4,7 @@
 #include "PyStrings.h"
 #include "CPPDataMember.h"
 #include "CPPInstance.h"
+#include "CPPEnum.h"
 #include "Dimensions.h"
 #include "LowLevelViews.h"
 #include "ProxyWrappers.h"
@@ -47,10 +48,6 @@ static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj, PyObject* /* kls 
         }
     }
 
-// non-initialized or public data accesses through class (e.g. by help())
-    void* address = dm->GetAddress(pyobj);
-    if (!address || (intptr_t)address == -1 /* Cling error */)
-        return nullptr;
 
     if (dm->fFlags & (kIsEnumPrep | kIsEnumType)) {
         if (dm->fFlags & kIsEnumPrep) {
@@ -58,19 +55,16 @@ static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj, PyObject* /* kls 
             dm->fFlags &= ~kIsEnumPrep;
 
         // fDescription contains the full name of the actual enum value object
-            const std::string& lookup = CPyCppyy_PyText_AsString(dm->fDescription);
-            const std::string& enum_type  = TypeManip::extract_namespace(lookup);
-            const std::string& enum_scope = TypeManip::extract_namespace(enum_type);
+            const Cppyy::TCppScope_t enum_type  = Cppyy::GetParentScope(dm->fScope);
+            const Cppyy::TCppScope_t enum_scope = Cppyy::GetParentScope(enum_type);
 
-            PyObject* pyscope = nullptr;
-            if (enum_scope.empty()) pyscope = GetScopeProxy(Cppyy::gGlobalScope);
-            else pyscope = CreateScopeProxy(enum_scope);
+            PyObject* pyscope = CreateScopeProxy(enum_scope);
             if (pyscope) {
-                PyObject* pyEnumType = PyObject_GetAttrString(pyscope,
-                    enum_type.substr(enum_scope.size() ? enum_scope.size()+2 : 0, std::string::npos).c_str());
+                PyObject* pyEnumType = 
+                    PyObject_GetAttrString(pyscope, Cppyy::GetFinalName(enum_type).c_str());
                 if (pyEnumType) {
-                    PyObject* pyval = PyObject_GetAttrString(pyEnumType,
-                        lookup.substr(enum_type.size()+2, std::string::npos).c_str());
+                    PyObject* pyval =
+                        PyObject_GetAttrString(pyEnumType, Cppyy::GetFinalName(dm->fScope).c_str());
                     Py_DECREF(pyEnumType);
                     if (pyval) {
                         Py_DECREF(dm->fDescription);
@@ -88,7 +82,16 @@ static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj, PyObject* /* kls 
             Py_INCREF(dm->fDescription);
             return dm->fDescription;
         }
+
+        if (Cppyy::IsEnumConstant(dm->fScope)) {
+            // anonymous enum
+            return pyval_from_enum(Cppyy::ResolveEnum(dm->fScope), nullptr, nullptr, dm->fScope);
+        }
     }
+// non-initialized or public data accesses through class (e.g. by help())
+    void* address = dm->GetAddress(pyobj);
+    if (!address || (intptr_t)address == -1 /* Cling error */)
+        return nullptr;
 
     if (dm->fConverter != 0) {
         PyObject* result = dm->fConverter->FromMemory((dm->fFlags & kIsArrayType) ? &address : address);
@@ -319,53 +322,54 @@ PyTypeObject CPPDataMember_Type = {
 
 
 //- public members -----------------------------------------------------------
-void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
+void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppScope_t data)
 {
-    fEnclosingScope = scope;
-    fOffset         = Cppyy::GetDatamemberOffset(scope, idata); // TODO: make lazy
-    fFlags          = Cppyy::IsStaticData(scope, idata) ? kIsStaticData : 0;
-
-    std::vector<dim_t> dims;
-    int ndim = 0; Py_ssize_t size = 0;
-    while (0 < (size = Cppyy::GetDimensionSize(scope, idata, ndim))) {
-         ndim += 1;
-         if (size == INT_MAX)      // meaning: incomplete array type
-             size = UNKNOWN_SIZE;
-         if (ndim == 1) dims.reserve(4);
-         dims.push_back((dim_t)size);
+    if (Cppyy::IsLambdaClass(Cppyy::GetDatamemberType(data))) {
+        fScope = Cppyy::WrapLambdaFromVariable(data);
+    } else {
+        fScope = data;
     }
-    if (!dims.empty())
-        fFlags |= kIsArrayType;
 
-    const std::string name = Cppyy::GetDatamemberName(scope, idata);
-    fFullType = Cppyy::GetDatamemberType(scope, idata);
-    if (Cppyy::IsEnumData(scope, idata)) {
+    fEnclosingScope = scope;
+    fOffset         = Cppyy::GetDatamemberOffset(fScope, fScope == data ? scope : Cppyy::GetScope("__cppyy_internal_wrap_g")); // XXX: Check back here // TODO: make lazy
+    fFlags          = Cppyy::IsStaticDatamember(fScope) ? kIsStaticData : 0;
+
+    const std::string name = Cppyy::GetFinalName(fScope);
+    Cppyy::TCppType_t type;
+
+
+    if (Cppyy::IsEnumConstant(fScope)) {
+        type = Cppyy::GetEnumConstantType(fScope);
+        fFullType = Cppyy::GetTypeAsString(type);
         if (fFullType.find("(anonymous)") == std::string::npos &&
             fFullType.find("(unnamed)")   == std::string::npos) {
         // repurpose fDescription for lazy lookup of the enum later
             fDescription = CPyCppyy_PyText_FromString((fFullType + "::" + name).c_str());
             fFlags |= kIsEnumPrep;
         }
-        fFullType = Cppyy::ResolveEnum(fFullType);
+        type = Cppyy::ResolveType(type);
         fFlags |= kIsConstData;
-    } else if (Cppyy::IsConstData(scope, idata)) {
-        fFlags |= kIsConstData;
+    } else {
+        type = Cppyy::GetDatamemberType(fScope);
+        fFullType = Cppyy::GetTypeAsString(type);
+
+        // Get the integer type if it's an enum
+        if (Cppyy::IsEnumType(type))
+            type = Cppyy::ResolveType(type);
+        
+        if (Cppyy::IsConstVar(fScope))
+            fFlags |= kIsConstData;
     }
 
-// if this data member is an array, the conversion needs to be pointer to object for instances,
-// to prevent the need for copying in the conversion; furthermore, fixed arrays' full type for
-// builtins are not declared as such if more than 1-dim (TODO: fix in clingwrapper)
-    if (!dims.empty() && fFullType.back() != '*') {
-        if (Cppyy::GetScope(fFullType)) fFullType += '*';
-        else if (fFullType.back() != ']') {
-            for (auto d: dims) fFullType += d == UNKNOWN_SIZE ? "*" : "[]";
-        }
-    }
+    std::vector<dim_t> dims = Cppyy::GetDimensions(type);
+
+    if (!dims.empty())
+        fFlags |= kIsArrayType;
 
     if (dims.empty())
-        fConverter = CreateConverter(fFullType);
+        fConverter = CreateConverter(type, 0);
     else
-        fConverter = CreateConverter(fFullType, {(dim_t)dims.size(), dims.data()});
+        fConverter = CreateConverter(type, {(dim_t)dims.size(), dims.data()});
 
     if (!(fFlags & kIsEnumPrep))
         fDescription = CPyCppyy_PyText_FromString(name.c_str());

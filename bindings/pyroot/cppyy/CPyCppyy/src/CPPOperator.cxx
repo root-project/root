@@ -2,7 +2,6 @@
 #include "CPyCppyy.h"
 #include "CPPOperator.h"
 #include "CPPInstance.h"
-#include "Utility.h"
 
 
 //- constructor --------------------------------------------------------------
@@ -50,14 +49,17 @@ PyObject* CPyCppyy::CPPOperator::Call(CPPInstance*& self,
         return result;
     }
 
-// fetch the current error, resetting the error buffer
-    auto error = CPyCppyy::Utility::FetchPyError();
+    PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
+    PyErr_Fetch(&pytype, &pyvalue, &pytrace);
 
     result = fStub((PyObject*)self, CPyCppyy_PyArgs_GET_ITEM(args, idx_other));
 
-// if there was still a problem, restore the Python error buffer
-    if (!result) {
-        CPyCppyy::Utility::RestorePyError(error);
+    if (!result)
+        PyErr_Restore(pytype, pyvalue, pytrace);
+    else {
+        Py_XDECREF(pytype);
+        Py_XDECREF(pyvalue);
+        Py_XDECREF(pytrace);
     }
 
     return result;

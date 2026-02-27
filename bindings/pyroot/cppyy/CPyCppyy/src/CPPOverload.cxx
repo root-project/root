@@ -291,6 +291,7 @@ static int mp_doc_set(CPPOverload* pymeth, PyObject *val, void *)
     return 0;
 }
 
+
 /**
  * @brief Returns a dictionary with the input parameter names for all overloads.
  *
@@ -549,24 +550,39 @@ static int mp_setcreates(CPPOverload* pymeth, PyObject* value, void*)
     return set_flag(pymeth, value, CallContext::kIsCreator, "__creates__");
 }
 
-constexpr const char *mempolicy_error_message =
-   "The __mempolicy__ attribute can't be used, because in the past it was reserved to manage the local memory policy. "
-   "If you want to do that now, please implement a pythonization for your class that uses SetOwnership() to manage the "
-   "ownership of arguments according to your needs.";
-
 //----------------------------------------------------------------------------
-static PyObject* mp_getmempolicy(CPPOverload*, void*)
+static PyObject* mp_getmempolicy(CPPOverload* pymeth, void*)
 {
-    PyErr_SetString(PyExc_RuntimeError, mempolicy_error_message);
-    return nullptr;
+// Get '_mempolicy' enum, which determines ownership of call arguments.
+    if (pymeth->fMethodInfo->fFlags & CallContext::kUseHeuristics)
+        return PyInt_FromLong(CallContext::kUseHeuristics);
+
+    if (pymeth->fMethodInfo->fFlags & CallContext::kUseStrict)
+        return PyInt_FromLong(CallContext::kUseStrict);
+
+    return PyInt_FromLong(-1);
 }
 
 //----------------------------------------------------------------------------
-static int mp_setmempolicy(CPPOverload*, PyObject*, void*)
+static int mp_setmempolicy(CPPOverload* pymeth, PyObject* value, void*)
 {
-    PyErr_SetString(PyExc_RuntimeError, mempolicy_error_message);
-    return -1;
+// Set '_mempolicy' enum, which determines ownership of call arguments.
+    long mempolicy = PyLong_AsLong(value);
+    if (mempolicy == CallContext::kUseHeuristics) {
+        pymeth->fMethodInfo->fFlags |= CallContext::kUseHeuristics;
+        pymeth->fMethodInfo->fFlags &= ~CallContext::kUseStrict;
+    } else if (mempolicy == CallContext::kUseStrict) {
+        pymeth->fMethodInfo->fFlags |= CallContext::kUseStrict;
+        pymeth->fMethodInfo->fFlags &= ~CallContext::kUseHeuristics;
+    } else {
+        PyErr_SetString(PyExc_ValueError,
+            "expected kMemoryStrict or kMemoryHeuristics as value for __mempolicy__");
+        return -1;
+    }
+
+    return 0;
 }
+
 
 //----------------------------------------------------------------------------
 #define CPPYY_BOOLEAN_PROPERTY(name, flag, label)                            \
@@ -628,8 +644,8 @@ static PyGetSetDef mp_getset[] = {
 // flags to control behavior
     {(char*)"__creates__",         (getter)mp_getcreates, (setter)mp_setcreates,
       (char*)"For ownership rules of result: if true, objects are python-owned", nullptr},
-    {(char*)"__mempolicy__", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
-      (char*)"Unused", nullptr},
+    {(char*)"__mempolicy__",       (getter)mp_getmempolicy, (setter)mp_setmempolicy,
+      (char*)"For argument ownership rules: like global, either heuristic or strict", nullptr},
     {(char*)"__set_lifeline__",    (getter)mp_getlifeline, (setter)mp_setlifeline,
       (char*)"If true, set a lifeline from the return value onto self", nullptr},
     {(char*)"__release_gil__",     (getter)mp_getthreaded, (setter)mp_setthreaded,
@@ -671,6 +687,8 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 
     CallContext ctxt{};
     const auto mflags = pymeth->fMethodInfo->fFlags;
+    const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
+    ctxt.fFlags |= mempolicy ? mempolicy : (uint64_t)CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
     ctxt.fFlags |= (mflags & CallContext::kProtected);
     if (IsConstructor(pymeth->fMethodInfo->fFlags)) ctxt.fFlags |= CallContext::kIsConstructor;
@@ -751,6 +769,9 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                     }
                 }
 
+            // clear collected errors
+                if (!errors.empty())
+                    std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
                 return HandleReturn(pymeth, im_self, result);
             }
 
@@ -794,7 +815,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
 // first summarize, then add details
     PyObject* topmsg = CPyCppyy_PyText_FromFormat(
         "none of the %d overloaded methods succeeded. Full details:", (int)nMethods);
-    SetDetailedException(std::move(errors), topmsg /* steals */, PyExc_TypeError /* default error */);
+    SetDetailedException(errors, topmsg /* steals */, PyExc_TypeError /* default error */);
 
 // report failure
     return nullptr;
@@ -1115,19 +1136,10 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
     if (name == "__init__")
         fMethodInfo->fFlags |= (CallContext::kIsCreator | CallContext::kIsConstructor);
 
-// special case, in heuristics mode also tag *Clone* methods as creators. Only
-// check that Clone is present in the method name, not in the template argument
-// list.
-    if (CallContext::GlobalPolicyFlags() & CallContext::kUseHeuristics) {
-        std::string_view name_maybe_template = name;
-        auto begin_template = name_maybe_template.find_first_of('<');
-        if (begin_template <= name_maybe_template.size()) {
-            name_maybe_template = name_maybe_template.substr(0, begin_template);
-        }
-        if (name_maybe_template.find("Clone") != std::string_view::npos) {
-            fMethodInfo->fFlags |= CallContext::kIsCreator;
-        }
-    }
+// special case, in heuristics mode also tag *Clone* methods as creators
+    if (CallContext::sMemoryPolicy == CallContext::kUseHeuristics && \
+            name.find("Clone") != std::string::npos)
+        fMethodInfo->fFlags |= CallContext::kIsCreator;
 
 #if PY_VERSION_HEX >= 0x03080000
     fVectorCall = (vectorcallfunc)mp_vectorcall;

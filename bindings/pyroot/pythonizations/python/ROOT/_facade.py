@@ -190,7 +190,7 @@ class ROOTFacade(types.ModuleType):
         self.__dict__["gROOT"] = self._cppyy.gbl.ROOT.GetROOT()
 
         # Make sure the interpreter is initialized once gROOT has been initialized
-        self._cppyy.gbl.TInterpreter.Instance()
+        self.__dict__["gInterpreter"] = self._cppyy.gbl.TInterpreter.Instance()
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)

@@ -90,16 +90,16 @@ static PyObject* CreateNewCppProxyClass(Cppyy::TCppScope_t klass, PyObject* pyba
 
 static inline
 void AddPropertyToClass(PyObject* pyclass,
-    Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata)
+    Cppyy::TCppScope_t scope, Cppyy::TCppScope_t data)
 {
-    CPyCppyy::CPPDataMember* property = CPyCppyy::CPPDataMember_New(scope, idata);
+    CPyCppyy::CPPDataMember* property = CPyCppyy::CPPDataMember_New(scope, data);
     PyObject* pname = CPyCppyy_PyText_InternFromString(const_cast<char*>(property->GetName().c_str()));
 
 // allow access at the instance level
     PyType_Type.tp_setattro(pyclass, pname, (PyObject*)property);
 
 // allow access at the class level (always add after setting instance level)
-    if (Cppyy::IsStaticData(scope, idata))
+    if (Cppyy::IsStaticDatamember(data) || Cppyy::IsEnumConstant(data))
         PyType_Type.tp_setattro((PyObject*)Py_TYPE(pyclass), pname, (PyObject*)property);
 
 // cleanup
@@ -159,7 +159,7 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
 
 // some properties that'll affect building the dictionary
     bool isNamespace = Cppyy::IsNamespace(scope);
-    bool isAbstract  = Cppyy::IsAbstract(scope);
+    bool isComplete = Cppyy::IsComplete(scope);
     bool hasConstructor = false;
     Cppyy::TCppMethod_t potGetItem = (Cppyy::TCppMethod_t)0;
 
@@ -174,9 +174,10 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
 
 // functions in namespaces are properly found through lazy lookup, so do not
 // create them until needed (the same is not true for data members)
-    const Cppyy::TCppIndex_t nMethods = isNamespace ? 0 : Cppyy::GetNumMethods(scope);
-    for (Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth) {
-        Cppyy::TCppMethod_t method = Cppyy::GetMethod(scope, imeth);
+    std::vector<Cppyy::TCppMethod_t> methods;
+    if (isComplete) Cppyy::GetClassMethods(scope, methods);
+
+    for (auto &method : methods) {
 
     // do not expose non-public methods as the Cling wrappers as those won't compile
         if (!Cppyy::IsPublicMethod(method))
@@ -188,7 +189,9 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
     // special case trackers
         bool setupSetItem = false;
         bool isConstructor = Cppyy::IsConstructor(method);
-        bool isTemplate = isConstructor ? false : Cppyy::IsMethodTemplate(scope, imeth);
+
+    // Here isTemplate means to ignore templated constructors, that is handled in the next loop.
+        bool isTemplate = Cppyy::IsTemplatedMethod(method) && !isConstructor;
         bool isStubbedOperator = false;
 
     // filter empty names (happens for namespaces, is bug?)
@@ -208,7 +211,7 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
     // operator[]/() returning a reference type will be used for __setitem__
         bool isCall = mtName == "__call__";
         if (isCall || mtName == "__getitem__") {
-            const std::string& qual_return = Cppyy::ResolveName(Cppyy::GetMethodResultType(method));
+            const std::string& qual_return = Cppyy::GetMethodReturnTypeAsString(method);
             const std::string& cpd = TypeManip::compound(qual_return);
             if (!cpd.empty() && cpd[cpd.size()-1] == '&' && \
                     qual_return.find("const", 0, 5) == std::string::npos) {
@@ -224,8 +227,7 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
         }
 
     // template members; handled by adding a dispatcher to the class
-        bool storeOnTemplate =
-            isTemplate ? true : (!isConstructor && Cppyy::ExistsMethodTemplate(scope, mtCppName));
+        bool storeOnTemplate = isTemplate;
         if (storeOnTemplate) {
             sync_templates(pyclass, mtCppName, mtName);
         // continue processing to actually add the method so that the proxy can find
@@ -241,7 +243,7 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
         else if (isConstructor) {           // ctor
             mtName = "__init__";
             hasConstructor = true;
-            if (!isAbstract) {
+            if (!Cppyy::IsAbstract(scope)) {
                 if (flags & CPPScope::kIsMultiCross) {
                     pycall = new CPPMultiConstructor(scope, method);
                 } else
@@ -292,14 +294,16 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
         }
     }
 
+
 // add proxies for un-instantiated/non-overloaded templated methods
-    const Cppyy::TCppIndex_t nTemplMethods = isNamespace ? 0 : Cppyy::GetNumTemplatedMethods(scope);
-    for (Cppyy::TCppIndex_t imeth = 0; imeth < nTemplMethods; ++imeth) {
-        const std::string mtCppName = Cppyy::GetTemplatedMethodName(scope, imeth);
+    std::vector<Cppyy::TCppMethod_t> templ_methods;
+    Cppyy::GetTemplatedMethods(scope, templ_methods);
+    for (auto &method : templ_methods) {
+        const std::string mtCppName = Cppyy::GetMethodName(method);
     // the number of arguments isn't known until instantiation and as far as C++ is concerned, all
     // same-named operators are simply overloads; so will pre-emptively add both names if with and
     // without arguments differ, letting the normal overload mechanism resolve on call
-        bool isConstructor = Cppyy::IsTemplatedConstructor(scope, imeth);
+        bool isConstructor = Cppyy::IsConstructor(method);
 
     // first add with no arguments
         std::string mtName0 = isConstructor ? "__init__" : Utility::MapOperatorName(mtCppName, false);
@@ -316,16 +320,19 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
 // add a pseudo-default ctor, if none defined
     if (!hasConstructor) {
         PyCallable* defctor = nullptr;
-        if (isAbstract)
-            defctor = new CPPAbstractClassConstructor(scope, (Cppyy::TCppMethod_t)0);
-        else if (isNamespace)
-            defctor = new CPPNamespaceConstructor(scope, (Cppyy::TCppMethod_t)0);
-        else if (!Cppyy::IsComplete(Cppyy::GetScopedFinalName(scope))) {
+        if (!isComplete) {
             ((CPPScope*)pyclass)->fFlags |= CPPScope::kIsInComplete;
             defctor = new CPPIncompleteClassConstructor(scope, (Cppyy::TCppMethod_t)0);
-        } else
+        } else if (Cppyy::IsAbstract(scope)) {
+            defctor = new CPPAbstractClassConstructor(scope, (Cppyy::TCppMethod_t)0);
+        } else if (isNamespace) {
+            defctor = new CPPNamespaceConstructor(scope, (Cppyy::TCppMethod_t)0);
+        } else {
             defctor = new CPPAllPrivateClassConstructor(scope, (Cppyy::TCppMethod_t)0);
-        cache["__init__"].push_back(defctor);
+        }
+
+        if (defctor)
+            cache["__init__"].push_back(defctor);
     }
 
 // map __call__ to __getitem__ if also mapped to __setitem__
@@ -363,22 +370,19 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
     Py_DECREF(dct);
 
  // collect data members (including enums)
-    const Cppyy::TCppIndex_t nDataMembers = Cppyy::GetNumDatamembers(scope);
-    for (Cppyy::TCppIndex_t idata = 0; idata < nDataMembers; ++idata) {
+    std::vector<Cppyy::TCppScope_t> datamembers;
+    Cppyy::GetDatamembers(scope, datamembers);
+    for (auto &datamember : datamembers) {
     // allow only public members
-        if (!Cppyy::IsPublicData(scope, idata))
+        if (!Cppyy::IsPublicData(datamember))
             continue;
 
     // enum datamembers (this in conjunction with previously collected enums above)
-        if (Cppyy::IsEnumData(scope, idata) && Cppyy::IsStaticData(scope, idata)) {
-        // some implementation-specific data members have no address: ignore them
-            if (!Cppyy::GetDatamemberOffset(scope, idata))
-                continue;
-
+        if (Cppyy::IsEnumType(Cppyy::GetDatamemberType(datamember)) && Cppyy::IsEnumConstant(datamember)) {
         // two options: this is a static variable, or it is the enum value, the latter
         // already exists, so check for it and move on if set
             PyObject* eset = PyObject_GetAttrString(pyclass,
-                const_cast<char*>(Cppyy::GetDatamemberName(scope, idata).c_str()));
+                const_cast<char*>(Cppyy::GetFinalName(datamember).c_str()));
             if (eset) {
                 Py_DECREF(eset);
                 continue;
@@ -388,15 +392,15 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
 
         // it could still be that this is an anonymous enum, which is not in the list
         // provided by the class
-            if (strstr(Cppyy::GetDatamemberType(scope, idata).c_str(), "(anonymous)") != 0 ||
-                strstr(Cppyy::GetDatamemberType(scope, idata).c_str(), "(unnamed)")   != 0) {
-                AddPropertyToClass(pyclass, scope, idata);
+            if (strstr(Cppyy::GetDatamemberTypeAsString(datamember).c_str(), "(anonymous)") != 0 ||
+                strstr(Cppyy::GetDatamemberTypeAsString(datamember).c_str(), "(unnamed)")   != 0) {
+                AddPropertyToClass(pyclass, scope, datamember);
                 continue;
             }
         }
 
     // properties (aka public (static) data members)
-        AddPropertyToClass(pyclass, scope, idata);
+        AddPropertyToClass(pyclass, scope, datamember);
     }
 
 // restore custom __getattr__
@@ -407,26 +411,24 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass, cons
 }
 
 //----------------------------------------------------------------------------
-static void CollectUniqueBases(Cppyy::TCppType_t klass, std::deque<std::string>& uqb)
+static void CollectUniqueBases(Cppyy::TCppScope_t klass, std::deque<Cppyy::TCppScope_t>& uqb)
 {
 // collect bases in acceptable mro order, while removing duplicates (this may
 // break the overload resolution in esoteric cases, but otherwise the class can
 // not be used at all, as CPython will refuse the mro).
     size_t nbases = Cppyy::GetNumBases(klass);
 
-    std::deque<Cppyy::TCppType_t> bids;
     for (size_t ibase = 0; ibase < nbases; ++ibase) {
-        const std::string& name = Cppyy::GetBaseName(klass, ibase);
+        Cppyy::TCppScope_t tp = Cppyy::GetBaseScope(klass, ibase);
         int decision = 2;
-        Cppyy::TCppType_t tp = Cppyy::GetScope(name);
         if (!tp) continue;   // means this base with not be available Python-side
         for (size_t ibase2 = 0; ibase2 < uqb.size(); ++ibase2) {
-            if (uqb[ibase2] == name) {         // not unique ... skip
+            if (uqb[ibase2] == tp) {         // not unique ... skip
                 decision = 0;
                 break;
             }
 
-            if (Cppyy::IsSubtype(tp, bids[ibase2])) {
+            if (Cppyy::IsSubclass(tp, uqb[ibase2])) {
             // mro requirement: sub-type has to follow base
                 decision = 1;
                 break;
@@ -434,20 +436,18 @@ static void CollectUniqueBases(Cppyy::TCppType_t klass, std::deque<std::string>&
         }
 
         if (decision == 1) {
-            uqb.push_front(name);
-            bids.push_front(tp);
+            uqb.push_front(tp);
         } else if (decision == 2) {
-            uqb.push_back(name);
-            bids.push_back(tp);
+            uqb.push_back(tp);
         }
     // skipped if decision == 0 (not unique)
     }
 }
 
-static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
+static PyObject* BuildCppClassBases(Cppyy::TCppScope_t klass)
 {
 // Build a tuple of python proxy classes of all the bases of the given 'klass'.
-    std::deque<std::string> uqb;
+    std::deque<Cppyy::TCppScope_t> uqb;
     CollectUniqueBases(klass, uqb);
 
 // allocate a tuple for the base classes, special case for first base
@@ -462,7 +462,7 @@ static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
         Py_INCREF((PyObject*)(void*)&CPPInstance_Type);
         PyTuple_SET_ITEM(pybases, 0, (PyObject*)(void*)&CPPInstance_Type);
     } else {
-        for (std::deque<std::string>::size_type ibase = 0; ibase < nbases; ++ibase) {
+        for (std::deque<Cppyy::TCppScope_t>::size_type ibase = 0; ibase < nbases; ++ibase) {
             PyObject* pyclass = CreateScopeProxy(uqb[ibase]);
             if (!pyclass) {
                 Py_DECREF(pybases);
@@ -506,16 +506,27 @@ PyObject* CPyCppyy::GetScopeProxy(Cppyy::TCppScope_t scope)
 
     return nullptr;
 }
-
-//----------------------------------------------------------------------------
-PyObject* CPyCppyy::CreateScopeProxy(Cppyy::TCppScope_t scope, const unsigned flags)
-{
-// Convenience function with a lookup first through the known existing proxies.
-    PyObject* pyclass = GetScopeProxy(scope);
-    if (pyclass)
-        return pyclass;
-
-    return CreateScopeProxy(Cppyy::GetScopedFinalName(scope), nullptr, flags);
+namespace CPyCppyy {
+PyObject *CppType_To_PyObject(Cppyy::TCppType_t type, std::string name, Cppyy::TCppScope_t parent_scope, PyObject *parent) {
+    Cppyy::TCppType_t resolved_type = Cppyy::ResolveType(type);
+    if (gPyTypeMap) {
+        const std::string& resolved = Cppyy::GetTypeAsString(resolved_type);
+        PyObject* tc = PyDict_GetItemString(gPyTypeMap, resolved.c_str()); // borrowed
+        if (tc && PyCallable_Check(tc)) {
+            const std::string& scName = Cppyy::GetScopedFinalName(parent_scope);
+            PyObject* nt = PyObject_CallFunction(tc, (char*)"ss", name.c_str(), scName != "<unnamed>" ? scName.c_str() : "");
+            if (nt) {
+                if (parent) {
+                    AddScopeToParent(parent, name, nt);
+                    Py_DECREF(parent);
+                }
+                return nt;
+            }
+            PyErr_Clear();
+        }
+    }
+    return nullptr;
+}
 }
 
 //----------------------------------------------------------------------------
@@ -535,10 +546,10 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent, 
 // Build a python shadow class for the named C++ class or namespace.
 
 // determine complete scope name, if a python parent has been given
-    std::string scName = "";
+    Cppyy::TCppScope_t parent_scope = 0;
     if (parent) {
         if (CPPScope_Check(parent))
-            scName = Cppyy::GetScopedFinalName(((CPPScope*)parent)->fCppType);
+            parent_scope = ((CPPScope*)parent)->fCppType;
         else {
             PyObject* parname = PyObject_GetAttr(parent, PyStrings::gName);
             if (!parname) {
@@ -547,66 +558,107 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent, 
             }
 
         // should be a string
-            scName = CPyCppyy_PyText_AsString(parname);
+            std::string scName = CPyCppyy_PyText_AsString(parname);
             Py_DECREF(parname);
             if (PyErr_Occurred())
                 return nullptr;
+            parent_scope = Cppyy::GetScope(scName);
         }
 
-    // accept this parent scope and use it's name for prefixing
         Py_INCREF(parent);
     }
 
 // retrieve C++ class (this verifies name, and is therefore done first)
-    const std::string& lookup = scName.empty() ? name : (scName+"::"+name);
-    Cppyy::TCppScope_t klass = Cppyy::GetScope(lookup);
+    if (name == "") {
+        Cppyy::TCppScope_t klass = Cppyy::GetGlobalScope();
+        Py_INCREF(gThisModule);
+        parent = gThisModule;
+        return CreateScopeProxy(klass, parent, flags);
+    } else if (Cppyy::TCppScope_t klass = Cppyy::GetScope(name, parent_scope)) {
+        if (Cppyy::IsTypedefed(klass) &&
+            Cppyy::IsPointerType(Cppyy::GetTypeFromScope(klass)) &&
+            Cppyy::IsClass(Cppyy::GetUnderlyingScope(klass)))
+            return nullptr; // this is handled by the caller; typedef to class pointer
+        return CreateScopeProxy(klass, parent, flags);
+    } else if (Cppyy::IsBuiltin(name)) {
+        Cppyy::TCppType_t type = Cppyy::GetType(name);
+        PyObject *result = nullptr;
+        if (type)
+            result = CppType_To_PyObject(type, name, parent_scope, parent);
+        if (result)
+            return result;
+    }
+    // all options have been exhausted: it doesn't exist as such
+    PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ class", name.c_str());
+    Py_XDECREF(parent);
+    return nullptr;
+}
 
-    if (!(bool)klass && Cppyy::IsTemplate(lookup)) {
-    // a "naked" templated class is requested: return callable proxy for instantiations
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CreateScopeProxy(Cppyy::TCppScope_t scope, PyObject* parent, const unsigned flags)
+{
+// Convenience function with a lookup first through the known existing proxies.
+    PyObject* pyclass = GetScopeProxy(scope);
+    if (pyclass)
+        return pyclass;
+
+    Cppyy::TCppScope_t parent_scope = nullptr;
+    if (CPPScope_Check(parent))
+        parent_scope = ((CPPScope*)parent)->fCppType;
+    if (!parent_scope)
+        parent_scope = Cppyy::GetParentScope(scope);
+
+    if (!parent) {
+        if (parent_scope)
+            parent = CreateScopeProxy(parent_scope);
+        else {
+            Py_INCREF(gThisModule);
+            parent = gThisModule;
+        }
+    }
+
+    std::string name = Cppyy::GetFinalName(scope);
+    bool is_typedef = false;
+    std::string typedefed_name = "";
+    if (Cppyy::IsTypedefed(scope)) {
+        is_typedef = true;
+        typedefed_name = Cppyy::GetMethodFullName(scope);
+        Cppyy::TCppScope_t underlying_scope = Cppyy::GetUnderlyingScope(scope);
+        if ((underlying_scope) && (underlying_scope != scope)) {
+            scope = underlying_scope;
+        } else {
+            if (PyObject *result = CppType_To_PyObject(Cppyy::GetTypeFromScope(scope), name, parent_scope, parent))
+                return result;
+    
+            PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ class", Cppyy::GetScopedFinalName(scope).c_str());
+            Py_XDECREF(parent);
+            return nullptr;
+        }
+    }
+
+    if (Cppyy::IsTemplate(scope)) {
+        // a "naked" templated class is requested: return callable proxy for instantiations
         PyObject* pytcl = PyObject_GetAttr(gThisModule, PyStrings::gTemplate);
+        PyObject* cppscope = PyLong_FromVoidPtr(scope);
         PyObject* pytemplate = PyObject_CallFunction(
-            pytcl, const_cast<char*>("s"), const_cast<char*>(lookup.c_str()));
+            pytcl, const_cast<char*>("sO"),
+            const_cast<char*>(Cppyy::GetScopedFinalName(scope).c_str()),
+            cppscope);
         Py_DECREF(pytcl);
 
     // cache the result
-        AddScopeToParent(parent ? parent : gThisModule, name, pytemplate);
+        AddScopeToParent(parent, name, pytemplate);
 
     // done, next step should be a call into this template
         Py_XDECREF(parent);
         return pytemplate;
     }
 
-    if (!(bool)klass) {
-    // could be an enum, which are treated separately in CPPScope (TODO: maybe they
-    // should be handled here instead anyway??)
-        if (Cppyy::IsEnum(lookup))
-            return nullptr;
-
-    // final possibility is a typedef of a builtin; these are mapped on the python side
-        std::string resolved = Cppyy::ResolveName(lookup);
-        if (gPyTypeMap) {
-            PyObject* tc = PyDict_GetItemString(gPyTypeMap, resolved.c_str()); // borrowed
-            if (tc && PyCallable_Check(tc)) {
-                PyObject* nt = PyObject_CallFunction(tc, (char*)"ss", name.c_str(), scName.c_str());
-                if (nt) {
-                    if (parent) {
-                        AddScopeToParent(parent, name, nt);
-                        Py_DECREF(parent);
-                    }
-                    return nt;
-                }
-                PyErr_Clear();
-            }
-        }
-
-    // all options have been exhausted: it doesn't exist as such
-        PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ class", lookup.c_str());
-        Py_XDECREF(parent);
+    if (Cppyy::IsEnumScope(scope))
         return nullptr;
-    }
 
 // locate class by ID, if possible, to prevent parsing scopes/templates anew
-    PyObject* pyscope = GetScopeProxy(klass);
+    PyObject* pyscope = GetScopeProxy(scope);
     if (pyscope) {
         if (parent) {
             AddScopeToParent(parent, name, pyscope);
@@ -615,86 +667,20 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent, 
         return pyscope;
     }
 
-// now have a class ... get the actual, fully scoped class name, so that typedef'ed
-// classes are created in the right place
-    const std::string& actual = Cppyy::GetScopedFinalName(klass);
-    if (actual != lookup) {
-        pyscope = CreateScopeProxy(actual);
-        if (!pyscope) PyErr_Clear();
-    }
-
-// locate the parent, if necessary, for memoizing the class if not specified
-    std::string::size_type last = 0;
-    if (!parent) {
-    // TODO: move this to TypeManip, which already has something similar in
-    // the form of 'extract_namespace'
-    // need to deal with template parameters that can have scopes themselves
-        int tpl_open = 0;
-        for (std::string::size_type pos = 0; pos < name.size(); ++pos) {
-            std::string::value_type c = name[pos];
-
-        // count '<' and '>' to be able to skip template contents
-            if (c == '<')
-                ++tpl_open;
-            else if (c == '>')
-                --tpl_open;
-
-      // by only checking for "::" the last part (class name) is dropped
-            else if (tpl_open == 0 && \
-                c == ':' && pos+1 < name.size() && name[ pos+1 ] == ':') {
-            // found a new scope part
-                const std::string& part = name.substr(last, pos-last);
-
-                PyObject* next = PyObject_GetAttrString(
-                    parent ? parent : gThisModule, const_cast<char*>(part.c_str()));
-
-                if (!next) {            // lookup failed, try to create it
-                    PyErr_Clear();
-                    next = CreateScopeProxy(part, parent);
-                }
-                Py_XDECREF(parent);
-
-                if (!next)              // create failed, give up
-                    return nullptr;
-
-            // found scope part
-                parent = next;
-
-            // done with part (note that pos is moved one ahead here)
-                last = pos+2; ++pos;
-            }
-        }
-
-        if (parent && !CPPScope_Check(parent)) {
-        // Special case: parent found is not one of ours (it's e.g. a pure Python module), so
-        // continuing would fail badly. One final lookup, then out of here ...
-            std::string unscoped = name.substr(last, std::string::npos);
-            PyObject* ret = PyObject_GetAttrString(parent, unscoped.c_str());
-            Py_DECREF(parent);
-            return ret;
-        }
-    }
-
-// use the module as a fake scope if no outer scope found
-    if (!parent) {
-        Py_INCREF(gThisModule);
-        parent = gThisModule;
-    }
-
-// if the scope was earlier found as actual, then we're done already, otherwise
-// build a new scope proxy
+    // if the scope was earlier found as actual, then we're done already, otherwise
+    // build a new scope proxy
     if (!pyscope) {
     // construct the base classes
-        PyObject* pybases = BuildCppClassBases(klass);
+        PyObject* pybases = BuildCppClassBases(scope);
         if (pybases != 0) {
         // create a fresh Python class, given bases, name, and empty dictionary
-            pyscope = CreateNewCppProxyClass(klass, pybases);
+            pyscope = CreateNewCppProxyClass(scope, pybases);
             Py_DECREF(pybases);
         }
 
     // fill the dictionary, if successful
         if (pyscope) {
-            if (BuildScopeProxyDict(klass, pyscope, flags)) {
+            if (BuildScopeProxyDict(scope, pyscope, flags)) {
             // something failed in building the dictionary
                 Py_DECREF(pyscope);
                 pyscope = nullptr;
@@ -703,11 +689,11 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent, 
 
     // store a ref from cppyy scope id to new python class
         if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete)) {
-            gPyClasses[klass] = PyWeakref_NewRef(pyscope, nullptr);
+            gPyClasses[scope] = PyWeakref_NewRef(pyscope, nullptr);
 
             if (!(((CPPScope*)pyscope)->fFlags & CPPScope::kIsNamespace)) {
             // add python-style features to classes only
-                if (!Pythonize(pyscope, Cppyy::GetScopedFinalName(klass))) {
+                if (!Pythonize(pyscope, scope)) {
                     Py_DECREF(pyscope);
                     pyscope = nullptr;
                 }
@@ -725,8 +711,14 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent, 
     }
 
 // store on parent if found/created and complete
-    if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete))
+    if (pyscope && !(((CPPScope*)pyscope)->fFlags & CPPScope::kIsInComplete)) {
+        // FIXME: This is to mimic original behaviour. Still required?
+        if (Cppyy::IsTemplateInstantiation(scope))
+            name = Cppyy::GetScopedFinalName(scope);
+        if (is_typedef && !typedefed_name.empty())
+            AddScopeToParent(parent, typedefed_name, pyscope);
         AddScopeToParent(parent, name, pyscope);
+    }
     Py_DECREF(parent);
 
 // all done
@@ -743,7 +735,7 @@ PyObject* CPyCppyy::CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyO
 // derives from Pythons Exception class
 
 // start with creation of CPPExcInstance type base classes
-    std::deque<std::string> uqb;
+    std::deque<Cppyy::TCppScope_t> uqb;
     CollectUniqueBases(((CPPScope*)pyscope)->fCppType, uqb);
     size_t nbases = uqb.size();
 
@@ -765,19 +757,18 @@ PyObject* CPyCppyy::CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyO
     } else {
         PyObject* best_base = nullptr;
 
-        for (std::deque<std::string>::size_type ibase = 0; ibase < nbases; ++ibase) {
+        for (std::deque<Cppyy::TCppScope_t>::size_type ibase = 0; ibase < nbases; ++ibase) {
         // retrieve bases through their enclosing scope to guarantee treatment as
         // exception classes and proper caching
-            const std::string& finalname = Cppyy::GetScopedFinalName(Cppyy::GetScope(uqb[ibase]));
-            const std::string& parentname = TypeManip::extract_namespace(finalname);
-            PyObject* base_parent = CreateScopeProxy(parentname);
+            Cppyy::TCppScope_t parent_scope = Cppyy::GetParentScope(uqb[ibase]);
+            PyObject* base_parent = CreateScopeProxy(parent_scope);
             if (!base_parent) {
                 Py_DECREF(pybases);
                 return nullptr;
             }
 
             PyObject* excbase = PyObject_GetAttrString(base_parent,
-                parentname.empty() ? finalname.c_str() : finalname.substr(parentname.size()+2, std::string::npos).c_str());
+                Cppyy::GetFinalName(uqb[ibase]).c_str());
             Py_DECREF(base_parent);
             if (!excbase) {
                 Py_DECREF(pybases);
@@ -787,7 +778,8 @@ PyObject* CPyCppyy::CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyO
             if (PyType_IsSubtype((PyTypeObject*)excbase, &CPPExcInstance_Type)) {
                 Py_XDECREF(best_base);
                 best_base = excbase;
-                if (finalname != "std::exception")
+
+                if (Cppyy::GetScopedFinalName(uqb[ibase]) != "std::exception")
                     break;
             } else {
             // just skip: there will be at least one exception derived base class
@@ -821,7 +813,7 @@ PyObject* CPyCppyy::CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyO
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
-        Cppyy::TCppType_t klass, const unsigned flags)
+        Cppyy::TCppScope_t klass, const unsigned flags)
 {
 // only known or knowable objects will be bound (null object is ok)
     if (!klass) {
@@ -908,7 +900,7 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
-        Cppyy::TCppType_t klass, const unsigned flags)
+        Cppyy::TCppScope_t klass, const unsigned flags)
 {
 // if the object is a null pointer, return a typed one (as needed for overloading)
     if (!address)
@@ -927,24 +919,19 @@ PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
 // successful, no down-casting is attempted?
 // TODO: optimize for final classes
     unsigned new_flags = flags;
-    if (gPinnedTypes.empty() || gPinnedTypes.find(klass) == gPinnedTypes.end()) {
-        if (!isRef) {
-            Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
+    if (!isRef && (gPinnedTypes.empty() || gPinnedTypes.find(klass) == gPinnedTypes.end())) {
+        Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
 
-            if (clActual) {
-                if (clActual != klass) {
-                    intptr_t offset = Cppyy::GetBaseOffset(
-                        clActual, klass, address, -1 /* down-cast */, true /* report errors */);
-                    if (offset != -1) {   // may fail if clActual not fully defined
-                        address = (void*)((intptr_t)address + offset);
-                        klass = clActual;
-                    }
+        if (clActual) {
+            if (clActual != klass) {
+                intptr_t offset = Cppyy::GetBaseOffset(
+                    clActual, klass, address, -1 /* down-cast */, true /* report errors */);
+                if (offset != -1) {   // may fail if clActual not fully defined
+                    address = (void*)((intptr_t)address + offset);
+                    klass = clActual;
                 }
-                new_flags |= CPPInstance::kIsActual;
             }
-        } else {
-            Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, *(void**)address);
-            klass = clActual;
+            new_flags |= CPPInstance::kIsActual;
         }
     }
 
@@ -954,7 +941,7 @@ PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObjectArray(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, cdims_t dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppScope_t klass, cdims_t dims)
 {
 // TODO: this function exists for symmetry; need to figure out if it's useful
     return TupleOfInstances_New(address, klass, dims);

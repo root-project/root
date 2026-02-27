@@ -15,6 +15,8 @@
 //- data _____________________________________________________________________
 namespace CPyCppyy {
     extern PyObject* gNullPtrObject;
+    void* Instance_AsVoidPtr(PyObject* pyobject);
+    PyObject* Instance_FromVoidPtr(void* addr, Cppyy::TCppScope_t klass_scope, bool python_owns);
 }
 
 
@@ -44,7 +46,7 @@ PyObject* CPyCppyy::CPPConstructor::Reflex(
     if (request == Cppyy::Reflex::RETURN_TYPE) {
         std::string fn = Cppyy::GetScopedFinalName(this->GetScope());
         if (format == Cppyy::Reflex::OPTIMAL || format == Cppyy::Reflex::AS_TYPE)
-            return CreateScopeProxy(fn);
+            return CreateScopeProxy(this->GetScope());
         else if (format == Cppyy::Reflex::AS_STRING)
             return CPyCppyy_PyText_FromString(fn.c_str());
     }
@@ -56,7 +58,6 @@ PyObject* CPyCppyy::CPPConstructor::Reflex(
 PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
     CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt)
 {
-
 // setup as necessary
     if (fArgsRequired == -1 && !this->Initialize(ctxt))
         return nullptr;                     // important: 0, not Py_None
@@ -77,15 +78,6 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
             "object already constructed; use __assign__ instead of __init__");
         return nullptr;
     }
-
-    const auto cppScopeFlags = ((CPPScope*)Py_TYPE(self))->fFlags;
-
-// Do nothing if the constructor is explicit and we are in an implicit
-// conversion context. We recognize this by checking the CPPScope::kNoImplicit
-// flag, as further implicit conversions are disabled to prevent infinite
-// recursion. See also the ConvertImplicit() helper in Converters.cxx.
-    if((cppScopeFlags & CPPScope::kNoImplicit) && Cppyy::IsExplicit(GetMethod()))
-        return nullptr;
 
 // self provides the python context for lifelines
     if (!ctxt->fPyContext)
@@ -135,7 +127,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
 
     } else {
     // translate the arguments
-        if (cppScopeFlags & CPPScope::kNoImplicit)
+        if (((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kNoImplicit)
             ctxt->fFlags |= CallContext::kNoImplicit;
         if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
             return nullptr;
@@ -181,6 +173,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
 // choose a different constructor, which if all fails will throw an exception
     return nullptr;
 }
+
 
 //----------------------------------------------------------------------------
 CPyCppyy::CPPMultiConstructor::CPPMultiConstructor(Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method) :

@@ -40,6 +40,10 @@ using CppyyExceptionContext_t = CppyyLegacy::ExceptionContext_t;
 using CppyyExceptionContext_t = ExceptionContext_t;
 #endif
 
+// FIXME: This is a dummy, replace with cling equivalent of gException
+static CppyyExceptionContext_t DummyException;
+static CppyyExceptionContext_t *gException = &DummyException;
+
 #ifdef NEED_SIGJMP
 # define CLING_EXCEPTION_SETJMP(buf) sigsetjmp(buf,1)
 #else
@@ -71,11 +75,6 @@ using CppyyExceptionContext_t = ExceptionContext_t;
         gException = R__old; \
     }
 
-// extern, defined in ROOT Core
-#ifdef _MSC_VER
-extern __declspec(dllimport) CppyyExceptionContext_t *gException;
-#else
-extern CppyyExceptionContext_t *gException;
-#endif
+CPYCPPYY_IMPORT CppyyExceptionContext_t *gException;
 
 #endif
