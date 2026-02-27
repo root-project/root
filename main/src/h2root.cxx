@@ -134,11 +134,7 @@ void MAIN__() {}
 
 // As recommended in
 // https://gcc.gnu.org/onlinedocs/gfortran/Argument-passing-conventions.html
-#if __GNUC__ > 7
-typedef size_t fortran_charlen_t;
-#else
-typedef int fortran_charlen_t;
-#endif
+using fortran_charlen_t = size_t;
 
 #else
 # define hlimit  HLIMIT
@@ -329,7 +325,11 @@ int main(int argc, char **argv)
 
    int lun = 10;
 #ifndef WIN32
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
+   // Reminder: Argument passing convention is that string lengths go as hidden arguments
+   // at the end of the argument list.
+   constexpr auto chdir = "example";
+   constexpr auto opt = "px";
+   hropen(lun, chdir, file_in, opt, record_size, ier, strlen(chdir), strlen(file_in), strlen(opt));
 #else
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
 #endif
