@@ -1850,13 +1850,7 @@ tgraph2derr.svg
 <text xml:space="preserve" x="484" y="451" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">16
 </text>
 <path d="M223,490l -166, -122" fill="none" stroke="black"/>
-<path d="M201,477l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M178,460l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M160,447l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M144,435l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M131,426l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M119,417l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M106,411l 3.8, -4.8" fill="none" stroke="black"/>
+<path d="M201,477l 1.9, -2.4M178,460l 1.9, -2.4M160,447l 1.9, -2.4M144,435l 1.9, -2.4M131,426l 1.9, -2.4M119,417l 1.9, -2.4M106,411l 3.8, -4.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="76" y="430" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M57,368v -243" fill="none" stroke="black"/>

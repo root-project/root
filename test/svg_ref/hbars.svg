@@ -18,74 +18,20 @@ hbars.svg
 <path d="M62,278l 1.000, -1.000h 442v -239l 1.000, -1.000v 241h -444z" fill="#6b8699"/>
 <rect x="62" y="36" width="444" height="241" fill="none" stroke="black"/>
 <path d="M62,278h 444" fill="none" stroke="black"/>
-<path d="M78,274v 3.6" fill="none" stroke="black"/>
-<path d="M78,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M102,274v 3.6" fill="none" stroke="black"/>
-<path d="M102,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M119,274v 3.6" fill="none" stroke="black"/>
-<path d="M119,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M132,274v 3.6" fill="none" stroke="black"/>
-<path d="M132,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M142,274v 3.6" fill="none" stroke="black"/>
-<path d="M142,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M151,274v 3.6" fill="none" stroke="black"/>
-<path d="M151,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M159,274v 3.6" fill="none" stroke="black"/>
-<path d="M159,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M166,274v 3.6" fill="none" stroke="black"/>
-<path d="M166,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M172,271v 7.2" fill="none" stroke="black"/>
-<path d="M172,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M78,274v 3.6M102,274v 3.6M119,274v 3.6M132,274v 3.6M142,274v 3.6M151,274v 3.6M159,274v 3.6M166,274v 3.6M172,271v 7.2M212,274v 3.6M236,274v 3.6M252,274v 3.6M265,274v 3.6M276,274v 3.6M285,274v 3.6M292,274v 3.6M299,274v 3.6M305,271v
+ 7.2M346,274v 3.6M369,274v 3.6M386,274v 3.6M399,274v 3.6M409,274v 3.6M418,274v 3.6M426,274v 3.6M433,274v 3.6M439,271v 7.2M479,274v 3.6M503,274v 3.6" fill="none" stroke="black"/>
 <text xml:space="preserve" x="165" y="293" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">10
 </text>
-<path d="M212,274v 3.6" fill="none" stroke="black"/>
-<path d="M212,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M236,274v 3.6" fill="none" stroke="black"/>
-<path d="M236,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M252,274v 3.6" fill="none" stroke="black"/>
-<path d="M252,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M265,274v 3.6" fill="none" stroke="black"/>
-<path d="M265,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M276,274v 3.6" fill="none" stroke="black"/>
-<path d="M276,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M285,274v 3.6" fill="none" stroke="black"/>
-<path d="M285,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M292,274v 3.6" fill="none" stroke="black"/>
-<path d="M292,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M299,274v 3.6" fill="none" stroke="black"/>
-<path d="M299,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M305,271v 7.2" fill="none" stroke="black"/>
-<path d="M305,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="310" y="288" fill="black" font-size="7.9" font-family="Helvetica" font-weight="bold">2
 </text>
 <text xml:space="preserve" x="297" y="293" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">10
 </text>
-<path d="M346,274v 3.6" fill="none" stroke="black"/>
-<path d="M346,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M369,274v 3.6" fill="none" stroke="black"/>
-<path d="M369,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M386,274v 3.6" fill="none" stroke="black"/>
-<path d="M386,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M399,274v 3.6" fill="none" stroke="black"/>
-<path d="M399,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M409,274v 3.6" fill="none" stroke="black"/>
-<path d="M409,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M418,274v 3.6" fill="none" stroke="black"/>
-<path d="M418,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M426,274v 3.6" fill="none" stroke="black"/>
-<path d="M426,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M433,274v 3.6" fill="none" stroke="black"/>
-<path d="M433,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M439,271v 7.2" fill="none" stroke="black"/>
-<path d="M439,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <text xml:space="preserve" x="443" y="287" fill="black" font-size="7.9" font-family="Helvetica" font-weight="bold">3
 </text>
 <text xml:space="preserve" x="430" y="293" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">10
 </text>
-<path d="M479,274v 3.6" fill="none" stroke="black"/>
-<path d="M479,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
-<path d="M503,274v 3.6" fill="none" stroke="black"/>
-<path d="M503,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M78,36v 241M102,36v 241M119,36v 241M132,36v 241M142,36v 241M151,36v 241M159,36v 241M166,36v 241M172,36v 241M212,36v 241M236,36v 241M252,36v 241M265,36v 241M276,36v 241M285,36v 241M292,36v 241M299,36v 241M305,36v 241M346,36v 241M369,36v
+ 241M386,36v 241M399,36v 241M409,36v 241M418,36v 241M426,36v 241M433,36v 241M439,36v 241M479,36v 241M503,36v 241" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M62,278v -241" fill="none" stroke="black"/>
 <text xml:space="preserve" x="44" y="274" fill="black" font-size="7.9" font-family="Helvetica" font-weight="bold">DE
 </text>
