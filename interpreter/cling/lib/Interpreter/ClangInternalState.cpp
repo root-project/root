@@ -148,15 +148,18 @@ namespace cling {
         builtinNames.emplace_back(Name);
     }
 
-    for (auto&& BuiltinInfo: m_ASTContext.getTargetInfo().getTargetBuiltins()) {
-      llvm::StringRef Name(BuiltinInfo.Name);
-      if (!Name.starts_with("__builtin"))
-        builtinNames.emplace_back(Name);
+    for (const auto& Shard : m_ASTContext.getTargetInfo().getTargetBuiltins()) {
+      for (const auto& BuiltinInfo : Shard.Infos) {
+        llvm::StringRef Name(BuiltinInfo.getName(Shard));
+        if (!Name.starts_with("__builtin"))
+          builtinNames.emplace_back(Name);
 #ifndef NDEBUG
-      else // Make sure it's already in the list
-        assert(std::find(builtinNames.begin(), builtinNames.end(),
-                         Name) == builtinNames.end() && "Not in list!");
+        else // Make sure it's already in the list
+          assert(std::find(builtinNames.begin(), builtinNames.end(), Name) ==
+                     builtinNames.end() &&
+                 "Not in list!");
 #endif
+      }
     }
 
     builtinNames.push_back(".*__builtin.*");

@@ -27,8 +27,7 @@ cling::ParserStateRAII::ParserStateRAII(Parser& p, bool skipToEOF)
   OldParenCount(p.ParenCount), OldBracketCount(p.BracketCount),
   OldBraceCount(p.BraceCount),
   OldTemplateParameterDepth(p.TemplateParameterDepth),
-  OldInNonInstantiationSFINAEContext(P->getActions()
-                                     .InNonInstantiationSFINAEContext),
+  nonSFINAECtx(p.getActions()),
   SkipToEOF(skipToEOF),
   ResetExprEvalCtx(p.getActions(), clang::Sema::ExpressionEvaluationContext::PotentiallyEvaluated)
 {
@@ -38,7 +37,6 @@ cling::ParserStateRAII::ParserStateRAII(Parser& p, bool skipToEOF)
   P->BracketCount = 0;
   P->BraceCount = 0;
   P->TemplateParameterDepth = 0;
-  P->getActions().InNonInstantiationSFINAEContext = false;
 }
 
 cling::ParserStateRAII::~ParserStateRAII() {
@@ -75,6 +73,4 @@ cling::ParserStateRAII::~ParserStateRAII() {
   P->BracketCount = OldBracketCount;
   P->BraceCount = OldBraceCount;
   P->TemplateParameterDepth = OldTemplateParameterDepth;
-  P->getActions().InNonInstantiationSFINAEContext =
-    OldInNonInstantiationSFINAEContext;
 }

@@ -46,9 +46,11 @@ namespace cling {
          i != clang::Builtin::FirstTSBuiltin; ++i)
       m_BuiltinNames.insert(BuiltinCtx.getName(i));
 
-    for (auto&& BuiltinInfo: m_Ctx.getTargetInfo().getTargetBuiltins())
-        m_BuiltinNames.insert(BuiltinInfo.Name);
-
+    for (const auto& Shard : m_Ctx.getTargetInfo().getTargetBuiltins()) {
+      for (const auto& BuiltinInfo : Shard.Infos) {
+        m_BuiltinNames.insert(BuiltinInfo.getName(Shard));
+      }
+    }
 
     // Suppress some unfixable warnings.
     // TODO: Find proper fix for these issues
@@ -795,7 +797,7 @@ namespace cling {
     std::string closeBraces = PrintEnclosingDeclContexts(Out(),
                                                          D->getDeclContext());
     Out() << "__asm (";
-    D->getAsmString()->printPretty(Out(), nullptr, m_Policy, m_Indentation);
+    D->getAsmStringExpr()->printPretty(Out(), nullptr, m_Policy, m_Indentation);
     Out() << ");" << closeBraces << '\n';
   }
 

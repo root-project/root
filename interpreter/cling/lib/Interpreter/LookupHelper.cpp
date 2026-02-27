@@ -83,12 +83,6 @@ namespace cling {
     P.getActions().getDiagnostics().setSuppressAllDiagnostics(
                                       diagOnOff == LookupHelper::NoDiagnostics);
     //
-    //  Tell Sema we are not in the process of doing an instantiation.
-    //  fSFINAETrap will reset any SFINAE error count of a SFINAE context from "above".
-    //  fSFINAETrap will reset this value to the previous one; the line below is overwriting
-    //  the value set by fSFINAETrap.
-    P.getActions().InNonInstantiationSFINAEContext = true;
-    //
     //  Tell the parser to not attempt spelling correction.
     //
     const_cast<LangOptions&>(PP.getLangOpts()).SpellChecking = 0;

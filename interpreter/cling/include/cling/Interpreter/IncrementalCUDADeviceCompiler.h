@@ -99,7 +99,7 @@ namespace cling {
     /// paths.
     void addHeaderSearchPathFlags(
         std::vector<std::string>& argv,
-        const std::shared_ptr<clang::HeaderSearchOptions> &headerSearchOptions);
+        const clang::HeaderSearchOptions& headerSearchOptions);
 
     ///\brief Compiles a PTX file from the current input. The PTX code is
     /// written to cling.ptx.
