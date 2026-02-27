@@ -421,7 +421,7 @@ void TGX11::ClearPixmap(Drawable *pix)
 void TGX11::ClearWindow()
 {
    if (!gCws) return;
-   
+
    if (!gCws->fIsPixmap && !gCws->fDoubleBuffer) {
       XSetWindowBackground((Display*)fDisplay, gCws->fDrawing, GetColor(0).fPixel);
       XClearWindow((Display*)fDisplay, gCws->fDrawing);
@@ -667,6 +667,34 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
                  gLineStyle == LineSolid ? *gGCline : *gGCdash, px, py);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draws N segments between provided points
+///
+/// \param [in] n    number of segements
+/// \param [in] xy   list of points, size 2*n
+
+void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
+{
+   const Int_t kMaxSegments = 500000;
+   if (n > kMaxSegments) {
+      Int_t ibeg = 0;
+      Int_t iend = kMaxSegments;
+      while (ibeg < n) {
+         DrawLinesSegments(iend - ibeg, &xy[ibeg*2]);
+         ibeg = iend;
+         iend = TMath::Min(n, iend + kMaxSegments);
+      }
+   } else if (n > 0) {
+      if (gLineStyle == LineSolid)
+         XDrawSegments((Display*)fDisplay, gCws->fDrawing, *gGCline, (XSegment *) xy, n);
+      else {
+         XSetDashes((Display*)fDisplay, *gGCdash, gDashOffset, gDashList, gDashSize);
+         XDrawSegments((Display*)fDisplay, gCws->fDrawing, *gGCdash, (XSegment *) xy, n);
+      }
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
