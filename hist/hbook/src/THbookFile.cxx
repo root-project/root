@@ -140,11 +140,7 @@ static Int_t gLastEntry = -1;
 
 // As recommended in
 // https://gcc.gnu.org/onlinedocs/gfortran/Argument-passing-conventions.html
-#if __GNUC__ > 7
-typedef size_t fortran_charlen_t;
-#else
-typedef int fortran_charlen_t;
-#endif
+using fortran_charlen_t = size_t;
 
 #else
 # define hlimit  HLIMIT
