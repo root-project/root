@@ -42,6 +42,7 @@ namespace clang {
   class HeaderSearchOptions;
   class LangOptions;
   class PreprocessorOptions;
+  class CompilerInstance;
 
 namespace CodeGen {
   class CodeGenModule;
@@ -49,10 +50,17 @@ namespace CodeGen {
 }
 
 /// The primary public interface to the Clang code generator.
-///
-/// This is not really an abstract interface.
 class CodeGenerator : public ASTConsumer {
   virtual void anchor();
+
+protected:
+  /// Use CreateLLVMCodeGen() below to create an instance of this class.
+  CodeGenerator() = default;
+
+  /// True if we've finished generating IR. This prevents us from generating
+  /// additional LLVM IR after emitting output in HandleTranslationUnit. This
+  /// can happen when Clang plugins trigger additional AST deserialization.
+  bool IRGenFinished = false;
 
 public:
   /// Return an opaque reference to the CodeGenModule object, which can
@@ -74,7 +82,7 @@ public:
   ///
   /// It is illegal to call methods other than GetModule on the
   /// CodeGenerator after releasing its module.
-  llvm::Module *ReleaseModule();
+  std::unique_ptr<llvm::Module> ReleaseModule();
 
   /// Return debug info code generator.
   CodeGen::CGDebugInfo *getCGDebugInfo();
@@ -105,25 +113,45 @@ public:
   /// enable codegen in interactive processing environments.
   llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
 
-  llvm::Module* StartModule(llvm::StringRef ModuleName,
-                            llvm::LLVMContext& C,
-                            const CodeGenOptions& CGO);
+  llvm::Module *StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C,
+                            const CodeGenOptions &CGO);
 
-  void forgetGlobal(llvm::GlobalValue* GV);
+  void forgetGlobal(llvm::GlobalValue *GV);
   void forgetDecl(llvm::StringRef MangledName);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.
-/// It is the responsibility of the caller to call delete on
-/// the allocated CodeGenerator instance.
-CodeGenerator *CreateLLVMCodeGen(DiagnosticsEngine &Diags,
-                                 llvm::StringRef ModuleName,
-                                 IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS,
-                                 const HeaderSearchOptions &HeaderSearchOpts,
-                                 const PreprocessorOptions &PreprocessorOpts,
-                                 const CodeGenOptions &CGO,
-                                 llvm::LLVMContext &C,
-                                 CoverageSourceInfo *CoverageInfo = nullptr);
+///
+/// Remember to call Initialize() if you plan to use this directly.
+std::unique_ptr<CodeGenerator>
+CreateLLVMCodeGen(const CompilerInstance &CI, llvm::StringRef ModuleName,
+                  llvm::LLVMContext &C,
+                  CoverageSourceInfo *CoverageInfo = nullptr);
+
+std::unique_ptr<CodeGenerator>
+CreateLLVMCodeGen(DiagnosticsEngine &Diags, llvm::StringRef ModuleName,
+                  IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS,
+                  const HeaderSearchOptions &HeaderSearchOpts,
+                  const PreprocessorOptions &PreprocessorOpts,
+                  const CodeGenOptions &CGO, llvm::LLVMContext &C,
+                  CoverageSourceInfo *CoverageInfo = nullptr);
+
+namespace CodeGen {
+/// Demangle the artificial function name (\param FuncName) used to encode trap
+/// reasons used in debug info for traps (e.g. __builtin_verbose_trap). See
+/// `CGDebugInfo::CreateTrapFailureMessageFor`.
+///
+/// \param FuncName - The function name to demangle.
+///
+/// \return A std::optional. If demangling succeeds the optional will contain
+/// a pair of StringRefs where the first field is the trap category and the
+/// second is the trap message. These can both be empty. If demangling fails the
+/// optional will not contain a value. Note the returned StringRefs if non-empty
+/// point into the underlying storage for \param FuncName and thus have the same
+/// lifetime.
+std::optional<std::pair<StringRef, StringRef>>
+DemangleTrapReasonInDebugInfo(StringRef FuncName);
+} // namespace CodeGen
 
 } // end namespace clang
 
