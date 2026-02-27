@@ -18,13 +18,13 @@
 #include "clang/Basic/FileEntry.h"
 
 #include "llvm/ADT/DenseMap.h"
-#include <llvm/ADT/DenseSet.h>
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Error.h"
 #include "llvm/ADT/StringSet.h"
+#include "llvm/Support/Error.h"
+#include <llvm/ADT/DenseSet.h>
 #include <memory>
 #include <utility>
 
@@ -195,10 +195,9 @@ public:
   /// \param Path The path to the directory containing module files, into
   /// which the global index will be written.
   /// \param Optionally pass already precomputed interesting identifiers.
-  static llvm::Error writeIndex(FileManager &FileMgr,
-                                const PCHContainerReader &PCHContainerRdr,
-                                StringRef Path,
-                              UserDefinedInterestingIDs *ExternalIDs = nullptr);
+  static llvm::Error
+  writeIndex(FileManager &FileMgr, const PCHContainerReader &PCHContainerRdr,
+             StringRef Path, UserDefinedInterestingIDs *ExternalIDs = nullptr);
 };
 }
 
