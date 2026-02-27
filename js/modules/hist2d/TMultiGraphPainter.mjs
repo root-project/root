@@ -24,6 +24,7 @@ class TMultiGraphPainter extends ObjectPainter {
    #auto; // extra options for auto colors
    #is3d; // if 3d drawing
    #pads;  // pads draw option
+   #pads_columns; // number pads columns
 
    /** @summary Create painter
      * @param {object|string} dom - DOM element for drawing or element id
@@ -317,7 +318,9 @@ class TMultiGraphPainter extends ObjectPainter {
 
       this.#is3d = d.check('3D');
       this.#auto = '';
-      this.#pads = d.check('PADS');
+      this.#pads = d.check('PADS', true);
+      if (this.#pads)
+         this.#pads_columns = d.partAsInt();
       ['PFC', 'PLC', 'PMC'].forEach(f => {
          if (d.check(f))
             this.#auto += ' ' + f;
@@ -337,7 +340,12 @@ class TMultiGraphPainter extends ObjectPainter {
       if (this.#pads) {
          promise = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(mgraph.fGraphs.arr.length, 0, true);
+            let nx = mgraph.fGraphs.arr.length, ny = 0;
+            if (this.#pads_columns) {
+               ny = Math.ceil(nx / this.#pads_columns);
+               nx = this.#pads_columns;
+            }
+            return pad_painter.divide(nx, ny, true);
          });
       } else if (d.check('A') || !this.getMainPainter()) {
          const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));

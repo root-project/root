@@ -21,6 +21,7 @@ import re
 import sys
 import tempfile
 import time
+import ctypes
 from contextlib import contextmanager
 from datetime import datetime
 from hashlib import sha1
@@ -37,8 +38,12 @@ ROOT.gROOT.SetBatch()
 
 cppMIME = "text/x-c++src"
 
+_enableJSVis = True
+
 # Keep display handle for canvases to be able update them
 _canvasHandles = {}
+
+_visualObjects = []
 
 _jsMagicHighlight = """
 Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
@@ -50,25 +55,56 @@ _jsNotDrawableClassesPatterns = ["TEve*"]
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
-_jsCode = """
+_jsFixedSizeDiv = """
 <div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
+</div>
+"""
+
+_jsFullWidthDiv = """
+<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
+   <div id="{jsDivId}">
+   </div>
+</div>
+"""
+
+_jsDrawJsonCode = """
+Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
+   const obj = Core.parse(json);
+   Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
+}});
+"""
+
+_jsBrowseFilesCode = """
+const arr = [ {fileBase64} ], blobs = [];
+for(let n = 0; n < arr.length; ++n) {{
+   const binaryString = atob(arr[n]),
+         bytes = new Uint8Array(binaryString.length);
+   for (let i = 0; i < binaryString.length; i++)
+      bytes[i] = binaryString.charCodeAt(i);
+   blobs.push(bytes.buffer);
+}}
+const next_file = h => {{
+   return !blobs.length ? null : h.openRootFile(blobs.shift()).then(() => next_file(h));
+}};
+Core.buildGUI('{jsDivId}','notebook').then(next_file);
+"""
+
+_jsCode = """
+{jsDivHtml}
 </div>
 <script>
    function process_{jsDivId}() {{
-      function drawPlot(Core) {{
+      function execCode(Core) {{
          Core.settings.HandleKeys = false;
-         Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
-            const obj = Core.parse(json);
-            Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
-         }});
+         {jsDrawCode}
       }}
-      const servers = ['/static/', 'https://root.cern/js/7.10.0/', 'https://jsroot.gsi.de/7.10.0/'],
+      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
-         drawPlot(JSROOT);
+         execCode(JSROOT);
       else if (typeof requirejs !== 'undefined') {{
          servers.forEach((s,i) => {{ servers[i] = s + path; }});
-         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  drawPlot);
+         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  execCode);
       }} else {{
          const config = document.getElementById('jupyter-config-data');
          if (config)
@@ -76,7 +112,7 @@ _jsCode = """
          else
             servers.shift();
          function loadJsroot() {{
-            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => drawPlot(JSROOT));
+            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => execCode(JSROOT));
          }}
          loadJsroot();
       }}
@@ -84,6 +120,47 @@ _jsCode = """
    process_{jsDivId}();
 </script>
 """
+
+
+_jsFileCode = """
+<div style="width: 100%; height: {jsCanvasHeight}px; position: relative">
+   <div id="{jsDivId}">
+   </div>
+</div>
+<script>
+   function process_{jsDivId}() {{
+      function showFile(Core) {{
+         Core.settings.HandleKeys = false;
+         const binaryString = atob('{fileBase64}');
+         const bytes = new Uint8Array(binaryString.length);
+         for (let i = 0; i < binaryString.length; i++)
+            bytes[i] = binaryString.charCodeAt(i);
+         Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile(bytes.buffer));
+      }}
+      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
+            path = 'build/jsroot';
+      if (typeof JSROOT !== 'undefined')
+         showFile(JSROOT);
+      else if (typeof requirejs !== 'undefined') {{
+         servers.forEach((s,i) => {{ servers[i] = s + path; }});
+         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  showFile);
+      }} else {{
+         const config = document.getElementById('jupyter-config-data');
+         if (config)
+            servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
+         else
+            servers.shift();
+         function loadJsroot() {{
+            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => showFile(JSROOT));
+         }}
+         loadJsroot();
+      }}
+   }}
+   process_{jsDivId}();
+</script>
+"""
+
+
 
 TBufferJSONErrorMessage = "The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
 
@@ -113,7 +190,7 @@ def RCanvasAvailable():
     return True
 
 
-def _initializeJSVis():
+def initializeJSVis():
     global _enableJSVis
     jupyter_jsroot = ROOT.gEnv.GetValue("Jupyter.JSRoot", "on").lower()
     if jupyter_jsroot not in {"on", "off"}:
@@ -122,40 +199,36 @@ def _initializeJSVis():
     _enableJSVis = jupyter_jsroot == "on"
 
 
-_initializeJSVis()
-_enableJSVisDebug = False
-
-
-def enableJSVis():
-    if not TBufferJSONAvailable():
-        return
+def enableJSVis(flag=True):
     global _enableJSVis
-    _enableJSVis = True
+    _enableJSVis = flag and TBufferJSONAvailable()
 
 
-def disableJSVis():
-    global _enableJSVis
-    _enableJSVis = False
-
-
-def enableJSVisDebug():
-    if not TBufferJSONAvailable():
-        return
-    global _enableJSVis
-    global _enableJSVisDebug
-    _enableJSVis = True
-    _enableJSVisDebug = True
-
-
-def disableJSVisDebug():
-    global _enableJSVis
-    global _enableJSVisDebug
-    _enableJSVis = False
-    _enableJSVisDebug = False
+def addVisualObject(object, kind="none", option=""):
+    global _visualObjects
+    if kind == "tfile":
+        _visualObjects.append(NotebookDrawerFiles([object], option))
+    elif kind == "files":
+        _visualObjects.append(NotebookDrawerFiles(object, option))
+    else:
+        _visualObjects.append(NotebookDrawerJson(object))
 
 
 def _getPlatform():
     return sys.platform
+
+
+def _getUniqueDivId():
+    """
+    Every DIV containing a JavaScript snippet must be unique in the
+    notebook. This method provides a unique identifier.
+    With the introduction of JupyterLab, multiple Notebooks can exist
+    simultaneously on the same HTML page. In order to ensure a unique
+    identifier with the UID throughout all open Notebooks the UID is
+    generated as a timestamp.
+    """
+    return "root_plot_" + str(int(round(time.time() * 1000)))
+
 
 
 def _getLibExtension(thePlatform):
@@ -306,61 +379,6 @@ def invokeAclic(cell):
         processCppCode(".L %s+" % fileName)
 
 
-def produceCanvasJson(canvas):
-    if canvas.IsUpdated() and not canvas.IsDrawn():
-        canvas.Draw()
-
-    if TWebCanvasAvailable():
-        return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 23, True)
-
-    # Add extra primitives to canvas with custom colors, palette, gStyle
-
-    prim = canvas.GetListOfPrimitives()
-
-    style = ROOT.gStyle
-    colors = ROOT.gROOT.GetListOfColors()
-    palette = None
-
-    # always provide gStyle object
-    if prim.FindObject(style):
-        style = None
-    else:
-        prim.Add(style)
-
-    cnt = 0
-    for n in range(colors.GetLast() + 1):
-        if colors.At(n):
-            cnt = cnt + 1
-
-    # add all colors if there are more than 598 colors defined
-    if cnt < 599 or prim.FindObject(colors):
-        colors = None
-    else:
-        prim.Add(colors)
-
-    if colors:
-        pal = ROOT.TColor.GetPalette()
-        palette = ROOT.TObjArray()
-        palette.SetName("CurrentColorPalette")
-        for i in range(pal.GetSize()):
-            palette.Add(colors.At(pal[i]))
-        prim.Add(palette)
-
-    ROOT.TColor.DefinedColors()
-
-    canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 23)
-
-    # Cleanup primitives after conversion
-    if style is not None:
-        prim.Remove(style)
-    if colors is not None:
-        prim.Remove(colors)
-    if palette is not None:
-        prim.Remove(palette)
-
-    return canvas_json
-
-
 transformers = []
 
 
@@ -439,58 +457,42 @@ class StreamCapture(object):
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
-    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
+    return [NotebookDrawerTCanvas(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
 
 
 def GetRCanvasDrawers():
     if not RCanvasAvailable():
         return []
     lOfC = ROOT.Experimental.RCanvas.GetCanvases()
-    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
+    return [NotebookDrawerRCanvas(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
 
+def GetVisualDrawers():
+    global _visualObjects
+    res = []
+    for obj in _visualObjects:
+        res.append(obj)
+    _visualObjects.clear()
+    return res
 
-def GetGeometryDrawer():
+def GetGeometryDrawers():
     if not hasattr(ROOT, "gGeoManager"):
-        return
+        return []
     if not ROOT.gGeoManager:
-        return
-    if not ROOT.gGeoManager.GetUserPaintVolume():
-        return
-    vol = ROOT.gGeoManager.GetTopVolume()
-    if vol:
-        return NotebookDrawer(vol)
+        return []
+    vol = ROOT.gGeoManager.GetUserPaintVolume()
+    if not vol:
+        return []
+    return [NotebookDrawerGeometry(vol)]
 
 
 def GetDrawers():
-    drawers = GetCanvasDrawers() + GetRCanvasDrawers()
-    geometryDrawer = GetGeometryDrawer()
-    if geometryDrawer:
-        drawers.append(geometryDrawer)
-    return drawers
-
-
-def DrawGeometry():
-    drawer = GetGeometryDrawer()
-    if drawer:
-        drawer.Draw()
-
-
-def DrawCanvases():
-    drawers = GetCanvasDrawers()
-    for drawer in drawers:
-        drawer.Draw()
-
-
-def DrawRCanvases():
-    rdrawers = GetRCanvasDrawers()
-    for drawer in rdrawers:
-        drawer.Draw()
+    return GetCanvasDrawers() + GetRCanvasDrawers() + GetVisualDrawers() + GetGeometryDrawers()
 
 
 def NotebookDraw():
-    DrawGeometry()
-    DrawCanvases()
-    DrawRCanvases()
+    drawers = GetDrawers()
+    for drawer in drawers:
+        drawer.Draw(display.display)
 
 
 class CaptureDrawnPrimitives(object):
@@ -508,68 +510,230 @@ class CaptureDrawnPrimitives(object):
         self.shell.events.register("post_execute", self._post_execute)
 
 
-class NotebookDrawer(object):
+
+
+class NotebookDrawerFiles(object):
     """
-    Capture the canvas which is drawn and decide if it should be displayed using
-    jsROOT.
+    Special drawer for TFile - shows files hierarchy with possibility to draw objects
+    """
+
+    def __init__(self, theObject, theOption=""):
+       self.drawObject = theObject
+       self.drawOption = theOption
+
+    def _getFileJsCode(self):
+        totalsz = 0
+        totalbase64 = ""
+        for file in self.drawObject:
+            sz = file.GetSize()
+            if sz > 10000000 and self.drawOption != "force":
+               return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show it disregard of file size"
+
+            totalsz += sz
+            if totalsz > 10000000 and self.drawOption != "force":
+               return f"Total file sizes {totalsz} too large for JSROOT display. Use 'force' draw option to show them disregard file size"
+
+            # create plain buffer and get pointer on it
+            u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
+            addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
+
+            if file.ReadBuffer(addrc, 0, sz):
+                return f"Fail to read file {file.GetName()} buffer of size {sz}"
+
+            base64 = ROOT.TBase64.Encode(addrc, sz)
+
+            if len(totalbase64) > 0:
+                totalbase64 = totalbase64 + ", "
+
+            totalbase64 = totalbase64 + "'" + base64 + "'"
+
+        id = _getUniqueDivId()
+
+        drawHtml = _jsFullWidthDiv.format(
+            jsDivId=id,
+            jsCanvasHeight=_jsCanvasHeight
+        )
+
+        browseFileCode = _jsBrowseFilesCode.format(
+            jsDivId=id,
+            fileBase64=totalbase64
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=browseFileCode
+        )
+
+        return thisJsCode
+
+    def Draw(self, displayFunction):
+        code = self._getFileJsCode()
+        displayFunction(display.HTML(code))
+
+
+
+class NotebookDrawerJson(object):
+    """
+    Generic class to create JSROOT drawing for the arbitrary object based on json conversion.
     """
 
     def __init__(self, theObject):
-        self.drawableObject = theObject
-        self.isRCanvas = False
-        self.isCanvas = False
-        self.drawableId = str(ROOT.AddressOf(theObject)[0])
-        if hasattr(self.drawableObject, "ResolveSharedPtrs"):
-            self.isRCanvas = True
-        else:
-            self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
-
-    def __del__(self):
-        if self.isRCanvas:
-            self.drawableObject.ClearShown()
-            self.drawableObject.ClearUpdated()
-        elif self.isCanvas:
-            self.drawableObject.ResetDrawn()
-            self.drawableObject.ResetUpdated()
-        else:
-            ROOT.gGeoManager.SetUserPaintVolume(None)
-
-    def _getListOfPrimitivesNamesAndTypes(self):
-        """
-        Get the list of primitives in the pad, recursively descending into
-        histograms and graphs looking for fitted functions.
-        """
-        primitives = self.drawableObject.GetListOfPrimitives()
-        primitivesNames = map(lambda p: p.ClassName(), primitives)
-        return sorted(primitivesNames)
-
-    def _getUniqueDivId(self):
-        """
-        Every DIV containing a JavaScript snippet must be unique in the
-        notebook. This method provides a unique identifier.
-        With the introduction of JupyterLab, multiple Notebooks can exist
-        simultaneously on the same HTML page. In order to ensure a unique
-        identifier with the UID throughout all open Notebooks the UID is
-        generated as a timestamp.
-        """
-        return "root_plot_" + str(int(round(time.time() * 1000)))
+       self.drawObject = theObject
 
     def _canJsDisplay(self):
-        # returns true if js-based drawing should be used
+        return TBufferJSONAvailable()
+
+    def _canPngDisplay(self):
+        return True
+
+    def _getWidth(self):
+        return _jsCanvasWidth
+
+    def _getHeight(self):
+        return _jsCanvasHeight
+
+    def _getJson(self):
+        return ROOT.TBufferJSON.ConvertToJSON(self.drawObject, 23).Data()
+
+    def _getJsOptions(self):
+        return ""
+
+    def _getJsCode(self):
+        width = self._getWidth()
+        height = self._getHeight()
+        json = self._getJson()
+        options = self._getJsOptions()
+
+        if not json:
+            return f"Class {self.drawObject.ClassName()} not supported yet"
+
+        zip = ROOT.TBufferJSON.zipJSON(json)
+
+        id = _getUniqueDivId()
+
+        drawHtml = _jsFixedSizeDiv.format(
+            jsDivId=id,
+            jsCanvasWidth=width,
+            jsCanvasHeight=height
+        )
+
+        drawJsonCode = _jsDrawJsonCode.format(
+            jsDivId=id,
+            jsonLength=len(json),
+            jsonZip=zip,
+            jsDrawOptions=options
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=drawJsonCode
+        )
+        return thisJsCode
+
+    def _getCanvas(self):
+        c1 = ROOT.TCanvas("__tmp_draw_image_canvas__", "", self._getWidth(), self._getHeight())
+        c1.Add(self.drawObject)
+        return c1
+
+    def _getPngImage(self):
+        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        canv = self._getCanvas()
+        with _setIgnoreLevel(ROOT.kError):
+            canv.SaveAs(ofile.name)
+        img = display.Image(filename=ofile.name, format="png", embed=True)
+        ofile.close()
+        os.unlink(ofile.name)
+        return img
+
+
+    def Draw(self, displayFunction):
+        global _enableJSVis
+        if _enableJSVis and self._canJsDisplay():
+            code = self._getJsCode()
+            displayFunction(display.HTML(code))
+        elif self._canPngDisplay():
+            displayFunction(self._getPngImage())
+        else:
+            displayFunction(display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} class is not implemented"))
+
+
+
+class NotebookDrawerGeometry(NotebookDrawerJson):
+    """
+    Drawer for geometry - png is not works with it.
+    """
+
+    def __del__(self):
+        self.drawObject.GetGeoManager().SetUserPaintVolume(ROOT.nullptr)
+
+    def _getJsOptions(self):
+        return "all"
+
+    def _canPngDisplay(self):
+        return False
+
+
+
+class NotebookDrawerCanvBase(NotebookDrawerJson):
+    """
+    Base class for TCanvas/RCanvas drawing.
+    Implementst specific Draw function where canvas update is handled
+    """
+
+    def _getCanvasId(self):
+        return ""
+
+    def _getUpdated(self):
+        return False
+
+    def _getCanvas(self):
+        return self.drawObject
+
+    def Draw(self, displayFunction):
+        global _enableJSVis, _canvasHandles
+        code = ""
+        if _enableJSVis and self._canJsDisplay():
+            code = display.HTML(self._getJsCode())
+        elif self._canPngDisplay():
+            code = self._getPngImage()
+        else:
+            code = display.HTML(f"Neither JSROOT nor plain drawing of {self.drawObject.ClassName()} is implemented")
+
+        name = self._getCanvasId()
+        updated = self._getUpdated()
+        if updated and name and (name in _canvasHandles):
+            _canvasHandles[name].update(code)
+        elif name:
+            _canvasHandles[name] = displayFunction(code, display_id=True)
+        else:
+            displayFunction(code)
+
+
+
+class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
+    """
+    Drawer of TCanvas.
+    """
+
+    def __del__(self):
+        self.drawObject.ResetDrawn()
+        self.drawObject.ResetUpdated()
+
+    def _getCanvasId(self):
+        return self.drawObject.GetName() + str(ROOT.AddressOf(self.drawObject)[0])
+
+    def _getUpdated(self):
+       return self.drawObject.IsUpdated()
+
+    def _canJsDisplay(self):
         if not TBufferJSONAvailable():
             return False
-        # RCanvas clways displayed with jsroot
-        if self.isRCanvas:
+        if TWebCanvasAvailable():
             return True
-        # check if jsroot was disabled
-        if not _enableJSVis:
-            return False
-        # geometry can be drawn, TWebCanvas also can be used
-        if not self.isCanvas or TWebCanvasAvailable():
-            return True
-
-        # to be optimised
-        primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
+        primitives = self.drawObject.GetListOfPrimitives()
+        primitivesTypesNames = sorted(map(lambda p: p.ClassName(), primitives))
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
                 if fnmatch.fnmatch(primitiveTypeName, unsupportedPattern):
@@ -581,118 +745,99 @@ class NotebookDrawer(object):
                     return False
         return True
 
-    def _getJsCode(self):
-        # produce JSON for the canvas
-        if self.isRCanvas:
-            json = self.drawableObject.CreateJSON()
+    def _getWidth(self):
+        if self.drawObject.GetWindowWidth() > 0:
+            return self.drawObject.GetWindowWidth()
+        return _jsCanvasWidth
+
+    def _getHeight(self):
+        if self.drawObject.GetWindowHeight() > 0:
+            return self.drawObject.GetWindowHeight()
+        return _jsCanvasHeight
+
+    def _getJson(self):
+        if self.drawObject.IsUpdated() and not self.drawObject.IsDrawn():
+            self.drawObject.Draw()
+
+        if TWebCanvasAvailable():
+            return ROOT.TWebCanvas.CreateCanvasJSON(self.drawObject, 23, True).Data()
+
+        # Add extra primitives to canvas with custom colors, palette, gStyle
+
+        prim = self.drawObject.GetListOfPrimitives()
+
+        style = ROOT.gStyle
+        colors = ROOT.gROOT.GetListOfColors()
+        palette = None
+
+        # always provide gStyle object
+        if prim.FindObject(style):
+            style = None
         else:
-            json = produceCanvasJson(self.drawableObject).Data()
+            prim.Add(style)
 
-        divId = self._getUniqueDivId()
+        cnt = 0
+        for n in range(colors.GetLast() + 1):
+            if colors.At(n):
+                cnt = cnt + 1
 
-        width = _jsCanvasWidth
-        height = _jsCanvasHeight
-        jsonzip = ROOT.TBufferJSON.zipJSON(json)
-        options = "all"
+        # add all colors if there are more than 598 colors defined
+        if cnt < 599 or prim.FindObject(colors):
+            colors = None
+        else:
+            prim.Add(colors)
 
-        if self.isCanvas:
-            if self.drawableObject.GetWindowWidth() > 0:
-                width = self.drawableObject.GetWindowWidth()
-            if self.drawableObject.GetWindowHeight() > 0:
-                height = self.drawableObject.GetWindowHeight()
-            options = ""
+        if colors:
+            pal = ROOT.TColor.GetPalette()
+            palette = ROOT.TObjArray()
+            palette.SetName("CurrentColorPalette")
+            for i in range(pal.GetSize()):
+                palette.Add(colors.At(pal[i]))
+            prim.Add(palette)
 
-        if self.isRCanvas:
-            if self.drawableObject.GetWidth() > 0:
-                width = self.drawableObject.GetWidth()
-            if self.drawableObject.GetHeight() > 0:
-                height = self.drawableObject.GetHeight()
-            options = ""
+        ROOT.TColor.DefinedColors()
 
-        thisJsCode = _jsCode.format(
-            jsCanvasWidth=width,
-            jsCanvasHeight=height,
-            jsonLength=len(json),
-            jsonZip=jsonzip,
-            jsDrawOptions=options,
-            jsDivId=divId,
-        )
-        return thisJsCode
+        canvas_json = ROOT.TBufferJSON.ConvertToJSON(self.drawObject, 23)
 
-    def _getJsDiv(self):
-        return display.HTML(self._getJsCode())
+        # Cleanup primitives after conversion
+        if style is not None:
+            prim.Remove(style)
+        if colors is not None:
+            prim.Remove(colors)
+        if palette is not None:
+            prim.Remove(palette)
 
-    def _getDrawId(self):
-        if self.isCanvas:
-            return self.drawableObject.GetName() + self.drawableId
-        if self.isRCanvas:
-            return self.drawableObject.GetUID()
-        # all other objects do not support update and can be ignored
-        return ""
+        return canvas_json.Data()
+
+
+class NotebookDrawerRCanvas(NotebookDrawerCanvBase):
+    """
+    Drawer of RCanvas.
+    """
+
+    def __del__(self):
+        self.drawObject.ClearShown()
+        self.drawObject.ClearUpdated()
+
+    def _getCanvasId(self):
+        return self.drawObject.GetUID()
 
     def _getUpdated(self):
-        if self.isCanvas:
-            return self.drawableObject.IsUpdated()
-        if self.isRCanvas:
-            return self.drawableObject.IsUpdated()
-        return False
+        return self.drawObject.IsUpdated()
 
-    def _jsDisplay(self):
-        global _canvasHandles
-        name = self._getDrawId()
-        updated = self._getUpdated()
-        jsdiv = self._getJsDiv()
-        if name and (name in _canvasHandles) and updated:
-            _canvasHandles[name].update(jsdiv)
-        elif name:
-            _canvasHandles[name] = display.display(jsdiv, display_id=True)
-        else:
-            display.display(jsdiv)
-        return 0
+    def _getWidth(self):
+        if self.drawObject.GetWidth() > 0:
+            return self.drawObject.GetWidth()
+        return _jsCanvasWidth
 
-    def _getPngImage(self):
-        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-        with _setIgnoreLevel(ROOT.kError):
-            self.drawableObject.SaveAs(ofile.name)
-        img = display.Image(filename=ofile.name, format="png", embed=True)
-        ofile.close()
-        os.unlink(ofile.name)
-        return img
+    def _getHeight(self):
+        if self.drawObject.GetHeight() > 0:
+            return self.drawObject.GetHeight()
+        return _jsCanvasHeight
 
-    def _pngDisplay(self):
-        global _canvasHandles
-        name = self._getDrawId()
-        updated = self._getUpdated()
-        img = self._getPngImage()
-        if updated and name and (name in _canvasHandles):
-            _canvasHandles[name].update(img)
-        elif name:
-            _canvasHandles[name] = display.display(img, display_id=True)
-        else:
-            display.display(img)
+    def _getJson(self):
+        return self.drawObject.CreateJSON()
 
-    def _display(self):
-        if _enableJSVisDebug:
-            self._pngDisplay()
-            self._jsDisplay()
-        else:
-            if self._canJsDisplay():
-                self._jsDisplay()
-            else:
-                self._pngDisplay()
-
-    def GetDrawableObjects(self):
-        if _enableJSVisDebug:
-            return [self._getJsDiv(), self._getPngImage()]
-
-        if self._canJsDisplay():
-            return [self._getJsDiv()]
-        else:
-            return [self._getPngImage()]
-
-    def Draw(self):
-        self._display()
-        return 0
 
 
 def setStyle():
@@ -729,9 +874,6 @@ TInterpreter::EErrorCode ProcessLineWrapper(const char* line) {
 
 def enhanceROOTModule():
     ROOT.enableJSVis = enableJSVis
-    ROOT.disableJSVis = disableJSVis
-    ROOT.enableJSVisDebug = enableJSVisDebug
-    ROOT.disableJSVisDebug = disableJSVisDebug
 
 
 def enableCppHighlighting():
@@ -742,6 +884,7 @@ def enableCppHighlighting():
 
 def iPythonize():
     setStyle()
+    initializeJSVis()
     loadMagicsAndCapturers()
     declareProcessLineWrapper()
     # enableCppHighlighting()

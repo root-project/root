@@ -15,6 +15,11 @@ class TTextPainter extends ObjectPainter {
             pp = this.getPadPainter(),
             fp = this.getFramePainter(),
             is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
+
+      // special handling of dummy frame painter
+      if (fp?.getDrawDom() === null)
+         return this;
+
       let fact = 1, use_frame = false;
 
       this.createAttText({ attr: text });
