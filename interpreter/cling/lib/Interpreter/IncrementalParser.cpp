@@ -163,7 +163,7 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
-      if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+      if (Info.getID() == diag::warn_falloff_nonvoid) {
         DiagLevel = DiagnosticsEngine::Error;
       }
       if (Ignoring()) {
@@ -316,15 +316,12 @@ namespace cling {
 
     DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
-      auto CG
-        = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
-                                                               makeModuleName(),
-                                                  &m_CI->getVirtualFileSystem(),
-                                                    m_CI->getHeaderSearchOpts(),
-                                                    m_CI->getPreprocessorOpts(),
-                                                         m_CI->getCodeGenOpts(),
-                                               *m_Interpreter->getLLVMContext())
-                                                );
+      auto CG = m_Interpreter->withLLVMContextDo([&](llvm::LLVMContext* Ctx) {
+        return std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(
+            Diag, makeModuleName(), &m_CI->getVirtualFileSystem(),
+            m_CI->getHeaderSearchOpts(), m_CI->getPreprocessorOpts(),
+            m_CI->getCodeGenOpts(), *Ctx));
+      });
       m_CodeGen = CG.get();
       assert(m_CodeGen);
       if (!Consumers.empty()) {
@@ -558,9 +555,10 @@ namespace cling {
   }
 
   llvm::Module* IncrementalParser::StartModule() {
-    return getCodeGenerator()->StartModule(makeModuleName(),
-                                           *m_Interpreter->getLLVMContext(),
-                                           getCI()->getCodeGenOpts());
+    return m_Interpreter->withLLVMContextDo([&](llvm::LLVMContext* Ctx) {
+      return getCodeGenerator()->StartModule(makeModuleName(), *Ctx,
+                                             getCI()->getCodeGenOpts());
+    });
   }
 
   void IncrementalParser::commitTransaction(ParseResultTransaction& PRT,
@@ -950,8 +948,10 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
-    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
-    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(
+        S, /*Enabled=*/true, /*AtEndOfTU=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S,
+                                                           /*AtEndOfTU=*/true);
 
     // Skip previous eof due to last incremental input.
     if (m_Parser->getCurToken().is(tok::annot_repl_input_end)) {
