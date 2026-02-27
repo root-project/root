@@ -59,7 +59,7 @@ void smooth_hist(const char *fname, double xmin, double xmax, int n1, int n2)
 void hist017_TH1_smooth(int n1 = 1000, int n2 = 1000000)
 {
 
-   TH1::AddDirectory(false);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
 
    c1 = new TCanvas();
    c1->Divide(1, 3);

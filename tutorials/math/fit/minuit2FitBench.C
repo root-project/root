@@ -99,7 +99,7 @@ bool DoFit(const char* fitter, TVirtualPad *pad, int npass) {
 }
 
 int minuit2FitBench(int npass=20) {
-   TH1::AddDirectory(false);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
    TCanvas *c1 = new TCanvas("FitBench","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
    c1->SetFillColor(kYellow-9);

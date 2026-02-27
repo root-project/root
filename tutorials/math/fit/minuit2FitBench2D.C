@@ -67,7 +67,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, int npass) {
 }
 
 void minuit2FitBench2D(int n = 100000) {
-   TH1::AddDirectory(false);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
    TCanvas *c1 = new TCanvas("c1","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
    // create a TF1 with the range from 0 to 3 and 6 parameters

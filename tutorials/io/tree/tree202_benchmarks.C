@@ -63,12 +63,14 @@ void billw(const char *billname, Int_t compress)
 
 void billr(const char *billname, Int_t compress)
 {
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
+
    //read N histograms from keys
    timer.Start();
    TFile f(billname);
    TIter next(f.GetListOfKeys());
    TH1F *h;
-   TH1::AddDirectory(kFALSE);
+
    TKey *key;
    Int_t i = 0;
    auto hmean = new TH1F("hmean", "hist mean from keys", 100, 0, 1);
