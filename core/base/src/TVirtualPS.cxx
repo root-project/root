@@ -215,3 +215,17 @@ void TVirtualPS::PrintRaw(Int_t len, const char *str)
    }
    fPrinted = kTRUE;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print N segments
+/// \param [in] n    number of segments
+/// \param [in] xw   array of X coordinates, size 2*n
+/// \param [in] yw   array of Y coordinates, size 2*n
+
+void TVirtualPS::DrawSegments(Int_t n, Double_t *xw, Double_t *yw)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      if ((xw[i] != xw[i+1]) || (yw[i] != yw[i+1]))
+         DrawPS(2, &xw[i], &yw[i]);
+}

@@ -58,6 +58,7 @@ public:
    virtual void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) = 0;
    virtual void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) = 0;
    virtual void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) = 0;
+   virtual void  DrawSegments(Int_t n, Double_t *xw, Double_t *yw);
    virtual void  NewPage() = 0;
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
