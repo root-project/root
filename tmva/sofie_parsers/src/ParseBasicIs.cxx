@@ -9,12 +9,9 @@ namespace SOFIE {
 template <EBasicIsOperator Op>
 std::unique_ptr<ROperator> ParseBasicIs(RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto)
 {
-   ETensorType input_type = ETensorType::UNDEFINED;
 
    std::string input_name = nodeproto.input(0);
-   if (parser.IsRegisteredTensorType(input_name)) {
-      input_type = parser.GetTensorType(input_name);
-   } else {
+   if (!parser.IsRegisteredTensorType(input_name)) {
       throw
          std::runtime_error("TMVA::SOFIE ONNX Parser " + IsOpTraits<Op>::Name() + " op has input tensor " + input_name +
                                   " but its type is not yet registered");

@@ -45,9 +45,11 @@ bool includeModel(std::string const &modelName)
 template <class T>
 std::string toInterpreter(T const &ptr, std::string const &className, bool toRawPointer = false)
 {
-   if constexpr (std::is_same_v<T, int>) {
+   // for the integer arguments (shape values)
+   if constexpr (std::is_same_v<T, int> || std::is_same_v<T, size_t>) {
       return std::to_string(ptr);
    }
+   // for the data arguments
    std::string out =
       TString::Format("reinterpret_cast<%s*>(0x%zx)", className.c_str(), reinterpret_cast<std::size_t>(&ptr)).Data();
    if (toRawPointer) {
@@ -94,6 +96,8 @@ runModel(std::string outputTypeName, std::string const &modelName, std::string s
       auto type_name = []<typename T>() {
          if constexpr (std::is_same_v<T, int>)
             return "int";
+         else if constexpr (std::is_same_v<T, size_t>)
+            return "size_t";
          else if constexpr (std::is_same_v<T, std::vector<float>>)
             return "std::vector<float>";
          else if constexpr (std::is_same_v<T, std::vector<int>>)

@@ -92,15 +92,6 @@ public:
          fShapeY.resize(2);
          fShapeY[0] = fShapeX.size();
 
-         // identify as -1 since we will declare maximum as size of input
-         // auto inputLength = ConvertDimShapeToLength(fShapeX);
-         // // case X is Dim, becomes complicated to know the maximum. Shuld be allocated dynamically
-         // size_t inputLength = 0;
-         // if (!model.IsDynamicTensor(fNX)) {
-         //    inputLength = ConvertShapeToLength(ConvertShapeToInt(fShapeX));
-         // else
-         //    inputLength = static_cast<size_t>(-1);   // flag -1 to define shape correctly
-
          // flag -1 to define the shape variable in the constructor code and not in the constructor signature
          fShapeY[1] = Dim{std::string("v_NonZero_") + fNX, static_cast<size_t>(-1) };
 

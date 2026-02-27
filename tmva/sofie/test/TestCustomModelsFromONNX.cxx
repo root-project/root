@@ -2973,5 +2973,36 @@ TEST(ONNX, NonZero_Constant)
       EXPECT_EQ(output[i] , correct_output[i]);
    }
 }
+TEST(ONNX, IsInf)
+{
+   // expected input
+   std::vector<float> input = { 1, static_cast<float>(1./0.), 2.};
+   std::vector<uint8_t> correct_output = { 0,1,0 };
 
+   // not cannot use input.size() in string because input symbol  will not be visible when running inference
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<uint8_t>, "IsInf",std::string("\"\", ") + std::to_string(input.size()), input.size(),input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, NotIsNaN)
+{
+   // expected input
+   std::vector<float> input = { 1, static_cast<float>(0./0.), 2.};
+   std::vector<uint8_t> correct_output = { 1,0,1 };
+
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<uint8_t>, "NotIsNaN",std::string("\"\", ") + std::to_string(input.size()), input.size(),input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
 
