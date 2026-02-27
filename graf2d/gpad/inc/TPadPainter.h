@@ -87,6 +87,9 @@ public:
    void     DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y) override;
    void     DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v) override;
 
+   void     DrawSegments(Int_t n, const Double_t *x, const Double_t *y) override;
+   void     DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v) override;
+
    //TPad needs both versions.
    void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) override;
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) override;
