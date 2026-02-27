@@ -16,6 +16,7 @@
 
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/RuntimeOptions.h"
+#include "cling/Interpreter/Value.h"
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
@@ -83,7 +84,6 @@ namespace cling {
   class InterpreterCallbacks;
   class LookupHelper;
   class Transaction;
-  class Value;
 
   ///\brief Class that implements the interpreter-like behavior. It manages the
   /// incremental compilation.
@@ -171,6 +171,10 @@ namespace cling {
     };
 
   public:
+    // This member holds the last result of the value printing. It's a class
+    // member because we might want to access it after more inputs. If no value
+    // printing happens, it's in an invalid state.
+    Value LastValue;
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
 
