@@ -22,7 +22,7 @@ static const int kHeaderSize = 9;
 
 static const size_t errorCodeSmallBuffer = (size_t)-70;
 
-void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipZSTD(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_CCtx, decltype(&ZSTD_freeCCtx)>;
     Ctx_ptr fCtx{ZSTD_createCCtx(), &ZSTD_freeCCtx};
@@ -58,7 +58,7 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
     tgt[8] = (inflate_size >> 16) & 0xff;
 }
 
-void R__unzipZSTD(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipZSTD(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
     using Ctx_ptr = std::unique_ptr<ZSTD_DCtx, decltype(&ZSTD_freeDCtx)>;
     Ctx_ptr fCtx{ZSTD_createDCtx(), &ZSTD_freeDCtx};

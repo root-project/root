@@ -46,36 +46,37 @@ extern "C" {
 
 struct bits_internal_state {
    unsigned short bi_buf;
-/* Output buffer. bits are inserted starting at the bottom (least significant
- * bits).
- */
+   /* Output buffer. bits are inserted starting at the bottom (least significant
+    * bits).
+    */
 
    int bi_valid;
-/* Number of valid bits in bi_buf.  All bits above the last valid bit
- * are always zero.
- */
+   /* Number of valid bits in bi_buf.  All bits above the last valid bit
+    * are always zero.
+    */
 
-   char *in_buf, *out_buf;
-/* Current input and output buffers. in_buf is used only for in-memory
- * compression.
- */
+   const char *in_buf;
+   char *out_buf;
+   /* Current input and output buffers. in_buf is used only for in-memory
+    * compression.
+    */
 
    unsigned in_offset, out_offset;
-/* Current offset in input and output buffers. in_offset is used only for
- * in-memory compression. On 16 bit machiens, the buffer is limited to 64K.
- */
+   /* Current offset in input and output buffers. in_offset is used only for
+    * in-memory compression. On 16 bit machiens, the buffer is limited to 64K.
+    */
 
    unsigned in_size, out_size;
-/* Size of current input and output buffers */
+   /* Size of current input and output buffers */
 
-/* On some platform (MacOS) marking this thread local does not work,
-   however in our use this is a constant, so we do not really need to make it
-   thread local */
-/* __thread */
-/* not used?
-   int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
-*/
-/* Current input function. Set to R__mem_read for in-memory compression */
+   /* On some platform (MacOS) marking this thread local does not work,
+      however in our use this is a constant, so we do not really need to make it
+      thread local */
+   /* __thread */
+   /* not used?
+      int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
+   */
+   /* Current input function. Set to R__mem_read for in-memory compression */
 
 #ifdef DEBUG
    ulg R__bits_sent;   /* bit length of the compressed data */
@@ -239,13 +240,12 @@ int  R__mem_read     OF((bits_internal_state *state, char *b,    unsigned bsize)
  */
     /* char *tgt, *src;        target and source buffers */
     /* ulg tgtsize, srcsize;   target and source sizes */
-ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize);
-
+ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize);
 
 /**
  * Decompress a deflated entry.
  */
-int R__Inflate(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt);
+int R__Inflate(const uch **ibufptr, long *ibufcnt, uch **obufptr, long *obufcnt);
 
 #ifdef __cplusplus
 }  // extern "C"

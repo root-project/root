@@ -35,6 +35,8 @@ private:
    TKey(const TKey&) = delete;            // TKey objects are not copiable.
    TKey& operator=(const TKey&) = delete; // TKey objects are not copiable.
 
+   Int_t UnzipObject(char *targetBuffer, const char *compressedBuffer) const;
+
 protected:
    Int_t       fVersion;     ///< Key version identifier
    Int_t       fNbytes;      ///< Number of bytes for the object on file
