@@ -481,6 +481,22 @@ class HistoProfileWrapper(MethodTemplateWrapper):
         return res
 
 
+class HistWrapper(MethodTemplateWrapper):
+    def __call__(self, *args):
+        """
+        Pythonization of Hist method template.
+        If the first argument is a list, convert to std::vector<RAxisVariant> to work around limitations for variadic function template with parameter packs.
+        """
+
+        if len(args) > 0 and isinstance(args[0], list):
+            import ROOT
+
+            axes = ROOT.std.vector["ROOT::Experimental::RAxisVariant"](args[0])
+            args = (axes, *args[1:])
+
+        return self._original_method(*args)
+
+
 @pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
 def pythonize_rdataframe(klass):
     # Parameters:
@@ -507,6 +523,8 @@ def pythonize_rdataframe(klass):
         # and stores a reference to such implementation
         getter = MethodTemplateGetter(getattr(klass, method_name), HistoProfileWrapper, model_class)
         setattr(klass, method_name, getter)
+
+    klass.Hist = MethodTemplateGetter(klass.Hist, HistWrapper)
 
     klass._OriginalFilter = klass.Filter
     klass._OriginalDefine = klass.Define
