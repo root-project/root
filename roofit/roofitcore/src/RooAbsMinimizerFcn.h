@@ -39,7 +39,7 @@ public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
    virtual ~RooAbsMinimizerFcn() = default;
 
-   virtual void initMinimizer(ROOT::Math::Minimizer &) = 0;
+   virtual void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) = 0;
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
    bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst);
