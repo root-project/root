@@ -581,8 +581,7 @@ IncrementalJIT::IncrementalJIT(
   }
 
   // Create ObjectLinkingLayer with our own MemoryManager.
-  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES,
-                                           const Triple& TT)
+  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES)
                                            -> std::unique_ptr<ObjectLayer> {
     if (m_JITLink) {
       // For JITLink, we only need a custom memory manager to avoid freeing the
@@ -596,7 +595,7 @@ IncrementalJIT::IncrementalJIT(
     }
 
     auto MMapper = std::make_unique<ClingMMapper>();
-    auto GetMemMgr = [MMapper = std::move(MMapper)]() {
+    auto GetMemMgr = [MMapper = std::move(MMapper)](const llvm::MemoryBuffer &) {
       return std::make_unique<ClingMemoryManager>(*MMapper);
     };
     auto Layer =
@@ -611,6 +610,8 @@ IncrementalJIT::IncrementalJIT(
     if (cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE")))
       Layer->registerJITEventListener(*cling::createPerfJITEventListener());
 #endif
+
+    auto TT = ES.getTargetTriple();
 
     // The following is based on LLJIT::createObjectLinkingLayer.
     if (TT.isOSBinFormatCOFF()) {
@@ -836,7 +837,7 @@ void* IncrementalJIT::getSymbolAddress(StringRef Name, bool IncludeHostSymbols){
   if (!IncludeHostSymbols)
     G.lock();
 
-  std::pair<llvm::StringMapIterator<std::nullopt_t>, bool> insertInfo;
+  std::pair<llvm::StringSet<>::iterator, bool> insertInfo;
   if (!IncludeHostSymbols)
     insertInfo = m_ForbidDlSymbols.insert(Name);
 

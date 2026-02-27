@@ -333,12 +333,15 @@ namespace cling {
 
     m_IncrParser->SetTransformers(parentInterp);
 
-    if (!TSCtx->getContext()) {
-      // Never true, but don't tell the compiler.
-      // Force symbols needed by runtime to be included in binaries.
-      // Prevents stripping the symbol due to dead-code optimization.
-      internal::symbol_requester();
-    }
+    // Do we need this?
+    TSCtx->withContextDo([](llvm::LLVMContext *Ctx) {
+      if (!Ctx) {
+        // Never true, but don't tell the compiler.
+        // Force symbols needed by runtime to be included in binaries.
+        // Prevents stripping the symbol due to dead-code optimization.
+        internal::symbol_requester();
+      }
+    });
   }
 
   ///\brief Constructor for the child Interpreter.
@@ -924,7 +927,7 @@ namespace cling {
     // Fix C++20 builds caused by commit:
     // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
     // We are loading clang modules here and not C++20 modules
-    auto Path = std::make_pair(II, ValidLoc);
+    auto Path = IdentifierLoc(ValidLoc, II);
     Module* Mod = getSema().getModuleLoader().loadModule(
         ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
     bool success = Mod && !getSema()
