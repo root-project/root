@@ -1850,13 +1850,7 @@ tgraph2dassym.svg
 <text xml:space="preserve" x="493" y="449" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">16
 </text>
 <path d="M223,490l -166, -122" fill="none" stroke="black"/>
-<path d="M197,475l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M175,458l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M157,445l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M142,434l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M128,424l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M117,415l 1.9, -2.4" fill="none" stroke="black"/>
-<path d="M104,410l 3.8, -4.8" fill="none" stroke="black"/>
+<path d="M197,475l 1.9, -2.4M175,458l 1.9, -2.4M157,445l 1.9, -2.4M142,434l 1.9, -2.4M128,424l 1.9, -2.4M117,415l 1.9, -2.4M104,410l 3.8, -4.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="74" y="428" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M57,368v -243" fill="none" stroke="black"/>
