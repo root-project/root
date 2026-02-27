@@ -130,4 +130,22 @@ public:
    Bool_t IsValid() const;
 };
 
+
+namespace ROOT::Internal::TEmulatedProxyHelpers {
+inline void PrintWriteStlWithoutProxyMsg(const char *where, const char *clName, const char *BranchName)
+{
+   const char *writeStlWithoutProxyMsg =
+      "The class requested (%s) for the branch \"%s\" "
+      "is an instance of an stl collection and does not have a compiled CollectionProxy. "
+      "Please generate the dictionary for this collection (%s) to avoid to write corrupted data.";
+   // This error message is repeated several times in the code. We write it once.
+   Error(where, writeStlWithoutProxyMsg, clName, BranchName, clName);
+}
+
+inline bool HasEmulatedProxy(TClass *cl){
+   return cl && cl->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy *>(cl->GetCollectionProxy());
+}
+} // namespace ROOT::Internal::TEmulatedProxyHelpers
+
+
 #endif
