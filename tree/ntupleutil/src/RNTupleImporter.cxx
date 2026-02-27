@@ -25,6 +25,7 @@
 #include <string_view>
 
 #include <TBranch.h>
+#include <TClonesArray.h>
 #include <TChain.h>
 #include <TClass.h>
 #include <TDataType.h>
@@ -32,6 +33,7 @@
 #include <TLeafC.h>
 #include <TLeafElement.h>
 #include <TLeafObject.h>
+#include <TString.h>
 
 #include <cassert>
 #include <cstdint>
@@ -73,6 +75,41 @@ ROOT::RResult<void>
 ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
 {
    *reinterpret_cast<std::string *>(field.fFieldBuffer) = reinterpret_cast<const char *>(branch.fBranchBuffer.get());
+   return RResult<void>::Success();
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::RNTupleImporter::RTClonesArrayTransformation::Transform(const RImportBranch &branch,
+                                                                            RImportField &field)
+{
+   auto clonesArrayPtr = *reinterpret_cast<TClonesArray **>(branch.fBranchBuffer.get());
+   auto clonesArraySize = clonesArrayPtr->GetEntries();
+   // Get the size of the connection value type
+   auto collectionValueField = field.fField->GetConstSubfields()[0];
+   assert(collectionValueField);
+   auto fieldCollectionValueSize = collectionValueField->GetValueSize();
+   auto collectionSize = fieldCollectionValueSize * clonesArraySize;
+   // Copy the contents of the TClonesArray for the current entry into a temporary buffer
+   std::vector<std::byte> dest;
+   dest.reserve(collectionSize);
+   for (decltype(clonesArraySize) i = 0; i < clonesArraySize; i++) {
+      std::byte *clonesArrayEl = reinterpret_cast<std::byte *>(clonesArrayPtr->At(i));
+      std::copy(clonesArrayEl, clonesArrayEl + fieldCollectionValueSize, std::back_inserter(dest));
+   }
+
+   // Assign the copied contents to the field buffer, later on it will be reinterpreted to the correct type
+   // std::vector<T> when reading
+   *reinterpret_cast<std::vector<std::byte> *>(field.fFieldBuffer) = dest;
+
+   return RResult<void>::Success();
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::RNTupleImporter::RTStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
+{
+   auto TStringBufPtr = reinterpret_cast<TString **>(branch.fBranchBuffer.get());
+   auto TStringPtr = *TStringBufPtr;
+   *reinterpret_cast<std::string *>(field.fFieldBuffer) = *TStringPtr;
    return RResult<void>::Success();
 }
 
@@ -205,6 +242,7 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
       // For leaf count arrays, we expect to find a single leaf; we don't add a field right away but only
       // later through a projection
       bool isLeafCountArray = false;
+      bool isTClonesArray = false;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
             return R__FAIL("unsupported: TObject branches, branch: " + std::string(b->GetName()));
@@ -232,6 +270,21 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
          if (isClass)
             fieldType = b->GetClassName();
 
+         if (fieldType == "TClonesArray") {
+            auto be = dynamic_cast<TBranchElement *>(b);
+            assert(be);
+            isTClonesArray = true;
+            fieldType = std::string("std::vector<") + be->GetClonesName() + ">";
+            fImportTransformations.emplace_back(
+               std::make_unique<RTClonesArrayTransformation>(fImportBranches.size(), fImportFields.size()));
+         }
+
+         if (fieldType == "TString") {
+            fieldType = "std::string";
+            fImportTransformations.emplace_back(
+               std::make_unique<RTStringTransformation>(fImportBranches.size(), fImportFields.size()));
+         }
+
          if (isFixedSizeArray)
             fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
@@ -256,6 +309,12 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
                // For classes, the branch buffer contains a pointer to object, which gets instantiated by TTree upon
                // calling SetBranchAddress()
                branchBufferSize = sizeof(void *) * countval;
+               // For TClonesArray, we create a value so that we can fill its buffer with the contents copied from the
+               // TTree branch
+               if (isTClonesArray || fieldType == "TString") {
+                  f.fValue = std::make_unique<ROOT::RFieldBase::RValue>(field->CreateValue());
+                  f.fFieldBuffer = f.fValue->GetPtr<void>().get();
+               }
             } else if (isLeafCountArray) {
                branchBufferSize = fLeafCountCollections[countleaf->GetName()].fMaxLength * field->GetValueSize();
             } else {
@@ -301,7 +360,7 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
       }
 
       // If the TTree branch type and the RNTuple field type match, use the branch read buffer as RNTuple write buffer
-      if (!isLeafCountArray && !fImportFields.back().fFieldBuffer) {
+      if (!isLeafCountArray && !fImportFields.back().fFieldBuffer && !isTClonesArray) {
          fImportFields.back().fFieldBuffer =
             isClass ? *reinterpret_cast<void **>(ib.fBranchBuffer.get()) : ib.fBranchBuffer.get();
       }

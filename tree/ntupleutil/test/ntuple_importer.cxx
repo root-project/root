@@ -1,8 +1,10 @@
 #include <ROOT/RNTupleImporter.hxx>
 
+#include <TClonesArray.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TChain.h>
+#include <TString.h>
 
 #include <cstdio>
 #include <string>
@@ -728,4 +730,94 @@ TEST(RNTUpleImporter, MaxEntries)
 
    reader = RNTupleReader::Open("ntuple4", fileGuard.GetPath());
    EXPECT_EQ(5U, reader->GetNEntries());
+}
+
+void check_customstructobj_eq(const CustomStructObj &a, const CustomStructObj &b)
+{
+   EXPECT_EQ(a.fInt, b.fInt);
+   EXPECT_FLOAT_EQ(a.fFloat, b.fFloat);
+   EXPECT_EQ(a.fVecFl.size(), b.fVecFl.size());
+   for (std::size_t i = 0; i < a.fVecFl.size(); i++) {
+      EXPECT_FLOAT_EQ(a.fVecFl[i], b.fVecFl[i]);
+   }
+   EXPECT_EQ(a.fVecVecFl.size(), b.fVecVecFl.size());
+   for (std::size_t i = 0; i < a.fVecVecFl.size(); i++) {
+      EXPECT_EQ(a.fVecVecFl[i].size(), b.fVecVecFl[i].size());
+      for (std::size_t j = 0; j < a.fVecVecFl[i].size(); j++) {
+         EXPECT_FLOAT_EQ(a.fVecVecFl[i][j], b.fVecVecFl[i][j]);
+      }
+   }
+   EXPECT_EQ(a.fStr, b.fStr);
+}
+
+TEST(RNTUpleImporter, TClonesArray)
+{
+   FileRaii fileGuard("test_ntuple_importer_tclonesarray.root");
+   {
+      auto f = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "recreate");
+      auto t = std::make_unique<TTree>("tree", "tree");
+      auto ca = std::make_unique<TClonesArray>("CustomStructObj");
+      auto branchData = ca.get();
+      auto &caRef = *ca;
+      t->Branch("ca", &branchData);
+      new (caRef[0]) CustomStructObj{1, 2.2, {3.3, 4.4}, {{5.5}, {6.6, 7.7, 8.8}}, "first"};
+      new (caRef[1])
+         CustomStructObj{9, 11.11, {12.12, 13.13, 14.14}, {{15.15, 16.16}, {17.17, 18.18}, {19.19}}, "second"};
+      t->Fill();
+      f->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+
+   importer->SetNTupleName("ntuple");
+   importer->SetIsQuiet(true);
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 1);
+
+   auto ca = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<CustomStructObj>>("ca");
+   reader->LoadEntry(0);
+
+   CustomStructObj refFirst{1, 2.2, {3.3, 4.4}, {{5.5}, {6.6, 7.7, 8.8}}, "first"};
+   CustomStructObj refSecond{9, 11.11, {12.12, 13.13, 14.14}, {{15.15, 16.16}, {17.17, 18.18}, {19.19}}, "second"};
+
+   EXPECT_EQ(ca->size(), 2);
+   check_customstructobj_eq(ca->at(0), refFirst);
+   check_customstructobj_eq(ca->at(1), refSecond);
+}
+
+TEST(RNTupleImporter, TString)
+{
+   FileRaii fileGuard("test_ntuple_importer_tstring.root");
+   const auto nEntries = 5;
+   std::vector<std::string> ref(nEntries);
+   for (auto i = 0; i < nEntries; i++) {
+      ref[i] = "string_" + std::to_string(i);
+   }
+   {
+      auto f = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "recreate");
+      auto t = std::make_unique<TTree>("tree", "tree");
+      TString mystr{};
+      t->Branch("str", &mystr);
+      for (const auto &str : ref) {
+         mystr = str;
+         t->Fill();
+      }
+      f->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetNTupleName("ntuple");
+   importer->SetIsQuiet(true);
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), nEntries);
+
+   auto mystr = reader->GetModel().GetDefaultEntry().GetPtr<std::string>("str");
+   for (auto i = 0; i < nEntries; i++) {
+      reader->LoadEntry(i);
+      EXPECT_EQ(*mystr, ref[i]);
+   }
 }
