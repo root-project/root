@@ -205,20 +205,6 @@ ValueAndPushforward<T, T> TanH_pushforward(T x, T d_x)
    return {::TMath::TanH(x), (1. / ::TMath::Sq(::TMath::CosH(x))) * d_x};
 }
 
-#ifdef WIN32
-// Additional custom derivatives that can be removed
-// after Issue #12108 in ROOT is resolved
-// constexpr is removed
-ValueAndPushforward<Double_t, Double_t> Pi_pushforward()
-{
-   return {3.1415926535897931, 0.};
-}
-// constexpr is removed
-ValueAndPushforward<Double_t, Double_t> Ln10_pushforward()
-{
-   return {2.3025850929940459, 0.};
-}
-#endif
 } // namespace TMath
 
 namespace ROOT::Math {
