@@ -10,6 +10,7 @@ set(LIBS
   clingUtils
   clangCodeGen
   clangDriver
+  clangOptions
   clangFrontend
   clangInterpreter
   clangParse

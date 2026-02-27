@@ -12,7 +12,7 @@
 #include "cling/Utils/Output.h"
 
 #include "clang/Basic/LangOptions.h"
-#include "clang/Driver/Options.h"
+#include "clang/Options/Options.h"
 
 #include "llvm/Option/Arg.h"
 #include "llvm/Option/ArgList.h"
@@ -24,7 +24,6 @@
 #include <memory>
 
 using namespace clang;
-using namespace clang::driver;
 
 using namespace llvm;
 using namespace llvm::opt;
