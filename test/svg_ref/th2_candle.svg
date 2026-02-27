@@ -487,47 +487,9 @@ th2_candle.svg
 <text xml:space="preserve" x="14" y="10" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Horizontal CANDLE1 plot
 </text>
 <path d="M19,156h 101" fill="none" stroke="black"/>
-<path d="M19,152v 4.1" fill="none" stroke="black"/>
-<path d="M21,154v 2.0" fill="none" stroke="black"/>
-<path d="M24,154v 2.0" fill="none" stroke="black"/>
-<path d="M26,154v 2.0" fill="none" stroke="black"/>
-<path d="M29,154v 2.0" fill="none" stroke="black"/>
-<path d="M31,152v 4.1" fill="none" stroke="black"/>
-<path d="M34,154v 2.0" fill="none" stroke="black"/>
-<path d="M36,154v 2.0" fill="none" stroke="black"/>
-<path d="M39,154v 2.0" fill="none" stroke="black"/>
-<path d="M41,154v 2.0" fill="none" stroke="black"/>
-<path d="M44,152v 4.1" fill="none" stroke="black"/>
-<path d="M46,154v 2.0" fill="none" stroke="black"/>
-<path d="M49,154v 2.0" fill="none" stroke="black"/>
-<path d="M51,154v 2.0" fill="none" stroke="black"/>
-<path d="M54,154v 2.0" fill="none" stroke="black"/>
-<path d="M56,152v 4.1" fill="none" stroke="black"/>
-<path d="M59,154v 2.0" fill="none" stroke="black"/>
-<path d="M61,154v 2.0" fill="none" stroke="black"/>
-<path d="M64,154v 2.0" fill="none" stroke="black"/>
-<path d="M66,154v 2.0" fill="none" stroke="black"/>
-<path d="M69,152v 4.1" fill="none" stroke="black"/>
-<path d="M71,154v 2.0" fill="none" stroke="black"/>
-<path d="M74,154v 2.0" fill="none" stroke="black"/>
-<path d="M76,154v 2.0" fill="none" stroke="black"/>
-<path d="M79,154v 2.0" fill="none" stroke="black"/>
-<path d="M81,152v 4.1" fill="none" stroke="black"/>
-<path d="M84,154v 2.0" fill="none" stroke="black"/>
-<path d="M87,154v 2.0" fill="none" stroke="black"/>
-<path d="M89,154v 2.0" fill="none" stroke="black"/>
-<path d="M92,154v 2.0" fill="none" stroke="black"/>
-<path d="M94,152v 4.1" fill="none" stroke="black"/>
-<path d="M97,154v 2.0" fill="none" stroke="black"/>
-<path d="M99,154v 2.0" fill="none" stroke="black"/>
-<path d="M102,154v 2.0" fill="none" stroke="black"/>
-<path d="M104,154v 2.0" fill="none" stroke="black"/>
-<path d="M107,152v 4.1" fill="none" stroke="black"/>
-<path d="M109,154v 2.0" fill="none" stroke="black"/>
-<path d="M112,154v 2.0" fill="none" stroke="black"/>
-<path d="M114,154v 2.0" fill="none" stroke="black"/>
-<path d="M117,154v 2.0" fill="none" stroke="black"/>
-<path d="M119,152v 4.1" fill="none" stroke="black"/>
+<path d="M19,152v 4.1M21,154v 2.0M24,154v 2.0M26,154v 2.0M29,154v 2.0M31,152v 4.1M34,154v 2.0M36,154v 2.0M39,154v 2.0M41,154v 2.0M44,152v 4.1M46,154v 2.0M49,154v 2.0M51,154v 2.0M54,154v 2.0M56,152v 4.1M59,154v 2.0M61,154v 2.0M64,154v 2.0M66,154v
+ 2.0M69,152v 4.1M71,154v 2.0M74,154v 2.0M76,154v 2.0M79,154v 2.0M81,152v 4.1M84,154v 2.0M87,154v 2.0M89,154v 2.0M92,154v 2.0M94,152v 4.1M97,154v 2.0M99,154v 2.0M102,154v 2.0M104,154v 2.0M107,152v 4.1M109,154v 2.0M112,154v 2.0M114,154v 2.0M117,154v
+ 2.0M119,152v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="19" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="16" y="162" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -555,47 +517,9 @@ th2_candle.svg
 <text xml:space="preserve" x="118" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M19,156v -136" fill="none" stroke="black"/>
-<path d="M22,156h -3.0" fill="none" stroke="black"/>
-<path d="M20,153h -1.5" fill="none" stroke="black"/>
-<path d="M20,149h -1.5" fill="none" stroke="black"/>
-<path d="M20,146h -1.5" fill="none" stroke="black"/>
-<path d="M20,143h -1.5" fill="none" stroke="black"/>
-<path d="M22,139h -3.0" fill="none" stroke="black"/>
-<path d="M20,136h -1.5" fill="none" stroke="black"/>
-<path d="M20,132h -1.5" fill="none" stroke="black"/>
-<path d="M20,129h -1.5" fill="none" stroke="black"/>
-<path d="M20,126h -1.5" fill="none" stroke="black"/>
-<path d="M22,122h -3.0" fill="none" stroke="black"/>
-<path d="M20,119h -1.5" fill="none" stroke="black"/>
-<path d="M20,115h -1.5" fill="none" stroke="black"/>
-<path d="M20,112h -1.5" fill="none" stroke="black"/>
-<path d="M20,109h -1.5" fill="none" stroke="black"/>
-<path d="M22,105h -3.0" fill="none" stroke="black"/>
-<path d="M20,102h -1.5" fill="none" stroke="black"/>
-<path d="M20,98h -1.5" fill="none" stroke="black"/>
-<path d="M20,95h -1.5" fill="none" stroke="black"/>
-<path d="M20,92h -1.5" fill="none" stroke="black"/>
-<path d="M22,88h -3.0" fill="none" stroke="black"/>
-<path d="M20,85h -1.5" fill="none" stroke="black"/>
-<path d="M20,82h -1.5" fill="none" stroke="black"/>
-<path d="M20,78h -1.5" fill="none" stroke="black"/>
-<path d="M20,75h -1.5" fill="none" stroke="black"/>
-<path d="M22,71h -3.0" fill="none" stroke="black"/>
-<path d="M20,68h -1.5" fill="none" stroke="black"/>
-<path d="M20,65h -1.5" fill="none" stroke="black"/>
-<path d="M20,61h -1.5" fill="none" stroke="black"/>
-<path d="M20,58h -1.5" fill="none" stroke="black"/>
-<path d="M22,54h -3.0" fill="none" stroke="black"/>
-<path d="M20,51h -1.5" fill="none" stroke="black"/>
-<path d="M20,48h -1.5" fill="none" stroke="black"/>
-<path d="M20,44h -1.5" fill="none" stroke="black"/>
-<path d="M20,41h -1.5" fill="none" stroke="black"/>
-<path d="M22,37h -3.0" fill="none" stroke="black"/>
-<path d="M20,34h -1.5" fill="none" stroke="black"/>
-<path d="M20,31h -1.5" fill="none" stroke="black"/>
-<path d="M20,27h -1.5" fill="none" stroke="black"/>
-<path d="M20,24h -1.5" fill="none" stroke="black"/>
-<path d="M22,20h -3.0" fill="none" stroke="black"/>
+<path d="M22,156h -3.0M20,153h -1.5M20,149h -1.5M20,146h -1.5M20,143h -1.5M22,139h -3.0M20,136h -1.5M20,132h -1.5M20,129h -1.5M20,126h -1.5M22,122h -3.0M20,119h -1.5M20,115h -1.5M20,112h -1.5M20,109h -1.5M22,105h -3.0M20,102h -1.5M20,98h -1.5M20,95h
+ -1.5M20,92h -1.5M22,88h -3.0M20,85h -1.5M20,82h -1.5M20,78h -1.5M20,75h -1.5M22,71h -3.0M20,68h -1.5M20,65h -1.5M20,61h -1.5M20,58h -1.5M22,54h -3.0M20,51h -1.5M20,48h -1.5M20,44h -1.5M20,41h -1.5M22,37h -3.0M20,34h -1.5M20,31h -1.5M20,27h
+ -1.5M20,24h -1.5M22,20h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="16" y="158" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="13" y="158" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -1211,47 +1135,9 @@ th2_candle.svg
 <text xml:space="preserve" x="151" y="10" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Horizontal CANDLE2 plot
 </text>
 <path d="M155,156h 101" fill="none" stroke="black"/>
-<path d="M155,152v 4.1" fill="none" stroke="black"/>
-<path d="M158,154v 2.0" fill="none" stroke="black"/>
-<path d="M160,154v 2.0" fill="none" stroke="black"/>
-<path d="M163,154v 2.0" fill="none" stroke="black"/>
-<path d="M165,154v 2.0" fill="none" stroke="black"/>
-<path d="M168,152v 4.1" fill="none" stroke="black"/>
-<path d="M170,154v 2.0" fill="none" stroke="black"/>
-<path d="M173,154v 2.0" fill="none" stroke="black"/>
-<path d="M175,154v 2.0" fill="none" stroke="black"/>
-<path d="M178,154v 2.0" fill="none" stroke="black"/>
-<path d="M180,152v 4.1" fill="none" stroke="black"/>
-<path d="M183,154v 2.0" fill="none" stroke="black"/>
-<path d="M186,154v 2.0" fill="none" stroke="black"/>
-<path d="M188,154v 2.0" fill="none" stroke="black"/>
-<path d="M191,154v 2.0" fill="none" stroke="black"/>
-<path d="M193,152v 4.1" fill="none" stroke="black"/>
-<path d="M196,154v 2.0" fill="none" stroke="black"/>
-<path d="M198,154v 2.0" fill="none" stroke="black"/>
-<path d="M201,154v 2.0" fill="none" stroke="black"/>
-<path d="M203,154v 2.0" fill="none" stroke="black"/>
-<path d="M206,152v 4.1" fill="none" stroke="black"/>
-<path d="M208,154v 2.0" fill="none" stroke="black"/>
-<path d="M211,154v 2.0" fill="none" stroke="black"/>
-<path d="M213,154v 2.0" fill="none" stroke="black"/>
-<path d="M216,154v 2.0" fill="none" stroke="black"/>
-<path d="M218,152v 4.1" fill="none" stroke="black"/>
-<path d="M221,154v 2.0" fill="none" stroke="black"/>
-<path d="M223,154v 2.0" fill="none" stroke="black"/>
-<path d="M226,154v 2.0" fill="none" stroke="black"/>
-<path d="M228,154v 2.0" fill="none" stroke="black"/>
-<path d="M231,152v 4.1" fill="none" stroke="black"/>
-<path d="M233,154v 2.0" fill="none" stroke="black"/>
-<path d="M236,154v 2.0" fill="none" stroke="black"/>
-<path d="M238,154v 2.0" fill="none" stroke="black"/>
-<path d="M241,154v 2.0" fill="none" stroke="black"/>
-<path d="M243,152v 4.1" fill="none" stroke="black"/>
-<path d="M246,154v 2.0" fill="none" stroke="black"/>
-<path d="M248,154v 2.0" fill="none" stroke="black"/>
-<path d="M251,154v 2.0" fill="none" stroke="black"/>
-<path d="M253,154v 2.0" fill="none" stroke="black"/>
-<path d="M256,152v 4.1" fill="none" stroke="black"/>
+<path d="M155,152v 4.1M158,154v 2.0M160,154v 2.0M163,154v 2.0M165,154v 2.0M168,152v 4.1M170,154v 2.0M173,154v 2.0M175,154v 2.0M178,154v 2.0M180,152v 4.1M183,154v 2.0M186,154v 2.0M188,154v 2.0M191,154v 2.0M193,152v 4.1M196,154v 2.0M198,154v
+ 2.0M201,154v 2.0M203,154v 2.0M206,152v 4.1M208,154v 2.0M211,154v 2.0M213,154v 2.0M216,154v 2.0M218,152v 4.1M221,154v 2.0M223,154v 2.0M226,154v 2.0M228,154v 2.0M231,152v 4.1M233,154v 2.0M236,154v 2.0M238,154v 2.0M241,154v 2.0M243,152v 4.1M246,154v
+ 2.0M248,154v 2.0M251,154v 2.0M253,154v 2.0M256,152v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="155" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="153" y="162" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -1279,47 +1165,9 @@ th2_candle.svg
 <text xml:space="preserve" x="255" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M155,156v -136" fill="none" stroke="black"/>
-<path d="M158,156h -3.0" fill="none" stroke="black"/>
-<path d="M157,153h -1.5" fill="none" stroke="black"/>
-<path d="M157,149h -1.5" fill="none" stroke="black"/>
-<path d="M157,146h -1.5" fill="none" stroke="black"/>
-<path d="M157,143h -1.5" fill="none" stroke="black"/>
-<path d="M158,139h -3.0" fill="none" stroke="black"/>
-<path d="M157,136h -1.5" fill="none" stroke="black"/>
-<path d="M157,132h -1.5" fill="none" stroke="black"/>
-<path d="M157,129h -1.5" fill="none" stroke="black"/>
-<path d="M157,126h -1.5" fill="none" stroke="black"/>
-<path d="M158,122h -3.0" fill="none" stroke="black"/>
-<path d="M157,119h -1.5" fill="none" stroke="black"/>
-<path d="M157,115h -1.5" fill="none" stroke="black"/>
-<path d="M157,112h -1.5" fill="none" stroke="black"/>
-<path d="M157,109h -1.5" fill="none" stroke="black"/>
-<path d="M158,105h -3.0" fill="none" stroke="black"/>
-<path d="M157,102h -1.5" fill="none" stroke="black"/>
-<path d="M157,98h -1.5" fill="none" stroke="black"/>
-<path d="M157,95h -1.5" fill="none" stroke="black"/>
-<path d="M157,92h -1.5" fill="none" stroke="black"/>
-<path d="M158,88h -3.0" fill="none" stroke="black"/>
-<path d="M157,85h -1.5" fill="none" stroke="black"/>
-<path d="M157,82h -1.5" fill="none" stroke="black"/>
-<path d="M157,78h -1.5" fill="none" stroke="black"/>
-<path d="M157,75h -1.5" fill="none" stroke="black"/>
-<path d="M158,71h -3.0" fill="none" stroke="black"/>
-<path d="M157,68h -1.5" fill="none" stroke="black"/>
-<path d="M157,65h -1.5" fill="none" stroke="black"/>
-<path d="M157,61h -1.5" fill="none" stroke="black"/>
-<path d="M157,58h -1.5" fill="none" stroke="black"/>
-<path d="M158,54h -3.0" fill="none" stroke="black"/>
-<path d="M157,51h -1.5" fill="none" stroke="black"/>
-<path d="M157,48h -1.5" fill="none" stroke="black"/>
-<path d="M157,44h -1.5" fill="none" stroke="black"/>
-<path d="M157,41h -1.5" fill="none" stroke="black"/>
-<path d="M158,37h -3.0" fill="none" stroke="black"/>
-<path d="M157,34h -1.5" fill="none" stroke="black"/>
-<path d="M157,31h -1.5" fill="none" stroke="black"/>
-<path d="M157,27h -1.5" fill="none" stroke="black"/>
-<path d="M157,24h -1.5" fill="none" stroke="black"/>
-<path d="M158,20h -3.0" fill="none" stroke="black"/>
+<path d="M158,156h -3.0M157,153h -1.5M157,149h -1.5M157,146h -1.5M157,143h -1.5M158,139h -3.0M157,136h -1.5M157,132h -1.5M157,129h -1.5M157,126h -1.5M158,122h -3.0M157,119h -1.5M157,115h -1.5M157,112h -1.5M157,109h -1.5M158,105h -3.0M157,102h
+ -1.5M157,98h -1.5M157,95h -1.5M157,92h -1.5M158,88h -3.0M157,85h -1.5M157,82h -1.5M157,78h -1.5M157,75h -1.5M158,71h -3.0M157,68h -1.5M157,65h -1.5M157,61h -1.5M157,58h -1.5M158,54h -3.0M157,51h -1.5M157,48h -1.5M157,44h -1.5M157,41h -1.5M158,37h
+ -3.0M157,34h -1.5M157,31h -1.5M157,27h -1.5M157,24h -1.5M158,20h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="152" y="158" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="150" y="158" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -2013,47 +1861,9 @@ th2_candle.svg
 <text xml:space="preserve" x="288" y="10" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Horizontal CANDLE3 plot
 </text>
 <path d="M292,156h 101" fill="none" stroke="black"/>
-<path d="M292,152v 4.1" fill="none" stroke="black"/>
-<path d="M295,154v 2.0" fill="none" stroke="black"/>
-<path d="M297,154v 2.0" fill="none" stroke="black"/>
-<path d="M300,154v 2.0" fill="none" stroke="black"/>
-<path d="M302,154v 2.0" fill="none" stroke="black"/>
-<path d="M305,152v 4.1" fill="none" stroke="black"/>
-<path d="M307,154v 2.0" fill="none" stroke="black"/>
-<path d="M310,154v 2.0" fill="none" stroke="black"/>
-<path d="M312,154v 2.0" fill="none" stroke="black"/>
-<path d="M315,154v 2.0" fill="none" stroke="black"/>
-<path d="M317,152v 4.1" fill="none" stroke="black"/>
-<path d="M320,154v 2.0" fill="none" stroke="black"/>
-<path d="M322,154v 2.0" fill="none" stroke="black"/>
-<path d="M325,154v 2.0" fill="none" stroke="black"/>
-<path d="M327,154v 2.0" fill="none" stroke="black"/>
-<path d="M330,152v 4.1" fill="none" stroke="black"/>
-<path d="M332,154v 2.0" fill="none" stroke="black"/>
-<path d="M335,154v 2.0" fill="none" stroke="black"/>
-<path d="M337,154v 2.0" fill="none" stroke="black"/>
-<path d="M340,154v 2.0" fill="none" stroke="black"/>
-<path d="M342,152v 4.1" fill="none" stroke="black"/>
-<path d="M345,154v 2.0" fill="none" stroke="black"/>
-<path d="M347,154v 2.0" fill="none" stroke="black"/>
-<path d="M350,154v 2.0" fill="none" stroke="black"/>
-<path d="M353,154v 2.0" fill="none" stroke="black"/>
-<path d="M355,152v 4.1" fill="none" stroke="black"/>
-<path d="M358,154v 2.0" fill="none" stroke="black"/>
-<path d="M360,154v 2.0" fill="none" stroke="black"/>
-<path d="M363,154v 2.0" fill="none" stroke="black"/>
-<path d="M365,154v 2.0" fill="none" stroke="black"/>
-<path d="M368,152v 4.1" fill="none" stroke="black"/>
-<path d="M370,154v 2.0" fill="none" stroke="black"/>
-<path d="M373,154v 2.0" fill="none" stroke="black"/>
-<path d="M375,154v 2.0" fill="none" stroke="black"/>
-<path d="M378,154v 2.0" fill="none" stroke="black"/>
-<path d="M380,152v 4.1" fill="none" stroke="black"/>
-<path d="M383,154v 2.0" fill="none" stroke="black"/>
-<path d="M385,154v 2.0" fill="none" stroke="black"/>
-<path d="M388,154v 2.0" fill="none" stroke="black"/>
-<path d="M390,154v 2.0" fill="none" stroke="black"/>
-<path d="M393,152v 4.1" fill="none" stroke="black"/>
+<path d="M292,152v 4.1M295,154v 2.0M297,154v 2.0M300,154v 2.0M302,154v 2.0M305,152v 4.1M307,154v 2.0M310,154v 2.0M312,154v 2.0M315,154v 2.0M317,152v 4.1M320,154v 2.0M322,154v 2.0M325,154v 2.0M327,154v 2.0M330,152v 4.1M332,154v 2.0M335,154v
+ 2.0M337,154v 2.0M340,154v 2.0M342,152v 4.1M345,154v 2.0M347,154v 2.0M350,154v 2.0M353,154v 2.0M355,152v 4.1M358,154v 2.0M360,154v 2.0M363,154v 2.0M365,154v 2.0M368,152v 4.1M370,154v 2.0M373,154v 2.0M375,154v 2.0M378,154v 2.0M380,152v 4.1M383,154v
+ 2.0M385,154v 2.0M388,154v 2.0M390,154v 2.0M393,152v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="292" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="290" y="162" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -2081,47 +1891,9 @@ th2_candle.svg
 <text xml:space="preserve" x="392" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M292,156v -136" fill="none" stroke="black"/>
-<path d="M295,156h -3.0" fill="none" stroke="black"/>
-<path d="M294,153h -1.5" fill="none" stroke="black"/>
-<path d="M294,149h -1.5" fill="none" stroke="black"/>
-<path d="M294,146h -1.5" fill="none" stroke="black"/>
-<path d="M294,143h -1.5" fill="none" stroke="black"/>
-<path d="M295,139h -3.0" fill="none" stroke="black"/>
-<path d="M294,136h -1.5" fill="none" stroke="black"/>
-<path d="M294,132h -1.5" fill="none" stroke="black"/>
-<path d="M294,129h -1.5" fill="none" stroke="black"/>
-<path d="M294,126h -1.5" fill="none" stroke="black"/>
-<path d="M295,122h -3.0" fill="none" stroke="black"/>
-<path d="M294,119h -1.5" fill="none" stroke="black"/>
-<path d="M294,115h -1.5" fill="none" stroke="black"/>
-<path d="M294,112h -1.5" fill="none" stroke="black"/>
-<path d="M294,109h -1.5" fill="none" stroke="black"/>
-<path d="M295,105h -3.0" fill="none" stroke="black"/>
-<path d="M294,102h -1.5" fill="none" stroke="black"/>
-<path d="M294,98h -1.5" fill="none" stroke="black"/>
-<path d="M294,95h -1.5" fill="none" stroke="black"/>
-<path d="M294,92h -1.5" fill="none" stroke="black"/>
-<path d="M295,88h -3.0" fill="none" stroke="black"/>
-<path d="M294,85h -1.5" fill="none" stroke="black"/>
-<path d="M294,82h -1.5" fill="none" stroke="black"/>
-<path d="M294,78h -1.5" fill="none" stroke="black"/>
-<path d="M294,75h -1.5" fill="none" stroke="black"/>
-<path d="M295,71h -3.0" fill="none" stroke="black"/>
-<path d="M294,68h -1.5" fill="none" stroke="black"/>
-<path d="M294,65h -1.5" fill="none" stroke="black"/>
-<path d="M294,61h -1.5" fill="none" stroke="black"/>
-<path d="M294,58h -1.5" fill="none" stroke="black"/>
-<path d="M295,54h -3.0" fill="none" stroke="black"/>
-<path d="M294,51h -1.5" fill="none" stroke="black"/>
-<path d="M294,48h -1.5" fill="none" stroke="black"/>
-<path d="M294,44h -1.5" fill="none" stroke="black"/>
-<path d="M294,41h -1.5" fill="none" stroke="black"/>
-<path d="M295,37h -3.0" fill="none" stroke="black"/>
-<path d="M294,34h -1.5" fill="none" stroke="black"/>
-<path d="M294,31h -1.5" fill="none" stroke="black"/>
-<path d="M294,27h -1.5" fill="none" stroke="black"/>
-<path d="M294,24h -1.5" fill="none" stroke="black"/>
-<path d="M295,20h -3.0" fill="none" stroke="black"/>
+<path d="M295,156h -3.0M294,153h -1.5M294,149h -1.5M294,146h -1.5M294,143h -1.5M295,139h -3.0M294,136h -1.5M294,132h -1.5M294,129h -1.5M294,126h -1.5M295,122h -3.0M294,119h -1.5M294,115h -1.5M294,112h -1.5M294,109h -1.5M295,105h -3.0M294,102h
+ -1.5M294,98h -1.5M294,95h -1.5M294,92h -1.5M295,88h -3.0M294,85h -1.5M294,82h -1.5M294,78h -1.5M294,75h -1.5M295,71h -3.0M294,68h -1.5M294,65h -1.5M294,61h -1.5M294,58h -1.5M295,54h -3.0M294,51h -1.5M294,48h -1.5M294,44h -1.5M294,41h -1.5M295,37h
+ -3.0M294,34h -1.5M294,31h -1.5M294,27h -1.5M294,24h -1.5M295,20h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="289" y="158" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="287" y="158" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -2815,47 +2587,9 @@ th2_candle.svg
 <text xml:space="preserve" x="424" y="10" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Horizontal CANDLE4 plot
 </text>
 <path d="M429,156h 101" fill="none" stroke="black"/>
-<path d="M429,152v 4.1" fill="none" stroke="black"/>
-<path d="M431,154v 2.0" fill="none" stroke="black"/>
-<path d="M434,154v 2.0" fill="none" stroke="black"/>
-<path d="M436,154v 2.0" fill="none" stroke="black"/>
-<path d="M439,154v 2.0" fill="none" stroke="black"/>
-<path d="M441,152v 4.1" fill="none" stroke="black"/>
-<path d="M444,154v 2.0" fill="none" stroke="black"/>
-<path d="M447,154v 2.0" fill="none" stroke="black"/>
-<path d="M449,154v 2.0" fill="none" stroke="black"/>
-<path d="M452,154v 2.0" fill="none" stroke="black"/>
-<path d="M454,152v 4.1" fill="none" stroke="black"/>
-<path d="M457,154v 2.0" fill="none" stroke="black"/>
-<path d="M459,154v 2.0" fill="none" stroke="black"/>
-<path d="M462,154v 2.0" fill="none" stroke="black"/>
-<path d="M464,154v 2.0" fill="none" stroke="black"/>
-<path d="M467,152v 4.1" fill="none" stroke="black"/>
-<path d="M469,154v 2.0" fill="none" stroke="black"/>
-<path d="M472,154v 2.0" fill="none" stroke="black"/>
-<path d="M474,154v 2.0" fill="none" stroke="black"/>
-<path d="M477,154v 2.0" fill="none" stroke="black"/>
-<path d="M479,152v 4.1" fill="none" stroke="black"/>
-<path d="M482,154v 2.0" fill="none" stroke="black"/>
-<path d="M484,154v 2.0" fill="none" stroke="black"/>
-<path d="M487,154v 2.0" fill="none" stroke="black"/>
-<path d="M489,154v 2.0" fill="none" stroke="black"/>
-<path d="M492,152v 4.1" fill="none" stroke="black"/>
-<path d="M494,154v 2.0" fill="none" stroke="black"/>
-<path d="M497,154v 2.0" fill="none" stroke="black"/>
-<path d="M499,154v 2.0" fill="none" stroke="black"/>
-<path d="M502,154v 2.0" fill="none" stroke="black"/>
-<path d="M504,152v 4.1" fill="none" stroke="black"/>
-<path d="M507,154v 2.0" fill="none" stroke="black"/>
-<path d="M509,154v 2.0" fill="none" stroke="black"/>
-<path d="M512,154v 2.0" fill="none" stroke="black"/>
-<path d="M514,154v 2.0" fill="none" stroke="black"/>
-<path d="M517,152v 4.1" fill="none" stroke="black"/>
-<path d="M519,154v 2.0" fill="none" stroke="black"/>
-<path d="M522,154v 2.0" fill="none" stroke="black"/>
-<path d="M525,154v 2.0" fill="none" stroke="black"/>
-<path d="M527,154v 2.0" fill="none" stroke="black"/>
-<path d="M530,152v 4.1" fill="none" stroke="black"/>
+<path d="M429,152v 4.1M431,154v 2.0M434,154v 2.0M436,154v 2.0M439,154v 2.0M441,152v 4.1M444,154v 2.0M447,154v 2.0M449,154v 2.0M452,154v 2.0M454,152v 4.1M457,154v 2.0M459,154v 2.0M462,154v 2.0M464,154v 2.0M467,152v 4.1M469,154v 2.0M472,154v
+ 2.0M474,154v 2.0M477,154v 2.0M479,152v 4.1M482,154v 2.0M484,154v 2.0M487,154v 2.0M489,154v 2.0M492,152v 4.1M494,154v 2.0M497,154v 2.0M499,154v 2.0M502,154v 2.0M504,152v 4.1M507,154v 2.0M509,154v 2.0M512,154v 2.0M514,154v 2.0M517,152v 4.1M519,154v
+ 2.0M522,154v 2.0M525,154v 2.0M527,154v 2.0M530,152v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="429" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="427" y="162" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -2883,47 +2617,9 @@ th2_candle.svg
 <text xml:space="preserve" x="528" y="162" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M429,156v -136" fill="none" stroke="black"/>
-<path d="M432,156h -3.0" fill="none" stroke="black"/>
-<path d="M430,153h -1.5" fill="none" stroke="black"/>
-<path d="M430,149h -1.5" fill="none" stroke="black"/>
-<path d="M430,146h -1.5" fill="none" stroke="black"/>
-<path d="M430,143h -1.5" fill="none" stroke="black"/>
-<path d="M432,139h -3.0" fill="none" stroke="black"/>
-<path d="M430,136h -1.5" fill="none" stroke="black"/>
-<path d="M430,132h -1.5" fill="none" stroke="black"/>
-<path d="M430,129h -1.5" fill="none" stroke="black"/>
-<path d="M430,126h -1.5" fill="none" stroke="black"/>
-<path d="M432,122h -3.0" fill="none" stroke="black"/>
-<path d="M430,119h -1.5" fill="none" stroke="black"/>
-<path d="M430,115h -1.5" fill="none" stroke="black"/>
-<path d="M430,112h -1.5" fill="none" stroke="black"/>
-<path d="M430,109h -1.5" fill="none" stroke="black"/>
-<path d="M432,105h -3.0" fill="none" stroke="black"/>
-<path d="M430,102h -1.5" fill="none" stroke="black"/>
-<path d="M430,98h -1.5" fill="none" stroke="black"/>
-<path d="M430,95h -1.5" fill="none" stroke="black"/>
-<path d="M430,92h -1.5" fill="none" stroke="black"/>
-<path d="M432,88h -3.0" fill="none" stroke="black"/>
-<path d="M430,85h -1.5" fill="none" stroke="black"/>
-<path d="M430,82h -1.5" fill="none" stroke="black"/>
-<path d="M430,78h -1.5" fill="none" stroke="black"/>
-<path d="M430,75h -1.5" fill="none" stroke="black"/>
-<path d="M432,71h -3.0" fill="none" stroke="black"/>
-<path d="M430,68h -1.5" fill="none" stroke="black"/>
-<path d="M430,65h -1.5" fill="none" stroke="black"/>
-<path d="M430,61h -1.5" fill="none" stroke="black"/>
-<path d="M430,58h -1.5" fill="none" stroke="black"/>
-<path d="M432,54h -3.0" fill="none" stroke="black"/>
-<path d="M430,51h -1.5" fill="none" stroke="black"/>
-<path d="M430,48h -1.5" fill="none" stroke="black"/>
-<path d="M430,44h -1.5" fill="none" stroke="black"/>
-<path d="M430,41h -1.5" fill="none" stroke="black"/>
-<path d="M432,37h -3.0" fill="none" stroke="black"/>
-<path d="M430,34h -1.5" fill="none" stroke="black"/>
-<path d="M430,31h -1.5" fill="none" stroke="black"/>
-<path d="M430,27h -1.5" fill="none" stroke="black"/>
-<path d="M430,24h -1.5" fill="none" stroke="black"/>
-<path d="M432,20h -3.0" fill="none" stroke="black"/>
+<path d="M432,156h -3.0M430,153h -1.5M430,149h -1.5M430,146h -1.5M430,143h -1.5M432,139h -3.0M430,136h -1.5M430,132h -1.5M430,129h -1.5M430,126h -1.5M432,122h -3.0M430,119h -1.5M430,115h -1.5M430,112h -1.5M430,109h -1.5M432,105h -3.0M430,102h
+ -1.5M430,98h -1.5M430,95h -1.5M430,92h -1.5M432,88h -3.0M430,85h -1.5M430,82h -1.5M430,78h -1.5M430,75h -1.5M432,71h -3.0M430,68h -1.5M430,65h -1.5M430,61h -1.5M430,58h -1.5M432,54h -3.0M430,51h -1.5M430,48h -1.5M430,44h -1.5M430,41h -1.5M432,37h
+ -3.0M430,34h -1.5M430,31h -1.5M430,27h -1.5M430,24h -1.5M432,20h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="426" y="158" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="424" y="158" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -3482,47 +3178,9 @@ th2_candle.svg
 <text xml:space="preserve" x="13" y="187" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Vertical CANDLE1 plot
 </text>
 <path d="M19,333h 101" fill="none" stroke="black"/>
-<path d="M19,329v 4.1" fill="none" stroke="black"/>
-<path d="M21,331v 2.0" fill="none" stroke="black"/>
-<path d="M24,331v 2.0" fill="none" stroke="black"/>
-<path d="M26,331v 2.0" fill="none" stroke="black"/>
-<path d="M29,331v 2.0" fill="none" stroke="black"/>
-<path d="M31,329v 4.1" fill="none" stroke="black"/>
-<path d="M34,331v 2.0" fill="none" stroke="black"/>
-<path d="M36,331v 2.0" fill="none" stroke="black"/>
-<path d="M39,331v 2.0" fill="none" stroke="black"/>
-<path d="M41,331v 2.0" fill="none" stroke="black"/>
-<path d="M44,329v 4.1" fill="none" stroke="black"/>
-<path d="M46,331v 2.0" fill="none" stroke="black"/>
-<path d="M49,331v 2.0" fill="none" stroke="black"/>
-<path d="M51,331v 2.0" fill="none" stroke="black"/>
-<path d="M54,331v 2.0" fill="none" stroke="black"/>
-<path d="M56,329v 4.1" fill="none" stroke="black"/>
-<path d="M59,331v 2.0" fill="none" stroke="black"/>
-<path d="M61,331v 2.0" fill="none" stroke="black"/>
-<path d="M64,331v 2.0" fill="none" stroke="black"/>
-<path d="M66,331v 2.0" fill="none" stroke="black"/>
-<path d="M69,329v 4.1" fill="none" stroke="black"/>
-<path d="M71,331v 2.0" fill="none" stroke="black"/>
-<path d="M74,331v 2.0" fill="none" stroke="black"/>
-<path d="M76,331v 2.0" fill="none" stroke="black"/>
-<path d="M79,331v 2.0" fill="none" stroke="black"/>
-<path d="M81,329v 4.1" fill="none" stroke="black"/>
-<path d="M84,331v 2.0" fill="none" stroke="black"/>
-<path d="M87,331v 2.0" fill="none" stroke="black"/>
-<path d="M89,331v 2.0" fill="none" stroke="black"/>
-<path d="M92,331v 2.0" fill="none" stroke="black"/>
-<path d="M94,329v 4.1" fill="none" stroke="black"/>
-<path d="M97,331v 2.0" fill="none" stroke="black"/>
-<path d="M99,331v 2.0" fill="none" stroke="black"/>
-<path d="M102,331v 2.0" fill="none" stroke="black"/>
-<path d="M104,331v 2.0" fill="none" stroke="black"/>
-<path d="M107,329v 4.1" fill="none" stroke="black"/>
-<path d="M109,331v 2.0" fill="none" stroke="black"/>
-<path d="M112,331v 2.0" fill="none" stroke="black"/>
-<path d="M114,331v 2.0" fill="none" stroke="black"/>
-<path d="M117,331v 2.0" fill="none" stroke="black"/>
-<path d="M119,329v 4.1" fill="none" stroke="black"/>
+<path d="M19,329v 4.1M21,331v 2.0M24,331v 2.0M26,331v 2.0M29,331v 2.0M31,329v 4.1M34,331v 2.0M36,331v 2.0M39,331v 2.0M41,331v 2.0M44,329v 4.1M46,331v 2.0M49,331v 2.0M51,331v 2.0M54,331v 2.0M56,329v 4.1M59,331v 2.0M61,331v 2.0M64,331v 2.0M66,331v
+ 2.0M69,329v 4.1M71,331v 2.0M74,331v 2.0M76,331v 2.0M79,331v 2.0M81,329v 4.1M84,331v 2.0M87,331v 2.0M89,331v 2.0M92,331v 2.0M94,329v 4.1M97,331v 2.0M99,331v 2.0M102,331v 2.0M104,331v 2.0M107,329v 4.1M109,331v 2.0M112,331v 2.0M114,331v 2.0M117,331v
+ 2.0M119,329v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="19" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="16" y="338" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -3550,47 +3208,9 @@ th2_candle.svg
 <text xml:space="preserve" x="118" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M19,333v -136" fill="none" stroke="black"/>
-<path d="M22,333h -3.0" fill="none" stroke="black"/>
-<path d="M20,329h -1.5" fill="none" stroke="black"/>
-<path d="M20,326h -1.5" fill="none" stroke="black"/>
-<path d="M20,322h -1.5" fill="none" stroke="black"/>
-<path d="M20,319h -1.5" fill="none" stroke="black"/>
-<path d="M22,316h -3.0" fill="none" stroke="black"/>
-<path d="M20,312h -1.5" fill="none" stroke="black"/>
-<path d="M20,309h -1.5" fill="none" stroke="black"/>
-<path d="M20,306h -1.5" fill="none" stroke="black"/>
-<path d="M20,302h -1.5" fill="none" stroke="black"/>
-<path d="M22,299h -3.0" fill="none" stroke="black"/>
-<path d="M20,295h -1.5" fill="none" stroke="black"/>
-<path d="M20,292h -1.5" fill="none" stroke="black"/>
-<path d="M20,289h -1.5" fill="none" stroke="black"/>
-<path d="M20,285h -1.5" fill="none" stroke="black"/>
-<path d="M22,282h -3.0" fill="none" stroke="black"/>
-<path d="M20,278h -1.5" fill="none" stroke="black"/>
-<path d="M20,275h -1.5" fill="none" stroke="black"/>
-<path d="M20,272h -1.5" fill="none" stroke="black"/>
-<path d="M20,268h -1.5" fill="none" stroke="black"/>
-<path d="M22,265h -3.0" fill="none" stroke="black"/>
-<path d="M20,261h -1.5" fill="none" stroke="black"/>
-<path d="M20,258h -1.5" fill="none" stroke="black"/>
-<path d="M20,255h -1.5" fill="none" stroke="black"/>
-<path d="M20,251h -1.5" fill="none" stroke="black"/>
-<path d="M22,248h -3.0" fill="none" stroke="black"/>
-<path d="M20,245h -1.5" fill="none" stroke="black"/>
-<path d="M20,241h -1.5" fill="none" stroke="black"/>
-<path d="M20,238h -1.5" fill="none" stroke="black"/>
-<path d="M20,234h -1.5" fill="none" stroke="black"/>
-<path d="M22,231h -3.0" fill="none" stroke="black"/>
-<path d="M20,228h -1.5" fill="none" stroke="black"/>
-<path d="M20,224h -1.5" fill="none" stroke="black"/>
-<path d="M20,221h -1.5" fill="none" stroke="black"/>
-<path d="M20,217h -1.5" fill="none" stroke="black"/>
-<path d="M22,214h -3.0" fill="none" stroke="black"/>
-<path d="M20,211h -1.5" fill="none" stroke="black"/>
-<path d="M20,207h -1.5" fill="none" stroke="black"/>
-<path d="M20,204h -1.5" fill="none" stroke="black"/>
-<path d="M20,200h -1.5" fill="none" stroke="black"/>
-<path d="M22,197h -3.0" fill="none" stroke="black"/>
+<path d="M22,333h -3.0M20,329h -1.5M20,326h -1.5M20,322h -1.5M20,319h -1.5M22,316h -3.0M20,312h -1.5M20,309h -1.5M20,306h -1.5M20,302h -1.5M22,299h -3.0M20,295h -1.5M20,292h -1.5M20,289h -1.5M20,285h -1.5M22,282h -3.0M20,278h -1.5M20,275h
+ -1.5M20,272h -1.5M20,268h -1.5M22,265h -3.0M20,261h -1.5M20,258h -1.5M20,255h -1.5M20,251h -1.5M22,248h -3.0M20,245h -1.5M20,241h -1.5M20,238h -1.5M20,234h -1.5M22,231h -3.0M20,228h -1.5M20,224h -1.5M20,221h -1.5M20,217h -1.5M22,214h -3.0M20,211h
+ -1.5M20,207h -1.5M20,204h -1.5M20,200h -1.5M22,197h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="16" y="335" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="13" y="335" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -4203,47 +3823,9 @@ th2_candle.svg
 <text xml:space="preserve" x="150" y="187" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Vertical CANDLE2 plot
 </text>
 <path d="M155,333h 101" fill="none" stroke="black"/>
-<path d="M155,329v 4.1" fill="none" stroke="black"/>
-<path d="M158,331v 2.0" fill="none" stroke="black"/>
-<path d="M160,331v 2.0" fill="none" stroke="black"/>
-<path d="M163,331v 2.0" fill="none" stroke="black"/>
-<path d="M165,331v 2.0" fill="none" stroke="black"/>
-<path d="M168,329v 4.1" fill="none" stroke="black"/>
-<path d="M170,331v 2.0" fill="none" stroke="black"/>
-<path d="M173,331v 2.0" fill="none" stroke="black"/>
-<path d="M175,331v 2.0" fill="none" stroke="black"/>
-<path d="M178,331v 2.0" fill="none" stroke="black"/>
-<path d="M180,329v 4.1" fill="none" stroke="black"/>
-<path d="M183,331v 2.0" fill="none" stroke="black"/>
-<path d="M186,331v 2.0" fill="none" stroke="black"/>
-<path d="M188,331v 2.0" fill="none" stroke="black"/>
-<path d="M191,331v 2.0" fill="none" stroke="black"/>
-<path d="M193,329v 4.1" fill="none" stroke="black"/>
-<path d="M196,331v 2.0" fill="none" stroke="black"/>
-<path d="M198,331v 2.0" fill="none" stroke="black"/>
-<path d="M201,331v 2.0" fill="none" stroke="black"/>
-<path d="M203,331v 2.0" fill="none" stroke="black"/>
-<path d="M206,329v 4.1" fill="none" stroke="black"/>
-<path d="M208,331v 2.0" fill="none" stroke="black"/>
-<path d="M211,331v 2.0" fill="none" stroke="black"/>
-<path d="M213,331v 2.0" fill="none" stroke="black"/>
-<path d="M216,331v 2.0" fill="none" stroke="black"/>
-<path d="M218,329v 4.1" fill="none" stroke="black"/>
-<path d="M221,331v 2.0" fill="none" stroke="black"/>
-<path d="M223,331v 2.0" fill="none" stroke="black"/>
-<path d="M226,331v 2.0" fill="none" stroke="black"/>
-<path d="M228,331v 2.0" fill="none" stroke="black"/>
-<path d="M231,329v 4.1" fill="none" stroke="black"/>
-<path d="M233,331v 2.0" fill="none" stroke="black"/>
-<path d="M236,331v 2.0" fill="none" stroke="black"/>
-<path d="M238,331v 2.0" fill="none" stroke="black"/>
-<path d="M241,331v 2.0" fill="none" stroke="black"/>
-<path d="M243,329v 4.1" fill="none" stroke="black"/>
-<path d="M246,331v 2.0" fill="none" stroke="black"/>
-<path d="M248,331v 2.0" fill="none" stroke="black"/>
-<path d="M251,331v 2.0" fill="none" stroke="black"/>
-<path d="M253,331v 2.0" fill="none" stroke="black"/>
-<path d="M256,329v 4.1" fill="none" stroke="black"/>
+<path d="M155,329v 4.1M158,331v 2.0M160,331v 2.0M163,331v 2.0M165,331v 2.0M168,329v 4.1M170,331v 2.0M173,331v 2.0M175,331v 2.0M178,331v 2.0M180,329v 4.1M183,331v 2.0M186,331v 2.0M188,331v 2.0M191,331v 2.0M193,329v 4.1M196,331v 2.0M198,331v
+ 2.0M201,331v 2.0M203,331v 2.0M206,329v 4.1M208,331v 2.0M211,331v 2.0M213,331v 2.0M216,331v 2.0M218,329v 4.1M221,331v 2.0M223,331v 2.0M226,331v 2.0M228,331v 2.0M231,329v 4.1M233,331v 2.0M236,331v 2.0M238,331v 2.0M241,331v 2.0M243,329v 4.1M246,331v
+ 2.0M248,331v 2.0M251,331v 2.0M253,331v 2.0M256,329v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="155" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="153" y="338" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -4271,47 +3853,9 @@ th2_candle.svg
 <text xml:space="preserve" x="255" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M155,333v -136" fill="none" stroke="black"/>
-<path d="M158,333h -3.0" fill="none" stroke="black"/>
-<path d="M157,329h -1.5" fill="none" stroke="black"/>
-<path d="M157,326h -1.5" fill="none" stroke="black"/>
-<path d="M157,322h -1.5" fill="none" stroke="black"/>
-<path d="M157,319h -1.5" fill="none" stroke="black"/>
-<path d="M158,316h -3.0" fill="none" stroke="black"/>
-<path d="M157,312h -1.5" fill="none" stroke="black"/>
-<path d="M157,309h -1.5" fill="none" stroke="black"/>
-<path d="M157,306h -1.5" fill="none" stroke="black"/>
-<path d="M157,302h -1.5" fill="none" stroke="black"/>
-<path d="M158,299h -3.0" fill="none" stroke="black"/>
-<path d="M157,295h -1.5" fill="none" stroke="black"/>
-<path d="M157,292h -1.5" fill="none" stroke="black"/>
-<path d="M157,289h -1.5" fill="none" stroke="black"/>
-<path d="M157,285h -1.5" fill="none" stroke="black"/>
-<path d="M158,282h -3.0" fill="none" stroke="black"/>
-<path d="M157,278h -1.5" fill="none" stroke="black"/>
-<path d="M157,275h -1.5" fill="none" stroke="black"/>
-<path d="M157,272h -1.5" fill="none" stroke="black"/>
-<path d="M157,268h -1.5" fill="none" stroke="black"/>
-<path d="M158,265h -3.0" fill="none" stroke="black"/>
-<path d="M157,261h -1.5" fill="none" stroke="black"/>
-<path d="M157,258h -1.5" fill="none" stroke="black"/>
-<path d="M157,255h -1.5" fill="none" stroke="black"/>
-<path d="M157,251h -1.5" fill="none" stroke="black"/>
-<path d="M158,248h -3.0" fill="none" stroke="black"/>
-<path d="M157,245h -1.5" fill="none" stroke="black"/>
-<path d="M157,241h -1.5" fill="none" stroke="black"/>
-<path d="M157,238h -1.5" fill="none" stroke="black"/>
-<path d="M157,234h -1.5" fill="none" stroke="black"/>
-<path d="M158,231h -3.0" fill="none" stroke="black"/>
-<path d="M157,228h -1.5" fill="none" stroke="black"/>
-<path d="M157,224h -1.5" fill="none" stroke="black"/>
-<path d="M157,221h -1.5" fill="none" stroke="black"/>
-<path d="M157,217h -1.5" fill="none" stroke="black"/>
-<path d="M158,214h -3.0" fill="none" stroke="black"/>
-<path d="M157,211h -1.5" fill="none" stroke="black"/>
-<path d="M157,207h -1.5" fill="none" stroke="black"/>
-<path d="M157,204h -1.5" fill="none" stroke="black"/>
-<path d="M157,200h -1.5" fill="none" stroke="black"/>
-<path d="M158,197h -3.0" fill="none" stroke="black"/>
+<path d="M158,333h -3.0M157,329h -1.5M157,326h -1.5M157,322h -1.5M157,319h -1.5M158,316h -3.0M157,312h -1.5M157,309h -1.5M157,306h -1.5M157,302h -1.5M158,299h -3.0M157,295h -1.5M157,292h -1.5M157,289h -1.5M157,285h -1.5M158,282h -3.0M157,278h
+ -1.5M157,275h -1.5M157,272h -1.5M157,268h -1.5M158,265h -3.0M157,261h -1.5M157,258h -1.5M157,255h -1.5M157,251h -1.5M158,248h -3.0M157,245h -1.5M157,241h -1.5M157,238h -1.5M157,234h -1.5M158,231h -3.0M157,228h -1.5M157,224h -1.5M157,221h
+ -1.5M157,217h -1.5M158,214h -3.0M157,211h -1.5M157,207h -1.5M157,204h -1.5M157,200h -1.5M158,197h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="152" y="335" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="150" y="335" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -5004,47 +4548,9 @@ th2_candle.svg
 <text xml:space="preserve" x="287" y="187" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Vertical CANDLE3 plot
 </text>
 <path d="M292,333h 101" fill="none" stroke="black"/>
-<path d="M292,329v 4.1" fill="none" stroke="black"/>
-<path d="M295,331v 2.0" fill="none" stroke="black"/>
-<path d="M297,331v 2.0" fill="none" stroke="black"/>
-<path d="M300,331v 2.0" fill="none" stroke="black"/>
-<path d="M302,331v 2.0" fill="none" stroke="black"/>
-<path d="M305,329v 4.1" fill="none" stroke="black"/>
-<path d="M307,331v 2.0" fill="none" stroke="black"/>
-<path d="M310,331v 2.0" fill="none" stroke="black"/>
-<path d="M312,331v 2.0" fill="none" stroke="black"/>
-<path d="M315,331v 2.0" fill="none" stroke="black"/>
-<path d="M317,329v 4.1" fill="none" stroke="black"/>
-<path d="M320,331v 2.0" fill="none" stroke="black"/>
-<path d="M322,331v 2.0" fill="none" stroke="black"/>
-<path d="M325,331v 2.0" fill="none" stroke="black"/>
-<path d="M327,331v 2.0" fill="none" stroke="black"/>
-<path d="M330,329v 4.1" fill="none" stroke="black"/>
-<path d="M332,331v 2.0" fill="none" stroke="black"/>
-<path d="M335,331v 2.0" fill="none" stroke="black"/>
-<path d="M337,331v 2.0" fill="none" stroke="black"/>
-<path d="M340,331v 2.0" fill="none" stroke="black"/>
-<path d="M342,329v 4.1" fill="none" stroke="black"/>
-<path d="M345,331v 2.0" fill="none" stroke="black"/>
-<path d="M347,331v 2.0" fill="none" stroke="black"/>
-<path d="M350,331v 2.0" fill="none" stroke="black"/>
-<path d="M353,331v 2.0" fill="none" stroke="black"/>
-<path d="M355,329v 4.1" fill="none" stroke="black"/>
-<path d="M358,331v 2.0" fill="none" stroke="black"/>
-<path d="M360,331v 2.0" fill="none" stroke="black"/>
-<path d="M363,331v 2.0" fill="none" stroke="black"/>
-<path d="M365,331v 2.0" fill="none" stroke="black"/>
-<path d="M368,329v 4.1" fill="none" stroke="black"/>
-<path d="M370,331v 2.0" fill="none" stroke="black"/>
-<path d="M373,331v 2.0" fill="none" stroke="black"/>
-<path d="M375,331v 2.0" fill="none" stroke="black"/>
-<path d="M378,331v 2.0" fill="none" stroke="black"/>
-<path d="M380,329v 4.1" fill="none" stroke="black"/>
-<path d="M383,331v 2.0" fill="none" stroke="black"/>
-<path d="M385,331v 2.0" fill="none" stroke="black"/>
-<path d="M388,331v 2.0" fill="none" stroke="black"/>
-<path d="M390,331v 2.0" fill="none" stroke="black"/>
-<path d="M393,329v 4.1" fill="none" stroke="black"/>
+<path d="M292,329v 4.1M295,331v 2.0M297,331v 2.0M300,331v 2.0M302,331v 2.0M305,329v 4.1M307,331v 2.0M310,331v 2.0M312,331v 2.0M315,331v 2.0M317,329v 4.1M320,331v 2.0M322,331v 2.0M325,331v 2.0M327,331v 2.0M330,329v 4.1M332,331v 2.0M335,331v
+ 2.0M337,331v 2.0M340,331v 2.0M342,329v 4.1M345,331v 2.0M347,331v 2.0M350,331v 2.0M353,331v 2.0M355,329v 4.1M358,331v 2.0M360,331v 2.0M363,331v 2.0M365,331v 2.0M368,329v 4.1M370,331v 2.0M373,331v 2.0M375,331v 2.0M378,331v 2.0M380,329v 4.1M383,331v
+ 2.0M385,331v 2.0M388,331v 2.0M390,331v 2.0M393,329v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="292" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="290" y="338" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -5072,47 +4578,9 @@ th2_candle.svg
 <text xml:space="preserve" x="392" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M292,333v -136" fill="none" stroke="black"/>
-<path d="M295,333h -3.0" fill="none" stroke="black"/>
-<path d="M294,329h -1.5" fill="none" stroke="black"/>
-<path d="M294,326h -1.5" fill="none" stroke="black"/>
-<path d="M294,322h -1.5" fill="none" stroke="black"/>
-<path d="M294,319h -1.5" fill="none" stroke="black"/>
-<path d="M295,316h -3.0" fill="none" stroke="black"/>
-<path d="M294,312h -1.5" fill="none" stroke="black"/>
-<path d="M294,309h -1.5" fill="none" stroke="black"/>
-<path d="M294,306h -1.5" fill="none" stroke="black"/>
-<path d="M294,302h -1.5" fill="none" stroke="black"/>
-<path d="M295,299h -3.0" fill="none" stroke="black"/>
-<path d="M294,295h -1.5" fill="none" stroke="black"/>
-<path d="M294,292h -1.5" fill="none" stroke="black"/>
-<path d="M294,289h -1.5" fill="none" stroke="black"/>
-<path d="M294,285h -1.5" fill="none" stroke="black"/>
-<path d="M295,282h -3.0" fill="none" stroke="black"/>
-<path d="M294,278h -1.5" fill="none" stroke="black"/>
-<path d="M294,275h -1.5" fill="none" stroke="black"/>
-<path d="M294,272h -1.5" fill="none" stroke="black"/>
-<path d="M294,268h -1.5" fill="none" stroke="black"/>
-<path d="M295,265h -3.0" fill="none" stroke="black"/>
-<path d="M294,261h -1.5" fill="none" stroke="black"/>
-<path d="M294,258h -1.5" fill="none" stroke="black"/>
-<path d="M294,255h -1.5" fill="none" stroke="black"/>
-<path d="M294,251h -1.5" fill="none" stroke="black"/>
-<path d="M295,248h -3.0" fill="none" stroke="black"/>
-<path d="M294,245h -1.5" fill="none" stroke="black"/>
-<path d="M294,241h -1.5" fill="none" stroke="black"/>
-<path d="M294,238h -1.5" fill="none" stroke="black"/>
-<path d="M294,234h -1.5" fill="none" stroke="black"/>
-<path d="M295,231h -3.0" fill="none" stroke="black"/>
-<path d="M294,228h -1.5" fill="none" stroke="black"/>
-<path d="M294,224h -1.5" fill="none" stroke="black"/>
-<path d="M294,221h -1.5" fill="none" stroke="black"/>
-<path d="M294,217h -1.5" fill="none" stroke="black"/>
-<path d="M295,214h -3.0" fill="none" stroke="black"/>
-<path d="M294,211h -1.5" fill="none" stroke="black"/>
-<path d="M294,207h -1.5" fill="none" stroke="black"/>
-<path d="M294,204h -1.5" fill="none" stroke="black"/>
-<path d="M294,200h -1.5" fill="none" stroke="black"/>
-<path d="M295,197h -3.0" fill="none" stroke="black"/>
+<path d="M295,333h -3.0M294,329h -1.5M294,326h -1.5M294,322h -1.5M294,319h -1.5M295,316h -3.0M294,312h -1.5M294,309h -1.5M294,306h -1.5M294,302h -1.5M295,299h -3.0M294,295h -1.5M294,292h -1.5M294,289h -1.5M294,285h -1.5M295,282h -3.0M294,278h
+ -1.5M294,275h -1.5M294,272h -1.5M294,268h -1.5M295,265h -3.0M294,261h -1.5M294,258h -1.5M294,255h -1.5M294,251h -1.5M295,248h -3.0M294,245h -1.5M294,241h -1.5M294,238h -1.5M294,234h -1.5M295,231h -3.0M294,228h -1.5M294,224h -1.5M294,221h
+ -1.5M294,217h -1.5M295,214h -3.0M294,211h -1.5M294,207h -1.5M294,204h -1.5M294,200h -1.5M295,197h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="289" y="335" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="287" y="335" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -5805,47 +5273,9 @@ th2_candle.svg
 <text xml:space="preserve" x="424" y="187" fill="black" font-size="5.4" font-family="Helvetica" font-weight="bold">Vertical CANDLE4 plot
 </text>
 <path d="M429,333h 101" fill="none" stroke="black"/>
-<path d="M429,329v 4.1" fill="none" stroke="black"/>
-<path d="M431,331v 2.0" fill="none" stroke="black"/>
-<path d="M434,331v 2.0" fill="none" stroke="black"/>
-<path d="M436,331v 2.0" fill="none" stroke="black"/>
-<path d="M439,331v 2.0" fill="none" stroke="black"/>
-<path d="M441,329v 4.1" fill="none" stroke="black"/>
-<path d="M444,331v 2.0" fill="none" stroke="black"/>
-<path d="M447,331v 2.0" fill="none" stroke="black"/>
-<path d="M449,331v 2.0" fill="none" stroke="black"/>
-<path d="M452,331v 2.0" fill="none" stroke="black"/>
-<path d="M454,329v 4.1" fill="none" stroke="black"/>
-<path d="M457,331v 2.0" fill="none" stroke="black"/>
-<path d="M459,331v 2.0" fill="none" stroke="black"/>
-<path d="M462,331v 2.0" fill="none" stroke="black"/>
-<path d="M464,331v 2.0" fill="none" stroke="black"/>
-<path d="M467,329v 4.1" fill="none" stroke="black"/>
-<path d="M469,331v 2.0" fill="none" stroke="black"/>
-<path d="M472,331v 2.0" fill="none" stroke="black"/>
-<path d="M474,331v 2.0" fill="none" stroke="black"/>
-<path d="M477,331v 2.0" fill="none" stroke="black"/>
-<path d="M479,329v 4.1" fill="none" stroke="black"/>
-<path d="M482,331v 2.0" fill="none" stroke="black"/>
-<path d="M484,331v 2.0" fill="none" stroke="black"/>
-<path d="M487,331v 2.0" fill="none" stroke="black"/>
-<path d="M489,331v 2.0" fill="none" stroke="black"/>
-<path d="M492,329v 4.1" fill="none" stroke="black"/>
-<path d="M494,331v 2.0" fill="none" stroke="black"/>
-<path d="M497,331v 2.0" fill="none" stroke="black"/>
-<path d="M499,331v 2.0" fill="none" stroke="black"/>
-<path d="M502,331v 2.0" fill="none" stroke="black"/>
-<path d="M504,329v 4.1" fill="none" stroke="black"/>
-<path d="M507,331v 2.0" fill="none" stroke="black"/>
-<path d="M509,331v 2.0" fill="none" stroke="black"/>
-<path d="M512,331v 2.0" fill="none" stroke="black"/>
-<path d="M514,331v 2.0" fill="none" stroke="black"/>
-<path d="M517,329v 4.1" fill="none" stroke="black"/>
-<path d="M519,331v 2.0" fill="none" stroke="black"/>
-<path d="M522,331v 2.0" fill="none" stroke="black"/>
-<path d="M525,331v 2.0" fill="none" stroke="black"/>
-<path d="M527,331v 2.0" fill="none" stroke="black"/>
-<path d="M530,329v 4.1" fill="none" stroke="black"/>
+<path d="M429,329v 4.1M431,331v 2.0M434,331v 2.0M436,331v 2.0M439,331v 2.0M441,329v 4.1M444,331v 2.0M447,331v 2.0M449,331v 2.0M452,331v 2.0M454,329v 4.1M457,331v 2.0M459,331v 2.0M462,331v 2.0M464,331v 2.0M467,329v 4.1M469,331v 2.0M472,331v
+ 2.0M474,331v 2.0M477,331v 2.0M479,329v 4.1M482,331v 2.0M484,331v 2.0M487,331v 2.0M489,331v 2.0M492,329v 4.1M494,331v 2.0M497,331v 2.0M499,331v 2.0M502,331v 2.0M504,329v 4.1M507,331v 2.0M509,331v 2.0M512,331v 2.0M514,331v 2.0M517,329v 4.1M519,331v
+ 2.0M522,331v 2.0M525,331v 2.0M527,331v 2.0M530,329v 4.1" fill="none" stroke="black"/>
 <text xml:space="preserve" x="429" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="427" y="338" fill="black" font-size="4.5" font-family="Times">&#8722;
@@ -5873,47 +5303,9 @@ th2_candle.svg
 <text xml:space="preserve" x="528" y="338" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <path d="M429,333v -136" fill="none" stroke="black"/>
-<path d="M432,333h -3.0" fill="none" stroke="black"/>
-<path d="M430,329h -1.5" fill="none" stroke="black"/>
-<path d="M430,326h -1.5" fill="none" stroke="black"/>
-<path d="M430,322h -1.5" fill="none" stroke="black"/>
-<path d="M430,319h -1.5" fill="none" stroke="black"/>
-<path d="M432,316h -3.0" fill="none" stroke="black"/>
-<path d="M430,312h -1.5" fill="none" stroke="black"/>
-<path d="M430,309h -1.5" fill="none" stroke="black"/>
-<path d="M430,306h -1.5" fill="none" stroke="black"/>
-<path d="M430,302h -1.5" fill="none" stroke="black"/>
-<path d="M432,299h -3.0" fill="none" stroke="black"/>
-<path d="M430,295h -1.5" fill="none" stroke="black"/>
-<path d="M430,292h -1.5" fill="none" stroke="black"/>
-<path d="M430,289h -1.5" fill="none" stroke="black"/>
-<path d="M430,285h -1.5" fill="none" stroke="black"/>
-<path d="M432,282h -3.0" fill="none" stroke="black"/>
-<path d="M430,278h -1.5" fill="none" stroke="black"/>
-<path d="M430,275h -1.5" fill="none" stroke="black"/>
-<path d="M430,272h -1.5" fill="none" stroke="black"/>
-<path d="M430,268h -1.5" fill="none" stroke="black"/>
-<path d="M432,265h -3.0" fill="none" stroke="black"/>
-<path d="M430,261h -1.5" fill="none" stroke="black"/>
-<path d="M430,258h -1.5" fill="none" stroke="black"/>
-<path d="M430,255h -1.5" fill="none" stroke="black"/>
-<path d="M430,251h -1.5" fill="none" stroke="black"/>
-<path d="M432,248h -3.0" fill="none" stroke="black"/>
-<path d="M430,245h -1.5" fill="none" stroke="black"/>
-<path d="M430,241h -1.5" fill="none" stroke="black"/>
-<path d="M430,238h -1.5" fill="none" stroke="black"/>
-<path d="M430,234h -1.5" fill="none" stroke="black"/>
-<path d="M432,231h -3.0" fill="none" stroke="black"/>
-<path d="M430,228h -1.5" fill="none" stroke="black"/>
-<path d="M430,224h -1.5" fill="none" stroke="black"/>
-<path d="M430,221h -1.5" fill="none" stroke="black"/>
-<path d="M430,217h -1.5" fill="none" stroke="black"/>
-<path d="M432,214h -3.0" fill="none" stroke="black"/>
-<path d="M430,211h -1.5" fill="none" stroke="black"/>
-<path d="M430,207h -1.5" fill="none" stroke="black"/>
-<path d="M430,204h -1.5" fill="none" stroke="black"/>
-<path d="M430,200h -1.5" fill="none" stroke="black"/>
-<path d="M432,197h -3.0" fill="none" stroke="black"/>
+<path d="M432,333h -3.0M430,329h -1.5M430,326h -1.5M430,322h -1.5M430,319h -1.5M432,316h -3.0M430,312h -1.5M430,309h -1.5M430,306h -1.5M430,302h -1.5M432,299h -3.0M430,295h -1.5M430,292h -1.5M430,289h -1.5M430,285h -1.5M432,282h -3.0M430,278h
+ -1.5M430,275h -1.5M430,272h -1.5M430,268h -1.5M432,265h -3.0M430,261h -1.5M430,258h -1.5M430,255h -1.5M430,251h -1.5M432,248h -3.0M430,245h -1.5M430,241h -1.5M430,238h -1.5M430,234h -1.5M432,231h -3.0M430,228h -1.5M430,224h -1.5M430,221h
+ -1.5M430,217h -1.5M432,214h -3.0M430,211h -1.5M430,207h -1.5M430,204h -1.5M430,200h -1.5M432,197h -3.0" fill="none" stroke="black"/>
 <text xml:space="preserve" x="426" y="335" fill="black" font-size="4.5" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="424" y="335" fill="black" font-size="4.5" font-family="Times">&#8722;

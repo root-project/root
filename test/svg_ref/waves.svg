@@ -40038,14 +40038,7 @@ waves.svg
 <rect x="504" y="13" width="1.4" height="13" fill="#f9f977"/>
 <rect x="504" y="0" width="1.4" height="13" fill="#fcfc7b"/>
 <path d="M506,369v -369" fill="none" stroke="black"/>
-<path d="M498,369h 7.6" fill="none" stroke="black"/>
-<path d="M498,322h 7.6" fill="none" stroke="black"/>
-<path d="M498,276h 7.6" fill="none" stroke="black"/>
-<path d="M498,230h 7.6" fill="none" stroke="black"/>
-<path d="M498,184h 7.6" fill="none" stroke="black"/>
-<path d="M498,138h 7.6" fill="none" stroke="black"/>
-<path d="M498,92h 7.6" fill="none" stroke="black"/>
-<path d="M498,46h 7.6" fill="none" stroke="black"/>
+<path d="M498,369h 7.6M498,322h 7.6M498,276h 7.6M498,230h 7.6M498,184h 7.6M498,138h 7.6M498,92h 7.6M498,46h 7.6" fill="none" stroke="black"/>
 <text xml:space="preserve" x="507" y="372" fill="black" font-size="9.7" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="507" y="326" fill="black" font-size="9.7" font-family="Helvetica" font-weight="bold">50
@@ -170262,17 +170255,7 @@ waves.svg
 <rect x="504" y="13" width="2.8" height="13" fill="#f9f977"/>
 <rect x="504" y="0" width="2.8" height="13" fill="#fcfc7b"/>
 <path d="M507,369v -369" fill="none" stroke="black"/>
-<path d="M492,369h 15" fill="none" stroke="black"/>
-<path d="M492,332h 15" fill="none" stroke="black"/>
-<path d="M492,295h 15" fill="none" stroke="black"/>
-<path d="M492,258h 15" fill="none" stroke="black"/>
-<path d="M492,221h 15" fill="none" stroke="black"/>
-<path d="M492,184h 15" fill="none" stroke="black"/>
-<path d="M492,147h 15" fill="none" stroke="black"/>
-<path d="M492,111h 15" fill="none" stroke="black"/>
-<path d="M492,74h 15" fill="none" stroke="black"/>
-<path d="M492,37h 15" fill="none" stroke="black"/>
-<path d="M492,0h 15" fill="none" stroke="black"/>
+<path d="M492,369h 15M492,332h 15M492,295h 15M492,258h 15M492,221h 15M492,184h 15M492,147h 15M492,111h 15M492,74h 15M492,37h 15M492,0h 15" fill="none" stroke="black"/>
 <text xml:space="preserve" x="510" y="374" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="510" y="337" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">10

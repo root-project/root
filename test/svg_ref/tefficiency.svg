@@ -14,29 +14,8 @@ tefficiency.svg
 <path d="M33,316l 1.000, -1.000h 216v -275l 1.000, -1.000v 277h -218z" fill="#a9a9a9"/>
 <rect x="33" y="38" width="218" height="277" fill="none" stroke="black"/>
 <path d="M33,316h 218" fill="none" stroke="black"/>
-<path d="M33,307v 8.3" fill="none" stroke="black"/>
-<path d="M43,311v 4.2" fill="none" stroke="black"/>
-<path d="M53,311v 4.2" fill="none" stroke="black"/>
-<path d="M63,311v 4.2" fill="none" stroke="black"/>
-<path d="M73,307v 8.3" fill="none" stroke="black"/>
-<path d="M83,311v 4.2" fill="none" stroke="black"/>
-<path d="M93,311v 4.2" fill="none" stroke="black"/>
-<path d="M103,311v 4.2" fill="none" stroke="black"/>
-<path d="M113,307v 8.3" fill="none" stroke="black"/>
-<path d="M122,311v 4.2" fill="none" stroke="black"/>
-<path d="M132,311v 4.2" fill="none" stroke="black"/>
-<path d="M142,311v 4.2" fill="none" stroke="black"/>
-<path d="M152,307v 8.3" fill="none" stroke="black"/>
-<path d="M162,311v 4.2" fill="none" stroke="black"/>
-<path d="M172,311v 4.2" fill="none" stroke="black"/>
-<path d="M182,311v 4.2" fill="none" stroke="black"/>
-<path d="M192,307v 8.3" fill="none" stroke="black"/>
-<path d="M202,311v 4.2" fill="none" stroke="black"/>
-<path d="M212,311v 4.2" fill="none" stroke="black"/>
-<path d="M221,311v 4.2" fill="none" stroke="black"/>
-<path d="M231,307v 8.3" fill="none" stroke="black"/>
-<path d="M241,311v 4.2" fill="none" stroke="black"/>
-<path d="M251,311v 4.2" fill="none" stroke="black"/>
+<path d="M33,307v 8.3M43,311v 4.2M53,311v 4.2M63,311v 4.2M73,307v 8.3M83,311v 4.2M93,311v 4.2M103,311v 4.2M113,307v 8.3M122,311v 4.2M132,311v 4.2M142,311v 4.2M152,307v 8.3M162,311v 4.2M172,311v 4.2M182,311v 4.2M192,307v 8.3M202,311v 4.2M212,311v
+ 4.2M221,311v 4.2M231,307v 8.3M241,311v 4.2M251,311v 4.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="31" y="328" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="70" y="328" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">2
@@ -52,45 +31,9 @@ tefficiency.svg
 <text xml:space="preserve" x="245" y="342" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">x
 </text>
 <path d="M33,316v -277" fill="none" stroke="black"/>
-<path d="M40,309h -6.5" fill="none" stroke="black"/>
-<path d="M37,302h -3.3" fill="none" stroke="black"/>
-<path d="M37,294h -3.3" fill="none" stroke="black"/>
-<path d="M37,287h -3.3" fill="none" stroke="black"/>
-<path d="M37,280h -3.3" fill="none" stroke="black"/>
-<path d="M40,273h -6.5" fill="none" stroke="black"/>
-<path d="M37,266h -3.3" fill="none" stroke="black"/>
-<path d="M37,259h -3.3" fill="none" stroke="black"/>
-<path d="M37,252h -3.3" fill="none" stroke="black"/>
-<path d="M37,245h -3.3" fill="none" stroke="black"/>
-<path d="M40,238h -6.5" fill="none" stroke="black"/>
-<path d="M37,231h -3.3" fill="none" stroke="black"/>
-<path d="M37,224h -3.3" fill="none" stroke="black"/>
-<path d="M37,217h -3.3" fill="none" stroke="black"/>
-<path d="M37,210h -3.3" fill="none" stroke="black"/>
-<path d="M40,203h -6.5" fill="none" stroke="black"/>
-<path d="M37,196h -3.3" fill="none" stroke="black"/>
-<path d="M37,189h -3.3" fill="none" stroke="black"/>
-<path d="M37,181h -3.3" fill="none" stroke="black"/>
-<path d="M37,174h -3.3" fill="none" stroke="black"/>
-<path d="M40,167h -6.5" fill="none" stroke="black"/>
-<path d="M37,160h -3.3" fill="none" stroke="black"/>
-<path d="M37,153h -3.3" fill="none" stroke="black"/>
-<path d="M37,146h -3.3" fill="none" stroke="black"/>
-<path d="M37,139h -3.3" fill="none" stroke="black"/>
-<path d="M40,132h -6.5" fill="none" stroke="black"/>
-<path d="M37,125h -3.3" fill="none" stroke="black"/>
-<path d="M37,118h -3.3" fill="none" stroke="black"/>
-<path d="M37,111h -3.3" fill="none" stroke="black"/>
-<path d="M37,104h -3.3" fill="none" stroke="black"/>
-<path d="M40,97h -6.5" fill="none" stroke="black"/>
-<path d="M37,90h -3.3" fill="none" stroke="black"/>
-<path d="M37,83h -3.3" fill="none" stroke="black"/>
-<path d="M37,75h -3.3" fill="none" stroke="black"/>
-<path d="M37,68h -3.3" fill="none" stroke="black"/>
-<path d="M40,61h -6.5" fill="none" stroke="black"/>
-<path d="M37,54h -3.3" fill="none" stroke="black"/>
-<path d="M37,47h -3.3" fill="none" stroke="black"/>
-<path d="M37,40h -3.3" fill="none" stroke="black"/>
+<path d="M40,309h -6.5M37,302h -3.3M37,294h -3.3M37,287h -3.3M37,280h -3.3M40,273h -6.5M37,266h -3.3M37,259h -3.3M37,252h -3.3M37,245h -3.3M40,238h -6.5M37,231h -3.3M37,224h -3.3M37,217h -3.3M37,210h -3.3M40,203h -6.5M37,196h -3.3M37,189h
+ -3.3M37,181h -3.3M37,174h -3.3M40,167h -6.5M37,160h -3.3M37,153h -3.3M37,146h -3.3M37,139h -3.3M40,132h -6.5M37,125h -3.3M37,118h -3.3M37,111h -3.3M37,104h -3.3M40,97h -6.5M37,90h -3.3M37,83h -3.3M37,75h -3.3M37,68h -3.3M40,61h -6.5M37,54h
+ -3.3M37,47h -3.3M37,40h -3.3" fill="none" stroke="black"/>
 <text xml:space="preserve" x="18" y="313" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0.3
 </text>
 <text xml:space="preserve" x="18" y="278" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0.4
@@ -218,29 +161,8 @@ tefficiency.svg
 <path d="M317,316l 1.000, -1.000h 216v -275l 1.000, -1.000v 277h -218z" fill="#a9a9a9"/>
 <rect x="317" y="38" width="218" height="277" fill="none" stroke="black"/>
 <path d="M317,316h 218" fill="none" stroke="black"/>
-<path d="M317,307v 8.3" fill="none" stroke="black"/>
-<path d="M327,311v 4.2" fill="none" stroke="black"/>
-<path d="M337,311v 4.2" fill="none" stroke="black"/>
-<path d="M347,311v 4.2" fill="none" stroke="black"/>
-<path d="M356,307v 8.3" fill="none" stroke="black"/>
-<path d="M366,311v 4.2" fill="none" stroke="black"/>
-<path d="M376,311v 4.2" fill="none" stroke="black"/>
-<path d="M386,311v 4.2" fill="none" stroke="black"/>
-<path d="M396,307v 8.3" fill="none" stroke="black"/>
-<path d="M406,311v 4.2" fill="none" stroke="black"/>
-<path d="M416,311v 4.2" fill="none" stroke="black"/>
-<path d="M426,311v 4.2" fill="none" stroke="black"/>
-<path d="M436,307v 8.3" fill="none" stroke="black"/>
-<path d="M445,311v 4.2" fill="none" stroke="black"/>
-<path d="M455,311v 4.2" fill="none" stroke="black"/>
-<path d="M465,311v 4.2" fill="none" stroke="black"/>
-<path d="M475,307v 8.3" fill="none" stroke="black"/>
-<path d="M485,311v 4.2" fill="none" stroke="black"/>
-<path d="M495,311v 4.2" fill="none" stroke="black"/>
-<path d="M505,311v 4.2" fill="none" stroke="black"/>
-<path d="M515,307v 8.3" fill="none" stroke="black"/>
-<path d="M525,311v 4.2" fill="none" stroke="black"/>
-<path d="M535,311v 4.2" fill="none" stroke="black"/>
+<path d="M317,307v 8.3M327,311v 4.2M337,311v 4.2M347,311v 4.2M356,307v 8.3M366,311v 4.2M376,311v 4.2M386,311v 4.2M396,307v 8.3M406,311v 4.2M416,311v 4.2M426,311v 4.2M436,307v 8.3M445,311v 4.2M455,311v 4.2M465,311v 4.2M475,307v 8.3M485,311v
+ 4.2M495,311v 4.2M505,311v 4.2M515,307v 8.3M525,311v 4.2M535,311v 4.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="314" y="328" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="354" y="328" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">2
@@ -256,45 +178,9 @@ tefficiency.svg
 <text xml:space="preserve" x="529" y="342" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">x
 </text>
 <path d="M317,316v -277" fill="none" stroke="black"/>
-<path d="M323,312h -6.5" fill="none" stroke="black"/>
-<path d="M320,304h -3.3" fill="none" stroke="black"/>
-<path d="M320,297h -3.3" fill="none" stroke="black"/>
-<path d="M320,290h -3.3" fill="none" stroke="black"/>
-<path d="M320,283h -3.3" fill="none" stroke="black"/>
-<path d="M323,276h -6.5" fill="none" stroke="black"/>
-<path d="M320,269h -3.3" fill="none" stroke="black"/>
-<path d="M320,262h -3.3" fill="none" stroke="black"/>
-<path d="M320,254h -3.3" fill="none" stroke="black"/>
-<path d="M320,247h -3.3" fill="none" stroke="black"/>
-<path d="M323,240h -6.5" fill="none" stroke="black"/>
-<path d="M320,233h -3.3" fill="none" stroke="black"/>
-<path d="M320,226h -3.3" fill="none" stroke="black"/>
-<path d="M320,219h -3.3" fill="none" stroke="black"/>
-<path d="M320,212h -3.3" fill="none" stroke="black"/>
-<path d="M323,204h -6.5" fill="none" stroke="black"/>
-<path d="M320,197h -3.3" fill="none" stroke="black"/>
-<path d="M320,190h -3.3" fill="none" stroke="black"/>
-<path d="M320,183h -3.3" fill="none" stroke="black"/>
-<path d="M320,176h -3.3" fill="none" stroke="black"/>
-<path d="M323,169h -6.5" fill="none" stroke="black"/>
-<path d="M320,161h -3.3" fill="none" stroke="black"/>
-<path d="M320,154h -3.3" fill="none" stroke="black"/>
-<path d="M320,147h -3.3" fill="none" stroke="black"/>
-<path d="M320,140h -3.3" fill="none" stroke="black"/>
-<path d="M323,133h -6.5" fill="none" stroke="black"/>
-<path d="M320,126h -3.3" fill="none" stroke="black"/>
-<path d="M320,119h -3.3" fill="none" stroke="black"/>
-<path d="M320,111h -3.3" fill="none" stroke="black"/>
-<path d="M320,104h -3.3" fill="none" stroke="black"/>
-<path d="M323,97h -6.5" fill="none" stroke="black"/>
-<path d="M320,90h -3.3" fill="none" stroke="black"/>
-<path d="M320,83h -3.3" fill="none" stroke="black"/>
-<path d="M320,76h -3.3" fill="none" stroke="black"/>
-<path d="M320,68h -3.3" fill="none" stroke="black"/>
-<path d="M323,61h -6.5" fill="none" stroke="black"/>
-<path d="M320,54h -3.3" fill="none" stroke="black"/>
-<path d="M320,47h -3.3" fill="none" stroke="black"/>
-<path d="M320,40h -3.3" fill="none" stroke="black"/>
+<path d="M323,312h -6.5M320,304h -3.3M320,297h -3.3M320,290h -3.3M320,283h -3.3M323,276h -6.5M320,269h -3.3M320,262h -3.3M320,254h -3.3M320,247h -3.3M323,240h -6.5M320,233h -3.3M320,226h -3.3M320,219h -3.3M320,212h -3.3M323,204h -6.5M320,197h
+ -3.3M320,190h -3.3M320,183h -3.3M320,176h -3.3M323,169h -6.5M320,161h -3.3M320,154h -3.3M320,147h -3.3M320,140h -3.3M323,133h -6.5M320,126h -3.3M320,119h -3.3M320,111h -3.3M320,104h -3.3M323,97h -6.5M320,90h -3.3M320,83h -3.3M320,76h -3.3M320,68h
+ -3.3M323,61h -6.5M320,54h -3.3M320,47h -3.3M320,40h -3.3" fill="none" stroke="black"/>
 <text xml:space="preserve" x="301" y="316" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0.3
 </text>
 <text xml:space="preserve" x="301" y="280" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">0.4

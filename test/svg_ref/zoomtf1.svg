@@ -22,47 +22,9 @@ zoomtf1.svg
  -0.845l 4.5, -0.659l 4.5, -0.473l 4.5, -0.287l 4.5, -0.101l 4.5, 0.086l 4.5, 0.272l 4.5, 0.458l 4.5, 0.644l 4.5, 0.830l 4.5, 1.0l 4.5, 1.2l 4.5, 1.4l 4.5, 1.6l 4.5, 1.8l 4.5, 1.9l 4.5, 2.1l 4.5, 2.3l 4.5, 2.5l 4.5, 2.7l 4.5, 2.8l 4.5, 3.0l 4.5, 3.2l
  4.5, 3.4l 4.5, 3.5l 4.5, 3.7" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M57,495h 454" fill="none" stroke="black"/>
-<path d="M57,482v 13" fill="none" stroke="black"/>
-<path d="M69,488v 6.6" fill="none" stroke="black"/>
-<path d="M80,488v 6.6" fill="none" stroke="black"/>
-<path d="M91,488v 6.6" fill="none" stroke="black"/>
-<path d="M103,482v 13" fill="none" stroke="black"/>
-<path d="M114,488v 6.6" fill="none" stroke="black"/>
-<path d="M125,488v 6.6" fill="none" stroke="black"/>
-<path d="M137,488v 6.6" fill="none" stroke="black"/>
-<path d="M148,482v 13" fill="none" stroke="black"/>
-<path d="M159,488v 6.6" fill="none" stroke="black"/>
-<path d="M171,488v 6.6" fill="none" stroke="black"/>
-<path d="M182,488v 6.6" fill="none" stroke="black"/>
-<path d="M193,482v 13" fill="none" stroke="black"/>
-<path d="M205,488v 6.6" fill="none" stroke="black"/>
-<path d="M216,488v 6.6" fill="none" stroke="black"/>
-<path d="M227,488v 6.6" fill="none" stroke="black"/>
-<path d="M239,482v 13" fill="none" stroke="black"/>
-<path d="M250,488v 6.6" fill="none" stroke="black"/>
-<path d="M261,488v 6.6" fill="none" stroke="black"/>
-<path d="M273,488v 6.6" fill="none" stroke="black"/>
-<path d="M284,482v 13" fill="none" stroke="black"/>
-<path d="M295,488v 6.6" fill="none" stroke="black"/>
-<path d="M307,488v 6.6" fill="none" stroke="black"/>
-<path d="M318,488v 6.6" fill="none" stroke="black"/>
-<path d="M329,482v 13" fill="none" stroke="black"/>
-<path d="M341,488v 6.6" fill="none" stroke="black"/>
-<path d="M352,488v 6.6" fill="none" stroke="black"/>
-<path d="M363,488v 6.6" fill="none" stroke="black"/>
-<path d="M375,482v 13" fill="none" stroke="black"/>
-<path d="M386,488v 6.6" fill="none" stroke="black"/>
-<path d="M397,488v 6.6" fill="none" stroke="black"/>
-<path d="M409,488v 6.6" fill="none" stroke="black"/>
-<path d="M420,482v 13" fill="none" stroke="black"/>
-<path d="M431,488v 6.6" fill="none" stroke="black"/>
-<path d="M443,488v 6.6" fill="none" stroke="black"/>
-<path d="M454,488v 6.6" fill="none" stroke="black"/>
-<path d="M465,482v 13" fill="none" stroke="black"/>
-<path d="M477,488v 6.6" fill="none" stroke="black"/>
-<path d="M488,488v 6.6" fill="none" stroke="black"/>
-<path d="M499,488v 6.6" fill="none" stroke="black"/>
-<path d="M511,482v 13" fill="none" stroke="black"/>
+<path d="M57,482v 13M69,488v 6.6M80,488v 6.6M91,488v 6.6M103,482v 13M114,488v 6.6M125,488v 6.6M137,488v 6.6M148,482v 13M159,488v 6.6M171,488v 6.6M182,488v 6.6M193,482v 13M205,488v 6.6M216,488v 6.6M227,488v 6.6M239,482v 13M250,488v 6.6M261,488v
+ 6.6M273,488v 6.6M284,482v 13M295,488v 6.6M307,488v 6.6M318,488v 6.6M329,482v 13M341,488v 6.6M352,488v 6.6M363,488v 6.6M375,482v 13M386,488v 6.6M397,488v 6.6M409,488v 6.6M420,482v 13M431,488v 6.6M443,488v 6.6M454,488v 6.6M465,482v 13M477,488v
+ 6.6M488,488v 6.6M499,488v 6.6M511,482v 13" fill="none" stroke="black"/>
 <text xml:space="preserve" x="52" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="88" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.2
@@ -88,53 +50,9 @@ zoomtf1.svg
 <text xml:space="preserve" x="452" y="538" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">X axis
 </text>
 <path d="M57,495v -440" fill="none" stroke="black"/>
-<path d="M71,449h -14" fill="none" stroke="black"/>
-<path d="M64,439h -6.8" fill="none" stroke="black"/>
-<path d="M64,430h -6.8" fill="none" stroke="black"/>
-<path d="M64,421h -6.8" fill="none" stroke="black"/>
-<path d="M64,411h -6.8" fill="none" stroke="black"/>
-<path d="M71,402h -14" fill="none" stroke="black"/>
-<path d="M64,393h -6.8" fill="none" stroke="black"/>
-<path d="M64,383h -6.8" fill="none" stroke="black"/>
-<path d="M64,374h -6.8" fill="none" stroke="black"/>
-<path d="M64,365h -6.8" fill="none" stroke="black"/>
-<path d="M71,356h -14" fill="none" stroke="black"/>
-<path d="M64,346h -6.8" fill="none" stroke="black"/>
-<path d="M64,337h -6.8" fill="none" stroke="black"/>
-<path d="M64,328h -6.8" fill="none" stroke="black"/>
-<path d="M64,318h -6.8" fill="none" stroke="black"/>
-<path d="M71,309h -14" fill="none" stroke="black"/>
-<path d="M64,300h -6.8" fill="none" stroke="black"/>
-<path d="M64,290h -6.8" fill="none" stroke="black"/>
-<path d="M64,281h -6.8" fill="none" stroke="black"/>
-<path d="M64,272h -6.8" fill="none" stroke="black"/>
-<path d="M71,262h -14" fill="none" stroke="black"/>
-<path d="M64,253h -6.8" fill="none" stroke="black"/>
-<path d="M64,244h -6.8" fill="none" stroke="black"/>
-<path d="M64,234h -6.8" fill="none" stroke="black"/>
-<path d="M64,225h -6.8" fill="none" stroke="black"/>
-<path d="M71,216h -14" fill="none" stroke="black"/>
-<path d="M64,206h -6.8" fill="none" stroke="black"/>
-<path d="M64,197h -6.8" fill="none" stroke="black"/>
-<path d="M64,188h -6.8" fill="none" stroke="black"/>
-<path d="M64,178h -6.8" fill="none" stroke="black"/>
-<path d="M71,169h -14" fill="none" stroke="black"/>
-<path d="M64,160h -6.8" fill="none" stroke="black"/>
-<path d="M64,150h -6.8" fill="none" stroke="black"/>
-<path d="M64,141h -6.8" fill="none" stroke="black"/>
-<path d="M64,132h -6.8" fill="none" stroke="black"/>
-<path d="M71,123h -14" fill="none" stroke="black"/>
-<path d="M64,113h -6.8" fill="none" stroke="black"/>
-<path d="M64,104h -6.8" fill="none" stroke="black"/>
-<path d="M64,95h -6.8" fill="none" stroke="black"/>
-<path d="M64,85h -6.8" fill="none" stroke="black"/>
-<path d="M71,76h -14" fill="none" stroke="black"/>
-<path d="M64,458h -6.8" fill="none" stroke="black"/>
-<path d="M64,467h -6.8" fill="none" stroke="black"/>
-<path d="M64,477h -6.8" fill="none" stroke="black"/>
-<path d="M64,486h -6.8" fill="none" stroke="black"/>
-<path d="M64,67h -6.8" fill="none" stroke="black"/>
-<path d="M64,57h -6.8" fill="none" stroke="black"/>
+<path d="M71,449h -14M64,439h -6.8M64,430h -6.8M64,421h -6.8M64,411h -6.8M71,402h -14M64,393h -6.8M64,383h -6.8M64,374h -6.8M64,365h -6.8M71,356h -14M64,346h -6.8M64,337h -6.8M64,328h -6.8M64,318h -6.8M71,309h -14M64,300h -6.8M64,290h -6.8M64,281h
+ -6.8M64,272h -6.8M71,262h -14M64,253h -6.8M64,244h -6.8M64,234h -6.8M64,225h -6.8M71,216h -14M64,206h -6.8M64,197h -6.8M64,188h -6.8M64,178h -6.8M71,169h -14M64,160h -6.8M64,150h -6.8M64,141h -6.8M64,132h -6.8M71,123h -14M64,113h -6.8M64,104h
+ -6.8M64,95h -6.8M64,85h -6.8M71,76h -14M64,458h -6.8M64,467h -6.8M64,477h -6.8M64,486h -6.8M64,67h -6.8M64,57h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="26" y="457" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.2
 </text>
 <text xml:space="preserve" x="26" y="410" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.3

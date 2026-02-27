@@ -155,55 +155,9 @@ tgraph3.svg
 <text xml:space="preserve" x="243" y="250" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M33,236v -208" fill="none" stroke="black"/>
-<path d="M40,219h -6.5" fill="none" stroke="black"/>
-<path d="M37,215h -3.3" fill="none" stroke="black"/>
-<path d="M37,210h -3.3" fill="none" stroke="black"/>
-<path d="M37,206h -3.3" fill="none" stroke="black"/>
-<path d="M37,202h -3.3" fill="none" stroke="black"/>
-<path d="M40,197h -6.5" fill="none" stroke="black"/>
-<path d="M37,193h -3.3" fill="none" stroke="black"/>
-<path d="M37,189h -3.3" fill="none" stroke="black"/>
-<path d="M37,184h -3.3" fill="none" stroke="black"/>
-<path d="M37,180h -3.3" fill="none" stroke="black"/>
-<path d="M40,176h -6.5" fill="none" stroke="black"/>
-<path d="M37,171h -3.3" fill="none" stroke="black"/>
-<path d="M37,167h -3.3" fill="none" stroke="black"/>
-<path d="M37,163h -3.3" fill="none" stroke="black"/>
-<path d="M37,158h -3.3" fill="none" stroke="black"/>
-<path d="M40,154h -6.5" fill="none" stroke="black"/>
-<path d="M37,150h -3.3" fill="none" stroke="black"/>
-<path d="M37,145h -3.3" fill="none" stroke="black"/>
-<path d="M37,141h -3.3" fill="none" stroke="black"/>
-<path d="M37,137h -3.3" fill="none" stroke="black"/>
-<path d="M40,132h -6.5" fill="none" stroke="black"/>
-<path d="M37,128h -3.3" fill="none" stroke="black"/>
-<path d="M37,124h -3.3" fill="none" stroke="black"/>
-<path d="M37,119h -3.3" fill="none" stroke="black"/>
-<path d="M37,115h -3.3" fill="none" stroke="black"/>
-<path d="M40,111h -6.5" fill="none" stroke="black"/>
-<path d="M37,107h -3.3" fill="none" stroke="black"/>
-<path d="M37,102h -3.3" fill="none" stroke="black"/>
-<path d="M37,98h -3.3" fill="none" stroke="black"/>
-<path d="M37,94h -3.3" fill="none" stroke="black"/>
-<path d="M40,89h -6.5" fill="none" stroke="black"/>
-<path d="M37,85h -3.3" fill="none" stroke="black"/>
-<path d="M37,81h -3.3" fill="none" stroke="black"/>
-<path d="M37,76h -3.3" fill="none" stroke="black"/>
-<path d="M37,72h -3.3" fill="none" stroke="black"/>
-<path d="M40,68h -6.5" fill="none" stroke="black"/>
-<path d="M37,63h -3.3" fill="none" stroke="black"/>
-<path d="M37,59h -3.3" fill="none" stroke="black"/>
-<path d="M37,55h -3.3" fill="none" stroke="black"/>
-<path d="M37,50h -3.3" fill="none" stroke="black"/>
-<path d="M40,46h -6.5" fill="none" stroke="black"/>
-<path d="M37,223h -3.3" fill="none" stroke="black"/>
-<path d="M37,228h -3.3" fill="none" stroke="black"/>
-<path d="M37,232h -3.3" fill="none" stroke="black"/>
-<path d="M37,236h -3.3" fill="none" stroke="black"/>
-<path d="M37,42h -3.3" fill="none" stroke="black"/>
-<path d="M37,37h -3.3" fill="none" stroke="black"/>
-<path d="M37,33h -3.3" fill="none" stroke="black"/>
-<path d="M37,29h -3.3" fill="none" stroke="black"/>
+<path d="M40,219h -6.5M37,215h -3.3M37,210h -3.3M37,206h -3.3M37,202h -3.3M40,197h -6.5M37,193h -3.3M37,189h -3.3M37,184h -3.3M37,180h -3.3M40,176h -6.5M37,171h -3.3M37,167h -3.3M37,163h -3.3M37,158h -3.3M40,154h -6.5M37,150h -3.3M37,145h
+ -3.3M37,141h -3.3M37,137h -3.3M40,132h -6.5M37,128h -3.3M37,124h -3.3M37,119h -3.3M37,115h -3.3M40,111h -6.5M37,107h -3.3M37,102h -3.3M37,98h -3.3M37,94h -3.3M40,89h -6.5M37,85h -3.3M37,81h -3.3M37,76h -3.3M37,72h -3.3M40,68h -6.5M37,63h -3.3M37,59h
+ -3.3M37,55h -3.3M37,50h -3.3M40,46h -6.5M37,223h -3.3M37,228h -3.3M37,232h -3.3M37,236h -3.3M37,42h -3.3M37,37h -3.3M37,33h -3.3M37,29h -3.3" fill="none" stroke="black"/>
 <text xml:space="preserve" x="28" y="223" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">1
 </text>
 <text xml:space="preserve" x="18" y="201" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">1.5

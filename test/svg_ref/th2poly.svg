@@ -6670,39 +6670,8 @@ th2poly.svg
 <text xml:space="preserve" x="15" y="12" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">USA Population
 </text>
 <path d="M57,238h 454" fill="none" stroke="black"/>
-<path d="M57,232v 6.4" fill="none" stroke="black"/>
-<path d="M71,235v 3.2" fill="none" stroke="black"/>
-<path d="M85,235v 3.2" fill="none" stroke="black"/>
-<path d="M99,235v 3.2" fill="none" stroke="black"/>
-<path d="M113,235v 3.2" fill="none" stroke="black"/>
-<path d="M127,232v 6.4" fill="none" stroke="black"/>
-<path d="M141,235v 3.2" fill="none" stroke="black"/>
-<path d="M155,235v 3.2" fill="none" stroke="black"/>
-<path d="M169,235v 3.2" fill="none" stroke="black"/>
-<path d="M183,235v 3.2" fill="none" stroke="black"/>
-<path d="M197,232v 6.4" fill="none" stroke="black"/>
-<path d="M211,235v 3.2" fill="none" stroke="black"/>
-<path d="M225,235v 3.2" fill="none" stroke="black"/>
-<path d="M239,235v 3.2" fill="none" stroke="black"/>
-<path d="M253,235v 3.2" fill="none" stroke="black"/>
-<path d="M267,232v 6.4" fill="none" stroke="black"/>
-<path d="M280,235v 3.2" fill="none" stroke="black"/>
-<path d="M294,235v 3.2" fill="none" stroke="black"/>
-<path d="M308,235v 3.2" fill="none" stroke="black"/>
-<path d="M322,235v 3.2" fill="none" stroke="black"/>
-<path d="M336,232v 6.4" fill="none" stroke="black"/>
-<path d="M350,235v 3.2" fill="none" stroke="black"/>
-<path d="M364,235v 3.2" fill="none" stroke="black"/>
-<path d="M378,235v 3.2" fill="none" stroke="black"/>
-<path d="M392,235v 3.2" fill="none" stroke="black"/>
-<path d="M406,232v 6.4" fill="none" stroke="black"/>
-<path d="M420,235v 3.2" fill="none" stroke="black"/>
-<path d="M434,235v 3.2" fill="none" stroke="black"/>
-<path d="M448,235v 3.2" fill="none" stroke="black"/>
-<path d="M462,235v 3.2" fill="none" stroke="black"/>
-<path d="M476,232v 6.4" fill="none" stroke="black"/>
-<path d="M490,235v 3.2" fill="none" stroke="black"/>
-<path d="M504,235v 3.2" fill="none" stroke="black"/>
+<path d="M57,232v 6.4M71,235v 3.2M85,235v 3.2M99,235v 3.2M113,235v 3.2M127,232v 6.4M141,235v 3.2M155,235v 3.2M169,235v 3.2M183,235v 3.2M197,232v 6.4M211,235v 3.2M225,235v 3.2M239,235v 3.2M253,235v 3.2M267,232v 6.4M280,235v 3.2M294,235v 3.2M308,235v
+ 3.2M322,235v 3.2M336,232v 6.4M350,235v 3.2M364,235v 3.2M378,235v 3.2M392,235v 3.2M406,232v 6.4M420,235v 3.2M434,235v 3.2M448,235v 3.2M462,235v 3.2M476,232v 6.4M490,235v 3.2M504,235v 3.2" fill="none" stroke="black"/>
 <text xml:space="preserve" x="52" y="248" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">130
 </text>
 <text xml:space="preserve" x="46" y="248" fill="black" font-size="10" font-family="Times">&#8722;
@@ -6732,33 +6701,8 @@ th2poly.svg
 <text xml:space="preserve" x="468" y="248" fill="black" font-size="10" font-family="Times">&#8722;
 </text>
 <path d="M57,238v -212" fill="none" stroke="black"/>
-<path d="M71,230h -14" fill="none" stroke="black"/>
-<path d="M64,222h -6.8" fill="none" stroke="black"/>
-<path d="M64,214h -6.8" fill="none" stroke="black"/>
-<path d="M64,206h -6.8" fill="none" stroke="black"/>
-<path d="M64,198h -6.8" fill="none" stroke="black"/>
-<path d="M71,190h -14" fill="none" stroke="black"/>
-<path d="M64,181h -6.8" fill="none" stroke="black"/>
-<path d="M64,173h -6.8" fill="none" stroke="black"/>
-<path d="M64,165h -6.8" fill="none" stroke="black"/>
-<path d="M64,157h -6.8" fill="none" stroke="black"/>
-<path d="M71,149h -14" fill="none" stroke="black"/>
-<path d="M64,141h -6.8" fill="none" stroke="black"/>
-<path d="M64,132h -6.8" fill="none" stroke="black"/>
-<path d="M64,124h -6.8" fill="none" stroke="black"/>
-<path d="M64,116h -6.8" fill="none" stroke="black"/>
-<path d="M71,108h -14" fill="none" stroke="black"/>
-<path d="M64,100h -6.8" fill="none" stroke="black"/>
-<path d="M64,92h -6.8" fill="none" stroke="black"/>
-<path d="M64,84h -6.8" fill="none" stroke="black"/>
-<path d="M64,75h -6.8" fill="none" stroke="black"/>
-<path d="M71,67h -14" fill="none" stroke="black"/>
-<path d="M64,59h -6.8" fill="none" stroke="black"/>
-<path d="M64,51h -6.8" fill="none" stroke="black"/>
-<path d="M64,43h -6.8" fill="none" stroke="black"/>
-<path d="M64,35h -6.8" fill="none" stroke="black"/>
-<path d="M71,26h -14" fill="none" stroke="black"/>
-<path d="M64,238h -6.8" fill="none" stroke="black"/>
+<path d="M71,230h -14M64,222h -6.8M64,214h -6.8M64,206h -6.8M64,198h -6.8M71,190h -14M64,181h -6.8M64,173h -6.8M64,165h -6.8M64,157h -6.8M71,149h -14M64,141h -6.8M64,132h -6.8M64,124h -6.8M64,116h -6.8M71,108h -14M64,100h -6.8M64,92h -6.8M64,84h
+ -6.8M64,75h -6.8M71,67h -14M64,59h -6.8M64,51h -6.8M64,43h -6.8M64,35h -6.8M71,26h -14M64,238h -6.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="43" y="235" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">25
 </text>
 <text xml:space="preserve" x="43" y="194" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">30
