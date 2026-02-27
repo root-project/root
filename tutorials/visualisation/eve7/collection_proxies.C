@@ -468,9 +468,8 @@ private:
       if (!fHist) {
          Bool_t status = TH1::AddDirectoryStatus();
 
-         TH1::AddDirectory(kFALSE); // Keeps histogram from going into memory
+         TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
          fHist = new TH2F("caloHist", "caloHist", fw3dlego::xbins_n - 1, fw3dlego::xbins, 72, -M_PI, M_PI);
-         TH1::AddDirectory(status);
          fSliceIndex = fCaloData->AddHistogram(fHist);
 
          fCaloData->RefSliceInfo(fSliceIndex)

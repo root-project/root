@@ -94,7 +94,7 @@ void draw_canvas(const std::string &title, Int_t col1)
 
 void rcanvas_mt(bool block_main_thread = true)
 {
-   TH1::AddDirectory(false);
+   TDirectory::TContext ctx{nullptr}; // Don't register histograms to the current directory
 
    if (block_main_thread) {
       // let use special http thread to process requests, do not need main thread
