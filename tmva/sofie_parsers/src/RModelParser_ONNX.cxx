@@ -47,6 +47,7 @@ extern ParserFuncSignature ParseGreaterEq;
 //Is Operators
 extern ParserFuncSignature ParseIsInf;
 extern ParserFuncSignature ParseIsNaN;
+extern ParserFuncSignature ParseNot;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSum;
@@ -192,6 +193,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    // Is If operators
    RegisterOperator("IsInf", ParseIsInf);
    RegisterOperator("IsNaN", ParseIsNaN);
+   RegisterOperator("Not", ParseNot);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSum", ParseReduceSum);
