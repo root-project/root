@@ -1772,14 +1772,5 @@ namespace utils {
     return QT;
   }
 
-  std::string TypeName::GetFullyQualifiedName(QualType QT,
-                                              const ASTContext &Ctx) {
-    QualType FQQT = GetFullyQualifiedType(QT, Ctx);
-    PrintingPolicy Policy(Ctx.getPrintingPolicy());
-    Policy.SuppressScope = false;
-    Policy.AnonymousTagLocations = false;
-    return FQQT.getAsString(Policy);
-  }
-
 } // end namespace utils
 } // end namespace cling
