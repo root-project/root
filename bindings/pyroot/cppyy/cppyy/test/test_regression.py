@@ -1410,6 +1410,26 @@ class TestREGRESSION:
         assert out == ""
         assert err == ""
 
+    def test48_variadic_conversion(self):
+        """Conversion for a variadic template function"""
+
+        import cppyy
+        cppyy.cppdef("""\
+        namespace regression_test48 {
+        template <typename... Ts> void f(std::pair<double, double>) {}
+        class A {
+        public:
+            template <typename... Ts>
+            void m(std::pair<double, double>) {}
+        };
+        }""")
+
+        r48 = cppyy.gbl.regression_test48
+
+        r48.f((1, 1))
+        a = r48.A()
+        a.m((1, 1))
+
     @mark.xfail(run=False, condition=IS_MAC_ARM or IS_WINDOWS == 64, reason="LLVM JIT fails to catch exceptions")
     def test49_overloads_with_runtime_errors(self):
         """Regression test for https://github.com/root-project/root/issues/17497

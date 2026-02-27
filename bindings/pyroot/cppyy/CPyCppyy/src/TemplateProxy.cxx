@@ -656,7 +656,7 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
     if (result)
         TPPCALL_RETURN;
 
-// case 4: auto-instantiation from types of arguments
+// case 4.1: auto-instantiation from types of arguments
     for (auto pref : {Utility::kReference, Utility::kPointer, Utility::kValue}) {
         // TODO: no need to loop if there are no non-instance arguments; also, should any
         // failed lookup be removed?
@@ -670,6 +670,17 @@ static PyObject* tpp_call(TemplateProxy* pytmpl, PyObject* args, PyObject* kwds)
         Utility::FetchError(errors);
         if (!pcnt) break;         // preference never used; no point trying others
     }
+
+// case 4.2: auto-instantiation with zero template arguments (in case they have defaults)
+    std::string fullname = pytmpl->fTI->fCppName + "<>";
+    pymeth = pytmpl->Instantiate(fullname, args, nargsf, Utility::kNone);
+    if (pymeth) {
+    // attempt actual call; allow implicit conversion of arguments
+        result = CallMethodImp(pytmpl, pymeth, args, nargsf, kwds, true, sighash);
+        if (result)
+            TPPCALL_RETURN;
+    }
+    Utility::FetchError(errors);
 
 // case 5: low priority methods, such as ones that take void* arguments
     result = SelectAndForward(pytmpl, pytmpl->fTI->fLowPriority, args, nargsf, kwds,
