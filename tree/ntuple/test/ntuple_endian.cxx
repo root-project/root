@@ -59,6 +59,12 @@ protected:
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
+   void CommitAttributeSet(RPageSink &) final {}
+
+   ROOT::Experimental::RNTupleAttrSetDescriptor BuildAttrSetDescriptor() final
+   {
+      throw ROOT::RException(R__FAIL("Attributes are not implemented"));
+   }
 
    std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
    {

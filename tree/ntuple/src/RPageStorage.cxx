@@ -1269,6 +1269,12 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
+void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(RPageSink &attrSink)
+{
+   auto desc = attrSink.BuildAttrSetDescriptor();
+   fDescriptorBuilder.AddAttributeSet(std::move(desc)).ThrowOnError();
+}
+
 void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
    if (!fInfosOfStreamerFields.empty()) {

@@ -110,7 +110,8 @@ TEST(MiniFile, Proper)
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -146,7 +147,8 @@ TEST(MiniFile, Directory)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto directory = file->mkdir("foo");
 
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *directory, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *directory, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -176,7 +178,8 @@ TEST(MiniFile, Directory)
    file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
    file->mkdir("foo/bar");
    directory = file->GetDirectory("foo/bar");
-   writer = RNTupleFileWriter::Append("MyNTuple2", *directory, RNTupleWriteOptions::kDefaultMaxKeySize);
+   writer = RNTupleFileWriter::Append("MyNTuple2", *directory, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                      /*isAttributesRNTuple=*/false);
    offHeader = writer->WriteNTupleHeader(&header, 1, 1);
    offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
@@ -317,7 +320,8 @@ TEST(MiniFile, ProperKeys)
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -437,7 +441,8 @@ TEST(MiniFile, LongString)
       "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
       "followed by an integer length.";
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                           /*isAttributesRNTuple=*/false);
 
    char header = 'h';
    char footer = 'f';
@@ -650,8 +655,10 @@ TEST(MiniFile, Multi)
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
-   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                            /*isAttributesRNTuple=*/false);
+   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                            /*isAttributesRNTuple=*/false);
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -772,7 +779,8 @@ TEST(MiniFile, StreamerInfo)
 
    {
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
-      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize,
+                                                    /*isAttributesRNTuple=*/false);
       writerProper->UpdateStreamerInfos(streamerInfos);
       writerProper->Commit();
    }

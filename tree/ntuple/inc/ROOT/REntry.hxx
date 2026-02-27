@@ -34,6 +34,10 @@ namespace ROOT {
 class RNTupleFillContext;
 class RNTupleReader;
 
+namespace Experimental::Internal {
+struct RNTupleAttrEntryPair;
+}
+
 // clang-format off
 /**
 \class ROOT::REntry
@@ -48,6 +52,7 @@ class REntry {
    friend class RNTupleFillContext;
    friend class RNTupleModel;
    friend class RNTupleReader;
+   friend struct Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID

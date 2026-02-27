@@ -38,6 +38,7 @@ namespace ROOT {
 class RNTupleWriteOptions;
 
 namespace Experimental {
+class RNTupleAttrSetWriterHandle;
 class RFile;
 
 /// Creates an RNTupleWriter that writes into the given `file`, appending to it. The RNTuple is written under the
@@ -135,6 +136,8 @@ private:
 
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
+
+   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
@@ -260,6 +263,16 @@ public:
    {
       return std::make_unique<ROOT::RNTupleModel::RUpdater>(*this);
    }
+
+   /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
+   /// The lifetime of the Attribute Set ends at the same time as the Writer's.
+   ROOT::Experimental::RNTupleAttrSetWriterHandle
+   CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name);
+
+   /// Writes the given AttributeSet to the underlying storage and closes it. This method is only useful if you
+   /// want to close the AttributeSet early: otherwise it will automatically closed when the RNTupleWriter gets
+   /// destroyed.
+   void CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle);
 }; // class RNTupleWriter
 
 } // namespace ROOT

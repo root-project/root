@@ -26,10 +26,16 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <memory>
 #include <vector>
 
 namespace ROOT {
+
+namespace Experimental {
+class RNTupleAttrSetWriter;
+class RNTupleAttrSetWriterHandle;
+} // namespace Experimental
 
 // clang-format off
 /**
@@ -49,6 +55,7 @@ sequential writing, please refer to RNTupleWriter.
 class RNTupleFillContext {
    friend class ROOT::RNTupleWriter;
    friend class RNTupleParallelWriter;
+   friend class ROOT::Experimental::RNTupleAttrSetWriter;
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -80,6 +87,11 @@ private:
    /// Vector of currently staged clusters.
    std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
 
+   /// All the Attribute Sets created from this FillContext.
+   /// NOTE: this is a deque to keep pointers stable upon adding/removing, but have deterministic iteration at the
+   /// same time.
+   std::deque<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
+
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
    {
@@ -105,6 +117,8 @@ private:
          FlushCluster();
       return status.GetLastEntrySize();
    }
+
+   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
 
    RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;

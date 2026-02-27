@@ -29,6 +29,8 @@ namespace Internal {
 class RNTupleWriteOptionsManip final {
 public:
    static void SetMaxKeySize(RNTupleWriteOptions &options, std::uint64_t maxKeySize);
+   static void SetIsForAttributes(RNTupleWriteOptions &options, bool forAttributes);
+   static bool GetIsForAttributes(const RNTupleWriteOptions &options);
 };
 
 } // namespace Internal
@@ -206,6 +208,8 @@ protected:
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    bool fEnablePageChecksums = true;
    bool fEnableSamePageMerging = true;
+   /// If true, the RNTuple we're writing is an attribute RNTuple. Not a user-settable option.
+   bool fForAttributes = false;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
    /// any payload whose size exceeds this will be split into multiple keys.
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
@@ -283,6 +287,16 @@ namespace Internal {
 inline void RNTupleWriteOptionsManip::SetMaxKeySize(RNTupleWriteOptions &options, std::uint64_t maxKeySize)
 {
    options.fMaxKeySize = maxKeySize;
+}
+
+inline void RNTupleWriteOptionsManip::SetIsForAttributes(RNTupleWriteOptions &options, bool forAttributes)
+{
+   options.fForAttributes = forAttributes;
+}
+
+inline bool RNTupleWriteOptionsManip::GetIsForAttributes(const RNTupleWriteOptions &options)
+{
+   return options.fForAttributes;
 }
 
 } // namespace Internal

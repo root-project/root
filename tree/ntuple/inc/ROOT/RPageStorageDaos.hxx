@@ -126,6 +126,7 @@ protected:
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   Experimental::RNTupleAttrSetDescriptor BuildAttrSetDescriptor() final;
    using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
