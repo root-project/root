@@ -2126,6 +2126,27 @@ L110:
       nbinin = ih2-ih1+1;
       axmul  = (x11-x00)/(h2sav-xmnlog);
 
+      std::vector<Double_t> ticksx, ticksy, gridsx, gridsy;
+
+      if (!drawGridOnly) {
+         ticksx.reserve(nbinin*2);
+         ticksy.reserve(nbinin*2);
+      }
+      if (optionGrid) {
+         gridsx.reserve(nbinin*2);
+         gridsy.reserve(nbinin*2);
+      }
+
+      struct LogLabel {
+         Int_t id = 0, num = 0;
+         Double_t u = 0., v = 0., value = 0.;
+         TString lbl;
+      };
+      std::vector<LogLabel> loglabels;
+      if (!drawGridOnly && !optionUnlab)
+         loglabels.reserve(nbinin);
+
+
 // Plot decade and intermediate tick marks
       decade      = ih1-2;
       labelnumber = ih1;
@@ -2164,12 +2185,20 @@ L110:
                }
             }
          }
-         if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+         if (!drawGridOnly) {
+            ticksx.emplace_back(xpl1);
+            ticksx.emplace_back(xpl2);
+            ticksy.emplace_back(ypl1);
+            ticksy.emplace_back(ypl2);
+         }
 
          if (optionGrid) {
             Rotate(xone,0,cosphi,sinphi,x0,y0,xpl2,ypl2);
             Rotate(xone,grid_side*gridlength,cosphi,sinphi,x0,y0,xpl1,ypl1);
-            linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            gridsx.emplace_back(xpl1);
+            gridsx.emplace_back(xpl2);
+            gridsy.emplace_back(ypl1);
+            gridsy.emplace_back(ypl2);
          }
 
          if (!drawGridOnly && !optionUnlab)  {
@@ -2235,9 +2264,12 @@ L110:
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
-               textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
-                                   gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                                   0, textaxis.GetTextSize(), typolabel.Data());
+               loglabels.push_back({
+                  .id = changelablogid, .num = changelablognum,
+                  .u = gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
+                  .v = gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
+                  .value = axis_value, .lbl = typolabel
+               });
                if (fNModLabs) ResetLabelAttributes(&textaxis);
             }
             labelnumber++;
@@ -2271,7 +2303,12 @@ L160:
             }
             idn = n1a*2;
             if ((nbinin <= idn) || ((nbinin > idn) && (k == 5))) {
-               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) {
+                  ticksx.emplace_back(xpl1);
+                  ticksx.emplace_back(xpl2);
+                  ticksy.emplace_back(ypl1);
+                  ticksy.emplace_back(ypl2);
+               }
 
 // Draw the intermediate LOG labels if requested
 
@@ -2327,7 +2364,11 @@ L160:
                      }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
-                     textaxis.PaintLatex(u,v,0,textaxis.GetTextSize(),typolabel.Data());
+                     loglabels.push_back({
+                        .id = changelablogid, .num = 0,
+                        .u = u, .v = v,
+                        .value = axis_value, .lbl = typolabel
+                     });
                      if (fNModLabs) ResetLabelAttributes(&textaxis);
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
@@ -2346,7 +2387,11 @@ L160:
                         }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
-                        textaxis.PaintLatex(u,v,0,textaxis.GetTextSize(),typolabel.Data());
+                        loglabels.push_back({
+                           .id = changelablogid, .num = 0,
+                           .u = u, .v = v,
+                           .value = axis_value, .lbl = typolabel
+                        });
                         if (fNModLabs) ResetLabelAttributes(&textaxis);
                      }
                   }
@@ -2354,15 +2399,38 @@ L160:
 
 // Draw the intermediate LOG grid if only three decades are requested
                if (optionGrid && nbinin <= 5 && ndiv > 100) {
-                  Rotate(xone,0,cosphi,sinphi,x0,y0,xpl2, ypl2);
+                  Rotate(xone,0,cosphi,sinphi,x0,y0, xpl2, ypl2);
                   Rotate(xone,grid_side*gridlength,cosphi,sinphi,x0,y0, xpl1,ypl1);
-                  linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                  gridsx.emplace_back(xpl1);
+                  gridsx.emplace_back(xpl2);
+                  gridsy.emplace_back(ypl1);
+                  gridsy.emplace_back(ypl2);
                }
             }  //endif ((nbinin <= idn) ||
          }  //endfor (k=2;k<10;k++)
       } //endfor (j=1; j<=nbinin; j++)
 L200:
-      Int_t dummy = 0; if (dummy) { }
+      // paint ticks all together with one command
+      if (ticksx.size() > 0) {
+         TAttLine::Modify();
+         gPad->PaintSegmentsNDC(ticksx.size() / 2, ticksx.data(), ticksy.data());
+      }
+
+      // paint all labels after ticks
+      for(auto & lbl : loglabels) {
+         if (fNModLabs)
+            ChangeLabelAttributes(lbl.id, lbl.num, &textaxis, chtemp, lbl.value, lbl.value*1e-6);
+         textaxis.PaintLatex(lbl.u, lbl.v, 0, textaxis.GetTextSize(), lbl.lbl.Data());
+         if (fNModLabs)
+            ResetLabelAttributes(&textaxis);
+      }
+
+      // paint grid lines all together at the end
+      if (gridsx.size() > 0) {
+         linegrid.TAttLine::Modify();
+         gPad->PaintSegmentsNDC(gridsx.size() / 2, gridsx.data(), gridsy.data());
+      }
+
    }  //endif (optionLog && ndiv)
 
 // Draw axis title if it exists
