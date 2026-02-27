@@ -68,6 +68,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Gather.hxx
    TMVA/ROperator_GatherND.hxx
    TMVA/ROperator_NonZero.hxx
+   TMVA/ROperator_Not.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 

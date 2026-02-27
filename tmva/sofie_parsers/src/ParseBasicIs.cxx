@@ -49,9 +49,9 @@ std::unique_ptr<ROperator> ParseBasicIs(RModelParser_ONNX &parser, const onnx::N
    } else
       throw std::runtime_error("TMVA::SOFIE ONNX Parser " + IsOpTraits<Op>::Name() + " operator - invalid attributes");
 
-   // Infer the output type
+   // Register the output type (is always BOOL)
    if (!parser.IsRegisteredTensorType(output_name)) {
-      parser.RegisterTensorType(output_name, input_type);
+      parser.RegisterTensorType(output_name, ETensorType::BOOL);
    }
 
    return op;
