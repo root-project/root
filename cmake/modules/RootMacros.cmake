@@ -668,10 +668,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---build the implicit dependencies arguments
-  # NOTE: only the Makefile generator respects this!
-  foreach(_dep ${_linkdef} ${_list_of_header_dependencies})
-    list(APPEND _implicitdeps CXX ${_dep})
-  endforeach()
+  # NOTE: DEPFILE is used instead of IMPLICIT_DEPENDS because IMPLICIT_DEPENDS
+  # only works with Unix Makefiles and has issues with cross-directory dependencies.
+  # DEPFILE works with all generators (Ninja, Unix Makefiles, etc.)
+  set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.depfile)
 
   if(ARG_MODULE)
     set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
@@ -724,7 +724,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        # make the dictionary generation command depend on the C++ standard, ensuring that the
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
-    IMPLICIT_DEPENDS ${_implicitdeps}
+                       -MF ${depfile_path}
+    DEPFILE ${depfile_path}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
