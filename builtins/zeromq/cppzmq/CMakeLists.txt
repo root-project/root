@@ -3,9 +3,10 @@ include(ExternalProject)
 set(cppzmq_HEADER_PATH ${CMAKE_CURRENT_BINARY_DIR}/BUILTIN_cppzmq-prefix/src/BUILTIN_cppzmq)
 
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+set(cppzmq_version 4.10.0)
 ExternalProject_Add(BUILTIN_cppzmq
-    URL ${lcgpackages}/cppzmq-4.8.1.tar.gz
-    URL_HASH SHA256=7a23639a45f3a0049e11a188e29aaedd10b2f4845f0000cf3e22d6774ebde0af
+    URL ${lcgpackages}/cppzmq-${cppzmq_version}.tar.gz
+    URL_HASH SHA256=c81c81bba8a7644c84932225f018b5088743a22999c6d82a2b5f5cd1e6942b74
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
