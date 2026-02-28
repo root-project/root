@@ -258,7 +258,7 @@ ROOTTEST_ADD_TEST(test_hadd_regr_20706
                   COMMAND ${ROOT_hadd_CMD} -f merged_20706.root file1_20706.root file2_20706.root
 )
 
-if(davix AND NOT MSVC)
+if(xrootd AND NOT MSVC)
 ROOTTEST_ADD_TEST(test_hadd_regr_20872
                   PRECMD ${CMAKE_COMMAND} -E rm -f merged_20872.root
                   COMMAND ${ROOT_hadd_CMD} -f merged_20872.root root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root
