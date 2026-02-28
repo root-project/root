@@ -30,6 +30,7 @@
 #include "Math/IFunctionfwd.h"
 
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 
