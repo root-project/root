@@ -1239,7 +1239,8 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
             ok = imp->importArg(this, p);
          } catch (const std::exception &e) {
             std::stringstream ss;
-            ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*imp).name()
+            const auto *ptr = imp.get();
+            ss << "RooJSONFactoryWSTool() failed. The importer " << typeid(*ptr).name()
                << " emitted and error: " << e.what() << std::endl;
             RooJSONFactoryWSTool::error(ss.str());
          }
