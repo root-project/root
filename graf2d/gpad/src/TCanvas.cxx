@@ -110,32 +110,41 @@ of the canvas. It gives a short explanation about the canvas' menus.
 
 A canvas may be automatically divided into pads via `TPad::Divide`.
 
+\since **ROOT version 6.40/00:**
+The constructor defines the size of the canvas, not the size of the canvas window.
+
 At creation time, no matter if in interactive or batch mode, the constructor
-defines the size of the canvas window (including the size of the window
-manager's decoration). To define precisely the graphics area size of a canvas in
-the interactive mode, the following four lines of code should be used:
+defines the size of the canvas (window size is calculated including the size of the
+window manager's decoration).
+
+To resize the canvas in both interactive and batch mode, use:
 ~~~ {.cpp}
-   {
-      Double_t w = 600;
-      Double_t h = 600;
-      auto c = new TCanvas("c", "c", w, h);
-      c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
-   }
-~~~
-and in the batch mode simply do:
-~~~ {.cpp}
-      c->SetCanvasSize(w,h);
+c->SetCanvasSize(w,h);
 ~~~
 
 If the canvas size exceeds the window size, scroll bars will be added to the canvas
 This allows to display very large canvases (even bigger than the screen size). The
 Following example shows how to proceed.
 ~~~ {.cpp}
-   {
-      auto c = new TCanvas("c","c");
-      c->SetCanvasSize(1500, 1500);
-      c->SetWindowSize(500, 500);
-   }
+{
+   auto c = new TCanvas("c","c");
+   c->SetCanvasSize(1500, 1500);
+   c->SetWindowSize(500, 500);
+}
+~~~
+
+To resize the window together with the canvas in the interactive mode, the following
+lines of code could be used:
+~~~ {.cpp}
+{
+   Double_t w = 600;
+   Double_t h = 600;
+   auto c = new TCanvas("c", "c", w, h);
+
+   Double_t new_w = 800;
+   Double_t new_h = 800;
+   c->SetWindowSize(new_w + (c->GetWindowWidth() - c->GetWw()), new_h + (c->GetWindowHeight() - c->GetWh()));
+}
 ~~~
 */
 
@@ -218,7 +227,7 @@ void TCanvas::Constructor()
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
-TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
+TCanvas::TCanvas(const char *name, Int_t cw, Int_t ch, Int_t winid) : TPad(), fDoubleBuffer(0)
 {
    fCanvasImp = nullptr;
    fPainter = nullptr;
@@ -227,10 +236,10 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
-   fWindowWidth  = ww;
-   fWindowHeight = wh;
-   fCw           = ww + 4;
-   fCh           = wh +28;
+   fWindowWidth  = cw + 4;
+   fWindowHeight = ch +28;
+   fCw           = cw;
+   fCh           = ch;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
 
@@ -361,18 +370,18 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 ///
 /// \param[in] name    canvas name
 /// \param[in] title   canvas title
-/// \param[in] ww      is the window size in pixels along X
+/// \param[in] cw      is the canvas size in pixels along X
 ///                    (if ww < 0  the menubar is not shown)
-/// \param[in] wh      is the window size in pixels along Y
+/// \param[in] ch      is the canvas size in pixels along Y
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
-TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad(), fDoubleBuffer(0)
+TCanvas::TCanvas(const char *name, const char *title, Int_t cw, Int_t ch) : TPad(), fDoubleBuffer(0)
 {
    fPainter = nullptr;
    fUseGL = gStyle->GetCanvasPreferGL();
 
-   Constructor(name, title, ww, wh);
+   Constructor(name, title, cw, ch);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -380,30 +389,30 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad
 ///
 /// \param[in] name    canvas name
 /// \param[in] title   canvas title
-/// \param[in] ww      is the window size in pixels along X
+/// \param[in] cw      is the canvas size in pixels along X
 ///                    (if ww < 0  the menubar is not shown)
-/// \param[in] wh      is the window size in pixels along Y
+/// \param[in] ch      is the canvas size in pixels along Y
 
-void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t wh)
+void TCanvas::Constructor(const char *name, const char *title, Int_t cw, Int_t ch)
 {
    if (gThreadXAR) {
       void *arr[6];
-      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
+      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&cw; arr[5] = &ch;
       if ((*gThreadXAR)("CANV", 6, arr, nullptr)) return;
    }
 
    Init();
    SetBit(kMenuBar,true);
-   if (ww < 0) {
-      ww       = -ww;
+   if (cw < 0) {
+      cw       = -cw;
       SetBit(kMenuBar,false);
    }
-   if (wh <= 0) {
-      Error("Constructor", "Invalid canvas height: %d",wh);
+   if (ch <= 0) {
+      Error("Constructor", "Invalid canvas height: %d",ch);
       return;
    }
-   fCw       = ww;
-   fCh       = wh;
+   fCw       = cw;
+   fCh       = ch;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) {
@@ -412,17 +421,18 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    }
    if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = ww;
-      fWindowHeight = wh;
-      fCw           = ww;
-      fCh           = wh;
+      fWindowWidth  = cw;
+      fWindowHeight = ch;
+      fCw           = cw;
+      fCh           = ch;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
       if (!fCanvasImp) return;
       fBatch        = kTRUE;
    } else {
       Float_t cx = gStyle->GetScreenFactor();
       auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
-      fCanvasImp = factory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
+      // 2,2+27 is the extra frame (1px each side) + top menu (27 px high)
+      fCanvasImp = factory->CreateCanvasImp(this, name, UInt_t(cx*(cw+2)), UInt_t(cx*(ch+2+27)));
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
@@ -449,18 +459,18 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 /// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
 ///                         the canvas (if wtopx < 0) the menubar is not shown)
-/// \param[in] ww           is the window size in pixels along X
-/// \param[in] wh           is the window size in pixels along Y
+/// \param[in] cw           is the canvas size in pixels along X
+/// \param[in] ch           is the canvas size in pixels along Y
 ///
 /// If "name" starts with "gl" the canvas is ready to receive GL output.
 
-TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh)
+TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t cw, Int_t ch)
         : TPad(), fDoubleBuffer(0)
 {
    fPainter = nullptr;
    fUseGL = gStyle->GetCanvasPreferGL();
 
-   Constructor(name, title, wtopx, wtopy, ww, wh);
+   Constructor(name, title, wtopx, wtopy, cw, ch);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,16 +480,16 @@ TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, 
 /// \param[in] title        canvas title
 /// \param[in] wtopx,wtopy  are the pixel coordinates of the top left corner of
 ///                         the canvas  (if wtopx < 0) the menubar is not shown)
-/// \param[in] ww           is the window size in pixels along X
-/// \param[in] wh           is the window size in pixels along Y
+/// \param[in] cw           is the canvas size in pixels along X
+/// \param[in] ch           is the canvas size in pixels along Y
 
 void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
-                          Int_t wtopy, Int_t ww, Int_t wh)
+                          Int_t wtopy, Int_t cw, Int_t ch)
 {
    if (gThreadXAR) {
       void *arr[8];
       arr[1] = this;   arr[2] = (void*)name;   arr[3] = (void*)title;
-      arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
+      arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &cw; arr[7] = &ch;
       if ((*gThreadXAR)("CANV", 8, arr, nullptr)) return;
    }
 
@@ -489,8 +499,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       wtopx    = -wtopx;
       SetBit(kMenuBar,false);
    }
-   fCw       = ww;
-   fCh       = wh;
+   fCw       = cw;
+   fCh       = ch;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) {
@@ -499,17 +509,18 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    }
    if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = ww;
-      fWindowHeight = wh;
-      fCw           = ww;
-      fCh           = wh;
+      fWindowWidth  = cw;
+      fWindowHeight = ch;
+      fCw           = cw;
+      fCh           = ch;
       fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
       if (!fCanvasImp) return;
       fBatch        = kTRUE;
    } else {                   //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
-      fCanvasImp = factory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*ww), UInt_t(cx*wh));
+      // 2,2+27 is the extra frame (1px each side) + top menu (27 px high)
+      fCanvasImp = factory->CreateCanvasImp(this, name, Int_t(cx*wtopx), Int_t(cx*wtopy), UInt_t(cx*(cw+2)), UInt_t(cx*(ch+2+27)));
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
@@ -601,8 +612,6 @@ void TCanvas::Build()
 
    if (IsBatch()) {
       // Make sure that batch interactive canvas sizes are the same
-      fCw -= 4;
-      fCh -= 28;
    } else if (IsWeb()) {
       // mark canvas as batch - avoid gVirtualX in many places
       SetBatch(kTRUE);
@@ -1043,7 +1052,7 @@ void TCanvas::EditorBar()
 /// Embedded a canvas into a TRootEmbeddedCanvas. This method is only called
 /// via TRootEmbeddedCanvas::AdoptCanvas.
 
-void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
+void TCanvas::EmbedInto(Int_t winid, Int_t cw, Int_t ch)
 {
    // If fCanvasImp already exists, no need to go further.
    if(fCanvasImp) return;
@@ -1051,10 +1060,10 @@ void TCanvas::EmbedInto(Int_t winid, Int_t ww, Int_t wh)
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
-   fWindowWidth  = ww;
-   fWindowHeight = wh;
-   fCw           = ww;
-   fCh           = wh;
+   fWindowWidth  = cw;
+   fWindowHeight = ch;
+   fCw           = cw;
+   fCh           = ch;
    fBatch        = kFALSE;
    fUpdating     = kFALSE;
 
@@ -1851,15 +1860,10 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
       return;
    }
    UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
-   w = UInt_t((fWindowWidth - editorWidth)/cx);
-   h = UInt_t((fWindowHeight)/cx);
+   w = GetWw();
+   h = GetWh();
    topx = GetWindowTopX();
    topy = GetWindowTopY();
-
-   if (w == 0) {
-      w = GetWw()+4; h = GetWh()+4;
-      topx = 1;    topy = 1;
-   }
 
    TString mname = fname;
    out << R"CODE(#ifdef __CLING__
@@ -1939,21 +1943,19 @@ void TCanvas::SetBatch(Bool_t batch)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Width and Height of canvas to ww and wh respectively. If ww and/or wh
+/// Set Width and Height of canvas to cw and ch respectively. If cw and/or ch
 /// are greater than the current canvas window a scroll bar is automatically
 /// generated. Use this function to zoom in a canvas and navigate via
-/// the scroll bars. The Width and Height in this method are different from those
-/// given in the TCanvas constructors where these two dimension include the size
-/// of the window decoration whereas they do not in this method.
-/// When both ww==0 and wh==0, auto resize mode will be enabled again and
+/// the scroll bars.
+/// When both cw==0 and ch==0, auto resize mode will be enabled again and
 /// canvas drawing area will automatically fit available window size
 
-void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
+void TCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
    if (fCanvasImp) {
-      fCw = ww;
-      fCh = wh;
-      fCanvasImp->SetCanvasSize(ww, wh);
+      fCw = cw;
+      fCh = ch;
+      fCanvasImp->SetCanvasSize(cw, ch);
       TContext ctxt(this, kTRUE);
       ResizePad();
    }
@@ -2149,7 +2151,7 @@ void TCanvas::SetWindowPosition(Int_t x, Int_t y)
 void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 {
    if (fBatch && !IsWeb())
-      SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
+      SetCanvasSize(ww, wh);
    else if (fCanvasImp)
       fCanvasImp->SetWindowSize(ww, wh);
 }

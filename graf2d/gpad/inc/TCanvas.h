@@ -99,18 +99,18 @@ public:
 
    TCanvas(Bool_t build=kTRUE);
    TCanvas(const char *name, const char *title="", Int_t form=1);
-   TCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
+   TCanvas(const char *name, const char *title, Int_t cw, Int_t ch);
    TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy,
-           Int_t ww, Int_t wh);
-   TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
+           Int_t cw, Int_t ch);
+   TCanvas(const char *name, Int_t cw, Int_t ch, Int_t winid);
    ~TCanvas() override;
 
    //-- used by friend TThread class
    void Constructor();
    void Constructor(const char *name, const char *title, Int_t form);
-   void Constructor(const char *name, const char *title, Int_t ww, Int_t wh);
+   void Constructor(const char *name, const char *title, Int_t cw, Int_t ch);
    void Constructor(const char *name, const char *title,
-           Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
+           Int_t wtopx, Int_t wtopy, Int_t cw, Int_t ch);
    void Destructor();
 
    TVirtualPad      *cd(Int_t subpadnumber=0) override;
@@ -123,7 +123,7 @@ public:
    TObject          *DrawClone(Option_t *option="") const override; // *MENU*
    virtual TObject  *DrawClonePad(); // *MENU*
    virtual void      EditorBar();
-   void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
+   void              EmbedInto(Int_t winid, Int_t cw, Int_t ch);
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
    void              FeedbackMode(Bool_t set);
    void              Flush();
@@ -203,7 +203,7 @@ public:
    void              SetWindowPosition(Int_t x, Int_t y);
    void              SetWindowSize(UInt_t ww, UInt_t wh);
    void              SetCanvasImp(TCanvasImp *i);
-   void              SetCanvasSize(UInt_t ww, UInt_t wh) override; // *MENU*
+   void              SetCanvasSize(UInt_t cw, UInt_t ch) override; // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
    void              SetSelected(TObject *obj) override;
    void              SetClickSelected(TObject *obj) { fClickSelected = obj; }
