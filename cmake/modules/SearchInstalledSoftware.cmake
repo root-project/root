@@ -653,7 +653,7 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
       endif()
     endif()
   else()
-    set(gsl_version 2.5)
+    set(gsl_version 2.8)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     foreach(l gsl gslcblas)
       list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -667,7 +667,7 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
+      URL_HASH SHA256=6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190
       SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
