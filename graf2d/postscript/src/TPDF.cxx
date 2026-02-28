@@ -2346,6 +2346,15 @@ void TPDF::Text(Double_t, Double_t, const wchar_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL. Same as Text.
+///
+
+void TPDF::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
 void TPDF::TextNDC(Double_t u, Double_t v, const char *chars)

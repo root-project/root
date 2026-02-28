@@ -44,6 +44,7 @@ to the Latex's one. It provides several functionalities:
 - [Italic and Boldface](\ref L12)
 - [Examples](\ref L13)
 - [Interface to TMathText](\ref L14)
+- [URL links](\ref L15)
 
 When the font precision (see `TAttText`) is low (0 or 1), TLatex is
 painted as a normal TText, the control characters are not interpreted.
@@ -393,6 +394,21 @@ TeX syntax and uses "\\" as control instead of "#". If a piece of text containin
 "\\" is given to `TLatex` then `TMathText` is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
 `TLatex`, the `TMathText` syntax can be used for them also.
+
+\anchor L15
+## URL links
+JSROOT and standard SVG output support the syntax '#url[link]{label}'.
+This can be combined with other LaTeX commands, such as color or font settings.
+Begin_Macro(source)
+{
+   auto cl = new TCanvas("cl", "Use of #url in TLatex", 1200, 800);
+   auto latex = new TLatex(0.5, 0.5, "Link on #color[4]{#url[https://root.cern]{root.cern}} web site");
+   latex->SetTextSize(0.1);
+   latex->SetTextAlign(22);
+   latex->Draw();
+   cl->Print("cl.svg");
+}
+End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -647,6 +663,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
    Int_t opSquareCurly   = -1;   // Position of first ]{
    Int_t opCloseCurly    = -2;   // Position of first }
    Int_t opColor         = -1;   // Position of first #color
+   Int_t opUrl           = -1;   // Position of first #url
    Int_t opFont          = -1;   // Position of first #font
    Int_t opScale         = -1;   // Position of first #scale
    Int_t opGreek         = -1;   // Position of a Greek letter
@@ -862,6 +879,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                opPlus=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
+            }
+            if (strncmp(buf,"url[",4)==0 || strncmp(buf,"url{",4)==0) {
+               opUrl=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
             }
          }
          if (length>i+3) {
@@ -1738,6 +1760,25 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
+   else if (opUrl>-1) { // \url found
+      if (opSquareCurly==-1) {
+         // url is not specified
+         fError = "Missing url. Syntax is #url[http://...]{ ... }";
+         delete[] text;
+         return TLatexFormSize(0,0,0);
+      }
+      TextSpec_t newSpec = spec;
+      Char_t *url = new Char_t[opSquareCurly-opUrl-4];
+      strncpy(url,text+opUrl+5,opSquareCurly-opUrl-5);
+      fName = url;
+      delete[] url;
+      if (!fShow) {
+         result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+      } else {
+         Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+      }
+      fName = "";
+   }
    else if (opFont>-1) { // \font found
       if (opSquareCurly==-1) {
          // font number is not specified
@@ -1927,7 +1968,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          // paint the Latex sub-expression per sub-expression
          Double_t xx, yy;
          Rotate(gPad, spec.fAngle, x, y, xx, yy);
-         gPad->PaintText(xx, yy, text);
+         if (fName.Length() > 0) gPad->PaintTextUrl(xx, yy, text, fName.Data());
+         else                    gPad->PaintText(xx, yy, text);
       } else {
          GetTextExtent(w,h,text);
          Double_t width = w;
@@ -2310,19 +2352,19 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 
 Int_t TLatex::CheckLatexSyntax(TString &text)
 {
-   const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
+   const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#url{","#font{","#sqrt{","#[]{","#{}{","#||{",
                        "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{","#mbox{",
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{","\\bf{","\\it{","\\mbox{"}; // check for }
-   const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","#kern[","#lower[","\\scale[","\\color[","\\font[","\\sqrt[","\\kern[","\\lower["}; // check for ]{ + }
+   const Char_t *kWord2[] = {"#scale[","#color[","#url[","#font[","#sqrt[","#kern[","#lower[","\\scale[","\\color[","\\font[","\\sqrt[","\\kern[","\\lower["}; // check for ]{ + }
    const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"}; // check for }{ then }
    const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("};
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"};
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"};
-   const Int_t lkWord1[]  = {4,4,2,2,7,7,6,6,4,4,4,5,5,5,5,6,7,7,7,7,7,4,4,6,7,7,6,6,4,4,4,4,4,5,5,5,5,6,7,7,7,4,4,6};
-   const Int_t lkWord2[]  = {7,7,6,6,6,7,7,7,6,6,6,7} ;
+   const Int_t lkWord1[]  = {4,4,2,2,7,7,5,6,6,4,4,4,5,5,5,5,6,7,7,7,7,7,4,4,6,7,7,6,6,4,4,4,4,4,5,5,5,5,6,7,7,7,4,4,6};
+   const Int_t lkWord2[]  = {7,7,5,6,6,6,7,7,7,6,6,6,7} ;
    const Int_t lkWord3[]  = {6,6,11,11} ;
-   Int_t nkWord1 = 44, nkWord2 = 12, nkWord3 = 4;
+   Int_t nkWord1 = 45, nkWord2 = 13, nkWord3 = 4;
    Int_t i,k ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;

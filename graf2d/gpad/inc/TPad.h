@@ -307,6 +307,7 @@ public:
    void              PaintText(Double_t x, Double_t y, const wchar_t *text) override;
    void              PaintTextNDC(Double_t u, Double_t v, const char *text) override;
    void              PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) override;
+   void              PaintTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj);
    Double_t          PixeltoX(Double_t px) override;
    Double_t          PixeltoY(Double_t py) override;

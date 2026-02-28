@@ -2983,6 +2983,15 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL. Same as Text.
+///
+
+void TPostScript::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
 void TPostScript::TextNDC(Double_t u, Double_t v, const char *chars)
