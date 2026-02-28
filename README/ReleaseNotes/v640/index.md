@@ -260,4 +260,14 @@ h_from_uhi = ROOT.TH1D(json.loads(json_str, , object_hook=uhi.io.json.object_hoo
 
 ## Versions of built-in packages
 
+The version of the following packages has been updated:
+ 
+ - cppzeromq: 4.10.0
+ - fftw3: 3.3.10
+ - gsl: 2.8
+ - gtest: 1.17.0
+ - libzeromq: 4.3.5
+ - xrootd: 5.9.1
+
+
 ## Items addressed for this release
