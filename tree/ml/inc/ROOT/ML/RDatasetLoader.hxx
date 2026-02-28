@@ -11,16 +11,17 @@
 #ifndef ROOT_INTERNAL_ML_RDATASETLOADER
 #define ROOT_INTERNAL_ML_RDATASETLOADER
 
+#include <algorithm>
+#include <memory>
+#include <numeric>
+#include <string>
+#include <type_traits>
 #include <vector>
-#include <random>
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDF/Utils.hxx"
 #include "ROOT/ML/RFlat2DMatrix.hxx"
 #include "ROOT/ML/RFlat2DMatrixOperators.hxx"
-#include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RVec.hxx"
-
-#include "ROOT/RLogger.hxx"
 
 namespace ROOT::Experimental::Internal::ML {
 

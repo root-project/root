@@ -51,7 +51,10 @@ using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleSerializer;
 
 /// \brief RNTuple page-DAOS mappings
-enum EDaosMapping { kOidPerCluster, kOidPerPage };
+enum EDaosMapping {
+   kOidPerCluster,
+   kOidPerPage
+};
 
 struct RDaosKey {
    daos_obj_id_t fOid;
@@ -125,7 +128,7 @@ struct RDaosContainerNTupleLocator {
    static const ntuple_index_t kReservedIndex = 0;
 
    RDaosContainerNTupleLocator() = default;
-   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)) {};
 
    bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
    [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };

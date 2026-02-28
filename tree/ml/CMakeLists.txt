@@ -12,7 +12,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTMLDataLoader
     ROOT/ML/RFlat2DMatrixOperators.hxx
     ROOT/ML/RDatasetLoader.hxx
     ROOT/ML/RSampler.hxx
-  NO_SOURCES
+  SOURCES
+    src/RBatchLoader.cxx
+    src/RChunkConstructor.cxx
+    src/RFlat2DMatrixOperators.cxx
+    src/RSampler.cxx
   DEPENDENCIES
     ROOTDataFrame
 )
