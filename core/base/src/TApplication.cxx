@@ -53,6 +53,7 @@ TApplication (see TRint).
 TApplication *gApplication = nullptr;
 Bool_t TApplication::fgGraphNeeded = kFALSE;
 Bool_t TApplication::fgGraphInit = kFALSE;
+Bool_t TApplication::fgSkipArguments = kFALSE;
 TList *TApplication::fgApplications = nullptr;  // List of available applications
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +238,15 @@ TApplication::~TApplication()
 void TApplication::NeedGraphicsLibs()
 {
    fgGraphNeeded = kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static method. This method should be called if TApplication should skip
+/// processing positional arguments leaving this to user.
+
+void TApplication::SkipParsingArguments()
+{
+   fgSkipArguments = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -474,6 +484,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                argv[i] = null;
          }
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
+         if (fgSkipArguments)
+            continue;
          Long64_t size;
          Long_t id, flags, modtime;
          char *arg = strchr(argv[i], '(');
