@@ -141,7 +141,7 @@ if(NOT sqlite)
     # RDF+SQlite tutorials
     list(APPEND dataframe_veto analysis/dataframe/*SQlite*)
 endif()
-if(NOT davix)
+if(NOT davix AND NOT curl)
     list(APPEND dataframe_veto analysis/dataframe/df027_SQliteDependencyOverVersion.C)
     list(APPEND dataframe_veto analysis/dataframe/df028_SQliteIPLocation.C)
     list(APPEND dataframe_veto analysis/dataframe/df029_SQlitePlatformDistribution.C)
