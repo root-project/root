@@ -14,9 +14,10 @@ else()
 endif()
 
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+set(libzeromq_version 4.3.5)
 ExternalProject_Add(BUILTIN_ZeroMQ
-    URL ${lcgpackages}/libzmq-7c2df78b49a3aa63e654b3f3526adf71ed091534.tar.gz
-    URL_HASH SHA256=fcc1b0648afa5d92e0ff0e6e93beb28cbbe008a5f98c228ff97144ba6e4a6c3e
+    URL ${lcgpackages}/zeromq-${libzeromq_version}.tar.gz 
+    URL_HASH SHA256=6653ef5910f17954861fe72332e68b03ca6e4d9c7160eb3a8de5a5a913bfab43
     CMAKE_ARGS
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
