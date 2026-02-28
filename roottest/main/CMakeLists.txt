@@ -376,7 +376,7 @@ ROOTTEST_ADD_TEST(RootcpReplaceEntireFileClean
                   COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r copy_repl.root
                   FIXTURES_REQUIRED main-RootcpReplaceEntireFileCheckOutput-fixture)
 
-if(davix)
+if(xrootd)
 ROOTTEST_ADD_TEST(RootcpReadRemote
                   COMMAND ${TOOLS_PREFIX}/rootcp${exeext} root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root copy_remote.root
                   FIXTURES_SETUP main-RootcpReadRemote-fixture)
