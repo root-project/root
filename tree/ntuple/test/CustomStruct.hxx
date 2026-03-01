@@ -36,7 +36,15 @@ enum class CustomEnumUInt64 : unsigned long int {};
 
 struct CustomStruct {
    template <typename T>
+   struct VectorWrapper {
+      std::vector<T> fVec;
+   };
+
+   template <typename T>
    using MyVec = std::vector<T>;
+
+   template <typename T>
+   using MyVectorWrapper = VectorWrapper<T>;
 
    float a = 0.0;
    std::vector<float> v1;
@@ -64,7 +72,10 @@ struct DerivedA2 : public CustomStruct {
 };
 
 struct DerivedWithTypedef : public CustomStruct {
-   MyVec<int> m;
+   MyVec<Double32_t> m1;
+   MyVec<Long64_t> m2;
+   MyVec<Int_t> m3;
+   MyVectorWrapper<Long64_t> m4;
 };
 
 struct DerivedB : public DerivedA {
