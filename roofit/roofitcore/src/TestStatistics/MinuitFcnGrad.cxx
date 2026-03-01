@@ -276,7 +276,7 @@ bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
    return returnee;
 }
 
-void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim)
+void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer * /*context*/)
 {
    auto &minuit = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer &>(minim);
    minuit.SetFCN(getNDim(), std::make_unique<MinuitGradFunctor>(*this, minim.ErrorDef()));

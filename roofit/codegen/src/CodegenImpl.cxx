@@ -99,7 +99,7 @@ void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrde
    }
    std::string const &offset = dataHist.calculateTreeIndexForCodeSquash(ctx, obs);
    std::string weightArr = dataHist.declWeightArrayForCodeSquash(ctx, correctForBinSize);
-   ctx.addResult(&arg, "*(" + weightArr + " + " + offset + ")");
+   ctx.addResult(&arg, "(" + weightArr + ")[" + offset + "]");
 }
 
 std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, RooArgList const &funcList,

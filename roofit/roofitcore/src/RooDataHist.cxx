@@ -1014,14 +1014,16 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooFit::Experimental::C
          return "";
       }
 
-      code += " + " + binning->translateBinNumber(ctx, *theVar, idxMult);
+      if (i > 0)
+         code += " + ";
+      code += binning->translateBinNumber(ctx, *theVar, idxMult);
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
       idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
    }
 
-   return "(" + code + ")";
+   return _vars.size() == 1 ? code : "(" + code + ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -128,15 +128,22 @@ public:
    RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet);
 
    bool hasGradient() const { return _hasGradient; }
+   bool hasHessian() const { return _hasHessian; }
    void gradient(double *out) const
    {
       updateGradientVarBuffer();
       std::fill(out, out + _params.size(), 0.0);
-
-      _grad(_gradientVarBuffer.data(), _observables.data(), _xlArr.data(), out);
+      _grad(_varBuffer.data(), _observables.data(), _xlArr.data(), out);
+   }
+   void hessian(double *out) const
+   {
+      updateGradientVarBuffer();
+      std::fill(out, out + _params.size() * _params.size(), 0.0);
+      _hessian(_varBuffer.data(), _observables.data(), _xlArr.data(), out);
    }
 
    void createGradient();
+   void createHessian();
 
    void writeDebugMacro(std::string const &) const;
 
@@ -145,7 +152,7 @@ public:
    double evaluate() const
    {
       updateGradientVarBuffer();
-      return _func(_gradientVarBuffer.data(), _observables.data(), _xlArr.data());
+      return _func(_varBuffer.data(), _observables.data(), _xlArr.data());
    }
 
    void loadData(RooAbsData const &data, RooSimultaneous const *simPdf);
@@ -157,13 +164,16 @@ private:
 
    using Func = double (*)(double *, double const *, double const *);
    using Grad = void (*)(double *, double const *, double const *, double *);
+   using Hessian = void (*)(double *, double const *, double const *, double *);
 
    RooArgList _params;
    std::string _funcName;
    Func _func;
    Grad _grad;
+   Hessian _hessian;
    bool _hasGradient = false;
-   mutable std::vector<double> _gradientVarBuffer;
+   bool _hasHessian = false;
+   mutable std::vector<double> _varBuffer;
    std::vector<double> _observables;
    std::unordered_map<RooFit::Detail::DataKey, std::size_t> _obsInfos;
    std::vector<double> _xlArr;
@@ -226,7 +236,7 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
          _params.add(*param);
       }
    }
-   _gradientVarBuffer.resize(_params.size());
+   _varBuffer.resize(_params.size());
 
    // Figure out which part of the computation graph depends on data
    std::unordered_set<RooFit::Detail::DataKey> dependsOnData;
@@ -355,9 +365,59 @@ void RooFuncWrapper::createGradient()
 #endif
 }
 
+void RooFuncWrapper::createHessian()
+{
+#ifdef ROOFIT_CLAD
+   std::string hessianName = _funcName + "_hessian_0";
+   std::string requestName = _funcName + "_hessian_req";
+
+   // Calculate Hessian
+   gInterpreter->Declare("#include <Math/CladDerivator.h>\n");
+   // disable clang-format for making the following code unreadable.
+   // clang-format off
+   std::stringstream requestFuncStrm;
+   std::string paramsStr =
+      _params.size() == 1 ? "\"params[0]\"" : ("\"params[0:" + std::to_string(_params.size() - 1) + "]\"");
+   requestFuncStrm << "#pragma clad ON\n"
+                      "void " << requestName << "() {\n"
+                      "  clad::hessian(" << _funcName << ", " << paramsStr << ");\n"
+                      "}\n"
+                      "#pragma clad OFF";
+   // clang-format on
+   auto print = [](std::string const &msg) { oocoutI(nullptr, Fitting) << msg << std::endl; };
+
+   bool cladSuccess = false;
+   {
+      ROOT::Math::Util::TimingScope timingScope(print, "Hessian generation time:");
+      cladSuccess = !gInterpreter->Declare(requestFuncStrm.str().c_str());
+   }
+   if (cladSuccess) {
+      std::stringstream errorMsg;
+      errorMsg << "Function could not be differentiated. See above for details.";
+      oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
+
+   // Clad provides different overloads for the Hessian, and we need to
+   // resolve to the one that we want. Without the static_cast, getting the
+   // function pointer would be ambiguous.
+   std::stringstream ss;
+   ROOT::Math::Util::TimingScope timingScope(print, "Hessian IR to machine code time:");
+   ss << "static_cast<void (*)(double *, double const *, double const *, double *)>(" << hessianName << ");";
+   _hessian = reinterpret_cast<Hessian>(gInterpreter->ProcessLine(ss.str().c_str()));
+   _hasHessian = true;
+#else
+   _hasHessian = false;
+   std::stringstream errorMsg;
+   errorMsg << "Function could not be differentiated since ROOT was built without Clad support.";
+   oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+#endif
+}
+
 void RooFuncWrapper::updateGradientVarBuffer() const
 {
-   std::transform(_params.begin(), _params.end(), _gradientVarBuffer.begin(), [](RooAbsArg *obj) {
+   std::transform(_params.begin(), _params.end(), _varBuffer.begin(), [](RooAbsArg *obj) {
       return obj->isCategory() ? static_cast<RooAbsCategory *>(obj)->getCurrentIndex()
                                : static_cast<RooAbsReal *>(obj)->getVal();
    });
@@ -385,10 +445,14 @@ void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
    }
 
    std::ofstream outFile;
+   std::string paramsStr =
+      _params.size() == 1 ? "\"params[0]\"" : ("\"params[0:" + std::to_string(_params.size() - 1) + "]\"");
    outFile.open(filename + ".C");
    outFile << R"(//auto-generated test macro
 #include <RooFit/Detail/MathFuncs.h>
 #include <Math/CladDerivator.h>
+
+//#define DO_HESSIAN
 
 )" << allCode.str()
            << R"(
@@ -396,6 +460,10 @@ void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
 void gradient_request() {
   clad::gradient()"
            << _funcName << R"(, "params");
+#ifdef DO_HESSIAN
+   clad::hessian()"
+           << _funcName << ", " << paramsStr << R"();
+#endif
 }
 #pragma clad OFF
 )";
@@ -423,7 +491,7 @@ void gradient_request() {
    };
 
    outFile << "// clang-format off\n" << std::endl;
-   writeVector("parametersVec", _gradientVarBuffer);
+   writeVector("parametersVec", _varBuffer);
    outFile << std::endl;
    writeVector("observablesVec", _observables);
    outFile << std::endl;
@@ -436,7 +504,9 @@ void gradient_request() {
 void )" << filename
            << R"(()
 {
-   std::vector<double> gradientVec(parametersVec.size());
+   const std::size_t n = parametersVec.size();
+
+   std::vector<double> gradientVec(n);
 
    auto func = [&](std::span<double> params) {
       return )"
@@ -465,6 +535,100 @@ void )" << filename
       std::cout << "  numr : " << numDiff(i) << std::endl;
       std::cout << "  clad : " << gradientVec[i] << std::endl;
    }
+
+#ifdef DO_HESSIAN
+   std::cout << "\n";
+
+   auto hess = [&](std::span<double> params, std::span<double> out) {
+      return )"
+           << _funcName << R"(_hessian_0(params.data(), observablesVec.data(), auxConstantsVec.data(), out.data());
+   };
+
+   std::vector<double> hessianVec(n * n);
+   hess(parametersVec, hessianVec);
+
+   // ---------- Numerical Hessian ----------
+   // Uses central differences:
+   // diag: (f(x+ei)-2f(x)+f(x-ei))/eps^2
+   // offdiag: (f(++ ) - f(+-) - f(-+) + f(--)) / (4 eps^2)
+   auto numHess = [&](std::size_t i, std::size_t j) {
+      const double eps = 1e-5; // often needs to be a bit larger than grad eps
+      std::vector<double> p(parametersVec.begin(), parametersVec.end());
+
+      if (i == j) {
+         const double f0 = func(p);
+
+         p[i] = parametersVec[i] + eps;
+         const double fUp = func(p);
+
+         p[i] = parametersVec[i] - eps;
+         const double fDown = func(p);
+
+         return (fUp - 2.0 * f0 + fDown) / (eps * eps);
+      } else {
+         // f(x_i + eps, x_j + eps)
+         p[i] = parametersVec[i] + eps;
+         p[j] = parametersVec[j] + eps;
+         const double fPP = func(p);
+
+         // f(x_i + eps, x_j - eps)
+         p[i] = parametersVec[i] + eps;
+         p[j] = parametersVec[j] - eps;
+         const double fPM = func(p);
+
+         // f(x_i - eps, x_j + eps)
+         p[i] = parametersVec[i] - eps;
+         p[j] = parametersVec[j] + eps;
+         const double fMP = func(p);
+
+         // f(x_i - eps, x_j - eps)
+         p[i] = parametersVec[i] - eps;
+         p[j] = parametersVec[j] - eps;
+         const double fMM = func(p);
+
+         return (fPP - fPM - fMP + fMM) / (4.0 * eps * eps);
+      }
+   };
+
+   // Compute full numerical Hessian
+   std::vector<double> numHessianVec(n * n);
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         numHessianVec[i + n * j] = numHess(i, j); // keep same layout as your print
+      }
+   }
+
+   // ---------- Compare & print ----------
+   std::cout << "Hessian comparison (clad vs numeric vs diff):\n\n";
+
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         const std::size_t idx = i + n * j; // same indexing you used
+         const double cladH = hessianVec[idx];
+         const double numH = numHessianVec[idx];
+         const double diff = cladH - numH;
+
+         std::cout << "[" << i << "," << j << "] "
+                   << "clad=" << cladH << "  num=" << numH << "  diff=" << diff << "\n";
+      }
+   }
+
+   std::cout << "\nRaw Clad Hessian matrix:\n";
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         std::cout << hessianVec[i + n * j] << "   ";
+      }
+      std::cout << "\n";
+   }
+
+   std::cout << "\nRaw Numerical Hessian matrix:\n";
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         std::cout << numHessianVec[i + n * j] << "   ";
+      }
+      std::cout << "\n";
+   }
+#endif
 }
 )";
 }
@@ -532,7 +696,16 @@ void RooEvaluatorWrapper::generateGradient()
 {
    if (!_funcWrapper)
       createFuncWrapper();
-   _funcWrapper->createGradient();
+   if (!_funcWrapper->hasGradient())
+      _funcWrapper->createGradient();
+}
+
+void RooEvaluatorWrapper::generateHessian()
+{
+   if (!_funcWrapper)
+      createFuncWrapper();
+   if (!_funcWrapper->hasHessian())
+      _funcWrapper->createHessian();
 }
 
 void RooEvaluatorWrapper::setUseGeneratedFunctionCode(bool flag)
@@ -547,11 +720,19 @@ void RooEvaluatorWrapper::gradient(double *out) const
    _funcWrapper->gradient(out);
 }
 
+void RooEvaluatorWrapper::hessian(double *out) const
+{
+   _funcWrapper->hessian(out);
+}
+
 bool RooEvaluatorWrapper::hasGradient() const
 {
-   if (!_funcWrapper)
-      return false;
-   return _funcWrapper->hasGradient();
+   return _funcWrapper && _funcWrapper->hasGradient();
+}
+
+bool RooEvaluatorWrapper::hasHessian() const
+{
+   return _funcWrapper && _funcWrapper->hasHessian();
 }
 
 void RooEvaluatorWrapper::writeDebugMacro(std::string const &filename) const
