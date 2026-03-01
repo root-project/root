@@ -189,7 +189,6 @@ set(ftgllibdir ${FTGL_LIBRARY_DIR})
 set(ftgllibs ${FTGL_LIBRARIES})
 set(ftglincdir ${FTGL_INCLUDE_DIR})
 
-set(buildglew ${value${builtin_glew}})
 set(glewlibdir ${GLEW_LIBRARY_DIR})
 set(glewlibs ${GLEW_LIBRARIES})
 set(glewincdir ${GLEW_INCLUDE_DIR})

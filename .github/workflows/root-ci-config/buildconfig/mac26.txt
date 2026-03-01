@@ -6,7 +6,6 @@ builtin_fftw3=ON
 builtin_freetype=ON
 builtin_ftgl=ON
 builtin_gl2ps=ON
-builtin_glew=ON
 builtin_gsl=ON
 builtin_gtest=ON
 builtin_lz4=ON

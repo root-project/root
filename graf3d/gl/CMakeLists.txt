@@ -234,10 +234,6 @@ else()
   target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
 endif()
 
-if(MSVC AND builtin_glew)
-  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
-endif()
-
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
 endif()
