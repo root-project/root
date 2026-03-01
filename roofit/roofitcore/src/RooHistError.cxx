@@ -27,10 +27,13 @@ a specified area of a Poisson or Binomail error distribution.
 #include "RooHistError.h"
 #include "RooBrentRootFinder.h"
 #include "RooMsgService.h"
-#include "TMath.h"
+
+#include "Math/QuantFuncMathCore.h" // ROOT::Math::chisquared_quantile, chisquared_quantile_c
 
 #include "Riostream.h"
+
 #include <cassert>
+#include <cmath>
 
 using std::endl;
 
@@ -48,75 +51,47 @@ const RooHistError &RooHistError::instance()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct our singleton object.
-
-RooHistError::RooHistError()
-{
-  // Initialize lookup table ;
-  Int_t i ;
-  for (i=0 ; i<1000 ; i++) {
-    getPoissonIntervalCalc(i,_poissonLoLUT[i],_poissonHiLUT[i],1.) ;
-  }
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a confidence interval for the expected number of events given n
-/// observed (unweighted) events. The interval will contain the same probability
-/// as nSigma of a Gaussian. Uses a central interval unless this does not enclose
-/// the point estimate n (ie, for small n) in which case the interval is adjusted
-/// to start at n. This method uses a lookup table to return precalculated results
-/// for n<1000
-
-bool RooHistError::getPoissonInterval(Int_t n, double &mu1, double &mu2, double nSigma) const
-{
-  // Use lookup table for most common cases
-  if (n<1000 && nSigma==1.) {
-    mu1=_poissonLoLUT[n] ;
-    mu2=_poissonHiLUT[n] ;
-    return true ;
-  }
-
-  // Forward to calculation method
-  bool ret =  getPoissonIntervalCalc(n,mu1,mu2,nSigma) ;
-  return ret ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate a confidence interval for the expected number of events given n
 /// observed (unweighted) events. The interval will contain the same probability
 /// as nSigma of a Gaussian. Uses a central interval unless this does not enclose
 /// the point estimate n (ie, for small n) in which case the interval is adjusted
 /// to start at n.
 
-bool RooHistError::getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, double nSigma) const
+bool RooHistError::getPoissonInterval(Int_t n, double &mu1, double &mu2, double nSigma) const
 {
-  // sanity checks
-  if(n < 0) {
-    oocoutE(nullptr,Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n << std::endl;
-    return false;
-  }
+   // sanity checks
+   if (n < 0) {
+      oocoutE(nullptr, Plotting) << "RooHistError::getPoissonInterval: cannot calculate interval for n = " << n
+                                 << std::endl;
+      return false;
+   }
+   if (!(nSigma > 0.0)) {
+      oocoutE(nullptr, Plotting) << "RooHistError::getPoissonInterval: nSigma must be > 0, got " << nSigma << std::endl;
+      return false;
+   }
 
-  // use asymptotic error if possible
-  if(n > 100) {
-    mu1= n - sqrt(n+0.25) + 0.5;
-    mu2= n + sqrt(n+0.25) + 0.5;
-    return true;
-  }
+   // Convert "number of sigmas" to central Gaussian probability beta, and
+   // corresponding two-sided tail probability alpha.
+   const double beta = std::erf(nSigma / std::sqrt(2.0));
+   const double alpha = 1.0 - beta;
 
-  // create a function object to use
-  PoissonSum upper(n);
-  if(n > 0) {
-    PoissonSum lower(n-1);
-    return getInterval(&upper,&lower,(double)n,1.0,mu1,mu2,nSigma);
-  }
+   // Special case n = 0 (boundary at mu >= 0).
+   // Use a one-sided interval including the MLE mu=0:
+   //   mu1 = 0
+   //   P(N <= 0 | mu2) = alpha,
+   // with alpha = 1 - erf(nSigma / sqrt(2)).
+   if (n == 0) {
+      mu1 = 0.0;
+      mu2 = 0.5 * ROOT::Math::chisquared_quantile(1.0 - alpha, 2.0 * (n + 1));
+      return true;
+   }
 
-  // Backup solution for negative numbers
-  return getInterval(&upper,nullptr,(double)n,1.0,mu1,mu2,nSigma);
+   // For n>0, use the central (equal-tailed) Garwood interval, which
+   // corresponds to allocating alpha/2 in each tail.
+   const double a2 = 0.5 * alpha;
+   mu1 = 0.5 * ROOT::Math::chisquared_quantile(a2, 2.0 * n);
+   mu2 = 0.5 * ROOT::Math::chisquared_quantile_c(a2, 2.0 * (n + 1));
+   return true;
 }
 
 
