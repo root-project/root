@@ -205,6 +205,28 @@ As part of this migration, the following build options are deprecated. From ROOT
   overhead in `RooAbsRealLValue::inRange()`, which is visible in many-parameter
   fits. Therefore, these functions are removed.
 
+### New implementation of `RooHistError::getPoissonInterval`
+
+**RooHistError::getPoissonInterval** was reimplemented to use an exact chi-square–based construction (Garwood interval) instead of asymptotic approximations and lookup tables.
+
+Previously:
+
+  * For `n > 100`, a hard-coded asymptotic formula was used, which was not explained in the documentation.
+  * That approximation corresponds to inverting the Poisson score test and was only correct for `nSigma = 1`.
+  * The behavior for `n > 100` was not statistically consistent because of the hard transition between exact formula and approximation, resulting in a discrete and unexpected jump in approximation bias.
+  * For small `n`, numerical root finding and a lookup table were used.
+
+Now:
+
+  * The interval is computed directly using chi-square quantiles for all `n`.
+  * The construction provides exact frequentist coverage.
+  * The implementation works consistently for arbitrary `nSigma`.
+  * The hard-coded `n > 100` threshold, lookup table, and numerical root finding were removed.
+  * For `n = 0`, a one-sided upper limit is used (with lower bound fixed at 0), consistent with the physical constraint `mu ≥ 0`.
+
+Results may differ from previous ROOT versions for `n > 100` or `nSigma != 1`.
+The new implementation is statistically consistent and recommended.
+
 ## RDataFrame
 
 - The message shown in ROOT 6.38 to inform users about change of default compression setting used by Snapshot (was 101 before 6.38, became 505 in 6.38) is now removed.
