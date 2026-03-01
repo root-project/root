@@ -62,8 +62,7 @@
 
 #include <TInterpreter.h>
 
-namespace RooFit {
-namespace Experimental {
+namespace RooFit::Experimental {
 
 namespace {
 
@@ -103,7 +102,7 @@ void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrde
 }
 
 std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, RooArgList const &funcList,
-                                    RooArgList const &coefList, bool normalize)
+                                    RooArgList const &coefList, bool normalize, bool forceScopeIndependent)
 {
    bool noLastCoeff = funcList.size() != coefList.size();
 
@@ -113,7 +112,12 @@ std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, R
 
    std::string sum = ctx.getTmpVarName();
    std::string coeffSum = ctx.getTmpVarName();
-   ctx.addToCodeBody(&arg, "double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n");
+   std::string code1 = "double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n";
+
+   if (forceScopeIndependent)
+      ctx.addToCodeBody(code1, true);
+   else
+      ctx.addToCodeBody(&arg, code1);
 
    std::string iterator = "i_" + ctx.getTmpVarName();
    std::string subscriptExpr = "[" + iterator + "]";
@@ -128,7 +132,10 @@ std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, R
    } else if (normalize) {
       code += sum + " /= " + coeffSum + ";\n";
    }
-   ctx.addToCodeBody(&arg, code);
+   if (forceScopeIndependent)
+      ctx.addToCodeBody(code, true);
+   else
+      ctx.addToCodeBody(&arg, code);
 
    return sum;
 }
@@ -240,7 +247,7 @@ void codegenImpl(RooAbsArg &arg, CodegenContext &ctx)
 
 void codegenImpl(RooAddPdf &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.pdfList(), arg.coefList(), true));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.pdfList(), arg.coefList(), true, false));
 }
 
 void codegenImpl(RooMultiVarGaussian &arg, CodegenContext &ctx)
@@ -261,30 +268,25 @@ void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
    // indices MathFunc call becomes more efficient.
    if (numPdfs > 2) {
       ctx.addResult(&arg, ctx.buildCall(mathFunc("multipdf"), arg.indexCategory(), arg.getPdfList()));
-
-      std::cout << "MathFunc call used\n";
-
-   } else {
-
-      // Ternary nested expression
-      std::string indexExpr = ctx.getResult(arg.indexCategory());
-
-      // int numPdfs = arg.getNumPdfs();
-      std::string expr;
-
-      for (int i = 0; i < numPdfs; ++i) {
-         RooAbsPdf *pdf = arg.getPdf(i);
-         std::string pdfExpr = ctx.getResult(*pdf);
-
-         expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
-      }
-
-      expr += "0.0";
-      expr += std::string(numPdfs, ')'); // Close all ternary operators
-
-      ctx.addResult(&arg, expr);
-      std::cout << "Ternary expression call used \n";
+      return;
    }
+   // Ternary nested expression
+   std::string indexExpr = ctx.getResult(arg.indexCategory());
+
+   // int numPdfs = arg.getNumPdfs();
+   std::string expr;
+
+   for (int i = 0; i < numPdfs; ++i) {
+      RooAbsPdf *pdf = arg.getPdf(i);
+      std::string pdfExpr = ctx.getResult(*pdf);
+
+      expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
+   }
+
+   expr += "0.0";
+   expr += std::string(numPdfs, ')'); // Close all ternary operators
+
+   ctx.addResult(&arg, expr);
 }
 
 // RooCategory index added.
@@ -305,6 +307,7 @@ void codegenImpl(RooAddition &arg, CodegenContext &ctx)
 {
    if (arg.list().empty()) {
       ctx.addResult(&arg, "0.0");
+      return;
    }
    std::string result;
    if (arg.list().size() > 1)
@@ -469,7 +472,6 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
 
    std::string weightSumName = RooFit::Detail::makeValidVarName(arg.GetName()) + "WeightSum";
    std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
-   ctx.addResult(&arg, resName);
    ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
@@ -496,6 +498,8 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
       std::string expected = ctx.getResult(*arg.expectedEvents());
       ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
    }
+
+   ctx.addResult(&arg, resName);
 }
 
 void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
@@ -553,7 +557,14 @@ void codegenImpl(RooPolynomial &arg, CodegenContext &ctx)
 
 void codegenImpl(RooProduct &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, ctx.buildCall(mathFunc("product"), arg.realComponents(), arg.realComponents().size()));
+   std::stringstream ss;
+   std::size_t n = arg.realComponents().size();
+   for (std::size_t i = 0; i < n; ++i) {
+      ss << ctx.getResult(arg.realComponents()[i]);
+      if (i != n - 1)
+         ss << " * " << std::endl;
+   }
+   ctx.addResult(&arg, ss.str());
 }
 
 void codegenImpl(RooRatio &arg, CodegenContext &ctx)
@@ -609,17 +620,17 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
    auto &intVar = static_cast<RooAbsRealLValue &>(*arg.numIntRealVars()[0]);
 
    std::string obsName = ctx.getTmpVarName();
-   std::string oldIntVarResult = ctx.getResult(intVar);
-   ctx.addResult(&intVar, "obs[0]");
 
+   auto oldVecObsInfo = ctx._vecObsIndices[intVar.namePtr()];
+   ctx.addVecObs(intVar.GetName(), 0);
    std::string funcName = ctx.buildFunction(arg.integrand(), {});
+   ctx._vecObsIndices[intVar.namePtr()] = oldVecObsInfo;
 
    std::stringstream ss;
 
    ss << "double " << obsName << "[1];\n";
 
    std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
-   ctx.addResult(&arg, resName);
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
    // TODO: once Clad has support for higher-order functions (follow also the
@@ -641,24 +652,21 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
 
    ctx.addToGlobalScope(ss.str());
 
-   ctx.addResult(&intVar, oldIntVarResult);
+   ctx.addResult(&arg, resName);
 }
 
 void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false, false));
 }
 
 void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false, false));
 }
 
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
 {
-   if (!arg.isConstant()) {
-      ctx.addResult(&arg, arg.GetName());
-   }
    ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
@@ -899,7 +907,7 @@ std::string codegenIntegralImpl(RooPolynomial &arg, int, const char *rangeName, 
 std::string codegenIntegralImpl(RooRealSumPdf &arg, int code, const char *rangeName, CodegenContext &ctx)
 {
    // Re-use translate, since integration is linear.
-   return realSumPdfTranslateImpl(ctx, arg, arg.funcIntListFromCache(code, rangeName), arg.coefList(), false);
+   return realSumPdfTranslateImpl(ctx, arg, arg.funcIntListFromCache(code, rangeName), arg.coefList(), false, true);
 }
 
 std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName, CodegenContext &)
@@ -909,5 +917,4 @@ std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName
    return doubleToString(arg.analyticalIntegral(code, rangeName));
 }
 
-} // namespace Experimental
-} // namespace RooFit
+} // namespace RooFit::Experimental
