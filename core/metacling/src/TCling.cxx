@@ -2707,6 +2707,34 @@ void TCling::PrintIntro()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print information about the interpreter.
+///\param[in] option Selects the type of information to print.
+///
+/// List of currently support options:
+///   - autoparsed: Print the list of classes that triggered autoparsing.
+void TCling::Print(Option_t *option) const
+{
+   if (option && *option) {
+      if (!strcmp(option, "autoparsed")) {
+         std::cout << "Auto parsed classes:" << std::endl;
+         for (auto & cls : fAutoParseClasses) {
+            std::cout << "  " << cls << std::endl;
+         }
+      } else if (!strcmp(option, "autoloaded")) {
+         std::cout << "Auto loaded libraries:" << std::endl;
+         for (auto & lib : fAutoLoadedLibraries) {
+            std::cout << "  " << lib << std::endl;
+         }
+      } else {
+         ::Error("TCling::Print", "Unknown option '%s'", option);
+      }
+   } else {
+      ::Info("TCling::Print", "No options specified");
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// \brief Add a directory to the list of directories in which the
 ///        interpreter looks for include files.
 /// \param[in] path The path to the directory.
@@ -3465,6 +3493,14 @@ template <int N>
 static bool StartsWithStrLit(const char *haystack, const char (&needle)[N]) {
    return !strncmp(haystack, needle, N - 1);
 }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register that a library was autoloaded either to provide a 'missing' symbol
+/// or to provide a class (see TClass::GetClass and TROOT::LoadClass).
+void TCling::RegisterAutoLoadedLibrary(const char *libname)
+{
+   fAutoLoadedLibraries.insert(libname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6593,6 +6629,12 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
       }
    }
 
+   if (nHheadersParsed) {
+      // Register that we did autoparsing for this class.
+      fAutoParseClasses.insert(cls);
+      if (gDebug)
+         Info("AutoParse", "Parsed %d headers for %s", nHheadersParsed, cls);
+   }
    return nHheadersParsed;
 
 }
@@ -6699,6 +6741,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    if (!LibLoader(libName))
       return nullptr;
 
+   fAutoLoadedLibraries.insert(libName);
    return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name);
 }
 
