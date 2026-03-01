@@ -910,47 +910,9 @@ clonepad.svg
 <rect x="239" y="36" width="11" height="7.3" fill="#263da8"/>
 <rect x="273" y="36" width="11" height="7.3" fill="#263da8"/>
 <path d="M57,327h 454" fill="none" stroke="black"/>
-<path d="M57,319v 8.7" fill="none" stroke="black"/>
-<path d="M69,323v 4.4" fill="none" stroke="black"/>
-<path d="M80,323v 4.4" fill="none" stroke="black"/>
-<path d="M91,323v 4.4" fill="none" stroke="black"/>
-<path d="M103,323v 4.4" fill="none" stroke="black"/>
-<path d="M114,319v 8.7" fill="none" stroke="black"/>
-<path d="M125,323v 4.4" fill="none" stroke="black"/>
-<path d="M137,323v 4.4" fill="none" stroke="black"/>
-<path d="M148,323v 4.4" fill="none" stroke="black"/>
-<path d="M159,323v 4.4" fill="none" stroke="black"/>
-<path d="M171,319v 8.7" fill="none" stroke="black"/>
-<path d="M182,323v 4.4" fill="none" stroke="black"/>
-<path d="M193,323v 4.4" fill="none" stroke="black"/>
-<path d="M205,323v 4.4" fill="none" stroke="black"/>
-<path d="M216,323v 4.4" fill="none" stroke="black"/>
-<path d="M227,319v 8.7" fill="none" stroke="black"/>
-<path d="M239,323v 4.4" fill="none" stroke="black"/>
-<path d="M250,323v 4.4" fill="none" stroke="black"/>
-<path d="M261,323v 4.4" fill="none" stroke="black"/>
-<path d="M273,323v 4.4" fill="none" stroke="black"/>
-<path d="M284,319v 8.7" fill="none" stroke="black"/>
-<path d="M295,323v 4.4" fill="none" stroke="black"/>
-<path d="M307,323v 4.4" fill="none" stroke="black"/>
-<path d="M318,323v 4.4" fill="none" stroke="black"/>
-<path d="M329,323v 4.4" fill="none" stroke="black"/>
-<path d="M341,319v 8.7" fill="none" stroke="black"/>
-<path d="M352,323v 4.4" fill="none" stroke="black"/>
-<path d="M363,323v 4.4" fill="none" stroke="black"/>
-<path d="M375,323v 4.4" fill="none" stroke="black"/>
-<path d="M386,323v 4.4" fill="none" stroke="black"/>
-<path d="M397,319v 8.7" fill="none" stroke="black"/>
-<path d="M409,323v 4.4" fill="none" stroke="black"/>
-<path d="M420,323v 4.4" fill="none" stroke="black"/>
-<path d="M431,323v 4.4" fill="none" stroke="black"/>
-<path d="M443,323v 4.4" fill="none" stroke="black"/>
-<path d="M454,319v 8.7" fill="none" stroke="black"/>
-<path d="M465,323v 4.4" fill="none" stroke="black"/>
-<path d="M477,323v 4.4" fill="none" stroke="black"/>
-<path d="M488,323v 4.4" fill="none" stroke="black"/>
-<path d="M499,323v 4.4" fill="none" stroke="black"/>
-<path d="M511,319v 8.7" fill="none" stroke="black"/>
+<path d="M57,319v 8.7M69,323v 4.4M80,323v 4.4M91,323v 4.4M103,323v 4.4M114,319v 8.7M125,323v 4.4M137,323v 4.4M148,323v 4.4M159,323v 4.4M171,319v 8.7M182,323v 4.4M193,323v 4.4M205,323v 4.4M216,323v 4.4M227,319v 8.7M239,323v 4.4M250,323v 4.4M261,323v
+ 4.4M273,323v 4.4M284,319v 8.7M295,323v 4.4M307,323v 4.4M318,323v 4.4M329,323v 4.4M341,319v 8.7M352,323v 4.4M363,323v 4.4M375,323v 4.4M386,323v 4.4M397,319v 8.7M409,323v 4.4M420,323v 4.4M431,323v 4.4M443,323v 4.4M454,319v 8.7M465,323v 4.4M477,323v
+ 4.4M488,323v 4.4M499,323v 4.4M511,319v 8.7" fill="none" stroke="black"/>
 <text xml:space="preserve" x="57" y="339" fill="black" font-size="12" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="51" y="339" fill="black" font-size="12" font-family="Times">&#8722;
@@ -978,47 +940,9 @@ clonepad.svg
 <text xml:space="preserve" x="507" y="339" fill="black" font-size="12" font-family="Helvetica">4
 </text>
 <path d="M57,327v -291" fill="none" stroke="black"/>
-<path d="M71,327h -14" fill="none" stroke="black"/>
-<path d="M64,320h -6.8" fill="none" stroke="black"/>
-<path d="M64,313h -6.8" fill="none" stroke="black"/>
-<path d="M64,306h -6.8" fill="none" stroke="black"/>
-<path d="M64,298h -6.8" fill="none" stroke="black"/>
-<path d="M71,291h -14" fill="none" stroke="black"/>
-<path d="M64,284h -6.8" fill="none" stroke="black"/>
-<path d="M64,276h -6.8" fill="none" stroke="black"/>
-<path d="M64,269h -6.8" fill="none" stroke="black"/>
-<path d="M64,262h -6.8" fill="none" stroke="black"/>
-<path d="M71,255h -14" fill="none" stroke="black"/>
-<path d="M64,247h -6.8" fill="none" stroke="black"/>
-<path d="M64,240h -6.8" fill="none" stroke="black"/>
-<path d="M64,233h -6.8" fill="none" stroke="black"/>
-<path d="M64,226h -6.8" fill="none" stroke="black"/>
-<path d="M71,218h -14" fill="none" stroke="black"/>
-<path d="M64,211h -6.8" fill="none" stroke="black"/>
-<path d="M64,204h -6.8" fill="none" stroke="black"/>
-<path d="M64,196h -6.8" fill="none" stroke="black"/>
-<path d="M64,189h -6.8" fill="none" stroke="black"/>
-<path d="M71,182h -14" fill="none" stroke="black"/>
-<path d="M64,175h -6.8" fill="none" stroke="black"/>
-<path d="M64,167h -6.8" fill="none" stroke="black"/>
-<path d="M64,160h -6.8" fill="none" stroke="black"/>
-<path d="M64,153h -6.8" fill="none" stroke="black"/>
-<path d="M71,146h -14" fill="none" stroke="black"/>
-<path d="M64,138h -6.8" fill="none" stroke="black"/>
-<path d="M64,131h -6.8" fill="none" stroke="black"/>
-<path d="M64,124h -6.8" fill="none" stroke="black"/>
-<path d="M64,116h -6.8" fill="none" stroke="black"/>
-<path d="M71,109h -14" fill="none" stroke="black"/>
-<path d="M64,102h -6.8" fill="none" stroke="black"/>
-<path d="M64,95h -6.8" fill="none" stroke="black"/>
-<path d="M64,87h -6.8" fill="none" stroke="black"/>
-<path d="M64,80h -6.8" fill="none" stroke="black"/>
-<path d="M71,73h -14" fill="none" stroke="black"/>
-<path d="M64,65h -6.8" fill="none" stroke="black"/>
-<path d="M64,58h -6.8" fill="none" stroke="black"/>
-<path d="M64,51h -6.8" fill="none" stroke="black"/>
-<path d="M64,44h -6.8" fill="none" stroke="black"/>
-<path d="M71,36h -14" fill="none" stroke="black"/>
+<path d="M71,327h -14M64,320h -6.8M64,313h -6.8M64,306h -6.8M64,298h -6.8M71,291h -14M64,284h -6.8M64,276h -6.8M64,269h -6.8M64,262h -6.8M71,255h -14M64,247h -6.8M64,240h -6.8M64,233h -6.8M64,226h -6.8M71,218h -14M64,211h -6.8M64,204h -6.8M64,196h
+ -6.8M64,189h -6.8M71,182h -14M64,175h -6.8M64,167h -6.8M64,160h -6.8M64,153h -6.8M71,146h -14M64,138h -6.8M64,131h -6.8M64,124h -6.8M64,116h -6.8M71,109h -14M64,102h -6.8M64,95h -6.8M64,87h -6.8M64,80h -6.8M71,73h -14M64,65h -6.8M64,58h -6.8M64,51h
+ -6.8M64,44h -6.8M71,36h -14" fill="none" stroke="black"/>
 <text xml:space="preserve" x="48" y="333" fill="black" font-size="12" font-family="Helvetica">4
 </text>
 <text xml:space="preserve" x="41" y="333" fill="black" font-size="12" font-family="Times">&#8722;

@@ -28,6 +28,7 @@ An instance of TVirtualX itself defines a batch interface to the graphics system
 
 #include "TVirtualX.h"
 #include "TString.h"
+#include "TPoint.h"
 
 
 Atom_t    gWM_DELETE_WINDOW;
@@ -319,6 +320,19 @@ void TVirtualX::DrawLine(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/)
 void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint * /*xy*/)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draws N segments between provided points
+///
+/// \param [in] n    number of segemtns
+/// \param [in] xy   list of points, size 2*n
+
+void TVirtualX::DrawLinesSegments(Int_t n, TPoint *xy)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLine(2, &xy[i]);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draws "n" markers with the current attributes at position [x,y].

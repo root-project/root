@@ -485,6 +485,69 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
    gVirtualX->DrawPolyLine(n, &xy[0]);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N segments on the pad
+
+void TPadPainter::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
+{
+   if (GetLineWidth() <= 0)
+      return;
+
+   if (n < 1) {
+      ::Error("TPadPainter::DrawSegments", "invalid number of segments %d", n);
+      return;
+   }
+
+   std::vector<TPoint> xy(n*2);
+   Int_t cnt = 0;
+   for (Int_t i = 0; i < n*2; ++i) {
+      if ((i % 2 == 0) && (x[i] == x[i+1]) && (y[i] == y[i+1])) {
+         // exclude empty segment
+         i++;
+         continue;
+      }
+
+      xy[cnt].fX = (SCoord_t)gPad->XtoPixel(x[i]);
+      xy[cnt].fY = (SCoord_t)gPad->YtoPixel(y[i]);
+      cnt++;
+   }
+
+   if (cnt > 1)
+      gVirtualX->DrawLinesSegments(cnt/2, &xy[0]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint N segments in normalized coordinates on the pad
+
+void TPadPainter::DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v)
+{
+   if (GetLineWidth() <= 0)
+      return;
+
+   if (n < 1) {
+      ::Error("TPadPainter::DrawSegmentsNDC", "invalid number of segments %d", n);
+      return;
+   }
+
+   std::vector<TPoint> xy(n*2);
+   Int_t cnt = 0;
+   for (Int_t i = 0; i < n*2; ++i) {
+      if ((i % 2 == 0) && (u[i] == u[i+1]) && (v[i] == v[i+1])) {
+         // exclude empty segment
+         i++;
+         continue;
+      }
+
+      xy[cnt].fX = (SCoord_t)gPad->UtoPixel(u[i]);
+      xy[cnt].fY = (SCoord_t)gPad->VtoPixel(v[i]);
+      cnt++;
+   }
+
+   if (cnt > 1)
+      gVirtualX->DrawLinesSegments(cnt/2, &xy[0]);
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker.

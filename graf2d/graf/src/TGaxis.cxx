@@ -1025,9 +1025,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t binHigh = 0., binHigh2 = 0., binHigh3 = 0.;
    Double_t binWidth = 0., binWidth2 = 0., binWidth3 = 0.;
    Double_t xpl1, xpl2, ypl1, ypl2;
-   Double_t xtick = 0;
-   Double_t xtick0, xtick1, dxtick=0;
-   Double_t ytick, ytick0, ytick1;
+   Double_t dxtick=0;
    Double_t wlabel, dwlabel, axis_value;
    Double_t xfactor, yfactor;
    Double_t xlabel, ylabel, dxlabel;
@@ -1043,8 +1041,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t xmnlog, x00, x11, h2, h2sav, axmul, y;
    Float_t chupxvsav, chupyvsav;
    Double_t rtxw, rtyw;
-   Int_t nlabels, nticks, nticks0, nticks1;
-   Int_t i, j, k, l, decade, ltick;
+   Int_t nlabels, nticks, nticks0 = 0, nticks1 = 0;
+   Int_t i, j, k, l, decade;
    Int_t mside, lside;
    Int_t nexe  = 0;
    Int_t lnlen = 0;
@@ -1639,183 +1637,118 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (optionText) ylabel /= 2;
 
 // Draw the linear tick marks if needed...
-   if (!optionLog) {
-      if (ndiv) {
-         if (fFunction) {
-            dxtick=(binHigh-binLow)/Double_t(nticks-1);
-         } else {
-            if (optionNoopt && !optionInt) dxtick=axis_length/Double_t(nticks-1);
-            else                           dxtick=axis_lengthN/Double_t(nticks-1);
-         }
-         for (k=0;k<nticks; k++) {
+   if (!optionLog && ndiv) {
+      if (fFunction) {
+         dxtick = (binHigh-binLow)/Double_t(nticks-1);
+         axis_length0 = binLow-wmin;
+         axis_length1 = wmax-binHigh;
+      } else {
+         if (optionNoopt && !optionInt) dxtick = axis_length/Double_t(nticks-1);
+         else                           dxtick = axis_lengthN/Double_t(nticks-1);
+      }
+      if (!optionNoopt || optionInt) {
+         if (axis_length0)
+            nticks0 = TMath::Min(Int_t(axis_length0/dxtick + epsilon), 1000);
+         if (axis_length1)
+            nticks1 = TMath::Min(Int_t(axis_length1/dxtick + epsilon), 1000);
+      }
+
+      std::vector<Double_t> ticksx, ticksy, gridx, gridy;
+      if (!drawGridOnly) {
+         ticksx.reserve(nticks + nticks0 + nticks1);
+         ticksy.reserve(nticks + nticks0 + nticks1);
+      }
+      if (optionGrid) {
+         gridx.reserve((nticks + nticks0 + nticks1) / nn2 + 2);
+         gridy.reserve((nticks + nticks0 + nticks1) / nn2 + 2);
+      }
+
+      auto draw_tick = [&](int indx, double xtick, double xf) {
+         int ltick;
+         if (indx % nn2 == 0)
+            ltick = 0;
+         else if (indx % nn3 == 0)
+            ltick = 1;
+         else
             ltick = 2;
-            if (k%nn3 == 0) ltick = 1;
-            if (k%nn2 == 0) ltick = 0;
-            if (fFunction) {
-               Double_t xf = binLow+Double_t(k)*dxtick;
-               Double_t zz = fFunction->Eval(xf)-rwmi;
-               xtick = zz* axis_length / TMath::Abs(rwma-rwmi);
-            } else {
-               xtick = Double_t(k)*dxtick;
-            }
-            ytick = 0;
-            if (!mside) ytick -= atick[ltick];
-            if ( optionNoopt && !optionInt) {
-               Rotate(xtick,ytick,cosphi,sinphi,x0,y0,xpl2,ypl2);
-               Rotate(xtick,atick[ltick],cosphi,sinphi,x0,y0,xpl1,ypl1);
-            }
-            else {
-               Rotate(xtick,ytick,cosphi,sinphi,xx0,yy0,xpl2,ypl2);
-               Rotate(xtick,atick[ltick],cosphi,sinphi,xx0,yy0,xpl1,ypl1);
-            }
-            if (optionVert) {
-               if ((x0 != x1) && (y0 != y1)) {
-                  if (mside) {
-                     xpl1 = xpl2;
-                     if (cosphi > 0) ypl1 = ypl2 + atick[ltick];
-                     else            ypl1 = ypl2 - atick[ltick];
-                  }
-                  else {
-                     xpl1 = 0.5*(xpl1 + xpl2);
-                     xpl2 = xpl1;
-                     ypl1 = 0.5*(ypl1 + ypl2) + atick[ltick];
-                     ypl2 = 0.5*(ypl1 + ypl2) - atick[ltick];
-                  }
-               }
-            }
-            if (!drawGridOnly) {
-               if (!optionArrow) {
-                     PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+
+         if (fFunction) {
+            Double_t zz = fFunction->Eval(xf)-rwmi;
+            xtick = zz * axis_length / TMath::Abs(rwma-rwmi);
+         }
+
+         Double_t ytick = mside ? 0. : -atick[ltick];
+         if (optionNoopt && !optionInt) {
+            Rotate(xtick,ytick,cosphi,sinphi,x0,y0, xpl2,ypl2);
+            Rotate(xtick,atick[ltick],cosphi,sinphi,x0,y0, xpl1,ypl1);
+         } else {
+            Rotate(xtick,ytick,cosphi,sinphi,xx0,yy0, xpl2,ypl2);
+            Rotate(xtick,atick[ltick],cosphi,sinphi,xx0,yy0, xpl1,ypl1);
+         }
+         if (optionVert) {
+            if ((x0 != x1) && (y0 != y1)) {
+               if (mside) {
+                  xpl1 = xpl2;
+                  if (cosphi > 0) ypl1 = ypl2 + atick[ltick];
+                  else            ypl1 = ypl2 - atick[ltick];
                } else {
-                  if (optionArrow==1) {
-                     if (x1!=x0) {
-                       if (xpl2<x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     } else {
-                       if (ypl2<y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     }
-                  }
-                  if (optionArrow==2) {
-                     if (x1!=x0) {
-                       if (xpl1>x0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     } else {
-                       if (ypl1>y0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     }
-                  }
-                  if (optionArrow==3) {
-                      if (x1!=x0) {
-                       if (xpl1>x0 && xpl2<x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     } else {
-                       if (ypl1>y0 && ypl2<y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                     }
-                  }
-               }
-            }
-
-            if (optionGrid) {
-               if (ltick == 0) {
-                  if (optionNoopt && !optionInt) {
-                     Rotate(xtick,0,cosphi,sinphi,x0,y0 ,xpl2,ypl2);
-                     Rotate(xtick,grid_side*gridlength ,cosphi,sinphi,x0,y0 ,xpl1,ypl1);
-                  }
-                  else {
-                     Rotate(xtick,0,cosphi ,sinphi,xx0,yy0 ,xpl2,ypl2);
-                     Rotate(xtick,grid_side*gridlength ,cosphi,sinphi,xx0,yy0 ,xpl1,ypl1);
-                  }
-                  linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                  xpl1 = 0.5*(xpl1 + xpl2);
+                  xpl2 = xpl1;
+                  ypl1 = 0.5*(ypl1 + ypl2) + atick[ltick];
+                  ypl2 = 0.5*(ypl1 + ypl2) - atick[ltick];
                }
             }
          }
-         xtick0 = 0;
-         xtick1 = xtick;
-
-         if (fFunction) axis_length0 = binLow-wmin;
-         if ((!optionNoopt || optionInt) && axis_length0) {
-            nticks0 = Int_t(axis_length0/dxtick + epsilon);
-            if (nticks0 > 1000) nticks0 = 1000;
-            xtick0 -= dxtick; // skip first major tick which already was drawn
-            for (k=1; k<=nticks0; k++) {
-               ltick = 2;
-               if (k%nn3 == 0) ltick = 1;
-               if (k%nn2 == 0) ltick = 0;
-               ytick0 = 0;
-               if (!mside) ytick0 -= atick[ltick];
-               if (fFunction) {
-                  xtick0 = (fFunction->Eval(binLow - Double_t(k)*dxtick)-rwmi)
-                           * axis_length / TMath::Abs(rwma-rwmi);
-               }
-               Rotate(xtick0,ytick0,cosphi,sinphi,xx0,yy0 ,xpl2,ypl2);
-               Rotate(xtick0,atick[ltick],cosphi,sinphi,xx0,yy0 ,xpl1,ypl1);
-               if (optionVert) {
-                  if ((x0 != x1) && (y0 != y1)) {
-                     if (mside) {
-                        xpl1 = xpl2;
-                        if (cosphi > 0) ypl1 = ypl2 + atick[ltick];
-                        else            ypl1 = ypl2 - atick[ltick];
-                     }
-                     else {
-                        xpl1 = 0.5*(xpl1 + xpl2);
-                        xpl2 = xpl1;
-                        ypl1 = 0.5*(ypl1 + ypl2) + atick[ltick];
-                        ypl2 = 0.5*(ypl1 + ypl2) - atick[ltick];
-                     }
-                  }
-               }
-               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-
-               if (optionGrid) {
-                  if (ltick == 0) {
-                     Rotate(xtick0,0,cosphi,sinphi,xx0,yy0,xpl2,ypl2);
-                     Rotate(xtick0,grid_side*gridlength ,cosphi,sinphi,xx0,yy0 ,xpl1,ypl1);
-                     linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                  }
-               }
-               xtick0 -= dxtick;
+         if (!drawGridOnly) {
+            Bool_t paint_tick = kTRUE;
+            if (optionArrow == 1)
+               paint_tick = (x1 != x0) ? (xpl2 < x1) : (ypl2 < y1);
+            else if (optionArrow == 2)
+               paint_tick = (x1 != x0) ? (xpl1 > x0) : (ypl1 > y0);
+            else if (optionArrow == 3)
+               paint_tick = (x1 != x0) ? (xpl1 > x0 && xpl2 < x1) : (ypl1 > y0 && ypl2 < y1);
+            if (paint_tick) {
+               ticksx.push_back(xpl1);
+               ticksx.push_back(xpl2);
+               ticksy.push_back(ypl1);
+               ticksy.push_back(ypl2);
             }
          }
 
-         if (fFunction) axis_length1 = wmax-binHigh;
-         if ((!optionNoopt || optionInt) && axis_length1) {
-            nticks1 = int(axis_length1/dxtick + epsilon);
-            if (nticks1 > 1000) nticks1 = 1000;
-            xtick1 += dxtick; // skip last major tick which was already drawn
-            for (k=1; k<=nticks1; k++) {
-               ltick = 2;
-               if (k%nn3 == 0) ltick = 1;
-               if (k%nn2 == 0) ltick = 0;
-               ytick1 = 0;
-               if (!mside) ytick1 -= atick[ltick];
-               if (fFunction) {
-                  xtick1 = (fFunction->Eval(binHigh + Double_t(k)*dxtick)-rwmi)
-                           * axis_length / TMath::Abs(rwma-rwmi);
-               }
-               Rotate(xtick1,ytick1,cosphi,sinphi,xx0,yy0 ,xpl2,ypl2);
-               Rotate(xtick1,atick[ltick],cosphi,sinphi,xx0,yy0 ,xpl1,ypl1);
-               if (optionVert) {
-                  if ((x0 != x1) && (y0 != y1)) {
-                     if (mside) {
-                        xpl1 = xpl2;
-                        if (cosphi > 0) ypl1 = ypl2 + atick[ltick];
-                        else            ypl1 = ypl2 - atick[ltick];
-                     }
-                     else {
-                        xpl1 = 0.5*(xpl1 + xpl2);
-                        xpl2 = xpl1;
-                        ypl1 = 0.5*(ypl1 + ypl2) + atick[ltick];
-                        ypl2 = 0.5*(ypl1 + ypl2) - atick[ltick];
-                     }
-                  }
-               }
-               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-               if (optionGrid) {
-                  if (ltick == 0) {
-                     Rotate(xtick1,0,cosphi,sinphi,xx0,yy0 ,xpl2,ypl2);
-                     Rotate(xtick1,grid_side*gridlength,cosphi,sinphi,xx0,yy0,xpl1,ypl1);
-                     linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
-                  }
-               }
-               xtick1 += dxtick;
+         if (optionGrid && (ltick == 0)) {
+            if (optionNoopt && !optionInt) {
+               Rotate(xtick,0,cosphi,sinphi,x0,y0, xpl2,ypl2);
+               Rotate(xtick,grid_side*gridlength,cosphi,sinphi,x0,y0, xpl1,ypl1);
+            } else {
+               Rotate(xtick,0,cosphi,sinphi,xx0,yy0, xpl2,ypl2);
+               Rotate(xtick,grid_side*gridlength,cosphi,sinphi,xx0,yy0, xpl1,ypl1);
             }
+            gridx.push_back(xpl1);
+            gridx.push_back(xpl2);
+            gridy.push_back(ypl1);
+            gridy.push_back(ypl2);
          }
+      };
+
+      for (k = 0; k < nticks; k++)
+         draw_tick(k, Double_t(k) * dxtick, binLow + Double_t(k)*dxtick);
+
+      for (k = 1; k <= nticks0; k++)
+         draw_tick(k, -1. * Double_t(k) * dxtick, binLow - Double_t(k)*dxtick);
+
+      for (k = 1; k <= nticks1; k++)
+         draw_tick(k, Double_t(nticks-1 + k) * dxtick, binHigh + Double_t(k)*dxtick);
+
+      // paint ticks all together with one command
+      if (ticksx.size() > 0) {
+         TAttLine::Modify();
+         gPad->PaintSegmentsNDC(ticksx.size() / 2, ticksx.data(), ticksy.data());
+      }
+
+      // paint grid lines all together after ticks
+      if (gridx.size() > 0) {
+         linegrid.TAttLine::Modify();
+         gPad->PaintSegmentsNDC(gridx.size() / 2, gridx.data(), gridy.data());
       }
    }
 
@@ -2193,6 +2126,27 @@ L110:
       nbinin = ih2-ih1+1;
       axmul  = (x11-x00)/(h2sav-xmnlog);
 
+      std::vector<Double_t> ticksx, ticksy, gridsx, gridsy;
+
+      if (!drawGridOnly) {
+         ticksx.reserve(nbinin*2);
+         ticksy.reserve(nbinin*2);
+      }
+      if (optionGrid) {
+         gridsx.reserve(nbinin*2);
+         gridsy.reserve(nbinin*2);
+      }
+
+      struct LogLabel {
+         Int_t id = 0, num = 0;
+         Double_t u = 0., v = 0., value = 0.;
+         TString lbl;
+      };
+      std::vector<LogLabel> loglabels;
+      if (!drawGridOnly && !optionUnlab)
+         loglabels.reserve(nbinin);
+
+
 // Plot decade and intermediate tick marks
       decade      = ih1-2;
       labelnumber = ih1;
@@ -2231,12 +2185,20 @@ L110:
                }
             }
          }
-         if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+         if (!drawGridOnly) {
+            ticksx.emplace_back(xpl1);
+            ticksx.emplace_back(xpl2);
+            ticksy.emplace_back(ypl1);
+            ticksy.emplace_back(ypl2);
+         }
 
          if (optionGrid) {
             Rotate(xone,0,cosphi,sinphi,x0,y0,xpl2,ypl2);
             Rotate(xone,grid_side*gridlength,cosphi,sinphi,x0,y0,xpl1,ypl1);
-            linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            gridsx.emplace_back(xpl1);
+            gridsx.emplace_back(xpl2);
+            gridsy.emplace_back(ypl1);
+            gridsy.emplace_back(ypl2);
          }
 
          if (!drawGridOnly && !optionUnlab)  {
@@ -2302,9 +2264,12 @@ L110:
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
-               textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
-                                   gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                                   0, textaxis.GetTextSize(), typolabel.Data());
+               loglabels.push_back({
+                  .id = changelablogid, .num = changelablognum,
+                  .u = gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
+                  .v = gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
+                  .value = axis_value, .lbl = typolabel
+               });
                if (fNModLabs) ResetLabelAttributes(&textaxis);
             }
             labelnumber++;
@@ -2338,7 +2303,12 @@ L160:
             }
             idn = n1a*2;
             if ((nbinin <= idn) || ((nbinin > idn) && (k == 5))) {
-               if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) {
+                  ticksx.emplace_back(xpl1);
+                  ticksx.emplace_back(xpl2);
+                  ticksy.emplace_back(ypl1);
+                  ticksy.emplace_back(ypl2);
+               }
 
 // Draw the intermediate LOG labels if requested
 
@@ -2394,7 +2364,11 @@ L160:
                      }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
-                     textaxis.PaintLatex(u,v,0,textaxis.GetTextSize(),typolabel.Data());
+                     loglabels.push_back({
+                        .id = changelablogid, .num = 0,
+                        .u = u, .v = v,
+                        .value = axis_value, .lbl = typolabel
+                     });
                      if (fNModLabs) ResetLabelAttributes(&textaxis);
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
@@ -2413,7 +2387,11 @@ L160:
                         }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
-                        textaxis.PaintLatex(u,v,0,textaxis.GetTextSize(),typolabel.Data());
+                        loglabels.push_back({
+                           .id = changelablogid, .num = 0,
+                           .u = u, .v = v,
+                           .value = axis_value, .lbl = typolabel
+                        });
                         if (fNModLabs) ResetLabelAttributes(&textaxis);
                      }
                   }
@@ -2421,15 +2399,38 @@ L160:
 
 // Draw the intermediate LOG grid if only three decades are requested
                if (optionGrid && nbinin <= 5 && ndiv > 100) {
-                  Rotate(xone,0,cosphi,sinphi,x0,y0,xpl2, ypl2);
+                  Rotate(xone,0,cosphi,sinphi,x0,y0, xpl2, ypl2);
                   Rotate(xone,grid_side*gridlength,cosphi,sinphi,x0,y0, xpl1,ypl1);
-                  linegrid.PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                  gridsx.emplace_back(xpl1);
+                  gridsx.emplace_back(xpl2);
+                  gridsy.emplace_back(ypl1);
+                  gridsy.emplace_back(ypl2);
                }
             }  //endif ((nbinin <= idn) ||
          }  //endfor (k=2;k<10;k++)
       } //endfor (j=1; j<=nbinin; j++)
 L200:
-      Int_t dummy = 0; if (dummy) { }
+      // paint ticks all together with one command
+      if (ticksx.size() > 0) {
+         TAttLine::Modify();
+         gPad->PaintSegmentsNDC(ticksx.size() / 2, ticksx.data(), ticksy.data());
+      }
+
+      // paint all labels after ticks
+      for(auto & lbl : loglabels) {
+         if (fNModLabs)
+            ChangeLabelAttributes(lbl.id, lbl.num, &textaxis, chtemp, lbl.value, lbl.value*1e-6);
+         textaxis.PaintLatex(lbl.u, lbl.v, 0, textaxis.GetTextSize(), lbl.lbl.Data());
+         if (fNModLabs)
+            ResetLabelAttributes(&textaxis);
+      }
+
+      // paint grid lines all together at the end
+      if (gridsx.size() > 0) {
+         linegrid.TAttLine::Modify();
+         gPad->PaintSegmentsNDC(gridsx.size() / 2, gridsx.data(), gridsy.data());
+      }
+
    }  //endif (optionLog && ndiv)
 
 // Draw axis title if it exists

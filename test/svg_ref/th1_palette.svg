@@ -404,47 +404,9 @@ th1_palette.svg
 <circle cx="490" cy="366" r="2.8"/>
 </g>
 <path d="M57,367h 454" fill="none" stroke="black"/>
-<path d="M57,357v 9.8" fill="none" stroke="black"/>
-<path d="M69,362v 4.9" fill="none" stroke="black"/>
-<path d="M80,362v 4.9" fill="none" stroke="black"/>
-<path d="M91,362v 4.9" fill="none" stroke="black"/>
-<path d="M103,362v 4.9" fill="none" stroke="black"/>
-<path d="M114,357v 9.8" fill="none" stroke="black"/>
-<path d="M125,362v 4.9" fill="none" stroke="black"/>
-<path d="M137,362v 4.9" fill="none" stroke="black"/>
-<path d="M148,362v 4.9" fill="none" stroke="black"/>
-<path d="M159,362v 4.9" fill="none" stroke="black"/>
-<path d="M171,357v 9.8" fill="none" stroke="black"/>
-<path d="M182,362v 4.9" fill="none" stroke="black"/>
-<path d="M193,362v 4.9" fill="none" stroke="black"/>
-<path d="M205,362v 4.9" fill="none" stroke="black"/>
-<path d="M216,362v 4.9" fill="none" stroke="black"/>
-<path d="M227,357v 9.8" fill="none" stroke="black"/>
-<path d="M239,362v 4.9" fill="none" stroke="black"/>
-<path d="M250,362v 4.9" fill="none" stroke="black"/>
-<path d="M261,362v 4.9" fill="none" stroke="black"/>
-<path d="M273,362v 4.9" fill="none" stroke="black"/>
-<path d="M284,357v 9.8" fill="none" stroke="black"/>
-<path d="M295,362v 4.9" fill="none" stroke="black"/>
-<path d="M307,362v 4.9" fill="none" stroke="black"/>
-<path d="M318,362v 4.9" fill="none" stroke="black"/>
-<path d="M329,362v 4.9" fill="none" stroke="black"/>
-<path d="M341,357v 9.8" fill="none" stroke="black"/>
-<path d="M352,362v 4.9" fill="none" stroke="black"/>
-<path d="M363,362v 4.9" fill="none" stroke="black"/>
-<path d="M375,362v 4.9" fill="none" stroke="black"/>
-<path d="M386,362v 4.9" fill="none" stroke="black"/>
-<path d="M397,357v 9.8" fill="none" stroke="black"/>
-<path d="M409,362v 4.9" fill="none" stroke="black"/>
-<path d="M420,362v 4.9" fill="none" stroke="black"/>
-<path d="M431,362v 4.9" fill="none" stroke="black"/>
-<path d="M443,362v 4.9" fill="none" stroke="black"/>
-<path d="M454,357v 9.8" fill="none" stroke="black"/>
-<path d="M465,362v 4.9" fill="none" stroke="black"/>
-<path d="M477,362v 4.9" fill="none" stroke="black"/>
-<path d="M488,362v 4.9" fill="none" stroke="black"/>
-<path d="M499,362v 4.9" fill="none" stroke="black"/>
-<path d="M511,357v 9.8" fill="none" stroke="black"/>
+<path d="M57,357v 9.8M69,362v 4.9M80,362v 4.9M91,362v 4.9M103,362v 4.9M114,357v 9.8M125,362v 4.9M137,362v 4.9M148,362v 4.9M159,362v 4.9M171,357v 9.8M182,362v 4.9M193,362v 4.9M205,362v 4.9M216,362v 4.9M227,357v 9.8M239,362v 4.9M250,362v 4.9M261,362v
+ 4.9M273,362v 4.9M284,357v 9.8M295,362v 4.9M307,362v 4.9M318,362v 4.9M329,362v 4.9M341,357v 9.8M352,362v 4.9M363,362v 4.9M375,362v 4.9M386,362v 4.9M397,357v 9.8M409,362v 4.9M420,362v 4.9M431,362v 4.9M443,362v 4.9M454,357v 9.8M465,362v 4.9M477,362v
+ 4.9M488,362v 4.9M499,362v 4.9M511,357v 9.8" fill="none" stroke="black"/>
 <text xml:space="preserve" x="57" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
 </text>
 <text xml:space="preserve" x="49" y="382" fill="black" font-size="15" font-family="Times">&#8722;
@@ -472,52 +434,9 @@ th1_palette.svg
 <text xml:space="preserve" x="507" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
 </text>
 <path d="M57,367v -326" fill="none" stroke="black"/>
-<path d="M71,367h -14" fill="none" stroke="black"/>
-<path d="M64,359h -6.8" fill="none" stroke="black"/>
-<path d="M64,352h -6.8" fill="none" stroke="black"/>
-<path d="M64,345h -6.8" fill="none" stroke="black"/>
-<path d="M64,338h -6.8" fill="none" stroke="black"/>
-<path d="M71,331h -14" fill="none" stroke="black"/>
-<path d="M64,324h -6.8" fill="none" stroke="black"/>
-<path d="M64,316h -6.8" fill="none" stroke="black"/>
-<path d="M64,309h -6.8" fill="none" stroke="black"/>
-<path d="M64,302h -6.8" fill="none" stroke="black"/>
-<path d="M71,295h -14" fill="none" stroke="black"/>
-<path d="M64,288h -6.8" fill="none" stroke="black"/>
-<path d="M64,281h -6.8" fill="none" stroke="black"/>
-<path d="M64,273h -6.8" fill="none" stroke="black"/>
-<path d="M64,266h -6.8" fill="none" stroke="black"/>
-<path d="M71,259h -14" fill="none" stroke="black"/>
-<path d="M64,252h -6.8" fill="none" stroke="black"/>
-<path d="M64,245h -6.8" fill="none" stroke="black"/>
-<path d="M64,237h -6.8" fill="none" stroke="black"/>
-<path d="M64,230h -6.8" fill="none" stroke="black"/>
-<path d="M71,223h -14" fill="none" stroke="black"/>
-<path d="M64,216h -6.8" fill="none" stroke="black"/>
-<path d="M64,209h -6.8" fill="none" stroke="black"/>
-<path d="M64,202h -6.8" fill="none" stroke="black"/>
-<path d="M64,194h -6.8" fill="none" stroke="black"/>
-<path d="M71,187h -14" fill="none" stroke="black"/>
-<path d="M64,180h -6.8" fill="none" stroke="black"/>
-<path d="M64,173h -6.8" fill="none" stroke="black"/>
-<path d="M64,166h -6.8" fill="none" stroke="black"/>
-<path d="M64,159h -6.8" fill="none" stroke="black"/>
-<path d="M71,151h -14" fill="none" stroke="black"/>
-<path d="M64,144h -6.8" fill="none" stroke="black"/>
-<path d="M64,137h -6.8" fill="none" stroke="black"/>
-<path d="M64,130h -6.8" fill="none" stroke="black"/>
-<path d="M64,123h -6.8" fill="none" stroke="black"/>
-<path d="M71,115h -14" fill="none" stroke="black"/>
-<path d="M64,108h -6.8" fill="none" stroke="black"/>
-<path d="M64,101h -6.8" fill="none" stroke="black"/>
-<path d="M64,94h -6.8" fill="none" stroke="black"/>
-<path d="M64,87h -6.8" fill="none" stroke="black"/>
-<path d="M71,80h -14" fill="none" stroke="black"/>
-<path d="M64,72h -6.8" fill="none" stroke="black"/>
-<path d="M64,65h -6.8" fill="none" stroke="black"/>
-<path d="M64,58h -6.8" fill="none" stroke="black"/>
-<path d="M64,51h -6.8" fill="none" stroke="black"/>
-<path d="M71,44h -14" fill="none" stroke="black"/>
+<path d="M71,367h -14M64,359h -6.8M64,352h -6.8M64,345h -6.8M64,338h -6.8M71,331h -14M64,324h -6.8M64,316h -6.8M64,309h -6.8M64,302h -6.8M71,295h -14M64,288h -6.8M64,281h -6.8M64,273h -6.8M64,266h -6.8M71,259h -14M64,252h -6.8M64,245h -6.8M64,237h
+ -6.8M64,230h -6.8M71,223h -14M64,216h -6.8M64,209h -6.8M64,202h -6.8M64,194h -6.8M71,187h -14M64,180h -6.8M64,173h -6.8M64,166h -6.8M64,159h -6.8M71,151h -14M64,144h -6.8M64,137h -6.8M64,130h -6.8M64,123h -6.8M71,115h -14M64,108h -6.8M64,101h
+ -6.8M64,94h -6.8M64,87h -6.8M71,80h -14M64,72h -6.8M64,65h -6.8M64,58h -6.8M64,51h -6.8M71,44h -14" fill="none" stroke="black"/>
 <text xml:space="preserve" x="47" y="373" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
 </text>
 <text xml:space="preserve" x="22" y="337" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1000
