@@ -12,14 +12,16 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
     num_elems = 3
 
+    _global_objects = []
+
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
         for _ in range(self.num_elems):
             o = ROOT.TObject()
-            # Prevent immediate deletion of C++ TObjects
-            ROOT.SetOwnership(o, False)
             sc.Add(o)
+            # To prevent deletion of the objects (TList is by default non-owning)
+            self._global_objects.append(o)
 
         return sc
 

@@ -11,11 +11,16 @@ class TSeqCollectionListMethods(unittest.TestCase):
 
     num_elems = 3
 
+    _global_objects = []
+
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
         for i in reversed(range(self.num_elems)):
-            sc.Add(ROOT.TObjString(str(i)))
+            o = ROOT.TObjString(str(i))
+            sc.Add(o)
+            # To prevent deletion of the objects (TList is by default non-owning)
+            self._global_objects.append(o)
 
         return sc
 
@@ -48,6 +53,10 @@ class TSeqCollectionListMethods(unittest.TestCase):
         sc.insert(self.num_elems + 4, o4)
         self.assertEqual(sc.GetEntries(), self.num_elems + 4)
         self.assertEqual(sc.At(self.num_elems + 3), o4)
+
+        # Clear before the added element might be garbage collected,
+        # to avoid dangling pointer access.
+        sc.Clear()
 
     def test_pop(self):
         sc = self.create_tseqcollection()
@@ -82,8 +91,10 @@ class TSeqCollectionListMethods(unittest.TestCase):
         with self.assertRaises(TypeError):
             sc2.pop(1.0)
 
-        # Pop a repeated element
-        sc2.append(ROOT.TObjString("2"))
+        # Pop a repeated element.
+        # Keep Python reference so the added element lives beyond the sc2.pop() call:
+        new_elem = ROOT.TObjString("2")
+        sc2.append(new_elem)
         elem = sc2.pop()
         self.assertEqual(sc2.At(0), elem)
 
