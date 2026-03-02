@@ -860,6 +860,7 @@ void TLegend::PaintPrimitives()
       TMarker entrymarker(xsym, ysym, 0);
       TLine entryline; // here only for line attributes
       entryline.SetBit(TLine::kLineNDC);
+      std::vector<Double_t> segmx, segmy;
 
 
       if (opt.Contains("p")) {
@@ -872,25 +873,41 @@ void TLegend::PaintPrimitives()
             symbolsize = entrymarker.GetMarkerSize();
       }
 
+      auto add_segment = [&segmx,&segmy](Double_t sx1, Double_t sy1, Double_t sx2, Double_t sy2) {
+         segmx.emplace_back(sx1);
+         segmy.emplace_back(sy1);
+         segmx.emplace_back(sx2);
+         segmy.emplace_back(sy2);
+      };
+
+      auto paint_segments = [&]() {
+         if (segmx.size() > 0) {
+            entry->TAttLine::Modify();
+            gPad->PaintSegmentsNDC(segmx.size()/2, segmx.data(), segmy.data());
+            segmx.clear();
+            segmy.clear();
+         }
+      };
+
       // Lambda function to draw error mark with end caps
       auto draw_error_mark = [&]() {
          if (!opt.Contains("p")) {
-            entryline.PaintLineNDC( xsym, ysym - yspace*arrow_shift,
-                                    xsym, ysym + yspace*arrow_shift);
+            add_segment(xsym, ysym - yspace*arrow_shift, xsym, ysym + yspace*arrow_shift);
          } else {
             Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
-            entryline.PaintLineNDC(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
-            entryline.PaintLineNDC(xsym, ysym - sy, xsym, ysym - yspace*arrow_shift);
+            add_segment(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
+            add_segment(xsym, ysym - sy, xsym, ysym - yspace*arrow_shift);
          }
          if (endcaps == 1) {
-            entryline.PaintLineNDC(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
-            entryline.PaintLineNDC(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
+            add_segment(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
+            add_segment(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
          } else if (endcaps == 2) {
-            entryline.PaintLineNDC(xsym-barw, ysym+yspace*0.20, xsym, ysym + yspace*0.30);
-            entryline.PaintLineNDC(xsym, ysym + yspace*0.30, xsym+barw, ysym+yspace*0.20);
-            entryline.PaintLineNDC(xsym-barw, ysym-yspace*0.20, xsym, ysym - yspace*0.30);
-            entryline.PaintLineNDC(xsym, ysym - yspace*0.30, xsym+barw,ysym-yspace*0.20);
+            add_segment(xsym-barw, ysym+yspace*0.20, xsym, ysym + yspace*0.30);
+            add_segment(xsym, ysym + yspace*0.30, xsym+barw, ysym+yspace*0.20);
+            add_segment(xsym-barw, ysym-yspace*0.20, xsym, ysym - yspace*0.30);
+            add_segment(xsym, ysym - yspace*0.30, xsym+barw,ysym-yspace*0.20);
          } else if (endcaps == 3) {
+            paint_segments(); // ensure all lines painted before filled areas
             if (eobj && eobj->InheritsFrom(TAttFill::Class())) {
                dynamic_cast<TAttFill*>(eobj)->Copy(*entry);
             }
@@ -933,20 +950,19 @@ void TLegend::PaintPrimitives()
 
          if (eobj && eobj->InheritsFrom(TAttLine::Class()))
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
-         entry->TAttLine::Copy(entryline);
          // line total length (in x) is margin*0.8
          // if the entry is filled, then surround the box with the line instead
          if (opt.Contains("f") && !opt.Contains("l")) {
-            entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
-                                    xsym + boxw, ysym + yspace*0.35);
-            entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                    xsym + boxw, ysym - yspace*0.35);
-            entryline.PaintLineNDC( xsym + boxw, ysym - yspace*0.35,
-                                    xsym + boxw, ysym + yspace*0.35);
-            entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                    xsym - boxw, ysym + yspace*0.35);
+            add_segment(xsym - boxw, ysym + yspace*0.35,
+                        xsym + boxw, ysym + yspace*0.35);
+            add_segment(xsym - boxw, ysym - yspace*0.35,
+                        xsym + boxw, ysym - yspace*0.35);
+            add_segment(xsym + boxw, ysym - yspace*0.35,
+                        xsym + boxw, ysym + yspace*0.35);
+            add_segment(xsym - boxw, ysym - yspace*0.35,
+                        xsym - boxw, ysym + yspace*0.35);
          } else {
-            entryline.PaintLineNDC( xsym - boxw, ysym, xsym + boxw, ysym );
+            add_segment(xsym - boxw, ysym, xsym + boxw, ysym );
             if (opt.Contains("e"))
                draw_error_mark();
          }
@@ -954,10 +970,12 @@ void TLegend::PaintPrimitives()
          // Draw error only
          if (eobj && eobj->InheritsFrom(TAttLine::Class()))
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
-         entry->TAttLine::Copy(entryline);
 
          draw_error_mark();
       }
+
+      // paint segments if not yet done before
+      paint_segments();
 
       // Draw Polymarker
       if (opt.Contains("p"))
