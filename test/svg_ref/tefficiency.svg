@@ -137,17 +137,11 @@ tefficiency.svg
 <text xml:space="preserve" x="115" y="218" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">68.3%
 </text>
 <path d="M92,236h 19v -49h -19z" fill="#ff0000"/>
-<path d="M92,187h 19" fill="none" stroke="black"/>
-<path d="M92,236h 19" fill="none" stroke="black"/>
-<path d="M111,236v -49" fill="none" stroke="black"/>
-<path d="M92,236v -49" fill="none" stroke="black"/>
+<path d="M92,187h 19M92,236h 19M111,236v -49M92,236v -49" fill="none" stroke="black"/>
 <text xml:space="preserve" x="115" y="288" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">90%
 </text>
 <path d="M92,305h 19v -49h -19z" fill="#0000ff"/>
-<path d="M92,257h 19" fill="none" stroke="black"/>
-<path d="M92,305h 19" fill="none" stroke="black"/>
-<path d="M111,305v -49" fill="none" stroke="black"/>
-<path d="M92,305v -49" fill="none" stroke="black"/>
+<path d="M92,257h 19M92,305h 19M111,305v -49M92,305v -49" fill="none" stroke="black"/>
 <rect x="8.9" y="5.3" width="161" height="17" fill="#f2f2f2"/>
 <path d="M7.0,8.1v 16h 160v -1.9h -159v -14z" fill="black"/>
 <path d="M8.9,23v -17h 161v 17h -161z" fill="none" stroke="black"/>
@@ -287,17 +281,11 @@ tefficiency.svg
 <text xml:space="preserve" x="398" y="216" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">kFNormal
 </text>
 <path d="M375,236h 19v -49h -19z" fill="#ff0000"/>
-<path d="M375,187h 19" fill="none" stroke="black"/>
-<path d="M375,236h 19" fill="none" stroke="black"/>
-<path d="M394,236v -49" fill="none" stroke="black"/>
-<path d="M375,236v -49" fill="none" stroke="black"/>
+<path d="M375,187h 19M375,236h 19M394,236v -49M375,236v -49" fill="none" stroke="black"/>
 <text xml:space="preserve" x="398" y="286" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">kFAC
 </text>
 <path d="M375,305h 19v -49h -19z" fill="#0000ff"/>
-<path d="M375,257h 19" fill="none" stroke="black"/>
-<path d="M375,305h 19" fill="none" stroke="black"/>
-<path d="M394,305v -49" fill="none" stroke="black"/>
-<path d="M375,305v -49" fill="none" stroke="black"/>
+<path d="M375,257h 19M375,305h 19M394,305v -49M375,305v -49" fill="none" stroke="black"/>
 <rect x="292" y="5.3" width="153" height="17" fill="#f2f2f2"/>
 <path d="M290,8.1v 16h 152v -1.9h -150v -14z" fill="black"/>
 <path d="M292,23v -17h 153v 17h -153z" fill="none" stroke="black"/>
