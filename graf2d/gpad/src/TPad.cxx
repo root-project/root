@@ -4311,7 +4311,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    const Double_t angr  = TMath::Pi()*(180.-angle)/180.;
    const Double_t epsil = 0.0001;
    const Int_t maxnbi = 100;
-   Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
+   Double_t xli[maxnbi], yli[maxnbi], xt1, xt2, yt1, yt2;
    Double_t ll, x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
 
    Double_t rwxmin = gPad->GetX1();
@@ -4436,21 +4436,18 @@ L30:
 
       // Draw the hatches
 L50:
-      if (nbi%2 != 0) continue;
+      if ((nbi%2 != 0) || (nbi == 0))
+         continue;
 
-      for (i=1; i<=nbi; i=i+2) {
-         // Rotate back the hatches
-         xlh[0] = cosb*xli[i-1]-sinb*ycur;
-         ylh[0] = sinb*xli[i-1]+cosb*ycur;
-         xlh[1] = cosb*xli[i]  -sinb*ycur;
-         ylh[1] = sinb*xli[i]  +cosb*ycur;
-         // Convert hatches' positions from true NDC to WC
-         xlh[0] = (xlh[0]/wndc)*(rwxmax-rwxmin)+rwxmin;
-         ylh[0] = (ylh[0]/hndc)*(rwymax-rwymin)+rwymin;
-         xlh[1] = (xlh[1]/wndc)*(rwxmax-rwxmin)+rwxmin;
-         ylh[1] = (ylh[1]/hndc)*(rwymax-rwymin)+rwymin;
-         gPad->PaintLine(xlh[0], ylh[0], xlh[1], ylh[1]);
+      for (i=0; i<nbi; ++i) {
+         // Rotate back the hatches - first calculate y coordinate
+         yli[i] = sinb*xli[i] + cosb*ycur;
+         xli[i] = cosb*xli[i] - sinb*ycur;
+         // Convert hatches' positions from true NDC to WC to handle cliping
+         xli[i] = (xli[i]/wndc)*(rwxmax-rwxmin)+rwxmin;
+         yli[i] = (yli[i]/hndc)*(rwymax-rwymin)+rwymin;
       }
+      gPad->PaintSegments(nbi/2, xli, yli);
    }
 }
 
