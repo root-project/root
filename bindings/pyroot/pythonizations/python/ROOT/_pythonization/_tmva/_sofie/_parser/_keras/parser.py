@@ -93,6 +93,15 @@ def add_layer_into_RModel(rmodel, layer_data):
     import numpy as np
     from ROOT.TMVA.Experimental import SOFIE
 
+    def move_operator(op):
+        """
+        Wrap an operator into a std::unique_ptr to pass it to RModel::AddOperator().
+        """
+        import ROOT
+
+        ROOT.SetOwnership(op, False)
+        return ROOT.std.unique_ptr[type(op)](op)
+
     keras_version = get_keras_version()
 
     fLayerType = layer_data["layerType"]
@@ -153,12 +162,12 @@ def add_layer_into_RModel(rmodel, layer_data):
         if fLayerType == "GlobalAveragePooling2D":
             if layer_data["channels_last"]:
                 op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
-                rmodel.AddOperatorReference(op)
+                rmodel.AddOperator(move_operator(op))
                 inputs[0] = LayerName + "PreTrans"
             outputs[0] = LayerName + "Squeeze"
-            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
             op = SOFIE.ROperator_Reshape(SOFIE.ReshapeOpMode.Squeeze, [2, 3], LayerName + "Squeeze", fLayerOutput)
-            rmodel.AddOperatorReference(op)
+            rmodel.AddOperator(move_operator(op))
 
         # Similar case is with Batchnorm, ONNX assumes that the 'axis' is always 1, but Keras
         # gives the user the choice of specifying it. So, we have to transpose the input layer
@@ -178,26 +187,26 @@ def add_layer_into_RModel(rmodel, layer_data):
             fAttrPerm[1] = axis
             fAttrPerm[axis] = 1
             op = SOFIE.ROperator_Transpose("float")(fAttrPerm, inputs[0], LayerName + "PreTrans")
-            rmodel.AddOperatorReference(op)
+            rmodel.AddOperator(move_operator(op))
             inputs[0] = LayerName + "PreTrans"
             outputs[0] = LayerName + "PostTrans"
-            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
             op = SOFIE.ROperator_Transpose("float")(fAttrPerm, LayerName + "PostTrans", fLayerOutput)
-            rmodel.AddOperatorReference(op)
+            rmodel.AddOperator(move_operator(op))
 
         elif fLayerType == "MaxPooling2D" or fLayerType == "AveragePooling2D":
             if layer_data["channels_last"]:
                 op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
-                rmodel.AddOperatorReference(op)
+                rmodel.AddOperator(move_operator(op))
                 inputs[0] = LayerName + "PreTrans"
                 outputs[0] = LayerName + "PostTrans"
-            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
             if layer_data["channels_last"]:
                 op = SOFIE.ROperator_Transpose("float")([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
-                rmodel.AddOperatorReference(op)
+                rmodel.AddOperator(move_operator(op))
 
         else:
-            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
 
         return rmodel
 
@@ -229,20 +238,20 @@ def add_layer_into_RModel(rmodel, layer_data):
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
                     op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
-                    rmodel.AddOperatorReference(op)
+                    rmodel.AddOperator(move_operator(op))
                     inputs[0] = LayerName + "PreTrans"
                     layer_data["layerInput"] = inputs
             outputs[0] = LayerName + fLayerType
             layer_data["layerOutput"] = outputs
             op = mapKerasLayerWithActivation[fLayerType](layer_data)
-            rmodel.AddOperatorReference(op)
+            rmodel.AddOperator(move_operator(op))
             Activation_layer_input = LayerName + fLayerType
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
                     op = SOFIE.ROperator_Transpose("float")(
                         [0, 2, 3, 1], LayerName + fLayerType, LayerName + "PostTrans"
                     )
-                    rmodel.AddOperatorReference(op)
+                    rmodel.AddOperator(move_operator(op))
                     Activation_layer_input = LayerName + "PostTrans"
 
             # Adding the activation function
@@ -251,7 +260,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             layer_data["layerInput"] = inputs
             layer_data["layerOutput"] = outputs
 
-            rmodel.AddOperatorReference(mapKerasLayer[LayerActivation](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayer[LayerActivation](layer_data)))
 
         else:  # if layer is conv and the activation is linear, we need to add transpose before and after
             if fLayerType == "Conv2D":
@@ -260,15 +269,15 @@ def add_layer_into_RModel(rmodel, layer_data):
                 fLayerOutput = outputs[0]
                 if layer_data["channels_last"]:
                     op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
-                    rmodel.AddOperatorReference(op)
+                    rmodel.AddOperator(move_operator(op))
                     inputs[0] = LayerName + "PreTrans"
                     layer_data["layerInput"] = inputs
                     outputs[0] = LayerName + "PostTrans"
-            rmodel.AddOperatorReference(mapKerasLayerWithActivation[fLayerType](layer_data))
+            rmodel.AddOperator(move_operator(mapKerasLayerWithActivation[fLayerType](layer_data)))
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
                     op = SOFIE.ROperator_Transpose("float")([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
-                    rmodel.AddOperatorReference(op)
+                    rmodel.AddOperator(move_operator(op))
         return rmodel
     else:
         raise Exception("TMVA.SOFIE - parsing keras layer " + fLayerType + " is not yet supported")
