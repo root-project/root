@@ -328,57 +328,44 @@ if(NOT builtin_lzma)
 endif()
 
 if(builtin_lzma)
-  set(lzma_version 5.2.4)
+  set(lzma_version 5.8.2)
   set(LZMA_TARGET LZMA)
-  message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
-  if(WIN32)
-    set(lzma_version 5.6.3)
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b1d45295d3f71f25a4c9101bd7c8d16cb56348bbef3bbc738da0351e17c73317
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
-                 -DCMAKE_CXX_FLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
-                 -DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
-                 -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG> --target liblzma
-      INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --component liblzma_Development
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  message(STATUS "Downloading and building LZMA version ${lzma_version}")
+
+  set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+  if(MSVC)
+      set(LIBLZMA_CXXFLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
+      set(LIBLZMA_CXXFLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
-      set(LIBLZMA_CFLAGS "-Wno-format-nonliteral")
-      set(LIBLZMA_LDFLAGS "-Qunused-arguments")
-    elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-      set(LIBLZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
+      set(LIBLZMA_CXXFLAGS "-Wno-format-nonliteral")
     endif()
     if(CMAKE_OSX_SYSROOT)
-      set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
+      set(LIBLZMA_CXXFLAGS "${LIBLZMA_CXXFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -O3")
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
-                        --with-pic --disable-shared --quiet
-                        --disable-scripts --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links
-                        CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LIBLZMA_CFLAGS} LDFLAGS=${LIBLZMA_LDFLAGS}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+    set(LIBLZMA_CXXFLAGS "${LIBLZMA_CXXFLAGS} -O3")
+    set(LIBLZMA_CXXFLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${LIBLZMA_CXXFLAGS}")
+    set(LIBLZMA_CXXFLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${LIBLZMA_CXXFLAGS}")
   endif()
+
+  ExternalProject_Add(
+    LZMA
+    URL https://root.cern/download/xz-${lzma_version}.tar.gz
+    URL_HASH SHA256=f21fdf2c1ee004de30ca40377a273e3369186e6b7ab7b50a410eaa2e2bbefafb
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
+                -DCMAKE_CXX_FLAGS_RELWITHDEBINFO=${LIBLZMA_CXXFLAGS_RELWITHDEBINFO}
+                -DCMAKE_CXX_FLAGS_RELEASE=${LIBLZMA_CXXFLAGS_RELEASE}
+                -DCMAKE_CXX_FLAGS_DEBUG=${LIBLZMA_CXXFLAGS_RELEASE}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG> --target liblzma
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --component liblzma_Development
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
+    TIMEOUT 600
+  )
+  set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
 
   add_library(LibLZMA STATIC IMPORTED GLOBAL)
   add_library(LibLZMA::LibLZMA ALIAS LibLZMA)
