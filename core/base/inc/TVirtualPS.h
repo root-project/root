@@ -62,6 +62,7 @@ public:
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
    virtual void  Text(Double_t x, Double_t y, const wchar_t *string) = 0;
+   virtual void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) = 0;
    virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
 
    virtual void  PrintFast(Int_t nch, const char *string="");

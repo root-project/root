@@ -130,3 +130,8 @@ void TWebPS::Text(Double_t x, Double_t y, const wchar_t *)
    buf[0] = x;
    buf[1] = y;
 }
+
+void TWebPS::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+{
+   Text(x, y, chars);
+}

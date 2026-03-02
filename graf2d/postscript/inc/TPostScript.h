@@ -129,6 +129,7 @@ public:
    void  SetColor(Int_t color = 1);
    void  SetColor(Float_t r, Float_t g, Float_t b) override;
    void  Text(Double_t x, Double_t y, const char *string) override;
+   void  TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
    void  Text(Double_t x, Double_t y, const wchar_t *string) override;
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t u, Double_t v, const wchar_t *string);

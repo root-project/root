@@ -1513,6 +1513,23 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw text with URL.
+///
+
+void TSVG::TextUrl(Double_t x, Double_t y, const char *chars, const char *url)
+{
+   PrintStr("@");
+   PrintFast(9,"<a href=\"");
+   PrintStr(url);
+   PrintFast(2,"\">");
+   PrintStr("@");
+   Text(x, y, chars);
+   PrintStr("@");
+   PrintFast(4,"</a>");
+   PrintStr("@");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write a string of characters in NDC
 
 void TSVG::TextNDC(Double_t u, Double_t v, const char *chars)

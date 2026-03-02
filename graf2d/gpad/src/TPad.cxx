@@ -4778,6 +4778,20 @@ void TPad::PaintText(Double_t x, Double_t y, const wchar_t *text)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint text with URL in CurrentPad World coordinates.
+
+void TPad::PaintTextUrl(Double_t x, Double_t y, const char *text, const char *url)
+{
+   Modified();
+
+   if (!gPad->IsBatch() && GetPainter())
+      GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
+
+   if (gVirtualPS) gVirtualPS->TextUrl(x, y, text, url);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint text in CurrentPad NDC coordinates.
 
 void TPad::PaintTextNDC(Double_t u, Double_t v, const char *text)

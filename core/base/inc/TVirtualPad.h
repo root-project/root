@@ -195,6 +195,7 @@ public:
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) = 0;
+   virtual void     PaintTextUrl(Double_t x, Double_t y, const char *text, const char *url) = 0;
    virtual Double_t PixeltoX(Double_t px) = 0;
    virtual Double_t PixeltoY(Double_t py) = 0;
    virtual void     PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) = 0;
