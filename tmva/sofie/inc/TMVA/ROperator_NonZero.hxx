@@ -7,9 +7,7 @@
 
 #include <sstream>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA::Experimental::SOFIE {
 
 template<class T>
 class ROperator_NonZero final : public ROperator
@@ -93,7 +91,7 @@ public:
          fShapeY[0] = fShapeX.size();
 
          // identify as -1 since we will declare maximum as size of input
-         fShapeY[1] = Dim{std::string("v_NonZero_") + fNX, static_cast<size_t>(-1)};
+         fShapeY[1] = Dim{std::string("fV_NonZero_") + fNX, static_cast<size_t>(-1)};
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
          if (model.Verbose()) {
@@ -106,7 +104,7 @@ public:
       // define output value used as max non zero with max size = input shape * N
       auto inputLength = ConvertDimShapeToLength(fShapeX);
       std::stringstream out;
-      out << SP << "size_t v_NonZero_" << fNX << " = " << inputLength << ";\n";
+      out << SP << "size_t fV_NonZero_" << fNX << " = " << inputLength << ";\n";
       return out.str();
    }
 
@@ -133,7 +131,7 @@ public:
 
       // loop on input indices
       out << SP << "size_t offset_" << opName << " = 0;\n";
-      out << SP << vnonzero << " = 0;\n";
+      out << SP << "size_t " << vnonzero << " = 0;\n";
       for (size_t j = 0; j < dims; j++) {
          std::string index = "i_" + std::to_string(j);
          for (size_t k = 0; k <= j; k++) out << SP;
@@ -185,9 +183,7 @@ public:
 
 };
 
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namepsace TMVA::Experimental::SOFIE
 
 
 #endif //TMVA_SOFIE_ROPERATOR_NonZero
