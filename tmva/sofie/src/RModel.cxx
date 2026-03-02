@@ -956,6 +956,15 @@ std::string typeForOutput(ETensorType t) {
    return ConvertTypeToString(t);
 }
 
+std::string memberNameForDimShape(std::string name)
+{
+   if (!name.empty()) {
+      name[0] = std::toupper(static_cast<unsigned char>(name[0]));
+   }
+   name = "f" + name;
+   return name;
+}
+
 }
 
 void RModel::GenerateOutput()
@@ -1010,13 +1019,10 @@ void RModel::GenerateOutput()
          for (auto &d : shape) {
             std::string pName = d.param;
             if (d.isParam && input_params_checked.count(pName) == 0) {
-               std::string cap = d.param;
-               if (!cap.empty()) {
-                  cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
-               }
-               dynamic_parameters_check += d.param + " > f" + cap + " || ";
+               std::string memberName = memberNameForDimShape(d.param);
+               dynamic_parameters_check += d.param + " > " + memberName + " || ";
                input_params_checked.insert(pName);
-               fGC += SP + "if (" + d.param + " > f" + cap + ") {\n";
+               fGC += SP + "if (" + d.param + " > " + memberName + ") {\n";
                fGC += SP + SP + "throw std::runtime_error(\"TMVA-SOFIE: dynamic input tensor shape parameter " +
                       d.param + " exceeds the initialized maximum allowed shape.\");\n";
                fGC += SP + "}\n";
@@ -1097,11 +1103,7 @@ void RModel::GenerateSessionCode()
       fGC += "\n\n";
       std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
       for (const auto &p : fDimShapeNames) {
-         std::string cap = p;
-         if (!cap.empty()) {
-            cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
-         }
-         fGC += "size_t f" + cap + ";\n";
+         fGC += "size_t " + memberNameForDimShape(p) + ";\n";
       }
    }
 
@@ -1155,11 +1157,7 @@ void RModel::GenerateSessionCode()
          fGC += "\n\n";
          std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
          for (const auto &p : fDimShapeNames) {
-            std::string cap = p;
-            if (!cap.empty()) {
-               cap[0] = std::toupper(static_cast<unsigned char>(cap[0]));
-            }
-            fGC += "   f" + cap + " = " + p + ";\n";
+            fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
          }
       }
 
