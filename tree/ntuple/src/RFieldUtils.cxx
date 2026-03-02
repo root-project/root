@@ -717,6 +717,15 @@ ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializatio
    }
 }
 
+std::string ROOT::Internal::GetRNTupleSoARecord(const TClass *cl)
+{
+   auto am = cl->GetAttributeMap();
+   if (am && am->HasKey("rntuple.SoARecord")) {
+      return am->GetPropertyAsString("rntuple.SoARecord");
+   }
+   return "";
+}
+
 std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templateType, std::size_t maxArgs)
 {
    std::vector<std::string> result;
