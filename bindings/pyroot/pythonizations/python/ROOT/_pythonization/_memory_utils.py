@@ -63,3 +63,28 @@ def _SetDirectory_SetOwnership(self, dir):
         import ROOT
 
         ROOT.SetOwnership(self, False)
+
+
+def declare_cpp_owned_arg(position, name, positional_args, keyword_args, condition=lambda _: True):
+    """
+    Helper function to drop Python ownership of a specific function argument
+    with a given position and name, referring to the C++ signature.
+
+    positional_args and keyword_args should be the usual args and kwargs passed
+    to the function, and condition is an optional condition on which the Python
+    ownership is dropped.
+    """
+    import ROOT
+
+    # has to match the C++ argument name
+    if name in keyword_args:
+        arg = keyword_args[name]
+    elif len(positional_args) > position:
+        arg = positional_args[0]
+    else:
+        # This can happen if the function was called with too few arguments.
+        # In that case we should not do anything.
+        return
+
+    if condition(arg):
+        ROOT.SetOwnership(arg, False)

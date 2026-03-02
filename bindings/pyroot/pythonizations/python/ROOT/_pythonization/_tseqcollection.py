@@ -241,10 +241,29 @@ def _index_pyz(self, val):
     return idx
 
 
+def _TSeqCollection_AddAt(self, *args, **kwargs):
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    def condition(_):
+        return self.IsOwner()
+
+    declare_cpp_owned_arg(0, "obj", args, kwargs, condition=condition)
+
+    self._AddAt(*args, **kwargs)
+
+
 @pythonization('TSeqCollection')
 def pythonize_tseqcollection(klass):
+    from ROOT._pythonization._tcollection import _TCollection_Add
+
     # Parameters:
     # klass: class to be pythonized
+
+    # Pythonize Add() methods
+    klass._Add = klass.Add
+    klass.Add = _TCollection_Add
+    klass._AddAt = klass.AddAt
+    klass.AddAt = _TSeqCollection_AddAt
 
     # Item access methods
     klass.__getitem__ = _getitem_pyz
@@ -257,3 +276,17 @@ def pythonize_tseqcollection(klass):
     klass.reverse = _reverse_pyz
     klass.sort    = _sort_pyz
     klass.index   = _index_pyz
+
+
+@pythonization("TList")
+def pythonize_tlist(klass):
+    from ROOT._pythonization._tcollection import _TCollection_Add
+
+    # Parameters:
+    # klass: class to be pythonized
+
+    # Pythonize Add() methods
+    klass._Add = klass.Add
+    klass.Add = _TCollection_Add
+    klass._AddAt = klass.AddAt
+    klass.AddAt = _TSeqCollection_AddAt
