@@ -2264,12 +2264,14 @@ L110:
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
-               loglabels.push_back({
-                  .id = changelablogid, .num = changelablognum,
-                  .u = gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
-                  .v = gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                  .value = axis_value, .lbl = typolabel
-               });
+               loglabels.emplace_back();
+               auto &back = loglabels.back();
+               back.id = changelablogid;
+               back.num = changelablognum;
+               back.u = gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1());
+               back.v = gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1());
+               back.value = axis_value;
+               back.lbl = typolabel;
                if (fNModLabs) ResetLabelAttributes(&textaxis);
             }
             labelnumber++;
@@ -2364,11 +2366,14 @@ L160:
                      }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
-                     loglabels.push_back({
-                        .id = changelablogid, .num = 0,
-                        .u = u, .v = v,
-                        .value = axis_value, .lbl = typolabel
-                     });
+                     loglabels.emplace_back();
+                     auto &back = loglabels.back();
+                     back.id = changelablogid;
+                     back.num = 0;
+                     back.u = u;
+                     back.v = v;
+                     back.value = axis_value;
+                     back.lbl = typolabel;
                      if (fNModLabs) ResetLabelAttributes(&textaxis);
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
@@ -2387,11 +2392,14 @@ L160:
                         }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
-                        loglabels.push_back({
-                           .id = changelablogid, .num = 0,
-                           .u = u, .v = v,
-                           .value = axis_value, .lbl = typolabel
-                        });
+                        loglabels.emplace_back();
+                        auto &back = loglabels.back();
+                        back.id = changelablogid;
+                        back.num = 0;
+                        back.u = u;
+                        back.v = v;
+                        back.value = axis_value;
+                        back.lbl = typolabel;
                         if (fNModLabs) ResetLabelAttributes(&textaxis);
                      }
                   }
