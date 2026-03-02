@@ -563,6 +563,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                     selected->RequestOnlyTClass(),
                                     selected->RequestedVersionNumber(),
                                     selected->RequestedRNTupleSerializationMode(),
+                                    selected->RequestedRNTupleSoARecord(),
                                     fInterpreter,
                                     fNormCtxt);
    } else {
@@ -574,6 +575,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                     selected->RequestOnlyTClass(),
                                     selected->RequestedVersionNumber(),
                                     selected->RequestedRNTupleSerializationMode(),
+                                    selected->RequestedRNTupleSoARecord(),
                                     fInterpreter,
                                     fNormCtxt);
    }

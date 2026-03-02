@@ -3930,7 +3930,7 @@ int RootClingMain(int argc,
 
    const char *etcDir = gDriverConfig->fTROOT__GetEtcDir();
    std::string llvmResourceDir = etcDir ? std::string(etcDir) + "/cling" : "";
-   
+
    if (gBareClingSubcommand) {
       std::vector<const char *> clingArgsC;
       clingArgsC.push_back(executableFileName);
@@ -4106,7 +4106,7 @@ int RootClingMain(int argc,
    // cling-only arguments
    if (etcDir)
       clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(etcDir));
-   
+
    // We do not want __ROOTCLING__ in the pch!
    if (!gOptGeneratePCH) {
       clingArgs.push_back("-D__ROOTCLING__");
@@ -4616,7 +4616,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      
+
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(nullptr, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
@@ -5532,6 +5532,7 @@ int GenReflexMain(int argc, char **argv)
       "        Default value is 'false'\n"
       "      - rntupleStreamerMode [true/false]: enforce streamed or native writing for RNTuple.\n"
       "        If unset, RNTuple stores classes in split mode or fails if the class cannot be split.\n"
+      "      - rntupleSoARecord [class name]: marks the class as an RNTuple SoA layout for the underlying record\n"
       "      - noInputOperator [true/false]: turns off input operator generation if set\n"
       "        to 'true'. Default value is 'false'\n"
       "      Example XML:\n"
@@ -5542,6 +5543,7 @@ int GenReflexMain(int argc, char **argv)
       "                 [id=\"xxxx\"] [noStreamer=\"true/false\"]\n"
       "                 [noInputOperator=\"true/false\"]\n"
       "                 [rntupleStreamerMode=\"true/false\"] />\n"
+      "                 [rntupleSoARecord=\"class_name\"] />\n"
       "          <class name=\"classname\" >\n"
       "            <field name=\"m_transient\" transient=\"true\"/>\n"
       "            <field name=\"m_anothertransient\" persistent=\"false\"/>\n"

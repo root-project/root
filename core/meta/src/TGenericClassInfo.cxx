@@ -314,6 +314,11 @@ namespace Internal {
                fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "true");
             }
          }
+
+         if (!fRNTupleSoARecord.empty()) {
+            fClass->CreateAttributeMap();
+            fClass->GetAttributeMap()->AddProperty("rntuple.SoARecord", fRNTupleSoARecord.c_str());
+         }
       }
       return fClass;
    }
@@ -431,6 +436,11 @@ namespace Internal {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
+   }
+
+   void TGenericClassInfo::SetRNTupleSoARecord(const std::string &recordName)
+   {
+      fRNTupleSoARecord = recordName;
    }
 
    void TGenericClassInfo::AdoptAlternate(ROOT::TClassAlt *alt)

@@ -68,6 +68,7 @@ namespace ROOT {
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
       Int_t                       fPragmaBits;
+      std::string                 fRNTupleSoARecord;
       Detail::TCollectionProxyInfo *fCollectionProxyInfo;
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
@@ -142,6 +143,7 @@ namespace ROOT {
       void                              SetStreamerFunc(ClassStreamerFunc_t);
       void                              SetConvStreamerFunc(ClassConvStreamerFunc_t);
       Short_t                           SetVersion(Short_t version);
+      void                              SetRNTupleSoARecord(const std::string &recordName);
 
       //   protected:
    private:

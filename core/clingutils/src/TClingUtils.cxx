@@ -386,6 +386,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -395,7 +396,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestedVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
@@ -417,6 +419,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -427,7 +430,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -456,6 +460,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -466,7 +471,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // For comparison purposes.
@@ -490,6 +496,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
                                          int rRequestedRNTupleSerializationMode,
+                                         const std::string &rRequestedRNTupleSoARecord,
                                          const cling::Interpreter &interpreter,
                                          const TNormalizedCtxt &normCtxt)
    : fRuleIndex(index),
@@ -500,7 +507,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
      fRequestNoInputOperator(rRequestNoInputOperator),
      fRequestOnlyTClass(rRequestOnlyTClass),
      fRequestedVersionNumber(rRequestVersionNumber),
-     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode),
+     fRequestedRNTupleSoARecord(rRequestedRNTupleSoARecord)
 // clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
@@ -2061,6 +2069,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       finalString << "\n" << "      instance.AdoptAlternate(::ROOT::AddClassAlternate(\""
                   << classname << "\",\"" << cl.GetDemangledTypeInfo() << "\"));\n";
 
+   }
+
+   //---------------------------------------------------------------------------
+   // Register underlying SoA record for RNTuple SoA layouts
+   /////////////////////////////////////////////////////////////////////////////
+
+   if (!cl.RequestedRNTupleSoARecord().empty()) {
+      finalString << "      instance.SetRNTupleSoARecord(\"" << cl.RequestedRNTupleSoARecord() << "\");" << "\n";
    }
 
    //---------------------------------------------------------------------------

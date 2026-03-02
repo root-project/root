@@ -101,6 +101,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
                                                       false,
                                                       -1,
                                                       0,
+                                                      "",
                                                       interp,
                                                       normCtxt));
    // clang-format on
@@ -163,6 +164,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
                                                       false,
                                                       -1,
                                                       0,
+                                                      "",
                                                       interp,
                                                       normCtxt));
    // clang-format on
