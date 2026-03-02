@@ -203,6 +203,7 @@ private:
    bool fRequestOnlyTClass;
    int  fRequestedVersionNumber;
    int  fRequestedRNTupleSerializationMode;
+   std::string fRequestedRNTupleSoARecord;
    // clang-format on
 
 public:
@@ -228,6 +229,7 @@ public:
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
                        int rRequestedRNTupleSerializationMode,
+                       const std::string &rRequestedRNTupleSoARecord,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -240,6 +242,7 @@ public:
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
                        int rRequestedRNTupleSerializationMode,
+                       const std::string &rRequestedRNTupleSoARecord,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -253,6 +256,7 @@ public:
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
                        int rRequestedRNTupleSerializationMode,
+                       const std::string &rRequestedRNTupleSoARecord,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -267,6 +271,7 @@ public:
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
                        int rRequestedRNTupleSerializationMode,
+                       const std::string &rRequestedRNTupleSoARecord,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
    // clang-format on
@@ -292,6 +297,7 @@ public:
    bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
    int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
    int  RequestedRNTupleSerializationMode() const { return fRequestedRNTupleSerializationMode; }
+   const std::string &RequestedRNTupleSoARecord() const { return fRequestedRNTupleSoARecord; }
    // clang-format on
    int  RootFlag() const {
       // Return the request (streamerInfo, has_version, etc.) combined in a single

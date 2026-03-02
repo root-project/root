@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 #include "LinkdefReader.h"
 #include "SelectionRules.h"
 #include "RConversionRuleParser.h"
@@ -57,6 +58,7 @@ struct LinkdefReader::Options {
    };
    int fVersionNumber;
    int fRNTupleSerializationMode; // 0: unset, -1: enforce streamed, 1: enforce native
+   std::string fRNTupleSoARecord;
 };
 
 /*
@@ -409,6 +411,7 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                   if (options->fVersionNumber >= 0) csr.SetRequestedVersionNumber(options->fVersionNumber);
                   if (options->fRNTupleSerializationMode != 0)
                      csr.SetRequestedRNTupleSerializationMode(options->fRNTupleSerializationMode);
+                  csr.SetRequestedRNTupleSoARecord(options->fRNTupleSoARecord);
                }
                if (csr.RequestStreamerInfo() && csr.RequestNoStreamer()) {
                   std::cerr << "Warning: " << localIdentifier << " option + mutual exclusive with -, + prevails\n";
@@ -663,7 +666,8 @@ public:
        *   nomap: (ignored by roocling; prevents entry in ROOT's rootmap file)
        *   stub: (ignored by rootcling was a directly for CINT code generation)
        *   version(x): sets the version number of the class to x
-       *   rntuple[un]split: enforce split/unsplit encoding in RNTuple
+       *   rntupleStreamerMode(true|false): enforce/prevent use of the RNTuple streamer field
+       *   rntupleSoARecord(x): marks the class as an RNTuple SoA layout for the underlying record class x
        */
 
       // We assume that the first toke in option or options
@@ -718,11 +722,36 @@ public:
                         "(either rntupleStreamerMode(true) or rntupleStreamerMode(false))",
                         boolval, PP);
                } else {
+                  if (!options.fRNTupleSoARecord.empty()) {
+                     Error("Error: rntupleStreamerMode(true) and rntupleSoARecord are mutually exclusive", boolval, PP);
+                  }
                   options.fRNTupleSerializationMode = -1;
                }
             } else {
                Error("Error: Malformed rntupleStreamerMode option (either 'true' or 'false').", boolval, PP);
             }
+         } else if (tok.getIdentifierInfo()->getName() == "rntupleSoARecord") {
+            clang::Token start = tok;
+            PP.Lex(tok);
+            if (tok.isNot(clang::tok::l_paren)) {
+               Error("Error: missing left parenthesis after rntupleSoARecord.", start, PP);
+               return false;
+            }
+            PP.Lex(tok);
+            clang::Token strval = tok;
+            if (tok.isNot(clang::tok::eod))
+               PP.Lex(tok);
+            if (tok.isNot(clang::tok::r_paren)) {
+               Error("Error: missing right parenthesis after rntupleSoARecord.", start, PP);
+               return false;
+            }
+            if (!strval.getIdentifierInfo() || strval.getIdentifierInfo()->getName().empty()) {
+               Error("Error: Malformed rntupleSoARecord option.", strval, PP);
+            }
+            if (options.fRNTupleSerializationMode == -1) {
+               Error("Error: rntupleStreamerMode(true) and rntupleSoARecord are mutually exclusive", strval, PP);
+            }
+            options.fRNTupleSoARecord = strval.getIdentifierInfo()->getName();
          } else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.
             // options.fUseStubs = 1;
