@@ -93,10 +93,25 @@ def _iter_pyz(self):
         yield o
 
 
+def _TCollection_Add(self, *args, **kwargs):
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    def condition(_):
+        return self.IsOwner()
+
+    declare_cpp_owned_arg(0, "obj", args, kwargs, condition=condition)
+
+    self._Add(*args, **kwargs)
+
+
 @pythonization('TCollection')
 def pythonize_tcollection(klass):
     # Parameters:
     # klass: class to be pythonized
+
+    # Pythonize Add()
+    klass._Add = klass.Add
+    klass.Add = _TCollection_Add
 
     # Add Python lists methods
     klass.append = klass.Add
