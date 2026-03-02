@@ -146,7 +146,6 @@ public:
       }
 
       std::size_t cols = fDatasets[0].GetCols();
-      ShuffledTensor.Reshape(fNumEntries, cols);
       RFlat2DMatrix SampledTensor(fNumEntries, cols);
       RFlat2DMatrix UndersampledMajorTensor(fNumResampledMajor, cols);
 
@@ -170,7 +169,6 @@ public:
       SampleWithReplacement(fNumResampledMinor, fNumMinor);
 
       std::size_t cols = fDatasets[0].GetCols();
-      ShuffledTensor.Reshape(fNumEntries, cols);
       RFlat2DMatrix SampledTensor(fNumEntries, cols);
       RFlat2DMatrix OversampledMinorTensor(fNumResampledMinor, cols);
 
