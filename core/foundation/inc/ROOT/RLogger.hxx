@@ -20,6 +20,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace ROOT {
@@ -127,19 +128,28 @@ public:
  A RLogHandler that multiplexes diagnostics to different client `RLogHandler`s
  and keeps track of the sum of `RLogDiagCount`s for all channels.
 
- `RLogHandler::Get()` returns the process's (static) log manager.
- */
+ `RLogManager::Get()` returns the process's (static) log manager.
 
+ The verbosity of individual channels can be configured at startup via the
+ `ROOT_LOG` environment variable. The format is a comma-separated list of
+ `ChannelName=Level` pairs, where `Level` is one of `Fatal`, `Error`,
+ `Warning`, `Info`, or `Debug` (optionally with an integer verbosity offset,
+ e.g. `Debug(3)`). Example:
+ ~~~
+ export ROOT_LOG='ROOT.InterpreterPerf=Debug(3),ROOT.RBrowser=Error'
+ ~~~
+ */
 class RLogManager : public RLogChannel, public RLogHandler {
    std::mutex fMutex;
    std::list<std::unique_ptr<RLogHandler>> fHandlers;
 
+   /// Verbosity overrides parsed from ROOT_LOG, keyed by channel name.
+   /// Applied to a channel the first time it calls GetEffectiveVerbosity().
+   std::unordered_map<std::string, ELogLevel> fEnvVerbosity;
+
 public:
-   /// Initialize taking a RLogHandler.
-   RLogManager(std::unique_ptr<RLogHandler> lh) : RLogChannel(ELogLevel::kWarning)
-   {
-      fHandlers.emplace_back(std::move(lh));
-   }
+   /// Initialize taking a RLogHandler. Parses ROOT_LOG and gDebug at construction.
+   RLogManager(std::unique_ptr<RLogHandler> lh);
 
    static RLogManager &Get();
 
@@ -151,6 +161,16 @@ public:
 
    /// Remove and return the given log handler. Returns `nullptr` if not found.
    std::unique_ptr<RLogHandler> Remove(RLogHandler *handler);
+
+   /// Return the verbosity override for the named channel, or ELogLevel::kUnset if none.
+   /// Used by RLogChannel::GetEffectiveVerbosity() to apply ROOT_LOG settings lazily.
+   ELogLevel GetEnvVerbosity(const std::string &channelName) const
+   {
+      auto it = fEnvVerbosity.find(channelName);
+      if (it != fEnvVerbosity.end())
+         return it->second;
+      return ELogLevel::kUnset;
+   }
 
    // Emit a `RLogEntry` to the RLogHandlers.
    // Returns false if further emission of this Log should be suppressed.
@@ -171,7 +191,6 @@ struct RLogLocation {
  One can construct a RLogEntry through RLogBuilder, including streaming into
  the diagnostic message and automatic emission.
  */
-
 class RLogEntry {
 public:
    RLogLocation fLocation;
@@ -206,7 +225,6 @@ namespace Detail {
 ~~~
  This will automatically capture the current class and function name, the file and line number.
  */
-
 class RLogBuilder : public std::ostringstream {
    /// The log entry to be built.
    RLogEntry fEntry;
@@ -309,9 +327,20 @@ inline RLogChannel &GetChannelOrManager(RLogChannel &channel)
 
 inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) const
 {
-   if (fVerbosity == ELogLevel::kUnset)
-      return mgr.GetVerbosity();
-   return fVerbosity;
+   // If this channel has an explicit verbosity set, use it.
+   if (fVerbosity != ELogLevel::kUnset)
+      return fVerbosity;
+
+   // Check if the ROOT_LOG environment variable specified a verbosity for
+   // this channel by name. Named channels have a non-empty name.
+   if (!fName.empty()) {
+      ELogLevel envLevel = mgr.GetEnvVerbosity(fName);
+      if (envLevel != ELogLevel::kUnset)
+         return envLevel;
+   }
+
+   // Fall back to the global manager verbosity.
+   return mgr.GetVerbosity();
 }
 
 } // namespace ROOT

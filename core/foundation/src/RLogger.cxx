@@ -19,16 +19,19 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <vector>
 
 // pin vtable
 ROOT::RLogHandler::~RLogHandler() {}
 
 namespace {
+
 class RLogHandlerDefault : public ROOT::RLogHandler {
 public:
-   // Returns false if further emission of this log entry should be suppressed.
    bool Emit(const ROOT::RLogEntry &entry) override;
 };
 
@@ -55,7 +58,95 @@ inline bool RLogHandlerDefault::Emit(const ROOT::RLogEntry &entry)
                           entry.fMessage.c_str());
    return true;
 }
+
+/// Trim leading and trailing whitespace from a string.
+std::string TrimWhitespace(const std::string &s)
+{
+   const auto begin = s.find_first_not_of(" \t\r\n");
+   if (begin == std::string::npos)
+      return {};
+   const auto end = s.find_last_not_of(" \t\r\n");
+   return s.substr(begin, end - begin + 1);
+}
+
+/// Parse a level string such as "Debug", "Debug(3)", "Info", "Warning", "Error", "Fatal".
+/// Returns the corresponding ELogLevel. For Debug(N), the returned level is kDebug + N.
+ROOT::ELogLevel ParseLogLevel(const std::string &levelStr)
+{
+   if (levelStr.compare(0, 5, "Debug") == 0) {
+      int extra = 0;
+      auto parenOpen = levelStr.find('(');
+      if (parenOpen != std::string::npos) {
+         auto parenClose = levelStr.find(')', parenOpen);
+         if (parenClose != std::string::npos) {
+            try {
+               extra = std::stoi(levelStr.substr(parenOpen + 1, parenClose - parenOpen - 1));
+            } catch (...) {
+               extra = 0;
+            }
+         }
+      }
+      return ROOT::ELogLevel::kDebug + extra;
+   }
+   if (levelStr == "Info")    return ROOT::ELogLevel::kInfo;
+   if (levelStr == "Warning") return ROOT::ELogLevel::kWarning;
+   if (levelStr == "Error")   return ROOT::ELogLevel::kError;
+   if (levelStr == "Fatal")   return ROOT::ELogLevel::kFatal;
+
+   // Unrecognised string: return kUnset so the channel falls back to global.
+   return ROOT::ELogLevel::kUnset;
+}
+
+/// Parse ROOT_LOG and return a map of channel-name -> verbosity level.
+/// Format: "Channel1=Level1,Channel2=Debug(N),..."
+std::unordered_map<std::string, ROOT::ELogLevel> ParseRootLogEnvVar()
+{
+   std::unordered_map<std::string, ROOT::ELogLevel> result;
+
+   const char *envVal = std::getenv("ROOT_LOG");
+   if (!envVal)
+      return result;
+
+   std::stringstream ss(envVal);
+   std::string token;
+   while (std::getline(ss, token, ',')) {
+      token = TrimWhitespace(token);
+      if (token.empty())
+         continue;
+
+      auto eq = token.find('=');
+      if (eq == std::string::npos)
+         continue;
+
+      std::string channelName = TrimWhitespace(token.substr(0, eq));
+      std::string levelStr    = TrimWhitespace(token.substr(eq + 1));
+
+      if (channelName.empty() || levelStr.empty())
+         continue;
+
+      ROOT::ELogLevel level = ParseLogLevel(levelStr);
+      if (level != ROOT::ELogLevel::kUnset)
+         result[channelName] = level;
+   }
+   return result;
+}
+
 } // unnamed namespace
+
+/// Construct the RLogManager, install the default handler, then apply
+/// gDebug and the ROOT_LOG environment variable.
+ROOT::RLogManager::RLogManager(std::unique_ptr<RLogHandler> lh) : RLogChannel(ELogLevel::kWarning)
+{
+   fHandlers.emplace_back(std::move(lh));
+
+   // Apply gDebug as a global verbosity floor.
+   // gDebug == 1 maps to kDebug, gDebug == 2 to kDebug+1, etc.
+   if (gDebug > 0)
+      SetVerbosity(ELogLevel::kDebug + (gDebug - 1));
+
+   // Parse ROOT_LOG and store per-channel overrides for lazy application.
+   fEnvVerbosity = ParseRootLogEnvVar();
+}
 
 ROOT::RLogManager &ROOT::RLogManager::Get()
 {
@@ -85,18 +176,12 @@ bool ROOT::RLogManager::Emit(const ROOT::RLogEntry &entry)
    if (channel != this)
       channel->Increment(entry.fLevel);
 
-   // Is there a specific level for the channel? If so, take that,
-   // overruling the global one.
    if (channel->GetEffectiveVerbosity(*this) < entry.fLevel)
       return true;
 
-   // Lock-protected extraction of handlers, such that they don't get added during the
-   // handler iteration.
    std::vector<RLogHandler *> handlers;
-
    {
       std::lock_guard<std::mutex> lock(fMutex);
-
       handlers.resize(fHandlers.size());
       std::transform(fHandlers.begin(), fHandlers.end(), handlers.begin(),
                      [](const std::unique_ptr<RLogHandler> &handlerUPtr) { return handlerUPtr.get(); });
