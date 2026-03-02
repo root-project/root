@@ -13,14 +13,16 @@ arrows.svg
 </text>
 <path d="M57,367v -244" fill="none" stroke="black"/>
 <path d="M46,142l 11, -20l 11, 20" fill="none" stroke="black"/>
-<path d="M114,367v -225" fill="none" stroke="black" stroke-width="2.0"/>
-<path d="M107,142l 7.2, -20l 7.2, 20z" fill="black"/>
-<path d="M107,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
-<path d="M171,347v -205" fill="none" stroke="black" stroke-width="2.0"/>
-<path d="M163,142l 7.2, -20l 7.2, 20z" fill="black"/>
-<path d="M163,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
-<path d="M178,347l -7.2, 20l -7.2, -20z" fill="black"/>
-<path d="M178,347l -7.2, 20l -7.2, -20h 14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M103,367v -225" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M95,142l 7.2, -20l 7.2, 20z" fill="black"/>
+<path d="M95,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M148,347v -205" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M141,142l 7.2, -20l 7.2, 20z" fill="black"/>
+<path d="M141,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M155,347l -7.2, 20l -7.2, -20z" fill="black"/>
+<path d="M155,347l -7.2, 20l -7.2, -20h 14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M182,367h 23M182,122h 23M193,367v -244" fill="none" stroke="black"/>
+<path d="M182,254l 11, -20l 11, 20" fill="none" stroke="black"/>
 <path d="M261,122l 180, 101" fill="none" stroke="black" stroke-width="2.0"/>
 <path d="M449,209l 16, 28l -32, 0.447z" fill="#ff0000"/>
 <path d="M449,209l 16, 28l -32, 0.447l 16, -28z" fill="none" stroke="black" stroke-width="2.0"/>
