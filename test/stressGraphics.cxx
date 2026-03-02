@@ -735,14 +735,16 @@ void arrows()
 
    auto ar1 = new TArrow(0.1,0.1,0.1,0.7);
    C->Add(ar1);
-   auto ar2 = new TArrow(0.2,0.1,0.2,0.7,0.05,"|>");
+   auto ar2 = new TArrow(0.18,0.1,0.18,0.7,0.05,"|>");
    ar2->SetAngle(40);
    ar2->SetLineWidth(2);
    C->Add(ar2);
-   auto ar3 = new TArrow(0.3,0.1,0.3,0.7,0.05,"<|>");
+   auto ar3 = new TArrow(0.26,0.1,0.26,0.7,0.05,"<|>");
    ar3->SetAngle(40);
    ar3->SetLineWidth(2);
    C->Add(ar3);
+   auto ar33 = new TArrow(0.34,0.1,0.34,0.7,0.05,"|-->--|");
+   C->Add(ar33);
    auto ar4 = new TArrow(0.46,0.7,0.82,0.42,0.07,"|>");
    ar4->SetAngle(60);
    ar4->SetLineWidth(2);
