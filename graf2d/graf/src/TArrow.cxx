@@ -222,33 +222,24 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Double_t cosT   = (length > 0) ? (x2n-x1n)/length : 1.;
    Double_t sinT   = (length > 0) ? (y2n-y1n)/length : 0.;
 
+   Double_t xarr[6], yarr[6];
+   Int_t cnt = 0;
+
    // Draw the start and end bars if needed
    if (opt.BeginsWith("|-")) {
-      Double_t x1ar[2], y1ar[2];
-      x1ar[0] = x1n-sinT*dSize;
-      y1ar[0] = y1n+cosT*dSize;
-      x1ar[1] = x1n+sinT*dSize;
-      y1ar[1] = y1n-cosT*dSize;
-      // NDC to user coordinates
-      for (Int_t i=0; i<2; i++) {
-         x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
-         y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
-      }
-      gPad->PaintLine(x1ar[0],y1ar[0],x1ar[1],y1ar[1]);
+      xarr[0] = x1n-sinT*dSize;
+      yarr[0] = y1n+cosT*dSize;
+      xarr[1] = x1n+sinT*dSize;
+      yarr[1] = y1n-cosT*dSize;
+      cnt += 2;
       opt(0) = ' ';
    }
    if (opt.EndsWith("-|")) {
-      Double_t x2ar[2], y2ar[2];
-      x2ar[0] = x2n-sinT*dSize;
-      y2ar[0] = y2n+cosT*dSize;
-      x2ar[1] = x2n+sinT*dSize;
-      y2ar[1] = y2n-cosT*dSize;
-      // NDC to user coordinates
-      for (Int_t i=0; i<2; i++) {
-         x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
-         y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
-      }
-      gPad->PaintLine(x2ar[0],y2ar[0],x2ar[1],y2ar[1]);
+      xarr[cnt] = x2n-sinT*dSize;
+      yarr[cnt] = y2n+cosT*dSize;
+      xarr[cnt+1] = x2n+sinT*dSize;
+      yarr[cnt+1] = y2n-cosT*dSize;
+      cnt += 2;
       opt(opt.Length()-1) = ' ';
    }
 
@@ -275,11 +266,16 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       x1n += cosT*rSize;
       y1n += sinT*rSize;
    }
-   x1n = (1/rx)*(x1n-x1ndc)+rx1;
-   y1n = (1/ry)*(y1n-y1ndc)+ry1;
-   x2n = (1/rx)*(x2n-x1ndc)+rx1;
-   y2n = (1/ry)*(y2n-y1ndc)+ry1;
-   gPad->PaintLine(x1n,y1n,x2n,y2n);
+   xarr[cnt] = x1n; xarr[cnt+1] = x2n;
+   yarr[cnt] = y1n; yarr[cnt+1] = y2n;
+   cnt += 2;
+   // NDC to user coordinates
+   for (Int_t i=0; i<cnt; i++) {
+      xarr[i] = (1/rx)*(xarr[i]-x1ndc)+rx1;
+      yarr[i] = (1/ry)*(yarr[i]-y1ndc)+ry1;
+   }
+   // paint arrow main line with start/stop segment together
+   gPad->PaintSegments(cnt/2, xarr, yarr);
 
    // Draw the arrow's head(s)
    if (opt.Contains(">")) {
