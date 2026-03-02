@@ -820,7 +820,7 @@ void TLegend::PaintPrimitives()
       if (endcaps == 3) arrow_shift = 0.2;
       // Draw fill pattern (in a box)
 
-      if ( opt.Contains("f")) {
+      if (opt.Contains("f")) {
          if (eobj && eobj->InheritsFrom(TAttFill::Class())) {
             dynamic_cast<TAttFill*>(eobj)->Copy(*entry);
          }
@@ -857,41 +857,39 @@ void TLegend::PaintPrimitives()
       // Get Polymarker size
 
       Double_t symbolsize = 0.;
-      TMarker entrymarker( xsym, ysym, 0 );
+      TMarker entrymarker(xsym, ysym, 0);
+      TLine entryline; // here only for line attributes
+      entryline.SetBit(TLine::kLineNDC);
 
-      if ( opt.Contains("p")) {
+
+      if (opt.Contains("p")) {
          if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
             dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
          }
          entrymarker.SetNDC();
          entry->TAttMarker::Copy(entrymarker);
-         if (entrymarker.GetMarkerStyle() >= 5 ) symbolsize = entrymarker.GetMarkerSize();
+         if (entrymarker.GetMarkerStyle() >= 5)
+            symbolsize = entrymarker.GetMarkerSize();
       }
 
-      // Lambda function to draw end caps 3
-      auto DrawEndCaps = [&]() {
+      // Lambda function to draw error mark with end caps
+      auto draw_error_mark = [&]() {
+         if (!opt.Contains("p")) {
+            entryline.PaintLineNDC( xsym, ysym - yspace*arrow_shift,
+                                    xsym, ysym + yspace*arrow_shift);
+         } else {
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+            entryline.PaintLineNDC(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
+            entryline.PaintLineNDC(xsym, ysym - sy, xsym, ysym - yspace*arrow_shift);
+         }
          if (endcaps == 1) {
-            TLine entrytop1(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
-            entrytop1.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(entrytop1);
-            entrytop1.Paint();
-            TLine entrytop2(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
-            entrytop2.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(entrytop2);
-            entrytop2.Paint();
+            entryline.PaintLineNDC(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
+            entryline.PaintLineNDC(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
          } else if (endcaps == 2) {
-            Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
-            Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
-            TPolyLine ple1(3,xe1,ye1);
-            ple1.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(ple1);
-            ple1.Paint();
-            Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
-            Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
-            TPolyLine ple2(3,xe2,ye2);
-            ple2.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(ple2);
-            ple2.Paint();
+            entryline.PaintLineNDC(xsym-barw, ysym+yspace*0.20, xsym, ysym + yspace*0.30);
+            entryline.PaintLineNDC(xsym, ysym + yspace*0.30, xsym+barw, ysym+yspace*0.20);
+            entryline.PaintLineNDC(xsym-barw, ysym-yspace*0.20, xsym, ysym - yspace*0.30);
+            entryline.PaintLineNDC(xsym, ysym - yspace*0.30, xsym+barw,ysym-yspace*0.20);
          } else if (endcaps == 3) {
             if (eobj && eobj->InheritsFrom(TAttFill::Class())) {
                dynamic_cast<TAttFill*>(eobj)->Copy(*entry);
@@ -901,10 +899,10 @@ void TLegend::PaintPrimitives()
             Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             for (Int_t i=0;i<3;i++) {
-            xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
-            ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
-            xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
-            ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+               xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
+               ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
+               xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
+               ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
             }
             int lc = entry->GetLineColor();
             int lw = entry->GetLineWidth();
@@ -930,18 +928,15 @@ void TLegend::PaintPrimitives()
          }
       };
 
-      // Draw line
+      if (opt.Contains("l") || opt.Contains("f")) {
+         // Draw line
 
-      if ( opt.Contains("l") || opt.Contains("f")) {
-         if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
+         if (eobj && eobj->InheritsFrom(TAttLine::Class()))
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
-         }
-         // line total length (in x) is margin*0.8
-         TLine entryline( xsym - boxw, ysym, xsym + boxw, ysym );
-         entryline.SetBit(TLine::kLineNDC);
          entry->TAttLine::Copy(entryline);
+         // line total length (in x) is margin*0.8
          // if the entry is filled, then surround the box with the line instead
-         if ( opt.Contains("f") && !opt.Contains("l")) {
+         if (opt.Contains("f") && !opt.Contains("l")) {
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
                                     xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
@@ -951,55 +946,22 @@ void TLegend::PaintPrimitives()
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
                                     xsym - boxw, ysym + yspace*0.35);
          } else {
-            entryline.Paint();
-            if (opt.Contains("e")) {
-               if ( !opt.Contains("p")) {
-                  entryline.PaintLineNDC( xsym, ysym - yspace*arrow_shift,
-                                          xsym, ysym + yspace*arrow_shift);
-               } else {
-                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
-                  TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
-                  entryline1.SetBit(TLine::kLineNDC);
-                  entry->TAttLine::Copy(entryline1);
-                  entryline1.Paint();
-                  TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*arrow_shift);
-                  entryline2.SetBit(TLine::kLineNDC);
-                  entry->TAttLine::Copy(entryline2);
-                  entryline2.Paint();
-               }
-               DrawEndCaps();
-            }
+            entryline.PaintLineNDC( xsym - boxw, ysym, xsym + boxw, ysym );
+            if (opt.Contains("e"))
+               draw_error_mark();
          }
-      }
-
-      // Draw error only
-
-      if (opt.Contains("e") && !(opt.Contains("l") || opt.Contains("f"))) {
-         if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
+      } else if (opt.Contains("e")) {
+         // Draw error only
+         if (eobj && eobj->InheritsFrom(TAttLine::Class()))
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
-         }
-         if ( !opt.Contains("p")) {
-            TLine entryline(xsym, ysym - yspace*arrow_shift,
-                            xsym, ysym + yspace*arrow_shift);
-            entryline.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(entryline);
-            entryline.Paint();
-         } else {
-            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
-            TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
-            entryline1.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(entryline1);
-            entryline1.Paint();
-            TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*arrow_shift);
-            entryline2.SetBit(TLine::kLineNDC);
-            entry->TAttLine::Copy(entryline2);
-            entryline2.Paint();
-         }
-         DrawEndCaps();
+         entry->TAttLine::Copy(entryline);
+
+         draw_error_mark();
       }
 
       // Draw Polymarker
-      if ( opt.Contains("p"))  entrymarker.Paint();
+      if (opt.Contains("p"))
+         entrymarker.Paint();
    }
    SetTextSize(save_textsize);
 }
