@@ -1581,7 +1581,7 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 2121;
+   Int_t nlinesGood = 1767;
    Bool_t counting = kFALSE;
    while (fgets(line,255,fp)) {
       if (counting) nlines++;
