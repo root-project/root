@@ -463,9 +463,9 @@ void TPaveStats::Paint(Option_t *option)
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
             Double_t xline2 = 2*dx/3+x1ref;
-            gPad->PaintLine(x1ref,yline1,x2ref,yline1);
-            gPad->PaintLine(xline1,yline1,xline1,yline2);
-            gPad->PaintLine(xline2,yline1,xline2,yline2);
+            Double_t xx[6] = { x1ref,  x2ref,  xline1, xline1, xline2, xline2 };
+            Double_t yy[6] = { yline1, yline1, yline1, yline2, yline1, yline2 };
+            gPad->PaintSegments(3, xx, yy);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
             while ( st ) {
