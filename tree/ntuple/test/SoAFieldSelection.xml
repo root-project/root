@@ -1,0 +1,6 @@
+<lcgdict>
+  <selection>
+    <class name="RecordXML" />
+    <class name="SoAXML" rntupleSoARecord="RecordXML" />
+  </selection>
+</lcgdict>

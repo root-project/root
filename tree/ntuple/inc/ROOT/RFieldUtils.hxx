@@ -63,6 +63,10 @@ enum class ERNTupleSerializationMode {
 
 ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
 
+/// Checks if the "rntuple.SoARecord" class attribute is set in the dictionary.
+/// If so, returns its content, which is the underlying record type name.
+std::string GetRNTupleSoARecord(const TClass *cl);
+
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
 /// If maxArgs > 0, stop tokenizing after the given number of tokens are found. Used to strip
