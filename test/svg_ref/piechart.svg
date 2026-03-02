@@ -1212,38 +1212,23 @@ piechart.svg
 <text xml:space="preserve" x="203" y="327" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">Slice0
 </text>
 <path d="M186,329h 14v -11h -14z" fill="#ff0000"/>
-<path d="M186,318h 14" fill="none" stroke="black"/>
-<path d="M186,329h 14" fill="none" stroke="black"/>
-<path d="M200,329v -11" fill="none" stroke="black"/>
-<path d="M186,329v -11" fill="none" stroke="black"/>
+<path d="M186,318h 14M186,329h 14M200,329v -11M186,329v -11" fill="none" stroke="black"/>
 <text xml:space="preserve" x="203" y="343" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">Slice1
 </text>
 <path d="M186,345h 14v -11h -14z" fill="#00ff00"/>
-<path d="M186,334h 14" fill="none" stroke="black"/>
-<path d="M186,345h 14" fill="none" stroke="black"/>
-<path d="M200,345v -11" fill="none" stroke="black"/>
-<path d="M186,345v -11" fill="none" stroke="black"/>
+<path d="M186,334h 14M186,345h 14M200,345v -11M186,345v -11" fill="none" stroke="black"/>
 <text xml:space="preserve" x="203" y="359" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">Slice2
 </text>
 <path d="M186,361h 14v -11h -14z" fill="#0000ff"/>
-<path d="M186,350h 14" fill="none" stroke="black"/>
-<path d="M186,361h 14" fill="none" stroke="black"/>
-<path d="M200,361v -11" fill="none" stroke="black"/>
-<path d="M186,361v -11" fill="none" stroke="black"/>
+<path d="M186,350h 14M186,361h 14M200,361v -11M186,361v -11" fill="none" stroke="black"/>
 <text xml:space="preserve" x="203" y="375" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">Slice3
 </text>
 <path d="M186,377h 14v -11h -14z" fill="#ffff00"/>
-<path d="M186,366h 14" fill="none" stroke="black"/>
-<path d="M186,377h 14" fill="none" stroke="black"/>
-<path d="M200,377v -11" fill="none" stroke="black"/>
-<path d="M186,377v -11" fill="none" stroke="black"/>
+<path d="M186,366h 14M186,377h 14M200,377v -11M186,377v -11" fill="none" stroke="black"/>
 <text xml:space="preserve" x="203" y="390" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">Slice4
 </text>
 <path d="M186,392h 14v -11h -14z" fill="#ff00ff"/>
-<path d="M186,381h 14" fill="none" stroke="black"/>
-<path d="M186,392h 14" fill="none" stroke="black"/>
-<path d="M200,392v -11" fill="none" stroke="black"/>
-<path d="M186,392v -11" fill="none" stroke="black"/>
+<path d="M186,381h 14M186,392h 14M200,392v -11M186,392v -11" fill="none" stroke="black"/>
 <rect x="8.9" y="280" width="150" height="16" fill="#f2f2f2"/>
 <path d="M7.3,283v 15h 150v -1.6h -148v -13z" fill="black"/>
 <path d="M8.9,296v -16h 150v 16h -150z" fill="none" stroke="black"/>

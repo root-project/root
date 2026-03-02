@@ -280,17 +280,11 @@ hbars.svg
 <text xml:space="preserve" x="341" y="394" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">All nations
 </text>
 <path d="M316,397h 20v -18h -20z" fill="#936870"/>
-<path d="M316,379h 20" fill="none" stroke="black"/>
-<path d="M316,397h 20" fill="none" stroke="black"/>
-<path d="M337,397v -18" fill="none" stroke="black"/>
-<path d="M316,397v -18" fill="none" stroke="black"/>
+<path d="M316,379h 20M316,397h 20M337,397v -18M316,397v -18" fill="none" stroke="black"/>
 <text xml:space="preserve" x="341" y="419" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">French only
 </text>
 <path d="M316,423h 20v -18h -20z" fill="#d35954"/>
-<path d="M316,405h 20" fill="none" stroke="black"/>
-<path d="M316,423h 20" fill="none" stroke="black"/>
-<path d="M337,423v -18" fill="none" stroke="black"/>
-<path d="M316,423v -18" fill="none" stroke="black"/>
+<path d="M316,405h 20M316,423h 20M337,423v -18M316,423v -18" fill="none" stroke="black"/>
 <rect x="12" y="322" width="65" height="15" fill="#f2f2f2"/>
 <path d="M10,325v 14h 64v -1.6h -62v -13z" fill="black"/>
 <path d="M12,337v -15h 65v 15h -65z" fill="none" stroke="black"/>
