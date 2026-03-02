@@ -20,10 +20,7 @@ zoomfit.svg
  6.7h 4.5v 5.7h 4.5v 6.7h 4.5v 6.2h 4.5v 4.6h 4.5v -1.0h 4.5v 5.2h 4.5v 0.517h 4.5v 4.6h 4.5v 3.1h 4.5v -1.0h 4.5v 2.1h 4.5v 2.1h 4.5v -0.517h 4.5v 0.517h 4.5v -1.5h 4.5v 1.5h 4.5v 1.5h 4.5v 0.517h 4.5v -1.0h 4.5v -0.517h 4.5v 1.0h 4.5v 0.517h 9.1"
  fill="none" stroke="#000099"/>
 <rect x="443" y="36" width="113" height="88" fill="white"/>
-<path d="M443,124h 113" fill="none" stroke="black"/>
-<path d="M556,124v -88" fill="none" stroke="black"/>
-<path d="M556,36h -113" fill="none" stroke="black"/>
-<path d="M443,36v 88" fill="none" stroke="black"/>
+<rect x="443" y="36" width="113" height="88" fill="none" stroke="black"/>
 <text xml:space="preserve" x="484" y="52" fill="black" font-size="19" font-family="Helvetica">hpx
 </text>
 <path d="M443,58h 113" fill="none" stroke="black"/>
@@ -103,10 +100,7 @@ zoomfit.svg
 <text xml:space="preserve" x="25" y="88" fill="black" font-size="18" font-family="Helvetica">800
 </text>
 <rect x="443" y="36" width="113" height="88" fill="white"/>
-<path d="M443,124h 113" fill="none" stroke="black"/>
-<path d="M556,124v -88" fill="none" stroke="black"/>
-<path d="M556,36h -113" fill="none" stroke="black"/>
-<path d="M443,36v 88" fill="none" stroke="black"/>
+<rect x="443" y="36" width="113" height="88" fill="none" stroke="black"/>
 <text xml:space="preserve" x="484" y="52" fill="black" font-size="19" font-family="Helvetica">hpx
 </text>
 <path d="M443,58h 113" fill="none" stroke="black"/>
