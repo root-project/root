@@ -2160,16 +2160,13 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
 template <typename T>
 R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Long64_t n)
 {
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (n < 0 || n > maxElements)
-   {
-      Fatal("XmlWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called
-   }
    BeforeIOoperation();
    if (n <= 0)
       return;
+   if (n > std::numeric_limits<Int_t>::max()) {
+      Fatal("XmlWriteFastArray", "Array larger than 2^31 elements cannot be stored in XML");
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
    PushStack(arrnode);
    XmlWriteArrayContent(arr, n);

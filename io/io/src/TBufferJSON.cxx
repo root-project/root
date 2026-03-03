@@ -3346,11 +3346,9 @@ void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char 
       fValue.Append("[]");
       return;
    }
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (arrsize > maxElements)
-   {
-      Fatal("JsonWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
+   const Int_t maxElements = std::numeric_limits<Int_t>::max();
+   if (arrsize > maxElements) {
+      Fatal("JsonWriteFastArray", "Array larger than 2^31 elements cannot be stored in JSON");
       return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
