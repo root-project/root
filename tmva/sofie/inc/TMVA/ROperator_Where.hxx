@@ -105,7 +105,7 @@ public:
             if (model.IsInitializedTensor(fNA)) {
                auto data = model.GetInitializedTensorData(fNA);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
+                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeA, fShapeY),
                   std::default_delete<T[]>());
                // Update the data and the shape of A
                model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
@@ -121,7 +121,7 @@ public:
             if (model.IsInitializedTensor(fNB)) {
                auto data = model.GetInitializedTensorData(fNB);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
+                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeB, fShapeY),
                   std::default_delete<T[]>());
                // do not update tensor B but add broadcasted one (since it can be input to some other operators)
                model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
@@ -137,7 +137,7 @@ public:
             if (model.IsInitializedTensor(fNC)) {
                auto data = model.GetInitializedTensorData(fNC);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeC, fShapeY),
+                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeC, fShapeY),
                   std::default_delete<T[]>());
                // do not update tensor C but add broadcasted one (since it can be input to some other operators)
                model.AddConstantTensor(fNBroadcastedC, model.GetTensorType(fNC), fShapeY, broadcastedData);
@@ -256,34 +256,34 @@ public:
       if (fShapeA != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
          //out << SP << "{\n";
-         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY)
-                         << ", fTensor_" << fNBroadcastedA << ");\n";
+         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY)
+                         << ", tensor_" << fNBroadcastedA << ");\n";
       }
       // Broadcast B if it's uninitialized
       if (fShapeB != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
          //out << SP << "{\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY)
-                   << ", fTensor_" << fNBroadcastedB << ");\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY)
+                   << ", tensor_" << fNBroadcastedB << ");\n";
       }
        // Broadcast C if it's uninitialized
       if (fShapeC != fShapeY) {
          // special case if C is an input tensor
          if (fIsInputBoolTensor) {
             size_t inputLength = ConvertShapeToLength(fShapeC);
-            out << SP << "std::vector<std::uint8_t> fTensor_" << fNC << "(tensor_" << fNC <<  ", tensor_" << fNC << " + " << inputLength << ");\n";
+            out << SP << "std::vector<std::uint8_t> tmp_tensor_" << fNC << "(tensor_" << fNC <<  ", tensor_" << fNC << " + " << inputLength << ");\n";
          }
          out << SP << "// Broadcasting uninitialized tensor " << fNC << "\n";
          //out << SP << "{\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<std::uint8_t>(fTensor_" << fNC << ".data(), " << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY)
-                   << ", fTensor_" << fNBroadcastedC << ");\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tmp_tensor_" << fNC << ".data(), " << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY)
+                   << ", tensor_" << fNBroadcastedC << ");\n";
       }
       std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
       std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
       std::string nameC = fNBroadcastedC.empty()? fNC : fNBroadcastedC;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       // get output tensor applying condition
-      out << SP << SP << "tensor_" << fNY << "[id] = "  << "(fTensor_" << nameC << "[id]) ? tensor_"
+      out << SP << SP << "tensor_" << fNY << "[id] = "  << "tensor_" << nameC << "[id] ? tensor_"
                                << nameA << "[id] : tensor_" + nameB + "[id];\n";
       out << SP << "}\n";
       return out.str();

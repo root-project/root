@@ -143,7 +143,7 @@ public:
             data1 = static_cast<T *>(model.GetInitializedTensorData(fNX1).get());
             if (broadcastX1) {
                broadcastedData1 = std::unique_ptr<T>(
-                  UTILITY::UnidirectionalBroadcast<T>(data1, fShapeX1, fShapeY));
+                  UTILITY::UnidirectionalBroadcast(data1, fShapeX1, fShapeY));
                data1 = broadcastedData1.get();
             }
 
@@ -154,7 +154,7 @@ public:
             data2 = static_cast<T *>(model.GetInitializedTensorData(fNX2).get());
             if (broadcastX2) {
                broadcastedData2 = std::unique_ptr<T>(
-                  UTILITY::UnidirectionalBroadcast<T>(data2, fShapeX2, fShapeY));
+                  UTILITY::UnidirectionalBroadcast(data2, fShapeX2, fShapeY));
                data2 = broadcastedData2.get();
             }
          } else if (model.IsShapeTensor(fNX2)) {

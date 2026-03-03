@@ -151,7 +151,7 @@ public:
                   fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
                   auto data = model.GetInitializedTensorData(fNA);
                   std::shared_ptr<void> broadcastedData(
-                     UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
+                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeA, fShapeY),
                      std::default_delete<T[]>());
                   if (model.Verbose())
                      std::cout << "broadcasted data A " << ConvertShapeToString(fShapeY) << " : "
@@ -172,7 +172,7 @@ public:
                                << ConvertValuesToString(ConvertShapeToLength(fShapeB), static_cast<T *>(data.get()))
                                << std::endl;
                   std::shared_ptr<void> broadcastedData(
-                     UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
+                     UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeB, fShapeY),
                      std::default_delete<T[]>());
                   // do not update tensor B but add broadcasted one (since it can be input to some other operators)
                   if (model.Verbose())
