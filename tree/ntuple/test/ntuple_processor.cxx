@@ -291,33 +291,53 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}}));
-   innerProcs.push_back(RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}));
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
    auto i = proc->RequestField<int>("i");
-   auto x = proc->RequestField<float>("x");
+   auto z = proc->RequestField<float>("z");
+   auto strct_a = proc->RequestField<float>("struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
-      EXPECT_EQ(static_cast<float>(*i), *x);
-   }
-   EXPECT_EQ(15, proc->GetNEntriesProcessed());
+      if ((idx >= 5 && idx < 10) || idx >= 15) {
+         EXPECT_EQ(*i, 4 - idx % 5);
+         EXPECT_EQ(*z, (4 - idx % 5) * 3.f);
+      } else {
+         EXPECT_EQ(*i, idx % 5);
+         EXPECT_EQ(*z, (idx % 5) * 2.f);
+      }
 
-   auto xPtr = std::make_shared<float>();
-   x.BindRawPtr(xPtr.get());
+      EXPECT_EQ(*strct_a, *z);
+   }
+   EXPECT_EQ(20, proc->GetNEntriesProcessed());
+
+   auto zPtr = std::make_shared<float>();
+   z.BindRawPtr(zPtr.get());
+   auto aPtr = std::make_shared<float>();
+   strct_a.BindRawPtr(aPtr.get());
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1 + 15, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx + 1 + 20, proc->GetNEntriesProcessed());
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(x.GetPtr().get(), xPtr.get());
+
+      if ((idx >= 5 && idx < 10) || idx >= 15) {
+         EXPECT_EQ(*i, 4 - idx % 5);
+         EXPECT_EQ(*z, (4 - idx % 5) * 3.f);
+      } else {
+         EXPECT_EQ(*i, idx % 5);
+         EXPECT_EQ(*z, (idx % 5) * 2.f);
+      }
+
+      EXPECT_EQ(*strct_a, *z);
+      EXPECT_EQ(z.GetPtr().get(), zPtr.get());
+      EXPECT_EQ(strct_a.GetPtr().get(), aPtr.get());
    }
-   EXPECT_EQ(30, proc->GetNEntriesProcessed());
+   EXPECT_EQ(40, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleProcessorTest, ChainedJoin)
