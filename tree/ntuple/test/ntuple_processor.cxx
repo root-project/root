@@ -227,19 +227,22 @@ TEST_F(RNTupleProcessorTest, AlternativeTypes)
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
    auto xAsDouble = proc->RequestField<double>("x");
-   auto xAsString = proc->RequestField<std::string>("x");
+   auto xAsFloat = proc->RequestField<float>("x");
+
+   try {
+      proc->RequestField<std::string>("x");
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("in-memory field x of type std::string is incompatible with "
+                                                 "on-disk field x: incompatible on-disk type name float"));
+   }
+
    auto yAsRVec = proc->RequestField<ROOT::RVec<float>>("y");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<double>(idx), *xAsDouble);
-
-      try {
-         *xAsString;
-      } catch (const ROOT::RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("type mismatch for field \"x\": expected double, got std::string"));
-      }
+      EXPECT_FLOAT_EQ(idx, *xAsFloat);
 
       ROOT::RVec<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
       for (std::size_t i = 0ul; i < yAsRVec->size(); ++i) {
