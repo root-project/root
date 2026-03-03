@@ -1,3 +1,4 @@
 builtin_vdt=ON
+davix=OFF
 pythia8=ON
 tmva-sofie=ON

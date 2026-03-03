@@ -1,6 +1,5 @@
 builtin_cfitsio=ON
 builtin_cppzmq=ON
-builtin_davix=ON
 builtin_fftw3=ON
 builtin_freetype=ON
 builtin_ftgl=ON
@@ -20,6 +19,7 @@ builtin_xxhash=ON
 builtin_zeromq=ON
 builtin_zstd=ON
 cocoa=ON
+davix=OFF
 minuit2_omp=OFF
 r=OFF
 tmva-sofie=ON
