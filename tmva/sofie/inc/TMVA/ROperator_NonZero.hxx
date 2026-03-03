@@ -93,7 +93,16 @@ public:
          fShapeY[0] = fShapeX.size();
 
          // identify as -1 since we will declare maximum as size of input
-         fShapeY[1] = Dim{std::string("v_NonZero_") + fNX, static_cast<size_t>(-1)};
+         // auto inputLength = ConvertDimShapeToLength(fShapeX);
+         // // case X is Dim, becomes complicated to know the maximum. Shuld be allocated dynamically
+         // size_t inputLength = 0;
+         // if (!model.IsDynamicTensor(fNX)) {
+         //    inputLength = ConvertShapeToLength(ConvertShapeToInt(fShapeX));
+         // else
+         //    inputLength = static_cast<size_t>(-1);   // flag -1 to define shape correctly
+
+         // flag -1 to define the shape variable in the constructor code and not in the constructor signature
+         fShapeY[1] = Dim{std::string("v_NonZero_") + fNX, static_cast<size_t>(-1) };
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
          if (model.Verbose()) {
@@ -101,7 +110,7 @@ public:
          }
       }
    }
-   std::string GenerateSessionMembersCode(std::string /*opName*/) override {
+   std::string GenerateSessionCtorCode() override {
       if (fIsOutputConstant) return "";
       // define output value used as max non zero with max size = input shape * N
       auto inputLength = ConvertDimShapeToLength(fShapeX);
@@ -133,7 +142,7 @@ public:
 
       // loop on input indices
       out << SP << "size_t offset_" << opName << " = 0;\n";
-      out << SP << vnonzero << " = 0;\n";
+      out << SP << "size_t " << vnonzero << " = 0;\n";
       for (size_t j = 0; j < dims; j++) {
          std::string index = "i_" + std::to_string(j);
          for (size_t k = 0; k <= j; k++) out << SP;

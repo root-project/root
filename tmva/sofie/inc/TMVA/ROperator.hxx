@@ -25,7 +25,9 @@ public:
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) { return {}; };
    virtual void Initialize(RModel&) = 0;
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
-   // generate initialization code for session constructor
+   // generate code for Session constructor before tensor allocation
+   virtual std::string GenerateSessionCtorCode() { return "";}
+   // generate initialization code for session constructor after tensor allocations
    virtual std::string GenerateInitCode() { return "";}
    // generate some specific declaration code for Session
    virtual std::string GenerateDeclCode() { return "";}
