@@ -953,8 +953,10 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
-    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
-    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(
+        S, /*Enabled=*/true, /*AtEndOfTU=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S,
+                                                           /*AtEndOfTU=*/true);
 
     // Skip previous eof due to last incremental input.
     if (m_Parser->getCurToken().is(tok::annot_repl_input_end)) {
