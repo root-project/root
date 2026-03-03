@@ -1376,15 +1376,12 @@ Int_t TBufferSQL2::SqlReadArraySize()
 template <typename T>
 R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize)
 {
-   constexpr Int_t dataWidth = 1; // at least 1
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (arrsize < 0 || arrsize > maxElements)
-   {
-      Fatal("SqlWriteArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called
-   }
    if (!withsize && (arrsize <= 0))
       return;
+   if (arrsize > std::numeric_limits<Int_t>::max()) {
+      Fatal("SqlWriteArray", "Array larger than 2^31 elements cannot be stored in SQL");
+      return; // In case the user re-routes the error handler to not die when Fatal is called
+   }
    PushStack()->SetArray(withsize ? arrsize : -1);
    Int_t indx = 0;
    if (fCompressLevel > 0) {
