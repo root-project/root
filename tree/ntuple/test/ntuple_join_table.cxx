@@ -22,7 +22,7 @@ TEST(RNTupleJoinTable, Basic)
    std::uint64_t fldValue = 0;
 
    // No entry mappings have been added to the join table yet
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({&fldValue}));
+   EXPECT_EQ(ROOT::kInvalidNTupleIndex, joinTable->GetEntryIndex({&fldValue}));
 
    // Now add the entry mapping for the page source
    joinTable->Add(*pageSource);
@@ -33,7 +33,7 @@ TEST(RNTupleJoinTable, Basic)
    for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
       fldValue = fld(i);
       EXPECT_EQ(fldValue, i * 2);
-      EXPECT_EQ(joinTable->GetEntryIndexes({&fldValue}), std::vector{static_cast<ROOT::NTupleSize_t>(i)});
+      EXPECT_EQ(joinTable->GetEntryIndex({&fldValue}), i);
    }
 }
 
@@ -127,13 +127,12 @@ TEST(RNTupleJoinTable, SparseSecondary)
       auto event = fldEvent(i);
 
       if (i % 2 == 1) {
-         EXPECT_EQ(joinTable->GetEntryIndexes({&event}), std::vector<ROOT::NTupleSize_t>{})
+         EXPECT_EQ(joinTable->GetEntryIndex({&event}), ROOT::kInvalidNTupleIndex)
             << "entry should not be present in the join table";
       } else {
-         auto entryIdxs = joinTable->GetEntryIndexes({&event});
-         ASSERT_EQ(1ul, entryIdxs.size());
-         EXPECT_EQ(entryIdxs[0], i / 2);
-         EXPECT_FLOAT_EQ(fldX(entryIdxs[0]), static_cast<float>(entryIdxs[0]) / 3.14);
+         auto entryIdx = joinTable->GetEntryIndex({&event});
+         EXPECT_EQ(entryIdx, i / 2);
+         EXPECT_FLOAT_EQ(fldX(entryIdx), static_cast<float>(entryIdx) / 3.14);
       }
    }
 }
@@ -171,152 +170,27 @@ TEST(RNTupleJoinTable, MultipleFields)
    for (std::uint64_t i = 0; i < pageSource->GetNEntries(); ++i) {
       run = i / 5;
       event = i % 5;
-      auto entryIdxs = joinTable->GetEntryIndexes({&run, &event});
-      ASSERT_EQ(1ul, entryIdxs.size());
-      EXPECT_EQ(fld(entryIdxs[0]), fld(i));
+      auto entryIdx = joinTable->GetEntryIndex({&run, &event});
+      EXPECT_EQ(fld(entryIdx), fld(i));
    }
 
    run = 1;
    event = 2;
-   auto idx1 = joinTable->GetEntryIndexes({&run, &event});
-   auto idx2 = joinTable->GetEntryIndexes({&event, &run});
+   auto idx1 = joinTable->GetEntryIndex({&run, &event});
+   auto idx2 = joinTable->GetEntryIndex({&event, &run});
    EXPECT_NE(idx1, idx2);
 
    try {
-      joinTable->GetEntryIndexes({&run, &event, &event});
+      joinTable->GetEntryIndex({&run, &event, &event});
       FAIL() << "querying the join table with more values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
    }
 
    try {
-      joinTable->GetEntryIndexes({&run});
+      joinTable->GetEntryIndex({&run});
       FAIL() << "querying the join table with fewer values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
-   }
-}
-
-TEST(RNTupleJoinTable, MultipleMatches)
-{
-   FileRaii fileGuard("test_ntuple_join_table_multiple_matches.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldRun = model->MakeField<std::uint64_t>("run");
-
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      *fldRun = 1;
-      for (int i = 0; i < 10; ++i) {
-         if (i > 4)
-            *fldRun = 2;
-         if (i > 7)
-            *fldRun = 3;
-         ntuple->Fill();
-      }
-   }
-
-   auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"run"});
-   joinTable->Add(*pageSource);
-
-   std::uint64_t run = 1;
-   auto entryIdxs = joinTable->GetEntryIndexes({&run});
-   auto expected = std::vector<ROOT::NTupleSize_t>{0, 1, 2, 3, 4};
-   EXPECT_EQ(expected, entryIdxs);
-   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
-   expected = {5, 6, 7};
-   EXPECT_EQ(expected, entryIdxs);
-   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
-   expected = {8, 9};
-   EXPECT_EQ(expected, entryIdxs);
-   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, entryIdxs);
-}
-
-TEST(RNTupleJoinTable, Partitions)
-{
-   auto fnWriteNTuple = [](const FileRaii &fileGuard, std::uint16_t run) {
-      auto model = RNTupleModel::Create();
-      *model->MakeField<std::int16_t>("run") = run;
-      auto fldI = model->MakeField<std::uint32_t>("i");
-
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      for (int i = 0; i < 5; ++i) {
-         *fldI = i;
-         ntuple->Fill();
-      }
-   };
-
-   auto joinTable = RNTupleJoinTable::Create({"i"});
-
-   std::vector<FileRaii> fileGuards;
-   fileGuards.emplace_back("test_ntuple_join_partition1.root");
-   fileGuards.emplace_back("test_ntuple_join_partition2.root");
-   fileGuards.emplace_back("test_ntuple_join_partition3.root");
-   fileGuards.emplace_back("test_ntuple_join_partition4.root");
-
-   std::int16_t runNumbers[4] = {1, 2, 3, 3};
-   std::vector<std::unique_ptr<RPageSource>> pageSources;
-
-   // Create four ntuples where with their corresponding run numbers and add them to the join table using this run
-   // number as the partition key.
-   for (unsigned i = 0; i < fileGuards.size(); ++i) {
-      fnWriteNTuple(fileGuards[i], runNumbers[i]);
-      pageSources.emplace_back(RPageSource::Create("ntuple", fileGuards[i].GetPath()));
-      joinTable->Add(*pageSources.back(), runNumbers[i]);
-   }
-
-   std::vector<RNTupleOpenSpec> openSpec;
-   for (const auto &fileGuard : fileGuards) {
-      openSpec.emplace_back("ntuple", fileGuard.GetPath());
-   }
-   auto proc = RNTupleProcessor::CreateChain(openSpec);
-
-   auto run = proc->RequestField<std::int16_t>("run");
-   auto i = proc->RequestField<std::uint32_t>("i");
-
-   std::uint32_t idx = 0;
-
-   // When getting the entry indexes for all partitions, we expect multiple resulting entry indexes (i.e., one entry
-   // index for each ntuple in the chain).
-   std::unordered_map<RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>> expectedEntryIdxMap = {
-      {1, {0}},
-      {2, {0}},
-      {3, {0, 0}},
-   };
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}, {1, 2, 3}));
-
-   expectedEntryIdxMap = {
-      {1, {0}},
-      {3, {0, 0}},
-   };
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}, {1, 3}));
-
-   // Calling GetEntryIndexes with a partition key not present in the join table shouldn't fail; it should just return
-   // an empty vector.
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({&idx}, 4));
-
-   // Similarly, calling GetEntryIndexes with a partition key that is present in the join table but a join value that
-   // isn't shouldn't fail; it should just return an empty vector.
-   idx = 99;
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({&idx}, 3));
-
-   expectedEntryIdxMap.clear();
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}, {1, 2, 3}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&idx}, {1, 3}));
-
-   for (auto it = proc->begin(); it != proc->end(); it++) {
-      auto entryIdxs = joinTable->GetEntryIndexes({i.GetRawPtr()}, *run);
-
-      // Because two ntuples store their events under run number 3 and their entries for `i` are identical, two entry
-      // indexes are expected. For the other case (run == 1 and run == 2), only one entry index is expected.
-      if (*run == 3)
-         EXPECT_EQ(entryIdxs.size(), 2ul);
-      else
-         EXPECT_EQ(entryIdxs.size(), 1ul);
    }
 }
