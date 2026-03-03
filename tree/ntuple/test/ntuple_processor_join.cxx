@@ -123,6 +123,46 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
+TEST(RNTupleJoinProcessor, NameConflict)
+{
+   FileRaii fileGuard("ntuple_processor_join_name_conflict.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldA = model->MakeField<float>("a");
+
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldA = i;
+         ntuple->Fill();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto fldB = model->MakeField<float>("b");
+
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      auto ntuple = RNTupleWriter::Append(std::move(model), "a", *file);
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldB = i * 2;
+         ntuple->Fill();
+      }
+   }
+
+   auto proc = RNTupleProcessor::CreateJoin({"ntuple", fileGuard.GetPath()}, {"a", fileGuard.GetPath()}, {});
+
+   try {
+      proc->RequestField<float>("a");
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr(
+                                 "ambiguous field name: \"a\" is present in the primary RNTupleProcessor \"ntuple\", "
+                                 "but may also refer to a field in the auxiliary RNTupleProcessor named \"a\". To "
+                                 "avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
+   }
+}
+
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 {
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});

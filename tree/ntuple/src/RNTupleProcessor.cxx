@@ -131,11 +131,6 @@ void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    fPageSource->Attach();
 
    fNEntries = fPageSource->GetNEntries();
-
-   ROOT::RNTupleDescriptor::RCreateModelOptions opts;
-   opts.SetCreateBare(true);
-   fProtoModel = fPageSource->GetSharedDescriptorGuard()->CreateModel(opts);
-   fProtoModel->Unfreeze();
 }
 
 bool ROOT::Experimental::RNTupleSingleProcessor::CanReadFieldFromDisk(std::string_view fieldName)
@@ -307,7 +302,6 @@ void ROOT::Experimental::RNTupleChainProcessor::Initialize(
       fEntry = entry;
 
    fInnerProcessors[0]->Initialize(fEntry);
-   fProtoModel = fInnerProcessors[0]->GetProtoModel().Clone();
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
@@ -451,20 +445,6 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
    fPrimaryProcessor->Initialize(fEntry);
    fAuxiliaryProcessor->Initialize(fEntry);
 
-   // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because the
-   // primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor), there
-   // will be name conflicts, so error out.
-   if (auto &primaryModel = fPrimaryProcessor->GetProtoModel();
-       primaryModel.GetFieldNames().find(fAuxiliaryProcessor->GetProcessorName()) !=
-       primaryModel.GetFieldNames().end()) {
-      throw RException(R__FAIL("a field or nested auxiliary processor named \"" +
-                               fAuxiliaryProcessor->GetProcessorName() +
-                               "\" is already present as a field in the primary processor; rename the auxiliary "
-                               "processor to avoid conflicts"));
-   }
-
-   SetProtoModel(fPrimaryProcessor->GetProtoModel().Clone(), fAuxiliaryProcessor->GetProtoModel().Clone());
-
    if (!fJoinFieldNames.empty()) {
       for (const auto &joinField : fJoinFieldNames) {
          if (!fPrimaryProcessor->CanReadFieldFromDisk(joinField)) {
@@ -506,38 +486,6 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
    fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
 }
 
-void ROOT::Experimental::RNTupleJoinProcessor::SetProtoModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel,
-                                                             std::unique_ptr<RNTupleModel> auxModel)
-{
-   fProtoModel = std::move(primaryModel);
-   fProtoModel->Unfreeze();
-
-   // Create an anonymous record field for the auxiliary processor, containing its top-level fields. These original
-   // top-level fields are registered as subfields in this processor's proto-model, such that they can be accessed as
-   // `auxNTupleName.fieldName`.
-   std::vector<std::unique_ptr<ROOT::RFieldBase>> auxFields;
-   auxFields.reserve(auxModel->GetFieldNames().size());
-
-   for (const auto &fieldName : auxModel->GetFieldNames()) {
-      auxFields.emplace_back(auxModel->GetConstField(fieldName).Clone(fieldName));
-   }
-
-   auto auxParentField = std::make_unique<Internal::RAuxiliaryProcessorField>(fAuxiliaryProcessor->GetProcessorName(),
-                                                                              std::move(auxFields));
-   const auto &subFields = auxParentField->GetConstSubfields();
-   fProtoModel->AddField(std::move(auxParentField));
-
-   for (const auto &field : subFields) {
-      fProtoModel->RegisterSubfield(field->GetQualifiedFieldName());
-
-      if (field->GetTypeName() == "RAuxiliaryProcessorField") {
-         for (const auto &auxSubfield : field->GetConstSubfields()) {
-            fProtoModel->RegisterSubfield(auxSubfield->GetQualifiedFieldName());
-         }
-      }
-   }
-}
-
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                           void *valuePtr,
@@ -545,6 +493,18 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
 {
    auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {
+      // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because
+      // the primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor),
+      // there will be name conflicts, so error out.
+      if (fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
+         throw RException(R__FAIL("ambiguous field name: \"" + fieldName +
+                                  "\" is present in the primary RNTupleProcessor \"" +
+                                  fPrimaryProcessor->GetProcessorName() +
+                                  "\", but may also refer to a field in the auxiliary RNTupleProcessor named \"" +
+                                  fAuxiliaryProcessor->GetProcessorName() +
+                                  "\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
+      }
+
       auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(fieldName, typeName, valuePtr, auxProvenance);
       if (fieldIdx)
          fAuxiliaryFieldIdxs.insert(fieldIdx);
