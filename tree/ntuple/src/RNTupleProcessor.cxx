@@ -154,17 +154,18 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
 {
    assert(fPageSource);
 
-   // Strip the parent field name prefix(es), if present.
    std::string onDiskFieldName = qualifiedFieldName;
-   auto posDot = onDiskFieldName.find_last_of('.');
-   if (posDot != std::string::npos)
-      onDiskFieldName = onDiskFieldName.substr(posDot + 1);
+
+   // Strip the "_join" prefix (for join fields) from the field name, if present.
+   if (onDiskFieldName.find("_join.") == 0) {
+      onDiskFieldName = onDiskFieldName.substr(6);
+   }
 
    const auto &desc = fPageSource->GetSharedDescriptorGuard().GetRef();
    ROOT::RFieldZero fieldZero;
    ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
 
-   const auto onDiskFieldId = desc.FindFieldId(qualifiedFieldName);
+   const auto onDiskFieldId = desc.FindFieldId(onDiskFieldName);
 
    if (onDiskFieldId == kInvalidDescriptorId) {
       return nullptr;
@@ -175,7 +176,13 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
       const auto &fieldDesc = desc.GetFieldDescriptor(onDiskFieldId);
       field = fieldDesc.CreateField(desc);
    } else {
-      field = ROOT::RFieldBase::Create(onDiskFieldName, typeName).Unwrap();
+      // Strip the parent field name prefix(es), if present.
+      std::string subfieldName = onDiskFieldName;
+      auto posDot = onDiskFieldName.find_last_of('.');
+      if (posDot != std::string::npos)
+         subfieldName = onDiskFieldName.substr(posDot + 1);
+
+      field = ROOT::RFieldBase::Create(subfieldName, typeName).Unwrap();
    }
 
    field->SetOnDiskId(onDiskFieldId);
@@ -189,7 +196,7 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
                                                             void *valuePtr,
                                                             const Internal::RNTupleProcessorProvenance &provenance)
 {
-   auto fieldIdx = fEntry->FindFieldIndex(fieldName);
+   auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
    if (!fieldIdx) {
       // Strip the processor name prefix(es), if present.
       std::string qualifiedFieldName = fieldName;
@@ -471,7 +478,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
 
          // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
          // composed join operations.
-         auto fieldIdx = AddFieldToEntry(fProcessorName + "." + joinField, "", nullptr,
+         auto fieldIdx = AddFieldToEntry(fProcessorName + "._join." + joinField, "std::uint64_t", nullptr,
                                          Internal::RNTupleProcessorProvenance(fProcessorName));
          fJoinFieldIdxs.insert(fieldIdx);
       }
