@@ -416,14 +416,12 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
 // Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
 // See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
 // and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
-template<typename T, class ConstContT = std::span<const T>, class ContT = std::span<T> >
-void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, ContT broadcastedData) {
+template<typename T, class ConstContT = std::span<const T>>
+void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, T *broadcastedData) {
    // Size of the shapes (tensor input here have shapes with same sizes, we have already added the needed ones )
    size_t size = shape.size();
    // Current length of the broadcasted tensor
    size_t curLength = data.size();
-   size_t targetLength = broadcastedData.size();
-   assert(ConvertShapeToLength(targetShape) == targetLength);
    // special case when broadcasting last dimensions (initial shapes must be the same)
    if (size > 1 && shape.front() == targetShape.front() && shape.back() == 1) {
       size_t bsize = targetShape.back();
@@ -433,16 +431,16 @@ void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const st
          bsize *= targetShape[k];
       }
       for (size_t i = 0; i < curLength; i++) {
-         std::fill(broadcastedData.begin() + i*bsize, broadcastedData.begin() + (i+1)*bsize , data[i]);
+         std::fill(broadcastedData + i*bsize, broadcastedData + (i+1)*bsize , data[i]);
       }
       return;
    }
 
-   std::copy(data.begin(), data.end(), broadcastedData.begin());
+   std::copy(data.begin(), data.end(), broadcastedData);
    // Product of the previous dimensions of targetShape
    size_t arrayNum = 1;
    // New broadcasted data: is this needed?
-   std::vector<T> newData(targetLength);
+   std::vector<T> newData(ConvertShapeToLength(targetShape));
 
    for (size_t idx = 0; idx < size; idx++) {
       size_t dim = shape[idx];
@@ -458,8 +456,8 @@ void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const st
             for (size_t arrayIdx = 0; arrayIdx < arrayNum; arrayIdx++) {
                for (size_t targetIdx = 0; targetIdx < targetDim; targetIdx++) {
                   size_t offset = arrayIdx * arrayLength * targetDim + targetIdx * arrayLength;
-                  std::copy(broadcastedData.begin() + arrayIdx * arrayLength,
-                     broadcastedData.begin() + (arrayIdx + 1) * arrayLength,
+                  std::copy(broadcastedData + arrayIdx * arrayLength,
+                     broadcastedData + (arrayIdx + 1) * arrayLength,
                      newData.begin() + offset);
                }
             }
@@ -473,12 +471,11 @@ void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const st
          // Update current length
          curLength = newLength;
          // Update broadcasted data
-         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData.begin());
+         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData);
       }
       // Update the number of arrays
       arrayNum *= targetDim;
    }
-   //return broadcastedData;
 }
 
 // interface where we allocate a new array for broadcasted data
@@ -486,10 +483,8 @@ template<typename T>
 T* CreateBroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, size_t targetLength) {
    // newShape is an array of size equal to dimension along which we are broadcasting the tensor
    T* broadcastedData = new T[targetLength];
-   std::span<T> bData(broadcastedData, broadcastedData+targetLength);
    size_t curLength = ConvertShapeToLength(shape);
-   std::span<const T> inData(data, curLength);
-   BroadcastTensor<T, std::span<const T>, std::span<T>>(inData, shape, targetShape, bData);
+   BroadcastTensor<T>({data, curLength}, shape, targetShape, broadcastedData);
    return broadcastedData;
 }
 // Unidirectional broadcasting shape to targetShape// In unidirectional broadcast - only tensor B can have the shape changed not
@@ -502,14 +497,14 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
       std::vector<size_t> newShape(targetSize, 1);
       size_t offset = targetSize - shape.size();
       std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
-      return CreateBroadcastTensor<T>(data, newShape, targetShape, ConvertShapeToLength(targetShape));
+      return CreateBroadcastTensor(data, newShape, targetShape, ConvertShapeToLength(targetShape));
    }
-   return CreateBroadcastTensor<T>(data, shape, targetShape, ConvertShapeToLength(targetShape));
+   return CreateBroadcastTensor(data, shape, targetShape, ConvertShapeToLength(targetShape));
 }
 
 // Unidirectional broadcasting shape to targetShape using a passed vector to avoid allocations
 template<typename T>
-void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::span<T> broadcastedData) {
+void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, T *broadcastedData) {
    size_t curLength = ConvertShapeToLength(shape);
    std::span<T> inData(const_cast<T*>(data), curLength);
    // Prepend shape with ones
@@ -518,9 +513,9 @@ void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, co
       std::vector<size_t> newShape(targetSize, 1);
       size_t offset = targetSize - shape.size();
       std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
-      BroadcastTensor<T>(inData, newShape, targetShape, broadcastedData);
+      BroadcastTensor(inData, newShape, targetShape, broadcastedData);
    }
-   BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, broadcastedData);
+   BroadcastTensor(inData, shape, targetShape, broadcastedData);
 }
 
 /// compute stride of a tensor given its shape (assume layout is row-major)

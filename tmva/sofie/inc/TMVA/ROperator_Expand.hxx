@@ -94,7 +94,7 @@ public:
          auto data = model.GetInitializedTensorData(fNX);
          if (fInitBroadcast) {
             std::shared_ptr<void> broadcastedData(
-               UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), shapeX, shapeY),
+               UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), shapeX, shapeY),
                std::default_delete<T[]>());
             // Update the data and the shape of X
             model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), shapeY, broadcastedData);
@@ -153,8 +153,8 @@ public:
       // No need to broadcast A if it's an initialized tensor or shapes are the same
       if (!fInitialized && fShapeX != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
-                   << ", std::span<"<<fType<<">(tensor_"<<fNY<<", "<<ConvertDimShapeToLength(fShapeY)<<"));\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
+                   << ", tensor_"<<fNY<<");\n";
       }
       return out.str();
    }

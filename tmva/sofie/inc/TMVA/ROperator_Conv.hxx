@@ -289,7 +289,7 @@ public:
                shape[0] = fShapeB[0];
                auto intTargetShape = ConvertShapeToInt(targetShape);
                std::shared_ptr<void> new_data_ptr(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(original_data.get()), shape, intTargetShape),
+                  UTILITY::UnidirectionalBroadcast(static_cast<float *>(original_data.get()), shape, intTargetShape),
                   std::default_delete<float[]>());
                model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), intTargetShape, new_data_ptr);
                fShapeB = model.GetTensorShape(fNB);
@@ -347,7 +347,7 @@ public:
             out << SP << "if (" << length << " > " << ConvertShapeToLength(shape) << ") {\n";
          else
             out << SP << "{\n";
-         out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
+         out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_"
              << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "fTensor_" << fNB << ".resize(" << length << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNB << ".begin());\n";
