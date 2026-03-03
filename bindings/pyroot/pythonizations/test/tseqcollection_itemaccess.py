@@ -125,6 +125,10 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         with self.assertRaises(TypeError):
             sc[1.0] = ROOT.TObject()
 
+        # Clear before the added element might be garbage collected,
+        # to avoid dangling pointer access.
+        sc.Clear()
+
     def test_setitem_slice(self):
         sc1 = self.create_tseqcollection()
         sc2 = self.create_tseqcollection()
@@ -238,6 +242,8 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             del sc[1.0]
+
+        sc.Clear()
 
     def test_delitem_slice(self):
         # Delete all items
