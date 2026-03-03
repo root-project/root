@@ -636,9 +636,7 @@ namespace cling {
               } else {
                 // If the type is currently being defined, complain
                 // about a nested redefinition.
-                const TagType *Tag
-                  = cast<TagType>(m_Context->getTagDeclType(PrevTagDecl));
-                if (Tag->isBeingDefined()) {
+                if (PrevTagDecl->isBeingDefined()) {
                   m_Sema->Diag(NameLoc, diag::err_nested_redefinition) << Name;
                   m_Sema->Diag(PrevTagDecl->getLocation(),
                                diag::note_previous_definition);
