@@ -1,1 +1,2 @@
 CMAKE_CXX_STANDARD=23
+davix=OFF
