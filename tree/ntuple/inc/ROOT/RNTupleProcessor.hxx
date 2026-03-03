@@ -371,6 +371,8 @@ public:
    /// \tparam T Type of the requested field.
    ///
    /// \param[in] fieldName Name of the requested field.
+   /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
+   /// created.
    ///
    /// \return An RNTupleProcessorOptionalPtr, which provides access to the field's value.
    ///
