@@ -1326,7 +1326,7 @@ namespace cling {
     largestream code;
     code << "extern \"C\" void " << funcname.str() << "(void* obj){(("
          << utils::TypeName::GetFullyQualifiedName(
-                clang::QualType(RD->getTypeForDecl(), 0), RD->getASTContext())
+                RD->getASTContext().getCanonicalTagType(RD), RD->getASTContext())
          << "*)obj)->~" << RD->getNameAsString() << "();}";
 
     // ifUniq = false: we know it's unique, no need to check.
