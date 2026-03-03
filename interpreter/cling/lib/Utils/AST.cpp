@@ -39,6 +39,32 @@ namespace {
       return dyn_cast<D>(R.getFoundDecl());
     return (D*)-1;
   }
+
+  // LLVM22: Replaces the old nns->getPrefix() pointer call
+  static NestedNameSpecifier getNNSPrefix(NestedNameSpecifier NNS) {
+    switch (NNS.getKind()) {
+    case NestedNameSpecifier::Kind::Namespace:
+      return NNS.getAsNamespaceAndPrefix().Prefix;
+    case NestedNameSpecifier::Kind::Type:
+      return NNS.getAsType()->getPrefix();
+    default:
+      return NestedNameSpecifier{};
+    }
+  }
+
+  // LLVM22: Replaces old nns->getAsNamespace()
+  static const NamespaceDecl* getNNSNamespace(NestedNameSpecifier NNS) {
+    if (NNS.getKind() != NestedNameSpecifier::Kind::Namespace)
+      return nullptr;
+    return dyn_cast<NamespaceDecl>(NNS.getAsNamespaceAndPrefix().Namespace);
+  }
+
+  // LLVM22: Replaces old nns->getAsNamespaceAlias()
+  static const NamespaceAliasDecl* getNNSNamespaceAlias(NestedNameSpecifier NNS) {
+    if (NNS.getKind() != NestedNameSpecifier::Kind::Namespace)
+      return nullptr;
+    return dyn_cast<NamespaceAliasDecl>(NNS.getAsNamespaceAndPrefix().Namespace);
+  }
 }
 
 namespace cling {
@@ -49,27 +75,27 @@ namespace utils {
         Ctx, tname, /*WithGlobalNsPrefix=*/false);
   }
 
-  static NestedNameSpecifier*
+  static NestedNameSpecifier
   GetFullyQualifiedNameSpecifier(const ASTContext& Ctx,
-                                 NestedNameSpecifier* scope) {
+                                 NestedNameSpecifier scope) {
     return clang::TypeName::getFullyQualifiedNestedNameSpecifier(
         Ctx, scope, /*WithGlobalNsPrefix=*/false);
   }
 
-  static NestedNameSpecifier*
+  static NestedNameSpecifier
   CreateNestedNameSpecifierForScopeOf(const ASTContext& Ctx, const Decl* decl,
                                       bool FullyQualified) {
     return clang::TypeName::createNestedNameSpecifierForScopeOf(
         Ctx, decl, FullyQualified, /*WithGlobalNsPrefix=*/false);
   }
 
-  static NestedNameSpecifier* CreateNestedNameSpecifierForScopeOf(
+  static NestedNameSpecifier CreateNestedNameSpecifierForScopeOf(
       const ASTContext& Ctx, const Type* TypePtr, bool FullyQualified) {
     return clang::TypeName::createNestedNameSpecifierForScopeOf(
         Ctx, TypePtr, FullyQualified, /*WithGlobalNsPrefix=*/false);
   }
 
-  NestedNameSpecifier*
+  NestedNameSpecifier
   TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
                                       const NamespaceDecl* Namesp) {
     return clang::TypeName::createNestedNameSpecifier(
@@ -77,19 +103,13 @@ namespace utils {
   }
 
   // FIXME: Doesn't exist upstream
-  NestedNameSpecifier* TypeName::CreateNestedNameSpecifier(
+  NestedNameSpecifier TypeName::CreateNestedNameSpecifier(
       const ASTContext& Ctx, const TypedefNameDecl* TD, bool FullyQualify) {
     return clang::TypeName::createNestedNameSpecifier(
         Ctx, TD, FullyQualify, /*WithGlobalNsPrefix=*/false);
   }
-  // FIXME: Doesn't exist upstream
-  NestedNameSpecifier* TypeName::CreateNestedNameSpecifier(
-      const ASTContext& Ctx, const UsingShadowDecl* USD, bool FullyQualify) {
-    return clang::TypeName::createNestedNameSpecifier(
-        Ctx, USD->getTargetDecl(), FullyQualify, /*WithGlobalNsPrefix=*/false);
-  }
 
-  NestedNameSpecifier*
+  NestedNameSpecifier
   TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx, const TagDecl* TD,
                                       bool FullyQualify) {
     return clang::TypeName::createNestedNameSpecifier(
@@ -121,8 +141,8 @@ namespace utils {
                                          bool fullyQualifyTmpltArg);
 
   static
-  NestedNameSpecifier* GetPartiallyDesugaredNNS(const ASTContext& Ctx,
-                                                NestedNameSpecifier* scope,
+  NestedNameSpecifier GetPartiallyDesugaredNNS(const ASTContext& Ctx,
+                                                NestedNameSpecifier scope,
                                            const Transform::Config& TypeConfig);
 
   bool Analyze::IsWrapper(const FunctionDecl* ND) {
@@ -257,12 +277,12 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier* SelectPrefix(const ASTContext& Ctx,
+  NestedNameSpecifier SelectPrefix(const ASTContext& Ctx,
                                     const DeclContext *declContext,
-                                    NestedNameSpecifier *original_prefix,
+                                    NestedNameSpecifier original_prefix,
                              const Transform::Config& TypeConfig) {
     // We have to also desugar the prefix.
-    NestedNameSpecifier* prefix = nullptr;
+    NestedNameSpecifier prefix = std::nullopt;
     if (declContext) {
       // We had a scope prefix as input, let see if it is still
       // the same as the scope of the result and if it is, then
@@ -273,12 +293,9 @@ namespace utils {
         const NamespaceDecl *new_ns =dyn_cast<NamespaceDecl>(declContext);
         if (new_ns) {
           new_ns = new_ns->getCanonicalDecl();
-          NamespaceDecl *old_ns = nullptr;
+          const NamespaceDecl *old_ns = nullptr;
           if (original_prefix) {
-            original_prefix->getAsNamespace();
-            if (NamespaceAliasDecl *alias =
-                     original_prefix->getAsNamespaceAlias())
-            {
+            if (const NamespaceAliasDecl* alias = getNNSNamespaceAlias(original_prefix)) {
               old_ns = alias->getNamespace()->getCanonicalDecl();
             }
           }
@@ -295,8 +312,8 @@ namespace utils {
         const CXXRecordDecl* newtype=dyn_cast<CXXRecordDecl>(declContext);
         if (newtype && original_prefix) {
           // Deal with a class
-          const Type *oldtype = original_prefix->getAsType();
-          if (oldtype &&
+          const Type *oldtype = original_prefix.getAsType();
+          if (original_prefix.getKind() == NestedNameSpecifier::Kind::Type &&
               // NOTE: Should we compare the RecordDecl instead?
               oldtype->getAsCXXRecordDecl() == newtype)
           {
@@ -328,22 +345,22 @@ namespace utils {
   }
 
   static
-  NestedNameSpecifier* SelectPrefix(const ASTContext& Ctx,
-                                    const ElaboratedType *etype,
-                                    NestedNameSpecifier *original_prefix,
+  NestedNameSpecifier SelectPrefix(const ASTContext& Ctx,
+                                    NestedNameSpecifier etypePrefix,
+                                    NestedNameSpecifier original_prefix,
                              const Transform::Config& TypeConfig) {
     // We have to also desugar the prefix.
 
-    NestedNameSpecifier* prefix = etype->getQualifier();
+    NestedNameSpecifier prefix = etypePrefix;
     if (original_prefix && prefix) {
       // We had a scope prefix as input, let see if it is still
       // the same as the scope of the result and if it is, then
       // we use it.
-      const Type *newtype = prefix->getAsType();
-      if (newtype) {
+      if (prefix.getKind() == NestedNameSpecifier::Kind::Type) {
+        const Type *newtype = prefix.getAsType();
         // Deal with a class
-        const Type *oldtype = original_prefix->getAsType();
-        if (oldtype &&
+        const Type *oldtype = original_prefix.getAsType();
+        if (original_prefix.getKind() == NestedNameSpecifier::Kind::Type &&
             // NOTE: Should we compare the RecordDecl instead?
             oldtype->getAsCXXRecordDecl() == newtype->getAsCXXRecordDecl())
         {
@@ -356,21 +373,21 @@ namespace utils {
       } else {
         // Deal with namespace.  This is mostly about dealing with
         // namespace aliases (i.e. keeping the one the user used).
-        const NamespaceDecl *new_ns = prefix->getAsNamespace();
+        const NamespaceDecl *new_ns = getNNSNamespace(prefix);
         if (new_ns) {
           new_ns = new_ns->getCanonicalDecl();
         }
-        else if (NamespaceAliasDecl *alias = prefix->getAsNamespaceAlias() )
+        else if (const NamespaceAliasDecl *alias = getNNSNamespaceAlias(prefix) )
         {
           new_ns = alias->getNamespace()->getCanonicalDecl();
         }
         if (new_ns) {
-          const NamespaceDecl *old_ns = original_prefix->getAsNamespace();
+          const NamespaceDecl *old_ns = getNNSNamespace(original_prefix);
           if (old_ns) {
             old_ns = old_ns->getCanonicalDecl();
           }
-          else if (NamespaceAliasDecl *alias =
-                   original_prefix->getAsNamespaceAlias())
+          else if (const NamespaceAliasDecl *alias =
+                   getNNSNamespaceAlias(original_prefix))
           {
             old_ns = alias->getNamespace()->getCanonicalDecl();
           }
@@ -391,12 +408,14 @@ namespace utils {
 
 
   static
-  NestedNameSpecifier* GetPartiallyDesugaredNNS(const ASTContext& Ctx,
-                                                NestedNameSpecifier* scope,
+  NestedNameSpecifier GetPartiallyDesugaredNNS(const ASTContext& Ctx,
+                                                NestedNameSpecifier scope,
                                           const Transform::Config& TypeConfig) {
     // Desugar the scope qualifier if needed.
 
-    if (const Type* scope_type = scope->getAsType()) {
+    if (scope.getKind() == NestedNameSpecifier::Kind::Type) {
+
+      const Type* scope_type = scope.getAsType();
 
       // this is not a namespace, so we might need to desugar
       QualType desugared = GetPartiallyDesugaredTypeImpl(Ctx,
@@ -405,23 +424,24 @@ namespace utils {
                                                          /*qualifyType=*/false,
                                                       /*qualifyTmpltArg=*/true);
 
-      NestedNameSpecifier* outer_scope = scope->getPrefix();
-      const ElaboratedType* etype
-         = dyn_cast<ElaboratedType>(desugared.getTypePtr());
-      if (etype) {
-        // The desugarding returned an elaborated type even-though we
+      NestedNameSpecifier outer_scope = getNNSPrefix(scope);
+      // LLVM22: ElaboratedType no longer exists.
+      // Check whether the desugared type carries a prefix (was elaborated).
+      NestedNameSpecifier desugaredPrefix = desugared->getPrefix();
+      if (desugaredPrefix) {
+        // Desugaring returned a type with a prefix, even-though we
         // did not request it (/*fullyQualify=*/false), so we must have been
         // looking a typedef pointing at a (or another) scope.
 
         if (outer_scope) {
-          outer_scope = SelectPrefix(Ctx,etype,outer_scope,TypeConfig);
+          outer_scope = SelectPrefix(Ctx,desugaredPrefix,outer_scope,TypeConfig);
         } else {
-          outer_scope = GetPartiallyDesugaredNNS(Ctx,etype->getQualifier(),
+          outer_scope = GetPartiallyDesugaredNNS(Ctx, desugaredPrefix,
                                                  TypeConfig);
         }
-        desugared = etype->getNamedType();
+        // LLVM22: In the old API we had:
+        // desugared = etype->getNamedType();
       } else {
-
         Decl* decl = nullptr;
         if (!desugared.isNull()) {
           const Type* desugaredTy = desugared.getTypePtr();
@@ -452,15 +472,35 @@ namespace utils {
             outer_scope = SelectPrefix(Ctx,decl->getDeclContext(),
                                        outer_scope,TypeConfig);
           } else {
-            outer_scope = nullptr;
+            outer_scope = std::nullopt;
           }
         } else if (outer_scope) {
           outer_scope = GetPartiallyDesugaredNNS(Ctx, outer_scope, TypeConfig);
         }
       }
-      return NestedNameSpecifier::Create(Ctx,outer_scope,
-                                         false /* template keyword wanted */,
-                                         desugared.getTypePtr());
+
+      // LLVM22: In the old API this was:
+      // return NestedNameSpecifier::Create(Ctx,outer_scope,
+      //                                    false /* template keyword wanted */,
+      //                                    desugared.getTypePtr());
+      if (outer_scope) {
+        // In case of template specializations iterate over the arguments and
+        // fully qualify them as well.
+        if (const auto *TT = dyn_cast<TagType>(desugared.getTypePtr())) {
+          // We are asked to fully qualify and we have a Record Type (which
+          // may point to a template specialization) or Template
+          // Specialization Type. We need to fully qualify their arguments.
+
+          const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+              Ctx, TT, TT->getKeyword(), outer_scope, /*WithGlobalNsPrefix=*/false);
+          desugared = QualType(TypePtr, 0);
+        } else if (const auto *TT = dyn_cast<TypedefType>(desugared.getTypePtr())) {
+          desugared = Ctx.getTypedefType(
+              TT->getKeyword(), outer_scope, TT->getDecl(),
+              clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
+        }
+      }
+      return NestedNameSpecifier(desugared.getTypePtr());
     } else {
       return  GetFullyQualifiedNameSpecifier(Ctx,scope);
     }
@@ -629,11 +669,7 @@ namespace utils {
         QT = Ty->desugar();
         return true;
       }
-      case Type::Elaborated: {
-        const ElaboratedType* Ty = llvm::cast<ElaboratedType>(QTy);
-        QT = Ty->desugar();
-        return true;
-      }
+      // LLVM22: There is no ElaboratedType anymore.
       //
       //  Conditionally sugared types.
       //
@@ -731,7 +767,7 @@ namespace utils {
       if (isa<TypedefType>(SubTy)
           || isa<UsingType>(SubTy)
           || isa<TemplateSpecializationType>(SubTy)
-          || isa<ElaboratedType>(SubTy)
+          || SubTy->getPrefix() // LLVM22: was isa<ElaboratedType>
           || fullyQualifyTmpltArg) {
         changed = true;
         QualType PDQT
@@ -926,27 +962,25 @@ namespace utils {
     // NOTE: however we problably want to add the std::vector typedefs
     // to the list of things to skip!
 
-    NestedNameSpecifier* original_prefix = nullptr;
+    NestedNameSpecifier original_prefix = std::nullopt;
     Qualifiers prefix_qualifiers;
-    const ElaboratedType* etype_input
-      = dyn_cast<ElaboratedType>(QT.getTypePtr());
-    if (etype_input) {
+    NestedNameSpecifier embedded_prefix = QT->getPrefix();
+
+    if (embedded_prefix) {
       // Intentionally, we do not care about the other compononent of
       // the elaborated type (the keyword) as part of the partial
       // desugaring (and/or name normaliztation) is to remove it.
-      original_prefix = etype_input->getQualifier();
-      if (original_prefix) {
-        const NamespaceDecl *ns = original_prefix->getAsNamespace();
+
+        const NamespaceDecl* ns = getNNSNamespace(embedded_prefix);
         if (!(ns && ns->isAnonymousNamespace())) {
           // We have to also desugar the prefix unless
           // it does not have a name (anonymous namespaces).
           fullyQualifyType = true;
           prefix_qualifiers = QT.getLocalQualifiers();
-          QT = QualType(etype_input->getNamedType().getTypePtr(),0);
-        } else {
-          original_prefix = nullptr;
+          original_prefix = embedded_prefix;
+          // TODO: LLVM22: In the old API this was:
+          // QT = QualType(etype_input->getNamedType().getTypePtr(), 0);
         }
-      }
     }
 
     // Desugar QT until we cannot desugar any more, or
@@ -989,15 +1023,15 @@ namespace utils {
                                            fullyQualifyTmpltArg);
     }
 
-    NestedNameSpecifier* prefix = nullptr;
-    const ElaboratedType* etype
-      = dyn_cast<ElaboratedType>(QT.getTypePtr());
-    if (etype) {
+    NestedNameSpecifier prefix = std::nullopt;
+    NestedNameSpecifier desugaredPrefix = QT->getPrefix();
+    if (desugaredPrefix) {
 
-      prefix = SelectPrefix(Ctx,etype,original_prefix,TypeConfig);
+      prefix = SelectPrefix(Ctx,desugaredPrefix,original_prefix,TypeConfig);
 
       prefix_qualifiers.addQualifiers(QT.getLocalQualifiers());
-      QT = QualType(etype->getNamedType().getTypePtr(),0);
+      // TODO: LLVM22: In the old API this was:
+      // QT = QualType(etype->getNamedType().getTypePtr(),0);
 
     } else if (fullyQualifyType) {
       // Let's check whether this type should have been an elaborated type.
@@ -1032,8 +1066,8 @@ namespace utils {
             && !(outer_ns && outer_ns->isAnonymousNamespace())
             && !outer->getNameAsString().empty() ) {
           if (original_prefix) {
-            const Type *oldtype = original_prefix->getAsType();
-            if (oldtype) {
+            if (original_prefix.getKind() == NestedNameSpecifier::Kind::Type) {
+              const Type *oldtype = original_prefix.getAsType();
               if (oldtype->getAsCXXRecordDecl() == outer) {
                 // Same type, use the original spelling
                 prefix
@@ -1041,12 +1075,12 @@ namespace utils {
                 outer = nullptr; // Cancel the later creation.
               }
             } else {
-              const NamespaceDecl *old_ns = original_prefix->getAsNamespace();
+              const NamespaceDecl *old_ns = getNNSNamespace(original_prefix);
               if (old_ns) {
                 old_ns = old_ns->getCanonicalDecl();
               }
-              else if (NamespaceAliasDecl *alias =
-                       original_prefix->getAsNamespaceAlias())
+              else if (const NamespaceAliasDecl *alias =
+                       getNNSNamespaceAlias(original_prefix))
               {
                 old_ns = alias->getNamespace()->getCanonicalDecl();
               }
@@ -1185,7 +1219,7 @@ namespace utils {
         if (isa<TypedefType>(SubTy)
             || isa<UsingType>(SubTy)
             || isa<TemplateSpecializationType>(SubTy)
-            || isa<ElaboratedType>(SubTy)
+            || SubTy->getPrefix() // LLVM22: was isa<ElaboratedType>
             || fullyQualifyTmpltArg) {
           QualType PDQT
             = GetPartiallyDesugaredTypeImpl(Ctx, SubTy, TypeConfig,
@@ -1201,8 +1235,10 @@ namespace utils {
       // If desugaring happened allocate new type in the AST.
       if (mightHaveChanged) {
         Qualifiers qualifiers = QT.getLocalQualifiers();
-        QT = Ctx.getTemplateSpecializationType(TST->getTemplateName(),
+        QT = Ctx.getTemplateSpecializationType(TST->getKeyword(),
+                                               TST->getTemplateName(),
                                                desArgs,
+                                               /*CanonicalArgs=*/{},
                                                TST->getCanonicalTypeInternal());
         QT = Ctx.getQualifiedType(QT, qualifiers);
       }
@@ -1257,7 +1293,7 @@ namespace utils {
             if (isa<TypedefType>(SubTy)
                 || isa<UsingType>(SubTy)
                 || isa<TemplateSpecializationType>(SubTy)
-                || isa<ElaboratedType>(SubTy)
+                || SubTy->getPrefix() // LLVM22: was isa<ElaboratedType>
                 || fullyQualifyTmpltArg) {
               mightHaveChanged = true;
               QualType PDQT
@@ -1275,7 +1311,7 @@ namespace utils {
           if (mightHaveChanged) {
             Qualifiers qualifiers = QT.getLocalQualifiers();
             TemplateName TN(TSTdecl->getSpecializedTemplate());
-            QT = Ctx.getTemplateSpecializationType(TN, desArgs,
+            QT = Ctx.getTemplateSpecializationType(ElaboratedTypeKeyword::None, TN, desArgs, /*CanonicalArgs=*/{},
                                          TSTRecord->getCanonicalTypeInternal());
             QT = Ctx.getQualifiedType(QT, qualifiers);
           }
@@ -1285,9 +1321,28 @@ namespace utils {
     // TODO: Find a way to avoid creating new types, if the input is already
     // fully qualified.
     if (prefix) {
-      // We intentionally always use ElaboratedTypeKeyword::None, we never want
-      // the keyword (humm ... what about anonymous types?)
-      QT = Ctx.getElaboratedType(ElaboratedTypeKeyword::None, prefix, QT);
+      // In case of template specializations iterate over the arguments and
+      // fully qualify them as well.
+      if (const auto *TT = dyn_cast<TagType>(QT.getTypePtr())) {
+        // We are asked to fully qualify and we have a Record Type (which
+        // may point to a template specialization) or Template
+        // Specialization Type. We need to fully qualify their arguments.
+
+        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+            Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
+        QT = QualType(TypePtr, 0);
+      } else if (const auto *TT = dyn_cast<TypedefType>(QT.getTypePtr())) {
+        QT = Ctx.getTypedefType(
+            TT->getKeyword(), prefix, TT->getDecl(),
+            clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
+      } else if (const auto *TST =
+                 dyn_cast<TemplateSpecializationType>(QT.getTypePtr())) {
+        // e.g. TDataPoint<float> with prefix NS:: reconstructed as
+        // NS::TDataPoint<float>
+        const Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+            Ctx, TST, /*WithGlobalNsPrefix=*/false);
+        QT = QualType(TypePtr, 0);
+      }
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);
     } else if (original_prefix) {
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);

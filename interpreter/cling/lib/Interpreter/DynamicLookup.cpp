@@ -58,8 +58,8 @@ namespace {
         // Exclude the artificially dependent DeclRefExprs, created by the
         // Lookup
         if (!Node->isTypeDependent()) {
-          if (NestedNameSpecifier* Qualifier = Node->getQualifier())
-            Qualifier->print(OS, m_Policy);
+          if (NestedNameSpecifier Qualifier = Node->getQualifier())
+            Qualifier.print(OS, m_Policy);
           m_Addresses.push_back(Node);
 
           OS << "((";
@@ -456,7 +456,7 @@ namespace cling {
         // Build Arg0 DynamicExprInfo
         Inits.push_back(BuildDynamicExprInfo(InitExpr));
         // Build Arg1 DeclContext* DC
-        QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
+        QualType DCTy = m_Context->getCanonicalTagType(m_DeclContextDecl);
         Inits.push_back(utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
                                                      (uintptr_t)m_CurDeclContext)
                         );
@@ -477,7 +477,7 @@ namespace cling {
         Inits.push_back(gClingDRE);
 
         // 2.3 Create a variable from LifetimeHandler.
-        QualType HandlerTy = m_Context->getTypeDeclType(m_LifetimeHandlerDecl);
+        QualType HandlerTy = m_Context->getCanonicalTagType(m_LifetimeHandlerDecl);
         TypeSourceInfo* TSI = m_Context->getTrivialTypeSourceInfo(HandlerTy,
                                                                   m_NoSLoc);
         VarDecl* HandlerInstance = VarDecl::Create(*m_Context,
@@ -683,7 +683,7 @@ namespace cling {
     CallArgs.push_back(Arg0);
 
     // Build Arg1
-    QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
+    QualType DCTy = m_Context->getCanonicalTagType(m_DeclContextDecl);
     Expr* Arg1 = utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
                                                     (uintptr_t)m_CurDeclContext);
     CallArgs.push_back(Arg1);
@@ -787,7 +787,7 @@ namespace cling {
     CtorArgs.push_back(VPReq);
 
     // 4. Call the constructor
-    QualType ExprInfoTy = m_Context->getTypeDeclType(m_DynamicExprInfoDecl);
+    QualType ExprInfoTy = m_Context->getCanonicalTagType(m_DynamicExprInfoDecl);
     ExprResult Initializer = m_Sema->ActOnParenListExpr(m_NoSLoc, m_NoELoc,
                                                         CtorArgs);
     TypeSourceInfo* TrivialTSI
