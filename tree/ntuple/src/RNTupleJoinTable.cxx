@@ -128,7 +128,6 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Add(ROOT::Internal::RPageSource 
 ROOT::NTupleSize_t
 ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<void *> &valuePtrs) const
 {
-
    for (const auto &partition : fPartitions) {
       for (const auto &joinMapping : partition.second) {
          auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
@@ -139,58 +138,4 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<
    }
 
    return kInvalidNTupleIndex;
-}
-
-std::vector<ROOT::NTupleSize_t>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs,
-                                                                PartitionKey_t partitionKey) const
-{
-   auto partition = fPartitions.find(partitionKey);
-   if (partition == fPartitions.end())
-      return {};
-
-   std::vector<ROOT::NTupleSize_t> entryIdxs{};
-
-   for (const auto &joinMapping : partition->second) {
-      auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
-      if (entriesForMapping)
-         entryIdxs.insert(entryIdxs.end(), entriesForMapping->begin(), entriesForMapping->end());
-   }
-
-   return entryIdxs;
-}
-
-std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(
-   const std::vector<void *> &valuePtrs, const std::vector<PartitionKey_t> &partitionKeys) const
-{
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
-
-   for (const auto &partitionKey : partitionKeys) {
-      auto entriesForPartition = GetEntryIndexes(valuePtrs, partitionKey);
-      if (!entriesForPartition.empty()) {
-         entryIdxs[partitionKey].insert(entryIdxs[partitionKey].end(), entriesForPartition.begin(),
-                                        entriesForPartition.end());
-      }
-   }
-
-   return entryIdxs;
-}
-
-std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs) const
-{
-   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
-
-   for (const auto &partition : fPartitions) {
-      for (const auto &joinMapping : partition.second) {
-         auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
-         if (entriesForMapping) {
-            entryIdxs[partition.first].insert(entryIdxs[partition.first].end(), entriesForMapping->begin(),
-                                              entriesForMapping->end());
-         }
-      }
-   }
-
-   return entryIdxs;
 }
