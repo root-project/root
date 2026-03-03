@@ -600,8 +600,8 @@ in this chapter.
 #include "TObject.h"
 class SClass : public TObject {
    private:
-      Float_t   fX;         //x position in centimeters
-      Float_t   fY;         //y position in centimeters
+      Float_t   fX;         ///<x position in centimeters
+      Float_t   fY;         ///<y position in centimeters
       Int_t     fTempValue; ///<! temporary state value
    public:
       SClass()             { fX = fY = -1; }
