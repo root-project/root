@@ -1234,10 +1234,11 @@ and its contents into the buffer `R__b`. The `Streamer `calls
 method reads the information from buffer `R__b` into the `Event`
 object.
 
-### Transient Data Members (///<!)
+### Transient Data Members (//!)
 
 
 To prevent a data member from being written to the file, insert a "`!`"
+To make it compatible with Doxygen, write `///<!` instead of `//!`.
 as the first character after the comment marks. It tells ROOT not to
 save that data member in a root file when saving the class. For example,
 in this version of Event, the `fPt` and `fTransient` data members are
