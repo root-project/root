@@ -61,6 +61,15 @@ Bool_t TCurlFile::ReadBuffer(char *buf, Int_t len)
    }
 
    fOffset += range.fNBytesRecv;
+   fBytesRead += range.fNBytesRecv;
+   fReadCalls++;
+#ifdef R__WIN32
+   SetFileBytesRead(GetFileBytesRead() + range.fNBytesRecv);
+   SetFileReadCalls(GetFileReadCalls() + 1);
+#else
+   fgBytesRead += range.fNBytesRecv;
+   fgReadCalls++;
+#endif
    return kFALSE;
 }
 
@@ -75,6 +84,15 @@ Bool_t TCurlFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
       Error("TCurlFile", "can not read data: %s", status.fStatusMsg.c_str());
       return kTRUE;
    }
+   fBytesRead += range.fNBytesRecv;
+   fReadCalls++;
+#ifdef R__WIN32
+   SetFileBytesRead(GetFileBytesRead() + range.fNBytesRecv);
+   SetFileReadCalls(GetFileReadCalls() + 1);
+#else
+   fgBytesRead += range.fNBytesRecv;
+   fgReadCalls++;
+#endif
    return kFALSE;
 }
 
@@ -93,6 +111,12 @@ Bool_t TCurlFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
       r.fLength = len[i];
       ranges.emplace_back(r);
       bufPos += len[i];
+      fBytesRead += r.fNBytesRecv;
+#ifdef R__WIN32
+      SetFileBytesRead(GetFileBytesRead() + r.fNBytesRecv);
+#else
+      fgBytesRead += r.fNBytesRecv;
+#endif
    }
 
    auto status = fConnection->SendRangesReq(nbuf, &ranges[0]);
