@@ -587,14 +587,18 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
    auto primaryProc =
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]});
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
+
    try {
-      auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]});
-      auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
+      proc->RequestField<float>("ntuple_aux.z");
+
+      FAIL() << "creating an auxiliary processor where its name causes conflicts should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(
-         err.what(),
-         testing::HasSubstr("a field or nested auxiliary processor named \"ntuple_aux\" is already present as a field "
-                            "in the primary processor; rename the auxiliary processor to avoid conflicts"));
+      EXPECT_THAT(err.what(), testing::HasSubstr(
+                                 "ambiguous field name: \"ntuple_aux.z\" is present in the primary RNTupleProcessor "
+                                 "\"ntuple\", but may also refer to a field in the auxiliary RNTupleProcessor named "
+                                 "\"ntuple_aux\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
    }
 }
 
