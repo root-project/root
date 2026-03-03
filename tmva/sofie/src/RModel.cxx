@@ -1152,6 +1152,11 @@ void RModel::GenerateSessionCode()
       }
       fGC += ") {\n";
 
+      // add some code required in session constructor
+      for (size_t id = 0; id < fOperators.size(); id++) {
+         fGC += fOperators[id]->GenerateSessionCtorCode();
+      }
+
       // initializing dynamic parameters
       if (!fDimShapeNames.empty()) {
          fGC += "\n\n";
