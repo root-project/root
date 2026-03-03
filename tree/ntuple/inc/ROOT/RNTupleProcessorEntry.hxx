@@ -115,7 +115,8 @@ private:
    };
 
    std::vector<RProcessorValue> fProcessorValues;
-   std::unordered_map<std::string, FieldIndex_t> fFieldName2Index;
+   // Maps from the field name to all type alternatives for that field that have been added to the entry.
+   std::unordered_map<std::string, std::vector<FieldIndex_t>> fFieldName2Index;
 
 public:
    /////////////////////////////////////////////////////////////////////////////
@@ -158,7 +159,7 @@ public:
       assert(fieldIdx < fProcessorValues.size());
 
       for (const auto &[fieldName, index] : fFieldName2Index) {
-         if (index == fieldIdx) {
+         if (std::find(index.begin(), index.end(), fieldIdx) != index.end()) {
             return fieldName;
          }
       }
@@ -175,13 +176,23 @@ public:
    /// parent field names, if applicable.
    ///
    /// \return A `std::optional` containing the field index if it was found.
-   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName) const
+   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName) const
    {
       auto it = fFieldName2Index.find(std::string(canonicalFieldName));
       if (it == fFieldName2Index.end()) {
          return std::nullopt;
       }
-      return it->second;
+
+      const auto &fieldIdxs = it->second;
+      assert(!fieldIdxs.empty());
+
+      for (auto idx : fieldIdxs) {
+         if (fProcessorValues[idx].fField->GetTypeName() == typeName) {
+            return idx;
+         }
+      }
+
+      return std::nullopt;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -201,12 +212,12 @@ public:
       if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
          fieldNameWithProcessorPrefix = processorPrefix + "." + qualifiedFieldName;
 
-      if (FindFieldIndex(fieldNameWithProcessorPrefix))
+      if (FindFieldIndex(fieldNameWithProcessorPrefix, field->GetTypeName()))
          throw ROOT::RException(
             R__FAIL("field \"" + fieldNameWithProcessorPrefix + "\" is already present in the entry"));
 
       auto fieldIdx = fProcessorValues.size();
-      fFieldName2Index[fieldNameWithProcessorPrefix] = fieldIdx;
+      fFieldName2Index[fieldNameWithProcessorPrefix].push_back(fieldIdx);
 
       assert(field);
       auto value = field->CreateValue();
