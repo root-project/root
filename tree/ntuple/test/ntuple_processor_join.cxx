@@ -128,13 +128,13 @@ TEST(RNTupleJoinProcessor, NameConflict)
    FileRaii fileGuard("ntuple_processor_join_name_conflict.root");
    {
       auto model = RNTupleModel::Create();
-      auto fldA = model->MakeField<float>("a");
+      auto fldStruct = model->MakeField<CustomStruct>("struct");
 
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple", *file);
 
       for (unsigned i = 0; i < 5; ++i) {
-         *fldA = i;
+         fldStruct->a = i;
          ntuple->Fill();
       }
    }
@@ -143,7 +143,7 @@ TEST(RNTupleJoinProcessor, NameConflict)
       auto fldB = model->MakeField<float>("b");
 
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
-      auto ntuple = RNTupleWriter::Append(std::move(model), "a", *file);
+      auto ntuple = RNTupleWriter::Append(std::move(model), "struct", *file);
 
       for (unsigned i = 0; i < 5; ++i) {
          *fldB = i * 2;
@@ -151,15 +151,16 @@ TEST(RNTupleJoinProcessor, NameConflict)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({"ntuple", fileGuard.GetPath()}, {"a", fileGuard.GetPath()}, {});
+   auto proc = RNTupleProcessor::CreateJoin({"ntuple", fileGuard.GetPath()}, {"struct", fileGuard.GetPath()}, {});
 
    try {
-      proc->RequestField<float>("a");
+      proc->RequestField<float>("struct.a");
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr(
-                                 "ambiguous field name: \"a\" is present in the primary RNTupleProcessor \"ntuple\", "
-                                 "but may also refer to a field in the auxiliary RNTupleProcessor named \"a\". To "
-                                 "avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
+      EXPECT_THAT(
+         err.what(),
+         testing::HasSubstr("ambiguous field name: \"struct.a\" is present in the primary RNTupleProcessor \"ntuple\", "
+                            "but may also refer to a field in the auxiliary RNTupleProcessor named \"struct\". To "
+                            "avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
    }
 }
 

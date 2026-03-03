@@ -94,12 +94,14 @@ protected:
          auto fldI = model->MakeField<int>("i");
          auto fldX = model->MakeField<float>("x");
          auto fldY = model->MakeField<std::vector<float>>("y");
+         auto fldStruct = model->MakeField<CustomStruct>("struct");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[0], fFileNames[0]);
 
          for (unsigned i = 0; i < 5; i++) {
             *fldI = i;
             *fldX = static_cast<float>(i);
             *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
+            fldStruct->a = i * 1.f;
             ntuple->Fill();
          }
       }
@@ -107,11 +109,13 @@ protected:
          auto model = RNTupleModel::Create();
          auto fldI = model->MakeField<int>("i");
          auto fldZ = model->MakeField<float>("z");
+         auto fldStruct = model->MakeField<CustomStruct>("struct");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[1], fFileNames[1]);
 
          for (unsigned i = 0; i < 5; ++i) {
             *fldI = i;
             *fldZ = i * 2.f;
+            fldStruct->a = i * 2.f;
             ntuple->Fill();
          }
       }
@@ -120,11 +124,14 @@ protected:
          auto model = RNTupleModel::Create();
          auto fldI = model->MakeField<int>("i");
          auto fldZ = model->MakeField<float>("z");
+         auto fldStruct = model->MakeField<CustomStruct>("struct");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[2], fFileNames[2]);
 
          for (int i = 4; i >= 0; --i) {
             *fldI = i;
             *fldZ = i * 3.f;
+            fldStruct->a = i * 3.f;
+
             ntuple->Fill();
          }
       }
@@ -133,6 +140,7 @@ protected:
          auto model = RNTupleModel::Create();
          auto fldI = model->MakeField<int>("i");
          auto fldZ = model->MakeField<float>("z");
+         auto fldStruct = model->MakeField<CustomStruct>("struct");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[3], fFileNames[3]);
 
          for (unsigned i = 0; i < 5; ++i) {
@@ -140,6 +148,7 @@ protected:
                continue;
             *fldI = i;
             *fldZ = i * 4.f;
+            fldStruct->a = i * 4.f;
             ntuple->Fill();
          }
       }
@@ -251,6 +260,19 @@ TEST_F(RNTupleProcessorTest, AlternativeTypes)
    }
 }
 
+TEST_F(RNTupleProcessorTest, Subfields)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto strct = proc->RequestField<CustomStruct>("struct");
+   auto strct_a = proc->RequestField<float>("struct.a");
+
+   for (auto idx : *proc) {
+      EXPECT_FLOAT_EQ(idx, idx);
+      EXPECT_FLOAT_EQ(strct->a, *strct_a);
+   }
+}
+
 TEST_F(RNTupleProcessorTest, PrintStructureSingle)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
@@ -311,6 +333,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -319,6 +342,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(*z, *strct_a);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -336,6 +360,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -344,6 +369,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
+      EXPECT_EQ(*z, *strct_a);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -361,6 +387,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -371,9 +398,12 @@ TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
 
       if ((idx % 5) % 2 == 1) {
          EXPECT_FALSE(z.HasValue());
+         EXPECT_FALSE(strct_a.HasValue());
       } else {
          EXPECT_TRUE(z.HasValue());
+         EXPECT_TRUE(strct_a.HasValue());
          EXPECT_EQ(*x * 4, *z);
+         EXPECT_EQ(*z, *strct_a);
       }
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -392,6 +422,7 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -400,6 +431,7 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(*z, *strct_a);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -417,6 +449,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -425,6 +458,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
+      EXPECT_EQ(*z, *strct_a);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -442,6 +476,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -452,9 +487,12 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
 
       if ((idx % 5) % 2 == 1) {
          EXPECT_FALSE(z.HasValue());
+         EXPECT_FALSE(strct_a.HasValue());
       } else {
          EXPECT_TRUE(z.HasValue());
+         EXPECT_TRUE(strct_a.HasValue());
          EXPECT_EQ(*x * 4, *z);
+         EXPECT_EQ(*z, *strct_a);
       }
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -472,7 +510,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a1 = proc->RequestField<float>("ntuple_aux.struct.a");
    auto z2 = proc->RequestField<float>("ntuple_aux2.z");
+   auto strct_a2 = proc->RequestField<float>("ntuple_aux2.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -481,7 +521,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
+      EXPECT_EQ(*x * 2, *strct_a1);
       EXPECT_EQ(*x * 3, *z2);
+      EXPECT_EQ(*x * 3, *strct_a2);
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
@@ -498,7 +540,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a1 = proc->RequestField<float>("ntuple_aux.struct.a");
    auto z2 = proc->RequestField<float>("ntuple_aux2.z");
+   auto strct_a2 = proc->RequestField<float>("ntuple_aux2.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -507,12 +551,16 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
+      EXPECT_EQ(*x * 2, *strct_a1);
 
       if (idx % 2 == 1) {
          EXPECT_FALSE(z2.HasValue());
+         EXPECT_FALSE(strct_a2.HasValue());
       } else {
          EXPECT_TRUE(z2.HasValue());
+         EXPECT_TRUE(strct_a2.HasValue());
          EXPECT_EQ(*x * 4, *z2);
+         EXPECT_EQ(*x * 4, *strct_a2);
       }
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -532,7 +580,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a1 = proc->RequestField<float>("ntuple_aux.struct.a");
    auto z2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.z");
+   auto strct_a2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -541,7 +591,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
+      EXPECT_EQ(*x * 2, *strct_a1);
       EXPECT_EQ(*x * 3, *z2);
+      EXPECT_EQ(*x * 3, *strct_a2);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -561,7 +613,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
    auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto strct_a1 = proc->RequestField<float>("ntuple_aux.struct.a");
    auto z2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.z");
+   auto strct_a2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.struct.a");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
@@ -570,12 +624,16 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
+      EXPECT_EQ(*x * 2, *strct_a1);
 
       if (idx % 2 == 1) {
          EXPECT_FALSE(z2.HasValue());
+         EXPECT_FALSE(strct_a2.HasValue());
       } else {
          EXPECT_TRUE(z2.HasValue());
+         EXPECT_TRUE(strct_a2.HasValue());
          EXPECT_EQ(*x * 4, *z2);
+         EXPECT_EQ(*x * 4, *strct_a2);
       }
    }
 
