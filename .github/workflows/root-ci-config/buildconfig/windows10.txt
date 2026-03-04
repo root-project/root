@@ -30,6 +30,7 @@ runtime_cxxmodules=OFF
 ssl=OFF
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
+tmva-sofie=OFF
 vdt=OFF
 x11=OFF
 xrootd=OFF
