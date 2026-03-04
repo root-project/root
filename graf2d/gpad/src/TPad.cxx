@@ -4587,12 +4587,13 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *)
          continue;
       }
       np++;
-      if (i1 < 0) i1 = i;
-      if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
+      if (i1 < 0)
+         i1 = i;
+      if (iclip == 0 && i < n-2)
+         continue;
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyLine(np, &x[i1], &y[i1]);
       }
       if (iclip) {
          x[i] = x1;
@@ -4625,13 +4626,13 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       if (option && (option[0] == 'C')) mustClip = kFALSE;
    }
 
-   Int_t i, i1=-1, np=1, iclip=0;
+   Int_t i, i1=-1, np = 1, iclip = 0;
 
    for (i=0; i < n-1; i++) {
-      Double_t x1=x[i];
-      Double_t y1=y[i];
-      Double_t x2=x[i+1];
-      Double_t y2=y[i+1];
+      Double_t x1 = x[i];
+      Double_t y1 = y[i];
+      Double_t x2 = x[i+1];
+      Double_t y2 = y[i+1];
       if (mustClip) {
          iclip = Clip(&x[i],&y[i],xmin,ymin,xmax,ymax);
          if (iclip == 2) {
@@ -4640,12 +4641,13 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
          }
       }
       np++;
-      if (i1 < 0) i1 = i;
-      if (iclip == 0 && i < n-2) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyLine(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPS(np, &x[i1], &y[i1]);
+      if (i1 < 0)
+         i1 = i;
+      if (iclip == 0 && i < n-2)
+         continue;
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyLine(np, &x[i1], &y[i1]);
       }
       if (iclip) {
          x[i] = x1;
@@ -4665,19 +4667,14 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
-   if (n <=0) return;
+   if (n <= 0)
+      return;
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawPolyLineNDC(n, x, y);
-
-   if (gVirtualPS) {
-      std::vector<Double_t> xw(n), yw(n);
-      for (Int_t i=0; i<n; i++) {
-         xw[i] = fX1 + x[i]*(fX2 - fX1);
-         yw[i] = fY1 + y[i]*(fY2 - fY1);
-      }
-      gVirtualPS->DrawPS(n, xw.data(), yw.data());
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawPolyLineNDC(n, x, y);
    }
+
    Modified();
 }
 
@@ -4714,11 +4711,11 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i1 < 0) i1 = i;
          if (i < n-1) continue;
       }
-      if (np == 0) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
+      if (np == 0)
+         continue;
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
       i1 = -1;
       np = 0;
@@ -4745,11 +4742,11 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i1 < 0) i1 = i;
          if (i < n-1) continue;
       }
-      if (np == 0) continue;
-      if (!gPad->IsBatch() && GetPainter())
-         GetPainter()->DrawPolyMarker(np, &x[i1], &y[i1]);
-      if (gVirtualPS) {
-         gVirtualPS->DrawPolyMarker(np, &x[i1], &y[i1]);
+      if (np == 0)
+         continue;
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
       i1 = -1;
       np = 0;
