@@ -905,9 +905,9 @@ void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
    }
 
    if (nPoints < threshold)
-      ConvertPoints(gPad, nPoints, xs, ys, xy);
+      ConvertPoints(pad, nPoints, xs, ys, xy);
    else
-      ConvertPointsAndMerge(gPad, threshold, nPoints, xs, ys, xy);
+      ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    //We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
    if (!gVirtualX->GetFillStyle())
