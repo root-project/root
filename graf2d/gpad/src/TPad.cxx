@@ -3740,7 +3740,14 @@ void TPad::Paint(Option_t * /*option*/)
       return;
    }
 
-   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
+   TVirtualPadPainter *oldpp = nullptr;
+   Bool_t replace_pp = kFALSE;
+
+   if (fCanvas) {
+      // check if special PS painter should be assigned to TCanvas
+      replace_pp = fCanvas->EnsurePSPainter(kTRUE, oldpp);
+      TColor::SetGrayscale(fCanvas->IsGrayscale());
+   }
 
    Bool_t began3DScene = kFALSE;
    fPadPaint = 1;
@@ -3774,6 +3781,9 @@ void TPad::Paint(Option_t * /*option*/)
 
    fPadPaint = 0;
    Modified(kFALSE);
+
+   if (replace_pp && fCanvas)
+      fCanvas->EnsurePSPainter(kFALSE, oldpp);
 
    // Close the 3D scene if we opened it. This must be done after modified
    // flag is cleared, as some viewers will invoke another paint by marking pad modified again
@@ -3972,12 +3982,17 @@ void TPad::PaintModified()
       return;
    }
 
-   if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
-
    TVirtualPS *saveps = gVirtualPS;
-   if (gVirtualPS) {
-      if (gVirtualPS->TestBit(kPrintingPS))
-         gVirtualPS = nullptr;
+   if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS))
+      gVirtualPS = nullptr;
+
+   TVirtualPadPainter *oldpp = nullptr;
+   Bool_t replace_pp = kFALSE;
+
+   if (fCanvas) {
+      // check if special PS painter should be assigned to TCanvas
+      replace_pp = fCanvas->EnsurePSPainter(kTRUE, oldpp);
+      TColor::SetGrayscale(fCanvas->IsGrayscale());
    }
 
    Bool_t began3DScene = kFALSE;
@@ -4025,9 +4040,11 @@ void TPad::PaintModified()
 
    // This must be done after modified flag is cleared, as some
    // viewers will invoke another paint by marking pad modified again
-   if (began3DScene) {
-      if (fViewer3D) fViewer3D->EndScene();
-   }
+   if (began3DScene && fViewer3D)
+      fViewer3D->EndScene();
+
+   if (replace_pp && fCanvas)
+      fCanvas->EnsurePSPainter(kFALSE, oldpp);
 
    gVirtualPS = saveps;
 }
@@ -4479,16 +4496,9 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
 {
-   static Double_t xw[2], yw[2];
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawLineNDC(u1, v1, u2, v2);
-
-   if (gVirtualPS) {
-      xw[0] = fX1 + u1*(fX2 - fX1);
-      xw[1] = fX1 + u2*(fX2 - fX1);
-      yw[0] = fY1 + v1*(fY2 - fY1);
-      yw[1] = fY1 + v2*(fY2 - fY1);
-      gVirtualPS->DrawPS(2, xw, yw);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawLineNDC(u1, v1, u2, v2);
    }
 
    Modified();
@@ -5390,6 +5400,7 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS->SetBit(kPrintingPS);
          gVirtualPS->NewPage();
       }
+
       Paint();
       if (noScreen)
          GetCanvas()->SetBatch(kFALSE);
