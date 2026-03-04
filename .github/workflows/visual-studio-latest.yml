@@ -34,11 +34,9 @@ jobs:
       shell: cmd
       run: "C:\\bin\\vs_update.bat"
 
-    - name: Upload VS update-log
-      uses: actions/upload-artifact@v4
-      with:
-        name: Update Log - Visual Studio Latest
-        path: C:/ROOT-CI/VS-Update.log
+    - name: Display Update Log - Visual Studio Latest
+      shell: cmd
+      run: "type C:\\ROOT-CI\\VS-Update.log"
 
   reboot-after-update:
     if: ${{ github.event.schedule == '30 6 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
