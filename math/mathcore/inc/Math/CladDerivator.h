@@ -1134,10 +1134,16 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
 
    // _d_alpha, _d_beta, _d_C
    int sizeC = n * m;
+
    for (int i = 0; i < sizeC; ++i) {
-      *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
-      *_d_beta += _d_output[i] * C[i];
-      _d_C[i] += _d_output[i] * beta;
+      if (C) {
+         *_d_alpha += _d_output[i] * (output[i] - beta * C[i]);
+         *_d_beta += _d_output[i] * C[i];
+      } else {
+         *_d_alpha += _d_output[i] * output[i];
+      }
+      if (_d_C)
+         _d_C[i] += _d_output[i] * beta;
    }
 }
 
