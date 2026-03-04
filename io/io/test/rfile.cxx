@@ -810,3 +810,29 @@ TEST(RFile, TTreeNoDoubleFree)
    // destructed once during writing, once during reading.
    EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 2);
 }
+
+TEST(RFile, Compression)
+{
+   FileRaii fileGuard("test_rfile_compression.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      std::string s = "foo";
+      file->Put("foo", s);
+   }
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      EXPECT_EQ(file->GetCompressionSettings(), ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   }
+   {
+      auto opts = RFile::RRecreateOptions();
+      opts.fCompressionSettings = 0;
+      auto file = RFile::Recreate(fileGuard.GetPath(), opts);
+      std::string s = "foo";
+      file->Put("foo", s);
+   }
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      EXPECT_EQ(file->GetCompressionSettings(), 0);
+   }
+}
