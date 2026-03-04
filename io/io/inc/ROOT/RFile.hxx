@@ -8,6 +8,7 @@
 #ifndef ROOT7_RFile
 #define ROOT7_RFile
 
+#include <Compression.h>
 #include <ROOT/RError.hxx>
 
 #include <deque>
@@ -290,6 +291,14 @@ public:
       kListRecursive = 1 << 2,
    };
 
+   struct RRecreateOptions {
+      /// See core/zip/inc/Compression.h for the meaning of the `compression` argument.
+      /// Default compression is 505 (ZSTD level 10).
+      int fCompressionSettings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+
+      RRecreateOptions();
+   };
+
    // This is arbitrary, but it's useful to avoid pathological cases
    static constexpr int kMaxPathNesting = 1000;
 
@@ -302,7 +311,7 @@ public:
    /// Opens the file for reading/writing, overwriting it if it already exists.
    /// \throw ROOT::RException if a file could not be created at `path` (e.g. if the specified
    /// directory tree does not exist).
-   static std::unique_ptr<RFile> Recreate(std::string_view path);
+   static std::unique_ptr<RFile> Recreate(std::string_view path, const RRecreateOptions &opts = RRecreateOptions());
 
    /// Opens the file for updating, creating a new one if it doesn't exist.
    /// \throw ROOT::RException if the file at `path` could neither be read nor created
