@@ -24,6 +24,7 @@ class TCanvas : public TPad {
 
 friend class TCanvasImp;
 friend class TWebCanvas;
+friend class TPad;      // to create/reset painter for PS drawing
 friend class TThread;
 friend class TInterpreter;
 
@@ -77,6 +78,7 @@ private:
 
    //Initialize PadPainter.
    void     CreatePainter();
+   Bool_t   EnsurePSPainter(Bool_t create, TVirtualPadPainter *&oldp);
 
 protected:
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;

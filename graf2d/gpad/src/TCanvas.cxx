@@ -37,6 +37,7 @@
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
+#include "TPadPainterPS.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
 #include "TVirtualX.h"
@@ -2619,6 +2620,29 @@ TVirtualPadPainter *TCanvas::GetCanvasPainter()
    return fPainter;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Replace canvas painter
+/// For intenral use only - when creating PS images
+
+Bool_t TCanvas::EnsurePSPainter(Bool_t create, TVirtualPadPainter *&oldp)
+{
+   if (!create) {
+      delete fPainter;
+      fPainter = oldp;
+      return kFALSE;
+   }
+
+   if (!gVirtualPS || !IsBatch())
+      return kFALSE;
+
+
+   if (fPainter && fPainter->IsA() == TPadPainterPS::Class())
+      return kFALSE;
+
+   oldp = fPainter;
+   fPainter = new TPadPainterPS(gVirtualPS);
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///assert on IsBatch() == false?
