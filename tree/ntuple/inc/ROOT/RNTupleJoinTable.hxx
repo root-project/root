@@ -149,7 +149,7 @@ private:
    public:
       //////////////////////////////////////////////////////////////////////////
       /// \brief Get the entry indexes for this entry mapping.
-      const std::vector<ROOT::NTupleSize_t> *GetEntryIndexes(std::vector<void *> valuePtrs) const;
+      const std::vector<ROOT::NTupleSize_t> *GetEntryIndexes(const std::vector<JoinValue_t> &joinValues) const;
 
       //////////////////////////////////////////////////////////////////////////
       /// \brief Create a new entry mapping.
@@ -207,14 +207,14 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get an entry index (if it exists) for the given join field value(s), from any partition.
    ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
+   /// \param[in] joinValues The join field values to look up.
    ///
    /// \note If one or more corresponding entries exist for the given value(s), the first entry index found in the join
    /// table is returned.
    ///
-   /// \return An entry number that corresponds to `valuePtrs`. When there are no corresponding entries,
+   /// \return An entry number that corresponds to `joinValues`. When there are no corresponding entries,
    /// `kInvalidNTupleIndex` is returned.
-   ROOT::NTupleSize_t GetEntryIndex(const std::vector<void *> &valuePtrs) const;
+   ROOT::NTupleSize_t GetEntryIndex(const std::vector<JoinValue_t> &joinValues) const;
 };
 } // namespace Internal
 } // namespace Experimental
