@@ -16,23 +16,20 @@
 #ifndef ROOT_INTERNAL_ML_RBATCHGENERATOR
 #define ROOT_INTERNAL_ML_RBATCHGENERATOR
 
+#include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include "ROOT/ML/RBatchLoader.hxx"
+#include "ROOT/ML/RChunkLoader.hxx"
+#include "ROOT/ML/RDatasetLoader.hxx"
 #include "ROOT/ML/RFlat2DMatrix.hxx"
 #include "ROOT/ML/RFlat2DMatrixOperators.hxx"
 #include "ROOT/ML/RSampler.hxx"
-#include "ROOT/RDF/RDatasetSpec.hxx"
-
-#include "ROOT/ML/RDatasetLoader.hxx"
-#include "ROOT/ML/RChunkLoader.hxx"
-#include "ROOT/ML/RBatchLoader.hxx"
-#include "TROOT.h"
-
-#include <cmath>
-#include <memory>
-#include <mutex>
-#include <random>
-#include <thread>
-#include <variant>
-#include <vector>
+#include "ROOT/RDF/InterfaceUtils.hxx"
 
 // Empty namespace to create a hook for the Pythonization
 namespace ROOT::Experimental::ML {
