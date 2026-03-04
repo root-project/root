@@ -649,7 +649,7 @@ std::vector<std::uint64_t> ROOT::RNTupleDescriptor::GetFeatureFlags() const
          base += 64;
       }
       f -= base;
-      flags |= 1 << f;
+      flags |= std::uint64_t(1) << f;
    }
    result.emplace_back(flags);
    return result;

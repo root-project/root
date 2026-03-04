@@ -227,7 +227,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
 
    // Clear the cache from clusters not the in the look-ahead window or the set of pinned clusters
    for (auto itr = fPool.begin(); itr != fPool.end();) {
-      if (provide.Contains(itr->first) > 0) {
+      if (provide.Contains(itr->first)) {
          ++itr;
          continue;
       }

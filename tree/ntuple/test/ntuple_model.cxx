@@ -284,8 +284,8 @@ TEST(RNTupleModel, RegisterSubfield)
 
    // sanity check
    try {
-      *defaultEntry.GetPtr<std::vector<float>>("struct.v1");
-      *entry->GetPtr<std::vector<float>>("struct.v1");
+      (void)*defaultEntry.GetPtr<std::vector<float>>("struct.v1");
+      (void)*entry->GetPtr<std::vector<float>>("struct.v1");
       FAIL() << "subfields not explicitly registered shouldn't be present in the entry";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: struct.v1"));
