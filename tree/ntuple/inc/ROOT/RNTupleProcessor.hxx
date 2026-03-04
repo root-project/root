@@ -315,6 +315,7 @@ protected:
    ///
    ///
    /// \param[in] fieldName Name of the field to add.
+   /// \param[in] typeName Type of the field to add.
    /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
    /// created.
    /// \param[in] provenance Provenance of the processor.
@@ -322,8 +323,8 @@ protected:
    /// \return The index of the newly added field in the entry.
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
-   virtual ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t>
-   AddFieldToEntry(std::string_view fieldName, void *valuePtr,
+   virtual Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
                    const Internal::RNTupleProcessorProvenance &provenance) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -392,11 +393,14 @@ public:
    /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
    /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
    template <typename T>
-   RNTupleProcessorOptionalPtr<T> RequestField(std::string_view fieldName, void *valuePtr = nullptr)
+   RNTupleProcessorOptionalPtr<T> RequestField(const std::string &fieldName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
-      // TODO handle alternative (compatible field types)
-      auto fieldIdx = AddFieldToEntry(fieldName, valuePtr, Internal::RNTupleProcessorProvenance()).Unwrap();
+      std::string typeName{};
+      if constexpr (!std::is_void_v<T>) {
+         typeName = ROOT::Internal::GetRenormalizedTypeName(typeid(T));
+      }
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }
 
@@ -563,6 +567,17 @@ private:
    std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a new field and connect it to the processor's page source.
+   ///
+   /// \param[in] qualifiedFieldName Name of the field to add, prefixed with its parent fields, if applicable.
+   /// \param[in] typeName Type of the field to add.
+   ///
+   /// \return The newly created field.
+   /// \throws ROOT::RException In case the requested field cannot be found on disk.
+   std::unique_ptr<ROOT::RFieldBase>
+   CreateAndConnectField(const std::string &qualifiedFieldName, const std::string &typeName);
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`, or setting
    /// an existing one.
    ///
@@ -602,8 +617,8 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t> AddFieldToEntry(
-      std::string_view fieldName, void *valuePtr = nullptr,
+   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -633,8 +648,9 @@ public:
    RNTupleSingleProcessor &operator=(RNTupleSingleProcessor &&) = delete;
    ~RNTupleSingleProcessor() override
    {
-      // The proto model needs to be deleted before fPageSource.
-      fProtoModel.release();
+      // The entry's fields need to be deleted before fPageSource.
+      if (fEntry)
+         fEntry->Clear();
    };
 };
 
@@ -697,8 +713,8 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t> AddFieldToEntry(
-      std::string_view fieldName, void *valuePtr = nullptr,
+   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -809,8 +825,8 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t> AddFieldToEntry(
-      std::string_view fieldName, void *valuePtr = nullptr,
+   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
+      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
