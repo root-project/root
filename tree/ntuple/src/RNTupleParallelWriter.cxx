@@ -107,7 +107,8 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDatasetImpl() final
+
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final
    {
       throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }

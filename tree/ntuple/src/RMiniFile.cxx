@@ -1343,7 +1343,7 @@ void ROOT::Internal::RNTupleFileWriter::UpdateStreamerInfos(const RNTupleSeriali
    fStreamerInfoMap.insert(streamerInfos.cbegin(), streamerInfos.cend());
 }
 
-void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
+ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compression)
 {
    const auto WriteStreamerInfoToFile = [&](TFile *file) {
       // Make sure the streamer info records used in the RNTuple are written to the file
@@ -1353,47 +1353,68 @@ void ROOT::Internal::RNTupleFileWriter::Commit(int compression)
          buf.TagStreamerInfo(info);
    };
 
+   ROOT::Internal::RNTupleLink anchorInfo;
+   // NOTE: checksum length is included in the uncompressed len
+   anchorInfo.fLength = RTFNTuple{}.GetSize() + sizeof(std::uint64_t);
+   anchorInfo.fLocator.SetType(RNTupleLocator::kTypeFile);
+
    if (auto fileProper = std::get_if<RImplTFile>(&fFile)) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
       fileProper->fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
       WriteStreamerInfoToFile(fileProper->fDirectory->GetFile());
+      auto key = static_cast<TKey *>(fileProper->fDirectory->GetListOfKeys()->FindObject(fNTupleName.c_str()));
+      R__ASSERT(key);
+      anchorInfo.fLocator.SetPosition(key->GetSeekKey() + key->GetKeylen());
+      anchorInfo.fLocator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
+      // NOTE: this must happen after FindObject(), otherwise some TFile implementations, such as TBufferMergerFile,
+      // may reset the keys list upon write.
       fileProper->fDirectory->GetFile()->Write();
-      return;
    } else if (auto fileRFile = std::get_if<RImplRFile>(&fFile)) {
       // Same as the case above but handled via RFile
       fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
       WriteStreamerInfoToFile(ROOT::Experimental::Internal::GetRFileTFile(*fileRFile->fFile));
+      auto key = fileRFile->fFile->GetKeyInfo(fNTupleName);
+      R__ASSERT(key);
+      anchorInfo.fLocator.SetPosition(key->GetSeekKey() + key->GetNBytesKey());
+      anchorInfo.fLocator.SetNBytesOnStorage(key->GetNBytesObj());
       fileRFile->fFile->Flush();
-      return;
-   }
+   } else {
+      // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
+      auto &fileSimple = std::get<RImplSimple>(fFile);
 
-   // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
-   auto &fileSimple = std::get<RImplSimple>(fFile);
-
-   if (fIsBare) {
       RTFNTuple ntupleOnDisk(fNTupleAnchor);
-      // Compute the checksum
-      std::uint64_t checksum = XXH3_64bits(ntupleOnDisk.GetPtrCkData(), ntupleOnDisk.GetSizeCkData());
-      memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekNTuple, &ntupleOnDisk, ntupleOnDisk.GetSize());
-      memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekNTuple + ntupleOnDisk.GetSize(), &checksum,
-             sizeof(checksum));
-      fileSimple.Flush();
-      return;
+      anchorInfo.fLocator.SetPosition(fileSimple.fControlBlock->fSeekNTuple);
+
+      if (fIsBare) {
+         // Compute the checksum
+         std::uint64_t checksum = XXH3_64bits(ntupleOnDisk.GetPtrCkData(), ntupleOnDisk.GetSizeCkData());
+         memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekNTuple, &ntupleOnDisk, ntupleOnDisk.GetSize());
+         memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekNTuple + ntupleOnDisk.GetSize(), &checksum,
+                sizeof(checksum));
+         fileSimple.Flush();
+
+         anchorInfo.fLocator.SetNBytesOnStorage(ntupleOnDisk.GetSize());
+      } else {
+         auto anchorSize = WriteTFileNTupleKey(compression);
+         WriteTFileKeysList(anchorSize); // NOTE: this is written uncompressed
+         WriteTFileStreamerInfo(compression);
+         WriteTFileFreeList(); // NOTE: this is written uncompressed
+
+         // Update header and TFile record
+         memcpy(fileSimple.fHeaderBlock, &fileSimple.fControlBlock->fHeader,
+                fileSimple.fControlBlock->fHeader.GetSize());
+         R__ASSERT(fileSimple.fControlBlock->fSeekFileRecord + fileSimple.fControlBlock->fFileRecord.GetSize() <
+                   RImplSimple::kHeaderBlockSize);
+         memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekFileRecord,
+                &fileSimple.fControlBlock->fFileRecord, fileSimple.fControlBlock->fFileRecord.GetSize());
+
+         fileSimple.Flush();
+
+         anchorInfo.fLocator.SetNBytesOnStorage(anchorSize);
+      }
    }
 
-   auto anchorSize = WriteTFileNTupleKey(compression);
-   WriteTFileKeysList(anchorSize); // NOTE: this is written uncompressed
-   WriteTFileStreamerInfo(compression);
-   WriteTFileFreeList(); // NOTE: this is written uncompressed
-
-   // Update header and TFile record
-   memcpy(fileSimple.fHeaderBlock, &fileSimple.fControlBlock->fHeader, fileSimple.fControlBlock->fHeader.GetSize());
-   R__ASSERT(fileSimple.fControlBlock->fSeekFileRecord + fileSimple.fControlBlock->fFileRecord.GetSize() <
-             RImplSimple::kHeaderBlockSize);
-   memcpy(fileSimple.fHeaderBlock + fileSimple.fControlBlock->fSeekFileRecord, &fileSimple.fControlBlock->fFileRecord,
-          fileSimple.fControlBlock->fFileRecord.GetSize());
-
-   fileSimple.Flush();
+   return anchorInfo;
 }
 
 std::uint64_t ROOT::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)

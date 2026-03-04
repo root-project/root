@@ -409,14 +409,17 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned cha
    return result;
 }
 
-void ROOT::Experimental::Internal::RPageSinkDaos::CommitDatasetImpl(unsigned char *serializedFooter,
-                                                                    std::uint32_t length)
+ROOT::Internal::RNTupleLink
+ROOT::Experimental::Internal::RPageSinkDaos::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
 {
    auto bufFooterZip = MakeUninitArray<unsigned char>(length);
    auto szFooterZip =
       RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());
    WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    WriteNTupleAnchor();
+
+   // TODO: return the proper anchor locator+length
+   return {};
 }
 
 void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader)

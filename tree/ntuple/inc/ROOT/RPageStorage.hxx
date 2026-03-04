@@ -327,7 +327,7 @@ public:
 
 protected:
    virtual void InitImpl(RNTupleModel &model) = 0;
-   virtual void CommitDatasetImpl() = 0;
+   virtual RNTupleLink CommitDatasetImpl() = 0;
 
 public:
    /// Parameters for the SealPage() method
@@ -393,7 +393,7 @@ public:
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
-   void CommitDataset();
+   RNTupleLink CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
@@ -494,7 +494,7 @@ protected:
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
-   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
+   virtual RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
 
    /// Enables the default set of metrics provided by RPageSink. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -542,7 +542,8 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void CommitDatasetImpl() final;
+   /// \return The locator and length of the written anchor.
+   RNTupleLink CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off

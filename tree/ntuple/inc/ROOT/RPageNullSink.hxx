@@ -105,7 +105,7 @@ public:
    }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
 
    std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const RNTupleWriteOptions &) const final
    {
