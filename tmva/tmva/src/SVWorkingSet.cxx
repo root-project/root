@@ -503,7 +503,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 
    // main loop
    while(!terminated) {
-      const Float_t null = 0.; //!!! dummy float null declaration because of problems with TMath::Max/Min(Float_t, Float_t) function
+      const Float_t null = 0.; // dummy float null declaration because of problems with TMath::Max/Min(Float_t, Float_t) function
       Float_t low, high;
       Float_t tmp_alpha_i, tmp_alpha_j;
       tmp_alpha_i = tmp_alpha_j = 0.;

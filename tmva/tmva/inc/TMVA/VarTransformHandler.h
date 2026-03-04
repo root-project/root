@@ -45,7 +45,7 @@ namespace TMVA {
       ~VarTransformHandler();
 
       TMVA::DataLoader* VarianceThreshold(Double_t threshold);
-      mutable MsgLogger* fLogger;             //! message logger
+      mutable MsgLogger* fLogger;             ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    private:

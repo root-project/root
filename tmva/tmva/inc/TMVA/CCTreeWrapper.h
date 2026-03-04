@@ -122,12 +122,12 @@ namespace TMVA {
 
       private:
 
-         Int_t fNLeafDaughters; //! number of terminal descendants
-         Double_t fNodeResubstitutionEstimate; //! R(t) = misclassification rate for node t
-         Double_t fResubstitutionEstimate; //! R(T_t) = sum[t' in ~T_t]{ R(t) }
-         Double_t fAlphaC; //! critical point, g(t) = alpha_c(t)
-         Double_t fMinAlphaC; //! G(t), minimum critical point of t and its descendants
-         DecisionTreeNode* fDTNode; //! pointer to wrapped node in the decision tree
+         Int_t fNLeafDaughters; ///<! number of terminal descendants
+         Double_t fNodeResubstitutionEstimate; ///<! R(t) = misclassification rate for node t
+         Double_t fResubstitutionEstimate; ///<! R(T_t) = sum[t' in ~T_t]{ R(t) }
+         Double_t fAlphaC; ///<! critical point, g(t) = alpha_c(t)
+         Double_t fMinAlphaC; ///<! G(t), minimum critical point of t and its descendants
+         DecisionTreeNode* fDTNode; ///<! pointer to wrapped node in the decision tree
       };
 
       CCTreeWrapper( DecisionTree* T,  SeparationBase* qualityIndex );
