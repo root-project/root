@@ -122,6 +122,7 @@ public:
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                        Int_t dstX, Int_t dstY, Bool_t enableBlending) override;
 
+   Bool_t IsNative() const override { return kTRUE; }
 
 private:
 
