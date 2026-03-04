@@ -7,4 +7,3 @@ builtin_zstd=ON
 pythia8=ON
 r=OFF
 soversion=ON
-tmva-sofie=ON

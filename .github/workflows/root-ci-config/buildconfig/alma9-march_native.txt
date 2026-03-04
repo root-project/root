@@ -8,6 +8,5 @@ builtin_zlib=ON
 builtin_zstd=ON
 pythia8=ON
 tmva-pymva=ON
-tmva-sofie=ON
 veccore=ON
 vc=ON

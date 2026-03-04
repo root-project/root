@@ -22,5 +22,4 @@ cocoa=ON
 davix=OFF
 minuit2_omp=OFF
 r=OFF
-tmva-sofie=ON
 x11=OFF
