@@ -540,18 +540,26 @@ void RFile::Close()
    fFile.reset();
 }
 
+ROOT::Experimental::RKeyInfo::RKeyInfo(const TKey &key)
+   : fPath(ReconstructFullKeyPath(key)),
+     fTitle(key.GetTitle()),
+     fClassName(key.GetClassName()),
+     fCycle(key.GetCycle()),
+     fLenObj(key.GetObjlen()),
+     fNBytesObj(key.GetNbytes() - key.GetKeylen()),
+     fNBytesKey(key.GetKeylen()),
+     fSeekKey(key.GetSeekKey()),
+     fSeekParentDir(key.GetSeekPdir())
+{
+}
+
 std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
 {
    const TKey *key = GetTKey(path);
    if (!key)
       return {};
 
-   RKeyInfo keyInfo;
-   keyInfo.fPath = ReconstructFullKeyPath(*key);
-   keyInfo.fClassName = key->GetClassName();
-   keyInfo.fCycle = key->GetCycle();
-   keyInfo.fTitle = key->GetTitle();
-
+   RKeyInfo keyInfo(*key);
    return keyInfo;
 }
 

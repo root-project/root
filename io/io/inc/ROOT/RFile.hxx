@@ -83,8 +83,17 @@ private:
    std::string fClassName;
    std::uint16_t fCycle = 0;
    ECategory fCategory = ECategory::kInvalid;
+   std::uint64_t fLenObj = 0;
+   std::uint64_t fNBytesObj = 0;
+   std::uint64_t fNBytesKey = 0;
+   std::uint64_t fSeekKey = 0;
+   std::uint64_t fSeekParentDir = 0;
+
+   explicit RKeyInfo(const TKey &key);
 
 public:
+   RKeyInfo() = default;
+
    /// Returns the absolute path of this key, i.e. the directory part plus the object name.
    const std::string &GetPath() const { return fPath; }
    /// Returns the base name of this key, i.e. the name of the object without the directory part.
@@ -93,6 +102,19 @@ public:
    const std::string &GetClassName() const { return fClassName; }
    std::uint16_t GetCycle() const { return fCycle; }
    ECategory GetCategory() const { return fCategory; }
+   /// Returns the in-memory size of the uncompressed object.
+
+   std::uint64_t GetLenObj() const { return fLenObj; }
+   /// Returns the on-disk size of the (potentially compressed) object, excluding its key.
+   std::uint64_t GetNBytesObj() const { return fNBytesObj; }
+
+   /// Returns the on-disk size of this object's key.
+   std::uint64_t GetNBytesKey() const { return fNBytesKey; }
+   /// Returns the on-disk offset of this object's key.
+   std::uint64_t GetSeekKey() const { return fSeekKey; }
+
+   /// Returns the on-disk offset of this object's parent directory key.
+   std::uint64_t GetSeekParentDir() const { return fSeekParentDir; }
 };
 
 /// The iterable returned by RFile::ListKeys()
