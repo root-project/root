@@ -10,6 +10,10 @@ if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
+if(APPLE AND builtin_clang AND OSX_SDK_VERSION VERSION_GREATER_EQUAL "26.4")
+  add_compile_definitions(MAC_SDK_WORKAROUND)
+endif()
+
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
 set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 18)
 
