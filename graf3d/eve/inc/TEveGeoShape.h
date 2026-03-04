@@ -29,7 +29,7 @@ private:
 protected:
    Int_t               fNSegments;
    TGeoShape          *fShape;
-   TGeoCompositeShape *fCompositeShape; //! Temporary holder (if passed shape is composite shape).
+   TGeoCompositeShape *fCompositeShape; ///<! Temporary holder (if passed shape is composite shape).
 
    static TGeoManager *fgGeoMangeur;
 

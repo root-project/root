@@ -28,11 +28,11 @@
 class TSPHE : public TShape {
 private:
    // Internal cache
-   mutable Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
-   mutable Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
-   mutable Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
+   mutable Double_t  *fSiTab;       ///<! Table of sin(fPhimin) .... sin(Phi)
+   mutable Double_t  *fCoTab;       ///<! Table of cos(fPhimin) .... cos(Phi)
+   mutable Double_t  *fCoThetaTab;  ///<! Table of sin(gThemin) .... cos(Theta)
    Int_t      fNdiv;        // number of divisions
-   Int_t      fNz;          //! number of sections
+   Int_t      fNz;          ///<! number of sections
    Float_t    fAspectRatio; // Relation between asumth and grid size (by default 1.0)
 
 protected:

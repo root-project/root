@@ -136,8 +136,8 @@ protected:
    UInt_t          fEventKeySym;
 
    // GL state
-   Bool_t              fDLCaptureOpen; //! DL-capture currently open
-   TGLContextIdentity *fGLCtxIdentity; //! Current GL context identity
+   Bool_t              fDLCaptureOpen; ///<! DL-capture currently open
+   TGLContextIdentity *fGLCtxIdentity; ///<! Current GL context identity
 
    GLUquadric         *fQuadric;
 

@@ -41,7 +41,7 @@ private:
 protected:
    Int_t fNSegments{0};
    TGeoShape *fShape{nullptr};
-   TGeoCompositeShape *fCompositeShape{nullptr}; //! Temporary holder (if passed shape is composite shape).
+   TGeoCompositeShape *fCompositeShape{nullptr}; ///<! Temporary holder (if passed shape is composite shape).
 
    static TGeoManager *fgGeoManager;
 
@@ -89,7 +89,7 @@ private:
    REveGeoShapeProjected &operator=(const REveGeoShapeProjected &) = delete;
 
 protected:
-   std::unique_ptr<TBuffer3D> fBuff;    //! 3d buffer
+   std::unique_ptr<TBuffer3D> fBuff;    ///<! 3d buffer
 
    void SetDepthLocal(Float_t d) override;
 

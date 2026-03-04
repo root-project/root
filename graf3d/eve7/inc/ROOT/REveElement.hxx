@@ -77,10 +77,10 @@ protected:
    List_t           fChildren;             //  List of children.
    TClass          *fChildClass {nullptr}; //  Class of acceptable children, others are rejected.
    REveCompound    *fCompound   {nullptr}; //  Compound this object belongs to.
-   REveElement     *fVizModel   {nullptr}; //! Element used as model from VizDB.
+   REveElement     *fVizModel   {nullptr}; ///<! Element used as model from VizDB.
    TString          fVizTag;               //  Tag used to query VizDB for model element.
 
-   Int_t            fDenyDestroy{0};          //! Deny-destroy count.
+   Int_t            fDenyDestroy{0};          ///<! Deny-destroy count.
    Bool_t           fDestroyOnZeroRefCnt{kTRUE};  //  Auto-destruct when ref-count reaches zero.
 
    Bool_t           fRnrSelf{kTRUE};                 //  Render this element.
@@ -94,9 +94,9 @@ protected:
    Color_t         *fMainColorPtr{nullptr};//  Pointer to main-color variable.
    std::unique_ptr<REveTrans> fMainTrans;   //  Pointer to main transformation matrix.
 
-   void            *fUserData{nullptr};     //! Externally assigned and controlled user data.
+   void            *fUserData{nullptr};     ///<! Externally assigned and controlled user data.
 
-   std::unique_ptr<REveRenderData> fRenderData;//! Vertex / normal / triangle index information for rendering.
+   std::unique_ptr<REveRenderData> fRenderData;///<! Vertex / normal / triangle index information for rendering.
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
@@ -337,8 +337,8 @@ public:
    };
 
 protected:
-   UChar_t      fChangeBits{0};  //!
-   Char_t       fDestructing{kNone}; //!
+   UChar_t      fChangeBits{0};  ///<!
+   Char_t       fDestructing{kNone}; ///<!
 
    static thread_local REveElement *stlMirAlpha;
    static thread_local int          stlMirError;

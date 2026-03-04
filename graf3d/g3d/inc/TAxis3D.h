@@ -38,7 +38,7 @@ protected:
    TAxis               fAxis[3];    //X/Y/Z axis
    TString             fOption;     // Options (is not use yet)
    static  const char *fgRulerName; // The default object name
-   TAxis              *fSelected;   //!  The selected axis to play with
+   TAxis              *fSelected;   ///<!  The selected axis to play with
    Bool_t              fZoomMode;   // Zoom mode for the entire parent TPad
    Bool_t              fStickyZoom; // StickyZoom mode:  zoom will not be disabled    after zooming attempt if true
 

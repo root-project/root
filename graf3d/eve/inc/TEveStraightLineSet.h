@@ -81,7 +81,7 @@ protected:
 
    Bool_t            fDepthTest;
 
-   Line_t*           fLastLine; //!
+   Line_t*           fLastLine; ///<!
 
 public:
    TEveStraightLineSet(const char* n="StraightLineSet", const char* t="");

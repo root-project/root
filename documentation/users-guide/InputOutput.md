@@ -1188,8 +1188,8 @@ simple example of a class with diverse data members.
 ``` {.cpp}
 class Event : public TObject {
 private:
-   TDirectory    *fTransient;            //! current directory
-   Float_t     fPt;                   //! transient value
+   TDirectory    *fTransient;            ///<! current directory
+   Float_t     fPt;                   ///<! transient value
 char           fType[20];
 Int_t          fNtrack;
 Int_t          fNseg;
@@ -1238,6 +1238,7 @@ object.
 
 
 To prevent a data member from being written to the file, insert a "`!`"
+To make it compatible with Doxygen, write `///<!` instead of `//!`.
 as the first character after the comment marks. It tells ROOT not to
 save that data member in a root file when saving the class. For example,
 in this version of Event, the `fPt` and `fTransient` data members are
@@ -1246,8 +1247,8 @@ not persistent.
 ``` {.cpp}
 class Event : public TObject {
 private:
-   TDirectory    *fTransient; //! current directory
-   Float_t fPt;               //! transient value
+   TDirectory    *fTransient; ///<! current directory
+   Float_t fPt;               ///<! transient value
 ...
 ```
 
@@ -1895,7 +1896,7 @@ a "`!`" after the comment marks. For example the pointer \*`fPainter` of
 a **`TH1`** is not persistent:
 
 ``` {.cpp}
-   TVirtualHistPainter* fPainter //!pointer to histogram painter
+   TVirtualHistPainter* fPainter ///<!pointer to histogram painter
 ```
 
 ### The TStreamerElement Class

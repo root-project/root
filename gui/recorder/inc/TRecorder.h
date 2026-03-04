@@ -265,7 +265,7 @@ public:
 class TRecorder : public TObject
 {
 private:
-   TRecorderState *fRecorderState;   //! Current state of recorder
+   TRecorderState *fRecorderState;   ///<! Current state of recorder
 
    TRecorder(const TRecorder&);            // Not implemented.
    TRecorder &operator=(const TRecorder&); // Not implemented.

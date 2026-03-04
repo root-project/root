@@ -53,7 +53,7 @@ protected:
    TSeqCollection *fOutline;          //Collection of outline's objects
    Bool_t          fDefaultOutline;   //Set to TRUE if outline is default cube
    Bool_t          fAutoRange;        //Set to TRUE if range computed automatically
-   Bool_t          fChanged;          //! Set to TRUE after ExecuteRotateView
+   Bool_t          fChanged;          ///<! Set to TRUE after ExecuteRotateView
 
    TView3D(const TView3D&); // Not implemented
    TView3D& operator=(const TView3D&); // Not implemented

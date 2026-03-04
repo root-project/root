@@ -43,25 +43,25 @@ public:
                   };
 
 protected:
-   mutable UInt_t             fRef;           //! physical instance ref counting
-   mutable TGLPhysicalShape  *fFirstPhysical; //! first replica
+   mutable UInt_t             fRef;           ///<! physical instance ref counting
+   mutable TGLPhysicalShape  *fFirstPhysical; ///<! first replica
 
-   TObject           *fExternalObj; //! Also plays the role of ID.
-   TGLBoundingBox     fBoundingBox; //! Shape's bounding box.
-   mutable TGLScene  *fScene;       //! scene where object is stored (can be zero!)
-   mutable UInt_t     fDLBase;      //! display-list id base
-   mutable Int_t      fDLSize;      //! display-list size for different LODs
-   mutable UShort_t   fDLValid;     //! display-list validity bit-field
-   mutable Bool_t     fDLCache;     //! use display list caching
-   mutable Bool_t     fRefStrong;   //! Strong ref (delete on 0 ref); not in scene
-   mutable Bool_t     fOwnExtObj;   //! External object is a fake
+   TObject           *fExternalObj; ///<! Also plays the role of ID.
+   TGLBoundingBox     fBoundingBox; ///<! Shape's bounding box.
+   mutable TGLScene  *fScene;       ///<! scene where object is stored (can be zero!)
+   mutable UInt_t     fDLBase;      ///<! display-list id base
+   mutable Int_t      fDLSize;      ///<! display-list size for different LODs
+   mutable UShort_t   fDLValid;     ///<! display-list validity bit-field
+   mutable Bool_t     fDLCache;     ///<! use display list caching
+   mutable Bool_t     fRefStrong;   ///<! Strong ref (delete on 0 ref); not in scene
+   mutable Bool_t     fOwnExtObj;   ///<! External object is a fake
 
    void PurgeDLRange(UInt_t base, Int_t size) const;
 
    static  Bool_t     fgIgnoreSizeForCameraInterest;
 
-   static  Bool_t     fgUseDLs;            //! global flag for usage of display-lists
-   static  Bool_t     fgUseDLsForVertArrs; //! global flag for usage of display-lists in shapes that use vertex arrays
+   static  Bool_t     fgUseDLs;            ///<! global flag for usage of display-lists
+   static  Bool_t     fgUseDLsForVertArrs; ///<! global flag for usage of display-lists in shapes that use vertex arrays
 
 public:
    TGLLogicalShape();

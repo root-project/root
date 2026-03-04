@@ -47,10 +47,10 @@ private:
    Double_t       fZoomMin;      //  minimum zoom factor
    Double_t       fZoomDefault;  //  default zoom factor
    Double_t       fZoomMax;      //  maximum zoom factor
-   TGLBoundingBox fVolume;       //! scene volume
+   TGLBoundingBox fVolume;       ///<! scene volume
 
    // Current interaction
-   Double_t       fDefXSize, fDefYSize; //! x, y size of scene from camera view
+   Double_t       fDefXSize, fDefYSize; ///<! x, y size of scene from camera view
    Double_t       fZoom;                //  current zoom
 
    static UInt_t  fgZoomDeltaSens;

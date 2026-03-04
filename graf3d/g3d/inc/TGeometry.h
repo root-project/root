@@ -43,19 +43,19 @@ private:
    THashList        *fMatrices;           //->Collection of rotation matrices
    THashList        *fShapes;             //->Collection of shapes
    TList            *fNodes;              //->Collection of nodes
-   TRotMatrix       *fMatrix;             //!Pointers to current rotation matrices
-   TNode            *fCurrentNode;        //!Pointer to current node
-   TMaterial       **fMaterialPointer;    //!Pointers to materials
-   TRotMatrix      **fMatrixPointer;      //!Pointers to rotation matrices
-   TShape          **fShapePointer;       //!Pointers to shapes
+   TRotMatrix       *fMatrix;             ///<!Pointers to current rotation matrices
+   TNode            *fCurrentNode;        ///<!Pointer to current node
+   TMaterial       **fMaterialPointer;    ///<!Pointers to materials
+   TRotMatrix      **fMatrixPointer;      ///<!Pointers to rotation matrices
+   TShape          **fShapePointer;       ///<!Pointers to shapes
    Float_t          fBomb;                //Bomb factor for exploded geometry
-   Int_t            fGeomLevel;           //!
-   Double_t         fX;                   //!
-   Double_t         fY;                   //! The global translation of the current node
-   Double_t         fZ;                   //!
-   Double_t         fTranslation[kMAXLEVELS][kVectorSize];//!
-   Double_t         fRotMatrix[kMAXLEVELS][kMatrixSize];  //!
-   Bool_t           fIsReflection[kMAXLEVELS];            //!
+   Int_t            fGeomLevel;           ///<!
+   Double_t         fX;                   ///<!
+   Double_t         fY;                   ///<! The global translation of the current node
+   Double_t         fZ;                   ///<!
+   Double_t         fTranslation[kMAXLEVELS][kVectorSize];///<!
+   Double_t         fRotMatrix[kMAXLEVELS][kMatrixSize];  ///<!
+   Bool_t           fIsReflection[kMAXLEVELS];            ///<!
 
 protected:
    TGeometry(const TGeometry&);

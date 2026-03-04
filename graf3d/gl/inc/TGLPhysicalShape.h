@@ -54,19 +54,19 @@ public:
                 };
 private:
    // Fields
-   const TGLLogicalShape * fLogicalShape; //! the associated logical shape
-         TGLPhysicalShape* fNextPhysical; //! pointer to next replica
-         TGLPShapeRef    * fFirstPSRef;   //! pointer to first reference
+   const TGLLogicalShape * fLogicalShape; ///<! the associated logical shape
+         TGLPhysicalShape* fNextPhysical; ///<! pointer to next replica
+         TGLPShapeRef    * fFirstPSRef;   ///<! pointer to first reference
 
-   UInt_t                  fID;           //! unique physical ID within containing scene
-   TGLMatrix               fTransform;    //! transform (placement) of physical instance
-   TGLBoundingBox          fBoundingBox;  //! bounding box of the physical (transformed)
-   Float_t                 fColor[17];    //! GL color array
-   EManip                  fManip;        //! permitted manipulation bitflags - see EManip
-   UChar_t                 fSelected;     //! selected state
-   Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
-   Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
-   Bool_t                  fIsScaleForRnr;//! cache
+   UInt_t                  fID;           ///<! unique physical ID within containing scene
+   TGLMatrix               fTransform;    ///<! transform (placement) of physical instance
+   TGLBoundingBox          fBoundingBox;  ///<! bounding box of the physical (transformed)
+   Float_t                 fColor[17];    ///<! GL color array
+   EManip                  fManip;        ///<! permitted manipulation bitflags - see EManip
+   UChar_t                 fSelected;     ///<! selected state
+   Bool_t                  fInvertedWind; ///<! face winding TODO: can get directly from fTransform?
+   Bool_t                  fModified;     ///<! has been modified - retain across scene rebuilds
+   Bool_t                  fIsScaleForRnr;///<! cache
 
    // Methods
    void            UpdateBoundingBox();
