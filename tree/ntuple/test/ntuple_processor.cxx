@@ -222,6 +222,32 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithVoidPtr)
    }
 }
 
+TEST_F(RNTupleProcessorTest, AlternativeTypes)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto xAsDouble = proc->RequestField<double>("x");
+   auto xAsString = proc->RequestField<std::string>("x");
+   auto yAsRVec = proc->RequestField<ROOT::RVec<float>>("y");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+
+      EXPECT_FLOAT_EQ(static_cast<double>(idx), *xAsDouble);
+
+      try {
+         *xAsString;
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("type mismatch for field \"x\": expected double, got std::string"));
+      }
+
+      ROOT::RVec<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      for (std::size_t i = 0ul; i < yAsRVec->size(); ++i) {
+         EXPECT_FLOAT_EQ(yExp[i], (*yAsRVec)[i]);
+      }
+   }
+}
+
 TEST_F(RNTupleProcessorTest, PrintStructureSingle)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});

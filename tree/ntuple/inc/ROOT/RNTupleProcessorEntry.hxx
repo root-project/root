@@ -97,12 +97,19 @@ public:
 
 private:
    struct RProcessorValue {
+      std::unique_ptr<ROOT::RFieldBase> fField;
+      std::string fQualifiedFieldName;
       ROOT::RFieldBase::RValue fValue;
       bool fIsValid;
       RNTupleProcessorProvenance fProcessorProvenance;
 
-      RProcessorValue(ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
-         : fValue(std::move(value)), fIsValid(isValid), fProcessorProvenance(provenance)
+      RProcessorValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
+                      ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
+         : fField(std::move(field)),
+           fQualifiedFieldName(qualifiedFieldName),
+           fValue(std::move(value)),
+           fIsValid(isValid),
+           fProcessorProvenance(provenance)
       {
       }
    };
@@ -111,6 +118,14 @@ private:
    std::unordered_map<std::string, FieldIndex_t> fFieldName2Index;
 
 public:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Clear all fields from the entry.
+   void Clear()
+   {
+      fProcessorValues.clear();
+      fFieldName2Index.clear();
+   }
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Set the validity of a field, i.e. whether it is possible to read its value in the current entry.
    ///
@@ -156,12 +171,13 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Find the field index of the provided field in the entry.
    ///
-   /// \param[in] fieldName The name of the field in the entry.
+   /// \param[in] canonicalFieldName The name of the field in the entry, including its processor name prefixes and
+   /// parent field names, if applicable.
    ///
    /// \return A `std::optional` containing the field index if it was found.
-   std::optional<FieldIndex_t> FindFieldIndex(std::string_view fieldName) const
+   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName) const
    {
-      auto it = fFieldName2Index.find(std::string(fieldName));
+      auto it = fFieldName2Index.find(std::string(canonicalFieldName));
       if (it == fFieldName2Index.end()) {
          return std::nullopt;
       }
@@ -171,26 +187,33 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new field to the entry.
    ///
-   /// \param[in] fieldName Name of the field to add.
+   /// \param[in] qualifiedFieldName Name of the field to add, including its parent field if applicable.
    /// \param[in] field Reference to the field to add, used to to create its corresponding RValue.
    /// \param[in] valuePtr Pointer to an object corresponding to the field's type to bind to its value. If this is a
    /// `nullptr`, a pointer will be created.
    /// \param[in] provenance Processor provenance of the field.
    ///
    /// \return The field index of the newly added field.
-   FieldIndex_t AddField(std::string_view fieldName, ROOT::RFieldBase &field, void *valuePtr,
+   FieldIndex_t AddField(const std::string &qualifiedFieldName, std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
                          const RNTupleProcessorProvenance &provenance)
    {
-      if (FindFieldIndex(fieldName))
-         throw ROOT::RException(
-            R__FAIL("field \"" + field.GetQualifiedFieldName() + "\" is already present in the entry"));
+      auto fieldNameWithProcessorPrefix = qualifiedFieldName;
+      if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
+         fieldNameWithProcessorPrefix = processorPrefix + "." + qualifiedFieldName;
 
-      auto value = field.CreateValue();
+      if (FindFieldIndex(fieldNameWithProcessorPrefix))
+         throw ROOT::RException(
+            R__FAIL("field \"" + fieldNameWithProcessorPrefix + "\" is already present in the entry"));
+
+      auto fieldIdx = fProcessorValues.size();
+      fFieldName2Index[fieldNameWithProcessorPrefix] = fieldIdx;
+
+      assert(field);
+      auto value = field->CreateValue();
       if (valuePtr)
          value.BindRawPtr(valuePtr);
-      auto fieldIdx = fProcessorValues.size();
-      fFieldName2Index[std::string(fieldName)] = fieldIdx;
-      fProcessorValues.emplace_back(RProcessorValue(std::move(value), true, provenance));
+      fProcessorValues.emplace_back(
+         RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), true, provenance));
 
       return fieldIdx;
    }
@@ -200,14 +223,22 @@ public:
    ///
    /// \param[in] fieldIdx Index of the field to update.
    /// \param[in] field The new field to use in the entry.
-   void UpdateField(FieldIndex_t fieldIdx, ROOT::RFieldBase &field)
+   void UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field)
    {
       assert(fieldIdx < fProcessorValues.size());
 
-      auto currValuePtr = fProcessorValues[fieldIdx].fValue.GetPtr<void>();
-      auto value = field.CreateValue();
-      value.Bind(currValuePtr);
-      fProcessorValues[fieldIdx].fValue = value;
+      auto &fieldInfo = fProcessorValues[fieldIdx];
+
+      if (field) {
+         auto newValue = field->CreateValue();
+         auto currValuePtr = fieldInfo.fValue.GetPtr<void>();
+         newValue.Bind(currValuePtr);
+         fieldInfo.fField = std::move(field);
+         fieldInfo.fValue = std::move(newValue);
+         fieldInfo.fIsValid = true;
+      } else {
+         fieldInfo.fIsValid = false;
+      }
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -275,14 +306,13 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the name of a field in the entry, including processor name prefixes in the case of auxiliary fields.
+   /// \brief Get the name of a field in the entry, including its parent fields.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
-   std::string GetFieldName(FieldIndex_t fieldIdx) const
+   std::string GetQualifiedFieldName(FieldIndex_t fieldIdx) const
    {
       assert(fieldIdx < fProcessorValues.size());
-      return fProcessorValues[fieldIdx].fProcessorProvenance.Get() + "." +
-             fProcessorValues[fieldIdx].fValue.GetField().GetQualifiedFieldName();
+      return fProcessorValues[fieldIdx].fQualifiedFieldName;
    }
 
    /////////////////////////////////////////////////////////////////////////////
