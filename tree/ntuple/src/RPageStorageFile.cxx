@@ -62,7 +62,7 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirec
                                              const ROOT::RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize());
+   fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize(), /*hidden=*/false);
 }
 
 ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file,
@@ -300,10 +300,9 @@ ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
-ROOT::Internal::RPageSinkFile::CloneWithDifferentName(std::string_view name,
-                                                      const ROOT::RNTupleWriteOptions &opts) const
+ROOT::Internal::RPageSinkFile::CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const
 {
-   auto writer = fWriter->CloneWithDifferentName(name);
+   auto writer = fWriter->CloneAsHidden(name);
    auto cloned = std::unique_ptr<RPageSinkFile>(new RPageSinkFile(std::move(writer), opts));
    return cloned;
 }

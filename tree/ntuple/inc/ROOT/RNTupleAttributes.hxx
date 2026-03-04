@@ -183,6 +183,9 @@ class RNTupleAttrSetWriter final {
                         std::shared_ptr<ROOT::NTupleSize_t> rangeStartPtr,
                         std::shared_ptr<ROOT::NTupleSize_t> rangeLenPtr);
 
+   /// Commits the attributes written so far to disk and disables writing any new ones.
+   ROOT::Internal::RNTupleLink Commit();
+
 public:
    /// Returns the descriptor of the underlying attribute RNTuple. This is **NOT** the same descriptor as the
    /// main RNTuple being written!

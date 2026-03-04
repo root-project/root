@@ -114,7 +114,7 @@ public:
    /// Creates a new sink that uses the same underlying file/directory but writes to a different RNTuple with the
    /// given `name`.
    std::unique_ptr<RPageSink>
-   CloneWithDifferentName(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
+   CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const override;
 }; // class RPageSinkFile
 
 // clang-format off

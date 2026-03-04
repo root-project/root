@@ -115,9 +115,14 @@ public:
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 
-   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
    {
       throw ROOT::RException(R__FAIL("cloning a RPageSynchronizingSink is not implemented yet"));
+   }
+
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final
+   {
+      throw ROOT::RException(R__FAIL("committing attribute sets is not implemented yet for parallel writing"));
    }
 };
 

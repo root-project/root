@@ -15,6 +15,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -50,6 +51,8 @@ using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
 using ROOT::Internal::RFieldDescriptorBuilder;
 using ROOT::Internal::RNTupleSerializer;
+
+using ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
 
 using ROOT::Internal::RCluster;
 using ROOT::Internal::ROnDiskPage;
@@ -1267,6 +1270,21 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fSerializationContext.MapClusterGroupId(clusterGroupId);
 
    fNextClusterInGroup = nClusters;
+}
+
+void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,
+                                                             const RNTupleLink &attrAnchorInfo)
+{
+   using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+
+   RNTupleAttrSetDescriptorBuilder attrSetDescBuilder;
+   auto attrSetDesc = attrSetDescBuilder.SchemaVersion(kSchemaVersionMajor, kSchemaVersionMinor)
+                         .AnchorLength(attrAnchorInfo.fLength)
+                         .AnchorLocator(attrAnchorInfo.fLocator)
+                         .Name(attrSetName)
+                         .MoveDescriptor()
+                         .Unwrap();
+   fDescriptorBuilder.AddAttributeSet(std::move(attrSetDesc)).ThrowOnError();
 }
 
 ROOT::Internal::RNTupleLink ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()

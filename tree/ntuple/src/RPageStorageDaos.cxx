@@ -451,8 +451,8 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
-ROOT::Experimental::Internal::RPageSinkDaos::CloneWithDifferentName(std::string_view /*name*/,
-                                                                    const ROOT::RNTupleWriteOptions & /*opts*/) const
+ROOT::Experimental::Internal::RPageSinkDaos::CloneAsHidden(std::string_view /*name*/,
+                                                           const ROOT::RNTupleWriteOptions & /*opts*/) const
 {
    throw ROOT::RException(R__FAIL("cloning a DAOS sink is not implemented yet"));
 }
