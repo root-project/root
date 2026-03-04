@@ -22,7 +22,7 @@ TEST(RNTupleJoinTable, Basic)
    std::uint64_t fldValue = 0;
 
    // No entry mappings have been added to the join table yet
-   EXPECT_EQ(ROOT::kInvalidNTupleIndex, joinTable->GetEntryIndex({&fldValue}));
+   EXPECT_EQ(ROOT::kInvalidNTupleIndex, joinTable->GetEntryIndex({fldValue}));
 
    // Now add the entry mapping for the page source
    joinTable->Add(*pageSource);
@@ -33,7 +33,7 @@ TEST(RNTupleJoinTable, Basic)
    for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
       fldValue = fld(i);
       EXPECT_EQ(fldValue, i * 2);
-      EXPECT_EQ(joinTable->GetEntryIndex({&fldValue}), i);
+      EXPECT_EQ(joinTable->GetEntryIndex({fldValue}), i);
    }
 }
 
@@ -127,10 +127,10 @@ TEST(RNTupleJoinTable, SparseSecondary)
       auto event = fldEvent(i);
 
       if (i % 2 == 1) {
-         EXPECT_EQ(joinTable->GetEntryIndex({&event}), ROOT::kInvalidNTupleIndex)
+         EXPECT_EQ(joinTable->GetEntryIndex({event}), ROOT::kInvalidNTupleIndex)
             << "entry should not be present in the join table";
       } else {
-         auto entryIdx = joinTable->GetEntryIndex({&event});
+         auto entryIdx = joinTable->GetEntryIndex({event});
          EXPECT_EQ(entryIdx, i / 2);
          EXPECT_FLOAT_EQ(fldX(entryIdx), static_cast<float>(entryIdx) / 3.14);
       }
@@ -170,25 +170,25 @@ TEST(RNTupleJoinTable, MultipleFields)
    for (std::uint64_t i = 0; i < pageSource->GetNEntries(); ++i) {
       run = i / 5;
       event = i % 5;
-      auto entryIdx = joinTable->GetEntryIndex({&run, &event});
+      auto entryIdx = joinTable->GetEntryIndex({static_cast<RNTupleJoinTable::JoinValue_t>(run), event});
       EXPECT_EQ(fld(entryIdx), fld(i));
    }
 
    run = 1;
    event = 2;
-   auto idx1 = joinTable->GetEntryIndex({&run, &event});
-   auto idx2 = joinTable->GetEntryIndex({&event, &run});
+   auto idx1 = joinTable->GetEntryIndex({static_cast<RNTupleJoinTable::JoinValue_t>(run), event});
+   auto idx2 = joinTable->GetEntryIndex({event, static_cast<RNTupleJoinTable::JoinValue_t>(run)});
    EXPECT_NE(idx1, idx2);
 
    try {
-      joinTable->GetEntryIndex({&run, &event, &event});
+      joinTable->GetEntryIndex({static_cast<RNTupleJoinTable::JoinValue_t>(run), event, event});
       FAIL() << "querying the join table with more values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
    }
 
    try {
-      joinTable->GetEntryIndex({&run});
+      joinTable->GetEntryIndex({static_cast<RNTupleJoinTable::JoinValue_t>(run)});
       FAIL() << "querying the join table with fewer values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));

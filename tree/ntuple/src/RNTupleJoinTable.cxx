@@ -15,23 +15,6 @@
 
 #include <ROOT/RNTupleJoinTable.hxx>
 
-namespace {
-ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
-{
-   ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t value;
-
-   switch (fieldValueSize) {
-   case 1: value = *reinterpret_cast<std::uint8_t *>(valuePtr); break;
-   case 2: value = *reinterpret_cast<std::uint16_t *>(valuePtr); break;
-   case 4: value = *reinterpret_cast<std::uint32_t *>(valuePtr); break;
-   case 8: value = *reinterpret_cast<std::uint64_t *>(valuePtr); break;
-   default: throw ROOT::RException(R__FAIL("value size not supported"));
-   }
-
-   return value;
-}
-} // anonymous namespace
-
 ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
    ROOT::Internal::RPageSource &pageSource, const std::vector<std::string> &joinFieldNames,
    ROOT::NTupleSize_t entryOffset)
@@ -61,7 +44,8 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
                                   "\" in join table: only integral types are allowed"));
       }
 
-      auto field = fieldDesc.CreateField(desc.GetRef());
+      auto field = std::make_unique<ROOT::RField<JoinValue_t>>(fieldDesc.GetFieldName());
+      field->SetOnDiskId(fieldDesc.GetId());
       ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
 
       fieldValues.emplace_back(field->CreateValue());
@@ -78,29 +62,20 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
       for (auto &fieldValue : fieldValues) {
          // TODO(fdegeus): use bulk reading
          fieldValue.Read(i);
-
-         auto valuePtr = fieldValue.GetPtr<void>();
-         castJoinValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
+         castJoinValues.push_back(fieldValue.GetRef<JoinValue_t>());
       }
 
       fMapping[RCombinedJoinFieldValue(castJoinValues)].push_back(i + entryOffset);
    }
 }
 
-const std::vector<ROOT::NTupleSize_t> *
-ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(std::vector<void *> valuePtrs) const
+const std::vector<ROOT::NTupleSize_t> *ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(
+   const std::vector<JoinValue_t> &joinValues) const
 {
-   if (valuePtrs.size() != fJoinFieldNames.size())
+   if (joinValues.size() != fJoinFieldNames.size())
       throw RException(R__FAIL("number of value pointers must match number of join fields"));
 
-   std::vector<JoinValue_t> castJoinValues;
-   castJoinValues.reserve(valuePtrs.size());
-
-   for (unsigned i = 0; i < valuePtrs.size(); ++i) {
-      castJoinValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
-   }
-
-   if (const auto &entries = fMapping.find(RCombinedJoinFieldValue(castJoinValues)); entries != fMapping.end()) {
+   if (const auto &entries = fMapping.find(RCombinedJoinFieldValue(joinValues)); entries != fMapping.end()) {
       return &entries->second;
    }
 
@@ -126,11 +101,11 @@ ROOT::Experimental::Internal::RNTupleJoinTable::Add(ROOT::Internal::RPageSource 
 }
 
 ROOT::NTupleSize_t
-ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<void *> &valuePtrs) const
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndex(const std::vector<JoinValue_t> &joinValues) const
 {
    for (const auto &partition : fPartitions) {
       for (const auto &joinMapping : partition.second) {
-         auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
+         auto entriesForMapping = joinMapping->GetEntryIndexes(joinValues);
          if (entriesForMapping) {
             return (*entriesForMapping)[0];
          }
