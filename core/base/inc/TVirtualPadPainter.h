@@ -110,6 +110,7 @@ public:
    //gif, jpg, png, bmp output.
    virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
 
+   virtual void     OnPad(TVirtualPad *) {}
 
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 

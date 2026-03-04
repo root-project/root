@@ -25,6 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     TInspectCanvas.h
     TPad.h
     TPadPainter.h
+    TPadPainterPS.h
     TPaveClass.h
     TRatioPlot.h
     TSliderBox.h
@@ -46,6 +47,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     src/TInspectCanvas.cxx
     src/TPad.cxx
     src/TPadPainter.cxx
+    src/TPadPainterPS.cxx
     src/TPaveClass.cxx
     src/TRatioPlot.cxx
     src/TSliderBox.cxx
