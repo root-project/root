@@ -13,13 +13,13 @@ on:
         - Reboot
         - Build
   schedule:
-    - cron: '0  1 * * 3'
-    - cron: '30 1 * * 3'
-    - cron: '0  2 * * 3'
+    - cron: '0  6 * * 3'
+    - cron: '30 6 * * 3'
+    - cron: '0  7 * * 3'
 
 jobs:
   update-visualstudio-latest:
-    if: ${{ github.event.schedule == '0  1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Update') }}
+    if: ${{ github.event.schedule == '0  6 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Update') }}
 
     name: Update Visual Studio - Latest
 
@@ -34,8 +34,14 @@ jobs:
       shell: cmd
       run: "C:\\bin\\vs_update.bat"
 
+    - name: Upload VS update-log
+      uses: actions/upload-artifact@v4
+      with:
+        name: Update Log - Visual Studio Latest
+        path: C:/ROOT-CI/VS-Update.log
+
   reboot-after-update:
-    if: ${{ github.event.schedule == '30 1 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
+    if: ${{ github.event.schedule == '30 6 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
 
     name: Reboot after update
 
@@ -51,7 +57,7 @@ jobs:
       run: "shutdown /r"
 
   build-windows:
-    if: ${{ github.event.schedule == '0  2 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Build') }}
+    if: ${{ github.event.schedule == '0  7 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Build') }}
 
     permissions:
       contents: read
@@ -73,8 +79,7 @@ jobs:
         with:
           ref: master
 
-      - name: Wednesday build
-        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      - name: Build after VS update
         shell: cmd
         run: "C:\\setenv.bat x64 &&
               python .github/workflows/root-ci-config/build_root.py
