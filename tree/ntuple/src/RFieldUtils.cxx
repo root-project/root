@@ -698,7 +698,7 @@ unsigned long long ROOT::Internal::ParseUIntTypeToken(const std::string &uintTok
    throw RException(R__FAIL("invalid integer type token: " + uintToken));
 }
 
-ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(TClass *cl)
+ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializationMode(const TClass *cl)
 {
    auto am = cl->GetAttributeMap();
    if (!am || !am->HasKey("rntuple.streamerMode"))

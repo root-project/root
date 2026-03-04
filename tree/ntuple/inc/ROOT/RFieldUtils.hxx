@@ -61,7 +61,7 @@ enum class ERNTupleSerializationMode {
    kUnset
 };
 
-ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
+ERNTupleSerializationMode GetRNTupleSerializationMode(const TClass *cl);
 
 /// Checks if the "rntuple.SoARecord" class attribute is set in the dictionary.
 /// If so, returns its content, which is the underlying record type name.
