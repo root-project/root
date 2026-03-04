@@ -5,6 +5,7 @@
 
 // This file has concrete RField implementations that depend on ROOT Meta:
 //  - RClassField
+//  - RSoAField
 //  - REnumField
 //  - RPairField
 //  - RProxiedCollectionField
@@ -43,6 +44,7 @@
 #include <cstdint> // std::uint32_t et al.
 #include <cstring> // for memset
 #include <memory>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -642,6 +644,225 @@ const std::type_info *ROOT::RClassField::GetPolymorphicTypeInfo() const
 void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
+   : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
+     fSoAClass(source.fSoAClass),
+     fSoAMemberOffsets(source.fSoAMemberOffsets),
+     fRecordMemberIndexes(source.fRecordMemberIndexes),
+     fMaxAlignment(source.fMaxAlignment)
+{
+   fTraits = source.GetTraits();
+   Attach(source.fSubfields[0]->Clone(source.fSubfields[0]->GetFieldName()));
+   fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
+}
+
+ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
+   : RSoAField(fieldName, EnsureValidClass(className))
+{
+}
+
+ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */),
+     fSoAClass(clSoA)
+{
+   static std::once_flag once;
+   std::call_once(once, []() {
+      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The SoA field is experimental and still under development.";
+   });
+
+   EnsureValidUserClass(fSoAClass, *this, "RSoAField");
+   const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fSoAClass);
+   if (recordTypeName.empty()) {
+      throw ROOT::RException(R__FAIL(std::string("class ") + GetTypeName() +
+                                     " is not marked with the rntupleSoARecord "
+                                     "dictionary option; cannot create corresponding RSoAField."));
+   }
+   try {
+      Attach(std::make_unique<ROOT::RClassField>("_0", recordTypeName));
+   } catch (ROOT::RException &e) {
+      throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
+   }
+   fRecordMemberFields = fSubfields[0]->GetMutableSubfields();
+
+   std::unordered_map<std::string, std::size_t> recordFieldNameToIdx;
+   for (std::size_t i = 0; i < fRecordMemberFields.size(); ++i) {
+      const RFieldBase *f = fRecordMemberFields[i];
+      assert(!f->GetFieldName().empty());
+      if (f->GetFieldName()[0] == ':') {
+         throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
+      }
+      recordFieldNameToIdx[f->GetFieldName()] = i;
+   }
+
+   const auto *bases = fSoAClass->GetListOfBases();
+   assert(bases);
+   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*bases)) {
+      if (baseClass->GetDelta() < 0) {
+         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
+                                  " virtually inherits from " + baseClass->GetName()));
+      }
+      // At a later point, we will support inheritance
+      throw RException(R__FAIL("SoA fields with inheritance are currently unsupported"));
+   }
+
+   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
+      if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
+         continue;
+
+      if (dataMember->Property() & kIsArray) {
+         throw RException(R__FAIL(std::string("unsupported array type in SoA class: ") + dataMember->GetName()));
+      }
+
+      const std::string typeName{dataMember->GetTrueTypeName()};
+      auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      auto vecFieldPtr = dynamic_cast<RRVecField *>(subField.get());
+      if (!vecFieldPtr) {
+         throw RException(R__FAIL("invalid field type in SoA class: " + subField->GetTypeName()));
+      }
+      subField.release();
+      auto vecField = std::unique_ptr<RRVecField>(vecFieldPtr);
+
+      auto itr = recordFieldNameToIdx.find(vecField->GetFieldName());
+      if (itr == recordFieldNameToIdx.end()) {
+         throw RException(R__FAIL(std::string("unexpected SoA member: ") + vecField->GetFieldName()));
+      }
+      const RFieldBase *memberField = fRecordMemberFields[itr->second];
+      if (vecField->begin()->GetTypeName() != memberField->GetTypeName() ||
+          vecField->begin()->GetTypeAlias() != memberField->GetTypeAlias()) {
+         const std::string leftType =
+            vecField->begin()->GetTypeName() +
+            (vecField->begin()->GetTypeAlias().empty() ? "" : " [" + vecField->begin()->GetTypeAlias() + "]");
+         const std::string rightType =
+            memberField->GetTypeName() +
+            (memberField->GetTypeAlias().empty() ? "" : " [" + memberField->GetTypeAlias() + "]");
+         throw RException(R__FAIL(std::string("SoA member type mismatch: ") + vecField->GetFieldName() + " (" +
+                                  leftType + " vs. " + rightType + ")"));
+      }
+
+      fMaxAlignment = std::max(fMaxAlignment, vecField->GetAlignment());
+
+      fSoAMemberOffsets.emplace_back(dataMember->GetOffset());
+      fRecordMemberIndexes.emplace_back(itr->second);
+   }
+   if (recordFieldNameToIdx.size() != fSoAMemberOffsets.size()) {
+      throw RException(R__FAIL("missing SoA members"));
+   }
+   assert(fRecordMemberFields.size() == fSoAMemberOffsets.size());
+
+   std::string renormalizedAlias;
+   if (ROOT::Internal::NeedsMetaNameAsAlias(fSoAClass->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
+
+   fTraits |= kTraitSoACollection;
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<RSoAField>(new RSoAField(newName, *this));
+}
+
+const ROOT::RFieldBase::RColumnRepresentations &ROOT::Experimental::RSoAField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{ENTupleColumnType::kSplitIndex64},
+                                                  {ENTupleColumnType::kIndex64},
+                                                  {ENTupleColumnType::kSplitIndex32},
+                                                  {ENTupleColumnType::kIndex32}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::Experimental::RSoAField::GenerateColumns()
+{
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
+}
+
+void ROOT::Experimental::RSoAField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
+{
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+}
+
+std::size_t ROOT::Experimental::RSoAField::AppendImpl(const void *from)
+{
+   const std::size_t nSoAMembers = fSoAMemberOffsets.size();
+
+   std::size_t N = 0; // Set by first SoA member and verified for the rest
+   for (std::size_t i = 0; i < nSoAMembers; ++i) {
+      const void *rvecPtr = static_cast<const unsigned char *>(from) + fSoAMemberOffsets[i];
+      auto [beginPtr, sizePtr, _] = ROOT::Internal::GetRVecDataMembers(rvecPtr);
+      assert(*sizePtr >= 0);
+      if (i == 0) {
+         N = *sizePtr;
+      } else {
+         if (static_cast<std::size_t>(*sizePtr) != N) {
+            const auto f = fRecordMemberFields[i];
+            throw RException(R__FAIL("SoA length mismatch for " + f->GetFieldName() + ": " + std::to_string(*sizePtr) +
+                                     " vs. " + std::to_string(N) + " (expected)"));
+         }
+      }
+   }
+
+   std::size_t nbytes = 0;
+   if (N > 0) {
+      for (std::size_t i = 0; i < nSoAMembers; ++i) {
+         const void *rvecPtr = static_cast<const unsigned char *>(from) + fSoAMemberOffsets[i];
+         auto [beginPtr, _, __] = ROOT::Internal::GetRVecDataMembers(rvecPtr);
+         RFieldBase *memberField = fRecordMemberFields[i];
+         if (memberField->IsSimple()) {
+            GetPrincipalColumnOf(*memberField)->AppendV(*beginPtr, N);
+            nbytes += N * GetPrincipalColumnOf(*memberField)->GetElement()->GetPackedSize();
+         } else {
+            for (std::size_t j = 0; j < N; ++j) {
+               nbytes += CallAppendOn(*memberField, *beginPtr + j * memberField->GetValueSize());
+            }
+         }
+      }
+   }
+
+   fNWritten += N;
+   fPrincipalColumn->Append(&fNWritten);
+   return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
+}
+
+void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t /* globalIndex */, void * /* to */)
+{
+   throw RException(R__FAIL("not yet implemented"));
+}
+
+void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
+{
+   fSoAClass->New(where);
+}
+
+void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   fSoAClass->Destructor(objPtr, true /* dtorOnly */);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue & /* value */) const
+{
+   throw RException(R__FAIL("not yet implemented"));
+   return std::vector<RValue>();
+}
+
+size_t ROOT::Experimental::RSoAField::GetValueSize() const
+{
+   return fSoAClass->GetClassSize();
+}
+
+const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
+{
+   // TODO(jblomer): factor out
+   bool polymorphic = fSoAClass->ClassProperty() & kClassHasVirtual;
+   if (!polymorphic) {
+      return nullptr;
+   }
+   return fSoAClass->GetTypeInfo();
 }
 
 //------------------------------------------------------------------------------

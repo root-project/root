@@ -442,6 +442,7 @@ public:
 #include "RField/RFieldProxiedCollection.hxx"
 #include "RField/RFieldRecord.hxx"
 #include "RField/RFieldSequenceContainer.hxx"
+#include "RField/RFieldSoA.hxx"
 #include "RField/RFieldSTLMisc.hxx"
 
 namespace ROOT {
