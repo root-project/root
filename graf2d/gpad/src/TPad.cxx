@@ -4482,11 +4482,10 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       if (Clip(x,y,fX1,fY1,fX2,fY2) == 2) return;
    }
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
-
-   if (gVirtualPS)
-      gVirtualPS->DrawPS(2, x, y);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawLine(x[0], y[0], x[1], y[1]);
+   }
 
    Modified();
 }
@@ -4789,11 +4788,11 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       }
    }
 
-   if (isAny && !gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawSegments(n, x, y);
-
-   if (isAny && gVirtualPS)
-      gVirtualPS->DrawSegments(n, x, y);
+   if (isAny)
+      if (auto pp = GetPainter()) {
+         pp->OnPad(this);
+         pp->DrawSegments(n, x, y);
+      }
 
    Modified();
 }
@@ -4806,16 +4805,9 @@ void TPad::PaintSegments(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 void TPad::PaintSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawSegmentsNDC(n, u, v);
-
-   if (gVirtualPS) {
-      // recalculate values into normal coordiantes
-      for (Int_t i = 0; i < 2*n; i++) {
-         u[i] = fX1 + u[i]*(fX2 - fX1);
-         v[i] = fY1 + v[i]*(fY2 - fY1);
-      }
-      gVirtualPS->DrawSegments(n, u, v);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawSegmentsNDC(n, u, v);
    }
 
    Modified();

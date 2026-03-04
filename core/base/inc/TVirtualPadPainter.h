@@ -96,8 +96,8 @@ public:
    virtual void     DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y) = 0;
    virtual void     DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v) = 0;
 
-   virtual void     DrawSegments(Int_t n, const Double_t *x, const Double_t *y);
-   virtual void     DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v);
+   virtual void     DrawSegments(Int_t n, Double_t *x, Double_t *y);
+   virtual void     DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v);
 
    virtual void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) = 0;
    virtual void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) = 0;

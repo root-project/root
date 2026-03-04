@@ -323,7 +323,10 @@ void TPadPainterPS::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wid
 
 void TPadPainterPS::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetLineWidth()<=0) return;
+   if (GetLineWidth() <= 0)
+      return;
+   Double_t x[2] = {x1, x2}, y[2] = {y1, y2};
+   fPS->DrawPS(2, x, y);
 }
 
 
@@ -332,7 +335,7 @@ void TPadPainterPS::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPadPainterPS::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetLineWidth()<=0)
+   if (GetLineWidth() <= 0)
       return;
 
    Double_t xw[2], yw[2];
@@ -427,7 +430,7 @@ void TPadPainterPS::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint N segments on the pad
 
-void TPadPainterPS::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
+void TPadPainterPS::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
    if (GetLineWidth() <= 0)
       return;
@@ -437,25 +440,13 @@ void TPadPainterPS::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   std::vector<TPoint> xy(n*2);
-   Int_t cnt = 0;
-   for (Int_t i = 0; i < n*2; ++i) {
-      if ((i % 2 == 0) && (x[i] == x[i+1]) && (y[i] == y[i+1])) {
-         // exclude empty segment
-         i++;
-         continue;
-      }
-
-      xy[cnt].fX = (SCoord_t)gPad->XtoPixel(x[i]);
-      xy[cnt].fY = (SCoord_t)gPad->YtoPixel(y[i]);
-      cnt++;
-   }
+   fPS->DrawSegments(n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint N segments in normalized coordinates on the pad
 
-void TPadPainterPS::DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v)
+void TPadPainterPS::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
    if (GetLineWidth() <= 0)
       return;
@@ -464,23 +455,13 @@ void TPadPainterPS::DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *
       ::Error("TPadPainterPS::DrawSegmentsNDC", "invalid number of segments %d", n);
       return;
    }
-
-   std::vector<TPoint> xy(n*2);
-   Int_t cnt = 0;
-   for (Int_t i = 0; i < n*2; ++i) {
-      if ((i % 2 == 0) && (u[i] == u[i+1]) && (v[i] == v[i+1])) {
-         // exclude empty segment
-         i++;
-         continue;
-      }
-
-      xy[cnt].fX = (SCoord_t)gPad->UtoPixel(u[i]);
-      xy[cnt].fY = (SCoord_t)gPad->VtoPixel(v[i]);
-      cnt++;
+   // recalculate values into normal coordiantes
+   for (Int_t i = 0; i < 2*n; i++) {
+      u[i] = (1 - u[i]) * fPad->GetX1() + u[i] * fPad->GetX2();
+      v[i] = (1 - v[i]) * fPad->GetY1() + v[i] * fPad->GetY2();
    }
+   fPS->DrawSegments(n, u, v);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker.
