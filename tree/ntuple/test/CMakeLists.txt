@@ -63,7 +63,8 @@ ROOT_ADD_GTEST(ntuple_modelext ntuple_modelext.cxx LIBRARIES ROOTNTuple MathCore
 ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_soa ntuple_soa.cxx LIBRARIES ROOTNTuple)
 ROOT_GENERATE_DICTIONARY(SoAFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/SoAField.hxx
-                         MODULE ntuple_soa LINKDEF SoAFieldLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES RIO)
+                         MODULE ntuple_soa LINKDEF SoAFieldLinkDef.h OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO ROOTVecOps)
 ROOT_ADD_GTEST(ntuple_type_name ntuple_type_name.cxx LIBRARIES ROOTNTuple CustomStruct)
 if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple)
