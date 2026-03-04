@@ -118,6 +118,7 @@ protected:
    THnBase* RebinBase(Int_t group) const;
    THnBase* RebinBase(const Int_t* group) const;
    void ResetBase(Option_t *option= "");
+   void SetTitleImpl(const char *title, bool overrideAxesTitle);
 
    static THnBase* CreateHnAny(const char* name, const char* title,
                                const TH1* h1, Bool_t sparse,
