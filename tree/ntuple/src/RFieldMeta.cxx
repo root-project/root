@@ -62,6 +62,50 @@ TClass *EnsureValidClass(std::string_view className)
    return cl;
 }
 
+/// Common checks used both by RClassField and RSoAField
+void EnsureValidUserClass(TClass *cl, const ROOT::RFieldBase &field, std::string_view fieldType)
+{
+   if (cl->GetState() < TClass::kInterpreted) {
+      throw ROOT::RException(R__FAIL(std::string(fieldType) + " " + cl->GetName() +
+                                     " cannot be constructed from a class that's not at least Interpreted"));
+   }
+   // Avoid accidentally supporting std types through TClass.
+   if (cl->Property() & kIsDefinedInStd) {
+      throw ROOT::RException(R__FAIL(field.GetTypeName() + " is not supported"));
+   }
+   if (field.GetTypeName() == "TObject") {
+      throw ROOT::RException(R__FAIL("TObject is only supported through RField<TObject>"));
+   }
+   if (cl->GetCollectionProxy()) {
+      throw ROOT::RException(R__FAIL(field.GetTypeName() + " has an associated collection proxy; "
+                                                           "use RProxiedCollectionField instead"));
+   }
+   // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
+   // Can be overwritten with the "rntuple.streamerMode=true" class attribute
+   if (!cl->CanSplit() && cl->Size() > 1 &&
+       ROOT::Internal::GetRNTupleSerializationMode(cl) != ROOT::Internal::ERNTupleSerializationMode::kForceNativeMode) {
+      throw ROOT::RException(R__FAIL(field.GetTypeName() + " cannot be stored natively in RNTuple"));
+   }
+   if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
+       ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+      throw ROOT::RException(
+         R__FAIL(field.GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
+   }
+   // Detect custom streamers set on individual members at runtime via
+   // TClass::SetMemberStreamer() or TClass::AdoptMemberStreamer().
+   // CanSplit() only checks for custom streamers set at compile time (fHasCustomStreamerMember),
+   // but runtime streamers are stored in TRealData and must be checked here.
+   if (!cl->GetListOfRealData()) {
+      cl->BuildRealData();
+   }
+   for (auto realMember : ROOT::Detail::TRangeStaticCast<TRealData>(*cl->GetListOfRealData())) {
+      if (realMember->GetStreamer()) {
+         throw ROOT::RException(R__FAIL(std::string(field.GetTypeName()) + " has member " + realMember->GetName() +
+                                        " with a custom streamer; not supported natively in RNTuple"));
+      }
+   }
+}
+
 TEnum *EnsureValidEnum(std::string_view enumName)
 {
    auto e = TEnum::GetEnum(std::string(enumName).c_str());
@@ -160,45 +204,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
                       false /* isSimple */),
      fClass(classp)
 {
-   if (fClass->GetState() < TClass::kInterpreted) {
-      throw RException(R__FAIL(std::string("RField: RClassField \"") + classp->GetName() +
-                               " cannot be constructed from a class that's not at least Interpreted"));
-   }
-   // Avoid accidentally supporting std types through TClass.
-   if (fClass->Property() & kIsDefinedInStd) {
-      throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
-   }
-   if (GetTypeName() == "TObject") {
-      throw RException(R__FAIL("TObject is only supported through RField<TObject>"));
-   }
-   if (fClass->GetCollectionProxy()) {
-      throw RException(R__FAIL(std::string(GetTypeName()) + " has an associated collection proxy; "
-                                                            "use RProxiedCollectionField instead"));
-   }
-   // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
-   // Can be overwritten with the "rntuple.streamerMode=true" class attribute
-   if (!fClass->CanSplit() && fClass->Size() > 1 &&
-       ROOT::Internal::GetRNTupleSerializationMode(fClass) !=
-          ROOT::Internal::ERNTupleSerializationMode::kForceNativeMode) {
-      throw RException(R__FAIL(GetTypeName() + " cannot be stored natively in RNTuple"));
-   }
-   if (ROOT::Internal::GetRNTupleSerializationMode(fClass) ==
-       ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
-      throw RException(R__FAIL(GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
-   }
-   // Detect custom streamers set on individual members at runtime via
-   // TClass::SetMemberStreamer() or TClass::AdoptMemberStreamer().
-   // CanSplit() only checks for custom streamers set at compile time (fHasCustomStreamerMember),
-   // but runtime streamers are stored in TRealData and must be checked here.
-   if (!fClass->GetListOfRealData()) {
-      fClass->BuildRealData();
-   }
-   for (auto realMember : ROOT::Detail::TRangeStaticCast<TRealData>(*fClass->GetListOfRealData())) {
-      if (realMember->GetStreamer()) {
-         throw RException(R__FAIL(std::string(GetTypeName()) + " has member " + realMember->GetName() +
-                                  " with a custom streamer; not supported natively in RNTuple"));
-      }
-   }
+   EnsureValidUserClass(fClass, *this, "RClassField");
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
