@@ -495,8 +495,9 @@ void TestReport(TCanvas *C, const TString &name, const TString &title, const TSt
 
    // start files generation
    if (gSvgMode) {
+      C->cd();
+      // important - create svg when main canvas selected, SVG size depends on this
       TSVG svg(e.svgfile, 111, gSvgCompact);
-      C->cd(0);
       C->Draw();
       svg.Close();
    } else {
@@ -505,13 +506,13 @@ void TestReport(TCanvas *C, const TString &name, const TString &title, const TSt
 
          C->SaveAs(e.pdffile);
       } else {
+         C->cd();
          TPostScript ps1(e.psfile, 111);
-         C->cd(0);
          C->Draw();
          ps1.Close();
 
+         C->cd();
          TPDF pdf(e.pdffile, 111);
-         C->cd(0);
          C->Draw();
          pdf.Close();
       }
