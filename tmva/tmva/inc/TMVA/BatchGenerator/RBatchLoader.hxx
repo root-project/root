@@ -201,7 +201,7 @@ public:
 
             // reset fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverTrainingBatch
             *fPrimaryLeftoverTrainingBatch = *fSecondaryLeftoverTrainingBatch;
-            fSecondaryLeftoverValidationBatch =
+            fSecondaryLeftoverTrainingBatch =
                std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{0, fNumColumns});
          }
       }
@@ -227,11 +227,11 @@ public:
                    fPrimaryLeftoverTrainingBatch->GetData() + (fBatchSize * fNumColumns), copy->GetData());
          batches.emplace_back(std::move(copy));
 
-         // exchange fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverValidationBatch
+         // exchange fPrimaryLeftoverTrainingBatch and fSecondaryLeftoverTrainingBatch
          *fPrimaryLeftoverTrainingBatch = *fSecondaryLeftoverTrainingBatch;
 
-         // reset fSecondaryLeftoverValidationBatch
-         fSecondaryLeftoverValidationBatch =
+         // reset fSecondaryLeftoverTrainingBatch
+         fSecondaryLeftoverTrainingBatch =
             std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{0, fNumColumns});
       }
 
