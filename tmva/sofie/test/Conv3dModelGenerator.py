@@ -3,6 +3,7 @@
 ### generate COnv2d model using Pytorch
 
 import argparse
+import sys
 
 import torch
 import torch.nn as nn
@@ -142,6 +143,9 @@ def main():
       torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
 
    if saveOnnx:
+      # dynamo export doesn't work on Python 3.14
+      dynamo_export = (sys.version_info.major, sys.version_info.minor) != (3, 14)
+
       #check torch version
       v = torch.__version__
       from packaging.version import Version
@@ -151,7 +155,7 @@ def main():
             xinput,
             name + ".onnx",
             export_params=True,
-            dynamo=True,
+            dynamo=dynamo_export,
             external_data=False
          )
       else :
