@@ -384,12 +384,15 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t
 
 void TPadPainterPS::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainterPS::DrawPolyLine", "invalid number of points");
       return;
    }
+
+   fPS->DrawPS(n, const_cast<Double_t *>(xs), const_cast<Double_t *>(ys));
 }
 
 
@@ -398,12 +401,15 @@ void TPadPainterPS::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys
 
 void TPadPainterPS::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainterPS::DrawPolyLine", "invalid number of points");
       return;
    }
+
+   fPS->DrawPS(n, const_cast<Float_t *>(xs), const_cast<Float_t *>(ys));
 }
 
 
@@ -412,19 +418,20 @@ void TPadPainterPS::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 
 void TPadPainterPS::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   if (GetLineWidth()<=0) return;
+   if (GetLineWidth() <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainterPS::DrawPolyLineNDC", "invalid number of points %d", n);
       return;
    }
 
-   std::vector<TPoint> xy(n);
-
-   for (Int_t i = 0; i < n; ++i) {
-      xy[i].fX = (SCoord_t)gPad->UtoPixel(u[i]);
-      xy[i].fY = (SCoord_t)gPad->VtoPixel(v[i]);
+   std::vector<Double_t> xw(n), yw(n);
+   for (Int_t i = 0; i < n; i++) {
+      xw[i] = (1 - u[i]) * fPad->GetX1() + u[i] * fPad->GetX2();
+      yw[i] = (1 - v[i]) * fPad->GetY1() + v[i] * fPad->GetY2();
    }
+   fPS->DrawPS(n, xw.data(), yw.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -472,6 +479,8 @@ void TPadPainterPS::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y
       ::Error("TPadPainterPS::DrawPolyMarker", "invalid number of points %d", n);
       return;
    }
+
+   fPS->DrawPolyMarker(n, const_cast<Double_t *>(x), const_cast<Double_t *>(y));
 }
 
 
@@ -484,6 +493,8 @@ void TPadPainterPS::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
       ::Error("TPadPainterPS::DrawPolyMarker", "invalid number of points %d", n);
       return;
    }
+
+   fPS->DrawPolyMarker(n, const_cast<Float_t *>(x), const_cast<Float_t *>(y));
 }
 
 
