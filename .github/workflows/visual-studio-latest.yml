@@ -14,7 +14,6 @@ on:
         - Build
   schedule:
     - cron: '0  6 * * 3'
-    - cron: '30 6 * * 3'
     - cron: '0  7 * * 3'
 
 jobs:
@@ -30,29 +29,17 @@ jobs:
       - latest
 
     steps:
-    - name: Update Visual Studio
+    - name: Update Visual Studio Latest
       shell: cmd
       run: "C:\\bin\\vs_update.bat"
 
     - name: Display Update Log - Visual Studio Latest
       shell: cmd
-      run: "type C:\\ROOT-CI\\VS-Update.log"
+      run: "timeout 30 > NUL & type C:\\ROOT-CI\\VS-Update.log"
 
-  reboot-after-update:
-    if: ${{ github.event.schedule == '30 6 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Reboot') }}
-
-    name: Reboot after update
-
-    runs-on:
-      - self-hosted
-      - windows
-      - x64
-      - latest
-
-    steps:
-    - name: Reboot
+    - name: Reboot after update - Visual Studio Latest
       shell: cmd
-      run: "shutdown /r"
+      run: "timeout 30 > NUL & shutdown /r"
 
   build-windows:
     if: ${{ github.event.schedule == '0  7 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Build') }}
