@@ -10,7 +10,6 @@ on:
         type: choice
         options:
         - Update
-        - Reboot
         - Build
   schedule:
     - cron: '0  6 * * 3'
