@@ -353,7 +353,20 @@ void TPadPainterPS::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
 
 void TPadPainterPS::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
+   Int_t style0 = -1;
+
+   if (mode == TVirtualPadPainter::kHollow) {
+      if (GetLineWidth() <= 0)
+         return;
+      style0 = fPS->GetFillStyle();
+      if (style0 > 0)
+         fPS->SetFillStyle(0);
+   }
+
+   fPS->DrawBox(x1, y1, x2, y2);
+
+   if (style0 > 0)
+      fPS->SetFillStyle(style0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,6 +378,8 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double
       ::Error("TPadPainterPS::DrawFillArea", "invalid number of points %d", nPoints);
       return;
    }
+
+   fPS->DrawPS(-nPoints, const_cast<Double_t *>(xs), const_cast<Double_t *>(ys));
 }
 
 
@@ -377,6 +392,8 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t
       ::Error("TPadPainterPS::DrawFillArea", "invalid number of points %d", nPoints);
       return;
    }
+
+   fPS->DrawPS(-nPoints, const_cast<Float_t *>(xs), const_cast<Float_t *>(ys));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

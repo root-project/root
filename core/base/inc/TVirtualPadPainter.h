@@ -112,6 +112,8 @@ public:
 
    virtual void     OnPad(TVirtualPad *) {}
 
+   virtual Bool_t   IsNative() const { return kFALSE; }
+
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 
    ClassDef(TVirtualPadPainter, 0)//Painter interface for pad.

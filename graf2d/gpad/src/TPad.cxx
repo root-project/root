@@ -4057,90 +4057,79 @@ void TPad::PaintModified()
 
 void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad->IsBatch() && GetPainter()) {
-      Int_t style0 = GetPainter()->GetFillStyle();
-      Int_t style  = style0;
-      if (option[0] == 's') {
-         GetPainter()->SetFillStyle(0);
-         style = 0;
+   auto pp = GetPainter();
+   if (!pp)
+      return;
+
+   pp->OnPad(this);
+
+   Int_t style0 = -1111, style = pp->GetFillStyle();
+   Bool_t draw_border = kFALSE, draw_fill = kFALSE;
+   if (option && *option == 's') {
+      style0 = style;
+      pp->SetFillStyle(0);
+      style = 0;
+      draw_border = kTRUE;
+   } else if (option && *option == 'l')
+      draw_border = kTRUE;
+
+   if (style >= 3100 && style < 4000) {
+      Double_t xb[4] = {x1, x1, x2, x2};
+      Double_t yb[4] = {y1, y2, y2, y1};
+      PaintFillAreaHatches(4, xb, yb, style);
+   } else if (!pp->IsNative()) {
+      draw_fill = kTRUE;
+      if (style == 0)
+         draw_border = kFALSE;
+   } else if ((style > 0) && (style < 1000)) {
+      draw_border = kTRUE;
+   } else if ((style >= 1000) && (style < 2000)) {
+      draw_fill = kTRUE;
+   } else if (style > 3000 && style < 3100) {
+      if (style < 3026)
+         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
+      //special case for TAttFillCanvas on real display
+      if (pp->GetFillColor() == 10) {
+         // SL: reproduce old sequence of painting calls, can have some side effects on opaque pads
+         pp->SetFillColor(1);
+         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
+         pp->SetFillColor(10);
       }
-      if (style) {
-         if (style > 3000 && style < 4000) {
-            if (style < 3026) {
-               // draw stipples with fFillColor foreground
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-            }
+   } else if (style >= 4000 && style <= 4100) {
+      // For style >=4000 we make the window transparent.
+      // From 4000 to 4100 the window is 100% transparent to 100% opaque
 
-            if (style >= 3100 && style < 4000) {
-               Double_t xb[4], yb[4];
-               xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
-               yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
-               PaintFillAreaHatches(4, xb, yb, style);
-               return;
-            }
-            //special case for TAttFillCanvas
-            if (GetPainter()->GetFillColor() == 10) {
-               GetPainter()->SetFillColor(1);
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-               GetPainter()->SetFillColor(10);
-            }
-         } else if (style >= 4000 && style <= 4100) {
-            // For style >=4000 we make the window transparent.
-            // From 4000 to 4100 the window is 100% transparent to 100% opaque
-
-            //ignore this style option when this is the canvas itself
-            if (this == fMother) {
-               //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
-               const Style_t oldFillStyle = GetPainter()->GetFillStyle();
-               if (gVirtualX->InheritsFrom("TGCocoa"))
-                  GetPainter()->SetFillStyle(1000);
-               GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-               if (gVirtualX->InheritsFrom("TGCocoa"))
-                  GetPainter()->SetFillStyle(oldFillStyle);
-            } else {
-               //draw background by blitting all bottom pads
-               int px, py;
-               XYtoAbsPixel(fX1, fY2, px, py);
-
-               if (fMother) {
-                  fMother->CopyBackgroundPixmap(px, py);
-                  CopyBackgroundPixmaps(fMother, this, px, py);
-               }
-
-               GetPainter()->SetOpacity(style - 4000);
-            }
-         } else if (style >= 1000 && style <= 1999) {
-            GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-         } else {
-            GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+      //ignore this style option when this is the canvas itself
+      if (this == fMother) {
+         //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
+         if (gVirtualX->InheritsFrom("TGCocoa")) {
+            style0 = style;
+            pp->SetFillStyle(1000);
          }
-         if (option[0] == 'l') GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+         draw_fill = kTRUE;
       } else {
-         GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-         if (option[0] == 's') GetPainter()->SetFillStyle(style0);
-      }
-   }
+         //draw background by blitting all bottom pads
+         int px, py;
+         XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (gVirtualPS) {
-      Int_t style0 = gVirtualPS->GetFillStyle();
-      if (option[0] == 's') {
-         gVirtualPS->SetFillStyle(0);
-      } else {
-         if (style0 >= 3100 && style0 < 4000) {
-            Double_t xb[4], yb[4];
-            xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
-            yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
-            PaintFillAreaHatches(4, xb, yb, style0);
-            return;
+         if (fMother) {
+            fMother->CopyBackgroundPixmap(px, py);
+            CopyBackgroundPixmaps(fMother, this, px, py);
          }
+
+         pp->SetOpacity(style - 4000);
       }
-      gVirtualPS->DrawBox(x1, y1, x2, y2);
-      if (option[0] == 'l') {
-         gVirtualPS->SetFillStyle(0);
-         gVirtualPS->DrawBox(x1, y1, x2, y2);
-      }
-      if (option[0] == 's' || option[0] == 'l') gVirtualPS->SetFillStyle(style0);
-   }
+   } else if (style > 0)
+      draw_border = kTRUE;
+
+   if (draw_fill)
+      pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
+
+   if (draw_border)
+      pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+
+   if (style0 != -1111)
+      pp->SetFillStyle(style0);
 
    Modified();
 }
@@ -4171,7 +4160,8 @@ void TPad::CopyBackgroundPixmap(Int_t x, Int_t y)
 {
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
-   if (GetPainter()) GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
+   if (GetPainter())
+      GetPainter()->CopyDrawable(GetPixmapID(), px-x, py-y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4186,8 +4176,8 @@ void TPad::PaintFillArea(Int_t, Float_t *, Float_t *, Option_t *)
 
 void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 {
-   if (nn <3) return;
-   Int_t n=0;
+   if (nn < 3)
+      return;
    Double_t xmin,xmax,ymin,ymax;
    if (TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
@@ -4199,24 +4189,22 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    std::vector<Double_t> x(nc, 0.);
    std::vector<Double_t> y(nc, 0.);
 
-   n = ClipPolygon(nn, xx, yy, nc, &x.front(), &y.front(),xmin,ymin,xmax,ymax);
+   Int_t n = ClipPolygon(nn, xx, yy, nc, x.data(), y.data(), xmin, ymin, xmax, ymax);
    if (!n)
       return;
 
-   // Paint the fill area with hatches
-   Int_t fillstyle = GetPainter()?GetPainter()->GetFillStyle():1;
-   if (gPad->IsBatch() && GetPainter() && gVirtualPS) fillstyle = gVirtualPS->GetFillStyle();
-   if (fillstyle >= 3100 && fillstyle < 4000) {
-      PaintFillAreaHatches(nn, &x.front(), &y.front(), fillstyle);
+   auto pp = GetPainter();
+   if (!pp)
       return;
-   }
 
-   if (!gPad->IsBatch() && GetPainter())
-      // invoke the graphics subsystem
-      GetPainter()->DrawFillArea(n, &x.front(), &y.front());
+   pp->OnPad(this);
 
-   if (gVirtualPS)
-      gVirtualPS->DrawPS(-n, &x.front(), &y.front());
+   // Paint the fill area with hatches
+   Int_t fillstyle = pp->GetFillStyle();
+   if (fillstyle >= 3100 && fillstyle < 4000)
+      PaintFillAreaHatches(nn, x.data(), y.data(), fillstyle);
+   else
+      pp->DrawFillArea(n, x.data(), y.data());
 
    Modified();
 }
@@ -4277,42 +4265,29 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t iAng2 = (fasi - 100 * idSPA) / 10;
    Int_t iAng1 = fasi % 10;
    Double_t dy = 0.003 * idSPA * gStyle->GetHatchesSpacing();
-   Short_t lws = 0, lws2 = 0, lw = gStyle->GetHatchesLineWidth();
-   Int_t   lss = 0, lss2 = 0, lcs = 0, lcs2 = 0;
+   Short_t lw = gStyle->GetHatchesLineWidth();
+   auto pp = GetPainter();
+   if (!pp)
+      return;
 
    // Save the current line attributes and change to draw hatches
-   if (!gPad->IsBatch() && GetPainter()) {
-      lws = GetPainter()->GetLineWidth();
-      lss = GetPainter()->GetLineStyle();
-      lcs = GetPainter()->GetLineColor();
-      GetPainter()->SetLineStyle(1);
-      GetPainter()->SetLineWidth(lw);
-      GetPainter()->SetLineColor(GetPainter()->GetFillColor());
-   }
-   if (gVirtualPS) {
-      lws2 = gVirtualPS->GetLineWidth();
-      lss2 = gVirtualPS->GetLineStyle();
-      lcs2 = gVirtualPS->GetLineColor();
-      gVirtualPS->SetLineStyle(1);
-      gVirtualPS->SetLineWidth(lw);
-      gVirtualPS->SetLineColor(gVirtualPS->GetFillColor());
-   }
+   auto lws = pp->GetLineWidth();
+   auto lss = pp->GetLineStyle();
+   auto lcs = pp->GetLineColor();
+
+   pp->SetLineStyle(1);
+   pp->SetLineWidth(lw);
+   pp->SetLineColor(pp->GetFillColor());
 
    // Draw the hatches
-   if (ang1[iAng1] != 5.) PaintHatches(dy, ang1[iAng1], nn, xx, yy);
-   if (ang2[iAng2] != 5.) PaintHatches(dy, ang2[iAng2], nn, xx, yy);
+   if (ang1[iAng1] != 5.)
+      PaintHatches(dy, ang1[iAng1], nn, xx, yy);
+   if (ang2[iAng2] != 5.)
+      PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
-   // Restore the line attributes
-   if (!gPad->IsBatch() && GetPainter()) {
-      GetPainter()->SetLineStyle(lss);
-      GetPainter()->SetLineWidth(lws);
-      GetPainter()->SetLineColor(lcs);
-   }
-   if (gVirtualPS) {
-      gVirtualPS->SetLineStyle(lss2);
-      gVirtualPS->SetLineWidth(lws2);
-      gVirtualPS->SetLineColor(lcs2);
-   }
+   pp->SetLineStyle(lss);
+   pp->SetLineWidth(lws);
+   pp->SetLineColor(lcs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -102,6 +102,8 @@ public:
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
+   Bool_t   IsNative() const override { return kTRUE; }
+
 private:
    //Let's make this clear:
    TPadPainter(const TPadPainter &) = delete;
