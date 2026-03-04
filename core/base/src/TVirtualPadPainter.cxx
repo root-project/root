@@ -70,7 +70,7 @@ TVirtualPadPainter *TVirtualPadPainter::PadPainter(Option_t *type)
 /// Draw N segments on the pad
 /// Exclude segments where both points match
 
-void TVirtualPadPainter::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
+void TVirtualPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
    for(Int_t i = 0; i < 2*n; i += 2)
       if ((x[i] != x[i+1]) || (y[i] != y[i + 1]))
@@ -81,7 +81,7 @@ void TVirtualPadPainter::DrawSegments(Int_t n, const Double_t *x, const Double_t
 /// Draw N segments in NDC coordinates on the pad
 /// Exclude segments where both points match
 
-void TVirtualPadPainter::DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v)
+void TVirtualPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
    for(Int_t i = 0; i < 2*n; i += 2)
       if ((u[i] != u[i+1]) || (v[i] != v[i + 1]))

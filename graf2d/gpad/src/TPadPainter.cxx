@@ -488,7 +488,7 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint N segments on the pad
 
-void TPadPainter::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
+void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
    if (GetLineWidth() <= 0)
       return;
@@ -519,7 +519,7 @@ void TPadPainter::DrawSegments(Int_t n, const Double_t *x, const Double_t *y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint N segments in normalized coordinates on the pad
 
-void TPadPainter::DrawSegmentsNDC(Int_t n, const Double_t *u, const Double_t *v)
+void TPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
    if (GetLineWidth() <= 0)
       return;
