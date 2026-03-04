@@ -175,10 +175,14 @@ bool ROOT::RLogManager::Emit(const ROOT::RLogEntry &entry)
    Increment(entry.fLevel);
    if (channel != this)
       channel->Increment(entry.fLevel);
-
+     
+   // Is there a specific level for the channel? If so, take that,
+   // overruling the global one.   
    if (channel->GetEffectiveVerbosity(*this) < entry.fLevel)
       return true;
 
+   // Lock-protected extraction of handlers, such that they don't get added during the
+   // handler iteration.
    std::vector<RLogHandler *> handlers;
    {
       std::lock_guard<std::mutex> lock(fMutex);
