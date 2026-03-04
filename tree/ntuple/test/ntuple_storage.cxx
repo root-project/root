@@ -54,8 +54,9 @@ protected:
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
+   void CommitAttributeSet(std::string_view, const ROOT::Internal::RNTupleLink &) final {}
 
-   std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   std::unique_ptr<RPageSink> CloneAsHidden(std::string_view, const ROOT::RNTupleWriteOptions &) const final
    {
       throw ROOT::RException(R__FAIL("cannot clone sink"));
    }
@@ -1210,7 +1211,7 @@ TEST(RPageSourceFile, OpenDifferentAnchor)
    }
 }
 
-TEST(RPageSinkFile, CloneWithDifferentName)
+TEST(RPageSinkFile, CloneAsHidden)
 {
    FileRaii fileGuard("test_ntuple_page_sink_file_diffname.ntuple");
 
@@ -1222,13 +1223,21 @@ TEST(RPageSinkFile, CloneWithDifferentName)
       auto sink1 = std::make_unique<RPageSinkFile>("ntuple1", *file, opts);
       sink1->Init(*model);
 
-      auto sink2 = sink1->CloneWithDifferentName("ntuple2", opts);
+      auto sink2 = sink1->CloneAsHidden("ntuple2", opts);
       sink2->Init(*model);
 
       sink1->CommitDataset();
       sink2->CommitDataset();
    }
 
-   EXPECT_NE(file->Get<ROOT::RNTuple>("ntuple1"), nullptr);
-   EXPECT_NE(file->Get<ROOT::RNTuple>("ntuple2"), nullptr);
+   // We can't just use file->Get because ntuple2 is hidden.
+   bool found[2] = {false, false};
+   for (auto key : file->WalkTKeys()) {
+      found[0] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple1";
+      found[1] |= key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fKeyName == "ntuple2";
+      if (found[0] && found[1])
+         break;
+   }
+   EXPECT_TRUE(found[0]);
+   EXPECT_TRUE(found[1]);
 }

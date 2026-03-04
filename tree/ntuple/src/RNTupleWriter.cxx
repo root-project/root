@@ -147,6 +147,12 @@ void ROOT::RNTupleWriter::CommitDataset()
       return;
 
    CommitCluster(true /* commitClusterGroup */);
+
+   // Commit attributes
+   for (auto &attrSet : fAttributeSets) {
+      CloseAttributeSetImpl(*attrSet);
+   }
+
    fFillContext.fSink->CommitDataset();
    fFillContext.fModel->Expire();
 }
@@ -179,7 +185,7 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> mode
       throw ROOT::RException(R__FAIL("cannot create an Attribute Set with an empty name"));
 
    auto opts = ROOT::RNTupleWriteOptions();
-   auto attrSink = fFillContext.fSink->CloneWithDifferentName(name, opts);
+   auto attrSink = fFillContext.fSink->CloneAsHidden(name, opts);
 
    std::string nameStr{name};
    auto attrSet = Experimental::RNTupleAttrSetWriter::Create(fFillContext, std::move(attrSink), std::move(model));
@@ -193,4 +199,30 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> mode
 
    auto &addedSet = fAttributeSets.emplace_back(std::move(attrSet));
    return Experimental::RNTupleAttrSetWriterHandle{addedSet};
+}
+
+void ROOT::RNTupleWriter::CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet)
+{
+   auto attrAnchorInfo = attrSet.Commit();
+   fFillContext.fSink->CommitAttributeSet(attrSet.GetDescriptor().GetName(), attrAnchorInfo);
+}
+
+void ROOT::RNTupleWriter::CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle)
+{
+   auto writer = handle.fWriter.lock();
+   if (writer) {
+      throw ROOT::RException(R__FAIL("Tried to close an invalid AttributeSetWriter"));
+   }
+
+   CloseAttributeSetImpl(*writer);
+
+   auto &attrSets = fAttributeSets;
+   for (auto it = attrSets.begin(), end = attrSets.end(); it != end; ++it) {
+      if (it->get() == writer.get()) {
+         attrSets.erase(it);
+         return;
+      }
+   }
+   // We must have erased the attribute set.
+   R__ASSERT(false);
 }

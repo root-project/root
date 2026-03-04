@@ -137,7 +137,7 @@ public:
    ~RPageSinkDaos() override;
 
    std::unique_ptr<ROOT::Internal::RPageSink>
-   CloneWithDifferentName(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const final;
+   CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const final;
 }; // class RPageSinkDaos
 
 // clang-format off

@@ -323,7 +323,12 @@ ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t c
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
-ROOT::Internal::RPageSinkBuf::CloneWithDifferentName(std::string_view name, const RNTupleWriteOptions &opts) const
+ROOT::Internal::RPageSinkBuf::CloneAsHidden(std::string_view name, const RNTupleWriteOptions &opts) const
 {
-   return fInnerSink->CloneWithDifferentName(name, opts);
+   return fInnerSink->CloneAsHidden(name, opts);
+}
+
+void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo)
+{
+   fInnerSink->CommitAttributeSet(attrSetName, attrAnchorInfo);
 }
