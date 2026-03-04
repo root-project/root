@@ -3796,8 +3796,14 @@ void TPad::Paint(Option_t * /*option*/)
 /// Paint the pad border.
 /// Draw first  a box as a normal filled box
 
-void TPad::PaintBorder(Color_t color, Bool_t tops)
+void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
 {
+   auto pp = GetPainter();
+   if (!pp)
+      return;
+
+   pp->OnPad(this);
+
    if (color >= 0) {
       TAttLine::Modify();  //Change line attributes only if necessary
       TAttFill::Modify();  //Change fill area attributes only if necessary
@@ -3805,88 +3811,109 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       //With Cocoa we have a transparency. But we also have
       //pixmaps, and if you just paint a new content over the old one
       //with alpha < 1., you'll be able to see the old content.
-      if (!gROOT->IsBatch() && gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
-         GetPainter()->ClearDrawable();
+      if (pp->IsNative() && gVirtualX->InheritsFrom("TGCocoa"))
+         pp->ClearDrawable();
 
-      PaintBox(fX1,fY1,fX2,fY2);
+      PaintBox(fX1, fY1, fX2, fY2);
    }
-   if (color < 0) color = -color;
+   if (color < 0)
+      color = -color;
+   if (IsTransparent())
+      return;
+
    // then paint 3d frame (depending on bordermode)
-   if (IsTransparent()) return;
    // Paint a 3D frame around the pad.
 
-   if (fBorderMode == 0) return;
+   if (fBorderMode == 0)
+      return;
    Int_t bordersize = fBorderSize;
-   if (bordersize <= 0) bordersize = 2;
+   if (bordersize <= 0)
+      bordersize = 2;
 
-   const Double_t realBsX = bordersize / (GetAbsWNDC() * GetWw()) * (fX2 - fX1);
-   const Double_t realBsY = bordersize / (GetAbsHNDC() * GetWh()) * (fY2 - fY1);
+   Double_t ww = GetWw(), wh = GetWh();
 
-   Short_t px1,py1,px2,py2;
-   Double_t xl, xt, yl, yt;
-
-   // GetColorDark() and GetColorBright() use GetFillColor()
-   Color_t oldcolor = GetFillColor();
-   SetFillColor(color);
-   TAttFill::Modify();
-   Color_t light = 0, dark = 0;
-   if (color != 0) {
-      light = TColor::GetColorBright(color);
-      dark  = TColor::GetColorDark(color);
+   if (!pp->IsNative()) {
+      // SL: need to calculate page size to get real coordiantes for border
+      // TODO: Code can be removed if border not need to be exact pixel size
+      Float_t xsize = 20, ysize = 26;
+      gStyle->GetPaperSize(xsize, ysize);
+      Double_t ratio = wh/ww;
+      if (xsize * ratio > ysize)
+         xsize = ysize/ratio;
+      else
+         ysize = xsize*ratio;
+      ww = 72 / 2.54 * xsize;
+      wh = 72 / 2.54 * ysize;
    }
 
+   const Double_t realBsX = bordersize / (GetAbsWNDC() * ww) * (fX2 - fX1);
+   const Double_t realBsY = bordersize / (GetAbsHNDC() * wh) * (fY2 - fY1);
+
+
+   // GetColorDark() and GetColorBright() use GetFillColor()
+   Color_t oldfillcolor = pp->GetFillColor();
+   Color_t light = !color ? 0 : TColor::GetColorBright(color);
+   Color_t dark = !color ? 0 : TColor::GetColorDark(color);
+
+   Double_t xl, xt, yl, yt;
+
    // Compute real left bottom & top right of the box in pixels
-   px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
-   px2 = XtoPixel(fX2);   py2 = YtoPixel(fY2);
-   if (px1 < px2) {xl = fX1; xt = fX2; }
-   else           {xl = fX2; xt = fX1;}
-   if (py1 > py2) {yl = fY1; yt = fY2;}
-   else           {yl = fY2; yt = fY1;}
+   if (XtoPixel(fX1) < XtoPixel(fX2)) {
+      xl = fX1;
+      xt = fX2;
+   } else {
+      xl = fX2;
+      xt = fX1;
+   }
+   if (YtoPixel(fY1) > YtoPixel(fY2)) {
+      yl = fY1;
+      yt = fY2;
+   } else {
+      yl = fY2;
+      yt = fY1;
+   }
 
    Double_t frameXs[7] = {}, frameYs[7] = {};
 
-   if (!IsBatch() && GetPainter()) {
-      // Draw top&left part of the box
-      frameXs[0] = xl;           frameYs[0] = yl;
-      frameXs[1] = xl + realBsX; frameYs[1] = yl + realBsY;
-      frameXs[2] = frameXs[1];   frameYs[2] = yt - realBsY;
-      frameXs[3] = xt - realBsX; frameYs[3] = frameYs[2];
-      frameXs[4] = xt;           frameYs[4] = yt;
-      frameXs[5] = xl;           frameYs[5] = yt;
-      frameXs[6] = xl;           frameYs[6] = yl;
+   // Draw top&left part of the box
+   frameXs[0] = xl;           frameYs[0] = yl;
+   frameXs[1] = xl + realBsX; frameYs[1] = yl + realBsY;
+   frameXs[2] = frameXs[1];   frameYs[2] = yt - realBsY;
+   frameXs[3] = xt - realBsX; frameYs[3] = frameYs[2];
+   frameXs[4] = xt;           frameYs[4] = yt;
+   frameXs[5] = xl;           frameYs[5] = yt;
+   frameXs[6] = xl;           frameYs[6] = yl;
 
-      if (fBorderMode == -1) GetPainter()->SetFillColor(dark);
-      else                   GetPainter()->SetFillColor(light);
-      GetPainter()->DrawFillArea(7, frameXs, frameYs);
+   pp->SetFillColor(fBorderMode == -1 ? dark : light);
+   pp->DrawFillArea(7, frameXs, frameYs);
 
-      // Draw bottom&right part of the box
-      frameXs[0] = xl;              frameYs[0] = yl;
-      frameXs[1] = xl + realBsX;    frameYs[1] = yl + realBsY;
-      frameXs[2] = xt - realBsX;    frameYs[2] = frameYs[1];
-      frameXs[3] = frameXs[2];      frameYs[3] = yt - realBsY;
-      frameXs[4] = xt;              frameYs[4] = yt;
-      frameXs[5] = xt;              frameYs[5] = yl;
-      frameXs[6] = xl;              frameYs[6] = yl;
+   // Draw bottom&right part of the box
+   frameXs[0] = xl;              frameYs[0] = yl;
+   frameXs[1] = xl + realBsX;    frameYs[1] = yl + realBsY;
+   frameXs[2] = xt - realBsX;    frameYs[2] = frameYs[1];
+   frameXs[3] = frameXs[2];      frameYs[3] = yt - realBsY;
+   frameXs[4] = xt;              frameYs[4] = yt;
+   frameXs[5] = xt;              frameYs[5] = yl;
+   frameXs[6] = xl;              frameYs[6] = yl;
 
-      if (fBorderMode == -1) GetPainter()->SetFillColor(light);
-      else                   GetPainter()->SetFillColor(dark);
-      GetPainter()->DrawFillArea(7, frameXs, frameYs);
+   pp->SetFillColor(fBorderMode == -1 ? light : dark);
+   pp->DrawFillArea(7, frameXs, frameYs);
 
-      // If this pad is a button, highlight it
-      if (InheritsFrom(TButton::Class()) && fBorderMode == -1) {
-         if (TestBit(kFraming)) {  // bit set in TButton::SetFraming
-            if (GetFillColor() != 2) GetPainter()->SetLineColor(2);
-            else                     GetPainter()->SetLineColor(4);
-            GetPainter()->DrawBox(xl + realBsX, yl + realBsY, xt - realBsX, yt - realBsY, TVirtualPadPainter::kHollow);
-         }
+   // If this pad is a button, highlight it
+   if (InheritsFrom(TButton::Class()) && fBorderMode == -1) {
+      if (TestBit(kFraming)) {  // bit set in TButton::SetFraming
+         Color_t oldlinecolor = pp->GetLineColor();
+         pp->SetLineColor(GetFillColor() != 2 ? 2 : 4);
+         pp->DrawBox(xl + realBsX, yl + realBsY, xt - realBsX, yt - realBsY, TVirtualPadPainter::kHollow);
+         pp->SetLineColor(oldlinecolor);
       }
-      GetPainter()->SetFillColor(-1);
-      SetFillColor(oldcolor);
    }
+   pp->SetFillColor(oldfillcolor);
 
-   if (!tops) return;
+   // No need to use PaintBorderPS, it is already performed via pad painter done!
 
-   PaintBorderPS(xl, yl, xt, yt, fBorderMode, bordersize, dark, light);
+   //if (tops)
+   //   PaintBorderPS(xl, yl, xt, yt, fBorderMode, bordersize, dark, light);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
