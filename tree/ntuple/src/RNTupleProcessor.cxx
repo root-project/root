@@ -548,16 +548,16 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    }
 
    // Collect the values of the join fields for this entry.
-   std::vector<void *> valPtrs;
-   valPtrs.reserve(fJoinFieldIdxs.size());
+   std::vector<ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t> values;
+   values.reserve(fJoinFieldIdxs.size());
    for (const auto &fieldIdx : fJoinFieldIdxs) {
-      auto ptr = fEntry->GetValue(fieldIdx).GetPtr<void>();
-      valPtrs.push_back(ptr.get());
+      auto val = fEntry->GetValue(fieldIdx).GetRef<ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t>();
+      values.push_back(val);
    }
 
    // Find the entry index corresponding to the join field values for each auxiliary processor and load the
    // corresponding entry.
-   const auto entryIdx = fJoinTable->GetEntryIndex(valPtrs);
+   const auto entryIdx = fJoinTable->GetEntryIndex(values);
 
    if (entryIdx == kInvalidNTupleIndex) {
       SetAuxiliaryFieldValidity(false);
