@@ -769,11 +769,11 @@ ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RCo
    return SealPage(config);
 }
 
-void ROOT::Internal::RPageSink::CommitDataset()
+ROOT::Internal::RNTupleLink ROOT::Internal::RPageSink::CommitDataset()
 {
    for (const auto &cb : fOnDatasetCommitCallbacks)
       cb(*this);
-   CommitDatasetImpl();
+   return CommitDatasetImpl();
 }
 
 ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
@@ -1269,7 +1269,7 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
+ROOT::Internal::RNTupleLink ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
    if (!fInfosOfStreamerFields.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
@@ -1297,7 +1297,7 @@ void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
    auto bufFooter = MakeUninitArray<unsigned char>(szFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
 
-   CommitDatasetImpl(bufFooter.get(), szFooter);
+   return CommitDatasetImpl(bufFooter.get(), szFooter);
 }
 
 void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string &prefix)

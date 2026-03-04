@@ -291,8 +291,10 @@ public:
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
-   /// Writes the RNTuple key to the file so that the header and footer keys can be found
-   void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
+
+   /// Writes the RNTuple key to the file so that the header and footer keys can be found.
+   /// \return information about the committed anchor.
+   RNTupleLink Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
 
    std::string_view GetNTupleName() const { return fNTupleName; }
 };

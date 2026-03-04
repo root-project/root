@@ -149,7 +149,7 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void CommitDatasetImpl() final;
+   RNTupleLink CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 

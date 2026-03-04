@@ -277,7 +277,8 @@ ROOT::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned char *serializedP
    return result;
 }
 
-void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
+ROOT::Internal::RNTupleLink
+ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
 {
    // Add the streamer info records from streamer fields: because of runtime polymorphism we may need to add additional
    // types not covered by the type names of the class fields
@@ -295,7 +296,7 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
    auto szFooterZip =
       RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
-   fWriter->Commit(GetWriteOptions().GetCompression());
+   return fWriter->Commit(GetWriteOptions().GetCompression());
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>

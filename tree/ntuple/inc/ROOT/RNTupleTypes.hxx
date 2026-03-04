@@ -293,6 +293,12 @@ public:
 
 namespace Internal {
 
+struct RNTupleLink {
+   RNTupleLocator fLocator;
+   /// Uncompressed length of the anchor, including the checksum.
+   std::uint32_t fLength = 0;
+};
+
 /// The in-memory representation of a 32bit or 64bit on-disk index column. Wraps the integer in a
 /// named type so that templates can distinguish between integer data columns and index columns.
 class RColumnIndex {

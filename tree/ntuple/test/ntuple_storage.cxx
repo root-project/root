@@ -53,7 +53,7 @@ protected:
    RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   ROOT::Internal::RNTupleLink CommitDatasetImpl() final { return {}; }
 
    std::unique_ptr<RPageSink> CloneWithDifferentName(std::string_view, const ROOT::RNTupleWriteOptions &) const final
    {

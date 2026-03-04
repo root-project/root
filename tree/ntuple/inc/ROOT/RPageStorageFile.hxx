@@ -96,7 +96,7 @@ protected:
    std::uint64_t StageClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   RNTupleLink CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
