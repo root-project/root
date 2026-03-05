@@ -2824,7 +2824,6 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
          const bool shortRange = (fBufCur - fBuffer) <= kMaxMapCount;
 
          // save index of already stored object
-         // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
          if (R__likely(shortRange)) {
             // truncation is OK the value we did put in the map is an 30-bit offset
             // and not a pointer
@@ -2836,7 +2835,6 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
             // This is needed so that the reader can distinguish between references,
             // bytecounts, and new class definitions.
             ULong64_t objIdx = static_cast<ULong64_t>(idx);
-            // FIXME: verify that objIdx is guaranteed to fit in 60-bits, i.e. objIdx <= kMaxLongRange
             assert(objIdx <= kMaxLongRange);
             *this << (objIdx | kLongRangeRefMask);
          }
@@ -2904,7 +2902,6 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    const bool shortRange = (fBufCur - fBuffer) <= kMaxMapCount;
    bool isNewClassTag = false;
 
-   // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
    *this >> bcnt;
    if (bcnt == kNewClassTag) {
       isNewClassTag = true;
@@ -2963,7 +2960,6 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    // in case tag is object tag return tag
    // NOTE: if we return early for reference for longRange, this would be only for shortRange
    if (!isClassTag && !isNewClassTag) {
-      // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
       if (objTag)
          *objTag = tag64;
       return 0;
@@ -3049,9 +3045,6 @@ void TBufferFile::WriteClass(const TClass *cl)
          UInt_t clIdx = UInt_t(idx);
 
          // save index of already stored class
-         // FIXME/TRUNCATION: potential truncation from 64 to 32 bits
-         // FIXME/INCORRECTNESS: if clIdx > 0x3FFFFFFF the control bit (2nd highest bit) will be wrong
-         // FIXME/INCORRECTNESS: similarly if clIdx > kClassMask (2GB) the code will be wrong
          *this << (clIdx | kClassMask);
       } else {
          // The 64-bit value is stored highest bytes first in the buffer,
@@ -3059,7 +3052,6 @@ void TBufferFile::WriteClass(const TClass *cl)
          // This is needed so that the reader can distinguish between references,
          // bytecounts, and new class definitions.
          ULong64_t clIdx = static_cast<ULong64_t>(idx);
-         // FIXME: verify that clIdx is guaranteed to fit in 60-bits, i.e. clIdx <= kMaxLongRange
          assert(clIdx <= kMaxLongRange);
          *this << (clIdx | kLongRangeClassMask);
       }
