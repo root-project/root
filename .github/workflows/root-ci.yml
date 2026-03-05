@@ -198,7 +198,7 @@ jobs:
           [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
           echo "Python is now $(which python3) $(python3 --version)"
           src/.github/workflows/root-ci-config/build_root.py  \
-                    --buildtype      Release                  \
+                    --buildtype      RelWithDebInfo           \
                     --platform       ${{ matrix.platform }}   \
                     --incremental    false                    \
                     --binaries       true                     \
@@ -548,7 +548,7 @@ jobs:
       - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Release
+                    --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --platform_config ${{ matrix.platform_config }}
                     --incremental    false
