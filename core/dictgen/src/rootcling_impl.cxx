@@ -4305,9 +4305,13 @@ int RootClingMain(int argc,
       ROOT::TMetaUtils::Info(nullptr, "== Language Options\n");
       const clang::LangOptions& LangOpts
          = interp.getCI()->getASTContext().getLangOpts();
-#define LANGOPT(Name, Bits, Default, Description) \
+
+      // FIXME: Replace with C++20 `using enum LangOptions::CompatibilityKind`.
+      using CK = clang::LangOptions::CompatibilityKind;
+#define LANGOPT(Name, Bits, Default, Compatibility, Description) \
+   if constexpr (CK::Compatibility != CK::Benign)                \
       ROOT::TMetaUtils::Info(nullptr, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
-#define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
+#define ENUM_LANGOPT(Name, Type, Bits, Default, Compatibility, Description)
 #include "clang/Basic/LangOptions.def"
       ROOT::TMetaUtils::Info(nullptr, "==== END interpreter configuration ====\n\n");
    }
