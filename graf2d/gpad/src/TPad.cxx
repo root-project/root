@@ -6394,10 +6394,11 @@ void TPad::SetView(TView *view)
 
 void TPad::SetAttFillPS(Color_t color, Style_t style)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetFillColor(color);
-      gVirtualPS->SetFillStyle(style);
-   }
+   if (auto pp = GetPainter())
+      if (!pp->IsNative()) {
+         pp->SetFillColor(color);
+         pp->SetFillStyle(style);
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6405,11 +6406,12 @@ void TPad::SetAttFillPS(Color_t color, Style_t style)
 
 void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetLineColor(color);
-      gVirtualPS->SetLineStyle(style);
-      gVirtualPS->SetLineWidth(lwidth);
-   }
+   if (auto pp = GetPainter())
+      if (!pp->IsNative()) {
+         pp->SetLineColor(color);
+         pp->SetLineStyle(style);
+         pp->SetLineWidth(lwidth);
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6417,11 +6419,12 @@ void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 
 void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetMarkerColor(color);
-      gVirtualPS->SetMarkerStyle(style);
-      gVirtualPS->SetMarkerSize(msize);
-   }
+   if (auto pp = GetPainter())
+      if (!pp->IsNative()) {
+         pp->SetMarkerColor(color);
+         pp->SetMarkerStyle(style);
+         pp->SetMarkerSize(msize);
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6429,25 +6432,27 @@ void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 
 void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
-   if (gVirtualPS) {
-      gVirtualPS->SetTextAlign(align);
-      gVirtualPS->SetTextAngle(angle);
-      gVirtualPS->SetTextColor(color);
-      gVirtualPS->SetTextFont(font);
-      if (font%10 > 2) {
-         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
-         Float_t dy;
-         if (wh < hh)  {
-            dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
-            tsize = dy/(fX2-fX1);
-         } else {
-            dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
-            tsize = dy/(fY2-fY1);
+   if (auto pp = GetPainter())
+      if (!pp->IsNative()) {
+         pp->SetTextAlign(align);
+         pp->SetTextAngle(angle);
+         pp->SetTextColor(color);
+         pp->SetTextFont(font);
+
+         if (font%10 > 2) {
+            Float_t wh = (Float_t) XtoPixel(GetX2());
+            Float_t hh = (Float_t) YtoPixel(GetY1());
+            Float_t dy;
+            if (wh < hh)  {
+               dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
+               tsize = dy/(GetX2()-GetX1());
+            } else {
+               dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
+               tsize = dy/(GetY2()-GetY1());
+            }
          }
+         pp->SetTextSize(tsize);
       }
-      gVirtualPS->SetTextSize(tsize);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
