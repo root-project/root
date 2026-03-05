@@ -167,7 +167,7 @@ else()
   set(useoldwebfile yes)
 endif()
 
-set(buildnetxng ${value${netxng}})
+set(buildnetxng ${value${xrootd}})
 
 set(buildcurl ${value${curl}})
 set(curllibdir ${CURL_LIBRARY_DIR})
