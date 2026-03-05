@@ -74,6 +74,16 @@ std::unique_ptr<ROperator> MakePyTorchRelu(PyObject* fNode);      // For instant
 std::unique_ptr<ROperator> MakePyTorchSelu(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Selu operator
 std::unique_ptr<ROperator> MakePyTorchSigmoid(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Sigmoid operator
 std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's Transpose operator
+std::unique_ptr<ROperator> MakePyTorchTanh(PyObject* fNode);      // For instantiating ROperator for PyTorch ONNX's Tanh operator
+std::unique_ptr<ROperator> MakePyTorchSoftmax(PyObject* fNode);   // For instantiating ROperator for PyTorch ONNX's Softmax operator
+std::unique_ptr<ROperator> MakePyTorchLeakyRelu(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's LeakyRelu operator
+std::unique_ptr<ROperator> MakePyTorchAdd(PyObject* fNode);       // For instantiating ROperator for PyTorch ONNX's Add operator
+std::unique_ptr<ROperator> MakePyTorchSub(PyObject* fNode);       // For instantiating ROperator for PyTorch ONNX's Sub operator
+std::unique_ptr<ROperator> MakePyTorchMul(PyObject* fNode);       // For instantiating ROperator for PyTorch ONNX's Mul operator
+std::unique_ptr<ROperator> MakePyTorchMatMul(PyObject* fNode);    // For instantiating ROperator for PyTorch ONNX's MatMul operator
+std::unique_ptr<ROperator> MakePyTorchFlatten(PyObject* fNode);   // For instantiating ROperator for PyTorch ONNX's Flatten operator
+std::unique_ptr<ROperator> MakePyTorchReshape(PyObject* fNode);   // For instantiating ROperator for PyTorch ONNX's Reshape operator
+std::unique_ptr<ROperator> MakePyTorchBatchNormalization(PyObject* fNode); // For instantiating ROperator for PyTorch ONNX's BatchNormalization operator
 
 // For mapping PyTorch ONNX Graph's Node with the preparatory functions for ROperators
 using PyTorchMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(PyObject* fNode)>;
@@ -85,7 +95,17 @@ const PyTorchMethodMap mapPyTorchNode =
     {"onnx::Relu",      &MakePyTorchRelu},
     {"onnx::Selu",      &MakePyTorchSelu},
     {"onnx::Sigmoid",   &MakePyTorchSigmoid},
-    {"onnx::Transpose", &MakePyTorchTranspose}
+    {"onnx::Transpose", &MakePyTorchTranspose},
+    {"onnx::Tanh",      &MakePyTorchTanh},
+    {"onnx::Softmax",   &MakePyTorchSoftmax},
+    {"onnx::LeakyRelu", &MakePyTorchLeakyRelu},
+    {"onnx::Add",       &MakePyTorchAdd},
+    {"onnx::Sub",       &MakePyTorchSub},
+    {"onnx::Mul",       &MakePyTorchMul},
+    {"onnx::MatMul",    &MakePyTorchMatMul},
+    {"onnx::Flatten",   &MakePyTorchFlatten},
+    {"onnx::Reshape",   &MakePyTorchReshape},
+    {"onnx::BatchNormalization", &MakePyTorchBatchNormalization}
 };
 
 
@@ -332,6 +352,339 @@ std::unique_ptr<ROperator> MakePyTorchConv(PyObject* fNode){
         }
         return op;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Tanh object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Tanh object, the names of
+/// input & output tensors and the data-type of the Graph node
+/// are extracted.
+std::unique_ptr<ROperator> MakePyTorchTanh(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameX      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Tanh<float>(fNameX,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Tanh does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Softmax object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Softmax object, the names of
+/// input & output tensors, the data-type, and the axis attribute
+/// are extracted.  The axis defaults to -1 per the ONNX specification
+/// when the attribute is not present.
+std::unique_ptr<ROperator> MakePyTorchSoftmax(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameX      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        // Extract the axis attribute; default to -1 per ONNX spec
+        int64_t fAttrAxis = -1;
+        PyObject* fAxisKey = PyUnicode_FromString("axis");
+        if (PyDict_Contains(fAttributes, fAxisKey)) {
+            fAttrAxis = (int64_t)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis")));
+        }
+        Py_DECREF(fAxisKey);
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Softmax(fAttrAxis,fNameX,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Softmax does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_LeakyRelu object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_LeakyRelu object, the names of
+/// input & output tensors, the data-type, and the alpha attribute
+/// are extracted.  The alpha defaults to 0.01 per the ONNX specification
+/// when the attribute is not present.
+std::unique_ptr<ROperator> MakePyTorchLeakyRelu(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameX      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        // Extract the alpha attribute; default to 0.01 per ONNX spec
+        float fAttrAlpha = 0.01f;
+        PyObject* fAlphaKey = PyUnicode_FromString("alpha");
+        if (PyDict_Contains(fAttributes, fAlphaKey)) {
+            fAttrAlpha = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"alpha")));
+        }
+        Py_DECREF(fAlphaKey);
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_LeakyRelu<float>(fAttrAlpha,fNameX,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator LeakyRelu does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_BasicBinary<Add> object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_BasicBinary<Add>, the names of the two
+/// input tensors and the output tensor are extracted.
+std::unique_ptr<ROperator> MakePyTorchAdd(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameA      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameB      = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_BasicBinary<float,Add>(fNameA,fNameB,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Add does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_BasicBinary<Sub> object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_BasicBinary<Sub>, the names of the two
+/// input tensors and the output tensor are extracted.
+std::unique_ptr<ROperator> MakePyTorchSub(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameA      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameB      = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_BasicBinary<float,Sub>(fNameA,fNameB,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sub does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_BasicBinary<Mul> object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_BasicBinary<Mul>, the names of the two
+/// input tensors and the output tensor are extracted.
+std::unique_ptr<ROperator> MakePyTorchMul(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameA      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameB      = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_BasicBinary<float,Mul>(fNameA,fNameB,fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Mul does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Gemm object for MatMul
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For PyTorch's MatMul operation in its ONNX graph, the names of the two
+/// input tensors and the output tensor are extracted.  MatMul is mapped to
+/// ROperator_Gemm with alpha=1.0, beta=0.0, no transpose, and no bias.
+std::unique_ptr<ROperator> MakePyTorchMatMul(PyObject* fNode){
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+        std::string fNameA      = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameB      = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_Gemm<float>(1.0, 0.0, 0, 0, fNameA, fNameB, fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator MatMul does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Reshape object for Flatten
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For PyTorch's Flatten operation in its ONNX graph, the axis attribute is
+/// extracted (default 1).  Flatten is mapped to ROperator_Reshape with
+/// ReshapeOpMode Flatten and an empty shape tensor name.
+std::unique_ptr<ROperator> MakePyTorchFlatten(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNameData   = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        // Extract axis attribute; default to 1 per ONNX spec
+        int fAttrAxis = 1;
+        PyObject* fAxisKey = PyUnicode_FromString("axis");
+        if (PyDict_Contains(fAttributes, fAxisKey)) {
+            fAttrAxis = (int)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis")));
+        }
+        Py_DECREF(fAxisKey);
+
+        std::unique_ptr<ROperator> op;
+        op.reset(new ROperator_Reshape(Flatten, fAttrAxis, fNameData, "", fNameY));
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_Reshape object for Reshape
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For PyTorch's Reshape operation in its ONNX graph, the data tensor and shape
+/// tensor names are extracted from nodeInputs[0] and nodeInputs[1] respectively.
+/// The allowzero attribute is extracted (default 0).
+std::unique_ptr<ROperator> MakePyTorchReshape(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNameData   = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameShape  = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameY      = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        // Extract allowzero attribute; default to 0 per ONNX spec
+        int fAttrAllowZero = 0;
+        PyObject* fAllowZeroKey = PyUnicode_FromString("allowzero");
+        if (PyDict_Contains(fAttributes, fAllowZeroKey)) {
+            fAttrAllowZero = (int)(PyLong_AsLong(PyDict_GetItemString(fAttributes,"allowzero")));
+        }
+        Py_DECREF(fAllowZeroKey);
+
+        std::unique_ptr<ROperator> op;
+        op.reset(new ROperator_Reshape(Reshape, fAttrAllowZero, fNameData, fNameShape, fNameY));
+        return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator_BatchNormalization object
+///
+/// \param[in] fNode Python PyTorch ONNX Graph node
+/// \return Unique pointer to ROperator object
+///
+/// For BatchNormalization, five inputs are extracted: X (data), scale, B (bias),
+/// mean and var.  The epsilon and momentum attributes are extracted with ONNX
+/// default values of 1e-5 and 0.9 respectively.  Training mode is set to 0
+/// as SOFIE is strictly an inference engine.
+std::unique_ptr<ROperator> MakePyTorchBatchNormalization(PyObject* fNode){
+        PyObject* fAttributes   = PyDict_GetItemString(fNode,"nodeAttributes");
+        PyObject* fInputs       = PyDict_GetItemString(fNode,"nodeInputs");
+        PyObject* fOutputs      = PyDict_GetItemString(fNode,"nodeOutputs");
+        std::string fNodeDType  = PyStringAsString(PyList_GetItem(PyDict_GetItemString(fNode,"nodeDType"),0));
+
+        // 5 inputs: X, scale, B, mean, var
+        std::string fNameX     = PyStringAsString(PyList_GetItem(fInputs,0));
+        std::string fNameScale = PyStringAsString(PyList_GetItem(fInputs,1));
+        std::string fNameB     = PyStringAsString(PyList_GetItem(fInputs,2));
+        std::string fNameMean  = PyStringAsString(PyList_GetItem(fInputs,3));
+        std::string fNameVar   = PyStringAsString(PyList_GetItem(fInputs,4));
+        std::string fNameY     = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+        // Extract epsilon attribute; default to 1e-5 per ONNX spec
+        float fAttrEpsilon = 1e-5f;
+        PyObject* fEpsilonKey = PyUnicode_FromString("epsilon");
+        if (PyDict_Contains(fAttributes, fEpsilonKey)) {
+            fAttrEpsilon = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"epsilon")));
+        }
+        Py_DECREF(fEpsilonKey);
+
+        // Extract momentum attribute; default to 0.9 per ONNX spec
+        float fAttrMomentum = 0.9f;
+        PyObject* fMomentumKey = PyUnicode_FromString("momentum");
+        if (PyDict_Contains(fAttributes, fMomentumKey)) {
+            fAttrMomentum = (float)(PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"momentum")));
+        }
+        Py_DECREF(fMomentumKey);
+
+        std::unique_ptr<ROperator> op;
+        switch(ConvertStringToType(fNodeDType)){
+            case ETensorType::FLOAT: {
+                op.reset(new ROperator_BatchNormalization<float>(fAttrEpsilon, fAttrMomentum, 0,
+                    fNameX, fNameScale, fNameB, fNameMean, fNameVar, fNameY));
+                break;
+                }
+                default:
+                throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator BatchNormalization does not yet support input type " + fNodeDType);
+        }
+        return op;
+}
 }//INTERNAL
 
 
@@ -460,10 +813,10 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                 "    nodeAttributes={j: _node_get(i, j) for j in nodeAttributeNames}\n"
                 "    nodeData['nodeAttributes']=nodeAttributes\n"
                 "    nodeInputs=[x for x in i.inputs()]\n"
-                "    nodeInputNames=[x.debugName() for x in nodeInputs]\n"
+                "    nodeInputNames=[x.debugName().replace('.','_') for x in nodeInputs]\n"
                 "    nodeData['nodeInputs']=nodeInputNames\n"
                 "    nodeOutputs=[x for x in i.outputs()]\n"
-                "    nodeOutputNames=[x.debugName() for x in nodeOutputs]\n"
+                "    nodeOutputNames=[x.debugName().replace('.','_') for x in nodeOutputs]\n"
                 "    nodeData['nodeOutputs']=nodeOutputNames\n"
                 "    nodeDType=[x.type().scalarType() for x in nodeOutputs]\n"
                 "    nodeData['nodeDType']=nodeDType\n"
@@ -484,18 +837,28 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         if(fNodeType == "onnx::Gemm"){
             rmodel.AddBlasRoutines({"Gemm", "Gemv"});
         }
+        else if(fNodeType == "onnx::MatMul"){
+            rmodel.AddBlasRoutines({"Gemm", "Gemv"});
+        }
         else if(fNodeType == "onnx::Selu" || fNodeType == "onnx::Sigmoid"){
+            rmodel.AddNeededStdLib("cmath");
+        }
+        else if(fNodeType == "onnx::Tanh" || fNodeType == "onnx::Softmax"
+             || fNodeType == "onnx::LeakyRelu"){
             rmodel.AddNeededStdLib("cmath");
         }
         else if (fNodeType == "onnx::Conv") {
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+        }
+        else if(fNodeType == "onnx::BatchNormalization"){
+            rmodel.AddNeededStdLib("cmath");
         }
         rmodel.AddOperator(INTERNAL::MakePyTorchNode(fNode));
     }
 
 
     //Extracting model weights to add the initialized tensors to the RModel
-    PyRunString("weightNames=[k for k in graph[1].keys()]",fGlobalNS,fLocalNS);
+    PyRunString("weightNames=[k.replace('.','_') for k in graph[1].keys()]",fGlobalNS,fLocalNS);
     PyRunString("weights=[v.numpy() for v in graph[1].values()]",fGlobalNS,fLocalNS);
     PyRunString("weightDTypes=[v.type()[6:-6] for v in graph[1].values()]",fGlobalNS,fLocalNS);
     PyObject* fPWeightNames = PyDict_GetItemString(fLocalNS,"weightNames");
@@ -534,7 +897,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     //Extracting Input tensor info
     PyRunString("inputs=[x for x in model.graph.inputs()]",fGlobalNS,fLocalNS);
     PyRunString("inputs=inputs[1:]",fGlobalNS,fLocalNS);
-    PyRunString("inputNames=[x.debugName() for x in inputs]",fGlobalNS,fLocalNS);
+    PyRunString("inputNames=[x.debugName().replace('.','_') for x in inputs]",fGlobalNS,fLocalNS);
     PyObject* fPInputs= PyDict_GetItemString(fLocalNS,"inputNames");
     std::string fInputName;
     std::vector<size_t>fInputShape;
@@ -557,7 +920,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 
     //Extracting output tensor names
     PyRunString("outputs=[x for x in graph[0].outputs()]",fGlobalNS,fLocalNS);
-    PyRunString("outputNames=[x.debugName() for x in outputs]",fGlobalNS,fLocalNS);
+    PyRunString("outputNames=[x.debugName().replace('.','_') for x in outputs]",fGlobalNS,fLocalNS);
     PyObject* fPOutputs= PyDict_GetItemString(fLocalNS,"outputNames");
     std::vector<std::string> fOutputNames;
     for(Py_ssize_t outputIter = 0; outputIter < PyList_Size(fPOutputs);++outputIter){

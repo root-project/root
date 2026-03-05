@@ -104,6 +104,83 @@ def generateConvolutionModel():
     m = torch.jit.script(model)
     torch.jit.save(m,"PyTorchModelConvolution.pt")
 
+
+def generateActivationModel():
+    # Model using Tanh, LeakyReLU, and Softmax activations
+    model = nn.Sequential(
+           nn.Linear(4,8),
+           nn.Tanh(),
+           nn.Linear(8,6),
+           nn.LeakyReLU(0.01),
+           nn.Linear(6,6),
+           nn.Softmax(dim=1)
+           )
+
+    #Construct loss function and optimizer
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
+
+    #Constructing random test dataset
+    x=torch.randn(2,4)
+    y=torch.randn(2,6)
+
+    #Training the model
+    for i in range(2000):
+        y_pred = model(x)
+        loss = criterion(y_pred,y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    #Saving the trained model
+    model.eval()
+    m = torch.jit.script(model)
+    torch.jit.save(m,"PyTorchModelActivation.pt")
+
+
+def generateBatchNormModel():
+    class Model(nn.Module):
+        def __init__(self):
+            super(Model, self).__init__()
+            self.bn = nn.BatchNorm1d(4)
+            self.fc = nn.Linear(12,6)
+            self.scale = nn.Parameter(torch.ones(6))
+            self.bias2 = nn.Parameter(torch.zeros(6))
+
+        def forward(self, x):
+            x = self.bn(x)
+            x = torch.flatten(x, 1)
+            x = self.fc(x)
+            x = x * self.scale
+            x = x + self.bias2
+            return x
+
+    model = Model()
+
+    #Construct loss function and optimizer
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
+
+    #Constructing random test dataset
+    x=torch.randn(2, 4, 3)
+    y=torch.randn(2, 6)
+
+    #Training the model
+    for i in range(2000):
+        y_pred = model(x)
+        loss = criterion(y_pred,y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    #Saving the trained model
+    model.eval()
+    m = torch.jit.script(model)
+    torch.jit.save(m,"PyTorchModelBatchNorm.pt")
+
+
 generateSequentialModel()
 generateModuleModel()
 generateConvolutionModel()
+generateActivationModel()
+generateBatchNormModel()
