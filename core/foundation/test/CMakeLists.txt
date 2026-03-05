@@ -13,3 +13,7 @@ ROOT_ADD_GTEST(testLogger testLogger.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testRRangeCast testRRangeCast.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testStringUtils testStringUtils.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(FoundationUtilsTests FoundationUtilsTests.cxx LIBRARIES Core INCLUDE_DIRS ../res)
+ROOT_ADD_GTEST(RLoggerEnvVar RLoggerEnvVar.cxx
+   LIBRARIES Core)
+set_tests_properties(RLoggerEnvVar PROPERTIES
+   ENVIRONMENT "ROOT_LOG=ROOT.TestChannel=Error")

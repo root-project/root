@@ -32,6 +32,7 @@ namespace {
 
 class RLogHandlerDefault : public ROOT::RLogHandler {
 public:
+   // Returns false if further emission of this log entry should be suppressed.
    bool Emit(const ROOT::RLogEntry &entry) override;
 };
 
@@ -60,10 +61,10 @@ inline bool RLogHandlerDefault::Emit(const ROOT::RLogEntry &entry)
 }
 
 /// Trim leading and trailing whitespace from a string.
-std::string TrimWhitespace(const std::string &s)
+std::string_view TrimWhitespace(std::string_view s)
 {
    const auto begin = s.find_first_not_of(" \t\r\n");
-   if (begin == std::string::npos)
+   if (begin == std::string_view::npos)
       return {};
    const auto end = s.find_last_not_of(" \t\r\n");
    return s.substr(begin, end - begin + 1);
@@ -83,6 +84,8 @@ ROOT::ELogLevel ParseLogLevel(const std::string &levelStr)
                extra = std::stoi(levelStr.substr(parenOpen + 1, parenClose - parenOpen - 1));
             } catch (...) {
                extra = 0;
+               ::Warning("ROOT_LOG", "Cannot parse verbosity level in '%s', defaulting to Debug",
+                         levelStr.c_str());
             }
          }
       }
@@ -93,7 +96,8 @@ ROOT::ELogLevel ParseLogLevel(const std::string &levelStr)
    if (levelStr == "Error")   return ROOT::ELogLevel::kError;
    if (levelStr == "Fatal")   return ROOT::ELogLevel::kFatal;
 
-   // Unrecognised string: return kUnset so the channel falls back to global.
+// Unrecognised string: warn the user and return kUnset so the channel falls back to global.
+   ::Warning("ROOT_LOG", "Unrecognized log level '%s', ignoring", levelStr.data());
    return ROOT::ELogLevel::kUnset;
 }
 
@@ -118,8 +122,8 @@ std::unordered_map<std::string, ROOT::ELogLevel> ParseRootLogEnvVar()
       if (eq == std::string::npos)
          continue;
 
-      std::string channelName = TrimWhitespace(token.substr(0, eq));
-      std::string levelStr    = TrimWhitespace(token.substr(eq + 1));
+      std::string_view channelName = TrimWhitespace(std::string_view(token).substr(0, eq));
+      std::string_view levelStr    = TrimWhitespace(std::string_view(token).substr(eq + 1));
 
       if (channelName.empty() || levelStr.empty())
          continue;
