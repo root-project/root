@@ -1016,11 +1016,6 @@ if(xrootd AND NOT TARGET XRootD::XrdCl)
   set_target_properties(XRootD::XrdUtils PROPERTIES IMPORTED_LOCATION ${XROOTD_UTILS_LIBRARIES})
 endif()
 
-#---check if netxng can be built-------------------------------
-if(xrootd)
-  set(netxng ON)
-endif()
-
 #---make sure non-builtin xrootd is not using builtin_openssl-----------
 if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
   if(fail-on-missing)

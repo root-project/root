@@ -19,7 +19,7 @@ if(curl)
    add_subdirectory(curl)
 endif()
 
-if(netxng)
+if(xrootd)
    add_subdirectory(netxng)
 endif()
 
