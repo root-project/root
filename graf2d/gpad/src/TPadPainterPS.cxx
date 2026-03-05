@@ -518,36 +518,29 @@ void TPadPainterPS::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text.
 
-void TPadPainterPS::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
+void TPadPainterPS::DrawText(Double_t x, Double_t y, const char *text, ETextMode /* mode */)
 {
-   const Int_t px = gPad->XtoPixel(x);
-   const Int_t py = gPad->YtoPixel(y);
-   const Double_t angle = GetTextAngle();
-   const Double_t mgn = GetTextMagnitude();
+   fPS->Text(x, y, text);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version working with wchar_t and required by TMathText.
 
-void TPadPainterPS::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
+void TPadPainterPS::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode /* mode */)
 {
-   const Int_t px = gPad->XtoPixel(x);
-   const Int_t py = gPad->YtoPixel(y);
-   const Double_t angle = GetTextAngle();
-   const Double_t mgn = GetTextMagnitude();
+   fPS->Text(x, y, text);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text in normalized coordinates.
 
-void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
+void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode /* mode */)
 {
-   const Int_t px = gPad->UtoPixel(u);
-   const Int_t py = gPad->VtoPixel(v);
-   const Double_t angle = GetTextAngle();
-   const Double_t mgn = GetTextMagnitude();
+   Double_t x = (1 - u) * fPad->GetX1() + u * fPad->GetX2();
+   Double_t y = (1 - v) * fPad->GetY1() + v * fPad->GetY2();
+   fPS->Text(x, y, text);
 }
 
 
@@ -562,10 +555,9 @@ void TPadPainterPS::SaveImage(TVirtualPad *, const char *, Int_t) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text in normalized coordinates.
 
-void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode)
+void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode /* mode */)
 {
-   const Int_t px = gPad->UtoPixel(u);
-   const Int_t py = gPad->VtoPixel(v);
-   const Double_t angle = GetTextAngle();
-   const Double_t mgn = GetTextMagnitude();
+   Double_t x = (1 - u) * fPad->GetX1() + u * fPad->GetX2();
+   Double_t y = (1 - v) * fPad->GetY1() + v * fPad->GetY2();
+   fPS->Text(x, y, text);
 }
