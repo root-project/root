@@ -6,6 +6,7 @@
 TEST(THbookFile, ReadTH1)
 {
    THbookFile file("mb4i1.hbook");
+   ASSERT_TRUE(file.IsOpen());
    EXPECT_STREQ(file.GetCurDir(), "//lun10");
    EXPECT_EQ(file.GetListOfKeys()->size(), 9);
 
