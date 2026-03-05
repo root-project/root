@@ -87,3 +87,12 @@ void TVirtualPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
       if ((u[i] != u[i+1]) || (v[i] != v[i + 1]))
          DrawLineNDC(u[i], v[i], u[i+1], v[i+1]);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text with url link
+/// By default only text is drawn
+
+void TVirtualPadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const char * /* url */)
+{
+   DrawText(x, y, text, kClear);
+}

@@ -248,10 +248,27 @@ void TWebPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMod
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Paint text with url
+
+void TWebPadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const char * /* url */)
+{
+   ::Error("DrawTextUrl", "Not supported yet in web painter");
+
+   auto buf = StoreOperation(TWebPainting::MakeTextOper(text), attrText, 2);
+   if (buf) {
+      buf[0] = x;
+      buf[1] = y;
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Special version working with wchar_t and required by TMathText.
 
 void TWebPadPainter::DrawText(Double_t x, Double_t y, const wchar_t * /*text*/, ETextMode /*mode*/)
 {
+   ::Error("DrawText", "Not supported wchar_t yet");
+
    auto buf = StoreOperation(TWebPainting::MakeTextOper("wchar_t"), attrText, 2);
    if (buf) {
       buf[0] = x;
@@ -288,6 +305,7 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
       buf[1] = v;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Produce image from WebPadPainter
