@@ -13,7 +13,7 @@
 
 TClingDelegateDiagnosticPrinter::TClingDelegateDiagnosticPrinter
 (clang::DiagnosticOptions *DiagOpts, clang::LangOptions &LangOpts, handler_t fn)
-  : TextDiagnosticPrinter(fOS, DiagOpts), fOS(fOS_out), fHandler(fn)
+  : TextDiagnosticPrinter(fOS, *DiagOpts), fOS(fOS_out), fHandler(fn)
 {
    // Required to initialize the internal `clang::TextDiagnostic` instance.
    TextDiagnosticPrinter::BeginSourceFile(LangOpts, nullptr);

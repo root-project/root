@@ -4866,8 +4866,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QT = Ctxt.getDependentSizedArrayType (newQT,
                                               arr->getSizeExpr(),
                                               arr->getSizeModifier(),
-                                              arr->getIndexTypeCVRQualifiers(),
-                                              arr->getBracketsRange());
+                                              arr->getIndexTypeCVRQualifiers());
 
       } else if (const auto arr = dyn_cast<IncompleteArrayType>(QT.getTypePtr())) {
          QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
@@ -4884,8 +4883,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QT = Ctxt.getVariableArrayType (newQT,
                                         arr->getSizeExpr(),
                                         arr->getSizeModifier(),
-                                        arr->getIndexTypeCVRQualifiers(),
-                                        arr->getBracketsRange());
+                                        arr->getIndexTypeCVRQualifiers());
       }
 
       // Add back the qualifiers.
