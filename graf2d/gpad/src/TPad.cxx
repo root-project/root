@@ -4846,12 +4846,11 @@ void TPad::PaintTextUrl(Double_t x, Double_t y, const char *text, const char *ur
 {
    Modified();
 
-   if (!gPad->IsBatch() && GetPainter())
-      GetPainter()->DrawText(x, y, text, TVirtualPadPainter::kClear);
-
-   if (gVirtualPS) gVirtualPS->TextUrl(x, y, text, url);
+   if (auto pp = GetPainter()) {
+      pp->OnPad(this);
+      pp->DrawTextUrl(x, y, text, url);
+   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint text in CurrentPad NDC coordinates.

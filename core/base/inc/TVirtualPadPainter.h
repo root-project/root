@@ -107,6 +107,8 @@ public:
    virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) = 0;
    virtual void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) = 0;
 
+   virtual void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url);
+
    //gif, jpg, png, bmp output.
    virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
 

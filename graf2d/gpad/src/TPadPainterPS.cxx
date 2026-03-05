@@ -534,6 +534,15 @@ void TPadPainterPS::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextM
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Drawint text with url link
+
+void TPadPainterPS::DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url)
+{
+   fPS->TextUrl(x, y, text, url);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint text in normalized coordinates.
 
 void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode /* mode */)
