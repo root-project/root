@@ -324,6 +324,10 @@ OBJ: TList	TList	Doubly linked list : 0
       void TAttLine::Modify()
  OBJ: TMethod	Modify	 : 0
       void TAttFill::Modify()
+ OBJ: TMethod	ModifyOn	 : 0
+      void TAttLine::ModifyOn(TVirtualPad* pad)
+ OBJ: TMethod	ModifyOn	 : 0
+      void TAttFill::ModifyOn(TVirtualPad* pad)
  OBJ: TMethod	Notify	 : 0
       Bool_t TObject::Notify()
  OBJ: TMethod	Obsolete	 : 0
@@ -643,11 +647,11 @@ OBJ: TList	TList	Doubly linked list : 0
       void TAttMarker::SetMarkerAttributes()
 
 childCl::Class()->GetListOfAllPublicMethods():
-childCl::childCl() // 
-childCl::childCl(const childCl&) // 
+childCl::childCl() //
+childCl::childCl(const childCl&) //
 childCl::fGetIndex(Int_t aIndex) // Title Derived
-childCl::~childCl() // 
-baseCl::baseCl() // 
-baseCl::baseCl(const baseCl&) // 
+childCl::~childCl() //
+baseCl::baseCl() //
+baseCl::baseCl(const baseCl&) //
 baseCl::fGetIndex(Int_t aIndex = 0) // Title Base
-baseCl::~baseCl() // 
+baseCl::~baseCl() //
