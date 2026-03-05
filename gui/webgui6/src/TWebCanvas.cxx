@@ -538,12 +538,15 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    TVirtualPS *saveps = gVirtualPS;
 
-   TWebPS ps;
-   ps.GetPainting()->SetClassName(obj->ClassName());
-   ps.GetPainting()->SetObjectName(obj->GetName());
-   gVirtualPS = masterps ? masterps : &ps;
+   TWebPS *webps = masterps;
+   if (!masterps) {
+      webps = new TWebPS;
+      webps->GetPainting()->SetClassName(obj->ClassName());
+      webps->GetPainting()->SetObjectName(obj->GetName());
+   }
+   gVirtualPS = webps;
    if (painter)
-      painter->SetPainting(ps.GetPainting());
+      painter->SetPainting(webps->GetPainting(), webps);
 
    // calling Paint function for the object
    obj->Paint(opt);
@@ -556,15 +559,18 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    }
 
    if (painter)
-      painter->SetPainting(nullptr);
+      painter->SetPainting(nullptr, nullptr);
 
    gVirtualPS = saveps;
 
    fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
-   if (!masterps && !ps.IsEmptyPainting())
-      master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, ps.TakePainting(), kTRUE);
+   if (!masterps) {
+      if (!webps->IsEmptyPainting())
+         master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, webps->TakePainting(), kTRUE);
+      delete webps;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
