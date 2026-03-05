@@ -64,6 +64,41 @@
 
 namespace clang {
 namespace TypeName {
+bool getFullyQualifiedTemplateName(const ASTContext &Ctx,
+                                          TemplateName &TName,
+                                          bool WithGlobalNsPrefix);
+bool getFullyQualifiedTemplateArgument(const ASTContext &Ctx,
+                                              TemplateArgument &Arg,
+                                              bool WithGlobalNsPrefix);
+const Type *getFullyQualifiedTemplateType(const ASTContext &Ctx,
+                                                 const TagType *TSTRecord,
+                                                 ElaboratedTypeKeyword Keyword,
+                                                 NestedNameSpecifier Qualifier,
+                                                 bool WithGlobalNsPrefix);
+const Type *
+getFullyQualifiedTemplateType(const ASTContext &Ctx,
+                              const TemplateSpecializationType *TST,
+                              bool WithGlobalNsPrefix);
+NestedNameSpecifier createOuterNNS(const ASTContext &Ctx, const Decl *D,
+                                          bool FullyQualify,
+                                          bool WithGlobalNsPrefix);
+NestedNameSpecifier getFullyQualifiedNestedNameSpecifier(
+    const ASTContext &Ctx, NestedNameSpecifier Scope, bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifierForScopeOf(const ASTContext &Ctx, const Decl *Decl,
+                                    bool FullyQualified,
+                                    bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifierForScopeOf(const ASTContext &Ctx, const Type *TypePtr,
+                                    bool FullyQualified,
+                                    bool WithGlobalNsPrefix);
+NestedNameSpecifier
+createNestedNameSpecifier(const ASTContext &Ctx, const NamespaceDecl *Namespace,
+                          bool WithGlobalNsPrefix);
+NestedNameSpecifier createNestedNameSpecifier(const ASTContext &Ctx,
+                                              const TypeDecl *TD,
+                                              bool FullyQualify,
+                                              bool WithGlobalNsPrefix);
 /// Get the fully qualified name for a type. This includes full
 /// qualification of all template parameters etc.
 ///
