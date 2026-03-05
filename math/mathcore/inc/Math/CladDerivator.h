@@ -1115,8 +1115,8 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
                                float *_d_C)
 {
    // TODO:
-   //    - handle transa and transb cases correctly
-   if (transa || transb) {
+   //    - fix and test the implementation for alpha != 1.0
+   if (alpha != 1.0f) {
       return;
    }
 
@@ -1127,12 +1127,34 @@ inline void Gemm_Call_pullback(float *output, bool transa, bool transb, int m, i
    // overwriting it.
    float one = 1.;
 
-   // _d_A, _d_B
-   // note: beta needs to be one because we want to add to _d_A and _d_B instead of overwriting it.
-   ::sgemm_(&cn, &ct, &m, &k, &n, &alpha, _d_output, &m, B, &k, &one, _d_A, &m);
-   ::sgemm_(&ct, &cn, &k, &n, &m, &alpha, A, &m, _d_output, &m, &one, _d_B, &k);
+   // Leading dimensions for the original storage (must match how sgemm_ is called in the primal)
+   const int lda_opA = transa ? k : m; // lda used with transa flag as in primal
+   const int ldb_opB = transb ? n : k; // ldb used with transb flag as in primal
 
-   // _d_alpha, _d_beta, _d_C
+   // Flags for op(A), op(B)
+   const char TA = transa ? ct : cn;
+   const char TB = transb ? ct : cn;
+
+   // Flags for op(A)^T and op(B)^T
+   const char TAT = transa ? cn : ct; // (A^T)^T = A, A^T if A
+   const char TBT = transb ? cn : ct; // (B^T)^T = B, B^T if B
+
+   if (!transa) {
+      // dA += alpha * dY * op(B)^T    (m x n) * (n x k) -> (m x k)
+      ::sgemm_(&cn, &TBT, &m, &k, &n, &alpha, _d_output, &m, B, &ldb_opB, &one, _d_A, &m);
+   } else {
+      // dA (shape k x m) += alpha * op(B) * dY^T   (k x n) * (n x m) -> (k x m)
+      ::sgemm_(&TB, &ct, &k, &m, &n, &alpha, B, &ldb_opB, _d_output, &m, &one, _d_A, &k);
+   }
+
+   if (!transb) {
+      // dB += alpha * op(A)^T * dY   (k x m) * (m x n) -> (k x n)
+      ::sgemm_(&TAT, &cn, &k, &n, &m, &alpha, A, &lda_opA, _d_output, &m, &one, _d_B, &k);
+   } else {
+      // dB (shape n x k) += alpha * dY^T * op(A)   (n x m) * (m x k) -> (n x k)
+      ::sgemm_(&ct, &TA, &n, &k, &m, &alpha, _d_output, &m, A, &lda_opA, &one, _d_B, &n);
+   }
+
    int sizeC = n * m;
 
    for (int i = 0; i < sizeC; ++i) {
