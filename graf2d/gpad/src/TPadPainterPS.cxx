@@ -332,7 +332,7 @@ Int_t TPadPainterPS::CreateDrawable(UInt_t, UInt_t)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear the current gVirtualX window - not implemented
+/// Clear the current gVirtualX window - noop for PS
 
 void TPadPainterPS::ClearDrawable()
 {
@@ -361,6 +361,17 @@ void TPadPainterPS::DestroyDrawable(Int_t)
 void TPadPainterPS::SelectDrawable(Int_t)
 {
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start new page on PS output
+
+void  TPadPainterPS::NewPage()
+{
+   fPS->NewPage();
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
