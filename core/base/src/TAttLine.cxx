@@ -11,9 +11,9 @@
 
 #include "TAttLine.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TStyle.h"
 #include "TColor.h"
 #include <cmath>
 #include <iostream>
@@ -245,18 +245,22 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
 
 void TAttLine::Modify()
 {
-   if (!gPad) return;
-   Int_t lineWidth = std::abs(fLineWidth%100);
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetLineColor(fLineColor);
-      if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);
-      else                                   gVirtualX->SetLineStyle(1);
-      gVirtualX->SetLineWidth(lineWidth);
-   }
-
-   if (fLineStyle > 0 && fLineStyle < 30) gPad->SetAttLinePS(fLineColor,fLineStyle,lineWidth);
-   else                                   gPad->SetAttLinePS(fLineColor,1,lineWidth);
+   ModifyOn(gPad);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current line attributes on specified pad
+
+void TAttLine::ModifyOn(TVirtualPad *pad)
+{
+   auto pp = pad ? pad->GetPainter() : nullptr;
+   if (!pp)
+      return;
+   pp->SetLineColor(fLineColor);
+   pp->SetLineStyle((fLineStyle > 0 && fLineStyle < 30) ? fLineStyle : 1);
+   pp->SetLineWidth(std::abs(fLineWidth % 100));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this line attributes to default values.

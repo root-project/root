@@ -6391,6 +6391,8 @@ void TPad::SetView(TView *view)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript fill area attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttFillPS(Color_t color, Style_t style)
 {
@@ -6403,6 +6405,8 @@ void TPad::SetAttFillPS(Color_t color, Style_t style)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript line attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 {
@@ -6416,6 +6420,8 @@ void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript marker attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 {
@@ -6429,6 +6435,8 @@ void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript text attributes.
+///
+/// DEPRECATED!!! No longer used by ROOT, kept only for backward compatibility
 
 void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {

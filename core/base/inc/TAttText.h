@@ -16,6 +16,7 @@
 #include "Rtypes.h"
 
 class TColorNumber;
+class TVirtualPad;
 
 class TAttText {
 
@@ -38,6 +39,7 @@ public:
    virtual Float_t  GetTextSize()  const {return fTextSize;}  ///< Return the text size
    virtual Float_t  GetTextSizePercent(Float_t size);         ///< Return the text in percent of the pad size
    virtual void     Modify();
+   virtual void     ModifyOn(TVirtualPad *pad);
    virtual void     ResetAttText(Option_t *toption="");
    virtual void     SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef=12, Float_t angdef=0, Int_t coldef=1, Int_t fondef=61, Float_t sizdef=1);
    virtual void     SetTextAttributes();  // *MENU*
