@@ -14,10 +14,10 @@
 #include "TROOT.h"
 #include "TAttText.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TVirtualX.h"
-#include "TError.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TStyle.h"
+#include "TError.h"
 #include "TColor.h"
 
 
@@ -326,32 +326,53 @@ Float_t TAttText::GetTextSizePercent(Float_t size)
 
 void TAttText::Modify()
 {
-   if (!gPad) return;
-
-   // Do we need to change font?
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetTextAngle(fTextAngle);
-      Float_t tsize;
-      if (fTextFont%10 > 2) {
-         tsize = fTextSize;
-      } else {
-         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
-         if (wh < hh)  tsize = fTextSize*wh;
-         else          tsize = fTextSize*hh;
-      }
-
-      if (gVirtualX->GetTextFont() != fTextFont) {
-         gVirtualX->SetTextFont(fTextFont);
-         gVirtualX->SetTextSize(tsize);
-      } else if (gVirtualX->GetTextSize() != tsize) {
-         gVirtualX->SetTextSize(tsize);
-      }
-      gVirtualX->SetTextAlign(fTextAlign);
-      gVirtualX->SetTextColor(fTextColor);
-   }
-   gPad->SetAttTextPS(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
+   ModifyOn(gPad);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current text attributes if necessary on specified pad.
+
+void TAttText::ModifyOn(TVirtualPad *pad)
+{
+   auto pp = pad ? pad->GetPainter() : nullptr;
+   if (!pp)
+      return;
+
+   Float_t tsize = fTextSize;
+
+   // there was difference in text size handling, keep it in one place
+   if (pp->IsNative()) {
+      if (fTextFont % 10 <= 2) {
+         auto  wh = pad->XtoPixel(pad->GetX2());
+         auto  hh = pad->YtoPixel(pad->GetY1());
+         if (wh < hh)  tsize *= wh;
+         else          tsize *= hh;
+      }
+   } else {
+      if (fTextFont % 10 > 2) {
+         Float_t wh = pad->XtoPixel(pad->GetX2());
+         Float_t hh = pad->YtoPixel(pad->GetY1());
+         if (wh < hh)  {
+            Float_t dy = pad->AbsPixeltoX(Int_t(tsize)) - pad->AbsPixeltoX(0);
+            tsize = dy/(pad->GetX2() - pad->GetX1());
+         } else {
+            Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(Int_t(tsize));
+            tsize = dy/(pad->GetY2() - pad->GetY1());
+         }
+      }
+   }
+   pp->SetTextAngle(fTextAngle);
+   if (pp->GetTextFont() != fTextFont) {
+      pp->SetTextFont(fTextFont);
+      pp->SetTextSize(tsize);
+   } else if (pp->GetTextSize() != tsize) {
+      pp->SetTextSize(tsize);
+   }
+   pp->SetTextAlign(fTextAlign);
+   pp->SetTextColor(fTextColor);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this text attributes to default values.

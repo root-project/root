@@ -13,9 +13,9 @@
 #include "Strlen.h"
 #include "TAttMarker.h"
 #include "TVirtualPad.h"
-#include "TStyle.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
+#include "TStyle.h"
 #include "TColor.h"
 
 
@@ -321,15 +321,23 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 
 void TAttMarker::Modify()
 {
-   if (!gPad) return;
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetMarkerColor(fMarkerColor);
-      gVirtualX->SetMarkerSize (fMarkerSize);
-      gVirtualX->SetMarkerStyle(fMarkerStyle);
-   }
-
-   gPad->SetAttMarkerPS(fMarkerColor,fMarkerStyle,fMarkerSize);
+   ModifyOn(gPad);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current marker attributes if necessary on specified pad.
+
+void TAttMarker::ModifyOn(TVirtualPad *pad)
+{
+   auto pp = pad ? pad->GetPainter() : nullptr;
+   if (!pp)
+      return;
+
+   pp->SetMarkerColor(fMarkerColor);
+   pp->SetMarkerSize (fMarkerSize);
+   pp->SetMarkerStyle(fMarkerStyle);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this marker attributes to the default values.

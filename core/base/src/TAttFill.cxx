@@ -11,9 +11,9 @@
 
 #include <iostream>
 #include "TAttFill.h"
-#include "TVirtualPad.h"
 #include "TStyle.h"
-#include "TVirtualX.h"
+#include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
 
@@ -215,13 +215,19 @@ void TAttFill::Copy(TAttFill &attfill) const
 
 void TAttFill::Modify()
 {
-   if (!gPad) return;
-   if (!gPad->IsBatch()) {
-      gVirtualX->SetFillColor(fFillColor);
-      gVirtualX->SetFillStyle(fFillStyle);
-   }
+   ModifyOn(gPad);
+}
 
-   gPad->SetAttFillPS(fFillColor,fFillStyle);
+////////////////////////////////////////////////////////////////////////////////
+/// Change current fill area attributes on speicifed pad
+
+void TAttFill::ModifyOn(TVirtualPad *pad)
+{
+   auto pp = pad ? pad->GetPainter() : nullptr;
+   if (!pp)
+      return;
+   pp->SetFillColor(fFillColor);
+   pp->SetFillStyle(fFillStyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

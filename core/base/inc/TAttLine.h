@@ -16,6 +16,7 @@
 #include "Rtypes.h"
 
 class TColorNumber;
+class TVirtualPad;
 
 class TAttLine {
 
@@ -36,6 +37,7 @@ public:
    virtual Style_t  GetLineStyle() const {return fLineStyle;} ///< Return the line style
    virtual Width_t  GetLineWidth() const {return fLineWidth;} ///< Return the line width
    virtual void     Modify();
+   virtual void     ModifyOn(TVirtualPad *pad);
    virtual void     ResetAttLine(Option_t *option="");
    virtual void     SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
    virtual void     SetLineAttributes(); // *MENU*

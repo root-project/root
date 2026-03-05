@@ -16,6 +16,7 @@
 #include "Rtypes.h"
 
 class TColorNumber;
+class TVirtualPad;
 
 class TAttMarker {
 
@@ -33,6 +34,7 @@ public:
    virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
    virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
    virtual void     Modify();
+   virtual void     ModifyOn(TVirtualPad *pad);
    virtual void     ResetAttMarker(Option_t *toption="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
    virtual void     SetMarkerAttributes();  // *MENU*
