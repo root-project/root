@@ -78,6 +78,15 @@ public:
    void     SetTextSize(Float_t tsize) override { if (fPS) fPS->SetTextSize(tsize); else TAttText::SetTextSize(tsize); }
    void     SetTextSizePixels(Int_t npixels) override { if (fPS) fPS->SetTextSizePixels(npixels); else TAttText::SetTextSizePixels(npixels); }
 
+   //Marker attributes
+   Color_t  GetMarkerColor() const override { return fPS ? fPS->GetMarkerColor() : TAttMarker::GetMarkerColor(); }
+   Style_t  GetMarkerStyle() const override { return fPS ? fPS->GetMarkerStyle() : TAttMarker::GetMarkerStyle(); }
+   Size_t   GetMarkerSize() const override { return fPS ? fPS->GetMarkerSize() : TAttMarker::GetMarkerSize(); }
+
+   void     SetMarkerColor(Color_t mcolor) override { if (fPS) fPS->SetMarkerColor(mcolor); else TAttMarker::SetMarkerColor(mcolor); }
+   void     SetMarkerStyle(Style_t mstyle) override  { if (fPS) fPS->SetMarkerStyle(mstyle); else TAttMarker::SetMarkerStyle(mstyle); }
+   void     SetMarkerSize(Size_t msize) override  { if (fPS) fPS->SetMarkerSize(msize); else TAttMarker::SetMarkerSize(msize); }
+
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t, UInt_t) override { return -1; }
    void     ClearDrawable() override {}

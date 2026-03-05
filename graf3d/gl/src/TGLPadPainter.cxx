@@ -257,6 +257,63 @@ void TGLPadPainter::SetTextSizePixels(Int_t npixels)
    gVirtualX->SetTextSizePixels(npixels);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Color_t TGLPadPainter::GetMarkerColor() const
+{
+   return gVirtualX->GetMarkerColor();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Style_t TGLPadPainter::GetMarkerStyle() const
+{
+   return gVirtualX->GetMarkerStyle();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Size_t TGLPadPainter::GetMarkerSize() const
+{
+   return gVirtualX->GetMarkerSize();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TGLPadPainter::SetMarkerColor(Color_t mcolor)
+{
+   gVirtualX->SetMarkerColor(mcolor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TGLPadPainter::SetMarkerStyle(Style_t mstyle)
+{
+   gVirtualX->SetMarkerStyle(mstyle);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TGLPadPainter::SetMarkerSize(Size_t msize)
+{
+   gVirtualX->SetMarkerSize(msize);
+}
+
+
+
+
 /*
 "Pixmap" part of TGLPadPainter.
 */

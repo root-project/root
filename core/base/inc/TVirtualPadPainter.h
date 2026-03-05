@@ -66,6 +66,15 @@ public:
    virtual void     SetTextSize(Float_t tsize=1) = 0;
    virtual void     SetTextSizePixels(Int_t npixels) = 0;
 
+   //Marker attributes
+   virtual Color_t  GetMarkerColor() const { return 0; }
+   virtual Style_t  GetMarkerStyle() const { return 0; }
+   virtual Size_t   GetMarkerSize()  const { return 0; }
+
+   virtual void     SetMarkerColor(Color_t /* mcolor */ = 1) {}
+   virtual void     SetMarkerStyle(Style_t /* mstyle */ = 1) {}
+   virtual void     SetMarkerSize(Size_t /* msize */ = 1) {}
+
    //This part is an interface to X11 pixmap management and to save sub-pads off-screens for OpenGL.
    //Currently, must be implemented only for X11/GDI
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap

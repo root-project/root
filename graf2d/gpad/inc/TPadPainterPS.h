@@ -66,6 +66,15 @@ public:
    void     SetTextSize(Float_t tsize) override;
    void     SetTextSizePixels(Int_t npixels) override;
 
+   //Marker attributes
+   Color_t  GetMarkerColor() const override;
+   Style_t  GetMarkerStyle() const override;
+   Size_t   GetMarkerSize() const override;
+
+   void     SetMarkerColor(Color_t mcolor) override;
+   void     SetMarkerStyle(Style_t mstyle) override;
+   void     SetMarkerSize(Size_t msize) override;
+
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
    void     ClearDrawable() override;
