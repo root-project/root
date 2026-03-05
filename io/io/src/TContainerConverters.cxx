@@ -102,7 +102,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          b.InitMap();
 
          // before reading object save start position
-         UInt_t startpos = b.Length();
+         ULong64_t startpos = b.Length();
 
          // attempt to load next object as TClass clCast
          ULong64_t tag;       // either tag or byte count
