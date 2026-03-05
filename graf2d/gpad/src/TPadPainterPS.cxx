@@ -55,7 +55,7 @@ gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualPS
 
 Color_t TPadPainterPS::GetLineColor() const
 {
-   return gVirtualPS->GetLineColor();
+   return fPS->GetLineColor();
 }
 
 
@@ -64,7 +64,7 @@ Color_t TPadPainterPS::GetLineColor() const
 
 Style_t TPadPainterPS::GetLineStyle() const
 {
-   return gVirtualPS->GetLineStyle();
+   return fPS->GetLineStyle();
 }
 
 
@@ -73,7 +73,7 @@ Style_t TPadPainterPS::GetLineStyle() const
 
 Width_t TPadPainterPS::GetLineWidth() const
 {
-   return gVirtualPS->GetLineWidth();
+   return fPS->GetLineWidth();
 }
 
 
@@ -82,7 +82,7 @@ Width_t TPadPainterPS::GetLineWidth() const
 
 void TPadPainterPS::SetLineColor(Color_t lcolor)
 {
-   gVirtualPS->SetLineColor(lcolor);
+   fPS->SetLineColor(lcolor);
 }
 
 
@@ -91,7 +91,7 @@ void TPadPainterPS::SetLineColor(Color_t lcolor)
 
 void TPadPainterPS::SetLineStyle(Style_t lstyle)
 {
-   gVirtualPS->SetLineStyle(lstyle);
+   fPS->SetLineStyle(lstyle);
 }
 
 
@@ -100,7 +100,7 @@ void TPadPainterPS::SetLineStyle(Style_t lstyle)
 
 void TPadPainterPS::SetLineWidth(Width_t lwidth)
 {
-   gVirtualPS->SetLineWidth(lwidth);
+   fPS->SetLineWidth(lwidth);
 }
 
 
@@ -109,7 +109,7 @@ void TPadPainterPS::SetLineWidth(Width_t lwidth)
 
 Color_t TPadPainterPS::GetFillColor() const
 {
-   return gVirtualPS->GetFillColor();
+   return fPS->GetFillColor();
 }
 
 
@@ -118,7 +118,7 @@ Color_t TPadPainterPS::GetFillColor() const
 
 Style_t TPadPainterPS::GetFillStyle() const
 {
-   return gVirtualPS->GetFillStyle();
+   return fPS->GetFillStyle();
 }
 
 
@@ -128,7 +128,7 @@ Style_t TPadPainterPS::GetFillStyle() const
 Bool_t TPadPainterPS::IsTransparent() const
 {
    //IsTransparent is implemented as inline function in TAttFill.
-   return gVirtualPS->IsTransparent();
+   return fPS->IsTransparent();
 }
 
 
@@ -137,7 +137,7 @@ Bool_t TPadPainterPS::IsTransparent() const
 
 void TPadPainterPS::SetFillColor(Color_t fcolor)
 {
-   gVirtualPS->SetFillColor(fcolor);
+   fPS->SetFillColor(fcolor);
 }
 
 
@@ -146,7 +146,7 @@ void TPadPainterPS::SetFillColor(Color_t fcolor)
 
 void TPadPainterPS::SetFillStyle(Style_t fstyle)
 {
-   gVirtualPS->SetFillStyle(fstyle);
+   fPS->SetFillStyle(fstyle);
 }
 
 
@@ -155,8 +155,7 @@ void TPadPainterPS::SetFillStyle(Style_t fstyle)
 
 void TPadPainterPS::SetOpacity(Int_t percent)
 {
-   // FIXME!!!
-//   gVirtualPS->SetOpacity(percent);
+   fPS->SetFillStyle(4000 + percent);
 }
 
 
@@ -165,7 +164,7 @@ void TPadPainterPS::SetOpacity(Int_t percent)
 
 Short_t TPadPainterPS::GetTextAlign() const
 {
-   return gVirtualPS->GetTextAlign();
+   return fPS->GetTextAlign();
 }
 
 
@@ -174,7 +173,7 @@ Short_t TPadPainterPS::GetTextAlign() const
 
 Float_t TPadPainterPS::GetTextAngle() const
 {
-   return gVirtualPS->GetTextAngle();
+   return fPS->GetTextAngle();
 }
 
 
@@ -183,7 +182,7 @@ Float_t TPadPainterPS::GetTextAngle() const
 
 Color_t TPadPainterPS::GetTextColor() const
 {
-   return gVirtualPS->GetTextColor();
+   return fPS->GetTextColor();
 }
 
 
@@ -192,7 +191,7 @@ Color_t TPadPainterPS::GetTextColor() const
 
 Font_t TPadPainterPS::GetTextFont() const
 {
-   return gVirtualPS->GetTextFont();
+   return fPS->GetTextFont();
 }
 
 
@@ -201,7 +200,7 @@ Font_t TPadPainterPS::GetTextFont() const
 
 Float_t TPadPainterPS::GetTextSize() const
 {
-   return gVirtualPS->GetTextSize();
+   return fPS->GetTextSize();
 }
 
 
@@ -220,7 +219,7 @@ Float_t TPadPainterPS::GetTextMagnitude() const
 
 void TPadPainterPS::SetTextAlign(Short_t align)
 {
-   gVirtualPS->SetTextAlign(align);
+   fPS->SetTextAlign(align);
 }
 
 
@@ -229,7 +228,7 @@ void TPadPainterPS::SetTextAlign(Short_t align)
 
 void TPadPainterPS::SetTextAngle(Float_t tangle)
 {
-   gVirtualPS->SetTextAngle(tangle);
+   fPS->SetTextAngle(tangle);
 }
 
 
@@ -238,7 +237,7 @@ void TPadPainterPS::SetTextAngle(Float_t tangle)
 
 void TPadPainterPS::SetTextColor(Color_t tcolor)
 {
-   gVirtualPS->SetTextColor(tcolor);
+   fPS->SetTextColor(tcolor);
 }
 
 
@@ -247,7 +246,7 @@ void TPadPainterPS::SetTextColor(Color_t tcolor)
 
 void TPadPainterPS::SetTextFont(Font_t tfont)
 {
-   gVirtualPS->SetTextFont(tfont);
+   fPS->SetTextFont(tfont);
 }
 
 
@@ -256,7 +255,7 @@ void TPadPainterPS::SetTextFont(Font_t tfont)
 
 void TPadPainterPS::SetTextSize(Float_t tsize)
 {
-   gVirtualPS->SetTextSize(tsize);
+   fPS->SetTextSize(tsize);
 }
 
 
@@ -265,7 +264,7 @@ void TPadPainterPS::SetTextSize(Float_t tsize)
 
 void TPadPainterPS::SetTextSizePixels(Int_t npixels)
 {
-   gVirtualPS->SetTextSizePixels(npixels);
+   fPS->SetTextSizePixels(npixels);
 }
 
 
@@ -289,7 +288,7 @@ void TPadPainterPS::ClearDrawable()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a gVirtualX pixmap - not implemented
 
-void TPadPainterPS::CopyDrawable(Int_t, Int_t, Int_t py)
+void TPadPainterPS::CopyDrawable(Int_t, Int_t, Int_t)
 {
 }
 
@@ -305,7 +304,7 @@ void TPadPainterPS::DestroyDrawable(Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Select the window in which the graphics will go - not implemented
 
-void TPadPainterPS::SelectDrawable(Int_t device)
+void TPadPainterPS::SelectDrawable(Int_t)
 {
 }
 
