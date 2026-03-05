@@ -45,7 +45,7 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
    b.InitMap();
 
    // Before reading object save start position
-   UInt_t startpos = UInt_t(b.Length());
+   ULong64_t startpos = ULong64_t(b.Length());
 
    ULong64_t tag;
    TClass *clRef = b.ReadClass(clReq, &tag);
