@@ -35,3 +35,19 @@ TEST(RLoggerEnvVar, EffectiveVerbosityUsesEnvVar)
    auto effective = TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get());
    EXPECT_EQ(effective, ROOT::ELogLevel::kError);
 }
+// Test: explicitly set verbosity on a channel takes precedence over ROOT_LOG env var.
+// ROOT_LOG sets ROOT.TestChannel=Error, but we explicitly set it to kInfo here.
+// The explicit setting should win.
+TEST(RLoggerEnvVar, ExplicitVerbosityTakesPrecedenceOverEnvVar)
+{
+   // ROOT_LOG set ROOT.TestChannel=Error via environment
+   // Now explicitly override it to kInfo
+   TestChannel().SetVerbosity(ROOT::ELogLevel::kInfo);
+
+   // Explicit verbosity should win over env var
+   EXPECT_EQ(TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get()),
+             ROOT::ELogLevel::kInfo);
+
+   // Reset back to kUnset so other tests are not affected
+   TestChannel().SetVerbosity(ROOT::ELogLevel::kUnset);
+}
