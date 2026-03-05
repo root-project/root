@@ -149,13 +149,13 @@ private:
    TBufferMergerFile(TBufferMerger &m);
 
    /** TBufferMergerFile has no default constructor. */
-   TBufferMergerFile();
+   TBufferMergerFile() = delete;
 
    /** TBufferMergerFile has no copy constructor. */
-   TBufferMergerFile(const TBufferMergerFile &);
+   TBufferMergerFile(const TBufferMergerFile &) = delete;
 
    /** TBufferMergerFile has no copy operator */
-   TBufferMergerFile &operator=(const TBufferMergerFile &);
+   TBufferMergerFile &operator=(const TBufferMergerFile &) = delete;
 
    friend class TBufferMerger;
 

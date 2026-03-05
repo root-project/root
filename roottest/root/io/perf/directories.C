@@ -38,25 +38,8 @@ TFile *Create(int ntop, int nsub, int nhist)
 
 void cleanup(TDirectory *dir)
 {
-   // return;
-
    gROOT->GetListOfFiles()->Remove(dir);
-   return;
-
-   TIter nextkey( dir->GetList() );
-
-   TObject *obj;
-   while ( (obj = nextkey())) {
-      if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
-         cleanup( (TDirectory*)obj );
-      }
-   }
-   //gROOT->SetMustClean(kFALSE);
-   dir->GetList()->Delete("fast");
-   //delete dir;
-   // dir->GetListOfKeys()->Delete("fast");
 }
-
 
 void test_directories(int ntop, int nsub, int nhist)
 {

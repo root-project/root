@@ -32,9 +32,8 @@ void execmanydirs(int n = 200, int mode = 16 | 32 | 64) {
   }
   // systematics.emplace_back("syst_" + std::to_string(10));
 
-  std::unique_ptr<TFile> out(TFile::Open("example_manydirs.root", "RECREATE"));
-  if (mode & 256)
-    gROOT->GetListOfFiles()->Remove(out.get());
+  const char *const tfileMode = (mode & 256) ? "RECREATE_WITHOUT_GLOBALREGISTRATION" : "RECREATE";
+  std::unique_ptr<TFile> out(TFile::Open("example_manydirs.root", tfileMode));
 
   for (const auto& isample : samples) {
      for (const auto& isystematic : systematics) {

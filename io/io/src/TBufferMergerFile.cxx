@@ -16,15 +16,13 @@
 namespace ROOT {
 
 TBufferMergerFile::TBufferMergerFile(TBufferMerger &m)
-   : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATE", "",
+   : TMemFile(m.fMerger.GetOutputFile()->GetName(), "RECREATE_WITHOUT_GLOBALREGISTRATION", "",
               m.fMerger.GetOutputFile()->GetCompressionSettings()),
      fMerger(m)
 {
 }
 
-TBufferMergerFile::~TBufferMergerFile()
-{
-}
+TBufferMergerFile::~TBufferMergerFile() = default;
 
 Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
 {

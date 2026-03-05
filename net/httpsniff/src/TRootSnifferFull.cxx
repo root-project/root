@@ -207,8 +207,7 @@ void TRootSnifferFull::CreateMemFile()
    TDirectory::TContext dirCtx{nullptr};
    TFile::TContext fileCtx{nullptr};
 
-   fMemFile = new TMemFile("dummy.file", "RECREATE");
-   gROOT->GetListOfFiles()->Remove(fMemFile);
+   fMemFile = new TMemFile("dummy.file", "RECREATE_WITHOUT_GLOBALREGISTRATION");
 
    TH1F *d = new TH1F("d", "d", 10, 0, 10);
    fMemFile->WriteObject(d, "h1");
@@ -348,8 +347,7 @@ Bool_t TRootSnifferFull::ProduceRootFile(const std::string &path, const std::str
    } restoreGFile;
 
    {
-      TMemFile memfile("dummy.file", "RECREATE");
-      gROOT->GetListOfFiles()->Remove(&memfile);
+      TMemFile memfile("dummy.file", "RECREATE_WITHOUT_GLOBALREGISTRATION");
 
       memfile.WriteObjectAny(obj_ptr, obj_cl, store_name);
       memfile.Close();
