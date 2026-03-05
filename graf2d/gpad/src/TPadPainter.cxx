@@ -300,6 +300,60 @@ void TPadPainter::SetTextSizePixels(Int_t npixels)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Color_t TPadPainter::GetMarkerColor() const
+{
+   return gVirtualX->GetMarkerColor();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Style_t TPadPainter::GetMarkerStyle() const
+{
+   return gVirtualX->GetMarkerStyle();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+Size_t TPadPainter::GetMarkerSize() const
+{
+   return gVirtualX->GetMarkerSize();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TPadPainter::SetMarkerColor(Color_t mcolor)
+{
+   gVirtualX->SetMarkerColor(mcolor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TPadPainter::SetMarkerStyle(Style_t mstyle)
+{
+   gVirtualX->SetMarkerStyle(mstyle);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualX.
+
+void TPadPainter::SetMarkerSize(Size_t msize)
+{
+   gVirtualX->SetMarkerSize(msize);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a gVirtualX Pixmap.
 
 Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)

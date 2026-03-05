@@ -269,6 +269,60 @@ void TPadPainterPS::SetTextSizePixels(Int_t npixels)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+Color_t TPadPainterPS::GetMarkerColor() const
+{
+   return fPS->GetMarkerColor();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+Style_t TPadPainterPS::GetMarkerStyle() const
+{
+   return fPS->GetMarkerStyle();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+Size_t TPadPainterPS::GetMarkerSize() const
+{
+   return fPS->GetMarkerSize();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+void TPadPainterPS::SetMarkerColor(Color_t mcolor)
+{
+   fPS->SetMarkerColor(mcolor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+void TPadPainterPS::SetMarkerStyle(Style_t mstyle)
+{
+   fPS->SetMarkerStyle(mstyle);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delegate to gVirtualPS.
+
+void TPadPainterPS::SetMarkerSize(Size_t msize)
+{
+   fPS->SetMarkerSize(msize);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a gVirtualX Pixmap - not implemented
 
 Int_t TPadPainterPS::CreateDrawable(UInt_t, UInt_t)
