@@ -361,6 +361,23 @@ Int_t TPadPainter::CreateDrawable(UInt_t w, UInt_t h)
    return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Resize a gVirtualX Pixmap.
+
+Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
+{
+   return gVirtualX->ResizePixmap(device, w, h);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when cocoa backend is used
+
+Bool_t TPadPainter::IsCocoa() const
+{
+   return gVirtualX->InheritsFrom("TGCocoa");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear the current gVirtualX window.

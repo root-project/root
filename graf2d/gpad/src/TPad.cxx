@@ -741,8 +741,14 @@ void TPad::Clear(Option_t *option)
       getchar();
    }
 
-   if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
-   if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
+   auto pp = GetPainter();
+   // If pad painter uses PS, ClearDrawable() start new page
+   if (pp) {
+      if (pp->IsNative())
+         pp->ClearDrawable();
+      else if (this == GetCanvas())
+         pp->NewPage();
+   }
 
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
@@ -3199,9 +3205,12 @@ void TPad::GetRangeAxis(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t
 
 void TPad::HighLight(Color_t color, Bool_t set)
 {
-   if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) return;
+   if (auto pp = GetPainter())
+      if(!pp->IsNative())
+         return;
 
-   if (color <= 0) return;
+   if (color <= 0)
+      return;
 
    AbsCoordinates(kTRUE);
 
@@ -3220,10 +3229,8 @@ void TPad::HighLight(Color_t color, Bool_t set)
       // momentarily such that when DrawClone is called, it is
       // not the right value (for DrawClone). Should be FIXED.
       gROOT->SetSelectedPad(this);
-      if (GetBorderMode()>0) {
-         if (set) PaintBorder(-color, kFALSE);
-         else     PaintBorder(-GetFillColor(), kFALSE);
-      }
+      if (GetBorderMode() > 0)
+         PaintBorder(set ? -color : -GetFillColor(), kFALSE);
    }
 
    AbsCoordinates(kFALSE);
@@ -3811,7 +3818,7 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
       //With Cocoa we have a transparency. But we also have
       //pixmaps, and if you just paint a new content over the old one
       //with alpha < 1., you'll be able to see the old content.
-      if (pp->IsNative() && gVirtualX->InheritsFrom("TGCocoa"))
+      if (pp->IsNative() && pp->IsCocoa())
          pp->ClearDrawable();
 
       PaintBox(fX1, fY1, fX2, fY2);
@@ -3917,7 +3924,7 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint a frame border with Postscript.
+/// Paint a frame border with Postscript - no longer used
 
 void TPad::PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light)
 {
@@ -4028,7 +4035,9 @@ void TPad::PaintModified()
       TContext ctxt(this, kTRUE);
       if (IsModified() || IsTransparent()) {
          if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-            if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
+            auto pp = GetPainter();
+            if (pp && pp->IsNative())
+               pp->ClearDrawable();
          }
          PaintBorder(GetFillColor(), kTRUE);
       }
@@ -4129,7 +4138,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       //ignore this style option when this is the canvas itself
       if (this == fMother) {
          //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
-         if (gVirtualX->InheritsFrom("TGCocoa")) {
+         if (pp->IsCocoa()) {
             style0 = style;
             pp->SetFillStyle(1000);
          }
@@ -5946,9 +5955,10 @@ void TPad::ResizePad(Option_t *option)
    if (gPad->IsBatch())
       fPixmapID = 0;
    else {
-      if (GetPainter()){
-        GetPainter()->SetLineWidth(-1);
-        GetPainter()->SetTextSize(-1);
+      auto pp = GetPainter();
+      if (pp){
+        pp->SetLineWidth(-1);
+        pp->SetTextSize(-1);
       }
       // create or re-create off-screen pixmap
       if (fPixmapID) {
@@ -5972,13 +5982,12 @@ void TPad::ResizePad(Option_t *option)
             h = 10;
          }
          if (fPixmapID == -1) {      // this case is handled via the ctor
-            if (GetPainter()) fPixmapID = GetPainter()->CreateDrawable(w, h);
+            if (pp)
+               fPixmapID = pp->CreateDrawable(w, h);
          } else {
-            if (gVirtualX) {
-               if (gVirtualX->ResizePixmap(fPixmapID, w, h)) {
-                  Resized();
-                  Modified(kTRUE);
-               }
+            if (pp && pp->ResizeDrawable(fPixmapID, w, h)) {
+               Resized();
+               Modified(kTRUE);
             }
          }
       }

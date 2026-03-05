@@ -79,6 +79,7 @@ public:
    //Currently, must be implemented only for X11/GDI
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap
    virtual void     ClearDrawable() = 0;//gVirtualX->Clear()
+   virtual Int_t    ResizeDrawable(Int_t /* device */, UInt_t /* w */, UInt_t /* h */) { return 0; } //gVirtualX->ResizePixmap
    virtual void     CopyDrawable(Int_t device, Int_t px, Int_t py) = 0;
    virtual void     DestroyDrawable(Int_t device) = 0;//gVirtualX->CloseWindow
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
@@ -91,6 +92,7 @@ public:
    virtual void     InitPainter();
    virtual void     InvalidateCS();
    virtual void     LockPainter();
+   virtual void     NewPage() {}
 
    //Now, drawing primitives.
    virtual void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
@@ -124,6 +126,7 @@ public:
    virtual void     OnPad(TVirtualPad *) {}
 
    virtual Bool_t   IsNative() const { return kFALSE; }
+   virtual Bool_t   IsCocoa() const { return kFALSE; }
 
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 

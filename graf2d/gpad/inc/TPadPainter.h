@@ -74,6 +74,7 @@ public:
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
    void     ClearDrawable() override;
+   Int_t    ResizeDrawable(Int_t device, UInt_t w, UInt_t h) override;
    void     CopyDrawable(Int_t device, Int_t px, Int_t py) override;
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
@@ -112,6 +113,9 @@ public:
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
    Bool_t   IsNative() const override { return kTRUE; }
+
+   Bool_t   IsCocoa() const override;
+
 
 private:
    //Let's make this clear:

@@ -82,6 +82,8 @@ public:
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
 
+   void     NewPage() override;
+
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                        Int_t dstX, Int_t dstY, Bool_t enableAlphaBlending) override;

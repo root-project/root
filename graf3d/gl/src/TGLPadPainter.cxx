@@ -311,9 +311,6 @@ void TGLPadPainter::SetMarkerSize(Size_t msize)
    gVirtualX->SetMarkerSize(msize);
 }
 
-
-
-
 /*
 "Pixmap" part of TGLPadPainter.
 */
@@ -321,30 +318,51 @@ void TGLPadPainter::SetMarkerSize(Size_t msize)
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-Int_t TGLPadPainter::CreateDrawable(UInt_t/*w*/, UInt_t/*h*/)
+Int_t TGLPadPainter::CreateDrawable(UInt_t /* w */, UInt_t /* h */)
 {
+   // return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Not required at the moment.
+/// Resize a gVirtualX Pixmap.
+
+Int_t TGLPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
+{
+   return gVirtualX->ResizePixmap(device, w, h);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Call gVirtualX->ClearWindow()
 
 void TGLPadPainter::ClearDrawable()
 {
+   gVirtualX->ClearWindow();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when cocoa backend is used
+
+Bool_t TGLPadPainter::IsCocoa() const
+{
+   return gVirtualX->InheritsFrom("TGCocoa");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::CopyDrawable(Int_t /*device*/, Int_t /*px*/, Int_t /*py*/)
+void TGLPadPainter::CopyDrawable(Int_t /* device */, Int_t /* px */, Int_t /* py */)
 {
+   // gVirtualX->CopyPixmap(device, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::DestroyDrawable(Int_t /*device*/)
+void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 {
+   // gVirtualX->SelectWindow(device);
+   // gVirtualX->ClosePixmap();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
