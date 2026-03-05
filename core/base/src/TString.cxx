@@ -1373,7 +1373,7 @@ TString *TString::ReadString(TBuffer &b, const TClass *clReq)
    b.InitMap();
 
    // Before reading object save start position
-   UInt_t startpos = UInt_t(b.Length());
+   ULong64_t startpos = ULong64_t(b.Length());
 
    ULong64_t tag;
    TClass *clRef = b.ReadClass(clReq, &tag);
@@ -1444,17 +1444,16 @@ void TString::WriteString(TBuffer &b, const TString *a)
 
    } else {
 
-      // Reserve space for leading byte count
-      UInt_t cntpos = UInt_t(b.Length());
-      b.SetBufferOffset(Int_t(cntpos+sizeof(UInt_t)));
-
       TClass *cl = a->IsA();
+
+      // Reserve space for leading byte count
+      TBuffer::ByteCountWriter bcnt(b, cl);
+
       b.WriteClass(cl);
 
       ((TString *)a)->Streamer(b);
 
-      // Write byte count
-      b.SetByteCount(cntpos);
+      // The byte count is written automatically by the ByteCountWriter destructor
    }
 }
 
