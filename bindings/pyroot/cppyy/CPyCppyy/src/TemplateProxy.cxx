@@ -231,9 +231,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         if (pyol && !bIsCppOL && !TemplateProxy_Check(pyol)) {
         // unknown object ... leave well alone
             Py_DECREF(pyol);
-            Py_DECREF(pycachename);
-            Py_DECREF(dct);
-            return nullptr;
+            pyol = nullptr;
         }
 
     // find the full name if the requested one was partial
