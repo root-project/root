@@ -23,6 +23,7 @@
 
 #include "TVirtualPS.h"
 #include <vector>
+#include <string>
 
 
 class TPoints;
@@ -30,29 +31,45 @@ class TPoints;
 class TPDF : public TVirtualPS {
 
 protected:
-   Float_t            fRed;             ///< Per cent of red
-   Float_t            fGreen;           ///< Per cent of green
-   Float_t            fBlue;            ///< Per cent of blue
-   Float_t            fAlpha;           ///< Per cent of transparency
-   std::vector<float> fAlphas;          ///< List of alpha values used
-   Float_t            fXsize;           ///< Page size along X
-   Float_t            fYsize;           ///< Page size along Y
-   Int_t              fType;            ///< Workstation type used to know if the PDF is open
-   Int_t              fPageFormat;      ///< Page format (A4, Letter etc ...)
-   Int_t              fPageOrientation; ///< Page orientation (Portrait, Landscape)
-   Int_t              fStartStream;     ///<
-   Float_t            fLineScale;       ///< Line width scale factor
-   Int_t             *fObjPos{nullptr}; ///< Objects position
-   Int_t              fObjPosSize{0};   ///< Real size of fObjPos
-   Int_t              fNbObj{0};        ///< Number of objects
-   Int_t              fNbPage;          ///< Number of pages
-   Bool_t             fPageNotEmpty;    ///< True if the current page is not empty
-   Bool_t             fCompress;        ///< True when fBuffer must be compressed
-   Bool_t             fRange;           ///< True when a range has been defined
+   Float_t             fRed;             ///< Per cent of red
+   Float_t             fGreen;           ///< Per cent of green
+   Float_t             fBlue;            ///< Per cent of blue
+   Float_t             fAlpha;           ///< Per cent of transparency
+   std::vector<float>  fAlphas;          ///< List of alpha values used
+   Float_t             fXsize;           ///< Page size along X
+   Float_t             fYsize;           ///< Page size along Y
+   Int_t               fType;            ///< Workstation type used to know if the PDF is open
+   Int_t               fPageFormat;      ///< Page format (A4, Letter etc ...)
+   Int_t               fPageOrientation; ///< Page orientation (Portrait, Landscape)
+   Int_t               fStartStream;     ///<
+   Float_t             fLineScale;       ///< Line width scale factor
+   Int_t              *fObjPos{nullptr}; ///< Objects position
+   Int_t               fObjPosSize{0};   ///< Real size of fObjPos
+   Int_t               fNbObj{0};        ///< Number of objects
+   Int_t               fNbPage;          ///< Number of pages
+   std::vector<int>    fPageObjects;     ///< Page object numbers
+   std::vector<std::string> fUrls;       ///< URLs
+   std::vector<float>  fRectX1;          ///<
+   std::vector<float>  fRectY1;          ///< /Rect coordinates for url annots
+   std::vector<float>  fRectX2;          ///<
+   std::vector<float>  fRectY2;          ///<
+   Bool_t              fPageNotEmpty;    ///< True if the current page is not empty
+   Bool_t              fCompress;        ///< True when fBuffer must be compressed
+   Bool_t              fRange;           ///< True when a range has been defined
 
-   static Int_t       fgLineJoin;       ///< Appearance of joining lines
-   static Int_t       fgLineCap;        ///< Appearance of line caps
-   static Bool_t      fgObjectIsOpen;   ///< Indicates if an object is open
+   static Int_t        fgLineJoin;       ///< Appearance of joining lines
+   static Int_t        fgLineCap;        ///< Appearance of line caps
+   static Int_t        fgCurrentPage;    ///< Object number of the current page
+   static Int_t        fgNbUrl;          ///< Number of URL in the page
+   static Bool_t       fgObjectIsOpen;   ///< Indicates if an object is open
+   static Bool_t       fgHasUrl;         ///< Indicates the text has an URL
+   static Double_t     fgA;              ///<
+   static Double_t     fgB;              ///<
+   static Double_t     fgC;              ///< CMT Matrix
+   static Double_t     fgD;              ///<
+   static Double_t     fgE;              ///<
+   static Double_t     fgF;              ///<
+
 
 public:
    TPDF();
@@ -64,6 +81,7 @@ public:
    void     CellArrayEnd() override;
    void     Close(Option_t *opt="") override;
    Double_t CMtoPDF(Double_t u) { return Int_t(0.5 + 72*u/2.54); }
+   void     ComputeRect(const char* chars, Double_t fontsize, Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f);
    void     DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
    void     DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                       Int_t mode, Int_t border, Int_t dark, Int_t light) override;
@@ -107,13 +125,15 @@ public:
    void     TextNDC(Double_t u, Double_t v, const char *string);
    void     TextNDC(Double_t, Double_t, const wchar_t *);
    void     WriteCompressedBuffer();
+   void     WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f, Bool_t acc=kTRUE);
    void     WriteReal(Float_t r, Bool_t space=kTRUE) override;
+   void     WriteUrlObjects();
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDefOverride(TPDF, 0);  //PDF driver
+   ClassDefOverride(TPDF, 1);  //PDF driver
 };
 
 #endif
