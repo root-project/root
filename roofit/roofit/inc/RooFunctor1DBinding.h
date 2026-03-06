@@ -18,7 +18,6 @@
 #include "RooListProxy.h"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
-#include "RooMsgService.h"
 #include "Math/IFunction.h"
 
 
@@ -32,23 +31,21 @@ RooAbsPdf*  bindPdf(const char* name, const ROOT::Math::IBaseFunctionOneDim& fto
 
 class RooFunctor1DBinding : public RooAbsReal {
 public:
-  RooFunctor1DBinding() : func(nullptr) {
-    // Default constructor
-  } ;
+  RooFunctor1DBinding() = default;
   RooFunctor1DBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& var);
   RooFunctor1DBinding(const RooFunctor1DBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooFunctor1DBinding(*this,newname); }
   void printArgs(std::ostream& os) const override ;
 
+  ROOT::Math::IBaseFunctionOneDim const *function() const { return func; }
+  RooAbsReal const &variable() const { return *var; }
+
 protected:
 
   double evaluate() const override ;
 
-  const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
+  const ROOT::Math::IBaseFunctionOneDim *func = nullptr; // Functor
   RooRealProxy                       var ;    // Argument reference
-
-
-private:
 
   ClassDefOverride(RooFunctor1DBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionOneDim
 };
@@ -57,23 +54,21 @@ private:
 
 class RooFunctor1DPdfBinding : public RooAbsPdf {
 public:
-  RooFunctor1DPdfBinding() : func(nullptr) {
-    // Default constructor
-  } ;
+  RooFunctor1DPdfBinding() = default;
   RooFunctor1DPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& vars);
   RooFunctor1DPdfBinding(const RooFunctor1DPdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname=nullptr) const override { return new RooFunctor1DPdfBinding(*this,newname); }
   void printArgs(std::ostream& os) const override ;
 
+  ROOT::Math::IBaseFunctionOneDim const *function() const { return func; }
+  RooAbsReal const &variable() const { return *var; }
+
 protected:
 
   double evaluate() const override ;
 
-  const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
+  ROOT::Math::IBaseFunctionOneDim const *func = nullptr; // Functor
   RooRealProxy                           var ;    // Argument reference
-
-
-private:
 
   ClassDefOverride(RooFunctor1DPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionOneDim
 };
