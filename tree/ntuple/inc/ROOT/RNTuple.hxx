@@ -44,6 +44,7 @@ RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std
 \brief Representation of an RNTuple data set in a ROOT file
 
 \note This is the documentation for the RNTuple anchor class. For a generic introduction to RNTuple, see \ref NTuple "the RNTuple Introduction". For reading RNTuples, see RNTupleReader. For writing RNTuples, see RNTupleWriter.
+For exploring the contents of an RNTuple, use ROOT::RDataFrame. See \ref rosetta-stone for examples how to draw and scan the contents.
 
 The class points to the header and footer keys, which in turn have the references to the pages (via page lists).
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
