@@ -5943,49 +5943,43 @@ void TPad::ResizePad(Option_t *option)
    // Coefficients to convert from canvas pixels to pad world coordinates
 
    // Resize all sub-pads
-   TObject *obj;
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter    next(GetListOfPrimitives());
-   while ((obj = next())) {
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TPad::Class()))
-         ((TPad*)obj)->ResizePad(option);
+         ((TPad *)obj)->ResizePad(option);
    }
 
    // Reset all current sizes
    if (gPad->IsBatch())
       fPixmapID = 0;
-   else {
-      auto pp = GetPainter();
-      if (pp){
-        pp->SetLineWidth(-1);
-        pp->SetTextSize(-1);
-      }
-      // create or re-create off-screen pixmap
-      if (fPixmapID) {
-         int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
-         int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
-         //protection in case of wrong pad parameters.
-         //without this protection, the OpenPixmap or ResizePixmap crashes with
-         //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
-         //resulting in a frozen xterm
-         if (   !(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
-             || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2))
-             || (TMath::IsNaN(fX1))  || (TMath::IsNaN(fX2))
-             || (TMath::IsNaN(fY1))  || (TMath::IsNaN(fY2)))
-            Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
-         if (w <= 0 || w > 10000) {
-            Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
-            w = 10;
-         }
-         if (h <= 0 || h > 10000) {
-            Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
-            h = 10;
-         }
-         if (fPixmapID == -1) {      // this case is handled via the ctor
-            if (pp)
+   else if (auto pp = GetPainter()) {
+      if (pp->IsNative()) {
+         pp->SetLineWidth(-1);
+         pp->SetTextSize(-1);
+         // create or re-create off-screen pixmap
+         if (fPixmapID) {
+            int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
+            int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
+            //protection in case of wrong pad parameters.
+            //without this protection, the OpenPixmap or ResizePixmap crashes with
+            //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
+            //resulting in a frozen xterm
+            if (!TMath::Finite(fX1) || !TMath::Finite(fX2) || !TMath::Finite(fY1) || !TMath::Finite(fY2) ||
+                TMath::IsNaN(fX1) || TMath::IsNaN(fX2) || TMath::IsNaN(fY1) || TMath::IsNaN(fY2))
+               Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
+            if (w <= 0 || w > 10000) {
+               Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
+               w = 10;
+            }
+            if (h <= 0 || h > 10000) {
+               Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
+               h = 10;
+            }
+            if (fPixmapID == -1)       // this case is handled via the ctor
                fPixmapID = pp->CreateDrawable(w, h);
-         } else {
-            if (pp && pp->ResizeDrawable(fPixmapID, w, h)) {
+            else if (pp->ResizeDrawable(fPixmapID, w, h)) {
                Resized();
                Modified(kTRUE);
             }
