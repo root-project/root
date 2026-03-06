@@ -2026,7 +2026,7 @@ df.Define("good_pt", "Muon_pt[Muon_pt > 100]").Histo1D("good_pt")->Draw();
    <td>
 ~~~{cpp}
 // Draw the histogram and fill hnew with it
-tree->Draw("sqrt(x)>>hnew","y>0"); 
+tree->Draw("sqrt(x)>>hnew","y>0");
 
 // Retrieve hnew from the current directory
 auto hnew = gDirectory->Get<TH1F>("hnew");
@@ -2077,7 +2077,7 @@ df.Range(5,7).Histo1D("x")->Draw();
 <tr>
    <td>
 ~~~{cpp}
-// Draw the X() component of the 
+// Draw the X() component of the
 // ROOT::Math::DisplacementVector3D in vec_list
 tree->Draw("vec_list.X()");
 ~~~
@@ -2091,8 +2091,8 @@ df.Define("x", "ROOT::RVecD out; for(const auto &el: vec_list) out.push_back(el.
 <tr>
    <td>
 ~~~{cpp}
-// Gather all values from a branch holding a collection per event, `pt`, 
-// and fill a histogram so that we can count the total number of values across all events 
+// Gather all values from a branch holding a collection per event, `pt`,
+// and fill a histogram so that we can count the total number of values across all events
 tree->Draw("pt>>histo");
 auto histo = gDirectory->Get<TH1D>("histo");
 histo->GetEntries();
