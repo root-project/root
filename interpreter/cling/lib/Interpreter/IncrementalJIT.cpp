@@ -581,8 +581,7 @@ IncrementalJIT::IncrementalJIT(
   }
 
   // Create ObjectLinkingLayer with our own MemoryManager.
-  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES,
-                                           const Triple& TT)
+  Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES)
                                            -> std::unique_ptr<ObjectLayer> {
     if (m_JITLink) {
       // For JITLink, we only need a custom memory manager to avoid freeing the
@@ -611,6 +610,8 @@ IncrementalJIT::IncrementalJIT(
     if (cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE")))
       Layer->registerJITEventListener(*cling::createPerfJITEventListener());
 #endif
+
+    auto TT = ES.getTargetTriple();
 
     // The following is based on LLJIT::createObjectLinkingLayer.
     if (TT.isOSBinFormatCOFF()) {
