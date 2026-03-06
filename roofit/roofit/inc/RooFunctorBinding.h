@@ -18,7 +18,6 @@
 #include "RooListProxy.h"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
-#include "RooMsgService.h"
 #include "Math/IFunction.h"
 
 namespace RooFit {
@@ -37,6 +36,9 @@ public:
   inline ~RooFunctorBinding() override { delete[] x ; }
   void printArgs(std::ostream& os) const override ;
 
+  ROOT::Math::IBaseFunctionMultiDim const *function() const { return func; }
+  RooArgList const &variables() const { return vars; }
+
 protected:
 
   double evaluate() const override ;
@@ -44,9 +46,6 @@ protected:
   const ROOT::Math::IBaseFunctionMultiDim* func = nullptr; // Functor
   RooListProxy vars; // Argument reference
   double *x = nullptr; // Argument value array
-
-
-private:
 
   ClassDefOverride(RooFunctorBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionMultiDim
 };
@@ -62,6 +61,9 @@ public:
   inline ~RooFunctorPdfBinding() override { delete[] x ; }
   void printArgs(std::ostream& os) const override ;
 
+  ROOT::Math::IBaseFunctionMultiDim const *function() const { return func; }
+  RooArgList const &variables() const { return vars; }
+
 protected:
 
   double evaluate() const override ;
@@ -69,9 +71,6 @@ protected:
   const ROOT::Math::IBaseFunctionMultiDim* func = nullptr;    // Functor
   RooListProxy vars ;    // Argument reference
   double *x = nullptr; // Argument value array
-
-
-private:
 
   ClassDefOverride(RooFunctorPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionMultiDim
 };
