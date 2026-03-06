@@ -927,7 +927,7 @@ namespace cling {
     // Fix C++20 builds caused by commit:
     // llvm-project/commit/574ee1c02ef73b66c5957cf93888234b0471695f
     // We are loading clang modules here and not C++20 modules
-    auto Path = std::make_pair(II, ValidLoc);
+    auto Path = IdentifierLoc(ValidLoc, II);
     Module* Mod = getSema().getModuleLoader().loadModule(
         ValidLoc, Path, Module::AllVisible, /*IsInclusionDirective=*/false);
     bool success = Mod && !getSema()
