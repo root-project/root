@@ -170,7 +170,7 @@ These operations do not modify the dataframe or book computations but simply ret
 | GetFilterNames() | Return the names of all filters in the computation graph. |
 | GetNRuns() | Return the number of event loops run by this RDataFrame instance so far. |
 | GetNSlots() | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
-| SaveGraph() | Store the computation graph of an RDataFrame in [DOT format (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) for easy inspection. See the [relevant section](\ref representgraph) for details. |
+| ROOT::RDF::SaveGraph() | Store the computation graph of an RDataFrame in [DOT format (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) for easy inspection. See the [relevant section](\ref representgraph) for details. |
 
 \anchor rdf_intro
 ## Introduction
