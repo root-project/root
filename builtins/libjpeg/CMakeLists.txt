@@ -1,0 +1,51 @@
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+set(ROOT_LIBJPEG_VERSION 3.1.3) # 10 Dec 2025 https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.3
+
+# Obtain the vendored sources as follows:
+# - git clone --depth 1 --branch <newtag> https://github.com/libjpeg-turbo/libjpeg-turbo
+# - rm -r .git doc/turbojpeg fuzz java test testimages simd
+
+set(ROOT_LIBJPEG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBJPEG-prefix)
+set(ROOT_LIBJPEG_LIBRARIES ${ROOT_LIBJPEG_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
+    if(winrtdebug)
+        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config Debug")
+    else()
+        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config Release")
+    endif()
+endif()
+
+ExternalProject_Add(
+    BUILTIN_LIBJPEG
+    PREFIX ${ROOT_LIBJPEG_PREFIX}
+    URL ${CMAKE_SOURCE_DIR}/builtins/libjpeg/src
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+    -DENABLE_SHARED=OFF
+    -DWITH_TURBOJPEG=OFF
+    -DWITH_SIMD=OFF
+    -DWITH_TOOLS=OFF
+    -DWITH_JAVA=OFF
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBJPEG_BUILD_COMMAND_FLAGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBJPEG_BUILD_COMMAND_FLAGS} --target install
+    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    BUILD_BYPRODUCTS ${ROOT_LIBJPEG_LIBRARIES}
+    TIMEOUT 600
+)
+
+# We need to create the directory now...
+file(MAKE_DIRECTORY ${ROOT_LIBJPEG_PREFIX}/include)
+add_library(JPEG::JPEG IMPORTED STATIC GLOBAL)
+set_target_properties(JPEG::JPEG PROPERTIES
+    IMPORTED_LOCATION ${ROOT_LIBJPEG_LIBRARIES}
+    INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBJPEG_PREFIX}/include
+)
