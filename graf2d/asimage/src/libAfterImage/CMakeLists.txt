@@ -44,13 +44,6 @@ SET(SRC_FILES
     libpng/png.c libpng/pngmem.c libpng/pngrio.c libpng/pngset.c libpng/pngwio.c libpng/pngwutil.c
     libpng/pngerror.c libpng/pngpread.c libpng/pngrtran.c libpng/pngtest.c libpng/pngwrite.c
     libpng/pngget.c libpng/pngread.c libpng/pngrutil.c libpng/pngtrans.c libpng/pngwtran.c
-    libjpeg/jcapimin.c libjpeg/jcapistd.c libjpeg/jccoefct.c libjpeg/jccolor.c libjpeg/jcdctmgr.c libjpeg/jchuff.c libjpeg/jcinit.c
-    libjpeg/jcmainct.c libjpeg/jcmarker.c libjpeg/jcmaster.c libjpeg/jcomapi.c libjpeg/jcparam.c libjpeg/jcphuff.c libjpeg/jcprepct.c
-    libjpeg/jcsample.c libjpeg/jctrans.c libjpeg/jdapimin.c libjpeg/jdapistd.c libjpeg/jdatadst.c libjpeg/jdatasrc.c libjpeg/jdcoefct.c
-    libjpeg/jdcolor.c libjpeg/transupp.c libjpeg/jaricom.c libjpeg/jdarith.c libjpeg/jcarith.c libjpeg/jddctmgr.c libjpeg/jdhuff.c
-    libjpeg/jdinput.c libjpeg/jdmainct.c libjpeg/jdmarker.c libjpeg/jdmaster.c libjpeg/jdmerge.c libjpeg/jdpostct.c libjpeg/jdsample.c
-    libjpeg/jdtrans.c libjpeg/jerror.c libjpeg/jfdctflt.c libjpeg/jfdctfst.c libjpeg/jfdctint.c libjpeg/jidctflt.c libjpeg/jidctfst.c
-    libjpeg/jidctint.c libjpeg/jmemmgr.c libjpeg/jmemnobs.c libjpeg/jquant1.c libjpeg/jquant2.c libjpeg/jutils.c
     libungif/dgif_lib.c libungif/egif_lib.c libungif/gif_err.c libungif/gifalloc.c libungif/gif_hash.c afterbase.c ascmap.c asfont.c
     asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
     export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
