@@ -200,7 +200,7 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    auto *FTD = const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD));
    Sema::InstantiatingTemplate Inst(
       S, Info.getLocation(), FTD,
-      defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, Info);
+      defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, SourceRange());
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
