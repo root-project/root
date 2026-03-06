@@ -447,6 +447,10 @@ jobs:
           #   is_special: true
           #   property: gpu
           #   extra-runs-on: gpu
+          # openSUSE Leap
+          - image: opensuse15
+            is_special: true
+            property: "leap"
 
     runs-on:
       - self-hosted
