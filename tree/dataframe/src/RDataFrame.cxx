@@ -1940,7 +1940,7 @@ df.Filter("std::isfinite(x)").Mean("x")
 \endcode
 
 \anchor rosetta-stone
-### Translating TTree::Draw to RDataFrame 
+### Translating TTree commands to RDataFrame
 
 <table>
 <tr>
@@ -2101,6 +2101,41 @@ histo->GetEntries();
    <td>
 ~~~{cpp}
 df.Histo1D("pt")->GetEntries();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+      <b>TTree::Scan()</b>
+   </td>
+   <td>
+      <b>ROOT::RDataFrame</b>
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Print a table of the first 10 entries for all variables in the Tree
+// if the first entry in the Muon_pt collection is > 10.
+tree->Scan("*", "Muon_pt[0] > 10.", "", 10);
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Selecting columns using a regular expression
+df.Filter("Muon_pt[0] > 10.").Display(".*", 10)->Print();
+~~~
+   </td>
+</tr>
+~~~{cpp}
+// For 10 events, print Muon_pt and Muon_eta, starting at entry 100
+tree->Scan("Muon_pt:Muon_eta", "", "", 10, 100);
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Selecting columns using a collection of names
+df.Range(100, 0).Display({"Muon_pt", "Muon_eta"}, 10)->Print();
 ~~~
    </td>
 </tr>
