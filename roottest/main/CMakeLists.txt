@@ -460,6 +460,55 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target3.root
                   FIXTURES_REQUIRED main-SimpleRootmkdir3CheckOutput-fixture)
 
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir4PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -rf target4.root
+                  FIXTURES_SETUP main-SimpleRootmkdir4PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir4
+                  COMMAND ${TOOLS_PREFIX}/rootmkdir${exeext} target4.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir4PrepareInput-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir4-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir4CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target4.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir4-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir4CheckOutput-fixture
+                  PASSRC 0)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir4Clean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target4.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir4CheckOutput-fixture)
+
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir5PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -rf target5.root
+                  FIXTURES_SETUP main-SimpleRootmkdir5PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir5
+                  COMMAND ${TOOLS_PREFIX}/rootmkdir${exeext} target5.root:foo
+                  PASSRC 1)
+
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir6PrepareInput
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -rf target6.root target6.2.root target6.3.root
+                  FIXTURES_SETUP main-SimpleRootmkdir6PrepareInput-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir6
+                  COMMAND ${TOOLS_PREFIX}/rootmkdir${exeext} -p target6.root:foo target6.2.root:bar/baz target6.3.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir6PrepareInput-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir6-fixture)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir6CheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target6.root:foo target6.2.root:bar/baz target6.3.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir6-fixture
+                  FIXTURES_SETUP main-SimpleRootmkdir6CheckOutput-fixture
+                  PASSRC 0)
+
+ROOTTEST_ADD_TEST(SimpleRootmkdir6Clean
+                  COMMAND ${TOOLS_PREFIX}/rootrm${exeext} -r target6.root target6.2.root target6.3.root
+                  FIXTURES_REQUIRED main-SimpleRootmkdir6CheckOutput-fixture)
+
 #########################################################################
 
 if(pyroot)
