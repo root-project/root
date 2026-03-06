@@ -1204,6 +1204,27 @@ class TestTEMPLATES:
 
         a = ns.S(1, 2)
         assert a.m_a == 1
+        
+    def test37_deleted_alias_of_template_proxy(self):
+        """Alias TemplateProxy and set None to orginal"""
+        import cppyy
+        
+        cppyy.cppdef(r"""
+            struct PyA {
+                template <typename T>
+                T get() { return (T)-1; }
+            };
+        """)
+        
+        PyA = cppyy.gbl.PyA
+        PyA.getter = PyA.get
+        
+        assert PyA().get[int]() == -1
+        assert PyA().getter[int]() == -1
+        
+        PyA.get = None
+        
+        assert PyA().getter[float]() == -1.0
 
 
 class TestTEMPLATED_TYPEDEFS:
