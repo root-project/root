@@ -595,7 +595,7 @@ IncrementalJIT::IncrementalJIT(
     }
 
     auto MMapper = std::make_unique<ClingMMapper>();
-    auto GetMemMgr = [MMapper = std::move(MMapper)]() {
+    auto GetMemMgr = [MMapper = std::move(MMapper)](const llvm::MemoryBuffer &) {
       return std::make_unique<ClingMemoryManager>(*MMapper);
     };
     auto Layer =
