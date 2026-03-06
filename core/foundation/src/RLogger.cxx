@@ -72,7 +72,7 @@ std::string_view TrimWhitespace(std::string_view s)
 
 /// Parse a level string such as "Debug", "Debug(3)", "Info", "Warning", "Error", "Fatal".
 /// Returns the corresponding ELogLevel. For Debug(N), the returned level is kDebug + N.
-ROOT::ELogLevel ParseLogLevel(const std::string &levelStr)
+ROOT::ELogLevel ParseLogLevel(std::string_view levelStr)
 {
    if (levelStr.compare(0, 5, "Debug") == 0) {
       int extra = 0;
@@ -81,22 +81,25 @@ ROOT::ELogLevel ParseLogLevel(const std::string &levelStr)
          auto parenClose = levelStr.find(')', parenOpen);
          if (parenClose != std::string::npos) {
             try {
-               extra = std::stoi(levelStr.substr(parenOpen + 1, parenClose - parenOpen - 1));
+               extra = std::stoi(std::string(levelStr.substr(parenOpen + 1, parenClose - parenOpen - 1)));
             } catch (...) {
                extra = 0;
-               ::Warning("ROOT_LOG", "Cannot parse verbosity level in '%s', defaulting to Debug",
-                         levelStr.c_str());
+               ::Warning("ROOT_LOG", "Cannot parse verbosity level in '%s', defaulting to Debug", levelStr.data());
             }
          }
       }
       return ROOT::ELogLevel::kDebug + extra;
    }
-   if (levelStr == "Info")    return ROOT::ELogLevel::kInfo;
-   if (levelStr == "Warning") return ROOT::ELogLevel::kWarning;
-   if (levelStr == "Error")   return ROOT::ELogLevel::kError;
-   if (levelStr == "Fatal")   return ROOT::ELogLevel::kFatal;
+   if (levelStr == "Info")
+      return ROOT::ELogLevel::kInfo;
+   if (levelStr == "Warning")
+      return ROOT::ELogLevel::kWarning;
+   if (levelStr == "Error")
+      return ROOT::ELogLevel::kError;
+   if (levelStr == "Fatal")
+      return ROOT::ELogLevel::kFatal;
 
-// Unrecognised string: warn the user and return kUnset so the channel falls back to global.
+   // Unrecognised string: warn the user and return kUnset so the channel falls back to global.
    ::Warning("ROOT_LOG", "Unrecognized log level '%s', ignoring", levelStr.data());
    return ROOT::ELogLevel::kUnset;
 }
@@ -123,14 +126,14 @@ std::unordered_map<std::string, ROOT::ELogLevel> ParseRootLogEnvVar()
          continue;
 
       std::string_view channelName = TrimWhitespace(std::string_view(token).substr(0, eq));
-      std::string_view levelStr    = TrimWhitespace(std::string_view(token).substr(eq + 1));
+      std::string_view levelStr = TrimWhitespace(std::string_view(token).substr(eq + 1));
 
       if (channelName.empty() || levelStr.empty())
          continue;
 
       ROOT::ELogLevel level = ParseLogLevel(levelStr);
       if (level != ROOT::ELogLevel::kUnset)
-         result[channelName] = level;
+         result[std::string(channelName)] = level;
    }
    return result;
 }
@@ -179,9 +182,9 @@ bool ROOT::RLogManager::Emit(const ROOT::RLogEntry &entry)
    Increment(entry.fLevel);
    if (channel != this)
       channel->Increment(entry.fLevel);
-     
+
    // Is there a specific level for the channel? If so, take that,
-   // overruling the global one.   
+   // overruling the global one.
    if (channel->GetEffectiveVerbosity(*this) < entry.fLevel)
       return true;
 

@@ -45,8 +45,7 @@ TEST(RLoggerEnvVar, ExplicitVerbosityTakesPrecedenceOverEnvVar)
    TestChannel().SetVerbosity(ROOT::ELogLevel::kInfo);
 
    // Explicit verbosity should win over env var
-   EXPECT_EQ(TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get()),
-             ROOT::ELogLevel::kInfo);
+   EXPECT_EQ(TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get()), ROOT::ELogLevel::kInfo);
 
    // Reset back to kUnset so other tests are not affected
    TestChannel().SetVerbosity(ROOT::ELogLevel::kUnset);

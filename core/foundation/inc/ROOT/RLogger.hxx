@@ -285,7 +285,9 @@ public:
    /// Construct the scoped count given a counter (e.g. a channel or RLogManager).
    /// The counter's lifetime must exceed the lifetime of this object!
    explicit RLogScopedDiagCount(RLogDiagCount &cnt)
-      : fCounter(&cnt), fInitialWarnings(cnt.GetNumWarnings()), fInitialErrors(cnt.GetNumErrors()),
+      : fCounter(&cnt),
+        fInitialWarnings(cnt.GetNumWarnings()),
+        fInitialErrors(cnt.GetNumErrors()),
         fInitialFatalErrors(cnt.GetNumFatalErrors())
    {
    }
