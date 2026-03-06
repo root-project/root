@@ -138,7 +138,7 @@ if (TARGET Gui)
 endif()
 ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
 ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
-ROOT_EXECUTABLE(rootmkdir_cxx src/rootmkdir.cxx LIBRARIES RIO Core Rint)
+ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint)
 ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

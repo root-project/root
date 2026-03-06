@@ -897,65 +897,6 @@ def rootEventselector(
 ##########
 
 ##########
-# ROOTMKDIR
-
-MKDIR_ERROR = "cannot create directory '{0}'"
-
-
-def _createDirectories(rootFile, pathSplit, parents):
-    """Same behaviour as createDirectory but allows the possibility
-    to build an whole path recursively with the option \"parents\" """
-    retcode = 0
-    lenPathSplit = len(pathSplit)
-    if lenPathSplit == 0:
-        pass
-    elif parents:
-        for i in range(lenPathSplit):
-            currentPathSplit = pathSplit[: i + 1]
-            if not (isExisting(rootFile, currentPathSplit) and isDirectory(rootFile, currentPathSplit)):
-                retcode += createDirectory(rootFile, currentPathSplit)
-    else:
-        doMkdir = True
-        for i in range(lenPathSplit - 1):
-            currentPathSplit = pathSplit[: i + 1]
-            if not (isExisting(rootFile, currentPathSplit) and isDirectory(rootFile, currentPathSplit)):
-                doMkdir = False
-                break
-        if doMkdir:
-            retcode += createDirectory(rootFile, pathSplit)
-        else:
-            logging.warning(MKDIR_ERROR.format("/".join(pathSplit)))
-            retcode += 1
-    return retcode
-
-
-def _rootMkdirProcessFile(fileName, pathSplitList, parents):
-    retcode = 0
-    rootFile = openROOTFile(fileName, "update")
-    if not rootFile:
-        return 1
-    for pathSplit in pathSplitList:
-        retcode += _createDirectories(rootFile, pathSplit, parents)
-    rootFile.Close()
-    return retcode
-
-
-def rootMkdir(sourceList, parents=False):
-    # Check arguments
-    if sourceList == []:
-        return 1
-
-    # Loop on the ROOT files
-    retcode = 0
-    for fileName, pathSplitList in sourceList:
-        retcode += _rootMkdirProcessFile(fileName, pathSplitList, parents)
-    return retcode
-
-
-# End of ROOTMKDIR
-##########
-
-##########
 # ROOTMV
 
 MOVE_ERROR = "error during copy of {0}, it is not removed from {1}"
