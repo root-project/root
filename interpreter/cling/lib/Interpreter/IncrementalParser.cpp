@@ -163,7 +163,7 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
-      if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+      if (Info.getID() == diag::warn_falloff_nonvoid) {
         DiagLevel = DiagnosticsEngine::Error;
       }
       if (Ignoring()) {
