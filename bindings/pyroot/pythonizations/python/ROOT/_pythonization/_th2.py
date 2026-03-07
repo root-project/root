@@ -60,6 +60,17 @@ def _FillWithArrayTH2(self, *args):
     return self.FillN(n, x, y, weights)
 
 
+def _TH2Poly_AddBin(self, *args, **kwargs):
+    """
+    The TH2Poly always takes ownership of the added bin objects.
+    """
+    from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+    declare_cpp_owned_arg(0, "poly", args, kwargs)
+
+    self._AddBin(*args, **kwargs)
+
+
 # The constructors need to be pythonized for each derived class separately:
 _th2_derived_classes_to_pythonize = [
     "TH2C",
@@ -89,3 +100,9 @@ for klass in _th2_derived_classes_to_pythonize:
     def _enable_numpy_fill(klass):
         klass._Fill = klass.Fill
         klass.Fill = _FillWithArrayTH2
+
+
+@pythonization("TH2Poly")
+def _pythonize_th2poly(klass):
+    klass._AddBin = klass.AddBin
+    klass.AddBin = _TH2Poly_AddBin
