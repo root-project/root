@@ -287,6 +287,12 @@ TEST(Parabola,BrentRootFinder)
    runTestBrent(0);      
 }
 
+TEST(Parabola,ModABRootFinder)
+{
+   // test parabola using ModAB Root Finder
+   runTestBrent(0, ROOT::Math::RootFinder::kMODAB);
+}
+
 #ifdef R__HAS_MATHMORE
 TEST(Parabola, GSLBrent)
 {
@@ -318,8 +324,14 @@ TEST(LogParabola,TF1GetX)
 
 TEST(LogParabola,BrentRootFinder)
 {
-   // test parabola using Brent Root Finder 
-   runTestBrent(0);      
+   // test log-parabola using Brent Root Finder 
+   runTestBrent(0);  //Brent fails with runTestBrent(1)!!! Changed back to 0  
+}
+
+TEST(LogParabola,ModABRootFinder)
+{
+   // test log-parabola using ModAB Root Finder
+   runTestBrent(1, ROOT::Math::RootFinder::kMODAB);
 }
 
 #ifdef R__HAS_MATHMORE
@@ -345,8 +357,14 @@ TEST(GammaCDF,BrentRootFinder)
    runTestBrent(2);      
 }
 
+TEST(GammaCDF, ModABRootFinder)
+{
+   // test gamma cdf using ModAB Root Finder
+   runTestBrent(2, ROOT::Math::RootFinder::kMODAB);
+}
+
 #ifdef R__HAS_MATHMORE
-TEST(GammaCDF,GSLBrent)
+TEST(GammaCDF,GSLBrent)У
 {
    // test gamma cdf using GSL Brent
    runTestBrent(2, ROOT::Math::RootFinder::kGSL_BRENT);      

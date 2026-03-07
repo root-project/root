@@ -22,8 +22,8 @@ namespace ROOT {
 namespace Math {
 
 
-static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
-static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
+static int gDefaultNpx = 100; // default number of points used in the grid to bracket the root
+static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeated
 
    BrentRootFinder::BrentRootFinder() : fFunction(nullptr),
                                         fLogScan(false), fNIter(0),
@@ -47,15 +47,14 @@ bool BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow
    // invalid previous status
    fStatus = -1;
 
-   if (xlow >= xup)
+   if (xlow > xup)
    {
-      double tmp = xlow;
-      xlow = xup;
-      xup = tmp;
+      fXMin = xup;
+      fXMax = xlow;
+   } else {
+      fXMin = xlow;
+      fXMax = xup;
    }
-   fXMin = xlow;
-   fXMax = xup;
-
    return true;
 }
 

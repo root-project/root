@@ -75,6 +75,7 @@ namespace ROOT {
       public:
 
          enum EType { kBRENT,                                   // Methods from MathCore
+                     kMODAB,                                    // Modified A&B method added in MathCore
                      kGSL_BISECTION, kGSL_FALSE_POS, kGSL_BRENT, // GSL Normal
                      kGSL_NEWTON, kGSL_SECANT, kGSL_STEFFENSON   // GSL Derivatives
          };
