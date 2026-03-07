@@ -95,4 +95,4 @@ private:
 } // namespace Math
 } // namespace ROOT
 
-#endif /* ROOT_Math_BrentRootFinder */
+#endif /* ROOT_Math_ModABRootFinder */
