@@ -364,7 +364,7 @@ TEST(GammaCDF, ModABRootFinder)
 }
 
 #ifdef R__HAS_MATHMORE
-TEST(GammaCDF,GSLBrent)У
+TEST(GammaCDF,GSLBrent)
 {
    // test gamma cdf using GSL Brent
    runTestBrent(2, ROOT::Math::RootFinder::kGSL_BRENT);      
