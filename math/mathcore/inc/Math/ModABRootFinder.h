@@ -34,8 +34,6 @@ namespace Math {
    side-correction, yielding superlinear convergence on well-behaved
    functions while retaining the robustness of bisection.
 
-   This class is implemented from TF1::GetX() method.
-
    @ingroup RootFinders
 
  */
@@ -76,7 +74,7 @@ public:
    /** Return number of iteration used to find minimum */
    int Iterations() const override { return fNIter; }
 
-   /** Return name of root finder algorithm ("BrentRootFinder"). */
+   /** Return name of root finder algorithm ("ModABRootFinder"). */
    const char *Name() const override;
 
    // static function used to modify the default parameters
