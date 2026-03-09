@@ -2932,7 +2932,17 @@ void TPDF::PatternEncode()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write a transformation matrix
+/// Write and Accumulate (if `acc` is true) the Current Transformation Matrix (CTM)
+///
+/// The Current Transformation Matrix (CTM, not CMT) is defined by the six parameters
+/// `a` `b` `c` `d` `e` `f` passed to the PDF `cm` operator (see the PDF Reference Guide
+/// page 156 [1] for details).
+///
+/// To correctly define the \Rect fields of the Annots created for each #url, one must keep
+/// track of the current CTM and apply it to the last transformation matrix used for the
+/// text (for example rotations).
+///
+/// [1] https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.4.pdf
 
 void TPDF::WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f, Bool_t acc)
 {

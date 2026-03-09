@@ -65,7 +65,7 @@ protected:
    static Bool_t       fgHasUrl;         ///< Indicates the text has an URL
    static Double_t     fgA;              ///<
    static Double_t     fgB;              ///<
-   static Double_t     fgC;              ///< CMT Matrix
+   static Double_t     fgC;              ///< Current Transformation Matrix (CTM)
    static Double_t     fgD;              ///<
    static Double_t     fgE;              ///<
    static Double_t     fgF;              ///<
