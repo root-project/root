@@ -2177,6 +2177,15 @@ RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSe
    auto cache = _prodPdf->createCacheElem(&_normSet, nullptr);
    _isRearranged = cache->_isRearranged;
 
+   // We don't want to carry the full cache object around, so we let it go out
+   // of scope and transfer the ownership of the args that we actually need.
+   cache->_ownedList.releaseOwnership();
+   cache->_numList.releaseOwnership();
+   cache->_denList.releaseOwnership();
+   addOwnedComponents(cache->_ownedList);
+   addOwnedComponents(cache->_numList);
+   addOwnedComponents(cache->_denList);
+
    // The actual servers for a given normalization set depend on whether the
    // cache is rearranged or not. See RooProdPdf::calculate to see
    // which args in the cache are used directly.
@@ -2187,19 +2196,8 @@ RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSe
       addOwnedComponents(std::move(cache->_rearrangedDen));
       return;
    }
-   // We don't want to carry the full cache object around, so we let it go out
-   // of scope and transfer the ownership of the args that we actually need.
-   cache->_ownedList.releaseOwnership();
-   std::vector<std::unique_ptr<RooAbsArg>> owned;
-   for (RooAbsArg *arg : cache->_ownedList) {
-      owned.emplace_back(arg);
-   }
    for (RooAbsArg *arg : cache->_partList) {
       _servers.add(*arg);
-      auto found = std::find_if(owned.begin(), owned.end(), [&](auto const &ptr) { return arg == ptr.get(); });
-      if (found != owned.end()) {
-         addOwnedComponents(std::move(owned[std::distance(owned.begin(), found)]));
-      }
    }
 }
 
