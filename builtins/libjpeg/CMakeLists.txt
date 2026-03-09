@@ -6,10 +6,6 @@
 
 set(ROOT_LIBJPEG_VERSION 3.1.3) # 10 Dec 2025 https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.3
 
-# Obtain the vendored sources as follows:
-# - git clone --depth 1 --branch <newtag> https://github.com/libjpeg-turbo/libjpeg-turbo
-# - rm -r .git doc/turbojpeg fuzz java test testimages simd
-
 set(ROOT_LIBJPEG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBJPEG-prefix)
 set(ROOT_LIBJPEG_LIBRARIES ${ROOT_LIBJPEG_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
 
@@ -24,7 +20,8 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBJPEG
     PREFIX ${ROOT_LIBJPEG_PREFIX}
-    URL ${CMAKE_SOURCE_DIR}/builtins/libjpeg/src
+    URL https://root.cern/download/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
+    URL_HASH SHA256=3a13a5ba767dc8264bc40b185e41368a80d5d5f945944d1dbaa4b2fb0099f4e5
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
