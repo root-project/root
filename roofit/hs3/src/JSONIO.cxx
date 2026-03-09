@@ -18,8 +18,9 @@
 
 #include <TClass.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <mutex>
 #include <sstream>
 
 // Include raw strings with initial export and import keys in JSON
@@ -101,6 +102,7 @@ ExportMap &exporters()
 
       toAdd.clear();
    }
+   exportersToAdd().clear();
    return exportersImpl();
 }
 
