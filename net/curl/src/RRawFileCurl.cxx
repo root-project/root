@@ -19,6 +19,7 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileCurl::Clone() 
 void ROOT::Internal::RRawFileCurl::OpenImpl()
 {
    fConnection = std::make_unique<RCurlConnection>(GetUrl());
+   fConnection->SetCredentialsFromEnvironment();
    if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
       fOptions.fBlockSize = kDefaultBlockSize;
 }

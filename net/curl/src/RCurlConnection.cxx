@@ -3,6 +3,7 @@
 
 #include "ROOT/RCurlConnection.hxx"
 #include "ROOT/RError.hxx"
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RVersion.hxx"
 
 #include <TError.h>
@@ -95,6 +96,12 @@ struct RTransferState {
 
    bool IsPartial() const { return fResponseCode == kHttpResponsePartial; }
 };
+
+ROOT::RLogChannel &HTTPClientLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.HTTPClient");
+   return sLog;
+}
 
 void EnsureCurlInitialized()
 {
@@ -880,4 +887,24 @@ void ROOT::Internal::RCurlConnection::ClearCredentials()
 ROOT::Internal::EHTTPCredentialsType ROOT::Internal::RCurlConnection::GetCredentialsType() const
 {
    return fCredentials ? fCredentials->fType : EHTTPCredentialsType::kNone;
+}
+
+/// Sets the credentials from process environment variables. Currently supported
+///   - S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION
+/// If the environment variables are not found, clear any credentials from the connection.
+void ROOT::Internal::RCurlConnection::SetCredentialsFromEnvironment()
+{
+   ClearCredentials();
+
+   const auto accessKey = std::getenv("S3_ACCESS_KEY");
+   if (accessKey && (accessKey[0] != '\0')) {
+      const auto secretKey = std::getenv("S3_SECRET_KEY");
+      if (!secretKey || (secretKey[0] == '\0')) {
+         R__LOG_WARNING(HTTPClientLog()) << "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset. "
+                                            "Ignoring S3 credentials.";
+         return;
+      }
+      const auto region = std::getenv("S3_REGION");
+      SetCredentials(RS3Credentials{accessKey, secretKey, region ? region : ""});
+   }
 }

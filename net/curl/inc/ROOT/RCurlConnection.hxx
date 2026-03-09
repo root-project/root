@@ -100,6 +100,7 @@ public:
    RCurlConnection(RCurlConnection &&other);
    RCurlConnection &operator=(RCurlConnection &&other);
 
+   void SetCredentialsFromEnvironment();
    void SetCredentials(const RS3Credentials &credentials);
    void ClearCredentials();
    EHTTPCredentialsType GetCredentialsType() const;

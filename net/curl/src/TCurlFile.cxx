@@ -20,6 +20,7 @@ TCurlFile::TCurlFile(const char *url, Option_t *opt)
    : TFile(url, strstr(opt, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "WEB_WITHOUT_GLOBALREGISTRATION" : "WEB"),
      fConnection(new ROOT::Internal::RCurlConnection(url))
 {
+   fConnection->SetCredentialsFromEnvironment();
    TFile::Init(kFALSE);
    fOffset = 0;
    fD = -2; // so TFile::IsOpen() will return true when in ~TFile
