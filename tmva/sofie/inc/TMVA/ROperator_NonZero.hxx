@@ -97,7 +97,7 @@ public:
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
          if (model.Verbose()) {
-            std::cout << "NonZero : " << fNX << " -> " << fNY << " " << ConvertShapeToString(fShapeY) << std::endl;
+            std::cout << "NonZero : " << fNX << " -> " << fNY << " " << ConvertDimShapeToString(fShapeY) << std::endl;
          }
       }
    }

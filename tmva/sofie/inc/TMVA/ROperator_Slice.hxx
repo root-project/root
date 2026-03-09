@@ -328,7 +328,7 @@ public:
 
          model.AddConstantTensor<int64_t>(fNOutput, ConvertShapeToInt(fShapeOutput), outputData.data());
          if (model.Verbose()) {
-            std::cout << "Slice: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+            std::cout << "Slice: output is a constant tensor " << ConvertDimShapeToString(fShapeOutput) << " : "
                      << ConvertValuesToString(outputData) << std::endl;
          }
       }
@@ -349,8 +349,8 @@ public:
          if (fIdentitySlice)  model.AddAliasTensor(fNOutput, fNData);
 
          if (model.Verbose()) {
-            std::cout << "Slice " << fNData << "  " << ConvertShapeToString(fShapeInput)
-                      << "---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput);
+            std::cout << "Slice " << fNData << "  " << ConvertDimShapeToString(fShapeInput)
+                      << "---> " << fNOutput << " " <<  ConvertDimShapeToString(fShapeOutput);
             if (fIdentitySlice) std::cout << " (using alias tensor since slice is an identity) ";
             std::cout << std::endl;
 

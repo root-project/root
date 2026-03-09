@@ -106,9 +106,9 @@ public:
 
 
       if (model.Verbose()) {
-         std::cout << "Split - input shape " << ConvertShapeToString(fInputShape) << " --> ";
+         std::cout << "Split - input shape " << ConvertDimShapeToString(fInputShape) << " --> ";
          for (auto & s : fOutputShapes)
-            std::cout << ConvertShapeToString(s) << "  ";
+            std::cout << ConvertDimShapeToString(s) << "  ";
          std::cout << std::endl;
       }
    }

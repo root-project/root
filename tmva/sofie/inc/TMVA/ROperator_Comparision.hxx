@@ -276,9 +276,9 @@ public:
 
          model.AddIntermediateTensor(fNY, ETensorType::BOOL, fDimShapeY);
          if (model.Verbose()) {
-            std::cout << ComparisionTrait<T, Op>::Name()  << " : " << fNX1 << "  " << ConvertShapeToString(fDimShapeX1) << " , "
-                                                          << fNX2 << "  " << ConvertShapeToString(fDimShapeX2) << " --> "
-                                                          << fNY  << "  " << ConvertShapeToString(fDimShapeY) << std::endl;
+            std::cout << ComparisionTrait<T, Op>::Name()  << " : " << fNX1 << "  " << ConvertDimShapeToString(fDimShapeX1) << " , "
+                                                          << fNX2 << "  " << ConvertDimShapeToString(fDimShapeX2) << " --> "
+                                                          << fNY  << "  " << ConvertDimShapeToString(fDimShapeY) << std::endl;
             model.PrintIntermediateTensors();
          }
       }
