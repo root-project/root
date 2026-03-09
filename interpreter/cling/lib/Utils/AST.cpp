@@ -560,21 +560,22 @@ namespace utils {
       } else {
 
         Decl* decl = nullptr;
-        const TypedefType* typedeftype =
-          dyn_cast_or_null<TypedefType>(&(*desugared));
-        const UsingType* usingtype =
-          dyn_cast_or_null<UsingType>(&(*desugared));
-        if (typedeftype) {
-          decl = typedeftype->getDecl();
-        } else if (usingtype) {
-          decl = usingtype->getFoundDecl();
-        } else {
-          // There are probably other cases ...
-          const TagType* tagdecltype = dyn_cast_or_null<TagType>(&(*desugared));
-          if (tagdecltype) {
-            decl = tagdecltype->getDecl();
-          } else {
-            decl = desugared->getAsCXXRecordDecl();
+        if (!desugared.isNull()) {
+          const Type* desugaredTy = desugared.getTypePtr();
+          switch (desugaredTy->getTypeClass()) {
+            case Type::Typedef:
+              decl = cast<TypedefType>(desugaredTy)->getDecl();
+              break;
+            case Type::Using:
+              decl = cast<UsingType>(desugaredTy)->getDecl();
+              break;
+            case Type::Record:
+            case Type::Enum:
+              decl = cast<TagType>(desugaredTy)->getDecl();
+              break;
+            default:
+              decl = desugared->getAsCXXRecordDecl();
+              break;
           }
         }
         if (decl) {
@@ -1142,22 +1143,23 @@ namespace utils {
       // in which case we want to add it ... but we can't really preserve
       // the typedef in this case ...
 
-      Decl *decl = nullptr;
-      const TypedefType* typedeftype =
-        dyn_cast_or_null<TypedefType>(QT.getTypePtr());
-      const UsingType* usingtype =
-        dyn_cast_or_null<UsingType>(QT.getTypePtr());
-      if (typedeftype) {
-        decl = typedeftype->getDecl();
-      } else if (usingtype) {
-        decl = usingtype->getFoundDecl();
-      } else {
-        // There are probably other cases ...
-        const TagType* tagdecltype = dyn_cast_or_null<TagType>(QT.getTypePtr());
-        if (tagdecltype) {
-          decl = tagdecltype->getDecl();
-        } else {
-          decl = QT->getAsCXXRecordDecl();
+      Decl* decl = nullptr;
+      if (!QT.isNull()) {
+        const Type* QTTy = QT.getTypePtr();
+        switch (QTTy->getTypeClass()) {
+          case Type::Typedef:
+            decl = cast<TypedefType>(QTTy)->getDecl();
+            break;
+          case Type::Using:
+            decl = cast<UsingType>(QTTy)->getDecl();
+            break;
+          case Type::Record:
+          case Type::Enum:
+            decl = cast<TagType>(QTTy)->getDecl();
+            break;
+          default:
+            decl = QT->getAsCXXRecordDecl();
+            break;
         }
       }
       if (decl) {
