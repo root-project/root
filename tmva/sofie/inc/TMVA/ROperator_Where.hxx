@@ -219,7 +219,7 @@ public:
          }
          if (fIsOutputConstant && model.Verbose())
             std::cout << "Where op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
-               << ((dataY.size() > 0) ? ConvertValuesToString(dataY) : ConvertShapeToString(shapeDataY) )
+               << ((dataY.size() > 0) ? ConvertValuesToString(dataY) : ConvertDimShapeToString(shapeDataY) )
                << ((dataY.size() > 0) ? " (constant)" : " (shape)") << std::endl;
 
          // output is a constant tensor

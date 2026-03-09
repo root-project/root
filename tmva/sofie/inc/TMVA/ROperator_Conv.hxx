@@ -241,7 +241,7 @@ public:
       }
       fShapeX = model.GetDimTensorShape(fNX);
       if (fShapeX.size() < 3 || fShapeX.size()  > 5) {
-         std::cout << fNX << " : " << ConvertShapeToString(fShapeX) << std::endl;
+         std::cout << fNX << " : " << ConvertDimShapeToString(fShapeX) << std::endl;
          throw
             std::runtime_error("TMVA SOFIE Conv Op input data tensor" + fNX + " is not of 3,4 or 5 dimensions");
       }
@@ -325,8 +325,8 @@ public:
       fInputTensorNames.emplace_back(imcol);
 
       if (model.Verbose()) {
-         std::cout << "Conv - " << fDim << "  " << fNX << " : " << ConvertShapeToString(fShapeX)
-                  << " --> " << fNY << " : " << ConvertShapeToString(fShapeY) << std::endl;
+         std::cout << "Conv - " << fDim << "  " << fNX << " : " << ConvertDimShapeToString(fShapeX)
+                  << " --> " << fNY << " : " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
    }
 
@@ -348,7 +348,7 @@ public:
          else
             out << SP << "{\n";
          out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_"
-             << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+             << fNB << ", " << ConvertShapeToString(shape) << ", " << ConvertDimShapeToString(fShapeY) << ");\n";
          out << SP << SP << "fTensor_" << fNB << ".resize(" << length << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", fTensor_" << fNB << ".begin());\n";
          out << SP << SP << "tensor_" << fNB << " = fTensor_" << fNB << ".data();\n";

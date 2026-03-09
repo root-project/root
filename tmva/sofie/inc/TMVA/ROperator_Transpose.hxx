@@ -119,7 +119,7 @@ public:
       } else {
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
          if (model.Verbose()) {
-            std::cout << "Transpose ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+            std::cout << "Transpose ---> " << fNOutput << " " <<  ConvertDimShapeToString(fShapeOutput) << std::endl;
          }
       }
    }

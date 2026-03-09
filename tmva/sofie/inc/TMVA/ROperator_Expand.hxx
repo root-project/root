@@ -120,8 +120,8 @@ public:
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose()) {
-         std::cout << "Expand - input " << fNX << " shape " << ConvertShapeToString(fShapeX) << " --> " << fNY << " shape "
-                  << ConvertShapeToString(fShapeY) << (fIsOutputConstant ? ConvertValuesToString(model.GetTensorData<T>(fNY)) + " (constant)" : "") << std::endl;
+         std::cout << "Expand - input " << fNX << " shape " << ConvertDimShapeToString(fShapeX) << " --> " << fNY << " shape "
+                  << ConvertDimShapeToString(fShapeY) << (fIsOutputConstant ? ConvertValuesToString(model.GetTensorData<T>(fNY)) + " (constant)" : "") << std::endl;
       }
    }
 
@@ -143,7 +143,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ Expand " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << SP << "\n//------ Expand " << opName << " --> " << ConvertDimShapeToString(fShapeY) << "\n";
       // need to declare shape parameters for non initialized shapes
       if (!fInitializedShape) {
          for (size_t i = 0; i < fShapeDim.size(); i++) {
@@ -153,7 +153,7 @@ public:
       // No need to broadcast A if it's an initialized tensor or shapes are the same
       if (!fInitialized && fShapeX != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
                    << ", tensor_"<<fNY<<");\n";
       }
       return out.str();

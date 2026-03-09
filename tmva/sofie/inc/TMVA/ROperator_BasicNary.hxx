@@ -194,9 +194,9 @@ public:
       if (model.Verbose()) {
          std::cout << NaryOperatorTraits<T, Op>::Name() << " : ";
          if (fNInputs.size() == 2)
-            std::cout << ConvertShapeToString(fShapeInputs[0]) << " , "
-                      << ConvertShapeToString(fShapeInputs[1]);
-         std::cout << " --> " << ConvertShapeToString(fDimShapeY) << std::endl;
+            std::cout << ConvertDimShapeToString(fShapeInputs[0]) << " , "
+                      << ConvertDimShapeToString(fShapeInputs[1]);
+         std::cout << " --> " << ConvertDimShapeToString(fDimShapeY) << std::endl;
       }
    }
 
