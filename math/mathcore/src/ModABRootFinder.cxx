@@ -95,12 +95,20 @@ bool ModABRootFinder::Solve(int maxIter, double absTol, double relTol)
          }
       } else {
          x3 = (x1 * y2 - y1 * x2) / (y2 - y1);
-         if (x3 < x1)
-            x3 = x1;
-         else if (x3 > x2)
-            x3 = x2;
-
-         y3 = (*fFunction)(x3);
+         // Clamp x3 when floating point round-off errors shoots it out of the bracketing interval. Assign also y values to avoid redundant re-evaluation
+         if (x3 <= x1)
+         {
+             x3 = x1;
+             y3 = y1;
+         }
+         else if (x3 >= x2)
+         {
+             x3 = x2;
+             y3 = y2;
+         }
+         else
+             y3 = (*fFunction)(x3);
+         
          threshold /= 2.0;
       }
       fRoot = x3;
