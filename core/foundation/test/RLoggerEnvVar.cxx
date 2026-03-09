@@ -1,6 +1,20 @@
 // Test that ROOT_LOG env var correctly configures RLogger channel verbosity.
-// ROOT_LOG is parsed once at RLogManager construction (process startup),
-// so each test case is a separate executable launched with the env var set.
+// ROOT_LOG is parsed once at RLogManager construction (process startup).
+// The env var is set programmatically before RLogManager initializes.
+
+// Set the env var BEFORE any ROOT headers are included, so it is present
+// when the RLogManager singleton is constructed.
+#ifdef _WIN32
+#include <cstdlib>
+namespace {
+int gEnvSet = _putenv("ROOT_LOG=ROOT.TestChannel=Error");
+}
+#else
+#include <cstdlib>
+namespace {
+int gEnvSet = setenv("ROOT_LOG", "ROOT.TestChannel=Error", 1);
+}
+#endif
 
 #include "ROOT/RLogger.hxx"
 #include "gtest/gtest.h"
@@ -15,8 +29,6 @@ ROOT::RLogChannel &TestChannel()
 // Test: channel verbosity set via ROOT_LOG is reflected in GetEnvVerbosity
 TEST(RLoggerEnvVar, EnvVerbosityIsStored)
 {
-   // ROOT_LOG was set to 'ROOT.TestChannel=Error' before process start
-   // (set in CMakeLists via set_tests_properties)
    auto level = ROOT::RLogManager::Get().GetEnvVerbosity("ROOT.TestChannel");
    EXPECT_EQ(level, ROOT::ELogLevel::kError);
 }
@@ -31,22 +43,17 @@ TEST(RLoggerEnvVar, UnknownChannelReturnsUnset)
 // Test: channel effective verbosity uses env var when channel has no explicit level
 TEST(RLoggerEnvVar, EffectiveVerbosityUsesEnvVar)
 {
-   // Channel has no explicit verbosity set, so should use env var value
    auto effective = TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get());
    EXPECT_EQ(effective, ROOT::ELogLevel::kError);
 }
+
 // Test: explicitly set verbosity on a channel takes precedence over ROOT_LOG env var.
 // ROOT_LOG sets ROOT.TestChannel=Error, but we explicitly set it to kInfo here.
 // The explicit setting should win.
 TEST(RLoggerEnvVar, ExplicitVerbosityTakesPrecedenceOverEnvVar)
 {
-   // ROOT_LOG set ROOT.TestChannel=Error via environment
-   // Now explicitly override it to kInfo
    TestChannel().SetVerbosity(ROOT::ELogLevel::kInfo);
-
-   // Explicit verbosity should win over env var
    EXPECT_EQ(TestChannel().GetEffectiveVerbosity(ROOT::RLogManager::Get()), ROOT::ELogLevel::kInfo);
-
    // Reset back to kUnset so other tests are not affected
    TestChannel().SetVerbosity(ROOT::ELogLevel::kUnset);
 }
