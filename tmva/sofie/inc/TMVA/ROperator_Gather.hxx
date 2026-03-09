@@ -54,8 +54,8 @@ public:
       }
       fShapeX = model.GetDimTensorShape(fNX);
       if (model.Verbose())
-         std::cout << "Gather - initial shape " << ConvertShapeToString(fShapeX) << " shape of indices "
-               << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
+         std::cout << "Gather - initial shape " << ConvertDimShapeToString(fShapeX) << " shape of indices "
+               << ConvertDimShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
       //  fShapeIndices can be  dynamic
       fShapeIndices = model.GetDimTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
@@ -86,7 +86,7 @@ public:
       }
       // Output shape
       if (model.Verbose())
-         std::cout << "Gather: q and r " << q << " " << r << " shape indices " << ConvertShapeToString(fShapeIndices) << std::endl;
+         std::cout << "Gather: q and r " << q << " " << r << " shape indices " << ConvertDimShapeToString(fShapeIndices) << std::endl;
 
       if (fShapeY.empty()) {
          fShapeY.resize(q + r - 1);
@@ -128,15 +128,15 @@ public:
             // shapeY can be scalar or vector of size1
             model.AddShapeTensor(fNY, outputData, fShapeY.size() == 0);
             if (model.Verbose())
-               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
-                   << " and values " << ConvertShapeToString(outputData) << " (shape) " << std::endl;
+               std::cout << "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
+                   << " and values " << ConvertDimShapeToString(outputData) << " (shape) " << std::endl;
          } else {
             int64_t value = static_cast<int64_t>(outputData[0].dim);
             auto shapeY = ConvertShapeToInt(fShapeY);
             model.AddConstantTensor(fNY, shapeY, &value);
             fIsOutputConstant = true;
             if (model.Verbose())
-               std::cout << "Gather: " << fNX << " " << ConvertShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+               std::cout << "Gather: " << fNX << " " << ConvertDimShapeToString(fShapeX) << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY)
                    << " and values {" << value <<  "} (constant) " << std::endl;
          }
       }
@@ -145,15 +145,15 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout <<  "Gather: input " << fNX << " " << ConvertShapeToString(fShapeX) << " indices " << fNIndices << ConvertShapeToString(fShapeIndices)
-                         << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY) << std::endl;
+               std::cout <<  "Gather: input " << fNX << " " << ConvertDimShapeToString(fShapeX) << " indices " << fNIndices << ConvertDimShapeToString(fShapeIndices)
+                         << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
    }
 
    std::string Generate(std::string opName) override {
       opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- Gather " << opName << " --> " << fNY << "  " << ConvertShapeToString(fShapeY) << "\n";
+      out << "//--------- Gather " << opName << " --> " << fNY << "  " << ConvertDimShapeToString(fShapeY) << "\n";
       if (fIsOutputConstant) {
          // no code to generate here for constant output. Tensor output is defined in Session constructor
          out << "//--------------------(constant)----------\n";

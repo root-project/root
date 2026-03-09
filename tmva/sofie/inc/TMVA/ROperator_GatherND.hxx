@@ -44,8 +44,8 @@ public:
       }
       fShapeX = model.GetDimTensorShape(fNX);
       if (model.Verbose())
-         std::cout << "GatherND - initial shape " << ConvertShapeToString(fShapeX) << " shape of indices "
-               << ConvertShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
+         std::cout << "GatherND - initial shape " << ConvertDimShapeToString(fShapeX) << " shape of indices "
+               << ConvertDimShapeToString(model.GetDimTensorShape(fNIndices)) << std::endl;
       //  fShapeIndices can be  dynamic
       fShapeIndices = model.GetDimTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
@@ -64,8 +64,8 @@ public:
       if (fBatchDims > 0) {
          for (size_t i = 0; i < fBatchDims; i++) {
             if (fShapeX[i] != fShapeIndices[i]) {
-               std::cout << " input shape " << ConvertShapeToString(fShapeX) << " "
-                         << " index shape " << ConvertShapeToString(fShapeIndices) << std::endl;
+               std::cout << " input shape " << ConvertDimShapeToString(fShapeX) << " "
+                         << " index shape " << ConvertDimShapeToString(fShapeIndices) << std::endl;
                throw std::runtime_error("TMVA SOFIE GatherND : invalid input or index shape for " + std::to_string(i));
             }
          }
@@ -89,9 +89,9 @@ public:
       fShapeY = std::vector<Dim>(fShapeIndices.begin(), fShapeIndices.end() - 1);
       fShapeY.insert(fShapeY.end(), fShapeX.begin() + fBatchDims + last_index_shape, fShapeX.end());
       if (fShapeY.size() != output_rank) {
-         std::cout << " input shape " << ConvertShapeToString(fShapeX) << " "
-                         << " index shape " << ConvertShapeToString(fShapeIndices)
-                         << " output shape " << ConvertShapeToString(fShapeY)
+         std::cout << " input shape " << ConvertDimShapeToString(fShapeX) << " "
+                         << " index shape " << ConvertDimShapeToString(fShapeIndices)
+                         << " output shape " << ConvertDimShapeToString(fShapeY)
                          << " and output rank should be " << output_rank << std::endl;
          throw std::runtime_error("TMVA SOFIE GatherND : Something is wrong in initialization ");
       }
@@ -101,8 +101,8 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          fType = ConvertTypeToString(model.GetTensorType(fNX));
          if (model.Verbose())
-               std::cout <<  "GatherND: input " << fNX << " " << ConvertShapeToString(fShapeX) << " indices " << fNIndices << ConvertShapeToString(fShapeIndices)
-                         << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY) << std::endl;
+               std::cout <<  "GatherND: input " << fNX << " " << ConvertDimShapeToString(fShapeX) << " indices " << fNIndices << ConvertDimShapeToString(fShapeIndices)
+                         << " -> " << fNY << " with shape " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
 
 
@@ -176,7 +176,7 @@ public:
       }
       opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- GatherND " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << "//--------- GatherND " << opName << " --> " << ConvertDimShapeToString(fShapeY) << "\n";
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q

@@ -111,7 +111,7 @@ public:
 
       if (fShapeX.size() <  2 || fShapeX.size() > 4) {
          throw
-            std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertShapeToString(fShapeX));
+            std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertDimShapeToString(fShapeX));
       }
 
       fShapeY = fShapeX;

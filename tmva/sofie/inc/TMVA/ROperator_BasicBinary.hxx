@@ -127,10 +127,10 @@ public:
       }
       if (dynamicInputs & 1 && model.Verbose())
          std::cout << BinaryOperatorTrait<T, Op>::Name() << " : input " << fNA << " is dynamic "
-                   << ConvertShapeToString(fDimShapeA) << std::endl;
+                   << ConvertDimShapeToString(fDimShapeA) << std::endl;
       if (dynamicInputs & 2 && model.Verbose())
          std::cout << BinaryOperatorTrait<T, Op>::Name() << " : input " << fNB << " is dynamic "
-                   << ConvertShapeToString(fDimShapeB) << std::endl;
+                   << ConvertDimShapeToString(fDimShapeB) << std::endl;
 
       // check if need to broadcast at initialization time if shapes are known and different
       // (we could broadcast the tensor tensor to maximum values of dynamic shapes - to be done)
@@ -259,8 +259,8 @@ public:
 
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fDimShapeY);
          if (model.Verbose()) {
-            std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << ConvertShapeToString(fDimShapeA) << " , "
-                      << ConvertShapeToString(fDimShapeB) << " --> " << ConvertShapeToString(fDimShapeY) << std::endl;
+            std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << ConvertDimShapeToString(fDimShapeA) << " , "
+                      << ConvertDimShapeToString(fDimShapeB) << " --> " << ConvertDimShapeToString(fDimShapeY) << std::endl;
          }
       }
    }

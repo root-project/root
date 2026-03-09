@@ -264,7 +264,7 @@ namespace SOFIE{
          if (model.Verbose()){
             std::cout << "Gemm (or MatMul) " << " ---> " << fNY << " shape ";
             if (fIsDynamic)
-               std::cout << ConvertShapeToString(fShapeY) << std::endl;
+               std::cout << ConvertDimShapeToString(fShapeY) << std::endl;
             else
                std::cout << ConvertShapeToString(shapeY) << std::endl;
          }
@@ -279,8 +279,8 @@ namespace SOFIE{
             throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
          }
          std::stringstream out;
-         out << "\n//--------- Gemm " << opName << " " << ConvertShapeToString(fShapeA) << " * " << ConvertShapeToString(fShapeB)
-             << " -> " << ConvertShapeToString(fShapeY) << "\n";
+         out << "\n//--------- Gemm " << opName << " " << ConvertDimShapeToString(fShapeA) << " * " << ConvertDimShapeToString(fShapeB)
+             << " -> " << ConvertDimShapeToString(fShapeY) << "\n";
          // need to consider case A and B have dim > 2 (for MatMul)
          int64_t dimA = fShapeA.size();
          int64_t dimB = fShapeB.size();

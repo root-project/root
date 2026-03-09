@@ -47,7 +47,7 @@ public:
 
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
       if (model.Verbose()) {
-         std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertShapeToString(fShape) << std::endl;
+         std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertDimShapeToString(fShape) << std::endl;
       }
    }
 
@@ -58,7 +58,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Relu called to Generate without being initialized first");
       }
       std::stringstream out;
-      auto length = ConvertDynamicShapeToLength(fShape);
+      auto length = ConvertDimShapeToLength(fShape);
       out << "\n//------ RELU\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] > 0 )? tensor_" << fNX << "[id] : 0);\n";

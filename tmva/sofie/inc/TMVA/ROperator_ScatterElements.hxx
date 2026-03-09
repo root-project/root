@@ -78,9 +78,9 @@ public:
       fShapeI = model.GetDimTensorShape(fNI);
       auto shapeU = model.GetDimTensorShape(fNU);
       if (model.Verbose()) {
-         std::cout << "ScatterElements: input: " << ConvertShapeToString(fShapeX)
-                                                << " indices " << ConvertShapeToString(fShapeI)
-                                                << " update " <<  ConvertShapeToString(shapeU) << std::endl;
+         std::cout << "ScatterElements: input: " << ConvertDimShapeToString(fShapeX)
+                                                << " indices " << ConvertDimShapeToString(fShapeI)
+                                                << " update " <<  ConvertDimShapeToString(shapeU) << std::endl;
       }
       if (!model.IsDynamicTensor(fNI) && !model.IsDynamicTensor(fNU)) {
          if (shapeU != fShapeI)

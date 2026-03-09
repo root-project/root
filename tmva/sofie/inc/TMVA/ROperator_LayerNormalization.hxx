@@ -178,7 +178,7 @@ public:
          out << SP << "// Broadcasting the bias of LayerNormalization op\n";
          out << SP << "{\n";
          out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_";
-         out << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeX) << ");\n";
+         out << fNB << ", " << ConvertDimShapeToString(fShapeB) << ", " << ConvertDimShapeToString(fShapeX) << ");\n";
          out << SP << "std::copy(data, data + " << fLength << ", tensor_" << fNBroadcastedB << ");\n";
          out << SP << "delete[] data;\n";
          out << SP << "}\n";

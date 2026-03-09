@@ -84,8 +84,8 @@ public:
       fType = ConvertTypeToString(model.GetTensorType(fNX));
 
       if (model.Verbose()) {
-         std::cout << "TopK " << fNX << "  " << ConvertShapeToString(fShapeX)
-                      << "---> " << fNVal << " " <<  ConvertShapeToString(fShapeY) << std::endl;
+         std::cout << "TopK " << fNX << "  " << ConvertDimShapeToString(fShapeX)
+                      << "---> " << fNVal << " " <<  ConvertDimShapeToString(fShapeY) << std::endl;
       }
    }
 

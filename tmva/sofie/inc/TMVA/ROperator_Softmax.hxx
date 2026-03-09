@@ -51,7 +51,7 @@ public:
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose()) {
-         std::cout << "Softmax -> " << fNY << " " << ConvertShapeToString(fShape) << std::endl;
+         std::cout << "Softmax -> " << fNY << " " << ConvertDimShapeToString(fShape) << std::endl;
       }
    }
 
