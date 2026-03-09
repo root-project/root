@@ -831,3 +831,44 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
 
    return status;
 }
+
+void ROOT::Internal::RCurlConnection::SetCredentials(const RS3Credentials &credentials)
+{
+   ClearCredentials();
+
+   const std::string region = credentials.fRegion.empty() ? "default" : credentials.fRegion;
+   const std::string sigArg = std::string("aws:amz:") + region + ":s3";
+   auto rc = curl_easy_setopt(fHandle, CURLOPT_AWS_SIGV4, sigArg.c_str());
+   R__ASSERT(rc == CURLE_OK);
+
+   const std::string userPwd = credentials.fAccessKey + ":" + credentials.fSecretKey;
+   rc = curl_easy_setopt(fHandle, CURLOPT_USERPWD, userPwd.c_str());
+   R__ASSERT(rc == CURLE_OK);
+
+   fCredentials = std::make_unique<RHTTPCredentials>();
+   fCredentials->fType = EHTTPCredentialsType::kS3;
+   fCredentials->fData = credentials;
+}
+
+void ROOT::Internal::RCurlConnection::ClearCredentials()
+{
+   if (!fCredentials)
+      return;
+
+   CURLcode rc;
+   switch (fCredentials->fType) {
+   case EHTTPCredentialsType::kS3:
+      rc = curl_easy_setopt(fHandle, CURLOPT_AWS_SIGV4, NULL);
+      R__ASSERT(rc == CURLE_OK);
+      rc = curl_easy_setopt(fHandle, CURLOPT_USERPWD, NULL);
+      R__ASSERT(rc == CURLE_OK);
+      break;
+   default: R__ASSERT(false && "internal error: unknown credentials type");
+   }
+   fCredentials.reset();
+}
+
+ROOT::Internal::EHTTPCredentialsType ROOT::Internal::RCurlConnection::GetCredentialsType() const
+{
+   return fCredentials ? fCredentials->fType : EHTTPCredentialsType::kNone;
+}
