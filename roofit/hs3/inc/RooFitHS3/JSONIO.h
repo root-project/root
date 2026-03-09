@@ -76,7 +76,6 @@ using ExportMap = std::map<TClass const *, std::vector<std::unique_ptr<const Exp
 using ExportKeysMap = std::map<TClass const *, ExportKeys>;
 using ImportExpressionMap = std::map<const std::string, ImportExpression>;
 
-void setupKeys();
 ImportMap &importers();
 ExportMap &exporters();
 ImportExpressionMap &importExpressions();
@@ -92,9 +91,15 @@ static bool registerExporter(const TClass *key, bool topPriority = true)
 {
    return registerExporter(key, std::make_unique<T>(), topPriority);
 }
+template <class T>
+static bool registerExporter(const std::string &key, bool topPriority = true)
+{
+   return registerExporter(key, std::make_unique<T>(), topPriority);
+}
 
 bool registerImporter(const std::string &key, std::unique_ptr<const Importer> f, bool topPriority = true);
 bool registerExporter(const TClass *key, std::unique_ptr<const Exporter> f, bool topPriority = true);
+bool registerExporter(const std::string &key, std::unique_ptr<const Exporter> f, bool topPriority = true);
 int removeImporters(const std::string &needle);
 int removeExporters(const std::string &needle);
 void printImporters();
