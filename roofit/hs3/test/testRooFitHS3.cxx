@@ -44,8 +44,6 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
-   ws1.Print();
-
    const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
 
    if (writeJsonFiles) {
@@ -118,8 +116,7 @@ int validate(std::vector<std::string> const &expressions, bool exact = true)
 {
    RooWorkspace ws;
    for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
-      std::cout << expressions[iExpr] << std::endl;
-      ws.factory(expressions[iExpr])->Print();
+      ws.factory(expressions[iExpr]);
    }
    const std::string argName = ws.factory(expressions.back())->GetName();
    return validate(ws, argName, exact);
@@ -433,8 +430,8 @@ TEST(RooFitHS3, SimultaneousGaussians)
 // https://github.com/root-project/root/issues/14637
 TEST(RooFitHS3, ScientificNotation)
 {
-   RooRealVar v1("v1","v1",1.0);
-   RooRealVar v2("v2","v2",1.0);
+   RooRealVar v1("v1", "v1", 1.0);
+   RooRealVar v2("v2", "v2", 1.0);
 
    // make a formula that is some parameters times some numbers
    auto thestring = "@0*0.2e-6 + @1*0.1";
@@ -445,18 +442,19 @@ TEST(RooFitHS3, ScientificNotation)
    RooFormulaVar fvBad("fvBad", "fvBad", thestring, arglist);
 
    // make gaussian with mean as that formula
-   RooRealVar x("x","x",0.0,-5.0,5.0);
-   RooGaussian g("g","g",x, fvBad, 1.0);
+   RooRealVar x("x", "x", 0.0, -5.0, 5.0);
+   RooGaussian g("g", "g", x, fvBad, 1.0);
 
    RooWorkspace ws("ws");
    ws.import(g);
-   //std::cout << (fvBad.expression()) << std::endl;
+   // std::cout << (fvBad.expression()) << std::endl;
 
    // export to json
    RooJSONFactoryWSTool t(ws);
    auto jsonStr = t.exportJSONtoString();
 
-   // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading the exponential char
+   // try to import, before the fix, it threw RooJSONFactoryWSTool::DependencyMissingError because of problem reading
+   // the exponential char
    RooWorkspace newws("newws");
    RooJSONFactoryWSTool t2(newws);
    ASSERT_TRUE(t2.importJSONfromString(jsonStr));
@@ -556,4 +554,88 @@ TEST(RooFitHS3, RooSpline)
 
    const int status = validate(ws, "spline", /*exact=*/true);
    EXPECT_EQ(status, 0);
+}
+
+namespace {
+
+class TestExporterA final : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override
+   {
+      static const std::string k{"unit_test_exporter_A"};
+      return k;
+   }
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *, RooFit::Detail::JSONNode &) const override
+   {
+      callCounter()++;
+      return true; // do nothing, just for test
+   }
+   static int &callCounter()
+   {
+      static int counter = 0;
+      return counter;
+   }
+};
+
+template <int N>
+class TestExporter final : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override
+   {
+      static const std::string k{"unit_test_exporter"};
+      return k;
+   }
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *, RooFit::Detail::JSONNode &) const override
+   {
+      callCounter()++;
+      return true; // do nothing, just for test
+   }
+   static int &callCounter()
+   {
+      static int counter = 0;
+      return counter;
+   }
+};
+
+} // namespace
+
+// Test the custom exporter registration mechanism.
+TEST(RooFitHS3, RegisterExporterByClassName)
+{
+   using RooFit::JSONIO::registerExporter;
+
+   constexpr const char *className = "RooGaussian";
+   TClass *klass = TClass::GetClass(className);
+   ASSERT_NE(klass, nullptr);
+
+   RooWorkspace ws{"ws"};
+   ws.factory("RooGaussian::model(x[-10, 10], mu[-10, 10], sigma[2., 0.01, 10])");
+
+   // 1. Add new exporter by class pointer with top priority.
+   //    We expect this to get used.
+   registerExporter<TestExporter<1>>(klass, /*topPriotiry=*/true);
+   RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(TestExporter<1>::callCounter()--, 1);
+
+   // 2. Add new exporter by class pointer with bottom priority.
+   //    We expect the previous TestExporter<1> to still be used.
+   registerExporter<TestExporter<2>>(klass, /*topPriotiry=*/false);
+   RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(TestExporter<1>::callCounter()--, 1);
+
+   // 3. Add new exporter by name with top priority.
+   //    We expect this to get used.
+   registerExporter<TestExporter<3>>(std::string{className}, /*topPriotiry=*/true);
+   RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(TestExporter<3>::callCounter()--, 1);
+
+   // 4. Add new exporter by name with bottom priority.
+   //    We expect the previous TestExporter<3> to still be used.
+   registerExporter<TestExporter<4>>(std::string{className}, /*topPriotiry=*/false);
+   RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(TestExporter<3>::callCounter()--, 1);
+
+   // Cleanup for other tests, also making sure the expected number of
+   // exporters is removed.
+   EXPECT_EQ(RooFit::JSONIO::removeExporters("TestExporter"), 4);
 }
