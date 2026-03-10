@@ -8808,13 +8808,15 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
 
    for (auto o : _obs) {
       if (auto rr = o->get<RooRealVar>(); rr && rr->hasRange("coordRange")) {
-         rr->removeRange("coordRange");                 // doesn't actually remove, just sets to -inf->+inf
+         rr->removeMin("coordRange");
+         rr->removeMax("coordRange");
          rr->setStringAttribute("coordRange", nullptr); // removes the attribute
       }
    }
    // probably should also remove any range on the x-axis variable too, if there is one
    if (auto rr = dynamic_cast<RooRealVar *>(v); rr && rr->hasRange("coordRange")) {
-      rr->removeRange("coordRange");                 // doesn't actually remove, just sets to -inf->+inf
+      rr->removeMin("coordRange");
+      rr->removeMax("coordRange");
       rr->setStringAttribute("coordRange", nullptr); // removes the attribute
    }
    coords(); // loads current coordinates and populates coordRange, if any
