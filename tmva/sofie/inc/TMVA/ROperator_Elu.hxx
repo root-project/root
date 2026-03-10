@@ -66,11 +66,13 @@ public:
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
 
-      out << SP << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << falpha << ";\n";
+      out << SP << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10)
+          << falpha << ";\n";
 
       out << "\n//------ ELU \n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] >= 0 )? tensor_" << fNX << "[id] : "<< OpName << "_alpha * std::exp(tensor_"<< fNX<<"[id]) - 1);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] >= 0 )? tensor_" << fNX
+          << "[id] : " << OpName << "_alpha * (std::exp(tensor_" << fNX << "[id]) - 1));\n";
       out << SP << "}\n";
       return out.str();
    }
