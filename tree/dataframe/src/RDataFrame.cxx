@@ -2127,6 +2127,8 @@ df.Filter("Muon_pt[0] > 10.").Display(".*", 10)->Print();
 ~~~
    </td>
 </tr>
+<tr>
+   <td>
 ~~~{cpp}
 // For 10 events, print Muon_pt and Muon_eta, starting at entry 100
 tree->Scan("Muon_pt:Muon_eta", "", "", 10, 100);
