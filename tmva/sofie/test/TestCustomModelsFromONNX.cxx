@@ -92,6 +92,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/Slice_Neg.ref.hxx"
 #include "input_models/references/Log.ref.hxx"
 #include "input_models/references/Elu.ref.hxx"
+#include "input_models/references/Gelu.ref.hxx"
 #include "input_models/references/Equal.ref.hxx"
 #include "input_models/references/EluAlpha.ref.hxx"
 #include "input_models/references/LessOrEqual.ref.hxx"
@@ -3150,5 +3151,25 @@ TEST(ONNX, Clip)
    }
    for (size_t i = 0; i < output[1].size(); ++i) {
       EXPECT_LE(std::abs(output[1][i] - correct_output2[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, Gelu)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard input
+   std::vector<float> input{1.0, -2.0, 3.0, 0.5, -1.0, 2.0};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Gelu", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Gelu_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Gelu_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
