@@ -92,6 +92,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/Log.ref.hxx"
 #include "input_models/references/Elu.ref.hxx"
 #include "input_models/references/Equal.ref.hxx"
+#include "input_models/references/EluAlpha.ref.hxx"
 #include "input_models/references/LessOrEqual.ref.hxx"
 #include "input_models/references/GreaterOrEqual.ref.hxx"
 #include "input_models/references/Less.ref.hxx"
@@ -303,6 +304,22 @@ TEST(ONNX, Elu)
 
       float *correct = Elu_ExpectedOutput::outputs;
 
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+TEST(ONNX, EluAlpha)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+      // Regression test for alpha != 1.0 (fixes #21539)
+      std::vector<float> input({
+        1.0, -2.0, 3.0, 0.5, -1.0, 2.0
+      });
+      ASSERT_INCLUDE_AND_RUN(std::vector<float>, "EluAlpha", input);
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(EluAlpha_ExpectedOutput::outputs) / sizeof(float));
+      float *correct = EluAlpha_ExpectedOutput::outputs;
       // Checking every output value, one by one
       for (size_t i = 0; i < output.size(); ++i) {
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
