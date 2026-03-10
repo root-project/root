@@ -180,7 +180,6 @@ TGX11::TGX11()
    fColormap           = 0;
    fBlackPixel         = 0;
    fWhitePixel         = 0;
-   fWindows            = nullptr;
    fColors             = nullptr;
    fXEvent             = new XEvent;
    fRedDiv             = -1;
@@ -194,7 +193,6 @@ TGX11::TGX11()
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
    fHasXft             = kFALSE;
-   fMaxNumberOfWindows = 10;
    fTextAlignH         = 1;
    fTextAlignV         = 1;
    fTextAlign          = 7;
@@ -229,17 +227,11 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
    fHasXft             = kFALSE;
-   fMaxNumberOfWindows = 10;
    fTextAlignH         = 1;
    fTextAlignV         = 1;
    fTextAlign          = 7;
    fTextMagnitude      = 1;
    for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
-
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (i = 0; i < fMaxNumberOfWindows; i++)
-      fWindows[i].fOpen = 0;
 
    fColors = new TExMap;
 }
@@ -277,26 +269,26 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    fDrawMode        = org.fDrawMode;
    fXEvent          = new XEvent;
 
-   fMaxNumberOfWindows = org.fMaxNumberOfWindows;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (i = 0; i < fMaxNumberOfWindows; i++) {
-      fWindows[i].fOpen         = org.fWindows[i].fOpen;
-      fWindows[i].fDoubleBuffer = org.fWindows[i].fDoubleBuffer;
-      fWindows[i].fIsPixmap     = org.fWindows[i].fIsPixmap;
-      fWindows[i].fDrawing      = org.fWindows[i].fDrawing;
-      fWindows[i].fWindow       = org.fWindows[i].fWindow;
-      fWindows[i].fBuffer       = org.fWindows[i].fBuffer;
-      fWindows[i].fWidth        = org.fWindows[i].fWidth;
-      fWindows[i].fHeight       = org.fWindows[i].fHeight;
-      fWindows[i].fClip         = org.fWindows[i].fClip;
-      fWindows[i].fXclip        = org.fWindows[i].fXclip;
-      fWindows[i].fYclip        = org.fWindows[i].fYclip;
-      fWindows[i].fWclip        = org.fWindows[i].fWclip;
-      fWindows[i].fHclip        = org.fWindows[i].fHclip;
-      fWindows[i].fNewColors    = org.fWindows[i].fNewColors;
-      fWindows[i].fNcolors      = org.fWindows[i].fNcolors;
-      fWindows[i].fShared       = org.fWindows[i].fShared;
+   for(auto & iter : org.fWindows) {
+      auto &tgt = fWindows[iter.first]; // entry created
+      auto &src = iter.second;
+      tgt.fOpen         = src.fOpen;
+      tgt.fDoubleBuffer = src.fDoubleBuffer;
+      tgt.fIsPixmap     = src.fIsPixmap;
+      tgt.fDrawing      = src.fDrawing;
+      tgt.fWindow       = src.fWindow;
+      tgt.fBuffer       = src.fBuffer;
+      tgt.fWidth        = src.fWidth;
+      tgt.fHeight       = src.fHeight;
+      tgt.fClip         = src.fClip;
+      tgt.fXclip        = src.fXclip;
+      tgt.fYclip        = src.fYclip;
+      tgt.fWclip        = src.fWclip;
+      tgt.fHclip        = src.fHclip;
+      // FIXME: copy of pointer on may lead to double delete!!!
+      tgt.fNewColors    = src.fNewColors;
+      tgt.fNcolors      = src.fNcolors;
+      tgt.fShared       = src.fShared;
    }
 
    for (i = 0; i < kNumCursors; i++)
@@ -323,7 +315,6 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 TGX11::~TGX11()
 {
    delete (XEvent*)fXEvent;
-   if (fWindows) TStorage::Dealloc(fWindows);
 
    if (!fColors) return;
    Long64_t key, value;
@@ -439,7 +430,7 @@ void TGX11::ClearWindow()
 
 void TGX11::ClosePixmap()
 {
-   CloseWindow1();
+   CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,48 +438,54 @@ void TGX11::ClosePixmap()
 
 void TGX11::CloseWindow()
 {
-   if (gCws->fShared)
-      gCws->fOpen = 0;
-   else
-      CloseWindow1();
+   if (gCws->fShared) {
+      // case of Qt window
+      if (gCws->fBuffer)
+         XFreePixmap((Display*)fDisplay, gCws->fBuffer);
 
-   // Never close connection. TApplication takes care of that
-   //   if (!gCws) Close();    // close X when no open window left
-}
+      if (gCws->fNewColors) {
+         if (fRedDiv == -1)
+            XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
+         delete [] gCws->fNewColors;
+         gCws->fNewColors = nullptr;
+      }
+   } else {
+      if (gCws->fIsPixmap)
+         XFreePixmap((Display*)fDisplay, gCws->fWindow);
+      else
+         XDestroyWindow((Display*)fDisplay, gCws->fWindow);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Delete current window.
+      if (gCws->fBuffer)
+         XFreePixmap((Display*)fDisplay, gCws->fBuffer);
 
-void TGX11::CloseWindow1()
-{
-   int wid;
+      if (gCws->fNewColors) {
+         if (fRedDiv == -1)
+            XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
+         delete [] gCws->fNewColors;
+         gCws->fNewColors = nullptr;
+      }
 
-   if (gCws->fIsPixmap)
-      XFreePixmap((Display*)fDisplay, gCws->fWindow);
-   else
-      XDestroyWindow((Display*)fDisplay, gCws->fWindow);
-
-   if (gCws->fBuffer) XFreePixmap((Display*)fDisplay, gCws->fBuffer);
-
-   if (gCws->fNewColors) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
-      delete [] gCws->fNewColors;
-      gCws->fNewColors = nullptr;
+      XFlush((Display*)fDisplay);
    }
-
-   XFlush((Display*)fDisplay);
 
    gCws->fOpen = 0;
 
-   // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (fWindows[wid].fOpen) {
-         gCws = &fWindows[wid];
-         return;
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (&iter->second == gCws) {
+         fWindows.erase(iter);
+         gCws = nullptr;
+         break;
       }
 
-   gCws = nullptr;
+   if (gCws)
+      Fatal("CloseWindow", "Not found gCws in list of windows");
+
+   // select first from active windows
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second.fOpen) {
+         gCws = &iter->second;
+         return;
+      }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1264,6 +1261,41 @@ Int_t TGX11::OpenDisplay(void *disp)
    return 0;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add new window handle
+/// Only for private usage
+
+Int_t TGX11::AddWindowHandle()
+{
+   Int_t maxid = 0;
+   for (auto & iter : fWindows) {
+      if (!iter.second.fOpen) {
+         iter.second.fOpen = 1;
+         return iter.first;
+      }
+      if (iter.first > maxid)
+         maxid = iter.first;
+   }
+
+   if (fWindows.size() == (size_t) maxid) {
+      // all ids are in use - just add maximal+1
+      maxid++;
+   } else
+      for (int id = 1; id < maxid; id++) {
+         if (fWindows.count(id) == 0) {
+            maxid = id;
+            break;
+         }
+      }
+
+
+   fWindows[maxid].fOpen = 1;
+   return maxid;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a new pixmap.
 ///
@@ -1273,35 +1305,19 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
 {
    Window root;
    unsigned int wval, hval;
-   int xx, yy, i, wid;
+   int xx, yy;
    unsigned int ww, hh, border, depth;
    wval = w;
    hval = h;
 
    // Select next free window number
-
-again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].fOpen) {
-         fWindows[wid].fOpen = 1;
-         gCws = &fWindows[wid];
-         break;
-      }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                                fMaxNumberOfWindows*sizeof(XWindow_t));
-      for (i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].fOpen = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   int wid = AddWindowHandle();
+   gCws = &fWindows[wid];
 
    gCws->fWindow = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
    XGetGeometry((Display*)fDisplay, gCws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
-   for (i = 0; i < kMAXGC; i++)
+   for (int i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gGClist[i], None);
 
    SetColor(gGCpxmp, 0);
@@ -1331,7 +1347,6 @@ Int_t TGX11::InitWindow(ULong_t win)
 {
    XSetWindowAttributes attributes;
    ULong_t attr_mask = 0;
-   int wid;
    int xval, yval;
    unsigned int wval, hval, border, depth;
    Window root;
@@ -1342,24 +1357,9 @@ Int_t TGX11::InitWindow(ULong_t win)
 
    // Select next free window number
 
-again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].fOpen) {
-         fWindows[wid].fOpen = 1;
-         fWindows[wid].fDoubleBuffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                                fMaxNumberOfWindows*sizeof(XWindow_t));
-      for (int i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].fOpen = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   int wid = AddWindowHandle();
+   gCws = &fWindows[wid];
+   gCws->fDoubleBuffer = 0;
 
    // Create window
 
@@ -1406,28 +1406,10 @@ again:
 
 Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 {
-   Int_t wid;
-
    // Select next free window number
-
-again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].fOpen) {
-         fWindows[wid].fOpen = 1;
-         fWindows[wid].fDoubleBuffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                                fMaxNumberOfWindows*sizeof(XWindow_t));
-      for (int i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].fOpen = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   int wid = AddWindowHandle();
+   gCws = &fWindows[wid];
+   gCws->fDoubleBuffer = 0;
 
    gCws->fWindow = qwid;
 
@@ -1446,31 +1428,13 @@ again:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove a window created by Qt (like CloseWindow1()).
+/// Remove a window created by Qt (like CloseWindow()).
 
 void TGX11::RemoveWindow(ULong_t qwid)
 {
-   SelectWindow((int)qwid);
+   SelectWindow((int) qwid);
 
-   if (gCws->fBuffer) XFreePixmap((Display*)fDisplay, gCws->fBuffer);
-
-   if (gCws->fNewColors) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
-      delete [] gCws->fNewColors;
-      gCws->fNewColors = nullptr;
-   }
-
-   gCws->fOpen = 0;
-
-   // make first window in list the current window
-   for (Int_t wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (fWindows[wid].fOpen) {
-         gCws = &fWindows[wid];
-         return;
-      }
-
-   gCws = nullptr;
+   CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1947,7 +1911,6 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
 void TGX11::ResizeWindow(Int_t wid)
 {
-   int i;
    int xval=0, yval=0;
    Window win, root=0;
    unsigned int wval=0, hval=0, border=0, depth=0;
@@ -1971,11 +1934,13 @@ void TGX11::ResizeWindow(Int_t wid)
          XFreePixmap((Display*)fDisplay,gTws->fBuffer);
          gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
       }
-      for (i = 0; i < kMAXGC; i++) XSetClipMask((Display*)fDisplay, gGClist[i], None);
+      for (int i = 0; i < kMAXGC; i++)
+         XSetClipMask((Display*)fDisplay, gGClist[i], None);
       SetColor(gGCpxmp, 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, *gGCpxmp, 0, 0, wval, hval);
       SetColor(gGCpxmp, 1);
-      if (gTws->fDoubleBuffer) gTws->fDrawing = gTws->fBuffer;
+      if (gTws->fDoubleBuffer)
+         gTws->fDrawing = gTws->fBuffer;
    }
    gTws->fWidth  = wval;
    gTws->fHeight = hval;
@@ -1986,22 +1951,25 @@ void TGX11::ResizeWindow(Int_t wid)
 
 void TGX11::SelectWindow(int wid)
 {
-   XRectangle region;
-   int i;
+   if (fWindows.count(wid) == 0)
+      return;
 
-   if (wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].fOpen) return;
+   auto &handle = fWindows[wid];
+   if (!handle.fOpen)
+      return;
 
-   gCws = &fWindows[wid];
+   gCws = &handle;
 
    if (gCws->fClip && !gCws->fIsPixmap && !gCws->fDoubleBuffer) {
+      XRectangle region;
       region.x      = gCws->fXclip;
       region.y      = gCws->fYclip;
       region.width  = gCws->fWclip;
       region.height = gCws->fHclip;
-      for (i = 0; i < kMAXGC; i++)
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipRectangles((Display*)fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
    } else {
-      for (i = 0; i < kMAXGC; i++)
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gGClist[i], None);
    }
 }
@@ -2120,8 +2088,8 @@ void  TGX11::SetCursor(Int_t wid, ECursor cursor)
 void TGX11::SetDoubleBuffer(int wid, int mode)
 {
    if (wid == 999) {
-      for (int i = 0; i < fMaxNumberOfWindows; i++) {
-         gTws = &fWindows[i];
+      for (auto & iter : fWindows) {
+         gTws = &iter.second;
          if (gTws->fOpen) {
             switch (mode) {
                case 1 :
@@ -2135,7 +2103,8 @@ void TGX11::SetDoubleBuffer(int wid, int mode)
       }
    } else {
       gTws = &fWindows[wid];
-      if (!gTws->fOpen) return;
+      if (!gTws->fOpen)
+         return;
       switch (mode) {
          case 1 :
             SetDoubleBufferON();
@@ -3673,28 +3642,9 @@ Pixmap_t TGX11::CreatePixmapFromData(unsigned char * /*bits*/, UInt_t /*width*/,
 
 Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
-   Int_t wid = 0;
+   Int_t wid = AddWindowHandle();
 
-   // Select next free window number
-   for (; wid < fMaxNumberOfWindows; ++wid)
-      if (!fWindows[wid].fOpen)
-         break;
-
-   if (wid == fMaxNumberOfWindows) {
-      Int_t newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t*) TStorage::ReAlloc(
-                                                fWindows, newsize * sizeof(XWindow_t),
-                                                fMaxNumberOfWindows*sizeof(XWindow_t)
-                                               );
-
-      for (Int_t i = fMaxNumberOfWindows; i < newsize; ++i)
-         fWindows[i].fOpen = 0;
-
-      fMaxNumberOfWindows = newsize;
-   }
-
-   fWindows[wid].fOpen = 1;
-   gCws = fWindows + wid;
+   gCws = &fWindows[wid];
    gCws->fWindow = pixid;
    gCws->fDrawing = gCws->fWindow;
    gCws->fBuffer = 0;
