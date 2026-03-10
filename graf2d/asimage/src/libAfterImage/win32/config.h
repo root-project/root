@@ -7,8 +7,6 @@
 /* Define if libAfterBase is available */
 #undef HAVE_AFTERBASE
 
-/* Define if using builtin libjpeg */
-#define  HAVE_BUILTIN_JPEG 1
 #define HAVE_UNSIGNED_CHAR
 #define HAVE_UNSIGNED_SHORT
 #define HAVE_BOOLEAN

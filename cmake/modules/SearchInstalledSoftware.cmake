@@ -519,11 +519,17 @@ if(asimage)
       list(APPEND ASEXTRA_LIBRARIES JPEG::JPEG)
     else()
       if(fail-on-missing)
-          message(SEND_ERROR "Dependency libjpeg not found. Please make sure it's installed on the system, or force the builtin libjpeg with '-Dbuiltin_jpeg=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
+        message(SEND_ERROR "Dependency libjpeg not found. Please make sure it's installed on the system, or force the builtin libjpeg with '-Dbuiltin_jpeg=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
       else()
         set(builtin_jpeg ON CACHE BOOL "Enabled because needed for asimage" FORCE)
       endif()
     endif()
+  endif()
+  
+  if(builtin_jpeg)
+    add_subdirectory(builtins/libjpeg)
+    get_target_property(JPEG_INCLUDE_DIR JPEG::JPEG INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(JPEG_LIBRARY_LOCATION JPEG::JPEG IMPORTED_LOCATION)
   endif()
 
   if(asimage_tiff)
@@ -556,8 +562,12 @@ if(asimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} 
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+                 -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
+                 -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ASTEP_EXTRA_BUILD_ARGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${ASTEP_LIB_DIR}/libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
@@ -567,11 +577,6 @@ if(asimage)
     )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
-    if(NOT builtin_jpeg)
-      list(APPEND afterimage_extra_args --with-jpeg-includes=${JPEG_INCLUDE_DIR})
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-jpeg)
-    endif()
     if(NOT builtin_gif)
       list(APPEND afterimage_extra_args --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
     else()
@@ -614,6 +619,7 @@ if(asimage)
                         --with-ttf --with-afterbase=no
                         --without-svg --disable-glx
                         --with-jpeg
+                        --with-jpeg-includes=${JPEG_INCLUDE_DIR}
                         --with-png
                         ${afterimage_extra_args}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
