@@ -323,6 +323,8 @@ TEST(RooDataHist, BatchDataAccessWithCategories)
 
    RooRealVar x("x", "x", 0, -10, 10);
    RooCategory cat("cat", "category");
+   cat.defineType("catX");
+   cat.defineType("catY");
 
    auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
    auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);
@@ -367,8 +369,11 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x("x", "x", 0, -10, 10);
-   RooCategory cat("cat", "category");
    x.setRange(-8., 5);
+
+   RooCategory cat("cat", "category");
+   cat.defineType("catX");
+   cat.defineType("catY");
 
    auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
    auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);

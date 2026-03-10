@@ -204,6 +204,8 @@ As part of this migration, the following build options are deprecated. From ROOT
   looking up the static variables with the epsilon values incurred significant
   overhead in `RooAbsRealLValue::inRange()`, which is visible in many-parameter
   fits. Therefore, these functions are removed.
+- The constructors of **RooDataSet** and **RooDataHist** that combine datasets via `Index()` and `Import()` now validate that the import names correspond to existing states of the index category. If an imported data slice refers to a category label that is not defined in the index category, the constructor now throws an error.
+  Previously, such labels were silently added as new category states, which could lead to inconsistent datasets when the state names were not synchronized with the model definition. This change prevents the creation of invalid combined datasets and surfaces configuration problems earlier.
 
 ### New implementation of `RooHistError::getPoissonInterval`
 
