@@ -81,6 +81,44 @@ include(FindPackageHandleStandardArgs)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
+#--- Search for packages that are absolutely necessary--------------------------
+
+#----------------------------------------------------------------------------
+# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+# Search for a required dependency, unless it's meant to be a built-in.
+# A list of all missing required packages will be printed in case they could
+# not be found.
+macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+  if(NOT ${BUILTIN_CONFIG_OPTION})
+    find_package(${PACKAGE_NAME})
+    if(NOT ${PACKAGE_NAME}_FOUND)
+      message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
+      "Please install it in the system (preferred), set the corresponding CMake search variable, "
+      "or opt in to downloading it using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
+      list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
+    endif()
+  endif()
+endmacro()
+
+# Clear cache variables, or LLVM may use old values for ZLIB
+# TODO: Still needed? This was ported here during a refactoring.
+# When (re-)configuring cleanly (cmake --fresh), this is should be unnecessary.
+foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE LIBRARIES CF)
+  unset(ZLIB_${suffix} CACHE)
+  unset(ZSTD_${suffix} CACHE)
+endforeach()
+
+ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
+ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
+ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
+ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
+
+if(NOT "${MISSING_PACKAGES}" STREQUAL "")
+  message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
+endif()
+
+#--- Redefine find_package for LLVM to pick up ROOT's builtins ----------------------
+# TODO: Make this only local to LLVM?
 macro(find_package)
   if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
     _find_package(${ARGV})
@@ -101,23 +139,6 @@ if(NOT shared)
 endif()
 
 #---Check for Zlib ------------------------------------------------------------------
-if(NOT builtin_zlib)
-  message(STATUS "Looking for ZLib")
-  # Clear cache variables, or LLVM may use old values for ZLIB
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE CF)
-    unset(ZLIB_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(ZLIB REQUIRED)
-  else()
-    find_package(ZLIB)
-    if(NOT ZLIB_FOUND)
-      message(STATUS "Zlib not found. Switching on builtin_zlib option")
-      set(builtin_zlib ON CACHE BOOL "Enabled because Zlib not found (${builtin_zlib_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_zlib)
   list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
@@ -314,19 +335,6 @@ if(builtin_pcre)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
-if(NOT builtin_lzma)
-  message(STATUS "Looking for LZMA")
-  if(fail-on-missing)
-    find_package(LibLZMA REQUIRED)
-  else()
-    find_package(LibLZMA)
-    if(NOT LIBLZMA_FOUND)
-      message(STATUS "LZMA not found. Switching on builtin_lzma option")
-      set(builtin_lzma ON CACHE BOOL "Enabled because LZMA not found (${builtin_lzma_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_lzma)
   list(APPEND ROOT_BUILTINS LZMA)
   add_subdirectory(builtins/lzma)
@@ -352,26 +360,8 @@ if(builtin_xxhash)
 endif()
 
 #---Check for ZSTD-------------------------------------------------------------------
-if(NOT builtin_zstd)
-  message(STATUS "Looking for ZSTD")
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARIES LIBRARY_DEBUG LIBRARY_RELEASE)
-    unset(ZSTD_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(ZSTD REQUIRED)
-    if(ZSTD_VERSION VERSION_LESS 1.0.0)
-      message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
-    endif()
-  else()
-    find_package(ZSTD)
-    if(NOT ZSTD_FOUND)
-      message(STATUS "ZSTD not found. Switching on builtin_zstd option")
-      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
-    elseif(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
-      message(STATUS "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Switching on builtin_zstd option")
-      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
-    endif()
-  endif()
+if(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
+  message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0) or enable ROOT's builtin version.")
 endif()
 
 if(builtin_zstd)
@@ -381,22 +371,6 @@ if(builtin_zstd)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
-if(NOT builtin_lz4)
-  message(STATUS "Looking for LZ4")
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
-    unset(LZ4_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(LZ4 REQUIRED)
-  else()
-    find_package(LZ4)
-    if(NOT LZ4_FOUND)
-      message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
-      set(builtin_lz4 ON CACHE BOOL "Enabled because LZ4 not found (${builtin_lz4_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_lz4)
   list(APPEND ROOT_BUILTINS LZ4)
   add_subdirectory(builtins/lz4)
