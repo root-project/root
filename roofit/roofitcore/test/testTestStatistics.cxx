@@ -24,6 +24,8 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooFormulaVar.h>
+#include <RooGenericPdf.h>
 
 #include <TH1D.h>
 #include <TMath.h>
@@ -890,4 +892,90 @@ TEST(CreateNLL, ResetDataCodegen)
    double nll2Val = nll->getVal();
 
    EXPECT_FLOAT_EQ(nll2Val, 2 * nll1Val);
+}
+
+TEST(RooChi2Var, BinnedRangeAdditivityAndNormalization)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   RooRealVar x("x", "x", 0., 1.);
+   x.setRange("lo", 0., 0.5);
+   x.setRange("hi", 0.5, 1.);
+   x.setRange("full", 0., 1.);
+
+   RooRealVar nbkg("nbkg", "", 11.);
+
+   // Flat function that evaluates to the expected number of events per unit x.
+   RooFormulaVar flat("flat", "nbkg + x - x", {nbkg, x});
+
+   RooGenericPdf uniform("uniform", "1 + x - x", x);
+   RooExtendPdf pdf("pdf", "", uniform, nbkg);
+
+   constexpr int nBins = 10;
+   TH1D h("h", "h", nBins, 0., 1.);
+
+   for (int i = 1; i <= nBins; ++i) {
+      h.SetBinContent(i, 1.);
+   }
+
+   // Histogram integral is 10, while nbkg = 11, so extended/function chi2 should be > 0.
+   RooDataHist dh("dh", "dh", x, &h);
+
+   auto makeChi2 = [&](RooAbsReal &func, const char *rangeName = nullptr, bool extended = false) {
+      std::unique_ptr<RooAbsReal> chi2{
+         rangeName ? func.createChi2(dh, DataError(RooAbsData::Poisson), Extended(extended), Range(rangeName))
+                   : func.createChi2(dh, DataError(RooAbsData::Poisson), Extended(extended))};
+      return chi2->getVal();
+   };
+
+   // Extended PDF
+   const double chi2ExtDefault = makeChi2(pdf, nullptr, true);
+   const double chi2ExtFull = makeChi2(pdf, "full", true);
+   const double chi2ExtLo = makeChi2(pdf, "lo", true);
+   const double chi2ExtHi = makeChi2(pdf, "hi", true);
+   const double chi2ExtLoHi = makeChi2(pdf, "lo,hi", true);
+
+   // Non-extended PDF
+   const double chi2NonExtDefault = makeChi2(uniform);
+   const double chi2NonExtFull = makeChi2(uniform, "full");
+   const double chi2NonExtLo = makeChi2(uniform, "lo");
+   const double chi2NonExtHi = makeChi2(uniform, "hi");
+   const double chi2NonExtLoHi = makeChi2(uniform, "lo,hi");
+
+   // Function
+   const double chi2FuncDefault = makeChi2(flat);
+   const double chi2FuncFull = makeChi2(flat, "full");
+   const double chi2FuncLo = makeChi2(flat, "lo");
+   const double chi2FuncHi = makeChi2(flat, "hi");
+   const double chi2FuncLoHi = makeChi2(flat, "lo,hi");
+
+   constexpr double tol = 1e-10;
+
+   // Extended PDF: range decomposition should be additive and positive.
+   EXPECT_GT(chi2ExtDefault, 0.);
+   EXPECT_NEAR(chi2ExtDefault, chi2ExtFull, tol);
+   EXPECT_NEAR(chi2ExtDefault, chi2ExtLoHi, tol);
+   EXPECT_NEAR(chi2ExtFull, chi2ExtLo + chi2ExtHi, tol);
+
+   // Non-extended uniform PDF against uniform data should be exactly compatible.
+   EXPECT_NEAR(chi2NonExtDefault, 0., tol);
+   EXPECT_NEAR(chi2NonExtFull, 0., tol);
+   EXPECT_NEAR(chi2NonExtLo, 0., tol);
+   EXPECT_NEAR(chi2NonExtHi, 0., tol);
+   EXPECT_NEAR(chi2NonExtLoHi, 0., tol);
+
+   // Flat function normalized to 11 should behave like the extended PDF.
+   EXPECT_GT(chi2FuncDefault, 0.);
+   EXPECT_NEAR(chi2FuncDefault, chi2FuncFull, tol);
+   EXPECT_NEAR(chi2FuncDefault, chi2FuncLoHi, tol);
+   EXPECT_NEAR(chi2FuncFull, chi2FuncLo + chi2FuncHi, tol);
+
+   // Function and extended PDF should give the same chi2 values.
+   EXPECT_NEAR(chi2ExtDefault, chi2FuncDefault, tol);
+   EXPECT_NEAR(chi2ExtFull, chi2FuncFull, tol);
+   EXPECT_NEAR(chi2ExtLo, chi2FuncLo, tol);
+   EXPECT_NEAR(chi2ExtHi, chi2FuncHi, tol);
+   EXPECT_NEAR(chi2ExtLoHi, chi2FuncLoHi, tol);
 }

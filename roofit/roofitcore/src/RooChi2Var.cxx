@@ -66,6 +66,8 @@
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
 
+#include <ROOT/StringUtils.hxx>
+
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
                        RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)
    : RooAbsOptTestStatistic(name, title, func, data, RooArgSet{}, cfg),
@@ -99,6 +101,12 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   double result(0);
   double carry(0);
 
+  // Also consider the composite case of multiple ranges
+  std::vector<std::string> rangeTokens;
+  if (!_rangeName.empty()) {
+    rangeTokens = ROOT::Split(_rangeName, ",");
+  }
+
   // Determine normalization factor depending on type of input function
   double normFactor(1) ;
   switch (_funcMode) {
@@ -112,7 +120,28 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
     // get the data values for this event
-    hdata->get(i);
+    RooArgSet const *row = hdata->get(i);
+
+    // Skip bins that are outside of the selected range
+    bool doSelect(true) ;
+    if (!_rangeName.empty()) {
+      doSelect = false;
+      // A row is selected if it is inside at least one complete named range.
+      for (const auto &rangeName : rangeTokens) {
+        bool inThisRange = true;
+        for (const auto arg : *row) {
+          if (!arg->inRange(rangeName.c_str())) {
+            inThisRange = false;
+            break;
+          }
+        }
+        if (inThisRange) {
+          doSelect = true;
+          break;
+        }
+      }
+    }
+    if (!doSelect) continue ;
 
     const double nData = hdata->weight() ;
 
