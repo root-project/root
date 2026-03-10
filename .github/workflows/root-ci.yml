@@ -411,10 +411,6 @@ jobs:
             is_special: true
             property: modules_off
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          - image: alma9
-            platform_config: alma9-march_native
-            is_special: true
-            property: march_native
           - image: alma10
             is_special: true
             property: arm64
@@ -449,8 +445,9 @@ jobs:
           #   extra-runs-on: gpu
           # openSUSE Leap
           - image: opensuse15
+            platform_config: opensuse15-march_native
             is_special: true
-            property: "leap"
+            property: march_native
 
     runs-on:
       - self-hosted
