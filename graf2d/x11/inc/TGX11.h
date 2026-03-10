@@ -13,6 +13,7 @@
 #define ROOT_TGX11
 
 #include "TVirtualX.h"
+#include <map>
 
 #ifdef Status
 // Convert Status from a CPP macro to a typedef:
@@ -80,13 +81,12 @@ class TExMap;
 class TGX11 : public TVirtualX {
 
 private:
-   Int_t      fMaxNumberOfWindows;    ///< Maximum number of windows
-   XWindow_t *fWindows;               ///< List of windows
+   std::unordered_map<Int_t,XWindow_t> fWindows; // map of windows
    TExMap    *fColors;                ///< Hash list of colors
    Cursor     fCursors[kNumCursors];  ///< List of cursors
    void      *fXEvent;                ///< Current native (X11) event
 
-   void   CloseWindow1();
+   Int_t  AddWindowHandle();
    void   ClearPixmap(Drawable *pix);
    void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
    void   FindBestVisual();
@@ -163,15 +163,6 @@ public:
    void      ClosePixmap() override;
    void      CloseWindow() override;
    void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos) override;
-   void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
-   void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, Int_t *ic) override;
-   void      DrawFillArea(Int_t n, TPoint *xy) override;
-   void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-   void      DrawPolyLine(Int_t n, TPoint *xy) override;
-   void      DrawLinesSegments(Int_t n, TPoint *xy) override;
-   void      DrawPolyMarker(Int_t n, TPoint *xy) override;
-   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
-   void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
    void      GetCharacterUp(Float_t &chupx, Float_t &chupy) override;
    Int_t     GetDoubleBuffer(Int_t wid) override;
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
@@ -208,6 +199,15 @@ public:
    void      SetDoubleBufferOFF() override;
    void      SetDoubleBufferON() override;
    void      SetDrawMode(EDrawMode mode) override;
+   void      Sync(Int_t mode) override;
+   void      UpdateWindow(Int_t mode) override;
+   void      Warp(Int_t ix, Int_t iy, Window_t id = 0) override;
+   Int_t     WriteGIF(char *name) override;
+   void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
+   Window_t  GetCurrentWindow() const override;
+   Int_t     SupportsExtension(const char *ext) const override;
+
+   //---- Methods used for old graphics -----
    void      SetFillColor(Color_t cindex) override;
    void      SetFillStyle(Style_t style) override;
    void      SetLineColor(Color_t cindex) override;
@@ -225,13 +225,15 @@ public:
    void      SetTextFont(Font_t fontnumber) override;
    void      SetTextMagnitude(Float_t mgn=1) override { fTextMagnitude = mgn;}
    void      SetTextSize(Float_t textsize) override;
-   void      Sync(Int_t mode) override;
-   void      UpdateWindow(Int_t mode) override;
-   void      Warp(Int_t ix, Int_t iy, Window_t id = 0) override;
-   Int_t     WriteGIF(char *name) override;
-   void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
-   Window_t  GetCurrentWindow() const override;
-   Int_t     SupportsExtension(const char *ext) const override;
+   void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, Int_t *ic) override;
+   void      DrawFillArea(Int_t n, TPoint *xy) override;
+   void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLine(Int_t n, TPoint *xy) override;
+   void      DrawLinesSegments(Int_t n, TPoint *xy) override;
+   void      DrawPolyMarker(Int_t n, TPoint *xy) override;
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
