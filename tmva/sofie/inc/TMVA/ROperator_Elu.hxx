@@ -7,58 +7,56 @@
 
 #include <sstream>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
 
 template <typename T>
-class ROperator_Elu final : public ROperator
-{
+class ROperator_Elu final : public ROperator {
 
 private:
-
    /* Attributes*/
-   float falpha= 1.0; //default value
+   float falpha = 1.0; // default value
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
    std::string fType;
 
 public:
-   ROperator_Elu(){}
-   ROperator_Elu(float alpha,std::string nameX, std::string nameY):
-   falpha(alpha),fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
+   ROperator_Elu() {}
+   ROperator_Elu(float alpha, std::string nameX, std::string nameY)
+      : falpha(alpha), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
    {
-      fInputTensorNames = { fNX };
-      fOutputTensorNames = { fNY };
-      
-      if(std::is_same<T, float>::value){
+      fInputTensorNames = {fNX};
+      fOutputTensorNames = {fNY};
+
+      if (std::is_same<T, float>::value) {
          fType = "float";
+      } else {
+         throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Elu operator");
       }
-		else{
-			throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Elu operator");
-		}
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input; //suggest copy to compiler
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override
+   {
+      auto ret = input; // suggest copy to compiler
       return ret;
    }
 
-   void Initialize(RModel& model) override {
-      if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
+   void Initialize(RModel &model) override
+   {
+      if (model.CheckIfTensorAlreadyExist(fNX) ==
+          false) { // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Elu Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
    }
 
-
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string OpName) override
+   {
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Operator Elu called to Generate without being initialized first");
@@ -76,12 +74,10 @@ public:
       out << SP << "}\n";
       return out.str();
    }
-
 };
 
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
-
-#endif //TMVA_SOFIE_ROPERATOR_Elu
+#endif // TMVA_SOFIE_ROPERATOR_Elu
