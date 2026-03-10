@@ -32,6 +32,7 @@ class LineFilter:
                 r"^Info in <\w+::ACLiC>: creating shared library",  # Compiled macros
                 r"^In file included from input_line",  # Wrapper input line
                 r"^[:space:]*$",  # Lines which are empty apart from spaces
+                r"^Info in <TROOT>: Object auto registration",  # ROOT 7 mode
             ]
         ]
 

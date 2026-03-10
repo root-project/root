@@ -195,6 +195,7 @@ if(CMD)
       string(STRIP "${_errvar0}" _errvar0)
       string(REPLACE "\n" ";" _lines "${_errvar0}")
       list(FILTER _lines EXCLUDE REGEX "^Info in <.+::ACLiC>: creating shared library.+")
+      list(FILTER _lines EXCLUDE REGEX "^Info in <TROOT>: Object auto registration.*") # ROOT 7 demo mode in ROOT 6
       string(REPLACE ";" "\n" _errvar0 "${_lines}")
       if(_errvar0)
         message(FATAL_ERROR "Unexpected error output")
