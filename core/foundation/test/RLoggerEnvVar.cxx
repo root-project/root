@@ -1,20 +1,6 @@
 // Test that ROOT_LOG env var correctly configures RLogger channel verbosity.
-// ROOT_LOG is parsed once at RLogManager construction (process startup).
-// The env var is set programmatically before RLogManager initializes.
-
-// Set the env var BEFORE any ROOT headers are included, so it is present
-// when the RLogManager singleton is constructed.
-#ifdef _WIN32
-#include <cstdlib>
-namespace {
-int gEnvSet = _putenv("ROOT_LOG=ROOT.TestChannel=Error");
-}
-#else
-#include <cstdlib>
-namespace {
-int gEnvSet = setenv("ROOT_LOG", "ROOT.TestChannel=Error", 1);
-}
-#endif
+// ROOT_LOG is parsed once at RLogManager construction (process startup),
+// so the env var is set via ENVIRONMENT in CMakeLists.txt.
 
 #include "ROOT/RLogger.hxx"
 #include "gtest/gtest.h"
@@ -48,8 +34,6 @@ TEST(RLoggerEnvVar, EffectiveVerbosityUsesEnvVar)
 }
 
 // Test: explicitly set verbosity on a channel takes precedence over ROOT_LOG env var.
-// ROOT_LOG sets ROOT.TestChannel=Error, but we explicitly set it to kInfo here.
-// The explicit setting should win.
 TEST(RLoggerEnvVar, ExplicitVerbosityTakesPrecedenceOverEnvVar)
 {
    TestChannel().SetVerbosity(ROOT::ELogLevel::kInfo);
