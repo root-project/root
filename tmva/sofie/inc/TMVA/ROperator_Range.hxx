@@ -66,7 +66,7 @@ public:
          if (model.IsInitializedTensor(tName)) {
             T * data = static_cast<T*>(model.GetInitializedTensorData(tName).get());
             if (!data)
-               std::runtime_error("TMVA SOFIE Range Op Input Tensor has invalid input  data");
+               throw std::runtime_error("TMVA SOFIE Range Op Input Tensor has invalid input  data");
             value = *data;
             ftype = 1;
          } else if (model.IsShapeTensor(tName)) {

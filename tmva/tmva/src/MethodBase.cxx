@@ -629,10 +629,7 @@ std::map<TString,Double_t>  TMVA::MethodBase::OptimizeTuningParameters(TString /
          << GetName() << Endl;
    Log() << kWARNING <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Currently we need to set hardcoded which parameter is tuned in which ranges"<<Endl;
 
-   std::map<TString,Double_t> tunedParameters;
-   tunedParameters.size(); // just to get rid of "unused" warning
-   return tunedParameters;
-
+   return std::map<TString,Double_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

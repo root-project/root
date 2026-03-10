@@ -203,7 +203,7 @@ public:
                return Dim{ outStr, static_cast<size_t>(-1)};
             }
          }
-         std::runtime_error("TMVA SOFIE Conv Op -  invalid values");
+         throw std::runtime_error("TMVA SOFIE Conv Op -  invalid values");
          return Dim{};
       };
 
