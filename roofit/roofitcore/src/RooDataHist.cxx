@@ -327,6 +327,17 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
       std::map<std::string,TH1*> hmap ;
       auto hiter = impSliceHistos.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",", /*skipEmpty=*/true)) {
+
+        if (!indexCat->hasLabel(token)) {
+           std::stringstream errorMsgStream;
+           errorMsgStream << "RooDataHist::RooDataHist(\"" << GetName() << "\") "
+                          << "you are providing import data for the category state \"" << token
+                          << "\", but the index category \"" << indexCat->GetName() << "\" has no such state!";
+           const std::string errorMsg = errorMsgStream.str();
+           coutE(InputArguments) << errorMsg << std::endl;
+           throw std::invalid_argument(errorMsg);
+        }
+
         if(auto dHist = dynamic_cast<RooDataHist*>(*hiter)) {
            dmap[token] = dHist;
         }
