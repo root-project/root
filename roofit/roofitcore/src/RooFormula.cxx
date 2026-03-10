@@ -135,12 +135,12 @@ bool isNumericNameValid(RooAbsArg &_rooAbsArg)
    try {
       nameValue = std::stod(_rooAbsArg.GetName());
       actualValue = std::stod(ss.str());
-   } catch (const std::invalid_argument &e) {
+   } catch (const std::invalid_argument &) {
       std::stringstream ssExc;
       ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has name or value that "
             << "cannot be converted to number";
       throw std::invalid_argument(ssExc.str());
-   } catch (const std::out_of_range &e) {
+   } catch (const std::out_of_range &) {
       std::stringstream ssExc;
       ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has numeric name or value that "
             << "gets out of a double range";
