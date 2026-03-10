@@ -14,7 +14,7 @@
 #include <ROOT/RNTupleWriter.hxx>
 
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleAttributes.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
 #include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RNTupleMetrics.hxx>

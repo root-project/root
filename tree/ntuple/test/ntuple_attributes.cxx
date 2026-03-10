@@ -1,5 +1,5 @@
 #include "ntuple_test.hxx"
-#include <ROOT/RNTupleAttributes.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
 
 TEST(RNTupleAttributes, CreateWriter)
 {

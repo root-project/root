@@ -1,12 +1,12 @@
-/// \file ROOT/RNTupleAttributes.hxx
+/// \file ROOT/RNTupleAttrWriting.hxx
 /// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2026-01-27
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
-#ifndef ROOT7_RNTuple_Attributes
-#define ROOT7_RNTuple_Attributes
+#ifndef ROOT7_RNTuple_Attr_Writing
+#define ROOT7_RNTuple_Attr_Writing
 
 #include <memory>
 #include <string_view>
@@ -45,13 +45,6 @@ struct RNTupleAttrEntry {
    std::size_t Append();
    ROOT::DescriptorId_t GetModelId() const { return fMetaEntry.GetModelId(); }
 };
-
-namespace RNTupleAttributes {
-
-inline const std::uint16_t kSchemaVersionMajor = 1;
-inline const std::uint16_t kSchemaVersionMinor = 0;
-
-} // namespace RNTupleAttributes
 
 } // namespace Internal
 

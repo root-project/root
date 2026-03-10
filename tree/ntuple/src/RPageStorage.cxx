@@ -15,7 +15,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleAttributes.hxx>
+#include <ROOT/RNTupleAttrUtils.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
