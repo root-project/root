@@ -1,25 +1,18 @@
-/// \file RNTupleAttributes.cxx
+/// \file RNTupleAttrWriting.cxx
 /// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2026-01-27
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
-#include <ROOT/RNTupleAttributes.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
+#include <ROOT/RNTupleAttrUtils.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/StringUtils.hxx>
 
 using namespace ROOT::Experimental::Internal::RNTupleAttributes;
-
-static const char *const kRangeStartName = "_rangeStart";
-static const char *const kRangeLenName = "_rangeLen";
-static const char *const kUserModelName = "_userModel";
-
-static constexpr std::size_t kRangeStartIndex = 0;
-static constexpr std::size_t kRangeLenIndex = 1;
-static constexpr std::size_t kUserModelIndex = 2;
 
 static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
 {
