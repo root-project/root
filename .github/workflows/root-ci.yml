@@ -77,6 +77,8 @@ env:
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
   GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
+  ROOT_TEST_S3_ACCESS_KEY: ${{ secrets.ROOT_TEST_S3_ACCESS_KEY }}
+  ROOT_TEST_S3_SECRET_KEY: ${{ secrets.ROOT_TEST_S3_SECRET_KEY }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
