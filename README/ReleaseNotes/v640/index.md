@@ -41,6 +41,7 @@ The following people have contributed to this new version:
 * `TDirectory::AddDirectoryStatus()` and `TDirectory::AddDirectory()` have been deprecated. These functions were meant to replace TH1::AddDirectoryStatus(), but
   never had any effect on ROOT. The associated bit TDirectory::fgAddDirectory was deprecated as well. Although users can set and read the bit, its usage should be
   stopped completely to avoid any confusion. The bit and functions will be removed in ROOT 7.
+* The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` have been deprecated because the name was misleading, and they will be removed in ROOT 6.42. Despite the name, the function did not actually remove a range, but only cleared its limits by setting them to  `−inf,+inf` leaving the named range itself defined (so `hasRange()` would still return `true`). Users should now explicitly call `removeMin()` and `removeMax()` to remove the lower and upper limits of a range.
 
 ## Removals
 
