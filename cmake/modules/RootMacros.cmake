@@ -36,6 +36,9 @@ endif()
 
 if(CMAKE_GENERATOR MATCHES Ninja OR CMAKE_GENERATOR MATCHES "Visual Studio")
   set(GeneratorNeedsBuildSerialization True)
+  if(MSVC)
+    set(build_config "--config $<CONFIG>")
+  endif()
 endif()
 
 set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
