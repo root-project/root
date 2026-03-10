@@ -930,6 +930,7 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const
 
    pc.defineInt("numcpu", "NumCPU", 0, 1);
    pc.defineInt("verbose", "Verbose", 0, 0);
+   pc.defineString("rangeName", "RangeWithName", 0, "", true);
 
    RooAbsTestStatistic::Configuration cfg;
 
@@ -980,7 +981,6 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const
    } else {
       pc.defineInt("integrate", "Integrate", 0, 0);
       pc.defineObject("yvar", "YVar", 0, nullptr);
-      pc.defineString("rangeName", "RangeWithName", 0, "", true);
       pc.defineInt("interleave", "NumCPU", 1, 0);
 
       // Process and check varargs
