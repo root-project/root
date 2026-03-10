@@ -1,0 +1,26 @@
+struct ImagesRAII {
+   std::vector<std::string> fFileNames;
+   ImagesRAII(const std::vector<std::string> &fileNames) : fFileNames(fileNames) {}
+   ~ImagesRAII()
+   {
+      for (auto &&fileName : fFileNames) {
+         gSystem->Unlink(fileName.c_str());
+      }
+   }
+};
+
+int simpleImages()
+{
+   TCanvas c;
+   TH1D h("myHisto", "The Title;the X;the Y", 64, -4, 4);
+   h.FillRandom("gaus");
+   h.Draw();
+   // We test png and jpeg only. The creation of the gifs 
+   // is affected by an issue on some platforms. See #21561
+   std::vector<std::string> fileNames{"f.jpeg", "f.png"};
+   ImagesRAII iraii(fileNames);
+   for (auto &&fileName : fileNames) {
+      c.SaveAs(fileName.c_str());
+   }
+   return 0;
+}
