@@ -4,9 +4,12 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(ROOT_LIBJPEG_VERSION 3.1.3) # 10 Dec 2025 https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.3
+# **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
+# 10 Dec 2025, https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.3
+set(ROOT_LIBJPEG_VERSION 3.1.3)
+set(ROOT_LIBJPEG_HASH "3a13a5ba767dc8264bc40b185e41368a80d5d5f945944d1dbaa4b2fb0099f4e5")
 
-set(ROOT_LIBJPEG_PREFIX ${CMAKE_BINARY_DIR}/ls)
+set(ROOT_LIBJPEG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBJPEG-prefix)
 
 # Here we need two cases because the library has two different names on Linux/macOS and Windows
 if(MSVC)
@@ -27,7 +30,7 @@ ExternalProject_Add(
     BUILTIN_LIBJPEG
     PREFIX ${ROOT_LIBJPEG_PREFIX}
     URL https://root.cern/download/libjpeg-turbo-${ROOT_LIBJPEG_VERSION}.tar.gz
-    URL_HASH SHA256=3a13a5ba767dc8264bc40b185e41368a80d5d5f945944d1dbaa4b2fb0099f4e5
+    URL_HASH SHA256=${ROOT_LIBJPEG_HASH}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}

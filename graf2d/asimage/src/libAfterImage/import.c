@@ -54,11 +54,7 @@
 # ifndef X_DISPLAY_MISSING
 #  include <X11/Xmd.h>
 # endif
-# ifdef HAVE_BUILTIN_JPEG
-#  include "libjpeg/jpeglib.h"
-# else
-#  include <jpeglib.h>
-# endif
+# include <jpeglib.h>
 #endif
 
 #if TIME_WITH_SYS_TIME
