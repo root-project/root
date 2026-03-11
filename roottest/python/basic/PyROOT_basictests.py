@@ -332,9 +332,9 @@ class Basic5PythonizationTestCase( MyTestCase ):
 
       l.extend( [ make_obj_str('5'), make_obj_str('j') ] )
       self.assertEqual( list(l), ['a', 'b', '1', '2', 'i', 'j', '3', '4', '5', 'j'] )
-      self.assertEqual( l.count( 'b' ), 1 )
-      self.assertEqual( l.count( 'j' ), 2 )
-      self.assertEqual( l.count( 'x' ), 0 )
+      self.assertEqual( sum(1 for x in l if x == 'b'), 1 )
+      self.assertEqual( sum(1 for x in l if x == 'j'), 2 )
+      self.assertEqual( sum(1 for x in l if x == 'x'), 0 )
 
       self.assertEqual( l.index( make_obj_str( 'i' ) ), 4 )
       self.assertRaises( ValueError, l.index, make_obj_str( 'x' ) )

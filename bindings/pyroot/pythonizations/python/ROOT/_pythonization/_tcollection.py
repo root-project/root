@@ -29,20 +29,6 @@ def _extend_pyz(self, c):
     for _ in range(len(c)):
         self.Add(next(it))
 
-def _count_pyz(self, o):
-    # Parameters:
-    # - self: collection
-    # - o: object to be counted in the collection
-    # Returns:
-    # - Number of occurrences of the object in the collection
-    n = 0
-
-    for elem in self:
-        if elem == o:
-            n += 1
-
-    return n
-
 # Python operators
 
 def _add_pyz(self, c):
@@ -117,7 +103,6 @@ def pythonize_tcollection(klass):
     klass.append = klass.Add
     klass.remove = _remove_pyz
     klass.extend = _extend_pyz
-    klass.count = _count_pyz
 
     # Define Python operators
     klass.__add__ = _add_pyz
