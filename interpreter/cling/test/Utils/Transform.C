@@ -500,7 +500,7 @@ decl = lookup.findScope("cmap<volatile int,volatile int>", diags,&t);
 QT = clang::QualType(t, 0);
 std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
 if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(decl)) {
-  QT = clang::QualType(rdecl->getTypeForDecl(), 0);
+  QT = Ctx.getCanonicalTagType(rdecl);
   std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
   clang::RecordDecl::field_iterator field_iter = rdecl->field_begin();
   // For some reason we can not call field_end:
