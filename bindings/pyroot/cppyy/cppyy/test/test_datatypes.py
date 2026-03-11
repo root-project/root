@@ -1002,8 +1002,12 @@ class TestDATATYPES:
         l1 = cppyy.bind_object(0, gbl.FourVector)
         assert not l1
 
-        assert c1 != l1
-        assert l1 != c1
+        # comparing null pointers of unrelated types is not supported, since
+        # there is no C++ equality operator for these operands
+        with raises(TypeError):
+            c1 != l1
+        with raises(TypeError):
+            l1 != c1
 
         l2 = cppyy.bind_object(0, gbl.FourVector)
         assert l1 == l2
