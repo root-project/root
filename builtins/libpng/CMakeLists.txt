@@ -13,7 +13,7 @@ set(ROOT_LIBPNG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBPNG-prefix)
 
 # Here we need two cases because the library has two different names on Linux/macOS and Windows
 if(MSVC)
-     set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng_static${CMAKE_STATIC_LIBRARY_SUFFIX})
+     set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX})
 else()
      set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
