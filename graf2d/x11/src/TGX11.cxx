@@ -421,20 +421,6 @@ void TGX11::QueryColors(Colormap cmap, RXColor *color, Int_t ncolors)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Clear the pixmap pix.
-
-void TGX11::ClearPixmap(Drawable *pix)
-{
-   Window root;
-   int xx, yy;
-   unsigned int ww, hh, border, depth;
-   XGetGeometry((Display*)fDisplay, *pix, &root, &xx, &yy, &ww, &hh, &border, &depth);
-   SetColor(gGCpxmp, 0);
-   XFillRectangle((Display*)fDisplay, *pix, *gGCpxmp, 0 ,0 ,ww ,hh);
-   SetColor(gGCpxmp, 1);
-   XFlush((Display*)fDisplay);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear current window.
@@ -1513,13 +1499,6 @@ void TGX11::QueryPointer(Int_t &ix, Int_t &iy)
    iy = root_y_return;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Remove the pixmap pix.
-
-void  TGX11::RemovePixmap(Drawable *pix)
-{
-   XFreePixmap((Display*)fDisplay,*pix);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Request Locator position.
