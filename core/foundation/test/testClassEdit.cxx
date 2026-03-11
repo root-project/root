@@ -310,7 +310,26 @@ TEST(TClassEdit, GetNormalizedName)
 
    n.clear();
    EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
+}
 
+TEST(TClassEdit, GetNormalizedNameTypedef)
+{
+   std::string n;
+
+   gInterpreter->Declare(R"(
+      struct MyAlloc {};
+      using MyMap = std::map<int,int,std::less<int>,MyAlloc>;
+   )");
+
+   TClassEdit::GetNormalizedName(n, "MyMap");
+   EXPECT_STREQ("map<int,int,less<int>,MyAlloc>", n.c_str());
+
+   gInterpreter->Declare(R"(
+      using MyMapDefault = std::map<int,int,std::less<int>,std::allocator<std::pair<const int,int>>>;
+   )");
+
+   TClassEdit::GetNormalizedName(n, "MyMapDefault");
+   EXPECT_STREQ("std::map<int,int>", n.c_str());
 }
 
 // https://github.com/root-project/root/issues/18654

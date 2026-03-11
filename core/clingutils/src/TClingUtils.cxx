@@ -4047,6 +4047,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    const int nNormArgs = normArgs.size();
 
    bool mightHaveChanged = false;
+   int latestNonDefaultArg = -1;
 
    // becomes true when a parameter has a value equal to its default
    for (int formal = 0, inst = 0; formal != nArgs; ++formal, ++inst) {
@@ -4085,10 +4086,12 @@ static void KeepNParams(clang::QualType& normalizedType,
                argsToKeep.push_back(normTArg);
             }
             // Done.
+            latestNonDefaultArg = -1;
             break;
          }
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
          argsToKeep.push_back(normTArg);
+         latestNonDefaultArg = formal;
          continue;
       } else {
          if (!isStdDropDefault) {
@@ -4110,15 +4113,20 @@ static void KeepNParams(clang::QualType& normalizedType,
       } else if (argKind == clang::TemplateArgument::Integral){
          equal = areEqualValues(tArg, *tParPtr);
       }
+
+      argsToKeep.push_back(normTArg);
       if (!equal) {
+         latestNonDefaultArg = formal;
          mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
-         argsToKeep.push_back(normTArg);
       } else {
          mightHaveChanged = true;
       }
 
 
    } // of loop over parameters and arguments
+
+   if (latestNonDefaultArg >= 0)
+      argsToKeep.resize(latestNonDefaultArg + 1);
 
    if (!prefix_changed && !mightHaveChanged) {
       normalizedType = originalNormalizedType;
@@ -4140,7 +4148,6 @@ static void KeepNParams(clang::QualType& normalizedType,
       normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
