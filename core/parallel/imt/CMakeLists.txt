@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/imt package
+# CMakeLists.txt file for building ROOT core/parallel/imt package
 ############################################################################
 
 if(NOT WIN32)
