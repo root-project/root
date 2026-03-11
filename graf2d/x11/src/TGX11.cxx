@@ -87,7 +87,7 @@ const int kMAXGC = 7,
 static GC gGClist[kMAXGC];
 static GC *gGCline = &gGClist[kGCline];  // PolyLines
 static GC *gGCmark = &gGClist[kGCmark];  // PolyMarker
-static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
+// static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
 static GC *gGCtext = &gGClist[kGCtext];  // Text
 static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
 static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
@@ -137,8 +137,8 @@ static XWindow_t *gTws;      // gTws: temporary pointer
 const Int_t kBIGGEST_RGB_VALUE = 65535;
 
 
-static Int_t  gFillHollow;         // Flag if fill style is hollow
-static Pixmap gFillPattern = 0;    // Fill pattern
+// static Int_t  gFillHollow;         // Flag if fill style is hollow
+// static Pixmap gFillPattern = 0;    // Fill pattern
 
 //
 // Text management
@@ -169,14 +169,14 @@ static int  gMarkerJoinStyle = JoinRound;
 //
 // Keep style values for line GC
 //
-static int  gLineWidth = 0;
-static int  gLineStyle = LineSolid;
+// static int  gLineWidth = 0;
+// static int  gLineStyle = LineSolid;
 static int  gCapStyle  = CapButt;
 static int  gJoinStyle = JoinMiter;
-static char gDashList[10];
-static int  gDashLength = 0;
-static int  gDashOffset = 0;
-static int  gDashSize   = 0;
+// static char gDashList[10];
+// static int  gDashLength = 0;
+// static int  gDashOffset = 0;
+// static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -553,11 +553,11 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    switch (mode) {
 
       case kHollow:
-         XDrawRectangle((Display*)fDisplay, gCws->fDrawing, *gGCline, x, y, w, h);
+         XDrawRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], x, y, w, h);
          break;
 
       case kFilled:
-         XFillRectangle((Display*)fDisplay, gCws->fDrawing, *gGCfill, x, y, w, h);
+         XFillRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill], x, y, w, h);
          break;
 
       default:
@@ -591,10 +591,10 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
       for (j = 0; j < ny; j++) {
          icol = ic[i+(nx*j)];
          if (icol != current_icol) {
-            XSetForeground((Display*)fDisplay, *gGCfill, GetColor(icol).fPixel);
+            XSetForeground((Display*)fDisplay, gCws->fGClist[kGCfill], GetColor(icol).fPixel);
             current_icol = icol;
          }
-         XFillRectangle((Display*)fDisplay, gCws->fDrawing, *gGCfill, ix, iy, w, h);
+         XFillRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill], ix, iy, w, h);
          iy = iy-h;
       }
       ix = ix+w;
@@ -611,11 +611,11 @@ void TGX11::DrawFillArea(int n, TPoint *xy)
 {
    XPoint *xyp = (XPoint*)xy;
 
-   if (gFillHollow)
-      XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCfill, xyp, n, CoordModeOrigin);
+   if (gCws->fillHollow)
+      XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill], xyp, n, CoordModeOrigin);
 
    else {
-      XFillPolygon((Display*)fDisplay, gCws->fDrawing, *gGCfill,
+      XFillPolygon((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill],
                    xyp, n, Nonconvex, CoordModeOrigin);
    }
 }
@@ -628,11 +628,11 @@ void TGX11::DrawFillArea(int n, TPoint *xy)
 
 void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   if (gLineStyle == LineSolid)
-      XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCline, x1, y1, x2, y2);
+   if (gCws->lineStyle == LineSolid)
+      XDrawLine((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], x1, y1, x2, y2);
    else {
-      XSetDashes((Display*)fDisplay, *gGCdash, gDashOffset, gDashList, gDashSize);
-      XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCdash, x1, y1, x2, y2);
+      XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
+      XDrawLine((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], x1, y1, x2, y2);
    }
 }
 
@@ -661,13 +661,12 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
          DrawPolyLine( npt, &xy[ibeg] );
       }
    } else if (n > 1) {
-      if (gLineStyle == LineSolid)
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCline, xyp, n, CoordModeOrigin);
+      if (gCws->lineStyle == LineSolid)
+         XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], xyp, n, CoordModeOrigin);
       else {
          int i;
-         XSetDashes((Display*)fDisplay, *gGCdash,
-                    gDashOffset, gDashList, gDashSize);
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCdash, xyp, n, CoordModeOrigin);
+         XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
+         XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], xyp, n, CoordModeOrigin);
 
          // calculate length of line to update dash offset
          for (i = 1; i < n; i++) {
@@ -675,16 +674,16 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
             int dy = xyp[i].y - xyp[i-1].y;
             if (dx < 0) dx = - dx;
             if (dy < 0) dy = - dy;
-            gDashOffset += dx > dy ? dx : dy;
+            gCws->dashOffset += dx > dy ? dx : dy;
          }
-         gDashOffset %= gDashLength;
+         gCws->dashOffset %= gCws->dashLength;
       }
    } else {
       int px,py;
       px=xyp[0].x;
       py=xyp[0].y;
       XDrawPoint((Display*)fDisplay, gCws->fDrawing,
-                 gLineStyle == LineSolid ? *gGCline : *gGCdash, px, py);
+                 gCws->lineStyle == LineSolid ? gCws->fGClist[kGCline] : gCws->fGClist[kGCdash], px, py);
    }
 }
 
@@ -706,11 +705,11 @@ void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
          iend = TMath::Min(n, iend + kMaxSegments);
       }
    } else if (n > 0) {
-      if (gLineStyle == LineSolid)
-         XDrawSegments((Display*)fDisplay, gCws->fDrawing, *gGCline, (XSegment *) xy, n);
+      if (gCws->lineStyle == LineSolid)
+         XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], (XSegment *) xy, n);
       else {
-         XSetDashes((Display*)fDisplay, *gGCdash, gDashOffset, gDashList, gDashSize);
-         XDrawSegments((Display*)fDisplay, gCws->fDrawing, *gGCdash, (XSegment *) xy, n);
+         XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
+         XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], (XSegment *) xy, n);
       }
    }
 }
@@ -2237,6 +2236,11 @@ void TGX11::SetDrawMode(EDrawMode mode)
 
 void TGX11::SetFillColor(Color_t cindex)
 {
+   TAttFill::SetFillColor(cindex);
+
+   SetAttFill((WinContext_t) gCws, *this);
+
+/*
    if (!gStyle->GetFillColor() && cindex > 1) cindex = 0;
    if (cindex >= 0) SetColor(gGCfill, Int_t(cindex));
    fFillColor = cindex;
@@ -2246,6 +2250,7 @@ void TGX11::SetFillColor(Color_t cindex)
       XFreePixmap((Display*)fDisplay, gFillPattern);
       gFillPattern = 0;
    }
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2256,11 +2261,16 @@ void TGX11::SetFillColor(Color_t cindex)
 
 void TGX11::SetFillStyle(Style_t fstyle)
 {
-   if (fFillStyle == fstyle) return;
+   TAttFill::SetFillStyle(fstyle);
+
+   SetAttFill((WinContext_t) gCws, *this);
+
+/*   if (fFillStyle == fstyle) return;
    fFillStyle = fstyle;
    Int_t style = fstyle/1000;
    Int_t fasi  = fstyle%1000;
    SetFillStyleIndex(style,fasi);
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2268,6 +2278,7 @@ void TGX11::SetFillStyle(Style_t fstyle)
 
 void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
 {
+/*
    static int current_fasi = 0;
 
    fFillStyle = 1000*style + fasi;
@@ -2304,6 +2315,7 @@ void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
       default:
          gFillHollow = 1;
    }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2334,8 +2346,10 @@ void TGX11::SetLineColor(Color_t cindex)
 
    TAttLine::SetLineColor(cindex);
 
-   SetColor(gGCline, Int_t(cindex));
-   SetColor(gGCdash, Int_t(cindex));
+   SetAttLine((WinContext_t) gCws, *this);
+
+   //SetColor(gGCline, Int_t(cindex));
+   //SetColor(gGCdash, Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2351,6 +2365,7 @@ void TGX11::SetLineColor(Color_t cindex)
 
 void TGX11::SetLineType(int n, int *dash)
 {
+   /*
    if (n <= 0) {
       gLineStyle = LineSolid;
       XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
@@ -2370,6 +2385,7 @@ void TGX11::SetLineType(int n, int *dash)
       XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
                          gLineStyle, gCapStyle, gJoinStyle);
    }
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2377,6 +2393,11 @@ void TGX11::SetLineType(int n, int *dash)
 
 void TGX11::SetLineStyle(Style_t lstyle)
 {
+   TAttLine::SetLineStyle(lstyle);
+
+   SetAttLine((WinContext_t) gCws, *this);
+/*
+
    static Int_t dashed[2] = {3,3};
    static Int_t dotted[2] = {1,2};
    static Int_t dasheddotted[4] = {3,4,1,4};
@@ -2407,6 +2428,7 @@ void TGX11::SetLineStyle(Style_t lstyle)
          delete tokens;
       }
    }
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2414,8 +2436,14 @@ void TGX11::SetLineStyle(Style_t lstyle)
 ///
 ///  \param [in] width   : line width in pixels
 
-void TGX11::SetLineWidth(Width_t width )
+void TGX11::SetLineWidth(Width_t width)
 {
+   TAttLine::SetLineWidth(width);
+
+   SetAttLine((WinContext_t) gCws, *this);
+
+/*
+
    if (fLineWidth == width) return;
    fLineWidth = width;
 
@@ -2428,6 +2456,7 @@ void TGX11::SetLineWidth(Width_t width )
                       gLineStyle, gCapStyle, gJoinStyle);
    XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
               gLineStyle, gCapStyle, gJoinStyle);
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
