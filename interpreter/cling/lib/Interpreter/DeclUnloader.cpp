@@ -513,6 +513,16 @@ namespace cling {
 
   bool DeclUnloader::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
+    if (auto* TLSD = dyn_cast<TopLevelStmtDecl>(D)) {
+      if (!TLSD->getStmt()) {
+        // Special case for TopLevelStmt. The change llvm/llvm-project@4b70d17bcf
+        // caused an invalid TopLevelStatement to be added to the AST, which
+        // can trigger assertions.
+        if (DeclContext *DC = TLSD->getDeclContext())
+          DC->removeDecl(TLSD); // unlink from TU
+        return true;
+      }
+    }
     CollectFilesToUncache(D->getBeginLoc());
 
     DeclContext* DC = D->getLexicalDeclContext();
