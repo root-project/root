@@ -90,7 +90,7 @@ static GC *gGCline = &gGClist[kGCline];  // PolyLines
 // static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
 static GC *gGCtext = &gGClist[kGCtext];  // Text
 static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
-static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
+// static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
 // static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
 
 static GC gGCecho;                 // Input echo
@@ -744,47 +744,42 @@ void TGX11::DrawPolyMarker(int n, TPoint *xy)
    } else {
       int r = gCws->markerSize / 2;
       auto &shape = gCws->markerShape;
-      int m;
 
-      for (m = 0; m < n; m++) {
-         int hollow = 0;
-
-         switch (gCws->markerType) {
-            case 0:        // hollow circle
-               XDrawArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
-                        xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
-               break;
-
-            case 1:        // filled circle
-               XFillArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
-                        xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
-               break;
-
-            case 2:        // hollow polygon
-               hollow = 1;
-            case 3:        // filled polygon
-               for (size_t i = 0; i < shape.size(); i++) {
-                  shape[i].x += xyp[m].x;
-                  shape[i].y += xyp[m].y;
-               }
-               if (hollow)
+      for (int m = 0; m < n; m++) {
+         if (gCws->markerType == 0) {
+            // hollow circle
+            XDrawArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                      xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
+         } else if (gCws->markerType == 1) {
+            // filled circle
+            XFillArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                      xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
+         } else {
+            for (size_t i = 0; i < shape.size(); i++) {
+               shape[i].x += xyp[m].x;
+               shape[i].y += xyp[m].y;
+            }
+            switch(gCws->markerType) {
+               case 2:
+                  // hollow polygon
                   XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
                              shape.data(), shape.size(), CoordModeOrigin);
-               else
+                  break;
+               case 3:
+                  // filled polygon
                   XFillPolygon((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
                                shape.data(), shape.size(), Nonconvex, CoordModeOrigin);
-               for (size_t i = 0; i < shape.size(); i++) {
-                  shape[i].x -= xyp[m].x;
-                  shape[i].y -= xyp[m].y;
-               }
-               break;
-
-            case 4:        // segmented line
-               for (size_t i = 0; i < shape.size(); i += 2)
-                  XDrawLine((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
-                            xyp[m].x + shape[i].x, xyp[m].y + shape[i].y,
-                            xyp[m].x + shape[i+1].x, xyp[m].y + shape[i+1].y);
-               break;
+                  break;
+               case 4:
+                  // segmented line
+                  XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                                (XSegment *) shape.data(), shape.size()/2);
+                  break;
+            }
+            for (size_t i = 0; i < shape.size(); i++) {
+               shape[i].x -= xyp[m].x;
+               shape[i].y -= xyp[m].y;
+            }
          }
       }
    }
@@ -2281,7 +2276,7 @@ void TGX11::SetFillStyle(Style_t fstyle)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill area style index.
 
-void TGX11::SetFillStyleIndex(Int_t style, Int_t fasi)
+void TGX11::SetFillStyleIndex(Int_t /* style */, Int_t /* fasi */)
 {
 /*
    static int current_fasi = 0;
@@ -2368,7 +2363,7 @@ void TGX11::SetLineColor(Color_t cindex)
 ///       e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
 ///       and a gap of 7 between dashes
 
-void TGX11::SetLineType(int n, int *dash)
+void TGX11::SetLineType(int /* n */, int * /* dash */)
 {
    /*
    if (n <= 0) {
@@ -2503,7 +2498,7 @@ void TGX11::SetMarkerSize(Float_t msize)
 ///  - if TYPE == 4 marker is described by segmented line XY
 ///     e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
 
-void TGX11::SetMarkerType(int type, int n, RXPoint *xy)
+void TGX11::SetMarkerType(int /* type */, int /* n */, RXPoint * /* xy */)
 {
    /*
    gMarker.type = type;
