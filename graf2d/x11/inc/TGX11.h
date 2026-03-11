@@ -14,6 +14,7 @@
 
 #include "TVirtualX.h"
 #include <map>
+#include <memory>
 
 #ifdef Status
 // Convert Status from a CPP macro to a typedef:
@@ -45,28 +46,6 @@ struct RXSetWindowAttributes;
 struct RXVisualInfo;
 struct RVisual;
 
-/// Description of a X11 window.
-struct XWindow_t {
-   Int_t    fOpen;                ///< 1 if the window is open, 0 if not
-   Int_t    fDoubleBuffer;        ///< 1 if the double buffer is on, 0 if not
-   Int_t    fIsPixmap;            ///< 1 if pixmap, 0 if not
-   Drawable fDrawing;             ///< drawing area, equal to window or buffer
-   Drawable fWindow;              ///< X11 window
-   Drawable fBuffer;              ///< pixmap used for double buffer
-   UInt_t   fWidth;               ///< width of the window
-   UInt_t   fHeight;              ///< height of the window
-   Int_t    fClip;                ///< 1 if the clipping is on
-   Int_t    fXclip;               ///< x coordinate of the clipping rectangle
-   Int_t    fYclip;               ///< y coordinate of the clipping rectangle
-   UInt_t   fWclip;               ///< width of the clipping rectangle
-   UInt_t   fHclip;               ///< height of the clipping rectangle
-   ULong_t *fNewColors;           ///< new image colors (after processing)
-   Int_t    fNcolors;             ///< number of different colors
-   Bool_t   fShared;              ///< notify when window is shared
-   void    *fGClist;              ///< list of GC object, individual for each window
-   TVirtualX::EDrawMode fDrawMode; ///< current draw mode
-};
-
 /// Description of a X11 color.
 struct XColor_t {
    ULong_t  fPixel;               ///< color pixel value
@@ -79,11 +58,13 @@ struct XColor_t {
 
 class TExMap;
 
+struct XWindow_t;
+
 
 class TGX11 : public TVirtualX {
 
 private:
-   std::unordered_map<Int_t,XWindow_t> fWindows; // map of windows
+   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap    *fColors;                ///< Hash list of colors
    Cursor     fCursors[kNumCursors];  ///< List of cursors
    void      *fXEvent;                ///< Current native (X11) event
