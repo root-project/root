@@ -86,7 +86,7 @@ jobs:
         dnf update -y
         dnf upgrade -y
         dnf install -y qt5-doctools
-        which qhelpgenerator-qt5
+        command -v qhelpgenerator-qt5
 
     - name: Apply option overrides
       env:
