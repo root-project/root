@@ -63,7 +63,7 @@ target_include_directories(MetaCling PRIVATE
    ${CMAKE_SOURCE_DIR}/core/foundation/res
    ${CMAKE_SOURCE_DIR}/core/meta/inc
    ${CMAKE_SOURCE_DIR}/core/metacling/res
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/parallel/thread/inc
    ${CMAKE_SOURCE_DIR}/core/compression/zip/inc
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude

@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/thread package
+# CMakeLists.txt file for building ROOT core/parallel/thread package
 ############################################################################
 
 if(WIN32)

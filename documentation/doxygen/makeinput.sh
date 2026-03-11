@@ -22,13 +22,13 @@ echo "        ../../core/os/macosx/            \\" >> Doxyfile_INPUT
 echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
 echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
-echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/multiproc/   \\" >> Doxyfile_INPUT
 echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
-echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/thread/      \\" >> Doxyfile_INPUT
 echo "        ../../core/os/unix/              \\" >> Doxyfile_INPUT
 echo "        ../../core/os/winnt/             \\" >> Doxyfile_INPUT
-echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
+echo "        ../../core/parallel/imt/         \\" >> Doxyfile_INPUT
 echo "        ../../core/compression/zip/inc/Compression.h \\" >> Doxyfile_INPUT
 echo "        ../../geom/                      \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
