@@ -86,9 +86,7 @@ add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
 
-add_subdirectory(macosx)
-add_subdirectory(unix)
-add_subdirectory(winnt)
+add_subdirectory(os)
 
 #-------------------------------------------------------------------------------
 

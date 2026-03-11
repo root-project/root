@@ -91,7 +91,7 @@ if(WIN32)
     src/TWin32Thread.cxx
     src/TWin32ThreadFactory.cxx
   )
-  target_include_directories(Thread PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+  target_include_directories(Thread PRIVATE ${CMAKE_SOURCE_DIR}/core/os/winnt/inc)
 else()
   target_sources(Thread PRIVATE
     src/TPosixCondition.cxx
