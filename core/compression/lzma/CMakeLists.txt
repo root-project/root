@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/lzma package
+# CMakeLists.txt file for building ROOT core/compression/lzma package
 ############################################################################
 
 target_sources(Core PRIVATE src/ZipLZMA.c)
