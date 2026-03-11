@@ -624,7 +624,7 @@ static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
             CPYCPPYY_ORDERED_OPERATOR_STUB(<,  klass->fOperators->fLt, __lt__)
             break;
         case Py_LE:
-            CPYCPPYY_ORDERED_OPERATOR_STUB(<=, klass->fOperators->fLe, __ge__)
+            CPYCPPYY_ORDERED_OPERATOR_STUB(<=, klass->fOperators->fLe, __le__)
             break;
         case Py_GT:
             CPYCPPYY_ORDERED_OPERATOR_STUB(>,  klass->fOperators->fGt, __gt__)
