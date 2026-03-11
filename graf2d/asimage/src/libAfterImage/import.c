@@ -35,11 +35,7 @@
 
 #ifdef HAVE_PNG
 /* Include file for users of png library. */
-# ifdef HAVE_BUILTIN_PNG
-#  include "libpng/png.h"
-# else
-#  include <png.h>
-# endif
+#include <png.h>
 #else
 # include <setjmp.h>
 # ifdef HAVE_JPEG

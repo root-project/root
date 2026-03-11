@@ -12,9 +12,6 @@
 #define HAVE_BOOLEAN
 typedef unsigned char boolean;
 
-/* Define if using builtin libpng */
-#define HAVE_BUILTIN_PNG 1
-
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
