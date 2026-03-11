@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/multiproc package
+# CMakeLists.txt file for building ROOT core/parallel/multiproc package
 ############################################################################
 
 if(WIN32)

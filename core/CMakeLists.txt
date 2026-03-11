@@ -67,15 +67,12 @@ add_subdirectory(cont)
 add_subdirectory(dictgen)
 add_subdirectory(foundation)
 add_subdirectory(gui)
-add_subdirectory(imt)
 add_subdirectory(meta)
 add_subdirectory(metacling)
-add_subdirectory(multiproc)
 add_subdirectory(newdelete)
 add_subdirectory(rint)
 add_subdirectory(testsupport)
 add_subdirectory(textinput)
-add_subdirectory(thread)
 add_subdirectory(utils)
 add_subdirectory(zip)
 add_subdirectory(lzma)
@@ -83,6 +80,7 @@ add_subdirectory(lz4)
 add_subdirectory(zstd)
 
 add_subdirectory(os)
+add_subdirectory(parallel)
 
 #-------------------------------------------------------------------------------
 
