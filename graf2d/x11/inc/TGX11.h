@@ -70,7 +70,6 @@ private:
    void      *fXEvent;                ///< Current native (X11) event
 
    Int_t  AddWindowHandle();
-   void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
    void   FindBestVisual();
    void   FindUsableVisual(RXVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
