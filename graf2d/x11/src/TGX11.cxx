@@ -76,12 +76,7 @@ extern int     XRotDrawAlignedImageString(Display*, XFontStruct*, float,
 extern XPoint *XRotTextExtents(Display*, XFontStruct*, float,
                                int, int, char*, int);
 
-//---- globals
 
-static XWindow_t *gCws;      // gCws: pointer to the current window
-static XWindow_t *gTws;      // gTws: temporary pointer
-
-const Int_t kBIGGEST_RGB_VALUE = 65535;
 
 //
 // Primitives Graphic Contexts global for all windows
@@ -99,6 +94,38 @@ static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
 static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
 
 static GC gGCecho;                 // Input echo
+
+
+/// Description of a X11 window.
+struct XWindow_t {
+   Int_t    fOpen = 0;                ///< 1 if the window is open, 0 if not
+   Int_t    fDoubleBuffer = 0;        ///< 1 if the double buffer is on, 0 if not
+   Int_t    fIsPixmap = 0;            ///< 1 if pixmap, 0 if not
+   Drawable fDrawing = 0;             ///< drawing area, equal to window or buffer
+   Drawable fWindow = 0;              ///< X11 window
+   Drawable fBuffer = 0;              ///< pixmap used for double buffer
+   UInt_t   fWidth = 0;               ///< width of the window
+   UInt_t   fHeight = 0;              ///< height of the window
+   Int_t    fClip = 0;                ///< 1 if the clipping is on
+   Int_t    fXclip = 0;               ///< x coordinate of the clipping rectangle
+   Int_t    fYclip = 0;               ///< y coordinate of the clipping rectangle
+   UInt_t   fWclip = 0;               ///< width of the clipping rectangle
+   UInt_t   fHclip = 0;               ///< height of the clipping rectangle
+   ULong_t *fNewColors = 0;           ///< new image colors (after processing)
+   Int_t    fNcolors = 0;             ///< number of different colors
+   Bool_t   fShared = 0;              ///< notify when window is shared
+   GC       fGClist[kMAXGC];          ///< list of GC object, individual for each window
+   TVirtualX::EDrawMode fDrawMode; ///< current draw mode
+};
+
+
+//---- globals
+
+static XWindow_t *gCws;      // gCws: pointer to the current window
+static XWindow_t *gTws;      // gTws: temporary pointer
+
+const Int_t kBIGGEST_RGB_VALUE = 65535;
+
 
 static Int_t  gFillHollow;         // Flag if fill style is hollow
 static Pixmap gFillPattern = 0;    // Fill pattern
@@ -243,8 +270,6 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 
 TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 {
-   int i;
-
    fDisplay         = org.fDisplay;
    fScreenNumber    = org.fScreenNumber;
    fVisual          = org.fVisual;
@@ -271,29 +296,32 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    fDrawMode        = org.fDrawMode;
    fXEvent          = new XEvent;
 
-   for(auto & iter : org.fWindows) {
-      auto &tgt = fWindows[iter.first]; // entry created
-      auto &src = iter.second;
-      tgt.fOpen         = src.fOpen;
-      tgt.fDoubleBuffer = src.fDoubleBuffer;
-      tgt.fIsPixmap     = src.fIsPixmap;
-      tgt.fDrawing      = src.fDrawing;
-      tgt.fWindow       = src.fWindow;
-      tgt.fBuffer       = src.fBuffer;
-      tgt.fWidth        = src.fWidth;
-      tgt.fHeight       = src.fHeight;
-      tgt.fClip         = src.fClip;
-      tgt.fXclip        = src.fXclip;
-      tgt.fYclip        = src.fYclip;
-      tgt.fWclip        = src.fWclip;
-      tgt.fHclip        = src.fHclip;
+   for(auto & pair : org.fWindows) {
+      fWindows.emplace(pair.first, std::make_unique<XWindow_t>());
+      auto &tgt = fWindows[pair.first]; // entry created
+      auto &src = pair.second;
+      tgt->fOpen         = src->fOpen;
+      tgt->fDoubleBuffer = src->fDoubleBuffer;
+      tgt->fIsPixmap     = src->fIsPixmap;
+      tgt->fDrawing      = src->fDrawing;
+      tgt->fWindow       = src->fWindow;
+      tgt->fBuffer       = src->fBuffer;
+      tgt->fWidth        = src->fWidth;
+      tgt->fHeight       = src->fHeight;
+      tgt->fClip         = src->fClip;
+      tgt->fXclip        = src->fXclip;
+      tgt->fYclip        = src->fYclip;
+      tgt->fWclip        = src->fWclip;
+      tgt->fHclip        = src->fHclip;
       // FIXME: copy of pointer on may lead to double delete!!!
-      tgt.fNewColors    = src.fNewColors;
-      tgt.fNcolors      = src.fNcolors;
-      tgt.fShared       = src.fShared;
+      tgt->fNewColors    = src->fNewColors;
+      tgt->fNcolors      = src->fNcolors;
+      tgt->fShared       = src->fShared;
+      for (int i = 0; i < kMAXGC; ++i)
+         tgt->fGClist[i]    = src->fGClist[i];
    }
 
-   for (i = 0; i < kNumCursors; i++)
+   for (int i = 0; i < kNumCursors; i++)
       fCursors[i] = org.fCursors[i];
 
    fColors = new TExMap;
@@ -470,16 +498,13 @@ void TGX11::CloseWindow()
       XFlush((Display*)fDisplay);
    }
 
-   auto lGC = (GC *) gCws->fGClist;
    for (int i = 0; i < kMAXGC; ++i)
-      XFreeGC((Display*)fDisplay, lGC[i]);
-   ::operator delete(gCws->fGClist);
-   gCws->fGClist = nullptr;
+      XFreeGC((Display*)fDisplay, gCws->fGClist[i]);
 
    gCws->fOpen = 0;
 
    for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
-      if (&iter->second == gCws) {
+      if (iter->second.get() == gCws) {
          fWindows.erase(iter);
          gCws = nullptr;
          break;
@@ -490,8 +515,8 @@ void TGX11::CloseWindow()
 
    // select first from active windows
    for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
-      if (iter->second.fOpen) {
-         gCws = &iter->second;
+      if (iter->second->fOpen) {
+         gCws = iter->second.get();
          return;
       }
 }
@@ -501,7 +526,7 @@ void TGX11::CloseWindow()
 
 void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 {
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, *gGCpxmp, 0, 0, gTws->fWidth,
              gTws->fHeight, xpos, ypos);
@@ -976,7 +1001,7 @@ void *TGX11::GetGC(Int_t which) const
 
 Int_t TGX11::GetDoubleBuffer(int wid)
 {
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->fOpen)
       return -1;
    else
@@ -1006,7 +1031,7 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
       unsigned int border, depth;
       unsigned int width, height;
 
-      gTws = &fWindows[wid];
+      gTws = fWindows[wid].get();
       XGetGeometry((Display*)fDisplay, gTws->fWindow, &root, &x, &y,
                    &width, &height, &border, &depth);
       XTranslateCoordinates((Display*)fDisplay, gTws->fWindow, fRootWin,
@@ -1101,7 +1126,7 @@ void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 
 Window_t TGX11::GetWindowID(int wid)
 {
-   return (Window_t) fWindows[wid].fWindow;
+   return (Window_t) fWindows[wid]->fWindow;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1113,7 +1138,7 @@ Window_t TGX11::GetWindowID(int wid)
 
 void TGX11::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->fOpen) return;
 
    XMoveWindow((Display*)fDisplay, gTws->fWindow, x, y);
@@ -1277,13 +1302,13 @@ Int_t TGX11::OpenDisplay(void *disp)
 Int_t TGX11::AddWindowHandle()
 {
    Int_t maxid = 0;
-   for (auto & iter : fWindows) {
-      if (!iter.second.fOpen) {
-         iter.second.fOpen = 1;
-         return iter.first;
+   for (auto & pair : fWindows) {
+      if (!pair.second->fOpen) {
+         pair.second->fOpen = 1;
+         return pair.first;
       }
-      if (iter.first > maxid)
-         maxid = iter.first;
+      if (pair.first > maxid)
+         maxid = pair.first;
    }
 
    if (fWindows.size() == (size_t) maxid) {
@@ -1297,19 +1322,18 @@ Int_t TGX11::AddWindowHandle()
          }
       }
 
+   fWindows.emplace(maxid, std::make_unique<XWindow_t>());
 
-   auto &ctxt = fWindows[maxid];
-   ctxt.fOpen = 1;
-   ctxt.fDrawMode = TVirtualX::kCopy;
-   ctxt.fGClist = ::operator new(kMAXGC * sizeof(GC));
-   auto lGC = (GC *) ctxt.fGClist;
+   auto ctxt = fWindows[maxid].get();
+   ctxt->fOpen = 1;
+   ctxt->fDrawMode = TVirtualX::kCopy;
    for (int n = 0; n < kMAXGC; ++n)
-      lGC[n] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
+      ctxt->fGClist[n] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
 
    XGCValues values;
-   if (XGetGCValues((Display*)fDisplay, lGC[kGCtext], GCForeground|GCBackground, &values)) {
-      XSetForeground((Display*)fDisplay, lGC[kGCinvt], values.background);
-      XSetBackground((Display*)fDisplay, lGC[kGCinvt], values.foreground);
+   if (XGetGCValues((Display*)fDisplay, ctxt->fGClist[kGCtext], GCForeground|GCBackground, &values)) {
+      XSetForeground((Display*)fDisplay, ctxt->fGClist[kGCinvt], values.background);
+      XSetBackground((Display*)fDisplay, ctxt->fGClist[kGCinvt], values.foreground);
    } else {
       Error("AddWindowHandle", "cannot get GC values");
    }
@@ -1317,7 +1341,7 @@ Int_t TGX11::AddWindowHandle()
    // Turn-off GraphicsExpose and NoExpose event reporting for the pixmap
    // manipulation GC, this to prevent these events from being stacked up
    // without ever being processed and thereby wasting a lot of memory.
-   XSetGraphicsExposures((Display*)fDisplay, lGC[kGCpxmp], False);
+   XSetGraphicsExposures((Display*)fDisplay, ctxt->fGClist[kGCpxmp], False);
 
    return maxid;
 }
@@ -1340,20 +1364,19 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
 
    // Select next free window number
    int wid = AddWindowHandle();
-   gCws = &fWindows[wid];
+   gCws = fWindows[wid].get();
 
    gCws->fWindow = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
    XGetGeometry((Display*)fDisplay, gCws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
-   auto lGC = (GC *) gCws->fGClist;
    for (int i = 0; i < kMAXGC; i++) {
       XSetClipMask((Display*)fDisplay, gGClist[i], None);
-      XSetClipMask((Display*)fDisplay, lGC[i], None);
+      XSetClipMask((Display*)fDisplay, gCws->fGClist[i], None);
    }
 
-   SetColor(lGC + kGCpxmp, 0);
-   XFillRectangle((Display*)fDisplay, gCws->fWindow, lGC[kGCpxmp], 0, 0, ww, hh);
-   SetColor(lGC + kGCpxmp, 1);
+   SetColor(&gCws->fGClist[kGCpxmp], 0);
+   XFillRectangle((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCpxmp], 0, 0, ww, hh);
+   SetColor(&gCws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gCws->fDrawing       = gCws->fWindow;
@@ -1389,7 +1412,7 @@ Int_t TGX11::InitWindow(ULong_t win)
    // Select next free window number
 
    int wid = AddWindowHandle();
-   gCws = &fWindows[wid];
+   gCws = fWindows[wid].get();
    gCws->fDoubleBuffer = 0;
 
    // Create window
@@ -1439,7 +1462,7 @@ Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
 {
    // Select next free window number
    int wid = AddWindowHandle();
-   gCws = &fWindows[wid];
+   gCws = fWindows[wid].get();
    gCws->fDoubleBuffer = 0;
 
    gCws->fWindow = qwid;
@@ -1864,9 +1887,7 @@ Int_t TGX11::RequestString(int x, int y, char *text)
 
 void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
-   int i;
-
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->fOpen) return;
 
    // don't do anything when size did not change
@@ -1880,14 +1901,13 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
          XFreePixmap((Display*)fDisplay,gTws->fBuffer);
          gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin, w, h, fDepth);
       }
-      auto lGC = (GC *) gTws->fGClist;
-      for (i = 0; i < kMAXGC; i++) {
+      for (int i = 0; i < kMAXGC; i++) {
          XSetClipMask((Display*)fDisplay, gGClist[i], None);
-         XSetClipMask((Display*)fDisplay, lGC[i], None);
+         XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
       }
-      SetColor(lGC + kGCpxmp, 0);
-      XFillRectangle((Display*)fDisplay, gTws->fBuffer, lGC[kGCpxmp], 0, 0, w, h);
-      SetColor(lGC + kGCpxmp, 1);
+      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, w, h);
+      SetColor(&gTws->fGClist[kGCpxmp], 1);
       if (gTws->fDoubleBuffer)
          gTws->fDrawing = gTws->fBuffer;
    }
@@ -1910,7 +1930,7 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    wval = w;
    hval = h;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    // don't do anything when size did not change
    //  if (gTws->fWidth == wval && gTws->fHeight == hval) return 0;
@@ -1927,16 +1947,14 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    }
    XGetGeometry((Display*)fDisplay, gTws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
-   auto lGC = (GC *) gTws->fGClist;
-
    for (i = 0; i < kMAXGC; i++) {
       XSetClipMask((Display*)fDisplay, gGClist[i], None);
-      XSetClipMask((Display*)fDisplay, lGC[i], None);
+      XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
    }
 
-   SetColor(lGC + kGCpxmp, 0);
-   XFillRectangle((Display*)fDisplay, gTws->fWindow, lGC[kGCpxmp], 0, 0, ww, hh);
-   SetColor(lGC + kGCpxmp, 1);
+   SetColor(&gTws->fGClist[kGCpxmp], 0);
+   XFillRectangle((Display*)fDisplay, gTws->fWindow, gTws->fGClist[kGCpxmp], 0, 0, ww, hh);
+   SetColor(&gTws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gTws->fDrawing = gTws->fWindow;
@@ -1955,7 +1973,7 @@ void TGX11::ResizeWindow(Int_t wid)
    Window win, root=0;
    unsigned int wval=0, hval=0, border=0, depth=0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    win = gTws->fWindow;
 
@@ -1974,14 +1992,13 @@ void TGX11::ResizeWindow(Int_t wid)
          XFreePixmap((Display*)fDisplay,gTws->fBuffer);
          gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
       }
-      auto lGC = (GC *) gTws->fGClist;
       for (int i = 0; i < kMAXGC; i++) {
          XSetClipMask((Display*)fDisplay, gGClist[i], None);
-         XSetClipMask((Display*)fDisplay, lGC[i], None);
+         XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
       }
-      SetColor(gGCpxmp, 0);
-      XFillRectangle((Display*)fDisplay, gTws->fBuffer, *gGCpxmp, 0, 0, wval, hval);
-      SetColor(gGCpxmp, 1);
+      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, wval, hval);
+      SetColor(&gTws->fGClist[kGCpxmp], 1);
       if (gTws->fDoubleBuffer)
          gTws->fDrawing = gTws->fBuffer;
    }
@@ -1997,13 +2014,10 @@ void TGX11::SelectWindow(int wid)
    if (fWindows.count(wid) == 0)
       return;
 
-   auto &handle = fWindows[wid];
-   if (!handle.fOpen)
+   if (!fWindows[wid]->fOpen)
       return;
 
-   gCws = &handle;
-
-   auto lGC = (GC *) gCws->fGClist;
+   gCws = fWindows[wid].get();
 
    if (gCws->fClip && !gCws->fIsPixmap && !gCws->fDoubleBuffer) {
       XRectangle region;
@@ -2013,12 +2027,12 @@ void TGX11::SelectWindow(int wid)
       region.height = gCws->fHclip;
       for (int i = 0; i < kMAXGC; i++) {
          XSetClipRectangles((Display*)fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
-         XSetClipRectangles((Display*)fDisplay, lGC[i], 0, 0, &region, 1, YXBanded);
+         XSetClipRectangles((Display*)fDisplay, gCws->fGClist[i], 0, 0, &region, 1, YXBanded);
       }
    } else {
       for (int i = 0; i < kMAXGC; i++) {
          XSetClipMask((Display*)fDisplay, gGClist[i], None);
-         XSetClipMask((Display*)fDisplay, lGC[i], None);
+         XSetClipMask((Display*)fDisplay, gCws->fGClist[i], None);
       }
    }
 }
@@ -2049,13 +2063,12 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
 
 void TGX11::SetClipOFF(int wid)
 {
-   gTws       = &fWindows[wid];
+   gTws       = fWindows[wid].get();
    gTws->fClip = 0;
-   auto lGC = (GC *) gTws->fGClist;
 
    for (int i = 0; i < kMAXGC; i++) {
       XSetClipMask( (Display*)fDisplay, gGClist[i], None );
-      XSetClipMask( (Display*)fDisplay, lGC[i], None );
+      XSetClipMask( (Display*)fDisplay, gTws->fGClist[i], None );
    }
 }
 
@@ -2068,7 +2081,7 @@ void TGX11::SetClipOFF(int wid)
 
 void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 {
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gTws->fXclip = x;
    gTws->fYclip = y;
    gTws->fWclip = w;
@@ -2080,10 +2093,9 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
       region.y      = gTws->fYclip;
       region.width  = gTws->fWclip;
       region.height = gTws->fHclip;
-      auto lGC = (GC *) gTws->fGClist;
       for (int i = 0; i < kMAXGC; i++) {
          XSetClipRectangles((Display*)fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
-         XSetClipRectangles((Display*)fDisplay, lGC[i], 0, 0, &region, 1, YXBanded);
+         XSetClipRectangles((Display*)fDisplay, gTws->fGClist[i], 0, 0, &region, 1, YXBanded);
       }
    }
 }
@@ -2126,7 +2138,7 @@ void  TGX11::SetColor(void *gci, int ci)
 
 void  TGX11::SetCursor(Int_t wid, ECursor cursor)
 {
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    XDefineCursor((Display*)fDisplay, gTws->fWindow, fCursors[cursor]);
 }
 
@@ -2142,8 +2154,8 @@ void  TGX11::SetCursor(Int_t wid, ECursor cursor)
 void TGX11::SetDoubleBuffer(int wid, int mode)
 {
    if (wid == 999) {
-      for (auto & iter : fWindows) {
-         gTws = &iter.second;
+      for (auto & pair : fWindows) {
+         gTws = pair.second.get();
          if (gTws->fOpen) {
             switch (mode) {
                case 1 :
@@ -2156,7 +2168,7 @@ void TGX11::SetDoubleBuffer(int wid, int mode)
          }
       }
    } else {
-      gTws = &fWindows[wid];
+      gTws = fWindows[wid].get();
       if (!gTws->fOpen)
          return;
       switch (mode) {
@@ -2187,17 +2199,16 @@ void TGX11::SetDoubleBufferON()
 {
    if (gTws->fDoubleBuffer || gTws->fIsPixmap)
       return;
-   auto lGC = (GC *) gTws->fGClist;
    if (!gTws->fBuffer) {
       gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin,
                                    gTws->fWidth, gTws->fHeight, fDepth);
-      SetColor(lGC + kGCpxmp, 0);
-      XFillRectangle((Display*)fDisplay, gTws->fBuffer, lGC[kGCpxmp], 0, 0, gTws->fWidth, gTws->fHeight);
-      SetColor(lGC + kGCpxmp, 1);
+      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth, gTws->fHeight);
+      SetColor(&gTws->fGClist[kGCpxmp], 1);
    }
    for (int i = 0; i < kMAXGC; i++) {
       XSetClipMask((Display*)fDisplay, gGClist[i], None);
-      XSetClipMask((Display*)fDisplay, lGC[i], None);
+      XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
    }
    gTws->fDoubleBuffer  = 1;
    gTws->fDrawing       = gTws->fBuffer;
@@ -2216,27 +2227,26 @@ void TGX11::SetDoubleBufferON()
 void TGX11::SetDrawMode(EDrawMode mode)
 {
    if (fDisplay) {
-      auto lGC = (GC *) gCws->fGClist;
 
       switch (mode) {
          case kCopy:
             for (int i = 0; i < kMAXGC; i++) {
                XSetFunction((Display*)fDisplay, gGClist[i], GXcopy);
-               XSetFunction((Display*)fDisplay, lGC[i], GXcopy);
+               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXcopy);
             }
             break;
 
          case kXor:
             for (int i = 0; i < kMAXGC; i++) {
                XSetFunction((Display*)fDisplay, gGClist[i], GXxor);
-               XSetFunction((Display*)fDisplay, lGC[i], GXxor);
+               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXxor);
             }
             break;
 
          case kInvert:
             for (int i = 0; i < kMAXGC; i++) {
                XSetFunction((Display*)fDisplay, gGClist[i], GXinvert);
-               XSetFunction((Display*)fDisplay, lGC[i], GXinvert);
+               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXinvert);
             }
             break;
       }
@@ -3348,7 +3358,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
    wval = w;
    hval = h;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    XWriteBitmapFile((Display*)fDisplay, pxname, gTws->fDrawing, wval, hval, -1, -1);
 }
 
@@ -3713,7 +3723,7 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
 {
    Int_t wid = AddWindowHandle();
 
-   gCws = &fWindows[wid];
+   gCws = fWindows[wid].get();
    gCws->fWindow = pixid;
    gCws->fDrawing = gCws->fWindow;
    gCws->fBuffer = 0;
@@ -3748,8 +3758,7 @@ Int_t TGX11::SupportsExtension(const char *ext) const
 
 WinContext_t TGX11::GetWindowContext(Int_t wid)
 {
-   auto &ctxt = fWindows[wid];
-   return (WinContext_t) &ctxt;
+   return (WinContext_t) fWindows[wid].get();
 }
 
 void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
@@ -3791,15 +3800,13 @@ void TGX11::SetDrawMode(WinContext_t wctxt, EDrawMode mode)
    if (!ctxt)
       return;
 
-   auto lGC = (GC *) ctxt->fGClist;
-
    auto gxmode = GXcopy;
    if (mode == kXor)
       gxmode = GXxor;
    else if (mode == kInvert)
       gxmode = GXinvert;
    for (int i = 0; i < kMAXGC; i++)
-      XSetFunction((Display*)fDisplay, lGC[i], gxmode);
+      XSetFunction((Display*)fDisplay, ctxt->fGClist[i], gxmode);
 
    ctxt->fDrawMode = mode;
 }
