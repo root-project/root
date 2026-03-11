@@ -100,21 +100,6 @@ class TCollectionListMethods(unittest.TestCase):
         for _ in range(len2):
             self.assertIs(itc1.Next(), itc2.Next())
 
-    def test_count(self):
-        c = ROOT.TList()
-
-        o1 = ROOT.TObject()
-        o2 = ROOT.TObject()
-
-        c.Add(o1)
-        c.Add(o2)
-        c.Add(o1)
-
-        self.assertEqual(c.count(o1), 2)
-        self.assertEqual(c.count(o2), 1)
-
-        c.Clear()
-
 
 if __name__ == '__main__':
     unittest.main()

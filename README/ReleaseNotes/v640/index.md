@@ -370,6 +370,17 @@ json_str = json.dumps(h, default=uhi.io.json.default)
 h_from_uhi = ROOT.TH1D(json.loads(json_str, , object_hook=uhi.io.json.object_hook))
 ```
 
+### Removed `TCollection.count()` Pythonization
+
+The Python-only `TCollection.count()` method has been removed. The meaning of the underlying comparison was ambiguous for C++ objects: depending on the element class, it might have counted by matching by value equality or pointer equality. This behavior can vary silently between classes and lead to inconsistent or misleading results, so it was safer to remove the `count()` method.
+
+Users who need to count occurrences in a **TCollection** can explicitly implement the desired comparison logic in Python, for example:
+
+```Python
+sum(1 for x in collection if x is obj)   # pointer comparison
+sum(1 for x in collection if x == obj)   # value comparison (if defined for the element C++ class)
+```
+
 ## ROOT executable
 
 - Removed stray linebreak when running `root -q` with input files or commands passed with `-e`.
