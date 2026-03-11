@@ -34,7 +34,7 @@ class TCollectionOperators(unittest.TestCase):
             for _ in range(lenc):
                 oc = itc.Next()
                 omul = itmul.Next()
-                self.assertEqual(oc, omul)
+                self.assertIs(oc, omul)
 
     # Tests
     def test_add(self):
@@ -56,14 +56,14 @@ class TCollectionOperators(unittest.TestCase):
         for _ in range(len1):
             oc1 = itc1.Next()
             oadd = itadd.Next()
-            self.assertEqual(oc1, oadd)
+            self.assertIs(oc1, oadd)
 
         # Compare with elements of second collection
         itc2 = ROOT.TIter(c2)
         for _ in range(len2):
             oc2 = itc2.Next()
             oadd = itadd.Next()
-            self.assertEqual(oc2, oadd)
+            self.assertIs(oc2, oadd)
 
     def test_mul(self):
         c = self.create_tcollection()
@@ -94,7 +94,7 @@ class TCollectionOperators(unittest.TestCase):
 
         for _ in range(self.factor - 1):
             for o in subc:
-                self.assertEqual(o, it.Next())
+                self.assertIs(o, it.Next())
 
 
 if __name__ == '__main__':

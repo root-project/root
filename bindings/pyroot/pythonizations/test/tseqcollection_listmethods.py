@@ -32,27 +32,27 @@ class TSeqCollectionListMethods(unittest.TestCase):
         o1 = ROOT.TObject()
         sc.insert(1, o1)
         self.assertEqual(sc.GetEntries(), self.num_elems + 1)
-        self.assertEqual(sc.At(1), o1)
+        self.assertIs(sc.At(1), o1)
 
         # Insert with negative index (starts from end)
         o2 = ROOT.TObject()
         sc.insert(-1, o2)
         self.assertEqual(sc.GetEntries(), self.num_elems + 2)
-        self.assertEqual(sc.At(self.num_elems), o2)
+        self.assertIs(sc.At(self.num_elems), o2)
 
         # Insert with index beyond lower boundary.
         # Inserts at the beginning
         o3 = ROOT.TObject()
         sc.insert(-(self.num_elems + 3), o3)
         self.assertEqual(sc.GetEntries(), self.num_elems + 3)
-        self.assertEqual(sc.At(0), o3)
+        self.assertIs(sc.At(0), o3)
 
         # Insert with index beyond upper boundary.
         # Inserts at the end
         o4 = ROOT.TObject()
         sc.insert(self.num_elems + 4, o4)
         self.assertEqual(sc.GetEntries(), self.num_elems + 4)
-        self.assertEqual(sc.At(self.num_elems + 3), o4)
+        self.assertIs(sc.At(self.num_elems + 3), o4)
 
         # Clear before the added element might be garbage collected,
         # to avoid dangling pointer access.

@@ -44,7 +44,7 @@ class TCollectionListMethods(unittest.TestCase):
             itc.Next()
 
         # Check that `o` is indeed the last element
-        self.assertEqual(o, itc.Next())
+        self.assertIs(o, itc.Next())
 
         # Clear before the added element might be garbage collected,
         # to avoid dangling pointer access.
@@ -98,7 +98,7 @@ class TCollectionListMethods(unittest.TestCase):
         # Compare with elements of second collection
         itc2 = ROOT.TIter(c2)
         for _ in range(len2):
-            self.assertEqual(itc1.Next(), itc2.Next())
+            self.assertIs(itc1.Next(), itc2.Next())
 
     def test_count(self):
         c = ROOT.TList()
