@@ -67,13 +67,26 @@ public:
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
 
-   //---- OpenGL related stuff, required only with R__HAS_COCOA ----
-   virtual Double_t  GetOpenGLScalingFactor();
-   virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
-   virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
-   virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
-   virtual Handle_t  GetCurrentOpenGLContext();
-   virtual void      FlushOpenGLBuffer(Handle_t ctx);
+
+   //---- Old graphics interface -----
+
+           void      SetFillColor(Color_t cindex) override;
+           void      SetFillStyle(Style_t style) override;
+           void      SetLineColor(Color_t cindex) override;
+   virtual void      SetLineType(Int_t n, Int_t *dash);
+           void      SetLineStyle(Style_t linestyle) override;
+           void      SetLineWidth(Width_t width) override;
+           void      SetMarkerColor(Color_t cindex) override;
+           void      SetMarkerSize(Float_t markersize) override;
+           void      SetMarkerStyle(Style_t markerstyle) override;
+   virtual void      SetOpacity(Int_t percent);
+   virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
+           void      SetTextAlign(Short_t talign=11) override;
+           void      SetTextColor(Color_t cindex) override;
+   virtual Int_t     SetTextFont(char *fontname, ETextSetMode mode);
+           void      SetTextFont(Font_t fontnumber) override;
+   virtual void      SetTextMagnitude(Float_t mgn);
+           void      SetTextSize(Float_t textsize) override;
 
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
    virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
@@ -87,6 +100,25 @@ public:
                               ETextMode mode);
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text,
                               ETextMode mode);
+
+   //---- New graphics interface -----
+
+   virtual WinContext_t GetWindowContext(Int_t wid);
+   virtual void      SetAttFill(WinContext_t wctxt, const TAttFill &att);
+   virtual void      SetAttLine(WinContext_t wctxt, const TAttLine &att);
+   virtual void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att);
+   virtual void      SetAttText(WinContext_t wctxt, const TAttText &att);
+   virtual void      SetDrawMode(WinContext_t wctxt, EDrawMode mode);
+
+
+   //---- OpenGL related stuff, required only with R__HAS_COCOA ----
+   virtual Double_t  GetOpenGLScalingFactor();
+   virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
+   virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
+   virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
+   virtual Handle_t  GetCurrentOpenGLContext();
+   virtual void      FlushOpenGLBuffer(Handle_t ctx);
+
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
    EDrawMode         GetDrawMode() { return fDrawMode; }
@@ -129,23 +161,6 @@ public:
    virtual void      SetDoubleBufferOFF();
    virtual void      SetDoubleBufferON();
    virtual void      SetDrawMode(EDrawMode mode);
-           void      SetFillColor(Color_t cindex) override;
-           void      SetFillStyle(Style_t style) override;
-           void      SetLineColor(Color_t cindex) override;
-   virtual void      SetLineType(Int_t n, Int_t *dash);
-           void      SetLineStyle(Style_t linestyle) override;
-           void      SetLineWidth(Width_t width) override;
-           void      SetMarkerColor(Color_t cindex) override;
-           void      SetMarkerSize(Float_t markersize) override;
-           void      SetMarkerStyle(Style_t markerstyle) override;
-   virtual void      SetOpacity(Int_t percent);
-   virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
-           void      SetTextAlign(Short_t talign=11) override;
-           void      SetTextColor(Color_t cindex) override;
-   virtual Int_t     SetTextFont(char *fontname, ETextSetMode mode);
-           void      SetTextFont(Font_t fontnumber) override;
-   virtual void      SetTextMagnitude(Float_t mgn);
-           void      SetTextSize(Float_t textsize) override;
    virtual void      Sync(Int_t mode);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);

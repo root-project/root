@@ -27,6 +27,7 @@ typedef ULongptr_t         Handle_t;     ///< Generic resource handle
 typedef Handle_t           Display_t;    ///< Display handle
 typedef Handle_t           Visual_t;     ///< Visual handle
 typedef Handle_t           Window_t;     ///< Window handle
+typedef Handle_t           WinContext_t; ///< Window drawing context
 typedef Handle_t           Pixmap_t;     ///< Pixmap handle
 typedef Handle_t           Drawable_t;   ///< Drawable handle
 typedef Handle_t           Region_t;     ///< Region handle
