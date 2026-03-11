@@ -524,7 +524,6 @@ class TestADVANCEDCPP:
         r4 = r1.m_other
         assert r3 is r4
 
-        assert r3 == r2
         assert r3 is r2
 
         r3.extra = 42
@@ -738,7 +737,9 @@ class TestADVANCEDCPP:
         assert type(o) != type(cppjit.gbl.g_abstract_ptr)
         cppjit.gbl.g_abstract_ptr = o
         assert type(o) != type(cppjit.gbl.g_abstract_ptr)
-        assert cppjit.gbl.g_abstract_ptr == o
+        # the classes have no C++ equality operator, so the proxies have to be
+        # compared by address explicitly
+        assert cppjit.addressof(cppjit.gbl.g_abstract_ptr) == cppjit.addressof(o)
         cppjit.gbl.g_abstract_ptr = cppjit.nullptr
 
         cppjit.cppexec("std::vector<int>* gtestv1 = nullptr;")
