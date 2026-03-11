@@ -5,9 +5,4 @@ if(pyroot)
                       COPY_TO_BUILDDIR Pythonizables.C Pythonizables.h
                       PRECMD ${ROOT_root_CMD} -b -q -e .L\ Pythonizables.C+)
   endif()
-
-  ROOTTEST_ADD_TEST(smartptr
-                    MACRO PyROOT_smartptrtest.py
-                    COPY_TO_BUILDDIR SmartPtr.C SmartPtr.h
-                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ SmartPtr.C+)
 endif()

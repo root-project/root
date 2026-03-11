@@ -355,6 +355,20 @@ class TestClassPYTHONIZATION:
 
         assert cppyy.gbl.pyzables.WithCallback2.klass_name == 'pyzables::WithCallback3'
 
+    def test10_shared_ptr_reset(self):
+        """Test for https://its.cern.ch/jira/browse/ROOT-10245.
+
+        Checks that smart pointer types are Pythonized with the special
+        __smartptr__ member that can also be used to reset the underlying smart
+        pointer.
+        """
+        import cppyy
+
+        optr = cppyy.gbl.std.make_shared["std::string"]("hello smart pointer")
+        o2 = cppyy.gbl.std.string()
+        cppyy._backend.SetOwnership(o2, False)  # This object will be owned by the smart pointer
+        optr.__smartptr__().reset(o2)
+        assert optr == o2
 
 ## actual test run
 if __name__ == "__main__":
