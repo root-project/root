@@ -38,7 +38,7 @@ class TIterIterator(unittest.TestCase):
         itc1 = ROOT.TIter(c)
         itc2 = ROOT.TIter(c)
         for _ in range(c.GetEntries()):
-            self.assertEqual(next(itc1), itc2.Next())
+            self.assertIs(next(itc1), itc2.Next())
 
     def test_for_loop_syntax(self):
         # Somehow redundant, but good to test with real syntax
@@ -47,7 +47,7 @@ class TIterIterator(unittest.TestCase):
         itc1 = ROOT.TIter(c)
         itc2 = ROOT.TIter(c)
         for elem1, elem2 in zip(itc1, itc2):
-            self.assertEqual(elem1, elem2)
+            self.assertIs(elem1, elem2)
 
 
 if __name__ == '__main__':

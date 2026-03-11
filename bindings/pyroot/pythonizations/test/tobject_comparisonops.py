@@ -109,12 +109,14 @@ class TObjectComparisonOps(unittest.TestCase):
         l1 = [ ROOT.TUrl(str(i)) for i in range(self.num_elems) ]
         l2 = list(reversed(l1))
 
-        self.assertNotEqual(l1, l2)
+        for i in range(self.num_elems):
+            self.assertIs(l1[i], l2[self.num_elems - 1 - i])
 
         # Test that comparison operators enable list sorting
         l2.sort()
 
-        self.assertEqual(l1, l2)
+        for e1, e2 in zip(l1, l2):
+            self.assertIs(e1, e2)
 
 
 if __name__ == '__main__':

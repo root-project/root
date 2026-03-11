@@ -32,13 +32,13 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Get items
         it = ROOT.TIter(sc)
         for i in range(self.num_elems):
-            self.assertEqual(it.Next(), sc[i])
+            self.assertIs(it.Next(), sc[i])
 
         # Get items, negative indices
         it2 = ROOT.TIter(sc)
         neg_idcs = [ -i-1 for i in reversed(range(self.num_elems)) ]
         for i in neg_idcs:
-            self.assertEqual(it2.Next(), sc[i])
+            self.assertIs(it2.Next(), sc[i])
 
         # Check invalid index cases
         with self.assertRaises(IndexError):
@@ -56,32 +56,32 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # All items
         slice1 = sc[:]
         for i in range(slice1.GetEntries()):
-            self.assertEqual(sc[i], slice1[i])
+            self.assertIs(sc[i], slice1[i])
 
         # First two items
         slice2 = sc[0:2]
-        self.assertEqual(sc[0], slice2[0])
-        self.assertEqual(sc[1], slice2[1])
+        self.assertIs(sc[0], slice2[0])
+        self.assertIs(sc[1], slice2[1])
 
         # Last two items
         slice3 = sc[-2:]
-        self.assertEqual(sc[1], slice3[0])
-        self.assertEqual(sc[2], slice3[1])
+        self.assertIs(sc[1], slice3[0])
+        self.assertIs(sc[2], slice3[1])
 
         # First and third items
         slice4 = sc[0::2]
-        self.assertEqual(sc[0], slice4[0])
-        self.assertEqual(sc[2], slice4[1])
+        self.assertIs(sc[0], slice4[0])
+        self.assertIs(sc[2], slice4[1])
 
         # All items, reverse order
         slice5 = sc[::-1]
         for i in range(slice5.GetEntries()):
-            self.assertEqual(sc[i], slice5[self.num_elems - 1 - i])
+            self.assertIs(sc[i], slice5[self.num_elems - 1 - i])
 
         # First and third items, reverse order
         slice6 = sc[::-2]
-        self.assertEqual(sc[0], slice6[1])
-        self.assertEqual(sc[2], slice6[0])
+        self.assertIs(sc[0], slice6[1])
+        self.assertIs(sc[2], slice6[0])
 
         # Step cannot be zero
         with self.assertRaises(ValueError):
@@ -100,7 +100,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Check previously set items
         it = ROOT.TIter(sc)
         for i in range(self.num_elems):
-            self.assertEqual(it.Next(), l1[i])
+            self.assertIs(it.Next(), l1[i])
 
         # Set items, negative indices
         l2 = []
@@ -113,7 +113,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Check previously set items
         it2 = ROOT.TIter(sc)
         for i in range(self.num_elems):
-            self.assertEqual(it2.Next(), l2[i])
+            self.assertIs(it2.Next(), l2[i])
 
         # Check invalid index cases
         with self.assertRaises(IndexError):
@@ -137,7 +137,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         sc1[:] = sc2
         self.assertEqual(sc1.GetEntries(), self.num_elems)
         for i in range(self.num_elems):
-            self.assertEqual(sc1[i], sc2[i])
+            self.assertIs(sc1[i], sc2[i])
 
         # Append items
         sc1 = self.create_tseqcollection()
@@ -148,10 +148,10 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         self.assertEqual(sc1.GetEntries(), 2 * self.num_elems)
         i = 0
         for elem in l1:  # first half
-            self.assertEqual(sc1[i], elem)
+            self.assertIs(sc1[i], elem)
             i += 1
         for elem in sc2:  # second half
-            self.assertEqual(sc1[i], elem)
+            self.assertIs(sc1[i], elem)
             i += 1
 
         # Assign second item.
@@ -163,9 +163,9 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         sc3[1:2] = l2
 
         self.assertEqual(sc3.GetEntries(), self.num_elems)
-        self.assertEqual(sc3[0], l3[0])
-        self.assertEqual(sc3[1], l2[0])
-        self.assertEqual(sc3[2], l3[2])
+        self.assertIs(sc3[0], l3[0])
+        self.assertIs(sc3[1], l2[0])
+        self.assertIs(sc3[2], l3[2])
 
         # Assign second and third items to just one item.
         # This tests that the third item is removed
@@ -176,8 +176,8 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         sc4[1:3] = l4
 
         self.assertEqual(sc4.GetEntries(), self.num_elems - 1)
-        self.assertEqual(sc4[0], l5[0])
-        self.assertEqual(sc4[1], l4[0])
+        self.assertIs(sc4[0], l5[0])
+        self.assertIs(sc4[1], l4[0])
 
         # Assign with step
         sc5 = self.create_tseqcollection()
@@ -188,17 +188,17 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         sc5[::2] = l6
 
         self.assertEqual(sc5.GetEntries(), self.num_elems)
-        self.assertEqual(sc5[0], l6[0])
-        self.assertEqual(sc5[1], o)
-        self.assertEqual(sc5[2], l6[1])
+        self.assertIs(sc5[0], l6[0])
+        self.assertIs(sc5[1], o)
+        self.assertIs(sc5[2], l6[1])
 
         # Assign with step (start from end)
         sc5[::-2] = l6
 
         self.assertEqual(sc5.GetEntries(), self.num_elems)
-        self.assertEqual(sc5[0], l6[1])
-        self.assertEqual(sc5[1], o)
-        self.assertEqual(sc5[2], l6[0])
+        self.assertIs(sc5[0], l6[1])
+        self.assertIs(sc5[1], o)
+        self.assertIs(sc5[2], l6[0])
 
         # Step cannot be zero
         sc6 = self.create_tseqcollection()
@@ -231,7 +231,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         it = ROOT.TIter(sc)
         for _ in range(2):
-            self.assertEqual(it.Next(), o1)
+            self.assertIs(it.Next(), o1)
 
         # Check invalid index cases
         with self.assertRaises(IndexError):
@@ -257,28 +257,28 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         del sc2[self.num_elems:]
         self.assertEqual(sc2.GetEntries(), self.num_elems)
         for el1, el2 in zip(sc2, l2):
-            self.assertEqual(el1, el2)
+            self.assertIs(el1, el2)
 
         # Delete first two items
         sc3 = self.create_tseqcollection()
         o = sc3[2]
         del sc3[0:2]
         self.assertEqual(sc3.GetEntries(), 1)
-        self.assertEqual(sc3[0], o)
+        self.assertIs(sc3[0], o)
 
         # Delete first and third items
         sc4 = self.create_tseqcollection()
         o = sc4[1]
         del sc4[::2]
         self.assertEqual(sc4.GetEntries(), 1)
-        self.assertEqual(sc4[0], o)
+        self.assertIs(sc4[0], o)
 
         # Delete first and third items (start from end)
         sc5 = self.create_tseqcollection()
         o = sc5[1]
         del sc5[::-2]
         self.assertEqual(sc5.GetEntries(), 1)
-        self.assertEqual(sc5[0], o)
+        self.assertIs(sc5[0], o)
 
         # Step cannot be zero
         sc6 = self.create_tseqcollection()
