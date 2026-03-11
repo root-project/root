@@ -91,7 +91,7 @@ static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
 static GC *gGCtext = &gGClist[kGCtext];  // Text
 static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
 static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
-static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
+// static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
 
 static GC gGCecho;                 // Input echo
 
@@ -516,20 +516,6 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 
    XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth,
              gTws->fHeight, xpos, ypos);
-   XFlush((Display*)fDisplay);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy area of current window in the pixmap pix.
-
-void TGX11::CopyWindowtoPixmap(Drawable *pix, int xpos, int ypos )
-{
-   Window root;
-   int xx, yy;
-   unsigned int ww, hh, border, depth;
-
-   XGetGeometry((Display*)fDisplay, *pix, &root, &xx, &yy, &ww, &hh, &border, &depth);
-   XCopyArea((Display*)fDisplay, gCws->fDrawing, *pix, *gGCpxmp, xpos, ypos, ww, hh, 0, 0);
    XFlush((Display*)fDisplay);
 }
 
@@ -1168,11 +1154,6 @@ Int_t TGX11::OpenDisplay(void *disp)
    } else {
       Error("OpenDisplay", "cannot get GC values");
    }
-
-   // Turn-off GraphicsExpose and NoExpose event reporting for the pixmap
-   // manipulation GC, this to prevent these events from being stacked up
-   // without ever being processed and thereby wasting a lot of memory.
-   XSetGraphicsExposures((Display*)fDisplay, *gGCpxmp, False);
 
    // Create input echo graphic context
    XGCValues echov;
