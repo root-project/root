@@ -63,6 +63,8 @@ struct XWindow_t {
    ULong_t *fNewColors;           ///< new image colors (after processing)
    Int_t    fNcolors;             ///< number of different colors
    Bool_t   fShared;              ///< notify when window is shared
+   void    *fGClist;              ///< list of GC object, individual for each window
+   TVirtualX::EDrawMode fDrawMode; ///< current draw mode
 };
 
 /// Description of a X11 color.
@@ -234,6 +236,14 @@ public:
    void      DrawPolyMarker(Int_t n, TPoint *xy) override;
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
+
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+   void      SetDrawMode(WinContext_t wctxt, EDrawMode mode) override;
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
