@@ -126,6 +126,56 @@ unconditionally. It is only available for polymorphic base
 classes, which is why the `Base` class in the example has a virtual destructor.
 
 
+### Equality comparisons
+
+The `==` and `!=` operators on C++ object proxies follow C++ semantics: they
+call the `operator==` or `operator!=` that the C++ class provides. If only one
+of the two operators is defined, the other one is derived from it by negation.
+
+If the class provides no equality operator at all, the comparison is **not**
+silently answered by comparing the addresses of the wrapped C++ objects.
+Instead, a `TypeError` is raised:
+
+~~~{.py}
+ROOT.gInterpreter.Declare("class MyClass {};")
+
+a = ROOT.MyClass()
+b = ROOT.MyClass()
+
+a == b  # raises TypeError
+~~~
+
+An address comparison would be misleading here, because `a == b` looks like a
+comparison by value even though the C++ class does not define one. Note that
+raising is also what protects you from Python's own fallback: if the proxy
+declared the comparison unsupported, Python would silently compare object
+identity, just like the `is` operator does.
+
+There are three ways out if you hit this error:
+
+1. Define an `operator==` for your C++ class, if comparing by value is
+   meaningful for it. This is the recommended solution, since the class then
+   behaves consistently in C++ and in Python.
+2. Implement `__eq__` and `__ne__` from Python, for example with a custom
+   pythonization as explained in the next section.
+3. If you want to know whether two proxies refer to the same C++ object,
+   compare their addresses explicitly:
+   ~~~{.py}
+   ROOT.addressof(a) == ROOT.addressof(b)
+   ~~~
+
+A few special cases are worth pointing out:
+
+  * Comparing a proxy with an object that is not a C++ proxy is left to Python,
+    so for example `a == 1` is `False` and `a != 1` is `True`.
+  * Two proxies of the *same* type are still compared by address if at least
+    one of them wraps a `nullptr`, because comparing by value is impossible in
+    that case. If the types differ, a `TypeError` is raised, even though C++
+    would allow the comparison for related types.
+  * Comparing a null proxy to `None` raises a `TypeError` as well. Use the
+    truth value of the proxy (`if not a: ...`) to check for a null pointer, and
+    `a is None` to check for Python's `None`.
+
 ### Custom pythonizations for C++ user classes by example
 
 This example shows how to use the `@pythonization` decorator to add extra
