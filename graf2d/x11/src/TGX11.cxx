@@ -115,7 +115,17 @@ struct XWindow_t {
    Int_t    fNcolors = 0;             ///< number of different colors
    Bool_t   fShared = 0;              ///< notify when window is shared
    GC       fGClist[kMAXGC];          ///< list of GC object, individual for each window
-   TVirtualX::EDrawMode fDrawMode; ///< current draw mode
+   TVirtualX::EDrawMode fDrawMode = TVirtualX::kCopy;    ///< current draw mode
+   TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
+   Int_t     lineWidth = 0;           ///< X11 line width
+   Int_t     lineStyle = LineSolid;   ///< X11 line style
+   std::vector<char> dashList;        ///< X11 array for dashes
+   Int_t     dashLength = 0;          ///< total length of dashes
+   Int_t     dashOffset = 0;          ///< current dash offset
+   TAttFill  fAttFill = {-1, -1};     ///< current fill attributes
+   Int_t     fillHollow = 0;          ///< X11 fill method
+   Int_t     fillFasi = 0;            ///< selected fasi pattern
+   Pixmap    fillPattern = 0;         ///< current initialized fill pattern
 };
 
 
@@ -319,6 +329,9 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
       tgt->fShared       = src->fShared;
       for (int i = 0; i < kMAXGC; ++i)
          tgt->fGClist[i]    = src->fGClist[i];
+      tgt->fDrawMode     = src->fDrawMode;
+      tgt->fAttLine      = src->fAttLine;
+      tgt->fAttFill      = src->fAttFill;
    }
 
    for (int i = 0; i < kNumCursors; i++)
@@ -486,6 +499,11 @@ void TGX11::CloseWindow()
 
    for (int i = 0; i < kMAXGC; ++i)
       XFreeGC((Display*)fDisplay, gCws->fGClist[i]);
+
+   if (gCws->fillPattern != 0) {
+      XFreePixmap((Display*)fDisplay, gCws->fillPattern);
+      gCws->fillPattern = 0;
+   }
 
    gCws->fOpen = 0;
 
@@ -3726,7 +3744,48 @@ void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt)
       return;
-   (void) att;
+
+   Int_t cindex = att.GetFillColor();
+   if (!gStyle->GetFillColor() && cindex > 1)
+      cindex = 0;
+   if (cindex >= 0)
+      SetColor(&ctxt->fGClist[kGCfill], Int_t(cindex));
+   ctxt->fAttFill.SetFillColor(cindex);
+
+   Int_t style = att.GetFillStyle() / 1000;
+   Int_t fasi  = att.GetFillStyle() % 1000;
+   Int_t stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
+   ctxt->fAttFill.SetFillStyle(style * 1000 + fasi);
+
+   switch (style) {
+      case 1:         // solid
+         ctxt->fillHollow = 0;
+         XSetFillStyle((Display*)fDisplay, ctxt->fGClist[kGCfill], FillSolid);
+         break;
+
+      case 2:         // pattern
+         ctxt->fillHollow = 1;
+         break;
+
+      case 3:         // hatch
+         ctxt->fillHollow = 0;
+         XSetFillStyle((Display*)fDisplay, ctxt->fGClist[kGCfill], FillStippled);
+
+         if (stn != ctxt->fillFasi) {
+            if (ctxt->fillPattern != 0)
+               XFreePixmap((Display*)fDisplay, ctxt->fillPattern);
+
+            ctxt->fillPattern = XCreateBitmapFromData((Display*)fDisplay, fRootWin,
+                                                      (const char*)gStipples[stn], 16, 16);
+
+            XSetStipple((Display*)fDisplay, ctxt->fGClist[kGCfill], ctxt->fillPattern);
+            ctxt->fillFasi = stn;
+         }
+         break;
+
+      default:
+         ctxt->fillHollow = 1;
+   }
 }
 
 void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
@@ -3734,7 +3793,60 @@ void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt)
       return;
-   (void) att;
+
+   if (ctxt->fAttLine.GetLineStyle() != att.GetLineStyle()) { //set style index only if different
+      if (att.GetLineStyle() <= 1)
+         ctxt->dashList.clear();
+      else if (att.GetLineStyle() == 2)
+         ctxt->dashList = { 3, 3 };
+      else if (att.GetLineStyle() == 3)
+         ctxt->dashList = { 1, 2 };
+      else if (att.GetLineStyle() == 4) {
+         ctxt->dashList = { 3, 4, 1, 4} ;
+      } else {
+         TString st = (TString)gStyle->GetLineStyleString(att.GetLineStyle());
+         auto tokens = st.Tokenize(" ");
+         Int_t nt = tokens->GetEntries();
+         ctxt->dashList.resize(nt);
+         for (Int_t j = 0; j < nt; ++j) {
+            Int_t it;
+            sscanf(tokens->At(j)->GetName(), "%d", &it);
+            ctxt->dashList[j] = (Int_t) (it/4);
+         }
+         delete tokens;
+      }
+      ctxt->dashLength = 0;
+      for (auto elem : ctxt->dashList)
+         ctxt->dashLength += elem;
+      ctxt->dashOffset = 0;
+      ctxt->lineStyle = ctxt->dashList.size() == 0 ? LineSolid : LineOnOffDash;
+   }
+
+   if (ctxt->fAttLine.GetLineWidth() != att.GetLineWidth()) {
+      ctxt->lineWidth = att.GetLineWidth();
+      if (ctxt->lineStyle == LineSolid) {
+         if (ctxt->lineWidth == 1)
+            ctxt->lineWidth = 0;
+      } else {
+         if (ctxt->lineWidth == 0)
+            ctxt->lineWidth = 1;
+      }
+   }
+
+  if (ctxt->lineWidth >= 0) {
+      XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCline], ctxt->lineWidth,
+                          ctxt->lineStyle, gCapStyle, gJoinStyle);
+      if (ctxt->lineStyle == LineOnOffDash)
+         XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->lineWidth,
+                             ctxt->lineStyle, gCapStyle, gJoinStyle);
+   }
+
+   if (att.GetLineColor() >= 0) {
+      SetColor(&ctxt->fGClist[kGCline], (Int_t) att.GetLineColor());
+      SetColor(&ctxt->fGClist[kGCdash], (Int_t) att.GetLineColor());
+   }
+
+   ctxt->fAttLine = att;
 }
 
 void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
