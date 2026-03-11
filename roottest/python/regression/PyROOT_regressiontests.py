@@ -360,7 +360,9 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
 
       b = a.begin()
       e = a.end()
-      self.assertNotEqual( a, e )
+      # This comparison is forbidden by the type system
+      with self.assertRaises(TypeError):
+          a == e
 
       b.__preinc__()
       self.assertEqual( b, e )

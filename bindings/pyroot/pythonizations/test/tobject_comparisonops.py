@@ -19,7 +19,7 @@ class TObjectComparisonOps(unittest.TestCase):
         o = ROOT.TObject()
 
         # TObject::IsEqual compares internal address
-        self.assertTrue(o == o)
+        self.assertTrue(o.IsEqual(o))
 
         # Test comparison with no TObject
         self.assertFalse(o == 1)
@@ -31,7 +31,7 @@ class TObjectComparisonOps(unittest.TestCase):
         o = ROOT.TObject()
 
         # TObject::IsEqual compares internal address
-        self.assertFalse(o != o)
+        self.assertFalse(not o.IsEqual(o))
 
         # Test comparison with no TObject
         self.assertTrue(o != 1)
