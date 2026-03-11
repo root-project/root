@@ -81,10 +81,7 @@ add_subdirectory(rint)
 add_subdirectory(testsupport)
 add_subdirectory(textinput)
 add_subdirectory(thread)
-add_subdirectory(zip)
-add_subdirectory(lzma)
-add_subdirectory(lz4)
-add_subdirectory(zstd)
+add_subdirectory(compression)
 
 add_subdirectory(os)
 

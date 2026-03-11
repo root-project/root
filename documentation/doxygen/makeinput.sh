@@ -29,7 +29,7 @@ echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
 echo "        ../../core/os/unix/              \\" >> Doxyfile_INPUT
 echo "        ../../core/os/winnt/             \\" >> Doxyfile_INPUT
 echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
-echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
+echo "        ../../core/compression/zip/inc/Compression.h \\" >> Doxyfile_INPUT
 echo "        ../../geom/                      \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
@@ -77,7 +77,7 @@ echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__
 echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/compression/lzma/     \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
