@@ -434,10 +434,10 @@ void TGX11::ClearWindow()
       XClearWindow((Display*)fDisplay, gCws->fDrawing);
       XFlush((Display*)fDisplay);
    } else {
-      SetColor(gGCpxmp, 0);
-      XFillRectangle((Display*)fDisplay, gCws->fDrawing, *gGCpxmp,
+      SetColor(&gCws->fGClist[kGCpxmp], 0);
+      XFillRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCpxmp],
                      0, 0, gCws->fWidth, gCws->fHeight);
-      SetColor(gGCpxmp, 1);
+      SetColor(&gCws->fGClist[kGCpxmp], 1);
    }
 }
 
@@ -514,7 +514,7 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 {
    gTws = fWindows[wid].get();
 
-   XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, *gGCpxmp, 0, 0, gTws->fWidth,
+   XCopyArea((Display*)fDisplay, gTws->fDrawing, gCws->fDrawing, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth,
              gTws->fHeight, xpos, ypos);
    XFlush((Display*)fDisplay);
 }
@@ -2985,7 +2985,7 @@ void TGX11::SetOpacity(Int_t percent)
    }
 
    // put image back in pixmap on server
-   XPutImage((Display*)fDisplay, gCws->fDrawing, *gGCpxmp, image, 0, 0, 0, 0,
+   XPutImage((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCpxmp], image, 0, 0, 0, 0,
              gCws->fWidth, gCws->fHeight);
    XFlush((Display*)fDisplay);
 
@@ -3295,7 +3295,7 @@ void TGX11::UpdateWindow(int mode)
 {
    if (gCws->fDoubleBuffer) {
       XCopyArea((Display*)fDisplay, gCws->fDrawing, gCws->fWindow,
-                *gGCpxmp, 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
+                gCws->fGClist[kGCpxmp], 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
    }
    if (mode == 1) {
       XFlush((Display*)fDisplay);
