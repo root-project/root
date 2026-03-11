@@ -379,6 +379,57 @@ void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get window drawing context
+/// Should remain valid until window exists
+
+WinContext_t TVirtualX::GetWindowContext(Int_t /* wid */)
+{
+   return (WinContext_t) 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes for specified window
+
+void TVirtualX::SetAttFill(WinContext_t /* wctxt */, const TAttFill & /* att */)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes for specified window
+
+void TVirtualX::SetAttLine(WinContext_t /* wctxt */, const TAttLine & /* att */)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker attributes for specified window
+
+void TVirtualX::SetAttMarker(WinContext_t /* wctxt */, const TAttMarker & /* att */)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes for specified window
+
+void TVirtualX::SetAttText(WinContext_t /* wctxt */, const TAttText & /* att */)
+{
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set window draw mode
+
+void TVirtualX::SetDrawMode(WinContext_t /* wctxt */, EDrawMode /* mode */)
+{
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Executes the command "code" coming from the other threads (Win32)
 
 UInt_t TVirtualX::ExecCommand(TGWin32Command * /*code*/)
