@@ -289,7 +289,7 @@ classReturn()
 
 class Test2* classReturnPtr() { return nullptr; }
 classReturnPtr()
-// CHECK: (Test2 *) nullptr
+// CHECK: (class Test2 *) nullptr
 
 int Ref = 42;
 const int& cIntRef(const int &val) {
