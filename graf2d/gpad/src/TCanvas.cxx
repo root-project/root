@@ -1126,16 +1126,14 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCanvas::FeedbackMode(Bool_t set)
 {
-   if (IsWeb())
+   if (IsWeb() || (fCanvasID == -1))
       return;
 
-   if (set) {
-      SetDoubleBuffer(0);             // turn off double buffer mode
-      gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
-   } else {
-      SetDoubleBuffer(1);             // turn on double buffer mode
-      gVirtualX->SetDrawMode(TVirtualX::kCopy); // set drawing mode back to normal (copy) mode
-   }
+   if (fPainter)
+      fPainter->SelectDrawable(fCanvasID);
+   gVirtualX->SetDrawMode(set ? TVirtualX::kInvert : TVirtualX::kCopy);  // set the drawing mode to XOR mode
+
+   SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
 }
 
 ////////////////////////////////////////////////////////////////////////////////
