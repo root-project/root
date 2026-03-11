@@ -206,6 +206,9 @@ public:
 
   void createInternalPlotVarClone();
 
+  /// Accessor to the TH1 histogram that is the basis for drawing the content.
+  TH1 *hist() const { return _hist; }
+
 protected:
 
   class DrawOpt {
