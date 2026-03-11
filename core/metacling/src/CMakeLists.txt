@@ -76,7 +76,7 @@ set_target_properties(MetaCling PROPERTIES
 
 if(MSVC)
    target_include_directories(MetaCling PRIVATE
-      ${CMAKE_SOURCE_DIR}/core/winnt/inc
+      ${CMAKE_SOURCE_DIR}/core/os/winnt/inc
    )
    set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
