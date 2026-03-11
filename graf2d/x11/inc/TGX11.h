@@ -70,14 +70,12 @@ private:
    void      *fXEvent;                ///< Current native (X11) event
 
    Int_t  AddWindowHandle();
-   void   ClearPixmap(Drawable *pix);
    void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
    void   FindBestVisual();
    void   FindUsableVisual(RXVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
-   void   RemovePixmap(Drawable *pix);
    void   SetColor(void *gc, Int_t ci);
    void   SetFillStyleIndex(Int_t style, Int_t fasi);
    void   SetInput(Int_t inp);
