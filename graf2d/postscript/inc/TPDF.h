@@ -47,28 +47,28 @@ protected:
    Int_t               fObjPosSize{0};   ///< Real size of fObjPos
    Int_t               fNbObj{0};        ///< Number of objects
    Int_t               fNbPage;          ///< Number of pages
+   Int_t               fCurrentPage;     ///< Object number of the current page
    std::vector<int>    fPageObjects;     ///< Page object numbers
    std::vector<std::string> fUrls;       ///< URLs
-   std::vector<float>  fRectX1;          ///<
-   std::vector<float>  fRectY1;          ///< /Rect coordinates for url annots
-   std::vector<float>  fRectX2;          ///<
-   std::vector<float>  fRectY2;          ///<
+   std::vector<float>  fRectX1;          ///< x1 /Rect coordinates for url annots
+   std::vector<float>  fRectY1;          ///< y1 /Rect coordinates for url annots
+   std::vector<float>  fRectX2;          ///< x2 /Rect coordinates for url annots
+   std::vector<float>  fRectY2;          ///< y2 /Rect coordinates for url annots
+   Bool_t              fObjectIsOpen;    ///< True if an object is opened
    Bool_t              fPageNotEmpty;    ///< True if the current page is not empty
    Bool_t              fCompress;        ///< True when fBuffer must be compressed
    Bool_t              fRange;           ///< True when a range has been defined
+   Bool_t              fUrl;             ///< True when the text has an URL
+   Int_t               fNbUrl;           ///< Number of URLs in the current page
+   Double_t            fA;               ///< "a" value of the Current Transformation Matrix (CTM)
+   Double_t            fB;               ///< "b" value of the Current Transformation Matrix (CTM)
+   Double_t            fC;               ///< "c" value of the Current Transformation Matrix (CTM)
+   Double_t            fD;               ///< "d" value of the Current Transformation Matrix (CTM)
+   Double_t            fE;               ///< "e" value of the Current Transformation Matrix (CTM)
+   Double_t            fF;               ///< "f" value of the Current Transformation Matrix (CTM)
 
    static Int_t        fgLineJoin;       ///< Appearance of joining lines
    static Int_t        fgLineCap;        ///< Appearance of line caps
-   static Int_t        fgCurrentPage;    ///< Object number of the current page
-   static Int_t        fgNbUrl;          ///< Number of URL in the page
-   static Bool_t       fgObjectIsOpen;   ///< Indicates if an object is open
-   static Bool_t       fgHasUrl;         ///< Indicates the text has an URL
-   static Double_t     fgA;              ///<
-   static Double_t     fgB;              ///<
-   static Double_t     fgC;              ///< Current Transformation Matrix (CTM)
-   static Double_t     fgD;              ///<
-   static Double_t     fgE;              ///<
-   static Double_t     fgF;              ///<
 
 
 public:

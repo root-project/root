@@ -96,17 +96,7 @@ const Int_t kNumberOfFonts = 15;
 
 Int_t  TPDF::fgLineJoin     = 0;
 Int_t  TPDF::fgLineCap      = 0;
-Int_t  TPDF::fgCurrentPage  = kObjFirstPage;
-Int_t  TPDF::fgNbUrl        = 1;
-Bool_t TPDF::fgObjectIsOpen = kFALSE;
 
-Bool_t TPDF::fgHasUrl = kFALSE;
-Double_t TPDF::fgA = 1;
-Double_t TPDF::fgB = 0;
-Double_t TPDF::fgC = 0;
-Double_t TPDF::fgD = 1;
-Double_t TPDF::fgE = 0;
-Double_t TPDF::fgF = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PDF constructor
@@ -116,6 +106,7 @@ TPDF::TPDF() : TVirtualPS()
    fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
+   fObjectIsOpen    = kFALSE;
    gVirtualPS       = this;
    fRed             = 0.;
    fGreen           = 0.;
@@ -129,7 +120,16 @@ TPDF::TPDF() : TVirtualPS()
    fStartStream     = 0;
    fLineScale       = 0.;
    fNbPage          = 0;
+   fCurrentPage     = kObjFirstPage;
    fRange           = kFALSE;
+   fUrl             = kFALSE;
+   fNbUrl           = 1;
+   fA               = 1.;
+   fB               = 0.;
+   fC               = 0.;
+   fD               = 1.;
+   fE               = 0.;
+   fF               = 0.;
    SetTitle("PDF");
 }
 
@@ -147,6 +147,7 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
+   fObjectIsOpen    = kFALSE;
    fRed             = 0.;
    fGreen           = 0.;
    fBlue            = 0.;
@@ -159,8 +160,16 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fStartStream     = 0;
    fLineScale       = 0.;
    fNbPage          = 0;
+   fCurrentPage     = kObjFirstPage;
    fRange           = kFALSE;
-   SetTitle("PDF");
+   fUrl             = kFALSE;
+   fNbUrl           = 1;
+   fA               = 1.;
+   fB               = 0.;
+   fC               = 0.;
+   fD               = 1.;
+   fE               = 0.;
+   fF               = 0.;   SetTitle("PDF");
    Open(fname, wtype);
 }
 
@@ -215,11 +224,11 @@ void TPDF::Close(Option_t *)
    PrintStr("endstream@");
    Int_t streamLength = fNByte-fStartStream-10;
    EndObject();
-   NewObject(fgCurrentPage+2);
+   NewObject(fCurrentPage+2);
    WriteInteger(streamLength, false);
    PrintStr("@");
    EndObject();
-   NewObject(fgCurrentPage+3);
+   NewObject(fCurrentPage+3);
    PrintStr("<<@");
    if (!strstr(GetTitle(),"PDF")) {
       PrintStr("/Title (");
@@ -231,7 +240,7 @@ void TPDF::Close(Option_t *)
       PrintStr(")@");
    }
    PrintStr("/Dest [");
-   WriteInteger(fgCurrentPage);
+   WriteInteger(fCurrentPage);
    PrintStr(" 0 R /XYZ null null 0]@");
    PrintStr("/Parent");
    WriteInteger(kObjContents);
@@ -307,7 +316,7 @@ void TPDF::Close(Option_t *)
    EndObject();
 
    if (!fPageObjects.empty()) fPageObjects.clear();
-   if (!fUrls.empty()) fUrls.clear();
+   if (!fUrls.empty())   fUrls.clear();
    if (!fRectX1.empty()) fRectX1.clear();
    if (!fRectY1.empty()) fRectY1.clear();
    if (!fRectX2.empty()) fRectX2.clear();
@@ -1392,9 +1401,9 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
 void TPDF::EndObject()
 {
-   if (!fgObjectIsOpen)
+   if (!fObjectIsOpen)
       Warning("TPDF::EndObject", "No Object currently opened.");
-   fgObjectIsOpen = kFALSE;
+   fObjectIsOpen = kFALSE;
 
    PrintStr("endobj@");
 }
@@ -1456,9 +1465,9 @@ void TPDF::MoveTo(Double_t x, Double_t y)
 
 void TPDF::NewObject(Int_t n)
 {
-   if (fgObjectIsOpen)
+   if (fObjectIsOpen)
       Warning("TPDF::NewObject", "An Object is already open.");
-   fgObjectIsOpen = kTRUE;
+   fObjectIsOpen = kTRUE;
    if (!fObjPos || n >= fObjPosSize) {
       Int_t newN = TMath::Max(2*fObjPosSize,n+1);
       Int_t *saveo = new Int_t [newN];
@@ -1494,12 +1503,12 @@ void TPDF::NewPage()
    }
 
    fNbPage++;
-   fgA = 1;
-   fgB = 0;
-   fgC = 0;
-   fgD = 1;
-   fgE = 0;
-   fgF = 0;
+   fA = 1.;
+   fB = 0.;
+   fC = 0.;
+   fD = 1.;
+   fE = 0.;
+   fF = 0.;
 
    if (fNbPage>1) {
       // Close the currently opened page
@@ -1507,11 +1516,11 @@ void TPDF::NewPage()
       PrintStr("endstream@");
       Int_t streamLength = fNByte-fStartStream-10;
       EndObject();
-      NewObject(fgCurrentPage+2);
+      NewObject(fCurrentPage+2);
       WriteInteger(streamLength, false);
       PrintStr("@");
       EndObject();
-      NewObject(fgCurrentPage+3);
+      NewObject(fCurrentPage+3);
       PrintStr("<<@");
       if (!strstr(GetTitle(),"PDF")) {
          PrintStr("/Title (");
@@ -1523,14 +1532,14 @@ void TPDF::NewPage()
          PrintStr(")@");
       }
       PrintStr("/Dest [");
-      WriteInteger(fgCurrentPage);
+      WriteInteger(fCurrentPage);
       PrintStr(" 0 R /XYZ null null 0]@");
       PrintStr("/Parent");
       WriteInteger(kObjContents);
       PrintStr(" 0 R");
       PrintStr("@");
       PrintStr("/Next");
-      WriteInteger(fgCurrentPage+7+fgNbUrl);
+      WriteInteger(fCurrentPage+7+fNbUrl);
       PrintStr(" 0 R");
       PrintStr("@");
       if (fNbPage>2) {
@@ -1542,8 +1551,8 @@ void TPDF::NewPage()
       PrintStr(">>@");
       EndObject();
       WriteUrlObjects();
-      fgCurrentPage = fgCurrentPage+fgNbUrl+4; // object number of the next page
-      fgNbUrl = 1;
+      fCurrentPage = fCurrentPage+fNbUrl+4; // object number of the next page
+      fNbUrl = 1;
    }
 
    // Start a new page
@@ -1552,8 +1561,8 @@ void TPDF::NewPage()
    WriteInteger(fNbPage);
    PrintStr("@% ======================");
    PrintStr("@");
-   NewObject(fgCurrentPage);
-   fPageObjects.push_back(fgCurrentPage);
+   NewObject(fCurrentPage);
+   fPageObjects.push_back(fCurrentPage);
    PrintStr("<<@");
    PrintStr("/Type /Page@");
    PrintStr("@");
@@ -1626,21 +1635,21 @@ void TPDF::NewPage()
    PrintStr("@");
 
    PrintStr("/Contents");
-   WriteInteger(fgCurrentPage+1);
+   WriteInteger(fCurrentPage+1);
    PrintStr(" 0 R@");
 
    PrintStr("/Annots");
-   WriteInteger(fgCurrentPage+4);
+   WriteInteger(fCurrentPage+4);
    PrintStr(" 0 R");
    PrintStr("@");
 
    PrintStr(">>@");
    EndObject();
 
-   NewObject(fgCurrentPage+1);
+   NewObject(fCurrentPage+1);
    PrintStr("<<@");
    PrintStr("/Length");
-   WriteInteger(fgCurrentPage+2);
+   WriteInteger(fCurrentPage+2);
    PrintStr(" 0 R@");
    PrintStr("/Filter [/FlateDecode]@");
    PrintStr(">>@");
@@ -1777,6 +1786,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fObjPosSize = 0;
    fNbObj = 0;
    fNbPage = 0;
+   fUrl = kFALSE;
 
    PrintStr("%PDF-1.4@");
    PrintStr("%\342\343\317\323");
@@ -2301,7 +2311,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    // Symbol Italic tan(15) = .26794
    if (font == 15) WriteCM(1, 0, 0.26794, 1, 0, 0, kFALSE);
 
-   if (fgHasUrl) ComputeRect(chars, fontsize, a, b, c, d, e, f);
+   if (fUrl) ComputeRect(chars, fontsize, a, b, c, d, e, f);
 
    PrintStr(" BT");
 
@@ -2401,11 +2411,11 @@ void TPDF::Text(Double_t, Double_t, const wchar_t *)
 
 void TPDF::TextUrl(Double_t x, Double_t y, const char *chars, const char *url)
 {
-   fgHasUrl = kTRUE;
+   fUrl = kTRUE;
    Text(x, y, chars);
-   fgNbUrl++;
+   fNbUrl++;
    fUrls.push_back(url);
-   fgHasUrl = kFALSE;
+   fUrl = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2957,18 +2967,18 @@ void TPDF::WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, D
    // accumulate in CTM ---
    if (acc) {
       Double_t na, nb, nc, nd, ne, nf;
-      na  = fgA*a + fgC*b;
-      nb  = fgB*a + fgD*b;
-      nc  = fgA*c + fgC*d;
-      nd  = fgB*c + fgD*d;
-      ne  = fgA*e + fgC*f + fgE;
-      nf  = fgB*e + fgD*f + fgF;
-      fgA = na;
-      fgB = nb;
-      fgC = nc;
-      fgD = nd;
-      fgE = ne;
-      fgF = nf;
+      na = fA*a + fC*b;
+      nb = fB*a + fD*b;
+      nc = fA*c + fC*d;
+      nd = fB*c + fD*d;
+      ne = fA*e + fC*f + fE;
+      nf = fB*e + fD*f + fF;
+      fA = na;
+      fB = nb;
+      fC = nc;
+      fD = nd;
+      fE = ne;
+      fF = nf;
    }
 }
 
@@ -2978,17 +2988,17 @@ void TPDF::WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, D
 void TPDF::WriteUrlObjects()
 {
    int i;
-   NewObject(fgCurrentPage+4);
+   NewObject(fCurrentPage+4);
    PrintStr("@");
    PrintStr("[");
-   for (i=0; i<fgNbUrl-1; i++) {
-      WriteInteger(fgCurrentPage+5+i);
+   for (i=0; i<fNbUrl-1; i++) {
+      WriteInteger(fCurrentPage+5+i);
       PrintStr(" 0 R");
    }
    PrintStr(" ]@");
    EndObject();
-   for (i=0; i<fgNbUrl-1; i++) {
-      NewObject(fgCurrentPage+5+i);
+   for (i=0; i<fNbUrl-1; i++) {
+      NewObject(fCurrentPage+5+i);
       PrintStr("<<@");
       PrintStr("/Type /Annot@");
       PrintStr("/Subtype /Link@");
@@ -3036,12 +3046,12 @@ void TPDF::ComputeRect(const char* chars, Double_t fontsize,
    double y2 =  ascent  + yShift;
 
    Double_t A, B, C, D, E, F;
-   A  = fgA*a + fgC*b;
-   B  = fgB*a + fgD*b;
-   C  = fgA*c + fgC*d;
-   D  = fgB*c + fgD*d;
-   E  = fgA*e + fgC*f + fgE;
-   F  = fgB*e + fgD*f + fgF;
+   A  = fA*a + fC*b;
+   B  = fB*a + fD*b;
+   C  = fA*c + fC*d;
+   D  = fB*c + fD*d;
+   E  = fA*e + fC*f + fE;
+   F  = fB*e + fD*f + fF;
 
    double bx1 = A*x1 + C*y1 + E;
    double by1 = B*x1 + D*y1 + F;
