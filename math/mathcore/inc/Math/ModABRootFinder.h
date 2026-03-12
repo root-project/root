@@ -33,19 +33,11 @@ namespace Math {
    adaptively switches between bisection and regula-falsi with
    side-correction, yielding superlinear convergence on well-behaved
    functions while retaining the robustness of bisection.
-
    @ingroup RootFinders
-
  */
 
 class ModABRootFinder : public IRootFinderMethod {
 public:
-   /** Default Constructor. */
-   ModABRootFinder();
-
-   /** Default Destructor. */
-   ~ModABRootFinder() override {}
-
    /** Set function to solve and the interval in where to look for the root.
 
        \@param f Function to be minimized.
@@ -61,7 +53,7 @@ public:
 
        \@param maxIter maximum number of iterations.
        \@param absTol desired absolute error in the minimum position.
-       \@param absTol desired relative error in the minimum position.
+       \@param relTol desired relative error in the minimum position.
    */
    bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) override;
 
@@ -77,19 +69,13 @@ public:
    /** Return name of root finder algorithm ("ModABRootFinder"). */
    const char *Name() const override;
 
-   // static function used to modify the default parameters
-
-   /** set number of default Npx used at construction time (when SetNpx is not called)
-       Default value is 100
-    */
-
 private:
-   const IGenFunction *fFunction; ///< Pointer to the function.
-   int fNIter;                    ///< Number of iterations needed for the last estimation.
-   int fStatus;                   ///< Status of code of the last estimate
-   double fXMin;                  ///< Lower bound of the search interval.
-   double fXMax;                  ///< Upper bound of the search interval
-   double fRoot;                  ///< Current estimation of the function root.
+   const IGenFunction *fFunction = nullptr; // Pointer to the function.
+   int fNIter = 0;     // Number of iterations needed for the last estimation.
+   int fStatus = -1;   // Status of code of the last estimate
+   double fXMin = 0.;  // Lower bound of the search interval.
+   double fXMax = 0.;  // Upper bound of the search interval
+   double fRoot = 0.;  // Current estimation of the function root.
 };
 
 } // namespace Math
