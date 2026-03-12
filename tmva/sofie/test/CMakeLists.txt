@@ -46,7 +46,7 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
 )
 
 # Creating a Google Test
-if (BLAS_FOUND)  # we need BLAS for compiling the models
+if (BLAS_FOUND OR use_gsl_cblas)  # we need BLAS for compiling the models
   ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
     LIBRARIES
       Core
@@ -74,7 +74,7 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ROOT
   FIXTURES_SETUP sofie-compile-models-root
 )
 
-if (BLAS_FOUND)
+if (BLAS_FOUND OR use_gsl_cblas)
   # Creating a Google Test for Serialisation of RModel
   ROOT_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
     LIBRARIES
@@ -119,7 +119,7 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
-  if (BLAS_FOUND)
+  if (BLAS_FOUND OR use_gsl_cblas)
     ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
       LIBRARIES
         ROOTTMVASofie
@@ -132,7 +132,7 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
 endif()
 
 # Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT broken_onnx)
+if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND (BLAS_FOUND OR use_gsl_cblas) AND NOT broken_onnx)
   configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
 
   # Test RModelParser_PyTorch
@@ -151,7 +151,7 @@ endif()
 
 
 # Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
+if (tpython AND ROOT_KERAS_FOUND AND (BLAS_FOUND OR use_gsl_cblas))
 
    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
    configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
