@@ -251,7 +251,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
 {
    std::string className;
    ROOT::TMetaUtils::GetQualifiedName(
-      className, *recordDecl.getTypeForDecl(), recordDecl);
+      className, recordDecl.getASTContext().getCanonicalTagType(&recordDecl), recordDecl);
 
    // Strip ROOT::Meta::Selection
    className.replace(0, 23, "");
@@ -312,7 +312,7 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
    if (InSelectionNamespace(recordDecl)) return true;
 
    std::string className;
-   GetQualifiedName(className, *recordDecl.getTypeForDecl(), recordDecl);
+   GetQualifiedName(className, recordDecl.getASTContext().getCanonicalTagType(&recordDecl), recordDecl);
 
    // If the class is not among those which have fields the type of which are to
    // be autoselected or excluded

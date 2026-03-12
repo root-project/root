@@ -244,7 +244,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
       return "bool";
    }
    const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
-   ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(td), *fInterp, normCtxt);
+   ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt, td), *fInterp, normCtxt);
 
    return truename.c_str();  // NOLINT
 }
@@ -262,7 +262,7 @@ const char *TClingTypedefInfo::Name() const
 
    const clang::TypedefNameDecl *td = llvm::cast<clang::TypedefNameDecl>(fDecl);
    const clang::ASTContext &ctxt = td->getASTContext();
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fNameCache, ctxt.getTypedefType(td), *fInterp);
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fNameCache, ctxt.getTypedefType(ElaboratedTypeKeyword::None, /*Qualifier=*/std::nullopt, td), *fInterp);
    return fNameCache.c_str();
 }
 

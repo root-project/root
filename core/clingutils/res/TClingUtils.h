@@ -67,6 +67,7 @@ namespace clang {
    class Type;
    class TypeDecl;
    class TypedefNameDecl;
+   enum class ElaboratedTypeKeyword;
    struct PrintingPolicy;
 }
 
@@ -754,7 +755,7 @@ clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *ins
 int RemoveTemplateArgsFromName(std::string& name, unsigned int);
 
 //______________________________________________________________________________
-clang::TemplateName ExtractTemplateNameFromQualType(const clang::QualType& qt);
+clang::TemplateName ExtractTemplateNameFromQualType(const clang::QualType& qt, clang::TemplateName& theTemplateName, clang::ElaboratedTypeKeyword& theKeyword);
 
 //______________________________________________________________________________
 bool QualType2Template(const clang::QualType& qt,
