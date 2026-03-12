@@ -1,14 +1,19 @@
 #include "ntuple_test.hxx"
 
-#include <TFileMerger.h>
 #include <ROOT/TBufferMerger.hxx>
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <xxhash.h>
+#include <zlib.h>
+
+#include <TFileMerger.h>
+#include <TKey.h>
+#include <TRandom3.h>
+#include <TTree.h>
+
 #include <string_view>
 #include <unordered_map>
-#include <zlib.h>
-#include "gmock/gmock.h"
-#include <TTree.h>
-#include <TRandom3.h>
 
 using ROOT::TestSupport::CheckDiagsRAII;
 
