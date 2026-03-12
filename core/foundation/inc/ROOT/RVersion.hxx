@@ -4,7 +4,7 @@
 /* Update on release: */
 #define ROOT_VERSION_MAJOR 6
 #define ROOT_VERSION_MINOR 38
-#define ROOT_VERSION_PATCH 4  // When changing the version number here, never add leading zeroes!
+#define ROOT_VERSION_PATCH 5  // When changing the version number here, never add leading zeroes!
 #define ROOT_RELEASE_DATE "Mar 12 2026"
 
 /* Don't change the lines below. */
