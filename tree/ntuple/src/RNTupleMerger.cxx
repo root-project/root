@@ -1256,6 +1256,12 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
+      if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
+         R__LOG_WARNING(NTupleMergeLog()) << "RNTuple '" << mergeData.fSrcDescriptor->GetName()
+                                          << "' has a higher format version than the latest supported by this version "
+                                             "of ROOT. Merging will work but some features may be dropped.";
+      }
+
       // Create sink from the input model if not initialized
       if (!fModel) {
          fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);

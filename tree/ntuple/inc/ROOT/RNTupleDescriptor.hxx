@@ -821,6 +821,12 @@ public:
    std::uint64_t GetOnDiskHeaderXxHash3() const { return fOnDiskHeaderXxHash3; }
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
+   /// \see ROOT::RNTuple::GetCurrentVersion()
+   std::uint64_t GetVersion() const
+   {
+      return (static_cast<std::uint64_t>(fVersionEpoch) << 48) | (static_cast<std::uint64_t>(fVersionMajor) << 32) |
+             (static_cast<std::uint64_t>(fVersionMinor) << 16) | (static_cast<std::uint64_t>(fVersionPatch));
+   }
 
    const RFieldDescriptor &GetFieldDescriptor(ROOT::DescriptorId_t fieldId) const
    {
