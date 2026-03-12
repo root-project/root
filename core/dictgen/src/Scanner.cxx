@@ -544,7 +544,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
        0 != ROOT::TMetaUtils::GetClassVersion(recordDecl,fInterpreter)) {
       std::string normName;
       TMetaUtils::GetNormalizedName(normName,
-                                    recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                    recordDecl->getASTContext().getCanonicalTagType(recordDecl),
                                     fInterpreter,
                                     fNormCtxt);
       ROOT::TMetaUtils::Error(nullptr,"Union %s has been selected for I/O. This is not supported. Interactive usage of unions is supported, as all C++ entities, without the need of dictionaries.\n",normName.c_str());
@@ -586,7 +586,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
       GetDeclQualName(recordDecl,qual_name);
       std::string normName;
       TMetaUtils::GetNormalizedName(normName,
-                                    recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                    recordDecl->getASTContext().getCanonicalTagType(recordDecl),
                                     fInterpreter,
                                     fNormCtxt);
       std::string typedef_qual_name;
@@ -740,7 +740,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             declSelRuleMapIt->second != selected) {
          std::string normName;
          TMetaUtils::GetNormalizedName(normName,
-                                       recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                       recordDecl->getASTContext().getCanonicalTagType(recordDecl),
                                        fInterpreter,
                                        fNormCtxt);
 
@@ -781,7 +781,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       if (!isFileSelection) {
          std::string normName;
          TMetaUtils::GetNormalizedName(normName,
-                                       recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                       recordDecl->getASTContext().getCanonicalTagType(recordDecl),
                                        fInterpreter,
                                        fNormCtxt);
          auto msg = "Class or struct %s was selected but its dictionary cannot be generated: "
@@ -817,7 +817,7 @@ void RScanner::AddDelayedAnnotatedRecordDecls()
    for (auto &&info: fDelayedAnnotatedRecordDecls) {
       const clang::Type *thisType = info.fSelected->GetRequestedType();
       if (!thisType)
-         thisType = info.fDecl->getTypeForDecl();
+         thisType = info.fDecl->getASTContext().getCanonicalTagType(info.fDecl)->getTypePtr();
       const clang::CXXRecordDecl *recordDecl = info.fDecl;
       auto nameTypeForIO = ROOT::TMetaUtils::GetNameTypeForIO(clang::QualType(thisType, 0), fInterpreter, fNormCtxt);
       auto typeForIO = nameTypeForIO.second;
