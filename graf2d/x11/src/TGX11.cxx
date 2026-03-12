@@ -85,7 +85,7 @@ const int kMAXGC = 7,
           kGCline = 0, kGCmark = 1, kGCfill = 2,
           kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
 static GC gGClist[kMAXGC];
-static GC *gGCline = &gGClist[kGCline];  // PolyLines
+// static GC *gGCline = &gGClist[kGCline];  // PolyLines
 // static GC *gGCmark = &gGClist[kGCmark];  // PolyMarker
 // static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
 // static GC *gGCtext = &gGClist[kGCtext];  // Text
@@ -3552,6 +3552,7 @@ Int_t TGX11::WriteGIF(char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image.
+/// Not used, keep for backward compatibility
 
 void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t ny,Int_t xmin,
                      Int_t ymin,Int_t xmax,Int_t ymax, UChar_t *image,Drawable_t wid)
@@ -3562,11 +3563,14 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
    int           nlines[256];
    XSegment      lines[256][maxSegment];
    Drawable_t    id;
+   GC            lineGC;
 
    if (wid) {
       id = wid;
+      lineGC = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
    } else {
       id = gCws->fDrawing;
+      lineGC = gCws->fGClist[kGCline];
    }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
@@ -3584,8 +3588,8 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
                lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
                lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
                if (nlines[icol] == maxSegment) {
-                  SetColor(gGCline,(int)icol+offset);
-                  XDrawSegments((Display*)fDisplay,id,*gGCline,&lines[icol][0],
+                  SetColor(&lineGC, (int)icol+offset);
+                  XDrawSegments((Display*)fDisplay,id,lineGC,&lines[icol][0],
                                 maxSegment);
                   nlines[icol] = 0;
                }
@@ -3598,8 +3602,8 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
          lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
          lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
          if (nlines[icol] == maxSegment) {
-            SetColor(gGCline,(int)icol+offset);
-            XDrawSegments((Display*)fDisplay,id,*gGCline,&lines[icol][0],
+            SetColor(&lineGC, (int)icol+offset);
+            XDrawSegments((Display*)fDisplay,id,lineGC,&lines[icol][0],
                           maxSegment);
             nlines[icol] = 0;
          }
@@ -3608,10 +3612,13 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
 
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
-         SetColor(gGCline,i+offset);
-         XDrawSegments((Display*)fDisplay,id,*gGCline,&lines[i][0],nlines[i]);
+         SetColor(&lineGC,i+offset);
+         XDrawSegments((Display*)fDisplay,id,lineGC,&lines[i][0],nlines[i]);
       }
    }
+
+   if (wid)
+      XFreeGC((Display*)fDisplay, lineGC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
