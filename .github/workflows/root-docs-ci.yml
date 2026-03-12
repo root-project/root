@@ -164,7 +164,7 @@ jobs:
     #Upload to GitHub as an artifact
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{env.TAR_NAME}}.gz
         path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
