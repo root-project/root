@@ -579,6 +579,11 @@ std::string GetUserAgentString()
 
 } // anonymous namespace
 
+int ROOT::Internal::RCurlConnection::GetCurlVersion()
+{
+   return LIBCURL_VERSION_NUM;
+}
+
 ROOT::Internal::RCurlConnection::RCurlConnection(const std::string &url)
 {
    EnsureCurlInitialized();
