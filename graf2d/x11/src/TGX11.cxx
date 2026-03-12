@@ -88,8 +88,8 @@ static GC gGClist[kMAXGC];
 static GC *gGCline = &gGClist[kGCline];  // PolyLines
 // static GC *gGCmark = &gGClist[kGCmark];  // PolyMarker
 // static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
-static GC *gGCtext = &gGClist[kGCtext];  // Text
-static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
+// static GC *gGCtext = &gGClist[kGCtext];  // Text
+// static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
 // static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
 // static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
 
@@ -130,8 +130,10 @@ struct XWindow_t {
    Int_t     markerType = 0;          ///< 4 differen kinds of marker
    Int_t     markerSize = 0;          ///< size of simple markers
    std::vector<XPoint> markerShape;   ///< marker shape points
-   Int_t markerLineWidth = 0;
-
+   Int_t markerLineWidth = 0;         ///< line width used for marker
+   TAttText fAttText;                 ///< current text attribute
+   Int_t textAlign = 0;               ///< selected text align
+   XFontStruct *textFont = nullptr;   ///< selected text font
 };
 
 
@@ -799,20 +801,22 @@ void TGX11::DrawPolyMarker(int n, TPoint *xy)
 void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const char *text, ETextMode mode)
 {
-   XRotSetMagnification(mgn);
 
-   if (!text) return;
+   if (!text || !gCws->textFont || gCws->fAttText.GetTextSize() < 0)
+      return;
+
+   XRotSetMagnification(mgn);
 
    switch (mode) {
 
       case kClear:
-         XRotDrawAlignedString((Display*)fDisplay, gTextFont, angle,
-                      gCws->fDrawing, *gGCtext, x, y, (char*)text, fTextAlign);
+         XRotDrawAlignedString((Display*)fDisplay, gCws->textFont, angle,
+                      gCws->fDrawing, gCws->fGClist[kGCtext], x, y, (char*)text, gCws->textAlign);
          break;
 
       case kOpaque:
-         XRotDrawAlignedImageString((Display*)fDisplay, gTextFont, angle,
-                      gCws->fDrawing, *gGCtext, x, y, (char*)text, fTextAlign);
+         XRotDrawAlignedImageString((Display*)fDisplay, gCws->textFont, angle,
+                      gCws->fDrawing, gCws->fGClist[kGCtext], x, y, (char*)text, gCws->textAlign);
          break;
 
       default:
@@ -1164,6 +1168,7 @@ Int_t TGX11::OpenDisplay(void *disp)
    for (i = 0; i < kMAXGC; i++)
       gGClist[i] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
 
+/*
    XGCValues values;
    if (XGetGCValues((Display*)fDisplay, *gGCtext, GCForeground|GCBackground, &values)) {
       XSetForeground((Display*)fDisplay, *gGCinvt, values.background);
@@ -1171,6 +1176,7 @@ Int_t TGX11::OpenDisplay(void *disp)
    } else {
       Error("OpenDisplay", "cannot get GC values");
    }
+*/
 
    // Create input echo graphic context
    XGCValues echov;
@@ -1735,11 +1741,11 @@ Int_t TGX11::RequestString(int x, int y, char *text)
       char nbytes;
       int dx;
       int i;
-      XDrawImageString((Display*)fDisplay, gCws->fWindow, *gGCtext, x, y, text, nt);
-      dx = XTextWidth(gTextFont, text, nt);
-      XDrawImageString((Display*)fDisplay, gCws->fWindow, *gGCtext, x + dx, y, " ", 1);
-      dx = pt == 0 ? 0 : XTextWidth(gTextFont, text, pt);
-      XDrawImageString((Display*)fDisplay, gCws->fWindow, *gGCinvt,
+      XDrawImageString((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCtext], x, y, text, nt);
+      dx = XTextWidth(gCws->textFont, text, nt);
+      XDrawImageString((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCtext], x + dx, y, " ", 1);
+      dx = pt == 0 ? 0 : XTextWidth(gCws->textFont, text, pt);
+      XDrawImageString((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCinvt],
                        x + dx, y, pt < len_text ? &text[pt] : " ", 1);
       XWindowEvent((Display*)fDisplay, gCws->fWindow, gKeybdMask, &event);
       switch (event.type) {
@@ -3154,7 +3160,7 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
 
 void TGX11::SetTextAlign(Short_t talign)
 {
-   Int_t txalh = talign/10;
+/*   Int_t txalh = talign/10;
    Int_t txalv = talign%10;
    fTextAlignH = txalh;
    fTextAlignV = txalv;
@@ -3202,8 +3208,14 @@ void TGX11::SetTextAlign(Short_t talign)
          }
          break;
    }
+   */
 
-   TAttText::SetTextAlign(fTextAlign);
+   TAttText::SetTextAlign(talign);
+
+   SetAttText((WinContext_t) gCws, *this);
+
+   // FIXME: member fTextAlign conflicts with TAttText::fTextAlign
+   fTextAlign = gCws->textAlign;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3214,7 +3226,9 @@ void TGX11::SetTextColor(Color_t cindex)
    if (cindex < 0) return;
 
    TAttText::SetTextColor(cindex);
+   SetAttText((WinContext_t) gCws, *this);
 
+   /*
    SetColor(gGCtext, Int_t(cindex));
 
    XGCValues values;
@@ -3225,6 +3239,7 @@ void TGX11::SetTextColor(Color_t cindex)
       Error("SetTextColor", "cannot get GC values");
    }
    XSetBackground((Display*)fDisplay, *gGCtext, GetColor(0).fPixel);
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3242,14 +3257,16 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
 {
    char **fontlist;
    int fontcount;
-   int i;
 
    if (mode == kLoad) {
-      for (i = 0; i < kMAXFONT; i++) {
+      for (int i = 0; i < kMAXFONT; i++) {
          if (strcmp(fontname, gFont[i].name) == 0) {
             gTextFont = gFont[i].id;
-            XSetFont((Display*)fDisplay, *gGCtext, gTextFont->fid);
-            XSetFont((Display*)fDisplay, *gGCinvt, gTextFont->fid);
+            if (gCws) {
+               gCws->textFont = gTextFont;
+               XSetFont((Display*)fDisplay, gCws->fGClist[kGCtext], gCws->textFont->fid);
+               XSetFont((Display*)fDisplay, gCws->fGClist[kGCinvt], gCws->textFont->fid);
+            }
             return 0;
          }
       }
@@ -3262,8 +3279,6 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
          if (gFont[gCurrentFontNumber].id)
             XFreeFont((Display*)fDisplay, gFont[gCurrentFontNumber].id);
          gTextFont = XLoadQueryFont((Display*)fDisplay, fontlist[0]);
-         XSetFont((Display*)fDisplay, *gGCtext, gTextFont->fid);
-         XSetFont((Display*)fDisplay, *gGCinvt, gTextFont->fid);
          gFont[gCurrentFontNumber].id = gTextFont;
          strlcpy(gFont[gCurrentFontNumber].name,fontname,80);
          gCurrentFontNumber++;
@@ -3281,7 +3296,9 @@ Int_t TGX11::SetTextFont(char *fontname, ETextSetMode mode)
 
 void TGX11::SetTextFont(Font_t fontnumber)
 {
-   fTextFont = fontnumber;
+   TAttText::SetTextFont(fontnumber);
+
+   SetAttText((WinContext_t) gCws, *this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3289,7 +3306,9 @@ void TGX11::SetTextFont(Font_t fontnumber)
 
 void TGX11::SetTextSize(Float_t textsize)
 {
-   fTextSize = textsize;
+   TAttText::SetTextSize(textsize);
+
+   SetAttText((WinContext_t) gCws, *this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4371,8 +4390,6 @@ void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
       ctxt->markerType = 0;
       ctxt->markerSize = 0;
    }
-
-
 }
 
 void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
@@ -4380,7 +4397,74 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt)
       return;
-   (void) att;
+
+   Int_t txalh = att.GetTextAlign() / 10;
+   Int_t txalv = att.GetTextAlign() % 10;
+
+   switch (txalh) {
+      case 0 :
+      case 1 :
+         switch (txalv) {  //left
+            case 1 :
+               ctxt->textAlign = 7;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 4;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 1;   //top
+               break;
+         }
+         break;
+      case 2 :
+         switch (txalv) { //center
+            case 1 :
+               ctxt->textAlign = 8;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 5;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 2;   //top
+               break;
+         }
+         break;
+      case 3 :
+         switch (txalv) {  //right
+            case 1 :
+               ctxt->textAlign = 9;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 6;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 3;   //top
+               break;
+         }
+         break;
+   }
+
+   SetColor(&ctxt->fGClist[kGCtext], att.GetTextColor());
+
+   XGCValues values;
+   if (XGetGCValues((Display*)fDisplay, ctxt->fGClist[kGCtext], GCForeground | GCBackground, &values)) {
+      XSetForeground( (Display*)fDisplay, ctxt->fGClist[kGCinvt], values.background );
+      XSetBackground( (Display*)fDisplay, ctxt->fGClist[kGCinvt], values.foreground );
+   } else {
+      Error("SetAttText", "cannot get GC values");
+   }
+   XSetBackground((Display*)fDisplay, ctxt->fGClist[kGCtext], GetColor(0).fPixel);
+
+   // use first existing font
+   for (int i = 0; i < kMAXFONT; i++)
+      if (gFont[i].id) {
+         gCws->textFont = gFont[i].id;
+         XSetFont((Display*)fDisplay, gCws->fGClist[kGCtext], gCws->textFont->fid);
+         XSetFont((Display*)fDisplay, gCws->fGClist[kGCinvt], gCws->textFont->fid);
+         break;
+      }
+
+   ctxt->fAttText = att;
 }
 
 
