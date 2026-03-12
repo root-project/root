@@ -35,7 +35,6 @@
 
 #include <algorithm>
 #include <deque>
-#include <cinttypes> // for PRIu64
 #include <initializer_list>
 #include <unordered_map>
 #include <vector>
@@ -908,6 +907,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
             // the actual data size after recompressing.
             buffer = MakeUninitArray<std::uint8_t>(bufSize);
 
+            // clang-format off
             if (needsResealing) {
                RTaskVisitor{fTaskGroup}(RResealFunc{
                   *srcColElement,
@@ -931,6 +931,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                   mergeData.fDestination.GetWriteOptions()
                });
             }
+            // clang-format on
          }
 
          ++pageIdx;
