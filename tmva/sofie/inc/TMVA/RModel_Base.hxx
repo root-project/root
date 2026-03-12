@@ -92,7 +92,7 @@ public:
        fCustomOpHeaders.insert(filename);
    }
    void GenerateHeaderInfo(std::string &hgname);
-   void PrintGenerated() { std::cout << fGC; }
+   void PrintGenerated(std::ostream &os=std::cout) { os << fGC; }
 
    std::string ReturnGenerated() { return fGC; }
    void OutputGenerated(std::string filename = "", bool append = false);
