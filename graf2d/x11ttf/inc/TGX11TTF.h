@@ -54,7 +54,7 @@ private:
    void     RenderString(Int_t x, Int_t y, ETextMode mode);
 
 public:
-   TGX11TTF(const TGX11 &org);
+   TGX11TTF(TGX11 &&org);
    ~TGX11TTF() override { }
 
    Bool_t Init(void *display) override;

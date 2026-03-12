@@ -132,9 +132,11 @@ protected:
    void      *GetGC(Int_t which) const;
    XColor_t  &GetColor(Int_t cid);
 
+   TGX11(TGX11 &&org);
+   TGX11(const TGX11 &org) = delete;
+
 public:
    TGX11();
-   TGX11(const TGX11 &org);
    TGX11(const char *name, const char *title);
    ~TGX11() override;
 
