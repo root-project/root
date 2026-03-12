@@ -7,7 +7,6 @@ builtin_cfitsio=OFF
 builtin_clang=ON
 builtin_cling=ON
 builtin_cppzmq=ON
-builtin_davix=OFF
 builtin_fftw3=OFF
 builtin_freetype=OFF
 builtin_ftgl=OFF

@@ -87,7 +87,6 @@ ROOT_BUILD_OPTION(builtin_cling ON "Build bundled copy of Cling. Only build with
 MARK_AS_ADVANCED(builtin_cling)
 ROOT_BUILD_OPTION(builtin_civetweb ON "Use civetweb distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_cppzmq OFF "Use ZeroMQ C++ bindings installed by ROOT (requires network)")
-ROOT_BUILD_OPTION(builtin_davix OFF "Build Davix internally (requires network)")
 ROOT_BUILD_OPTION(builtin_fftw3 OFF "Build FFTW3 internally (requires network)")
 ROOT_BUILD_OPTION(builtin_freetype OFF "Build bundled copy of freetype")
 ROOT_BUILD_OPTION(builtin_ftgl OFF "Build bundled copy of FTGL")
@@ -268,7 +267,6 @@ if(builtin_all)
   set(builtin_clang_defvalue ON)
   set(builtin_cling_defvalue ON)
   set(builtin_cppzmq_defvalue ON)
-  set(builtin_davix_defvalue ON)
 #  set(builtin_fftw3_defvalue ON) (GPL)
   set(builtin_freetype_defvalue ON)
   set(builtin_ftgl_defvalue ON)
@@ -383,7 +381,7 @@ endif()
 
 #---Removed options------------------------------------------------------------
 # Please notify SPI when adding to this list
-foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
+foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor chirp cxx11 cxx14 cxx17
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
