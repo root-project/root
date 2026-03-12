@@ -28,12 +28,6 @@ typedef unsigned char boolean;
 /* Define to 1 if you have the <ft2build.h> header file. */
 #define HAVE_FT2BUILD_H 1
 
-/* Define if libgif is available */
-#define HAVE_GIF
-
-/* Define if using builtin libungif */
-#define HAVE_BUILTIN_UNGIF 1
-
 #if _MSC_VER >= 1400
 #define NO_DOUBLE_FCLOSE_AFTER_FDOPEN
 #else

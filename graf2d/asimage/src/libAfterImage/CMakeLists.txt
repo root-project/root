@@ -34,14 +34,14 @@ if(NOT EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h")
   message(SEND_ERROR "Can't find zlib.h in ${ZLIB_INCLUDE_DIR}")
 endif()
 
-INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${GIF_INCLUDE_DIR})
 
 set (LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
 
 FILE(GLOB H_FILES "*.h")
 
 SET(SRC_FILES
-    libungif/dgif_lib.c libungif/egif_lib.c libungif/gif_err.c libungif/gifalloc.c libungif/gif_hash.c afterbase.c ascmap.c asfont.c
+    afterbase.c ascmap.c asfont.c
     asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
     export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
     imencdec.c scanline.c
@@ -50,6 +50,6 @@ SET(SRC_FILES
 
 ADD_LIBRARY(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
 
-target_link_libraries(${LIB_NAME} PRIVATE ${JPEG_LIBRARY_LOCATION} ${PNG_LIBRARY_LOCATION})
+target_link_libraries(${LIB_NAME} PRIVATE ${JPEG_LIBRARY_LOCATION} ${PNG_LIBRARY_LOCATION} ${GIF_LIBRARY_LOCATION})
 
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_DESTINATION})

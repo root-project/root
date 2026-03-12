@@ -76,11 +76,7 @@
 #endif
 
 #ifdef HAVE_GIF
-# ifdef HAVE_BUILTIN_UNGIF
-#  include "libungif/gif_lib.h"
-# else
-#  include <gif_lib.h>
-# endif
+# include <gif_lib.h>
 #endif
 
 #ifdef HAVE_TIFF
