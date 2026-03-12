@@ -48,7 +48,7 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Test Results - Visual Studio Preview
           path: C:/ROOT-CI/build/TestResults.xml
