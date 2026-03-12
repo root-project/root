@@ -5,7 +5,8 @@ file(MAKE_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}/libsubdir)
 ROOTTEST_GENERATE_EXECUTABLE(clingDictInBinary
                              main.cxx
                              ${CMAKE_CURRENT_BINARY_DIR}/libsubdir/bindict_dict.cxx
-                             LIBRARIES Core)
+                             LIBRARIES Core
+                             FIXTURES_SETUP clingDictInBinary-createExe)
 
 add_custom_command(OUTPUT libsubdir/bindict_dict.cxx
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libsubdir
@@ -23,6 +24,6 @@ if(NOT MSVC OR win_broken_tests)
                       COMMAND ${CMAKE_COMMAND} -E env "PATH=${CMAKE_CURRENT_BINARY_DIR}/libsubdir:$ENV{PATH}" clingDictInBinary${exesuffix}
                       OUTREF check_dict_in_binary.ref
                       LABELS roottest regression cling
-                      DEPENDS ${GENERATE_EXECUTABLE_TEST})
+                      FIXTURES_REQUIRED clingDictInBinary-createExe)
 endif()
 
