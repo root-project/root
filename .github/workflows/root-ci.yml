@@ -607,13 +607,14 @@ jobs:
         run: ctest --output-on-failure -j $(nproc)
 
   event_file:
+    # Upload a file with the github event context for the step that posts the test results.
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
         (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
 
-    name: "Upload Event Payload"
+    name: "Upload Github event context for the test summary step"
     runs-on: ubuntu-latest
     steps:
     - name: Upload
