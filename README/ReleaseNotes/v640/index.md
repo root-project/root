@@ -32,6 +32,7 @@ The following people have contributed to this new version:
  Silia Taider, CERN/EP-SFT,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
+ Sandro Wenzel, CERN/EP-ALICE,\
 
 ## Deprecations
 
@@ -73,6 +74,7 @@ The following people have contributed to this new version:
 ## Geometry
 
 * The list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
+* `TGeoTessellated` now has efficient, BVH accelerated, navigation function implementations. This makes it possible to use `TGeoTessellated` in applications using `TGeoNavigator` (such as detector simulation).
 
 ### Extensible color schemes for geometry visualization
 ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.

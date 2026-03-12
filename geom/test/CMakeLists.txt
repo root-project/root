@@ -13,3 +13,6 @@ if(gdml)
     test_boolean_extrusion.cxx
     LIBRARIES Geom GeomChecker)
 endif()
+ROOT_ADD_GTEST(tessellated
+  test_tessellated.cxx
+  LIBRARIES Geom)
