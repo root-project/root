@@ -62,9 +62,13 @@ public:
                    const char *text, ETextMode mode) override;
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const wchar_t *text, ETextMode mode) override;
-   void   SetTextFont(Font_t fontnumber) override;
+
+   using TGX11::SetTextFont;
    Int_t  SetTextFont(char *fontname, ETextSetMode mode) override;
-   void   SetTextSize(Float_t textsize) override;
+
+   //---- Methods used for new graphics -----
+   void  SetAttText(WinContext_t wctxt, const TAttText &att) override;
+
 
 #ifdef R__HAS_XFT
    //---- Methods used text/fonts handling via Xft -----
