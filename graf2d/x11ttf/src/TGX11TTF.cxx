@@ -543,13 +543,16 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set specified font.
 
-void TGX11TTF::SetTextFont(Font_t fontnumber)
+
+void TGX11TTF::SetAttText(WinContext_t wctxt, const TAttText &att)
 {
-   fTextFont = fontnumber;
-   if (!fHasTTFonts) {
-      TGX11::SetTextFont(fontnumber);
-   } else {
-      TTF::SetTextFont(fontnumber);
+   // TODO: add to window context custom part for TTF,
+   // it can be allocated and provided via private interface
+   TGX11::SetAttText(wctxt, att);
+
+   if (fHasTTFonts) {
+      TTF::SetTextFont(att.GetTextFont());
+      TTF::SetTextSize(att.GetTextSize());
    }
 }
 
@@ -569,19 +572,6 @@ Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
       return TGX11::SetTextFont(fontname, mode);
    } else {
       return TTF::SetTextFont(fontname);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set current text size.
-
-void TGX11TTF::SetTextSize(Float_t textsize)
-{
-   fTextSize = textsize;
-   if (!fHasTTFonts) {
-      TGX11::SetTextSize(textsize);
-   } else {
-      TTF::SetTextSize(textsize);
    }
 }
 
