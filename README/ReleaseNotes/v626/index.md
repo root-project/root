@@ -1071,7 +1071,7 @@ The latest Apple operating sytstem supported is Monterey (macOS version 12).
 * [[#14458](https://github.com/root-project/root/issues/14458)] - Crash when doing Weighted Likelihood fit
 * [[#14508](https://github.com/root-project/root/issues/14508)] - Using LZMA compression with RNTupleWriter leads to memory corruption
 
-## Release 6.26/16
+## Release 6.26/18
 
 Published on February 12, 2026
 
