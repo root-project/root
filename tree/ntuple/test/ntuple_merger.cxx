@@ -3903,5 +3903,14 @@ TEST(RNTupleMerger, MergeNewerVersion)
          auto res = merger.Merge(sourcePtrs, opts);
          EXPECT_TRUE(bool(res));
       }
+
+      // Now merge again but with VersionBehavior set to Abort.
+      {
+         RNTupleMergeOptions opts;
+         opts.fVersionBehavior = ROOT::Experimental::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_FALSE(bool(res));
+         EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("has a higher format version"));
+      }
    }
 }
