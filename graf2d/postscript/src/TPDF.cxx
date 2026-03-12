@@ -94,8 +94,8 @@ const Int_t kObjFirstPage        = 51; // First page object
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
 
-Int_t  TPDF::fgLineJoin = 0;
-Int_t  TPDF::fgLineCap = 0;
+Int_t TPDF::fgLineJoin = 0;
+Int_t TPDF::fgLineCap = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3056,21 +3056,21 @@ void TPDF::ComputeRect(const char* chars, Double_t fontsize,
    if (ax == 3)
       xShift = -W;
    if (ay == 2)
-      yShift = -(ascent-descent) / 2.0;
+      yShift = -(ascent - descent) / 2.0;
    if (ay == 3)
       yShift = -ascent;
    double x1 = xShift;
    double x2 = xShift + W;
    double y1 = -descent + yShift;
-   double y2 = ascent  + yShift;
+   double y2 = ascent + yShift;
 
    Double_t A, B, C, D, E, F;
-   A  = fA * a + fC * b;
-   B  = fB * a + fD * b;
-   C  = fA * c + fC * d;
-   D  = fB * c + fD * d;
-   E  = fA * e + fC * f + fE;
-   F  = fB * e + fD * f + fF;
+   A = fA * a + fC * b;
+   B = fB * a + fD * b;
+   C = fA * c + fC * d;
+   D = fB * c + fD * d;
+   E = fA * e + fC * f + fE;
+   F = fB * e + fD * f + fF;
 
    double bx1 = A * x1 + C * y1 + E;
    double by1 = B * x1 + D * y1 + F;
