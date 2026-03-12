@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out ROOT
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: root
       - name: Determine tag that CppInterOp in ROOT is based
@@ -19,7 +19,7 @@ jobs:
           echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
           rm $tag_file
       - name: Check out CppInterOp
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: compiler-research/CppInterOp
           ref: ${{ steps.determine-tag.outputs.tag }}
