@@ -25,7 +25,7 @@ TEST(RCurlConnection, CredFromEnv)
    gSystem->Setenv("S3_ACCESS_KEY", "x");
    {
       ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.requiredDiag(kWarning, "RCurlConnection",
+      diagRAII.requiredDiag(kWarning, "[ROOT.HTTPClient]",
                             "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset",
                             false /* matchFullMessage */);
       conn.SetCredentialsFromEnvironment();
@@ -34,7 +34,7 @@ TEST(RCurlConnection, CredFromEnv)
    gSystem->Setenv("S3_SECRET_KEY", "");
    {
       ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.requiredDiag(kWarning, "RCurlConnection",
+      diagRAII.requiredDiag(kWarning, "[ROOT.HTTPClient]",
                             "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset",
                             false /* matchFullMessage */);
       conn.SetCredentialsFromEnvironment();

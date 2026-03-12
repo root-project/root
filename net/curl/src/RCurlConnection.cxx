@@ -3,6 +3,7 @@
 
 #include "ROOT/RCurlConnection.hxx"
 #include "ROOT/RError.hxx"
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RVersion.hxx"
 
 #include <TError.h>
@@ -94,6 +95,12 @@ struct RTransferState {
 
    bool IsPartial() const { return fResponseCode == kHttpResponsePartial; }
 };
+
+ROOT::RLogChannel &HTTPClientLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.HTTPClient");
+   return sLog;
+}
 
 void EnsureCurlInitialized()
 {
@@ -385,7 +392,7 @@ int CallbackDebug(CURL * /* handle */, curl_infotype type, char *data, size_t si
    case CURLINFO_SSL_DATA_IN:
    case CURLINFO_SSL_DATA_OUT:
       if (size > kMaxDebugDataChars) {
-         Info("RCurlConnection", "%s <snip>", prefix.c_str());
+         R__LOG_INFO(HTTPClientLog()) << prefix << " <snip>";
          return 0;
       }
    default: break;
@@ -408,7 +415,7 @@ int CallbackDebug(CURL * /* handle */, curl_infotype type, char *data, size_t si
    if (!isPrintable) {
       msg = "<Non-plaintext sequence>";
    }
-   Info("RCurlConnection", "%s%s", prefix.c_str(), msg.c_str());
+   R__LOG_INFO(HTTPClientLog()) << prefix << msg;
    return 0;
 }
 
@@ -884,8 +891,8 @@ void ROOT::Internal::RCurlConnection::SetCredentialsFromEnvironment()
    if (accessKey && (accessKey[0] != '\0')) {
       const auto secretKey = std::getenv("S3_SECRET_KEY");
       if (!secretKey || (secretKey[0] == '\0')) {
-         Warning("RCurlConnection", "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset. "
-                                    "Ignoring S3 credentials.");
+         R__LOG_WARNING(HTTPClientLog()) << "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset. "
+                                            "Ignoring S3 credentials.";
          return;
       }
       const auto region = std::getenv("S3_REGION");
