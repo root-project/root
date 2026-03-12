@@ -157,29 +157,36 @@ private:
       /// aligned to kBlockAlign...
       static constexpr std::size_t kHeaderBlockSize = 4096;
 
-      // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
-      unsigned char *fHeaderBlock = nullptr;
-      std::size_t fBlockSize = 0;
-      std::uint64_t fBlockOffset = 0;
-      unsigned char *fBlock = nullptr;
-
-      /// For the simplest cases, a C file stream can be used for writing
-      FILE *fFile = nullptr;
       /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
       bool fDirectIO = false;
-      /// Keeps track of the seek offset
-      std::uint64_t fFilePos = 0;
-      /// Keeps track of the next key offset
-      std::uint64_t fKeyOffset = 0;
-      /// Keeps track of TFile control structures, which need to be updated on committing the data set
-      std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
+
+      struct RSharedData {
+         /// For the simplest cases, a C file stream can be used for writing
+         FILE *fFile = nullptr;
+         /// Keeps track of the seek offset
+         std::uint64_t fFilePos = 0;
+         /// Keeps track of the next key offset
+         std::uint64_t fKeyOffset = 0;
+
+         // fHeaderBlock and fBlock are raw pointers because we have to manually call operator new and delete.
+         unsigned char *fHeaderBlock = nullptr;
+         std::size_t fBlockSize = 0;
+         std::uint64_t fBlockOffset = 0;
+         unsigned char *fBlock = nullptr;
+
+         /// Keeps track of TFile control structures, which need to be updated on committing the data set
+         std::unique_ptr<ROOT::Internal::RTFileControlBlock> fControlBlock;
+
+         RSharedData(FILE *file);
+         ~RSharedData();
+      };
+      std::shared_ptr<RSharedData> fShared;
 
       RImplSimple();
       RImplSimple(const RImplSimple &other) = delete;
       RImplSimple(RImplSimple &&other) = delete;
       RImplSimple &operator=(const RImplSimple &other) = delete;
       RImplSimple &operator=(RImplSimple &&other) = delete;
-      ~RImplSimple();
 
       void AllocateBuffers(std::size_t bufferSize);
       void Flush();
@@ -195,7 +202,7 @@ private:
       /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
       /// argument is actually just a pointer.)
       std::uint64_t ReserveBlobKey(std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
-      operator bool() const { return fFile; }
+      operator bool() const { return fShared->fFile; }
    };
 
    template <typename T>
