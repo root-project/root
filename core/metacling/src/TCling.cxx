@@ -1970,7 +1970,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
    // We should look for modulemap files there too.
    if (auto DE = FM.getOptionalDirectoryRef(FullPath)) {
       HeaderSearch &HS = PP.getHeaderSearchInfo();
-      HeaderSearchOptions &HSOpts = HS.getHeaderSearchOpts();
+      HeaderSearchOptions &HSOpts = const_cast<HeaderSearchOptions&>(HS.getHeaderSearchOpts());
       const auto &ModPaths = HSOpts.PrebuiltModulePaths;
       bool pathExists = std::find(ModPaths.begin(), ModPaths.end(), FullPath) != ModPaths.end();
       if (!pathExists)
@@ -1983,7 +1983,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
       llvm::sys::path::append(ModuleMapFileName, ModuleMapName);
       if (auto FE = FM.getOptionalFileRef(ModuleMapFileName, /*openFile*/ false,
                                           /*CacheFailure*/ false)) {
-         if (!HS.loadModuleMapFile(*FE, /*IsSystem*/ false))
+         if (!HS.parseAndLoadModuleMapFile(*FE, /*IsSystem*/ false))
             return true;
          Error("RegisterPrebuiltModulePath", "Could not load modulemap in %s", ModuleMapFileName.c_str());
       }
@@ -5199,11 +5199,11 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
 
    if (RecDecl) {
       if (RecDecl->getNameAsString() == funcname) {
-         clang::QualType QT = Ctx.getTypeDeclType(RecDecl);
-         DName = Ctx.DeclarationNames.getCXXConstructorName(Ctx.getCanonicalType(QT));
+         clang::CanQualType QT = Ctx.getCanonicalTagType(RecDecl);
+         DName = Ctx.DeclarationNames.getCXXConstructorName(QT);
       } else if (funcname[0] == '~' && RecDecl->getNameAsString() == funcname + 1) {
-         clang::QualType QT = Ctx.getTypeDeclType(RecDecl);
-         DName = Ctx.DeclarationNames.getCXXDestructorName(Ctx.getCanonicalType(QT));
+         clang::CanQualType QT = Ctx.getCanonicalTagType(RecDecl);
+         DName = Ctx.DeclarationNames.getCXXDestructorName(QT);
       } else {
          DName = &Ctx.Idents.get(funcname);
       }
@@ -6859,7 +6859,7 @@ void TCling::UpdateClassInfoWithDecl(const NamedDecl* ND)
          return;
       }
 
-      clang::QualType type(tdDef->getTypeForDecl(), 0);
+      clang::QualType type = tdDef->getASTContext().getCanonicalTagType(tdDef);
       ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else if (ns) {
       canon = ns->getCanonicalDecl();
@@ -8903,7 +8903,7 @@ static void ConstructorName(std::string &name, const clang::Decl *decl,
    const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
    if (!td) return;
 
-   clang::QualType qualType(td->getTypeForDecl(),0);
+   clang::QualType qualType = td->getASTContext().getTypeDeclType(td);
    ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
    unsigned int level = 0;
    for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
