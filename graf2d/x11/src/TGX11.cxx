@@ -278,7 +278,8 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fTextAlignV         = 1;
    fTextAlign          = 7;
    fTextMagnitude      = 1;
-   for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
+   for (i = 0; i < kNumCursors; i++)
+      fCursors[i] = 0;
 
    fColors = new TExMap;
 }
@@ -286,7 +287,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Currently only used by TGX11TTF.
 
-TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
+TGX11::TGX11(TGX11 &&org) : TVirtualX(org)
 {
    fDisplay         = org.fDisplay;
    fScreenNumber    = org.fScreenNumber;
@@ -312,51 +313,14 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
    fGreenShift      = org.fGreenShift;
    fBlueShift       = org.fBlueShift;
    fDrawMode        = org.fDrawMode;
-   fXEvent          = new XEvent;
+   fXEvent          = org.fXEvent; org.fXEvent = nullptr;
+   fColors          = org.fColors; org.fColors = nullptr;
 
-   for(auto & pair : org.fWindows) {
-      fWindows.emplace(pair.first, std::make_unique<XWindow_t>());
-      auto &tgt = fWindows[pair.first]; // entry created
-      auto &src = pair.second;
-      tgt->fOpen         = src->fOpen;
-      tgt->fDoubleBuffer = src->fDoubleBuffer;
-      tgt->fIsPixmap     = src->fIsPixmap;
-      tgt->fDrawing      = src->fDrawing;
-      tgt->fWindow       = src->fWindow;
-      tgt->fBuffer       = src->fBuffer;
-      tgt->fWidth        = src->fWidth;
-      tgt->fHeight       = src->fHeight;
-      tgt->fClip         = src->fClip;
-      tgt->fXclip        = src->fXclip;
-      tgt->fYclip        = src->fYclip;
-      tgt->fWclip        = src->fWclip;
-      tgt->fHclip        = src->fHclip;
-      // FIXME: copy of pointer on may lead to double delete!!!
-      tgt->fNewColors    = src->fNewColors;
-      tgt->fNcolors      = src->fNcolors;
-      tgt->fShared       = src->fShared;
-      for (int i = 0; i < kMAXGC; ++i)
-         tgt->fGClist[i]    = src->fGClist[i];
-      tgt->fDrawMode     = src->fDrawMode;
-      tgt->fAttLine      = src->fAttLine;
-      tgt->fAttFill      = src->fAttFill;
-   }
+   fWindows         = std::move(org.fWindows);
 
-   for (int i = 0; i < kNumCursors; i++)
+   for (int i = 0; i < kNumCursors; i++) {
       fCursors[i] = org.fCursors[i];
-
-   fColors = new TExMap;
-   Long64_t key, value;
-   TExMapIter it(org.fColors);
-   while (it.Next(key, value)) {
-      XColor_t *colo = (XColor_t *) (Long_t)value;
-      XColor_t *col  = new XColor_t;
-      col->fPixel   = colo->fPixel;
-      col->fRed     = colo->fRed;
-      col->fGreen   = colo->fGreen;
-      col->fBlue    = colo->fBlue;
-      col->fDefined = colo->fDefined;
-      fColors->Add(key, (Long_t) col);
+      org.fCursors[i] = 0;
    }
 }
 
@@ -365,16 +329,22 @@ TGX11::TGX11(const TGX11 &org) : TVirtualX(org)
 
 TGX11::~TGX11()
 {
-   delete (XEvent*)fXEvent;
+   if (fXEvent)
+      delete (XEvent*)fXEvent;
 
-   if (!fColors) return;
-   Long64_t key, value;
-   TExMapIter it(fColors);
-   while (it.Next(key, value)) {
-      XColor_t *col = (XColor_t *) (Long_t)value;
-      delete col;
+   if (fColors) {
+      Long64_t key, value;
+      TExMapIter it(fColors);
+      while (it.Next(key, value)) {
+         XColor_t *col = (XColor_t *) (Long_t)value;
+         delete col;
+      }
+      delete fColors;
    }
-   delete fColors;
+
+   for (int i = 0; i < kNumCursors; i++)
+      if (fCursors[i])
+         XFreeCursor((Display*)fDisplay, fCursors[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -382,7 +352,8 @@ TGX11::~TGX11()
 
 Bool_t TGX11::Init(void *display)
 {
-   if (OpenDisplay(display) == -1) return kFALSE;
+   if (OpenDisplay(display) == -1)
+      return kFALSE;
    return kTRUE;
 }
 

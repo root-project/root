@@ -148,7 +148,7 @@ static TTFX11Init gTTFX11Init;
 ////////////////////////////////////////////////////////////////////////////////
 /// Create copy of TGX11 but now use TrueType fonts.
 
-TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
+TGX11TTF::TGX11TTF(TGX11 &&org) : TGX11(std::move(org))
 {
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
@@ -170,9 +170,8 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 
 void TGX11TTF::Activate()
 {
-   if (gVirtualX && dynamic_cast<TGX11*>(gVirtualX)) {
-      TGX11 *oldg = (TGX11 *) gVirtualX;
-      gVirtualX = new TGX11TTF(*oldg);
+   if (auto oldg = dynamic_cast<TGX11*>(gVirtualX)) {
+      gVirtualX = new TGX11TTF(std::move(*oldg));
       delete oldg;
    }
 }
