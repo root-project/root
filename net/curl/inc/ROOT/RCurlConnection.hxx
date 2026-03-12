@@ -100,6 +100,9 @@ public:
    RCurlConnection(RCurlConnection &&other);
    RCurlConnection &operator=(RCurlConnection &&other);
 
+   /// Used for testing
+   static int GetCurlVersion();
+
    void SetCredentialsFromEnvironment();
    void SetCredentials(const RS3Credentials &credentials);
    void ClearCredentials();
