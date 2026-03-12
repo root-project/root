@@ -1335,11 +1335,21 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Exp
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
 ROOT::Internal::RNTupleFileWriter::CloneAsHidden(std::string_view ntupleName) const
 {
-   if (auto *file = std::get_if<RImplTFile>(&fFile)) {
-      return Append(ntupleName, *file->fDirectory, fNTupleAnchor.fMaxKeySize, /* hidden= */ true);
+   if (auto *tfile = std::get_if<RImplTFile>(&fFile)) {
+      return Append(ntupleName, *tfile->fDirectory, fNTupleAnchor.fMaxKeySize, /* hidden= */ true);
+   } else if (auto *file = std::get_if<RImplSimple>(&fFile)) {
+      if (fIsBare)
+         throw ROOT::RException(R__FAIL("cloning a bare file is currently unsupported"));
+
+      auto writer = std::unique_ptr<RNTupleFileWriter>(
+         new RNTupleFileWriter(ntupleName, fNTupleAnchor.GetMaxKeySize(), /*hidden=*/true));
+      auto &clonedFile = std::get<RImplSimple>(writer->fFile);
+      clonedFile.fShared = file->fShared;
+      clonedFile.fDirectIO = file->fDirectIO;
+      return writer;
    }
-   // TODO: support also non-TFile-based writers
-   throw ROOT::RException(R__FAIL("cannot clone a non-TFile-based RNTupleFileWriter."));
+   // TODO: support also RFile-based writers
+   throw ROOT::RException(R__FAIL("cannot clone an RFile-based RNTupleFileWriter."));
 }
 
 void ROOT::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
@@ -1403,7 +1413,7 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compre
       // Writing by C file stream: prepare the container format header and stream the RNTuple anchor object
       auto &fileSimple = std::get<RImplSimple>(fFile);
       auto &shared = *fileSimple.fShared;
-
+    
       RTFNTuple ntupleOnDisk(fNTupleAnchor);
       anchorInfo.fLocator.SetPosition(shared.fControlBlock->fSeekNTuple);
 
@@ -1423,12 +1433,11 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compre
          WriteTFileFreeList(); // NOTE: this is written uncompressed
 
          // Update header and TFile record
-         memcpy(shared.fHeaderBlock, &shared.fControlBlock->fHeader,
-                shared.fControlBlock->fHeader.GetSize());
+         memcpy(shared.fHeaderBlock, &shared.fControlBlock->fHeader, shared.fControlBlock->fHeader.GetSize());
          R__ASSERT(shared.fControlBlock->fSeekFileRecord + shared.fControlBlock->fFileRecord.GetSize() <
                    RImplSimple::kHeaderBlockSize);
-         memcpy(shared.fHeaderBlock + shared.fControlBlock->fSeekFileRecord,
-                &shared.fControlBlock->fFileRecord, shared.fControlBlock->fFileRecord.GetSize());
+         memcpy(shared.fHeaderBlock + shared.fControlBlock->fSeekFileRecord, &shared.fControlBlock->fFileRecord,
+                shared.fControlBlock->fFileRecord.GetSize());
 
          fileSimple.Flush();
 
