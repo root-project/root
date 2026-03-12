@@ -1,5 +1,13 @@
 #include "ntuple_test.hxx"
 
+#include <ROOT/RConfig.hxx>
+#ifndef R__BYTESWAP
+#define IS_BIG_ENDIAN 1
+#endif
+
+#if IS_BIG_ENDIAN
+#include <Byteswap.h>
+#endif
 #include <ROOT/TBufferMerger.hxx>
 
 #include <gmock/gmock.h>
@@ -23,8 +31,7 @@ namespace {
 std::int32_t ReadRawInt(const void *ptr)
 {
    std::int32_t val = *reinterpret_cast<const std::int32_t *>(ptr);
-#ifndef R__BYTESWAP
-   // on big endian system
+#if IS_BIG_ENDIAN
    auto x = (val & 0x0000FFFF) << 16 | (val & 0xFFFF0000) >> 16;
    return (x & 0x00FF00FF) << 8 | (x & 0xFF00FF00) >> 8;
 #else
@@ -3811,6 +3818,90 @@ TEST(RNTupleMerger, MergeStreamerFieldsSecondMissing)
             auto res = merger.Merge(sourcePtrs, opts);
             EXPECT_FALSE(bool(res));
          }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeNewerVersion)
+{
+   // Verify that merging RNTuples with future versions works as expected (warn user but successfully merge)
+   FileRaii fileGuard("test_ntuple_merge_newer_version.root");
+
+   // Write a regular RNTuple
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), wopts);
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         ntuple->Fill();
+      }
+      ntuple->CommitDataset();
+   }
+
+   // Get metadata about its anchor
+   std::uint64_t anchorSeek = 0, anchorNbytes = 0;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      auto anchorKey = file->GetKey("ntuple");
+      ASSERT_NE(anchorKey, nullptr);
+      anchorSeek = anchorKey->GetSeekKey() + anchorKey->GetKeylen();
+      anchorNbytes = anchorKey->GetNbytes() - anchorKey->GetKeylen() - 8; // 8 for the checksum
+   }
+
+   // Patch the anchor version (and update its checksum)
+   {
+      auto file = fopen(fileGuard.GetPath().c_str(), "r+b");
+      // change the major version to 0x99
+      fseek(file, anchorSeek + 9, SEEK_SET);
+      fputc(0x99, file);
+
+      // NOTE: skipping the first 6 bytes (nbytes and class version) for checksum calculation
+      anchorSeek += 6;
+      anchorNbytes -= 6;
+      fseek(file, anchorSeek, SEEK_SET);
+
+      // recompute checksum
+      auto buf = MakeUninitArray<std::byte>(anchorNbytes);
+      auto read = fread(buf.get(), 1, anchorNbytes, file);
+      ASSERT_EQ(read, anchorNbytes);
+      std::uint64_t checksum = XXH3_64bits(buf.get(), anchorNbytes);
+#if !IS_BIG_ENDIAN
+      // checksum needs to be stored in little endian. We byteswap here if we're in LE because fwrite will write
+      // this bytes effectively in "big endian".
+      checksum = RByteSwap<8>::bswap(checksum);
+#endif
+      // NOTE: we need to seek here to guarantee that the writing operation following the previous read will succeed
+      // (see "File access flags" here https://en.cppreference.com/w/c/io/fopen).
+      fseek(file, anchorSeek + anchorNbytes, SEEK_SET);
+      fwrite(&checksum, 1, sizeof(checksum), file);
+      fclose(file);
+   }
+
+   // Merge
+   FileRaii fileGuardOut("test_ntuple_merge_newer_version_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Create the output
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         CheckDiagsRAII diagsRaii;
+         diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "has a higher format version", false);
+         RNTupleMergeOptions opts;
+         opts.fMergingMode = mmode;
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_TRUE(bool(res));
       }
    }
 }

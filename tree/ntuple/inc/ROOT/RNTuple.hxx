@@ -81,6 +81,18 @@ public:
    static constexpr std::uint16_t kVersionMinor = 1;
    static constexpr std::uint16_t kVersionPatch = 2;
 
+   /// Returns the RNTuple version in the following form:
+   ///   Epoch: 2 most significant bytes
+   ///   Major: next 2 bytes
+   ///   Minor: next 2 bytes
+   ///   Patch: 2 least significant bytes
+   /// This integer can be compared with that of another RNTuple to determine which one has the highest overall version.
+   static constexpr std::uint64_t GetCurrentVersion()
+   {
+      return (static_cast<std::uint64_t>(kVersionEpoch) << 48) | (static_cast<std::uint64_t>(kVersionMajor) << 32) |
+             (static_cast<std::uint64_t>(kVersionMinor) << 16) | (static_cast<std::uint64_t>(kVersionPatch));
+   }
+
 private:
    /// Version of the RNTuple binary format that the writer supports (see specification).
    /// Changing the epoch indicates backward-incompatible changes
