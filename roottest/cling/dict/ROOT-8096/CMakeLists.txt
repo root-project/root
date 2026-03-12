@@ -1,6 +1,6 @@
 # ROOT-8096
 
-add_custom_command(OUTPUT dict.cxx
+add_custom_command(OUTPUT dict.cxx dict_rdict.pcm
    COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/definitions.h -o dict.cxx  --selection_file=${CMAKE_CURRENT_SOURCE_DIR}/selection.xml --rootmap libROOT-8096.rootmap --rootmap-lib libROOT-8096${libsuffix} )
 
 set_source_files_properties(dict.cxx PROPERTIES GENERATED TRUE)
@@ -19,6 +19,7 @@ add_test(NAME roottest-cling-dict-ROOT-8096-build
                                   --target  ROOT-8096${fast}
                                   -- ${always-make})
 #                                  --target  ${targetname_libgen}${fast})
+set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY FIXTURES_SETUP roottest-cling-dict-ROOT-8096-build)
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
 if(GeneratorNeedsBuildSerialization)
    set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
@@ -31,7 +32,7 @@ endif()
 ROOTTEST_ADD_TEST(load
                   MACRO load.C
                   PRECMD ${load_precmd}
-                  DEPENDS roottest-cling-dict-ROOT-8096-build
+                  FIXTURES_REQUIRED roottest-cling-dict-ROOT-8096-build
                   OUTREF load.ref)
 
 ROOTTEST_ADD_TESTDIRS()
