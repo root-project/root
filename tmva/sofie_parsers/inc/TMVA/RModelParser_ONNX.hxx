@@ -74,13 +74,13 @@ public:
    // parse the ONNX graph
    void ParseONNXGraph(RModel & model, const onnx::GraphProto & g, std::string  name = "");
 
-   std::unique_ptr<onnx::ModelProto> LoadModel(std::string filename);
-
-public:
+   std::unique_ptr<onnx::ModelProto> LoadModel(const std::string &filename);
+   std::unique_ptr<onnx::ModelProto> LoadModel(std::istream &input);
 
    RModelParser_ONNX() noexcept;
 
-   RModel Parse(std::string filename, bool verbose = false);
+   RModel Parse(std::string const &filename, bool verbose = false);
+   RModel Parse(std::istream &input, std::string const &name, bool verbose = false);
 
    // check the model for missing operators - return false in case some operator implementation is missing
    bool CheckModel(std::string filename, bool verbose = false);

@@ -359,7 +359,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
 }
 
 // Parse a model
-RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
+RModel RModelParser_ONNX::Parse(std::string const &filename, bool verbose)
 {
    fVerbose = verbose;
 
@@ -392,15 +392,44 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    return rmodel;
 }
 
-std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filename) {
+RModel RModelParser_ONNX::Parse(std::istream &input, std::string const &name, bool verbose)
+{
+   fVerbose = verbose;
 
+   fTensorTypeMap.clear();
+
+   auto model = LoadModel(input);
+   if (!model)
+      throw std::runtime_error("TMVA::SOFIE - Failed to parse ONNX model from input stream");
+
+   const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
+
+   std::time_t ttime = std::time(0);
+   std::tm *gmt_time = std::gmtime(&ttime);
+   std::string parsetime(std::asctime(gmt_time));
+
+   RModel rmodel(name, parsetime);
+   ParseONNXGraph(rmodel, graph, name);
+   return rmodel;
+}
+
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(const std::string &filename) {
+   std::fstream input(filename, std::ios::in | std::ios::binary);
+   if (!input) {
+      std::cerr << "TMVA::SOFIE - Failed to open onnx file " << filename << std::endl;
+      return {};
+   }
+
+   return LoadModel(input);
+}
+
+std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &input) {
    GOOGLE_PROTOBUF_VERIFY_VERSION;
    auto model = std::make_unique<onnx::ModelProto>();
 
-   std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!model->ParseFromIstream(&input)) {
-      std::cerr << "TMVA::SOFIE - Failed to open onnx file " <<  filename << std::endl;
-      return std::unique_ptr<onnx::ModelProto>();
+      std::cerr << "TMVA::SOFIE - Failed to parse ONNX model from input stream" << std::endl;
+      return {};
    }
 
    // ONNX version is ir_version()  - model_version() returns 0
