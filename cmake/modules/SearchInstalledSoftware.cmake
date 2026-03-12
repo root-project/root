@@ -411,11 +411,17 @@ if(asimage)
       list(APPEND ASEXTRA_LIBRARIES GIF::GIF)
     else()
       if(fail-on-missing)
-          message(SEND_ERROR "Dependency libgif not found. Please make sure it's installed on the system, or force the builtin libgif with '-Dbuiltin_gif=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
+        message(SEND_ERROR "Dependency libgif not found. Please make sure it's installed on the system, or force the builtin libgif with '-Dbuiltin_gif=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
       else()
         set(builtin_gif ON CACHE BOOL "Enabled because needed for asimage" FORCE)
       endif()
     endif()
+  endif()
+
+  if(builtin_gif)
+    add_subdirectory(builtins/libgif)
+    get_target_property(GIF_INCLUDE_DIR GIF::GIF INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(GIF_LIBRARY_LOCATION GIF::GIF IMPORTED_LOCATION)
   endif()
 
   if(NOT builtin_png)
@@ -496,6 +502,8 @@ if(asimage)
                  -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
                  -DPNG_INCLUDE_DIR=${PNG_INCLUDE_DIR}
                  -DPNG_LIBRARY_LOCATION=${PNG_LIBRARY_LOCATION}
+                 -DGIF_INCLUDE_DIR=${GIF_INCLUDE_DIR}
+                 -DGIF_LIBRARY_LOCATION=${GIF_LIBRARY_LOCATION}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ASTEP_EXTRA_BUILD_ARGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${ASTEP_LIB_DIR}/libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
@@ -503,18 +511,17 @@ if(asimage)
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
       TIMEOUT 600
     )
+    if(builtin_gif)
+      add_dependencies(AFTERIMAGE BUILTIN_LIBGIF)
+    endif()
+    if(builtin_jpeg)
+      add_dependencies(AFTERIMAGE BUILTIN_LIBJPEG)
+    endif()
+    if(builtin_png)
+      add_dependencies(AFTERIMAGE BUILTIN_LIBPNG)
+    endif()
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
-    if(NOT builtin_gif)
-      list(APPEND afterimage_extra_args --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-ungif)
-    endif()
-    if(NOT builtin_png)
-      list(APPEND afterimage_extra_args --with-png-includes=${PNG_INCLUDE_DIR})
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-png)
-    endif()
     if(asimage_tiff)
       list(APPEND afterimage_extra_args --with-tiff-includes=${TIFF_INCLUDE_DIR})
     else()
@@ -550,6 +557,8 @@ if(asimage)
                         --with-jpeg-includes=${JPEG_INCLUDE_DIR}
                         --with-png
                         --with-png-includes=${PNG_INCLUDE_DIR}
+                        --with-gif
+                        --with-gif-includes=${GIF_INCLUDE_DIR}
                         ${afterimage_extra_args}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
