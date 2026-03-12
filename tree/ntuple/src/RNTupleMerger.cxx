@@ -106,6 +106,16 @@ static std::optional<ENTupleMergeErrBehavior> ParseOptionErrBehavior(const TStri
                                                         {"Skip", ENTupleMergeErrBehavior::kSkip},
                                                      });
 }
+
+static std::optional<ENTupleMergeVersionBehavior> ParseOptionVersionBehavior(const TString &opts)
+{
+   return ParseStringOption<ENTupleMergeVersionBehavior>(
+      opts, "rntuple.VersionBehavior=",
+      {
+         {"WarnOnHigherVersion", ENTupleMergeVersionBehavior::kWarnOnHigherVersion},
+         {"AbortOnHigherVersion", ENTupleMergeVersionBehavior::kAbortOnHigherVersion},
+      });
+}
 // -------------------------------------------------------------------------------------
 
 // Entry point for TFileMerger. Internally calls RNTupleMerger::Merge().
@@ -243,6 +253,9 @@ try {
    }
    if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
       mergerOpts.fErrBehavior = *errBehavior;
+   }
+   if (auto versionBehavior = ParseOptionVersionBehavior(mergeInfo->fOptions)) {
+      mergerOpts.fVersionBehavior = *versionBehavior;
    }
    merger.Merge(sourcePtrs, mergerOpts).ThrowOnError();
 
@@ -1257,9 +1270,16 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
       if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
-         R__LOG_WARNING(NTupleMergeLog()) << "RNTuple '" << mergeData.fSrcDescriptor->GetName()
-                                          << "' has a higher format version than the latest supported by this version "
-                                             "of ROOT. Merging will work but some features may be dropped.";
+         if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
+            R__LOG_WARNING(NTupleMergeLog())
+               << "RNTuple '" << mergeData.fSrcDescriptor->GetName()
+               << "' has a higher format version than the latest supported by this version "
+                  "of ROOT. Merging will work but some features may be dropped.";
+         } else {
+            return R__FAIL("RNTuple '" + mergeData.fSrcDescriptor->GetName() +
+                           "' has a higher format version than the latest supported by this version. Refusing to "
+                           "merge, since RNTupleMergeOptions::fVersionBehavior is set to AbortOnHigherVersion.");
+         }
       }
 
       // Create sink from the input model if not initialized
