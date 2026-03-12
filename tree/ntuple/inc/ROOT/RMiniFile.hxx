@@ -159,6 +159,7 @@ private:
 
       /// Whether the C file stream has been opened with Direct I/O, introducing alignment requirements.
       bool fDirectIO = false;
+      bool fIsClone = false;
 
       struct RSharedData {
          /// For the simplest cases, a C file stream can be used for writing
