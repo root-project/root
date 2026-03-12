@@ -78,6 +78,9 @@ TEST(CurlFile, S3Credentials)
    if (!testAccessKey || testAccessKey[0] == '\0' || !testSecretKey || testSecretKey[0] == '\0') {
       GTEST_SKIP() << "Missing S3 test credentials <ROOT_TEST_S3_[ACCESS|SECRET]_KEY>, skipping";
    }
+   if (ROOT::Internal::RCurlConnection::GetCurlVersion() <= 0x078100) {
+      GTEST_SKIP() << "libcurl <= 7.81 is known to produce an AWSv4 signature incompatible with Ceph S3";
+   }
 
    gSystem->Setenv("S3_ACCESS_KEY", testAccessKey);
    gSystem->Setenv("S3_SECRET_KEY", testSecretKey);
