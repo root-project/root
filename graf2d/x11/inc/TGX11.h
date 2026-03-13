@@ -215,7 +215,7 @@ public:
    void      DrawLinesSegments(Int_t n, TPoint *xy) override;
    void      DrawPolyMarker(Int_t n, TPoint *xy) override;
    void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
-   void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
 
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;

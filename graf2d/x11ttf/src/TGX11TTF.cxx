@@ -360,13 +360,13 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawText.
+/// text is drawn with TGX11::DrawTextW.
 
-void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const char *text, ETextMode mode)
+void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                         const char *text, ETextMode mode)
 {
    if (!fHasTTFonts) {
-      TGX11::DrawText(x, y, angle, mgn, text, mode);
+      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
    } else {
       if (!TTF::fgInit) TTF::Init();
       TTF::SetRotationMatrix(angle);
@@ -379,13 +379,13 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawText.
+/// text is drawn with TGX11::DrawTextW.
 
-void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const wchar_t *text, ETextMode mode)
+void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                         const wchar_t *text, ETextMode mode)
 {
    if (!fHasTTFonts) {
-      TGX11::DrawText(x, y, angle, mgn, text, mode);
+      TGX11::DrawTextW(wctxt, x, y, angle, mgn, text, mode);
    } else {
       if (!TTF::fgInit) TTF::Init();
       TTF::SetRotationMatrix(angle);

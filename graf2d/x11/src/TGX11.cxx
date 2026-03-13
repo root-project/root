@@ -849,6 +849,23 @@ void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw a text string using current font.
+///
+///  \param [in] mode       : drawing mode
+///              - mode=0     : the background is not drawn (kClear)
+///              - mode=1     : the background is drawn (kOpaque)
+///  \param [in] x,y        : text position
+///  \param [in] angle      : text angle
+///  \param [in] mgn        : magnification factor
+///  \param [in] text       : text string
+
+void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                     const wchar_t *text, ETextMode mode)
+{
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw a text string using current font on specified window.
 ///
 ///  \param [in] mode       : drawing mode
