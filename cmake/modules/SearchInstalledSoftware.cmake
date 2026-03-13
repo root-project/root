@@ -361,7 +361,7 @@ endif()
 
 #---Check for ZSTD-------------------------------------------------------------------
 if(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
-  message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0) or enable ROOT's builtin version.")
+  message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
 endif()
 
 if(builtin_zstd)
