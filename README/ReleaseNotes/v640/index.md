@@ -43,6 +43,10 @@ The following people have contributed to this new version:
   never had any effect on ROOT. The associated bit TDirectory::fgAddDirectory was deprecated as well. Although users can set and read the bit, its usage should be
   stopped completely to avoid any confusion. The bit and functions will be removed in ROOT 7.
 * The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` have been deprecated because the name was misleading, and they will be removed in ROOT 6.42. Despite the name, the function did not actually remove a range, but only cleared its limits by setting them to  `−inf,+inf` leaving the named range itself defined (so `hasRange()` would still return `true`). Users should now explicitly call `removeMin()` and `removeMax()` to remove the lower and upper limits of a range.
+* The `builtin_zeromq` and `builtin_cppzmq` build options are deprecated and will be removed in ROOT 6.42.
+  The ZeroMQ library and its C++ bindings are used by the experimental RooFit multiprocessing package, enabled by the `roofit_multiprocess` build option.
+  The ZeroMQ versions it requires (>=4.3.6 or 4.3.5 with the draft API) are now available in the package managers of several platforms, for example Conda, Homebrew, Fedora and the Extra Packages for Enterprise Linux (EPEL).
+  The `roofit_multiprocess` feature is only required by a small set of RooFit power uses, who are using one of these environments and therefore don't require the builtin ZeroMQ library.
 
 ## Removals
 

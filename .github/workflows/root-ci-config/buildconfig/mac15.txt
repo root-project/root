@@ -1,5 +1,4 @@
 builtin_cfitsio=ON
-builtin_cppzmq=ON
 builtin_fftw3=ON
 builtin_freetype=ON
 builtin_ftgl=ON
@@ -16,7 +15,6 @@ builtin_unuran=ON
 builtin_vdt=ON
 builtin_xrootd=ON
 builtin_xxhash=ON
-builtin_zeromq=ON
 builtin_zstd=ON
 cocoa=ON
 davix=OFF
