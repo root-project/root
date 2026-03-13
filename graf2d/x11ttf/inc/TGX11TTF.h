@@ -58,9 +58,10 @@ public:
    ~TGX11TTF() override { }
 
    Bool_t Init(void *display) override;
-   void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+
+   void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const char *text, ETextMode mode) override;
-   void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+   void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const wchar_t *text, ETextMode mode) override;
 
    using TGX11::SetTextFont;
