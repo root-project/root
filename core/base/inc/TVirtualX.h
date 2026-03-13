@@ -110,6 +110,15 @@ public:
    virtual void      SetAttText(WinContext_t wctxt, const TAttText &att);
    virtual void      SetDrawMode(WinContext_t wctxt, EDrawMode mode);
 
+   virtual void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
+   virtual void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy);
+   virtual void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   virtual void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy);
+   virtual void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy);
+   virtual void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy);
+   virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
+   virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode);
+
 
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----
    virtual Double_t  GetOpenGLScalingFactor();

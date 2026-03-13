@@ -390,44 +390,115 @@ WinContext_t TVirtualX::GetWindowContext(Int_t /* wid */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill attributes for specified window
 
-void TVirtualX::SetAttFill(WinContext_t /* wctxt */, const TAttFill & /* att */)
+void TVirtualX::SetAttFill(WinContext_t /* wctxt */, const TAttFill &att)
 {
-
+   SetFillColor(att.GetFillColor());
+   SetFillStyle(att.GetFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set line attributes for specified window
 
-void TVirtualX::SetAttLine(WinContext_t /* wctxt */, const TAttLine & /* att */)
+void TVirtualX::SetAttLine(WinContext_t /* wctxt */, const TAttLine &att)
 {
-
+   SetLineColor(att.GetLineColor());
+   SetLineStyle(att.GetLineStyle());
+   SetLineWidth(att.GetLineWidth());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker attributes for specified window
 
-void TVirtualX::SetAttMarker(WinContext_t /* wctxt */, const TAttMarker & /* att */)
+void TVirtualX::SetAttMarker(WinContext_t /* wctxt */, const TAttMarker &att)
 {
-
+   SetMarkerColor(att.GetMarkerColor());
+   SetMarkerSize(att.GetMarkerSize());
+   SetMarkerStyle(att.GetMarkerStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set text attributes for specified window
 
-void TVirtualX::SetAttText(WinContext_t /* wctxt */, const TAttText & /* att */)
+void TVirtualX::SetAttText(WinContext_t /* wctxt */, const TAttText &att)
 {
-
+   SetTextAlign(att.GetTextAlign());
+   SetTextAngle(att.GetTextAngle());
+   SetTextColor(att.GetTextColor());
+   SetTextSize(att.GetTextSize());
+   SetTextFont(att.GetTextFont());
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set window draw mode
 
-void TVirtualX::SetDrawMode(WinContext_t /* wctxt */, EDrawMode /* mode */)
+void TVirtualX::SetDrawMode(WinContext_t /* wctxt */, EDrawMode mode)
 {
-
+   SetDrawMode(mode);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw box on specified window
+
+void TVirtualX::DrawBoxW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+{
+   DrawBox(x1, y1, x2, y2, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw fill area on specified window
+
+void TVirtualX::DrawFillAreaW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawFillArea(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw line on specified window
+
+void TVirtualX::DrawLineW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   DrawLine(x1, y1, x2, y2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly line on specified window
+
+void TVirtualX::DrawPolyLineW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawPolyLine(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw line segments on specified window
+
+void TVirtualX::DrawLinesSegmentsW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawLinesSegments(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw poly marker on specified window
+
+void TVirtualX::DrawPolyMarkerW(WinContext_t /* wctxt */, Int_t n, TPoint *xy)
+{
+   DrawPolyMarker(n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text on specified window
+
+void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode)
+{
+   DrawText(x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw wtext on specified window
+
+void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode)
+{
+   DrawText(x, y, angle, mgn, text, mode);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Executes the command "code" coming from the other threads (Win32)
