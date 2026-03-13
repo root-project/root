@@ -330,12 +330,8 @@ void TAttMarker::Modify()
 void TAttMarker::ModifyOn(TVirtualPad *pad)
 {
    auto pp = pad ? pad->GetPainter() : nullptr;
-   if (!pp)
-      return;
-
-   pp->SetMarkerColor(fMarkerColor);
-   pp->SetMarkerSize (fMarkerSize);
-   pp->SetMarkerStyle(fMarkerStyle);
+   if (pp)
+      pp->SetAttMarker(*this);
 }
 
 

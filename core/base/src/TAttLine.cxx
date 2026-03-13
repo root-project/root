@@ -256,11 +256,21 @@ void TAttLine::ModifyOn(TVirtualPad *pad)
    auto pp = pad ? pad->GetPainter() : nullptr;
    if (!pp)
       return;
-   pp->SetLineColor(fLineColor);
-   pp->SetLineStyle((fLineStyle > 0 && fLineStyle < 30) ? fLineStyle : 1);
-   pp->SetLineWidth(std::abs(fLineWidth % 100));
-}
 
+   Bool_t normal_style = (fLineStyle > 0) && (fLineStyle < 30);
+   Bool_t normal_width = (fLineWidth >= 0) && (fLineWidth < 100);
+
+   if (normal_style && normal_width)
+      pp->SetAttLine(*this);
+   else {
+      TAttLine att1(*this);
+      if (!normal_style)
+         att1.SetLineStyle(1);
+      if (!normal_width)
+         att1.SetLineWidth(std::abs(fLineWidth % 100));
+      pp->SetAttLine(att1);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this line attributes to default values.

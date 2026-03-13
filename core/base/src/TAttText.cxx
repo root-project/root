@@ -329,7 +329,6 @@ void TAttText::Modify()
    ModifyOn(gPad);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current text attributes if necessary on specified pad.
 
@@ -339,6 +338,7 @@ void TAttText::ModifyOn(TVirtualPad *pad)
    if (!pp)
       return;
 
+   Float_t tsize0 = fTextSize;
    Float_t tsize = fTextSize;
 
    // there was difference in text size handling, keep it in one place
@@ -362,15 +362,12 @@ void TAttText::ModifyOn(TVirtualPad *pad)
          }
       }
    }
-   pp->SetTextAngle(fTextAngle);
-   if (pp->GetTextFont() != fTextFont) {
-      pp->SetTextFont(fTextFont);
-      pp->SetTextSize(tsize);
-   } else if (pp->GetTextSize() != tsize) {
-      pp->SetTextSize(tsize);
-   }
-   pp->SetTextAlign(fTextAlign);
-   pp->SetTextColor(fTextColor);
+
+   fTextSize = tsize;
+
+   pp->SetAttText(*this);
+
+   fTextSize = tsize0;
 }
 
 
