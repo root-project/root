@@ -11,6 +11,10 @@
 
 #include "TVirtualPadPainter.h"
 #include "TPluginManager.h"
+#include "TAttFill.h"
+#include "TAttLine.h"
+#include "TAttMarker.h"
+#include "TAttText.h"
 
 
 /** \class TVirtualPadPainter
@@ -95,4 +99,45 @@ void TVirtualPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 void TVirtualPadPainter::DrawTextUrl(Double_t x, Double_t y, const char *text, const char * /* url */)
 {
    DrawText(x, y, text, kClear);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes
+
+void TVirtualPadPainter::SetAttFill(const TAttFill &att)
+{
+   SetFillColor(att.GetFillColor());
+   SetFillStyle(att.GetFillStyle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes
+
+void TVirtualPadPainter::SetAttLine(const TAttLine &att)
+{
+   SetLineColor(att.GetLineColor());
+   SetLineStyle(att.GetLineStyle());
+   SetLineWidth(att.GetLineWidth());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker attributes
+
+void TVirtualPadPainter::SetAttMarker(const TAttMarker &att)
+{
+   SetMarkerColor(att.GetMarkerColor());
+   SetMarkerSize(att.GetMarkerSize());
+   SetMarkerStyle(att.GetMarkerStyle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes
+
+void TVirtualPadPainter::SetAttText(const TAttText &att)
+{
+   SetTextAlign(att.GetTextAlign());
+   SetTextAngle(att.GetTextAngle());
+   SetTextColor(att.GetTextColor());
+   SetTextSize(att.GetTextSize());
+   SetTextFont(att.GetTextFont());
 }
