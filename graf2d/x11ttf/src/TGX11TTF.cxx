@@ -208,9 +208,9 @@ Bool_t TGX11TTF::Init(void *display)
 /// then the rotation is applied on the alignment variables.
 /// SetRotation and LayoutGlyphs should have been called before.
 
-void TGX11TTF::Align(void)
+void TGX11TTF::Align(Int_t value)
 {
-   EAlign align = (EAlign) fTextAlign;
+   EAlign align = (EAlign) value;
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
@@ -372,8 +372,8 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
-      Align();
-      RenderString(x, y, mode);
+      Align(GetTextAlignW(wctxt));
+      RenderString(wctxt, x, y, mode);
    }
 }
 
@@ -391,21 +391,21 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
-      Align();
-      RenderString(x, y, mode);
+      Align(GetTextAlignW(wctxt));
+      RenderString(wctxt, x, y, mode);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the background of the current window in an XImage.
 
-RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+RXImage *TGX11TTF::GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   Window_t cws = GetWindow(wctxt);
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize(cws, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -419,32 +419,37 @@ RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x+w > width)  w = width - x;
    if (y+h > height) h = height - y;
 
-   return (RXImage*)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
+   return (RXImage *)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test if there is really something to render.
 
-Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
+Bool_t TGX11TTF::IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   Window_t cws = GetWindow(wctxt);
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize(cws, xy, xy, width, height);
 
    // If w or h is 0, very likely the string is only blank characters
-   if ((int)w == 0 || (int)h == 0)  return kFALSE;
+   if ((int)w == 0 || (int)h == 0)
+      return kFALSE;
 
    // If string falls outside window, there is probably no need to draw it.
-   if (x + (int)w <= 0 || x >= (int)width)  return kFALSE;
-   if (y + (int)h <= 0 || y >= (int)height) return kFALSE;
+   if (x + (int)w <= 0 || x >= (int)width)
+      return kFALSE;
+   if (y + (int)h <= 0 || y >= (int)height)
+      return kFALSE;
 
    // If w or h are much larger than the window size, there is probably no need
    // to draw it. Moreover a to large text size may produce a Seg Fault in
    // malloc in RenderString.
-   if (w > 10*width)  return kFALSE;
-   if (h > 10*height) return kFALSE;
+   if (w > 10*width)
+      return kFALSE;
+   if (h > 10*height)
+      return kFALSE;
 
    return kTRUE;
 }
@@ -453,7 +458,7 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 /// Perform the string rendering in the pad.
 /// LayoutGlyphs should have been called before.
 
-void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
+void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
    TTF::TTGlyph* glyph = TTF::fgGlyphs;
 
@@ -465,7 +470,8 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    Int_t x1   = x-Xoff-fAlign.x;
    Int_t y1   = y+Yoff+fAlign.y-h;
 
-   if (!IsVisible(x1, y1, w, h)) return;
+   if (!IsVisible(wctxt, x1, y1, w, h))
+      return;
 
    // create the XImage that will contain the text
    UInt_t depth = fDepth;
@@ -481,9 +487,9 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
    ULong_t   bg;
    XGCValues values;
-   GC *gc = (GC*)GetGC(3);
+   auto gc = (GC *) GetGCW(wctxt, 3);
    if (!gc) {
-      Error("DrawText", "error getting Graphics Context");
+      Error("RenderString", "error getting Graphics Context");
       return;
    }
    XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
@@ -491,7 +497,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    // get the background
    if (mode == kClear) {
       // if mode == kClear we need to get an image of the background
-      XImage *bim = GetBackground(x1, y1, w, h);
+      XImage *bim = GetBackground(wctxt, x1, y1, w, h);
       if (!bim) {
          Error("DrawText", "error getting background image");
          return;
@@ -533,9 +539,10 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    }
 
    // put the Ximage on the screen
-   Window_t cws = GetCurrentWindow();
-   gc = (GC*)GetGC(6);
-   if (gc) XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
+   Window_t cws = GetWindow(wctxt);
+   gc = (GC *) GetGCW(wctxt, 6);
+   if (gc)
+      XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
    XDestroyImage(xim);
 }
 
