@@ -13,6 +13,7 @@
 #define ROOT_TPadPainter
 
 #include "TVirtualPadPainter.h"
+#include "GuiTypes.h"
 
 /*
 TVirtualPadPainter is an attempt to abstract
@@ -24,6 +25,8 @@ or gl pad painter.
 class TVirtualPad;
 
 class TPadPainter : public TVirtualPadPainter {
+   WinContext_t   fWinContext;
+
 public:
    TPadPainter();
    //Final overriders for TVirtualPadPainter pure virtual functions.
@@ -70,6 +73,12 @@ public:
    void     SetMarkerColor(Color_t mcolor) override;
    void     SetMarkerStyle(Style_t mstyle) override;
    void     SetMarkerSize(Size_t msize) override;
+
+   //Overall attributes
+   void      SetAttFill(const TAttFill &att) override;
+   void      SetAttLine(const TAttLine &att) override;
+   void      SetAttMarker(const TAttMarker &att) override;
+   void      SetAttText(const TAttText &att) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
