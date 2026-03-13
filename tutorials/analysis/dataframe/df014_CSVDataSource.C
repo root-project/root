@@ -23,11 +23,8 @@ int df014_CSVDataSource()
 {
    // Let's first create a RDF that will read from the CSV file.
    // The types of the columns will be automatically inferred.
-   auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
-   auto fileName = "CsvDataSource_MuRun2010B.csv";
-   if(gSystem->AccessPathName(fileName))
-      TFile::Cp(fileNameUrl, fileName);
-   auto df = ROOT::RDF::FromCSV(fileName);
+   auto fileUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   auto df = ROOT::RDF::FromCSV(fileUrl);
 
    // Now we will apply a first filter based on two columns of the CSV,
    // and we will define a new column that will contain the invariant mass.
