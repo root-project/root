@@ -58,9 +58,12 @@ class RooAbsReal(object):
         r"""The RooAbsReal::createHistogram() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsReal.createHistogram` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createHistogram(*args, **kwargs)
+        out = self._createHistogram(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
@@ -72,9 +75,12 @@ class RooAbsReal(object):
         r"""The RooAbsReal::createIntegral() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsReal.createIntegral` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createIntegral(*args, **kwargs)
+        out = self._createIntegral(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
@@ -86,9 +92,12 @@ class RooAbsReal(object):
         r"""The RooAbsReal::createRunningIntegral() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsReal.createRunningIntegral` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createRunningIntegral(*args, **kwargs)
+        out = self._createRunningIntegral(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},"
@@ -99,9 +108,12 @@ class RooAbsReal(object):
         r"""The RooAbsReal::createChi2() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsReal.createChi2` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createChi2(*args, **kwargs)
+        out = self._createChi2(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooFitResult *RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},"
@@ -112,9 +124,12 @@ class RooAbsReal(object):
         r"""The RooAbsReal::chi2FitTo() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsReal.chi2FitTo` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._chi2FitTo(*args, **kwargs)
+        out = self._chi2FitTo(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     def setEvalErrorLoggingMode(m):
 

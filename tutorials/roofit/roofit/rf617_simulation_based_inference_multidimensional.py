@@ -78,6 +78,7 @@ def morphing(setting, n_dimensions):
             hist.add(hist.get(i_bin), 1.0)
 
         templates[nd_idx] = ROOT.RooHistPdf(f"histpdf{idx}", f"histpdf{idx}", ROOT.RooArgSet(*x_vars), hist, 1)
+        templates[nd_idx]._data_hist = hist  # To keep the underlying RooDataHist alive
 
         # Add the PDF to the grid
         grid.addPdf(templates[nd_idx], *nd_idx)
