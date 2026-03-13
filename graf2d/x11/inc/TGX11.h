@@ -196,10 +196,13 @@ public:
    //---- Methods used for old graphics -----
    void      SetFillColor(Color_t cindex) override;
    void      SetFillStyle(Style_t style) override;
+   Style_t   GetFillStyle() const override;
    void      SetLineColor(Color_t cindex) override;
    void      SetLineType(Int_t n, Int_t *dash) override;
    void      SetLineStyle(Style_t linestyle) override;
+   Style_t   GetLineStyle() const override;
    void      SetLineWidth(Width_t width) override;
+   Width_t   GetLineWidth() const override;
    void      SetMarkerColor(Color_t cindex) override;
    void      SetMarkerSize(Float_t markersize) override;
    void      SetMarkerStyle(Style_t markerstyle) override;
