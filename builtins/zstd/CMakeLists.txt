@@ -1,104 +1,57 @@
-project(zstd LANGUAGES C)
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
 
-find_package(xxHash REQUIRED)
+# **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
+# 19 Feb 2025,  https://github.com/facebook/zstd/releases/tag/v1.5.7
+set(ROOT_ZSTD_VERSION 1.5.7)
+set(ROOT_ZSTD_HASH "37d7284556b20954e56e1ca85b80226768902e2edabd3b649e9e72c0c9012ee3")
+set(ZSTD_VERSION ${ROOT_ZSTD_VERSION} CACHE INTERNAL "" FORCE) # used in roottest
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(AddZstdCompilationFlags)
-ADD_ZSTD_COMPILATION_FLAGS()
+set(ROOT_ZSTD_PREFIX ${CMAKE_BINARY_DIR}/builtins/ZSTD-prefix)
 
-file(READ zstd.h CONTENT)
-string(REGEX MATCH ".*define ZSTD_VERSION_MAJOR *([0-9]+).*define ZSTD_VERSION_MINOR *([0-9]+).*define ZSTD_VERSION_RELEASE *([0-9]+)" VERSION_REGEX "${CONTENT}")
-set(ZSTD_VERSION_MAJOR ${CMAKE_MATCH_1})
-set(ZSTD_VERSION_MINOR ${CMAKE_MATCH_2})
-set(ZSTD_VERSION_PATCH ${CMAKE_MATCH_3})
-set(ZSTD_VERSION_STRING "${ZSTD_VERSION_MAJOR}.${ZSTD_VERSION_MINOR}.${ZSTD_VERSION_PATCH}")
-
-set(ZSTD_SOURCES
-        common/error_private.c
-        common/fse_decompress.c
-        common/pool.c
-        common/zstd_common.c
-        common/entropy_common.c
-        common/threading.c
-        compress/fse_compress.c
-        compress/zstd_compress_superblock.c
-        compress/zstd_fast.c
-        compress/hist.c
-        compress/zstd_compress_literals.c
-        compress/zstd_opt.c
-        compress/zstd_lazy.c
-        compress/huf_compress.c
-        compress/zstd_compress_sequences.c
-        compress/zstd_double_fast.c
-        compress/zstdmt_compress.c
-        compress/zstd_compress.c
-        compress/zstd_ldm.c
-        decompress/huf_decompress.c
-        decompress/zstd_ddict.h
-        decompress/zstd_decompress_block.c
-        decompress/zstd_ddict.c
-        decompress/zstd_decompress.c
-        dictBuilder/cover.c
-        dictBuilder/divsufsort.c
-        dictBuilder/fastcover.c
-        dictBuilder/zdict.c
-)
-
-set(ZSTD_HEADERS
-       zstd.h
-       zstd_errors.h
-       zdict.h
-       common/bitstream.h
-       common/threading.h
-       common/zstd_internal.h
-       common/compiler.h
-       common/debug.h
-       common/error_private.h
-       common/huf.h
-       common/pool.h
-       common/zstd_deps.h
-       common/cpu.h
-       common/entropy_common.c
-       common/fse.h
-       common/mem.h
-       compress/zstd_compress_internal.h
-       compress/zstd_ldm.h
-       compress/zstd_compress_superblock.h
-       compress/zstd_fast.h
-       compress/hist.h
-       compress/zstd_compress_literals.h
-       compress/zstd_cwksp.h
-       compress/zstd_opt.h
-       decompress/zstd_lazy.h
-       decompress/zstd_compress_sequences.h
-       decompress/zstd_double_fast.h
-       decompress/zstdmt_compress.h
-       decompress/zstd_ddict.h
-       decompress/zstd_decompress_internal.h
-       decompress/zstd_decompress_block.h
-       dictBuilder/cover.h
-       dictBuilder/divsufsort.h
-)
-
-set(ZSTD_VERSION ${ZSTD_VERSION_STRING} CACHE INTERNAL "" FORCE)
-set(ZSTD_VERSION_STRING ${ZSTD_VERSION_STRING} CACHE INTERNAL "" FORCE)
-set(ZSTD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
-set(ZSTD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
-
-add_library(zstd STATIC ${ZSTDHEADERS} ${ZSTD_SOURCES})
-target_compile_definitions(zstd PRIVATE "XXH_NAMESPACE=ZSTD_")
-set_target_properties(zstd PROPERTIES COMPILE_DEFINITIONS "ZSTD_HEAPMODE=0;_CRT_SECURE_NO_WARNINGS" C_VISIBILITY_PRESET hidden)
-target_include_directories(zstd
-  PRIVATE ${xxHash_INCLUDE_DIR} ${ZSTD_INCLUDE_DIR}
-  INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>
-)
-
-if(NOT MSVC)
-  target_compile_options(zstd PRIVATE -fPIC -w -O3)
+if(MSVC)
+     set(ROOT_ZSTD_LIBRARY ${ROOT_ZSTD_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd_static${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+     set(ROOT_ZSTD_LIBRARY ${ROOT_ZSTD_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
-add_library(ZSTD::ZSTD ALIAS zstd)
 
-set(ZSTD_LIBRARY $<TARGET_FILE:ZSTD> CACHE INTERNAL "")
-set(ZSTD_LIBRARIES ZSTD::ZSTD CACHE INTERNAL "")
+if(MSVC)
+    # In the MSVC case, we forward the default C++ configuration flags because
+    # they are changed by ROOT in SetUpWindows.cmake.
+    set(zstd_extra_cmake_args
+        -DCMAKE_CXXFLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
+        -DCMAKE_CXXFLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
+        -DCMAKE_CXXFLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG})
+endif()
 
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS ZSTD::ZSTD)
+ExternalProject_Add(
+    BUILTIN_ZSTD
+    URL https://lcgpackages.web.cern.ch/tarFiles/sources/zstd-${ROOT_ZSTD_VERSION}.tar.gz
+    URL_HASH SHA256=${ROOT_ZSTD_HASH}
+    PREFIX ${ROOT_ZSTD_PREFIX}
+    SOURCE_SUBDIR "build/cmake"
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DCMAKE_CXX_VISIBILITY_PRESET=hidden
+    -DCMAKE_C_VISIBILITY_PRESET=hidden
+    -DZSTD_BUILD_SHARED=OFF
+    BUILD_COMMAND ${CMAKE_COMMAND} --build "<SOURCE_DIR>/<SOURCE_SUBDIR>" --config $<CONFIG>
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install "<SOURCE_DIR>/<SOURCE_SUBDIR>" --config $<CONFIG> 
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+    BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${ROOT_ZSTD_LIBRARY}
+    TIMEOUT 600
+)
+
+set(ZSTD_INCLUDE_DIR ${ROOT_ZSTD_PREFIX}/include)
+file(MAKE_DIRECTORY ${ZSTD_INCLUDE_DIR})
+add_library(ZSTD::ZSTD IMPORTED STATIC GLOBAL)
+set_target_properties(ZSTD::ZSTD PROPERTIES
+    IMPORTED_LOCATION ${ROOT_ZSTD_LIBRARY}
+    INTERFACE_INCLUDE_DIRECTORIES ${ZSTD_INCLUDE_DIR}
+)
