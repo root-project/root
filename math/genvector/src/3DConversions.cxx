@@ -39,12 +39,15 @@ namespace ROOT {
 namespace Math {
 namespace gv_detail {
 
+#if __cplusplus >= 202002L
+using enum Rotation3D::ERotation3DMatrixIndex;
+#else
 enum ERotation3DMatrixIndex
 { kXX = Rotation3D::kXX, kXY = Rotation3D::kXY, kXZ = Rotation3D::kXZ
 , kYX = Rotation3D::kYX, kYY = Rotation3D::kYY, kYZ = Rotation3D::kYZ
 , kZX = Rotation3D::kZX, kZY = Rotation3D::kZY, kZZ = Rotation3D::kZZ
 };
-
+#endif
 
 // ----------------------------------------------------------------------
 void convert( Rotation3D const & from, AxisAngle   & to)
