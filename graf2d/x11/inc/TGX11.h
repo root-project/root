@@ -225,6 +225,15 @@ public:
    void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
    void      SetDrawMode(WinContext_t wctxt, EDrawMode mode) override;
 
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
+   void      DrawTextW(WinContext_t, Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
+
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
    void         MapWindow(Window_t id) override;

@@ -524,6 +524,19 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 
 void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
+   DrawBoxW((WinContext_t) gCws, x1, y1, x2, y2, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a box on specified window
+///
+///  - mode=0 hollow  (kHollow)
+///  - mode=1 solid   (kSolid)
+
+void TGX11::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
    Int_t w = TMath::Abs(x2 - x1);
@@ -532,11 +545,11 @@ void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    switch (mode) {
 
       case kHollow:
-         XDrawRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], x, y, w, h);
+         XDrawRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], x, y, w, h);
          break;
 
       case kFilled:
-         XFillRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill], x, y, w, h);
+         XFillRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill], x, y, w, h);
          break;
 
       default:
@@ -588,13 +601,25 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
 
 void TGX11::DrawFillArea(int n, TPoint *xy)
 {
-   XPoint *xyp = (XPoint*)xy;
+   DrawFillAreaW((WinContext_t) gCws, n, xy);
+}
 
-   if (gCws->fillHollow)
-      XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill], xyp, n, CoordModeOrigin);
+////////////////////////////////////////////////////////////////////////////////
+/// Fill area described by polygon on specified window
+///
+///  \param [in] n     number of points
+///  \param [in] xy   list of points
+
+void TGX11::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   XPoint *xyp = (XPoint *)xy;
+
+   if (ctxt->fillHollow)
+      XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill], xyp, n, CoordModeOrigin);
 
    else {
-      XFillPolygon((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCfill],
+      XFillPolygon((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill],
                    xyp, n, Nonconvex, CoordModeOrigin);
    }
 }
@@ -607,11 +632,24 @@ void TGX11::DrawFillArea(int n, TPoint *xy)
 
 void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   if (gCws->lineStyle == LineSolid)
-      XDrawLine((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], x1, y1, x2, y2);
+   DrawLineW((WinContext_t) gCws, x1, y1, x2, y2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line on specified window.
+///
+///  \param [in] x1,y1        : begin of line
+///  \param [in] x2,y2        : end of line
+
+void TGX11::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   if (ctxt->lineStyle == LineSolid)
+      XDrawLine((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], x1, y1, x2, y2);
    else {
-      XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
-      XDrawLine((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], x1, y1, x2, y2);
+      XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+      XDrawLine((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], x1, y1, x2, y2);
    }
 }
 
@@ -623,6 +661,18 @@ void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
 void TGX11::DrawPolyLine(int n, TPoint *xy)
 {
+   DrawPolyLineW((WinContext_t) gCws, n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line through all points on specified window.
+///
+///  \param [in] n     number of points
+///  \param [in] xy   list of points
+
+void TGX11::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   auto ctxt = (XWindow_t *) wctxt;
    XPoint *xyp = (XPoint*)xy;
 
    const Int_t kMaxPoints = 1000001;
@@ -631,38 +681,36 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
       int ibeg = 0;
       int iend = kMaxPoints - 1;
       while (iend < n) {
-         DrawPolyLine( kMaxPoints, &xy[ibeg] );
+         DrawPolyLineW(wctxt, kMaxPoints, &xy[ibeg]);
          ibeg = iend;
          iend += kMaxPoints - 1;
       }
       if (ibeg < n) {
          int npt = n - ibeg;
-         DrawPolyLine( npt, &xy[ibeg] );
+         DrawPolyLineW(wctxt, npt, &xy[ibeg]);
       }
    } else if (n > 1) {
-      if (gCws->lineStyle == LineSolid)
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], xyp, n, CoordModeOrigin);
+      if (ctxt->lineStyle == LineSolid)
+         XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], xyp, n, CoordModeOrigin);
       else {
-         int i;
-         XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], xyp, n, CoordModeOrigin);
+         XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+         XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], xyp, n, CoordModeOrigin);
 
          // calculate length of line to update dash offset
-         for (i = 1; i < n; i++) {
+         for (int i = 1; i < n; i++) {
             int dx = xyp[i].x - xyp[i-1].x;
             int dy = xyp[i].y - xyp[i-1].y;
             if (dx < 0) dx = - dx;
             if (dy < 0) dy = - dy;
-            gCws->dashOffset += dx > dy ? dx : dy;
+            ctxt->dashOffset += dx > dy ? dx : dy;
          }
-         gCws->dashOffset %= gCws->dashLength;
+         ctxt->dashOffset %= ctxt->dashLength;
       }
    } else {
-      int px,py;
-      px=xyp[0].x;
-      py=xyp[0].y;
-      XDrawPoint((Display*)fDisplay, gCws->fDrawing,
-                 gCws->lineStyle == LineSolid ? gCws->fGClist[kGCline] : gCws->fGClist[kGCdash], px, py);
+      int px = xyp[0].x;
+      int py = xyp[0].y;
+      XDrawPoint((Display*)fDisplay, ctxt->fDrawing,
+                 ctxt->lineStyle == LineSolid ? ctxt->fGClist[kGCline] : ctxt->fGClist[kGCdash], px, py);
    }
 }
 
@@ -674,21 +722,34 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
 
 void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
 {
+   DrawLinesSegmentsW((WinContext_t) gCws, n, xy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draws N segments between provided points on specified windows
+///
+/// \param [in] n    number of segements
+/// \param [in] xy   list of points, size 2*n
+
+void TGX11::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
    const Int_t kMaxSegments = 500000;
    if (n > kMaxSegments) {
       Int_t ibeg = 0;
       Int_t iend = kMaxSegments;
       while (ibeg < n) {
-         DrawLinesSegments(iend - ibeg, &xy[ibeg*2]);
+         DrawLinesSegmentsW(wctxt, iend - ibeg, &xy[ibeg*2]);
          ibeg = iend;
          iend = TMath::Min(n, iend + kMaxSegments);
       }
    } else if (n > 0) {
-      if (gCws->lineStyle == LineSolid)
-         XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCline], (XSegment *) xy, n);
+      if (ctxt->lineStyle == LineSolid)
+         XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], (XSegment *) xy, n);
       else {
-         XSetDashes((Display*)fDisplay, gCws->fGClist[kGCdash], gCws->dashOffset, gCws->dashList.data(), gCws->dashList.size());
-         XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCdash], (XSegment *) xy, n);
+         XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+         XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], (XSegment *) xy, n);
       }
    }
 }
@@ -702,50 +763,62 @@ void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
 
 void TGX11::DrawPolyMarker(int n, TPoint *xy)
 {
-   XPoint *xyp = (XPoint*)xy;
+   DrawPolyMarkerW((WinContext_t) gCws, n, xy);
+}
 
-   if ((gCws->markerShape.size() == 0) && (gCws->markerSize <= 0)) {
+////////////////////////////////////////////////////////////////////////////////
+/// Draw n markers with the current attributes at position x, y on specified window.
+///
+///  \param [in] n     number of markers to draw
+///  \param [in] xy   x,y coordinates of markers
+
+void TGX11::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   XPoint *xyp = (XPoint *) xy;
+
+   if ((ctxt->markerShape.size() == 0) && (ctxt->markerSize <= 0)) {
       const int kNMAX = 1000000;
       int nt = n/kNMAX;
       for (int it=0;it<=nt;it++) {
          if (it < nt) {
-            XDrawPoints((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark], &xyp[it*kNMAX], kNMAX, CoordModeOrigin);
+            XDrawPoints((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark], &xyp[it*kNMAX], kNMAX, CoordModeOrigin);
          } else {
-            XDrawPoints((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark], &xyp[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
+            XDrawPoints((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark], &xyp[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
          }
       }
    } else {
-      int r = gCws->markerSize / 2;
-      auto &shape = gCws->markerShape;
+      int r = ctxt->markerSize / 2;
+      auto &shape = ctxt->markerShape;
 
       for (int m = 0; m < n; m++) {
-         if (gCws->markerType == 0) {
+         if (ctxt->markerType == 0) {
             // hollow circle
-            XDrawArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
-                      xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
-         } else if (gCws->markerType == 1) {
+            XDrawArc((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
+                      xyp[m].x - r, xyp[m].y - r, ctxt->markerSize, ctxt->markerSize, 0, 360*64);
+         } else if (ctxt->markerType == 1) {
             // filled circle
-            XFillArc((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
-                      xyp[m].x - r, xyp[m].y - r, gCws->markerSize, gCws->markerSize, 0, 360*64);
+            XFillArc((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
+                      xyp[m].x - r, xyp[m].y - r, ctxt->markerSize, ctxt->markerSize, 0, 360*64);
          } else {
             for (size_t i = 0; i < shape.size(); i++) {
                shape[i].x += xyp[m].x;
                shape[i].y += xyp[m].y;
             }
-            switch(gCws->markerType) {
+            switch(ctxt->markerType) {
                case 2:
                   // hollow polygon
-                  XDrawLines((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                  XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
                              shape.data(), shape.size(), CoordModeOrigin);
                   break;
                case 3:
                   // filled polygon
-                  XFillPolygon((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                  XFillPolygon((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
                                shape.data(), shape.size(), Nonconvex, CoordModeOrigin);
                   break;
                case 4:
                   // segmented line
-                  XDrawSegments((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCmark],
+                  XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
                                 (XSegment *) shape.data(), shape.size()/2);
                   break;
             }
@@ -772,8 +845,26 @@ void TGX11::DrawPolyMarker(int n, TPoint *xy)
 void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const char *text, ETextMode mode)
 {
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
 
-   if (!text || !gCws->textFont || gCws->fAttText.GetTextSize() < 0)
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a text string using current font on specified window.
+///
+///  \param [in] mode       : drawing mode
+///              - mode=0     : the background is not drawn (kClear)
+///              - mode=1     : the background is drawn (kOpaque)
+///  \param [in] x,y        : text position
+///  \param [in] angle      : text angle
+///  \param [in] mgn        : magnification factor
+///  \param [in] text       : text string
+
+void TGX11::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                      const char *text, ETextMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   if (!text || !ctxt->textFont || ctxt->fAttText.GetTextSize() < 0)
       return;
 
    XRotSetMagnification(mgn);
@@ -781,13 +872,13 @@ void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    switch (mode) {
 
       case kClear:
-         XRotDrawAlignedString((Display*)fDisplay, gCws->textFont, angle,
-                      gCws->fDrawing, gCws->fGClist[kGCtext], x, y, (char*)text, gCws->textAlign);
+         XRotDrawAlignedString((Display*)fDisplay, ctxt->textFont, angle,
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
          break;
 
       case kOpaque:
-         XRotDrawAlignedImageString((Display*)fDisplay, gCws->textFont, angle,
-                      gCws->fDrawing, gCws->fGClist[kGCtext], x, y, (char*)text, gCws->textAlign);
+         XRotDrawAlignedImageString((Display*)fDisplay, ctxt->textFont, angle,
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
          break;
 
       default:
