@@ -224,10 +224,8 @@ void TAttFill::Modify()
 void TAttFill::ModifyOn(TVirtualPad *pad)
 {
    auto pp = pad ? pad->GetPainter() : nullptr;
-   if (!pp)
-      return;
-   pp->SetFillColor(fFillColor);
-   pp->SetFillStyle(fFillStyle);
+   if (pp)
+      pp->SetAttFill(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
