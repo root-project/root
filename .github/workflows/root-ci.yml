@@ -150,14 +150,6 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
-      - name: Export SSL certificate files for Davix
-        run: |
-          for cert in /opt/homebrew/opt/ca-certificates/share/ca-certificates/cacert.pem /opt/local/share/curl/curl-ca-bundle.crt; do
-            if [ -f ${cert} ]; then
-              echo "SSL_CERT_FILE=${cert}" >> $GITHUB_ENV
-            fi
-          done
-
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
