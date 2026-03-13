@@ -26,3 +26,10 @@ TEST(TCurlFile, Cp)
    EXPECT_TRUE(f->Cp(localPath, false /* progressbar */));
    remove(localPath);
 }
+
+TEST(TCurlFile, Raw)
+{
+   const char *localPath = "root_test_curl_file_raw";
+   EXPECT_TRUE(TFile::Cp("https://root.cern.ch/files/aleph_all.C?filetype=raw", localPath, false /* progressbar */));
+   remove(localPath);
+}
