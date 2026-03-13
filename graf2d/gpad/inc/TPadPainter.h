@@ -26,6 +26,8 @@ class TVirtualPad;
 
 class TPadPainter : public TVirtualPadPainter {
    WinContext_t   fWinContext;
+   Int_t          fSetLineWidth = 0; ///< remember set width to optimize some painting
+   Style_t        fSetFillStyle = 0; ///< remember set fill style to optimize painting
 
 public:
    TPadPainter();

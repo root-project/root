@@ -47,7 +47,7 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys);
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t close_path);
 
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, unsigned nPoints, const T *xs, const T *ys);
@@ -132,6 +132,7 @@ void TPadPainter::SetLineStyle(Style_t lstyle)
 
 void TPadPainter::SetLineWidth(Width_t lwidth)
 {
+   fSetLineWidth = lwidth;
    gVirtualX->SetLineWidth(lwidth);
 }
 
@@ -178,6 +179,7 @@ void TPadPainter::SetFillColor(Color_t fcolor)
 
 void TPadPainter::SetFillStyle(Style_t fstyle)
 {
+   fSetFillStyle = fstyle;
    gVirtualX->SetFillStyle(fstyle);
 }
 
@@ -430,6 +432,7 @@ void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width
 
 void TPadPainter::SetAttFill(const TAttFill &att)
 {
+   fSetFillStyle = att.GetFillStyle();
    gVirtualX->SetAttFill(fWinContext, att);
 }
 
@@ -438,6 +441,7 @@ void TPadPainter::SetAttFill(const TAttFill &att)
 
 void TPadPainter::SetAttLine(const TAttLine &att)
 {
+   fSetLineWidth = att.GetLineWidth();
    gVirtualX->SetAttLine(fWinContext, att);
 }
 
@@ -462,7 +466,8 @@ void TPadPainter::SetAttText(const TAttText &att)
 
 void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetLineWidth()<=0) return;
+   if (fSetLineWidth <= 0)
+      return;
 
    const Int_t px1 = gPad->XtoPixel(x1);
    const Int_t px2 = gPad->XtoPixel(x2);
@@ -477,7 +482,8 @@ void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetLineWidth()<=0) return;
+   if (fSetLineWidth <= 0)
+      return;
 
    const Int_t px1 = gPad->UtoPixel(u1);
    const Int_t py1 = gPad->VtoPixel(v1);
@@ -492,7 +498,8 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 
 void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
+   if (fSetLineWidth <= 0 && mode == TVirtualPadPainter::kHollow)
+      return;
 
    Int_t px1 = gPad->XtoPixel(x1);
    Int_t px2 = gPad->XtoPixel(x2);
@@ -518,7 +525,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys);
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fSetFillStyle == 0);
 }
 
 
@@ -532,7 +539,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys);
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fSetFillStyle == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,7 +547,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
 
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (fSetLineWidth <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
@@ -556,7 +564,8 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   if (GetLineWidth()<=0) return;
+   if (fSetLineWidth <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
@@ -572,7 +581,8 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 
 void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   if (GetLineWidth()<=0) return;
+   if (fSetLineWidth <= 0)
+      return;
 
    if (n < 2) {
       ::Error("TPadPainter::DrawPolyLineNDC", "invalid number of points %d", n);
@@ -594,7 +604,7 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 
 void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
-   if (GetLineWidth() <= 0)
+   if (fSetLineWidth <= 0)
       return;
 
    if (n < 1) {
@@ -625,7 +635,7 @@ void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 
 void TPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
-   if (GetLineWidth() <= 0)
+   if (fSetLineWidth <= 0)
       return;
 
    if (n < 1) {
@@ -995,7 +1005,7 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys)
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t close_path)
 {
    std::vector<TPoint> xy;
 
@@ -1014,7 +1024,7 @@ void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    //We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
-   if (!gVirtualX->GetFillStyle())
+   if (close_path)
       xy.push_back(xy.front());
 
    if (xy.size() > 2)
