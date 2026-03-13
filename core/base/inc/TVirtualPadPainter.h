@@ -15,6 +15,10 @@
 #include "Rtypes.h"
 
 class TVirtualPad;
+class TAttFill;
+class TAttLine;
+class TAttMarker;
+class TAttText;
 
 class TVirtualPadPainter {
 public:
@@ -74,6 +78,11 @@ public:
    virtual void     SetMarkerColor(Color_t /* mcolor */ = 1) {}
    virtual void     SetMarkerStyle(Style_t /* mstyle */ = 1) {}
    virtual void     SetMarkerSize(Size_t /* msize */ = 1) {}
+
+   virtual void      SetAttFill(const TAttFill &att);
+   virtual void      SetAttLine(const TAttLine &att);
+   virtual void      SetAttMarker(const TAttMarker &att);
+   virtual void      SetAttText(const TAttText &att);
 
    //This part is an interface to X11 pixmap management and to save sub-pads off-screens for OpenGL.
    //Currently, must be implemented only for X11/GDI
