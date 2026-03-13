@@ -16,7 +16,7 @@
 //                                                                      //
 // This is part of the ROOT implementation of the Qt object             //
 // communication mechanism (see also                                    //
-// http://www.troll.no/qt/metaobjects.html)                             //
+// https://www.troll.no/qt/metaobjects.html)                             //
 //                                                                      //
 // See TQObject for details.                                             //
 //                                                                      //

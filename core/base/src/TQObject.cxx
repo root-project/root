@@ -13,7 +13,7 @@
 \ingroup Base
 
 This is the ROOT implementation of the Qt object communication
-mechanism (see also http://www.troll.no/qt/metaobjects.html)
+mechanism (see also https://www.troll.no/qt/metaobjects.html)
 
 Signals and slots are used for communication between objects.
 When an object has changed in some way that might be interesting

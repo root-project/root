@@ -46,7 +46,7 @@ If you use ROOT for your work, we kindly ask you to cite it as:
 See the reference in BibTeX format [here](README/root_citation.bib).
 
 ## Live Demo for CERN Users
-[![](https://img.shields.io/badge/Launch-SWAN-orange)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
+[![](https://img.shields.io/badge/Launch-SWAN-orange)](https://swan.cern.ch/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 

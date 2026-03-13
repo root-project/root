@@ -18,7 +18,7 @@
 // TUri                                                                 //
 //                                                                      //
 // This class represents a RFC3986 compatible URI.                      //
-// See http://rfc.net/rfc3986.html.                                     //
+// See https://rfc.net/rfc3986.html.                                     //
 // It provides member functions to return the different parts of        //
 // an URI.                                                              //
 //                                                                      //

@@ -19,7 +19,7 @@
 // Describes an Operating System directory for the browser.             //
 //                                                                      //
 // Author: Christian Bormann  30/09/97                                  //
-//         http://www.ikf.physik.uni-frankfurt.de/~bormann/             //
+//         https://www.ikf.physik.uni-frankfurt.de/~bormann/             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

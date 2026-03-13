@@ -13,10 +13,10 @@
 \ingroup Base
 
 C++ Wrapper for the "Perl Compatible Regular Expressions" library
- The PCRE lib can be found at: http://www.pcre.org/
+ The PCRE lib can be found at: https://www.pcre.org/
 
 Extensive documentation about Regular expressions in Perl can be
-found at : http://perldoc.perl.org/perlre.html
+found at : https://perldoc.perl.org/perlre.html
 */
 
 #include <iostream>
@@ -157,7 +157,7 @@ TPRegexp &TPRegexp::operator=(const TPRegexp &p)
 ///   Unlike i, m, s and x, these two flags affect the way the regex is used
 ///   rather than the regex itself. See Using regular expressions in Perl in
 ///   perlretut for further explanation of the g and c modifiers.
-/// For more detail see: http://perldoc.perl.org/perlre.html#Modifiers.
+/// For more detail see: https://perldoc.perl.org/perlre.html#Modifiers.
 
 UInt_t TPRegexp::ParseMods(const TString &modStr) const
 {

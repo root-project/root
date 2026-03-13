@@ -18,11 +18,11 @@
 //                                                                      //
 // C++ Wrapper for the "Perl Compatible Regular Expressions" library    //
 //  The PCRE lib can be found at:                                       //
-//              http://www.pcre.org/                                    //
+//              https://www.pcre.org/                                    //
 //                                                                      //
 // Extensive documentation about Regular expressions in Perl can be     //
 // found at :                                                           //
-//              http://perldoc.perl.org/perlre.html                     //
+//              https://perldoc.perl.org/perlre.html                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
