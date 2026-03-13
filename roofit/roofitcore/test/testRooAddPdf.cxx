@@ -5,13 +5,16 @@
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooFit/Evaluator.h>
+#include <RooFormulaVar.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
+#include <RooPolynomial.h>
 #include <RooProdPdf.h>
 #include <RooRealIntegral.h>
+#include <RooRealSumPdf.h>
 #include <RooUniform.h>
 #include <RooWorkspace.h>
 
@@ -423,4 +426,122 @@ TEST(RooAddPdf, IntegralsForRangedFitWithIdenticalCoefRange)
    // We expect only two integral objects: one normalization integral for each
    // of the component pdfs.
    EXPECT_EQ(iIntegrals, 2);
+}
+
+/// Test that we get the right expectedEvents() in conditional fits when
+/// getting the expected number of events from the coefficients.
+TEST(RooAddPdf, ConditionalExpectedEventsFromCoefs)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   const double yInterval = 5.0;
+
+   // Create observables
+   RooRealVar x("x", "x", 0, 5);
+   RooRealVar y("y", "y", 0, yInterval);
+
+   // Create uniform signal and background
+   RooPolynomial gx("gx", "gx", x);
+   RooPolynomial gy("gy", "gy", y);
+   RooProdPdf sig("sig", "sig", RooArgSet(gx, gy));
+   RooPolynomial ux("ux", "ux", x);
+   RooPolynomial uy("uy", "uy", y);
+   RooProdPdf bkg("bkg", "bkg", RooArgSet(ux, uy));
+
+   // Create composite pdf sig+bkg
+   RooRealVar nsig("nsig", "", 100, 0., 1000.);
+   RooRealVar nbkg("nbkg", "", 1000, 0., 10000.);
+   RooAddPdf model("model", "model", {sig, bkg}, {nsig, nbkg});
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   // As necessary for conditional fits, we need to fix the coefficient
+   // normalization set to the union set of the observables and conditional
+   // observables.
+   model.fixAddCoefNormalization(nsetXY);
+
+   // Test both the method to get expectedEvents directly, and the method that
+   // returns a RooAbsReal representing the expected number of events.
+   const double nExpected = model.expectedEvents(&nsetXY);
+   std::unique_ptr<RooAbsReal> nExpectedArg = model.createExpectedEventsFunc(&nsetXY);
+
+   // In conditional fits, the conditional observable is taken out of the
+   // normalization set.
+   const double nExpectedConditional = model.expectedEvents(&nsetX);
+   std::unique_ptr<RooAbsReal> nExpectedConditionalArg = model.createExpectedEventsFunc(&nsetX);
+
+   // Since we don't integrate the uniform expected events over the conditional
+   // observable y, we expect there to be a factor ymax - ymin.
+   EXPECT_DOUBLE_EQ(nExpectedConditional * yInterval, nExpected);
+
+   EXPECT_DOUBLE_EQ(nExpectedArg->getVal(), nExpected);
+   EXPECT_DOUBLE_EQ(nExpectedConditionalArg->getVal(), nExpectedConditional);
+}
+
+/// Test that we get the right expectedEvents() in conditional fits when
+/// getting the expected number of events from the component pdfs.
+TEST(RooAddPdf, ConditionalExpectedEventsFromPdfs)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   // Observables
+   RooRealVar x("x", "x", 0, 5);
+   RooRealVar y("y", "y", 0, 5);
+
+   // Yield functions: uniform yield that articficially depends on x and y
+   // because RooRealSumPdf::expectedEvents() uses the normalization integrals
+   // as the expected events via getNorm(nset). As getNorm() strips away the
+   // observables the pdf doesn't depend on (different from
+   // createIntegral(nset)), we would not get the desired expected events of
+   // xmax-xmin and ymax-ymin if we would not do this trick.
+   RooFormulaVar yieldSig{"yield_sig", "1 + x - x + y - y", {x, y}};
+   RooFormulaVar yieldBkg{"yield_bkg", "1 + x - x + y - y", {x, y}};
+
+   RooRealSumPdf pdfSig{"pdf_sig", "", yieldSig, RooArgList{1.0}, true};
+   RooRealSumPdf pdfBkg{"pdf_bkg", "", yieldBkg, RooArgList{1.0}, true};
+
+   RooAddPdf pdf{"pdf", "", {pdfSig, pdfBkg}};
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   // As necessary for conditional fits, we need to fix the coefficient
+   // normalization set to the union set of the observables and conditional
+   // observables.
+   pdf.fixAddCoefNormalization(nsetXY);
+
+   // Test both the method to get expectedEvents directly, and the method that
+   // returns a RooAbsReal representing the expected number of events.
+   double nSig = pdfSig.expectedEvents(&nsetXY);
+   double nBkg = pdfBkg.expectedEvents(&nsetXY);
+   double nSum = pdf.expectedEvents(&nsetXY);
+   std::unique_ptr<RooAbsReal> nSigArg = pdfSig.createExpectedEventsFunc(&nsetXY);
+   std::unique_ptr<RooAbsReal> nBkgArg = pdfBkg.createExpectedEventsFunc(&nsetXY);
+   std::unique_ptr<RooAbsReal> nSumArg = pdf.createExpectedEventsFunc(&nsetXY);
+
+   // In conditional fits, the conditional observable is taken out of the
+   // normalization set.
+   double nSigCond = pdfSig.expectedEvents(&nsetX);
+   double nBkgCond = pdfBkg.expectedEvents(&nsetX);
+   double nSumCond = pdf.expectedEvents(&nsetX);
+   std::unique_ptr<RooAbsReal> nSigCondArg = pdfSig.createExpectedEventsFunc(&nsetX);
+   std::unique_ptr<RooAbsReal> nBkgCondArg = pdfBkg.createExpectedEventsFunc(&nsetX);
+   std::unique_ptr<RooAbsReal> nSumCondArg = pdf.createExpectedEventsFunc(&nsetX);
+
+   // We expect that the expected events of the AddPdf is the sum of the
+   // components expectedEvents(), for both normalization sets.
+   EXPECT_DOUBLE_EQ(nSum, nSig + nBkg);
+   EXPECT_DOUBLE_EQ(nSumCond, nSigCond + nBkgCond);
+
+   EXPECT_DOUBLE_EQ(nSigArg->getVal(), nSig);
+   EXPECT_DOUBLE_EQ(nBkgArg->getVal(), nBkg);
+   EXPECT_DOUBLE_EQ(nSumArg->getVal(), nSum);
+   EXPECT_DOUBLE_EQ(nSigCondArg->getVal(), nSigCond);
+   EXPECT_DOUBLE_EQ(nBkgCondArg->getVal(), nBkgCond);
+   EXPECT_DOUBLE_EQ(nSumCondArg->getVal(), nSumCond);
 }
