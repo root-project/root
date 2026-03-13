@@ -25,12 +25,8 @@ int df015_LazyDataSource()
 
    // Let's first create a RDF that will read from the CSV file.
    // See the tutorial (https://root.cern/doc/master/df014__CSVDataSource_8C.html) on CSV data sources for more details!
-   auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
-   auto fileName = "CsvDataSource_MuRun2010B.csv";
-   if(gSystem->AccessPathName(fileName))
-      TFile::Cp(fileNameUrl, fileName);
-
-   auto csv_rdf = FromCSV(fileName);
+   auto fileUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   auto csv_rdf = FromCSV(fileUrl);
 
    // Now we take out two columns: px and py of the first muon in the muon pair
    std::string px1Name = "px1";

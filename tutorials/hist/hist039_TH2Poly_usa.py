@@ -17,8 +17,6 @@
 # \author Olivier Couet
 
 import ROOT
-import os.path
-import urllib.request
 
 states = ["alabama",      "arizona",      "arkansas",       "california",    "colorado",      "connecticut",   "delaware",
           "florida",      "georgia",      "idaho",          "illinois",      "indiana",       "iowa",          "kansas",
@@ -42,11 +40,8 @@ lat1 = 24
 lat2 = 50
 p = ROOT.TH2Poly("Lower48", "Lower 48 Population (2009);Latitude;Longitude", lon1, lon2, lat1, lat2)
 
-fileName = "usa.root"
-fileNameUrl = "http://root.cern/files/usa.root"
-if not os.path.isfile(fileName):
-    urllib.request.urlretrieve(fileNameUrl, fileName)
-f = ROOT.TFile.Open(fileName)
+fileUrl = "http://root.cern/files/usa.root"
+f = ROOT.TFile.Open(fileUrl)
 
 # Define the TH2Poly bins.
 mg = ROOT.TMultiGraph
