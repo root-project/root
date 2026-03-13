@@ -1048,7 +1048,7 @@ XColor_t &TGX11::GetColor(Int_t cid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return current window pointer. Protected method used by TGX11TTF.
+/// Return current window pointer.
 
 Window_t TGX11::GetCurrentWindow() const
 {
@@ -1070,6 +1070,45 @@ void *TGX11::GetGC(Int_t which) const
       return nullptr;
    }
    return &gCws->fGClist[which];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return X11 window for specified window context.
+/// Protected method used by TGX11TTF.
+
+Window_t TGX11::GetWindow(WinContext_t wctxt) const
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return (Window_t) (ctxt ? ctxt->fDrawing : 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return X11 Graphics Context for specified window context.
+/// Protected method used by TGX11TTF.
+
+void *TGX11::GetGCW(WinContext_t wctxt, Int_t which) const
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt) {
+      Error("GetGC", "No window context specified");
+      return nullptr;
+   }
+
+   if (which >= kMAXGC || which < 0) {
+      Error("GetGC", "trying to get illegal GC (which = %d)", which);
+      return nullptr;
+   }
+   return &ctxt->fGClist[which];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return text align value for specified window context.
+/// Protected method used by TGX11TTF.
+
+Int_t TGX11::GetTextAlignW(WinContext_t wctxt) const
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return ctxt ? ctxt->textAlign : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

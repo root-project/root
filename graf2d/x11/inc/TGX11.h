@@ -112,7 +112,7 @@ protected:
    Int_t      fScreenNumber;       ///< Screen number
    Int_t      fTextAlignH;         ///< Text Alignment Horizontal
    Int_t      fTextAlignV;         ///< Text Alignment Vertical
-   Int_t      fTextAlign;          ///< Text alignment (set in SetTextAlign)
+   Int_t      fTextAlign;          ///< Text alignment (set in SetTextAlign) !!! conflict with TAttText
    Float_t    fCharacterUpX;       ///< Character Up vector along X
    Float_t    fCharacterUpY;       ///< Character Up vector along Y
    Float_t    fTextMagnitude;      ///< Text Magnitude
@@ -130,6 +130,10 @@ protected:
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
    void      *GetGC(Int_t which) const;
+   Window_t  GetWindow(WinContext_t wctxt) const;
+   void      *GetGCW(WinContext_t wctxt, Int_t which) const;
+   Int_t      GetTextAlignW(WinContext_t wctxt) const;
+
    XColor_t  &GetColor(Int_t cid);
 
    TGX11(TGX11 &&org);
