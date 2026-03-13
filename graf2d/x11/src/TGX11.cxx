@@ -2402,6 +2402,15 @@ void TGX11::SetFillStyle(Style_t fstyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return current fill style
+/// FIXME: Only as temporary solution while some code analyze current fill style
+
+Style_t TGX11::GetFillStyle() const
+{
+   return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set fill area style index.
 
 void TGX11::SetFillStyleIndex(Int_t /* style */, Int_t /* fasi */)
@@ -2560,6 +2569,15 @@ void TGX11::SetLineStyle(Style_t lstyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return current line style
+/// FIXME: Only as temporary solution while some code analyze current line style
+
+Style_t TGX11::GetLineStyle() const
+{
+   return gCws ? gCws->fAttLine.GetLineStyle() : TAttLine::GetLineStyle();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set line width.
 ///
 ///  \param [in] width   : line width in pixels
@@ -2585,6 +2603,15 @@ void TGX11::SetLineWidth(Width_t width)
    XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
               gLineStyle, gCapStyle, gJoinStyle);
 */
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current line width
+/// FIXME: Only as temporary solution while some code analyze current line wide
+
+Width_t TGX11::GetLineWidth() const
+{
+   return gCws ? gCws->fAttLine.GetLineWidth() : TAttLine::GetLineWidth();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
