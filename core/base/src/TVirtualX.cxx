@@ -431,7 +431,7 @@ void TVirtualX::SetAttText(WinContext_t /* wctxt */, const TAttText &att)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set window draw mode
 
-void TVirtualX::SetDrawMode(WinContext_t /* wctxt */, EDrawMode mode)
+void TVirtualX::SetDrawModeW(WinContext_t /* wctxt */, EDrawMode mode)
 {
    SetDrawMode(mode);
 }

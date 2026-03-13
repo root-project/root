@@ -4624,7 +4624,7 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
 }
 
 
-void TGX11::SetDrawMode(WinContext_t wctxt, EDrawMode mode)
+void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt)
