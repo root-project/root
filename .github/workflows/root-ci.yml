@@ -396,7 +396,7 @@ jobs:
           - image: fedora44
           - image: alma8
           - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-D_GLIBCXX_DEBUG"]
           - image: alma10
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
