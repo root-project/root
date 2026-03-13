@@ -173,6 +173,7 @@ ROOT_PYTHON_PACKAGE(ROOT SOURCES ${py_sources})
 
 # The Python version at build time should be easy to figure out from Python, so
 # we can raise an exception if the used Python version is not compatible.
+# The file will be implicitly installed by install(DIRECTORY ...) in the
+# ROOT_PYTHON_PACKAGE function.
 set(python_version_file "${localruntimedir}/ROOT/_python_version.py")
 file(WRITE "${python_version_file}" "_root_python_version = \"${Python3_VERSION}\"\n")
-install(FILES "${python_version_file}" DESTINATION "${CMAKE_INSTALL_PYTHONDIR}")
