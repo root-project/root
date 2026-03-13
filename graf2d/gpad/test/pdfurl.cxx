@@ -22,10 +22,10 @@ TEST(TPad, PDFUrl)
    c2.cd();
    l2.Draw();
 
-   c1.Print(pdfFile + "[");                  // Start multi-page PDF
+   c1.Print(pdfFile + "["); // Start multi-page PDF
    c2.Print(pdfFile, "Title:Page 1");
    c1.Print(pdfFile, "Title:Page 2");
-   c1.Print(pdfFile + "]");                  // Close multi-page PDF
+   c1.Print(pdfFile + "]"); // Close multi-page PDF
 
    // Check if the file was created successfully
    FileStat_t fileStat;
