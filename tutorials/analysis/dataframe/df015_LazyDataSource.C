@@ -10,7 +10,7 @@
 /// Dataset Reference:
 /// McCauley, T. (2014). Dimuon event information derived from the Run2010B
 /// public Mu dataset. CERN Open Data Portal.
-/// DOI: [10.7483/OPENDATA.CMS.CB8H.MFFA](http://opendata.cern.ch/record/700).
+/// DOI: [10.7483/OPENDATA.CMS.CB8H.MFFA](https://opendata.cern.ch/record/700).
 /// From the ROOT website: https://root.cern/files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
 ///
 /// \macro_code

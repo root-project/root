@@ -6,7 +6,7 @@
 ## This tutorial is a simplified but yet complex example of an analysis reconstructing the Higgs boson decaying to two Z
 ## bosons from events with four leptons. The data and simulated events are taken from CERN OpenData representing a
 ## subset of the data recorded in 2012 with the CMS detector at the LHC. The tutorials follows the Higgs to four leptons
-## analysis published on CERN Open Data portal ([10.7483/OPENDATA.CMS.JKB8.RR42](http://opendata.cern.ch/record/5500)).
+## analysis published on CERN Open Data portal ([10.7483/OPENDATA.CMS.JKB8.RR42](https://opendata.cern.ch/record/5500)).
 ## The resulting plots show the invariant mass of the selected four lepton systems in different decay modes (four muons,
 ## four electrons and two of each kind) and in a combined plot indicating the decay of the Higgs boson with a mass of
 ## about 125 GeV.

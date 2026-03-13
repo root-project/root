@@ -7,8 +7,8 @@
 /// It illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input files are filled with 66 mio. events
 /// from CMS OpenData containing muon candidates part of 2012 dataset
-/// ([DOI: 10.7483/OPENDATA.CMS.YLIC.86ZZ](http://opendata.cern.ch/record/6004)
-/// and [DOI: 10.7483/OPENDATA.CMS.M5AD.Y3V3](http://opendata.cern.ch/record/6030)).
+/// ([DOI: 10.7483/OPENDATA.CMS.YLIC.86ZZ](https://opendata.cern.ch/record/6004)
+/// and [DOI: 10.7483/OPENDATA.CMS.M5AD.Y3V3](https://opendata.cern.ch/record/6030)).
 /// The macro matches muon pairs and produces an histogram of the dimuon mass
 /// spectrum showing resonances up to the Z mass.
 /// Note that the bump at 30 GeV is not a resonance but a trigger effect.

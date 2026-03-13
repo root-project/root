@@ -12,7 +12,7 @@
 /// The data related to the latitude and the longitude has been provided from the
 /// log files storing the users IP.
 /// This product includes GeoLite2 data created by MaxMind, available from
-/// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
+/// <a href="https://www.maxmind.com">https://www.maxmind.com</a>.
 ///
 /// \macro_code
 ///
