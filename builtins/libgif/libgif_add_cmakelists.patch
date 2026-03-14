@@ -20,7 +20,7 @@
 +)
 +
 +if(NOT MSVC)
-+    target_compile_options(gif-static PRIVATE -std=gnu99 -Wall -Wno-format-truncation)
++    target_compile_options(gif-static PRIVATE -std=gnu99 -fPIC -Wall -Wno-format-truncation)
 +endif()
 +
 +target_include_directories(gif-static PUBLIC ./)
