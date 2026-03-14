@@ -13,6 +13,11 @@ if(WIN32)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
 
+if(CMAKE_HOST_APPLE)
+  # Don't move this because the SDK needs to be set before "project(ROOT)"
+  include(cmake/modules/SetOSX_SDK.cmake)
+endif()
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"

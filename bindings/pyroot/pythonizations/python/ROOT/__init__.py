@@ -9,9 +9,31 @@
 ################################################################################
 
 from os import environ
+import platform
 
 # Prevent cppyy's check for the PCH
 environ["CLING_STANDARD_PCH"] = "none"
+
+from ._python_version import _root_python_version
+
+_runtime_version = platform.python_version()
+
+
+def _major_minor(v):
+    return ".".join(v.split(".")[:2])
+
+
+# Check for Python ABI compatibility with this ROOT build. This check prevents
+# hard crashes and undefined behavior, yielding helpful error messages instead.
+if _major_minor(_runtime_version) != _major_minor(_root_python_version):
+    import textwrap
+
+    message = f"""
+    ROOT was built for Python {_root_python_version}, but you are running Python {_runtime_version}.
+    Python major.minor versions must match. Use a matching Python or ROOT build.
+    """
+    raise ImportError(textwrap.dedent(message))
+
 
 # Prevent cppyy's check for extra header directory
 environ["CPPYY_API_PATH"] = "none"

@@ -12461,6 +12461,9 @@ bool IntExprEvaluator::VisitBuiltinCallExpr(const CallExpr *E,
   case Builtin::BI__builtin_popcount:
   case Builtin::BI__builtin_popcountl:
   case Builtin::BI__builtin_popcountll:
+#if defined(MAC_SDK_WORKAROUND)
+  case Builtin::BI__builtin_popcountg:
+#endif
   case Builtin::BI__popcnt16: // Microsoft variants of popcount
   case Builtin::BI__popcnt:
   case Builtin::BI__popcnt64: {

@@ -34,7 +34,6 @@ class TH1D;
 #ifndef PyObject_HEAD
 struct _object;
 typedef _object PyObject;
-#define Py_single_input 256
 #endif
 
 namespace TMVA {
@@ -111,7 +110,7 @@ namespace TMVA {
       PyObject *fPyReturn; // python return data
 
    protected:
-      void PyRunString(TString code, TString errorMessage="Failed to run python code", int start=Py_single_input); // runs python code from string in local namespace with error handling
+      void PyRunString(TString code, TString errorMessage="Failed to run python code", int start=256 /* Py_single_input */); // runs python code from string in local namespace with error handling
 
    private:
       static PyObject *fModuleBuiltin;

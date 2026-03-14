@@ -722,6 +722,13 @@ foreach(t ${tutorials})
     # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
     set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
   endif()
+
+  if(CMAKE_SYSTEM_NAME MATCHES "Darwin" AND CMAKE_HOST_SYSTEM_VERSION VERSION_GREATER_EQUAL 25.4 AND tname MATCHES "gl-.*grad")
+    # ROOT-21367
+    # On mac beta, there is a stack corruption (suspected to be a compiler bug) that may fail these tests
+    set_tests_properties(tutorial-${tname} PROPERTIES DISABLED True)
+    message(NOTICE "Disabling tutorial ${tname} for mac beta")
+  endif()
 endforeach()
 
 if(root7 AND MSVC)
