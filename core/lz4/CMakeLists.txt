@@ -7,6 +7,10 @@
 find_package(LZ4 REQUIRED)
 find_package(xxHash REQUIRED)
 
+if(builtin_lz4)
+    add_dependencies(Core BUILTIN_LZ4)
+endif()
+
 target_sources(Core PRIVATE src/ZipLZ4.cxx)
 target_link_libraries(Core PRIVATE xxHash::xxHash LZ4::LZ4)
 target_include_directories(Core PUBLIC
