@@ -116,7 +116,8 @@ typedef unsigned char boolean;
 #define HAVE_XPM 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
-#undef HAVE_ZLIB_H
+// 16 Mar 2026: With a system or builtin zlib, the file is there by definition
+#define HAVE_ZLIB_H 1
 
 /* Define if locale support in X is needed */
 #undef I18N

@@ -25,7 +25,6 @@
 ./asstorage.o : \
 		win32/config.h \
 		config.h \
-		zlib/zlib.h \
 		asstorage.h \
 		afterimage.h
 
