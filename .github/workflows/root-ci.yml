@@ -413,7 +413,7 @@ jobs:
           - image: alma10
             platform_config: alma10-clang_ninja
             is_special: true
-            property: "clang Ninja"
+            property: "clang Ninja builtin"
             overrides: ["CMAKE_CXX_STANDARD=20"]
           # Fedora Rawhide with Python debug build
           - image: rawhide
