@@ -9,17 +9,19 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include <RooFit/Detail/NormalizationHelpers.h>
-#include <RooDataHist.h>
-#include <RooWorkspace.h>
 #include <RooArgSet.h>
-#include <RooSimultaneous.h>
+#include <RooDataHist.h>
+#include <RooEvaluatorWrapper.h>
+#include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooFit/Evaluator.h>
+#include <RooFitResult.h>
+#include <RooHelpers.h>
+#include <RooMinimizer.h>
+#include <RooPlot.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
-#include <RooHelpers.h>
-#include <RooFitResult.h>
-#include <RooPlot.h>
-#include <RooFit/Evaluator.h>
+#include <RooSimultaneous.h>
+#include <RooWorkspace.h>
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -618,9 +620,21 @@ TEST_P(HFFixtureFit, Fit)
       }
 
       using namespace RooFit;
-      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(*data, evalBackend, Optimize(constTermOptimization),
-                                                            GlobalObservables(*mc->GetGlobalObservables()), Save(),
-                                                            PrintLevel(verbose ? 1 : -1))};
+      std::unique_ptr<RooAbsReal> nll{simPdf->createNLL(*data, evalBackend, Optimize(constTermOptimization),
+                                                        GlobalObservables(*mc->GetGlobalObservables()))};
+      RooMinimizer::Config cfg;
+      if (evalBackend == RooFit::EvalBackend::Codegen()) {
+         // Make sure we use both analytical gradient and Hessian
+         static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nll).generateGradient();
+         static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nll).generateHessian();
+         cfg.useGradient = true;
+         cfg.useHessian = true;
+      }
+      RooMinimizer minim{*nll, cfg};
+      minim.setPrintLevel(verbose ? 1 : -1);
+      minim.minimize("Minuit2", "Migrad");
+      minim.hesse();
+      std::unique_ptr<RooFitResult> fitResult{minim.save()};
       ASSERT_NE(fitResult, nullptr);
       if (verbose)
          fitResult->Print("v");
