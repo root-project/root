@@ -2496,31 +2496,7 @@ public:
    /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
    /// auto myHist = myDf.Hist({axis}, {"col0"});
    /// ~~~
-   template <typename BinContentType = double>
-   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
-   Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList)
-   {
-      // Note: this overload works around limitations for automatic pythonization of variadic function templates with
-      // template parameter packs.
-      return Hist<BinContentType, RDFDetail::RInferredType>(std::move(axes), columnList);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return an RHist (*lazy action*).
-   /// \tparam BinContentType The bin content type of the returned RHist.
-   /// \param[in] axes The returned histogram will be constructed using these axes.
-   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   /// \return the histogram wrapped in a RResultPtr.
-   ///
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. Also see RResultPtr.
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
-   /// auto myHist = myDf.Hist<double, double>({axis}, {"col0"});
-   /// ~~~
-   template <typename BinContentType, typename ColumnType, typename... ColumnTypes>
+   template <typename BinContentType = double, typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
    RResultPtr<ROOT::Experimental::RHist<BinContentType>>
    Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList)
    {
@@ -2614,34 +2590,8 @@ public:
    /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
    /// auto myHist = myDf.Hist({axis}, {"col0"}, "colW");
    /// ~~~
-   template <typename BinContentType = ROOT::Experimental::RBinWithError>
-   RResultPtr<ROOT::Experimental::RHist<BinContentType>>
-   Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList, std::string_view wName)
-   {
-      // Note: this overload works around limitations for automatic pythonization of variadic function templates with
-      // template parameter packs.
-      return Hist<BinContentType, RDFDetail::RInferredType>(std::move(axes), columnList, wName);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return an RHist with weights (*lazy action*).
-   /// \tparam BinContentType The bin content type of the returned RHist.
-   /// \param[in] axes The returned histogram will be constructed using these axes.
-   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
-   /// \param[in] wName The name of the column that will provide the weights.
-   /// \return the histogram wrapped in a RResultPtr.
-   ///
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. Also see RResultPtr.
-   ///
-   /// This overload is not available for integral bin content types (see \ref RHistEngine::SupportsWeightedFilling).
-   ///
-   /// ### Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
-   /// auto myHist = myDf.Hist<ROOT::Experimental::RBinWithError, double, double>({axis}, {"col0"}, "colW");
-   /// ~~~
-   template <typename BinContentType = ROOT::Experimental::RBinWithError, typename ColumnType, typename... ColumnTypes>
+   template <typename BinContentType = ROOT::Experimental::RBinWithError,
+             typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
    RResultPtr<ROOT::Experimental::RHist<BinContentType>>
    Hist(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList, std::string_view wName)
    {
