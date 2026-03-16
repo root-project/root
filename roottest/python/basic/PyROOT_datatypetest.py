@@ -599,16 +599,14 @@ class TestClassDATATYPES:
         d = gbl.get_global_pod()
         assert gbl.is_global_pod(d)
         assert c == d
-        # TODO: in PyROOT, non-TObjects are not mem-regulated
-        #assert id(c) == id(d)
+        assert c is d
 
         e = gbl.CppyyTestPod()
         e.m_int = 43
         e.m_double = 2.14
 
         gbl.g_pod = e
-        # TODO: in PyROOT, non-TObjects are not mem-regulated
-        #assert gbl.is_global_pod(e)
+        assert gbl.is_global_pod(e)
         assert gbl.g_pod.m_int == 43
         assert gbl.g_pod.m_double == 2.14
 
@@ -892,14 +890,10 @@ class TestClassDATATYPES:
             b2 = cppyy.bind_object(a, CppyyTestData)
             b.m_int = 888
             assert b.m_int == 888
-            assert b == b2 and b.m_int == b2.m_int
-            # TODO: in PyROOT, non-TObjects are not mem-regulated
-            #assert b is b2    # memory regulator recycles
+            assert b is b2 and b.m_int == b2.m_int
             b3 = cppyy.bind_object(cppyy.addressof(a), CppyyTestData)
             assert b3.m_int == 888
-            assert b == b3 and b.m_int == b3.m_int
-            # TODO: in PyROOT, non-TObjects are not mem-regulated
-            #assert b is b3    # likewise
+            assert b is b3 and b.m_int == b3.m_int
 
         address_equality_test(c.m_voidp, c2)
         address_equality_test(c.get_voidp(), c2)

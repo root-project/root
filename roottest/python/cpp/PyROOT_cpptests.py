@@ -166,7 +166,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       c2 = gROOT.Class()
 
-      self.assertEqual( c1, c2 )
+      self.assertIs( c1, c2 )
 
       old = gROOT.GetDirLevel()
       TROOT.SetDirLevel( 2 )
