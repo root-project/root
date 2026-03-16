@@ -256,7 +256,6 @@ void TPDF::Close(Option_t *)
    PrintStr(">>@");
    EndObject();
    WriteUrlObjects();
-   PrintStr("@% ======================");
    PrintStr("@");
    NewObject(kObjOutlines);
    PrintStr("<<@");
@@ -1563,10 +1562,6 @@ void TPDF::NewPage()
    }
 
    // Start a new page
-   PrintStr("@% ======================");
-   PrintStr("@% ============= PAGE");
-   WriteInteger(fNbPage);
-   PrintStr("@% ======================");
    PrintStr("@");
    NewObject(fCurrentPage);
    fPageObjects.push_back(fCurrentPage);
