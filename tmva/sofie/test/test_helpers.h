@@ -61,6 +61,36 @@ std::string toInterpreter(T const &ptr, std::string const &className, bool toRaw
 // Output type names without commas in the name, to be used in macro calls
 using TupleFloatInt64_t = std::tuple<std::vector<float>, std::vector<int64_t>>;
 
+// Helper: map C++ type -> string used in interpreter
+template <typename T>
+constexpr const char *type_name()
+{
+   if constexpr (std::is_same_v<T, int>)
+      return "int";
+   else if constexpr (std::is_same_v<T, size_t>)
+      return "size_t";
+   else if constexpr (std::is_same_v<T, std::vector<float>>)
+      return "std::vector<float>";
+   else if constexpr (std::is_same_v<T, std::vector<int>>)
+      return "std::vector<int>";
+   else if constexpr (std::is_same_v<T, std::vector<int64_t>>)
+      return "std::vector<int64_t>";
+   else if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
+      return "std::vector<uint8_t>";
+   else
+      static_assert(!sizeof(T), "Input type not supported");
+}
+
+template <typename T>
+void emitInput(std::stringstream &cmd, const T &input, bool &first)
+{
+   if (!first)
+      cmd << ", ";
+   first = false;
+
+   cmd << toInterpreter(input, type_name<T>(), true);
+}
+
 template <typename OutputType_t, typename... Ts>
 OutputType_t
 runModel(std::string outputTypeName, std::string const &modelName, std::string sessionArgs, Ts const &...inputs)
@@ -91,34 +121,8 @@ runModel(std::string outputTypeName, std::string const &modelName, std::string s
 
    // Emit all inputs to s.infer(...)
    if constexpr (sizeof...(Ts) > 0) {
-
-      // Helper: map C++ type -> string used in interpreter
-      auto type_name = []<typename T>() {
-         if constexpr (std::is_same_v<T, int>)
-            return "int";
-         else if constexpr (std::is_same_v<T, size_t>)
-            return "size_t";
-         else if constexpr (std::is_same_v<T, std::vector<float>>)
-            return "std::vector<float>";
-         else if constexpr (std::is_same_v<T, std::vector<int>>)
-            return "std::vector<float>";
-         else if constexpr (std::is_same_v<T, std::vector<int64_t>>)
-            return "std::vector<int64_t>";
-         else if constexpr (std::is_same_v<T, std::vector<uint8_t>>)
-            return "std::vector<uint8_t>";
-         else
-            static_assert(!sizeof(T), "Input type not supported");
-      };
-
       bool first = true;
-      (
-         [&] {
-            if (!first)
-               cmd << ", ";
-            first = false;
-            cmd << toInterpreter(inputs, type_name.template operator()<Ts>(), true);
-         }(),
-         ...);
+      (emitInput<Ts>(cmd, inputs, first), ...);
    }
 
    cmd << R"();
