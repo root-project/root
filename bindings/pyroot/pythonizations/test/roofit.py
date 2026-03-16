@@ -75,8 +75,19 @@ class TestRooAbsCollection(unittest.TestCase):
 
         for i, vptr in enumerate(variables):
             vname = "var" + str(i)
-            self.assertEqual(coll.find(vptr) == vptr, vptr in coll)
-            self.assertEqual(coll.find(vname) == vptr, vname in coll)
+
+            found_by_ptr = coll.find(vptr)
+            found_by_name = coll.find(vname)
+
+            # To ensure comparing objects of equal type also when it can't
+            # auto-downcast because the object was not found in the collection:
+            if found_by_ptr == ROOT.nullptr:
+                found_by_ptr = ROOT.BindObject(found_by_ptr, vptr.IsA().GetName())
+            if found_by_name == ROOT.nullptr:
+                found_by_name = ROOT.BindObject(found_by_name, vptr.IsA().GetName())
+
+            self.assertEqual(found_by_ptr == vptr, vptr in coll)
+            self.assertEqual(found_by_name == vptr, vname in coll)
 
     def _test_getitem(self, collection_class):
 
