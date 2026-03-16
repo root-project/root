@@ -712,6 +712,7 @@ It has the following contents, followed a locator to the linked RNTuple anchor a
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 The meaning of the Schema Version is described below.
+Note that the Attribute Anchor Uncompressed Size includes the 8 bytes of the checksum.
 
 ### Page List Envelope
 
