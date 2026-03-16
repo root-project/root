@@ -26,6 +26,19 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
     endif()
 endif()
 
+# If zlib is not builtin, the string will be empty, nothing special to be 
+# done: we rely on libpng CMake to find zlib.
+# If zlib is builtin, we need to direct the builtin libpng to it.
+# For that, the libpng recommended way (see their CMakeLists)
+# is to use the CMake ZLIB_ROOT variable, which has nothing to do with ROOT 
+# despite the name: it's a standard CMake convention to direct the search of
+# the find macro.
+# Therefore we set it to the prefix path of the builtin zlib in ROOT's 
+# build directory.
+if(builtin_zlib)
+  set(ZLIB_ROOT_OPTION "-DZLIB_ROOT=${ROOT_ZLIB_PREFIX}")
+endif()
+
 ExternalProject_Add(
     BUILTIN_LIBPNG
     PREFIX ${ROOT_LIBPNG_PREFIX}
@@ -40,8 +53,9 @@ ExternalProject_Add(
     -DCMAKE_CXX_VISIBILITY_PRESET=hidden
     -DPNG_SHARED=OFF
     -DPNG_STATIC=ON
+    -DZLIB_LIBRARY=${ZLIB_LIBRARIES}
     -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
-    -DZLIB_LIBRARY=$<TARGET_FILE:ZLIB::ZLIB>    
+    ${ZLIB_ROOT_OPTION}
     BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBPNG_BUILD_COMMAND_FLAGS}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LIBPNG_BUILD_COMMAND_FLAGS} --target install
     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
@@ -55,3 +69,7 @@ set_target_properties(PNG::PNG PROPERTIES
     IMPORTED_LOCATION ${ROOT_LIBPNG_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBPNG_PREFIX}/include
 )
+
+if(builtin_zlib)
+    add_dependencies(BUILTIN_LIBPNG BUILTIN_ZLIB)
+endif()

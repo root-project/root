@@ -497,7 +497,7 @@ if(asimage)
       CMAKE_ARGS -G ${CMAKE_GENERATOR} 
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
-                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
                  -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
                  -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
                  -DPNG_INCLUDE_DIR=${PNG_INCLUDE_DIR}
@@ -531,7 +531,7 @@ if(asimage)
       set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     if(builtin_zlib)
-      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIR}")
+      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIRS}")
     endif()
     if(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
       set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
