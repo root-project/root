@@ -136,8 +136,8 @@ class AttrReadTest(unittest.TestCase):
         ]
 
         for attr in node_attributes:
-            self.assertEqual(getattr(proxy, attr),
-                             getattr(proxy.proxied_node, attr))
+            self.assertIs(getattr(proxy, attr),
+                          getattr(proxy.proxied_node, attr))
 
     def test_undefined_attr_transformation(self):
         """

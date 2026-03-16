@@ -524,7 +524,7 @@ class Regression21ReuseProxies(MyTestCase):
       a2 = ROOT.A()
       a1.otherA = a2
       a3 = a1.otherA
-      self.assertEqual(a3, a2)
+      self.assertIs(a3, a2)
       val = 4
       a3.b = val
       self.assertEqual(a2.b, val)
