@@ -3006,3 +3006,57 @@ TEST(ONNX, NotIsNaN)
    }
 }
 
+TEST(ONNX, ScatterND_1)
+{
+   // test 1-D scatter (k=1, scalar slice)
+   std::vector<float> input = {1.,2.,3.,4.,5.};  // shape {5}
+   std::vector<int64_t> indices = { 0, 2, 4};    // shape {3,1}
+   std::vector<float> updates = { 10.,30.,50.};  // shape {3}
+   std::vector<float> correct_output = {10., 2., 30., 4., 50.};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_1", input, indices, updates);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, ScatterND_2)
+{
+   // test 2-d Scatter - scatter rows - reduction = 'add
+   std::vector<float> input = {1.,1.,2.,2.,3.,3.};  // shape {3,2}
+   std::vector<int64_t> indices = { 0, 1};          // shape {2,1}
+   std::vector<float> updates = { 10.,10.,20.,20.};  // shape { 2,2}
+   std::vector<float> correct_output = {11., 11., 22., 22., 3., 3.};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_2", input, indices, updates);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, ScatterND_3)
+{
+   // test element wise scatter (k==rank input)  reduction = 'mul'
+   std::vector<float> input = {1.,2.,3.,4.};  // shape {2,2}
+   std::vector<int64_t> indices = { 0,0, 1,1};          // shape {2,2}
+   std::vector<float> updates = { 11.,22.};  // shape { 2}
+   std::vector<float> correct_output = {11., 2., 3., 88.};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterND_3", input, indices, updates);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
