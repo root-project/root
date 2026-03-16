@@ -26,6 +26,7 @@
 #include "TClass.h"
 #include "Bytes.h"
 
+#include <limits>
 #include <vector>
 #include <string>
 
@@ -227,6 +228,27 @@ public:
    virtual TVirtualArray *PeekDataCache() const;
    virtual TVirtualArray *PopDataCache();
    virtual void           PushDataCache(TVirtualArray *);
+
+   TClass *ReadClass(const TClass *cl, UInt_t *objTag)
+      R__DEPRECATED(6, 42, "Use the overload with ULong64_t* for objTag instead")
+   {
+      if (objTag) {
+         ULong64_t objTag64 = 0;
+
+         auto result = ReadClass(cl, &objTag64);
+         if (objTag64 > std::numeric_limits<UInt_t>::max()) {
+            Error("ReadClass",
+                  "Object tag value %llu exceeds maximum of %u for 32-bit tag. Consider using the overload with "
+                  "ULong64_t* for objTag instead.",
+                  objTag64, std::numeric_limits<UInt_t>::max());
+            return result;
+         }
+         *objTag = static_cast<UInt_t>(objTag64);
+         return result;
+      } else {
+         return ReadClass(cl, static_cast<ULong64_t *>(nullptr));
+      }
+   }
 
    virtual TClass    *ReadClass(const TClass *cl = nullptr, ULong64_t *objTag = nullptr) = 0;
    virtual void       WriteClass(const TClass *cl) = 0;
