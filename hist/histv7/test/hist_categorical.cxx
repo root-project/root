@@ -198,3 +198,35 @@ TEST(RCategoricalAxis, GetFullRange)
       EXPECT_EQ(std::distance(full.begin(), full.end()), categories.size());
    }
 }
+
+static void Test_RCategoricalAxis_Slice(bool enableOverflowBin)
+{
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis origAxis(categories, enableOverflowBin);
+   ASSERT_EQ(origAxis.HasOverflowBin(), enableOverflowBin);
+
+   {
+      // The only allowed "slicing" is to keep the entire axis.
+      const RSliceSpec full;
+      const auto axis = origAxis.Slice(full);
+      EXPECT_EQ(axis.GetNNormalBins(), 3);
+      EXPECT_EQ(axis.GetCategories(), categories);
+      EXPECT_TRUE(axis.HasOverflowBin());
+   }
+
+   // Slicing and other operations are not allowed / implemented.
+   EXPECT_THROW(origAxis.Slice(origAxis.GetFullRange()), std::runtime_error);
+   EXPECT_THROW(origAxis.Slice(origAxis.GetNormalRange()), std::runtime_error);
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationRebin(2)), std::runtime_error);
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationSum{}), std::runtime_error);
+}
+
+TEST(RCategoricalAxis, Slice)
+{
+   Test_RCategoricalAxis_Slice(true);
+}
+
+TEST(RCategoricalAxis, SliceNoOverflowBin)
+{
+   Test_RCategoricalAxis_Slice(false);
+}
