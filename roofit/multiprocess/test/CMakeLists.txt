@@ -1,7 +1,7 @@
 # @author Patrick Bos, NL eScience Center, 2019-2022
 
 add_library(RooFit_multiprocess_testing_utils INTERFACE)
-target_link_libraries(RooFit_multiprocess_testing_utils INTERFACE RooFitCore RooBatchCompute)
+target_link_libraries(RooFit_multiprocess_testing_utils INTERFACE RooFitCore)
 target_include_directories(RooFit_multiprocess_testing_utils INTERFACE ${RooFitMultiProcess_INCLUDE_DIR})
 
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_Job test_Job.cxx LIBRARIES RooFitMultiProcess Core)

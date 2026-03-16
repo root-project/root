@@ -8,6 +8,7 @@
 #include "ROOT/RFile.hxx"
 
 #include <ROOT/StringUtils.hxx>
+#include <ROOT/RLogger.hxx>
 #include <ROOT/RError.hxx>
 
 #include <Byteswap.h>
@@ -221,10 +222,11 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
    return rfile;
 }
 
-std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
+std::unique_ptr<RFile> RFile::Recreate(std::string_view path, const RRecreateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
+   auto tfile = std::unique_ptr<TFile>(
+      TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION", "", opts.fCompressionSettings));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -540,18 +542,26 @@ void RFile::Close()
    fFile.reset();
 }
 
+ROOT::Experimental::RKeyInfo::RKeyInfo(const TKey &key)
+   : fPath(ReconstructFullKeyPath(key)),
+     fTitle(key.GetTitle()),
+     fClassName(key.GetClassName()),
+     fCycle(key.GetCycle()),
+     fLenObj(key.GetObjlen()),
+     fNBytesObj(key.GetNbytes() - key.GetKeylen()),
+     fNBytesKey(key.GetKeylen()),
+     fSeekKey(key.GetSeekKey()),
+     fSeekParentDir(key.GetSeekPdir())
+{
+}
+
 std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
 {
    const TKey *key = GetTKey(path);
    if (!key)
       return {};
 
-   RKeyInfo keyInfo;
-   keyInfo.fPath = ReconstructFullKeyPath(*key);
-   keyInfo.fClassName = key->GetClassName();
-   keyInfo.fCycle = key->GetCycle();
-   keyInfo.fTitle = key->GetTitle();
-
+   RKeyInfo keyInfo(*key);
    return keyInfo;
 }
 
@@ -565,3 +575,5 @@ TFile *ROOT::Experimental::Internal::GetRFileTFile(RFile &file)
 {
    return file.fFile.get();
 }
+
+RFile::RRecreateOptions::RRecreateOptions() = default;

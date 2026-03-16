@@ -105,6 +105,27 @@ class ROOTModule(unittest.TestCase):
         if root_module_has("RooFit.Evaluator"):
             from ROOT.RooFit import Evaluator
 
+    def test_deprecated_features(self):
+        """
+        Verify that deprecated features are removed in the release where we
+        announced that they will be removed.
+
+        This serves as a reminder to us to delete the deprecated code after
+        increasing the version number.
+
+        Once a deprecated feature was deleted, we can remove the corresponding
+        check in this test.
+        """
+        import ROOT
+
+        version = tuple(int(n) for n in ROOT.__version__.split("."))
+
+        if version >= (6, 44, 0):
+            # Verify that SetHeuristicMemoryPolicy is not available
+            with self.assertRaises(AttributeError):
+                ROOT.SetHeuristicMemoryPolicy(True)
+                ROOT.SetHeuristicMemoryPolicy(False)
+
 
 if __name__ == "__main__":
     unittest.main()

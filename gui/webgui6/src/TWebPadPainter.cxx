@@ -30,19 +30,20 @@ Main classes (like histograms or graphs) should be painted on JavaScript side
 
 Float_t *TWebPadPainter::StoreOperation(const std::string &oper, unsigned attrkind, int opersize)
 {
-   if (!fPainting) return nullptr;
+   if (!fPainting)
+      return nullptr;
 
    if (attrkind & attrLine)
-      fPainting->AddLineAttr(*this);
+      fPainting->AddLineAttr(fPS ? *((TAttLine *) fPS) : *((TAttLine *)this));
 
    if (attrkind & attrFill)
-      fPainting->AddFillAttr(*this);
+      fPainting->AddFillAttr(fPS ? *((TAttFill *) fPS) : *((TAttFill *)this));
 
    if (attrkind & attrMarker)
-      fPainting->AddMarkerAttr(*this);
+      fPainting->AddMarkerAttr(fPS ? *((TAttMarker *) fPS) : *((TAttMarker *)this));
 
    if (attrkind & attrText)
-      fPainting->AddTextAttr(*this);
+      fPainting->AddTextAttr(fPS ? *((TAttText *)fPS) : *((TAttText *)this));
 
    fPainting->AddOper(oper);
 

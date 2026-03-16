@@ -1,8 +1,8 @@
 #ifndef ROOT_INTERNAL_ML_RFLAT2DMATRIX
 #define ROOT_INTERNAL_ML_RFLAT2DMATRIX
 
-#include <utility>
 #include <cassert>
+#include <utility>
 
 #include "ROOT/RVec.hxx"
 

@@ -291,9 +291,9 @@ int R__seekable()
  * the first six bytes (method and crc).
  */
 
-ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
-    /* char *tgt, *src;        target and source buffers */
-    /* ulg tgtsize, srcsize;   target and source sizes */
+ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
+/* char *tgt, *src;        target and source buffers */
+/* ulg tgtsize, srcsize;   target and source sizes */
 {
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;

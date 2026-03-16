@@ -32,6 +32,7 @@ The following people have contributed to this new version:
  Silia Taider, CERN/EP-SFT,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
+ Sandro Wenzel, CERN/EP-ALICE,\
 
 ## Deprecations
 
@@ -41,11 +42,16 @@ The following people have contributed to this new version:
 * `TDirectory::AddDirectoryStatus()` and `TDirectory::AddDirectory()` have been deprecated. These functions were meant to replace TH1::AddDirectoryStatus(), but
   never had any effect on ROOT. The associated bit TDirectory::fgAddDirectory was deprecated as well. Although users can set and read the bit, its usage should be
   stopped completely to avoid any confusion. The bit and functions will be removed in ROOT 7.
+* The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` have been deprecated because the name was misleading, and they will be removed in ROOT 6.42. Despite the name, the function did not actually remove a range, but only cleared its limits by setting them to  `−inf,+inf` leaving the named range itself defined (so `hasRange()` would still return `true`). Users should now explicitly call `removeMin()` and `removeMax()` to remove the lower and upper limits of a range.
+* The `builtin_zeromq` and `builtin_cppzmq` build options are deprecated and will be removed in ROOT 6.42.
+  The ZeroMQ library and its C++ bindings are used by the experimental RooFit multiprocessing package, enabled by the `roofit_multiprocess` build option.
+  The ZeroMQ versions it requires (>=4.3.6 or 4.3.5 with the draft API) are now available in the package managers of several platforms, for example Conda, Homebrew, Fedora and the Extra Packages for Enterprise Linux (EPEL).
+  The `roofit_multiprocess` feature is only required by a small set of RooFit power uses, who are using one of these environments and therefore don't require the builtin ZeroMQ library.
 
 ## Removals
 
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
-* The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
+* The `TObject` equality operator Pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
 * Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
 * The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that were installed when building ROOT with `builtin_glew=ON` are no longer installed. This is done because ROOT is moving away from GLEW for loading OpenGL extensions.
@@ -72,6 +78,7 @@ The following people have contributed to this new version:
 ## Geometry
 
 * The list of logical volumes gets now rehashed automatically, giving an important performance improvement for setups having a large number of those.
+* `TGeoTessellated` now has efficient, BVH accelerated, navigation function implementations. This makes it possible to use `TGeoTessellated` in applications using `TGeoNavigator` (such as detector simulation).
 
 ### Extensible color schemes for geometry visualization
 ROOT now provides an extensible mechanism to assign colors and transparency to geometry volumes via the new `TGeoColorScheme` strategy class, used by `TGeoManager::DefaultColors()`.
@@ -204,6 +211,8 @@ As part of this migration, the following build options are deprecated. From ROOT
   looking up the static variables with the epsilon values incurred significant
   overhead in `RooAbsRealLValue::inRange()`, which is visible in many-parameter
   fits. Therefore, these functions are removed.
+- The constructors of **RooDataSet** and **RooDataHist** that combine datasets via `Index()` and `Import()` now validate that the import names correspond to existing states of the index category. If an imported data slice refers to a category label that is not defined in the index category, the constructor now throws an error.
+  Previously, such labels were silently added as new category states, which could lead to inconsistent datasets when the state names were not synchronized with the model definition. This change prevents the creation of invalid combined datasets and surfaces configuration problems earlier.
 
 ### New implementation of `RooHistError::getPoissonInterval`
 
@@ -236,6 +245,113 @@ The new implementation is statistically consistent and recommended.
 
 - ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
 
+
+### Change in memory ownership heuristics
+
+In previous ROOT versions, if a C++ member function took a non-`const` raw pointer, e.g.
+```C++
+MyClass::add(T* obj)
+```
+then calling this method from Python on an instance
+```Python
+my_instance.add(obj)
+```
+would assume that ownership of `obj` is transferred to `my_instance`.
+
+In practice, many such functions do not actually take ownership.
+As a result, this heuristic caused several memory leaks.
+
+Starting with ROOT 6.40, the ROOT Python interfaces no longer assumes ownership transfer for non-`const` raw pointer arguments.
+
+#### What does this mean for you?
+
+Because Python no longer automatically relinquishes ownership, some code that previously relied on the old heuristic may now expose:
+
+  * **Dangling references** on the C++ side
+  * **Double deletes**
+
+These issues must now be fixed by managing object lifetimes explicitly.
+
+#### Dangling references
+
+A dangling reference occurs when C++ holds a pointer or reference to an object that has already been deleted on the Python side.
+
+*Example*
+```Python
+obj = ROOT.MyClass()
+my_instance.foo(obj)
+del obj  # C++ may still hold a pointer: dangling reference
+```
+
+When the Python object is deleted, the memory associated with the C++ object
+ is also freed. But the C++ side may want to delete the object as well, for
+instance if the destructor of the class of `my_instance` also calls `delete obj`.
+
+*Possible remedies*
+
+ 1. **Keep the Python object alive**
+
+    Assign the object to a Python variable that lives at least as long as the C++ reference.
+
+    *Example:* Python lifeline
+    ```Python
+    obj = ROOT.MyClass()
+    my_instance.foo(obj)
+    # Setting `obj` as an attribute of `my_instance` makes sure that it's not
+    # garbage collected before `my_instance` is deleted:
+    my_instance._owned_obj = obj
+    del obj  # Reference counter for `obj` doesn't hit zero here
+    ```
+    Setting the lifeline reference could also be done in a user-side Pythonization of `MyClass::foo`.
+
+ 3. **Transfer ownership explicitly to C++**
+      * Drop the ownership on the Python side:
+        ```Python
+        ROOT.SetOwnership(obj, False)
+        ```
+      * Ensure that the C++ side will take ownership instead, e.g. by explicitly calling `delete` in the class destructor or using smart pointers like `std::unique_ptr`.
+
+ 3. **Rely on Pythonizations that imply ownership transfer**
+
+    If the object is stored in a non-owning collection such as a default-constructed `TCollection` (e.g. `TList`), you can make the collection owning before adding any elements:
+    ```Python
+    coll.SetOwner(True)
+    ```
+    This will imply ownership transfer to the C++ side when adding elements with `TCollection::Add()`.
+
+#### Note on **TCollection** Pythonization
+
+`TCollection`-derived classes are Pythonized such that when an object is added to an owning collection via `TCollection::Add()`, Python ownership is automatically dropped.
+
+If you identify other cases where such a Pythonization would be beneficial, please report them via a GitHub issue. Users can also implement custom Pythonizations outside ROOT if needed.
+
+#### Double deletes
+
+A double delete indicates that C++ already owns the object, but Python still attempts to delete it.
+
+In this case, you do not need to ensure C++ ownership, as it already exists.
+Instead, ensure that Python does not delete the object.
+
+*Possible remedies*
+
+ 1. Drop Python ownership explicitly:
+    ```Python
+    ROOT.SetOwnership(obj, False)
+    ```
+
+ 2. Pythonize the relevant member function to automatically drop ownership on the Python side (similar to the `TCollection` Pythonization described above).
+
+#### Temporary compatibility option
+
+You can temporarily restore the old heuristic by calling:
+```Python
+ROOT.SetHeuristicMemoryPolicy(True)
+```
+
+after importing ROOT.
+
+This option is intended **for debugging only and will be removed in ROOT 6.44**.
+
 ### UHI
 #### Backwards incompatible changes
 - `TH1.values()` now returns a **read-only** NumPy array by default. Previously it returned a writable array that allowed modifying histogram contents implicitly.
@@ -258,6 +374,17 @@ h[...] = np.arange(10)
 json_str = json.dumps(h, default=uhi.io.json.default)
 
 h_from_uhi = ROOT.TH1D(json.loads(json_str, , object_hook=uhi.io.json.object_hook))
+```
+
+### Removed `TCollection.count()` Pythonization
+
+The Python-only `TCollection.count()` method has been removed. The meaning of the underlying comparison was ambiguous for C++ objects: depending on the element class, it might have counted by matching by value equality or pointer equality. This behavior can vary silently between classes and lead to inconsistent or misleading results, so it was safer to remove the `count()` method.
+
+Users who need to count occurrences in a **TCollection** can explicitly implement the desired comparison logic in Python, for example:
+
+```Python
+sum(1 for x in collection if x is obj)   # pointer comparison
+sum(1 for x in collection if x == obj)   # value comparison (if defined for the element C++ class)
 ```
 
 ## ROOT executable

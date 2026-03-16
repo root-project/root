@@ -40,9 +40,12 @@ class RooAbsRealLValue(object):
         r"""The RooAbsRealLValue::createHistogram() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsRealLValue.createHistogram` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createHistogram(*args, **kwargs)
+        out = self._createHistogram(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooPlot *RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2={},"

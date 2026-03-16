@@ -115,7 +115,7 @@
                for (size_t i = 0; i < inputs.size(); i++) {
                   if (i > 0 && inputs[i].size() != inputs[i - 1].size())
                      throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have different shapes " + fInputs[i] + " : " +
-                                              ConvertShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertShapeToString(inputs[i - 1]));
+                                              ConvertDimShapeToString(inputs[i]) + " and " + fInputs[i-1] + " : " + ConvertDimShapeToString(inputs[i - 1]));
                   for (size_t iaxis = 0; iaxis < inputs[i].size(); iaxis++) {
                      if ((int)iaxis == fAxis) {
                         // support both integer and params shape for the concatenation axis
@@ -134,8 +134,8 @@
                      }
                      else if ((!inputs[i][iaxis].isParam && !ret[iaxis].isParam) && (inputs[i][iaxis].dim != ret[iaxis].dim)) {
                         throw std::runtime_error("TMVA SOFIE Concat Op - input tensors have wrong shapes " +
-                                                 ConvertShapeToString(inputs[i]) + " and " +
-                                                 ConvertShapeToString(inputs[i - 1]));
+                                                 ConvertDimShapeToString(inputs[i]) + " and " +
+                                                 ConvertDimShapeToString(inputs[i - 1]));
                      }
                      else if (!inputs[i][iaxis].isParam && ret[iaxis].isParam){
                         // if shape is not parametric use it
@@ -240,7 +240,7 @@
                   model.AddShapeTensor(fOutput,outputData, false); // cannot be a  scalar
                   if (model.Verbose()) {
                      std::cout << "output of Concat is a shape tensor " << ConvertShapeToString(outputShape) << " : "
-                     << ConvertShapeToString(outputData) << " (shape)" <<  std::endl;
+                     << ConvertDimShapeToString(outputData) << " (shape)" <<  std::endl;
                   }
                   fIsOutputConstant = true;
                }
@@ -256,7 +256,7 @@
          std::string Generate(std::string opName) override {
             opName = "op_" + opName;
             std::stringstream out;
-            out<<"\n//--------- Concat " << opName << " --> " << fOutput << "  " << ConvertShapeToString(fOutputShape) << "\n";
+            out<<"\n//--------- Concat " << opName << " --> " << fOutput << "  " << ConvertDimShapeToString(fOutputShape) << "\n";
 
             if (fIsOutputConstant) return out.str();
 

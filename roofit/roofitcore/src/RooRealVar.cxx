@@ -108,7 +108,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 {
   _value = value ;
   _fast = true ;
-  removeRange();
+  removeMin();
+  removeMax();
   setConstant(true) ;
   TRACE_CREATE;
 }

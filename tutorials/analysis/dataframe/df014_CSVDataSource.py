@@ -20,17 +20,11 @@
 ## \author Enric Tejedor (CERN)
 
 import ROOT
-import urllib.request
-import os
 
-# Let's first create a RDF that will read from the CSV file.
+# Let's first create a RDF that will read from the remote CSV file.
 # The types of the columns will be automatically inferred.
-fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
-fileName = "CsvDataSource_MuRun2010B.csv"
-if not os.path.isfile(fileName):
-    urllib.request.urlretrieve(fileNameUrl, fileName)
-
-df = ROOT.RDF.FromCSV(fileName)
+fileUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
+df = ROOT.RDF.FromCSV(fileUrl)
 
 # Now we will apply a first filter based on two columns of the CSV,
 # and we will define a new column that will contain the invariant mass.

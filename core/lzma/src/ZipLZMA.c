@@ -18,7 +18,7 @@
 
 static const int kHeaderSize = 9;
 
-void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipLZMA(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
    uint64_t out_size;             /* compressed size */
    unsigned in_size   = (unsigned) (*srcsize);
@@ -99,7 +99,7 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    *irep = (int)stream.total_out + kHeaderSize;
 }
 
-void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipLZMA(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
    lzma_stream stream = LZMA_STREAM_INIT;
    lzma_ret returnStatus;

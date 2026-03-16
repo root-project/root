@@ -20,6 +20,8 @@
 #include <RooEvaluatorWrapper.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
+#include <RooFunctor1DBinding.h>
+#include <RooFunctorBinding.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
@@ -33,6 +35,7 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
+#include <Math/Functor.h>
 #include <ROOT/StringUtils.hxx>
 #include <TMath.h>
 #include <TROOT.h>
@@ -485,7 +488,95 @@ FactoryTestParams param12{"RooMultiVarGaussian",
                           [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                           },
-                          5e-3, // increase tolerance because the numeric integration algos are still different
+                          1e-4,
+                          /*randomizeParameters=*/true};
+
+namespace {
+
+// Functions to be wrapped in ROOT::Math::Functors
+double func_1(double const *x)
+{
+   return x[0] - x[1];
+}
+void func_1_grad(double const * /*x*/, double *grad_out)
+{
+   grad_out[0] = 1;
+   grad_out[1] = -1;
+}
+
+auto &functor_1()
+{
+   static ROOT::Math::GradFunctor functor{func_1, 2, func_1_grad};
+   return functor;
+}
+
+double func_gaussian(double const *x)
+{
+   const double arg = x[0] - x[1];
+   const double sig = x[2];
+   return std::exp(-0.5 * arg * arg / (sig * sig));
+}
+
+void func_gaussian_grad(double const *x, double *grad_out)
+{
+   const double arg = x[0] - x[1];
+   const double sig = x[2];
+
+   const double inv_sig2 = 1.0 / (sig * sig);
+   const double f = std::exp(-0.5 * arg * arg * inv_sig2);
+
+   grad_out[0] = -f * arg * inv_sig2;
+   grad_out[1] = f * arg * inv_sig2;
+   grad_out[2] = f * arg * arg * inv_sig2 / sig;
+}
+
+auto &functor_gaussian()
+{
+   static ROOT::Math::GradFunctor functor{func_gaussian, 3, func_gaussian_grad};
+   return functor;
+}
+
+double func_1_1D(double x)
+{
+   return x - 1.0;
+}
+double func_1_1D_diff(double /*x*/)
+{
+   return 1.;
+}
+
+auto &functor_1_1D()
+{
+   static ROOT::Math::GradFunctor1D functor{func_1_1D, func_1_1D_diff};
+   return functor;
+}
+
+} // namespace
+
+FactoryTestParams param13{"RooFunctor",
+                          [](RooWorkspace &ws) {
+                             RooRealVar x("x", "", 0.0, -4, 4);
+                             RooRealVar mu("mu", "", 0.0, -4, 4);
+                             RooRealVar shift("shift", "", 1.0, -4, 4);
+                             shift.setConstant(true);
+                             RooFunctorBinding mu_shifted("mu_shifted", "", functor_1(), {mu, shift});
+                             RooFunctor1DBinding mu_shifted_1D("mu_shifted_1D", "", functor_1_1D(), {mu});
+                             RooRealVar sigma("sigma", "", 4., 0.01, 10.);
+
+                             RooFunctorPdfBinding gauss_1("model_1", "", functor_gaussian(), {x, mu_shifted, sigma});
+                             RooFunctorPdfBinding gauss_2("model_2", "", functor_gaussian(), {x, mu_shifted_1D, sigma});
+
+                             RooAddPdf model{"model", "", {gauss_1, gauss_2}, RooArgList{0.5}};
+
+                             RooArgSet vars{x};
+
+                             ws.import(model);
+                             ws.defineSet("observables", vars);
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-3,
                           /*randomizeParameters=*/true};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
@@ -556,7 +647,15 @@ auto testValues = testing::Values(
                    "expr::gauss_func('std::exp(-0.5*(x - mean) * (x - mean) / (sigma * sigma))', {x, mean, sigma})",
                    "WrapperPdf::model(gauss_func)"},
                   6e-3, true),
-   param12);
+   param12
+// The following test for RooFunctorBinding and friends fails on Windows with the following error:
+//   CMake Error at C:/ROOT-CI/src/cmake/modules/RootTestDriver.cmake:253 (message):
+//     error code: Access violation
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   ,
+   param13
+#endif
+);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {

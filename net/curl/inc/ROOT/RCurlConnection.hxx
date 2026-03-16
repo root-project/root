@@ -17,10 +17,27 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace ROOT {
 namespace Internal {
+
+enum class EHTTPCredentialsType {
+   kNone,
+   kS3
+};
+
+struct RS3Credentials final {
+   std::string fAccessKey;
+   std::string fSecretKey;
+   std::string fRegion;
+};
+
+struct RHTTPCredentials {
+   EHTTPCredentialsType fType = EHTTPCredentialsType::kNone;
+   std::variant<RS3Credentials> fData;
+};
 
 /// Encapsulates a curl easy handle and provides an interface to send HTTP HEAD and (multi-)range queries.
 class RCurlConnection {
@@ -32,6 +49,7 @@ public:
          kSuccess = 0,
          kTooManyRanges, ///< should not get to the user; number of request ranges is automatically reduced as needed
          kNotFound,
+         kForbidden,
          kIOError,
          kUnknown
       };
@@ -46,6 +64,7 @@ public:
    };
 
 private:
+   std::unique_ptr<RHTTPCredentials> fCredentials;
    void *fHandle = nullptr; ///< the CURL easy handle corresponding to this connection
    /// If set to zero, automatically adjust: try with all given ranges and as long as the number of ranges is too large,
    /// half it. If set to zero and automatic reduction of the number of requests is necessary, the number of requests
@@ -80,6 +99,14 @@ public:
    RCurlConnection &operator=(const RCurlConnection &other) = delete;
    RCurlConnection(RCurlConnection &&other);
    RCurlConnection &operator=(RCurlConnection &&other);
+
+   /// Used for testing
+   static int GetCurlVersion();
+
+   void SetCredentialsFromEnvironment();
+   void SetCredentials(const RS3Credentials &credentials);
+   void ClearCredentials();
+   EHTTPCredentialsType GetCredentialsType() const;
 
    /// Checks if the resource exists and if it does, return the value of the content-length header as size
    RStatus SendHeadReq(std::uint64_t &remoteSize);

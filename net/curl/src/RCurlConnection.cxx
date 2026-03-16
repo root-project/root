@@ -3,6 +3,7 @@
 
 #include "ROOT/RCurlConnection.hxx"
 #include "ROOT/RError.hxx"
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RVersion.hxx"
 
 #include <TError.h>
@@ -36,6 +37,7 @@ namespace {
 static constexpr int kHttpResponseSuccessClass = 2;
 static constexpr int kHttpResponsePartial = 206;
 static constexpr int kHttpResponseBadRequest = 400;
+static constexpr int kHttpResponseForbidden = 403;
 static constexpr int kHttpResponseNotFound = 404;
 static constexpr int kHttpResponseRangeNotSatisfiable = 416;
 
@@ -94,6 +96,12 @@ struct RTransferState {
 
    bool IsPartial() const { return fResponseCode == kHttpResponsePartial; }
 };
+
+ROOT::RLogChannel &HTTPClientLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.HTTPClient");
+   return sLog;
+}
 
 void EnsureCurlInitialized()
 {
@@ -571,6 +579,11 @@ std::string GetUserAgentString()
 
 } // anonymous namespace
 
+int ROOT::Internal::RCurlConnection::GetCurlVersion()
+{
+   return LIBCURL_VERSION_NUM;
+}
+
 ROOT::Internal::RCurlConnection::RCurlConnection(const std::string &url)
 {
    EnsureCurlInitialized();
@@ -599,6 +612,7 @@ ROOT::Internal::RCurlConnection::~RCurlConnection()
 ROOT::Internal::RCurlConnection::RCurlConnection(RCurlConnection &&other)
 {
    std::swap(fHandle, other.fHandle);
+   std::swap(fCredentials, other.fCredentials);
    SetupErrorBuffer();
 }
 
@@ -608,6 +622,7 @@ ROOT::Internal::RCurlConnection &ROOT::Internal::RCurlConnection::RCurlConnectio
       return *this;
    fHandle = other.fHandle;
    other.fHandle = nullptr;
+   fCredentials = std::move(other.fCredentials);
    SetupErrorBuffer();
    return *this;
 }
@@ -704,6 +719,8 @@ void ROOT::Internal::RCurlConnection::Perform(RStatus &status)
          status.fStatusCode = RStatus::kNotFound;
       } else if (responseCode == kHttpResponseBadRequest) {
          status.fStatusCode = RStatus::kTooManyRanges;
+      } else if (responseCode == kHttpResponseForbidden) {
+         status.fStatusCode = RStatus::kForbidden;
       } else {
          status.fStatusCode = RStatus::kIOError;
       }
@@ -830,4 +847,69 @@ ROOT::Internal::RCurlConnection::SendRangesReq(std::size_t N, RUserRange *ranges
    ReverseDisplacements(displacements, ranges, order, static_cast<bool>(status));
 
    return status;
+}
+
+void ROOT::Internal::RCurlConnection::SetCredentials(const RS3Credentials &credentials)
+{
+   ClearCredentials();
+
+   const std::string region = credentials.fRegion.empty() ? "default" : credentials.fRegion;
+   const std::string sigArg = std::string("aws:amz:") + region + ":s3";
+   auto rc = curl_easy_setopt(fHandle, CURLOPT_AWS_SIGV4, sigArg.c_str());
+   if (rc != CURLE_OK) {
+      throw RException(R__FAIL(std::string("cannot set CURLOPT_AWS_SIGV4: ") + GetCurlErrorString(rc)));
+   }
+
+   const std::string userPwd = credentials.fAccessKey + ":" + credentials.fSecretKey;
+   rc = curl_easy_setopt(fHandle, CURLOPT_USERPWD, userPwd.c_str());
+   if (rc != CURLE_OK) {
+      throw RException(R__FAIL(std::string("cannot set CURLOPT_USERPWD: ") + GetCurlErrorString(rc)));
+   }
+
+   fCredentials = std::make_unique<RHTTPCredentials>();
+   fCredentials->fType = EHTTPCredentialsType::kS3;
+   fCredentials->fData = credentials;
+}
+
+void ROOT::Internal::RCurlConnection::ClearCredentials()
+{
+   if (!fCredentials)
+      return;
+
+   CURLcode rc;
+   switch (fCredentials->fType) {
+   case EHTTPCredentialsType::kS3:
+      rc = curl_easy_setopt(fHandle, CURLOPT_AWS_SIGV4, NULL);
+      R__ASSERT(rc == CURLE_OK);
+      rc = curl_easy_setopt(fHandle, CURLOPT_USERPWD, NULL);
+      R__ASSERT(rc == CURLE_OK);
+      break;
+   default: R__ASSERT(false && "internal error: unknown credentials type");
+   }
+   fCredentials.reset();
+}
+
+ROOT::Internal::EHTTPCredentialsType ROOT::Internal::RCurlConnection::GetCredentialsType() const
+{
+   return fCredentials ? fCredentials->fType : EHTTPCredentialsType::kNone;
+}
+
+/// Sets the credentials from process environment variables. Currently supported
+///   - S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION
+/// If the environment variables are not found, clear any credentials from the connection.
+void ROOT::Internal::RCurlConnection::SetCredentialsFromEnvironment()
+{
+   ClearCredentials();
+
+   const auto accessKey = std::getenv("S3_ACCESS_KEY");
+   if (accessKey && (accessKey[0] != '\0')) {
+      const auto secretKey = std::getenv("S3_SECRET_KEY");
+      if (!secretKey || (secretKey[0] == '\0')) {
+         R__LOG_WARNING(HTTPClientLog()) << "found S3_ACCESS_KEY environment variable but S3_SECRET_KEY unset. "
+                                            "Ignoring S3 credentials.";
+         return;
+      }
+      const auto region = std::getenv("S3_REGION");
+      SetCredentials(RS3Credentials{accessKey, secretKey, region ? region : ""});
+   }
 }

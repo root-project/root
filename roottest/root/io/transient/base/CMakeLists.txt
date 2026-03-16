@@ -10,9 +10,9 @@ add_test(NAME roottest-root-io-transient-base-build
                                   --target base${fast}
                                   -- ${always-make})
 set_property(TEST roottest-root-io-transient-base-build PROPERTY FIXTURES_SETUP root-io-transient-base-build)
-if(CMAKE_GENERATOR MATCHES Ninja)
-   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY RESOURCE_LOCK NINJA_BUILD)
-   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY FIXTURES_REQUIRED NINJA_BUILD_ALL)
+if(GeneratorNeedsBuildSerialization)
+   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+   set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
 
 ROOTTEST_ADD_TEST(WriteFile

@@ -27,11 +27,7 @@
 
 #ifdef HAVE_PNG
 /* Include file for users of png library. */
-# ifdef HAVE_BUILTIN_PNG
-#  include "libpng/png.h"
-# else
-#  include <png.h>
-# endif
+#include <png.h>
 #else
 #include <setjmp.h>
 # ifdef HAVE_JPEG
@@ -46,11 +42,7 @@
 # ifndef X_DISPLAY_MISSING
 #  include <X11/Xmd.h>
 # endif
-# ifdef HAVE_BUILTIN_JPEG
-#  include "libjpeg/jpeglib.h"
-# else
-#  include <jpeglib.h>
-# endif
+# include <jpeglib.h>
 #endif
 /*#define DO_CLOCKING*/
 
@@ -84,11 +76,7 @@
 #endif
 
 #ifdef HAVE_GIF
-# ifdef HAVE_BUILTIN_UNGIF
-#  include "libungif/gif_lib.h"
-# else
-#  include <gif_lib.h>
-# endif
+# include <gif_lib.h>
 #endif
 
 #ifdef HAVE_TIFF

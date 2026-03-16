@@ -81,6 +81,44 @@ include(FindPackageHandleStandardArgs)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
+#--- Search for packages that are absolutely necessary--------------------------
+
+#----------------------------------------------------------------------------
+# ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+# Search for a required dependency, unless it's meant to be a built-in.
+# A list of all missing required packages will be printed in case they could
+# not be found.
+macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
+  if(NOT ${BUILTIN_CONFIG_OPTION})
+    find_package(${PACKAGE_NAME})
+    if(NOT ${PACKAGE_NAME}_FOUND)
+      message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
+      "Please install it in the system (preferred), set the corresponding CMake search variable, "
+      "or opt in to downloading it using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
+      list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
+    endif()
+  endif()
+endmacro()
+
+# Clear cache variables, or LLVM may use old values for ZLIB
+# TODO: Still needed? This was ported here during a refactoring.
+# When (re-)configuring cleanly (cmake --fresh), this is should be unnecessary.
+foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE LIBRARIES CF)
+  unset(ZLIB_${suffix} CACHE)
+  unset(ZSTD_${suffix} CACHE)
+endforeach()
+
+ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
+ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
+ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
+ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
+
+if(NOT "${MISSING_PACKAGES}" STREQUAL "")
+  message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
+endif()
+
+#--- Redefine find_package for LLVM to pick up ROOT's builtins ----------------------
+# TODO: Make this only local to LLVM?
 macro(find_package)
   if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
     _find_package(${ARGV})
@@ -101,23 +139,6 @@ if(NOT shared)
 endif()
 
 #---Check for Zlib ------------------------------------------------------------------
-if(NOT builtin_zlib)
-  message(STATUS "Looking for ZLib")
-  # Clear cache variables, or LLVM may use old values for ZLIB
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE CF)
-    unset(ZLIB_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(ZLIB REQUIRED)
-  else()
-    find_package(ZLIB)
-    if(NOT ZLIB_FOUND)
-      message(STATUS "Zlib not found. Switching on builtin_zlib option")
-      set(builtin_zlib ON CACHE BOOL "Enabled because Zlib not found (${builtin_zlib_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_zlib)
   list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
@@ -314,76 +335,9 @@ if(builtin_pcre)
 endif()
 
 #---Check for LZMA-------------------------------------------------------------------
-if(NOT builtin_lzma)
-  message(STATUS "Looking for LZMA")
-  if(fail-on-missing)
-    find_package(LibLZMA REQUIRED)
-  else()
-    find_package(LibLZMA)
-    if(NOT LIBLZMA_FOUND)
-      message(STATUS "LZMA not found. Switching on builtin_lzma option")
-      set(builtin_lzma ON CACHE BOOL "Enabled because LZMA not found (${builtin_lzma_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_lzma)
-  set(lzma_version 5.2.4)
-  set(LZMA_TARGET LZMA)
-  message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
-  if(WIN32)
-    set(lzma_version 5.6.3)
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b1d45295d3f71f25a4c9101bd7c8d16cb56348bbef3bbc738da0351e17c73317
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
-                 -DCMAKE_CXX_FLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
-                 -DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
-                 -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG> --target liblzma
-      INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --component liblzma_Development
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  else()
-    if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
-      set(LIBLZMA_CFLAGS "-Wno-format-nonliteral")
-      set(LIBLZMA_LDFLAGS "-Qunused-arguments")
-    elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-      set(LIBLZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179 -wd2102")
-    endif()
-    if(CMAKE_OSX_SYSROOT)
-      set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
-    set(LIBLZMA_CFLAGS "${LIBLZMA_CFLAGS} -O3")
-    ExternalProject_Add(
-      LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
-                        --with-pic --disable-shared --quiet
-                        --disable-scripts --disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-lzma-links
-                        CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${LIBLZMA_CFLAGS} LDFLAGS=${LIBLZMA_LDFLAGS}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
-      TIMEOUT 600
-    )
-    set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  endif()
-
-  add_library(LibLZMA STATIC IMPORTED GLOBAL)
-  add_library(LibLZMA::LibLZMA ALIAS LibLZMA)
-  target_include_directories(LibLZMA INTERFACE ${LIBLZMA_INCLUDE_DIR})
-  set_target_properties(LibLZMA PROPERTIES IMPORTED_LOCATION ${LIBLZMA_LIBRARIES})
+  list(APPEND ROOT_BUILTINS LZMA)
+  add_subdirectory(builtins/lzma)
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
@@ -406,26 +360,8 @@ if(builtin_xxhash)
 endif()
 
 #---Check for ZSTD-------------------------------------------------------------------
-if(NOT builtin_zstd)
-  message(STATUS "Looking for ZSTD")
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARIES LIBRARY_DEBUG LIBRARY_RELEASE)
-    unset(ZSTD_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(ZSTD REQUIRED)
-    if(ZSTD_VERSION VERSION_LESS 1.0.0)
-      message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
-    endif()
-  else()
-    find_package(ZSTD)
-    if(NOT ZSTD_FOUND)
-      message(STATUS "ZSTD not found. Switching on builtin_zstd option")
-      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
-    elseif(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
-      message(STATUS "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Switching on builtin_zstd option")
-      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
-    endif()
-  endif()
+if(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
+  message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
 endif()
 
 if(builtin_zstd)
@@ -435,22 +371,6 @@ if(builtin_zstd)
 endif()
 
 #---Check for LZ4--------------------------------------------------------------------
-if(NOT builtin_lz4)
-  message(STATUS "Looking for LZ4")
-  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
-    unset(LZ4_${suffix} CACHE)
-  endforeach()
-  if(fail-on-missing)
-    find_package(LZ4 REQUIRED)
-  else()
-    find_package(LZ4)
-    if(NOT LZ4_FOUND)
-      message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
-      set(builtin_lz4 ON CACHE BOOL "Enabled because LZ4 not found (${builtin_lz4_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 if(builtin_lz4)
   list(APPEND ROOT_BUILTINS LZ4)
   add_subdirectory(builtins/lz4)
@@ -491,11 +411,17 @@ if(asimage)
       list(APPEND ASEXTRA_LIBRARIES GIF::GIF)
     else()
       if(fail-on-missing)
-          message(SEND_ERROR "Dependency libgif not found. Please make sure it's installed on the system, or force the builtin libgif with '-Dbuiltin_gif=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
+        message(SEND_ERROR "Dependency libgif not found. Please make sure it's installed on the system, or force the builtin libgif with '-Dbuiltin_gif=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
       else()
         set(builtin_gif ON CACHE BOOL "Enabled because needed for asimage" FORCE)
       endif()
     endif()
+  endif()
+
+  if(builtin_gif)
+    add_subdirectory(builtins/libgif)
+    get_target_property(GIF_INCLUDE_DIR GIF::GIF INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(GIF_LIBRARY_LOCATION GIF::GIF IMPORTED_LOCATION)
   endif()
 
   if(NOT builtin_png)
@@ -506,11 +432,17 @@ if(asimage)
       list(GET PNG_INCLUDE_DIRS 0 PNG_INCLUDE_DIR)
     else()
       if(fail-on-missing)
-          message(SEND_ERROR "Dependency libpng not found. Please make sure it's installed on the system, or force the builtin libpng with '-Dbuiltin_png=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
+        message(SEND_ERROR "Dependency libpng not found. Please make sure it's installed on the system, or force the builtin libpng with '-Dbuiltin_png=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
       else()
         set(builtin_png ON CACHE BOOL "Enabled because needed for asimage" FORCE)
       endif()
     endif()
+  endif()
+
+  if(builtin_png)
+    add_subdirectory(builtins/libpng)
+    get_target_property(PNG_INCLUDE_DIR PNG::PNG INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(PNG_LIBRARY_LOCATION PNG::PNG IMPORTED_LOCATION)
   endif()
 
   if(NOT builtin_jpeg)
@@ -519,11 +451,17 @@ if(asimage)
       list(APPEND ASEXTRA_LIBRARIES JPEG::JPEG)
     else()
       if(fail-on-missing)
-          message(SEND_ERROR "Dependency libjpeg not found. Please make sure it's installed on the system, or force the builtin libjpeg with '-Dbuiltin_jpeg=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
+        message(SEND_ERROR "Dependency libjpeg not found. Please make sure it's installed on the system, or force the builtin libjpeg with '-Dbuiltin_jpeg=ON', or set '-Dfail-on-missing=OFF' to fall back to builtins if a dependency is not found.")
       else()
         set(builtin_jpeg ON CACHE BOOL "Enabled because needed for asimage" FORCE)
       endif()
     endif()
+  endif()
+
+  if(builtin_jpeg)
+    add_subdirectory(builtins/libjpeg)
+    get_target_property(JPEG_INCLUDE_DIR JPEG::JPEG INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(JPEG_LIBRARY_LOCATION JPEG::JPEG IMPORTED_LOCATION)
   endif()
 
   if(asimage_tiff)
@@ -556,8 +494,16 @@ if(asimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} 
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+                 -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
+                 -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
+                 -DPNG_INCLUDE_DIR=${PNG_INCLUDE_DIR}
+                 -DPNG_LIBRARY_LOCATION=${PNG_LIBRARY_LOCATION}
+                 -DGIF_INCLUDE_DIR=${GIF_INCLUDE_DIR}
+                 -DGIF_LIBRARY_LOCATION=${GIF_LIBRARY_LOCATION}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ASTEP_EXTRA_BUILD_ARGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${ASTEP_LIB_DIR}/libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
@@ -567,21 +513,6 @@ if(asimage)
     )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
-    if(NOT builtin_jpeg)
-      list(APPEND afterimage_extra_args --with-jpeg-includes=${JPEG_INCLUDE_DIR})
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-jpeg)
-    endif()
-    if(NOT builtin_gif)
-      list(APPEND afterimage_extra_args --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-ungif)
-    endif()
-    if(NOT builtin_png)
-      list(APPEND afterimage_extra_args --with-png-includes=${PNG_INCLUDE_DIR})
-    else()
-      list(APPEND afterimage_extra_args --with-builtin-png)
-    endif()
     if(asimage_tiff)
       list(APPEND afterimage_extra_args --with-tiff-includes=${TIFF_INCLUDE_DIR})
     else()
@@ -614,7 +545,11 @@ if(asimage)
                         --with-ttf --with-afterbase=no
                         --without-svg --disable-glx
                         --with-jpeg
+                        --with-jpeg-includes=${JPEG_INCLUDE_DIR}
                         --with-png
+                        --with-png-includes=${PNG_INCLUDE_DIR}
+                        --with-gif
+                        --with-gif-includes=${GIF_INCLUDE_DIR}
                         ${afterimage_extra_args}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
@@ -626,6 +561,15 @@ if(asimage)
     if(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
       set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
     endif()
+  endif()
+  if(builtin_gif)
+    add_dependencies(AFTERIMAGE BUILTIN_LIBGIF)
+  endif()
+  if(builtin_jpeg)
+    add_dependencies(AFTERIMAGE BUILTIN_LIBJPEG)
+  endif()
+  if(builtin_png)
+    add_dependencies(AFTERIMAGE BUILTIN_LIBPNG)
   endif()
   if(builtin_freetype)
     add_dependencies(AFTERIMAGE FREETYPE)
@@ -1105,7 +1049,7 @@ foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(DAVIX_${suffix} CACHE)
 endforeach()
 
-if(davix AND NOT builtin_davix)
+if(davix)
   if(MSVC)
     message(FATAL_ERROR "Davix is not supported on Windows")
   endif()
@@ -1118,38 +1062,9 @@ if(davix AND NOT builtin_davix)
   else()
     find_package(Davix 0.6.4)
     if(NOT DAVIX_FOUND)
-      find_package(libuuid)
-      if(NOT libuuid_FOUND)
-        message(STATUS "Davix dependency libuuid not found, switching OFF 'davix' option.")
-      endif()
-      find_package(LibXml2)
-      if(NOT LIBXML2_FOUND)
-        message(STATUS "Davix dependency libxml2 not found, switching OFF 'davix' option.")
-      endif()
-      find_package(OpenSSL)
-      if(NOT (OPENSSL_FOUND OR builtin_openssl))
-        message(STATUS "Davix dependency openssl not found, switching OFF 'davix' option.")
-      endif()
-      if(libuuid_FOUND AND LIBXML2_FOUND AND (OPENSSL_FOUND OR builtin_openssl))
-        message(STATUS "Davix not found, switching ON 'builtin_davix' option.")
-        set(builtin_davix ON CACHE BOOL "Enabled because external Davix not found but davix requested (${builtin_davix_description})" FORCE)
-      else()
-        set(davix OFF CACHE BOOL "Disabled because dependencies not found (${davix_description})" FORCE)
-      endif()
+      message(STATUS "Davix not found. Switching off davix option")
+      set(davix OFF CACHE BOOL "Disabled because dependencies not found (${davix_description})" FORCE)
     endif()
-  endif()
-endif()
-
-if(builtin_davix)
-  ROOT_CHECK_CONNECTION("builtin_davix=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'davix' and 'builtin_davix' options")
-    set(builtin_davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  else()
-    list(APPEND ROOT_BUILTINS Davix)
-    add_subdirectory(builtins/davix)
-    set(davix ON CACHE BOOL "Enabled because builtin_davix is enabled)" FORCE)
   endif()
 endif()
 

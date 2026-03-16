@@ -169,12 +169,6 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    }
    return length;
 }
-std::string ConvertShapeToString(const std::vector<Dim> & shape) {
-   return ConvertDimShapeToString(shape);
-}
-std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape) {
-   return ConvertDimShapeToLength(shape);
-}
 
 
 namespace{

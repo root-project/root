@@ -30,7 +30,7 @@ static const int kChecksumOffset = 2 + 1 + 3 + 3;
 static const int kChecksumSize = sizeof(XXH64_canonical_t);
 static const int kHeaderSize = kChecksumOffset + kChecksumSize;
 
-void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
+void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
    int LZ4_version = LZ4_versionNumber();
    uint64_t out_size; /* compressed size */
@@ -84,7 +84,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    *irep = (int)returnStatus + kHeaderSize;
 }
 
-void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
    // NOTE: We don't check that srcsize / tgtsize is reasonable or within the ROOT-imposed limits.
    // This is assumed to be handled by the upper layers.
@@ -111,7 +111,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    // extra function call costs?  NOTE that ROOT limits the buffer size to 16MB.
    XXH64_hash_t checksumResult = XXH64(src + kHeaderSize, inputBufferSize, 0);
    XXH64_hash_t checksumFromFile =
-      XXH64_hashFromCanonical(reinterpret_cast<XXH64_canonical_t *>(src + kChecksumOffset));
+      XXH64_hashFromCanonical(reinterpret_cast<const XXH64_canonical_t *>(src + kChecksumOffset));
 
    if (R__unlikely(checksumFromFile != checksumResult)) {
       fprintf(

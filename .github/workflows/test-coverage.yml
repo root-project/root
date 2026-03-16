@@ -114,7 +114,7 @@ jobs:
 
       # This checks out the merge commit if this is a PR
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref_name }}
 

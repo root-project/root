@@ -471,4 +471,11 @@ struct ExampleMC {
 };
 } // namespace v2
 
+// Test class for runtime member streamers set via TClass::SetMemberStreamer
+struct MemberWithCustomStreamer {
+   int fNormal = 0;
+   int fCustom = 0;
+   ClassDefNV(MemberWithCustomStreamer, 2);
+};
+
 #endif

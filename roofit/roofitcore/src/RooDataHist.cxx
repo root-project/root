@@ -327,6 +327,17 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
       std::map<std::string,TH1*> hmap ;
       auto hiter = impSliceHistos.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",", /*skipEmpty=*/true)) {
+
+        if (!indexCat->hasLabel(token)) {
+           std::stringstream errorMsgStream;
+           errorMsgStream << "RooDataHist::RooDataHist(\"" << GetName() << "\") "
+                          << "you are providing import data for the category state \"" << token
+                          << "\", but the index category \"" << indexCat->GetName() << "\" has no such state!";
+           const std::string errorMsg = errorMsgStream.str();
+           coutE(InputArguments) << errorMsg << std::endl;
+           throw std::invalid_argument(errorMsg);
+        }
+
         if(auto dHist = dynamic_cast<RooDataHist*>(*hiter)) {
            dmap[token] = dHist;
         }
@@ -1014,14 +1025,16 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooFit::Experimental::C
          return "";
       }
 
-      code += " + " + binning->translateBinNumber(ctx, *theVar, idxMult);
+      if (i > 0)
+         code += " + ";
+      code += binning->translateBinNumber(ctx, *theVar, idxMult);
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
       idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
    }
 
-   return "(" + code + ")";
+   return _vars.size() == 1 ? code : "(" + code + ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

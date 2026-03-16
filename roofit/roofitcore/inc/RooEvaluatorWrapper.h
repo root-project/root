@@ -62,10 +62,13 @@ public:
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
    bool hasGradient() const override;
+   bool hasHessian() const override;
 
    void gradient(double *out) const override;
+   void hessian(double *out) const override;
 
    void generateGradient();
+   void generateHessian();
 
    void setUseGeneratedFunctionCode(bool);
 

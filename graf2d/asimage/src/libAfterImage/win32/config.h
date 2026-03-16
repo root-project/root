@@ -7,15 +7,10 @@
 /* Define if libAfterBase is available */
 #undef HAVE_AFTERBASE
 
-/* Define if using builtin libjpeg */
-#define  HAVE_BUILTIN_JPEG 1
 #define HAVE_UNSIGNED_CHAR
 #define HAVE_UNSIGNED_SHORT
 #define HAVE_BOOLEAN
 typedef unsigned char boolean;
-
-/* Define if using builtin libpng */
-#define HAVE_BUILTIN_PNG 1
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -32,12 +27,6 @@ typedef unsigned char boolean;
 
 /* Define to 1 if you have the <ft2build.h> header file. */
 #define HAVE_FT2BUILD_H 1
-
-/* Define if libgif is available */
-#define HAVE_GIF
-
-/* Define if using builtin libungif */
-#define HAVE_BUILTIN_UNGIF 1
 
 #if _MSC_VER >= 1400
 #define NO_DOUBLE_FCLOSE_AFTER_FDOPEN
@@ -127,7 +116,8 @@ typedef unsigned char boolean;
 #define HAVE_XPM 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
-#undef HAVE_ZLIB_H
+// 16 Mar 2026: With a system or builtin zlib, the file is there by definition
+#define HAVE_ZLIB_H 1
 
 /* Define if locale support in X is needed */
 #undef I18N

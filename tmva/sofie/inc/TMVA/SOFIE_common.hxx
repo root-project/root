@@ -208,12 +208,8 @@ std::size_t ConvertShapeToLength(const std::vector<size_t> & shape);
 
 std::string ConvertShapeToString(const std::vector<size_t> & shape);
 std::string ConvertDimShapeToString(const std::vector<Dim> & shape);
-std::string ConvertShapeToString(const std::vector<Dim> & shape);
-
-
 
 std::string ConvertDimShapeToLength(const std::vector<Dim> & shape);
-std::string ConvertDynamicShapeToLength(const std::vector<Dim> & shape);
 
 
 template<class T>

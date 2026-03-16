@@ -56,9 +56,12 @@ class RooAbsData(object):
         r"""The RooAbsData::createHistogram() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsData.createHistogram` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createHistogram(*args, **kwargs)
+        out = self._createHistogram(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooAbsData *RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},"
@@ -70,9 +73,12 @@ class RooAbsData(object):
         r"""The RooAbsData::reduce() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
-        # Redefinition of `RooAbsData.reduce` for keyword arguments.
+        import ROOT
+
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._reduce(*args, **kwargs)
+        out = self._reduce(*args, **kwargs)
+        ROOT.SetOwnership(out, True)
+        return out
 
     @cpp_signature(
         "RooPlot *RooAbsData::statOn(RooPlot* frame,"

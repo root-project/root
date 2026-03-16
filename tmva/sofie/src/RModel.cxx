@@ -573,7 +573,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       auto shape = ConvertShapeToInt(input.second.shape);
       if (verbose)
          std::cout << "converting input shape for " << input.first << " " << ConvertShapeToString(shape) << " from "
-            << ConvertShapeToString(input.second.shape) << std::endl;
+            << ConvertDimShapeToString(input.second.shape) << std::endl;
       if (!shape.empty()) {
          // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
          // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
@@ -1572,7 +1572,7 @@ void RModel::PrintOutputTensors() const {
         std::cout << "Tensor name: \"" << it << "\"\t";
         try {
          auto shape = GetDimTensorShape(it);
-         std::cout << "with shape: " << ConvertShapeToString(shape) << std::endl;
+         std::cout << "with shape: " << ConvertDimShapeToString(shape) << std::endl;
         } catch (...) {
           std::cout << "with shape not yet defined" << std::endl;
         }

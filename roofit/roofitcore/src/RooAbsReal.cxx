@@ -3116,7 +3116,8 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) const
 {
   auto fund = std::make_unique<RooRealVar>(newname?newname:GetName(),GetTitle(),_value,getUnit());
-  fund->removeRange();
+  fund->removeMin();
+  fund->removeMax();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
   return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));

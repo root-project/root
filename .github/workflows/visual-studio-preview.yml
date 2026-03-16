@@ -2,46 +2,12 @@ name: 'Visual Studio - Preview'
 
 on:
   workflow_dispatch:
-    inputs:
-      selected-job:
-        description: 'Select which job to run'
-        required: true
-        default: 'Build'
-        type: choice
-        options:
-        - Update
-        - Build
   schedule:
-    - cron: '0  6 * * 3'
     - cron: '0  7 * * 3'
 
 jobs:
-  update-visualstudio-preview:
-    if: ${{ github.event.schedule == '0  6 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Update') }}
-
-    name: Update Visual Studio - Preview (Insiders)
-
-    runs-on:
-      - self-hosted
-      - windows
-      - x64
-      - preview
-
-    steps:
-    - name: Update Visual Studio Preview
-      shell: cmd
-      run: "C:\\bin\\vs_update.bat"
-
-    - name: Display Update Log - Visual Studio Preview
-      shell: cmd
-      run: "timeout 30 > NUL & type C:\\ROOT-CI\\VS-Update.log"
-
-    - name: Reboot after update - Visual Studio Preview
-      shell: cmd
-      run: "timeout 30 > NUL & shutdown /r"
-
   build-windows:
-    if: ${{ github.event.schedule == '0  7 * * 3' || (github.event_name == 'workflow_dispatch' && inputs.selected-job == 'Build') }}
+    if: ${{ github.event.schedule == '0  7 * * 3' || github.event_name == 'workflow_dispatch' }}
 
     permissions:
       contents: read
@@ -58,8 +24,12 @@ jobs:
       - preview
 
     steps:
+      - name: Display Update Log - Visual Studio Preview
+        shell: cmd
+        run: "type C:\\ROOT-CI\\VS-Update.log"
+
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: master
 
@@ -78,7 +48,7 @@ jobs:
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Test Results - Visual Studio Preview
           path: C:/ROOT-CI/build/TestResults.xml

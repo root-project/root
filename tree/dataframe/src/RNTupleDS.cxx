@@ -205,7 +205,7 @@ public:
       fieldZero.Attach(std::move(fField));
       try {
          ROOT::Internal::CallConnectPageSourceOnField(fieldZero, source);
-      } catch (const ROOT::RException &err) {
+      } catch (const ROOT::RException &) {
          fField = std::move(fieldZero.ReleaseSubfields()[0]);
          auto onDiskType = source.GetSharedDescriptorGuard()->GetFieldDescriptor(fField->GetOnDiskId()).GetTypeName();
          std::string msg = "RNTupleDS: invalid type \"" + fField->GetTypeName() + "\" for column \"" +

@@ -427,6 +427,17 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     if (indexCat) {
       auto hiter = impSliceData.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
+
+        if (!indexCat->hasLabel(token)) {
+           std::stringstream errorMsgStream;
+           errorMsgStream << "RooDataSet::RooDataSet(\"" << GetName() << "\") "
+                          << "you are providing import data for the category state \"" << token
+                          << "\", but the index category \"" << indexCat->GetName() << "\" has no such state!";
+           const std::string errorMsg = errorMsgStream.str();
+           coutE(InputArguments) << errorMsg << std::endl;
+           throw std::invalid_argument(errorMsg);
+        }
+
         hmap[token] = static_cast<RooDataSet*>(*hiter);
         ++hiter;
       }

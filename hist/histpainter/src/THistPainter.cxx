@@ -8686,8 +8686,7 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
 {
 
    if (!obj) return;
-   Bool_t status = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext ctx{nullptr}; // No self-registration to directories
 
    if (obj->InheritsFrom(TMatrixFBase::Class())) {
       // case TMatrixF
@@ -8713,8 +8712,6 @@ void THistPainter::PaintSpecialObjects(const TObject *obj, Option_t *option)
       R__TVectorD->SetBit(kCanDelete);
       R__TVectorD->Draw(option);
    }
-
-   TH1::AddDirectory(status);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
