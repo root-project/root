@@ -127,6 +127,26 @@ public:
       }
    }
 
+   /// Slice this axis according to the specification.
+   ///
+   /// Axes throw exceptions if the slicing cannot be performed. For example, the rebin operation must divide the
+   /// number of normal bins for RRegularAxis and RVariableBinAxis, while RCategoricalAxis cannot be sliced at all.
+   ///
+   /// \param[in] sliceSpec the slice specification
+   /// \return the sliced axis
+   RAxisVariant Slice(const RSliceSpec &sliceSpec) const
+   {
+      if (auto *regular = GetRegularAxis()) {
+         return regular->Slice(sliceSpec);
+      } else if (auto *variable = GetVariableBinAxis()) {
+         return variable->Slice(sliceSpec);
+      } else if (auto *categorical = GetCategoricalAxis()) {
+         return categorical->Slice(sliceSpec);
+      } else {
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
+      }
+   }
+
    friend bool operator==(const RAxisVariant &lhs, const RAxisVariant &rhs) { return lhs.fVariant == rhs.fVariant; }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

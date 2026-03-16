@@ -23,6 +23,11 @@ TEST(RAxisVariant, RegularAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 0);
+      EXPECT_TRUE(slicedAxis.GetRegularAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), Bins);
    }
 
    {
@@ -36,6 +41,11 @@ TEST(RAxisVariant, RegularAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 0);
+      EXPECT_TRUE(slicedAxis.GetRegularAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), Bins);
    }
 }
 
@@ -64,6 +74,11 @@ TEST(RAxisVariant, VariableBinAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 1);
+      EXPECT_TRUE(slicedAxis.GetVariableBinAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), Bins);
    }
 
    {
@@ -77,6 +92,11 @@ TEST(RAxisVariant, VariableBinAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 1);
+      EXPECT_TRUE(slicedAxis.GetVariableBinAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), Bins);
    }
 }
 
@@ -100,6 +120,11 @@ TEST(RAxisVariant, CategoricalAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), 4);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 2);
+      EXPECT_TRUE(slicedAxis.GetCategoricalAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), 3);
    }
 
    {
@@ -113,5 +138,10 @@ TEST(RAxisVariant, CategoricalAxis)
       EXPECT_EQ(std::distance(normal12.begin(), normal12.end()), 1);
       const auto full = axis.GetFullRange();
       EXPECT_EQ(std::distance(full.begin(), full.end()), 3);
+
+      const auto slicedAxis = axis.Slice(RSliceSpec{});
+      EXPECT_EQ(slicedAxis.GetVariant().index(), 2);
+      EXPECT_TRUE(slicedAxis.GetCategoricalAxis() != nullptr);
+      EXPECT_EQ(slicedAxis.GetNNormalBins(), 3);
    }
 }
