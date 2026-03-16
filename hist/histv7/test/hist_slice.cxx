@@ -285,3 +285,210 @@ TEST(RSliceBinIndexMapper, MapSliceFullSum)
       EXPECT_TRUE(success);
    }
 }
+
+TEST(RHistEngine, SliceInvalidNumberOfArguments)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RHistEngine<int> engine1(axis);
+   ASSERT_EQ(engine1.GetNDimensions(), 1);
+   const RHistEngine<int> engine2(axis, axis);
+   ASSERT_EQ(engine2.GetNDimensions(), 2);
+
+   EXPECT_NO_THROW(engine1.Slice(RSliceSpec{}));
+   EXPECT_THROW(engine1.Slice(RSliceSpec{}, RSliceSpec{}), std::invalid_argument);
+
+   EXPECT_THROW(engine2.Slice(RSliceSpec{}), std::invalid_argument);
+   EXPECT_NO_THROW(engine2.Slice(RSliceSpec{}, RSliceSpec{}));
+   EXPECT_THROW(engine2.Slice(RSliceSpec{}, RSliceSpec{}, RSliceSpec{}), std::invalid_argument);
+}
+
+TEST(RHistEngine, SliceSumAll)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RHistEngine<int> engine1(axis);
+   ASSERT_EQ(engine1.GetNDimensions(), 1);
+   const RHistEngine<int> engine2(axis, axis);
+   ASSERT_EQ(engine2.GetNDimensions(), 2);
+
+   const RSliceSpec sum(RSliceSpec::ROperationSum{});
+   EXPECT_THROW(engine1.Slice(sum), std::invalid_argument);
+   EXPECT_THROW(engine2.Slice(sum, sum), std::invalid_argument);
+}
+
+TEST(RHistEngine, SliceFull)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, i + 1);
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(axis.GetFullRange()), RSliceSpec(axis.GetNormalRange())}) {
+      const auto sliced = engine.Slice(sliceSpec);
+      ASSERT_EQ(sliced.GetNDimensions(), 1);
+      EXPECT_TRUE(sliced.GetAxes()[0].GetRegularAxis() != nullptr);
+      EXPECT_EQ(sliced.GetAxes()[0].GetNNormalBins(), Bins);
+      EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+
+      EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 100);
+      for (std::size_t i = 0; i < Bins; i++) {
+         EXPECT_EQ(sliced.GetBinContent(i), i + 1);
+      }
+      EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 200);
+   }
+}
+
+TEST(RHistEngine, SliceNormal)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, i + 1);
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
+
+   const auto sliced = engine.Slice(axis.GetNormalRange(1, 5));
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   const auto *regular = sliced.GetAxes()[0].GetRegularAxis();
+   ASSERT_TRUE(regular != nullptr);
+   EXPECT_EQ(regular->GetNNormalBins(), 4);
+   EXPECT_EQ(regular->GetLow(), 1);
+   EXPECT_EQ(regular->GetHigh(), 5);
+   EXPECT_EQ(sliced.GetTotalNBins(), 6);
+
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 101);
+   for (std::size_t i = 0; i < 4; i++) {
+      EXPECT_EQ(sliced.GetBinContent(i), i + 2);
+   }
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 395);
+}
+
+TEST(RHistEngine, SliceRebin)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, i + 1);
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
+
+   const auto sliced = engine.Slice(RSliceSpec::ROperationRebin(2));
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   const auto *regular = sliced.GetAxes()[0].GetRegularAxis();
+   ASSERT_TRUE(regular != nullptr);
+   EXPECT_EQ(regular->GetNNormalBins(), Bins / 2);
+   EXPECT_EQ(regular->GetLow(), 0);
+   EXPECT_EQ(regular->GetHigh(), Bins);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins / 2 + 2);
+
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 100);
+   for (std::size_t i = 0; i < Bins / 2; i++) {
+      EXPECT_EQ(sliced.GetBinContent(i), 4 * i + 3);
+   }
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 200);
+}
+
+TEST(RHistEngine, SliceRangeRebin)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.SetBinContent(i, i + 1);
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 200);
+
+   const RSliceSpec spec(axis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+   const auto sliced = engine.Slice(spec);
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   const auto *regular = sliced.GetAxes()[0].GetRegularAxis();
+   ASSERT_TRUE(regular != nullptr);
+   EXPECT_EQ(regular->GetNNormalBins(), 2);
+   EXPECT_EQ(regular->GetLow(), 1);
+   EXPECT_EQ(regular->GetHigh(), 5);
+   EXPECT_EQ(sliced.GetTotalNBins(), 4);
+
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 101);
+   for (std::size_t i = 0; i < 2; i++) {
+      EXPECT_EQ(sliced.GetBinContent(i), 4 * i + 5);
+   }
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 395);
+}
+
+TEST(RHistEngine, SliceSum)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis, axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 0, 1000);
+   engine.SetBinContent(RBinIndex::Underflow(), 2, 2000);
+   for (std::size_t i = 0; i < Bins; i++) {
+      for (std::size_t j = 0; j < Bins; j++) {
+         engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
+         engine.SetBinContent(i, RBinIndex(j), i * Bins + j);
+         engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
+      }
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 3, 3000);
+   engine.SetBinContent(RBinIndex::Overflow(), 6, 4000);
+
+   const auto sliced = engine.Slice(RSliceSpec{}, RSliceSpec::ROperationSum{});
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_TRUE(sliced.GetAxes()[0].GetRegularAxis() != nullptr);
+   EXPECT_EQ(sliced.GetAxes()[0].GetNNormalBins(), Bins);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 3000);
+   for (std::size_t i = 0; i < Bins; i++) {
+      EXPECT_EQ(sliced.GetBinContent(i), i * (100 + Bins * Bins + 200) + Bins * (Bins - 1) / 2);
+   }
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 7000);
+}
+
+TEST(RHistEngine, SliceRangeSum)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine(axis, axis);
+
+   engine.SetBinContent(RBinIndex::Underflow(), 0, 1000);
+   engine.SetBinContent(RBinIndex::Underflow(), 2, 2000);
+   for (std::size_t i = 0; i < Bins; i++) {
+      for (std::size_t j = 0; j < Bins; j++) {
+         engine.SetBinContent(i, RBinIndex::Underflow(), 100 * i);
+         engine.SetBinContent(i, RBinIndex(j), i * Bins + j);
+         engine.SetBinContent(i, RBinIndex::Overflow(), 200 * i);
+      }
+   }
+   engine.SetBinContent(RBinIndex::Overflow(), 3, 3000);
+   engine.SetBinContent(RBinIndex::Overflow(), 6, 4000);
+
+   const RSliceSpec rangeSum(axis.GetNormalRange(1, 5), RSliceSpec::ROperationSum{});
+   const auto sliced = engine.Slice(RSliceSpec{}, rangeSum);
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_TRUE(sliced.GetAxes()[0].GetRegularAxis() != nullptr);
+   EXPECT_EQ(sliced.GetAxes()[0].GetNNormalBins(), Bins);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Underflow()), 2000);
+   for (std::size_t i = 0; i < Bins; i++) {
+      EXPECT_EQ(sliced.GetBinContent(i), 4 * i * Bins + 10);
+   }
+   EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 3000);
+}
