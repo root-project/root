@@ -658,7 +658,6 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-         policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
          // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
          // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
          // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
@@ -4225,7 +4224,6 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-   policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
    policy.AnonymousTagLocations = false; // Do not extract file name + line number for anonymous types.
    // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
    // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
