@@ -76,6 +76,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseEinsum.cxx
     src/ParseRandom.cxx
     src/ParseScatterElements.cxx
+    src/ParseScatterND.cxx
     src/ParseNonZero.cxx
     src/ParseNot.cxx
     ${PROTO_SRCS}

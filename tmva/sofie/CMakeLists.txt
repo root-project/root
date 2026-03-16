@@ -65,6 +65,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Einsum.hxx
    TMVA/ROperator_Random.hxx
    TMVA/ROperator_ScatterElements.hxx
+   TMVA/ROperator_ScatterND.hxx
    TMVA/ROperator_Gather.hxx
    TMVA/ROperator_GatherND.hxx
    TMVA/ROperator_NonZero.hxx
