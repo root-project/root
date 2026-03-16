@@ -32,6 +32,20 @@ TEST(RRegularAxis, Constructor)
    EXPECT_THROW(RRegularAxis(Bins, {0, NaN}), std::invalid_argument);
 }
 
+TEST(RRegularAxis, ComputeLowHighEdge)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      EXPECT_EQ(axis.ComputeLowEdge(i), i);
+      EXPECT_EQ(axis.ComputeHighEdge(i), i + 1);
+   }
+
+   EXPECT_THROW(axis.ComputeLowEdge(Bins), std::invalid_argument);
+   EXPECT_THROW(axis.ComputeHighEdge(Bins), std::invalid_argument);
+}
+
 TEST(RRegularAxis, Equality)
 {
    static constexpr std::size_t Bins = 20;
