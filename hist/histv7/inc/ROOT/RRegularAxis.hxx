@@ -83,6 +83,28 @@ public:
    double GetHigh() const { return fHigh; }
    bool HasFlowBins() const { return fEnableFlowBins; }
 
+   /// Compute the low edge of a bin.
+   ///
+   /// \param[in] bin the index, must be \f$< fNNormalBins\f$
+   double ComputeLowEdge(std::uint64_t bin) const
+   {
+      if (bin >= fNNormalBins) {
+         throw std::invalid_argument("bin must be inside the axis");
+      }
+      return fLow + (fHigh - fLow) * bin / fNNormalBins;
+   }
+
+   /// Compute the high edge of a bin.
+   ///
+   /// \param[in] bin the index, must be \f$< fNNormalBins\f$
+   double ComputeHighEdge(std::uint64_t bin) const
+   {
+      if (bin >= fNNormalBins) {
+         throw std::invalid_argument("bin must be inside the axis");
+      }
+      return fLow + (fHigh - fLow) * (bin + 1) / fNNormalBins;
+   }
+
    friend bool operator==(const RRegularAxis &lhs, const RRegularAxis &rhs)
    {
       return lhs.fNNormalBins == rhs.fNNormalBins && lhs.fLow == rhs.fLow && lhs.fHigh == rhs.fHigh &&
