@@ -142,6 +142,8 @@ endif()
 if(builtin_zlib)
   list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
+  get_target_property(ZLIB_INCLUDE_DIR ZLIB::ZLIB INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(ZLIB_LIBRARY_LOCATION ZLIB::ZLIB IMPORTED_LOCATION)
 endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------
@@ -497,7 +499,7 @@ if(asimage)
       CMAKE_ARGS -G ${CMAKE_GENERATOR} 
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
-                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
                  -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
                  -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
                  -DPNG_INCLUDE_DIR=${PNG_INCLUDE_DIR}
