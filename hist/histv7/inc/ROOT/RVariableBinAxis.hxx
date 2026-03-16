@@ -8,6 +8,7 @@
 #include "RBinIndex.hxx"
 #include "RBinIndexRange.hxx"
 #include "RLinearizedIndex.hxx"
+#include "RSliceSpec.hxx"
 
 #include <cassert>
 #include <cmath>
@@ -194,6 +195,57 @@ public:
    {
       return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fBinEdges.size() - 1)
                              : GetNormalRange();
+   }
+
+   /// Slice this axis according to the specification.
+   ///
+   /// Throws an exception if the axis cannot be sliced:
+   ///  * A sum operation makes the dimension disappear.
+   ///  * The rebin operation must divide the number of normal bins.
+   ///
+   /// \param[in] sliceSpec the slice specification
+   /// \return the sliced axis, with enabled underflow and overflow bins
+   RVariableBinAxis Slice(const RSliceSpec &sliceSpec) const
+   {
+      if (sliceSpec.GetOperationSum() != nullptr) {
+         throw std::runtime_error("sum operation makes dimension disappear");
+      }
+
+      // Figure out the properties of the sliced axis.
+      std::size_t nNormalBins = fBinEdges.size() - 1;
+      std::size_t begin = 0;
+      std::size_t end = nNormalBins;
+
+      const auto &range = sliceSpec.GetRange();
+      if (!range.IsInvalid()) {
+         if (range.GetBegin().IsNormal()) {
+            begin = range.GetBegin().GetIndex();
+         }
+         if (range.GetEnd().IsNormal()) {
+            end = range.GetEnd().GetIndex();
+         }
+         nNormalBins = end - begin;
+      }
+
+      std::uint64_t nGroup = 1;
+      if (auto *opRebin = sliceSpec.GetOperationRebin()) {
+         nGroup = opRebin->GetNGroup();
+         if (nNormalBins % nGroup != 0) {
+            throw std::runtime_error("rebin operation does not divide number of normal bins");
+         }
+      }
+
+      // Prepare the bin edges.
+      std::vector<double> binEdges;
+      for (std::size_t bin = begin; bin < end; bin += nGroup) {
+         binEdges.push_back(fBinEdges[bin]);
+      }
+      binEdges.push_back(fBinEdges[end]);
+
+      // The sliced axis always has flow bins enabled to preserve all entries. This is the least confusing for users,
+      // even if not always strictly necessary.
+      bool enableFlowBins = true;
+      return RVariableBinAxis(std::move(binEdges), enableFlowBins);
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

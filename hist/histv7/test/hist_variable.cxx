@@ -332,3 +332,69 @@ TEST(RVariableBinAxis, GetFullRange)
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
 }
+
+static void Test_RVariableBinAxis_Slice(bool enableFlowBins)
+{
+   static constexpr std::size_t Bins = 20;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < Bins; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(Bins);
+   const RVariableBinAxis origAxis(bins, enableFlowBins);
+   ASSERT_EQ(origAxis.HasFlowBins(), enableFlowBins);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(origAxis.GetFullRange()), RSliceSpec(origAxis.GetNormalRange())}) {
+      const auto axis = origAxis.Slice(sliceSpec);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins);
+      EXPECT_EQ(axis.GetBinEdges(), bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec slice(origAxis.GetNormalRange(1, Bins - 1));
+      const auto axis = origAxis.Slice(slice);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins - 2);
+      EXPECT_EQ(axis.GetBinEdges().front(), 1);
+      EXPECT_EQ(axis.GetBinEdges().back(), Bins - 1);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec rebin(RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(rebin);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins / 2);
+      EXPECT_EQ(axis.GetBinEdges().front(), 0);
+      EXPECT_EQ(axis.GetBinEdges().back(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   // Rebin grouping must divide the number of normal bins.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationRebin(3)), std::runtime_error);
+
+   // Sum operation makes dimension disappear.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationSum{}), std::runtime_error);
+
+   {
+      const RSliceSpec sliceRebin(origAxis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(sliceRebin);
+      EXPECT_EQ(axis.GetNNormalBins(), 2);
+      const auto &binEdges = axis.GetBinEdges();
+      ASSERT_EQ(binEdges.size(), 3);
+      EXPECT_EQ(binEdges[0], 1);
+      EXPECT_EQ(binEdges[1], 3);
+      EXPECT_EQ(binEdges[2], 5);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+}
+
+TEST(RVariableBinAxis, Slice)
+{
+   Test_RVariableBinAxis_Slice(true);
+}
+
+TEST(RVariableBinAxis, SliceNoFlowBins)
+{
+   Test_RVariableBinAxis_Slice(false);
+}
