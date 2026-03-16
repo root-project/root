@@ -8,6 +8,7 @@
 #include "RBinIndex.hxx"
 #include "RBinIndexRange.hxx"
 #include "RLinearizedIndex.hxx"
+#include "RSliceSpec.hxx"
 
 #include <cassert>
 #include <cmath>
@@ -214,6 +215,59 @@ public:
    {
       return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fNNormalBins)
                              : GetNormalRange();
+   }
+
+   /// Slice this axis according to the specification.
+   ///
+   /// Throws an exception if the axis cannot be sliced:
+   ///  * A sum operation makes the dimension disappear.
+   ///  * The rebin operation must divide the number of normal bins.
+   ///
+   /// \param[in] sliceSpec the slice specification
+   /// \return the sliced axis, with enabled underflow and overflow bins
+   RRegularAxis Slice(const RSliceSpec &sliceSpec) const
+   {
+      if (sliceSpec.GetOperationSum() != nullptr) {
+         throw std::runtime_error("sum operation makes dimension disappear");
+      }
+
+      // Figure out the properties of the sliced axis.
+      std::uint64_t nNormalBins = fNNormalBins;
+      double low = fLow;
+      double high = fHigh;
+
+      const auto &range = sliceSpec.GetRange();
+      if (!range.IsInvalid()) {
+         std::uint64_t begin = 0;
+         std::uint64_t end = nNormalBins;
+         if (range.GetBegin().IsNormal()) {
+            begin = range.GetBegin().GetIndex();
+            // Only compute a new lower end of the axis interval if needed.
+            if (begin > 0) {
+               low = ComputeLowEdge(begin);
+            }
+         }
+         if (range.GetEnd().IsNormal()) {
+            end = range.GetEnd().GetIndex();
+            // Only compute a new upper end of the axis interval if needed, to avoid floating-point inaccuracies.
+            if (end < nNormalBins) {
+               high = ComputeHighEdge(end - 1);
+            }
+         }
+         nNormalBins = end - begin;
+      }
+
+      if (auto *opRebin = sliceSpec.GetOperationRebin()) {
+         if (nNormalBins % opRebin->GetNGroup() != 0) {
+            throw std::runtime_error("rebin operation does not divide number of normal bins");
+         }
+         nNormalBins /= opRebin->GetNGroup();
+      }
+
+      // The sliced axis always has flow bins enabled to preserve all entries. This is the least confusing for users,
+      // even if not always strictly necessary.
+      bool enableFlowBins = true;
+      return RRegularAxis(nNormalBins, {low, high}, enableFlowBins);
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

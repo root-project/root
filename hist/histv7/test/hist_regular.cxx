@@ -272,3 +272,62 @@ TEST(RRegularAxis, GetFullRange)
       EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
 }
+
+static void Test_RegularAxis_Slice(bool enableFlowBins)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis origAxis(Bins, {0, Bins}, enableFlowBins);
+   ASSERT_EQ(origAxis.HasFlowBins(), enableFlowBins);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(origAxis.GetFullRange()), RSliceSpec(origAxis.GetNormalRange())}) {
+      const auto axis = origAxis.Slice(sliceSpec);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins);
+      EXPECT_EQ(axis.GetLow(), 0);
+      EXPECT_EQ(axis.GetHigh(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec slice(origAxis.GetNormalRange(1, Bins - 1));
+      const auto axis = origAxis.Slice(slice);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins - 2);
+      EXPECT_EQ(axis.GetLow(), 1);
+      EXPECT_EQ(axis.GetHigh(), Bins - 1);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   {
+      const RSliceSpec rebin(RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(rebin);
+      EXPECT_EQ(axis.GetNNormalBins(), Bins / 2);
+      EXPECT_EQ(axis.GetLow(), 0);
+      EXPECT_EQ(axis.GetHigh(), Bins);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+
+   // Rebin grouping must divide the number of normal bins.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationRebin(3)), std::runtime_error);
+
+   // Sum operation makes dimension disappear.
+   EXPECT_THROW(origAxis.Slice(RSliceSpec::ROperationSum{}), std::runtime_error);
+
+   {
+      const RSliceSpec sliceRebin(origAxis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+      const auto axis = origAxis.Slice(sliceRebin);
+      EXPECT_EQ(axis.GetNNormalBins(), 2);
+      EXPECT_EQ(axis.GetLow(), 1);
+      EXPECT_EQ(axis.GetHigh(), 5);
+      EXPECT_TRUE(axis.HasFlowBins());
+   }
+}
+
+TEST(RRegularAxis, Slice)
+{
+   Test_RegularAxis_Slice(true);
+}
+
+TEST(RRegularAxis, SliceNoFlowBins)
+{
+   Test_RegularAxis_Slice(false);
+}
