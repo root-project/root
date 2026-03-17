@@ -13,8 +13,7 @@
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
-#include "TVirtualPS.h"
-#include "TVirtualX.h"
+#include "TVirtualPadPainter.h"
 
 Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
@@ -296,8 +295,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("|>")) {
-         if (gVirtualX) gVirtualX->SetLineStyle(1);
-         if (gVirtualPS) gVirtualPS->SetLineStyle(1);
+         gPad->GetPainter()->SetLineStyle(1);
          if (GetFillColor()) {
             gPad->PaintFillArea(3,x2ar,y2ar);
             gPad->PaintPolyLine(4,x2ar,y2ar);
@@ -326,8 +324,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("<|")) {
-         if (gVirtualX) gVirtualX->SetLineStyle(1);
-         if (gVirtualPS) gVirtualPS->SetLineStyle(1);
+         gPad->GetPainter()->SetLineStyle(1);
          if (GetFillColor()) {
             gPad->PaintFillArea(3,x1ar,y1ar);
             gPad->PaintPolyLine(4,x1ar,y1ar);
