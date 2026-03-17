@@ -1,15 +1,15 @@
 // @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005
 
- /**********************************************************************
-  *                                                                    *
-  * Copyright (c) 2004  CERN                                           *
-  * All rights reserved.                                               *
-  *                                                                    *
-  * For the licensing terms see $ROOTSYS/LICENSE.                      *
-  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
-  *                                                                    *
-  **********************************************************************/
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2004  CERN                                           *
+ * All rights reserved.                                               *
+ *                                                                    *
+ * For the licensing terms see $ROOTSYS/LICENSE.                      *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+ *                                                                    *
+ **********************************************************************/
 
 // Header file for class RootFinder
 //
@@ -20,11 +20,9 @@
 #ifndef ROOT_Math_RootFinder
 #define ROOT_Math_RootFinder
 
-
 #include "Math/IFunctionfwd.h"
 
 #include "Math/IRootFinderMethod.h"
-
 
 /**
    @defgroup RootFinders One-dimensional Root-Finding
@@ -36,171 +34,148 @@
    @ingroup NumAlgo
 */
 
-
 namespace ROOT {
-   namespace Math {
-
+namespace Math {
 
 //_____________________________________________________________________________________
-      /**
-         User Class to find the Root of one dimensional functions.
-         The GSL Methods are implemented in MathMore and they are loaded automatically
-         via the plug-in manager
+/**
+   User Class to find the Root of one dimensional functions.
+   The GSL Methods are implemented in MathMore and they are loaded automatically
+   via the plug-in manager
 
-         The possible types of Root-finding algorithms are:
-         <ul>
-         <li>Root Bracketing Algorithms which do not require function derivatives
-         <ol>
-         <li>RootFinder::kBRENT  (default method implemented in MathCore)
-         <li>RootFinder::kGSL_BISECTION
-         <li>RootFinder::kGSL_FALSE_POS
-         <li>RootFinder::kGSL_BRENT
-         </ol>
-         <li>Root Finding Algorithms using Derivatives
-         <ol>
-         <li>RootFinder::kGSL_NEWTON
-         <li>RootFinder::kGSL_SECANT
-         <li>RootFinder::kGSL_STEFFENSON
-         </ol>
-         </ul>
+   The possible types of Root-finding algorithms are:
+   
+   Root Bracketing Algorithms which do not require function derivatives
+   
+   RootFinder::kBRENT  (default method implemented in MathCore)
+   RootFinder::kGSL_BISECTION
+   RootFinder::kGSL_FALSE_POS
+   RootFinder::kGSL_BRENT
+   RootFinder::kMODAB
+   
+   Root Finding Algorithms using Derivatives
+   
+   RootFinder::kGSL_NEWTON
+   RootFinder::kGSL_SECANT
+   RootFinder::kGSL_STEFFENSON
 
-         This class does not cupport copying
+   This class does not support copying
 
-         @ingroup RootFinders
+   @ingroup RootFinders
 
-      */
+*/
 
-      class RootFinder {
+class RootFinder {
 
-      public:
+public:
+   enum EType {
+      kBRENT,            // Methods from MathCore
+      kGSL_BISECTION,
+      kGSL_FALSE_POS,
+      kGSL_BRENT,
+      kGSL_NEWTON,
+      kGSL_SECANT,       // GSL Normal
+      kGSL_STEFFENSON    // GSL Derivatives
+      kMODAB,            // Modified A&B method added in MathCore
+   };
 
-         enum EType { kBRENT,                                   // Methods from MathCore
-                     kMODAB,                                    // Modified A&B method added in MathCore
-                     kGSL_BISECTION, kGSL_FALSE_POS, kGSL_BRENT, // GSL Normal
-                     kGSL_NEWTON, kGSL_SECANT, kGSL_STEFFENSON   // GSL Derivatives
-         };
+   /**
+      Construct a Root-Finder algorithm
+   */
+   RootFinder(RootFinder::EType type = RootFinder::kBRENT);
+   virtual ~RootFinder();
 
-         /**
-            Construct a Root-Finder algorithm
-         */
-         RootFinder(RootFinder::EType type = RootFinder::kBRENT);
-         virtual ~RootFinder();
+   // usually copying is non trivial, so we delete this
+   RootFinder(const RootFinder &) = delete;
+   RootFinder &operator=(const RootFinder &rhs) = delete;
+   RootFinder(RootFinder &&) = delete;
+   RootFinder &operator=(RootFinder &&rhs) = delete;
 
-         // usually copying is non trivial, so we delete this
-         RootFinder(const RootFinder & ) = delete;
-         RootFinder & operator = (const RootFinder & rhs) = delete;
-         RootFinder(RootFinder && ) = delete;
-         RootFinder & operator = (RootFinder && rhs) = delete;
+   bool SetMethod(RootFinder::EType type = RootFinder::kBRENT);
 
-         bool SetMethod(RootFinder::EType type = RootFinder::kBRENT);
+   /**
+      Provide to the solver the function and the initial search interval [xlow, xup]
+      for algorithms not using derivatives (bracketing algorithms)
+      The templated function f must be of a type implementing the \a operator() method,
+      <em>  double  operator() (  double  x ) </em>
+      Returns non zero if interval is not valid (i.e. does not contains a root)
+   */
 
-         /**
-            Provide to the solver the function and the initial search interval [xlow, xup]
-            for algorithms not using derivatives (bracketing algorithms)
-            The templated function f must be of a type implementing the \a operator() method,
-            <em>  double  operator() (  double  x ) </em>
-            Returns non zero if interval is not valid (i.e. does not contains a root)
-         */
+   bool SetFunction(const IGenFunction &f, double xlow, double xup) { return fSolver->SetFunction(f, xlow, xup); }
 
-         bool SetFunction( const IGenFunction & f, double xlow, double xup) {
-            return fSolver->SetFunction( f, xlow, xup);
-         }
+   /**
+      Provide to the solver the function and an initial estimate of the root,
+      for algorithms using derivatives.
+      The templated function f must be of a type implementing the \a operator()
+      and the \a Gradient() methods.
+      <em>  double  operator() (  double  x ) </em>
+      Returns non zero if starting point is not valid
+   */
 
+   bool SetFunction(const IGradFunction &f, double xstart) { return fSolver->SetFunction(f, xstart); }
 
-         /**
-            Provide to the solver the function and an initial estimate of the root,
-            for algorithms using derivatives.
-            The templated function f must be of a type implementing the \a operator()
-            and the \a Gradient() methods.
-            <em>  double  operator() (  double  x ) </em>
-            Returns non zero if starting point is not valid
-         */
+   template <class Function, class Derivative>
+   bool Solve(Function &f, Derivative &d, double start, int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
 
-         bool  SetFunction( const IGradFunction & f, double xstart) {
-            return fSolver->SetFunction( f, xstart);
-         }
+   template <class Function>
+   bool Solve(Function &f, double min, double max, int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
 
-         template<class Function, class Derivative>
-         bool Solve(Function &f, Derivative &d, double start,
-                   int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+   /**
+       Compute the roots iterating until the estimate of the Root is within the required tolerance returning
+       the iteration Status
+   */
+   bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10)
+   {
+      return fSolver->Solve(maxIter, absTol, relTol);
+   }
 
-         template<class Function>
-         bool Solve(Function &f, double min, double max,
-                   int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+   /**
+       Return the number of iteration performed to find the Root.
+   */
+   int Iterations() const { return fSolver->Iterations(); }
 
-         /**
-             Compute the roots iterating until the estimate of the Root is within the required tolerance returning
-             the iteration Status
-         */
-         bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) {
-            return fSolver->Solve( maxIter, absTol, relTol );
-         }
+   /**
+      Perform a single iteration and return the Status
+   */
+   int Iterate() { return fSolver->Iterate(); }
 
-         /**
-             Return the number of iteration performed to find the Root.
-         */
-         int Iterations() const {
-            return fSolver->Iterations();
-         }
+   /**
+      Return the current and latest estimate of the Root
+   */
+   double Root() const { return fSolver->Root(); }
 
-         /**
-            Perform a single iteration and return the Status
-         */
-         int Iterate() {
-            return fSolver->Iterate();
-         }
+   /**
+      Return the status of the last estimate of the Root
+      = 0 OK, not zero failure
+   */
+   int Status() const { return fSolver->Status(); }
 
-         /**
-            Return the current and latest estimate of the Root
-         */
-         double Root() const {
-            return fSolver->Root();
-         }
+   /**
+      Return the current and latest estimate of the lower value of the Root-finding interval (for bracketing algorithms)
+   */
+   /*   double XLower() const {  */
+   /*     return fSolver->XLower();  */
+   /*   } */
 
-         /**
-            Return the status of the last estimate of the Root
-            = 0 OK, not zero failure
-         */
-         int Status() const {
-            return fSolver->Status();
-         }
+   /**
+      Return the current and latest estimate of the upper value of the Root-finding interval (for bracketing algorithms)
+   */
+   /*   double XUpper() const {  */
+   /*     return  fSolver->XUpper();  */
+   /*   } */
 
+   /**
+      Get Name of the Root-finding solver algorithm
+   */
+   const char *Name() const { return fSolver->Name(); }
 
-         /**
-            Return the current and latest estimate of the lower value of the Root-finding interval (for bracketing algorithms)
-         */
-/*   double XLower() const {  */
-/*     return fSolver->XLower();  */
-/*   } */
+protected:
+private:
+   IRootFinderMethod *fSolver; // type of algorithm to be used
+};
 
-         /**
-            Return the current and latest estimate of the upper value of the Root-finding interval (for bracketing algorithms)
-         */
-/*   double XUpper() const {  */
-/*     return  fSolver->XUpper();  */
-/*   } */
-
-         /**
-            Get Name of the Root-finding solver algorithm
-         */
-         const char * Name() const {
-            return fSolver->Name();
-         }
-
-
-      protected:
-
-
-      private:
-
-         IRootFinderMethod* fSolver;   // type of algorithm to be used
-
-
-      };
-
-   } // namespace Math
+} // namespace Math
 } // namespace ROOT
-
 
 #include "Math/WrappedFunction.h"
 
@@ -216,14 +191,15 @@ namespace ROOT {
  * @param relTol Relative tolerance, passed to Solve(int,double,double)
  * @return true if a root was found. Retrieve the result using Root().
  */
-template<class Function, class Derivative>
-bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
-                                  int maxIter, double absTol, double relTol)
+template <class Function, class Derivative>
+bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start, int maxIter, double absTol, double relTol)
 {
-   if (!fSolver) return false;
+   if (!fSolver)
+      return false;
    ROOT::Math::GradFunctor1D wf(f, d);
    bool ret = fSolver->SetFunction(wf, start);
-   if (!ret) return false;
+   if (!ret)
+      return false;
    return Solve(maxIter, absTol, relTol);
 }
 
@@ -237,14 +213,15 @@ bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
  * @param relTol Relative tolerance, passed to Solve(int,double,double)
  * @return true if a root was found. Retrieve the result using Root().
  */
-template<class Function>
-bool ROOT::Math::RootFinder::Solve(Function &f, double min, double max,
-                                  int maxIter, double absTol, double relTol)
+template <class Function>
+bool ROOT::Math::RootFinder::Solve(Function &f, double min, double max, int maxIter, double absTol, double relTol)
 {
-   if (!fSolver) return false;
+   if (!fSolver)
+      return false;
    ROOT::Math::WrappedFunction<Function &> wf(f);
    bool ret = fSolver->SetFunction(wf, min, max);
-   if (!ret) return false;
+   if (!ret)
+      return false;
    return Solve(maxIter, absTol, relTol);
 }
 

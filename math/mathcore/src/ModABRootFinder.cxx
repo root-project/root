@@ -13,12 +13,10 @@
 
 #include "Math/ModABRootFinder.h"
 #include "Math/IFunctionfwd.h"
+#include "Math/Error.h"
 #include <cmath>
 
-#include "Math/Error.h"
-
-namespace ROOT {
-namespace Math {
+namespace ROOT::Math {
 
 bool ModABRootFinder::SetFunction(const ROOT::Math::IGenFunction &f, double xmin, double xmax)
 {
@@ -30,8 +28,7 @@ bool ModABRootFinder::SetFunction(const ROOT::Math::IGenFunction &f, double xmin
    if (xmin > xmax) {
       fXMin = xmax;
       fXMax = xmin;
-   }
-   else {
+   } else {
       fXMin = xmin;
       fXMax = xmax;
    }
@@ -43,7 +40,8 @@ const char *ModABRootFinder::Name() const
    return "ModABRootFinder";
 }
 
-int sign(double x) {
+int sign(double x)
+{
    return (x > 0) - (x < 0);
 }
 
@@ -55,13 +53,13 @@ bool ModABRootFinder::Solve(int maxIter, double absTol, double relTol)
       MATH_ERROR_MSG("ModABRootFinder::Solve", "Function has not been set");
       return false;
    }
-   double x1 = fXMin, y1 = (*fFunction)(x1);   
+   double x1 = fXMin, y1 = (*fFunction)(x1);
    if (y1 == 0.0) {
       fRoot = x1;
       fStatus = 0;
       return true;
    }
-   double x2 = fXMax, y2 = (*fFunction)(x2);   
+   double x2 = fXMax, y2 = (*fFunction)(x2);
    if (y2 == 0.0) {
       fRoot = x2;
       fStatus = 0;
@@ -89,18 +87,15 @@ bool ModABRootFinder::Solve(int maxIter, double absTol, double relTol)
          }
       } else {
          x3 = (x1 * y2 - y1 * x2) / (y2 - y1);
-         // Clamp x3 when floating point round-off errors shoots it out of the bracketing interval. Assign also y values to avoid redundant re-evaluation
-         if (x3 <= x1)
-         {
+         // Clamp x3 when floating point round-off errors shoots it out of the bracketing interval. Assign also y values
+         // to avoid redundant re-evaluation
+         if (x3 <= x1) {
             x3 = x1;
             y3 = y1;
-         }
-         else if (x3 >= x2)
-         {
+         } else if (x3 >= x2) {
             x3 = x2;
             y3 = y2;
-         }
-         else
+         } else
             y3 = (*fFunction)(x3);
 
          threshold /= 2.0;
@@ -137,10 +132,9 @@ bool ModABRootFinder::Solve(int maxIter, double absTol, double relTol)
          x2 = x3;
          y2 = y3;
       }
-      if (x2 - x1 > threshold)
-      {
-          bisection = true;
-          side = 0;
+      if (x2 - x1 > threshold) {
+         bisection = true;
+         side = 0;
       }
    }
    fNIter = maxIter;
@@ -148,5 +142,4 @@ bool ModABRootFinder::Solve(int maxIter, double absTol, double relTol)
    fStatus = -2;
    return false;
 }
-} // namespace Math
-} // namespace ROOT
+} // namespace ROOT::Math

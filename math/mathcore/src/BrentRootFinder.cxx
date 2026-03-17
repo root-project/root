@@ -1,54 +1,53 @@
 // @(#)root/mathcore:$Id$
 // Authors: David Gonzalez Maline    01/2008
 
- /**********************************************************************
-  *                                                                    *
-  * Copyright (c) 2006  CERN                                           *
-  * All rights reserved.                                               *
-  *                                                                    *
-  * For the licensing terms see $ROOTSYS/LICENSE.                      *
-  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
-  *                                                                    *
-  **********************************************************************/
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2006  CERN                                           *
+ * All rights reserved.                                               *
+ *                                                                    *
+ * For the licensing terms see $ROOTSYS/LICENSE.                      *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+ *                                                                    *
+ **********************************************************************/
 
 #include "Math/BrentRootFinder.h"
 #include "Math/BrentMethods.h"
 #include "Math/IFunctionfwd.h"
+#include "Math/Error.h"
 #include <cmath>
 
-#include "Math/Error.h"
+namespace ROOT::Math {
 
-namespace ROOT {
-namespace Math {
+static int gDefaultNpx = 100;    // default number of points used in the grid to bracket the root
+static int gDefaultNSearch = 10; // number of time the iteration (bracketing -Brent ) is repeated
 
-
-static int gDefaultNpx = 100; // default number of points used in the grid to bracket the root
-static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeated
-
-   BrentRootFinder::BrentRootFinder() : fFunction(nullptr),
-                                        fLogScan(false), fNIter(0),
-                                        fNpx(0), fStatus(-1),
-                                        fXMin(0), fXMax(0), fRoot(0)
+BrentRootFinder::BrentRootFinder()
+   : fFunction(nullptr), fLogScan(false), fNIter(0), fNpx(0), fStatus(-1), fXMin(0), fXMax(0), fRoot(0)
 {
    // default constructor (number of points used to bracket value is set to 100)
    fNpx = gDefaultNpx;
 }
 
-void BrentRootFinder::SetDefaultNpx(int n) { gDefaultNpx = n; }
-
-void BrentRootFinder::SetDefaultNSearch(int n) { gDefaultNSearch = n; }
-
-
-bool BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
+void BrentRootFinder::SetDefaultNpx(int n)
 {
-// Set function to solve and the interval in where to look for the root.
+   gDefaultNpx = n;
+}
+
+void BrentRootFinder::SetDefaultNSearch(int n)
+{
+   gDefaultNSearch = n;
+}
+
+bool BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction &f, double xlow, double xup)
+{
+   // Set function to solve and the interval in where to look for the root.
 
    fFunction = &f;
    // invalid previous status
    fStatus = -1;
 
-   if (xlow > xup)
-   {
+   if (xlow > xup) {
       fXMin = xup;
       fXMax = xlow;
    } else {
@@ -58,17 +57,18 @@ bool BrentRootFinder::SetFunction(const ROOT::Math::IGenFunction& f, double xlow
    return true;
 }
 
-const char* BrentRootFinder::Name() const
-{   return "BrentRootFinder";  }
-
+const char *BrentRootFinder::Name() const
+{
+   return "BrentRootFinder";
+}
 
 bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
 {
-  // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
+   // Returns the X value corresponding to the function value fy for (xmin<x<xmax).
 
    if (!fFunction) {
-       MATH_ERROR_MSG("BrentRootFinder::Solve", "Function has not been set");
-       return false;
+      MATH_ERROR_MSG("BrentRootFinder::Solve", "Function has not been set");
+      return false;
    }
 
    if (fLogScan && fXMin <= 0) {
@@ -76,35 +76,34 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
       fLogScan = false;
    }
 
-
    const double fy = 0; // To find the root
    fNIter = 0;
    fStatus = -1;
 
    double xmin = fXMin;
    double xmax = fXMax;
-   fRoot = 0; 
+   fRoot = 0;
 
-   int maxIter1 = gDefaultNSearch;  // external loop (number of search )
-   int maxIter2 = maxIter;          // internal loop inside the Brent algorithm
+   int maxIter1 = gDefaultNSearch; // external loop (number of search )
+   int maxIter2 = maxIter;         // internal loop inside the Brent algorithm
 
    int niter1 = 0;
    int niter2 = 0;
    bool ok = false;
-   while (!ok){
-      if (niter1 > maxIter1){
+   while (!ok) {
+      if (niter1 > maxIter1) {
          MATH_ERROR_MSG("BrentRootFinder::Solve", "Search didn't converge");
          fStatus = -2;
          return false;
       }
-      double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx,fLogScan);
+      double x = BrentMethods::MinimStep(fFunction, 4, xmin, xmax, fy, fNpx, fLogScan);
       if (xmin > xmax) {
          // interval does not contain minimum - return
          MATH_ERROR_MSG("BrentRootFinder", "Interval does not contain a root");
-         return false; 
+         return false;
       }
       x = BrentMethods::MinimBrent(fFunction, 4, xmin, xmax, x, fy, ok, niter2, absTol, relTol, maxIter2);
-      fNIter += niter2;  // count the total number of iterations
+      fNIter += niter2; // count the total number of iterations
       niter1++;
       fRoot = x;
    }
@@ -112,6 +111,4 @@ bool BrentRootFinder::Solve(int maxIter, double absTol, double relTol)
    fStatus = 0;
    return true;
 }
-
-} // namespace Math
-} // namespace ROOT
+} // namespace ROOT::Math

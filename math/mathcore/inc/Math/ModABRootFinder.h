@@ -20,11 +20,9 @@
 #define ROOT_Math_ModABRootFinder
 
 #include "Math/IFunction.h"
-
 #include "Math/IRootFinderMethod.h"
 
-namespace ROOT {
-namespace Math {
+namespace ROOT::Math {
 
 //___________________________________________________________________________________________
 /**
@@ -71,14 +69,12 @@ public:
 
 private:
    const IGenFunction *fFunction = nullptr; // Pointer to the function.
-   int fNIter = 0;     // Number of iterations needed for the last estimation.
-   int fStatus = -1;   // Status of code of the last estimate
-   double fXMin = 0.;  // Lower bound of the search interval.
-   double fXMax = 0.;  // Upper bound of the search interval
-   double fRoot = 0.;  // Current estimation of the function root.
+   int fNIter = 0;                          // Number of iterations needed for the last estimation.
+   int fStatus = -1;                        // Status of code of the last estimate
+   double fXMin = 0.;                       // Lower bound of the search interval.
+   double fXMax = 0.;                       // Upper bound of the search interval
+   double fRoot = 0.;                       // Current estimation of the function root.
 };
-
-} // namespace Math
-} // namespace ROOT
+} // namespace ROOT::Math
 
 #endif /* ROOT_Math_ModABRootFinder */
