@@ -33,6 +33,7 @@ The following people have contributed to this new version:
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
  Sandro Wenzel, CERN/EP-ALICE,\
+ Ned Ganchovski, Proektsoft EOOD,\
 
 ## Deprecations
 
@@ -201,6 +202,10 @@ As part of this migration, the following build options are deprecated. From ROOT
   * `veccore`
   * `builtin_vc`
   * `builtin_veccore`
+
+### Added Modified Anderson-Bjork (ModAB) root-finding algorithm
+
+This is new and efficient bracketing root-finding algorithm. It combines bisection with Anderson-Bjork's method to achieve superlinear convergence (e.i. = 1.7-1.8), while preserving worst-case optimality. According to the benchmarks, it outperforms classical algorithms like ITP, Brent and Ridders. It is implemented as the `ROOT::Math::ModABRootFinder` class.
 
 ## RooFit
 
