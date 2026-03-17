@@ -88,7 +88,7 @@ if (BLAS_FOUND OR use_gsl_cblas)
 
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
-    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
+    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core ROOT::BLAS)
   endif()
 endif()
 
@@ -124,7 +124,7 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
       LIBRARIES
         ROOTTMVASofie
         ROOTTMVASofieParser
-        BLAS::BLAS
+        ROOT::BLAS
       INCLUDE_DIRS
         ${CMAKE_CURRENT_BINARY_DIR}
     )
@@ -142,7 +142,7 @@ if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND (BLAS_FOUND OR use_gsl_
         TMVA
         Python3::NumPy
         Python3::Python
-        BLAS::BLAS
+        ROOT::BLAS
         INCLUDE_DIRS
         SYSTEM
         ${CMAKE_CURRENT_BINARY_DIR}
@@ -161,7 +161,7 @@ if (tpython AND ROOT_KERAS_FOUND AND (BLAS_FOUND OR use_gsl_cblas))
        ROOTTMVASofie
        Python3::NumPy
        Python3::Python
-       BLAS::BLAS
+       ROOT::BLAS
        INCLUDE_DIRS
        SYSTEM
        ${CMAKE_CURRENT_BINARY_DIR}
