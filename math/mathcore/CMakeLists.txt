@@ -32,6 +32,7 @@ set(HEADERS
   Math/BrentMethods.h
   Math/BrentMinimizer1D.h
   Math/BrentRootFinder.h
+  Math/ModABRootFinder.h
   Math/ChebyshevPol.h
   Math/Delaunay2D.h
   Math/DistFuncMathCore.h
@@ -125,6 +126,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/BrentMethods.cxx
     src/BrentMinimizer1D.cxx
     src/BrentRootFinder.cxx
+    src/ModABRootFinder.cxx
     src/ChebyshevPol.cxx
     src/DataRange.cxx
     src/Delaunay2D.cxx
