@@ -42,6 +42,9 @@ public:
    Int_t          GetDarkColor() const  {return TColor::GetColorDark(GetFillColor());}
    Int_t          GetLightColor() const {return TColor::GetColorBright(GetFillColor());}
    void           Paint(Option_t *option="") override;
+   void           PaintBorderOn(TVirtualPad *pad,
+                                Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                                Short_t bordersize, Short_t bordermode, Bool_t with_selection = kFALSE);
    virtual void   PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                              Color_t color, Short_t bordersize, Short_t bordermode,
                              Bool_t tops);
