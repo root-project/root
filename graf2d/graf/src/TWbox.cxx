@@ -139,14 +139,33 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 {
    if (bordermode == 0)
       return;
+
+   auto oldcolor = GetFillColor();
+   SetFillColor(color);
+
+   PaintBorderOn(gPad, x1, y1, x2, y2, bordersize, bordermode);
+
+   SetFillColor(oldcolor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a 3D border around a box.
+/// Used also by the pad painter
+
+void TWbox::PaintBorderOn(TVirtualPad *pad,
+                          Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                          Short_t bordersize, Short_t bordermode, Bool_t with_selection)
+{
+   if (bordermode == 0)
+      return;
    if (bordersize <= 0)
       bordersize = 2;
 
-   auto pp = gPad->GetPainter();
+   auto pp = pad->GetPainter();
    if (!pp)
       return;
 
-   Double_t ww = gPad->GetWw(), wh = gPad->GetWh();
+   Double_t ww = pad->GetWw(), wh = pad->GetWh();
 
    if (pp->GetPS()) {
       // SL: need to calculate page size to get real coordiantes for border
@@ -162,25 +181,25 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
       wh = 72 / 2.54 * ysize;
    }
 
-   const Double_t realBsX = bordersize / (gPad->GetAbsWNDC() * ww) * (gPad->GetX2() - gPad->GetX1());
-   const Double_t realBsY = bordersize / (gPad->GetAbsHNDC() * wh) * (gPad->GetY2() - gPad->GetY1());
+   const Double_t realBsX = bordersize / (pad->GetAbsWNDC() * ww) * (pad->GetX2() - pad->GetX1());
+   const Double_t realBsY = bordersize / (pad->GetAbsHNDC() * wh) * (pad->GetY2() - pad->GetY1());
 
    // GetColorDark() and GetColorBright() use GetFillColor()
-   Color_t oldfillcolor = GetFillColor();
-   Color_t light = !color ? 0 : TColor::GetColorBright(color);
-   Color_t dark = !color ? 0 : TColor::GetColorDark(color);
+   Color_t fillcolor = GetFillColor();
+   Color_t light = !fillcolor ? 0 : GetLightColor();
+   Color_t dark = !fillcolor ? 0 : GetDarkColor();
 
    Double_t xl, xt, yl, yt;
 
    // Compute real left bottom & top right of the box in pixels
-   if (gPad->XtoPixel(x1) < gPad->XtoPixel(x2)) {
+   if (pad->XtoPixel(x1) < pad->XtoPixel(x2)) {
       xl = x1;
       xt = x2;
    } else {
       xl = x2;
       xt = x1;
    }
-   if (gPad->YtoPixel(y1) > gPad->YtoPixel(y2)) {
+   if (pad->YtoPixel(y1) > pad->YtoPixel(y2)) {
       yl = y1;
       yt = y2;
    } else {
@@ -216,7 +235,15 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    pp->SetAttFill(*this);
    pp->DrawFillArea(7, frameXs, frameYs);
 
-   SetFillColor(oldfillcolor);
+   SetFillColor(fillcolor);
+
+   if (with_selection) {
+      Color_t oldlinecolor = GetLineColor();
+      SetLineColor(GetFillColor() != 2 ? 2 : 4);
+      pp->SetAttLine(*this);
+      pp->DrawBox(xl + realBsX, yl + realBsY, xt - realBsX, yt - realBsY, TVirtualPadPainter::kHollow);
+      SetLineColor(oldlinecolor);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
