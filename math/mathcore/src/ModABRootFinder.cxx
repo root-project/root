@@ -13,9 +13,9 @@
 
 #include "Math/ModABRootFinder.h"
 #include "Math/IFunctionfwd.h"
-#include <cmath>
-
 #include "Math/Error.h"
+
+#include <cmath>
 
 namespace ROOT {
 namespace Math {
