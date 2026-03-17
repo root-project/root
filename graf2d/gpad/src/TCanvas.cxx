@@ -2630,7 +2630,7 @@ Bool_t TCanvas::EnsurePSPainter(Bool_t create, TVirtualPadPainter *&oldp)
       return kFALSE;
    }
 
-   if (!gVirtualPS || !IsBatch())
+   if (!gVirtualPS /* || !IsBatch() */)
       return kFALSE;
 
 
