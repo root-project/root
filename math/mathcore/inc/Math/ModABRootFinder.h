@@ -23,8 +23,7 @@
 
 #include "Math/IRootFinderMethod.h"
 
-namespace ROOT {
-namespace Math {
+namespace ROOT::Math {
 
 //___________________________________________________________________________________________
 /**
