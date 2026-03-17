@@ -1,19 +1,20 @@
 // @(#)root/mathcore:$Id$
 // Authors: David Gonzalez Maline    01/2008
 
- /**********************************************************************
-  *                                                                    *
-  * Copyright (c) 2006  CERN                                           *
-  * All rights reserved.                                               *
-  *                                                                    *
-  * For the licensing terms see $ROOTSYS/LICENSE.                      *
-  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
-  *                                                                    *
-  **********************************************************************/
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2006  CERN                                           *
+ * All rights reserved.                                               *
+ *                                                                    *
+ * For the licensing terms see $ROOTSYS/LICENSE.                      *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+ *                                                                    *
+ **********************************************************************/
 
 #include "Math/RootFinder.h"
 #include "Math/IRootFinderMethod.h"
 #include "Math/BrentRootFinder.h"
+#include "Math/ModABRootFinder.h"
 
 #include "RConfigure.h"
 
@@ -36,9 +37,7 @@
 namespace ROOT {
 namespace Math {
 
-
-RootFinder::RootFinder(RootFinder::EType type) :
-   fSolver(nullptr)
+RootFinder::RootFinder(RootFinder::EType type) : fSolver(nullptr)
 {
    // constructor passing type (default is kBRENT)
    const bool success = SetMethod(type);
@@ -51,81 +50,61 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    fSolver = nullptr;
 
    // set method - Use the plug-in manager if method is implemented in MathMore
-   if ( type == RootFinder::kBRENT )
-   {
+   if (type == RootFinder::kBRENT) {
       fSolver = new BrentRootFinder();
       return true;
    }
 
-#ifdef MATH_NO_PLUGIN_MANAGER    // no PM available
+   if (type == RootFinder::kMODAB) {
+      fSolver = new ModABRootFinder();
+      return true;
+   }
+
+#ifdef MATH_NO_PLUGIN_MANAGER // no PM available
 #ifdef R__HAS_MATHMORE
 
-   switch(type) {
+   switch (type) {
 
-   case kGSL_BISECTION:
-      fSolver = new ROOT::Math::Roots::Bisection();
-      break;
-   case kGSL_FALSE_POS:
-      fSolver = new ROOT::Math::Roots::FalsePos();
-      break;
-   case kGSL_BRENT:
-      fSolver = new ROOT::Math::Roots::Brent();
-      break;
-   case kGSL_NEWTON:
-      fSolver = new ROOT::Math::Roots::Newton();
-      break;
-   case kGSL_SECANT:
-      fSolver = new ROOT::Math::Roots::Secant();
-      break;
-   case kGSL_STEFFENSON:
-      fSolver = new ROOT::Math::Roots::Steffenson();
-      break;
+   case kGSL_BISECTION: fSolver = new ROOT::Math::Roots::Bisection(); break;
+   case kGSL_FALSE_POS: fSolver = new ROOT::Math::Roots::FalsePos(); break;
+   case kGSL_BRENT: fSolver = new ROOT::Math::Roots::Brent(); break;
+   case kGSL_NEWTON: fSolver = new ROOT::Math::Roots::Newton(); break;
+   case kGSL_SECANT: fSolver = new ROOT::Math::Roots::Secant(); break;
+   case kGSL_STEFFENSON: fSolver = new ROOT::Math::Roots::Steffenson(); break;
    default:
-      MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
+      MATH_ERROR_MSG("RootFinder::SetMethod", "RootFinderMethod type is not available in MathCore");
       fSolver = 0;
       return false;
       break;
    };
 
 #else
-   MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
+   MATH_ERROR_MSG("RootFinder::SetMethod", "RootFinderMethod type is not available in MathCore");
    return false;
 #endif
 
-#else  // case of using Plugin Manager
+#else // case of using Plugin Manager
    TPluginHandler *h;
    std::string stype;
 
-   switch(type) {
+   switch (type) {
 
-   case kGSL_BISECTION:
-      stype = "Bisection";
-      break;
-   case kGSL_FALSE_POS:
-      stype = "FalsePos";
-      break;
-   case kGSL_BRENT:
-      stype = "Brent";
-      break;
-   case kGSL_NEWTON:
-      stype = "Newton";
-      break;
-   case kGSL_SECANT:
-      stype = "Secant";
-      break;
-   case kGSL_STEFFENSON:
-      stype = "Steffenson";
-      break;
+   case kGSL_BISECTION: stype = "Bisection"; break;
+   case kGSL_FALSE_POS: stype = "FalsePos"; break;
+   case kGSL_BRENT: stype = "Brent"; break;
+   case kGSL_NEWTON: stype = "Newton"; break;
+   case kGSL_SECANT: stype = "Secant"; break;
+   case kGSL_STEFFENSON: stype = "Steffenson"; break;
    default:
-      MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
+      MATH_ERROR_MSG("RootFinder::SetMethod", "RootFinderMethod type is not available in MathCore");
       fSolver = nullptr;
       return false;
       break;
    };
 
-   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::IRootFinderMethod", stype.c_str() ))) {
+   if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::IRootFinderMethod", stype.c_str()))) {
       if (h->LoadPlugin() == -1) {
-         MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
+         MATH_ERROR_MSG("RootFinder::SetMethod", "Error loading RootFinderMethod");
          return false;
       }
 
@@ -135,13 +114,12 @@ bool RootFinder::SetMethod(RootFinder::EType type)
 #endif
 
    if (!fSolver) {
-      MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");
+      MATH_ERROR_MSG("RootFinder::SetMethod", "Error loading RootFinderMethod");
       return false;
    }
 
    return true;
 }
-
 
 RootFinder::~RootFinder()
 {
@@ -149,6 +127,5 @@ RootFinder::~RootFinder()
    delete fSolver;
 }
 
-
-}
-}
+} // namespace Math
+} // namespace ROOT
