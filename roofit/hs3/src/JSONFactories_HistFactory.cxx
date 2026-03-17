@@ -574,7 +574,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
-      RooArgList vars{tool->requestArgList<RooRealVar>(p, "vars")};
+      RooArgList vars{tool->requestArgList<RooAbsReal>(p, "vars")};
 
       auto &pip = tool->wsEmplace<PiecewiseInterpolation>(name, *tool->requestArg<RooAbsReal>(p, "nom"),
                                                           tool->requestArgList<RooAbsReal>(p, "low"),
