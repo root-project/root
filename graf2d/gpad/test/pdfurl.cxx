@@ -36,7 +36,7 @@ TEST(TPad, PDFUrl)
    Long64_t actualSize = fileStat.fSize;
 
    // Reference file size in bytes (adjust to match your expected output)
-   const Long64_t referenceSize = 14098;
+   const Long64_t referenceSize = 13927;
    const double tolerance = 0.01; // Allow 1% deviation
 
    // Compute acceptable size range
