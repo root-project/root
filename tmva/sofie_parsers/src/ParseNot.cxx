@@ -17,8 +17,9 @@ ParserFuncSignature ParseNot = [](RModelParser_ONNX &parser, const onnx::NodePro
 
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
+      std::cout << "NOT op input type is " << static_cast<int>(input_type) << "  " << ConvertTypeToString(input_type) << std::endl;
       if (input_type !=ETensorType::BOOL  && input_type !=ETensorType::UINT8 )
-         std::runtime_error("TMVA::SOFIE ONNX Parser Not op has invalid input type " + ConvertTypeToString(input_type));
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Not op has invalid input type " + ConvertTypeToString(input_type));
    } else {
       throw
          std::runtime_error("TMVA::SOFIE ONNX Parser Not op has input tensor " + input_name +

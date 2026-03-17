@@ -29,6 +29,8 @@ class RModelParser_ONNX {
 public:
    struct OperatorsMapImpl;
 
+   enum EFusedOp { kMatMulAdd, kConvAdd, kConvTransAdd, kGemmRelu, kBatchnormRelu};
+
 private:
 
    bool fVerbose = false;
@@ -36,8 +38,9 @@ private:
    std::unique_ptr<OperatorsMapImpl> fOperatorsMapImpl;
    // Type of the tensors
    std::unordered_map<std::string, ETensorType> fTensorTypeMap;
-   // flag list of fused operators
-   std::vector<bool> fFusedOperators;
+
+   // List of fused operators storing as key the second operator and a value a pair of fusion type and parent operator
+   std::map<int, std::pair<EFusedOp, int>> fFusedOperators;
 
 
 public:

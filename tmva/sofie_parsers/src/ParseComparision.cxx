@@ -65,17 +65,17 @@ ParserFuncSignature ParseLess = [](RModelParser_ONNX &parser, const onnx::NodePr
    return ParseComparision<EComparisionOperator::Less>(parser, nodeproto);
 };
 
-// Parse Mul
+// Parse LessEq
 ParserFuncSignature ParseLessEq = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseComparision<EComparisionOperator::LessEq>(parser, nodeproto);
 };
 
-// Parse Div
+// Parse Greater
 ParserFuncSignature ParseGreater = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseComparision<EComparisionOperator::Greater>(parser, nodeproto);
 };
 
-// Parse Pow
+// Parse GreaterEq
 ParserFuncSignature ParseGreaterEq = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseComparision<EComparisionOperator::GreaterEq>(parser, nodeproto);
 };

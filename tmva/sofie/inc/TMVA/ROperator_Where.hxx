@@ -20,26 +20,26 @@ private:
    bool fIsInputBoolTensor = false;
 
 
-   std::string fNA;
-   std::string fNB;
+   std::string fNX;
+   std::string fNY;
    std::string fNC;
-   std::string fNBroadcastedA;
-   std::string fNBroadcastedB;
+   std::string fNBroadcastedX;
+   std::string fNBroadcastedY;
    std::string fNBroadcastedC;
    std::string fNY;
 
 
-   std::vector<size_t> fShapeA;
-   std::vector<size_t> fShapeB;
+   std::vector<size_t> fShapeX;
+   std::vector<size_t> fShapeY;
    std::vector<size_t> fShapeC;
    std::vector<size_t> fShapeY;
 
 
 public:
    ROperator_Where(){}
-   ROperator_Where(const std::string & nameA, const std::string & nameB, const std::string & nameC, const std::string & nameY):
-      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)){
-         fInputTensorNames = { fNA, fNB, fNC };
+   ROperator_Where(const std::string & nameX, const std::string & nameY, const std::string & nameC, const std::string & nameY):
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX, fNY, fNC };
          fOutputTensorNames = { fNY };
       }
 
@@ -57,11 +57,11 @@ public:
 
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
-      if (!model.CheckIfTensorAlreadyExist(fNA)){
-         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNA + "is not found in model");
+      if (!model.CheckIfTensorAlreadyExist(fNX)){
+         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNX + "is not found in model");
       }
-      if (!model.CheckIfTensorAlreadyExist(fNB)) {
-         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNB + "is not found in model");
+      if (!model.CheckIfTensorAlreadyExist(fNY)) {
+         throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNY + "is not found in model");
       }
       if (!model.CheckIfTensorAlreadyExist(fNC)) {
          throw std::runtime_error(std::string("TMVA SOFIE Where Op Input Tensor ") + fNC + "is not found in model");
@@ -70,24 +70,24 @@ public:
       if (model.IsReadyInputTensor(fNC))
          fIsInputBoolTensor = true;
       // check broadcast for A, B and C
-      fShapeA = model.GetTensorShape(fNA);
-      fShapeB = model.GetTensorShape(fNB);
+      fShapeX = model.GetTensorShape(fNX);
+      fShapeY = model.GetTensorShape(fNY);
       fShapeC = model.GetTensorShape(fNC);
-      bool broadcast = !UTILITY::AreSameShape(fShapeA, fShapeB) || !UTILITY::AreSameShape(fShapeA, fShapeC);
+      bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY) || !UTILITY::AreSameShape(fShapeX, fShapeC);
       if (broadcast) {
          // find shape to broadcast between A,B,C looking for max length
-         size_t lengthA = ConvertShapeToLength(fShapeA);
-         size_t lengthB = ConvertShapeToLength(fShapeB);
+         size_t lengthA = ConvertShapeToLength(fShapeX);
+         size_t lengthB = ConvertShapeToLength(fShapeY);
          size_t lengthC = ConvertShapeToLength(fShapeC);
          bool broadcastA = false, broadcastB = false, broadcastC = false;
          if (lengthA >= lengthB && lengthA >= lengthC) {
-            fShapeY = fShapeA;
+            fShapeY = fShapeX;
             //broadcast B and C if different than A
             broadcastB = (lengthB != lengthA);
             broadcastC = (lengthC != lengthA);
          }
          else if (lengthB >= lengthA && lengthB >= lengthC) {
-            fShapeY = fShapeB;
+            fShapeY = fShapeY;
             //broadcast A and C if different than B
             broadcastA = (lengthA != lengthB);
             broadcastC = (lengthC != lengthB);
@@ -101,34 +101,34 @@ public:
 
          // Broadcast A to Y
          if (broadcastA) {
-            fNBroadcastedA = "BC_" + fNA + "_to_" + fNY;
-            if (model.IsInitializedTensor(fNA)) {
-               auto data = model.GetInitializedTensorData(fNA);
+            fNBroadcastedX = "BC_" + fNX + "_to_" + fNY;
+            if (model.IsInitializedTensor(fNX)) {
+               auto data = model.GetInitializedTensorData(fNX);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeA, fShapeY),
+                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeX, fShapeY),
                   std::default_delete<T[]>());
                // Update the data and the shape of A
-               model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
-               fShapeA = fShapeY;
+               model.AddConstantTensor(fNBroadcastedX, model.GetTensorType(fNX), fShapeY, broadcastedData);
+               fShapeX = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting A
-               model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY);
+               model.AddIntermediateTensor(fNBroadcastedX, model.GetTensorType(fNX), fShapeY);
             }
          }
          // Broadcast B to Y
          if (broadcastB) {
-            fNBroadcastedB = "BC_" + fNB + "_to_" + fNY;
-            if (model.IsInitializedTensor(fNB)) {
-               auto data = model.GetInitializedTensorData(fNB);
+            fNBroadcastedY = "BC_" + fNY + "_to_" + fNY;
+            if (model.IsInitializedTensor(fNY)) {
+               auto data = model.GetInitializedTensorData(fNY);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeB, fShapeY),
+                  UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), fShapeY, fShapeY),
                   std::default_delete<T[]>());
                // do not update tensor B but add broadcasted one (since it can be input to some other operators)
-               model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
-               fShapeB = fShapeY;
+               model.AddConstantTensor(fNBroadcastedY, model.GetTensorType(fNY), fShapeY, broadcastedData);
+               fShapeY = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting B
-               model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
+               model.AddIntermediateTensor(fNBroadcastedY, model.GetTensorType(fNY), fShapeY);
             }
          }
          // Broadcast C to Y
@@ -148,7 +148,7 @@ public:
             }
          }
       } else {
-         fShapeY = fShapeA;
+         fShapeY = fShapeX;
       }
       // check case of constant  output (if all inputs are defined)
       if (model.IsInitializedTensor(fNC)) {
@@ -160,19 +160,19 @@ public:
          T * dataB = nullptr;
          std::vector<Dim> shapeDataA;
          std::vector<Dim> shapeDataB;
-         if (model.IsInitializedTensor(fNA)) {
-             std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
-             dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
+         if (model.IsInitializedTensor(fNX)) {
+             std::string nameX = fNBroadcastedX.empty()? fNX : fNBroadcastedX;
+             dataA = static_cast<T *>(model.GetInitializedTensorData(nameX).get());
             // flag tensors to not be written in a file
-            model.SetNotWritableInitializedTensor(nameA);
-         } else if (model.IsShapeTensor(fNA))
-            shapeDataA = model.GetShapeTensorValues(fNA);
-         if (model.IsInitializedTensor(fNB)) {
-            std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
-            dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
-            model.SetNotWritableInitializedTensor(nameB);
-         } else if (model.IsShapeTensor(fNB))
-            shapeDataB = model.GetShapeTensorValues(fNB);
+            model.SetNotWritableInitializedTensor(nameX);
+         } else if (model.IsShapeTensor(fNX))
+            shapeDataA = model.GetShapeTensorValues(fNX);
+         if (model.IsInitializedTensor(fNY)) {
+            std::string nameY = fNBroadcastedY.empty()? fNY : fNBroadcastedY;
+            dataB = static_cast<T *>(model.GetInitializedTensorData(nameY).get());
+            model.SetNotWritableInitializedTensor(nameY);
+         } else if (model.IsShapeTensor(fNY))
+            shapeDataB = model.GetShapeTensorValues(fNY);
 
          std::vector<T> dataY;
          std::vector<Dim> shapeDataY;
@@ -226,10 +226,10 @@ public:
          if (fIsOutputConstant) fOutputTensorNames.pop_back();
       }
       if (!fIsOutputConstant) {
-        model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+        model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
         if (model.Verbose())
             std::cout << "Where op " << " condition : " << fNC << "  " << ConvertShapeToString(fShapeC) <<
-                   " X " << fNA << "  " << ConvertShapeToString(fShapeA) << " Y " <<  fNB << "  " << ConvertShapeToString(fShapeB)
+                   " X " << fNX << "  " << ConvertShapeToString(fShapeX) << " Y " <<  fNY << "  " << ConvertShapeToString(fShapeY)
                    << " ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << std::endl;
       }
    }
@@ -253,18 +253,18 @@ public:
       size_t length = ConvertShapeToLength(fShapeY);
       std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized
-      if (fShapeA != fShapeY) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
+      if (fShapeX != fShapeY) {
+         out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
          //out << SP << "{\n";
-         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY)
-                         << ", tensor_" << fNBroadcastedA << ");\n";
+         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
+                         << ", tensor_" << fNBroadcastedX << ");\n";
       }
       // Broadcast B if it's uninitialized
-      if (fShapeB != fShapeY) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
+      if (fShapeY != fShapeY) {
+         out << SP << "// Broadcasting uninitialized tensor " << fNY << "\n";
          //out << SP << "{\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY)
-                   << ", tensor_" << fNBroadcastedB << ");\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNY << ", " << ConvertShapeToString(fShapeY) << ", " << ConvertShapeToString(fShapeY)
+                   << ", tensor_" << fNBroadcastedY << ");\n";
       }
        // Broadcast C if it's uninitialized
       if (fShapeC != fShapeY) {
@@ -278,13 +278,13 @@ public:
          out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tmp_tensor_" << fNC << ".data(), " << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY)
                    << ", tensor_" << fNBroadcastedC << ");\n";
       }
-      std::string nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
-      std::string nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
+      std::string nameX = fNBroadcastedX.empty()? fNX : fNBroadcastedX;
+      std::string nameY = fNBroadcastedY.empty()? fNY : fNBroadcastedY;
       std::string nameC = fNBroadcastedC.empty()? fNC : fNBroadcastedC;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       // get output tensor applying condition
       out << SP << SP << "tensor_" << fNY << "[id] = "  << "tensor_" << nameC << "[id] ? tensor_"
-                               << nameA << "[id] : tensor_" + nameB + "[id];\n";
+                               << nameX << "[id] : tensor_" + nameY + "[id];\n";
       out << SP << "}\n";
       return out.str();
    }

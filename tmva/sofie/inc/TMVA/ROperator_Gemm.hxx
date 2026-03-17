@@ -165,7 +165,7 @@ namespace SOFIE{
          }
          if (fNC != ""){
             if (model.CheckIfTensorAlreadyExist(fNC) == false){   //input must be a graph input, or already initialized intermediate tensor
-               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNC + " is not found in model");
+               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor " + fNC + " is not found in model");
             }
          }
          if (model.IsDynamicTensor(fNA) || model.IsDimInputTensor(fNA) ) {

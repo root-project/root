@@ -26,6 +26,7 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
       ? nodeproto.input(1) : "";
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
+      std::cout << "Reshape/Un/Squueze op input type is " << static_cast<int>(input_type) << "  " << ConvertTypeToString(input_type) << std::endl;
    } else {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Reshape op has input tensor" + input_name +
                                " but its type is not yet registered");
@@ -57,6 +58,7 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
+      std::cout << "Reshape/Un/Squueze register output " << output_name << " with type is " << static_cast<int>(input_type) << "  " << ConvertTypeToString(input_type) << std::endl;
    }
 
    return op;

@@ -18,7 +18,7 @@ namespace SOFIE{
 
 enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumSquare, ReduceProd, InvalidReduceOp };
 
-template <typename T, EReduceOpMode Op>
+template <EReduceOpMode Op>
 class ROperator_Reduce final : public ROperator
 {
 private:
@@ -76,7 +76,7 @@ public:
          std::sort(ax.begin(), ax.end());
          for (size_t j = 0; j < ax.size(); j++) {
             // erase reduced dimensions, but keep last one
-            if (outputShape.size() > 1) {
+            if (outputShape.size() > 0) {
                outputShape.erase(outputShape.begin() + ax[j]);
                for (size_t k = j+1; k < ax.size(); k++)
                   ax[k] -= 1;  // decrease by one since we have removed a value
@@ -120,9 +120,6 @@ public:
 
    std::string Generate(std::string opName) override {
       opName = "op_" + opName;
-      if (fShapeX.empty() || fShapeY.empty()) {
-         throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
-      }
 
       auto inputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeX);
       auto outputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeY);
