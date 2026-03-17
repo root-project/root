@@ -1534,7 +1534,9 @@ void TASImage::Paint(Option_t *option)
    int tox = expand  ? 0 : int(gPad->UtoPixel(1.) * gPad->GetLeftMargin());
    int toy = expand  ? 0 : int(gPad->VtoPixel(0.) * gPad->GetTopMargin());
 
-   if (!gROOT->IsBatch()) {
+   auto ps = gPad->GetPainter()->GetPS();
+
+   if (!ps) {
       Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
       Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, tox, toy);
 
@@ -1559,15 +1561,13 @@ void TASImage::Paint(Option_t *option)
                         pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
                         min, max, ndiv, "+L");
       }
-   }
-
-   // loop over pixmap and draw image to PostScript
-   if (gVirtualPS) {
+   } else {
+      // loop over pixmap and draw image to PostScript
 
       Bool_t paint_as_png = kFALSE;
 
-      if (gVirtualPS->InheritsFrom("TImageDump")) { // PostScript is asimage
-         TImage *dump = (TImage *)gVirtualPS->GetStream();
+      if (ps->InheritsFrom("TImageDump")) { // PostScript is asimage
+         TImage *dump = (TImage *)ps->GetStream();
          if (!dump) return;
          dump->Merge(fScaledImage ? fScaledImage : this, "alphablend",
                      gPad->XtoAbsPixel(0), gPad->YtoAbsPixel(1));
@@ -1589,15 +1589,15 @@ void TASImage::Paint(Option_t *option)
                            min, max, ndiv, "+L");
          }
          return;
-      } else if (gVirtualPS->InheritsFrom("TPDF")) {
+      } else if (ps->InheritsFrom("TPDF")) {
          Warning("Paint", "PDF not implemented yet");
          return;
-      } else if (gVirtualPS->InheritsFrom("TSVG")) {
+      } else if (ps->InheritsFrom("TSVG")) {
          paint_as_png = kTRUE;
       }
 
-      Double_t dx = gPad->GetX2()-gPad->GetX1();
-      Double_t dy = gPad->GetY2()-gPad->GetY1();
+      Double_t dx = gPad->GetX2() - gPad->GetX1();
+      Double_t dy = gPad->GetY2() - gPad->GetY1();
       Double_t x1, x2, y1, y2;
 
       if (expand) {
@@ -1613,10 +1613,10 @@ void TASImage::Paint(Option_t *option)
       }
 
       // get special color cell to be reused during image printing
-      gVirtualPS->SetFillColor(TColor::GetColor((Float_t) 1., (Float_t) 1., (Float_t) 1.));
-      gVirtualPS->SetFillStyle(1001);
+      ps->SetFillColor(TColor::GetColor((Float_t) 1., (Float_t) 1., (Float_t) 1.));
+      ps->SetFillStyle(1001);
 
-      gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
+      ps->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
       if (paint_as_png) {
          char *buffer = nullptr;
@@ -1628,7 +1628,7 @@ void TASImage::Paint(Option_t *option)
          if (!params.png.compression)
             params.png.compression = -1;
          if (ASImage2PNGBuff(image, (CARD8 **)&buffer, &size, &params)) {
-            gVirtualPS->CellArrayPng(buffer, size);
+            ps->CellArrayPng(buffer, size);
             free(buffer);
          }
       } else {
@@ -1638,13 +1638,13 @@ void TASImage::Paint(Option_t *option)
             for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
                imdec->decode_image_scanline(imdec);
                for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
-                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                          imdec->buffer.green[xt],
-                                          imdec->buffer.blue[xt]);
+                  ps->CellArrayFill(imdec->buffer.red[xt],
+                                    imdec->buffer.green[xt],
+                                    imdec->buffer.blue[xt]);
             }
          stop_image_decoding(&imdec);
       }
-      gVirtualPS->CellArrayEnd();
+      ps->CellArrayEnd();
 
       // print the color bar
       if (grad_im) {
@@ -1654,8 +1654,8 @@ void TASImage::Paint(Option_t *option)
          x2 = x1 + xconv;
          y2 = gPad->AbsPixeltoY(pal_Ay);
          y1 = y2 - yconv;
-         gVirtualPS->CellArrayBegin(grad_im->width, grad_im->height,
-                                    x1, x2, y1, y2);
+         ps->CellArrayBegin(grad_im->width, grad_im->height,
+                            x1, x2, y1, y2);
 
          if (paint_as_png) {
             char *buffer = nullptr;
@@ -1668,7 +1668,7 @@ void TASImage::Paint(Option_t *option)
                params.png.compression = -1;
 
             if (ASImage2PNGBuff(grad_im, (CARD8 **)&buffer, &size, &params)) {
-               gVirtualPS->CellArrayPng(buffer, size);
+               ps->CellArrayPng(buffer, size);
                free(buffer);
             }
          } else {
@@ -1678,13 +1678,13 @@ void TASImage::Paint(Option_t *option)
                for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
                   imdec->decode_image_scanline(imdec);
                   for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
-                     gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                             imdec->buffer.green[xt],
-                                             imdec->buffer.blue[xt]);
+                     ps->CellArrayFill(imdec->buffer.red[xt],
+                                       imdec->buffer.green[xt],
+                                       imdec->buffer.blue[xt]);
                }
             stop_image_decoding(&imdec);
          }
-         gVirtualPS->CellArrayEnd();
+         ps->CellArrayEnd();
 
          // values of palette
          TGaxis axis;
@@ -1693,6 +1693,7 @@ void TASImage::Paint(Option_t *option)
          double max = fMaxValue;
          axis.SetLineColor(1);       // draw black ticks
          Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+         // TODO: provide PaintAxisOn method
          axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
                         pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
                         min, max, ndiv, "+L");
