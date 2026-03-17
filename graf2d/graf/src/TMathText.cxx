@@ -18,8 +18,8 @@
 #include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPS.h"
-#include "TVirtualX.h"
 #include "TText.h"
 
 #include "../../../graf2d/mathtext/inc/mathtext.h"
@@ -583,20 +583,13 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    Short_t saveAlign = fTextAlign;
 
    TAttText::Modify();
-   if (gVirtualPS) { // Initialise TMathTextRenderer
-      if (gPad->IsBatch()) {
-         if (gVirtualPS->InheritsFrom("TImageDump")) gPad->PaintText(0, 0, "");
-      }
+   if (auto ps = gPad->GetPainter()->GetPS()) { // Initialise TMathTextRenderer
+      if (ps->InheritsFrom("TImageDump")) gPad->PaintText(0, 0, "");
    }
 
    // Do not use Latex if font is low precision.
    if (fTextFont % 10 < 2) {
-      if (gVirtualX) {
-         gVirtualX->SetTextAngle(angle);
-      }
-      if (gVirtualPS) {
-         gVirtualPS->SetTextAngle(angle);
-      }
+      gPad->GetPainter()->SetTextAngle(angle);
       gPad->PaintText(x, y, text1);
       return;
    }
