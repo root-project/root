@@ -2366,7 +2366,10 @@ void TGX11::SetFillColor(Color_t cindex)
 {
    TAttFill::SetFillColor(cindex);
 
-   SetAttFill((WinContext_t) gCws, *this);
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillColor(cindex);
+
+   SetAttFill((WinContext_t) gCws, arg);
 
 /*
    if (!gStyle->GetFillColor() && cindex > 1) cindex = 0;
@@ -2391,7 +2394,10 @@ void TGX11::SetFillStyle(Style_t fstyle)
 {
    TAttFill::SetFillStyle(fstyle);
 
-   SetAttFill((WinContext_t) gCws, *this);
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillStyle(fstyle);
+
+   SetAttFill((WinContext_t) gCws, arg);
 
 /*   if (fFillStyle == fstyle) return;
    fFillStyle = fstyle;
@@ -2483,7 +2489,10 @@ void TGX11::SetLineColor(Color_t cindex)
 
    TAttLine::SetLineColor(cindex);
 
-   SetAttLine((WinContext_t) gCws, *this);
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineColor(cindex);
+
+   SetAttLine((WinContext_t) gCws, arg);
 
    //SetColor(gGCline, Int_t(cindex));
    //SetColor(gGCdash, Int_t(cindex));
@@ -2532,7 +2541,10 @@ void TGX11::SetLineStyle(Style_t lstyle)
 {
    TAttLine::SetLineStyle(lstyle);
 
-   SetAttLine((WinContext_t) gCws, *this);
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineStyle(lstyle);
+
+   SetAttLine((WinContext_t) gCws, arg);
 /*
 
    static Int_t dashed[2] = {3,3};
@@ -2586,7 +2598,10 @@ void TGX11::SetLineWidth(Width_t width)
 {
    TAttLine::SetLineWidth(width);
 
-   SetAttLine((WinContext_t) gCws, *this);
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineWidth(width);
+
+   SetAttLine((WinContext_t) gCws, arg);
 
 /*
 
@@ -2623,7 +2638,10 @@ void TGX11::SetMarkerColor(Color_t cindex)
 
    TAttMarker::SetMarkerColor(cindex);
 
-   SetAttMarker((WinContext_t) gCws, *this);
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerColor(cindex);
+
+   SetAttMarker((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2635,7 +2653,10 @@ void TGX11::SetMarkerSize(Float_t msize)
 {
    TAttMarker::SetMarkerSize(msize);
 
-   SetAttMarker((WinContext_t) gCws, *this);
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerSize(msize);
+
+   SetAttMarker((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2674,7 +2695,10 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 {
    TAttMarker::SetMarkerStyle(markerstyle);
 
-   SetAttMarker((WinContext_t) gCws, *this);
+   TAttMarker arg(gCws->fAttMarker);
+   arg.SetMarkerStyle(markerstyle);
+
+   SetAttMarker((WinContext_t) gCws, arg);
 /*
 
    if (fMarkerStyle == markerstyle) return;
@@ -3361,7 +3385,10 @@ void TGX11::SetTextAlign(Short_t talign)
 
    TAttText::SetTextAlign(talign);
 
-   SetAttText((WinContext_t) gCws, *this);
+   TAttText arg(gCws->fAttText);
+   arg.SetTextAlign(talign);
+
+   SetAttText((WinContext_t) gCws, arg);
 
    // FIXME: member fTextAlign conflicts with TAttText::fTextAlign
    fTextAlign = gCws->textAlign;
@@ -3375,7 +3402,11 @@ void TGX11::SetTextColor(Color_t cindex)
    if (cindex < 0) return;
 
    TAttText::SetTextColor(cindex);
-   SetAttText((WinContext_t) gCws, *this);
+
+   TAttText arg(gCws->fAttText);
+   arg.SetTextColor(cindex);
+
+   SetAttText((WinContext_t) gCws, arg);
 
    /*
    SetColor(gGCtext, Int_t(cindex));
@@ -3447,7 +3478,10 @@ void TGX11::SetTextFont(Font_t fontnumber)
 {
    TAttText::SetTextFont(fontnumber);
 
-   SetAttText((WinContext_t) gCws, *this);
+   TAttText arg(gCws->fAttText);
+   arg.SetTextFont(fontnumber);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3457,7 +3491,10 @@ void TGX11::SetTextSize(Float_t textsize)
 {
    TAttText::SetTextSize(textsize);
 
-   SetAttText((WinContext_t) gCws, *this);
+   TAttText arg(gCws->fAttText);
+   arg.SetTextSize(textsize);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
