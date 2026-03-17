@@ -328,7 +328,7 @@ TEST(LogParabola,BrentRootFinder)
    runTestBrent(0);  //Brent fails with runTestBrent(1)!!! Changed back to 0  
 }
 
-TEST(LogParabola,ModABRootFinder)
+TEST(LogParabola, ModABRootFinder)
 {
    // test log-parabola using ModAB Root Finder
    runTestBrent(1, ROOT::Math::RootFinder::kMODAB);
