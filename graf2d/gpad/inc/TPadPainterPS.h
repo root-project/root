@@ -121,6 +121,9 @@ public:
 
    void     OnPad(TVirtualPad *pad) override { fPad = pad; }
 
+   TVirtualPS *GetPS() const override { return fPS; }
+
+
 private:
    //Let's make this clear:
    TPadPainterPS(const TPadPainterPS &) = delete;
