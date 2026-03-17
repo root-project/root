@@ -44,23 +44,22 @@ namespace Math {
    via the plug-in manager
 
    The possible types of Root-finding algorithms are:
-   <ul>
-   <li>Root Bracketing Algorithms which do not require function derivatives
-   <ol>
-   <li>RootFinder::kBRENT  (default method implemented in MathCore)
-   <li>RootFinder::kGSL_BISECTION
-   <li>RootFinder::kGSL_FALSE_POS
-   <li>RootFinder::kGSL_BRENT
-   </ol>
-   <li>Root Finding Algorithms using Derivatives
-   <ol>
-   <li>RootFinder::kGSL_NEWTON
-   <li>RootFinder::kGSL_SECANT
-   <li>RootFinder::kGSL_STEFFENSON
-   </ol>
-   </ul>
+   
+   Root Bracketing Algorithms which do not require function derivatives
+   
+   RootFinder::kBRENT  (default method implemented in MathCore)
+   RootFinder::kGSL_BISECTION
+   RootFinder::kGSL_FALSE_POS
+   RootFinder::kGSL_BRENT
+   RootFinder::kMODAB
+   
+   Root Finding Algorithms using Derivatives
+   
+   RootFinder::kGSL_NEWTON
+   RootFinder::kGSL_SECANT
+   RootFinder::kGSL_STEFFENSON
 
-   This class does not cupport copying
+   This class does not support copying
 
    @ingroup RootFinders
 
@@ -70,14 +69,14 @@ class RootFinder {
 
 public:
    enum EType {
-      kBRENT, // Methods from MathCore
+      kBRENT,            // Methods from MathCore
       kGSL_BISECTION,
       kGSL_FALSE_POS,
-      kGSL_BRENT, // GSL Normal
+      kGSL_BRENT,
       kGSL_NEWTON,
-      kGSL_SECANT,
-      kGSL_STEFFENSON // GSL Derivatives
-         kMODAB,      // Modified A&B method added in MathCore
+      kGSL_SECANT,       // GSL Normal
+      kGSL_STEFFENSON    // GSL Derivatives
+      kMODAB,            // Modified A&B method added in MathCore
    };
 
    /**
