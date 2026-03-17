@@ -15,6 +15,7 @@
 #include "Rtypes.h"
 
 class TVirtualPad;
+class TVirtualPS;
 class TAttFill;
 class TAttLine;
 class TAttMarker;
@@ -136,6 +137,7 @@ public:
 
    virtual Bool_t   IsNative() const { return kFALSE; }
    virtual Bool_t   IsCocoa() const { return kFALSE; }
+   virtual TVirtualPS *GetPS() const { return nullptr; }
 
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 
