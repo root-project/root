@@ -693,13 +693,6 @@ if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
   set (machine_learning-TMVA_SOFIE_GNN_Application-depends tutorial-machine_learning-TMVA_SOFIE_GNN_Parser)
 endif()
 
-# Download open data csv only once from a python tutorial, the C++ ones depend on it
-set(analysis-dataframe-df014_CSVDataSource-depends tutorial-analysis-dataframe-df014_CSVDataSource-py)
-set(analysis-dataframe-df015_LazyDataSource-depends tutorial-analysis-dataframe-df014_CSVDataSource-py)
-
-# Download the input root file only once from a python tutorial, the C++ one depends on it
-set(hist-hist039_TH2Poly_usa-depends tutorial-hist-hist039_TH2Poly_usa-py)
-
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)

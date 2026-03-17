@@ -27,6 +27,8 @@ SKIP_TUTORIALS = {
     "df014_CSVDataSource.C",  # requires reading remote data via HTTP
     "df014_CSVDataSource.py",  # requires reading remote data via HTTP
     "df015_LazyDataSource.C",  # requires reading remote data via HTTP
+    "hist039_TH2Poly_usa.py",  # requires reading remote data via HTTP
+    "hist039_TH2Poly_usa.C",  # requires reading remote data via HTTP
 }
 
 # ----------------------
