@@ -15,8 +15,8 @@
 #include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPS.h"
-#include "TVirtualX.h"
 #include "snprintf.h"
 
 const Double_t kPI = TMath::Pi();
@@ -1357,13 +1357,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       result = fs1+fs2;
    }
 
-   else if (opSpec>-1) {
+   else if (opSpec > -1) {
       TextSpec_t newSpec = spec;
       newSpec.fFont = fItalic ? 152 : 122;
       char letter = '\243' + opSpec;
       if(opSpec == 75 || opSpec == 76) {
          newSpec.fFont = GetTextFont();
-         if (gVirtualX->InheritsFrom("TGCocoa")) {
+         if (gPad->GetPainter()->IsCocoa()) {
             if (opSpec == 75) letter = '\201'; // AA Angstroem
             if (opSpec == 76) letter = '\214'; // aa Angstroem
          } else {
@@ -1491,25 +1491,26 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             Double_t x2 = x+fs1.Width()/2, y2 = y -fs1.Over();
             // tilde must be drawn separately on screen and on PostScript
             // because an adjustment is required along Y for PostScript.
-            TVirtualPS *saveps = gVirtualPS;
-            if (gVirtualPS) gVirtualPS = nullptr;
-            Double_t y22 = y2;
-            if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
+
             Double_t xx, yy;
-            Rotate(gPad, spec.fAngle, x2, y2, xx, yy);
-            TText tilde;
-            tilde.SetTextFont(fTextFont);
-            tilde.SetTextColor(spec.fColor);
-            tilde.SetTextSize(0.9*spec.fSize);
-            tilde.SetTextAlign(22);
-            tilde.SetTextAngle(fTextAngle);
-            tilde.PaintText(xx,yy,"~");
-            if (saveps) {
-               gVirtualPS = saveps;
-               if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
-               Rotate(gPad, spec.fAngle, x2, y22, xx, yy);
-               gVirtualPS->SetTextAlign(22);
-               gVirtualPS->Text(xx, yy, "~");
+            if (auto ps = gPad->GetPainter()->GetPS()) {
+               if (!strstr(ps->GetTitle(), "IMG"))
+                  y2 -= 4*sub;
+               Rotate(gPad, spec.fAngle, x2, y2, xx, yy);
+               ps->SetTextAlign(22);
+               ps->Text(xx, yy, "~");
+            } else {
+               if (gPad->GetPainter()->IsCocoa())
+                  y2 -= 4.7*sub;
+               Rotate(gPad, spec.fAngle, x2, y2, xx, yy);
+               // TODO: use pad painter SetAttText and DrawText directly
+               TText tilde;
+               tilde.SetTextFont(fTextFont);
+               tilde.SetTextColor(spec.fColor);
+               tilde.SetTextSize(0.9*spec.fSize);
+               tilde.SetTextAlign(22);
+               tilde.SetTextAngle(fTextAngle);
+               tilde.PaintText(xx,yy,"~");
             }
             break;
          }
@@ -2150,88 +2151,76 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    TAttText::Modify();  // Change text attributes only if necessary.
 
-   TVirtualPS *saveps = gVirtualPS;
+   auto ps = gPad->GetPainter()->GetPS();
 
-   if (gVirtualPS) {
-      if (gVirtualPS->InheritsFrom("TTeXDump")) {
-         gVirtualPS->SetTextAngle(angle);
-         TString t(text1);
-         if (t.Index("#")>=0 || t.Index("^")>=0 || t.Index("\\")>=0) {
-            t.ReplaceAll("#LT","\\langle");
-            t.ReplaceAll("#GT","\\rangle");
-            t.ReplaceAll("#club","\\clubsuit");
-            t.ReplaceAll("#spade","\\spadesuit");
-            t.ReplaceAll("#heart","\\heartsuit");
-            t.ReplaceAll("#diamond","\\diamondsuit");
-            t.ReplaceAll("#voidn","\\wp");
-            t.ReplaceAll("#voidb","f");
-            t.ReplaceAll("#ocopyright","\\copyright");
-            t.ReplaceAll("#trademark","TM");
-            t.ReplaceAll("#void3","TM");
-            t.ReplaceAll("#oright","R");
-            t.ReplaceAll("#void1","R");
-            t.ReplaceAll("#3dots","\\ldots");
-            t.ReplaceAll("#lbar","\\mid");
-            t.ReplaceAll("#bar","\\wwbar");
-            t.ReplaceAll("#void8","\\mid");
-            t.ReplaceAll("#divide","\\div");
-            t.ReplaceAll("#Jgothic","\\Im");
-            t.ReplaceAll("#Rgothic","\\Re");
-            t.ReplaceAll("#doublequote","\"");
-            t.ReplaceAll("#plus","+");
-            t.ReplaceAll("#minus","-");
-            t.ReplaceAll("#/","/");
-            t.ReplaceAll("#upoint",".");
-            t.ReplaceAll("#aa","\\mbox{\\aa}");
-            t.ReplaceAll("#AA","\\mbox{\\AA}");
+   if (ps && ps->InheritsFrom("TTeXDump")) {
+      TString t(text1);
+      if (t.Index("#")>=0 || t.Index("^")>=0 || t.Index("\\")>=0) {
+         t.ReplaceAll("#LT","\\langle");
+         t.ReplaceAll("#GT","\\rangle");
+         t.ReplaceAll("#club","\\clubsuit");
+         t.ReplaceAll("#spade","\\spadesuit");
+         t.ReplaceAll("#heart","\\heartsuit");
+         t.ReplaceAll("#diamond","\\diamondsuit");
+         t.ReplaceAll("#voidn","\\wp");
+         t.ReplaceAll("#voidb","f");
+         t.ReplaceAll("#ocopyright","\\copyright");
+         t.ReplaceAll("#trademark","TM");
+         t.ReplaceAll("#void3","TM");
+         t.ReplaceAll("#oright","R");
+         t.ReplaceAll("#void1","R");
+         t.ReplaceAll("#3dots","\\ldots");
+         t.ReplaceAll("#lbar","\\mid");
+         t.ReplaceAll("#bar","\\wwbar");
+         t.ReplaceAll("#void8","\\mid");
+         t.ReplaceAll("#divide","\\div");
+         t.ReplaceAll("#Jgothic","\\Im");
+         t.ReplaceAll("#Rgothic","\\Re");
+         t.ReplaceAll("#doublequote","\"");
+         t.ReplaceAll("#plus","+");
+         t.ReplaceAll("#minus","-");
+         t.ReplaceAll("#/","/");
+         t.ReplaceAll("#upoint",".");
+         t.ReplaceAll("#aa","\\mbox{\\aa}");
+         t.ReplaceAll("#AA","\\mbox{\\AA}");
 
-            t.ReplaceAll("#omicron","o");
-            t.ReplaceAll("#Alpha","A");
-            t.ReplaceAll("#Beta","B");
-            t.ReplaceAll("#Epsilon","E");
-            t.ReplaceAll("#Zeta","Z");
-            t.ReplaceAll("#Eta","H");
-            t.ReplaceAll("#Iota","I");
-            t.ReplaceAll("#Kappa","K");
-            t.ReplaceAll("#Mu","M");
-            t.ReplaceAll("#Nu","N");
-            t.ReplaceAll("#Omicron","O");
-            t.ReplaceAll("#Rho","P");
-            t.ReplaceAll("#Tau","T");
-            t.ReplaceAll("#Chi","X");
-            t.ReplaceAll("#varomega","\\varpi");
+         t.ReplaceAll("#omicron","o");
+         t.ReplaceAll("#Alpha","A");
+         t.ReplaceAll("#Beta","B");
+         t.ReplaceAll("#Epsilon","E");
+         t.ReplaceAll("#Zeta","Z");
+         t.ReplaceAll("#Eta","H");
+         t.ReplaceAll("#Iota","I");
+         t.ReplaceAll("#Kappa","K");
+         t.ReplaceAll("#Mu","M");
+         t.ReplaceAll("#Nu","N");
+         t.ReplaceAll("#Omicron","O");
+         t.ReplaceAll("#Rho","P");
+         t.ReplaceAll("#Tau","T");
+         t.ReplaceAll("#Chi","X");
+         t.ReplaceAll("#varomega","\\varpi");
 
-            t.ReplaceAll("#varUpsilon","?");
-            t.ReplaceAll("#corner","?");
-            t.ReplaceAll("#ltbar","?");
-            t.ReplaceAll("#bottombar","?");
-            t.ReplaceAll("#notsubset","?");
-            t.ReplaceAll("#arcbottom","?");
-            t.ReplaceAll("#cbar","?");
-            t.ReplaceAll("#arctop","?");
-            t.ReplaceAll("#topbar","?");
-            t.ReplaceAll("#arcbar","?");
-            t.ReplaceAll("#downleftarrow","?");
-            t.ReplaceAll("#splitline","\\genfrac{}{}{0pt}{}");
+         t.ReplaceAll("#varUpsilon","?");
+         t.ReplaceAll("#corner","?");
+         t.ReplaceAll("#ltbar","?");
+         t.ReplaceAll("#bottombar","?");
+         t.ReplaceAll("#notsubset","?");
+         t.ReplaceAll("#arcbottom","?");
+         t.ReplaceAll("#cbar","?");
+         t.ReplaceAll("#arctop","?");
+         t.ReplaceAll("#topbar","?");
+         t.ReplaceAll("#arcbar","?");
+         t.ReplaceAll("#downleftarrow","?");
+         t.ReplaceAll("#splitline","\\genfrac{}{}{0pt}{}");
 
-            t.ReplaceAll("#","\\");
-            t.ReplaceAll("%","\\%");
-         }
-         gVirtualPS->Text(x,y,t.Data());
-      } else {
-         Bool_t saveb = gPad->IsBatch();
-         gPad->SetBatch(kTRUE);
-         if (!PaintLatex1( x, y, angle, size, text1)) {
-            if (saveps) gVirtualPS = saveps;
-            return;
-         }
-         gPad->SetBatch(saveb);
+         t.ReplaceAll("#","\\");
+         t.ReplaceAll("%","\\%");
       }
-      gVirtualPS = nullptr;
+      ps->SetTextAngle(angle);
+      ps->Text(x, y, t.Data());
+   } else {
+      PaintLatex1(x, y, angle, size, text1);
    }
-
-   if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
-   if (saveps) gVirtualPS = saveps;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2255,30 +2244,23 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
 
    // Do not use Latex if font is low precision.
    if (fTextFont % 10 < 2) {
-      if (gVirtualX) gVirtualX->SetTextAngle(angle);
-      if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
-      gPad->PaintText(x,y,text1);
+      gPad->GetPainter()->SetTextAngle(angle);
+      gPad->PaintText(x, y, text1);
       return 1;
    }
 
-   Bool_t saveb = gPad->IsBatch();
    // Paint the text using TMathText if contains a "\"
    if (strstr(text1,"\\")) {
-      TMathText tm;
-      tm.SetTextAlign(GetTextAlign());
-      tm.SetTextFont(GetTextFont());
-      tm.SetTextColor(GetTextColor());
-      tm.PaintMathText(x, y, angle, size, text1);
-      // If PDF, paint using TLatex
-      if (gVirtualPS) {
-         if (gVirtualPS->InheritsFrom("TPDF") ||
-             gVirtualPS->InheritsFrom("TSVG")) {
-            newText.ReplaceAll("\\","#");
-            gPad->SetBatch(kTRUE);
-         } else {
-            return 1;
-         }
+      auto ps = gPad->GetPainter()->GetPS();
+      // If PDF or SVG, paint using TLatex
+      if (ps && (ps->InheritsFrom("TPDF") || ps->InheritsFrom("TSVG"))) {
+         newText.ReplaceAll("\\","#");
       } else {
+         TMathText tm;
+         tm.SetTextAlign(GetTextAlign());
+         tm.SetTextFont(GetTextFont());
+         tm.SetTextColor(GetTextColor());
+         tm.PaintMathText(x, y, angle, size, text1);
          return 1;
       }
    }
@@ -2334,7 +2316,6 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       Analyse(x,y,newSpec,text,length);
    }
 
-   gPad->SetBatch(saveb);
    SetTextSize(saveSize);
    SetTextAngle(angle);
    SetTextFont(saveFont);
