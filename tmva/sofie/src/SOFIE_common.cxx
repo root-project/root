@@ -99,6 +99,8 @@ std::string ConvertTypeToString(ETensorType type){
    }
 }
 
+// invert function might now work correctly for booleans
+// prefer avoid using it if possible
 ETensorType ConvertStringToType(std::string type){
    if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
@@ -106,10 +108,13 @@ ETensorType ConvertStringToType(std::string type){
    else if(type == "int64" || type == "int64_t"){
      return ETensorType::INT64;
    }
+   else if(type == "int32" || type == "int32_t"){
+     return ETensorType::INT32;
+   }
    else if (type == "double" || type == "float64"){
       return ETensorType::DOUBLE;
    }
-   else if (type == "bool" ){
+   else if (type == "bool" || type == "uint8_t" ){
       return ETensorType::BOOL;
    }
    else{

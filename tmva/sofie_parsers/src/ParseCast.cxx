@@ -13,21 +13,23 @@ ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodePr
                                "  but its type is not yet registered");
    }
 
-   std::unique_ptr<ROperator> op;
-   std::string attr_type;
+   ETensorType output_type = ETensorType::UNDEFINED;
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
       std::string attribute_name = nodeproto.attribute(i).name();
-      if (attribute_name == "to")
-         attr_type = ConvertTypeToString(static_cast<ETensorType>(nodeproto.attribute(i).i()));
+      if (attribute_name == "to") {
+         output_type = static_cast<ETensorType>(nodeproto.attribute(i).i());
+      }
    }
+   if (output_type == ETensorType::UNDEFINED)
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Cast op has invalid output type");
 
    std::string output_name = nodeproto.output(0);
-   op.reset(new ROperator_Cast(attr_type, nodeproto.input(0), output_name));
+   auto op = std::make_unique<ROperator_Cast>(output_type, nodeproto.input(0), output_name);
 
    if (!parser.IsRegisteredTensorType(output_name)) {
-      ETensorType output_type = ConvertStringToType(attr_type);
       parser.RegisterTensorType(output_name, output_type);
+      std::cout << "Cast -> " << output_name << " type " << (int) output_type << "  " << ConvertTypeToString(output_type) << std::endl;
    }
 
    return op;

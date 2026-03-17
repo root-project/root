@@ -279,9 +279,6 @@ public:
 
       opName = "op_" + opName;
 
-      if (fDimShapeY.empty()) {
-         throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
-      }
       std::stringstream out;
       out << SP << "\n//------ " << opName << "  " << BinaryOperatorTrait<T, Op>::Name() << " --> "
           << ConvertDimShapeToString(fDimShapeY) << "\n";

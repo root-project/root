@@ -307,47 +307,59 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    if (fVerbose)
       std::cout << "Parsing operator " << op_type << std::endl;
 
-   // skip already fused operators
-   if (fFusedOperators[idx]) return nullptr;
+   // perform the fusion of  operators
+   if (fFusedOperators.count(idx) == 1) {
+      int idx1 = fFusedOperators[idx].second;
+      if (fVerbose) {
+         std::cout << "\tFusing operators " << graphproto.node(idx1).name()
+                   << " with  " <<  graphproto.node(idx1).name() << std::endl;
+      }
+      if (fFusedOperators[idx].first == EFusedOp::kMatMulAdd) {
+         return ParseFuseMatMulAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kConvAdd) {
+         return ParseFuseConvAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kConvTransAdd) {
+         return ParseFuseConvTransposeAdd(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kGemmRelu) {
+         return ParseFuseGemmRelu(*this, graphproto.node(idx1), graphproto.node(idx));
+      } else if (fFusedOperators[idx].first == EFusedOp::kBatchnormRelu) {
+         return ParseFuseBatchnormRelu(*this, graphproto.node(idx1), graphproto.node(idx));
+      }
+   }
 
-   // try to fuse with following operator in case it is not last one
+   // try to fuse with following operator in case it is not last one and having only a single child
    if (children.size() == 1) {
       int idx2 = children.front();
       if (op_type == "MatMul") {
         // Fuse MatMul and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
-         }
-         else {
-            return ParseMatMul(*this, graphproto.node(idx));
+            fFusedOperators[idx2] = {EFusedOp::kMatMulAdd, idx};
+            return nullptr;
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
       // Fuse Conv or ConvTranspose without bias and Add
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
             if (nodeproto.op_type() == "Conv") {
-               fFusedOperators[idx2] = true;
-               return ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+               fFusedOperators[idx2] = { EFusedOp::kConvAdd, idx};
+               return nullptr;
             } else {
-               fFusedOperators[idx2] = true;
-               return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+               fFusedOperators[idx2] = { EFusedOp::kConvTransAdd, idx};
+               return nullptr;
             }
          }
       } else if (nodeproto.op_type() == "Gemm") {
          // Fuse Gemm with activation operators
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseGemmRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+            fFusedOperators[idx2] = {EFusedOp::kGemmRelu, idx};
+            return nullptr;
          }
       } else if (nodeproto.op_type() == "BatchNormalization") {
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseBatchnormRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+            fFusedOperators[idx2] = {EFusedOp::kBatchnormRelu, idx};
+            return nullptr;
          }
       }
    }
-
-
 
    auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
@@ -771,7 +783,6 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    // we have to record order of node execution separately to
    // account for fused operators
    size_t node_order_exec = 0;
-   fFusedOperators = std::vector<bool>(graph.node_size(), false);
    for (int i = 0; i < graph.node_size(); i++) {
       std::string op_type = graph.node(nodesOrder[i]).op_type();
 

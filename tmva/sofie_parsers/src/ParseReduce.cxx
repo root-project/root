@@ -57,14 +57,15 @@ std::unique_ptr<ROperator> ParseReduce(RModelParser_ONNX &parser, const onnx::No
             std::vector<int64_t>({nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()});
       }
    }
-   switch (input_type) {
-   case ETensorType::FLOAT:
-      op.reset(new ROperator_Reduce<float, Op>(attr_keepdims, attr_axes, input_name, axes_name, output_name));
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Reduce Operator does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+   op.reset(new ROperator_Reduce<Op>(attr_keepdims, attr_axes, input_name, axes_name, output_name));
+   // switch (input_type) {
+   // case ETensorType::FLOAT:
+   //    op.reset(new ROperator_Reduce<float, Op>(attr_keepdims, attr_axes, input_name, axes_name, output_name));
+   //    break;
+   // default:
+   //    throw std::runtime_error("TMVA::SOFIE - Unsupported - Reduce Operator does not yet support input type " +
+   //                             std::to_string(static_cast<int>(input_type)));
+   // }
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
