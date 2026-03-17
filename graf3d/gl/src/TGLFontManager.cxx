@@ -200,7 +200,7 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
    //later gVirtualX->GetTextAling() will give you 7. Brilliant!
    //But with Cocoa you'll have 11. As it should be, of course.
 
-   if (gVirtualX->InheritsFrom("TGCocoa")) {
+   if (gVirtualX->InheritsFrom("TGCocoa") || true) {
       const UInt_t hAlign = UInt_t(align / 10);
       switch (hAlign) {
       case 1:
