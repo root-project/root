@@ -39,7 +39,6 @@ Furthermore, for each dimension the histogram statistics include the sum of weig
 This allows to compute the arithmetic mean and the standard deviation of the values before binning.
 
 A *linearized index* starts from 0 up to the total number of bins, potentially including flow bins.
-For a single axis, it places the flow bins after the normal bins.
 The *global index* is a combination of the linearized indices from all axes.
 
 A *profile* is a histogram that computes the arithmetic mean and standard deviation per bin.
