@@ -397,8 +397,8 @@ Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
 
 \anchor L15
 ## URL links
-JSROOT and standard SVG output support the syntax '#url[link]{label}'.
-This can be combined with other LaTeX commands, such as color or font settings.
+JSROOT, standard PDF output and standard SVG output support the syntax '#url[link]{label}'.
+This can be combined with other TLatex commands, such as color or font settings.
 Begin_Macro(source)
 {
    auto cl = new TCanvas("cl", "Use of #url in TLatex", 1200, 800);
@@ -407,6 +407,7 @@ Begin_Macro(source)
    latex->SetTextAlign(22);
    latex->Draw();
    cl->Print("cl.svg");
+   cl->Print("cl.pdf");
 }
 End_Macro
 */

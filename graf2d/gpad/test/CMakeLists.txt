@@ -6,3 +6,4 @@
 
 ROOT_ADD_GTEST(TRatioPlot ratioplot.cxx LIBRARIES Gpad)
 ROOT_ADD_GTEST(TPad pdftitle.cxx LIBRARIES Gpad)
+ROOT_ADD_GTEST(TPDF pdfurl.cxx LIBRARIES Gpad)

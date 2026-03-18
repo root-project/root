@@ -27,4 +27,5 @@ void latex_url()
    latex->SetTextAngle(30.);
    c1->Add(latex);
    c1->Print("c1.svg");
+   c1->Print("c1.pdf");
 }

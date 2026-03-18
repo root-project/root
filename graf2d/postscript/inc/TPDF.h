@@ -23,6 +23,7 @@
 
 #include "TVirtualPS.h"
 #include <vector>
+#include <string>
 
 
 class TPoints;
@@ -30,90 +31,109 @@ class TPoints;
 class TPDF : public TVirtualPS {
 
 protected:
-   Float_t            fRed;             ///< Per cent of red
-   Float_t            fGreen;           ///< Per cent of green
-   Float_t            fBlue;            ///< Per cent of blue
-   Float_t            fAlpha;           ///< Per cent of transparency
-   std::vector<float> fAlphas;          ///< List of alpha values used
-   Float_t            fXsize;           ///< Page size along X
-   Float_t            fYsize;           ///< Page size along Y
-   Int_t              fType;            ///< Workstation type used to know if the PDF is open
-   Int_t              fPageFormat;      ///< Page format (A4, Letter etc ...)
-   Int_t              fPageOrientation; ///< Page orientation (Portrait, Landscape)
-   Int_t              fStartStream;     ///<
-   Float_t            fLineScale;       ///< Line width scale factor
-   Int_t             *fObjPos{nullptr}; ///< Objects position
-   Int_t              fObjPosSize{0};   ///< Real size of fObjPos
-   Int_t              fNbObj{0};        ///< Number of objects
-   Int_t              fNbPage;          ///< Number of pages
-   Bool_t             fPageNotEmpty;    ///< True if the current page is not empty
-   Bool_t             fCompress;        ///< True when fBuffer must be compressed
-   Bool_t             fRange;           ///< True when a range has been defined
+   Float_t fRed;                   ///< Per cent of red
+   Float_t fGreen;                 ///< Per cent of green
+   Float_t fBlue;                  ///< Per cent of blue
+   Float_t fAlpha;                 ///< Per cent of transparency
+   std::vector<float> fAlphas;     ///< List of alpha values used
+   Float_t fXsize;                 ///< Page size along X
+   Float_t fYsize;                 ///< Page size along Y
+   Int_t fType;                    ///< Workstation type used to know if the PDF is open
+   Int_t fPageFormat;              ///< Page format (A4, Letter etc ...)
+   Int_t fPageOrientation;         ///< Page orientation (Portrait, Landscape)
+   Int_t fStartStream;             ///< Stream start
+   Float_t fLineScale;             ///< Line width scale factor
+   Int_t *fObjPos{nullptr};        ///< Objects position
+   Int_t fObjPosSize{0};           ///< Real size of fObjPos
+   Int_t fNbObj{0};                ///< Number of objects
+   Int_t fNbPage;                  ///< Number of pages
+   Int_t fCurrentPage;             ///< Object number of the current page
+   std::vector<int> fPageObjects;  ///< Page object numbers
+   std::vector<std::string> fUrls; ///< URLs
+   std::vector<float> fRectX1;     ///< x1 /Rect coordinates for url annots
+   std::vector<float> fRectY1;     ///< y1 /Rect coordinates for url annots
+   std::vector<float> fRectX2;     ///< x2 /Rect coordinates for url annots
+   std::vector<float> fRectY2;     ///< y2 /Rect coordinates for url annots
+   Bool_t fObjectIsOpen;           ///< True if an object is opened
+   Bool_t fPageNotEmpty;           ///< True if the current page is not empty
+   Bool_t fCompress;               ///< True when fBuffer must be compressed
+   Bool_t fRange;                  ///< True when a range has been defined
+   Bool_t fUrl;                    ///< True when the text has an URL
+   Int_t fNbUrl;                   ///< Number of URLs in the current page
+   Double_t fA;                    ///< "a" value of the Current Transformation Matrix (CTM)
+   Double_t fB;                    ///< "b" value of the Current Transformation Matrix (CTM)
+   Double_t fC;                    ///< "c" value of the Current Transformation Matrix (CTM)
+   Double_t fD;                    ///< "d" value of the Current Transformation Matrix (CTM)
+   Double_t fE;                    ///< "e" value of the Current Transformation Matrix (CTM)
+   Double_t fF;                    ///< "f" value of the Current Transformation Matrix (CTM)
 
-   static Int_t       fgLineJoin;       ///< Appearance of joining lines
-   static Int_t       fgLineCap;        ///< Appearance of line caps
-   static Bool_t      fgObjectIsOpen;   ///< Indicates if an object is open
+   static Int_t fgLineJoin; ///< Appearance of joining lines
+   static Int_t fgLineCap;  ///< Appearance of line caps
+
 
 public:
    TPDF();
    TPDF(const char *filename, Int_t type=-111);
    ~TPDF() override;
 
-   void     CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
-   void     CellArrayFill(Int_t r, Int_t g, Int_t b) override;
-   void     CellArrayEnd() override;
-   void     Close(Option_t *opt="") override;
-   Double_t CMtoPDF(Double_t u) { return Int_t(0.5 + 72*u/2.54); }
-   void     DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
-   void     DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                      Int_t mode, Int_t border, Int_t dark, Int_t light) override;
-   void     DrawHatch(Float_t dy, Float_t angle, Int_t n, Float_t *x, Float_t *y);
-   void     DrawHatch(Float_t dy, Float_t angle, Int_t n, Double_t *x, Double_t *y);
-   void     DrawPolyLine(Int_t n, TPoints *xy);
-   void     DrawPolyLineNDC(Int_t n, TPoints *uv);
-   void     DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
-   void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
-   void     DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
-   void     DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
-   void     LineTo(Double_t x, Double_t y);
-   void     MoveTo(Double_t x, Double_t y);
-   void     EndObject();
-   void     FontEncode();
-   void     NewObject(Int_t n);
-   void     NewPage() override;
-   void     Off();
-   void     On();
-   void     Open(const char *filename, Int_t type=-111) override;
-   void     PatternEncode();
-   void     PrintFast(Int_t nch, const char *string="") override;
-   void     PrintStr(const char *string="") override;
-   void     Range(Float_t xrange, Float_t yrange);
-   void     SetAlpha(Float_t alpha = 1.);
-   void     SetColor(Int_t color = 1);
-   void     SetColor(Float_t r, Float_t g, Float_t b) override;
-   void     SetFillColor( Color_t cindex=1) override;
-   void     SetFillPatterns(Int_t ipat, Int_t color);
-   void     SetLineColor( Color_t cindex=1) override;
-   void     SetLineJoin(Int_t linejoin=0);
-   void     SetLineCap(Int_t linecap=0);
-   void     SetLineScale(Float_t scale=1) {fLineScale = scale;}
-   void     SetLineStyle(Style_t linestyle = 1) override;
-   void     SetLineWidth(Width_t linewidth = 1) override;
-   void     SetMarkerColor(Color_t cindex=1) override;
-   void     SetTextColor(Color_t cindex=1) override;
-   void     Text(Double_t x, Double_t y, const char *string) override;
-   void     Text(Double_t, Double_t, const wchar_t *) override;
-   void     TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
-   void     TextNDC(Double_t u, Double_t v, const char *string);
-   void     TextNDC(Double_t, Double_t, const wchar_t *);
-   void     WriteCompressedBuffer();
-   void     WriteReal(Float_t r, Bool_t space=kTRUE) override;
+   void CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
+   void CellArrayFill(Int_t r, Int_t g, Int_t b) override;
+   void CellArrayEnd() override;
+   void Close(Option_t *opt = "") override;
+   Double_t CMtoPDF(Double_t u) { return Int_t(0.5 + 72 * u / 2.54); }
+   void ComputeRect(const char* chars, Double_t fontsize, Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f);
+   void DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
+   void DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
+                  Int_t mode, Int_t border, Int_t dark, Int_t light) override;
+   void DrawHatch(Float_t dy, Float_t angle, Int_t n, Float_t *x, Float_t *y);
+   void DrawHatch(Float_t dy, Float_t angle, Int_t n, Double_t *x, Double_t *y);
+   void DrawPolyLine(Int_t n, TPoints *xy);
+   void DrawPolyLineNDC(Int_t n, TPoints *uv);
+   void DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
+   void DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
+   void DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
+   void DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void LineTo(Double_t x, Double_t y);
+   void MoveTo(Double_t x, Double_t y);
+   void EndObject();
+   void FontEncode();
+   void NewObject(Int_t n);
+   void NewPage() override;
+   void Off();
+   void On();
+   void Open(const char *filename, Int_t type = -111) override;
+   void PatternEncode();
+   void PrintFast(Int_t nch, const char *string = "") override;
+   void PrintStr(const char *string = "") override;
+   void Range(Float_t xrange, Float_t yrange);
+   void SetAlpha(Float_t alpha = 1.);
+   void SetColor(Int_t color = 1);
+   void SetColor(Float_t r, Float_t g, Float_t b) override;
+   void SetFillColor( Color_t cindex = 1) override;
+   void SetFillPatterns(Int_t ipat, Int_t color);
+   void SetLineColor( Color_t cindex = 1) override;
+   void SetLineJoin(Int_t linejoin = 0);
+   void SetLineCap(Int_t linecap = 0);
+   void SetLineScale(Float_t scale = 1) {fLineScale = scale;}
+   void SetLineStyle(Style_t linestyle = 1) override;
+   void SetLineWidth(Width_t linewidth = 1) override;
+   void SetMarkerColor(Color_t cindex = 1) override;
+   void SetTextColor(Color_t cindex = 1) override;
+   void Text(Double_t x, Double_t y, const char *string) override;
+   void Text(Double_t, Double_t, const wchar_t *) override;
+   void TextUrl(Double_t x, Double_t y, const char *string, const char *url) override;
+   void TextNDC(Double_t u, Double_t v, const char *string);
+   void TextNDC(Double_t, Double_t, const wchar_t *);
+   void WriteCompressedBuffer();
+   void WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f, Bool_t acc = kTRUE);
+   void WriteReal(Float_t r, Bool_t space = kTRUE) override;
+   void WriteUrlObjects();
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDefOverride(TPDF, 0);  //PDF driver
+   ClassDefOverride(TPDF, 1); // PDF driver
 };
 
 #endif

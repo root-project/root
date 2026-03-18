@@ -94,9 +94,8 @@ const Int_t kObjFirstPage        = 51; // First page object
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
 
-Int_t  TPDF::fgLineJoin = 0;
-Int_t  TPDF::fgLineCap  = 0;
-Bool_t TPDF::fgObjectIsOpen = kFALSE;
+Int_t TPDF::fgLineJoin = 0;
+Int_t TPDF::fgLineCap = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,23 +103,33 @@ Bool_t TPDF::fgObjectIsOpen = kFALSE;
 
 TPDF::TPDF() : TVirtualPS()
 {
-   fStream          = nullptr;
-   fCompress        = kFALSE;
-   fPageNotEmpty    = kFALSE;
-   gVirtualPS       = this;
-   fRed             = 0.;
-   fGreen           = 0.;
-   fBlue            = 0.;
-   fAlpha           = 1.;
-   fXsize           = 0.;
-   fYsize           = 0.;
-   fType            = 0;
-   fPageFormat      = 0;
+   fStream = nullptr;
+   fCompress = kFALSE;
+   fPageNotEmpty = kFALSE;
+   fObjectIsOpen = kFALSE;
+   gVirtualPS = this;
+   fRed = 0.;
+   fGreen = 0.;
+   fBlue = 0.;
+   fAlpha = 1.;
+   fXsize = 0.;
+   fYsize = 0.;
+   fType = 0;
+   fPageFormat = 0;
    fPageOrientation = 0;
-   fStartStream     = 0;
-   fLineScale       = 0.;
-   fNbPage          = 0;
-   fRange           = kFALSE;
+   fStartStream = 0;
+   fLineScale = 0.;
+   fNbPage = 0;
+   fCurrentPage = kObjFirstPage;
+   fRange = kFALSE;
+   fUrl = kFALSE;
+   fNbUrl = 1;
+   fA = 1.;
+   fB = 0.;
+   fC = 0.;
+   fD = 1.;
+   fE = 0.;
+   fF = 0.;
    SetTitle("PDF");
 }
 
@@ -135,22 +144,32 @@ TPDF::TPDF() : TVirtualPS()
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream          = nullptr;
-   fCompress        = kFALSE;
-   fPageNotEmpty    = kFALSE;
-   fRed             = 0.;
-   fGreen           = 0.;
-   fBlue            = 0.;
-   fAlpha           = 1.;
-   fXsize           = 0.;
-   fYsize           = 0.;
-   fType            = 0;
-   fPageFormat      = 0;
+   fStream = nullptr;
+   fCompress = kFALSE;
+   fPageNotEmpty = kFALSE;
+   fObjectIsOpen = kFALSE;
+   fRed = 0.;
+   fGreen = 0.;
+   fBlue = 0.;
+   fAlpha = 1.;
+   fXsize = 0.;
+   fYsize = 0.;
+   fType = 0;
+   fPageFormat = 0;
    fPageOrientation = 0;
-   fStartStream     = 0;
-   fLineScale       = 0.;
-   fNbPage          = 0;
-   fRange           = kFALSE;
+   fStartStream = 0;
+   fLineScale = 0.;
+   fNbPage = 0;
+   fCurrentPage = kObjFirstPage;
+   fRange = kFALSE;
+   fUrl = kFALSE;
+   fNbUrl = 1;
+   fA = 1.;
+   fB = 0.;
+   fC = 0.;
+   fD = 1.;
+   fE = 0.;
+   fF = 0.;
    SetTitle("PDF");
    Open(fname, wtype);
 }
@@ -206,11 +225,11 @@ void TPDF::Close(Option_t *)
    PrintStr("endstream@");
    Int_t streamLength = fNByte-fStartStream-10;
    EndObject();
-   NewObject(4*(fNbPage-1)+kObjFirstPage+2);
+   NewObject(fCurrentPage + 2);
    WriteInteger(streamLength, false);
    PrintStr("@");
    EndObject();
-   NewObject(4*(fNbPage-1)+kObjFirstPage+3);
+   NewObject(fCurrentPage + 3);
    PrintStr("<<@");
    if (!strstr(GetTitle(),"PDF")) {
       PrintStr("/Title (");
@@ -222,7 +241,7 @@ void TPDF::Close(Option_t *)
       PrintStr(")@");
    }
    PrintStr("/Dest [");
-   WriteInteger(4*(fNbPage-1)+kObjFirstPage);
+   WriteInteger(fCurrentPage);
    PrintStr(" 0 R /XYZ null null 0]@");
    PrintStr("/Parent");
    WriteInteger(kObjContents);
@@ -230,13 +249,14 @@ void TPDF::Close(Option_t *)
    PrintStr("@");
    if (fNbPage > 1) {
       PrintStr("/Prev");
-      WriteInteger(4*(fNbPage-2)+kObjFirstPage+3);
+      WriteInteger(fPageObjects[fNbPage - 2] + 3);
       PrintStr(" 0 R");
       PrintStr("@");
    }
    PrintStr(">>@");
    EndObject();
-
+   WriteUrlObjects();
+   PrintStr("@");
    NewObject(kObjOutlines);
    PrintStr("<<@");
    PrintStr("/Type /Outlines@");
@@ -272,7 +292,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr("/Last");
-   WriteInteger(4*(fNbPage-1)+kObjFirstPage+3);
+   WriteInteger(fPageObjects[fNbPage - 1] + 3);
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr(">>@");
@@ -286,8 +306,8 @@ void TPDF::Close(Option_t *)
    WriteInteger(fNbPage);
    PrintStr("@");
    PrintStr("/Kids [");
-   for (i=1; i<=fNbPage; i++) {
-      WriteInteger(4*(i-1)+kObjFirstPage);
+   for (i = 0; i < (int)fPageObjects.size(); i++) {
+      WriteInteger(fPageObjects[i]);
       PrintStr(" 0 R");
    }
    PrintStr(" ]");
@@ -295,6 +315,20 @@ void TPDF::Close(Option_t *)
    PrintStr(">>@");
    EndObject();
 
+   if (!fPageObjects.empty())
+      fPageObjects.clear();
+   if (!fUrls.empty())
+      fUrls.clear();
+   if (!fRectX1.empty())
+      fRectX1.clear();
+   if (!fRectY1.empty())
+      fRectY1.clear();
+   if (!fRectX2.empty())
+      fRectX2.clear();
+   if (!fRectY2.empty())
+      fRectY2.clear();
+
+   // List of transparencies
    NewObject(kObjTransList);
    PrintStr("<<@");
    for (i=0; i<(int)fAlphas.size(); i++) {
@@ -1373,9 +1407,9 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
 void TPDF::EndObject()
 {
-   if (!fgObjectIsOpen)
+   if (!fObjectIsOpen)
       Warning("TPDF::EndObject", "No Object currently opened.");
-   fgObjectIsOpen = kFALSE;
+   fObjectIsOpen = kFALSE;
 
    PrintStr("endobj@");
 }
@@ -1437,9 +1471,9 @@ void TPDF::MoveTo(Double_t x, Double_t y)
 
 void TPDF::NewObject(Int_t n)
 {
-   if (fgObjectIsOpen)
+   if (fObjectIsOpen)
       Warning("TPDF::NewObject", "An Object is already open.");
-   fgObjectIsOpen = kTRUE;
+   fObjectIsOpen = kTRUE;
    if (!fObjPos || n >= fObjPosSize) {
       Int_t newN = TMath::Max(2*fObjPosSize,n+1);
       Int_t *saveo = new Int_t [newN];
@@ -1475,6 +1509,12 @@ void TPDF::NewPage()
    }
 
    fNbPage++;
+   fA = 1.;
+   fB = 0.;
+   fC = 0.;
+   fD = 1.;
+   fE = 0.;
+   fF = 0.;
 
    if (fNbPage>1) {
       // Close the currently opened page
@@ -1482,11 +1522,11 @@ void TPDF::NewPage()
       PrintStr("endstream@");
       Int_t streamLength = fNByte-fStartStream-10;
       EndObject();
-      NewObject(4*(fNbPage-2)+kObjFirstPage+2);
+      NewObject(fCurrentPage + 2);
       WriteInteger(streamLength, false);
       PrintStr("@");
       EndObject();
-      NewObject(4*(fNbPage-2)+kObjFirstPage+3);
+      NewObject(fCurrentPage + 3);
       PrintStr("<<@");
       if (!strstr(GetTitle(),"PDF")) {
          PrintStr("/Title (");
@@ -1498,28 +1538,33 @@ void TPDF::NewPage()
          PrintStr(")@");
       }
       PrintStr("/Dest [");
-      WriteInteger(4*(fNbPage-2)+kObjFirstPage);
+      WriteInteger(fCurrentPage);
       PrintStr(" 0 R /XYZ null null 0]@");
       PrintStr("/Parent");
       WriteInteger(kObjContents);
       PrintStr(" 0 R");
       PrintStr("@");
       PrintStr("/Next");
-      WriteInteger(4*(fNbPage-1)+kObjFirstPage+3);
+      WriteInteger(fCurrentPage + 7 + fNbUrl);
       PrintStr(" 0 R");
       PrintStr("@");
       if (fNbPage>2) {
          PrintStr("/Prev");
-         WriteInteger(4*(fNbPage-3)+kObjFirstPage+3);
+         WriteInteger(fPageObjects[fNbPage - 3] + 3);
          PrintStr(" 0 R");
          PrintStr("@");
       }
       PrintStr(">>@");
       EndObject();
+      WriteUrlObjects();
+      fCurrentPage = fCurrentPage + fNbUrl + 4; // object number of the next page
+      fNbUrl = 1;
    }
 
    // Start a new page
-   NewObject(4*(fNbPage-1)+kObjFirstPage);
+   PrintStr("@");
+   NewObject(fCurrentPage);
+   fPageObjects.push_back(fCurrentPage);
    PrintStr("<<@");
    PrintStr("/Type /Page@");
    PrintStr("@");
@@ -1592,15 +1637,21 @@ void TPDF::NewPage()
    PrintStr("@");
 
    PrintStr("/Contents");
-   WriteInteger(4*(fNbPage-1)+kObjFirstPage+1);
+   WriteInteger(fCurrentPage + 1);
    PrintStr(" 0 R@");
+
+   PrintStr("/Annots");
+   WriteInteger(fCurrentPage + 4);
+   PrintStr(" 0 R");
+   PrintStr("@");
+
    PrintStr(">>@");
    EndObject();
 
-   NewObject(4*(fNbPage-1)+kObjFirstPage+1);
+   NewObject(fCurrentPage + 1);
    PrintStr("<<@");
    PrintStr("/Length");
-   WriteInteger(4*(fNbPage-1)+kObjFirstPage+2);
+   WriteInteger(fCurrentPage + 2);
    PrintStr(" 0 R@");
    PrintStr("/Filter [/FlateDecode]@");
    PrintStr(">>@");
@@ -1617,15 +1668,14 @@ void TPDF::NewPage()
    fBlue  = -1;
    fAlpha = -1.;
 
-   PrintStr("1 0 0 1");
    if (fPageOrientation == 2) {
       ymargin = CMtoPDF(height)-CMtoPDF(fXsize*xup)-xmargin;
       xmargin = xmargin+CMtoPDF(fYsize*yup);
    }
-   WriteReal(xmargin);
-   WriteReal(ymargin);
-   PrintStr(" cm");
-   if (fPageOrientation == 2) PrintStr(" 0 1 -1 0 0 0 cm");
+
+   WriteCM(1, 0, 0, 1, xmargin, ymargin);
+   if (fPageOrientation == 2)
+      WriteCM(0, 1, -1, 0, 0, 0);
    if (fgLineJoin) {
       WriteInteger(fgLineJoin);
       PrintFast(2," j");
@@ -1739,6 +1789,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fObjPosSize = 0;
    fNbObj = 0;
    fNbPage = 0;
+   fUrl = kFALSE;
 
    PrintStr("%PDF-1.4@");
    PrintStr("%\342\343\317\323");
@@ -2228,30 +2279,44 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    }
 
    // Text angle
+   Double_t a, b, c, d, e, f;
    if (fTextAngle == 0) {
-      PrintStr(" 1 0 0 1");
-      WriteReal(XtoPDF(x));
-      WriteReal(YtoPDF(y));
+      a = 1;
+      b = 0;
+      c = 0;
+      d = 1;
+      e = XtoPDF(x);
+      f = YtoPDF(y);
    } else if (fTextAngle == 90) {
-      PrintStr(" 0 1 -1 0");
-      WriteReal(XtoPDF(x));
-      WriteReal(YtoPDF(y));
+      a = 0;
+      b = 1;
+      c = -1;
+      d = 0;
+      e = XtoPDF(x);
+      f = YtoPDF(y);
    } else if (fTextAngle == 270) {
-      PrintStr(" 0 -1 1 0");
-      WriteReal(XtoPDF(x));
-      WriteReal(YtoPDF(y));
+      a = 0;
+      b = -1;
+      c = 1;
+      d = 0;
+      e = XtoPDF(x);
+      f = YtoPDF(y);
    } else {
-      WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
-      WriteReal(TMath::Sin(kDEGRAD*fTextAngle));
-      WriteReal(-TMath::Sin(kDEGRAD*fTextAngle));
-      WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
-      WriteReal(XtoPDF(x));
-      WriteReal(YtoPDF(y));
+      a = TMath::Cos(kDEGRAD * fTextAngle);
+      b = TMath::Sin(kDEGRAD * fTextAngle);
+      c = -TMath::Sin(kDEGRAD * fTextAngle);
+      d = TMath::Cos(kDEGRAD * fTextAngle);
+      e = XtoPDF(x);
+      f = YtoPDF(y);
    }
-   PrintStr(" cm");
+   WriteCM(a, b, c, d, e, f, kFALSE);
 
    // Symbol Italic tan(15) = .26794
-   if (font == 15) PrintStr(" 1 0 0.26794 1 0 0 cm");
+   if (font == 15)
+      WriteCM(1, 0, 0.26794, 1, 0, 0, kFALSE);
+
+   if (fUrl)
+      ComputeRect(chars, fontsize, a, b, c, d, e, f);
 
    PrintStr(" BT");
 
@@ -2349,9 +2414,13 @@ void TPDF::Text(Double_t, Double_t, const wchar_t *)
 /// Draw text with URL. Same as Text.
 ///
 
-void TPDF::TextUrl(Double_t x, Double_t y, const char *chars, const char *)
+void TPDF::TextUrl(Double_t x, Double_t y, const char *chars, const char *url)
 {
+   fUrl = kTRUE;
    Text(x, y, chars);
+   fNbUrl++;
+   fUrls.push_back(url);
+   fUrl = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2875,4 +2944,170 @@ void TPDF::PatternEncode()
    fNByte += 56;
    PrintStr("endstream@");
    EndObject();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write and Accumulate (if `acc` is true) the Current Transformation Matrix (CTM)
+///
+/// The Current Transformation Matrix (CTM, not CMT) is defined by the six parameters
+/// `a` `b` `c` `d` `e` `f` passed to the PDF `cm` operator (see the PDF Reference Guide
+/// page 156 [1] for details).
+///
+/// To correctly define the \Rect fields of the Annots created for each #url, one must keep
+/// track of the current CTM and apply it to the last transformation matrix used for the
+/// text (for example rotations).
+///
+/// [1] https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.4.pdf
+
+void TPDF::WriteCM(Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f, Bool_t acc)
+{
+   WriteReal(a);
+   WriteReal(b);
+   WriteReal(c);
+   WriteReal(d);
+   WriteReal(e);
+   WriteReal(f);
+   PrintStr(" cm");
+
+   // accumulate in CTM ---
+   if (acc) {
+      Double_t na, nb, nc, nd, ne, nf;
+      na = fA * a + fC * b;
+      nb = fB * a + fD * b;
+      nc = fA * c + fC * d;
+      nd = fB * c + fD * d;
+      ne = fA * e + fC * f + fE;
+      nf = fB * e + fD * f + fF;
+      fA = na;
+      fB = nb;
+      fC = nc;
+      fD = nd;
+      fE = ne;
+      fF = nf;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write the annotation objects containing the URLs
+
+void TPDF::WriteUrlObjects()
+{
+   int i;
+   NewObject(fCurrentPage + 4);
+   PrintStr("@");
+   PrintStr("[");
+   for (i = 0; i < fNbUrl - 1; i++) {
+      WriteInteger(fCurrentPage + 5 + i);
+      PrintStr(" 0 R");
+   }
+   PrintStr(" ]@");
+   EndObject();
+   for (i = 0; i < fNbUrl - 1; i++) {
+      NewObject(fCurrentPage + 5 + i);
+      PrintStr("<<@");
+      PrintStr("/Type /Annot@");
+      PrintStr("/Subtype /Link@");
+      PrintStr("/Rect [");
+      WriteReal(fRectX1[i], kFALSE);
+      WriteReal(fRectY1[i]);
+      WriteReal(fRectX2[i]);
+      WriteReal(fRectY2[i]);
+      PrintStr("]@");
+      PrintStr("/Border [0 0 0]@");
+      PrintStr("/A << /S /URI /URI (");
+      PrintStr(fUrls[i].c_str());
+      PrintStr(") >>@");
+      PrintStr(">>@");
+      EndObject();
+   }
+   if (!fUrls.empty())
+      fUrls.clear();
+   if (!fRectX1.empty())
+      fRectX1.clear();
+   if (!fRectY1.empty())
+      fRectY1.clear();
+   if (!fRectX2.empty())
+      fRectX2.clear();
+   if (!fRectY2.empty())
+      fRectY2.clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the Rect for url
+
+void TPDF::ComputeRect(const char* chars, Double_t fontsize,
+                       Double_t a, Double_t b, Double_t c, Double_t d, Double_t e, Double_t f)
+{
+   double W = 0.52 * fontsize * strlen(chars);
+   double ascent = 0.72 * fontsize;
+   double descent = 0.22 * fontsize;
+
+   int ax = fTextAlign / 10;
+   int ay = fTextAlign % 10;
+   double xShift = 0;
+   double yShift = 0;
+   if (ax == 2)
+      xShift = -W / 2.0;
+   if (ax == 3)
+      xShift = -W;
+   if (ay == 2)
+      yShift = -(ascent - descent) / 2.0;
+   if (ay == 3)
+      yShift = -ascent;
+   double x1 = xShift;
+   double x2 = xShift + W;
+   double y1 = -descent + yShift;
+   double y2 = ascent + yShift;
+
+   Double_t A, B, C, D, E, F;
+   A = fA * a + fC * b;
+   B = fB * a + fD * b;
+   C = fA * c + fC * d;
+   D = fB * c + fD * d;
+   E = fA * e + fC * f + fE;
+   F = fB * e + fD * f + fF;
+
+   double bx1 = A * x1 + C * y1 + E;
+   double by1 = B * x1 + D * y1 + F;
+   double bx2 = A * x2 + C * y1 + E;
+   double by2 = B * x2 + D * y1 + F;
+   double bx3 = A * x2 + C * y2 + E;
+   double by3 = B * x2 + D * y2 + F;
+   double bx4 = A * x1 + C * y2 + E;
+   double by4 = B * x1 + D * y2 + F;
+
+   double xmin = bx1;
+   double xmax = bx1;
+   double ymin = by1;
+   double ymax = by1;
+
+   if (bx2 < xmin)
+      xmin = bx2;
+   if (bx3 < xmin)
+      xmin = bx3;
+   if (bx4 < xmin)
+      xmin = bx4;
+   if (bx2 > xmax)
+      xmax = bx2;
+   if (bx3 > xmax)
+      xmax = bx3;
+   if (bx4 > xmax)
+      xmax = bx4;
+   if (by2 < ymin)
+      ymin = by2;
+   if (by3 < ymin)
+      ymin = by3;
+   if (by4 < ymin)
+      ymin = by4;
+   if (by2 > ymax)
+      ymax = by2;
+   if (by3 > ymax)
+      ymax = by3;
+   if (by4 > ymax)
+      ymax = by4;
+
+   fRectX1.push_back(xmin);
+   fRectY1.push_back(ymin);
+   fRectX2.push_back(xmax);
+   fRectY2.push_back(ymax);
 }

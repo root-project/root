@@ -637,7 +637,7 @@ void print_reports()
 
       StatusPrint(e.psfile, title, e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), ref->ps1ref, ref->ps1err);
 
-      StatusPrint(e.pdffile, "PDF output", FileSize(e.pdffile), ref->pdfref, ref->pdferr);
+      StatusPrint(e.pdffile, "PDF output", FileSize(e.pdffile) - (gWebMode ? 0 : 60), ref->pdfref, ref->pdferr);
 
       StatusPrint(e.jpgfile, "JPG output", FileSize(e.jpgfile), ref->jpgref, ref->jpgerr);
 
