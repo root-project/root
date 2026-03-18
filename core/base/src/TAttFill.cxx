@@ -215,15 +215,16 @@ void TAttFill::Copy(TAttFill &attfill) const
 
 void TAttFill::Modify()
 {
-   ModifyOn(gPad);
+   if (gPad)
+      ModifyOn(*gPad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current fill area attributes on speicifed pad
 
-void TAttFill::ModifyOn(TVirtualPad *pad)
+void TAttFill::ModifyOn(TVirtualPad &pad)
 {
-   auto pp = pad ? pad->GetPainter() : nullptr;
+   auto pp = pad.GetPainter();
    if (pp)
       pp->SetAttFill(*this);
 }

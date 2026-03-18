@@ -245,15 +245,16 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
 
 void TAttLine::Modify()
 {
-   ModifyOn(gPad);
+   if (gPad)
+      ModifyOn(*gPad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current line attributes on specified pad
 
-void TAttLine::ModifyOn(TVirtualPad *pad)
+void TAttLine::ModifyOn(TVirtualPad &pad)
 {
-   auto pp = pad ? pad->GetPainter() : nullptr;
+   auto pp = pad.GetPainter();
    if (!pp)
       return;
 
