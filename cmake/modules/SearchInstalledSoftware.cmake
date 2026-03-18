@@ -146,6 +146,19 @@ if(builtin_zlib)
   get_target_property(ZLIB_LIBRARY_LOCATION ZLIB::ZLIB IMPORTED_LOCATION)
 endif()
 
+# Check if the version string contains 'zlib-ng'
+if(ZLIB_VERSION MATCHES "zlib-ng")
+    message(STATUS "Found zlib-ng (Compatibility Mode)")
+    set(ZLIB_NG True)
+else()
+    # Fallback check: check for a specific zlib-ng symbol in the header
+    include(CheckSymbolExists)
+    check_symbol_exists(ZLIBNG_VERNUM "${ZLIB_INCLUDE_DIRS}/zlib.h" ZLIB_NG)
+    if(ZLIB_NG)
+        message(STATUS "Found zlib-ng via header symbol")
+    endif()
+endif()
+
 #---Check for nlohmann/json.hpp---------------------------------------------------------
 if(NOT builtin_nlohmannjson)
   message(STATUS "Looking for nlohmann/json.hpp")
