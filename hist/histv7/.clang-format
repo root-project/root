@@ -1,0 +1,8 @@
+BasedOnStyle: InheritParentConfig
+
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveBitFields:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
