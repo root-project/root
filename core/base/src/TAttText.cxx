@@ -326,15 +326,16 @@ Float_t TAttText::GetTextSizePercent(Float_t size)
 
 void TAttText::Modify()
 {
-   ModifyOn(gPad);
+   if (gPad)
+      ModifyOn(*gPad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current text attributes if necessary on specified pad.
 
-void TAttText::ModifyOn(TVirtualPad *pad)
+void TAttText::ModifyOn(TVirtualPad &pad)
 {
-   auto pp = pad ? pad->GetPainter() : nullptr;
+   auto pp = pad.GetPainter();
    if (!pp)
       return;
 
@@ -344,21 +345,21 @@ void TAttText::ModifyOn(TVirtualPad *pad)
    // there was difference in text size handling, keep it in one place
    if (pp->IsNative()) {
       if (fTextFont % 10 <= 2) {
-         auto  wh = pad->XtoPixel(pad->GetX2());
-         auto  hh = pad->YtoPixel(pad->GetY1());
+         auto  wh = pad.XtoPixel(pad.GetX2());
+         auto  hh = pad.YtoPixel(pad.GetY1());
          if (wh < hh)  tsize *= wh;
          else          tsize *= hh;
       }
    } else {
       if (fTextFont % 10 > 2) {
-         Float_t wh = pad->XtoPixel(pad->GetX2());
-         Float_t hh = pad->YtoPixel(pad->GetY1());
+         Float_t wh = pad.XtoPixel(pad.GetX2());
+         Float_t hh = pad.YtoPixel(pad.GetY1());
          if (wh < hh)  {
-            Float_t dy = pad->AbsPixeltoX(Int_t(tsize)) - pad->AbsPixeltoX(0);
-            tsize = dy/(pad->GetX2() - pad->GetX1());
+            Float_t dy = pad.AbsPixeltoX(Int_t(tsize)) - pad.AbsPixeltoX(0);
+            tsize = dy/(pad.GetX2() - pad.GetX1());
          } else {
-            Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(Int_t(tsize));
-            tsize = dy/(pad->GetY2() - pad->GetY1());
+            Float_t dy = pad.AbsPixeltoY(0) - pad.AbsPixeltoY(Int_t(tsize));
+            tsize = dy/(pad.GetY2() - pad.GetY1());
          }
       }
    }

@@ -32,7 +32,7 @@ public:
    virtual Color_t  GetFillColor() const { return fFillColor; } ///< Return the fill area color
    virtual Style_t  GetFillStyle() const { return fFillStyle; } ///< Return the fill area style
    virtual Bool_t   IsTransparent() const;
-   virtual void     ModifyOn(TVirtualPad *pad);
+   virtual void     ModifyOn(TVirtualPad &pad);
    virtual void     Modify();
    virtual void     ResetAttFill(Option_t *option="");
    virtual void     SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);

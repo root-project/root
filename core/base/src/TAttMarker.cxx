@@ -321,15 +321,16 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 
 void TAttMarker::Modify()
 {
-   ModifyOn(gPad);
+   if (gPad)
+      ModifyOn(*gPad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current marker attributes if necessary on specified pad.
 
-void TAttMarker::ModifyOn(TVirtualPad *pad)
+void TAttMarker::ModifyOn(TVirtualPad &pad)
 {
-   auto pp = pad ? pad->GetPainter() : nullptr;
+   auto pp = pad.GetPainter();
    if (pp)
       pp->SetAttMarker(*this);
 }
