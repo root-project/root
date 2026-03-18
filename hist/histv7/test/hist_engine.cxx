@@ -479,6 +479,19 @@ TEST(RHistEngine, FillTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(engine2.Fill(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistEngine, FillWeightNegative)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<float> engine({axis});
+
+   engine.Fill(1.5, RWeight(1));
+   ASSERT_EQ(engine.GetBinContent(RBinIndex(1)), 1);
+
+   engine.Fill(1.5, RWeight(-1));
+   EXPECT_EQ(engine.GetBinContent(RBinIndex(1)), 0);
+}
+
 TEST(RHistEngine, Scale)
 {
    static constexpr std::size_t Bins = 20;
