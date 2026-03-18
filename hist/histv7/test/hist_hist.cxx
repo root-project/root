@@ -299,6 +299,30 @@ TEST(RHist, FillCategoricalWeight)
    EXPECT_FLOAT_EQ(hist.ComputeNEffectiveEntries(), 1.9931034);
 }
 
+TEST(RHist, FillExceptionSafety)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<float> hist({axis, axis});
+
+   hist.Fill(1.5, 2.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+   ASSERT_EQ(hist.GetBinContent(RBinIndex(1), RBinIndex(2)), 1);
+
+   EXPECT_THROW(hist.Fill(1.5, "b"), std::invalid_argument);
+   EXPECT_THROW(hist.Fill(std::make_tuple(1.5, "b")), std::invalid_argument);
+   EXPECT_THROW(hist.Fill(1.5, "b", RWeight(1)), std::invalid_argument);
+   EXPECT_THROW(hist.Fill(std::make_tuple(1.5, "b"), RWeight(1)), std::invalid_argument);
+
+   // Verify exception safety. Only the first entry should be there.
+   EXPECT_EQ(hist.GetNEntries(), 1);
+   EXPECT_EQ(hist.GetBinContent(RBinIndex(1), RBinIndex(2)), 1);
+   EXPECT_EQ(hist.GetStats().GetSumW(), 1);
+   EXPECT_EQ(hist.GetStats().GetSumW2(), 1);
+   EXPECT_EQ(hist.GetStats().GetDimensionStats(0).fSumWX, 1.5);
+   EXPECT_EQ(hist.GetStats().GetDimensionStats(1).fSumWX, 2.5);
+}
+
 TEST(RHist, Scale)
 {
    static constexpr std::size_t Bins = 20;
