@@ -454,12 +454,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
       if (!strchr(fElements[i].c_str(),'<')) {
+         if (mode&kResolveTypedef) {
+            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
+         }
          if (mode&kDropStd) {
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
             RemoveStd( fElements[i], offset );
-         }
-         if (mode&kResolveTypedef) {
-            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
          }
          continue;
       }
