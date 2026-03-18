@@ -329,7 +329,10 @@ TEST(TClassEdit, GetNormalizedNameTypedef)
    )");
 
    TClassEdit::GetNormalizedName(n, "MyMapDefault");
-   EXPECT_STREQ("std::map<int,int>", n.c_str());
+   EXPECT_STREQ("map<int,int>", n.c_str());
+
+   TClassEdit::GetNormalizedName(n, "std::map<int,int,std::less<int>,std::allocator<std::pair<const int,int>>>");
+   EXPECT_STREQ("map<int,int>", n.c_str());
 }
 
 // https://github.com/root-project/root/issues/18654
