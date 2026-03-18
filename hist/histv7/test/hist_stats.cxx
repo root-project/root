@@ -254,6 +254,27 @@ TEST(RHistStats, AddAtomicDifferent)
    EXPECT_THROW(statsC.AddAtomic(statsB), std::invalid_argument);
 }
 
+TEST(RHistStats, AddExceptionSafety)
+{
+   RHistStats statsA(2);
+   RHistStats statsB(2);
+   statsB.DisableDimension(1);
+
+   statsA.Fill(1, 2);
+   ASSERT_EQ(statsA.GetNEntries(), 1);
+   statsB.Fill(1, 2);
+
+   EXPECT_THROW(statsA.Add(statsB), std::invalid_argument);
+   EXPECT_THROW(statsA.AddAtomic(statsB), std::invalid_argument);
+
+   // Verify exception safety. Only the original entry should be there.
+   EXPECT_EQ(statsA.GetNEntries(), 1);
+   EXPECT_EQ(statsA.GetSumW(), 1);
+   EXPECT_EQ(statsA.GetSumW2(), 1);
+   EXPECT_EQ(statsA.GetDimensionStats(0).fSumWX, 1);
+   EXPECT_EQ(statsA.GetDimensionStats(1).fSumWX, 2);
+}
+
 TEST(RHistStats, Clear)
 {
    RHistStats stats(2);

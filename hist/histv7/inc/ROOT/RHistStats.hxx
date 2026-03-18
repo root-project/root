@@ -200,13 +200,17 @@ public:
       if (fDimensionStats.size() != other.fDimensionStats.size()) {
          throw std::invalid_argument("number of dimensions not identical in Add");
       }
-      fNEntries += other.fNEntries;
-      fSumW += other.fSumW;
-      fSumW2 += other.fSumW2;
+      // For exception safety, first check all dimensions before modifying the object.
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
          if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
             throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
          }
+      }
+
+      fNEntries += other.fNEntries;
+      fSumW += other.fSumW;
+      fSumW2 += other.fSumW2;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
          if (fDimensionStats[i].fEnabled) {
             fDimensionStats[i].Add(other.fDimensionStats[i]);
          }
@@ -224,15 +228,19 @@ public:
       // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
       // object.
       if (fDimensionStats.size() != other.fDimensionStats.size()) {
-         throw std::invalid_argument("number of dimensions not identical in Add");
+         throw std::invalid_argument("number of dimensions not identical in AddAtomic");
       }
+      // For exception safety, first check all dimensions before modifying the object.
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with AddAtomic");
+         }
+      }
+
       Internal::AtomicAdd(&fNEntries, other.fNEntries);
       Internal::AtomicAdd(&fSumW, other.fSumW);
       Internal::AtomicAdd(&fSumW2, other.fSumW2);
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
-            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
-         }
          if (fDimensionStats[i].fEnabled) {
             fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
          }
