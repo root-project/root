@@ -142,6 +142,23 @@ endif()
 if(builtin_zlib)
   list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
+else()
+  # If not built-in, check if this is zlib-ng
+  set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+  message(STATUS "Checking whether zlib-ng is provided")
+  check_c_source_compiles("
+      #include <zlib.h>
+      #ifndef ZLIBNG_VERNUM
+      #error Not zlib-ng
+      #endif
+      int main() { return 0; }
+  " ZLIB_NG)
+endif()
+
+if(ZLIB_NG)
+  message(STATUS "Zlib-ng detected")
+else()
+  message(STATUS "Zlib detected")
 endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------
@@ -497,7 +514,7 @@ if(asimage)
       CMAKE_ARGS -G ${CMAKE_GENERATOR} 
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
-                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
                  -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
                  -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
                  -DPNG_INCLUDE_DIR=${PNG_INCLUDE_DIR}
@@ -531,7 +548,7 @@ if(asimage)
       set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     if(builtin_zlib)
-      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIR}")
+      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIRS}")
     endif()
     if(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
       set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
