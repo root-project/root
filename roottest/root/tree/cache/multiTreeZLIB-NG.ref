@@ -1,0 +1,158 @@
+Processing runmultiTree.C...
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 280290 bytes in 2 transactions
+Reading............................: 31225 bytes in 300 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 140.145000 Kbytes
+Number of blocks in current cache..: 2700, total size: 280290
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 374402 bytes in 2 transactions
+Reading............................: 41714 bytes in 400 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 187.201000 Kbytes
+Number of blocks in current cache..: 3600, total size: 374402
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 467802 bytes in 2 transactions
+Reading............................: 52114 bytes in 500 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 233.901000 Kbytes
+Number of blocks in current cache..: 4500, total size: 467802
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.899700
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 280290 bytes in 2 transactions
+Reading............................: 31225 bytes in 300 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 140.145000 Kbytes
+Number of blocks in current cache..: 2700, total size: 280290
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.899775
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 374402 bytes in 2 transactions
+Reading............................: 41714 bytes in 400 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 187.201000 Kbytes
+Number of blocks in current cache..: 3600, total size: 374402
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.900000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 467802 bytes in 2 transactions
+Reading............................: 52114 bytes in 500 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 233.901000 Kbytes
+Number of blocks in current cache..: 4500, total size: 467802
+File Reading.......................: 1212 transactions
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 1.000000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 311515 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 103.838333 Kbytes
+Number of blocks in current cache..: 2700, total size: 280290
+File Reading.......................: 15 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 1.000000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 416116 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 138.705333 Kbytes
+Number of blocks in current cache..: 3600, total size: 374402
+File Reading.......................: 15 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 1.000000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 519916 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 173.305333 Kbytes
+Number of blocks in current cache..: 4500, total size: 467802
+File Reading.......................: 15 transactions
+******TreeCache statistics for tree: tree1 in file: multi.root ******
+Number of branches in the cache ...: 300
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.999667
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 311515 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 103.838333 Kbytes
+Number of blocks in current cache..: 2700, total size: 280290
+File Reading.......................: 15 transactions
+******TreeCache statistics for tree: tree2 in file: multi.root ******
+Number of branches in the cache ...: 400
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.999750
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 416116 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 138.705333 Kbytes
+Number of blocks in current cache..: 3600, total size: 374402
+File Reading.......................: 15 transactions
+******TreeCache statistics for tree: tree3 in file: multi.root ******
+Number of branches in the cache ...: 500
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 1.000000
+Secondary Efficiency ..............: 0.000000
+Secondary Efficiency Rel ..........: 0.000000
+Learn entries......................: 100
+Cached Reading.....................: 519916 bytes in 3 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 0 bytes
+Average transaction................: 173.305333 Kbytes
+Number of blocks in current cache..: 4500, total size: 467802
+File Reading.......................: 15 transactions
+(int) 0

@@ -144,19 +144,23 @@ if(builtin_zlib)
   add_subdirectory(builtins/zlib)
   get_target_property(ZLIB_INCLUDE_DIR ZLIB::ZLIB INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(ZLIB_LIBRARY_LOCATION ZLIB::ZLIB IMPORTED_LOCATION)
+  set(ZLIB_NG True)
+else()
+  # If not built-in, check if this is zlib-ng
+  set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+  check_c_source_compiles("
+      #include <zlib.h>
+      #ifndef ZLIBNG_VERNUM
+      #error Not zlib-ng
+      #endif
+      int main() { return 0; }
+  " ZLIB_NG)
 endif()
 
-# Check if the version string contains 'zlib-ng'
-if(ZLIB_VERSION MATCHES "zlib-ng")
-    message(STATUS "Found zlib-ng (Compatibility Mode)")
-    set(ZLIB_NG True)
+if(ZLIB_NG)
+  message(STATUS "ZLIB is zlib-ng built in compatibility mode")
 else()
-    # Fallback check: check for a specific zlib-ng symbol in the header
-    include(CheckSymbolExists)
-    check_symbol_exists(ZLIBNG_VERNUM "${ZLIB_INCLUDE_DIRS}/zlib.h" ZLIB_NG)
-    if(ZLIB_NG)
-        message(STATUS "Found zlib-ng via header symbol")
-    endif()
+  message(STATUS "ZLIB is a regular zlib version")
 endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------

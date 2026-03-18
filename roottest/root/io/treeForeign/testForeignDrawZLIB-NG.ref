@@ -3,7 +3,7 @@ Warning in <TClass::Init>: no dictionary for class Wrapper is available
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
-*Entries :        2 : Total =            4215 bytes  File  Size =       1472 *
+*Entries :        2 : Total =            4215 bytes  File  Size =       1592 *
 *        :          : Tree compression factor =   1.08                       *
 ******************************************************************************
 *Branch  :obj                                                                *
@@ -18,16 +18,16 @@ Warning in <TClass::Init>: no dictionary for class MyClass is available
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :arr.fUniqueID : UInt_t fUniqueID[arr_]                             *
-*Entries :        2 : Total  Size=        702 bytes  File Size  =        108 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
+*Entries :        2 : Total  Size=        702 bytes  File Size  =        107 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.02     *
 *............................................................................*
 *Br    3 :arr.fBits : UInt_t fBits[arr_]                                     *
-*Entries :        2 : Total  Size=        682 bytes  File Size  =        104 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
+*Entries :        2 : Total  Size=        682 bytes  File Size  =        103 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.02     *
 *............................................................................*
 *Br    4 :arr.chunk : MyClass* chunk[arr_]                                   *
-*Entries :        2 : Total  Size=        770 bytes  File Size  =        151 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.28     *
+*Entries :        2 : Total  Size=        770 bytes  File Size  =        153 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.26     *
 *............................................................................*
 ************************
 *    Row   *     myvar *
