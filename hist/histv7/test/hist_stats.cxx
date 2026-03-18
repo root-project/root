@@ -603,6 +603,26 @@ TEST(RHistStats, FillTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(stats2.Fill(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistStats, FillExceptionSafety)
+{
+   RHistStats stats(2);
+
+   stats.Fill(1, 2);
+   ASSERT_EQ(stats.GetNEntries(), 1);
+
+   EXPECT_THROW(stats.Fill(1, "b"), std::invalid_argument);
+   EXPECT_THROW(stats.Fill(std::make_tuple(1, "b")), std::invalid_argument);
+   EXPECT_THROW(stats.Fill(1, "b", RWeight(1)), std::invalid_argument);
+   EXPECT_THROW(stats.Fill(std::make_tuple(1, "b"), RWeight(1)), std::invalid_argument);
+
+   // Verify exception safety. Only the first entry should be there.
+   EXPECT_EQ(stats.GetNEntries(), 1);
+   EXPECT_EQ(stats.GetSumW(), 1);
+   EXPECT_EQ(stats.GetSumW2(), 1);
+   EXPECT_EQ(stats.GetDimensionStats(0).fSumWX, 1);
+   EXPECT_EQ(stats.GetDimensionStats(1).fSumWX, 2);
+}
+
 TEST(RHistStats, Scale)
 {
    RHistStats stats(3);

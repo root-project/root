@@ -402,6 +402,20 @@ public:
    }
 
 private:
+   template <std::size_t I, std::size_t N, typename... A>
+   void CheckArguments(const std::tuple<A...> &args) const
+   {
+      using ArgumentType = std::tuple_element_t<I, std::tuple<A...>>;
+      if (fDimensionStats[I].fEnabled) {
+         if constexpr (!std::is_convertible_v<ArgumentType, double>) {
+            throw std::invalid_argument("invalid type of argument in RHistStats");
+         }
+      }
+      if constexpr (I + 1 < N) {
+         CheckArguments<I + 1, N>(args);
+      }
+   }
+
    template <std::size_t I, typename... A>
    void FillImpl(const std::tuple<A...> &args)
    {
@@ -410,7 +424,8 @@ private:
          if constexpr (std::is_convertible_v<ArgumentType, double>) {
             fDimensionStats[I].Add(std::get<I>(args));
          } else {
-            throw std::invalid_argument("invalid type of argument in RHistStats");
+            // Should be checked in CheckArguments above!
+            assert(0); // GCOVR_EXCL_LINE
          }
       }
       if constexpr (I + 1 < sizeof...(A)) {
@@ -428,7 +443,8 @@ private:
          } else {
             // Avoid compiler warning about unused parameter...
             (void)w;
-            throw std::invalid_argument("invalid type of argument in RHistStats");
+            // Should be checked in CheckArguments above!
+            assert(0); // GCOVR_EXCL_LINE
          }
       }
       if constexpr (I + 1 < N) {
@@ -457,6 +473,9 @@ public:
       if (sizeof...(A) != fDimensionStats.size()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
+      // For exception safety, first check all arguments before modifying the object.
+      CheckArguments<0, sizeof...(A)>(args);
+
       fNEntries++;
       fSumW++;
       fSumW2++;
@@ -482,6 +501,9 @@ public:
       if (sizeof...(A) != fDimensionStats.size()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
+      // For exception safety, first check all arguments before modifying the object.
+      CheckArguments<0, sizeof...(A)>(args);
+
       fNEntries++;
       double w = weight.fValue;
       fSumW += w;
@@ -518,6 +540,9 @@ public:
             if (N != fDimensionStats.size()) {
                throw std::invalid_argument("invalid number of arguments to Fill");
             }
+            // For exception safety, first check all arguments before modifying the object.
+            CheckArguments<0, N>(t);
+
             fNEntries++;
             double w = std::get<N>(t).fValue;
             fSumW += w;
