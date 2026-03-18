@@ -624,6 +624,26 @@ TEST(RHistStats, FillTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(stats2.Fill(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistStats, FillWeightNegative)
+{
+   RHistStats stats(1);
+   stats.Fill(1, RWeight(1));
+   stats.Fill(1, RWeight(-1));
+
+   EXPECT_EQ(stats.GetNEntries(), 2);
+   EXPECT_EQ(stats.GetSumW(), 0);
+   EXPECT_EQ(stats.GetSumW2(), 2);
+   // The two weighted entries cancel out each other.
+   EXPECT_EQ(stats.ComputeNEffectiveEntries(), 0);
+
+   // Cannot compute the mean, and all other computations depend on it.
+   EXPECT_TRUE(std::isnan(stats.ComputeMean()));
+   EXPECT_TRUE(std::isnan(stats.ComputeVariance()));
+   EXPECT_TRUE(std::isnan(stats.ComputeStdDev()));
+   EXPECT_TRUE(std::isnan(stats.ComputeSkewness()));
+   EXPECT_TRUE(std::isnan(stats.ComputeKurtosis()));
+}
+
 TEST(RHistStats, FillExceptionSafety)
 {
    RHistStats stats(2);
