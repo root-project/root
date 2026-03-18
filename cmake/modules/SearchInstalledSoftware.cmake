@@ -142,6 +142,23 @@ endif()
 if(builtin_zlib)
   list(APPEND ROOT_BUILTINS ZLIB)
   add_subdirectory(builtins/zlib)
+else()
+  # If not built-in, check if this is zlib-ng
+  set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
+  message(STATUS "Checking whether zlib-ng is provided")
+  check_c_source_compiles("
+      #include <zlib.h>
+      #ifndef ZLIBNG_VERNUM
+      #error Not zlib-ng
+      #endif
+      int main() { return 0; }
+  " ZLIB_NG)
+endif()
+
+if(ZLIB_NG)
+  message(STATUS "Zlib-ng detected")
+else()
+  message(STATUS "Zlib detected")
 endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------
