@@ -2583,11 +2583,31 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    // Generate the dependency via standard output, not searching the
    // standard include directories,
 
+   bool needToUnlinkTempFile = false;
 #ifndef WIN32
    const char * stderrfile = "/dev/null";
 #else
-   TString stderrfile= "stderr.tmp";
-   gSystem->PrependPathName(build_loc, stderrfile);
+   // Determine the null device based on the shell in use.
+   // COMSPEC unset or pointing to cmd.exe -> NUL
+   // COMSPEC pointing to powershell       -> $null
+   // Anything else (e.g. bash/sh on Windows) -> `depfilename`.stderr.tmp
+   TString stderrfile;
+   const char *comspec = gSystem->Getenv("COMSPEC");
+   if (!comspec || !comspec[0]) {
+      stderrfile = "NUL";
+   } else {
+      TString comspecStr(comspec);
+      comspecStr.ToLower();
+      if (comspecStr.EndsWith("cmd.exe")) {
+         stderrfile = "NUL";
+      } else if (comspecStr.Contains("powershell.exe")) {
+         stderrfile = "$null";
+      } else {
+         needToUnlinkTempFile = true;
+         stderrfile = depfilename + ".stderr.tmp";
+         gSystem->PrependPathName(build_loc, stderrfile);
+      }
+   }
 #endif
    TString bakdepfilename = depfilename + ".bak";
 
@@ -2711,9 +2731,10 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
       ::Warning("ACLiC","Failed to generate the dependency file for %s",
                 library.Data());
    } else {
-#ifdef WIN32
-      gSystem->Unlink(stderrfile);
-#endif
+      if (needToUnlinkTempFile) {
+         // Remove the temporary stderr file if it was created.
+         gSystem->Unlink(stderrfile);
+      }
       gSystem->Unlink(bakdepfilename);
    }
 }
