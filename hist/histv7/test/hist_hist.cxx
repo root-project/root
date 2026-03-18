@@ -165,6 +165,33 @@ TEST(RHist, StressAddAtomic)
    EXPECT_EQ(histA.GetBinContent(0), NAdds);
 }
 
+TEST(RHist, AddExceptionSafety)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis regularAxis(Bins, {0, Bins});
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis categoricalAxis(categories);
+
+   RHist<int> histA({regularAxis, regularAxis});
+   RHist<int> histB({regularAxis, categoricalAxis});
+
+   histA.Fill(1.5, 2.5);
+   ASSERT_EQ(histA.GetNEntries(), 1);
+   ASSERT_EQ(histA.GetBinContent(RBinIndex(1), RBinIndex(2)), 1);
+   histB.Fill(1.5, "b");
+
+   EXPECT_THROW(histA.Add(histB), std::invalid_argument);
+   EXPECT_THROW(histA.AddAtomic(histB), std::invalid_argument);
+
+   // Verify exception safety. Only the original entry should be there.
+   EXPECT_EQ(histA.GetNEntries(), 1);
+   EXPECT_EQ(histA.GetBinContent(RBinIndex(1), RBinIndex(2)), 1);
+   EXPECT_EQ(histA.GetStats().GetSumW(), 1);
+   EXPECT_EQ(histA.GetStats().GetSumW2(), 1);
+   EXPECT_EQ(histA.GetStats().GetDimensionStats(0).fSumWX, 1.5);
+   EXPECT_EQ(histA.GetStats().GetDimensionStats(1).fSumWX, 2.5);
+}
+
 TEST(RHist, Clear)
 {
    static constexpr std::size_t Bins = 20;
