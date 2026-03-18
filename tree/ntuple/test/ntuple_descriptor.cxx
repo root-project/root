@@ -202,6 +202,14 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    descBuilder.EnsureValidDescriptor();
 }
 
+TEST(RNTupleDescriptorBuilder, VersionMatches)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
+   auto desc = descBuilder.MoveDescriptor();
+   EXPECT_EQ(desc.GetVersion(), ROOT::RNTuple::GetCurrentVersion());
+}
+
 TEST(RFieldDescriptorBuilder, HeaderExtension)
 {
    RNTupleDescriptorBuilder descBuilder;

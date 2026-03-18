@@ -35,7 +35,6 @@
 
 #include <algorithm>
 #include <deque>
-#include <cinttypes> // for PRIu64
 #include <initializer_list>
 #include <unordered_map>
 #include <vector>
@@ -106,6 +105,16 @@ static std::optional<ENTupleMergeErrBehavior> ParseOptionErrBehavior(const TStri
                                                         {"Abort", ENTupleMergeErrBehavior::kAbort},
                                                         {"Skip", ENTupleMergeErrBehavior::kSkip},
                                                      });
+}
+
+static std::optional<ENTupleMergeVersionBehavior> ParseOptionVersionBehavior(const TString &opts)
+{
+   return ParseStringOption<ENTupleMergeVersionBehavior>(
+      opts, "rntuple.VersionBehavior=",
+      {
+         {"WarnOnHigherVersion", ENTupleMergeVersionBehavior::kWarnOnHigherVersion},
+         {"AbortOnHigherVersion", ENTupleMergeVersionBehavior::kAbortOnHigherVersion},
+      });
 }
 // -------------------------------------------------------------------------------------
 
@@ -244,6 +253,9 @@ try {
    }
    if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
       mergerOpts.fErrBehavior = *errBehavior;
+   }
+   if (auto versionBehavior = ParseOptionVersionBehavior(mergeInfo->fOptions)) {
+      mergerOpts.fVersionBehavior = *versionBehavior;
    }
    merger.Merge(sourcePtrs, mergerOpts).ThrowOnError();
 
@@ -908,6 +920,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
             // the actual data size after recompressing.
             buffer = MakeUninitArray<std::uint8_t>(bufSize);
 
+            // clang-format off
             if (needsResealing) {
                RTaskVisitor{fTaskGroup}(RResealFunc{
                   *srcColElement,
@@ -931,6 +944,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                   mergeData.fDestination.GetWriteOptions()
                });
             }
+            // clang-format on
          }
 
          ++pageIdx;
@@ -1254,6 +1268,19 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
+
+      if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
+         if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
+            R__LOG_WARNING(NTupleMergeLog())
+               << "RNTuple '" << mergeData.fSrcDescriptor->GetName()
+               << "' has a higher format version than the latest supported by this version "
+                  "of ROOT. Merging will work but some features may be dropped.";
+         } else {
+            return R__FAIL("RNTuple '" + mergeData.fSrcDescriptor->GetName() +
+                           "' has a higher format version than the latest supported by this version. Refusing to "
+                           "merge, since RNTupleMergeOptions::fVersionBehavior is set to AbortOnHigherVersion.");
+         }
+      }
 
       // Create sink from the input model if not initialized
       if (!fModel) {
