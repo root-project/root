@@ -147,6 +147,8 @@ public:
       kTraitEmulatedField = 0x20,
       /// Can attach new item fields even when already connected
       kTraitExtensible = 0x40,
+      /// The field represents a collection in SoA layout
+      kTraitSoACollection = 0x80,
 
       /// Shorthand for types that are both trivially constructible and destructible
       kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible
