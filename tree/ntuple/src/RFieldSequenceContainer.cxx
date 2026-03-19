@@ -15,88 +15,6 @@
 
 namespace {
 
-/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
-/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
-std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
-{
-   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
-   // int32_t fSize is the second data member (after 1 void*)
-   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
-   R__ASSERT(*size >= 0);
-   // int32_t fCapacity is the third data member (1 int32_t after fSize)
-   std::int32_t *capacity = size + 1;
-   R__ASSERT(*capacity >= -1);
-   return {beginPtr, size, capacity};
-}
-
-std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
-GetRVecDataMembers(const void *rvecPtr)
-{
-   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
-}
-
-std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
-{
-   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
-   //
-   // data members:
-   // - void *fBegin
-   // - int32_t fSize
-   // - int32_t fCapacity
-   // - the char[] inline storage, which is aligned like T
-   //
-   // padding might be present:
-   // - between fCapacity and the char[] buffer aligned like T
-   // - after the char[] buffer
-
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-
-   // mimic the logic of RVecInlineStorageSize, but at runtime
-   const auto inlineStorageSz = [&] {
-      constexpr unsigned cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
-      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
-      constexpr unsigned maxInlineByteSize = 1024;
-      const unsigned nElements =
-         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
-      return nElements * sizeOfT;
-   }();
-
-   // compute padding between first 3 datamembers and inline buffer
-   // (there should be no padding between the first 3 data members)
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-
-   // padding at the end of the object
-   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
-   if (paddingEnd != 0)
-      paddingEnd = alignOfRVecT - paddingEnd;
-
-   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
-}
-
-std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
-{
-   // the alignment of an RVec<T> is the largest among the alignments of its data members
-   // (including the inline buffer which has the same alignment as the RVec::value_type)
-   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
-}
-
-void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
-{
-   // figure out if we are in the small state, i.e. begin == &inlineBuffer
-   // there might be padding between fCapacity and the inline buffer, so we compute it here
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
-
-   const bool owns = (*capacityPtr != -1);
-   if (!isSmall && owns)
-      free(*beginPtr);
-}
-
 std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr, ROOT::RFieldBase &itemField)
 {
    auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
@@ -252,7 +170,8 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
    Attach(std::move(itemField), "_0");
-   fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
+   fValueSize =
+      Internal::EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
 
    // Determine if we can optimimize bulk reading
    if (fSubfields[0]->IsSimple()) {
@@ -276,7 +195,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::CloneImpl(std::string_view n
 
 std::size_t ROOT::RRVecField::AppendImpl(const void *from)
 {
-   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(from);
+   auto [beginPtr, sizePtr, _] = Internal::GetRVecDataMembers(from);
 
    std::size_t nbytes = 0;
    if (fSubfields[0]->IsSimple() && *sizePtr) {
@@ -301,7 +220,7 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
       throw RException(R__FAIL("RVec too large: " + std::to_string(nItems)));
    }
 
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(rvec);
+   auto [beginPtr, sizePtr, capacityPtr] = Internal::GetRVecDataMembers(rvec);
    const std::size_t oldSize = *sizePtr;
 
    if (oldSize == nItems) {
@@ -398,7 +317,7 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(bulkSpec.fValues);
+   auto [beginPtr, sizePtr, capacityPtr] = Internal::GetRVecDataMembers(bulkSpec.fValues);
 
    // Get size of the first RVec of the bulk
    RNTupleLocalIndex firstItemIndex;
@@ -422,8 +341,8 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
       const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
       for (std::size_t i = 0; i < nBatch; ++i) {
          const auto size = offsets[i] - lastOffset;
-         std::tie(beginPtr, sizePtr, capacityPtr) =
-            GetRVecDataMembers(reinterpret_cast<unsigned char *>(bulkSpec.fValues) + (nValues + i) * fValueSize);
+         std::tie(beginPtr, sizePtr, capacityPtr) = Internal::GetRVecDataMembers(
+            reinterpret_cast<unsigned char *>(bulkSpec.fValues) + (nValues + i) * fValueSize);
          *beginPtr = itemValueArray + nItems * itemValueSize;
          *sizePtr = size;
          *capacityPtr = -1;
@@ -503,7 +422,7 @@ void ROOT::RRVecField::ConstructValue(void *where) const
 
 void ROOT::RRVecField::RRVecDeleter::operator()(void *objPtr, bool dtorOnly)
 {
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
+   auto [beginPtr, sizePtr, capacityPtr] = Internal::GetRVecDataMembers(objPtr);
 
    if (fItemDeleter) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
@@ -511,7 +430,7 @@ void ROOT::RRVecField::RRVecDeleter::operator()(void *objPtr, bool dtorOnly)
       }
    }
 
-   DestroyRVecWithChecks(fItemAlignment, beginPtr, capacityPtr);
+   Internal::DestroyRVecWithChecks(fItemAlignment, beginPtr, capacityPtr);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
@@ -524,7 +443,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RRVecField::GetDeleter() const
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RRVecField::SplitValue(const RValue &value) const
 {
-   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetPtr<void>().get());
+   auto [beginPtr, sizePtr, _] = Internal::GetRVecDataMembers(value.GetPtr<void>().get());
 
    std::vector<RValue> result;
    result.reserve(*sizePtr);
@@ -542,7 +461,7 @@ size_t ROOT::RRVecField::GetValueSize() const
 
 size_t ROOT::RRVecField::GetAlignment() const
 {
-   return EvalRVecAlignment(fSubfields[0]->GetAlignment());
+   return Internal::EvalRVecAlignment(fSubfields[0]->GetAlignment());
 }
 
 void ROOT::RRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -879,7 +798,8 @@ ROOT::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldName, std::uniq
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "ROOT::VecOps::RVec<" + itemField->GetTypeAlias() + ">";
    Attach(std::move(itemField), "_0");
-   fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
+   fValueSize =
+      Internal::EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
    if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*fSubfields[0]);
 }
@@ -951,7 +871,7 @@ void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc
 
 size_t ROOT::RArrayAsRVecField::GetAlignment() const
 {
-   return EvalRVecAlignment(fSubfields[0]->GetAlignment());
+   return Internal::EvalRVecAlignment(fSubfields[0]->GetAlignment());
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsRVecField::SplitValue(const ROOT::RFieldBase::RValue &value) const
