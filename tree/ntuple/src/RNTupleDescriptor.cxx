@@ -42,7 +42,8 @@ bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
           fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
           fStructure == other.fStructure && fParentId == other.fParentId &&
           fProjectionSourceId == other.fProjectionSourceId && fLinkIds == other.fLinkIds &&
-          fLogicalColumnIds == other.fLogicalColumnIds && other.fTypeChecksum == other.fTypeChecksum;
+          fLogicalColumnIds == other.fLogicalColumnIds && fTypeChecksum == other.fTypeChecksum &&
+          fIsSoACollection == other.fIsSoACollection;
 }
 
 ROOT::RFieldDescriptor ROOT::RFieldDescriptor::Clone() const
@@ -63,6 +64,7 @@ ROOT::RFieldDescriptor ROOT::RFieldDescriptor::Clone() const
    clone.fColumnCardinality = fColumnCardinality;
    clone.fLogicalColumnIds = fLogicalColumnIds;
    clone.fTypeChecksum = fTypeChecksum;
+   clone.fIsSoACollection = fIsSoACollection;
    return clone;
 }
 
@@ -1197,6 +1199,9 @@ ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::M
    }
    if (fField.GetStructure() == ROOT::ENTupleStructure::kInvalid) {
       return R__FAIL("invalid field structure");
+   }
+   if (fField.IsSoACollection() && (fField.GetStructure() != ROOT::ENTupleStructure::kCollection)) {
+      return R__FAIL("invalid SoA flag on non-collection field");
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetParentId() != ROOT::kInvalidDescriptorId) {

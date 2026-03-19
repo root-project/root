@@ -73,6 +73,8 @@ ROOT::RResult<std::uint32_t> SerializeField(const ROOT::RFieldDescriptor &fieldD
       flags |= RNTupleSerializer::kFlagProjectedField;
    if (fieldDesc.GetTypeChecksum().has_value())
       flags |= RNTupleSerializer::kFlagHasTypeChecksum;
+   if (fieldDesc.IsSoACollection())
+      flags |= RNTupleSerializer::kFlagIsSoACollection;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
@@ -219,6 +221,10 @@ DeserializeField(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RFie
       std::uint32_t typeChecksum;
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeChecksum);
       fieldDesc.TypeChecksum(typeChecksum);
+   }
+
+   if (flags & RNTupleSerializer::kFlagIsSoACollection) {
+      fieldDesc.IsSoACollection(true);
    }
 
    return frameSize;

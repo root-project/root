@@ -156,6 +156,8 @@ private:
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
    std::optional<std::uint32_t> fTypeChecksum;
+   /// Indicates if this is a collection that should be represented in memory by a SoA layout.
+   bool fIsSoACollection = false;
 
 public:
    RFieldDescriptor() = default;
@@ -189,6 +191,7 @@ public:
    std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != ROOT::kInvalidDescriptorId; }
+   bool IsSoACollection() const { return fIsSoACollection; }
 
    bool IsCustomClass() const R__DEPRECATED(6, 42, "removed from public interface");
    bool IsCustomEnum(const RNTupleDescriptor &desc) const R__DEPRECATED(6, 42, "removed from public interface");
@@ -1537,6 +1540,11 @@ public:
    RFieldDescriptorBuilder &TypeChecksum(const std::optional<std::uint32_t> typeChecksum)
    {
       fField.fTypeChecksum = typeChecksum;
+      return *this;
+   }
+   RFieldDescriptorBuilder &IsSoACollection(bool val)
+   {
+      fField.fIsSoACollection = val;
       return *this;
    }
    ROOT::DescriptorId_t GetParentId() const { return fField.fParentId; }
