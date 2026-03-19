@@ -17,7 +17,7 @@
 #include "TBox.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
-#include "TVirtualX.h"
+#include "TCanvasImp.h"
 #include "TClass.h"
 #include "TMath.h"
 #include "TPoint.h"
@@ -246,12 +246,13 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
    Int_t  wx, wy;
-   TVirtualPad  *parent = gPad;
+   auto parent = gPad;
+   auto pp = parent->GetPainter();
    Bool_t opaque  = gPad->OpaqueMoving();
    Bool_t ropaque = gPad->OpaqueResizing();
 
    // convert to user coordinates and either paint ot set back
-   auto action = [parent,isBox,this](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
+   auto action = [parent,pp,isBox,this](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
       auto x1 = parent->AbsPixeltoX(_x1);
       auto y1 = parent->AbsPixeltoY(_y1);
       auto x2 = parent->AbsPixeltoX(_x2);
@@ -267,9 +268,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       }
       if (paint) {
-         auto pp = parent->GetPainter();
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
-
       } else {
          SetX1(x1);
          SetY1(y1);
@@ -297,13 +296,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       oldY1 = fY1;
       oldX2 = fX2;
       oldY2 = fY2;
-      gVirtualX->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
-      if (GetFillColor())
-         gVirtualX->SetLineColor(GetFillColor());
-      else
-         gVirtualX->SetLineColor(1);
-      gVirtualX->SetLineWidth(2);
+      pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
 
       // No break !!!
 
@@ -503,7 +496,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (wx || wy) {
          if (wx) px = wx;
          if (wy) py = wy;
-         gVirtualX->Warp(px, py);
+         parent->GetCanvasImp()->Warp(px, py);
       }
 
       pxold = px;
@@ -574,20 +567,19 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (pA || pB || pC || pD || pTop || pL || pR || pBot)
          parent->Modified(kTRUE);
 
-      if (!opaque) {
-         gVirtualX->SetLineColor(-1);
-         gVirtualX->SetLineWidth(-1);
-      }
+      if (!opaque)
+         pp->SetAttLine({-1, 1, -1});
 
       break;
 
    case kButton1Locate:
+      // Sergey: code is never used, has to be removed in ROOT7
 
       ExecuteEvent(kButton1Down, px, py);
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = parent->GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
