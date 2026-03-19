@@ -21,6 +21,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPad.h"
+#include "TCanvas.h"
 
 #include "TColorGradient.h"
 #include "TGLPadPainter.h"
@@ -1059,11 +1060,11 @@ void TGLPadPainter::RestoreViewport()
 
 void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   TVirtualPad *canvas = (TVirtualPad *)pad->GetCanvas();
+   auto canvas = pad->GetCanvas();
    if (!canvas)
       return;
 
-   gROOT->ProcessLine(Form("((TCanvas *)0x%zx)->Flush();", (size_t)canvas));
+   canvas->Flush();
 
    std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
    glPixelStorei(GL_PACK_ALIGNMENT, 1);
