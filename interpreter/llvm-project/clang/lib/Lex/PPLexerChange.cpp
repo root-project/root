@@ -751,7 +751,7 @@ void Preprocessor::EnterSubmodule(Module *M, SourceLocation ImportLoc,
   // This module is visible to itself, but exports should not be made visible
   // until they are imported.
   if (FirstTime)
-    makeModuleVisible(M, ImportLoc, /*IncludeExports=*/false);
+    makeModuleVisible(M, ImportLoc, /*IncludeExports=*/true);
 }
 
 bool Preprocessor::needModuleMacros() const {
