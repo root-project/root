@@ -1189,6 +1189,10 @@ ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field
       .NRepetitions(field.GetNRepetitions());
    if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
       fieldDesc.TypeChecksum(field.GetTypeChecksum());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
+      assert(field.GetStructure() == ENTupleStructure::kCollection);
+      fieldDesc.IsSoACollection(true);
+   }
    return fieldDesc;
 }
 
