@@ -17,4 +17,23 @@ and a drawing area).
 */
 
 #include "TCanvasImp.h"
+#include "TVirtualX.h"
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change mouse pointer, redirect to gVirtualX
+
+void TCanvasImp::Warp(Int_t ix, Int_t iy)
+{
+   if(gVirtualX)
+      gVirtualX->Warp(ix, iy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Request current mouse pointer, redirect to gVirtualX
+
+Int_t TCanvasImp::RequestLocator(Int_t &x, Int_t &y)
+{
+   return gVirtualX ? gVirtualX->RequestLocator(1, 1, x, y) : -1;
+}
 
