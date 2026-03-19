@@ -16,6 +16,7 @@
 #include "TBuffer.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualX.h"
 #include "TClass.h"
 #include "TMath.h"
@@ -249,12 +250,40 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Bool_t opaque  = gPad->OpaqueMoving();
    Bool_t ropaque = gPad->OpaqueResizing();
 
+   // convert to user coordinates and either paint ot set back
+   auto action = [parent,isBox,this](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
+      auto x1 = parent->AbsPixeltoX(_x1);
+      auto y1 = parent->AbsPixeltoY(_y1);
+      auto x2 = parent->AbsPixeltoX(_x2);
+      auto y2 = parent->AbsPixeltoY(_y2);
+      if (isBox) {
+         if (parent->GetLogx()) {
+            x1 = TMath::Power(10, x1);
+            x2 = TMath::Power(10, x2);
+         }
+         if (parent->GetLogy()) {
+            y1 = TMath::Power(10, y1);
+            y2 = TMath::Power(10, y2);
+         }
+      }
+      if (paint) {
+         auto pp = parent->GetPainter();
+         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+
+      } else {
+         SetX1(x1);
+         SetY1(y1);
+         SetX2(x2);
+         SetY2(y2);
+      }
+   };
+
    HideToolTip(event);
 
    switch (event) {
 
    case kMouseEnter:
-      if (fTip) gPad->ResetToolTip(fTip);
+      if (fTip) parent->ResetToolTip(fTip);
       break;
 
    case kButton1Double:
@@ -287,12 +316,12 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (isBox) {
          if (gPad->GetLogx()) {
-           if (fX1>0) px1 = gPad->XtoAbsPixel(TMath::Log10(fX1));
-           if (fX2>0) px2 = gPad->XtoAbsPixel(TMath::Log10(fX2));
+           if (GetX1() > 0) px1 = gPad->XtoAbsPixel(TMath::Log10(GetX1()));
+           if (GetX2() > 0) px2 = gPad->XtoAbsPixel(TMath::Log10(GetX2()));
          }
          if (gPad->GetLogy()) {
-           if (fY1>0) py1 = gPad->YtoAbsPixel(TMath::Log10(fY1));
-           if (fY2>0) py2 = gPad->YtoAbsPixel(TMath::Log10(fY2));
+           if (GetY1() > 0) py1 = gPad->YtoAbsPixel(TMath::Log10(GetY1()));
+           if (GetY2() > 0) py2 = gPad->YtoAbsPixel(TMath::Log10(GetY2()));
          }
       }
 
@@ -387,11 +416,9 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gPad->SetCursor(kCross);
       }
 
-      fResizing = kFALSE;
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
-         fResizing = kTRUE;
+      fResizing = pA || pB || pC || pD || pTop || pL || pR || pBot;
 
-      if (!pA && !pB && !pC && !pD && !pTop && !pL && !pR && !pBot && !pINSIDE)
+      if (!fResizing && !pINSIDE)
          gPad->SetCursor(kCross);
 
       break;
@@ -402,67 +429,67 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       wx = wy = 0;
 
       if (pA) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyt, pxt, pyold, TVirtualX::kHollow);  // draw the old box
+         if (!ropaque) action(kTRUE, pxold, pyt, pxt, pyold);  // draw the old box
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
-         if (!ropaque) gVirtualX->DrawBox(px   , pyt, pxt, py,    TVirtualX::kHollow);  // draw the new box
+         if (!ropaque) action(kTRUE, px, pyt, pxt, py);  // draw the new box
       }
       if (pB) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, pxold, pyold, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyt, pxold, pyold);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyt, px,  py);
       }
       if (pC) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, pxold, pyold, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyl, pxold, pyold);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, px ,   py,    TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyl, px, py);
       }
       if (pD) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyold, pxt, pyl, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxold, pyold, pxt, pyl);
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
-         if (!ropaque) gVirtualX->DrawBox(px   , py ,   pxt, pyl, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px, py, pxt, pyl);
       }
       if (pTop) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pBot) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pL) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pR) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pINSIDE) {
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
+         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the old box
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
@@ -470,7 +497,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (px2 > px2p) { dx = px2 - px2p; px1 -= dx; px2 -= dx; wx = px-dx; }
          if (py1 > py1p) { dy = py1 - py1p; py1 -= dy; py2 -= dy; wy = py-dy; }
          if (py2 < py2p) { dy = py2p - py2; py1 += dy; py2 += dy; wy = py+dy; }
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the new box
+         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the new box
       }
 
       if (wx || wy) {
@@ -482,60 +509,28 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       pxold = px;
       pyold = py;
 
-
       if ((pINSIDE && opaque) || (fResizing && ropaque)) {
-         if (pA) {
-            fX1 = gPad->AbsPixeltoX(pxold);
-            fY1 = gPad->AbsPixeltoY(pyt);
-            fX2 = gPad->AbsPixeltoX(pxt);
-            fY2 = gPad->AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            fX1 = gPad->AbsPixeltoX(pxl);
-            fY1 = gPad->AbsPixeltoY(pyt);
-            fX2 = gPad->AbsPixeltoX(pxold);
-            fY2 = gPad->AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            fX1 = gPad->AbsPixeltoX(pxl);
-            fY1 = gPad->AbsPixeltoY(pyold);
-            fX2 = gPad->AbsPixeltoX(pxold);
-            fY2 = gPad->AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            fX1 = gPad->AbsPixeltoX(pxold);
-            fY1 = gPad->AbsPixeltoY(pyold);
-            fX2 = gPad->AbsPixeltoX(pxt);
-            fY2 = gPad->AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-         }
+         if (pA)
+            action(kFALSE, pxold, pyt, pxt, pyold);
+         if (pB)
+            action(kFALSE, pxl, pyt, pxold, pyold);
+         if (pC)
+            action(kFALSE, pxl, pyold, pxold, pyl);
+         if (pD)
+            action(kFALSE, pxold, pyold, pxt, pyl);
+         if (pTop || pBot || pL || pR || pINSIDE)
+            action(kFALSE, px1, py1, px2, py2);
 
-         if (isBox) {
-            if (gPad->GetLogx()) {
-               fX1 = TMath::Power(10,fX1);
-               fX2 = TMath::Power(10,fX2);
-            }
-            if (gPad->GetLogy()) {
-               fY1 = TMath::Power(10,fY1);
-               fY2 = TMath::Power(10,fY2);
-            }
-         }
-
-         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
-         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
-         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
-         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
-         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
-         if (pA) gPad->ShowGuidelines(this, event, '1', true);
-         if (pB) gPad->ShowGuidelines(this, event, '2', true);
-         if (pC) gPad->ShowGuidelines(this, event, '3', true);
-         if (pD) gPad->ShowGuidelines(this, event, '4', true);
-         gPad->Modified(kTRUE);
+         if (pINSIDE) parent->ShowGuidelines(this, event, 'i', true);
+         if (pTop) parent->ShowGuidelines(this, event, 't', true);
+         if (pBot) parent->ShowGuidelines(this, event, 'b', true);
+         if (pL) parent->ShowGuidelines(this, event, 'l', true);
+         if (pR) parent->ShowGuidelines(this, event, 'r', true);
+         if (pA) parent->ShowGuidelines(this, event, '1', true);
+         if (pB) parent->ShowGuidelines(this, event, '2', true);
+         if (pC) parent->ShowGuidelines(this, event, '3', true);
+         if (pD) parent->ShowGuidelines(this, event, '4', true);
+         parent->Modified(kTRUE);
       }
 
       break;
@@ -544,69 +539,40 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (opaque) {
-            this->SetX1(oldX1);
-            this->SetY1(oldY1);
-            this->SetX2(oldX2);
-            this->SetY2(oldY2);
-            gPad->Modified(kTRUE);
-            gPad->Update();
+            SetX1(oldX1);
+            SetY1(oldY1);
+            SetX2(oldX2);
+            SetY2(oldY2);
+            parent->Modified(kTRUE);
+            parent->Update();
          }
          break;
       }
 
       if (opaque || ropaque) {
-         gPad->ShowGuidelines(this, event);
+         parent->ShowGuidelines(this, event);
       } else {
-         if (px1 < 0 ) break;
-         if (pA) {
-            fX1 = gPad->AbsPixeltoX(pxold);
-            fY1 = gPad->AbsPixeltoY(pyt);
-            fX2 = gPad->AbsPixeltoX(pxt);
-            fY2 = gPad->AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            fX1 = gPad->AbsPixeltoX(pxl);
-            fY1 = gPad->AbsPixeltoY(pyt);
-            fX2 = gPad->AbsPixeltoX(pxold);
-            fY2 = gPad->AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            fX1 = gPad->AbsPixeltoX(pxl);
-            fY1 = gPad->AbsPixeltoY(pyold);
-            fX2 = gPad->AbsPixeltoX(pxold);
-            fY2 = gPad->AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            fX1 = gPad->AbsPixeltoX(pxold);
-            fY1 = gPad->AbsPixeltoY(pyold);
-            fX2 = gPad->AbsPixeltoX(pxt);
-            fY2 = gPad->AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
-         }
-
-         if (isBox) {
-            if (gPad->GetLogx()) {
-               fX1 = TMath::Power(10,fX1);
-               fX2 = TMath::Power(10,fX2);
-            }
-            if (gPad->GetLogy()) {
-               fY1 = TMath::Power(10,fY1);
-               fY2 = TMath::Power(10,fY2);
-            }
-         }
+         if (px1 < 0)
+            break;
+         if (pA)
+            action(kFALSE, pxold, pyt, pxt, pyold);
+         if (pB)
+            action(kFALSE, pxl, pyt, pxold, pyold);
+         if (pC)
+            action(kFALSE, pxl, pyold, pxold, pyl);
+         if (pD)
+            action(kFALSE, pxold, pyold, pxt, pyl);
+         if (pTop || pBot || pL || pR || pINSIDE)
+            action(kFALSE, px1, py1, px2, py2);
          if (pINSIDE) {
             // if it was not a pad that was moved then it must have been
             // a box or something like that so we have to redraw the pad
-           if (parent == gPad) gPad->Modified(kTRUE);
+           if (parent == gPad) parent->Modified(kTRUE);
          }
       }
 
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot) gPad->Modified(kTRUE);
+      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
+         parent->Modified(kTRUE);
 
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
