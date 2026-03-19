@@ -100,6 +100,7 @@ public:
    void     CopyDrawable(Int_t device, Int_t px, Int_t py) override;
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
+   void     SetDrawMode(Int_t device, Int_t mode) override;
 
    void     InitPainter() override;
    void     InvalidateCS() override;

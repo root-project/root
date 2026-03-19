@@ -420,6 +420,14 @@ void TPadPainter::SelectDrawable(Int_t device)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set drawing mode for specified device
+
+void TPadPainter::SetDrawMode(Int_t device, Int_t mode)
+{
+   gVirtualX->SetDrawModeW(gVirtualX->GetWindowContext(device), (TVirtualX::EDrawMode) mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 
 void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width*/, UInt_t /*height*/,
