@@ -87,6 +87,9 @@ public:
    virtual Bool_t HasToolBar() const { return kFALSE; }
    virtual Bool_t HasToolTips() const { return kFALSE; }
 
+   virtual void Warp(Int_t ix, Int_t iy);
+   virtual Int_t RequestLocator(Int_t &x, Int_t &y);
+
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
 
