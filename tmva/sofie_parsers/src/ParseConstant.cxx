@@ -37,7 +37,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
    std::string output_name = nodeproto.output(0);
    ETensorType output_type = ETensorType::FLOAT;
    std::vector<std::size_t> shape;   // output shape (use in case of constant operator)
-   // it should be only one attribute (Constant or 1 or 0 COnstant of Shape)
+   // it should be only one attribute (Constant or 1 or 0 Constant of Shape)
    if (nodeproto.attribute_size() > 1)
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant or ConstantOfShape and attribute size is larger than 1");
    if (nodeproto.attribute_size() > 0) {

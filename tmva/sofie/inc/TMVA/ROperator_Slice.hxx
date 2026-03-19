@@ -337,7 +337,7 @@ public:
          size_t ndim = fShapeInput.size();
          fIdentitySlice = fShapeOutput.size() == ndim;
          // check also if input data is not input to the model. In that case we copy the data since we cannot just copy from the input pointer
-         fIdentitySlice &= !model.IsReadyInputTensor(fNData);
+         fIdentitySlice &= (!model.IsReadyInputTensor(fNData) && !model.IsDimInputTensor(fNData));
          for (size_t idim = 0; idim < ndim; idim++) {
             if (!fIdentitySlice) break;
             fIdentitySlice &= (fStart[idim].GetVal() == "0");
