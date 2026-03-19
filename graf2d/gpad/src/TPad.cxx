@@ -51,6 +51,7 @@
 #include "TDatime.h"
 #include "TColor.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
 #include "TImage.h"
@@ -2003,8 +2004,39 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          return;
       default:
          break;
+   }
+   if (newcode)
+      return;
+
+   auto pp = GetPainter();
+
+   auto action = [this,pp,parent](Bool_t paint, Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
+      auto x1 = AbsPixeltoX(_x1);
+      auto y1 = AbsPixeltoY(_y1);
+      auto x2 = AbsPixeltoX(_x2);
+      auto y2 = AbsPixeltoY(_y2);
+      if (paint) {
+         pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
+      } else {
+         // Get parent corners pixels coordinates
+         Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
+         Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
+         Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
+         Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
+
+         // Get pad new corners pixels coordinates
+         Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
+         Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
+         Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
+         Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
+
+         // Compute new pad positions in the NDC space of parent
+         fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+         fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+         fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
+         fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
       }
-      if (newcode) return;
+   };
 
    switch (event) {
 
@@ -2018,14 +2050,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       fXUpNDC = fXlowNDC + fWNDC;
       fYUpNDC = fYlowNDC + fHNDC;
-
-      GetPainter()->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
-      if (GetFillColor())
-         GetPainter()->SetLineColor(GetFillColor());
-      else
-         GetPainter()->SetLineColor(1);
-      GetPainter()->SetLineWidth(2);
+      pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) 1, GetLineStyle(), 2});
 
       // No break !!!
 
@@ -2127,11 +2152,9 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             SetCursor(kCross);
       }
 
-      fResizing = kFALSE;
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
-         fResizing = kTRUE;
+      fResizing = pA || pB || pC || pD || pTop || pL || pR || pBot;
 
-      if (!pA && !pB && !pC && !pD && !pTop && !pL && !pR && !pBot && !pINSIDE)
+      if (!fResizing && !pINSIDE)
          SetCursor(kCross);
 
       break;
@@ -2143,7 +2166,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       wx = wy = 0;
 
       if (pA) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyt, pxt, pyold, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxold, pyt, pxt, pyold);
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
@@ -2161,10 +2184,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             wx = wy = 0;
          }
-         if (!ropaque) gVirtualX->DrawBox(px, pyt, pxt, py, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px, pyt, pxt, py);
       }
       if (pB) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, pxold, pyold, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyt, pxold, pyold);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py > pyt-kMinSize) { py = pyt-kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
@@ -2182,10 +2205,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             wx = wy = 0;
          }
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyt, px ,  py,    TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyt, px, py);
       }
       if (pC) {
-         if (!ropaque) gVirtualX->DrawBox(pxl  , pyl, pxold, pyold, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyl, pxold, pyold);
          if (px < pxl+kMinSize) { px = pxl+kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px > pxtp) { px = pxtp; wx = px; }
@@ -2203,10 +2226,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             wx = wy = 0;
          }
-         if (!ropaque) gVirtualX->DrawBox(pxl, pyl, px, py, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxl, pyl, px, py);
       }
       if (pD) {
-         if (!ropaque) gVirtualX->DrawBox(pxold, pyold, pxt, pyl, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, pxold, pyold, pxt, pyl);
          if (px > pxt-kMinSize) { px = pxt-kMinSize; wx = px; }
          if (py < pyl+kMinSize) { py = pyl+kMinSize; wy = py; }
          if (px < pxlp) { px = pxlp; wx = px; }
@@ -2224,10 +2247,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
             wx = wy = 0;
          }
-         if (!ropaque) gVirtualX->DrawBox(px, py, pxt, pyl, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px, py, pxt, pyl);
       }
       if (pTop) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          py2 += py - pyold;
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
@@ -2240,10 +2263,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             else
                px2 = npx2;
          }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pBot) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          py1 += py - pyold;
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
@@ -2256,10 +2279,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             else
                px2 = npx2;
          }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pL) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          px1 += px - pxold;
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
@@ -2273,10 +2296,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             else
                py2 = npy2;
          }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pR) {
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
          px2 += px - pxold;
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
@@ -2290,10 +2313,10 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             else
                py2 = npy2;
          }
-         if (!ropaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
+         if (!ropaque) action(kTRUE, px1, py1, px2, py2);
       }
       if (pINSIDE) {
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the old box
+         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the old box
          Int_t dx = px - pxold;
          Int_t dy = py - pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
@@ -2301,72 +2324,30 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (px2 > px2p) { dx = px2 - px2p; px1 -= dx; px2 -= dx; wx = px-dx; }
          if (py1 > py1p) { dy = py1 - py1p; py1 -= dy; py2 -= dy; wy = py-dy; }
          if (py2 < py2p) { dy = py2p - py2; py1 += dy; py2 += dy; wy = py+dy; }
-         if (!opaque) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);  // draw the new box
+         if (!opaque) action(kTRUE, px1, py1, px2, py2);  // draw the new box
       }
 
       if (wx || wy) {
          if (wx) px = wx;
          if (wy) py = wy;
-         gVirtualX->Warp(px, py);
+         GetCanvasImp()->Warp(px, py);
       }
 
       pxold = px;
       pyold = py;
 
-      Double_t x1, y1, x2, y2;
-      x1 = x2 = y1 = y2 = 0;
-
       if ((!fResizing && opaque) || (fResizing && ropaque)) {
-         if (pA) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            x1 = AbsPixeltoX(px1);
-            y1 = AbsPixeltoY(py1);
-            x2 = AbsPixeltoX(px2);
-            y2 = AbsPixeltoY(py2);
-         }
-
          if (px != pxorg || py != pyorg) {
-
-            // Get parent corners pixels coordinates
-            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
-
-            // Get pad new corners pixels coordinates
-            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
-            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
-            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
-            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
-
-            // Compute new pad positions in the NDC space of parent
-            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
-            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
+            if (pA)
+               action(kFALSE, pxold, pyt, pxt, pyold);
+            if (pB)
+               action(kFALSE, pxl, pyt, pxold, pyold);
+            if (pC)
+               action(kFALSE, pxl, pyold, pxold, pyl);
+            if (pD)
+               action(kFALSE, pxold, pyold, pxt, pyl);
+            if (pTop || pBot || pL || pR || pINSIDE)
+               action(kFALSE, px1, py1, px2, py2);
          }
 
          // Reset pad parameters and recompute conversion coefficients
@@ -2397,69 +2378,24 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (opaque||ropaque) {
          ShowGuidelines(this, event);
       } else {
-         x1 = x2 = y1 = y2 = 0;
-
-         if (pA) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pB) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyt);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyold);
-         }
-         if (pC) {
-            x1 = AbsPixeltoX(pxl);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxold);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pD) {
-            x1 = AbsPixeltoX(pxold);
-            y1 = AbsPixeltoY(pyold);
-            x2 = AbsPixeltoX(pxt);
-            y2 = AbsPixeltoY(pyl);
-         }
-         if (pTop || pBot || pL || pR || pINSIDE) {
-            x1 = AbsPixeltoX(px1);
-            y1 = AbsPixeltoY(py1);
-            x2 = AbsPixeltoX(px2);
-            y2 = AbsPixeltoY(py2);
-         }
+         if (pA)
+            action(kFALSE, pxold, pyt, pxt, pyold);
+         if (pB)
+            action(kFALSE, pxl, pyt, pxold, pyold);
+         if (pC)
+            action(kFALSE, pxl, pyold, pxold, pyl);
+         if (pD)
+            action(kFALSE, pxold, pyold, pxt, pyl);
+         if (pTop || pBot || pL || pR || pINSIDE)
+            action(kFALSE, px1, py1, px2, py2);
 
          if (pA || pB || pC || pD || pTop || pL || pR || pBot)
             Modified(kTRUE);
 
-         gVirtualX->SetLineColor(-1);
-         gVirtualX->SetLineWidth(-1);
-
-         if (px != pxorg || py != pyorg) {
-
-            // Get parent corners pixels coordinates
-            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
-
-            // Get pad new corners pixels coordinates
-            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
-            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
-            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
-            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
-
-            // Compute new pad positions in the NDC space of parent
-            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
-            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
-         }
+         pp->SetAttLine({-1, 1, -1});
 
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
-
 
          // emit signal
          RangeChanged();
@@ -2473,7 +2409,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
