@@ -1129,11 +1129,10 @@ void TCanvas::FeedbackMode(Bool_t set)
    if (IsWeb() || (fCanvasID == -1))
       return;
 
-   if (fPainter)
-      fPainter->SelectDrawable(fCanvasID);
-   gVirtualX->SetDrawMode(set ? TVirtualX::kInvert : TVirtualX::kCopy);  // set the drawing mode to XOR mode
-
    SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
+
+   if (fPainter)
+      fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

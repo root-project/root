@@ -406,6 +406,14 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set drawing mode for specified device
+
+void TGLPadPainter::SetDrawMode(Int_t device, Int_t mode)
+{
+   gVirtualX->SetDrawModeW(gVirtualX->GetWindowContext(device), (TVirtualX::EDrawMode) mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///Init gl-pad painter:
 ///1. 2D painter does not use depth test, should not modify
 ///   depth-buffer content (except initial cleanup).
