@@ -3055,12 +3055,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    }
 
    bool disableAutoParsing = gInterpreter->IsAutoParsingSuspended();
-   // FIXME: We need to decided on the interface to disable auto-parsing only during TClass::GetClass.
-#ifdef ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
-   constexpr bool requestDisableAutoParsing = true;
-#else
+   // We could get the user choice from:
+   //   - environment variable ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING
+   //   - TClass::SetGetClassAutoParsing
    static const bool requestDisableAutoParsing = !gEnv->GetValue("Root.TClass.GetClass.AutoParsing", true);
-#endif
    if (requestDisableAutoParsing)
       disableAutoParsing = true;
    TInterpreter::SuspendAutoParsing autoparseFence(gInterpreter, disableAutoParsing);
