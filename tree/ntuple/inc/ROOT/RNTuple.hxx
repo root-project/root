@@ -78,8 +78,8 @@ class RNTuple final {
 public:
    static constexpr std::uint16_t kVersionEpoch = 1;
    static constexpr std::uint16_t kVersionMajor = 0;
-   static constexpr std::uint16_t kVersionMinor = 1;
-   static constexpr std::uint16_t kVersionPatch = 2;
+   static constexpr std::uint16_t kVersionMinor = 2;
+   static constexpr std::uint16_t kVersionPatch = 0;
 
    /// Returns the RNTuple version in the following form:
    ///   Epoch: 2 most significant bytes

@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.1.2
+# RNTuple Binary Format Specification 1.0.2.0
 
 ## Versioning Notes
 
@@ -392,6 +392,7 @@ The "flags" field can have any of the following bits set:
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
 | 0x04     | Has ROOT type checksum as reported by TClass                               |
+| 0x08     | The field is a collection that was stored using a SoA layout               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 For fixed-size arrays, another (sub) field with `Parent Field ID` equal to the ID of this field
@@ -414,6 +415,11 @@ The following restrictions apply on field projections:
 
 If `flag==0x04` (_type checksum_) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
+
+If `flag==0x08` (_SoA_) is set,
+the field is a collection that was represented in memory in a SoA (struct of arrays) layout.
+The flag has no impact otherwise on the on-disk representation of the collection.
+It can be used to distingush collections stored through a collection proxy from collection stored with a SoA field.
 
 Depending on the flags, the following optional values follow:
 
@@ -1084,6 +1090,18 @@ The on-disk representation of associative collections is identical to a `std::ma
   - Child field of type `std::pair<K, V>`, where `K` and `V` must be types with RNTuple I/O support.
 
 N.B., proxy-based associative collections are supported in the RNTuple binary format, but currently are not implemented in ROOT's RNTuple reader and writer. This will be added in the future.
+
+#### Classes representing a SoA layout of an underlying record type
+
+User classes that are marked in the dictionary as SoA layout classes of an underlying record type `T`
+behave as collections of the given underlying record type.
+The underlying record type must be a user-defined class with RNTuple support.
+The on-disk representation is identical to a `std::vector<T>`, using two fields:
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
+  - Child field of type `T` with name `_0`.
+
+The field's type name is the type of the SoA class.
+The SoA flag of the field descriptor must be set.
 
 ### ROOT::RNTupleCardinality<SizeT>
 
