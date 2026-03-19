@@ -188,3 +188,6 @@ if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
     # https://github.com/root-project/root/issues/9809
     ROOT_ADD_PYUNITTEST(pyroot_array_numpy_views array_conversions.py PYTHON_DEPS numpy)
 endif()
+
+file(COPY mock_rdf_define_header.hxx DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+ROOT_ADD_PYUNITTEST(mock_rdf_define_pyz mock_rdf_define_pyz.py)
