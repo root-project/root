@@ -93,6 +93,10 @@ Once a PR is created, a member of the ROOT team will review it as quickly as pos
 ROOT community, it may be beneficial to add a suggested reviewer to the PR in order to get quicker attention.
 Please ping people :wave: should you not get timely feedback, for instance with `@root-project/core ping!`
 
+> [!IMPORTANT]
+> For compatibility with our CI, you should create your PR with a **branch name different from `master`**.
+> The branch name should ideally reflect the work being done in the PR, but this is not a hard requirement.
+
 ## Tests
 
 As you contribute code, this code will likely fix an issue or add a feature.
@@ -132,3 +136,19 @@ Some tests are run only outside the PR testing system:
 we might come back to you with additional reports after your contribution was merged.
 
 Thank you for reading this; and even more: thank you :bouquet: for considering to contribute!
+
+## AI-assisted coding disclosure
+
+Contributors are required to disclose whether the proposed changes (code or otherwise) were, in part or completely, automatically generated
+by an LLM / "AI agent".
+
+The changes must in all cases have been *thoroughly reviewed and understood* by the contributor, who has full responsibility over them.
+
+Please avoid proposing LLM-generated changes as-is without a full review and understanding, as this disrespects
+the reviewers' time and may cause your future contributions to be automatically rejected if reiterated.
+
+Likewise, PR comments and any sort of engagement with other contributors must not be parroting LLMs or chatbots.
+At the reviewers' discretion, PRs suspected to contain low-effort copy-pasting from LLM tools may be closed.
+
+In short, a tacit agreement of mutual respect is expected from all parties involved.
+
