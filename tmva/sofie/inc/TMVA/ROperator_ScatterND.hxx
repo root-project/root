@@ -132,7 +132,8 @@ public:
 
       // Step 2: Emit strides as a static constexpr array
       out << SP << "// Step 2: data strides (row-major)\n";
-      out << SP << "static constexpr int64_t " << opName << "_data_strides[" << r << "] = {";
+      //to do: use static constexpr for defined strides
+      out << SP << "size_t " << opName << "_data_strides[" << r << "] = {";
       for (size_t i = 0; i < r; ++i)
          out << stridesX[i] << (i + 1 < r ? ", " : "");
       out << "};\n\n";

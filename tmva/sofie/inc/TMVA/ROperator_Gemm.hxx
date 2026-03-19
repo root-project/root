@@ -222,7 +222,7 @@ namespace SOFIE{
             if (fIsDynamic && shapeY.empty())
                broadcast_needed = true;
             else
-               // consider broadcasting also if same length
+               // consider broadcasting also if hey have different length
                broadcast_needed = (fShapeC != shapeY);
 
 
@@ -285,7 +285,12 @@ namespace SOFIE{
          int64_t dimA = fShapeA.size();
          int64_t dimB = fShapeB.size();
          int64_t dimY = fShapeY.size();
-         if (dimA != dimB || dimA != dimY) {
+         int64_t dimC = fShapeC.size();
+         if (dimA != dimB || dimA != dimY || (fBroadcastBias && dimC != dimY)) {
+             std::cout << " shape A " << ConvertDimShapeToString(fShapeA)
+                       << " shape B " << ConvertDimShapeToString(fShapeB)
+                       << " shape C " << ConvertShapeToString(fShapeC)
+                       << " shape Y " << ConvertDimShapeToString(fShapeY) << std::endl;
              throw std::runtime_error("TMVA SOFIE Gemm(MatMul) has invalid shape for inputs or output");
          }
          auto m = (fAttrTransA ? fShapeA[dimA-1].GetVal() : fShapeA[dimA-2].GetVal());
@@ -357,6 +362,9 @@ namespace SOFIE{
          }
          // do the bias broadcasting
          if (fBroadcastBias) {
+            // also shapeC has prepended 1 to be same rank of Y
+            std::vector<size_t> sC =  {fShapeC[dimC-2], fShapeC[dimC-1]};
+
             fAttrBeta = 1.;
             out << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
             out << SP << SP << "size_t y_index = ";
@@ -369,11 +377,11 @@ namespace SOFIE{
 
             out << SP << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
             std::string bias_index;
-            if (fShapeC[0] == 1 && fShapeC[1] == sY[1].dim)
+            if (sC[0] == 1 && sC[1] == sY[1].dim)
                bias_index = "k";
-            else if (fShapeC[1] == 1 && fShapeC[0] == sY[0].dim)
+            else if (sC[1] == 1 && sC[0] == sY[0].dim)
                bias_index = "j";
-            else if (fShapeC[0] == 1 && fShapeC[1] == 1)   // scalar case
+            else if (sC[0] == 1 && sC[1] == 1)   // scalar case
                bias_index = "0";
             else {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertShapeToString(fShapeC));

@@ -140,6 +140,7 @@ public:
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
          fBroadcastFlag = ret.first;
          fShapeY = ret.second;
+         auto  lengthY = ConvertShapeToLength(fShapeY);
          if (model.IsConstantTensor(fNA) && model.IsConstantTensor(fNB)) {
             bool broadcast = fBroadcastFlag > 0;
             if (broadcast) {
@@ -193,7 +194,7 @@ public:
             const std::string &nameB = fNBroadcastedB.empty() ? fNB : fNBroadcastedB;
             auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
             auto dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
-            std::vector<T> dataY(ConvertShapeToLength(fShapeY));
+            std::vector<T> dataY(lengthY);
             for (size_t i = 0; i < dataY.size(); i++) {
                dataY[i] = BinaryOperatorTrait<T, Op>::Func(dataA[i], dataB[i]);
             }
@@ -207,6 +208,59 @@ public:
                          << " , " << fNB << "  " << ConvertShapeToString(fShapeB) << " ---> " << fNY << "  "
                          << ConvertShapeToString(fShapeY) << " : " << ConvertValuesToString(dataY) << std::endl;
             }
+         } else if (((model.IsShapeTensor(fNA) && model.IsShapeTensor(fNB)) ||
+                    (model.IsShapeTensor(fNA) && model.IsConstantTensor(fNB)) ||
+                    (model.IsShapeTensor(fNB) && model.IsConstantTensor(fNA)))
+                     && (fShapeA.size() <=1 && fShapeB.size() <=1 &&  model.GetTensorType(fNA) == ETensorType::INT64)) {
+            // case of shape tensors ( tensors are of rank 0 or 1  )
+            std::vector<Dim> dimValA;
+            std::vector<Dim> dimValB;
+            if (model.IsShapeTensor(fNA))
+               dimValA = model.GetShapeTensorValues(fNA);
+            if (model.IsShapeTensor(fNB))
+               dimValB = model.GetShapeTensorValues(fNB);
+            // adjust for broadcasting - repet values until it reaches shapes of Y
+            if (!fShapeY.empty() && fShapeY[0] > 1) {
+               if (dimValA.size() == 1) dimValA = std::vector<Dim>( fShapeY[0], dimValA[0]);
+               if (dimValB.size() == 1) dimValB = std::vector<Dim>( fShapeY[0], dimValB[0]);
+            }
+
+            auto convertDataToDim = [&](const std::string & name, const std::vector<size_t> & shape, std::vector<Dim> & dimValues) {
+               auto data = static_cast<int64_t *>(model.GetInitializedTensorData(name).get());
+               dimValues.resize(lengthY);
+               for (size_t i = 0; i < lengthY; i++) {
+                  if (!shape.empty() && lengthY == shape[0])
+                     dimValues[i] = Dim{ static_cast<size_t>(data[i])};
+                  else // case dataA is a scalar
+                     dimValues[i] = Dim{ static_cast<size_t>(data[0])};
+               }
+            };
+            if (model.IsConstantTensor(fNA)) {
+               convertDataToDim(fNA,fShapeA,dimValA);
+            } else if (model.IsConstantTensor(fNB)) {
+               convertDataToDim(fNB,fShapeB,dimValB);
+            }
+
+            //perform binary operations on shape tensors
+            std::vector<Dim> dimValY(lengthY);
+            for (size_t i = 0; i < lengthY; i++) {
+               if (!dimValA[i].isParam && !dimValB[i].isParam) {
+                  size_t d = BinaryOperatorTrait<size_t, Op>::Func(dimValA[i].dim, dimValB[i].dim);
+                  dimValY[i] = Dim{d};
+               } else {
+                  auto res =  BinaryOperatorTrait<T, Op>::Op(dimValA[i].GetVal(), dimValB[i].GetVal());
+                  dimValY[i] = Dim{res, static_cast<size_t>(-1)};
+               }
+            }
+            model.AddShapeTensor(fNY,dimValY, fShapeY.empty()); // cannot be a  scalar
+            if (model.Verbose()) {
+               std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << fNA << "  " << ConvertShapeToString(fShapeA)
+                         << " , " << fNB << "  " << ConvertShapeToString(fShapeB) << " ---> " << fNY << "  "
+                         << ConvertShapeToString(fShapeY) << " : " << ConvertDimShapeToString(dimValY) << " (shape)" <<  std::endl;
+            }
+            // no code needs to be generated (flag this as a constant output tensor)
+            fIsOutputConstant = true;
+
          } else {
             // case of defined and non-constant tensors
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);

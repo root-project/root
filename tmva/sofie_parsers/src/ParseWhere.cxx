@@ -32,10 +32,10 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Where<float>(nodeproto.input(1), nodeproto.input(2), nodeproto.input(0), output_name));
+      op.reset(new ROperator_Where<float>(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), output_name));
       break;
    case ETensorType::INT64:
-      op.reset(new ROperator_Where<int64_t>(nodeproto.input(1), nodeproto.input(2), nodeproto.input(0), output_name));
+      op.reset(new ROperator_Where<int64_t>(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), output_name));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Where Operator does not yet support input type " +
