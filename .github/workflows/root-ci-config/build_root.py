@@ -180,7 +180,7 @@ def main():
     if testing:
         extra_ctest_flags = ''
         if WINDOWS:
-            extra_ctest_flags += '--repeat until-pass:5 '
+#            extra_ctest_flags += '--repeat until-pass:5 '
             extra_ctest_flags += '--build-config ' + args.buildtype
         if benchmark:
             extra_ctest_flags = ' -R "^rootbench-" '
