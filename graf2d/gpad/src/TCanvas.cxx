@@ -627,8 +627,7 @@ void TCanvas::Build()
                                     fWindowWidth, fWindowHeight);
 
       // Get effective canvas parameters without borders
-      Int_t dum1, dum2;
-      gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
+      fCanvasImp->GetCanvasGeometry(fCanvasID, fCw, fCh);
 
       fContextMenu = new TContextMenu("ContextMenu");
    }
@@ -722,8 +721,8 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
    TPad::cd(subpadnumber);
 
    // in case doublebuffer is off, draw directly onto display window
-   if (!IsBatch() && !IsWeb() && !fDoubleBuffer)
-      gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
+   if (!IsBatch() && !IsWeb() && !fDoubleBuffer && fPainter)
+      fPainter->SelectDrawable(fCanvasID);//Ok, does not matter for glpad.
 
    return gPad;
 }
@@ -804,7 +803,9 @@ void TCanvas::Close(Option_t *option)
       TPad::Close(option);
 
       if (!IsBatch() && !IsWeb()) {
-         gVirtualX->SelectWindow(fCanvasID);    //select current canvas
+         //select current canvas
+         if (fPainter)
+            fPainter->SelectDrawable(fCanvasID);
 
          DeleteCanvasPainter();
 
@@ -1145,7 +1146,7 @@ void TCanvas::Flush()
    TContext ctxt(this, kTRUE);
    if (!IsBatch()) {
       if (!UseGL() || fGLDevice == -1) {
-         gVirtualX->SelectWindow(fCanvasID);
+         fPainter->SelectDrawable(fCanvasID);
          gPad = ctxt.GetSaved(); //don't do cd() because than also the pixmap is changed
          CopyPixmaps();
          gVirtualX->UpdateWindow(1);
@@ -1663,7 +1664,8 @@ void TCanvas::ProcessedEvent(Int_t event, Int_t x, Int_t y, TObject *obj)
 
 void TCanvas::Resize(Option_t *)
 {
-   if (fCanvasID == -1) return;
+   if (fCanvasID == -1)
+      return;
 
    if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Resize", "");
@@ -1675,16 +1677,15 @@ void TCanvas::Resize(Option_t *)
    TContext ctxt(this, kTRUE);
 
    if (!IsBatch() && !IsWeb()) {
-      gVirtualX->SelectWindow(fCanvasID);      //select current canvas
-      gVirtualX->ResizeWindow(fCanvasID);      //resize canvas and off-screen buffer
+      fPainter->SelectDrawable(fCanvasID); //select current canvas for painting???
+      gVirtualX->ResizeWindow(fCanvasID);   //resize canvas and off-screen buffer
 
       // Get effective window parameters including menubar and borders
       fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
                                     fWindowWidth, fWindowHeight);
 
       // Get effective canvas parameters without borders
-      Int_t dum1, dum2;
-      gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
+      fCanvasImp->GetCanvasGeometry(fCanvasID, fCw, fCh);
    }
 
    if (fXsizeUser && fYsizeUser) {
@@ -1729,7 +1730,7 @@ void TCanvas::Resize(Option_t *)
       fYsizeReal = fXsizeReal*Double_t(fCh)/Double_t(fCw);
    }
 
-//*-*- Loop on all pads to recompute conversion coefficients
+   //*-*- Loop on all pads to recompute conversion coefficients
    TPad::ResizePad();
 }
 
