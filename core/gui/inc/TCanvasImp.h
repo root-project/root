@@ -64,9 +64,8 @@ public:
       w = h = 0;
       return 0;
    }
-   virtual void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h);
 
-   virtual void Iconify() {}
+   virtual void   Iconify() {}
    virtual Int_t  InitWindow() { return 0; }
    virtual void   SetStatusText(const char *text = nullptr, Int_t partidx = 0) { (void) text; (void) partidx; }
    virtual void   SetWindowPosition(Int_t x, Int_t y) { (void) x; (void) y; }
@@ -91,6 +90,8 @@ public:
 
    virtual void Warp(Int_t ix, Int_t iy);
    virtual Int_t RequestLocator(Int_t &x, Int_t &y);
+   virtual void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h);
+   virtual void ResizeCanvasWindow(Int_t wid);
 
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };

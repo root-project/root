@@ -1676,8 +1676,10 @@ void TCanvas::Resize(Option_t *)
    TContext ctxt(this, kTRUE);
 
    if (!IsBatch() && !IsWeb()) {
+      // SL: do we need it here?
       fPainter->SelectDrawable(fCanvasID); //select current canvas for painting???
-      gVirtualX->ResizeWindow(fCanvasID);   //resize canvas and off-screen buffer
+
+      fCanvasImp->ResizeCanvasWindow(fCanvasID); //resize canvas and off-screen buffer
 
       // Get effective window parameters including menubar and borders
       fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
