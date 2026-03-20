@@ -419,17 +419,27 @@ void TGX11::QueryColors(Colormap cmap, RXColor *color, Int_t ncolors)
 
 void TGX11::ClearWindow()
 {
-   if (!gCws) return;
+   ClearWindowW((WinContext_t) gCws);
+}
 
-   if (!gCws->fIsPixmap && !gCws->fDoubleBuffer) {
-      XSetWindowBackground((Display*)fDisplay, gCws->fDrawing, GetColor(0).fPixel);
-      XClearWindow((Display*)fDisplay, gCws->fDrawing);
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window.
+
+void TGX11::ClearWindowW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   if (!ctxt->fIsPixmap && !ctxt->fDoubleBuffer) {
+      XSetWindowBackground((Display*)fDisplay, ctxt->fDrawing, GetColor(0).fPixel);
+      XClearWindow((Display*)fDisplay, ctxt->fDrawing);
       XFlush((Display*)fDisplay);
    } else {
-      SetColor(&gCws->fGClist[kGCpxmp], 0);
-      XFillRectangle((Display*)fDisplay, gCws->fDrawing, gCws->fGClist[kGCpxmp],
-                     0, 0, gCws->fWidth, gCws->fHeight);
-      SetColor(&gCws->fGClist[kGCpxmp], 1);
+      SetColor(&ctxt->fGClist[kGCpxmp], 0);
+      XFillRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCpxmp],
+                     0, 0, ctxt->fWidth, ctxt->fHeight);
+      SetColor(&ctxt->fGClist[kGCpxmp], 1);
    }
 }
 

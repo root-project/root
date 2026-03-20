@@ -437,6 +437,14 @@ void TVirtualX::SetDrawModeW(WinContext_t /* wctxt */, EDrawMode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window
+
+void TVirtualX::ClearWindowW(WinContext_t /* wctxt */)
+{
+   ClearWindow();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw box on specified window
 
 void TVirtualX::DrawBoxW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
