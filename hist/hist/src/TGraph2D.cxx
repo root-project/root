@@ -531,7 +531,7 @@ TGraph2D::TGraph2D(const TGraph2D &g)
    (*this) = g;
 
    // append TGraph2D to gdirectory
-   if (TH1::AddDirectoryStatus()) {
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
          // append without replacing existing objects
@@ -627,7 +627,7 @@ void TGraph2D::Build(Int_t n)
    fPainter   = nullptr;
    fUserHisto = kFALSE;
 
-   if (TH1::AddDirectoryStatus()) {
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
          fDirectory->Append(this, kTRUE);
@@ -715,8 +715,7 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
 
 void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   if (addStatus) {
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && TH1::AddDirectoryStatus()) {
       SetDirectory(dir);
       if (dir) {
          ResetBit(kCanDelete);

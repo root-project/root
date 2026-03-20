@@ -1515,7 +1515,7 @@ void TEfficiency::Build(const char* name,const char* title)
    SetTitle(title);
 
    SetStatisticOption(kDefStatOpt);
-   if (TH1::AddDirectoryStatus())
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && TH1::AddDirectoryStatus())
       SetDirectory(gDirectory);
 
    SetBit(kPosteriorMode,false);
