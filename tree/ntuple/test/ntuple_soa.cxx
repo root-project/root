@@ -161,3 +161,42 @@ TEST(RNTuple, SoAEmpty)
    EXPECT_EQ(0u, v(1).size());
    EXPECT_EQ(0u, v(2).size());
 }
+
+TEST(RNTuple, SoASimple)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_simple.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("f", "SoASimple"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto soa = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("f");
+      soa->fX.push_back(1.0);
+      soa->fY.push_back(2.0);
+      writer->Fill();
+      soa->fX.clear();
+      // Filling in general is not exception-safe, but filling a single SoA field is
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
+      soa->fY.clear();
+      writer->Fill();
+      writer->CommitCluster();
+      soa->fX.push_back(3.0);
+      soa->fY.push_back(4.0);
+      soa->fX.push_back(5.0);
+      soa->fY.push_back(6.0);
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto v = reader->GetView<std::vector<RecordSimple>>("f");
+   EXPECT_EQ(1u, v(0).size());
+   EXPECT_FLOAT_EQ(1.0, v(0).at(0).fX);
+   EXPECT_FLOAT_EQ(2.0, v(0).at(0).fY);
+   EXPECT_EQ(0u, v(1).size());
+   EXPECT_EQ(2u, v(2).size());
+   EXPECT_FLOAT_EQ(3.0, v(2).at(0).fX);
+   EXPECT_FLOAT_EQ(4.0, v(2).at(0).fY);
+   EXPECT_FLOAT_EQ(5.0, v(2).at(1).fX);
+   EXPECT_FLOAT_EQ(6.0, v(2).at(1).fY);
+}
