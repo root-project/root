@@ -890,6 +890,33 @@ bool CPyCppyy::Utility::InitProxy(PyObject* module, PyTypeObject* pytype, const 
 }
 
 //----------------------------------------------------------------------------
+std::map<std::string, char> const &CPyCppyy::Utility::TypecodeMap()
+{
+   // See https://docs.python.org/3/library/array.html#array.array
+   static std::map<std::string, char> typecodeMap{
+       {"char",               'b'},
+       {"unsigned char",      'B'},
+#if PY_VERSION_HEX < 0x03100000
+       {"wchar_t",            'u'},
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+       {"Py_UCS4",            'w'},
+#endif
+       {"short",              'h'},
+       {"unsigned short",     'H'},
+       {"int",                'i'},
+       {"unsigned int",       'I'},
+       {"long",               'l'},
+       {"unsigned long",      'L'},
+       {"long long",          'q'},
+       {"unsigned long long", 'Q'},
+       {"float",              'f'},
+       {"double",             'd'}
+   };
+   return typecodeMap;
+}
+
+//----------------------------------------------------------------------------
 Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, void*& buf, bool check)
 {
 // Retrieve a linear buffer pointer from the given pyobject.
