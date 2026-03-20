@@ -3539,9 +3539,27 @@ void TGX11::Sync(int mode)
 
 void TGX11::UpdateWindow(int mode)
 {
-   if (gCws->fDoubleBuffer) {
-      XCopyArea((Display*)fDisplay, gCws->fDrawing, gCws->fWindow,
-                gCws->fGClist[kGCpxmp], 0, 0, gCws->fWidth, gCws->fHeight, 0, 0);
+   UpdateWindowW((WinContext_t) gCws, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update display for specified window.
+///
+///  \param [in] mode : (1) update (0) sync
+///
+/// Synchronise client and server once (not permanent).
+/// Copy the pixmap gCws->fDrawing on the window gCws->fWindow
+/// if the double buffer is on.
+
+void TGX11::UpdateWindowW(WinContext_t wctxt, Int_t mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   if (ctxt->fDoubleBuffer) {
+      XCopyArea((Display*)fDisplay, ctxt->fDrawing, ctxt->fWindow,
+                ctxt->fGClist[kGCpxmp], 0, 0, ctxt->fWidth, ctxt->fHeight, 0, 0);
    }
    if (mode == 1) {
       XFlush((Display*)fDisplay);

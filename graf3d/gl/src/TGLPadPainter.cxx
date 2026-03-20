@@ -62,6 +62,7 @@ TGLPadPainter::TGLPadPainter()
                     fLocked(kTRUE)
 {
    fVp[0] = fVp[1] = fVp[2] = fVp[3] = 0;
+   fWinContext = 0;
 }
 
 
@@ -364,6 +365,7 @@ void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 {
    // gVirtualX->SelectWindow(device);
    // gVirtualX->ClosePixmap();
+   fWinContext = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,12 +374,16 @@ void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 ///this pixmap. For OpenGL this means the change of
 ///coordinate system and viewport.
 
-void TGLPadPainter::SelectDrawable(Int_t /*device*/)
+void TGLPadPainter::SelectDrawable(Int_t /* device */)
 {
    if (fLocked)
       return;
 
    if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
+      // GL painter does not use proper id for sub-pads (see CreateDrawable)
+      // so one always use canvas ID to execute TVirtualX-specific commands
+      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
+
       Int_t px = 0, py = 0;
 
       pad->XYtoAbsPixel(pad->GetX1(), pad->GetY1(), px, py);
@@ -406,11 +412,25 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Call low-level update of selected drawable, redirect to gVirtualX.
+
+void TGLPadPainter::UpdateDrawable(Int_t mode)
+{
+   if (fWinContext)
+      gVirtualX->UpdateWindowW(fWinContext, mode);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set drawing mode for specified device
 
 void TGLPadPainter::SetDrawMode(Int_t device, Int_t mode)
 {
-   gVirtualX->SetDrawModeW(gVirtualX->GetWindowContext(device), (TVirtualX::EDrawMode) mode);
+   auto ctxt = fWinContext;
+   if (device)
+      ctxt = gVirtualX->GetWindowContext(device);
+   if (ctxt)
+      gVirtualX->SetDrawModeW(ctxt, (TVirtualX::EDrawMode) mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,8 +524,9 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //from TView3D::ExecuteRotateView. This means in fact,
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
-      if (gVirtualX->GetDrawMode() == TVirtualX::kInvert) {
-         gVirtualX->DrawLine(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
+      if (fWinContext) {
+         gVirtualX->DrawLineW(fWinContext,
+                             gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
       }
 
@@ -542,7 +563,16 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (fLocked) return;
+   if (fLocked) {
+      if (fWinContext) {
+         const Int_t px1 = gPad->UtoPixel(u1);
+         const Int_t py1 = gPad->VtoPixel(v1);
+         const Int_t px2 = gPad->UtoPixel(u2);
+         const Int_t py2 = gPad->VtoPixel(v2);
+         gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
+      }
+      return;
+   }
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();

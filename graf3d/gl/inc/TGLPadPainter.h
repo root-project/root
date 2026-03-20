@@ -16,6 +16,7 @@
 #include "TGLFontManager.h"
 #include "TGLPadUtils.h"
 #include "TPoint.h"
+#include "GuiTypes.h"
 
 #include <vector>
 
@@ -31,6 +32,8 @@ private:
    Rgl::Pad::Tesselator        fTess;
    Rgl::Pad::MarkerPainter     fMarker;
    Rgl::Pad::GLLimits          fLimits;
+
+   WinContext_t   fWinContext; // context of selected drawable
 
    std::vector<Double_t>       fVs;//Vertex buffer for tesselator.
 
@@ -100,6 +103,7 @@ public:
    void     CopyDrawable(Int_t device, Int_t px, Int_t py) override;
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
+   void     UpdateDrawable(Int_t mode) override;
    void     SetDrawMode(Int_t device, Int_t mode) override;
 
    void     InitPainter() override;

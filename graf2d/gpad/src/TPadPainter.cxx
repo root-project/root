@@ -426,6 +426,14 @@ void TPadPainter::SelectDrawable(Int_t device)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Call low-level update of selected drawable, redirect to gVirtualX.
+
+void TPadPainter::UpdateDrawable(Int_t mode)
+{
+   gVirtualX->UpdateWindowW(fWinContext, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set drawing mode for specified device
 
 void TPadPainter::SetDrawMode(Int_t device, Int_t mode)
