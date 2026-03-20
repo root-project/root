@@ -140,6 +140,7 @@ public:
    virtual Bool_t   IsNative() const { return kFALSE; }
    virtual Bool_t   IsCocoa() const { return kFALSE; }
    virtual TVirtualPS *GetPS() const { return nullptr; }
+   virtual Bool_t   IsSupportAlpha() const { return kFALSE; }
 
    static TVirtualPadPainter *PadPainter(Option_t *opt = "");
 

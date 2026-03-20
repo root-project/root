@@ -380,6 +380,13 @@ Bool_t TPadPainter::IsCocoa() const
    return gVirtualX->InheritsFrom("TGCocoa");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if trasnparent colors are supported
+
+Bool_t TPadPainter::IsSupportAlpha() const
+{
+   return gVirtualX->InheritsFrom("TGQuartz");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear the current gVirtualX window.
