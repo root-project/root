@@ -1458,12 +1458,9 @@ void TMVA::MethodBase::WriteStateToXML( void* parent ) const
 
 void TMVA::MethodBase::ReadStateFromStream( TFile& rf )
 {
-   Bool_t addDirStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory( 0 ); // this avoids the binding of the hists in PDF to the current ROOT file
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
    fMVAPdfS = (TMVA::PDF*)rf.Get( "MVA_PDF_Signal" );
    fMVAPdfB = (TMVA::PDF*)rf.Get( "MVA_PDF_Background" );
-
-   TH1::AddDirectory( addDirStatus );
 
    ReadWeightsFromStream( rf );
 

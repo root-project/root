@@ -288,8 +288,7 @@ void TMVA::PDEFoam::SetXmax(Int_t idim, Double_t wmax)
 
 void TMVA::PDEFoam::Create()
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
 
    if(fPseRan==0) Log() << kFATAL << "Random number generator not set" << Endl;
    if(fDistr==0)  Log() << kFATAL << "Distribution function not set" << Endl;
@@ -339,8 +338,6 @@ void TMVA::PDEFoam::Create()
    // Define and explore root cell(s)
    InitCells();
    Grow();
-
-   TH1::AddDirectory(addStatus);
 
    // prepare PDEFoam for the filling with events
    ResetCellElements(); // reset all cell elements
