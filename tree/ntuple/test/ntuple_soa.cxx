@@ -1,6 +1,9 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldUtils.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/TestSupport.hxx>
 
 #include "SoAField.hxx"
@@ -108,4 +111,30 @@ TEST(RNTuple, SoACheck)
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA is a SoA field and connot be used through RClassField"));
    }
+}
+
+TEST(RNTuple, SoADescriptor)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_descriptor.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto f1 = std::make_unique<RSoAField>("f1", "SoA");
+      EXPECT_TRUE(f1->GetTraits() & ROOT::RFieldBase::kTraitSoACollection);
+      model->AddField(std::move(f1));
+      auto f2 = ROOT::RFieldBase::Create("f2", "SoA").Unwrap();
+      EXPECT_TRUE(f2->GetTraits() & ROOT::RFieldBase::kTraitSoACollection);
+      model->AddField(std::move(f2));
+      model->MakeField<std::vector<Record>>("f3");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_TRUE(desc.GetFieldDescriptor(desc.FindFieldId("f1")).IsSoACollection());
+   EXPECT_EQ(ROOT::ENTupleStructure::kCollection, desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetStructure());
+   EXPECT_TRUE(desc.GetFieldDescriptor(desc.FindFieldId("f2")).IsSoACollection());
+   EXPECT_EQ(ROOT::ENTupleStructure::kCollection, desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetStructure());
+   EXPECT_FALSE(desc.GetFieldDescriptor(desc.FindFieldId("f3")).IsSoACollection());
+   EXPECT_EQ(ROOT::ENTupleStructure::kCollection, desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetStructure());
 }
