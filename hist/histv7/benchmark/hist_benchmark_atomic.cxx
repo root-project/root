@@ -182,4 +182,14 @@ BENCHMARK_DEFINE_F(RBinWithError, AtomicAdd)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RBinWithError, AtomicAdd);
 
+BENCHMARK_DEFINE_F(RBinWithError, AtomicLoad)(benchmark::State &state)
+{
+   ROOT::Experimental::RBinWithError load;
+   for (auto _ : state) {
+      fBin.AtomicLoad(&load);
+      benchmark::DoNotOptimize(load);
+   }
+}
+BENCHMARK_REGISTER_F(RBinWithError, AtomicLoad);
+
 BENCHMARK_MAIN();
