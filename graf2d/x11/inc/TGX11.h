@@ -231,6 +231,7 @@ public:
    void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
    void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
    void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   void      ClearWindowW(WinContext_t wctxt) override;
 
    void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
    void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;

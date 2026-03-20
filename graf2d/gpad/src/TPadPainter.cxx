@@ -393,9 +393,8 @@ Bool_t TPadPainter::IsSupportAlpha() const
 
 void TPadPainter::ClearDrawable()
 {
-   gVirtualX->ClearWindow();
+   gVirtualX->ClearWindowW(fWinContext);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a gVirtualX pixmap.

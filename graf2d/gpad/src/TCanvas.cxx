@@ -610,14 +610,13 @@ void TCanvas::Build()
    } else {
       //normal mode with a screen window
       // Set default physical canvas attributes
-      //Should be done via gVirtualX, not via fPainter (at least now). No changes here.
-      gVirtualX->SelectWindow(fCanvasID);
-      gVirtualX->SetFillColor(1);         //Set color index for fill area
-      gVirtualX->SetLineColor(1);         //Set color index for lines
-      gVirtualX->SetMarkerColor(1);       //Set color index for markers
-      gVirtualX->SetTextColor(1);         //Set color index for text
+      fPainter->SelectDrawable(fCanvasID);
+      fPainter->SetAttFill({1, 1001});    //Set color index for fill area
+      fPainter->SetAttLine({1, 1, 1});    //Set color index for lines
+      fPainter->SetAttMarker({1, 1, 1});  //Set color index for markers
+      fPainter->SetAttText({22, 0., 1, 42, 12}); //Set color index for text
       // Clear workstation
-      gVirtualX->ClearWindow();
+      fPainter->ClearDrawable();
 
       // Set Double Buffer on by default
       SetDoubleBuffer(1);
