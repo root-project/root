@@ -171,7 +171,7 @@ Histograms may also be created by:
   -  making a projection from a 2-D or 3-D histogram, see below
   -  reading a histogram from a file
 
- When a histogram is created, a reference to it is automatically added
+ When a histogram is created in ROOT 6, a reference to it is automatically added
  to the list of in-memory objects for the current file or directory.
  Then the pointer to this histogram in the current directory can be found
  by its name, doing:
@@ -181,13 +181,17 @@ Histograms may also be created by:
 
  This default behaviour can be changed by:
 ~~~ {.cpp}
-       h->SetDirectory(nullptr);          // for the current histogram h
-       TH1::AddDirectory(kFALSE);   // sets a global switch disabling the referencing
+       h->SetDirectory(nullptr);    // for one histogram h
+       TH1::AddDirectory(kFALSE);   // deprecated, see below
 ~~~
  When the histogram is deleted, the reference to it is removed from
  the list of objects in memory.
  When a file is closed, all histograms in memory associated with this file
  are automatically deleted.
+
+In ROOT 7, this auto registration will be phased out. This mode can be tested in ROOT 6 using
+ROOT::Experimental::DisableObjectAutoRegistration(). To opt in to the ROOT-6-style registration
+in ROOT 7, use ROOT::Experimental::EnableObjectAutoRegistration().
 
 \anchor labelling-axis
 ### Labelling axes
@@ -752,7 +756,10 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: cannot be inlined on Windows/NT.
+/// Check whether TH1-derived classes should register themselves to the current gDirectory.
+/// \note Even if this returns true, the state of
+/// ROOT::Experimental::ObjectAutoRegistrationEnabled() might prevent the registration of
+/// histograms, since it has higher precedence.
 
 Bool_t TH1::AddDirectoryStatus()
 {
@@ -800,7 +807,7 @@ void TH1::Build()
 
    UseCurrentStyle();
 
-   if (TH1::AddDirectoryStatus()) {
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
          fFunctions->UseRWLock();
@@ -1285,16 +1292,19 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the flag controlling the automatic add of histograms in memory
+/// Sets the flag controlling the automatic add of histograms in memory.
 ///
 /// By default (fAddDirectory = kTRUE), histograms are automatically added
-/// to the list of objects in memory.
+/// to the current directory (gDirectory).
 /// Note that one histogram can be removed from its support directory
 /// by calling h->SetDirectory(nullptr) or h->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
-/// NOTE that this is a static function. To call it, use;
-/// TH1::AddDirectory
+/// This is a static function. To call it, use `TH1::AddDirectory`
+///
+/// \deprecated Use ROOT::Experimental::ObjectAutoRegistrationEnabled(). It can be
+/// set using an entry in rootrc or an environment variable, is initialised in a
+/// thread-safe manner and covers more cases.
 
 void TH1::AddDirectory(Bool_t add)
 {
@@ -2760,7 +2770,7 @@ void TH1::Copy(TObject &obj) const
    // will be added to gDirectory independently of the fDirectory stored.
    // and if the AddDirectoryStatus() is false it will not be added to
    // any directory (fDirectory = nullptr)
-   if (fgAddDirectory && gDirectory) {
+   if (ROOT::Experimental::ObjectAutoRegistrationEnabled() && AddDirectoryStatus() && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
