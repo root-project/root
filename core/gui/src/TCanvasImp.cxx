@@ -46,3 +46,11 @@ void TCanvasImp::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
    gVirtualX->GetGeometry(wid, x, y, w, h);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Resize canvas window, redirect to gVirtualX
+
+void TCanvasImp::ResizeCanvasWindow(Int_t wid)
+{
+   if (gVirtualX)
+      gVirtualX->ResizeWindow(wid);   //resize canvas and off-screen buffer
+}
