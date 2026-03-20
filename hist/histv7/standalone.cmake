@@ -13,8 +13,8 @@ target_include_directories(ROOTHist INTERFACE
 target_compile_features(ROOTHist INTERFACE cxx_std_17)
 
 # Install header files manually: PUBLIC_HEADER has the disadvantage that CMake
-# flattens the directory structure on install, and FILE_SETs are only available
-# with CMake v3.23.
+# flattens the directory structure on install
+# TO-DO: use FILE_SETs instead
 install(FILES ${histv7_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT)
 
 include(CTest)
