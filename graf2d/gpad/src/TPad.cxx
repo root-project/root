@@ -1148,10 +1148,9 @@ void TPad::CopyPixmap()
    int px, py;
    XYtoAbsPixel(fX1, fY2, px, py);
 
-   if (fPixmapID != -1 && GetPainter())
-      GetPainter()->CopyDrawable(fPixmapID, px, py);
-
-   if (this == gPad) HighLight(gPad->GetHighLightColor());
+   if (fPixmapID != -1)
+      if (auto pp = GetPainter())
+         pp->CopyDrawable(fPixmapID, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1159,14 +1158,18 @@ void TPad::CopyPixmap()
 
 void TPad::CopyPixmaps()
 {
-   if (!fPrimitives) fPrimitives = new TList;
-   TIter    next(GetListOfPrimitives());
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   TIter next(GetListOfPrimitives());
    while (auto obj = next()) {
-      if (obj->InheritsFrom(TPad::Class())) {
-         ((TPad*)obj)->CopyPixmap();
-         ((TPad*)obj)->CopyPixmaps();
+      if (auto pad = dynamic_cast<TPad*>(obj)) {
+         pad->CopyPixmap();
+         pad->CopyPixmaps();
       }
    }
+
+   if (this == gPad)
+      HighLight(GetHighLightColor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
