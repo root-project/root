@@ -1755,44 +1755,58 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
 void TPad::DrawCrosshair()
 {
-   if (!gPad || (gPad->GetEvent() == kMouseEnter)) return;
+   if (!gPad || (gPad->GetEvent() == kMouseEnter))
+      return;
 
    TPad *cpad = (TPad*)gPad;
    TCanvas *canvas = cpad->GetCanvas();
+   // switch off double buffer and select canvas drawable
    canvas->FeedbackMode(kTRUE);
 
+   auto pp = GetPainter();
+
    //erase old position and draw a line at current position
-   Int_t pxmin,pxmax,pymin,pymax,px,py;
-#ifndef R__HAS_COCOA
-   Int_t pxold = fCrosshairPos%10000;
-   Int_t pyold = fCrosshairPos/10000;
-#endif // R__HAS_COCOA
-   px    = cpad->GetEventX();
-   py    = cpad->GetEventY()+1;
+   Double_t umin, umax, vmin, vmax, u, v;
+   Int_t px    = cpad->GetEventX();
+   Int_t py    = cpad->GetEventY() + 1;
    if (canvas->GetCrosshair() > 1) {  //crosshair only in the current pad
-      pxmin = cpad->XtoAbsPixel(fX1);
-      pxmax = cpad->XtoAbsPixel(fX2);
-      pymin = cpad->YtoAbsPixel(fY1);
-      pymax = cpad->YtoAbsPixel(fY2);
+      umin = GetAbsXlowNDC();
+      umax = GetAbsXlowNDC() + GetAbsWNDC();
+      vmin = GetAbsYlowNDC();
+      vmax = GetAbsYlowNDC() + GetAbsHNDC();
    } else { //default; crosshair spans the full canvas
-      pxmin = 0;
-      pxmax = canvas->GetWw();
-      pymin = 0;
-      pymax = cpad->GetWh();
+      umin = 0;
+      umax = 1;
+      vmin = 0;
+      vmax = 1;
    }
-#ifndef R__HAS_COCOA
-   // Not needed, no XOR with Cocoa.
-   if(pxold) gVirtualX->DrawLine(pxold,pymin,pxold,pymax);
-   if(pyold) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
-#endif // R__HAS_COCOA
+
+   TContext ctxt(canvas);
+
+   pp->SetAttLine({1,1,1});
+
+   if ((fCrosshairPos != 0) && !pp->IsCocoa()) {
+      // xor does not supported on Cocoa, implemented differently
+      Int_t pxold = fCrosshairPos % 10000;
+      Int_t pyold = fCrosshairPos / 10000;
+      u = 1. * pxold / canvas->GetWw();
+      v = 1. - 1. * pyold / canvas->GetWh();
+      pp->DrawLineNDC(umin, v, umax, v);
+      pp->DrawLineNDC(u, vmin, u, vmax);
+   }
+
    if (cpad->GetEvent() == kButton1Down ||
        cpad->GetEvent() == kButton1Up   ||
        cpad->GetEvent() == kMouseLeave) {
       fCrosshairPos = 0;
       return;
    }
-   gVirtualX->DrawLine(px,pymin,px,pymax);
-   gVirtualX->DrawLine(pxmin,py,pxmax,py);
+
+   u = 1. * px / canvas->GetWw();
+   v = 1. - 1. * py / canvas->GetWh();
+   pp->DrawLineNDC(umin, v, umax, v);
+   pp->DrawLineNDC(u, vmin, u, vmax);
+
    fCrosshairPos = px + 10000*py;
 }
 
