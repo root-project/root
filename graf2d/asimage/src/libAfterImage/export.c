@@ -19,11 +19,6 @@
  */
 
 #undef LOCAL_DEBUG
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
 
 #ifdef HAVE_PNG
 /* Include file for users of png library. */
@@ -69,11 +64,7 @@
 #include <ctype.h>
 /* <setjmp.h> is used for the optional error recovery mechanism */
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 
 #ifdef HAVE_GIF
 # include <gif_lib.h>
@@ -1222,17 +1213,17 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 	TIFF *out;
 	static const ASTiffExportParams defaultsTiff = { ASIT_Tiff, 0, (CARD32)-1, TIFF_COMPRESSION_NONE, 100, 0 };
         ASImageExportParams defaults;
-	uint16 photometric = PHOTOMETRIC_RGB;
-	tsize_t linebytes, scanline;
-	ASImageDecoder *imdec ;
-	CARD32 *r, *g, *b, *a ;
-	unsigned char* buf;
-	CARD32  row ;
-	Bool has_alpha ;
-	int nsamples = 3 ;
-	START_TIME(started);
+        uint16_t photometric = PHOTOMETRIC_RGB;
+        tsize_t linebytes, scanline;
+        ASImageDecoder *imdec;
+        CARD32 *r, *g, *b, *a;
+        unsigned char *buf;
+        CARD32 row;
+        Bool has_alpha;
+        int nsamples = 3;
+        START_TIME(started);
 
-	if( params == NULL ) {
+        if (params == NULL) {
            defaults.type = defaultsTiff.type;
            defaults.tiff = defaultsTiff;
            params = &defaults ;
@@ -1268,15 +1259,15 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 		return False;
 	}
 
-	TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32) im->width);
-	TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32) im->height);
-	TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+   TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (uint32_t)im->width);
+   TIFFSetField(out, TIFFTAG_IMAGELENGTH, (uint32_t)im->height);
+   TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
 	TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, nsamples);
 	if (has_alpha)
 	{
-	    uint16 v[1];
-	    v[0] = EXTRASAMPLE_UNASSALPHA;
-	    TIFFSetField(out, TIFFTAG_EXTRASAMPLES, 1, v);
+      uint16_t v[1];
+      v[0] = EXTRASAMPLE_UNASSALPHA;
+      TIFFSetField(out, TIFFTAG_EXTRASAMPLES, 1, v);
 	}
 
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,   8);

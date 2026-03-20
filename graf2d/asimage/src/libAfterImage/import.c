@@ -27,12 +27,6 @@
 #undef DO_CLOCKING
 #undef DEBUG_TRANSP_GIF
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 #ifdef HAVE_PNG
 /* Include file for users of png library. */
 #include <png.h>
@@ -79,11 +73,7 @@
 #ifdef const
 #undef const
 #endif
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 #ifdef HAVE_GIF
 # include <gif_lib.h>
 #endif
@@ -2172,8 +2162,8 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 					if ( 1/* striped image */)
 					{
 						int strip_no;
-						uint32* bc;
-						TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
+                  uint32_t *bc;
+                  TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
 						int all_strip_size = 0;
 						for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); ++strip_no)
 							all_strip_size += bc[strip_no];

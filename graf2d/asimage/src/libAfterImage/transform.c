@@ -23,11 +23,6 @@
 #define USE_64BIT_FPU
 #undef NEED_RBITSHIFT_FUNCS
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
 //#undef HAVE_MMX
 
 #ifdef DO_CLOCKING
@@ -58,11 +53,7 @@
 #include <mmintrin.h>
 #endif
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
 #include "asvisual.h"
 #include "blender.h"
 #include "asimage.h"

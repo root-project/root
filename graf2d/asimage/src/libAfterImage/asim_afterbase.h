@@ -17,7 +17,28 @@
 #  include <time.h>
 # endif
 #endif
-   
+
+/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+#ifndef __CHAR_UNSIGNED__
+/* # undef __CHAR_UNSIGNED__ */
+#endif
+
+#ifdef _WIN32
+typedef unsigned char boolean;
+/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+    if it is not supported. */
+#define inline
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+#else
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+/* #undef inline */
+#endif
+/* Define to empty if `const' does not conform to ANSI C. */
+/* #undef const */
+#endif
 
 /* our own version of X Wrapper : */
 #include "xwrap.h"

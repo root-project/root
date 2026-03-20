@@ -23,15 +23,12 @@
 #undef DEBUG_TRANSP_GIF
 
 #ifdef _WIN32
-# include "win32/config.h"
 # include <windows.h>
-# include "win32/afterbase.h"
 #else
-# include "config.h"
 # include <string.h>
-# include "afterbase.h"
 #endif
 
+#include "afterbase.h"
 #include "asimage.h"
 #include "imencdec.h"
 #include "import.h"

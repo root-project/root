@@ -27,12 +27,6 @@
 #endif
 #define DO_CLOCKING
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -51,18 +45,9 @@
 #endif
 #include <memory.h>
 
-#ifndef HAVE_ZLIB_H
-#include "zlib/zlib.h"
-#else
 #include <zlib.h>
-#endif
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
-
 #include "asstorage.h"
 
 /* default storage : */

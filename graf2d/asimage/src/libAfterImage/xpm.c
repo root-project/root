@@ -22,11 +22,8 @@
 #undef DO_CLOCKING
 
 #ifdef _WIN32
-#include "win32/config.h"
 #include <io.h>
 #define read _read
-#else
-#include "config.h"
 #endif
 
 #ifdef HAVE_XPM
@@ -66,11 +63,7 @@
 #endif
 #endif
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 #include "asimage.h"
 #include "ascmap.h"
 #include "xpm.h"

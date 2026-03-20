@@ -15,11 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -66,11 +61,9 @@
 #ifdef _WIN32
 #include <io.h>
 #include <windows.h>
-#include "win32/afterbase.h"
 #define access _access
-#else
-#include "afterbase.h"
 #endif
+#include "afterbase.h"
 #include "asimage.h"
 
 #ifdef X_DISPLAY_MISSING

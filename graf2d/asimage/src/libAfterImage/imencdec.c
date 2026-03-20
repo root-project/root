@@ -25,12 +25,6 @@
 #undef DEBUG_RECTS2
 #endif
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 #include <string.h>
 #ifdef DO_CLOCKING
 #if TIME_WITH_SYS_TIME
@@ -58,11 +52,7 @@
 #include <mmintrin.h>
 #endif
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 #include "asvisual.h"
 #include "blender.h"
 #include "asimage.h"

@@ -107,9 +107,8 @@ ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 #endif
 #   include <afterbase.h>
 #else
-#   include <win32/config.h>
-#   include <win32/afterbase.h>
 #   define X_DISPLAY_MISSING 1
+#   include <afterbase.h>
 #endif
 #   include <afterimage.h>
 #   include <bmp.h>
