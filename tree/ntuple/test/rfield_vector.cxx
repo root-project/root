@@ -341,63 +341,14 @@ void FillComplexVector(const std::string &fname)
    ntuple->Fill();
 }
 
-// Note: RVec and std::vector differ in the number of construction/destruction calls when reading through
-// a file. The reason is that we can control the memory re-allocation prodedure for RVec, which allows
-// us to save destruction/construction calls.
-
-TEST(RNTuple, ComplexVector)
+template <template <typename> class Coll_t>
+void TestComplexVector(const std::string &fname)
 {
-   FileRaii fileGuard("test_ntuple_vec_complex.root");
-   FillComplexVector<Vector_t>(fileGuard.GetPath());
-
    ComplexStruct::SetNCallConstructor(0);
    ComplexStruct::SetNCallDestructor(0);
    {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<ComplexStruct>>("v");
-
-      ntuple->LoadEntry(0);
-      EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_TRUE(rdV->empty());
-      ntuple->LoadEntry(1);
-      EXPECT_EQ(10, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10u, rdV->size());
-      ntuple->LoadEntry(2);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(10000u, rdV->size());
-      ntuple->LoadEntry(3);
-      EXPECT_EQ(10010, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(9910, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(100u, rdV->size());
-      ntuple->LoadEntry(4);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10010, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(200u, rdV->size());
-      ntuple->LoadEntry(5);
-      EXPECT_EQ(10210, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(0u, rdV->size());
-      ntuple->LoadEntry(6);
-      EXPECT_EQ(10211, ComplexStruct::GetNCallConstructor());
-      EXPECT_EQ(10210, ComplexStruct::GetNCallDestructor());
-      EXPECT_EQ(1u, rdV->size());
-   }
-   EXPECT_EQ(10211u, ComplexStruct::GetNCallDestructor());
-}
-
-TEST(RNTuple, ComplexRVec)
-{
-   FileRaii fileGuard("test_ntuple_rvec_complex.root");
-   FillComplexVector<ROOT::RVec>(fileGuard.GetPath());
-
-   ComplexStruct::SetNCallConstructor(0);
-   ComplexStruct::SetNCallDestructor(0);
-   {
-      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<ComplexStruct>>("v");
+      auto ntuple = RNTupleReader::Open("T", fname);
+      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<Coll_t<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -429,6 +380,20 @@ TEST(RNTuple, ComplexRVec)
       EXPECT_EQ(1u, rdV->size());
    }
    EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, ComplexVector)
+{
+   FileRaii fileGuard("test_ntuple_vec_complex.root");
+   FillComplexVector<Vector_t>(fileGuard.GetPath());
+   TestComplexVector<Vector_t>(fileGuard.GetPath());
+}
+
+TEST(RNTuple, ComplexRVec)
+{
+   FileRaii fileGuard("test_ntuple_rvec_complex.root");
+   FillComplexVector<ROOT::RVec>(fileGuard.GetPath());
+   TestComplexVector<ROOT::RVec>(fileGuard.GetPath());
 }
 
 TEST(RNTuple, VectorOfString)

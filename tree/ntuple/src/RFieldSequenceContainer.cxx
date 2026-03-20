@@ -615,7 +615,8 @@ void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
    R__ASSERT(itemSize > 0);
    const auto oldNItems = typedValue->size() / itemSize;
-   const bool canRealloc = oldNItems < nItems;
+   const auto availNItems = typedValue->capacity() / itemSize;
+   const bool canRealloc = availNItems < nItems;
    bool allDeallocated = false;
    if (itemDeleter) {
       allDeallocated = canRealloc;
