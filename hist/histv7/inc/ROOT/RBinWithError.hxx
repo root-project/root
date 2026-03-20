@@ -8,6 +8,7 @@
 #include "RHistUtils.hxx"
 
 #include <cmath>
+#include <cstring>
 
 namespace ROOT {
 namespace Experimental {
@@ -100,6 +101,32 @@ public:
    ///
    /// \param[in] rhs another bin content that must not be modified during the operation
    void AtomicAdd(const RBinWithError &rhs) { AtomicAdd(rhs.fSum, rhs.fSum2); }
+
+   void AtomicLoad(RBinWithError *ret) const
+   {
+      double origSum2;
+      Internal::AtomicLoad(&fSum2, &origSum2);
+
+      while (true) {
+         // Repeat loads from memory until we see a non-negative value.
+         // NB: do not use origSum2 < 0, it does not work for -0.0!
+         while (std::signbit(origSum2)) {
+            Internal::AtomicLoad(&fSum2, &origSum2);
+         }
+
+         Internal::AtomicLoad(&fSum, &ret->fSum);
+         Internal::AtomicLoad(&fSum2, &ret->fSum2);
+
+         // Check if the value of fSum2 is still identical to the first load.
+         // NB: do not use origSum2 == ret->fSum2, it is problematic because 0.0 == -0.0!
+         if (!std::memcmp(&origSum2, &ret->fSum2, sizeof(origSum2))) {
+            return;
+         }
+
+         // The comparison failed, an update happened or is in progress.
+         origSum2 = ret->fSum2;
+      }
+   }
 };
 
 } // namespace Experimental

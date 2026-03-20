@@ -1,5 +1,6 @@
 #include "hist_test.hxx"
 
+#include <atomic>
 #include <cstddef>
 
 #ifndef TYPED_TEST_SUITE
@@ -80,4 +81,49 @@ TEST(RBinWithError, StressAtomicAdd)
 
    EXPECT_EQ(bin.fSum, NAdds * Addend);
    EXPECT_EQ(bin.fSum2, NAdds * Addend * Addend);
+}
+
+TEST(RBinWithError, AtomicLoad)
+{
+   RBinWithError bin;
+   bin.fSum = 1;
+   bin.fSum2 = 2;
+
+   RBinWithError load;
+   bin.AtomicLoad(&load);
+   EXPECT_EQ(load.fSum, 1);
+   EXPECT_EQ(load.fSum2, 2);
+}
+
+TEST(RBinWithError, StressAtomicLoad)
+{
+   static constexpr double Addend = 2.0;
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 8000;
+   static constexpr std::size_t NLoads = 8000;
+
+   RBinWithError bin;
+   double sum = 0, sum2 = 0;
+
+   std::atomic_flag loader;
+   StressInParallel(NThreads, [&] {
+      if (!loader.test_and_set()) {
+         RBinWithError load;
+         for (std::size_t i = 0; i < NLoads; i++) {
+            bin.AtomicLoad(&load);
+            if (load.fSum * Addend != load.fSum2) {
+               // Failure! Store the values and stop the loader.
+               sum = load.fSum;
+               sum2 = load.fSum2;
+               return;
+            }
+         }
+      } else {
+         for (std::size_t i = 0; i < NAddsPerThread; i++) {
+            bin.AtomicAdd(Addend);
+         }
+      }
+   });
+
+   EXPECT_EQ(sum * Addend, sum2);
 }
