@@ -206,6 +206,10 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
 {
    EnsureValidUserClass(fClass, *this, "RClassField");
 
+   if (!ROOT::Internal::GetRNTupleSoARecord(fClass).empty()) {
+      throw ROOT::RException(R__FAIL(GetTypeName() + " is a SoA field and connot be used through RClassField"));
+   }
+
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
    if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
