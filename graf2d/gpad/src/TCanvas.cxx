@@ -836,7 +836,7 @@ void TCanvas::Close(Option_t *option)
 void TCanvas::CopyPixmaps()
 {
    if (!IsBatch()) {
-      CopyPixmap();
+      TPad::CopyPixmap();
       TPad::CopyPixmaps();
    }
 }
