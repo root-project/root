@@ -125,6 +125,8 @@ public:
 
    void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
 
+   Bool_t   IsSupportAlpha() const override { return kTRUE; }
+
 private:
    //Let's make this clear:
    TWebPadPainter(const TWebPadPainter &rhs) = delete;

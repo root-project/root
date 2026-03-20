@@ -129,6 +129,7 @@ public:
 
    Bool_t   IsCocoa() const override;
 
+   Bool_t   IsSupportAlpha() const override;
 
 private:
    //Let's make this clear:

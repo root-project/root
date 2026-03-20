@@ -2474,8 +2474,10 @@ void TCanvas::ToggleToolTips()
 
 Bool_t TCanvas::SupportAlpha()
 {
-   return gPad && (gVirtualX->InheritsFrom("TGQuartz") ||
-                   (gPad->GetGLDevice() != -1) || (gPad->GetCanvas() && gPad->GetCanvas()->IsWeb()));
+   if (gPad)
+      if (auto pp = gPad->GetPainter())
+         return pp->IsSupportAlpha();
+   return kFALSE;
 }
 
 extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {

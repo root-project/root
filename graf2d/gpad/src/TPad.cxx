@@ -2544,8 +2544,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
-            if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
-            else                                        zoomcolor->SetAlpha(0.5);
+            if (!pp->IsSupportAlpha() || !zoomcolor)
+               zoombox->SetFillStyle(3002);
+            else
+               zoomcolor->SetAlpha(0.5);
             zoombox->SetFillColor(ci);
             zoombox->Draw();
             gPad->Modified();

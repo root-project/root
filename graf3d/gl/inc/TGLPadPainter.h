@@ -139,6 +139,8 @@ public:
 
    Bool_t   IsCocoa() const override;
 
+   Bool_t   IsSupportAlpha() const override { return kTRUE; }
+
 private:
 
    //Attention! GL_PROJECTION will become
