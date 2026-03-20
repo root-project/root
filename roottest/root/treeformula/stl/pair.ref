@@ -20,7 +20,7 @@ Warning in <TClass::Init>: no dictionary for class edm::Wrapper<vector<edmreftes
 Warning in <TClass::Init>: no dictionary for class edm::Provenance is available
 Warning in <TClass::Init>: no dictionary for class edm::EventProvenance is available
 **************************************
-*    Row   * Instance * ProductDescr *
+*    Row   * Instance * ProductDe... *
 **************************************
 *        0 *        0 *   OtherThing *
 *        0 *        1 *        Thing *

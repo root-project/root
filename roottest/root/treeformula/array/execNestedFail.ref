@@ -4,15 +4,15 @@ Error in <TTreeFormula::Compile>:  Bad numerical expression : "values[do_not_exi
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "do_not_exist"
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "values[do_not_exist]"
 Error in <TTreeFormula::Compile>:  Bad numerical expression : "do_not_exist"
-************************
-*    Row   * values[do *
-************************
-*        0 *           *
-*        1 *           *
-************************
-************************
-*    Row   * values[0] *
-************************
-*        0 *           *
-*        1 *           *
-************************
+***********************************
+*    Row   * values[do_not_exist] *
+***********************************
+*        0 *                      *
+*        1 *                      *
+***********************************
+***********************************
+*    Row   * values[0] + do_no... *
+***********************************
+*        0 *                      *
+*        1 *                      *
+***********************************
