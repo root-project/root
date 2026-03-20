@@ -549,8 +549,7 @@ void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
 
 void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& istr, const TString& classname)
 {
-   Bool_t addDirStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
+   TDirectory::TContext dirCtx{nullptr}; // Don't register histograms to current directory
    char buf[512];
    istr.getline(buf,512);
 
@@ -615,7 +614,6 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
 
       istr.getline(buf,512); // reading the next line
    }
-   TH1::AddDirectory(addDirStatus);
 
    UInt_t classIdx=(classname=="signal")?0:1;
    for(UInt_t ivar=0; ivar<fCumulativePDF.size(); ++ivar) {
