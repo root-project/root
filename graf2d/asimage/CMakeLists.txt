@@ -9,6 +9,8 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+add_subdirectory(src/libAfterImage)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
   NO_INSTALL_HEADERS
   HEADERS
@@ -23,7 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    ${AFTERIMAGE_LIBRARIES}
+    libAfterImage
     ${ASEXTRA_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${X11_LIBRARIES}
@@ -32,12 +34,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     Core
     Graf
     Postscript
-  BUILTINS
-    AFTERIMAGE
 )
 
-target_include_directories(ASImage SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
-target_link_libraries(ASImage PRIVATE JPEG::JPEG PNG::PNG GIF::GIF)
+target_link_libraries(ASImage PRIVATE JPEG::JPEG PNG::PNG GIF::GIF libAfterImage Freetype::Freetype)
+if (x11)
+  target_link_libraries(ASImage PRIVATE X11::X11)
+endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
   NO_INSTALL_HEADERS
@@ -50,7 +52,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    ${AFTERIMAGE_LIBRARIES}
+    libAfterImage
     ${ASEXTRA_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${X11_LIBRARIES}
@@ -60,7 +62,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
     ASImage
 )
 
-target_include_directories(ASImageGui SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
-target_link_libraries(ASImageGui PRIVATE JPEG::JPEG PNG::PNG GIF::GIF)
+target_link_libraries(ASImageGui PRIVATE JPEG::JPEG PNG::PNG GIF::GIF libAfterImage Freetype::Freetype)
+if (x11)
+  target_link_libraries(ASImageGui PRIVATE X11::X11)
+endif()
 
 ROOT_INSTALL_HEADERS()

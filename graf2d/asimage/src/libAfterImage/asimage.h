@@ -534,8 +534,6 @@ extern Bool asimage_use_mmx ;
  * im				- pointer to valid ASImage structure.
  * NOTES
  * If there was XImage attached to it - it will be deallocated as well.
- * EXAMPLE
- * asview.c: ASView.5
  *********/
 /****f* libAfterImage/asimage/asimage_replace()
  * NAME

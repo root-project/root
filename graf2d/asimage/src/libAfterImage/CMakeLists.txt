@@ -1,55 +1,161 @@
 # libAferImage CMakeLists.txt
+project(AFTERIMAGE)
+cmake_minimum_required(VERSION 3.21)
 
-PROJECT(AFTERIMAGE)
+set(LIB_NAME libAfterImage)
+
+set(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
+
+set(H_FILES
+    afterbase.h
+    afterrootpngwrite.h
+    asfont.h
+    asimage.h
+    asvisual.h
+    bmp.h
+    colornames.h
+    export.h
+    import.h
+    transform.h
+    xcf.h
+    xpm.h
+    afterimage.h
+    ascmap.h
+    asim_afterbase.h
+    asstorage.h
+    blender.h
+    char2uni.h
+    draw.h
+    imencdec.h
+    scanline.h
+    ungif.h
+    ximage.h
+    xwrap.h)
+
+set(SRC_FILES
+    afterbase.c
+    ascmap.c
+    asfont.c
+    asimage.c
+    asstorage.c
+    asvisual.c
+    blender.c
+    bmp.c
+    char2uni.c
+    export.c
+    import.c
+    transform.c
+    ungif.c
+    xcf.c
+    ximage.c
+    xpm.c
+    draw.c
+    imencdec.c
+    scanline.c
+    afterrootpngwrite.c)
+
+add_library(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
+set_property(TARGET ${LIB_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(TARGET BUILTIN_LIBGIF)
+  add_dependencies(${LIB_NAME} BUILTIN_LIBGIF)
+endif()
+if(TARGET BUILTIN_LIBJPEG)
+  add_dependencies(${LIB_NAME} BUILTIN_LIBJPEG)
+endif()
+if(TARGET BUILTIN_LIBPNG)
+  add_dependencies(${LIB_NAME} BUILTIN_LIBPNG)
+endif()
+if(TARGET BUILTIN_FREETYPE)
+  add_dependencies(${LIB_NAME} BUILTIN_FREETYPE)
+endif()
+
+target_include_directories(${LIB_NAME} PUBLIC ./)
+target_link_libraries(
+  ${LIB_NAME} PRIVATE ${ASEXTRA_LIBRARIES} Freetype::Freetype ZLIB::ZLIB)
+if(TARGET X11::X11)
+target_link_libraries(
+  ${LIB_NAME} PRIVATE X11::X11)
+endif()
+
+include(CheckIncludeFiles)
+
+target_compile_definitions(
+  ${LIB_NAME}
+  PRIVATE HAVE_ERRNO_H
+          HAVE_FREETYPE
+          HAVE_FREETYPE_FREETYPE
+          HAVE_FT2BUILD_H
+          HAVE_INTTYPES_H
+          HAVE_MEMORY_H
+          HAVE_PROTOTYPES
+          HAVE_STDARG_H
+          HAVE_STDDEF_H
+          HAVE_STRING_H
+          HAVE_SYS_STAT_H
+          HAVE_SYS_TYPES_H
+          HAVE_SYS_WAIT_H
+          HAVE_XPM
+          HAVE_ZLIB_H
+          NO_DEBUG_OUTPUT)
+
+check_include_files(malloc.h PROJECT_HAVE_MALLOC)
+if (PROJECT_HAVE_MALLOC)
+  target_compile_definitions(
+    ${LIB_NAME}
+    PRIVATE HAVE_MALLOC_H)
+endif()
+
+if(TARGET JPEG::JPEG)
+  target_compile_definitions(${LIB_NAME} PRIVATE HAVE_JPEG)
+endif()
+if(TARGET PNG::PNG)
+  target_compile_definitions(${LIB_NAME} PRIVATE HAVE_PNG)
+endif()
+if(TARGET GIF::GIF)
+  target_compile_definitions(${LIB_NAME} PRIVATE HAVE_GIF) #
+endif()
+if(TARGET TIFF::TIFF)
+  target_compile_definitions(${LIB_NAME} PRIVATE HAVE_TIFF) # asimage_tiff
+endif()
+
 if(WIN32)
-  # required for the following feature & bug fix:
-  # 3.15: Added $<REMOVE_DUPLICATES:list> generator expression
-  # 3.16: Bug fix with CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS: the auto-generated exports
-  #       are now updated only when the object files providing the symbols are updated
-  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-  # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
-  # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
-  cmake_policy(SET CMP0091 OLD)
+  # Microsoft Visual Studio:
+  if(MSVC)
+    # Define
+    target_compile_definitions(${LIB_NAME} PRIVATE _CRT_SECURE_NO_DEPRECATE
+                                                   _MBCS _LIB)
+    target_compile_options(${LIB_NAME} PRIVATE /wd4996 /wd4267 /wd4018 /wd4244)
+
+  endif()
+  target_compile_definitions(
+    ${LIB_NAME}
+    PRIVATE NO_DOUBLE_FCLOSE_AFTER_FDOPEN X_DISPLAY_MISSING 
+            HAVE_UNSIGNED_CHAR HAVE_UNSIGNED_SHORT HAVE_BOOLEAN)
 else()
-  cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+  target_compile_definitions(
+    ${LIB_NAME}
+    PRIVATE HAVE_SYS_TIME_H
+            HAVE_DIRENT_H
+            HAVE_LONG_LONG
+            HAVE_STDINT_H
+            HAVE_STDLIB_H
+            HAVE_UNISTD_H
+            HAVE_STRINGS_H
+            SHAPE
+            STDC_HEADERS
+            TIME_WITH_SYS_TIME)
+  check_include_files(mmintrin.h PROJECT_HAVE_SSE2_INTRINSICS)
+  if (PROJECT_HAVE_SSE2_INTRINSICS)
+    target_compile_definitions(
+      ${LIB_NAME}
+      PRIVATE HAVE_MMX)
+  endif()
+  if(NOT TARGET X11::X11)
+    target_compile_definitions(
+      ${LIB_NAME} PRIVATE X_DISPLAY_MISSING)
+  endif()
+  
 endif()
-
-SET(LIB_NAME libAfterImage)
-
-# Microsoft Visual Studio:
-IF(MSVC)
-  # Define
-  ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /DNO_DEBUG_OUTPUT /D_MBCS /D_LIB /wd4996 /wd4267 /wd4018 /wd4244")
-ENDIF()
-
-set(FREETYPE_INCLUDE_DIR "" CACHE PATH "Path to Freetype include dir")
-set(ZLIB_INCLUDE_DIR "" CACHE PATH "Path to zlib include dir")
-
-if(NOT EXISTS "${FREETYPE_INCLUDE_DIR}/ft2build.h")
-  message(SEND_ERROR "Can't find ft2build.h in ${FREETYPE_INCLUDE_DIR}")
-endif()
-
-if(NOT EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h")
-  message(SEND_ERROR "Can't find zlib.h in ${ZLIB_INCLUDE_DIR}")
-endif()
-
-INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIR} ${GIF_INCLUDE_DIR})
-
-set (LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
-
-FILE(GLOB H_FILES "*.h")
-
-SET(SRC_FILES
-    afterbase.c ascmap.c asfont.c
-    asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
-    export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
-    imencdec.c scanline.c
-    afterrootpngwrite.c
-)
-
-ADD_LIBRARY(${LIB_NAME} STATIC ${H_FILES} ${SRC_FILES})
-
-target_link_libraries(${LIB_NAME} PRIVATE ${JPEG_LIBRARY_LOCATION} ${PNG_LIBRARY_LOCATION} ${GIF_LIBRARY_LOCATION})
 
 install(TARGETS ${LIB_NAME} DESTINATION ${LIB_DESTINATION})

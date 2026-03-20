@@ -24,13 +24,6 @@
 #undef DEBUG_RECTS2
 #endif
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
-
 #define USE_64BIT_FPU
 
 #include <string.h>
@@ -56,11 +49,7 @@
 #include <stdarg.h>
 #endif
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
 #include "asvisual.h"
 #include "scanline.h"
 #include "blender.h"

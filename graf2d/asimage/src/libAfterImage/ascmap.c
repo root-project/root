@@ -22,12 +22,6 @@
 #undef LOCAL_DEBUG
 #undef DO_CLOCKING
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
 #include <string.h>
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -50,11 +44,7 @@
 #endif
 #include <ctype.h>
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
 
 #include "asimage.h"
 #include "import.h"

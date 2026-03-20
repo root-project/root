@@ -24,11 +24,7 @@
 #undef DEBUG_RECTS2
 #endif
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
+#include "afterbase.h"
 
 
 #include <string.h>

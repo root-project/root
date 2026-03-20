@@ -1324,7 +1324,7 @@ endmacro()
 #                                                                and then use those for linking.
 #                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
 #                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
-#                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
+#                                 BUILTINS builtin1 builtin2   : builtins like xxhash
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers

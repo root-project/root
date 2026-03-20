@@ -21,12 +21,6 @@
 #undef DEBUG_ELLIPS
 
 #ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
-#ifdef _WIN32
 #define Long64_t __int64 
 #else
 #define Long64_t long long
@@ -38,11 +32,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
-# include "afterbase.h"
-#endif
+#include "afterbase.h"
 #include "asvisual.h"
 #include "asimage.h"
 #include "draw.h"

@@ -1,6 +1,12 @@
 #ifndef _ASVISUAL_H_HEADER_INCLUDED
 #define _ASVISUAL_H_HEADER_INCLUDED
 
+#if !defined(X_DISPLAY_MISSING)
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
+#include "asim_afterbase.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -200,8 +206,6 @@ long ARGB32_manhattan_distance (long a, long b);
  *  create_visual_ximage() - to create XImage
  * ASVisual could be dealolocated and its resources freed with :
  *  destroy_asvisual()
- * EXAMPLE
- * asview.c: ASView
  * SOURCE
  */
 typedef struct ASVisual
@@ -480,8 +484,6 @@ void setup_as_colormap( ASVisual *asv );
  * Cleanup function. Frees all the memory and deallocates all the
  * resources. If reusable is False it will also free the object, pointed
  * to by asv.
- * EXAMPLE
- * asview.c: ASView.2
  *********/
 ASVisual *create_asvisual_for_id( Display *dpy, int screen, int default_depth,
 	                              VisualID visual_id, Colormap cmap,

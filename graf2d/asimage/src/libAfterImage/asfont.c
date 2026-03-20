@@ -18,13 +18,6 @@
 #undef LOCAL_DEBUG
 #undef DO_CLOCKING
 
-#ifdef _WIN32
-#include "win32/config.h"
-#else
-#include "config.h"
-#endif
-
-
 #define DO_X11_ANTIALIASING
 #define DO_2STEP_X11_ANTIALIASING
 #define DO_3STEP_X11_ANTIALIASING
@@ -75,11 +68,7 @@
 
 #define INCLUDE_ASFONT_PRIVATE
 
-#ifdef _WIN32
-# include "win32/afterbase.h"
-#else
 # include "afterbase.h"
-#endif
 #include "asfont.h"
 #include "asimage.h"
 #include "asvisual.h"

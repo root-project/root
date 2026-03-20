@@ -298,8 +298,6 @@ ASImage *pixmap2asimage (struct ASVisual *asv, Pixmap p, int x, int y,
  * asimage2pixmap() creates new pixmap of exactly same size as
  * supplied ASImage. It then calls asimage2drawable to copy entire content
  * of the ASImage onto that created pixmap.
- * EXAMPLE
- * asview.c: ASView.5
  * SEE ALSO
  * asimage2ximage()
  * asimage2drawable()
