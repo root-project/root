@@ -505,8 +505,10 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             // rather than from TClass. This might be desirable in the future, but for now in this
             // situation we rely on field emulation instead.
             else if (cl->GetState() >= TClass::kInterpreted) {
-               if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
-                   ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+               if (!ROOT::Internal::GetRNTupleSoARecord(cl).empty()) {
+                  result = std::make_unique<ROOT::Experimental::RSoAField>(fieldName, typeName);
+               } else if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
+                          ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
                } else {
                   result = std::make_unique<RClassField>(fieldName, typeName);
