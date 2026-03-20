@@ -3,6 +3,7 @@
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleView.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/TestSupport.hxx>
 
@@ -137,4 +138,26 @@ TEST(RNTuple, SoADescriptor)
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetStructure());
    EXPECT_FALSE(desc.GetFieldDescriptor(desc.FindFieldId("f3")).IsSoACollection());
    EXPECT_EQ(ROOT::ENTupleStructure::kCollection, desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetStructure());
+}
+
+TEST(RNTuple, SoAEmpty)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_empty.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("f", "SoA"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+   auto v = reader->GetView<std::vector<Record>>("f");
+   EXPECT_EQ(0u, v(0).size());
+   EXPECT_EQ(0u, v(1).size());
+   EXPECT_EQ(0u, v(2).size());
 }
