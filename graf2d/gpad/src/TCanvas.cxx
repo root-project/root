@@ -1148,7 +1148,7 @@ void TCanvas::Flush()
          fPainter->SelectDrawable(fCanvasID);
          gPad = ctxt.GetSaved(); //don't do cd() because than also the pixmap is changed
          CopyPixmaps();
-         gVirtualX->UpdateWindow(1);
+         fPainter->UpdateDrawable(1);
       } else {
          TVirtualPS *tvps = gVirtualPS;
          gVirtualPS = nullptr;

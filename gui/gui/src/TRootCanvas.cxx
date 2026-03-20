@@ -1745,7 +1745,7 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    if (event->fType == kButtonPress) {
       if (fToolTip && fCanvas->GetShowToolTips()) {
          fToolTip->Hide();
-         gVirtualX->UpdateWindow(0);
+         gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
          gSystem->ProcessEvents();
       }
       fButton = button;

@@ -445,6 +445,14 @@ void TVirtualX::ClearWindowW(WinContext_t /* wctxt */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Update specified window
+
+void TVirtualX::UpdateWindowW(WinContext_t /* wctxt */, Int_t mode)
+{
+   UpdateWindow(mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw box on specified window
 
 void TVirtualX::DrawBoxW(WinContext_t /* wctxt */, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
