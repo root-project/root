@@ -2970,6 +2970,11 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 /// If silent is 'true', do not warn about missing dictionary for the class.
 /// (typically used for classes that are used only for transient members)
 /// Returns `nullptr` in case class is not found.
+///
+/// To completely disallow auto-parsing during TClass::GetClass, you can either
+/// set the shell environment variable `ROOT_DISABLE_TCLASS_GET_CLASS_AUTOPARSING`
+/// (to anything) or set the `rootrc` key `Root.TClass.GetClass.AutoParsing` to
+/// `false`.
 
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
