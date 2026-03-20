@@ -152,6 +152,12 @@ std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoad(const T *ptr, T *ret)
 }
 
 template <typename T>
+auto AtomicLoad(const T *ptr, T *ret) -> decltype(ptr->AtomicLoad(ret))
+{
+   return ptr->AtomicLoad(ret);
+}
+
+template <typename T>
 std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoadAcquire(const T *ptr, T *ret)
 {
 #ifndef _MSC_VER
