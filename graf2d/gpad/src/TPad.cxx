@@ -2467,7 +2467,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    TView *view = GetView();
    static Int_t axisNumber;
    static Double_t ratio1, ratio2;
-   static Int_t px1old, py1old, px2old, py2old;
+   static Double_t px1old, py1old, px2old, py2old;
    Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
@@ -2485,56 +2485,53 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       kCont4 = kTRUE;
    }
 
+   auto pp = GetPainter();
+
    switch (event) {
 
    case kButton1Down:
       axisNumber = 1;
-      if (!strcmp(axis->GetName(),"xaxis")) {
-         axisNumber = 1;
-         if (!IsVertical()) axisNumber = 2;
-      }
-      if (!strcmp(axis->GetName(),"yaxis")) {
-         axisNumber = 2;
-         if (!IsVertical()) axisNumber = 1;
-      }
-      if (!strcmp(axis->GetName(),"zaxis")) {
+      if (!strcmp(axis->GetName(),"xaxis"))
+         axisNumber = IsVertical() ? 1 : 2;
+      if (!strcmp(axis->GetName(),"yaxis"))
+         axisNumber = IsVertical() ? 2 : 1;
+      if (!strcmp(axis->GetName(),"zaxis"))
          axisNumber = 3;
-      }
       if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio1);
       } else {
          if (axisNumber == 1) {
             ratio1 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px1old = XtoAbsPixel(GetUxmin()+ratio1*(GetUxmax() - GetUxmin()));
-            py1old = YtoAbsPixel(GetUymin());
+            px1old = GetUxmin()+ratio1*(GetUxmax() - GetUxmin());
+            py1old = GetUymin();
             px2old = px1old;
-            py2old = YtoAbsPixel(GetUymax());
+            py2old = GetUymax();
          } else if (axisNumber == 2) {
             ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
-            px1old = XtoAbsPixel(GetUxmin());
-            px2old = XtoAbsPixel(GetUxmax());
+            py1old = GetUymin()+ratio1*(GetUymax() - GetUymin());
+            px1old = GetUxmin();
+            px2old = GetUxmax();
             py2old = py1old;
          } else {
             ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = YtoAbsPixel(GetUymin()+ratio1*(GetUymax() - GetUymin()));
-            px1old = XtoAbsPixel(GetUxmax());
+            py1old = GetUymin()+ratio1*(GetUymax() - GetUymin());
+            px1old = GetUxmax();
             px2old = XtoAbsPixel(GetX2());
             py2old = py1old;
          }
          if (!opaque) {
-            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
          } else {
             if (axisNumber == 1) {
-               zbx1 = AbsPixeltoX(px1old);
-               zbx2 = AbsPixeltoX(px2old);
+               zbx1 = px1old;
+               zbx2 = px2old;
                zby1 = GetUymin();
                zby2 = GetUymax();
             } else if (axisNumber == 2) {
                zbx1 = GetUxmin();
                zbx2 = GetUxmax();
-               zby1 = AbsPixeltoY(py1old);
-               zby2 = AbsPixeltoY(py2old);
+               zby1 = py1old;
+               zby2 = py2old;
             }
             if (GetLogx()) {
                zbx1 = TMath::Power(10,zbx1);
@@ -2555,34 +2552,36 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gPad->Update();
          }
       }
-      if (!opaque) gVirtualX->SetLineColor(-1);
+      if (!opaque)
+         pp->SetAttLine({-1, 1, 1});
       // No break !!!
 
    case kButton1Motion:
       if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
       } else {
-         if (!opaque) gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (!opaque)
+            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
          if (axisNumber == 1) {
             ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px2old = XtoAbsPixel(GetUxmin()+ratio2*(GetUxmax() - GetUxmin()));
+            px2old = GetUxmin()+ratio2*(GetUxmax() - GetUxmin());
          } else {
             ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py2old = YtoAbsPixel(GetUymin()+ratio2*(GetUymax() - GetUymin()));
+            py2old = GetUymin()+ratio2*(GetUymax() - GetUymin());
          }
          if (!opaque) {
-            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
          } else {
             if (axisNumber == 1) {
-               zbx1 = AbsPixeltoX(px1old);
-               zbx2 = AbsPixeltoX(px2old);
+               zbx1 = px1old;
+               zbx2 = px2old;
                zby1 = GetUymin();
                zby2 = GetUymax();
             } else if (axisNumber == 2) {
                zbx1 = GetUxmin();
                zbx2 = GetUxmax();
-               zby1 = AbsPixeltoY(py1old);
-               zby2 = AbsPixeltoY(py2old);
+               zby1 = py1old;
+               zby2 = py2old;
             }
             if (GetLogx()) {
                zbx1 = TMath::Power(10,zbx1);
@@ -2629,7 +2628,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       if (bin2>bin1) {
          axis->SetRange(bin1,bin2);
       }
-      if (resetAxisRange) axis->ResetBit(TAxis::kAxisRange);
+      if (resetAxisRange)
+         axis->ResetBit(TAxis::kAxisRange);
       if (bin2>bin1) {
          gPad->Modified();
          gPad->Update();
@@ -2785,7 +2785,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          }
       }
       if (!opaque) {
-         gVirtualX->SetLineColor(-1);
+         pp->SetAttLine({-1, 1, 1});
       } else {
          if (zoombox) {
             zoombox.reset();
