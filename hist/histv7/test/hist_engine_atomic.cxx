@@ -267,6 +267,64 @@ TEST(RHistEngine, StressFillAddAtomicWeight)
    EXPECT_EQ(engineA.GetBinContent(0), NOps * Weight);
 }
 
+TEST(RHistEngine, SnapshotAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engineA({axis});
+
+   engineA.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineA.Fill(i + 0.5);
+   }
+   engineA.Fill(100);
+
+   RHistEngine<int> engineB = engineA.SnapshotAtomic();
+   ASSERT_EQ(engineB.GetNDimensions(), 1);
+   ASSERT_EQ(engineB.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineB.GetBinContent(index), 1);
+   }
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Overflow()), 1);
+}
+
+TEST(RHistEngine, StressSnapshotAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NFillsPerThread = 100000;
+   static constexpr std::size_t NSnapshots = 10000;
+
+   // Create a histogram with some bins that takes a bit of time to snapshot. The idea of this stress test is then to
+   // fill the first and last bin from multiple threads. If the snapshot is consistent, it must never have a bigger bin
+   // content in the last bin.
+   RHistEngine<int> engine(Bins, {0, Bins});
+   int first = 0, last = 0;
+
+   std::atomic_flag snapshotter;
+   StressInParallel(NThreads, [&] {
+      if (!snapshotter.test_and_set()) {
+         for (std::size_t i = 0; i < NSnapshots; i++) {
+            RHistEngine<int> snapshot = engine.SnapshotAtomic();
+            first = snapshot.GetBinContent(0);
+            last = snapshot.GetBinContent(Bins - 1);
+            if (last > first) {
+               return;
+            }
+         }
+      } else {
+         for (std::size_t i = 0; i < NFillsPerThread; i++) {
+            engine.FillAtomic(0.5);
+            engine.FillAtomic(Bins - 0.5);
+         }
+      }
+   });
+
+   EXPECT_GE(first, last);
+}
+
 TEST(RHistEngine_RBinWithError, AddAtomic)
 {
    static constexpr std::size_t Bins = 20;
