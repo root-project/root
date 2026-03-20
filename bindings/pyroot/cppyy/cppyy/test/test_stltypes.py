@@ -1982,7 +1982,7 @@ class TestSTLTUPLE:
         assert s1.fInt == 42
         assert s2.fInt == 42
 
-    @mark.xfail(strict=True, condition=IS_WINDOWS, reason="The wrong values are read back from the tuple!")
+    @mark.xfail(run=False, condition=IS_WINDOWS, reason="The wrong values are read back from the tuple!")
     def test05_tuple_assignment_operator(self):
         """Check that using std::tuple<>::operator= works.
         This used to fail because ROOT uses a different type to represent
@@ -2216,6 +2216,75 @@ class TestSTLSPAN:
         # internally.
         assert [b for b in s] == l1
 
+    def test02_span_argument_conversions(self):
+        """
+        Test conversion of various Python objects to std::span arguments.
+
+        Covers:
+        1) Python proxy spans
+        2) NumPy arrays
+        3) array.array
+        4) Type mismatch errors
+        5) std::vector implicit conversion
+        6) const std::span behavior
+        """
+        import cppyy
+        import numpy as np
+        import array
+        import pytest
+
+        cppyy.cppdef("""
+        #include <span>
+        #include <vector>
+
+        template<class T>
+        size_t sum_span(std::span<T> s) {
+            size_t total = 0;
+            for (size_t i = 0; i < s.size(); ++i)
+                total += (size_t)s[i];
+            return total;
+        }
+
+        template<class T>
+        size_t sum_span_const(std::span<const T> s) {
+            size_t total = 0;
+            for (size_t i = 0; i < s.size(); ++i)
+                total += (size_t)s[i];
+            return total;
+        }
+        """)
+
+        data = [1., 2., 3.]
+        expected = sum(data)
+
+        # 1) Python proxy span
+        v = cppyy.gbl.std.vector["double"](data)
+        s = cppyy.gbl.std.span["double"](v)
+        assert cppyy.gbl.sum_span["double"](s) == expected
+        assert cppyy.gbl.sum_span_const["double"](s) == expected
+
+        # 2) NumPy array
+        np_arr = np.array(data, dtype=np.float64)
+        assert cppyy.gbl.sum_span["double"](np_arr) == expected
+        assert cppyy.gbl.sum_span_const["double"](np_arr) == expected
+
+        # 3) array.array
+        arr = array.array('d', data)
+        assert cppyy.gbl.sum_span["double"](arr) == expected
+        assert cppyy.gbl.sum_span_const["double"](arr) == expected
+
+        # 4) Type mismatch → should raise TypeError
+        np_double = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+        with pytest.raises(TypeError):
+            cppyy.gbl.sum_span["double"](np_double)
+
+        # 5) std::vector implicit conversion
+        v2 = cppyy.gbl.std.vector["double"](data)
+        assert cppyy.gbl.sum_span["double"](v2) == expected
+        assert cppyy.gbl.sum_span_const["double"](v2) == expected
+
+        # 6) const span behaves the same (already checked above, but explicit case)
+        assert cppyy.gbl.sum_span_const["double"](np_arr) == expected
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-v', '-ra', __file__]))

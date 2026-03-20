@@ -62,6 +62,8 @@ PyObject* FuncPtr2StdFunction(const std::string& retType, const std::string& sig
 // initialize proxy type objects
 bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 
+std::map<std::string, char> const &TypecodeMap();
+
 // retrieve the memory buffer from pyobject, return buflength, tc (optional) is python
 // array.array type code, size is type size, buf will point to buffer, and if check is
 // true, some heuristics will be applied to check buffer compatibility with the type

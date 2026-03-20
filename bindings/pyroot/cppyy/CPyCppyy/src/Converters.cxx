@@ -29,6 +29,9 @@
 #include <sstream>
 #include <cstddef>
 #include <string_view>
+#if __cplusplus >= 202002L
+#include <span>
+#endif
 
 // codecvt does not exist for gcc4.8.5 and is in principle deprecated; it is
 // only used in py2 for char -> wchar_t conversion for std::wstring; if not
@@ -1644,6 +1647,78 @@ bool CPyCppyy::VoidArrayConverter::ToMemory(PyObject* value, void* address, PyOb
     *(void**)address = buf;
     return true;
 }
+
+#if __cplusplus >= 202002L
+
+namespace CPyCppyy {
+
+class StdSpanConverter : public InstanceConverter {
+public:
+    StdSpanConverter(std::string const &typeName, Cppyy::TCppType_t klass, bool keepControl = false)
+        : InstanceConverter{klass, keepControl}, fTypeName{typeName}
+    {
+    }
+
+    ~StdSpanConverter()
+    {
+        if (fHasBuffer) {
+            PyBuffer_Release(&fBufinfo);
+        }
+    }
+
+    bool SetArg(PyObject *, Parameter &, CallContext * = nullptr) override;
+    bool HasState() override { return true; }
+
+private:
+    std::string fTypeName;
+    std::span<std::size_t> fBuffer;
+    bool fHasBuffer = false;
+    Py_buffer fBufinfo;
+};
+
+} // namespace CPyCppyy
+
+//----------------------------------------------------------------------------
+bool CPyCppyy::StdSpanConverter::SetArg(PyObject *pyobject, Parameter &para, CallContext *ctxt)
+{
+    auto typecodeFound = Utility::TypecodeMap().find(fTypeName);
+
+// attempt to get buffer if the C++ type maps to a buffer type
+    if (typecodeFound == Utility::TypecodeMap().end() || !PyObject_CheckBuffer(pyobject)) {
+    // Fall back to regular InstanceConverter
+        return this->InstanceConverter::SetArg(pyobject, para, ctxt);
+    }
+
+    Py_ssize_t buflen = 0;
+    char typecode = typecodeFound->second;
+    memset(&fBufinfo, 0, sizeof(Py_buffer));
+
+    if (PyObject_GetBuffer(pyobject, &fBufinfo, PyBUF_FORMAT) == 0) {
+        if (!strchr(fBufinfo.format, typecode)) {
+            PyErr_Format(PyExc_TypeError,
+                         "buffer has incompatible type: expected '%c' for C++ type '%s', but got format '%s'", typecode,
+                         fTypeName.c_str(), fBufinfo.format ? fBufinfo.format : "<null>");
+            PyBuffer_Release(&fBufinfo);
+            return false;
+        }
+        buflen = Utility::GetBuffer(pyobject, typecode, 1, para.fValue.fVoidp, false);
+    }
+
+// ok if buffer exists (can't perform any useful size checks)
+    if (para.fValue.fVoidp && buflen != 0) {
+    // We assume the layout for any std::span<T> is the same, and just use
+    // std::span<std::size_t> as a placeholder. Not elegant, but works.
+        fBuffer = std::span<std::size_t>{(std::size_t *)para.fValue.fVoidp, static_cast<std::size_t>(buflen)};
+        fHasBuffer = true;
+        para.fValue.fVoidp = &fBuffer;
+        para.fTypeCode = 'V';
+        return true;
+    }
+
+    return false;
+}
+
+#endif // __cplusplus >= 202002L
 
 namespace {
 
@@ -3341,6 +3416,30 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
                 delete cnv;
         }
     }
+
+#if __cplusplus >= 202002L
+//-- special case: std::span
+    pos = resolvedType.find("span<");
+    if (pos == 0 /* no std:: */ || pos == 5 /* with std:: */ ||
+        pos == 6 /* const no std:: */ || pos == 11 /* const with std:: */ ) {
+
+        auto pos1 = realType.find('<');
+        auto pos21 = realType.find(','); // for the case there are more template args
+        auto pos22 = realType.find('>');
+        auto len = std::min(pos21 - pos1, pos22 - pos1) - 1;
+        std::string value_type = realType.substr(pos1+1, len);
+
+        // strip leading "const "
+        const std::string cprefix = "const ";
+        if (value_type.compare(0, cprefix.size(), cprefix) == 0) {
+            value_type = value_type.substr(cprefix.size());
+        }
+
+        std::string span_type = "std::span<" + value_type + ">";
+
+        return new StdSpanConverter{value_type, Cppyy::GetScope(span_type)};
+    }
+#endif
 
 // converters for known C++ classes and default (void*)
     Converter* result = nullptr;
