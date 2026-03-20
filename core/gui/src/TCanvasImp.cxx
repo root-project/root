@@ -37,3 +37,12 @@ Int_t TCanvasImp::RequestLocator(Int_t &x, Int_t &y)
    return gVirtualX ? gVirtualX->RequestLocator(1, 1, x, y) : -1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Gets the size and position of the canvas paint area.
+
+void TCanvasImp::GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h)
+{
+   Int_t x, y;
+   gVirtualX->GetGeometry(wid, x, y, w, h);
+}
+
