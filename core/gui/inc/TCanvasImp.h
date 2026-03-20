@@ -64,6 +64,8 @@ public:
       w = h = 0;
       return 0;
    }
+   virtual void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h);
+
    virtual void Iconify() {}
    virtual Int_t  InitWindow() { return 0; }
    virtual void   SetStatusText(const char *text = nullptr, Int_t partidx = 0) { (void) text; (void) partidx; }
