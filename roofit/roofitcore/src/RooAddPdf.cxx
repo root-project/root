@@ -985,7 +985,7 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    } else {
       coefListNew.add(coefList());
    }
-   auto newArg = std::make_unique<RooAddPdf>(GetName(), GetTitle(), pdfList(), coefListNew, _recursive);
+   auto newArg = std::make_unique<RooAddPdf>(GetName(), GetTitle(), pdfList(), coefListNew);
    // Copy some other info that the RooAddPdf copy constructor would otherwise take care of.
    newArg->setNormRange(normRange());
    newArg->_codeReg = _codeReg;
