@@ -928,7 +928,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
                 if (check && bufinfo.itemsize != size) {
                     PyErr_Format(PyExc_TypeError,
                         "buffer itemsize (%ld) does not match expected size (%d)", bufinfo.itemsize, size);
-                    CPyCppyy_PyBuffer_Release(pyobject, &bufinfo);
+                    PyBuffer_Release(&bufinfo);
                     return 0;
                 }
 
@@ -937,17 +937,17 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
                     buflen = bufinfo.len/bufinfo.itemsize;
                 else if (buf && bufinfo.ndim == 1)
                     buflen = bufinfo.shape ? bufinfo.shape[0] : bufinfo.len/bufinfo.itemsize;
-                CPyCppyy_PyBuffer_Release(pyobject, &bufinfo);
+                PyBuffer_Release(&bufinfo);
                 if (buflen)
                     return buflen;
             } else {
             // have buf, but format mismatch: bail out now, otherwise the old
             // code will return based on itemsize match
-                CPyCppyy_PyBuffer_Release(pyobject, &bufinfo);
+                PyBuffer_Release(&bufinfo);
                 return 0;
             }
         } else if (bufinfo.obj)
-            CPyCppyy_PyBuffer_Release(pyobject, &bufinfo);
+            PyBuffer_Release(&bufinfo);
         PyErr_Clear();
     }
 
@@ -972,7 +972,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         (*(bufprocs->bf_getbuffer))(pyobject, &bufinfo, PyBUF_WRITABLE);
         buf = (char*)bufinfo.buf;
         Py_ssize_t buflen = bufinfo.len;
-        CPyCppyy_PyBuffer_Release(pyobject, &bufinfo);
+        PyBuffer_Release(&bufinfo);
 #endif
 
         if (buf && check == true) {

@@ -276,14 +276,6 @@ inline Py_ssize_t PyNumber_AsSsize_t(PyObject* obj, PyObject*) {
 #define Py_RETURN_FALSE return Py_INCREF(Py_False), Py_False
 #endif
 
-#if PY_VERSION_HEX >= 0x03000000 && PY_VERSION_HEX < 0x03010000
-#define CPyCppyy_PyBuffer PyBuffer_Release
-#else
-inline void CPyCppyy_PyBuffer_Release(PyObject* /* unused */, Py_buffer* view) {
-    PyBuffer_Release(view);
-}
-#endif
-
 // vector call support
 #if PY_VERSION_HEX >= 0x03090000
 #define CPyCppyy_PyCFunction_Call PyObject_Call

@@ -565,7 +565,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
 
         // rvalue must be an exporter
         if (PyObject_GetBuffer(value, &src, PyBUF_FULL_RO) < 0) {
-            if (src.obj) CPyCppyy_PyBuffer_Release(value, &src);
+            if (src.obj) PyBuffer_Release(&src);
             return ret;
         }
 
@@ -581,7 +581,7 @@ static int ll_ass_sub(CPyCppyy::LowLevelView* self, PyObject* key, PyObject* val
         dest.len = dest.shape[0] * dest.itemsize;
 
         ret = copy_single(&dest, &src);
-        CPyCppyy_PyBuffer_Release(value, &src);
+        PyBuffer_Release(&src);
         return ret;
     }
 
