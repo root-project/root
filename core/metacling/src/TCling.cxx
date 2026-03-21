@@ -8261,6 +8261,14 @@ std::string TCling::CallFunc_GetWrapperCode(CallFunc_t *func) const
 //
 
 ////////////////////////////////////////////////////////////////////////////////
+
+size_t TCling::ClassInfo_AlignOf(ClassInfo_t* cinfo) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
+   return TClinginfo->GetAlignOf();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return true if the entity pointed to by 'declid' is declared in
 /// the context described by 'info'.  If info is null, look into the
 /// global scope (translation unit scope).

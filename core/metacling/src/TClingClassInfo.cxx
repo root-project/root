@@ -1317,6 +1317,12 @@ int TClingClassInfo::RootFlag() const
    return 0;
 }
 
+/// Return the size of the class in bytes as reported by clang.
+///
+/// Returns -1 if the class info is invalid, 0 for a forward-declared class,
+/// an enum, or a class with no definition, and 1 for a namespace (a special
+/// value inherited from CINT).  For all other cases the actual byte size
+/// obtained from the clang ASTRecordLayout is returned.
 int TClingClassInfo::Size() const
 {
    if (!IsValid()) {
@@ -1353,6 +1359,47 @@ int TClingClassInfo::Size() const
    int64_t size = Layout.getSize().getQuantity();
    int clang_size = static_cast<int>(size);
    return clang_size;
+}
+
+/// Return the alignment of the class in bytes as reported by clang.
+///
+/// Returns (size_t)-1 if the class info is invalid, 0 for a forward-declared
+/// class, an enum, a namespace or or a class with no definition. For all other
+/// cases the actual alignment obtained from the clang ASTRecordLayout is
+/// returned.
+size_t TClingClassInfo::GetAlignOf() const
+{
+   if (!IsValid()) {
+      return -1;
+   }
+   if (!GetDecl()) {
+      // A forward declared class.
+      return 0;
+   }
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   Decl::Kind DK = GetDecl()->getKind();
+   if (DK == Decl::Namespace) {
+      return 0;
+   }
+   else if (DK == Decl::Enum) {
+      return 0;
+   }
+   const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());
+   if (!RD) {
+      return -1;
+   }
+   if (!RD->getDefinition()) {
+      // Forward-declared class.
+      return 0;
+   }
+   ASTContext &Context = GetDecl()->getASTContext();
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   const ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
+   auto align = Layout.getAlignment().getQuantity();
+   assert(align > 0);
+   return align;
 }
 
 Longptr_t TClingClassInfo::Tagnum() const

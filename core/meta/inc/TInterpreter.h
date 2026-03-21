@@ -430,6 +430,7 @@ public:
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, void * /* arena */) const {return nullptr;}
    virtual Long_t ClassInfo_Property(ClassInfo_t * /* info */) const {return 0;}
    virtual int    ClassInfo_Size(ClassInfo_t * /* info */) const {return 0;}
+   virtual size_t ClassInfo_AlignOf(ClassInfo_t * /* info */) const {return 0;}
    virtual Longptr_t ClassInfo_Tagnum(ClassInfo_t * /* info */) const {return 0;}
    virtual const char *ClassInfo_FileName(ClassInfo_t * /* info */) const {return nullptr;}
    virtual const char *ClassInfo_FullName(ClassInfo_t * /* info */) const {return nullptr;}

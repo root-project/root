@@ -177,6 +177,7 @@ public:
    TVirtualStreamerInfo();
    TVirtualStreamerInfo(TClass * /*cl*/);
    virtual            ~TVirtualStreamerInfo();
+   virtual size_t      GetClassAlignment() const = 0;
    virtual void        Build(Bool_t isTransient = kFALSE) = 0;
    virtual void        BuildCheck(TFile *file = nullptr, Bool_t load = kTRUE) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;

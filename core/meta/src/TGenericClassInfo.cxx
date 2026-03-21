@@ -87,7 +87,7 @@ namespace Internal {
                                         const char *declFileName, Int_t declFileLine,
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_)
       : fAction(action), fClass(nullptr), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
@@ -95,7 +95,7 @@ namespace Internal {
         fIsA(isa),
         fVersion(1),
         fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fAlignment(alignof_), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
    {
       // Constructor.
@@ -107,7 +107,7 @@ namespace Internal {
                                         const char *declFileName, Int_t declFileLine,
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
+                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_)
       : fAction(action), fClass(nullptr), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
@@ -115,7 +115,7 @@ namespace Internal {
         fIsA(isa),
         fVersion(version),
         fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fAlignment(alignof_), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
@@ -137,7 +137,7 @@ namespace Internal {
         fIsA(nullptr),
         fVersion(version),
         fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
-        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0), fPragmaBits(pragmabits),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0), fAlignment(0), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
@@ -295,6 +295,7 @@ namespace Internal {
             }
          }
          fClass->SetClassSize(fSizeof);
+         fClass->SetClassAlignment(fAlignment);
 
          //---------------------------------------------------------------------
          // Attach the schema evolution information

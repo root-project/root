@@ -1987,7 +1987,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
-   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
+   finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << "), alignof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl, interp))
