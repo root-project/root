@@ -76,7 +76,9 @@ element type.
 #include "TStreamerInfoActions.h"
 
 #include <memory>
+#include <algorithm>
 #include <array>
+#include <new>
 
 std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
@@ -154,6 +156,7 @@ TStreamerInfo::TStreamerInfo()
    fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
+   fAlignment= 0;
    fClassVersion = 0;
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
@@ -188,6 +191,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
+   fAlignment= 0;
    fClassVersion = fClass->GetClassVersion();
    fOnFileClassVersion = 0;
    fOldVersion = Class()->GetClassVersion();
@@ -2098,6 +2102,7 @@ void TStreamerInfo::BuildOld()
             }
             element->SetOffset(baseOffset);
             offset += baseclass->Size();
+            fAlignment = std::max(fAlignment, baseclass->GetClassAlignment());
 
             continue;
          } else {
@@ -2195,6 +2200,7 @@ void TStreamerInfo::BuildOld()
          fVirtualInfoLoc = new ULong_t[1]; // To allow for a single delete statement.
          fVirtualInfoLoc[0] = offset;
          offset += sizeof(TStreamerInfo*);
+         fAlignment = std::max(fAlignment, sizeof(TStreamerInfo*));
       }
 
       TDataMember* dm = 0;
@@ -2641,11 +2647,16 @@ void TStreamerInfo::BuildOld()
             asize = element->GetSize();
          }
          // align the non-basic data types (required on alpha and IRIX!!)
-         if ((offset % kSizeOfPtr) != 0) {
-            offset = offset - (offset % kSizeOfPtr) + kSizeOfPtr;
+         Int_t align = kSizeOfPtr;
+         if (element->GetClass() && element->GetClass()->GetClassAlignment())
+            align = element->GetClass()->GetClassAlignment();
+         if ((offset % align) != 0) {
+            offset = offset - (offset % align) + align;
          }
          element->SetOffset(offset);
          offset += asize;
+         if (element->GetClass())
+            fAlignment = std::max(fAlignment, element->GetClass()->GetClassAlignment());
       }
 
       if (!wasCompiled && rules) {
@@ -3330,8 +3341,11 @@ void TStreamerInfo::ComputeSize()
    // to be aligned.  So let's be on the safe side and align on the size of
    // the pointers.  (Question: is that the right thing on x32 ABI ?)
    constexpr size_t kSizeOfPtr = sizeof(void*);
-   if ((fSize % kSizeOfPtr) != 0 && !fClass->IsSyntheticPair()) {
-      fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
+   if (fAlignment < kSizeOfPtr) {
+      fAlignment = kSizeOfPtr;
+   }
+   if ((fSize % fAlignment) != 0) {
+      fSize = fSize - (fSize % fAlignment) + fAlignment;
    }
 }
 
@@ -4991,8 +5005,12 @@ void* TStreamerInfo::New(void *obj)
    TIter next(fElements);
 
    if (!p) {
-      // Allocate and initialize the memory block.
-      p = new char[fSize];
+      // Allocate and initialize the memory block. Ensure the returned
+      // storage is aligned to the class alignment requirement.
+      auto align = fClass->GetClassAlignment();
+      // Use aligned new (C++17). This will return memory aligned to
+      // 'align' and can be freed with the matching delete[].
+      p = static_cast<char*>(::operator new[](fSize, std::align_val_t(align)));
       memset(p, 0, fSize);
    }
 
@@ -5146,22 +5164,39 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
    char* p = (char*) ary;
 
    if (!p) {
-      Long_t len = nElements * size + sizeof(Long_t)*2;
-      p = new char[len];
+      // Determine the alignment requirement for the class.
+      const std::size_t align = fClass->GetClassAlignment();
+      // The header holds two Long_t cookie values (size and nElements).
+      // Round the header size up to the next multiple of 'align' so that
+      // dataBegin (= p + headerSize) is itself aligned to 'align'.
+      const std::size_t cookieSize = sizeof(Long_t) * 2;
+      const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+
+      Long_t len = nElements * size + headerSize;
+
+      // Allocate and initialize the memory block.  Request alignment so
+      // that the raw block starts on an 'align'-boundary; combined with
+      // the rounded-up header this guarantees dataBegin is also aligned.
+      p = static_cast<char*>(::operator new[](len, std::align_val_t(align)));
       memset(p, 0, len);
    }
 
-   // Store the array cookie
-   Long_t* r = (Long_t*) p;
+   // Store the array cookie in the two Long_t slots immediately before dataBegin.
+   // Recompute headerSize from the class alignment so the layout matches DeleteArray.
+   const std::size_t align      = fClass->GetClassAlignment();
+   const std::size_t cookieSize = sizeof(Long_t) * 2;
+   const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+
+   Long_t* r = (Long_t*)(p + headerSize - cookieSize);
    r[0] = size;
    r[1] = nElements;
-   char* dataBegin = (char*) &r[2];
+   char* dataBegin = p + headerSize;
 
    // Do a placement new for each element.
-   p = dataBegin;
+   char* q = dataBegin;
    for (Long_t cnt = 0; cnt < nElements; ++cnt) {
-      New(p);
-      p += size;
+      New(q);
+      q += size;
    } // for nElements
 
    return dataBegin;
@@ -5306,7 +5341,7 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
    } // iter over elements
 
    if (!dtorOnly) {
-      delete[] p;
+      ::operator delete[](p, std::align_val_t(fClass->GetClassAlignment()));
    }
 }
 
@@ -5350,10 +5385,17 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
 
    //???FIX ME: What about varying length arrays?
 
-   Long_t* r = (Long_t*) ary;
-   Long_t arrayLen = r[-1];
-   Long_t size = r[-2];
-   char* memBegin = (char*) &r[-2];
+   // Recover the cookie layout: the two Long_t values sit in the header
+   // block immediately before dataBegin, with the same alignment-based
+   // headerSize that NewArray used.
+   const std::size_t align      = fClass->GetClassAlignment();
+   const std::size_t cookieSize = sizeof(Long_t) * 2;
+   const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+
+   Long_t* r = (Long_t*)((char*)ary - cookieSize);
+   Long_t arrayLen = r[1];
+   Long_t size     = r[0];
+   char* memBegin  = (char*)ary - headerSize;
 
    char* p = ((char*) ary) + ((arrayLen - 1) * size);
    for (Long_t cnt = 0; cnt < arrayLen; ++cnt, p -= size) {
@@ -5362,7 +5404,7 @@ void TStreamerInfo::DeleteArray(void* ary, Bool_t dtorOnly)
    } // for arrayItemSize
 
    if (!dtorOnly) {
-      delete[] memBegin;
+      ::operator delete[](memBegin, std::align_val_t(align));
    }
 }
 
@@ -5910,7 +5952,7 @@ TStreamerInfo::GenExplicitClassStreamer( const ::ROOT::TCollectionProxyInfo &inf
 //
 // Utility functions
 //
-static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent)
+static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std::string &dmFull, Int_t offset, bool silent, bool needAlign)
 {
    // Create a TStreamerElement for the type 'dmFull' and whose data member name is 'dmName'.
 
@@ -5918,6 +5960,10 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
    TString dmType( TClassEdit::ShortType(dmFull.c_str(),1) );
    Bool_t dmIsPtr = (s1 != dmType);
    const char *dmTitle = "Emulation";
+   //align the non-basic data types (required on alpha and IRIX!!)
+   size_t align = sizeof(void *);
+   if (needAlign && offset % align != 0)
+      offset = offset - offset % align + align;
 
    TDataType *dt = gROOT->GetType(dmType);
    if (dt && dt->GetType() > 0 ) {  // found a basic type
@@ -5969,6 +6015,9 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
          }
       }
       // a class
+      align = std::max(align, clm->GetClassAlignment());
+      if (needAlign && align != sizeof(void *) && offset % align != 0)
+         offset = offset - offset % align + align;
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
       } else if(clm == TString::Class() && !dmIsPtr) {
@@ -6012,24 +6061,26 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    i->SetName(pname.c_str());
    i->SetClass(nullptr);
    i->GetElements()->Delete();
-   TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent);
+   TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent, /*needAlign=*/false);
    Int_t size = 0;
+   size_t align = sizeof(void *);
    if (fel) {
-      i->GetElements()->Add( fel );
+      i->GetElements()->Add(fel);
 
-      size = fel->GetSize();
-      Int_t sp = sizeof(void *);
-      //align the non-basic data types (required on alpha and IRIX!!)
-      if (size%sp != 0) size = size - size%sp + sp;
+      if (fel->GetClass() && fel->GetClass()->GetClassAlignment())
+         i->fAlignment = std::max(align, fel->GetClass()->GetClassAlignment());
    } else {
       delete i;
       return 0;
    }
    if (hint_pair_offset)
       size = hint_pair_offset;
-   TStreamerElement *second = R__CreateEmulatedElement("second", secondname, size, silent);
+   TStreamerElement *second =
+      R__CreateEmulatedElement("second", secondname, size, silent, /*needAlign=*/!hint_pair_offset);
    if (second) {
-      i->GetElements()->Add( second );
+      i->GetElements()->Add(second);
+      if (second->GetClass() && second->GetClass()->GetClassAlignment())
+         i->fAlignment = std::max(align, second->GetClass()->GetClassAlignment());
    } else {
       delete i;
       return 0;

@@ -181,6 +181,7 @@ public:
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
+   size_t               GetAlignOf() const;
    Longptr_t            Tagnum() const;
    const char          *FileName();
    void                 FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

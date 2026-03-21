@@ -5754,6 +5754,31 @@ void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the alignment requirement (in bytes) for objects of this class.
+///
+/// Returns (size_t)-1 if the class info is invalid, 0 for a forward-declared
+/// class, an enum, a namespace or or a class with no definition. For all other
+/// cases the actual alignment obtained from the dictionary or the clang ASTRecordLayout,
+/// or the StreamerInfo (in that order of priority) is returned.
+///
+/// Returns `0` when the alignment cannot be determined.
+
+size_t TClass::GetClassAlignment() const
+{
+   if (fAlignment != 0)
+      return fAlignment;
+   if ((fState < kEmulated && !fCollectionProxy) || Property() & (kIsNamespace|kIsEnum))
+      return 0;
+   // FIX-ALIGN: do we need to have something special for collection proxy?
+   //if (fCollectionProxy)
+   //   return fCollectionProxy->AlignOf();
+   if (HasInterpreterInfo()) {
+      return gCling->ClassInfo_AlignOf(GetClassInfo());
+   }
+   return GetStreamerInfo()->GetClassAlignment();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return size of object of this class.
 
 Int_t TClass::Size() const

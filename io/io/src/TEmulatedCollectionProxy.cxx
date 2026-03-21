@@ -48,7 +48,7 @@ TEmulatedCollectionProxy::TEmulatedCollectionProxy(const TEmulatedCollectionProx
 }
 
 TEmulatedCollectionProxy::TEmulatedCollectionProxy(const char* cl_name, Bool_t silent)
-   : TGenCollectionProxy(typeid(std::vector<char>), sizeof(std::vector<char>::iterator))
+   : TGenCollectionProxy(typeid(Cont_t), sizeof(Cont_t::iterator))
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 
@@ -88,9 +88,9 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly) const
       const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    }
    if (dtorOnly) {
-      ((Cont_t*)p)->~Cont_t();
+      WithCont(p, [](auto *c, std::size_t) { using Vec_t = std::decay_t<decltype(*c)>; c->~Vec_t(); });
    } else {
-      delete (Cont_t*) p;
+      WithCont(p, [](auto *c, std::size_t) { delete c; });
    }
 }
 
@@ -102,7 +102,7 @@ void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly) const
    // how many elements are in the array.
    Warning("DeleteArray", "Cannot properly delete emulated array of %s at %p, I don't know how many elements it has!", fClass->GetName(), p);
    if (!dtorOnly) {
-      delete[] (Cont_t*) p;
+      ::operator delete(p);
    }
 }
 
@@ -133,10 +133,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // Note: an emulated collection proxy is never really associative
          // since under-neath is actually an array.
 
-         // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-         auto alignedSize = [](size_t in) {
+         auto alignedSize = [](size_t in, TClass *align_cl) {
             constexpr size_t kSizeOfPtr = sizeof(void*);
-            return in + (kSizeOfPtr - in%kSizeOfPtr)%kSizeOfPtr;
+            size_t align = align_cl ? align_cl->GetClassAlignment() : kSizeOfPtr;
+            return in + (align - in%align)%align;
          };
          struct GenerateTemporaryTEnum
          {
@@ -195,10 +195,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   fProperties |= kNeedDelete;
                }
                if ( 0 == fValOffset )  {
-                  fValOffset = alignedSize(fKey->fSize);
+                  fValOffset = alignedSize(fKey->fSize, (*fValue).fType.GetClass());
                }
                if ( 0 == fValDiff )  {
-                  fValDiff = alignedSize(fValOffset + fVal->fSize);
+                  fValDiff = alignedSize(fValOffset + fVal->fSize, (*fValue).fType.GetClass());
                }
                if (num > 3 && !inside[3].empty()) {
                   if (! TClassEdit::IsDefAlloc(inside[3].c_str(),inside[0].c_str())) {
@@ -268,7 +268,6 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    // Shrink the container
 
    typedef std::string  String_t;
-   PCont_t c   = PCont_t(fEnv->fObject);
    char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
    size_t i;
 
@@ -363,8 +362,11 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                break;
          }
    }
-   c->resize(left*fValDiff,0);
-   fEnv->fStart = left > 0 ? c->data() : 0;
+   WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+      assert( fValDiff % alignmentElemSize == 0 );
+      c->resize(left * fValDiff / alignmentElemSize);
+      fEnv->fStart = left > 0 ? c->data() : nullptr;
+   });
    return;
 }
 
@@ -372,10 +374,12 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
 {
    // Expand the container
    size_t i;
-   PCont_t c   = PCont_t(fEnv->fObject);
-   c->resize(left*fValDiff,0);
    void *oldstart = fEnv->fStart;
-   fEnv->fStart = left > 0 ? c->data() : 0;
+   WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+      assert( fValDiff % alignmentElemSize == 0 );
+      c->resize(left * fValDiff / alignmentElemSize);
+      fEnv->fStart = left > 0 ? c->data() : nullptr;
+   });
 
    char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {

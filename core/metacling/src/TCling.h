@@ -447,6 +447,7 @@ public: // Public Interface
    void*  ClassInfo_New(ClassInfo_t* info, void* arena) const final;
    Long_t ClassInfo_Property(ClassInfo_t* info) const final;
    int    ClassInfo_Size(ClassInfo_t* info) const final;
+   size_t ClassInfo_AlignOf(ClassInfo_t* info) const final;
    Longptr_t ClassInfo_Tagnum(ClassInfo_t* info) const final;
    const char* ClassInfo_FileName(ClassInfo_t* info) const final;
    const char* ClassInfo_FullName(ClassInfo_t* info) const final;
