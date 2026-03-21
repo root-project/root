@@ -243,7 +243,8 @@ private:
    ROOT::DirAutoAdd_t  fDirAutoAdd;     //pointer which implements the Directory Auto Add feature for this class.']'
    ClassStreamerFunc_t fStreamerFunc;   //Wrapper around this class custom Streamer member function.
    ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
-   Int_t               fSizeof;         //Sizeof the class.
+   Int_t               fSizeof = -1;            //Sizeof the class.
+   std::size_t         fAlignment = 0;          //Alignment of the class (0 for unknown alignment)
 
    std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
@@ -308,6 +309,7 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
+   void               SetClassAlignment(std::size_t align) { fAlignment = align; }
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
    void SetStreamerImpl(Int_t streamerType);
@@ -430,6 +432,7 @@ public:
       return fClassVersion;
    }
    Int_t              GetClassSize() const { return Size(); }
+   size_t             GetClassAlignment() const;
    TDataMember       *GetDataMember(const char *datamember) const;
    Longptr_t          GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const;

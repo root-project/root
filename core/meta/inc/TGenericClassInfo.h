@@ -66,6 +66,7 @@ namespace ROOT {
       ClassConvStreamerFunc_t     fConvStreamerFunc;
       TVirtualCollectionProxy    *fCollectionProxy;
       Int_t                       fSizeof;
+      std::size_t                 fAlignment;
       Int_t                       fPragmaBits;
       Detail::TCollectionProxyInfo *fCollectionProxyInfo;
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
@@ -78,13 +79,13 @@ namespace ROOT {
                        const char *declFileName, Int_t declFileLine,
                        const std::type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_ = 0);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const std::type_info &info, const Internal::TInitBehavior *action,
                        DictFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
+                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof, std::size_t alignof_ = 0);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
