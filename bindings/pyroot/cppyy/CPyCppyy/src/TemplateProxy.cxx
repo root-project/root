@@ -102,7 +102,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
                 std::string ptrdef;
                 if (PyObject_GetBuffer(itemi, &bufinfo, PyBUF_FORMAT) == 0) {
                     for (int j = 0; j < bufinfo.ndim; ++j) ptrdef += "*";
-                    CPyCppyy_PyBuffer_Release(itemi, &bufinfo);
+                    PyBuffer_Release(&bufinfo);
                 } else {
                     ptrdef += "*";
                     PyErr_Clear();
