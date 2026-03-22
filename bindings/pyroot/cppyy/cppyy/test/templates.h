@@ -528,7 +528,7 @@ struct Test {};
 using testptr = Test *;
 
 template <typename T>
-bool testfun(T const &x)
+bool testfun(T x)
 {
    return !(bool)x;
 }

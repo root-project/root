@@ -1871,7 +1871,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
             std::ostringstream initdef;
             initdef << "namespace __cppyy_internal {\n"
-                    << "void init_" << rname << "(" << name << "*& self";
+                    << "void init_" << rname << "(" << name << "** self";
             bool codegen_ok = true;
             std::vector<std::string> arg_types, arg_names, arg_defaults;
             arg_types.reserve(ndata); arg_names.reserve(ndata); arg_defaults.reserve(ndata);
@@ -1909,7 +1909,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
                     initdef << ", " << arg_types[i] << " " << arg_names[i];
                     if (defaults_ok) initdef << " = " << arg_defaults[i];
                 }
-                initdef << ") {\n  self = new " << name << "{";
+                initdef << ") {\n  *self = new " << name << "{";
                 for (std::vector<std::string>::size_type i = 0; i < arg_names.size(); ++i) {
                     if (i != 0) initdef << ", ";
                     initdef << arg_names[i];

@@ -3268,11 +3268,25 @@ bool CPyCppyy::InitializerListConverter::SetArg(
 #endif
 }
 
+namespace CPyCppyy {
+
+// raising converter to take out overloads
+class NotImplementedConverter : public Converter {
+public:
+    NotImplementedConverter(PyObject *errorType, std::string const &message) : fErrorType{errorType}, fMessage{message} {}
+    bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
+private:
+    PyObject *fErrorType;
+    std::string fMessage;
+};
+
+} // namespace CPyCppyy
+
 //----------------------------------------------------------------------------
 bool CPyCppyy::NotImplementedConverter::SetArg(PyObject*, Parameter&, CallContext*)
 {
 // raise a NotImplemented exception to take a method out of overload resolution
-    PyErr_SetString(PyExc_NotImplementedError, "this method cannot (yet) be called");
+    PyErr_SetString(fErrorType, fMessage.c_str());
     return false;
 }
 
@@ -3337,6 +3351,14 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
     bool isConst = strncmp(resolvedType.c_str(), "const", 5) == 0;
     const std::string& cpd = TypeManip::compound(resolvedType);
     std::string realType   = TypeManip::clean_type(resolvedType, false, true);
+
+// mutable pointer references (T*&) are incompatible with Python's object model
+   if (cpd == "*&") {
+       return new NotImplementedConverter{PyExc_TypeError,
+           "argument type '" + resolvedType + "' is not supported: non-const references to pointers (T*&) allow a"
+           " function to replace the pointer itself. Python cannot represent this safely. Consider changing the"
+           " C++ API to return the new pointer or use a wrapper"};
+   }
 
 // accept unqualified type (as python does not know about qualifiers)
     h = gConvFactories.find((isConst ? "const " : "") + realType + cpd);
@@ -3487,7 +3509,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
         if (h != gConvFactories.end())
             return (h->second)(dims);
     // else, unhandled moves
-        result = new NotImplementedConverter();
+        result = new NotImplementedConverter{PyExc_NotImplementedError, "this method cannot (yet) be called"};
     }
 
     if (!result && h != gConvFactories.end())
@@ -3500,7 +3522,8 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
         else if (!cpd.empty())
             result = new VoidArrayConverter();        // "user knows best"
         else
-            result = new NotImplementedConverter();   // fails on use
+            // fails on use
+            result = new NotImplementedConverter{PyExc_NotImplementedError, "this method cannot (yet) be called"};
     }
 
     return result;

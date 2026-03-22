@@ -369,6 +369,29 @@ after importing ROOT.
 
 This option is intended **for debugging only and will be removed in ROOT 6.44**.
 
+### Drop support for calling C++ functions with non-const pointer references
+
+From now on, we disallow calling C++ functions with non-const pointer references (`T*&`) from Python.
+These allow pointer rebinding, which cannot be represented safely in Python and could previously lead to confusing behavior.
+A `TypeError` is now raised. Typical ROOT usage is unaffected.
+
+In the rare case where you want to call such a function, please change the C++ interface or - if the interface is outside your control - write a wrapper function that avoids non-const pointer references as arguments.
+
+For example, a function with the signature `bool setPtr(MyClass *&)` could be wrapped by a function that augments the return value with the updated pointer:
+```
+ROOT.gInterpreter.Declare("""
+    std::pair<bool, MyClass*> setPtrWrapper(MyClass *ptr) {
+       bool out = setPtr(ptr);
+       return {out, ptr};
+    }
+""")
+```
+Then, call it from Python as follows:
+```Python
+# Use tuple unpacking for convenience
+_, ptr = cppyy.gbl.setPtrWrapper(ptr)
+```
+
 ### UHI
 #### Backwards incompatible changes
 - `TH1.values()` now returns a **read-only** NumPy array by default. Previously it returned a writable array that allowed modifying histogram contents implicitly.
