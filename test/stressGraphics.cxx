@@ -4481,15 +4481,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       gErrorIgnoreLevel = 0;
 
    const char *ref_name = "stressGraphics.ref", *ref_kind = "       ";
+   ref_kind = "    ZLIB";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
       ref_kind = gSvgMode ? "WEB SVG" : "    WEB";
    } else if (gSvgMode) {
       ref_kind = "    SVG";
    } else {
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-      ref_name = "stressGraphics_builtinzlib.ref";
-      ref_kind = "   ZLIB";
+#ifdef R__HAS_ZLIB_NG
+      ref_name = "stressGraphics_zlibng.ref";
+      ref_kind = "ZLIB_NG";
 #endif
    }
 
