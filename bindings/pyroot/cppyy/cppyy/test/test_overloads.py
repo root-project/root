@@ -448,5 +448,24 @@ class TestOVERLOADS:
         assert cppyy.gbl.test14_baz(functor) == 2 # should resolve to baz(std::function)
 
 
+    def test15_disallow_mutable_pointer_references(self):
+        """Verify that mutable pointer references (T*&) are not allowed as arguments.
+        """
+
+        import cppyy
+
+        cppyy.cppdef("""
+        struct MyClass {
+           int val = 0;
+        };
+
+        void changePtr(MyClass *& ptr) {}
+        """)
+
+        ptr = cppyy.gbl.MyClass()
+
+        raises(TypeError, cppyy.gbl.changePtr, ptr)
+
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))

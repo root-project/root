@@ -1133,9 +1133,7 @@ class TestTEMPLATES:
 
         assert ns.testfun["testptr"](cppyy.bind_object(cppyy.nullptr, ns.Test))
 
-        # TODO: raises TypeError; the problem is that the type is resolved
-        # from UsingPtr::Test*const& to UsingPtr::Test*& (ie. `const` is lost)
-        # assert ns.testfun["UsingPtr::testptr"](cppyy.nullptr)
+        assert ns.testfun["UsingPtr::testptr"](cppyy.nullptr)
 
         assert ns.testptr.__name__     == "Test"
         assert ns.testptr.__cpp_name__ == "UsingPtr::Test*"

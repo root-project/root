@@ -481,13 +481,6 @@ protected:
     size_t            fValueSize;
 };
 
-
-// raising converter to take out overloads
-class NotImplementedConverter : public Converter {
-public:
-    bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
-};
-
 } // unnamed namespace
 
 } // namespace CPyCppyy

@@ -228,8 +228,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( oaddr, Z.GimeAddressPtr( o ) )
       self.assertEqual( oaddr, Z.GimeAddressPtrRef( o ) )
       
-      pZ = Z.getZ(0)
-      self.assertEqual( Z.checkAddressOfZ( pZ ), True )
+      pZ = Z.getZ(1)
       self.assertEqual( pZ , Z.getZ(1) )
 
       import array
