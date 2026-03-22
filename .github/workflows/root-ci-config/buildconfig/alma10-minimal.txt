@@ -1,7 +1,5 @@
 ccache=ON
 builtin_vdt=ON
-builtin_zlib=ON
-builtin_zstd=ON
 fail-on-missing=ON
 minimal=ON
 roottest=ON
