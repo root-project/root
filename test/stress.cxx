@@ -330,8 +330,11 @@ void stress1()
       printf("%-8s hdiff=%g, pdifftot=%g, rint=%g\n"," ",hdiff,pdifftot,rint);
    }
    if (gPrintSubBench) { printf("Test  1 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
+
+   
+   auto comprSettings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
    //Save all objects in a Root file (will be checked by stress2)
-   TFile local("stress.root","recreate");
+   TFile local("stress.root","recreate", "", comprSettings);
    f1form->Write();
    f1->Write();
    h1form->Write();
@@ -358,13 +361,15 @@ void stress2()
    //Long64_t lastgood = 9789;  // changes for new TFormula
    //Long64_t lastgood = 9797;  // changes for TH1 v8 ROOT-9173 on 32-bits
    //Long64_t lastgood = 10034;  // changes in TFormula (v12)
+   //Long64_t lastgood = 9813; // ROOT's cloudflare built-in zlib
+   //Long64_t lastgood = 9939;  // First value for zlib-ng
 #ifdef R__HAS_DEFAULT_LZ4
       Long64_t lastgood = 10733;
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
          OK = kFALSE;
 #else
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-      Long64_t lastgood = 9813;
+#ifdef R__HAS_ZLIB_NG
+      Long64_t lastgood = 9939;
 #else
       Long64_t lastgood = 10100;  // changes in TFormula (v13)
 #endif
@@ -400,11 +405,7 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-#ifdef R__HAS_CLOUDFLARE_ZLIB
-   constexpr Long64_t lastgood = 52264;
-#else
    constexpr Long64_t lastgood = 52090;
-#endif
    constexpr Long64_t tolerance = 300;
 #ifdef R__HAS_DEFAULT_LZ4
       constexpr Long64_t difflastgoodlz4 = 5500;

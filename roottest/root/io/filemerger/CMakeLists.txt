@@ -69,11 +69,18 @@ ROOTTEST_ADD_TEST(datagen-hadd-mzlibfile14
                                     root-io-filemerger-datagen-hadd-mzlibfile34-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
 
-if(ZLIB_CF)
-  ROOTTEST_ADD_TEST(merged-zlib
-                    MACRO testMergedFile.C
-                    MACROARG "\"mzlibfile1-4.root\",101,4804,20"
-                    FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
+if(ZLIB_NG)
+   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+      ROOTTEST_ADD_TEST(merged-zlib
+                       MACRO testMergedFile.C
+                       MACROARG "\"mzlibfile1-4.root\",101,5362,20"
+                       FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
+   else()
+      ROOTTEST_ADD_TEST(merged-zlib
+                        MACRO testMergedFile.C
+                        MACROARG "\"mzlibfile1-4.root\",101,4771,20"
+                        FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
+   endif()
 else()
   ROOTTEST_ADD_TEST(merged-zlib
                     MACRO testMergedFile.C
@@ -258,35 +265,35 @@ ROOTTEST_ADD_TEST(hsimpleF
                                     root-io-filemerger-hsimple9x2-fixture
                   FIXTURES_SETUP root-io-filemerger-hsimpleF-fixture)
 
-if(ZLIB_CF)
+if(ZLIB_NG)
    ROOTTEST_ADD_TEST(simple-default-compr-level9
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple9.root\",25000,9,441500,25"
+                     MACROARG "\"hsimple9.root\",25000,9,433535,25"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple9-fixture)
 
    ROOTTEST_ADD_TEST(simple-zlib-compr-level1
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple101.root\",25000,101,443022,25"
+                     MACROARG "\"hsimple101.root\",25000,101,442841,25"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple101-fixture)
 
    ROOTTEST_ADD_TEST(simple-zlib-compr-level6
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple106.root\",25000,106,441608,25"
+                     MACROARG "\"hsimple106.root\",25000,106,441579,25"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple106-fixture)
 
    ROOTTEST_ADD_TEST(simple-zlib-compr-level9
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple109.root\",25000,109,441508,25"
+                     MACROARG "\"hsimple109.root\",25000,109,433545,25"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple109-fixture)
 
    ROOTTEST_ADD_TEST(simplex2-default-compr-level9
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple9x2.root\",50000,9,871048,30"
+                     MACROARG "\"hsimple9x2.root\",50000,9,855171,30"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple9x2-fixture)
 
    ROOTTEST_ADD_TEST(simplex2-zlib-compr-level9
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple109x2.root\",50000,109,871053,30"
+                     MACROARG "\"hsimple109x2.root\",50000,109,855177,30"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple109x2-fixture)
 
    ROOTTEST_ADD_TEST(simple-lz4-compr-level9
@@ -306,7 +313,7 @@ if(ZLIB_CF)
 
    ROOTTEST_ADD_TEST(simplef-default-compr-level9
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimpleF.root\",30*25000,9,12889798,30"
+                     MACROARG "\"hsimpleF.root\",30*25000,9,12649062,30"
                      FIXTURES_REQUIRED root-io-filemerger-hsimpleF-fixture)
 
    ROOTTEST_ADD_TEST(simplek-lz4-compr-level4
@@ -319,10 +326,24 @@ if(ZLIB_CF)
                      MACROARG "\"hsimple404.root\",25000,404,517262,15"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple404-fixture)
 
-   ROOTTEST_ADD_TEST(simple-lz4-compr-level1
-                     MACRO testSimpleFile.C
-                     MACROARG "\"hsimple401.root\",25000,401,519976,5"
-                     FIXTURES_REQUIRED root-io-filemerger-hsimple401-fixture)
+   if(MSVC)
+      if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
+         ROOTTEST_ADD_TEST(simple-lz4-compr-level1
+                           MACRO testSimpleFile.C
+                           MACROARG "\"hsimple401.root\",25000,401,519968,5"
+                           FIXTURES_REQUIRED root-io-filemerger-hsimple401-fixture)
+      else()
+         ROOTTEST_ADD_TEST(simple-lz4-compr-level1
+                           MACRO testSimpleFile.C
+                           MACROARG "\"hsimple401.root\",25000,401,519981,5"
+                           FIXTURES_REQUIRED root-io-filemerger-hsimple401-fixture)      
+      endif()
+   else()
+      ROOTTEST_ADD_TEST(simple-lz4-compr-level1
+                        MACRO testSimpleFile.C
+                        MACROARG "\"hsimple401.root\",25000,401,519976,5"
+                        FIXTURES_REQUIRED root-io-filemerger-hsimple401-fixture)
+   endif()
 else()
    ROOTTEST_ADD_TEST(simple-default-compr-level9
                      MACRO testSimpleFile.C

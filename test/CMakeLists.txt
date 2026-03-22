@@ -137,9 +137,9 @@ if(opengl AND TARGET TreeViewer)
   if(MSVC)
     set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
   endif()
-  # with ZLIB-CF(builtin_zlib) we have better compression ratio.
+  # We need to adapt to zlib-ng, if that's used
   if(ZLIB_CF)
-    configure_file(stressGraphics_builtinzlib.ref stressGraphics_builtinzlib.ref COPYONLY)
+    configure_file(stressGraphics_zlibng.ref stressGraphics_zlibng.ref COPYONLY)
   else()
     configure_file(stressGraphics.ref stressGraphics.ref COPYONLY)
   endif()

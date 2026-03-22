@@ -1,0 +1,94 @@
+@@ -281,8 +281,8 @@
+ Reported AutoFlush from current tree: 65
+ Reported cache size from chain: 1500000
+ Reported cache size from current tree: 1500000
+-Reported buffer size from TTreeCache: 2527105
+-TTreeCache buffer size changed, object location not checked
++Reported buffer size from TTreeCache: 1500000
++TTreeCache object pointer stayed the same
+ * Cleared env variable ROOT_TTREECACHE_SIZE
+ --- Start of subtest 18
+ New TChain with two files, different cluster size, use a selector
+@@ -303,44 +303,44 @@
+ New TChain with two files, different cluster size, use a selector
+ No call to chain.SetCacheSize()
+ MySelector::Process called, entry=99
+-Reported cache size from fChain: 2886905
+-Reported AutoFlush value for the TTree 50
+-Reported cache size from TTree: 2886905
+-Buffer size of TTreeCache: 2886905
+-MySelector::Process called, entry=0
+-Reported cache size from fChain: 3752977
+-Reported AutoFlush value for the TTree 65
+-Reported cache size from TTree: 3752977
+-Buffer size of TTreeCache: 3752977
++Reported cache size from fChain: 1304851
++Reported AutoFlush value for the TTree 50
++Reported cache size from TTree: 1304851
++Buffer size of TTreeCache: 1304851
++MySelector::Process called, entry=0
++Reported cache size from fChain: 1696306
++Reported AutoFlush value for the TTree 65
++Reported cache size from TTree: 1696306
++Buffer size of TTreeCache: 1696306
+ TTreeCache buffer size changed, object location not checked
+ * env variable ROOT_TTREECACHE_SIZE=1.1
+ --- Start of subtest 20
+ New TChain with two files, different cluster size, use a selector
+ No call to chain.SetCacheSize()
+ MySelector::Process called, entry=99
+-Reported cache size from fChain: 3175596
+-Reported AutoFlush value for the TTree 50
+-Reported cache size from TTree: 3175596
+-Buffer size of TTreeCache: 3175596
+-MySelector::Process called, entry=0
+-Reported cache size from fChain: 4128275
+-Reported AutoFlush value for the TTree 65
+-Reported cache size from TTree: 4128275
+-Buffer size of TTreeCache: 4128275
++Reported cache size from fChain: 1435336
++Reported AutoFlush value for the TTree 50
++Reported cache size from TTree: 1435336
++Buffer size of TTreeCache: 1435336
++MySelector::Process called, entry=0
++Reported cache size from fChain: 1865937
++Reported AutoFlush value for the TTree 65
++Reported cache size from TTree: 1865937
++Buffer size of TTreeCache: 1865937
+ TTreeCache buffer size changed, object location not checked
+ --- Start of subtest 21
+ New TChain with two files, different cluster size, use a selector
+ -> Calling chain.SetCacheSize(-1) <-
+ MySelector::Process called, entry=99
+-Reported cache size from fChain: 3175596
+-Reported AutoFlush value for the TTree 50
+-Reported cache size from TTree: 3175596
+-Buffer size of TTreeCache: 3175596
+-MySelector::Process called, entry=0
+-Reported cache size from fChain: 3175596
+-Reported AutoFlush value for the TTree 65
+-Reported cache size from TTree: 3175596
+-Buffer size of TTreeCache: 3175596
++Reported cache size from fChain: 1435336
++Reported AutoFlush value for the TTree 50
++Reported cache size from TTree: 1435336
++Buffer size of TTreeCache: 1435336
++MySelector::Process called, entry=0
++Reported cache size from fChain: 1435336
++Reported AutoFlush value for the TTree 65
++Reported cache size from TTree: 1435336
++Buffer size of TTreeCache: 1435336
+ TTreeCache object pointer stayed the same
+ --- Start of subtest 22
+ New TChain with two files, different cluster size, use a selector
+@@ -368,8 +368,8 @@
+ Reported cache size from fChain: 1500000
+ Reported AutoFlush value for the TTree 65
+ Reported cache size from TTree: 1500000
+-Buffer size of TTreeCache: 2527105
+-TTreeCache buffer size changed, object location not checked
++Buffer size of TTreeCache: 1500000
++TTreeCache object pointer stayed the same
+ --- Start of subtest 24
+ Created a new TTree with default constructor
+ -> Calling SetCacheSize(1000000) <-

@@ -9,14 +9,14 @@ if(${compression_default} STREQUAL "lz4")
                   OUTREF autocacheLZ4.ref
                   ERRREF autocache.eref)
 else(${compression_default} STREQUAL "zlib")
-      ROOTTEST_ADD_TEST(multiTree
+      if(ZLIB_NG)
+        ROOTTEST_ADD_TEST(multiTree
                   MACRO runmultiTree.C
-                  OUTREF multiTreeZLIB.ref)
-      if(ZLIB_CF)
+                  OUTREF multiTreeZLIB-NG.ref)
          ROOTTEST_ADD_TEST(autocache
                   COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
                   MACRO runautocache.C
-                  OUTREF autocacheZLIB_builtinzlib.ref
+                  OUTREF autocacheZLIB-NG.ref
                   ERRREF autocache.eref)
       else()
          ROOTTEST_ADD_TEST(autocache
@@ -24,6 +24,9 @@ else(${compression_default} STREQUAL "zlib")
                   MACRO runautocache.C
                   OUTREF autocacheZLIB.ref
                   ERRREF autocache.eref)
+        ROOTTEST_ADD_TEST(multiTree
+                  MACRO runmultiTree.C
+                  OUTREF multiTreeZLIB.ref)
      endif()
 endif()
 
@@ -56,6 +59,8 @@ ROOTTEST_ADD_TEST(LastCluster
 
 if(compression_default STREQUAL "lz4")
   set(_ref execperfstattestLZ4.oref)
+elseif(ZLIB_NG)
+  set(_ref execperfstattestZLIB-NG.oref)
 else()
   set(_ref execperfstattestZLIB.oref)
 endif()
