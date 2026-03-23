@@ -448,6 +448,12 @@ class TestCROSSINHERITANCE:
       # as the C++ side now carries the type of the dispatcher, not the type of
       # the direct base class
         with warnings.catch_warnings(record=True) as w:
+            # ensure warnings are not turned into errors, even if we run python -W error
+            # The reason why we don't turn warnings into errors instead and just
+            # catch the exception is that the error would be changed into a
+            # more uninformative "TypeError: no python-side overrides supported ()"
+            warnings.simplefilter("default")
+
             class MyPyDerived1(VD.MyClass1):
                 pass        # TODO: verify warning is given
             assert len(w) == 1
@@ -1139,7 +1145,7 @@ class TestCROSSINHERITANCE:
     def test26_no_default_ctor(self):
         """Make sure no default ctor is created if not viable"""
 
-        import cppyy, warnings
+        import cppyy
 
         cppyy.cppdef("""namespace no_default_ctor {
         struct NoDefCtor1 {
@@ -1158,7 +1164,11 @@ class TestCROSSINHERITANCE:
           virtual ~NoDefCtor3() {}
         };
 
-        class Simple {}; }""")
+        class Simple {
+        public:
+          virtual ~Simple() {}
+        };
+        }""")
 
         ns = cppyy.gbl.no_default_ctor
 
@@ -1170,18 +1180,16 @@ class TestCROSSINHERITANCE:
             with raises(TypeError):
                 PyDerived()
 
-            with warnings.catch_warnings(record=True) as w:
-                class PyDerived(cppyy.multi(kls, ns.Simple)):
-                    def __init__(self):
-                        super(PyDerived, self).__init__()
+            class PyDerived(cppyy.multi(kls, ns.Simple)):
+                def __init__(self):
+                    super(PyDerived, self).__init__()
 
             with raises(TypeError):
                 PyDerived()
 
-            with warnings.catch_warnings(record=True) as w:
-                class PyDerived(cppyy.multi(ns.Simple, kls)):
-                    def __init__(self):
-                        super(PyDerived, self).__init__()
+            class PyDerived(cppyy.multi(ns.Simple, kls)):
+                def __init__(self):
+                    super(PyDerived, self).__init__()
 
             with raises(TypeError):
                 PyDerived()

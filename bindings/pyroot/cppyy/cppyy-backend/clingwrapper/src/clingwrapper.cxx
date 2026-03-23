@@ -1703,7 +1703,7 @@ ptrdiff_t Cppyy::GetBaseOffset(TCppType_t derived, TCppType_t base,
             std::ostringstream msg;
             msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
             // TODO: propagate this warning to caller w/o use of Python C-API
-            // PyErr_Warn(PyExc_RuntimeWarning, const_cast<char*>(msg.str().c_str()));
+            // PyErr_WarnEx(PyExc_RuntimeWarning, const_cast<char*>(msg.str().c_str()), 1);
             std::cerr << "Warning: " << msg.str() << '\n';
         }
 
