@@ -50,4 +50,8 @@ target_include_directories(FTGL PRIVATE
       ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
 )
 
+if(builtin_freetype)
+  add_dependencies(FTGL BUILTIN_FREETYPE)
+endif()
+
 ROOT_INSTALL_HEADERS()

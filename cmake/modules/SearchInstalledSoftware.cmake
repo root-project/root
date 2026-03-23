@@ -245,70 +245,8 @@ if(NOT builtin_freetype)
 endif()
 
 if(builtin_freetype)
-  set(freetype_version 2.12.1)
-  message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
-  set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
-  if(WIN32)
-    set(FREETYPE_LIB_DIR ".")
-    if(CMAKE_GENERATOR MATCHES Ninja)
-      set(freetypelib freetype.lib)
-      if (CMAKE_BUILD_TYPE MATCHES Debug)
-        set(freetypelib freetyped.lib)
-      endif()
-    else()
-      set(freetypebuild Release)
-      set(freetypelib freetype.lib)
-      if(winrtdebug)
-        set(freetypebuild Debug)
-        set(freetypelib freetyped.lib)
-      endif()
-      set(FREETYPE_LIB_DIR "${freetypebuild}")
-      set(FREETYPE_EXTRA_BUILD_ARGS --config ${freetypebuild})
-    endif()
-    ExternalProject_Add(
-      FREETYPE
-      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                 -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
-                 -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${FREETYPE_EXTRA_BUILD_ARGS}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FREETYPE_LIB_DIR}/${freetypelib} ${FREETYPE_LIBRARY}
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 0
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
-      TIMEOUT 600
-    )
-  else()
-    set(_freetype_cflags -O)
-    set(_freetype_cc ${CMAKE_C_COMPILER})
-    if(CMAKE_SYSTEM_NAME STREQUAL AIX)
-      set(_freetype_zlib --without-zlib)
-    endif()
-    set(_freetype_brotli "--with-brotli=no")
-    if(CMAKE_OSX_SYSROOT)
-      set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
-    ExternalProject_Add(
-      FREETYPE
-      URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
-      CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
-                         --disable-shared --with-png=no --with-bzip2=no
-                         --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
-                          "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
-      INSTALL_COMMAND ""
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-      BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
-      TIMEOUT 600
-    )
-  endif()
-  set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/include)
-  set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
-  set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY})
-  set(FREETYPE_TARGET FREETYPE)
+  list(APPEND ROOT_BUILTINS FREETYPE)
+  add_subdirectory(builtins/freetype)
 endif()
 
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
@@ -513,7 +451,7 @@ if(asimage)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} 
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR}
+                 -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIRS}
                  -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
                  -DJPEG_INCLUDE_DIR=${JPEG_INCLUDE_DIR}
                  -DJPEG_LIBRARY_LOCATION=${JPEG_LIBRARY_LOCATION}
@@ -541,7 +479,7 @@ if(asimage)
       list(APPEND afterimage_extra_args --without-x)
     endif()
     if(builtin_freetype)
-      list(APPEND afterimage_extra_args --with-ttf-includes=-I${FREETYPE_INCLUDE_DIR})
+      list(APPEND afterimage_extra_args --with-ttf-includes=-I${FREETYPE_INCLUDE_DIRS})
       set(_after_cflags "${_after_cflags} -DHAVE_FREETYPE_FREETYPE -DPNG_ARM_NEON_OPT=0")
     endif()
     if(CMAKE_OSX_SYSROOT)
@@ -589,7 +527,7 @@ if(asimage)
     add_dependencies(AFTERIMAGE BUILTIN_LIBPNG)
   endif()
   if(builtin_freetype)
-    add_dependencies(AFTERIMAGE FREETYPE)
+    add_dependencies(AFTERIMAGE BUILTIN_FREETYPE)
   endif()
   set(AFTERIMAGE_TARGET AFTERIMAGE)
 endif()
