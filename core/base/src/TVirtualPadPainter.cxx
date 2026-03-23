@@ -15,6 +15,7 @@
 #include "TAttLine.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
+#include "TVirtualX.h"
 
 
 /** \class TVirtualPadPainter
@@ -140,4 +141,24 @@ void TVirtualPadPainter::SetAttText(const TAttText &att)
    SetTextColor(att.GetTextColor());
    SetTextSize(att.GetTextSize());
    SetTextFont(att.GetTextFont());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set double buffer mode for specified device, redirect to gVirtualX
+
+void TVirtualPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
+{
+   // TODO: move to actual painter classes, call only for selected device
+   if (gVirtualX)
+      gVirtualX->SetDoubleBuffer(device, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set cursor for specified device, redirect to gVirtualX
+
+void TVirtualPadPainter::SetCursor(Int_t device, ECursor cursor)
+{
+   // TODO: move to actual painter classes, call only for selected device
+   if (gVirtualX)
+      gVirtualX->SetCursor(device, cursor);
 }

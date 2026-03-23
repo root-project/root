@@ -13,6 +13,7 @@
 #define ROOT_TVirtualPadPainter
 
 #include "Rtypes.h"
+#include "GuiTypes.h"
 
 class TVirtualPad;
 class TVirtualPS;
@@ -95,6 +96,8 @@ public:
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
    virtual void     UpdateDrawable(Int_t /* mode */) {}
    virtual void     SetDrawMode(Int_t /* device */, Int_t /* mode */) {}
+   virtual void     SetDoubleBuffer(Int_t device, Int_t mode);
+   virtual void     SetCursor(Int_t win, ECursor cursor);
 
 
    //TASImage support.
