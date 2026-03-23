@@ -5187,7 +5187,7 @@ void TPad::Print(const char *filename, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         if (GetPainter()){
+         if (GetPainter()) {
             GetPainter()->SelectDrawable(wid);
             GetPainter()->SaveImage(this, psname.Data(), gtype);
          }
@@ -5202,9 +5202,9 @@ void TPad::Print(const char *filename, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         gVirtualX->Update(1);
-         gSystem->Sleep(30); // synchronize
-         if (GetPainter()) GetPainter()->SaveImage(this, psname, gtype);
+         gPad->GetCanvasImp()->UpdateDisplay(1, kTRUE);
+         if (GetPainter())
+            GetPainter()->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
          }

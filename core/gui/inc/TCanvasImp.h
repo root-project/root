@@ -92,6 +92,7 @@ public:
    virtual Int_t RequestLocator(Int_t &x, Int_t &y);
    virtual void GetCanvasGeometry(Int_t wid, UInt_t &w, UInt_t &h);
    virtual void ResizeCanvasWindow(Int_t wid);
+   virtual void UpdateDisplay(Int_t mode = 0, Bool_t sleep = kFALSE);
 
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };

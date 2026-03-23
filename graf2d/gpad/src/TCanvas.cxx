@@ -1309,8 +1309,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
-         if (!IsWeb())
-            gVirtualX->Update();
+         fCanvasImp->UpdateDisplay(0);
          if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
