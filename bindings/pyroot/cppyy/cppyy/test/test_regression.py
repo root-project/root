@@ -1114,9 +1114,13 @@ class TestREGRESSION:
             len(ai.name) == 6
             assert ai.name[:len(s)] == s
 
-        with warnings.catch_warnings(record=True) as w:
-            ai.name = u'hellowd'
-            assert 'too long' in str(w[-1].message)
+      # isolate the warning configuration
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # turn warnings into errors
+
+            with pytest.raises(RuntimeWarning) as exc:
+                ai.name = u'hellowd'
+            assert 'too long' in str(exc.value)
 
         # vector of objects
         va = cppyy.gbl.std.vector[ns.AxisInformation](N)

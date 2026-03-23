@@ -1304,7 +1304,8 @@ bool CPyCppyy::CStringConverter::SetArg(
 
 // verify (too long string will cause truncation, no crash)
     if (fMaxSize != std::string::npos && fMaxSize < fBuffer.size())
-        PyErr_Warn(PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)");
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)", 1) < 0)
+            return false;
 
     if (!ctxt->fPyContext) {
     // use internal buffer as workaround
@@ -1349,7 +1350,8 @@ bool CPyCppyy::CStringConverter::ToMemory(PyObject* value, void* address, PyObje
 
 // verify (too long string will cause truncation, no crash)
     if (fMaxSize != std::string::npos && fMaxSize < (std::string::size_type)len)
-        PyErr_Warn(PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)");
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)"string too long for char array (truncated)", 1) < 0)
+            return false;
 
 // if address is available, and it wasn't set by this converter, assume a byte-wise copy;
 // otherwise assume a pointer copy (this relies on the converter to be used for properties,
@@ -1426,7 +1428,8 @@ bool CPyCppyy::WCStringConverter::ToMemory(PyObject* value, void* address, PyObj
 
 // verify (too long string will cause truncation, no crash)
     if (fMaxSize != std::wstring::npos && fMaxSize < (std::wstring::size_type)len)
-        PyErr_Warn(PyExc_RuntimeWarning, (char*)"string too long for wchar_t array (truncated)");
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)"string too long for wchar_t array (truncated)", 1) < 0)
+            return false;
 
     Py_ssize_t res = -1;
     if (fMaxSize != std::wstring::npos)
@@ -1485,7 +1488,10 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address, PyObjec
                                                                              \
 /* verify (too long string will cause truncation, no crash) */               \
     if (fMaxSize != std::wstring::npos && maxbytes < len) {                  \
-        PyErr_Warn(PyExc_RuntimeWarning, (char*)"string too long for "#type" array (truncated)");\
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)"string too long for "#type" array (truncated)", 1) < 0) { \
+            Py_DECREF(bstr);                                                 \
+            return false;                                                    \
+        }                                                                    \
         len = maxbytes;                                                      \
     }                                                                        \
                                                                              \

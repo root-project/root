@@ -203,7 +203,8 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 
         if (!Cppyy::HasVirtualDestructor(basetype)) {
             const std::string& bname = Cppyy::GetScopedFinalName(basetype);
-            PyErr_Warn(PyExc_RuntimeWarning, (char*)("class \""+bname+"\" has no virtual destructor").c_str());
+            if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)("class \""+bname+"\" has no virtual destructor").c_str(), 1) < 0)
+                return false;
         }
 
         base_infos.emplace_back(

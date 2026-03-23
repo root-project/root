@@ -439,7 +439,8 @@ static PyObject* SetCppLazyLookup(PyObject*, PyObject* args)
 #else
 // As of py3.11, there is no longer a lookup function pointer in the dict object
 // to replace. Since this feature is not widely advertised, it's simply dropped
-    PyErr_Warn(PyExc_RuntimeWarning, (char*)"lazy lookup is no longer supported");
+    if (PyErr_WarnEx(PyExc_RuntimeWarning, (char*)"lazy lookup is no longer supported", 1) < 0)
+        return nullptr;
     (void)args; // avoid warning about unused parameter
 #endif
 
