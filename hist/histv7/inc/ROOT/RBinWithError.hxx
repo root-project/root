@@ -74,7 +74,9 @@ private:
             Internal::AtomicLoad(&fSum2, &origSum2);
          }
 
-         // The variable appears to be unlocked, confirm with a compare-exchange.
+         // The variable appears to be unlocked, confirm with a compare-exchange. It uses acquire memory order in case
+         // of success, so the release store synchronizes with this load. This ensures that the previous write of fSum
+         // becomes a visible side-effect in this thread and the access below will see it.
          double negated = std::copysign(origSum2, -1.0);
          if (Internal::AtomicCompareExchangeAcquire(&fSum2, &origSum2, &negated)) {
             break;
@@ -85,6 +87,7 @@ private:
       fSum += a;
 
       double sum2 = origSum2 + a2;
+      // This store synchronizes with the compare-exchange, see above.
       Internal::AtomicStoreRelease(&fSum2, &sum2);
    }
 
