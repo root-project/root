@@ -1963,8 +1963,8 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 
 void TCanvas::SetCursor(ECursor cursor)
 {
-   if (!IsBatch() && !IsWeb())
-      gVirtualX->SetCursor(fCanvasID, cursor);
+   if (!IsBatch() && !IsWeb() && fCanvasID != -1)
+      fPainter->SetCursor(fCanvasID, cursor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1975,7 +1975,8 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    if (IsBatch() || IsWeb())
       return;
    fDoubleBuffer = mode;
-   gVirtualX->SetDoubleBuffer(fCanvasID, mode);
+   if (fCanvasID != -1)
+      fPainter->SetDoubleBuffer(fCanvasID, mode);
 
    // depending of the buffer mode set the drawing window to either
    // the canvas pixmap or to the canvas on-screen window
