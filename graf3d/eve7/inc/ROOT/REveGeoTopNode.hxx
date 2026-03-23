@@ -22,6 +22,7 @@ class REveGeoTopNodeData;
 ////////////////////////////////////////////////////////////////////////
 
 class REveGeomDescription : public RGeomDescription {
+  static TGeoManager* s_geoManager;
 protected:
    std::vector<RGeomNodeVisibility> fVisibilitySelf;
    std::vector<RGeomNodeVisibility> fVisibilityRec;
@@ -63,6 +64,9 @@ public:
    TGeoNode* LocateNodeWithPath(const std::vector<std::string> &path) { return fApex.LocateNodeWithPath(path); }
 
    bool GetVisiblityForStack(const std::vector<int>& stack);
+
+   void ImportFile(const char* filePath);
+   static TGeoManager* GetGeoManager();
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -103,7 +107,7 @@ protected:
    REveGeomDescription fDesc;
 
 public:
-   REveGeoTopNodeData(const Text_t *n = "REveGeoTopNodeData", const Text_t *t = "");
+   REveGeoTopNodeData(const char* fileName);
    virtual ~REveGeoTopNodeData() {}
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
@@ -112,7 +116,7 @@ public:
 
    void SetChannel(unsigned connid, int chid);
    void VisibilityChanged(bool on, REveGeomDescription::ERnrFlags flag, const std::vector<int>& path);
-   void SetTopNodeWithPath(const std::vector<std::string>& path);
+   void SetTopNodeWithPath(const std::string& path);
 };
 
 /////////////////////////////////////////////////////////////////////////
