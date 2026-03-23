@@ -9,8 +9,10 @@ sap.ui.define([
     'sap/ui/layout/HorizontalLayout',
     'rootui5/geom/lib/ColorBox',
     'sap/m/CheckBox',
-    'sap/m/Text'
-], function (GeomHierarchy,GeomBrowserModel, tableColumn, Device, Menu, MenuItem, Popup, HorizontalLayout, GeomColorBox, mCheckBox, mText) {
+    'sap/m/Text',
+    'sap/ui/core/Icon',
+    'sap/ui/core/UIComponent',
+], function (GeomHierarchy, GeomBrowserModel, tableColumn, Device, Menu, MenuItem, Popup, HorizontalLayout, GeomColorBox, mCheckBox, mText, Icon, UIComponent) {
 
     "use strict";
 
@@ -37,7 +39,7 @@ sap.ui.define([
 
         setupManagerAndViewType: function (eveViewerId, mgr) {
             this.eveViewerId = eveViewerId;
-            this.mgr       = mgr;
+            this.mgr = mgr;
 
             let eviewer = this.mgr.GetElement(this.eveViewerId);
             let sceneInfo = eviewer.childs[0];
@@ -50,44 +52,10 @@ sap.ui.define([
 
             // h.getController().configure({
             this.configure({
-               websocket,
-               show_columns: false,
-               jsroot: EVE.JSR
+                websocket,
+                show_columns: true,
+                jsroot: EVE.JSR
             });
-            
-                let t = this.byId("treeTable");
-                t.setColumnHeaderVisible(true);
-
-                t.addColumn(new tableColumn('columnVis', {
-                    label: 'Visibility',
-                    tooltip: 'Visibility flags',
-                    autoResizable: true,
-                    visible: true,
-                    width: '20%',
-                    template: new HorizontalLayout({
-                        content: [
-                            new mCheckBox({ enabled: true, visible: true, selected: "{avisible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} Visibility Children' }),
-                            new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: '{name} Visibility Self' })
-                        ]
-                    })
-                }));
-
-                t.addColumn(new tableColumn('columnColor', {
-                    label: 'Color',
-                    tooltip: 'Color of geometry volumes',
-                    width: '10%',
-                    autoResizable: true,
-                    visible: true,
-                    template: new GeomColorBox({ color: "{_node/color}", visible: "{= !!${_node/color}}" })
-                }));
-                t.addColumn(new tableColumn('columnMaterial', {
-                    label: 'Material',
-                    tooltip: 'Material of the volumes',
-                    width: '20%',
-                    autoResizable: true,
-                    visible: true,
-                    template: new mText({ text: "{_node/material}", wrapping: false })
-                }));
 
             this.model.addNodeAttributes = function (node, item) {
                 node._node = this.provideLogicalNode(item);
@@ -103,8 +71,93 @@ sap.ui.define([
 
             console.log('channel id is', websocket.getChannelId());
             this.mgr.handle.send("SETCHANNEL:" + topNodeEve.fElementId + "," + websocket.getChannelId());
-            topNodeEve.websocket =  websocket;
+            topNodeEve.websocket = websocket;
         },
+
+
+        configureTable(show_columns) {
+
+            // create model only for browser - no need for anybody else
+            this.model = new GeomBrowserModel();
+
+            this.model.useIndexSuffix = false;
+
+            let t = this.byId("treeTable");
+
+            t.setModel(this.model);
+
+            t.setRowHeight(20);
+
+            this.model.assignTreeTable(t);
+
+            t.addColumn(new tableColumn({
+                label: 'Description',
+                tooltip: 'Name of geometry nodes',
+                autoResizable: true,
+                width: show_columns ? '50%' : '100%',
+                visible: true,
+                tooltip: "{name}",
+                template: new HorizontalLayout({
+                    content: [
+                        new Icon({ visible: '{top}', src: 'sap-icon://badge', tooltip: '{name} selected as top node' }).addStyleClass('sapUiTinyMarginEnd'),
+                        new mText({ text: '{name}', tooltip: '{name}', wrapping: false })
+                    ]
+                })
+            }));
+            t.addColumn(new tableColumn({
+                label: 'Visibility',
+                tooltip: 'Visibility flags',
+                autoResizable: true,
+                visible: true,
+                width: '20%',
+                template: new HorizontalLayout({
+                    content: [
+                        new mCheckBox({ enabled: true, visible: true, selected: "{avisible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} Visibility Children' }),
+                        new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: '{name} Visibility Self' })
+                    ]
+                })
+            }));
+            t.addColumn(new tableColumn({
+                label: 'Color',
+                tooltip: 'Color of geometry volumes',
+                width: '10%',
+                autoResizable: true,
+                visible: true,
+                template: new GeomColorBox({ color: "{_node/color}", visible: "{= !!${_node/color}}" })
+            }));
+            t.addColumn(new tableColumn({
+                label: 'Material',
+                tooltip: 'Material of the volumes',
+                width: '20%',
+                autoResizable: true,
+                visible: true,
+                template: new mText({ text: "{_node/material}", wrapping: false })
+            }));
+
+            this._columnResized = 0;
+
+            // catch re-rendering of the table to assign handlers
+            t.addEventDelegate({
+                onAfterRendering() {
+                    this.assignRowHandlers();
+                    if (this._columnResized < 1) return;
+                    this._columnResized = 0;
+                    let fullsz = 4;
+
+                    t.getColumns().forEach(col => {
+                        if (col.getVisible()) fullsz += 4 + col.$().width();
+                    });
+
+                    this.viewer?.byId('geomViewerApp').getAggregation('_navMaster').setWidth(fullsz + 'px');
+                }
+            }, this);
+
+            t.attachEvent("columnResize", {}, evnt => {
+                this._columnResized++;
+            }, this);
+
+        },
+
         switchSingle: function () {
             let oRouter = UIComponent.getRouterFor(this);
             EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: this.eveViewerId };
@@ -119,7 +172,7 @@ sap.ui.define([
         detachViewer: function () {
             this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
             this.destroy();
-        },       
+        },
         cdTop() {
             this.websocket.send('CDTOP:');
 
@@ -127,7 +180,7 @@ sap.ui.define([
             for (let n = 0; n < len; ++n)
                 this.model?.setProperty(`/nodes/${n}/top`, false);
             // this.model?.setProperty(ctxt.getPath() + '/top', true);
-           // this.doReload();
+            // this.doReload();
         },
         cdUp() {
             this.websocket.send('CDUP:');
@@ -136,28 +189,28 @@ sap.ui.define([
             for (let n = 0; n < len; ++n)
                 this.model?.setProperty(`/nodes/${n}/top`, false);
             // this.model?.setProperty(ctxt.getPath() + '/top', true);
-           // this.doReload();
+            // this.doReload();
         },
 
-      /** @summary Get entry with physical node visibility */
-      getPhysVisibilityEntry(path, force) {
-         console.error("AMT get PHY entry unused ...");
+        /** @summary Get entry with physical node visibility */
+        getPhysVisibilityEntry(path, force) {
+            console.error("AMT get PHY entry unused ...");
 
-         let stack = this.getStackByPath(this.fullModel, path);
-         if (stack === null)
-            return;
+            let stack = this.getStackByPath(this.fullModel, path);
+            if (stack === null)
+                return;
 
-         let len = stack.length;
+            let len = stack.length;
 
-         for (let i = 0; i < this.physVisibility?.length; ++i) {
-            let item = this.physVisibility[i], match = true;
-            if (len != item.stack?.length) continue;
-            for (let k = 0; match && (k < len); ++k)
-               if (stack[k] != item.stack[k])
-                  match = false;
-            if (match)
-               return item;
-         }
+            for (let i = 0; i < this.physVisibility?.length; ++i) {
+                let item = this.physVisibility[i], match = true;
+                if (len != item.stack?.length) continue;
+                for (let k = 0; match && (k < len); ++k)
+                    if (stack[k] != item.stack[k])
+                        match = false;
+                if (match)
+                    return item;
+            }
         },
 
         /** @summary invoked when visibility checkbox clicked */

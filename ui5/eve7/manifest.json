@@ -53,6 +53,10 @@
                 "name": "Table",
                 "pattern": "table/:viewName:",
                 "target": ["Table"]
+            }, {
+                "name": "GeoTable",
+                "pattern": "geotable/:viewName:",
+                "target": ["GeoTable"]
             }],
             "targets": {
                 "Main": {
@@ -74,6 +78,11 @@
                     "transition": "slide",
                     "clearAggregation": false,
                     "viewName": "EveTable"
+                },
+                "GeoTable": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "GeoTable"
                 }
             }
         }
