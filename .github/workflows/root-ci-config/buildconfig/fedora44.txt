@@ -1,5 +1,5 @@
 CMAKE_CXX_STANDARD=23
-experimental_adaptivecpp=ON
+experimental_adaptivecpp=OFF
 pythia8=ON
 roofit_multiprocess=ON
 test_distrdf_pyspark=OFF
