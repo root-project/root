@@ -14,6 +14,7 @@ class RModel final : public RModel_Base {
 private:
    bool fIsInitialized = false;
    bool fIsSubGraph = false;
+   bool fUseVDT = false;
    int fVerbose = 0;
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
@@ -230,6 +231,11 @@ public:
    void HeadInitializedTensors(std::string name, int n_print = 50);
 
    bool UseSession() const { return fUseSession; }
+   // flag to use vdt for fast math functions (e.g. exp in softmax)
+   void SetUseVDT(bool on) {
+      fUseVDT = on;
+   }
+   bool UseVDT() const { return fUseVDT;}
 
    // Use the ClassDef macro to allow definition of custom streaming
    ClassDefNV(RModel, 3);
