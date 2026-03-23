@@ -16,6 +16,7 @@ class ROperator_Softmax final : public ROperator {
 
 private:
    bool fLogSoftmax;  // for the logsoftmax case
+   bool fUseVDT = false;
    int64_t fAttrAxis;
 
    std::string fNX;
@@ -53,6 +54,12 @@ public:
       if (model.Verbose()) {
          std::cout << "Softmax -> " << fNY << " " << ConvertDimShapeToString(fShape) << std::endl;
       }
+      fUseVDT = model.UseVDT();
+      if (fUseVDT) {
+         model.AddNeededCustomHeader("vdt/exp.h");
+         if (fLogSoftmax)
+            model.AddNeededCustomHeader("vdt/log.h");
+      }
    }
 
    std::string Generate(std::string OpName) override {
@@ -64,6 +71,9 @@ public:
       size_t size = fShape.size();
       auto length_str = ConvertDimShapeToLength(fShape);
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
+
+      std::string expFunction = (fUseVDT) ? "vdt::fast_expf" : "std::exp";
+      std::string logFunction = (fUseVDT) ? "vdt::fast_logf" : "std::log";
 
       // Check if this is the special case where memory is contiguous.
       if (axis == size - 1) {
@@ -88,7 +98,7 @@ public:
 
          out << SP << SP << fType << " sum = 0.0;\n";
          out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
-         out << SP << SP << SP << "y_ptr[j] = std::exp(x_ptr[j] - vmax);\n";
+         out << SP << SP << SP << "y_ptr[j] = " << expFunction << "(x_ptr[j] - vmax);\n";
          out << SP << SP << SP << "sum += y_ptr[j];\n";
          out << SP << SP << "}\n";
 
@@ -96,7 +106,7 @@ public:
          out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
          if (fLogSoftmax)
-            out << SP << SP << SP << "y_ptr[j] = std::log(y_ptr[j]);\n";
+            out << SP << SP << SP << "y_ptr[j] = " << logFunction << "(y_ptr[j]);\n";
          out << SP << SP << "}\n";
          out << SP << "}\n";
 
@@ -147,7 +157,7 @@ public:
          if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
          out << ";\n";
          for (size_t j = 0; j < size; j++) out << SP;
-         out << "tensor_" << fNY << "[id] = std::exp(tensor_" << fNX << "[id] - vmax);\n";
+         out << "tensor_" << fNY << "[id] = " << expFunction << "(tensor_" << fNX << "[id] - vmax);\n";
          for (size_t j = 0; j < size; j++) out << SP;
          out << "sum += tensor_" << fNY << "[id];\n";
          for (size_t j = 0; j < size-1; j++) out << SP;
@@ -162,7 +172,7 @@ public:
          out << "tensor_" << fNY << "[id] /= sum;\n";
          if (fLogSoftmax) {
             for (size_t j = 0; j < size; j++) out << SP;
-            out << "tensor_" << fNY << "[id] = std::log(tensor_" << fNY << "[id]);\n";
+            out << "tensor_" << fNY << "[id] = " << logFunction << "(tensor_" << fNY << "[id]);\n";
          }
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "}\n";
