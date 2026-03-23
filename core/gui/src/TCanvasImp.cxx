@@ -18,6 +18,7 @@ and a drawing area).
 
 #include "TCanvasImp.h"
 #include "TVirtualX.h"
+#include "TSystem.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,4 +54,15 @@ void TCanvasImp::ResizeCanvasWindow(Int_t wid)
 {
    if (gVirtualX)
       gVirtualX->ResizeWindow(wid);   //resize canvas and off-screen buffer
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update gVirtualX display, also optionally sleep to wait until operation finished
+
+void TCanvasImp::UpdateDisplay(Int_t mode, Bool_t sleep)
+{
+   if (gVirtualX)
+      gVirtualX->Update(mode);
+   if (sleep)
+      gSystem->Sleep(30);
 }
