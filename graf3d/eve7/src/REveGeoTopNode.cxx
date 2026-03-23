@@ -28,7 +28,7 @@
 
 #include <cassert>
 #include <iostream>
-
+#include <regex>
 #include <nlohmann/json.hpp>
 
 
@@ -44,7 +44,9 @@ thread_local ElementId_t gSelId;
 #endif
 
 
+TGeoManager* REveGeomDescription::s_geoManager = nullptr;
 
+/*
 namespace {
 void PrintStackPath(const std::vector<int>& stack)
 {
@@ -55,7 +57,7 @@ void PrintStackPath(const std::vector<int>& stack)
 
    printf("\n");
 }
-}
+}*/
 
 
 bool REveGeomDescription::ChangeEveVisibility(const std::vector<int> &stack, ERnrFlags flags, bool on)
@@ -136,6 +138,7 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
    using namespace std::string_literals;
    REveGeomDescription &eveDesc = dynamic_cast<REveGeomDescription &>(fDesc);
 
+  REveGeoManagerHolder gmgr(REveGeomDescription::GetGeoManager());
    if (arg.compare(0, 6, "CDTOP:") == 0)
    {
       std::vector<std::string> ep;
@@ -208,6 +211,12 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+TGeoManager* REveGeomDescription::GetGeoManager()
+{
+  assert(s_geoManager);
+  return s_geoManager;
+}
+
 void REveGeomDescription::Apex::SetFromPath(std::vector<std::string> absPath)
 {
    fPath = absPath;
@@ -216,7 +225,7 @@ void REveGeomDescription::Apex::SetFromPath(std::vector<std::string> absPath)
 
 TGeoNode *REveGeomDescription::Apex::LocateNodeWithPath(const std::vector<std::string> &path) const
 {
-   TGeoNode *top = gGeoManager->GetTopNode();
+   TGeoNode *top = REveGeomDescription::GetGeoManager()->GetTopNode();
    // printf("Top node name from geoData name (%s)\n", top->GetName());
    for (size_t t = 0; t < path.size(); t++) {
       std::string s = path[t];
@@ -248,7 +257,7 @@ std::vector<int> REveGeomDescription::Apex::GetIndexStack() const
 {
     std::vector<int> indexStack;
 
-    TGeoNode* current = gGeoManager->GetTopNode();
+    TGeoNode* current = REveGeomDescription::GetGeoManager()->GetTopNode();
 
     // optional: skip first if it is top itself
     size_t start = 0;
@@ -291,26 +300,44 @@ std::vector<int> REveGeomDescription::Apex::GetIndexStack() const
     return indexStack;
 }
 
+void REveGeomDescription::ImportFile(const char* filename)
+{
+   s_geoManager = TGeoManager::Import(filename);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Constructor.
 
-REveGeoTopNodeData::REveGeoTopNodeData(const Text_t *n, const Text_t *t) : REveElement(n, t)
+REveGeoTopNodeData::REveGeoTopNodeData(const char* filename)
 {
-   fWebHierarchy = std::make_shared<REveGeomHierarchy>(fDesc, true);
-   fWebHierarchy->SetReceiver(this);
-
    // this below will be obsolete
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
+   fDesc.ImportFile(filename);
+
+
+   fWebHierarchy = std::make_shared<REveGeomHierarchy>(fDesc, true);
+   fWebHierarchy->SetReceiver(this);
 }
 
-void REveGeoTopNodeData::SetTopNodeWithPath(const std::vector<std::string>& path)
+void REveGeoTopNodeData::SetTopNodeWithPath(const std::string &path)
 {
-   fDesc.SetTopNodeWithPath(path);
-    for (auto &el : fNieces) {
-         REveGeoTopNodeViz *etn = dynamic_cast<REveGeoTopNodeViz *>(el);
-         etn->BuildDesc();
+   std::regex re(R"([/\\]+)"); // split on one or more slashes
+   std::sregex_token_iterator it(path.begin(), path.end(), re, -1);
+   std::sregex_token_iterator end;
+   std::vector<std::string> result;
+
+   for (; it != end; ++it) {
+      if (!it->str().empty()) { // skip empty parts
+         result.push_back(*it);
       }
+   }
+
+   fDesc.SetTopNodeWithPath(result);
+   for (auto &el : fNieces) {
+      REveGeoTopNodeViz *etn = dynamic_cast<REveGeoTopNodeViz *>(el);
+      etn->BuildDesc();
+   }
 }
 
 void REveGeoTopNodeData::VisibilityChanged(bool on, REveGeomDescription::ERnrFlags flag, const std::vector<int>& path)
@@ -416,6 +443,7 @@ bool REveGeoTopNodeViz::AcceptNode(TGeoIterator &it, bool skip) const
 
 std::string REveGeoTopNodeViz::GetHighlightTooltip(const std::set<int> & set) const
 {
+  REveGeoManagerHolder gmgr(REveGeomDescription::GetGeoManager());
    if (set.empty()) {
       return "";
    } else {
@@ -490,7 +518,7 @@ void REveGeoTopNodeViz::CollectNodes(TGeoVolume *volume, std::vector<BNode> &bnl
    // get top node transformation
    TGeoHMatrix global;
    {
-      TGeoNode *inode = gGeoManager->GetTopNode();
+      TGeoNode *inode = REveGeomDescription::GetGeoManager()->GetTopNode();
       for (int idx : apexStack) {
          inode = inode->GetDaughter(idx);
          global.Multiply(inode->GetMatrix());
@@ -653,8 +681,8 @@ void REveGeoTopNodeViz::BuildRenderData()
       REveUtil::ColorFromIdx(fNodes[i].color, c);
       // if (i < 400) printf("%d > %d %d %d %d \n",fNodes[i].color, c[0], c[1], c[2], c[3]);
       uint32_t v = (c[0] << 16) + (c[1] << 8) + c[2];
-      float pc = *(float *)&v;
-
+      float pc;
+      std::memcpy(&pc, &v, sizeof(pc));
       GetRenderData()->PushV(pc);
    }
 }
@@ -671,7 +699,7 @@ void REveGeoTopNodeViz::SetGeoData(REveGeoTopNodeData *d, bool rebuild)
 
 int REveGeoTopNodeViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-
+   REveGeoManagerHolder gmgr(REveGeomDescription::GetGeoManager());
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
    if (!fGeoData) {
