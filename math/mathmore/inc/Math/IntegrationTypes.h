@@ -42,6 +42,7 @@ namespace Math {
   namespace Integration {
 
      using namespace IntegrationOneDim;
+    using Type = IntegrationOneDim::Type;
 
 
 //     // type of integration

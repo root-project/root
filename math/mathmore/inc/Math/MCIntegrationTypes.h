@@ -40,6 +40,7 @@ namespace Math {
 
 
      using namespace IntegrationMultiDim;
+    using Type = IntegrationMultiDim::Type;
 
 
     // type of integration
