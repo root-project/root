@@ -97,9 +97,9 @@ private:
    }
 
 public:
-   void AtomicInc() { AtomicAdd(1.0, 1.0); }
+   void AtomicIncRelease() { AtomicAdd(1.0, 1.0); }
 
-   void AtomicAdd(double w) { AtomicAdd(w, w * w); }
+   void AtomicAddRelease(double w) { AtomicAdd(w, w * w); }
 
    /// Add another bin content using atomic instructions.
    ///
