@@ -68,7 +68,7 @@ class Command;
 @private
    QuartzWindow *fMainWindow;
    BOOL fHasFocus;
-   
+
    QuartzView *fContentView;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
@@ -203,6 +203,11 @@ class Command;
    unsigned long fBackgroundPixel;
    BOOL fOverrideRedirect;
 
+   TAttLine   fAttLine;   ///< current line attributes
+   TAttFill   fAttFill;   ///< current fill attributes
+   TAttMarker fAttMarker; ///< current marker attribute
+   TAttText   fAttText;   ///< current text attribute
+
    BOOL fHasFocus;
    QuartzView *fParentView;
 
@@ -237,6 +242,12 @@ class Command;
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
 - (CGFloat) fScaleFactor;
+
+//Graphical attributes
+@property (nonatomic, readonly) TAttLine *attLine;
+@property (nonatomic, readonly) TAttFill *attFill;
+@property (nonatomic, readonly) TAttMarker *attMarker;
+@property (nonatomic, readonly) TAttText *attText;
 
 @property (nonatomic, assign) CGContextRef fContext;
 
