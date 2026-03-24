@@ -737,6 +737,52 @@ void TGQuartz::SetOpacity(Int_t /*percent*/)
    // colors).
 }
 
+
+//______________________________________________________________________________
+void TGQuartz::SetAttFill(WinContext_t wctxt, const TAttFill &att)
+{
+   att.Copy(GetAttFill(wctxt));
+
+   // TODO: remove this after transition done
+   TAttFill::SetFillColor(att.GetFillColor());
+   TAttFill::SetFillStyle(att.GetFillStyle());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttLine(WinContext_t wctxt, const TAttLine &att)
+{
+   att.Copy(GetAttLine(wctxt));
+
+   // TODO: remove this after transition done
+   TAttLine::SetLineColor(att.GetLineColor());
+   TAttLine::SetLineStyle(att.GetLineStyle());
+   TAttLine::SetLineWidth(att.GetLineWidth());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
+{
+   att.Copy(GetAttMarker(wctxt));
+
+   // TODO: remove this after transition done
+   TAttMarker::SetMarkerColor(att.GetMarkerColor());
+   TAttMarker::SetMarkerSize(att.GetMarkerSize());
+   TAttMarker::SetMarkerStyle(att.GetMarkerStyle());
+}
+
+//______________________________________________________________________________
+void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
+{
+   att.Copy(GetAttText(wctxt));
+
+   // TODO: remove this after transition done
+   TAttText::SetTextAlign(att.GetTextAlign());
+   TAttText::SetTextAngle(att.GetTextAngle());
+   TAttText::SetTextColor(att.GetTextColor());
+   TAttText::SetTextSize(att.GetTextSize());
+   TAttText::SetTextFont(att.GetTextFont());
+}
+
 //TTF related part.
 
 //______________________________________________________________________________
@@ -1085,6 +1131,79 @@ void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
    if (!drawable.fContext) {
       Error(calledFrom, "Context is null");
       return 0;
+   }
+
+   return drawable;
+}
+
+//______________________________________________________________________________
+TAttFill &TGQuartz::GetAttFill(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attFill)
+      return *this;
+   return *drawable.attFill;
+}
+
+//______________________________________________________________________________
+TAttLine &TGQuartz::GetAttLine(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attLine)
+      return *this;
+   return *drawable.attLine;
+}
+
+//______________________________________________________________________________
+TAttMarker &TGQuartz::GetAttMarker(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attMarker)
+      return *this;
+   return *drawable.attMarker;
+}
+
+//______________________________________________________________________________
+TAttText &TGQuartz::GetAttText(WinContext_t wctxt)
+{
+   // attributes stored in direct drawable (view) and not in underlying pixmap
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+   if (!drawable || !drawable.attText)
+      return *this;
+   return *drawable.attText;
+}
+
+//______________________________________________________________________________
+void *TGQuartz::GetPixmapDrawable(void *drawable0, const char *calledFrom) const
+{
+   assert(calledFrom != 0 && "GetDrawableChecked, calledFrom parameter is null");
+
+   if (!drawable0)
+      return nullptr;
+
+   auto drawable = (NSObject<X11Drawable> *) drawable0;
+   if (!drawable.fIsPixmap) {
+      //TPad/TCanvas ALWAYS draw only into a pixmap.
+      if ([drawable isKindOfClass : [QuartzView class]]) {
+         QuartzView *view = (QuartzView *)drawable;
+         if (!view.fBackBuffer) {
+            Error(calledFrom, "Selected window is not double buffered");
+            return nullptr;
+         }
+
+         drawable = view.fBackBuffer;
+      } else {
+         Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
+         return nullptr;
+      }
+   }
+
+   if (!drawable.fContext) {
+      Error(calledFrom, "Context is null");
+      return nullptr;
    }
 
    return drawable;
