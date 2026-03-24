@@ -78,6 +78,12 @@ public:
    Int_t     GetFontDescent(const char *text) const override;
    Float_t   GetTextMagnitude() override;
 
+   //---- Methods used for new graphics -----
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+
 private:
 
    //Unfortunately, I have to convert from
@@ -100,6 +106,11 @@ private:
 
    void SetAA();
    void *GetSelectedDrawableChecked(const char *calledFrom) const;
+   TAttFill &GetAttFill(WinContext_t wctxt);
+   TAttLine &GetAttLine(WinContext_t wctxt);
+   TAttMarker &GetAttMarker(WinContext_t wctxt);
+   TAttText &GetAttText(WinContext_t wctxt);
+   void *GetPixmapDrawable(void *drawable0, const char *calledFrom) const;
 
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);
