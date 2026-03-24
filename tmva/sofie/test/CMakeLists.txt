@@ -46,7 +46,7 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
 )
 
 # Creating a Google Test
-if (TARGET ROOT::BLAS)  # we need BLAS for compiling the models
+if (BLAS_FOUND)  # we need BLAS for compiling the models
   ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
     LIBRARIES
       Core
@@ -74,7 +74,7 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ROOT
   FIXTURES_SETUP sofie-compile-models-root
 )
 
-if (TARGET ROOT::BLAS)
+if (BLAS_FOUND)
   # Creating a Google Test for Serialisation of RModel
   ROOT_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
     LIBRARIES
@@ -88,7 +88,7 @@ if (TARGET ROOT::BLAS)
 
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
-    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core ROOT::BLAS)
+    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS)
   endif()
 endif()
 
@@ -119,12 +119,12 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
-  if (TARGET ROOT::BLAS)
+  if (BLAS_FOUND)
     ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
       LIBRARIES
         ROOTTMVASofie
         ROOTTMVASofieParser
-        ROOT::BLAS
+        BLAS::BLAS
       INCLUDE_DIRS
         ${CMAKE_CURRENT_BINARY_DIR}
     )
@@ -132,7 +132,7 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
 endif()
 
 # Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND (TARGET ROOT::BLAS) AND NOT broken_onnx)
+if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT broken_onnx)
   configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
 
   # Test RModelParser_PyTorch
@@ -142,7 +142,7 @@ if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND (TARGET ROOT::BLAS) AND
         TMVA
         Python3::NumPy
         Python3::Python
-        ROOT::BLAS
+        BLAS::BLAS
         INCLUDE_DIRS
         SYSTEM
         ${CMAKE_CURRENT_BINARY_DIR}
@@ -151,7 +151,7 @@ endif()
 
 
 # Any features that link against libpython are disabled if built with tpython=OFF
-if (tpython AND ROOT_KERAS_FOUND AND (TARGET ROOT::BLAS))
+if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
 
    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
    configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
@@ -161,7 +161,7 @@ if (tpython AND ROOT_KERAS_FOUND AND (TARGET ROOT::BLAS))
        ROOTTMVASofie
        Python3::NumPy
        Python3::Python
-       ROOT::BLAS
+       BLAS::BLAS
        INCLUDE_DIRS
        SYSTEM
        ${CMAKE_CURRENT_BINARY_DIR}
