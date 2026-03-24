@@ -638,7 +638,7 @@ void print_reports()
 
       StatusPrint(e.psfile, title, e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), ref->ps1ref, ref->ps1err);
 
-      StatusPrint(e.pdffile, "PDF output", FileSize(e.pdffile) - (gWebMode ? 0 : 60), ref->pdfref, ref->pdferr);
+      StatusPrint(e.pdffile, "PDF output", FileSize(e.pdffile), ref->pdfref, ref->pdferr);
 
       StatusPrint(e.jpgfile, "JPG output", FileSize(e.jpgfile), ref->jpgref, ref->jpgerr);
 
@@ -4481,7 +4481,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       gErrorIgnoreLevel = 0;
 
    const char *ref_name = "stressGraphics.ref", *ref_kind = "       ";
-   ref_kind = "    ZLIB";
+   ref_kind = "   ZLIB";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
       ref_kind = gSvgMode ? "WEB SVG" : "    WEB";
