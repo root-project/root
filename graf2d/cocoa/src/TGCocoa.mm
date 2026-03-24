@@ -691,6 +691,15 @@ WinContext_t TGCocoa::GetSelectedContext()
 }
 
 //______________________________________________________________________________
+void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
+{
+   NSObject<X11Drawable> * drawable = (NSObject<X11Drawable> *) wctxt;
+
+   if([drawable setDrawMode : mode])
+      fPimpl->fX11CommandBuffer.ClearXOROperations();
+}
+
+//______________________________________________________________________________
 void TGCocoa::ClearWindow()
 {
    //Clear the selected drawable OR pixmap (the name - from TVirtualX interface - is bad).
