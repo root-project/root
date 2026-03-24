@@ -382,20 +382,19 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 }
 
 //______________________________________________________________________________
-void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
+void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
-   //Comment from TVirtualX:
-   // Draw PolyMarker
-   // n         : number of points
-   // xy        : list of points
-   //End of comment.
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
 
    //Do some checks first.
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                        (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyMarker");
+   auto &attmark = GetAttMarker(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyMarkerW");
    if (!drawable)
       return;
 
@@ -404,21 +403,21 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetFillColor(ctx, GetMarkerColor())) {
-      Error("DrawPolyMarker", "Could not find TColor for index %d", GetMarkerColor());
+   if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor())) {
+      Error("DrawPolyMarker", "Could not find TColor for index %d", attmark.GetMarkerColor());
       return;
    }
 
-   Quartz::SetLineColor(ctx, GetMarkerColor());//Can not fail (for coverity).
+   Quartz::SetLineColor(ctx, attmark.GetMarkerColor());//Can not fail (for coverity).
    Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetMarkerStyle()))));
+   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle()))));
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(GetMarkerStyle());
+   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(attmark.GetMarkerStyle());
 
    // The fast pixel markers need to be treated separately
    if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
@@ -429,29 +428,46 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
        CGContextSetLineCap(ctx, kCGLineCapRound);
    }
 
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(GetMarkerStyle())/2.)/4.;
+   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle())/2.)/4.;
    Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
 
    CGContextSetLineJoin(ctx, kCGLineJoinMiter);
    CGContextSetLineCap(ctx, kCGLineCapButt);
 }
 
+//______________________________________________________________________________
+void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
+{
+   //Comment from TVirtualX:
+   // Draw PolyMarker
+   // n         : number of points
+   // xy        : list of points
+   //End of comment.
+
+   DrawPolyMarkerW(GetSelectedContext(), n, xy);
+}
+
 
 //______________________________________________________________________________
-void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
-                        const char *text, ETextMode /*mode*/)
+void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle */ , Float_t /* mgn */,
+                         const char *text, ETextMode /* mode */)
 {
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
       return;
 
-   if (GetTextSize()<1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+   auto &atttext = GetAttText(wctxt);
+
+   if (atttext.GetTextSize() < 1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
    if (!drawable)
       return;
 
@@ -462,8 +478,8 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
    CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
 
    try {
-      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
-         const unsigned fontIndex = GetTextFont() / 10;
+      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(atttext.GetTextFont(), kScale * atttext.GetTextSize())) {
+         const unsigned fontIndex = atttext.GetTextFont() / 10;
          if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
             //This is a hack. Correct way is to extract glyphs from symbol.ttf,
             //find correct mapping, place this glyphs. This requires manual layout though (?),
@@ -476,36 +492,36 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
             for (size_type i = 0, len = unichars.size(); i < len; ++i)
                unichars[i] = 0xF000 + (unsigned char)text[i];
 
-            Quartz::TextLine ctLine(unichars, currentFont, GetTextColor());
+            Quartz::TextLine ctLine(unichars, currentFont, atttext.GetTextColor());
             ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
          } else {
-            const Quartz::TextLine ctLine(text, currentFont, GetTextColor());
+            const Quartz::TextLine ctLine(text, currentFont, atttext.GetTextColor());
             ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
          }
       }
    } catch (const std::exception &e) {
-      Error("DrawText", "Exception from Quartz::TextLine: %s", e.what());
+      Error("DrawTextW", "Exception from Quartz::TextLine: %s", e.what());
    }
 }
 
 //______________________________________________________________________________
-void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const wchar_t *text, ETextMode mode)
+void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const char *text, ETextMode mode)
+{
+   DrawTextW(GetSelectedContext(), x, y, angle, mgn, text, mode);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
+                         const wchar_t *text, ETextMode mode)
 {
    if (!text || !text[0])
       return;
 
    if (!TTF::IsInitialized()) {
-      Error("DrawText", "wchar_t string to draw, but TTF initialization failed");
+      Error("DrawTextW", "wchar_t string to draw, but TTF initialization failed");
       return;
    }
-
-   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
-      return;
-
-   (void)x;
-   (void)y;
-   (void)angle;
-   (void)mode;
 
    TTF::SetSmoothing(kTRUE);
    TTF::SetRotationMatrix(angle);
@@ -513,7 +529,14 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
    TTF::LayoutGlyphs();
 
    AlignTTFString();
-   RenderTTFString(x, y, mode);
+   RenderTTFString(wctxt, x, y, mode);
+}
+
+//______________________________________________________________________________
+void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const wchar_t *text, ETextMode mode)
+{
+   DrawTextW(GetSelectedContext(), x, y, angle, mgn, text, mode);
 }
 
 //______________________________________________________________________________
@@ -912,7 +935,7 @@ Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
+void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
    //Comment from TGX11TTF:
    // Perform the string rendering in the pad.
@@ -921,7 +944,16 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    //This code is a modified (for Quartz) version of TG11TTF::RenderString.
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
+   auto &atttext = GetAttText(wctxt);
+
+   if (!atttext.GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+      return;
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
    if (!drawable)
       return;
 
@@ -933,7 +965,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    if (!dstPixmap) {
       //I can not read pixels from a window (I can, but this is too slow and unreliable).
-      Error("DrawText", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
+      Error("RenderTTFString", "fSelectedDrawable is neither QuartzPixmap nor a double buffered window");
       return;
    }
 
@@ -954,7 +986,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
    //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : 1.f]);
    if (!pixmap.Get()) {
-      Error("DrawText", "pixmap creation failed");
+      Error("RenderTTFString", "pixmap creation failed");
       return;
    }
 
@@ -971,7 +1003,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
          arrayGuard.Reset([dstPixmap readColorBits : bbox]);
 
       if (!arrayGuard.Get()) {
-         Error("DrawText", "problem with reading background pixels");
+         Error("RenderTTFString", "problem with reading background pixels");
          return;
       }
 
@@ -1006,7 +1038,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       const Int_t bx = bitmap->left + xOff;
       const Int_t by = h - bitmap->top - yOff;
 
-      DrawFTGlyphIntoPixmap(pixmap.Get(), source, TGCocoa::GetPixel(GetTextColor()),
+      DrawFTGlyphIntoPixmap(pixmap.Get(), source, TGCocoa::GetPixel(atttext.GetTextColor()),
                             mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
    }
 
