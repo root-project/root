@@ -84,6 +84,9 @@ public:
    void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
    void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
 
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+
+
 private:
 
    //Unfortunately, I have to convert from
