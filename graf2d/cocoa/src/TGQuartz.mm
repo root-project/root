@@ -113,27 +113,33 @@ TGQuartz::TGQuartz(const char *name, const char *title)
    SetAA();
 }
 
-
 //______________________________________________________________________________
-void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
    //Check some conditions first.
    if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
          if (!view) {
-            ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+            ::Warning("DrawBoxW", "Invalid view/window for XOR-mode");
             return;
          }
 
          if (![view.fQuartzWindow findXorWindow])
             [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
+         fPimpl->fX11CommandBuffer.AddDrawBoxXor(drawable0.fID, x1, y1, x2, y2);
       }
       return;
    }
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawBox");
+   auto &attline = GetAttLine(wctxt);
+   auto &attfill = GetAttFill(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawBoxW");
    if (!drawable)
       return;
 
@@ -146,7 +152,7 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
+   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(attfill.GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
       TPoint polygon[4];
@@ -158,26 +164,33 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
                                           4, polygon, kFALSE); //kFALSE == don't draw a shadow.
    } else {
-      const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
+      const bool isHollow = mode == kHollow || attfill.GetFillStyle() / 1000 == 2;
 
       //Note! Pattern index (and its address) MUST live
       //long enough to be valid at the point of Quartz::DrawBox call!
       unsigned patternIndex = 0;
       if (isHollow) {
-         if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-            Error("DrawBox", "Can not find color for index %d", int(GetLineColor()));
+         if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+            Error("DrawBoxW", "Can not find color for index %d", int(attline.GetLineColor()));
             return;
          }
       } else {
-         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
-            Error("DrawBox", "SetFillAreaParameters failed");
+         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, &attfill)) {
+            Error("DrawBoxW", "SetFillAreaParameters failed");
             return;
          }
       }
-      Quartz::SetLineStyle(ctx, GetLineStyle());
-      Quartz::SetLineWidth(ctx, GetLineWidth());
+      Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+      Quartz::SetLineWidth(ctx, attline.GetLineWidth());
       Quartz::DrawBox(ctx, x1, y1, x2, y2, isHollow);
    }
+}
+
+
+//______________________________________________________________________________
+void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
+{
+   DrawBoxW(GetSelectedContext(), x1, y1, x2, y2, mode);
 }
 
 

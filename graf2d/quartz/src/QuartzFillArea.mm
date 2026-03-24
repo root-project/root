@@ -388,28 +388,31 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 }
 
 //______________________________________________________________________________
-bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
+bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex, TAttFill *attfill)
 {
    assert(ctx != nullptr && "SetFillAreaParameters, ctx parameter is null");
 
-   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   Style_t attFillStyle = attfill ? attfill->GetFillStyle() : gVirtualX->GetFillStyle();
+   Color_t attFillColor = attfill ? attfill->GetFillColor() : gVirtualX->GetFillColor();
+
+   const unsigned fillStyle = attFillStyle / 1000;
 
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
-      if (!SetLineColor(ctx, gVirtualX->GetFillColor())) {
-         ::Error("SetFillAreaParameters", "Line color for index %d was not found", int(gVirtualX->GetLineColor()));
+      if (!SetLineColor(ctx, attFillColor)) {
+         ::Error("SetFillAreaParameters", "Line color for index %d was not found", int(attFillColor));
          return false;
       }
    } else if (fillStyle == 1) {
       //Solid fill.
-      if (!SetFillColor(ctx, gVirtualX->GetFillColor())) {
-         ::Error("SetFillAreaParameters", "Fill color for index %d was not found", int(gVirtualX->GetFillColor()));
+      if (!SetFillColor(ctx, attFillColor)) {
+         ::Error("SetFillAreaParameters", "Fill color for index %d was not found", int(attFillColor));
          return false;
       }
    } else {
       assert(patternIndex != nullptr && "SetFillAreaParameters, pattern index in null");
 
-      *patternIndex = gVirtualX->GetFillStyle() % 1000;
+      *patternIndex = attFillStyle % 1000;
       //ROOT has 26 fixed patterns.
       if (*patternIndex > 25)
          *patternIndex = 2;
