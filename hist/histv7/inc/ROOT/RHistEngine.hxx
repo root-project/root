@@ -17,6 +17,7 @@
 #include "RWeight.hxx"
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -501,7 +502,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicInc(&fBinContents[index.fIndex]);
+         Internal::AtomicIncRelease(&fBinContents[index.fIndex]);
       }
    }
 
@@ -525,7 +526,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
       }
    }
 
@@ -550,7 +551,7 @@ public:
       RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
-         Internal::AtomicAdd(&fBinContents[index.fIndex], weight);
+         Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight);
       }
    }
 
@@ -574,7 +575,7 @@ public:
             RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
             if (index.fValid) {
                assert(index.fIndex < fBinContents.size());
-               Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+               Internal::AtomicAddRelease(&fBinContents[index.fIndex], weight.fValue);
             }
          } else {
             FillAtomic(t);
@@ -837,6 +838,10 @@ public:
       BinContentType tmp;
       bool changed;
       do {
+         // To guarantee correctness, we let the release operation(s) in FillAtomic synchronize with this acquire fence.
+         // This ensures that all previous writes become visible side-effects and the atomic loads will see them.
+         std::atomic_thread_fence(std::memory_order_acquire);
+
          changed = false;
          for (std::size_t i = 0; i < fBinContents.size(); i++) {
             Internal::AtomicLoad(&fBinContents[i], &tmp);
