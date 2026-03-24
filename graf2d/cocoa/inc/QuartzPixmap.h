@@ -41,6 +41,11 @@
    ROOT::MacOSX::Util::CFScopeGuard<CGContextRef> fContext;
 
    CGFloat       fScaleFactor;
+
+   TAttLine   fAttLine;   ///< current line attributes
+   TAttFill   fAttFill;   ///< current fill attributes
+   TAttMarker fAttMarker; ///< current marker attribute
+   TAttText   fAttText;   ///< current text attribute
 }
 
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
@@ -61,6 +66,12 @@
 
 - (unsigned) fWidth;
 - (unsigned) fHeight;
+
+//Graphical attributes
+@property (nonatomic, readonly) TAttLine *attLine;
+@property (nonatomic, readonly) TAttFill *attFill;
+@property (nonatomic, readonly) TAttMarker *attMarker;
+@property (nonatomic, readonly) TAttText *attText;
 
 - (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask
          clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
@@ -93,6 +104,11 @@
    unsigned       fWidth;
    unsigned       fHeight;
 
+   TAttLine   fAttLine;   ///< current line attributes
+   TAttFill   fAttFill;   ///< current fill attributes
+   TAttMarker fAttMarker; ///< current marker attribute
+   TAttText   fAttText;   ///< current text attribute
+
    ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> fImage;
    std::vector<unsigned char> fImageData;
 }
@@ -117,6 +133,12 @@
 - (unsigned) fHeight;
 
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
+
+//Graphical attributes
+@property (nonatomic, readonly) TAttLine *attLine;
+@property (nonatomic, readonly) TAttFill *attFill;
+@property (nonatomic, readonly) TAttMarker *attMarker;
+@property (nonatomic, readonly) TAttText *attText;
 
 @end
 

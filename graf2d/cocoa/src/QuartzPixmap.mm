@@ -188,6 +188,30 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
+- (TAttLine *) attLine
+{
+   return &fAttLine;
+}
+
+//______________________________________________________________________________
+- (TAttFill *) attFill
+{
+   return &fAttFill;
+}
+
+//______________________________________________________________________________
+- (TAttMarker *) attMarker
+{
+   return &fAttMarker;
+}
+
+//______________________________________________________________________________
+- (TAttText *) attText
+{
+   return &fAttText;
+}
+
+//______________________________________________________________________________
 - (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area
           withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
@@ -409,6 +433,7 @@ namespace Quartz = ROOT::Quartz;
 }
 
 @end
+
 
 @implementation QuartzImage
 
@@ -756,6 +781,30 @@ namespace Quartz = ROOT::Quartz;
 - (unsigned) fHeight
 {
    return fHeight;
+}
+
+//______________________________________________________________________________
+- (TAttLine *) attLine
+{
+   return &fAttLine;
+}
+
+//______________________________________________________________________________
+- (TAttFill *) attFill
+{
+   return &fAttFill;
+}
+
+//______________________________________________________________________________
+- (TAttMarker *) attMarker
+{
+   return &fAttMarker;
+}
+
+//______________________________________________________________________________
+- (TAttText *) attText
+{
+   return &fAttText;
 }
 
 //______________________________________________________________________________
