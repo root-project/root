@@ -84,8 +84,12 @@ private:
          }
       }
 
-      // By using a spin lock, we do not need atomic operations for fSum.
-      fSum += a;
+      // By using a spin lock, we would not need atomic operations for fSum. However, we must use a release store to
+      // guarantee correctness of AtomicLoad.
+      double sum;
+      Internal::AtomicLoad(&fSum, &sum);
+      sum += a;
+      Internal::AtomicStoreRelease(&fSum, &sum);
 
       double sum2 = origSum2 + a2;
       // This store synchronizes with the compare-exchange, see above.
@@ -105,17 +109,26 @@ public:
    void AtomicLoad(RBinWithError *ret) const
    {
       double origSum2;
-      Internal::AtomicLoad(&fSum2, &origSum2);
+      Internal::AtomicLoadAcquire(&fSum2, &origSum2);
 
       while (true) {
          // Repeat loads from memory until we see a non-negative value.
          // NB: do not use origSum2 < 0, it does not work for -0.0!
          while (std::signbit(origSum2)) {
-            Internal::AtomicLoad(&fSum2, &origSum2);
+            Internal::AtomicLoadAcquire(&fSum2, &origSum2);
          }
 
-         Internal::AtomicLoad(&fSum, &ret->fSum);
-         Internal::AtomicLoad(&fSum2, &ret->fSum2);
+         // The release store to fSum2 at the end of AtomicAdd synchronizes with the last acquire load above. This
+         // ensures that the previous write of fSum becomes a visible side-effect in this thread and the atomic load
+         // below will see it.
+
+         Internal::AtomicLoadAcquire(&fSum, &ret->fSum);
+
+         // In the reverse direction, the release store of fSum synchronizes with the acquire load above. This ensures
+         // that the previous write of fSum2 becomes a visible side-effect and we would notice if the spinlock is taken.
+
+         // NB: an acquire load is required here in case the comparison fails below and we repeat the outer loop.
+         Internal::AtomicLoadAcquire(&fSum2, &ret->fSum2);
 
          // Check if the value of fSum2 is still identical to the first load.
          // NB: do not use origSum2 == ret->fSum2, it is problematic because 0.0 == -0.0!
