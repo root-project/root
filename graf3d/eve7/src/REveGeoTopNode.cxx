@@ -334,6 +334,7 @@ void REveGeoTopNodeData::SetTopNodeWithPath(const std::string &path)
    }
 
    fDesc.SetTopNodeWithPath(result);
+
    for (auto &el : fNieces) {
       REveGeoTopNodeViz *etn = dynamic_cast<REveGeoTopNodeViz *>(el);
       etn->BuildDesc();
@@ -774,6 +775,30 @@ int REveGeoTopNodeViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["nodeVisibility"] = nodeVisibility;
    j["fSecondarySelect"] = fAlwaysSecSelect;
 
+
+
+
+   // ship bounding box info
+   TGeoNode* top  = fGeoData->fDesc.GetApexNode();
+   TGeoVolume *vol = top->GetVolume();
+   TGeoShape *shape = vol->GetShape();
+   shape->ComputeBBox();
+   TGeoBBox *box = dynamic_cast<TGeoBBox *>(shape);
+   if (box) {
+      const Double_t *origin = box->GetOrigin();
+
+      printf("BBox center: (%f, %f, %f)\n", origin[0], origin[1], origin[2]);
+      //printf("origin lengths: (%f, %f, %f)\n", origin[0], origin[1], origin[2]);
+
+      auto jbb = json::array();
+      jbb.push_back(origin[0] - box->GetDX());
+      jbb.push_back(origin[0] + box->GetDX());
+      jbb.push_back(origin[1] - box->GetDY());
+      jbb.push_back(origin[1] + box->GetDY());
+      jbb.push_back(origin[2] - box->GetDZ());
+      jbb.push_back(origin[2] + box->GetDZ());
+      j["bbox"] = jbb;
+   }
    // std::cout << "Write Core json " << j.dump(1) << "\n";
    return ret;
 }
