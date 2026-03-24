@@ -304,6 +304,13 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(rvec);
    const std::size_t oldSize = *sizePtr;
 
+   if (oldSize == nItems) {
+      // If neither shrink nor grow is necessary, do nothing.
+      // Note that this case preserves a memory adopting RVec as such. All real resizes in either direction
+      // transform a memory adopting RVec into an owning RVec.
+      return *beginPtr;
+   }
+
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
