@@ -59,7 +59,7 @@ public:
    bool ChangeEveVisibility(const std::vector<int> &stack, ERnrFlags rnrFlag, bool on);
    std::vector<int> GetIndexStack() { return fApex.GetIndexStack(); }
    const std::vector<std::string>& GetApexPath() const { return fApex.GetPath();}
-   void SetTopNodeWithPath(const std::vector<std::string>& path);
+   void InitPath(const std::vector<std::string>& path);
    TGeoNode* GetApexNode() { return fApex.GetNode(); }
    TGeoNode* LocateNodeWithPath(const std::vector<std::string> &path) { return fApex.LocateNodeWithPath(path); }
 
@@ -116,7 +116,7 @@ public:
 
    void SetChannel(unsigned connid, int chid);
    void VisibilityChanged(bool on, REveGeomDescription::ERnrFlags flag, const std::vector<int>& path);
-   void SetTopNodeWithPath(const std::string& path);
+   void InitPath(const std::string& path);
 };
 
 /////////////////////////////////////////////////////////////////////////

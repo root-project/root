@@ -47,7 +47,7 @@ void geoTopNode()
    // tracker barrel
    auto data = new REveGeoTopNodeData("https://root.cern/files/cms.root");
    setDetColors();
-   data->SetTopNodeWithPath("/CMSE_1/TRAK_1/SVTX_1");
+   data->InitPath("/CMSE_1/TRAK_1/SVTX_1");
    data->RefDescription().SetVisLevel(2);
    eveMng->GetWorld()->AddElement(data);
 
