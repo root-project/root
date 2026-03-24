@@ -676,6 +676,15 @@ void TGCocoa::SelectWindow(Int_t windowID)
 }
 
 //______________________________________________________________________________
+WinContext_t TGCocoa::GetWindowContext(Int_t wid)
+{
+   if (!wid)
+      return (WinContext_t) 0;
+   auto drawable = fPimpl->GetDrawable(wid);
+   return (WinContext_t) drawable;
+}
+
+//______________________________________________________________________________
 void TGCocoa::ClearWindow()
 {
    //Clear the selected drawable OR pixmap (the name - from TVirtualX interface - is bad).
