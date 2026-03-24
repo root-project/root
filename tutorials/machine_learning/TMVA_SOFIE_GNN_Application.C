@@ -1,9 +1,11 @@
 /// \file
 /// \ingroup tutorial_ml
 /// \notebook -nodraw
-// Macro evaluating a GNN model which was generated with the Parser macro
-//
-// \macro_code
+/// Macro evaluating a GNN model which was generated with the Parser macro
+///
+/// \macro_code
+///
+/// \author
 
 // need to add include path to find generated model file
 #ifdef __CLING__
