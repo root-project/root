@@ -1982,6 +1982,8 @@ void print_mask_info(ULong_t mask)
       fBackBuffer = nil;
       fID = 0;
 
+      fDrawMode = TVirtualX::kCopy;
+
       //Passive grab parameters.
       fPassiveGrabButton = -1;//0 is kAnyButton.
       fPassiveGrabEventMask = 0;
@@ -2146,6 +2148,24 @@ void print_mask_info(ULong_t mask)
 {
    return &fAttText;
 }
+
+//______________________________________________________________________________
+- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode
+{
+   BOOL res = NO;
+
+   if (fDrawMode == TVirtualX::kInvert && newMode != TVirtualX::kInvert) {
+
+      [self.fQuartzWindow removeXorWindow];
+
+      res = YES;
+   }
+
+   fDrawMode = newMode;
+
+   return res;
+}
+
 
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h

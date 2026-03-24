@@ -106,6 +106,7 @@ public:
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;
    WinContext_t GetSelectedContext();
+   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,

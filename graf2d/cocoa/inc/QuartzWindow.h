@@ -208,6 +208,8 @@ class Command;
    TAttMarker fAttMarker; ///< current marker attribute
    TAttText   fAttText;   ///< current text attribute
 
+   TVirtualX::EDrawMode fDrawMode; // current draw mode
+
    BOOL fHasFocus;
    QuartzView *fParentView;
 
@@ -248,6 +250,8 @@ class Command;
 @property (nonatomic, readonly) TAttFill *attFill;
 @property (nonatomic, readonly) TAttMarker *attMarker;
 @property (nonatomic, readonly) TAttText *attText;
+
+- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
 
 @property (nonatomic, assign) CGContextRef fContext;
 

@@ -59,6 +59,9 @@
 @property (nonatomic, readonly) TAttMarker *attMarker;
 @property (nonatomic, readonly) TAttText *attText;
 
+// new graphics methods
+- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
+
 //Functions to copy one drawable into another.
 - (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask
          clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
