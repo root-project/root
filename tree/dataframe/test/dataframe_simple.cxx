@@ -1085,6 +1085,22 @@ TEST_P(RDFSimpleTests, ReadStdArray)
    }
 }
 
+TEST_P(RDFSimpleTests, SkewnessAndKurtosis)
+{
+   auto df = ROOT::RDataFrame(5);
+   auto df_x = df.Define("x", [](ULong64_t i) { return (double)i; }, {"rdfentry_"});
+
+   auto skewness = df_x.Skewness("x");
+   auto kurtosis = df_x.Kurtosis("x");
+
+   double s_val = *skewness;
+   double k_val = *kurtosis;
+
+   EXPECT_NEAR(s_val, 0.0, 1e-9);
+
+   EXPECT_LT(k_val, 0.0); 
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 

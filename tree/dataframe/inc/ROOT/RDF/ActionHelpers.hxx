@@ -53,7 +53,7 @@
 #include <utility> // std::index_sequence
 #include <vector>
 #include <numeric> // std::accumulate in MeanHelper
-
+#include <cmath> // std::sqrt, std::pow
 class TCollection;
 class TStatistic;
 class TTreeReader;
@@ -1437,6 +1437,211 @@ public:
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return StdDevHelper(result, fCounts.size());
+   }
+};
+
+// Implements Welford's Online Algorithm for Skewness
+// Ref: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+class R__CLING_PTRCHECK(off) SkewnessHelper : public RActionImpl<SkewnessHelper> {
+   unsigned int fNSlots;
+   std::shared_ptr<double> fResultSkewness;
+
+   // Welford's Algorithm Accumulators per slot
+   std::vector<ULong64_t> fCounts;
+   std::vector<double> fMeans;
+   std::vector<double> fM2; // Sum of squares of differences
+   std::vector<double> fM3; // Sum of cubed differences
+
+public:
+   SkewnessHelper(const std::shared_ptr<double> &resPtr, const unsigned int nSlots)
+      : fNSlots(nSlots),
+        fResultSkewness(resPtr),
+        fCounts(fNSlots, 0),
+        fMeans(fNSlots, 0.),
+        fM2(fNSlots, 0.),
+        fM3(fNSlots, 0.)
+   {
+   }
+
+   // Rule of Five:
+   ~SkewnessHelper() = default;                                   // Destructor
+   SkewnessHelper(const SkewnessHelper &) = delete;               // Copy Ctor
+   SkewnessHelper &operator=(const SkewnessHelper &) = delete;    // Copy Assignment
+   SkewnessHelper(SkewnessHelper &&) = default;                   // Move Ctor
+   SkewnessHelper &operator=(SkewnessHelper &&) = default;        // Move Assignment
+
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, double val)
+   {
+      ULong64_t n = ++fCounts[slot];
+      double delta = val - fMeans[slot];
+      double delta_n = delta / n;
+      double term1 = delta * delta_n * (n - 1);
+
+      fM3[slot] += term1 * delta_n * (n - 2) - 3 * delta_n * fM2[slot];
+      fM2[slot] += term1;
+      fMeans[slot] += delta_n;
+   }
+
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs) {
+         Exec(slot, v);
+      }
+   }
+
+   void Initialize() { /* noop */ }
+
+   void Finalize()
+   {
+      for (unsigned int i = 1; i < fNSlots; ++i) {
+         if (fCounts[i] == 0)
+            continue;
+
+         double n1 = static_cast<double>(fCounts[0]);
+         double n2 = static_cast<double>(fCounts[i]);
+         double n = n1 + n2;
+
+         double delta = fMeans[i] - fMeans[0];
+         double delta2 = delta * delta; 
+         double delta3 = delta * delta2;
+
+         fM3[0] += fM3[i] + delta3 * n1 * n2 * (n1 - n2) / (n * n * n) + 
+                   3.0 * delta * (n1 * fM2[i] - n2 * fM2[0]) / n;
+         
+         fM2[0] += fM2[i] + delta2 * n1 * n2 / n;
+         fMeans[0] += delta * n2 / n;
+         fCounts[0] += fCounts[i]; 
+      }
+      
+      if (fCounts[0] > 2 && fM2[0] > 0) {
+         *fResultSkewness = (std::sqrt(static_cast<double>(fCounts[0])) * fM3[0]) / std::pow(fM2[0], 1.5);
+      } else {
+         *fResultSkewness = 0.0;
+      }
+   }
+
+   std::string GetActionName() { return "Skewness"; }
+
+   SkewnessHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
+      return SkewnessHelper(result, fCounts.size());
+   }
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final {
+      // TODO: Implement mergeable value to support distributed RDataFrame
+      return nullptr;
+   }
+};
+
+// Implements Welford's Online Algorithm for Kurtosis
+// Ref: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford's_online_algorithm
+class R__CLING_PTRCHECK(off) KurtosisHelper : public RActionImpl<KurtosisHelper> {
+   unsigned int fNSlots;
+   std::shared_ptr<double> fResultKurtosis;
+
+   // Accumulators per slot
+   std::vector<ULong64_t> fCounts;
+   std::vector<double> fMeans;
+   std::vector<double> fM2;
+   std::vector<double> fM3;
+   std::vector<double> fM4;
+
+public:
+   KurtosisHelper(const std::shared_ptr<double> &resPtr, const unsigned int nSlots)
+      : fNSlots(nSlots),
+        fResultKurtosis(resPtr),
+        fCounts(fNSlots, 0),
+        fMeans(fNSlots, 0.),
+        fM2(fNSlots, 0.),
+        fM3(fNSlots, 0.),
+        fM4(fNSlots, 0.)
+   {
+   }
+
+   // Rule of Five:
+   ~KurtosisHelper() = default;                                   // 1. Destructor
+   KurtosisHelper(const KurtosisHelper &) = delete;               // 2. Copy Constructor
+   KurtosisHelper &operator=(const KurtosisHelper &) = delete;    // 3. Copy Assignment
+   KurtosisHelper(KurtosisHelper &&) = default;                   // 4. Move Constructor
+   KurtosisHelper &operator=(KurtosisHelper &&) = default;        // 5. Move Assignment
+
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, double val)
+   {
+      ULong64_t n = ++fCounts[slot];
+      double delta = val - fMeans[slot];
+      double delta_n = delta / n;
+      double term1 = delta * delta_n * (n - 1);
+
+      fM4[slot] +=
+         term1 * delta_n * delta_n * (n * n - 3 * n + 3) + 6 * delta_n * delta_n * fM2[slot] - 4 * delta_n * fM3[slot];
+      fM3[slot] += term1 * delta_n * (n - 2) - 3 * delta_n * fM2[slot];
+      fM2[slot] += term1;
+      fMeans[slot] += delta_n;
+   }
+
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs) {
+         Exec(slot, v);
+      }
+   }
+
+   void Initialize() { /* noop */ }
+
+void Finalize()
+   {
+      for (unsigned int i = 1; i < fNSlots; ++i) {
+         if (fCounts[i] == 0) continue;
+
+         double n1 = static_cast<double>(fCounts[0]);
+         double n2 = static_cast<double>(fCounts[i]);
+         double n = n1 + n2;
+
+         double delta = fMeans[i] - fMeans[0];
+         double delta2 = delta * delta;
+         double delta3 = delta * delta2;
+         double delta4 = delta2 * delta2; 
+
+         fM4[0] += fM4[i] + delta4 * n1 * n2 * (n1 * n1 - n1 * n2 + n2 * n2) / (n * n * n) +
+                   6.0 * delta2 * (n1 * n1 * fM2[i] + n2 * n2 * fM2[0]) / (n * n) +
+                   4.0 * delta * (n1 * fM3[i] - n2 * fM3[0]) / n;
+
+         fM3[0] += fM3[i] + delta3 * n1 * n2 * (n1 - n2) / (n * n) + 
+                   3.0 * delta * (n1 * fM2[i] - n2 * fM2[0]) / n;
+         
+         fM2[0] += fM2[i] + delta2 * n1 * n2 / n;
+         
+         fMeans[0] += delta * n2 / n;
+         fCounts[0] += fCounts[i]; 
+      }
+
+      if (fCounts[0] > 3 && fM2[0] > 0) {
+         double n = static_cast<double>(fCounts[0]);
+         *fResultKurtosis = (n * fM4[0]) / (fM2[0] * fM2[0]) - 3.0;
+      } else {
+         *fResultKurtosis = -3.0; 
+      }
+   }
+
+   std::string GetActionName() { return "Kurtosis"; }
+
+   KurtosisHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
+      return KurtosisHelper(result, fCounts.size());
+   }
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final {
+      // TODO: Implement mergeable value to support distributed RDataFrame
+      return nullptr;
    }
 };
 
