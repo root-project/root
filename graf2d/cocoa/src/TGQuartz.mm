@@ -193,9 +193,8 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    DrawBoxW(GetSelectedContext(), x1, y1, x2, y2, mode);
 }
 
-
 //______________________________________________________________________________
-void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
+void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
    //Comment from TVirtualX:
 
@@ -203,17 +202,19 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
    // n         : number of points
    // xy        : array of points
 
-   //End of comment.
-   if (n < 3)
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
       return;
 
+   if (n < 3)
+      return;
    //Do some checks first.
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable =
-               (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawFillArea");
+   auto &attfill = GetAttFill(wctxt);
 
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawFillAreaW");
    if (!drawable)
       return;
 
@@ -231,9 +232,9 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
    }
 
-   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
+   const TColor * const fillColor = gROOT->GetColor(attfill.GetFillColor());
    if (!fillColor) {
-      Error("DrawFillArea", "Could not find TColor for index %d", GetFillColor());
+      Error("DrawFillAreaW", "Could not find TColor for index %d", attfill.GetFillColor());
       return;
    }
 
@@ -242,13 +243,20 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
                                           n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
-      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
-         Error("DrawFillArea", "SetFillAreaParameters failed");
+      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, &attfill)) {
+         Error("DrawFillAreaW", "SetFillAreaParameters failed");
          return;
       }
 
       Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE);//The last argument - do not draw shadows.
    }
+}
+
+
+//______________________________________________________________________________
+void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
+{
+   DrawFillAreaW(GetSelectedContext(), n, xy);
 }
 
 
