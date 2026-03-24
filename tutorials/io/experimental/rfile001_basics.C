@@ -2,12 +2,14 @@
 /// \ingroup ROOT7 tutorial_io
 /// Demonstrate the basic usage of RFile.
 ///
-/// \author Giacomo Parolini <giacomo.parolini@cern.ch>
-/// \date 2025-11-06
 /// \macro_code
 /// \macro_output
+///
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
+///
+/// \date 2025-11-06
+/// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
 void write_hist_to_rfile(const char *fileName)
 {
