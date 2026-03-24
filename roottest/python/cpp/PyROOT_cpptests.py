@@ -229,7 +229,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( oaddr, Z.GimeAddressPtrRef( o ) )
       
       pZ = Z.getZ(1)
-      self.assertEqual( pZ , Z.getZ(1) )
+      self.assertIs( pZ , Z.getZ(1) )
 
       import array
       # Not supported in p2.2

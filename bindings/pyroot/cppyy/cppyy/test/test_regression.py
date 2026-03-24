@@ -253,7 +253,7 @@ class TestREGRESSION:
         a = cppyy.gbl.CObjA()
         co = cppyy.ll.as_cobject(a)
 
-        assert a == cppyy.bind_object(co, 'CObjA')
+        assert a is cppyy.bind_object(co, 'CObjA')
         assert a.m_int == 42
         assert cppyy.bind_object(co, 'CObjA').m_int == 42
 

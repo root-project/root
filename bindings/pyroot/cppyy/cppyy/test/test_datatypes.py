@@ -644,7 +644,7 @@ class TestDATATYPES:
 
         d = gbl.get_global_pod()
         assert gbl.is_global_pod(d)
-        assert c == d
+        assert c is d
         assert id(c) == id(d)
 
         e = gbl.CppyyTestPod()
