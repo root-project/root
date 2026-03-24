@@ -101,7 +101,7 @@ ROOT::RGeoItem REveGeomDescription::MakeBrowserItem(const RGeomNode &node, std::
                    visRec, vis);
 }
 
-void REveGeomDescription::SetTopNodeWithPath(const std::vector<std::string>& path)
+void REveGeomDescription::InitPath(const std::vector<std::string>& path)
 {
    fApex.SetFromPath(path);
    Build(fApex.GetNode()->GetVolume()); // rebuild geo-webviewer
@@ -139,7 +139,7 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
    if (arg.compare(0, 6, "CDTOP:") == 0)
    {
       std::vector<std::string> ep;
-      eveDesc.SetTopNodeWithPath(ep);
+      eveDesc.InitPath(ep);
       fDesc.IssueSignal(this, "CdTop");
       fWebWindow->Send(connid, "RELOAD"s);
    }
@@ -147,7 +147,7 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
    {
        std::vector<std::string> result = eveDesc.GetApexPath();
        result.pop_back();
-       eveDesc.SetTopNodeWithPath(result);
+       eveDesc.InitPath(result);
       fDesc.IssueSignal(this, "CdUp");
       fWebWindow->Send(connid, "RELOAD"s);
    }
@@ -159,7 +159,7 @@ void REveGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &ar
       std::vector<std::string> result = eveDesc.GetApexPath();
       if (path->size() > 1) {
          result.insert(result.end(), path->begin() + 1, path->end());
-         eveDesc.SetTopNodeWithPath(result);
+         eveDesc.InitPath(result);
          fDesc.IssueSignal(this, "SelectTop");
          fWebWindow->Send(connid, "RELOAD"s);
       }
@@ -317,7 +317,7 @@ REveGeoTopNodeData::REveGeoTopNodeData(const char* filename)
    fWebHierarchy->SetReceiver(this);
 }
 
-void REveGeoTopNodeData::SetTopNodeWithPath(const std::string &path)
+void REveGeoTopNodeData::InitPath(const std::string &path)
 {
    std::regex re(R"([/\\]+)"); // split on one or more slashes
    std::sregex_token_iterator it(path.begin(), path.end(), re, -1);
@@ -330,7 +330,7 @@ void REveGeoTopNodeData::SetTopNodeWithPath(const std::string &path)
       }
    }
 
-   fDesc.SetTopNodeWithPath(result);
+   fDesc.InitPath(result);
 
    for (auto &el : fNieces) {
       REveGeoTopNodeViz *etn = dynamic_cast<REveGeoTopNodeViz *>(el);
