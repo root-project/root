@@ -38,6 +38,26 @@ BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicAdd)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RHistAtomic_int, AtomicAdd);
 
+BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicLoad)(benchmark::State &state)
+{
+   int load;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicLoad(&fAtomic, &load);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_int, AtomicLoad);
+
+BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicStoreRelease)(benchmark::State &state)
+{
+   int store = 1;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicStoreRelease(&fAtomic, &store);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_int, AtomicStoreRelease);
+
 struct RHistAtomic_float : public benchmark::Fixture {
    float fAtomic = 0;
 };
@@ -60,6 +80,26 @@ BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicAdd)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RHistAtomic_float, AtomicAdd);
 
+BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicLoad)(benchmark::State &state)
+{
+   float load;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicLoad(&fAtomic, &load);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_float, AtomicLoad);
+
+BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicStoreRelease)(benchmark::State &state)
+{
+   float store = 1.0f;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicStoreRelease(&fAtomic, &store);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_float, AtomicStoreRelease);
+
 struct RHistAtomic_double : public benchmark::Fixture {
    double fAtomic = 0;
 };
@@ -81,6 +121,26 @@ BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicAdd)(benchmark::State &state)
    }
 }
 BENCHMARK_REGISTER_F(RHistAtomic_double, AtomicAdd);
+
+BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicLoad)(benchmark::State &state)
+{
+   double load;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicLoad(&fAtomic, &load);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_double, AtomicLoad);
+
+BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicStoreRelease)(benchmark::State &state)
+{
+   double store = 1.0;
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicStoreRelease(&fAtomic, &store);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_double, AtomicStoreRelease);
 
 struct RBinWithError : public benchmark::Fixture {
    ROOT::Experimental::RBinWithError fBin;
