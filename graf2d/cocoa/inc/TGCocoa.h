@@ -103,6 +103,8 @@ public:
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
    void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
 
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
