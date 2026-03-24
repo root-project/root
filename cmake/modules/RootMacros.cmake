@@ -34,11 +34,13 @@ else()
   set(runtimedir ${CMAKE_INSTALL_PYTHONDIR})
 endif()
 
-if(CMAKE_GENERATOR MATCHES Ninja OR CMAKE_GENERATOR MATCHES "Visual Studio")
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  set(GeneratorNeedsBuildSerialization False)
+  set(build_config "--config $<CONFIG>")
+endif()
+
+if(CMAKE_GENERATOR MATCHES Ninja)
   set(GeneratorNeedsBuildSerialization True)
-  if(MSVC)
-    set(build_config "--config $<CONFIG>")
-  endif()
 endif()
 
 set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
