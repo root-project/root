@@ -38,6 +38,15 @@ BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicAdd)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RHistAtomic_int, AtomicAdd);
 
+BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicAddRelease)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicAddRelease(&fAtomic, 1);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_int, AtomicAddRelease);
+
 BENCHMARK_DEFINE_F(RHistAtomic_int, AtomicLoad)(benchmark::State &state)
 {
    int load;
@@ -89,6 +98,15 @@ BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicAdd)(benchmark::State &state)
    }
 }
 BENCHMARK_REGISTER_F(RHistAtomic_float, AtomicAdd);
+
+BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicAddRelease)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicAddRelease(&fAtomic, 1.0f);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_float, AtomicAddRelease);
 
 BENCHMARK_DEFINE_F(RHistAtomic_float, AtomicLoad)(benchmark::State &state)
 {
@@ -142,6 +160,15 @@ BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicAdd)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RHistAtomic_double, AtomicAdd);
 
+BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicAddRelease)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      ROOT::Experimental::Internal::AtomicAddRelease(&fAtomic, 1.0);
+      benchmark::ClobberMemory();
+   }
+}
+BENCHMARK_REGISTER_F(RHistAtomic_double, AtomicAddRelease);
+
 BENCHMARK_DEFINE_F(RHistAtomic_double, AtomicLoad)(benchmark::State &state)
 {
    double load;
@@ -185,14 +212,14 @@ BENCHMARK_DEFINE_F(RBinWithError, Inc)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RBinWithError, Inc);
 
-BENCHMARK_DEFINE_F(RBinWithError, AtomicInc)(benchmark::State &state)
+BENCHMARK_DEFINE_F(RBinWithError, AtomicIncRelease)(benchmark::State &state)
 {
    for (auto _ : state) {
-      fBin.AtomicInc();
+      fBin.AtomicIncRelease();
       benchmark::ClobberMemory();
    }
 }
-BENCHMARK_REGISTER_F(RBinWithError, AtomicInc);
+BENCHMARK_REGISTER_F(RBinWithError, AtomicIncRelease);
 
 BENCHMARK_DEFINE_F(RBinWithError, Add)(benchmark::State &state)
 {
@@ -203,14 +230,14 @@ BENCHMARK_DEFINE_F(RBinWithError, Add)(benchmark::State &state)
 }
 BENCHMARK_REGISTER_F(RBinWithError, Add);
 
-BENCHMARK_DEFINE_F(RBinWithError, AtomicAdd)(benchmark::State &state)
+BENCHMARK_DEFINE_F(RBinWithError, AtomicAddRelease)(benchmark::State &state)
 {
    for (auto _ : state) {
-      fBin.AtomicAdd(1.0);
+      fBin.AtomicAddRelease(1.0);
       benchmark::ClobberMemory();
    }
 }
-BENCHMARK_REGISTER_F(RBinWithError, AtomicAdd);
+BENCHMARK_REGISTER_F(RBinWithError, AtomicAddRelease);
 
 BENCHMARK_DEFINE_F(RBinWithError, AtomicLoad)(benchmark::State &state)
 {

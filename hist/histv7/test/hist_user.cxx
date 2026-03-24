@@ -54,11 +54,11 @@ struct User {
       return *this;
    }
 
-   void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
+   void AtomicIncRelease() { ROOT::Experimental::Internal::AtomicIncRelease(&fValue); }
 
-   void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
+   void AtomicAddRelease(double w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w); }
 
-   void AtomicAdd(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w.fWeight); }
+   void AtomicAddRelease(const UserWeight &w) { ROOT::Experimental::Internal::AtomicAddRelease(&fValue, w.fWeight); }
 
    void AtomicAdd(const User &rhs) { ROOT::Experimental::Internal::AtomicAdd(&fValue, rhs.fValue); }
 
@@ -194,7 +194,7 @@ TEST(RHistEngineUser, FillUserWeightInvalidNumberOfArguments)
 
 TEST(RHistEngineUser, FillAtomic)
 {
-   // Unweighted filling with atomic instructions uses AtomicInc
+   // Unweighted filling with atomic instructions uses AtomicIncRelease
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -209,7 +209,7 @@ TEST(RHistEngineUser, FillAtomic)
 
 TEST(RHistEngineUser, FillAtomicWeight)
 {
-   // Weighted filling with atomic instructions uses AtomicAdd(double)
+   // Weighted filling with atomic instructions uses AtomicAddRelease(double)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
@@ -224,7 +224,7 @@ TEST(RHistEngineUser, FillAtomicWeight)
 
 TEST(RHistEngineUser, FillAtomicUserWeight)
 {
-   // Weighted filling with user-defined weight and atomic instructions uses AtomicAdd(const UserWeight &)
+   // Weighted filling with user-defined weight and atomic instructions uses AtomicAddRelease(const UserWeight &)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<User> engine({axis});
