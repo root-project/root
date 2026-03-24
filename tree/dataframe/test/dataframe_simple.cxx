@@ -1085,6 +1085,27 @@ TEST_P(RDFSimpleTests, ReadStdArray)
    }
 }
 
+TEST_P(RDFSimpleTests, Product)
+{
+   // Integer Product
+   auto df = ROOT::RDataFrame(5);
+   auto df_i = df.Define("i", [](ULong64_t i) { return (int)i + 1; }, {"rdfentry_"});
+   auto product_i = df_i.Product("i");
+
+   EXPECT_EQ(*product_i, 120);
+
+   // Double Product
+   auto df2 = ROOT::RDataFrame(3);
+   auto df_d = df2.Define("d", [](ULong64_t i) {
+      if (i == 0) return 0.5;
+      if (i == 1) return 4.0;
+      return 10.0;
+   }, {"rdfentry_"});
+   auto product_d = df_d.Product("d");
+
+   EXPECT_DOUBLE_EQ(*product_d, 20.0);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
