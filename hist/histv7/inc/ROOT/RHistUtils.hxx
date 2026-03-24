@@ -152,6 +152,18 @@ std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoad(const T *ptr, T *ret)
 }
 
 template <typename T>
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoadAcquire(const T *ptr, T *ret)
+{
+#ifndef _MSC_VER
+   __atomic_load(ptr, ret, __ATOMIC_ACQUIRE);
+#else
+   MSVC::AtomicOps<sizeof(T)>::Load(ptr, ret);
+   // Cannot specify the memory order directly, use a fence.
+   std::atomic_thread_fence(std::memory_order_acquire);
+#endif
+}
+
+template <typename T>
 std::enable_if_t<std::is_arithmetic_v<T>> AtomicStoreRelease(T *ptr, T *val)
 {
 #ifndef _MSC_VER
