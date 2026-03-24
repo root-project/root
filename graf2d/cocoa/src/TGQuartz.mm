@@ -599,6 +599,8 @@ void TGQuartz::SetLineColor(Color_t cindex)
 {
    // Set color index "cindex" for drawing lines.
    TAttLine::SetLineColor(cindex);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -607,6 +609,8 @@ void TGQuartz::SetLineStyle(Style_t lstyle)
 {
    // Set line style.
    TAttLine::SetLineStyle(lstyle);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -616,6 +620,8 @@ void TGQuartz::SetLineWidth(Width_t width)
    // Set the line width.
 
    TAttLine::SetLineWidth(width);
+
+   SetAttLine(GetSelectedContext(), *this);
 }
 
 
@@ -625,6 +631,8 @@ void TGQuartz::SetFillColor(Color_t cindex)
    // Set color index "cindex" for fill areas.
 
    TAttFill::SetFillColor(cindex);
+
+   SetAttFill(GetSelectedContext(), *this);
 }
 
 
@@ -633,6 +641,8 @@ void TGQuartz::SetFillStyle(Style_t style)
 {
    // Set fill area style.
    TAttFill::SetFillStyle(style);
+
+   SetAttFill(GetSelectedContext(), *this);
 }
 
 
@@ -641,6 +651,8 @@ void TGQuartz::SetMarkerColor(Color_t cindex)
 {
    // Set color index "cindex" for markers.
    TAttMarker::SetMarkerColor(cindex);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -651,6 +663,8 @@ void TGQuartz::SetMarkerSize(Float_t markersize)
    //
    // markersize - the marker scale factor
    TAttMarker::SetMarkerSize(markersize);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -660,6 +674,8 @@ void TGQuartz::SetMarkerStyle(Style_t markerstyle)
    // Set marker style.
 
    TAttMarker::SetMarkerStyle(markerstyle);
+
+   SetAttMarker(GetSelectedContext(), *this);
 }
 
 
@@ -667,11 +683,10 @@ void TGQuartz::SetMarkerStyle(Style_t markerstyle)
 void TGQuartz::SetTextAlign(Short_t talign)
 {
    // Set the text alignment.
-   //
-   // talign = txalh horizontal text alignment
-   // talign = txalv vertical text alignment
 
    TAttText::SetTextAlign(talign);
+
+   SetAttText(GetSelectedContext(), *this);
 }
 
 //______________________________________________________________________________
@@ -680,6 +695,8 @@ void TGQuartz::SetTextColor(Color_t cindex)
    // Set the color index "cindex" for text.
 
    TAttText::SetTextColor(cindex);
+
+   SetAttText(GetSelectedContext(), *this);
 }
 
 
@@ -690,12 +707,7 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 
    TAttText::SetTextFont(fontNumber);
 
-   if (!TTF::IsInitialized()) {
-      Error("SetTextFont", "TTF is not initialized");
-      return;
-   }
-
-   TTF::SetTextFont(fontNumber);
+   SetAttText(GetSelectedContext(), *this);
 }
 
 //______________________________________________________________________________
@@ -718,12 +730,7 @@ void TGQuartz::SetTextSize(Float_t textsize)
 
    TAttText::SetTextSize(textsize);
 
-   if (!TTF::IsInitialized()) {
-      Error("SetTextSize", "TTF is not initialized");
-      return;
-   }
-
-   TTF::SetTextSize(textsize);
+   SetAttText(GetSelectedContext(), *this);
 }
 
 
@@ -774,6 +781,14 @@ void TGQuartz::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
 void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 {
    att.Copy(GetAttText(wctxt));
+
+   if (!TTF::IsInitialized()) {
+      Error("SetAttText", "TTF is not initialized");
+      return;
+   }
+
+   TTF::SetTextSize(att.GetTextSize());
+   TTF::SetTextFont(att.GetTextFont());
 
    // TODO: remove this after transition done
    TAttText::SetTextAlign(att.GetTextAlign());

@@ -105,6 +105,7 @@ public:
 
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;
+   WinContext_t GetSelectedContext();
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
