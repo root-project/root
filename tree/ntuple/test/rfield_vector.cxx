@@ -498,3 +498,54 @@ TEST(RNTuple, VectorOfTObject)
    ASSERT_EQ(1u, objs->size());
    EXPECT_EQ(44u, objs->at(0).GetUniqueID());
 }
+
+TEST(RNTuple, RVecAdopted)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_tobject.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto vec = model->MakeField<std::vector<float>>("vec");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *vec = {1.0, 2.0};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   float buf[] = {0.0, 0.0, 0.0};
+   ROOT::RVec<float> vec(buf, 3);
+   auto view = reader->GetView("vec", &vec);
+
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(3u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 1);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(1u, vec.size());
+
+   view(0);
+   EXPECT_NE(buf, vec.data());
+   EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   vec = ROOT::RVec<float>(buf, 2);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+
+   view(0);
+   EXPECT_EQ(buf, vec.data());
+   EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vec));
+   EXPECT_EQ(2u, vec.size());
+   EXPECT_FLOAT_EQ(1.0, buf[0]);
+   EXPECT_FLOAT_EQ(2.0, buf[1]);
+   EXPECT_FLOAT_EQ(0.0, buf[2]);
+}
