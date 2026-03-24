@@ -42,9 +42,21 @@ PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
    PyObject *name = nullptr;
    PyObject *target = nullptr;
 
-   PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target);
+   if (!PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target)) {
+      return nullptr;
+   }
 
-   CPyCppyy::RegisterConverterAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
+   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
+   if (!nameStr) {
+      return nullptr;
+   }
+
+   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
+   if (!targetStr) {
+      return nullptr;
+   }
+
+   CPyCppyy::RegisterConverterAlias(nameStr, targetStr);
 
    Py_RETURN_NONE;
 }
@@ -54,9 +66,21 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
    PyObject *name = nullptr;
    PyObject *target = nullptr;
 
-   PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target);
+   if (!PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target)) {
+      return nullptr;
+   }
 
-   CPyCppyy::RegisterExecutorAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
+   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
+   if (!nameStr) {
+      return nullptr;
+   }
+
+   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
+   if (!targetStr) {
+      return nullptr;
+   }
+
+   CPyCppyy::RegisterExecutorAlias(nameStr, targetStr);
 
    Py_RETURN_NONE;
 }
@@ -75,7 +99,7 @@ class PyObjRefCounter final {
    void Reset(PyObject *object)
    {
       if (fObject) {
-         Py_DECREF(fObject);
+         Py_DecRef(fObject);
          fObject = nullptr;
       }
       if (object) {

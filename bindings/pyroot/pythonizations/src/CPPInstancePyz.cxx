@@ -12,9 +12,7 @@
 // Bindings
 #include "CPyCppyy/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
 #include "../../cppyy/CPyCppyy/src/CPPInstance.h"
-#include "../../cppyy/CPyCppyy/src/CustomPyTypes.h"
 
 #include "PyROOTPythonize.h"
 #include "TBufferFile.h"
@@ -40,18 +38,18 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
    PyObject *pybuf = 0, *pyname = 0;
    if (!PyArg_ParseTuple(args, "O!O!:__expand__", &PyBytes_Type, &pybuf, &PyBytes_Type, &pyname))
       return 0;
-   const char *clname = PyBytes_AS_STRING(pyname);
+   const char *clname = PyBytes_AsString(pyname);
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
    void *newObj = 0;
    if (strcmp(clname, "TBufferFile") == 0) {
       TBufferFile *buf = new TBufferFile(TBuffer::kWrite);
-      buf->WriteFastArray(PyBytes_AS_STRING(pybuf), PyBytes_GET_SIZE(pybuf));
+      buf->WriteFastArray(PyBytes_AsString(pybuf), PyBytes_Size(pybuf));
       newObj = buf;
    } else {
       // use the PyString macro's to by-pass error checking; do not adopt the buffer,
       // as the local TBufferFile can go out of scope (there is no copying)
-      TBufferFile buf(TBuffer::kRead, PyBytes_GET_SIZE(pybuf), PyBytes_AS_STRING(pybuf), kFALSE);
+      TBufferFile buf(TBuffer::kRead, PyBytes_Size(pybuf), PyBytes_AsString(pybuf), kFALSE);
       newObj = buf.ReadObjectAny(0);
    }
    PyObject *result = CPyCppyy::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/true);
@@ -101,13 +99,13 @@ PyObject *op_reduce(PyObject *self)
    // the buffer contents; use a string for the class name, used when casting
    // on reading back in (see CPPInstanceExpand defined above)
    PyObject *res2 = PyTuple_New(2);
-   PyTuple_SET_ITEM(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
-   PyTuple_SET_ITEM(res2, 1, PyBytes_FromString(Cppyy::GetScopedFinalName(selfClass).c_str()));
+   PyTuple_SetItem(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
+   PyTuple_SetItem(res2, 1, PyBytes_FromString(Cppyy::GetScopedFinalName(selfClass).c_str()));
 
    PyObject *result = PyTuple_New(2);
    Py_INCREF(s_expand);
-   PyTuple_SET_ITEM(result, 0, s_expand);
-   PyTuple_SET_ITEM(result, 1, res2);
+   PyTuple_SetItem(result, 0, s_expand);
+   PyTuple_SetItem(result, 1, res2);
 
    return result;
 }
