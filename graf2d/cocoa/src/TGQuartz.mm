@@ -267,6 +267,51 @@ void TGQuartz::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y
    //Noop.
 }
 
+//______________________________________________________________________________
+void TGQuartz::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
+
+   if (fDirectDraw) {
+      if (!drawable0.fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
+         if (!view) {
+             ::Warning("DrawLineW", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         if (![view.fQuartzWindow findXorWindow])
+            [view.fQuartzWindow addXorWindow];
+         fPimpl->fX11CommandBuffer.AddDrawLineXor(drawable0.fID, x1, y1, x2, y2);
+      }
+
+      return;
+   }
+
+   auto &attline = GetAttLine(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawLineW");
+   if (!drawable)
+      return;
+
+   CGContextRef ctx = drawable.fContext;
+   const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
+
+   if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+      Error("DrawLineW", "Could not set line color for index %d", int(attline.GetLineColor()));
+      return;
+   }
+
+   Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+   Quartz::SetLineWidth(ctx, attline.GetLineWidth());
+
+   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2,
+                    X11::LocalYROOTToCocoa(drawable, y2));
+}
 
 //______________________________________________________________________________
 void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
@@ -275,62 +320,26 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x1,y1        : begin of line
    // x2,y2        : end of line
 
-   if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
-         if (!view) {
-             ::Warning("DrawLine", "Invalid view/window for XOR-mode");
-             return;
-         }
-
-         if (![view.fQuartzWindow findXorWindow])
-            [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);
-      }
-
-      return;
-   }
-
-   //Do some checks first:
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawLine, bad drawable is selected");
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawLine");
-   if (!drawable)
-      return;
 
-   CGContextRef ctx = drawable.fContext;
-   const Quartz::CGStateGuard ctxGuard(ctx);
-   //AA flag is not a part of a state.
-   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
-
-   if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-      Error("DrawLine", "Could not set line color for index %d", int(GetLineColor()));
-      return;
-   }
-
-   Quartz::SetLineStyle(ctx, GetLineStyle());
-   Quartz::SetLineWidth(ctx, GetLineWidth());
-
-   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2,
-                    X11::LocalYROOTToCocoa(drawable, y2));
+   DrawLineW(GetSelectedContext(), x1, y1, x2, y2);
 }
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
+void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
-   //Comment from TVirtualX:
-   // Draw a line through all points.
-   // n         : number of points
-   // xy        : list of points
-   //End of comment.
+   auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
+   if (!drawable0)
+      return;
 
    //Some checks first.
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable =
-                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyLine");
+   auto &attline = GetAttLine(wctxt);
+
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawPolyLineW");
    if (!drawable)
       return;
 
@@ -339,13 +348,13 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   if (!Quartz::SetLineColor(ctx, GetLineColor())) {
-      Error("DrawPolyLine", "Could not find TColor for index %d", GetLineColor());
+   if (!Quartz::SetLineColor(ctx, attline.GetLineColor())) {
+      Error("DrawPolyLineW", "Could not find TColor for index %d", attline.GetLineColor());
       return;
    }
 
-   Quartz::SetLineStyle(ctx, GetLineStyle());
-   Quartz::SetLineWidth(ctx, GetLineWidth());
+   Quartz::SetLineStyle(ctx, attline.GetLineStyle());
+   Quartz::SetLineWidth(ctx, attline.GetLineWidth());
 
    //Convert to bottom-left-corner system.
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
@@ -358,6 +367,19 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    // CTM (current transformation matrix) is restored by 'ctxGuard's dtor.
 }
 
+//______________________________________________________________________________
+void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
+{
+   //Comment from TVirtualX:
+   // Draw a line through all points.
+   // n         : number of points
+   // xy        : list of points
+   //End of comment.
+
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawPolyLine, bad drawable is selected");
+
+   DrawPolyLineW(GetSelectedContext(), n, xy);
+}
 
 //______________________________________________________________________________
 void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
