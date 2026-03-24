@@ -22,7 +22,9 @@ add_test(NAME roottest-cling-dict-ROOT-8096-build
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY FIXTURES_SETUP roottest-cling-dict-ROOT-8096-build)
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
 if(GeneratorNeedsBuildSerialization)
-   set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+   if(GeneratorNeedsResourecLock)
+      set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+   endif()
    set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
 

@@ -14,7 +14,9 @@ ROOTTEST_ADD_TEST(split-fail
 ROOTTEST_ADD_TEST(libjetevent-build
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target JetEvent${fast} -- ${always-make})
 if(GeneratorNeedsBuildSerialization)
-    set_property(TEST roottest-root-io-tmpifile-libjetevent-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    if(GeneratorNeedsResourecLock)
+        set_property(TEST roottest-root-io-tmpifile-libjetevent-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
+    endif()
     set_property(TEST roottest-root-io-tmpifile-libjetevent-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
 
