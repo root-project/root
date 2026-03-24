@@ -1519,6 +1519,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          // console.log(u8[0], u8[1], u8[2], u8[3]);
 
          let g = new RC.Geometry();
+
+         // bounding box
+         let bb = topNode.bbox;
+         g.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+
          // let vatt = new RC.BufferAttribute(topNode.shapeVertices, 3);
          // g.vertices = new RC.BufferAttribute(topNode.shapeVertices, 3);
          g.vertices = RC.Float32Attribute(topNode.shapeVertices, 3);
