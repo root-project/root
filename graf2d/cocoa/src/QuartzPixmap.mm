@@ -39,6 +39,7 @@ namespace Quartz = ROOT::Quartz;
    if (self = [super init]) {
       fWidth = 0;
       fHeight = 0;
+      fDirectDraw = NO;
 
       if (![self resizeW : width H : height scaleFactor : scaleFactor]) {
          [self release];
@@ -209,6 +210,18 @@ namespace Quartz = ROOT::Quartz;
 - (TAttText *) attText
 {
    return &fAttText;
+}
+
+//______________________________________________________________________________
+- (void) setDirectDraw : (BOOL) mode
+{
+   fDirectDraw = mode;
+}
+
+//______________________________________________________________________________
+- (BOOL) isDirectDraw
+{
+   return fDirectDraw;
 }
 
 //______________________________________________________________________________

@@ -121,7 +121,7 @@ void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t 
       return;
 
    //Check some conditions first.
-   if (fDirectDraw) {
+   if ([drawable0 isDirectDraw]) {
       if (!drawable0.fIsPixmap) {
          QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
          if (!view) {
@@ -208,8 +208,8 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
    if (n < 3)
       return;
-   //Do some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   // No fill area with direct drawing
+   if ([drawable0 isDirectDraw])
       return;
 
    auto &attfill = GetAttFill(wctxt);
@@ -274,7 +274,7 @@ void TGQuartz::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t
    if (!drawable0)
       return;
 
-   if (fDirectDraw) {
+   if ([drawable0 isDirectDraw]) {
       if (!drawable0.fIsPixmap) {
          QuartzView * const view = (QuartzView *)fPimpl->GetWindow(drawable0.fID).fContentView;
          if (!view) {
@@ -334,7 +334,7 @@ void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
       return;
 
    //Some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if ([drawable0 isDirectDraw])
       return;
 
    auto &attline = GetAttLine(wctxt);
@@ -389,7 +389,7 @@ void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
       return;
 
    //Do some checks first.
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if ([drawable0 isDirectDraw])
       return;
 
    auto &attmark = GetAttMarker(wctxt);
@@ -456,7 +456,7 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle 
    if (!drawable0)
       return;
 
-   if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
+   if ([drawable0 isDirectDraw])
       return;
 
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
@@ -946,6 +946,9 @@ void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode m
 
    auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
    if (!drawable0)
+      return;
+
+   if ([drawable0 isDirectDraw])
       return;
 
    auto &atttext = GetAttText(wctxt);

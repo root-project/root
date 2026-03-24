@@ -1983,6 +1983,7 @@ void print_mask_info(ULong_t mask)
       fID = 0;
 
       fDrawMode = TVirtualX::kCopy;
+      fDirectDraw = NO;
 
       //Passive grab parameters.
       fPassiveGrabButton = -1;//0 is kAnyButton.
@@ -2166,6 +2167,21 @@ void print_mask_info(ULong_t mask)
    return res;
 }
 
+//______________________________________________________________________________
+- (void) setDirectDraw : (BOOL) mode
+{
+   fDirectDraw = mode;
+
+   // while painting operates with the pixmap, set direct flag for it too
+   if (fBackBuffer)
+      [fBackBuffer setDirectDraw : mode];
+}
+
+//______________________________________________________________________________
+- (BOOL) isDirectDraw
+{
+   return fDirectDraw;
+}
 
 //______________________________________________________________________________
 - (void) setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h

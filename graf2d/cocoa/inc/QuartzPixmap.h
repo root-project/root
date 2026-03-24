@@ -46,6 +46,8 @@
    TAttFill   fAttFill;   ///< current fill attributes
    TAttMarker fAttMarker; ///< current marker attribute
    TAttText   fAttText;   ///< current text attribute
+
+   BOOL fDirectDraw;
 }
 
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
@@ -72,6 +74,10 @@
 @property (nonatomic, readonly) TAttFill *attFill;
 @property (nonatomic, readonly) TAttMarker *attMarker;
 @property (nonatomic, readonly) TAttText *attText;
+
+- (void) setDirectDraw : (BOOL) mode;
+- (BOOL) isDirectDraw;
+
 
 - (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask
          clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
