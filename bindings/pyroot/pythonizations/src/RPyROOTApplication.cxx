@@ -10,7 +10,7 @@
  *************************************************************************/
 
 // Bindings
-#include "Python.h"
+#include "PythonLimitedAPI.h"
 #include "RPyROOTApplication.h"
 
 // ROOT
@@ -51,18 +51,24 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          // Retrieve sys.argv list from Python
          PyObject *argl = PySys_GetObject("argv");
 
-         if (argl && 0 < PyList_Size(argl))
-            argc = (int)PyList_GET_SIZE(argl);
+         if (argl) {
+            Py_ssize_t size = PyList_Size(argl);
+            if (size > 0)
+               argc = static_cast<int>(size);
+         }
 
          argv = new char *[argc];
+
          for (int i = 1; i < argc; ++i) {
-            char *argi = const_cast<char *>(PyUnicode_AsUTF8(PyList_GET_ITEM(argl, i)));
+            PyObject *item = PyList_GetItem(argl, i);
+            const char *argi = PyUnicode_AsUTF8AndSize(item, nullptr);
+
             if (strcmp(argi, "-") == 0 || strcmp(argi, "--") == 0) {
                // Stop collecting options, the remaining are for the Python script
                argc = i; // includes program name
                break;
             }
-            argv[i] = argi;
+            argv[i] = const_cast<char *>(argi);
          }
       }
 
@@ -139,7 +145,7 @@ void PyROOT::RPyROOTApplication::InitROOTMessageCallback()
 /// \param[in] args [0] Boolean that tells whether to ignore the command line options.
 PyObject *PyROOT::RPyROOTApplication::InitApplication(PyObject * /*self*/, PyObject *args)
 {
-   int argc = PyTuple_GET_SIZE(args);
+   int argc = PyTuple_Size(args);
    if (argc == 1) {
       PyObject *ignoreCmdLineOpts = PyTuple_GetItem(args, 0);
 

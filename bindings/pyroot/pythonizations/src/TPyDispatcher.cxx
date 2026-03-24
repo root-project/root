@@ -54,7 +54,7 @@ TPyDispatcher &TPyDispatcher::operator=(const TPyDispatcher &other)
    if (this != &other) {
       this->TObject::operator=(other);
 
-      Py_XDECREF(fCallable);
+      Py_DecRef(fCallable);
       Py_XINCREF(other.fCallable);
       fCallable = other.fCallable;
    }
@@ -67,7 +67,7 @@ TPyDispatcher &TPyDispatcher::operator=(const TPyDispatcher &other)
 
 TPyDispatcher::~TPyDispatcher()
 {
-   Py_XDECREF(fCallable);
+   Py_DecRef(fCallable);
 }
 
 //- public members -----------------------------------------------------------
@@ -93,13 +93,13 @@ PyObject *TPyDispatcher::DispatchVA(const char *format, ...)
 
       if (!PyTuple_Check(args)) { // if only one arg ...
          PyObject *t = PyTuple_New(1);
-         PyTuple_SET_ITEM(t, 0, args);
+         PyTuple_SetItem(t, 0, args);
          args = t;
       }
    }
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -136,27 +136,27 @@ PyObject *TPyDispatcher::DispatchVA1(const char *clname, void *obj, const char *
 
       if (!PyTuple_Check(args)) { // if only one arg ...
          PyObject *t = PyTuple_New(2);
-         PyTuple_SET_ITEM(t, 0, pyobj);
-         PyTuple_SET_ITEM(t, 1, args);
+         PyTuple_SetItem(t, 0, pyobj);
+         PyTuple_SetItem(t, 1, args);
          args = t;
       } else {
-         PyObject *t = PyTuple_New(PyTuple_GET_SIZE(args) + 1);
-         PyTuple_SET_ITEM(t, 0, pyobj);
-         for (int i = 0; i < PyTuple_GET_SIZE(args); i++) {
-            PyObject *item = PyTuple_GET_ITEM(args, i);
-            Py_INCREF(item);
-            PyTuple_SET_ITEM(t, i + 1, item);
+         PyObject *t = PyTuple_New(PyTuple_Size(args) + 1);
+         PyTuple_SetItem(t, 0, pyobj);
+         for (int i = 0; i < PyTuple_Size(args); i++) {
+            PyObject *item = PyTuple_GetItem(args, i);
+            Py_IncRef(item);
+            PyTuple_SetItem(t, i + 1, item);
          }
-         Py_DECREF(args);
+         Py_DecRef(args);
          args = t;
       }
    } else {
       args = PyTuple_New(1);
-      PyTuple_SET_ITEM(args, 0, pyobj);
+      PyTuple_SetItem(args, 0, pyobj);
    }
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -171,12 +171,12 @@ PyObject *TPyDispatcher::DispatchVA1(const char *clname, void *obj, const char *
 PyObject *TPyDispatcher::Dispatch(TPad *selpad, TObject *selected, Int_t event)
 {
    PyObject *args = PyTuple_New(3);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(selpad, "TPad"));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
-   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(event));
+   PyTuple_SetItem(args, 0, CPyCppyy::Instance_FromVoidPtr(selpad, "TPad"));
+   PyTuple_SetItem(args, 1, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
+   PyTuple_SetItem(args, 2, PyLong_FromLong(event));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -191,13 +191,13 @@ PyObject *TPyDispatcher::Dispatch(TPad *selpad, TObject *selected, Int_t event)
 PyObject *TPyDispatcher::Dispatch(Int_t event, Int_t x, Int_t y, TObject *selected)
 {
    PyObject *args = PyTuple_New(4);
-   PyTuple_SET_ITEM(args, 0, PyLong_FromLong(event));
-   PyTuple_SET_ITEM(args, 1, PyLong_FromLong(x));
-   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(y));
-   PyTuple_SET_ITEM(args, 3, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
+   PyTuple_SetItem(args, 0, PyLong_FromLong(event));
+   PyTuple_SetItem(args, 1, PyLong_FromLong(x));
+   PyTuple_SetItem(args, 2, PyLong_FromLong(y));
+   PyTuple_SetItem(args, 3, CPyCppyy::Instance_FromVoidPtr(selected, "TObject"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -212,12 +212,12 @@ PyObject *TPyDispatcher::Dispatch(Int_t event, Int_t x, Int_t y, TObject *select
 PyObject *TPyDispatcher::Dispatch(TVirtualPad *pad, TObject *obj, Int_t event)
 {
    PyObject *args = PyTuple_New(3);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(pad, "TVirtualPad"));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(obj, "TObject"));
-   PyTuple_SET_ITEM(args, 2, PyLong_FromLong(event));
+   PyTuple_SetItem(args, 0, CPyCppyy::Instance_FromVoidPtr(pad, "TVirtualPad"));
+   PyTuple_SetItem(args, 1, CPyCppyy::Instance_FromVoidPtr(obj, "TObject"));
+   PyTuple_SetItem(args, 2, PyLong_FromLong(event));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -232,11 +232,11 @@ PyObject *TPyDispatcher::Dispatch(TVirtualPad *pad, TObject *obj, Int_t event)
 PyObject *TPyDispatcher::Dispatch(TGListTreeItem *item, TDNDData *data)
 {
    PyObject *args = PyTuple_New(2);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(item, "TGListTreeItem"));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(data, "TDNDData"));
+   PyTuple_SetItem(args, 0, CPyCppyy::Instance_FromVoidPtr(item, "TGListTreeItem"));
+   PyTuple_SetItem(args, 1, CPyCppyy::Instance_FromVoidPtr(data, "TDNDData"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
@@ -251,11 +251,11 @@ PyObject *TPyDispatcher::Dispatch(TGListTreeItem *item, TDNDData *data)
 PyObject *TPyDispatcher::Dispatch(const char *name, const TList *attr)
 {
    PyObject *args = PyTuple_New(2);
-   PyTuple_SET_ITEM(args, 0, PyBytes_FromString(name));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr((void *)attr, "TList"));
+   PyTuple_SetItem(args, 0, PyBytes_FromString(name));
+   PyTuple_SetItem(args, 1, CPyCppyy::Instance_FromVoidPtr((void *)attr, "TList"));
 
    PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
+   Py_DecRef(args);
 
    if (!result) {
       PyErr_Print();
