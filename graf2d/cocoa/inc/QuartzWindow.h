@@ -209,6 +209,7 @@ class Command;
    TAttText   fAttText;   ///< current text attribute
 
    TVirtualX::EDrawMode fDrawMode; // current draw mode
+   BOOL fDirectDraw;
 
    BOOL fHasFocus;
    QuartzView *fParentView;
@@ -252,6 +253,8 @@ class Command;
 @property (nonatomic, readonly) TAttText *attText;
 
 - (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (void) setDirectDraw : (BOOL) mode;
+- (BOOL) isDirectDraw;
 
 @property (nonatomic, assign) CGContextRef fContext;
 

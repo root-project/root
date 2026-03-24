@@ -61,6 +61,8 @@
 
 // new graphics methods
 - (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (void) setDirectDraw : (BOOL) mode;
+- (BOOL) isDirectDraw;
 
 //Functions to copy one drawable into another.
 - (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask

@@ -3497,6 +3497,17 @@ void TGCocoa::SetDoubleBuffer(Int_t windowID, Int_t mode)
 void TGCocoa::SetDoubleBufferOFF()
 {
    fDirectDraw = true;
+
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
+          "SetDoubleBufferON, called, but no correct window was selected before");
+
+   NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
+   if (!window) return;
+
+   assert(window.fIsPixmap == NO &&
+          "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
+
+   [window setDirectDraw : YES];
 }
 
 //______________________________________________________________________________
@@ -3509,11 +3520,12 @@ void TGCocoa::SetDoubleBufferON()
           "SetDoubleBufferON, called, but no correct window was selected before");
 
    NSObject<X11Window> * const window = fPimpl->GetWindow(fSelectedDrawable);
-
    if (!window) return;
 
    assert(window.fIsPixmap == NO &&
           "SetDoubleBufferON, selected drawable is a pixmap, can not attach pixmap to pixmap");
+
+   [window setDirectDraw : NO];
 
    const unsigned currW = window.fWidth;
    const unsigned currH = window.fHeight;
