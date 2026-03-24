@@ -142,7 +142,7 @@ struct AtomicOps<8> {
 #endif
 
 template <typename T>
-void AtomicLoad(const T *ptr, T *ret)
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicLoad(const T *ptr, T *ret)
 {
 #ifndef _MSC_VER
    __atomic_load(ptr, ret, __ATOMIC_RELAXED);
@@ -152,7 +152,7 @@ void AtomicLoad(const T *ptr, T *ret)
 }
 
 template <typename T>
-void AtomicStoreRelease(T *ptr, T *val)
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicStoreRelease(T *ptr, T *val)
 {
 #ifndef _MSC_VER
    __atomic_store(ptr, val, __ATOMIC_RELEASE);
@@ -164,7 +164,7 @@ void AtomicStoreRelease(T *ptr, T *val)
 }
 
 template <typename T>
-bool AtomicCompareExchange(T *ptr, T *expected, T *desired)
+std::enable_if_t<std::is_arithmetic_v<T>, bool> AtomicCompareExchange(T *ptr, T *expected, T *desired)
 {
 #ifndef _MSC_VER
    return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
@@ -174,7 +174,7 @@ bool AtomicCompareExchange(T *ptr, T *expected, T *desired)
 }
 
 template <typename T>
-bool AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
+std::enable_if_t<std::is_arithmetic_v<T>, bool> AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
 {
 #ifndef _MSC_VER
    return __atomic_compare_exchange(ptr, expected, desired, /*weak=*/false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED);
@@ -187,7 +187,7 @@ bool AtomicCompareExchangeAcquire(T *ptr, T *expected, T *desired)
 }
 
 template <typename T>
-void AtomicAddCompareExchangeLoop(T *ptr, T val)
+std::enable_if_t<std::is_arithmetic_v<T>> AtomicAddCompareExchangeLoop(T *ptr, T val)
 {
    T expected;
    AtomicLoad(ptr, &expected);
