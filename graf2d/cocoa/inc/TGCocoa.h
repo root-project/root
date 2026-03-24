@@ -107,6 +107,8 @@ public:
    WinContext_t GetWindowContext(Int_t wid) override;
    WinContext_t GetSelectedContext();
    void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   void      ClearWindowW(WinContext_t wctxt) override;
+   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
