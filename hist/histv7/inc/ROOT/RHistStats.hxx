@@ -23,6 +23,10 @@ class TBuffer;
 namespace ROOT {
 namespace Experimental {
 
+// forward declaration for friend declaration
+template <typename T>
+class RHist;
+
 /**
 Histogram statistics of unbinned values.
 
@@ -39,6 +43,9 @@ stats.Fill(1.5);
 Feedback is welcome!
 */
 class RHistStats final {
+   template <typename T>
+   friend class RHist;
+
 public:
    /// Statistics for one dimension.
    struct RDimensionStats final {

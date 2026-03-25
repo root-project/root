@@ -492,3 +492,137 @@ TEST(RHistEngine, SliceRangeSum)
    }
    EXPECT_EQ(sliced.GetBinContent(RBinIndex::Overflow()), 3000);
 }
+
+TEST(RHist, SliceTainted)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis);
+
+   hist.SetBinContent(RBinIndex(1), 2);
+   ASSERT_TRUE(hist.GetStats().IsTainted());
+
+   const auto sliced = hist.Slice(RSliceSpec{});
+   EXPECT_TRUE(sliced.GetStats().IsTainted());
+}
+
+TEST(RHist, SliceFull)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis);
+
+   hist.Fill(1.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   // Three different ways of "slicing" which will keep the entire axis.
+   for (auto sliceSpec : {RSliceSpec{}, RSliceSpec(axis.GetFullRange()), RSliceSpec(axis.GetNormalRange())}) {
+      const auto sliced = hist.Slice(sliceSpec);
+      ASSERT_EQ(sliced.GetNDimensions(), 1);
+      EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+
+      EXPECT_FALSE(sliced.GetStats().IsTainted());
+      EXPECT_EQ(sliced.GetBinContent(1), 1);
+   }
+}
+
+TEST(RHist, SliceNormal)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis);
+
+   hist.Fill(1.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   const auto sliced = hist.Slice(axis.GetNormalRange(1, 5));
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_EQ(sliced.GetTotalNBins(), 6);
+   EXPECT_EQ(sliced.GetBinContent(0), 1);
+
+   // The sliced histogram still has the same statistics.
+   EXPECT_FALSE(sliced.GetStats().IsTainted());
+   EXPECT_EQ(sliced.GetNEntries(), 1);
+   EXPECT_EQ(sliced.ComputeMean(), 1.5);
+}
+
+TEST(RHist, SliceRebin)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis);
+
+   hist.Fill(1.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   const auto sliced = hist.Slice(RSliceSpec::ROperationRebin(2));
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins / 2 + 2);
+   EXPECT_EQ(sliced.GetBinContent(0), 1);
+
+   // The sliced histogram still has the same statistics.
+   EXPECT_FALSE(sliced.GetStats().IsTainted());
+   EXPECT_EQ(sliced.GetNEntries(), 1);
+   EXPECT_EQ(sliced.ComputeMean(), 1.5);
+}
+
+TEST(RHist, SliceRangeRebin)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis);
+
+   hist.Fill(1.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   const RSliceSpec spec(axis.GetNormalRange(1, 5), RSliceSpec::ROperationRebin(2));
+   const auto sliced = hist.Slice(spec);
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_EQ(sliced.GetTotalNBins(), 4);
+   EXPECT_EQ(sliced.GetBinContent(0), 1);
+
+   // The sliced histogram still has the same statistics.
+   EXPECT_FALSE(sliced.GetStats().IsTainted());
+   EXPECT_EQ(sliced.GetNEntries(), 1);
+   EXPECT_EQ(sliced.ComputeMean(), 1.5);
+}
+
+TEST(RHist, SliceSum)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis, axis);
+
+   hist.Fill(1.5, 2.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   const auto sliced = hist.Slice(RSliceSpec{}, RSliceSpec::ROperationSum{});
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+   EXPECT_EQ(sliced.GetBinContent(1), 1);
+
+   // The first dimension still has the same statistics.
+   EXPECT_FALSE(sliced.GetStats().IsTainted());
+   EXPECT_EQ(sliced.GetNEntries(), 1);
+   EXPECT_EQ(sliced.ComputeMean(), 1.5);
+}
+
+TEST(RHist, SliceRangeSum)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> hist(axis, axis);
+
+   hist.Fill(1.5, 2.5);
+   ASSERT_EQ(hist.GetNEntries(), 1);
+
+   const RSliceSpec rangeSum(axis.GetNormalRange(1, 5), RSliceSpec::ROperationSum{});
+   const auto sliced = hist.Slice(RSliceSpec{}, rangeSum);
+   ASSERT_EQ(sliced.GetNDimensions(), 1);
+   EXPECT_EQ(sliced.GetTotalNBins(), Bins + 2);
+   EXPECT_EQ(sliced.GetBinContent(1), 1);
+
+   // The slicing could have dropped entries (even if it didn't in this case), the statistics are tainted.
+   EXPECT_TRUE(sliced.GetStats().IsTainted());
+   EXPECT_THROW(sliced.GetNEntries(), std::logic_error);
+}

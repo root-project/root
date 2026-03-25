@@ -31,6 +31,10 @@ class TBuffer;
 namespace ROOT {
 namespace Experimental {
 
+// forward declaration for friend declaration
+template <typename T>
+class RHist;
+
 /**
 A histogram data structure to bin data along multiple dimensions.
 
@@ -66,6 +70,9 @@ class RHistEngine final {
    // For conversion, all other template instantiations must be a friend.
    template <typename U>
    friend class RHistEngine;
+
+   // For slicing, RHist needs to call SliceImpl.
+   friend class RHist<BinContentType>;
 
    /// The axis configuration for this histogram. Relevant methods are forwarded from the public interface.
    Internal::RAxes fAxes;
@@ -641,43 +648,8 @@ public:
       }
    }
 
-   /// Slice this histogram with an RSliceSpec per dimension.
-   ///
-   /// With a range, only the specified bins are retained. All other bin contents are transferred to the underflow and
-   /// overflow bins:
-   /// \code
-   /// ROOT::Experimental::RHistEngine<int> hist(/* one dimension */);
-   /// // Fill the histogram with a number of entries...
-   /// auto sliced = hist.Slice({hist.GetAxes()[0].GetNormalRange(1, 5)});
-   /// // The returned histogram will have 4 normal bins, an underflow and an overflow bin.
-   /// \endcode
-   ///
-   /// Slicing can also perform operations per dimension, see RSliceSpec. RSliceSpec::ROperationRebin allows to rebin
-   /// the histogram axis, grouping a number of normal bins into a new one:
-   /// \code
-   /// ROOT::Experimental::RHistEngine<int> hist(/* one dimension */);
-   /// // Fill the histogram with a number of entries...
-   /// auto rebinned = hist.Slice(ROOT::Experimental::RSliceSpec::ROperationRebin(2));
-   /// // The returned histogram has groups of two normal bins merged.
-   /// \endcode
-   ///
-   /// RSliceSpec::ROperationSum sums the bin contents along that axis, which allows to project to a lower-dimensional
-   /// histogram:
-   /// \code
-   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
-   /// // Fill the histogram with a number of entries...
-   /// auto projected = hist.Slice(ROOT::Experimental::RSliceSpec{}, ROOT::Experimental::RSliceSpec::ROperationSum{});
-   /// // The returned histogram has one dimension, with bin contents summed along the second axis.
-   /// \endcode
-   /// Note that it is not allowed to sum along all histogram axes because the return value would be a scalar.
-   ///
-   /// Ranges and operations can be combined. In that case, the range is applied before the operation.
-   ///
-   /// \param[in] sliceSpecs the slice specifications for each axis
-   /// \return the sliced histogram
-   /// \par See also
-   /// the \ref Slice(const A &... args) const "variadic function template overload" accepting arguments directly
-   RHistEngine Slice(const std::vector<RSliceSpec> &sliceSpecs) const
+private:
+   RHistEngine SliceImpl(const std::vector<RSliceSpec> &sliceSpecs, bool &dropped) const
    {
       if (sliceSpecs.size() != GetNDimensions()) {
          throw std::invalid_argument("invalid number of specifications passed to Slice");
@@ -719,11 +691,56 @@ public:
             RLinearizedIndex mappedIndex = sliced.fAxes.ComputeGlobalIndex(mappedIndices);
             assert(mappedIndex.fValid);
             sliced.fBinContents[mappedIndex.fIndex] += fBinContents[i];
+         } else {
+            dropped = true;
          }
          ++origRangeIt;
       }
 
       return sliced;
+   }
+
+public:
+   /// Slice this histogram with an RSliceSpec per dimension.
+   ///
+   /// With a range, only the specified bins are retained. All other bin contents are transferred to the underflow and
+   /// overflow bins:
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist(/* one dimension */);
+   /// // Fill the histogram with a number of entries...
+   /// auto sliced = hist.Slice({hist.GetAxes()[0].GetNormalRange(1, 5)});
+   /// // The returned histogram will have 4 normal bins, an underflow and an overflow bin.
+   /// \endcode
+   ///
+   /// Slicing can also perform operations per dimension, see RSliceSpec. RSliceSpec::ROperationRebin allows to rebin
+   /// the histogram axis, grouping a number of normal bins into a new one:
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist(/* one dimension */);
+   /// // Fill the histogram with a number of entries...
+   /// auto rebinned = hist.Slice(ROOT::Experimental::RSliceSpec::ROperationRebin(2));
+   /// // The returned histogram has groups of two normal bins merged.
+   /// \endcode
+   ///
+   /// RSliceSpec::ROperationSum sums the bin contents along that axis, which allows to project to a lower-dimensional
+   /// histogram:
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
+   /// // Fill the histogram with a number of entries...
+   /// auto projected = hist.Slice(ROOT::Experimental::RSliceSpec{}, ROOT::Experimental::RSliceSpec::ROperationSum{});
+   /// // The returned histogram has one dimension, with bin contents summed along the second axis.
+   /// \endcode
+   /// Note that it is not allowed to sum along all histogram axes because the return value would be a scalar.
+   ///
+   /// Ranges and operations can be combined. In that case, the range is applied before the operation.
+   ///
+   /// \param[in] sliceSpecs the slice specifications for each axis
+   /// \return the sliced histogram
+   /// \par See also
+   /// the \ref Slice(const A &... args) const "variadic function template overload" accepting arguments directly
+   RHistEngine Slice(const std::vector<RSliceSpec> &sliceSpecs) const
+   {
+      bool dropped = false;
+      return SliceImpl(sliceSpecs, dropped);
    }
 
    /// Slice this histogram with an RSliceSpec per dimension.
