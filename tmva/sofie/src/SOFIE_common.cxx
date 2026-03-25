@@ -549,6 +549,29 @@ std::vector<Dim> UTILITY::ComputeStrideFromShape(const std::vector<Dim> & shape)
    return strides;
 }
 
+// utilities functions for generating code
+
+// ------------------------------------------------------------------ //
+//  Emit 'rank' nested for-loops: for(size_t idx_i=0; idx_i<dim_i; )  //
+// ------------------------------------------------------------------ //
+const std::string SP = "   ";
+void EmitNestedLoops(std::stringstream &out, size_t loopRank, const std::vector<Dim> shape) {
+   for (size_t i = 0; i < loopRank; ++i) {
+      for (size_t s = 0; s < i + 2; ++s) out << SP;
+
+      out << "for (size_t idx_" << i << " = 0; idx_" << i
+          << " < " << shape[i] << "; ++idx_" << i << ") {\n";
+   }
+}
+void CloseNestedLoops(std::stringstream &out, size_t loopRank) {
+   for (int64_t i = loopRank - 1; i >= 0; --i) {
+      for (int64_t s = 0; s < i + 2; ++s) out << SP;
+         out << "}\n";
+   }
+}
+
+
+
 struct FreeBlock {
   std::size_t offset;
   std::size_t size;

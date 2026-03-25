@@ -14,33 +14,27 @@ namespace SOFIE{
 
 
 
-
-template <typename T>
 class ROperator_Transpose final : public ROperator
 {
 
 private:
-   std::vector<int_t> fAttrPerm;
 
-   std::string fNData;
-   std::string fNOutput;
-   std::vector<Dim> fShapeData;
-   std::vector<Dim> fShapeOutput;
+   std::vector<int64_t> fAttrPerm;
+
+   std::string fNX;
+   std::string fNY;
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
 
 public:
 
    ROperator_Transpose(){}
-   ROperator_Transpose(std::vector<int_t> attr_perm, std::string nameData, std::string nameOutput):
-      fAttrPerm(attr_perm), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
-            fInputTensorNames = { fNData };
-            fOutputTensorNames = { fNOutput };
+   ROperator_Transpose(std::vector<int64_t> attr_perm, std::string nameData, std::string nameOutput):
+      fAttrPerm(attr_perm), fNX(UTILITY::Clean_name(nameData)), fNY(UTILITY::Clean_name(nameOutput)) {
+            fInputTensorNames = { fNX };
+            fOutputTensorNames = { fNY };
    }
 
-   ROperator_Transpose(std::string nameData, std::string nameOutput):
-      fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
-         fInputTensorNames = { fNData };
-         fOutputTensorNames = { fNOutput };
-   }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
@@ -61,119 +55,200 @@ public:
       return ret;
    }
 
+   template<class T>
+   void ProcessInitializedTensor(RModel& model) {
+      // case input is a constant or initialized tensor we perform here the transpose
+      // here we know the shape
+      auto shapeX = ConvertShapeToInt(fShapeX);
+      auto shapeY = ConvertShapeToInt(fShapeY);
+      fIsOutputConstant = true;
+
+      auto inStrides = UTILITY::ComputeStrideFromShape(shapeX);
+      auto outStrides = UTILITY::ComputeStrideFromShape(shapeY);
+      size_t length = ConvertShapeToLength(shapeY);
+      auto inputData = static_cast<T *>(model.GetInitializedTensorData(fNX).get());
+      size_t dim = fShapeX.size();
+      std::vector<size_t> outputIdx(dim);
+      std::vector<T> outputData(length);
+      for (size_t i = 0; i < length; i++) {
+         outputIdx[0] = i / outStrides[0];
+         for (size_t j = 1; j < dim; j++) {
+            outputIdx[j] = (i % outStrides[j - 1]) / outStrides[j];
+         }
+         // compute input index
+         size_t inputIndex = 0;
+         for (size_t j = 0; j < dim; j++) {
+            // find value in fAtrrPerm corresponding to j
+            int k = std::find(fAttrPerm.begin(), fAttrPerm.end(), j) - fAttrPerm.begin();
+            inputIndex += outputIdx[k] * inStrides[j];
+         }
+         outputData[i] = inputData[inputIndex];
+      }
+      model.AddConstantTensor<T>(fNY, shapeY, outputData.data());
+      if (model.Verbose()) {
+         std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(shapeY) << " : "
+                   << ConvertValuesToString(outputData) << std::endl;
+      }
+   }
 
    void Initialize(RModel& model) override {
-      if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
-         std::cout<<"Input tensor for transpose: "<<fNData<<'\n';
+      if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
+         std::cout<<"Input tensor for transpose: "<<fNX<<'\n';
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");
       }
-      fShapeData = model.GetDimTensorShape(fNData);
+      fShapeX = model.GetDimTensorShape(fNX);
       if (fAttrPerm.empty()){
-         fAttrPerm.reserve(fShapeData.size());
-         for (int i = fShapeData.size() - 1; i >= 0; i--){
+         fAttrPerm.reserve(fShapeX.size());
+         for (int i = fShapeX.size() - 1; i >= 0; i--){
             fAttrPerm.push_back(i);
          }
       }
 
       // inference of output shape
-      if (fAttrPerm.size() != fShapeData.size() )
+      if (fAttrPerm.size() != fShapeX.size() )
          throw std::runtime_error("TMVA SOFIE Tranpose Op - Invalid axes attributes");
 
-      fShapeOutput.resize(fAttrPerm.size());
+      fShapeY.resize(fAttrPerm.size());
       for (size_t i = 0; i < fAttrPerm.size(); i++){
-         fShapeOutput[i] = fShapeData[fAttrPerm[i]];
+         fShapeY[i] = fShapeX[fAttrPerm[i]];
       }
 
-      if (model.IsInitializedTensor(fNData) ) {
-         // here we know the shape
-         auto shapeX = ConvertShapeToInt(fShapeData);
-         auto shapeY = ConvertShapeToInt(fShapeOutput);
-         fIsOutputConstant = true;
-         // case input is a constant or initialized tensor we perform here the transpose
-         auto inStrides = UTILITY::ComputeStrideFromShape(shapeX);
-         auto outStrides = UTILITY::ComputeStrideFromShape(shapeY);
-         size_t length = ConvertShapeToLength(shapeY);
-         auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNData).get());
-         size_t dim = fShapeData.size();
-         std::vector<size_t> outputIdx(dim);
-         std::vector<T> outputData(length);
-         for (size_t i = 0; i < length; i++) {
-            outputIdx[0] = i / outStrides[0];
-            for (size_t j = 1; j < dim; j++) {
-               outputIdx[j] = (i % outStrides[j-1]) / outStrides[j];
-            }
-            // compute input index
-            size_t inputIndex = 0;
-            for (size_t j = 0; j < dim; j++) {
-               // find value in fAtrrPerm corresponding to j
-               int k = std::find(fAttrPerm.begin(), fAttrPerm.end(), j) - fAttrPerm.begin();
-               inputIndex += outputIdx[k] * inStrides[j];
-            }
-            outputData[i] = inputData[inputIndex];
+      if (model.IsInitializedTensor(fNX) ) {
+         auto type = model.GetTensorType(fNX);
+         switch(type) {
+            case ETensorType::FLOAT:
+               ProcessInitializedTensor<float>(model);
+               break;
+            case ETensorType::INT64:
+               ProcessInitializedTensor<int64_t>(model);
+               break;
+            case ETensorType::BOOL:
+               ProcessInitializedTensor<uint8_t>(model);
+               break;
+            case ETensorType::UINT8:
+               ProcessInitializedTensor<uint8_t>(model);
+               break;
+            default:
+               std::cout << "Transpose - no support for initialized tensor of type " << ConvertTypeToString(type) << std::endl;
          }
-         model.AddConstantTensor<T>(fNOutput, shapeY, outputData.data());
-         if (model.Verbose()) {
-            std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(shapeY) << " : "
-               << ConvertValuesToString(outputData) << std::endl;
-         }
-      } else {
-         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
-         if (model.Verbose()) {
-            std::cout << "Transpose ---> " << fNOutput << " " <<  ConvertDimShapeToString(fShapeOutput) << std::endl;
-         }
+         return;
+      }
+      // case of intermediate tensors (non constant)
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      if (model.Verbose()) {
+         std::cout << "Transpose ---> " << fNY << " " <<  ConvertDimShapeToString(fShapeY) << std::endl;
       }
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) return "";  //no op for constant tensors
-      OpName = "op_" + OpName;
-      if (fShapeData.empty() || fShapeOutput.empty()){
+      opName = "op_" + opName;
+      if (fShapeX.empty() || fShapeY.empty()){
          throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");
       }
-      int dim = fShapeData.size();
-      auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
-      auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
-      auto length = ConvertDimShapeToLength(fShapeData);
-      //assert (length == outStrides[0]*fShapeOutput[0]);
+      auto stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
+      auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+
+      auto intShapeX = ConvertShapeToInt(fShapeX);
+      size_t rank = fShapeX.size();
+      bool isDynamic = (intShapeX.empty() && rank > 0);
+
+      std::string constQualifier = (isDynamic) ? "const" : "constexpr";
 
       std::stringstream out;
-      // Implement transpose operator using consecutive read inputs.
-      // But
-      // tensorOut[id] = tensorInput[ inStrides[0]*i0 + inStrides[1]*i1 + inStrides[2]*i2 + ...]
-      // now if (j0,j1,j2) are the output indices
-      // j0 =  id / outStrides[0]
-      // j1 =  (id % outStrides[0])/outStrides[1]
-      // j2 =  (id % outStrides[1])/outStrides[2]
-      //......
-      // and we have j_k = i_fAttrPerm[k]
-      // since we are using consecutive writes we should find the inverse of fAttrPerm
-      out << SP << "///------- Transpose operator " << OpName << ConvertDimShapeToString(fShapeData)
-                  << " --> " << ConvertDimShapeToString(fShapeOutput) << std::endl;
-      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNOutput << "[id] = tensor_" << fNData << "[ ";
-      // compute output j indices
-      std::vector<std::string> i_out(dim);
-      for (int k =0; k < dim; k++){
-         if (k == 0)
-            i_out[k] = "id";
-         else
-            i_out[k] = "(id % (" + outStrides[k-1].GetVal() + "))";
-         if (k < dim-1)
-            i_out[k] += " / (" + outStrides[k].GetVal() + ")";
-      }
-      // use now them for input tensors
-      // need to invert the fAttrPerm[k]
-      for (int k =0; k < dim; k++){
-         // find value in fAtrrPerm corresponding to k
-         int l = std::find(fAttrPerm.begin(), fAttrPerm.end(), k) - fAttrPerm.begin();
-         assert(l >= 0 && l < dim);
-         out << "( " << i_out[l] << " )";
-         if (k < dim-1) {
-            out << " * " << inStrides[k];
-            out << " + ";
+
+      out << SP << "///------- Transpose operator " << opName << ConvertDimShapeToString(fShapeX)
+                  << " --> " << ConvertDimShapeToString(fShapeY) << std::endl;
+
+      // Implement more efficient implementation of transpose operator using strides
+      // For 2-dim rank tensors we could have an optimised implementation for rank = 2 tensors using Tiles
+
+      // General implementation : start pre-computing strides as const expr
+      // Emit strides for X (input) and Y (output) as constexpr
+      out << SP << "{\n";
+      out << SP << SP << "// Pre-baked input strides (row-major)\n";
+      out << SP << SP << constQualifier << " size_t " << opName << "_strX[] = {";
+      for (size_t i = 0; i < rank; ++i)
+         out << stridesX[i] << (i + 1 < rank ? ", " : "");
+      out << "};\n";
+
+      out << SP << SP << "// Pre-baked output strides (row-major)\n";
+      out << SP << SP << constQualifier << " size_t " << opName << "_strY[] = {";
+      for (size_t i = 0; i < rank; ++i)
+         out << stridesY[i] << (i + 1 < rank ? ", " : "");
+      out << "};\n\n";
+
+      // Check if last perm axis == rank-1 (contiguous inner axis fast path)
+      bool innerContiguous = (fAttrPerm.back() == (int64_t) (rank - 1));
+      size_t outerRank    = innerContiguous ? rank - 1 : rank;
+      size_t  innerSize    = innerContiguous ? (isDynamic ? 0 : intShapeX[fAttrPerm[rank - 1]])
+                             : 1;
+
+      if (innerContiguous && !isDynamic && innerSize > 1) {
+         // ---- Fast path: innermost axis is contiguous in source -----
+         out << SP << SP
+             << "// Fast path: last permuted axis is contiguous in source\n";
+         out << SP << SP
+             << "// Inner " << innerSize << " elements copied with pointer arithmetic\n";
+
+         // Nested loops over all axes except the last
+         EmitNestedLoops(out, outerRank, fShapeY);
+
+         // Compute flat src and dst offsets for the current outer indices
+         out << SP << SP << SP << "size_t src_off = ";
+         for (size_t i = 0; i < outerRank; ++i) {
+            out << "idx_" << i << " * " << opName << "_strX["
+                << fAttrPerm[i] << "]";
+            if (i + 1 < outerRank) out << " + ";
          }
+         out << ";\n";
+
+         out << SP << SP << SP << "size_t dst_off = ";
+         for (size_t i = 0; i < outerRank; ++i) {
+            out << "idx_" << i << " * " << opName << "_strY[" << i << "]";
+            if (i + 1 < outerRank) out << " + ";
+         }
+         out << ";\n";
+
+         // Inner memcpy-style copy over the contiguous axis
+         out << SP << SP << SP
+             << "std::copy(tensor_" << fNX << " + src_off, "
+             << "tensor_" << fNX << " + src_off + " << innerSize << ", "
+             << "tensor_" << fNY << " + dst_off);\n";
+
+         CloseNestedLoops(out, outerRank);
+
+      } else {
+
+       // ---- General path: per-element index arithmetic -------------
+         out << SP << SP << "// General N-D transpose\n";
+
+         EmitNestedLoops(out, rank, fShapeY);
+
+         // Flat source index: sum over perm[i] * strideX[perm[i]]
+         out << SP << SP << SP << "size_t src_idx = ";
+         for (size_t i = 0; i < rank; ++i) {
+            out << "idx_" << i << " * " << opName << "_strX[" << fAttrPerm[i] << "]";
+            if (i + 1 < rank) out << " + ";
+         }
+         out << ";\n";
+
+         // Flat destination index: sum over i * strideY[i]
+         out << SP << SP << SP << "size_t dst_idx = ";
+         for (size_t i = 0; i < rank; ++i) {
+            out << "idx_" << i << " * " << opName << "_strY[" << i << "]";
+            if (i + 1 < rank) out << " + ";
+         }
+         out << ";\n";
+
+         out << SP << SP << SP
+             << "tensor_" << fNY << "[dst_idx] = "
+             << "tensor_" << fNX << "[src_idx];\n";
+
+         CloseNestedLoops(out, rank);
+
       }
-      out << "];\n";
+
       out << SP << "}\n";
       return out.str();
    }

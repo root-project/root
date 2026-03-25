@@ -803,6 +803,10 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
    }
 }
 
+//Utility functions to generate code
+void EmitNestedLoops(std::stringstream &out, size_t loopRank, const std::vector<Dim> shape);
+void CloseNestedLoops(std::stringstream &out, size_t loopRank);
+
 
 // code for the memory greeding allocations
 struct TensorLifeInfo {
