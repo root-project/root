@@ -1,25 +1,26 @@
-# \file
-# \ingroup tutorial_dataframe
-#
-# Configure a Dask connection to a HTCondor cluster hosted by the CERN batch
-# service. To reproduce this tutorial, run the following steps:
-#
-# 1. Login to lxplus
-# 2. Source an LCG release (minimum LCG104). See
-#    https://lcgdocs.web.cern.ch/lcgdocs/lcgreleases/introduction/ for details
-# 3. Install the `dask_lxplus` package, which provides the `CernCluster` class
-#    needed to properly connect to the CERN condor pools. See
-#    https://batchdocs.web.cern.ch/specialpayload/dask.html for instructions
-# 4. Run this tutorial
-#
-# The tutorial defines resources that each job will request to the condor
-# scheduler, then creates a Dask client that can be used by RDataFrame to
-# distribute computations.
-#
-# \macro_code
-#
-# \date September 2023
-# \author Vincenzo Eduardo Padulano CERN
+## \file
+## \ingroup tutorial_dataframe
+##
+## Configure a Dask connection to a HTCondor cluster hosted by the CERN batch
+## service. To reproduce this tutorial, run the following steps:
+##
+## 1. Login to lxplus
+## 2. Source an LCG release (minimum LCG104). See
+##    https://lcgdocs.web.cern.ch/lcgdocs/lcgreleases/introduction/ for details
+## 3. Install the `dask_lxplus` package, which provides the `CernCluster` class
+##    needed to properly connect to the CERN condor pools. See
+##    https://batchdocs.web.cern.ch/specialpayload/dask.html for instructions
+## 4. Run this tutorial
+##
+## The tutorial defines resources that each job will request to the condor
+## scheduler, then creates a Dask client that can be used by RDataFrame to
+## distribute computations.
+##
+## \macro_code
+##
+## \date September 2023
+## \author Vincenzo Eduardo Padulano CERN
+
 from datetime import datetime
 import socket
 import time

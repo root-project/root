@@ -3,6 +3,8 @@
 ## \notebook -nodraw
 ##
 ## \macro_code
+##
+## \author
 
 import ROOT
 

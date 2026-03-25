@@ -6,6 +6,8 @@
 ## The tutorial also generate some  data which can serve as input for the tutorial TMVA_SOFIE_GNN_Application.C
 ##
 ## \macro_code
+##
+## \author
 
 import os
 

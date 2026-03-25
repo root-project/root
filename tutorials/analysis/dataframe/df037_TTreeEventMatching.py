@@ -1,18 +1,19 @@
-# \file
-# \ingroup tutorial_dataframe
-# \notebook -nodraw
-#
-# This example shows processing of a TTree-based dataset with horizontal
-# concatenations (friends) and event matching (based on TTreeIndex). In case
-# the current event being processed does not match one (or more) of the friend
-# datasets, one can use the FilterAvailable and DefaultValueFor functionalities
-# to act upon the situation.
-#
-# \macro_code
-# \macro_output
-#
-# \date September 2024
-# \author Vincenzo Eduardo Padulano (CERN)
+## \file
+## \ingroup tutorial_dataframe
+## \notebook -nodraw
+##
+## This example shows processing of a TTree-based dataset with horizontal
+## concatenations (friends) and event matching (based on TTreeIndex). In case
+## the current event being processed does not match one (or more) of the friend
+## datasets, one can use the FilterAvailable and DefaultValueFor functionalities
+## to act upon the situation.
+##
+## \macro_code
+## \macro_output
+##
+## \date September 2024
+## \author Vincenzo Eduardo Padulano (CERN)
+
 import array
 import os
 

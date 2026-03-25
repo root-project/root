@@ -1,16 +1,16 @@
-#  \file
-#  \ingroup tutorial_fit
-#  \notebook -nodraw
-#  Example on how to use the new Minimizer class in ROOT
-#   Show usage with all the possible minimizers.
-#  Minimize the Rosenbrock function (a 2D -function)
-#
-#  input : minimizer name + algorithm name
-#  randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
-#
-#  \macro_code
-#
-#  \author Lorenzo Moneta
+## \file
+##  \ingroup tutorial_fit
+##  \notebook -nodraw
+##  Example on how to use the new Minimizer class in ROOT
+##   Show usage with all the possible minimizers.
+##  Minimize the Rosenbrock function (a 2D -function)
+##
+##  input : minimizer name + algorithm name
+##  randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
+##
+##  \macro_code
+##
+##  \author Lorenzo Moneta
 
 import ROOT
 import numpy as np

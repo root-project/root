@@ -1,17 +1,18 @@
-# \file
-# \ingroup tutorial_dataframe
-# \notebook -nodraw
-#
-# This example shows how to process a dataset where entries might be
-# incomplete due to one or more missing branches in one or more of the files
-# in the dataset. It shows usage of the FilterAvailable and DefaultValueFor
-# RDataFrame functionalities to act upon the missing entries.
-#
-# \macro_code
-# \macro_output
-#
-# \date September 2024
-# \author Vincenzo Eduardo Padulano (CERN)
+## \file
+## \ingroup tutorial_dataframe
+## \notebook -nodraw
+##
+## This example shows how to process a dataset where entries might be
+## incomplete due to one or more missing branches in one or more of the files
+## in the dataset. It shows usage of the FilterAvailable and DefaultValueFor
+## RDataFrame functionalities to act upon the missing entries.
+##
+## \macro_code
+## \macro_output
+##
+## \date September 2024
+## \author Vincenzo Eduardo Padulano (CERN)
+
 import array
 import os
 
