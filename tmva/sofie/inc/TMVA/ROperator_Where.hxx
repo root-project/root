@@ -140,9 +140,9 @@ public:
          fBroadcastFlag |= retCZ.first;
          fShapeZ = retCZ.second;
 
-         bool allConstant = model.IsConstantTensor(fNC) &&
-                            model.IsConstantTensor(fNX) &&
-                            model.IsConstantTensor(fNY);
+         bool allConstant = model.IsInitializedTensor(fNC) &&
+                            model.IsInitializedTensor(fNX) &&
+                            model.IsInitializedTensor(fNY);
 
          if (allConstant) {
             // ----------------------------------------------------------
@@ -191,29 +191,8 @@ public:
                          << " : " << ConvertValuesToString(dataZ) << " (constant)\n";
          } else {
             // ----------------------------------------------------------
-            //  Non-constant static: register broadcasted intermediates
+            //  Non-constant static tensors - we don't need to broadcast tensors
             // ----------------------------------------------------------
-            auto registerBC = [&](const std::string &name,
-                                  const std::vector<size_t> &shape,
-                                  std::string &bcName,
-                                  const std::string &prefix) {
-               if (shape != fShapeZ) {
-                  bcName = prefix + name + "to" + fNZ;
-                  if (model.IsInitializedTensor(name)) {
-                     auto data = model.GetInitializedTensorData(name);
-                     std::shared_ptr<void> bcData(
-                        UTILITY::UnidirectionalBroadcast(static_cast<T *>(data.get()), shape, fShapeZ),
-                        std::default_delete<T[]>());
-                     model.AddConstantTensor(bcName, model.GetTensorType(name), fShapeZ, bcData);
-                  } else {
-                     model.AddIntermediateTensor(bcName, model.GetTensorType(name), fShapeZ);
-                  }
-               }
-            };
-
-            registerBC(fNX, fShapeX, fNBroadcastedX, "BC_");
-            registerBC(fNY, fShapeY, fNBroadcastedY, "BC_");
-            registerBC(fNC, fShapeC, fNBroadcastedC, "BC_");
 
             fDimShapeZ = ConvertShapeToDim(fShapeZ);
             model.AddIntermediateTensor(fNZ, model.GetTensorType(fNX), fShapeZ);
@@ -228,6 +207,7 @@ public:
       } else {
          // ---------------------------------------------------------------- //
          //  Dynamic path: at least one input has a parametric shape
+         //  Need to use BroadcastShape to find output shape
          // ---------------------------------------------------------------- //
          auto retXY = UTILITY::MultidirectionalBroadcastShape(fDimShapeX, fDimShapeY);
          fBroadcastFlag = retXY.first;
@@ -322,52 +302,9 @@ public:
       }
 
       // ---------------------------------------------------------------- //
-      //  Runtime broadcasting for non-constant, non-initialised tensors
-      // ---------------------------------------------------------------- //
-      // Broadcast X if needed
-      if (!fNBroadcastedX.empty()) {
-         out << SP << "// Broadcast X tensor " << fNX << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<"
-             << TensorType<T>::Name() << ">(tensor_" << fNX << ", "
-             << ConvertDimShapeToString(fDimShapeX) << ", "
-             << ConvertDimShapeToString(fDimShapeZ) << ", tensor_" << fNBroadcastedX << ");\n";
-      }
-      // Broadcast Y if needed
-      if (!fNBroadcastedY.empty()) {
-         out << SP << "// Broadcast Y tensor " << fNY << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<"
-             << TensorType<T>::Name() << ">(tensor_" << fNY << ", "
-             << ConvertDimShapeToString(fDimShapeY) << ", "
-             << ConvertDimShapeToString(fDimShapeZ) << ", tensor_" << fNBroadcastedY << ");\n";
-      }
-      // Broadcast C (condition) if needed
-      if (!fNBroadcastedC.empty()) {
-         if (fIsInputBoolTensor) {
-            // live bool input: need a temporary std::vector for the broadcast utility
-            size_t inputLength = ConvertShapeToLength(fShapeC);
-            out << SP << "std::vector<std::uint8_t> tmp_tensor_" << fNC
-                << "(tensor_" << fNC << ", tensor_" << fNC << " + " << inputLength << ");\n";
-            out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<std::uint8_t>"
-                << "(tmp_tensor_" << fNC << ".data(), "
-                << ConvertDimShapeToString(fDimShapeC) << ", "
-                << ConvertDimShapeToString(fDimShapeZ) << ", tensor_" << fNBroadcastedC << ");\n";
-         } else {
-            out << SP << "// Broadcast condition tensor " << fNC << "\n";
-            out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<std::uint8_t>"
-                << "(tensor_" << fNC << ", "
-                << ConvertDimShapeToString(fDimShapeC) << ", "
-                << ConvertDimShapeToString(fDimShapeZ) << ", tensor_" << fNBroadcastedC << ");\n";
-         }
-      }
-
-      // Final (possibly broadcasted) tensor names
-      const std::string nameX = fNBroadcastedX.empty() ? fNX : fNBroadcastedX;
-      const std::string nameY = fNBroadcastedY.empty() ? fNY : fNBroadcastedY;
-      const std::string nameC = fNBroadcastedC.empty() ? fNC : fNBroadcastedC;
-
-      // ---------------------------------------------------------------- //
+      //  Runtime for non-constant, non-initialised tensors
+      //
       //  Generate loop(s) with per-dimension stride-based index arithmetic
-      //  (same pattern as BasicBinary)
       // ---------------------------------------------------------------- //
       auto stridesX = UTILITY::ComputeStrideFromShape(fDimShapeX);
       auto stridesY = UTILITY::ComputeStrideFromShape(fDimShapeY);
@@ -426,9 +363,9 @@ public:
       // Inner assignment
       for (int j = 0; j < nloop + 1; j++) out << SP;
       out << "tensor_" << fNZ << "[" << idxZ << "] = "
-          << "tensor_" << nameC << "[" << idxC << "] ? "
-          << "tensor_" << nameX << "[" << idxX << "] : "
-          << "tensor_" << nameY << "[" << idxY << "];\n";
+          << "tensor_" << fNC << "[" << idxC << "] ? "
+          << "tensor_" << fNX << "[" << idxX << "] : "
+          << "tensor_" << fNY << "[" << idxY << "];\n";
 
       // Close loops
       for (int i = nloop; i > 0; i--) {
