@@ -400,19 +400,19 @@ static PySequenceMethods op_as_sequence = {
     0,                             // sq_inplace_repeat
 };
 
-std::function<PyObject *(PyObject *)> &CPPInstance::ReduceMethod() {
-   static std::function<PyObject *(PyObject *)> reducer;
+PyCFunction &CPPInstance::ReduceMethod() {
+   static PyCFunction reducer = nullptr;
    return reducer;
 }
 
-PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
+PyObject *op_reduce(PyObject *self, PyObject * args)
 {
    auto &reducer = CPPInstance::ReduceMethod();
    if (!reducer) {
       PyErr_SetString(PyExc_NotImplementedError, "");
       return nullptr;
    }
-   return reducer(self);
+   return reducer(self, args);
 }
 
 

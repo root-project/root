@@ -9,15 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "PythonLimitedAPI.h"
+
 // Bindings
 #include "CPyCppyy/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
-
 #include "PyROOTPythonize.h"
 #include "TBufferFile.h"
-
-using namespace CPyCppyy;
 
 namespace PyROOT {
 extern PyObject *gRootModule;
@@ -60,7 +58,7 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
 /// Turn the object proxy instance into a character stream and return for
 /// pickle, together with the callable object that can restore the stream
 /// into the object proxy instance.
-PyObject *op_reduce(PyObject *self)
+PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
 {
    // keep a borrowed reference around to the callable function for expanding;
    // because it is borrowed, it means that there can be no pickling during the
@@ -69,13 +67,11 @@ PyObject *op_reduce(PyObject *self)
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
-   static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope("TBufferFile");
-   TBufferFile *buff = 0;
-   Cppyy::TCppType_t selfClass = ((CPPInstance *)self)->ObjectIsA();
-   if (selfClass == s_bfClass) {
+   TBufferFile *buff = nullptr;
+   std::string className = CPyCppyy::Instance_GetScopedFinalName(self);
+   if (className == "TBufferFile") {
       buff = (TBufferFile *)CPyCppyy::Instance_AsVoidPtr(self);
    } else {
-      auto className = Cppyy::GetScopedFinalName(selfClass);
       if (className.find("__cppyy_internal::Dispatcher") == 0) {
          PyErr_Format(PyExc_IOError,
                       "generic streaming of Python objects whose class derives from a C++ class is not supported. "
@@ -90,7 +86,7 @@ PyObject *op_reduce(PyObject *self)
       // to delete
       if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self), TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
-                      Cppyy::GetScopedFinalName(selfClass).c_str());
+                      className.c_str());
          return 0;
       }
       buff = &s_buff;
@@ -100,7 +96,7 @@ PyObject *op_reduce(PyObject *self)
    // on reading back in (see CPPInstanceExpand defined above)
    PyObject *res2 = PyTuple_New(2);
    PyTuple_SetItem(res2, 0, PyBytes_FromStringAndSize(buff->Buffer(), buff->Length()));
-   PyTuple_SetItem(res2, 1, PyBytes_FromString(Cppyy::GetScopedFinalName(selfClass).c_str()));
+   PyTuple_SetItem(res2, 1, PyBytes_FromString(className.c_str()));
 
    PyObject *result = PyTuple_New(2);
    Py_INCREF(s_expand);
@@ -120,6 +116,6 @@ PyObject *op_reduce(PyObject *self)
 /// so that it can be injected in CPPInstance
 PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject * /*args*/)
 {
-   CPPInstance::ReduceMethod() = op_reduce;
+   CPyCppyy::Instance_SetReduceMethod((PyCFunction)op_reduce);
    Py_RETURN_NONE;
 }

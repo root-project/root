@@ -13,7 +13,6 @@
 #include "CPyCppyy/API.h"
 
 #include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
@@ -30,8 +29,15 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    PyObject *pyclass = nullptr;
    PyObject *pyobject = nullptr;
    int up = 1;
-   if (!PyArg_ParseTuple(args, "O!O|i:DynamicCast", &CPPInstance_Type, &pyclass, &pyobject, &up))
+   if (!PyArg_ParseTuple(args, "OO|i:DynamicCast", &pyclass, &pyobject, &up))
       return nullptr;
+
+   if (!CPyCppyy::Instance_Check(pyclass)) {
+      PyErr_Format(PyExc_TypeError,
+         "DynamicCast argument 1 must be a cppyy instance, got '%.200s'",
+         Py_TYPE(pyclass)->tp_name);
+      return nullptr;
+   }
 
    // Perform actual cast - calls default implementation of DynamicCast
    TClass *cl1 = (TClass *)CPyCppyy::Instance_AsVoidPtr(self);
@@ -49,8 +55,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 
    // Now use binding to return a usable class. Upcast: result is a base.
    // Downcast: result is a derived.
-   Cppyy::TCppType_t cpptype = ((CPyCppyy::CPPInstance *)(up ? pyclass : self))->ObjectIsA();
-   TClass *tcl = TClass::GetClass(Cppyy::GetScopedFinalName(cpptype).c_str());
+   TClass *tcl = TClass::GetClass(CPyCppyy::Instance_GetScopedFinalName(up ? pyclass : self).c_str());
    TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? CPyCppyy::Instance_AsVoidPtr(pyclass) : cl1);
 
    return CPyCppyy::Instance_FromVoidPtr(address, klass->GetName());

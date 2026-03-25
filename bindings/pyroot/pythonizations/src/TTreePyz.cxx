@@ -38,9 +38,9 @@
 namespace {
 
 // Get the TClass of the C++ object proxied by pyobj
-TClass *GetTClass(const PyObject *pyobj)
+TClass *GetTClass(PyObject *pyobj)
 {
-   return TClass::GetClass(Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance *)pyobj)->ObjectIsA()).c_str());
+   return TClass::GetClass(CPyCppyy::Instance_GetScopedFinalName(pyobj).c_str());
 }
 
 } // namespace
@@ -248,7 +248,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
       }
 
       void *buf = nullptr;
-      if (CPPInstance_Check(address))
+      if (CPyCppyy::Instance_Check(address))
          buf = CPyCppyy::Instance_AsVoidPtr(address);
       else
          Utility::GetBuffer(address, '*', 1, buf, false);
@@ -320,7 +320,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
       }
       void *buf = nullptr;
 
-      if (CPPInstance_Check(address)) {
+      if (CPyCppyy::Instance_Check(address)) {
          if (((CPPInstance *)address)->fFlags & CPPInstance::kIsReference)
             buf = (void *)((CPPInstance *)address)->fObject;
          else

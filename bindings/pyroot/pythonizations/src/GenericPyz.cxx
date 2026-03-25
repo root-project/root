@@ -14,7 +14,6 @@
 #include "CPyCppyy/API.h"
 
 #include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
@@ -24,15 +23,6 @@
 #include "TInterpreterValue.h"
 
 #include <map>
-
-namespace {
-
-std::string GetScopedFinalNameFromPyObject(const PyObject *pyobj)
-{
-   return Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance *)pyobj)->ObjectIsA());
-}
-
-} // namespace
 
 using namespace CPyCppyy;
 
@@ -75,7 +65,7 @@ PyObject *ClingPrintValue(PyObject *self, PyObject * /* args */)
       gInterpreter->Declare(printerCode.c_str());
    }
 
-   const std::string className = GetScopedFinalNameFromPyObject(self);
+   const std::string className = CPyCppyy::Instance_GetScopedFinalName(self);
 
    std::string printResult;
 

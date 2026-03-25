@@ -15,8 +15,6 @@
 
 // Cppyy
 #include "CPyCppyy/API.h"
-#include "../../cppyy/CPyCppyy/src/CallContext.h"
-#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
 
 // ROOT
 #include "TInterpreter.h"

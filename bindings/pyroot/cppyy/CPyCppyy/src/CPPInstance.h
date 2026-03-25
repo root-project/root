@@ -15,7 +15,6 @@
 #include "CallContext.h"     // for Parameter
 
 // Standard
-#include <functional>
 #include <utility>
 #include <vector>
 
@@ -87,7 +86,7 @@ public:
 // implementation of the __reduce__ method: doesn't wrap any function by
 // default but can be re-assigned by libraries that add C++ object
 // serialization support, like ROOT
-    static std::function<PyObject *(PyObject *)> &ReduceMethod();
+    static PyCFunction &ReduceMethod();
 
 private:
     void  CreateExtension();
