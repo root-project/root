@@ -88,6 +88,13 @@ def generate_keras_models(dst_dir):
         model, random_generator.rand(1, 4, 4, 1), random_generator.rand(1, 4, 4, 8), "KerasModelConv2D_Same", 2
     )
 
+    # Conv2D model with same padding and dilation
+    model = Sequential()
+    model.add(Conv2D(4, kernel_size=3, activation="relu", input_shape=(8, 8, 1), padding="same", dilation_rate=2))
+    train_and_save(
+        model, random_generator.rand(1, 8, 8, 1), random_generator.rand(1, 8, 8, 4), "KerasModelConv2D_SameDilated", 2
+    )
+
     # Reshape model
     model = Sequential()
     model.add(Conv2D(8, kernel_size=3, activation="relu", input_shape=(4, 4, 1), padding="same"))
@@ -242,6 +249,10 @@ class SOFIE_Keras_Parser_Models(unittest.TestCase):
     def test_conv2d_same_padding(self):
         input_tensor = np.ones((1, 4, 4, 1), dtype=np.float32)
         self.run_model_test("KerasModelConv2D_Same", [input_tensor], batch_size=1)
+
+    def test_conv2d_same_padding_dilated(self):
+        input_tensor = np.ones((1, 8, 8, 1), dtype=np.float32)
+        self.run_model_test("KerasModelConv2D_SameDilated", [input_tensor], batch_size=1)
 
     def test_reshape(self):
         input_tensor = np.ones((1, 4, 4, 1), dtype=np.float32)
