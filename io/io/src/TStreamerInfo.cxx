@@ -245,6 +245,15 @@ TStreamerInfo::~TStreamerInfo()
 /// Makes sure kBuildRunning reset once Build finishes.
 
 namespace {
+   /// Round \p value up to the next multiple of \p align.
+   /// \p align must be a power of two.
+   template <typename T>
+   inline T AlignUp(T value, T align)
+   {
+      assert((align & (align - 1)) == 0); // must be a power of two
+      return (value + align - 1) & ~(align - 1);
+   }
+
    struct TPreventRecursiveBuildGuard {
       TPreventRecursiveBuildGuard(TStreamerInfo* info): fInfo(info) {
          fInfo->SetBit(TStreamerInfo::kBuildRunning);
@@ -2651,7 +2660,7 @@ void TStreamerInfo::BuildOld()
          Int_t align = kSizeOfPtr;
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();
-         offset = (offset + align - 1) & ~(align - 1);
+         offset = AlignUp(offset, align);
          element->SetOffset(offset);
          offset += asize;
          if (element->GetClass())
@@ -3344,7 +3353,7 @@ void TStreamerInfo::ComputeSize()
       fAlignment = kSizeOfPtr;
    }
    if ((fSize % fAlignment) != 0) {
-      fSize = (fSize + fAlignment - 1) & ~(fAlignment - 1);
+      fSize = (Int_t)AlignUp((size_t)fSize, fAlignment);
    }
 }
 
@@ -5163,7 +5172,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
       // Round the header size up to the next multiple of 'align' so that
       // dataBegin (= p + headerSize) is itself aligned to 'align'.
       const std::size_t cookieSize = sizeof(Long_t) * 2;
-      const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+      const std::size_t headerSize = AlignUp(cookieSize, align);
 
       Long_t len = nElements * size + headerSize;
 
@@ -5178,7 +5187,7 @@ void* TStreamerInfo::NewArray(Long_t nElements, void *ary)
    // Recompute headerSize from the class alignment so the layout matches DeleteArray.
    const std::size_t align      = fClass->GetClassAlignment();
    const std::size_t cookieSize = sizeof(Long_t) * 2;
-   const std::size_t headerSize = ((cookieSize + align - 1) / align) * align;
+   const std::size_t headerSize = AlignUp(cookieSize, align);
 
    Long_t* r = (Long_t*)(p + headerSize - cookieSize);
    r[0] = size;
@@ -5956,7 +5965,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
    //align the non-basic data types (required on alpha and IRIX!!)
    size_t align = sizeof(void *);
    if (needAlign && offset % align != 0)
-      offset = (offset + align - 1) & ~(align - 1);
+      offset = (Int_t)AlignUp((size_t)offset, align);
 
    TDataType *dt = gROOT->GetType(dmType);
    if (dt && dt->GetType() > 0 ) {  // found a basic type
@@ -6009,8 +6018,8 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
       }
       // a class
       align = std::max(align, clm->GetClassAlignment());
-      if (needAlign && align != sizeof(void *) && offset % align != 0)
-         offset = (offset + align - 1) & ~(align - 1);
+      if (needAlign && align != sizeof(void *) && ((offset % align) != 0))
+         offset = (Int_t)AlignUp((size_t)offset, align);
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
       } else if(clm == TString::Class() && !dmIsPtr) {
