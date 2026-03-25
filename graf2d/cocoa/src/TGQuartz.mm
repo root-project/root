@@ -1196,37 +1196,6 @@ void TGQuartz::SetAA()
 }
 
 //______________________________________________________________________________
-void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
-{
-   assert(calledFrom != 0 && "GetSelectedDrawableChecked, calledFrom parameter is null");
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "GetSelectedDrawableChecked, bad drawable is selected");
-
-   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
-   if (!drawable.fIsPixmap) {
-      //TPad/TCanvas ALWAYS draw only into a pixmap.
-      if ([drawable isKindOfClass : [QuartzView class]]) {
-         QuartzView *view = (QuartzView *)drawable;
-         if (!view.fBackBuffer) {
-            Error(calledFrom, "Selected window is not double buffered");
-            return 0;
-         }
-
-         drawable = view.fBackBuffer;
-      } else {
-         Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
-         return 0;
-      }
-   }
-
-   if (!drawable.fContext) {
-      Error(calledFrom, "Context is null");
-      return 0;
-   }
-
-   return drawable;
-}
-
-//______________________________________________________________________________
 TAttFill &TGQuartz::GetAttFill(WinContext_t wctxt)
 {
    // attributes stored in direct drawable (view) and not in underlying pixmap
