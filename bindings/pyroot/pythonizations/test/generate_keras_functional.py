@@ -98,6 +98,12 @@ def generate_keras_functional(dst_dir):
     model = models.Model(inp, out)
     train_and_save(model, "Conv2D_padding_same")
 
+    # Conv2D padding_same with dilation_rate=2
+    inp = layers.Input(shape=(8, 8, 3))
+    out = layers.Conv2D(4, (3, 3), padding='same', dilation_rate=2, data_format='channels_last', activation='relu')(inp)
+    model = models.Model(inp, out)
+    train_and_save(model, "Conv2D_padding_same_dilation")
+
     # Conv2D padding_valid
     inp = layers.Input(shape=(8, 8, 3))
     out = layers.Conv2D(4, (3, 3), padding='valid', data_format='channels_last', activation='elu')(inp)
