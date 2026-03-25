@@ -2650,9 +2650,7 @@ void TStreamerInfo::BuildOld()
          Int_t align = kSizeOfPtr;
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();
-         if ((offset % align) != 0) {
-            offset = offset - (offset % align) + align;
-         }
+         offset = (offset + align - 1) & ~(align - 1);
          element->SetOffset(offset);
          offset += asize;
          if (element->GetClass())
@@ -3345,7 +3343,7 @@ void TStreamerInfo::ComputeSize()
       fAlignment = kSizeOfPtr;
    }
    if ((fSize % fAlignment) != 0) {
-      fSize = fSize - (fSize % fAlignment) + fAlignment;
+      fSize = (fSize + fAlignment - 1) & ~(fAlignment - 1);
    }
 }
 
@@ -5963,7 +5961,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
    //align the non-basic data types (required on alpha and IRIX!!)
    size_t align = sizeof(void *);
    if (needAlign && offset % align != 0)
-      offset = offset - offset % align + align;
+      offset = (offset + align - 1) & ~(align - 1);
 
    TDataType *dt = gROOT->GetType(dmType);
    if (dt && dt->GetType() > 0 ) {  // found a basic type
@@ -6017,7 +6015,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
       // a class
       align = std::max(align, clm->GetClassAlignment());
       if (needAlign && align != sizeof(void *) && offset % align != 0)
-         offset = offset - offset % align + align;
+         offset = (offset + align - 1) & ~(align - 1);
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
       } else if(clm == TString::Class() && !dmIsPtr) {
