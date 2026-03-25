@@ -161,7 +161,7 @@ def add_layer_into_RModel(rmodel, layer_data):
         fLayerOutput = outputs[0]
         if fLayerType == "GlobalAveragePooling2D":
             if layer_data["channels_last"]:
-                op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
+                op = SOFIE.ROperator_Transpose([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
                 rmodel.AddOperator(move_operator(op))
                 inputs[0] = LayerName + "PreTrans"
             outputs[0] = LayerName + "Squeeze"
@@ -186,23 +186,23 @@ def add_layer_into_RModel(rmodel, layer_data):
             fAttrPerm = list(range(0, num_input_shapes))
             fAttrPerm[1] = axis
             fAttrPerm[axis] = 1
-            op = SOFIE.ROperator_Transpose("float")(fAttrPerm, inputs[0], LayerName + "PreTrans")
+            op = SOFIE.ROperator_Transpose(fAttrPerm, inputs[0], LayerName + "PreTrans")
             rmodel.AddOperator(move_operator(op))
             inputs[0] = LayerName + "PreTrans"
             outputs[0] = LayerName + "PostTrans"
             rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
-            op = SOFIE.ROperator_Transpose("float")(fAttrPerm, LayerName + "PostTrans", fLayerOutput)
+            op = SOFIE.ROperator_Transpose(fAttrPerm, LayerName + "PostTrans", fLayerOutput)
             rmodel.AddOperator(move_operator(op))
 
         elif fLayerType == "MaxPooling2D" or fLayerType == "AveragePooling2D":
             if layer_data["channels_last"]:
-                op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
+                op = SOFIE.ROperator_Transpose([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
                 rmodel.AddOperator(move_operator(op))
                 inputs[0] = LayerName + "PreTrans"
                 outputs[0] = LayerName + "PostTrans"
             rmodel.AddOperator(move_operator(mapKerasLayer[fLayerType](layer_data)))
             if layer_data["channels_last"]:
-                op = SOFIE.ROperator_Transpose("float")([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
+                op = SOFIE.ROperator_Transpose([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
                 rmodel.AddOperator(move_operator(op))
 
         else:
@@ -237,7 +237,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             # if the data format is channels last (can be set to channels first by the user).
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
-                    op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
+                    op = SOFIE.ROperator_Transpose([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
                     rmodel.AddOperator(move_operator(op))
                     inputs[0] = LayerName + "PreTrans"
                     layer_data["layerInput"] = inputs
@@ -248,7 +248,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             Activation_layer_input = LayerName + fLayerType
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
-                    op = SOFIE.ROperator_Transpose("float")(
+                    op = SOFIE.ROperator_Transpose(
                         [0, 2, 3, 1], LayerName + fLayerType, LayerName + "PostTrans"
                     )
                     rmodel.AddOperator(move_operator(op))
@@ -268,7 +268,7 @@ def add_layer_into_RModel(rmodel, layer_data):
                 outputs = layer_data["layerOutput"]
                 fLayerOutput = outputs[0]
                 if layer_data["channels_last"]:
-                    op = SOFIE.ROperator_Transpose("float")([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
+                    op = SOFIE.ROperator_Transpose([0, 3, 1, 2], inputs[0], LayerName + "PreTrans")
                     rmodel.AddOperator(move_operator(op))
                     inputs[0] = LayerName + "PreTrans"
                     layer_data["layerInput"] = inputs
@@ -276,7 +276,7 @@ def add_layer_into_RModel(rmodel, layer_data):
             rmodel.AddOperator(move_operator(mapKerasLayerWithActivation[fLayerType](layer_data)))
             if fLayerType == "Conv2D":
                 if layer_data["channels_last"]:
-                    op = SOFIE.ROperator_Transpose("float")([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
+                    op = SOFIE.ROperator_Transpose([0, 2, 3, 1], LayerName + "PostTrans", fLayerOutput)
                     rmodel.AddOperator(move_operator(op))
         return rmodel
     else:

@@ -26,11 +26,7 @@ def MakeKerasPermute(layer):
     if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
         if len(fAttributePermute) > 0:
             fAttributePermute = [0] + fAttributePermute  # for the batch dimension from the input
-            op = SOFIE.ROperator_Transpose("float")(
-                fAttributePermute, fLayerInputName, fLayerOutputName
-            )  # SOFIE.fPermuteDims
-        else:
-            op = SOFIE.ROperator_Transpose("float")(fLayerInputName, fLayerOutputName)
+        op = SOFIE.ROperator_Transpose(fAttributePermute, fLayerInputName, fLayerOutputName)
         return op
     else:
         raise RuntimeError(

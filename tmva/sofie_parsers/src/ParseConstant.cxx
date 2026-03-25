@@ -176,7 +176,6 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, output_type);
-      std::cout << "Constant -> " << output_name << "  " << (int) output_type << std::endl;
    }
 
    if (parser.Verbose())

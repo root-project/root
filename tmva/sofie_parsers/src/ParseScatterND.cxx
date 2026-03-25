@@ -12,19 +12,14 @@ ParserFuncSignature ParseScatterND = [](RModelParser_ONNX &parser, const onnx::N
       throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has invalid input size");
    }
    // data is input 0
-   if (!parser.IsRegisteredTensorType(nodeproto.input(0))){
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(0)
+   for (int i = 0; i < 3; i++) {
+      if (!parser.IsRegisteredTensorType(nodeproto.input(i)))
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(i)
                                 + " but its type is not yet registered");
    }
-   if (!parser.IsRegisteredTensorType(nodeproto.input(1))){
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(1)
-                                + " but its type is not yet registered");
-   }
-   if (!parser.IsRegisteredTensorType(nodeproto.input(2))){
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(2)
-                                + " but its type is not yet registered");
-   }
+
    ETensorType input_type = parser.GetTensorType(nodeproto.input(0));
+   // type of update tensor (input(2)) must be the same of data tensor (input(0)
    if (parser.GetTensorType(nodeproto.input(2)) != input_type) {
       throw std::runtime_error("TMVA::SOFIE ONNX parser ScatterND op has input tensors of different types: " +
                   nodeproto.input(2) + " : " + ConvertTypeToString(parser.GetTensorType(nodeproto.input(2))) +
@@ -38,11 +33,10 @@ ParserFuncSignature ParseScatterND = [](RModelParser_ONNX &parser, const onnx::N
          reduction = nodeproto.attribute(i).s();
    }
 
-   std::unique_ptr<ROperator> op;
    std::string output_name = nodeproto.output(0);
 
-   op.reset(new ROperator_ScatterND(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2),
-                                          output_name, reduction));
+   auto op = std::make_unique<ROperator_ScatterND>(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2),
+                                          output_name, reduction);
 
    // Infer the output type
    if (!parser.IsRegisteredTensorType(output_name)) {

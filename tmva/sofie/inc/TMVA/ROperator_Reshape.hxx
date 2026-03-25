@@ -223,7 +223,6 @@ public:
       }
       else if (fOpMode == Unsqueeze) {
          // unsqueeze
-         std::cout << "doing unsqueeze....\n";
          assert(!fAttrAxes.empty());
          auto output_shape = input_shape;
          auto &axes = fAttrAxes;

@@ -85,7 +85,6 @@ public:
       bool isDynamic = model.IsDynamicTensor(fNX);
       fShapeX = model.GetDimTensorShape(fNX);
       fShapeY = fShapeX;
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       // Type of the output
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       // Size of the input
@@ -125,10 +124,6 @@ public:
       if (fAttrStashType == 1 && model.GetTensorType(fNX) != ETensorType::FLOAT) {
          fCastToFloat = true;
          fType = "float";
-         // fNCastedX = "Casted" + fNX;
-         // model.AddIntermediateTensor(fNCastedX, ETensorType::FLOAT, fShapeX);
-         // fNNormalizedX = "Normalized" + fNX;
-         // model.AddIntermediateTensor(fNNormalizedX, ETensorType::FLOAT, fShapeX);
       }
       // scale shape
       fShapeScale = model.GetDimTensorShape(fNScale);
@@ -157,17 +152,13 @@ public:
          }
       }
 
-      std::cout << "bias + scale " << ConvertDimShapeToString(fShapeB) << "  " << ConvertDimShapeToString(fShapeScale) << std::endl;
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      if (model.Verbose()){
+         std::cout << "LayerNormalization : " << fNX << " -> " << fNY << " shape " << ConvertDimShapeToString(fShapeY)
+                  << " using bias and scale with shapes " << ConvertDimShapeToString(fShapeB) << "  " << ConvertDimShapeToString(fShapeScale)
+                  << std::endl;
+      }
 
-      // // Broadcast the bias
-      // if (!fNB.empty()) {
-      //    fShapeB = model.GetTensorShape(fNB);
-      //    size_t lengthB = ConvertShapeToLength(fShapeB);
-      //    if (isDynamic || lengthB < static_cast<size_t>(std::stoi(fLength))) {
-      //       fNBroadcastedB = "Broadcasted" + fNB;
-      //       model.AddIntermediateTensor(fNBroadcastedB, ConvertStringToType(fType), fShapeX);
-      //    }
-      // }
       model.AddNeededStdLib("cmath");
    }
 

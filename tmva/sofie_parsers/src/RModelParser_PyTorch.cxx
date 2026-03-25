@@ -275,15 +275,7 @@ std::unique_ptr<ROperator> MakePyTorchTranspose(PyObject* fNode){
         std::string fNameData   = PyStringAsString(PyList_GetItem(fInputs,0));
         std::string fNameOutput = PyStringAsString(PyList_GetItem(fOutputs,0));
 
-        std::unique_ptr<ROperator> op;
-        switch(ConvertStringToType(fNodeDType)){
-            case ETensorType::FLOAT: {
-                op.reset(new ROperator_Transpose<float>(fAttrPermute, fNameData, fNameOutput));
-                break;
-            }
-            default:
-            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + fNodeDType);
-        }
+        std::unique_ptr<ROperator> op = std::make_unique<ROperator_Transpose>(fAttrPermute, fNameData, fNameOutput);
         return op;
 }
 

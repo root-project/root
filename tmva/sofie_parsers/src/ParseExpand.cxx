@@ -13,7 +13,6 @@ ParserFuncSignature ParseExpand = [](RModelParser_ONNX &parser, const onnx::Node
    const std::string input_name = nodeproto.input(0);
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
-      std::cout << "input type is " << static_cast<int>(input_type) << "  " << ConvertTypeToString(input_type) << std::endl;
    } else {
       throw std::runtime_error(
         "TMVA::SOFIE ONNX Parser Expand op has input tensor " + input_name +

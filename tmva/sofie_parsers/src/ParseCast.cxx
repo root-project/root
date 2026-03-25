@@ -29,7 +29,6 @@ ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodePr
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, output_type);
-      std::cout << "Cast -> " << output_name << " type " << (int) output_type << "  " << ConvertTypeToString(output_type) << std::endl;
    }
 
    return op;
