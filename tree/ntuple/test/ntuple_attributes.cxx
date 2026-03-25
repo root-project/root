@@ -317,3 +317,23 @@ TEST(RNTupleAttributes, InvalidPendingRange)
       EXPECT_THAT(ex.what(), testing::HasSubstr("was not created by it or was already committed"));
    }
 }
+
+TEST(RNTupleAttributes, ReassignPendingRange)
+{
+   // verify that reassigning a pending range and not committing it properly triggers the warning.
+   FileRaii fileGuard("test_ntuple_attr_reassign_range.root");
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = RNTupleWriter::Append(RNTupleModel::Create(), "ntpl", *file);
+   auto attrSet = writer->CreateAttributeSet(RNTupleModel::Create(), "MyAttributes");
+
+   auto attrRange = attrSet->BeginRange();
+   attrSet->CommitRange(std::move(attrRange));
+   // reassign the range but never commit it.
+   attrRange = attrSet->BeginRange();
+
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "A pending attribute range was not committed", false);
+}
