@@ -56,3 +56,10 @@ set_target_properties(JPEG::JPEG PROPERTIES
     IMPORTED_LOCATION ${ROOT_LIBJPEG_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBJPEG_PREFIX}/include
 )
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(JPEG_INCLUDE_DIRS ${${ROOT_LIBJPEG_PREFIX}/include} PARENT_SCOPE)
+set(JPEG_LIBRARIES ${ROOT_LIBJPEG_LIBRARY} PARENT_SCOPE)
+set(JPEG_FOUND TRUE PARENT_SCOPE)
+set(JPEG_VERSION ${ROOT_LIBJPEG_VERSION} PARENT_SCOPE)

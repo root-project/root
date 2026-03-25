@@ -47,11 +47,14 @@ ExternalProject_Add(
     TIMEOUT 600
 )
 
+add_library(Freetype::Freetype IMPORTED STATIC GLOBAL)
+
 # Set the canonical output of find_package according to
 # https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
 set(FREETYPE_INCLUDE_DIRS ${FREETYPE_PREFIX}/include/freetype2 PARENT_SCOPE)
 set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY} PARENT_SCOPE)
-set(FREETYPE_FOUND TRUE PARENT_SCOPE)
+set(Freetype_FOUND TRUE PARENT_SCOPE)
+set(Freetype_VERSION ${FREETYPE_VERSION} PARENT_SCOPE)
 
 if(builtin_zlib)
     add_dependencies(BUILTIN_FREETYPE BUILTIN_ZLIB)
