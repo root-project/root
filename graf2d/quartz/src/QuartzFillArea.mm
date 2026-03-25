@@ -347,12 +347,12 @@ void DrawPattern(void *data, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
+bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex, Color_t attrFillColor)
 {
    assert(ctx != nullptr && "SetFillPattern, ctx parameter is null");
    assert(patternIndex != nullptr && "SetFillPattern, patternIndex parameter is null");
 
-   const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
+   const TColor *fillColor = gROOT->GetColor(attrFillColor);
    if (!fillColor)
       fillColor = gROOT->GetColor(kWhite);
 
@@ -417,7 +417,7 @@ bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex, TAttFill *a
       if (*patternIndex > 25)
          *patternIndex = 2;
 
-      if (!SetFillPattern(ctx, patternIndex)) {
+      if (!SetFillPattern(ctx, patternIndex, attFillColor)) {
          ::Error("SetFillAreaParameters", "SetFillPattern failed");
          return false;
       }
@@ -443,7 +443,7 @@ void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool holl
 }
 
 //______________________________________________________________________________
-void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
+void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow, Style_t attFillStyle)
 {
    // Draw a filled area through all points.
    // n         : number of points
@@ -459,8 +459,10 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
       CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
 
    CGContextClosePath(ctx);
+   if (attFillStyle == (Style_t) -1)
+      attFillStyle = gVirtualX->GetFillStyle();
 
-   const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
+   const unsigned fillStyle = attFillStyle / 1000;
 
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
