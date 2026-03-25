@@ -248,7 +248,7 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
          return;
       }
 
-      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE);//The last argument - do not draw shadows.
+      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill.GetFillStyle());//The last argument - do not draw shadows.
    }
 }
 
