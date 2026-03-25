@@ -21,7 +21,9 @@
 #include <string>
 #include <map>
 #include <cstdlib>
+#include <cstddef>
 #include <vector>
+#include <new>
 
 class TObjArray;
 class TCollectionProxyFactory;
@@ -298,18 +300,15 @@ public:
 
       T *allocate(std::size_t n)
       {
-         std::size_t bytes = n * sizeof(T);
          std::size_t effectiveAlign = alignment < alignof(T) ? alignof(T) : alignment;
-         // Round up to a multiple of effectiveAlign (required by aligned operator new)
-         bytes = (bytes + effectiveAlign - 1) & ~(effectiveAlign - 1);
+         std::size_t bytes = AlignUp(n * sizeof(T), effectiveAlign);
          return static_cast<T *>(::operator new(bytes, std::align_val_t{effectiveAlign}));
       }
 
       void deallocate(T *p, std::size_t n) noexcept
       {
-         std::size_t bytes = n * sizeof(T);
          std::size_t effectiveAlign = alignment < alignof(T) ? alignof(T) : alignment;
-         bytes = (bytes + effectiveAlign - 1) & ~(effectiveAlign - 1);
+         std::size_t bytes = AlignUp(n * sizeof(T), effectiveAlign);
          ::operator delete(p, bytes, std::align_val_t{effectiveAlign});
       }
 
@@ -317,6 +316,13 @@ public:
       bool operator==(const AlignedAllocator<U> &other) const noexcept { return alignment == other.alignment; }
       template <typename U>
       bool operator!=(const AlignedAllocator<U> &other) const noexcept { return !(*this == other); }
+
+   private:
+      /// Round \p value up to the next multiple of \p align. \p align must be a power of two.
+      static std::size_t AlignUp(std::size_t value, std::size_t align)
+      {
+         return (value + align - 1) & ~(align - 1);
+      }
    };
 
 protected:
