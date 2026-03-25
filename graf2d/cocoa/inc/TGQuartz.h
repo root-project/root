@@ -114,7 +114,6 @@ private:
    void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();
-   void *GetSelectedDrawableChecked(const char *calledFrom) const;
    TAttFill &GetAttFill(WinContext_t wctxt);
    TAttLine &GetAttLine(WinContext_t wctxt);
    TAttMarker &GetAttMarker(WinContext_t wctxt);
