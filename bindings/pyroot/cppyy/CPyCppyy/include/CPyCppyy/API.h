@@ -174,6 +174,10 @@ CPYCPPYY_EXTERN void* CallVoidP(Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallCo
 
 //- C++ access to cppyy objects ---------------------------------------------
 
+// Get C++ Instance (python object proxy) name.
+// Sets a TypeError and returns an empty string if the pyobject is not a CPPInstance.
+CPYCPPYY_EXTERN std::string Instance_GetScopedFinalName(PyObject* pyobject);
+
 // C++ Instance (python object proxy) to void* conversion
 CPYCPPYY_EXTERN void* Instance_AsVoidPtr(PyObject* pyobject);
 
@@ -198,6 +202,11 @@ CPYCPPYY_EXTERN bool Instance_IsLively(PyObject* pyobject);
 // type verifiers for C++ Overload
 CPYCPPYY_EXTERN bool Overload_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Overload_CheckExact(PyObject* pyobject);
+
+// Sets the __reduce__ method for the CPPInstance class, which is by default not
+// implemented by cppyy but might make sense to implement by frameworks that
+// support IO of arbitrary C++ objects, like ROOT.
+CPYCPPYY_EXTERN void Instance_SetReduceMethod(PyCFunction reduceMethod);
 
 
 //- access to the python interpreter ----------------------------------------

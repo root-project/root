@@ -103,6 +103,18 @@ static bool Initialize()
 
 
 //- C++ access to cppyy objects ---------------------------------------------
+std::string CPyCppyy::Instance_GetScopedFinalName(PyObject* pyobject)
+{
+   if (!Instance_Check(pyobject)) {
+       PyErr_SetString(PyExc_TypeError, "Instance_GetScopedFinalName : object is not a C++ instance");
+       return "";
+   }
+
+   Cppyy::TCppType_t pyobjectClass = ((CPPInstance *)pyobject)->ObjectIsA();
+   return Cppyy::GetScopedFinalName(pyobjectClass);
+}
+
+//-----------------------------------------------------------------------------
 void* CPyCppyy::Instance_AsVoidPtr(PyObject* pyobject)
 {
 // Extract the object pointer held by the CPPInstance pyobject.
@@ -254,6 +266,11 @@ bool CPyCppyy::Overload_CheckExact(PyObject* pyobject)
     return CPPOverload_CheckExact(pyobject);
 }
 
+//-----------------------------------------------------------------------------
+void CPyCppyy::Instance_SetReduceMethod(PyCFunction reduceMethod)
+{
+    CPPInstance::ReduceMethod() = reduceMethod;
+}
 
 //- access to the python interpreter ----------------------------------------
 bool CPyCppyy::Import(const std::string& mod_name)
