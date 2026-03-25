@@ -20,9 +20,6 @@
 #if defined(WIN32)
 #include <glad/wgl.h>
 #else
-#if defined(__APPLE__) && !defined(R__HAS_COCOA)
-#define GLEW_APPLE_GLX
-#endif
 #if !defined(R__HAS_COCOA)
 #include <glad/glx.h>
 #endif

@@ -225,7 +225,6 @@ target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
      ${FREETYPE_INCLUDE_DIRS}
-     ${GLEW_INCLUDE_DIRS}
 )
 
 if(builtin_gl2ps)
