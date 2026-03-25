@@ -13,7 +13,6 @@
 #include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
 #include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
-#include "../../cppyy/CPyCppyy/src/Utility.h"
 #include "../../cppyy/CPyCppyy/src/Dimensions.h"
 
 #include "CPyCppyy/API.h"
@@ -46,6 +45,10 @@ TClass *GetTClass(PyObject *pyobj)
 } // namespace
 
 using namespace CPyCppyy;
+
+namespace PyROOT{
+void GetBuffer(PyObject *pyobject, void *&buf);
+}
 
 static TBranch *SearchForBranch(TTree *tree, const char *name)
 {
@@ -251,7 +254,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
       if (CPyCppyy::Instance_Check(address))
          buf = CPyCppyy::Instance_AsVoidPtr(address);
       else
-         Utility::GetBuffer(address, '*', 1, buf, false);
+         PyROOT::GetBuffer(address, buf);
 
       if (buf) {
          TBranch *branch = nullptr;
@@ -331,7 +334,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
             argc += 1;
          }
       } else {
-         Utility::GetBuffer(address, '*', 1, buf, false);
+         PyROOT::GetBuffer(address, buf);
       }
 
       if (buf && !klName.empty()) {
