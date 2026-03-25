@@ -22,6 +22,10 @@
 
 using namespace CPyCppyy;
 
+namespace PyROOT{
+void GetBuffer(PyObject *pyobject, void *&buf);
+}
+
 // Cast the void* returned by TClass::DynamicCast to the right type
 PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 {
@@ -50,7 +54,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    } else if (PyInt_Check(pyobject) || PyLong_Check(pyobject)) {
       address = (void *)PyLong_AsLongLong(pyobject);
    } else {
-      Utility::GetBuffer(pyobject, '*', 1, address, false);
+      PyROOT::GetBuffer(pyobject, address);
    }
 
    // Now use binding to return a usable class. Upcast: result is a base.
