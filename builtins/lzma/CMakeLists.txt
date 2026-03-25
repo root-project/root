@@ -65,3 +65,10 @@ add_library(LibLZMA STATIC IMPORTED GLOBAL)
 add_library(LibLZMA::LibLZMA ALIAS LibLZMA)
 target_include_directories(LibLZMA INTERFACE ${LIBLZMA_INCLUDE_DIR})
 set_target_properties(LibLZMA PROPERTIES IMPORTED_LOCATION ${LIBLZMA_LIBRARIES})
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(LIBLZMA_INCLUDE_DIRS ${LibLZMA_INCLUDE_DIR} PARENT_SCOPE)
+set(LIBLZMA_LIBRARIES ${LIBLZMA_LIBRARIES} PARENT_SCOPE)
+set(LibLZMA_FOUND TRUE PARENT_SCOPE)
+set(LibLZMA_VERSION ${ROOT_LZMA_VERSION} PARENT_SCOPE)

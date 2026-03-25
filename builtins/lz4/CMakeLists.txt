@@ -58,3 +58,10 @@ add_library(LibLZ4 STATIC IMPORTED GLOBAL)
 add_library(LZ4::LZ4 ALIAS LibLZ4)
 target_include_directories(LibLZ4 INTERFACE ${LIBLZ4_INCLUDE_DIR})
 set_target_properties(LibLZ4 PROPERTIES IMPORTED_LOCATION ${ROOT_LZ4_LIBRARY})
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(LZ4_INCLUDE_DIRS ${LIBLZ4_INCLUDE_DIR} PARENT_SCOPE)
+set(LZ4_LIBRARIES ${ROOT_LZ4_LIBRARY} PARENT_SCOPE)
+set(LZ4_FOUND TRUE PARENT_SCOPE)
+set(LZ4_VERSION ${ROOT_LZ4_VERSION} PARENT_SCOPE)

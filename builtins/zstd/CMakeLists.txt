@@ -55,3 +55,10 @@ set_target_properties(ZSTD::ZSTD PROPERTIES
     IMPORTED_LOCATION ${ROOT_ZSTD_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ZSTD_INCLUDE_DIR}
 )
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(ZSTD_INCLUDE_DIRS ${ZSTD_INCLUDE_DIR} PARENT_SCOPE)
+set(ZSTD_LIBRARIES ${ROOT_ZSTD_LIBRARY} PARENT_SCOPE)
+set(ZSTD_FOUND TRUE PARENT_SCOPE)
+set(ZSTD_VERSION ${ROOT_ZSTD_VERSION} PARENT_SCOPE)

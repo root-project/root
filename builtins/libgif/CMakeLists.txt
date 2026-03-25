@@ -48,3 +48,10 @@ set_target_properties(GIF::GIF PROPERTIES
     IMPORTED_LOCATION ${ROOT_LIBGIF_LIBRARY}
     INTERFACE_INCLUDE_DIRECTORIES ${ROOT_LIBGIF_PREFIX}/include
 )
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(GIF_INCLUDE_DIRS ${ROOT_LIBGIF_PREFIX}/include PARENT_SCOPE)
+set(GIF_LIBRARIES ${ROOT_LIBGIF_LIBRARY} PARENT_SCOPE)
+set(GIF_FOUND TRUE PARENT_SCOPE)
+set(GIF_VERSION ${ROOT_LIBGIF_VERSION} PARENT_SCOPE)

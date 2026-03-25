@@ -73,3 +73,10 @@ set_target_properties(PNG::PNG PROPERTIES
 if(builtin_zlib)
     add_dependencies(BUILTIN_LIBPNG BUILTIN_ZLIB)
 endif()
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(PNG_INCLUDE_DIRS ${ROOT_LIBPNG_PREFIX}/include PARENT_SCOPE)
+set(PNG_LIBRARIES ${ROOT_LIBPNG_LIBRARY} PARENT_SCOPE)
+set(PNG_FOUND TRUE PARENT_SCOPE)
+set(PNG_VERSION ${ROOT_LIBPNG_VERSION} PARENT_SCOPE)
