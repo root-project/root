@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # The Python tutorials appear in the Namespaces page. 
 # This script removes the namespace given as input from all the files.
 
