@@ -56,13 +56,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                obj3d.geo_object = elem.fMasterId || elem.fElementId;
                obj3d.geo_name = elem.fName; // used for highlight
 
-               obj3d.matrixAutoUpdate = false;
                if (elem.render_data.matrix) {
                   if (this.mgr.is_rcore) {
                      obj3d.setMatrixFromArray(elem.render_data.matrix);
                   } else {
                      obj3d.matrix.fromArray(elem.render_data.matrix);
                      obj3d.updateMatrixWorld(true);
+                     obj3d.matrixAutoUpdate = false;
                   }
                }
 
