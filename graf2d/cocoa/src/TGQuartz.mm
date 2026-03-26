@@ -129,9 +129,11 @@ void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t 
             return;
          }
 
-         if (![view.fQuartzWindow findXorWindow])
-            [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawBoxXor(drawable0.fID, x1, y1, x2, y2);
+         [view.fQuartzWindow addXorBox: view : drawable0.fID : x1 : y1 : x2 : y2];
+
+         //if (![view.fQuartzWindow findXorWindow])
+         //   [view.fQuartzWindow addXorWindow];
+         //fPimpl->fX11CommandBuffer.AddDrawBoxXor(drawable0.fID, x1, y1, x2, y2);
       }
       return;
    }
@@ -282,9 +284,12 @@ void TGQuartz::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t
              return;
          }
 
-         if (![view.fQuartzWindow findXorWindow])
-            [view.fQuartzWindow addXorWindow];
-         fPimpl->fX11CommandBuffer.AddDrawLineXor(drawable0.fID, x1, y1, x2, y2);
+         [view.fQuartzWindow addXorLine: view : drawable0.fID : x1 : y1 : x2 : y2];
+
+         //if (![view.fQuartzWindow findXorWindow])
+         //   [view.fQuartzWindow addXorWindow];
+
+         // fPimpl->fX11CommandBuffer.AddDrawLineXor(drawable0.fID, x1, y1, x2, y2);
       }
 
       return;

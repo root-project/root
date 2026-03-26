@@ -73,6 +73,8 @@ class Command;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
    BOOL fIsDeleted;
+
+   std::vector<ROOT::MacOSX::X11::Command *> fXorOps;
 }
 
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
@@ -132,6 +134,10 @@ class Command;
 - (void) adjustXorWindowGeometry : (XorDrawingWindow *) win;
 - (void) removeXorWindow;
 - (XorDrawingWindow *) findXorWindow;
+- (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) flushXor;
+- (void) clearXor;
 
 //X11Window protocol.
 
