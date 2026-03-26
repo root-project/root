@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script creates the file Doxyfile_INPUT which defines the list of directories to be
 # analysed by doxygen. To only build a subset of the documentation it is enough to comment
