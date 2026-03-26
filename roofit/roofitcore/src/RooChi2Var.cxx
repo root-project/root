@@ -16,42 +16,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-/** \class RooChi2Var
-    \ingroup Roofitcore
-    \brief Simple \f$ \chi^2 \f$ calculation from a binned dataset and a PDF.
- *
- * It calculates:
- *
- \f{align*}{
-   \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
-   N_\mathrm{PDF,bin} &=
-     \begin{cases}
-         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
-         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
-     \end{cases} \\
-   \Delta_\mathrm{bin} &=
-     \begin{cases}
-         \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
-         \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
-     \end{cases}
- \f}
- * If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
- * In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
- * expected number of events that the PDF predicts.
- *
- * \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
- * zero error. This leads to messages like:
- * ```
- * [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
- * ```
- *
- * \note In this case, one can use the expected errors of the PDF instead of the data errors:
- * ```{.cpp}
- * RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
- * ```
- */
-
 #include "RooChi2Var.h"
 
 #include "FitHelpers.h"
