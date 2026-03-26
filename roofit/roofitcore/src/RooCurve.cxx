@@ -560,6 +560,12 @@ double RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 
     // Add pull^2 to chisq
     if (point.y!=0) {
+       if (eyl == 0 || eyh == 0) {
+          Warning("RooPlot::chiSquare",
+              "Zero bin error encountered. Result may be undefined. "
+              "RooPlot::chiSquare is deprecated; use RooAbsReal::createChi2 instead.");
+          continue;
+        }
       double pull = (point.y>avg) ? ((point.y-avg)/eyl) : ((point.y-avg)/eyh) ;
       chisq += pull*pull ;
       nbin++ ;
