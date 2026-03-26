@@ -53,10 +53,6 @@
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #define R__HARDWARE_INTERFERENCE_SIZE @hardwareinterferencesize@ /*Determined at CMake configure to be stable across all TUs*/
 
-#@uselz4@ R__HAS_DEFAULT_LZ4  /**/
-#@usezlib@ R__HAS_DEFAULT_ZLIB  /**/
-#@uselzma@ R__HAS_DEFAULT_LZMA  /**/
-#@usezstd@ R__HAS_DEFAULT_ZSTD  /**/
 #@usezlibng@ R__HAS_ZLIB_NG /**/
 
 #@hastmvacpu@ R__HAS_TMVACPU /**/

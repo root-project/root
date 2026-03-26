@@ -69,6 +69,7 @@ The following people have contributed to this new version:
      multiGraph->Add(static_cast<TGraph*>(gr->Clone()));
   }
   ```
+* The `compression_default` build option was removed. It was supposed to change the default compression algorithm, but didn't actually work with the default parameters of `TFile`.
 
 ## Build System
 
