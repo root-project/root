@@ -585,8 +585,14 @@ void TGCocoa::Update(Int_t mode)
       fPimpl->fX11CommandBuffer.Flush(fPimpl.get());
    }
 
-   if (fDirectDraw && mode != 2)
-      fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
+   if (fDirectDraw && mode != 2) {
+      // fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
+      auto windows = NSApplication.sharedApplication.windows;
+      for (NSWindow *candidate : windows) {
+         if ([candidate isKindOfClass:QuartzWindow.class])
+            [(QuartzWindow *)candidate flushXor];
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -695,10 +701,10 @@ void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
    auto drawable = (NSObject<X11Drawable> *) wctxt;
 
-   if ([drawable getDrawMode] == kInvert && mode != kInvert)
-      fPimpl->fX11CommandBuffer.ClearXOROperations();
+   // if ([drawable getDrawMode] == kInvert && mode != kInvert)
+   //   fPimpl->fX11CommandBuffer.ClearXOROperations();
 
-   // here also XOR window will be removed
+   // here XOR window and XOR operations will be removed if present
    [drawable setDrawMode : mode];
 }
 
@@ -3562,13 +3568,13 @@ void TGCocoa::SetDrawMode(EDrawMode mode)
    //
    //EDrawMode{kCopy, kXor, kInvert};
    if (fDrawMode == kInvert && mode != kInvert) {
-       // Remove previously added CrosshairWindow.
-       auto windows = NSApplication.sharedApplication.windows;
-       for (NSWindow *candidate : windows) {
-           if ([candidate isKindOfClass:QuartzWindow.class])
-               [(QuartzWindow *)candidate removeXorWindow];
-       }
-       fPimpl->fX11CommandBuffer.ClearXOROperations();
+      // Remove previously added CrosshairWindow.
+      auto windows = NSApplication.sharedApplication.windows;
+      for (NSWindow *candidate : windows) {
+         if ([candidate isKindOfClass:QuartzWindow.class])
+            [(QuartzWindow *)candidate removeXorWindow];
+      }
+      // fPimpl->fX11CommandBuffer.ClearXOROperations();
    }
 
    fDrawMode = mode;

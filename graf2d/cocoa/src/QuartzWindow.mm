@@ -1536,12 +1536,13 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) removeXorWindow
 {
-    if (auto win = [self findXorWindow]) {
-        // For some reason, without ordeing out, the crosshair window's content stays
-        // in the parent's window. Thus we first have to order out the crosshair window.
-        [win orderOut:nil];
-        [self removeChildWindow : win];
-    }
+   if (auto win = [self findXorWindow]) {
+      // For some reason, without ordeing out, the crosshair window's content stays
+      // in the parent's window. Thus we first have to order out the crosshair window.
+      [win orderOut:nil];
+      [self removeChildWindow : win];
+   }
+   [self clearXor];
 }
 
 //______________________________________________________________________________
@@ -1553,6 +1554,59 @@ void print_mask_info(ULong_t mask)
             return (XorDrawingWindow *)child;
     }
     return nil;
+}
+
+//______________________________________________________________________________
+- (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+{
+   [self addXorWindow];
+
+   try {
+      std::unique_ptr<ROOT::MacOSX::X11::DrawLineXor> cmd(new ROOT::MacOSX::X11::DrawLineXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      cmd->setView(view);
+      fXorOps.push_back(cmd.get());
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+- (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+{
+   [self addXorWindow];
+
+   try {
+      std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      cmd->setView(view);
+      fXorOps.push_back(cmd.get());
+      cmd.release();
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//______________________________________________________________________________
+- (void) flushXor
+{
+   auto xorWindow = [self findXorWindow];
+   if (!xorWindow) {
+      [self clearXor];
+      return;
+   }
+
+   XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
+   [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
+   fXorOps.clear(); // A view will free the memory.
+   [cv setNeedsDisplay : YES];
+}
+
+//______________________________________________________________________________
+- (void) clearXor
+{
+   for (auto elem : fXorOps)
+      delete elem;
+   fXorOps.clear();
 }
 
 
