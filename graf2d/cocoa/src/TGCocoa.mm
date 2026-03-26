@@ -587,11 +587,11 @@ void TGCocoa::Update(Int_t mode)
 
    if (fDirectDraw && mode != 2) {
       // fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
-      auto windows = NSApplication.sharedApplication.windows;
-      for (NSWindow *candidate : windows) {
-         if ([candidate isKindOfClass:QuartzWindow.class])
-            [(QuartzWindow *)candidate flushXor];
-      }
+      //auto windows = NSApplication.sharedApplication.windows;
+      //for (NSWindow *candidate : windows) {
+      //   if ([candidate isKindOfClass:QuartzWindow.class])
+      //      [(QuartzWindow *)candidate flushXor];
+      //}
    }
 }
 
@@ -3564,17 +3564,12 @@ void TGCocoa::SetDoubleBufferON()
 //______________________________________________________________________________
 void TGCocoa::SetDrawMode(EDrawMode mode)
 {
-   // Sets the drawing mode.
+   // Sets the drawing mode for all windows.
    //
-   //EDrawMode{kCopy, kXor, kInvert};
-   if (fDrawMode == kInvert && mode != kInvert) {
-      // Remove previously added CrosshairWindow.
-      auto windows = NSApplication.sharedApplication.windows;
-      for (NSWindow *candidate : windows) {
-         if ([candidate isKindOfClass:QuartzWindow.class])
-            [(QuartzWindow *)candidate removeXorWindow];
-      }
-      // fPimpl->fX11CommandBuffer.ClearXOROperations();
+   auto windows = NSApplication.sharedApplication.windows;
+   for (NSWindow *candidate : windows) {
+      if ([candidate isKindOfClass:QuartzWindow.class])
+         [(QuartzWindow *)candidate setDrawMode : mode];
    }
 
    fDrawMode = mode;

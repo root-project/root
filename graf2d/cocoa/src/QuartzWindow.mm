@@ -1132,6 +1132,12 @@ void print_mask_info(ULong_t mask)
     xorOps = primitives;
 }
 
+- (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd
+{
+   xorOps.push_back(cmd);
+}
+
+
 - (void) drawRect : (NSRect) dirtyRect
 {
     [super drawRect:dirtyRect];
@@ -1224,6 +1230,7 @@ void print_mask_info(ULong_t mask)
 
       fIsDeleted = NO;
       fHasFocus = NO;
+      fDrawMode = TVirtualX::kCopy;
    }
 
    return self;
@@ -1254,6 +1261,7 @@ void print_mask_info(ULong_t mask)
       fDelayedTransient = NO;
       fIsDeleted = NO;
       fHasFocus = NO;
+      fDrawMode = TVirtualX::kCopy;
    }
 
    return self;
@@ -1506,15 +1514,18 @@ void print_mask_info(ULong_t mask)
 #pragma mark - XorDrawinWindow/View
 
 //______________________________________________________________________________
-- (void) addXorWindow
+- (XorDrawingWindow *) addXorWindow
 {
-    if ([self findXorWindow])
-        return;
+   auto res = [self findXorWindow];
+   if (res)
+      return res;
 
-    XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
-    [self adjustXorWindowGeometry:special];
-    [self addChildWindow : special ordered : NSWindowAbove];
-    [special release];
+   XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
+   res = special;
+   [self adjustXorWindowGeometry:special];
+   [self addChildWindow : special ordered : NSWindowAbove];
+   [special release];
+   return res;
 }
 
 //______________________________________________________________________________
@@ -1559,13 +1570,19 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
 {
-   [self addXorWindow];
+   auto xorWindow = [self addXorWindow];
 
    try {
       std::unique_ptr<ROOT::MacOSX::X11::DrawLineXor> cmd(new ROOT::MacOSX::X11::DrawLineXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
       cmd->setView(view);
-      fXorOps.push_back(cmd.get());
+      // fXorOps.push_back(cmd.get());
+      // cmd.release();
+
+      auto cv = (XorDrawingView *)xorWindow.contentView;
+      [cv addXorCommand : cmd.get()];
       cmd.release();
+      [cv setNeedsDisplay : YES];
+
    } catch (const std::exception &) {
       throw;
    }
@@ -1574,13 +1591,18 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
 {
-   [self addXorWindow];
+   auto xorWindow = [self addXorWindow];
 
    try {
       std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
       cmd->setView(view);
-      fXorOps.push_back(cmd.get());
+      // fXorOps.push_back(cmd.get());
+      // cmd.release();
+
+      auto cv = (XorDrawingView *)xorWindow.contentView;
+      [cv addXorCommand : cmd.get()];
       cmd.release();
+      [cv setNeedsDisplay : YES];
    } catch (const std::exception &) {
       throw;
    }
@@ -1595,10 +1617,10 @@ void print_mask_info(ULong_t mask)
       return;
    }
 
-   XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
-   [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
-   fXorOps.clear(); // A view will free the memory.
-   [cv setNeedsDisplay : YES];
+   // XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
+   // [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
+   // fXorOps.clear(); // A view will free the memory.
+   // [cv setNeedsDisplay : YES];
 }
 
 //______________________________________________________________________________
@@ -1607,6 +1629,21 @@ void print_mask_info(ULong_t mask)
    for (auto elem : fXorOps)
       delete elem;
    fXorOps.clear();
+}
+
+//______________________________________________________________________________
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode
+{
+   if (fDrawMode == TVirtualX::kInvert && newMode != TVirtualX::kInvert)
+      [self removeXorWindow];
+
+   fDrawMode = newMode;
+}
+
+//______________________________________________________________________________
+- (TVirtualX::EDrawMode) getDrawMode
+{
+   return fDrawMode;
 }
 
 
@@ -2036,7 +2073,6 @@ void print_mask_info(ULong_t mask)
       fBackBuffer = nil;
       fID = 0;
 
-      fDrawMode = TVirtualX::kCopy;
       fDirectDraw = NO;
 
       //Passive grab parameters.
@@ -2207,17 +2243,13 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode
 {
-   if (fDrawMode == TVirtualX::kInvert && newMode != TVirtualX::kInvert) {
-      [self.fQuartzWindow removeXorWindow];
-   }
-
-   fDrawMode = newMode;
+   [self.fQuartzWindow setDrawMode:newMode];
 }
 
 //______________________________________________________________________________
 - (TVirtualX::EDrawMode) getDrawMode
 {
-   return fDrawMode;
+   return [self.fQuartzWindow getDrawMode];
 }
 
 //______________________________________________________________________________
