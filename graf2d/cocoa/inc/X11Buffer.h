@@ -245,8 +245,6 @@ private:
 
    std::vector<Command *> fCommands;
    std::vector<QuartzView *> fViewBranch;
-
-   std::vector<Command *> fXorOps;
 public:
    typedef std::vector<Command *>::size_type size_type;
 
@@ -264,22 +262,15 @@ public:
    void AddUpdateWindow(QuartzView *view);
    void AddDeletePixmap(Pixmap_t pixmap);
 
-   //'XOR' graphics for canvas.
-   void AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
-   void AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
-
    void Flush(Details::CocoaPrivate *impl);
-   void FlushXOROps(Details::CocoaPrivate *impl);
    void RemoveOperationsForDrawable(Drawable_t wid);
    void RemoveGraphicsOperationsForWindow(Window_t wid);
-   void RemoveXORGraphicsOperationsForWindow(Window_t wid);
 
    size_type BufferSize()const
    {
       return fCommands.size();
    }
 
-   void ClearXOROperations();
 private:
    void ClearCommands();
    //Clip related stuff.
