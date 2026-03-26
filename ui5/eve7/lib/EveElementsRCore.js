@@ -1104,13 +1104,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let lcol = RcCol(ebox.fLineColor);
          let line = new RC.Line(geo_rim, this.RcLineMaterial(lcol, 0.8, 1));
          mesh.add(line);
+         this.RcPickable(ebox, mesh);
 
-         mesh.get_ctrl = function () { return new EveElemControl(this); }
+         // AMT dispose function outdated
          mesh.dispose = function () {
             this.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
             this.geometry.dispose(); this.material.dispose();
          };
-
          return mesh;
       }
       //==============================================================================
