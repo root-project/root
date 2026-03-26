@@ -99,7 +99,8 @@ sap.ui.define([
       bootstrap()
       {
          RC.GLManager.sCheckFrameBuffer = false;
-         RC.Object3D.sDefaultPickable = false;
+         RC.Object3D.sDefaultQuaternionsAndAutoUpdate = false;
+         RC.Mesh.sDefaultPickable = false;
          RC.PickingShaderMaterial.DEFAULT_PICK_MODE = RC.PickingShaderMaterial.PICK_MODE.UINT;
 
          this.createRCoreRenderer();
@@ -460,14 +461,11 @@ sap.ui.define([
             diffuse: col.clone().multiplyScalar(0.5)
          }
          );
-         let vtx = new Float32Array(3);
-         vtx[0] = 0; vtx[1] = 0; vtx[2] = 0;
          let s = new RC.ZSprite(null, sm);
          s.instanced = false;
-         s.position.set(0, 0, 0);
          s.visible = false;
          this.scene.add(s);
-         this.controls.centerMarker = s;
+         this.centerMarker = s;
 
          // This will also call render().
          this.resetRenderer();
@@ -542,6 +540,8 @@ sap.ui.define([
 
             // console.log("resetRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
          }
+
+         this.centerMarker.visible = false;
 
          this.controls.setFromBBox(sbbox);
 
@@ -651,7 +651,8 @@ sap.ui.define([
                      color: this.fgCol,
                      font: font_metrics,
                   });
-                  text.position = ax.p;
+                  text.matrix.setPosition(ax.p);
+                  text.matrixChanged();
                   text.material.side = RC.FRONT_SIDE;
                   ag.add(text);
                }
@@ -747,7 +748,7 @@ sap.ui.define([
          // Note that rgt.render_end() releases all std textures.
 
          if (this.rqt.queue.used_fail_count == 0) {
-            // AMT: All render passess are drawn with the black bg
+            // AMT: All render passes are drawn with the black bg
             //      except of the tone map render pass
             this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
             this.rqt.render_tone_map_to_screen();
@@ -1083,6 +1084,10 @@ sap.ui.define([
 
          e.applyMatrix4(pthis.camera.testMtx);
          // console.log("picked word view coordinates ", e);
+
+         pthis.centerMarker.matrix.setPosition(e.x, e.y, e.z);
+			pthis.centerMarker.matrixChanged();
+			pthis.centerMarker.visible = true;
 
          pthis.controls.setCameraCenter(e.x, e.y, e.z);
          pthis.request_render();
