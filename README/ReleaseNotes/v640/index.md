@@ -48,6 +48,9 @@ The following people have contributed to this new version:
   The ZeroMQ library and its C++ bindings are used by the experimental RooFit multiprocessing package, enabled by the `roofit_multiprocess` build option.
   The ZeroMQ versions it requires (>=4.3.6 or 4.3.5 with the draft API) are now available in the package managers of several platforms, for example Conda, Homebrew, Fedora and the Extra Packages for Enterprise Linux (EPEL).
   The `roofit_multiprocess` feature is only required by a small set of RooFit power uses, who are using one of these environments and therefore don't require the builtin ZeroMQ library.
+* The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects are deprecated and will be removed in ROOT 6.42.
+  These methods implemented a specialized chi-square fit for x-y-data with errors in y and optional errors in x, which is conceptually different from the standard histogram-based chi-square in the **RooDataHist** case and can lead to ambiguous results.
+  To fit 2D data with errors in and `x` and `y`, use specialized tools like `TGraphErrors::Fit()`, or build an explicit likelihood model if you want to stay with RooFit.
 
 ## Removals
 

@@ -193,13 +193,29 @@ public:
   // Chi^2 fits to X-Y datasets
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
                               const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
+                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={})
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
 
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
   virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
                const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
+               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={})
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.")
+#endif
+;
 
   virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
