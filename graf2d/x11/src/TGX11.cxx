@@ -4677,6 +4677,8 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
    ctxt->fAttText = att;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set window draw mode
 
 void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
@@ -4693,4 +4695,13 @@ void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
       XSetFunction((Display*)fDisplay, ctxt->fGClist[i], gxmode);
 
    ctxt->fDrawMode = mode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window draw mode
+
+TVirtualX::EDrawMode TGX11::GetDrawModeW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return ctxt ? ctxt->fDrawMode : kCopy;
 }
