@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
-#include <iostream>
+#include <thread>
 
 TEST(TROOT, Version)
 {
@@ -50,4 +50,44 @@ TEST(TROOT, GetIncludeDir)
    fs::path includeDirRef = EXPECTED_INCLUDE_DIR;
 
    EXPECT_EQ(includeDir, includeDirRef);
+}
+
+TEST(TROOT, AutoRegistrationTLS)
+{
+   using namespace ROOT::Experimental;
+   using namespace std::chrono_literals;
+
+   const auto initialState = ObjectAutoRegistrationEnabled();
+   auto enabler = [&]() {
+      const auto innerState = ObjectAutoRegistrationEnabled();
+      EXPECT_EQ(innerState, initialState);
+      EnableObjectAutoRegistration();
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+      std::this_thread::sleep_for(10ms);
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+   };
+   auto disabler = [&]() {
+      const auto innerState = ObjectAutoRegistrationEnabled();
+      EXPECT_EQ(innerState, initialState);
+      DisableObjectAutoRegistration();
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+      std::this_thread::sleep_for(10ms);
+      EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+   };
+
+   std::thread t1{enabler};
+   std::thread t2{disabler};
+
+   DisableObjectAutoRegistration();
+   EXPECT_EQ(ObjectAutoRegistrationEnabled(), false);
+
+   std::thread t3{enabler};
+   std::thread t4{disabler};
+
+   EnableObjectAutoRegistration();
+   EXPECT_EQ(ObjectAutoRegistrationEnabled(), true);
+
+   for (auto thread : {&t1, &t2, &t3, &t4}) {
+      thread->join();
+   }
 }
