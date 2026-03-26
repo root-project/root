@@ -2522,7 +2522,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 # order to manage dependencies.
 #
 #-------------------------------------------------------------------------------
-macro(ROOTTEST_COMPILE_MACRO filename)
+function(ROOTTEST_COMPILE_MACRO filename)
   CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
 
   # Add defines to root_compile_macro, in order to have out-of-source builds
@@ -2563,6 +2563,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   ROOTTEST_TARGETNAME_FROM_FILE(COMPILE_MACRO_TEST ${filename})
 
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
+  set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST} PARENT_SCOPE)
 
   add_test(NAME ${COMPILE_MACRO_TEST} COMMAND ${compile_macro_command})
   if(NOT MSVC OR win_broken_tests)
@@ -2583,7 +2584,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
-endmacro(ROOTTEST_COMPILE_MACRO)
+endfunction(ROOTTEST_COMPILE_MACRO)
 
 #-------------------------------------------------------------------------------
 #
