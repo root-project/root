@@ -56,6 +56,8 @@ void CallFlushColumnsOnField(RFieldBase &);
 void CallCommitClusterOnField(RFieldBase &);
 void CallConnectPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
+void CallConnectExtendedColumnsToPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &,
+                                                 ROOT::NTupleSize_t firstEntry);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
@@ -86,6 +88,8 @@ class RFieldBase {
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
+   friend void
+   Internal::CallConnectExtendedColumnsToPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t);
    friend ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
@@ -261,6 +265,9 @@ private:
    /// calling this function. For subfields, a field ID may or may not be set. If the field ID is unset, it will be
    /// determined using the page source descriptor, based on the parent field ID and the subfield name.
    void ConnectPageSource(ROOT::Internal::RPageSource &pageSource);
+   /// Similar to ConnectPageSink, but only used to connect new columns that were added via late model extension.
+   /// The field must be already connected to the sink.
+   void ConnectExtendedColumnsToPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
 
    void SetArtificial()
    {
