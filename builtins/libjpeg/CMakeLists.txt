@@ -22,7 +22,7 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
     if(winrtdebug)
         set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config Debug")
     else()
-        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config Release")
+        set(ROOT_LIBJPEG_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
     endif()
 endif()
 

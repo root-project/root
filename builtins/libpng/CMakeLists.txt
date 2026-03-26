@@ -13,17 +13,19 @@ set(ROOT_LIBPNG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBPNG-prefix)
 
 # Here we need two cases because the library has two different names on Linux/macOS and Windows
 if(MSVC)
-     set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if(winrtdebug)
+        set(LIBPNG_POSTFIX d)
+    endif()
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+        if(winrtdebug)
+            set(ROOT_LIBPNG_BUILD_COMMAND_FLAGS "--config Debug")
+        else()
+            set(ROOT_LIBPNG_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+        endif()
+    endif()
+    set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng16_static${LIBPNG_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
 else()
      set(ROOT_LIBPNG_LIBRARY ${ROOT_LIBPNG_PREFIX}/lib/libpng${CMAKE_STATIC_LIBRARY_SUFFIX})
-endif()
-
-if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    if(winrtdebug)
-        set(ROOT_LIBPNG_BUILD_COMMAND_FLAGS "--config Debug")
-    else()
-        set(ROOT_LIBPNG_BUILD_COMMAND_FLAGS "--config Release")
-    endif()
 endif()
 
 # If zlib is not builtin, the string will be empty, nothing special to be 
