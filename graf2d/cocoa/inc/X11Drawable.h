@@ -60,7 +60,8 @@
 @property (nonatomic, readonly) TAttText *attText;
 
 // new graphics methods
-- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
 - (void) setDirectDraw : (BOOL) mode;
 - (BOOL) isDirectDraw;
 

@@ -252,7 +252,9 @@ class Command;
 @property (nonatomic, readonly) TAttMarker *attMarker;
 @property (nonatomic, readonly) TAttText *attText;
 
-- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
+
 - (void) setDirectDraw : (BOOL) mode;
 - (BOOL) isDirectDraw;
 
