@@ -43,8 +43,6 @@ for the composing faces.
 #include <cmath>
 #include <limits>
 
-ClassImp(TGeoTessellated);
-
 using Vertex_t = Tessellated::Vertex_t;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +96,8 @@ bool TGeoFacet::IsNeighbour(const TGeoFacet &other, bool &flip) const
    }
    return neighbour;
 }
+
+Bool_t TGeoTessellated::fgStreamOptimization = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. In case nfacets is zero, it is user's responsibility to
@@ -798,7 +798,7 @@ inline bool rayFacetHit(const Vertex_t &orig, const Vertex_t &dir, const TGeoFac
 template <typename T = float>
 struct Vec3f {
    T x, y, z;
-   Vec3f(T x_, T y_, T z_) : x(x_), y(y_), z(z_){};
+   Vec3f(T x_, T y_, T z_) : x(x_), y(y_), z(z_) {};
 };
 
 template <typename T>
@@ -922,9 +922,7 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t 
    using Bvh = bvh::v2::Bvh<Node>;
    using Ray = bvh::v2::Ray<Scalar, 3>;
 
-   // let's fetch the bvh
-   auto mybvh = (Bvh *)fBVH;
-   if (!mybvh) {
+   if (!fBVH) {
       assert(false);
       return -1.;
    }
@@ -936,7 +934,7 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t 
    };
 
    // let's do very quick checks against the top node
-   const auto topnode_bbox = mybvh->get_root().get_bbox();
+   const auto topnode_bbox = fBVH->get_root().get_bbox();
    if ((-point[0] + topnode_bbox.min[0]) > stepmax) {
       return Big();
    }
@@ -967,9 +965,9 @@ Double_t TGeoTessellated::DistFromOutside(const Double_t *point, const Double_t 
    Vertex_t dir_v{dir[0], dir[1], dir[2]};
    // Traverse the BVH and apply concrete object intersection in BVH leafs
    bvh::v2::GrowingStack<Bvh::Index> stack;
-   mybvh->intersect<false, use_robust_traversal>(ray, mybvh->get_root().index, stack, [&](size_t begin, size_t end) {
+   fBVH->intersect<false, use_robust_traversal>(ray, fBVH->get_root().index, stack, [&](size_t begin, size_t end) {
       for (size_t prim_id = begin; prim_id < end; ++prim_id) {
-         auto objectid = mybvh->prim_ids[prim_id];
+         auto objectid = fBVH->prim_ids[prim_id];
          const auto &facet = fFacets[objectid];
          const auto &n = fOutwardNormals[objectid];
 
@@ -1005,9 +1003,7 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *point, const Double_t *
    using Bvh = bvh::v2::Bvh<Node>;
    using Ray = bvh::v2::Ray<Scalar, 3>;
 
-   // let's fetch the bvh
-   auto mybvh = (Bvh *)fBVH;
-   if (!mybvh) {
+   if (!fBVH) {
       assert(false);
       return -1.;
    }
@@ -1029,9 +1025,9 @@ Double_t TGeoTessellated::DistFromInside(const Double_t *point, const Double_t *
    Vertex_t dir_v{dir[0], dir[1], dir[2]};
    // Traverse the BVH and apply concrete object intersection in BVH leafs
    bvh::v2::GrowingStack<Bvh::Index> stack;
-   mybvh->intersect<false, use_robust_traversal>(ray, mybvh->get_root().index, stack, [&](size_t begin, size_t end) {
+   fBVH->intersect<false, use_robust_traversal>(ray, fBVH->get_root().index, stack, [&](size_t begin, size_t end) {
       for (size_t prim_id = begin; prim_id < end; ++prim_id) {
-         auto objectid = mybvh->prim_ids[prim_id];
+         auto objectid = fBVH->prim_ids[prim_id];
          auto facet = fFacets[objectid];
          const auto &n = fOutwardNormals[objectid];
 
@@ -1122,7 +1118,7 @@ void TGeoTessellated::BuildBVH()
 
    // check if some previous object is registered and delete if necessary
    if (fBVH) {
-      delete (Bvh *)fBVH;
+      delete fBVH;
       fBVH = nullptr;
    }
 
@@ -1132,7 +1128,7 @@ void TGeoTessellated::BuildBVH()
    auto bvh = bvh::v2::DefaultBuilder<Node>::build(bboxes, centers, config);
    auto bvhptr = new Bvh;
    *bvhptr = std::move(bvh); // copy structure
-   fBVH = (void *)(bvhptr);
+   fBVH = bvhptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1147,9 +1143,7 @@ bool TGeoTessellated::Contains(Double_t const *point) const
    using Bvh = bvh::v2::Bvh<Node>;
    using Ray = bvh::v2::Ray<Scalar, 3>;
 
-   // let's fetch the bvh
-   auto mybvh = (Bvh *)fBVH;
-   if (!mybvh) {
+   if (!fBVH) {
       assert(false);
       return false;
    }
@@ -1182,9 +1176,9 @@ bool TGeoTessellated::Contains(Double_t const *point) const
    // Traverse the BVH and apply concrete object intersection in BVH leafs
    bvh::v2::GrowingStack<Bvh::Index> stack;
    size_t crossings = 0;
-   mybvh->intersect<false, use_robust_traversal>(ray, mybvh->get_root().index, stack, [&](size_t begin, size_t end) {
+   fBVH->intersect<false, use_robust_traversal>(ray, fBVH->get_root().index, stack, [&](size_t begin, size_t end) {
       for (size_t prim_id = begin; prim_id < end; ++prim_id) {
-         auto objectid = mybvh->prim_ids[prim_id];
+         auto objectid = fBVH->prim_ids[prim_id];
          auto &facet = fFacets[objectid];
 
          // for the parity test, we probe all crossing surfaces
@@ -1234,16 +1228,11 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
 
    using Scalar = float;
    using Vec3 = bvh::v2::Vec<Scalar, 3>;
-   using Node = bvh::v2::Node<Scalar, 3>;
-   using Bvh = bvh::v2::Bvh<Node>;
-
-   // let's fetch the bvh
-   auto mybvh = (Bvh *)fBVH;
 
    // testpoint object in float for quick BVH interaction
    Vec3 testpoint(point[0], point[1], point[2]);
 
-   auto currnode = mybvh->nodes[0]; // we start from the top BVH node
+   auto currnode = fBVH->nodes[0]; // we start from the top BVH node
    // we do a quick check on the top node (in case we are outside shape)
    bool outside_top = false;
    if (!in) {
@@ -1274,11 +1263,10 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
          const auto end_prim_id = begin_prim_id + currnode.index.prim_count();
 
          for (auto p_id = begin_prim_id; p_id < end_prim_id; p_id++) {
-            const auto object_id = mybvh->prim_ids[p_id];
+            const auto object_id = fBVH->prim_ids[p_id];
 
             const auto &facet = fFacets[object_id];
-            auto thissafetySQ =
-               pointFacetDistSq(Vec3f<float>(point[0], point[1], point[2]), facet, fVertices);
+            auto thissafetySQ = pointFacetDistSq(Vec3f<float>(point[0], point[1], point[2]), facet, fVertices);
 
             if (thissafetySQ < smallest_safety_sq) {
                smallest_safety_sq = thissafetySQ;
@@ -1294,11 +1282,11 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
          const auto rightchild_id = leftchild_id + 1;
 
          for (size_t childid : {leftchild_id, rightchild_id}) {
-            if (childid >= mybvh->nodes.size()) {
+            if (childid >= fBVH->nodes.size()) {
                continue;
             }
 
-            const auto &node = mybvh->nodes[childid];
+            const auto &node = fBVH->nodes[childid];
             const auto inside = bvh::v2::extra::contains(node.get_bbox(), testpoint);
 
             if (inside) {
@@ -1316,7 +1304,7 @@ inline Double_t TGeoTessellated::SafetyKernel(const Double_t *point, bool in, in
 
       if (queue.size() > 0) {
          auto currElement = queue.top();
-         currnode = mybvh->nodes[currElement.bvh_node_id];
+         currnode = fBVH->nodes[currElement.bvh_node_id];
          current_safety_to_node_sq = currElement.value;
          queue.pop();
       } else {
@@ -1381,10 +1369,20 @@ void TGeoTessellated::ComputeNormal(const Double_t *point, const Double_t *dir, 
 void TGeoTessellated::Streamer(TBuffer &b)
 {
    if (b.IsReading()) {
-      b.ReadClassBuffer(TGeoTessellated::Class(), this);
-      CloseShape(false); // close shape but do not re-perform checks
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      b.ReadClassBuffer(TGeoTessellated::Class(), this, R__v, R__s, R__c);
+      if (!fBVH)
+         CloseShape(false); // close shape but do not re-perform checks
    } else {
-      b.WriteClassBuffer(TGeoTessellated::Class(), this);
+      if (fgStreamOptimization) {
+         b.WriteClassBuffer(TGeoTessellated::Class(), this);
+      } else {
+         auto bvh = fBVH;
+         fBVH = nullptr;
+         b.WriteClassBuffer(TGeoTessellated::Class(), this);
+         fBVH = bvh;
+      }
    }
 }
 
