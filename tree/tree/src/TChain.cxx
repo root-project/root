@@ -1910,7 +1910,7 @@ void TChain::ls(Option_t* option) const
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
 {
-   TFile *file = TFile::Open(name, "recreate", "chain files", 1);
+   TFile *file = TFile::Open(name, "recreate", "chain files");
    return Merge(file, 0, option);
 }
 
