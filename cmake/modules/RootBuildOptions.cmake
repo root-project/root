@@ -202,16 +202,6 @@ if(all AND minimal)
   message(FATAL_ERROR "The 'all' and 'minimal' options are mutually exclusive")
 endif()
 
-#--- Compression algorithms in ROOT-------------------------------------------------------------
-set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, zstd or lzma)")
-string(TOLOWER "${compression_default}" compression_default)
-if("${compression_default}" MATCHES "zlib|lz4|lzma|zstd")
-  message(STATUS "ROOT default compression algorithm: ${compression_default}")
-else()
-  message(FATAL_ERROR "Unsupported compression algorithm: ${compression_default}\n"
-    "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
-endif()
-
 #--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
  set(arrow_defvalue ON)
@@ -381,8 +371,9 @@ endif()
 
 #---Removed options------------------------------------------------------------
 # Please notify SPI when adding to this list
-foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor chirp cxx11 cxx14 cxx17
-        cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
+foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor chirp
+        compression_default cxx11 cxx14 cxx17 cxxmodules exceptions
+        geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
         tcmalloc vmc xproofd mysql odbc pgsql)

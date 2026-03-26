@@ -396,12 +396,6 @@ else()
   set(hasroot7 undef)
 endif()
 
-set(uselz4 undef)
-set(usezlib undef)
-set(uselzma undef)
-set(usezstd undef)
-set(use${compression_default} define)
-
 if(ZLIB_NG)
   set(usezlibng define)
 else()
