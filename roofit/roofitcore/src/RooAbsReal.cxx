@@ -4001,7 +4001,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
+/// Calls RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList) and returns fit result.
 ///
 /// List of possible commands in the `cmdList`:
 ///
@@ -4051,12 +4051,39 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const R
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
 ///
-/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
+/// It calculates:
 ///
-/// The list of supported command arguments is given in the documentation for
-///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
+///  \f{align*}{
+///    \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
+///    N_\mathrm{PDF,bin} &=
+///      \begin{cases}
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
+///      \end{cases} \\
+///    \Delta_\mathrm{bin} &=
+///      \begin{cases}
+///          \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
+///          \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
+///      \end{cases}
+///  \f}
+///
+/// If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
+/// In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
+/// expected number of events that the PDF predicts.
+///
+/// \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
+/// zero error. This leads to messages like:
+/// ```
+/// [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
+/// ```
+///
+/// \note In this case, one can use the expected errors of the PDF instead of the data errors:
+/// ```{.cpp}
+/// RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
+/// ```
 ///
 /// \param data Histogram with data
+/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 /// \return \f$ \chi^2 \f$ variable
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
