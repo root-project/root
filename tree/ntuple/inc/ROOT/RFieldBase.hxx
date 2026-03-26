@@ -357,8 +357,13 @@ protected:
          GenerateColumnsImpl<0, ColumnCppTs...>(GetColumnRepresentations().GetSerializationDefault(), 0);
       } else {
          const auto N = fColumnRepresentatives.size();
-         fAvailableColumns.reserve(N * sizeof...(ColumnCppTs));
-         for (unsigned i = 0; i < N; ++i) {
+         constexpr auto cardinality = sizeof...(ColumnCppTs);
+         static_assert(cardinality > 0, "GenerateColumnsImpl must be called with at least 1 type argument");
+         fAvailableColumns.reserve(N * cardinality);
+         // Note that we don't assume that we have 0 columns here, as this function may be called to extend the
+         // column representations of this field.
+         const auto first = fAvailableColumns.size();
+         for (auto i = first / cardinality; i < N; ++i) {
             GenerateColumnsImpl<0, ColumnCppTs...>(fColumnRepresentatives[i].get(), i);
          }
       }
@@ -958,6 +963,7 @@ struct RFieldRepresentationModifier {
       const auto N = field.fColumnRepresentatives[0].get().size();
       R__ASSERT(N >= 1 && N <= 2);
       R__ASSERT(field.fPrincipalColumn);
+      R__ASSERT(newRepresentationIdx * N < field.fAvailableColumns.size());
       field.fPrincipalColumn = field.fAvailableColumns[newRepresentationIdx * N].get();
       if (field.fAuxiliaryColumn) {
          R__ASSERT(N == 2);
