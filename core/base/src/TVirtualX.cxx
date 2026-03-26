@@ -437,6 +437,14 @@ void TVirtualX::SetDrawModeW(WinContext_t /* wctxt */, EDrawMode mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns window draw mode
+
+TVirtualX::EDrawMode TVirtualX::GetDrawModeW(WinContext_t /* wctxt */)
+{
+   return GetDrawMode();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clear specified window
 
 void TVirtualX::ClearWindowW(WinContext_t /* wctxt */)

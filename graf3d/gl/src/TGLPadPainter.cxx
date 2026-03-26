@@ -524,7 +524,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //from TView3D::ExecuteRotateView. This means in fact,
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
-      if (fWinContext) {
+      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
          gVirtualX->DrawLineW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
@@ -564,7 +564,8 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
    if (fLocked) {
-      if (fWinContext) {
+      // this code used when crosshair cursor is drawn
+      if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
          const Int_t px1 = gPad->UtoPixel(u1);
          const Int_t py1 = gPad->VtoPixel(v1);
          const Int_t px2 = gPad->UtoPixel(u2);

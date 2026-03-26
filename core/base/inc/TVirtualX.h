@@ -109,6 +109,7 @@ public:
    virtual void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att);
    virtual void      SetAttText(WinContext_t wctxt, const TAttText &att);
    virtual void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode);
+   virtual EDrawMode GetDrawModeW(WinContext_t wctxt);
    virtual void      ClearWindowW(WinContext_t wctxt);
    virtual void      UpdateWindowW(WinContext_t wctxt, Int_t mode);
 
