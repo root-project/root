@@ -830,8 +830,17 @@ ROOT::RFieldBase::RColumnRepresentations::Selection_t ROOT::RFieldBase::GetColum
 
 void ROOT::RFieldBase::SetColumnRepresentatives(const RColumnRepresentations::Selection_t &representatives)
 {
-   if (fState != EState::kUnconnected)
-      throw RException(R__FAIL("cannot set column representative once field is connected"));
+   const auto isNewSelectionASuperset = [&]() {
+      if (representatives.size() < fColumnRepresentatives.size())
+         return false;
+      for (auto i = 0u; i < fColumnRepresentatives.size(); ++i)
+         if (representatives[i] != fColumnRepresentatives[i].get())
+            return false;
+      return true;
+   };
+   if (fState != EState::kUnconnected && !(fState == EState::kConnectedToSink && isNewSelectionASuperset()))
+      throw RException(R__FAIL("cannot set column representative once field is connected unless the new selection is a "
+                               "superset of the previous"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
    fColumnRepresentatives.clear();
    fColumnRepresentatives.reserve(representatives.size());
