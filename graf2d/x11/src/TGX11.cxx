@@ -456,32 +456,21 @@ void TGX11::ClosePixmap()
 
 void TGX11::CloseWindow()
 {
-   if (gCws->fShared) {
-      // case of Qt window
-      if (gCws->fBuffer)
-         XFreePixmap((Display*)fDisplay, gCws->fBuffer);
+   if (gCws->fBuffer)
+      XFreePixmap((Display*)fDisplay, gCws->fBuffer);
 
-      if (gCws->fNewColors) {
-         if (fRedDiv == -1)
-            XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
-         delete [] gCws->fNewColors;
-         gCws->fNewColors = nullptr;
-      }
-   } else {
+   if (gCws->fNewColors) {
+      if (fRedDiv == -1)
+         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
+      delete [] gCws->fNewColors;
+      gCws->fNewColors = nullptr;
+   }
+
+   if (!gCws->fShared) { // if not QT window
       if (gCws->fIsPixmap)
          XFreePixmap((Display*)fDisplay, gCws->fWindow);
       else
          XDestroyWindow((Display*)fDisplay, gCws->fWindow);
-
-      if (gCws->fBuffer)
-         XFreePixmap((Display*)fDisplay, gCws->fBuffer);
-
-      if (gCws->fNewColors) {
-         if (fRedDiv == -1)
-            XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
-         delete [] gCws->fNewColors;
-         gCws->fNewColors = nullptr;
-      }
 
       XFlush((Display*)fDisplay);
    }
@@ -508,7 +497,7 @@ void TGX11::CloseWindow()
 
    // select first from active windows
    for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
-      if (iter->second->fOpen) {
+      if (iter->second && iter->second->fOpen) {
          gCws = iter->second.get();
          return;
       }
@@ -2126,7 +2115,7 @@ void TGX11::ResizeWindow(Int_t wid)
 
 void TGX11::SelectWindow(int wid)
 {
-   if (fWindows.count(wid) == 0)
+   if ((wid == 0) || (fWindows.count(wid) == 0))
       return;
 
    if (!fWindows[wid]->fOpen)
