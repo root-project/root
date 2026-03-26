@@ -363,11 +363,6 @@ void stress2()
    //Long64_t lastgood = 10034;  // changes in TFormula (v12)
    //Long64_t lastgood = 9813; // ROOT's cloudflare built-in zlib
    //Long64_t lastgood = 9939;  // First value for zlib-ng
-#ifdef R__HAS_DEFAULT_LZ4
-      Long64_t lastgood = 10733;
-      if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
-         OK = kFALSE;
-#else
 #ifdef R__HAS_ZLIB_NG
       Long64_t lastgood = 9939;
 #else
@@ -375,7 +370,6 @@ void stress2()
 #endif
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
-#endif
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
@@ -407,26 +401,14 @@ void stress3()
    Bool_t OK = kTRUE;
    constexpr Long64_t lastgood = 52090;
    constexpr Long64_t tolerance = 300;
-#ifdef R__HAS_DEFAULT_LZ4
-      constexpr Long64_t difflastgoodlz4 = 5500;
-      if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)
-         OK = kFALSE;
-#else
       if (last < lastgood - tolerance || last > lastgood + tolerance || comp < 1.8 || comp > 2.4)
          OK = kFALSE;
-#endif
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-#ifdef R__HAS_DEFAULT_LZ4
-      printf("%-8s LZ4 file size= %lld (expected %lld +/- %lld)\n"
-             "%-8s Comp Fact=  %3.2f (expected 1.8 +/- 0.3)\n",
-             " ", last, lastgood + difflastgoodlz4, tolerance, " ", comp);
-#else
        printf("%-8s File size= %lld (expected %lld +/- %lld)\n"
              "%-8s Comp Fact=  %3.2f (expected 2.1 +/- 0.3)\n",
              " ", last, lastgood, tolerance, " ", comp);
-#endif
    }
    if (gPrintSubBench) { printf("Test  3 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }

@@ -1,13 +1,9 @@
 set(refname "")
 
-if(${compression_default} STREQUAL "lz4")
-  set(refname testForeignDrawLZ4.ref)
-else(${compression_default} STREQUAL "zlib")
-  if(ZLIB_NG)
-    set(refname testForeignDrawZLIB-NG.ref)
-  else()
-    set(refname testForeignDrawZLIB.ref)
-   endif()
+if(ZLIB_NG)
+  set(refname testForeignDrawZLIB-NG.ref)
+else()
+  set(refname testForeignDrawZLIB.ref)
 endif()
 
 if(NOT refname STREQUAL "")

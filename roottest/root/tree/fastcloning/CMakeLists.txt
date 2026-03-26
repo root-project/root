@@ -1,24 +1,22 @@
-if(${compression_default} STREQUAL "zlib")
-   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-      # 32 bits
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+   # 32 bits
+   ROOTTEST_ADD_TEST(execCheckClusterRange
+               MACRO execCheckClusterRange.C
+               OUTREF references/execCheckClusterRange.ref32)
+else()
+   # 64 bits
+   if(MSVC)
       ROOTTEST_ADD_TEST(execCheckClusterRange
-                  MACRO execCheckClusterRange.C
-                  OUTREF references/execCheckClusterRange.ref32)
+               MACRO execCheckClusterRange.C
+               OUTREF references/execCheckClusterRange_zlib_win64.ref)
+   elseif(ZLIB_NG)
+      ROOTTEST_ADD_TEST(execCheckClusterRange
+               MACRO execCheckClusterRange.C
+               OUTREF references/execCheckClusterRange_zlibng.ref)
    else()
-      # 64 bits
-      if(MSVC)
-         ROOTTEST_ADD_TEST(execCheckClusterRange
-                  MACRO execCheckClusterRange.C
-                  OUTREF references/execCheckClusterRange_zlib_win64.ref)
-      elseif(ZLIB_NG)
-         ROOTTEST_ADD_TEST(execCheckClusterRange
-                  MACRO execCheckClusterRange.C
-                  OUTREF references/execCheckClusterRange_zlibng.ref)
-      else()
-         ROOTTEST_ADD_TEST(execCheckClusterRange
-                  MACRO execCheckClusterRange.C
-                  OUTREF references/execCheckClusterRange_zlib.ref)
-      endif()
+      ROOTTEST_ADD_TEST(execCheckClusterRange
+               MACRO execCheckClusterRange.C
+               OUTREF references/execCheckClusterRange_zlib.ref)
    endif()
 endif()
 
