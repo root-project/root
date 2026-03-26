@@ -60,7 +60,9 @@ ROOTTEST_ADD_TEST(ClassConvReadNew
                   MACRO ClassConvReadNew.cxx
                   OUTREF ClassConvReadNew.ref
                   LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-ClassConvWriteNew-fixture)
+                  FIXTURES_REQUIRED root-io-evolution-ClassConvNew-fixture
+                                    root-io-evolution-ClassConvWriteOld-fixture # Not a typo. It reads the old file
+                  )
 
 
 ROOTTEST_COMPILE_MACRO(ClassConvOther.cxx
