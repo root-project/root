@@ -160,3 +160,8 @@ ROOT::Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> mod
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleBasename, file, ntupleDir, options);
    return ROOT::RNTupleWriter::Create(std::move(model), std::move(sink), options);
 }
+
+ROOT::Internal::RPageSink &ROOT::Internal::GetWriterSink(ROOT::RNTupleWriter &writer)
+{
+   return *writer.fFillContext.fSink;
+}

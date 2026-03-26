@@ -852,3 +852,318 @@ R"({
    // clang-format on
    EXPECT_EQ(expect, os.str());
 }
+
+TEST(RNTuple, LateColumnExtension)
+{
+   FileRaii fileGuard("test_ntuple_latecolumnext.ntuple");
+
+   auto model = RNTupleModel::Create();
+   auto pF = model->MakeField<float>("f"); // this has column representation {kSplitReal32}.
+
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   for (int i = 0; i < 100; ++i) {
+      *pF = i;
+      writer->Fill();
+   }
+   auto &modelRef = const_cast<RNTupleModel &>(writer->GetModel());
+   modelRef.Unfreeze();
+
+   auto &field = modelRef.GetMutableField("f");
+   ROOT::Internal::RNTupleModelChangeset changeset{modelRef};
+   changeset.AddColumnRepr(&field, {{ROOT::ENTupleColumnType::kReal32}});
+
+   modelRef.Freeze();
+
+   auto &sink = ROOT::Internal::GetWriterSink(*writer);
+   sink.UpdateSchema(changeset, 0);
+
+   // Keep writing 50 entries with the old active representation, then switch it.
+   for (int i = 0; i < 100; ++i) {
+      if (i == 50) {
+         writer->CommitCluster();
+         ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(field, 1);
+      }
+      *pF = 100 + i;
+      writer->Fill();
+   }
+
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // check that we can read data fine
+   auto vF = reader->GetView<float>("f");
+   EXPECT_EQ(reader->GetNEntries(), 200);
+   for (auto idx : reader->GetEntryRange()) {
+      EXPECT_FLOAT_EQ(vF(idx), idx);
+   }
+   // check that metadata is correct
+   const auto &desc = reader->GetDescriptor();
+   auto fieldId = desc.FindFieldId("f");
+   const auto &fdesc = desc.GetFieldDescriptor(fieldId);
+   ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 2);
+   EXPECT_EQ(fdesc.GetColumnCardinality(), 1);
+   const auto &col1Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   const auto &col2Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[1]);
+   EXPECT_EQ(col1Desc.GetType(), ROOT::ENTupleColumnType::kSplitReal32);
+   EXPECT_EQ(col2Desc.GetType(), ROOT::ENTupleColumnType::kReal32);
+   EXPECT_EQ(col1Desc.GetFieldId(), fieldId);
+   EXPECT_EQ(col2Desc.GetFieldId(), fieldId);
+   EXPECT_EQ(col1Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col2Desc.GetRepresentationIndex(), 1);
+   EXPECT_EQ(col1Desc.GetIndex(), 0);
+   EXPECT_EQ(col2Desc.GetIndex(), 0);
+   EXPECT_EQ(col1Desc.GetFirstElementIndex(), 0);
+   EXPECT_EQ(col2Desc.GetFirstElementIndex(), 0);
+
+   const auto cluster1Id = desc.FindClusterId(0, 0);
+   const auto &cluster1Desc = desc.GetClusterDescriptor(cluster1Id);
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(1));
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_TRUE(cluster1Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_EQ(cluster1Desc.GetFirstEntryIndex(), 0);
+   EXPECT_EQ(cluster1Desc.GetNEntries(), 150);
+
+   const auto cluster2Id = desc.FindNextClusterId(cluster1Id);
+   const auto &cluster2Desc = desc.GetClusterDescriptor(cluster2Id);
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(1));
+   EXPECT_TRUE(cluster2Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_EQ(cluster2Desc.GetFirstEntryIndex(), 150);
+   EXPECT_EQ(cluster2Desc.GetNEntries(), 50);
+}
+
+TEST(RNTuple, LateColumnExtension2)
+{
+   FileRaii fileGuard("test_ntuple_latecolumnext2.ntuple");
+
+   auto model = RNTupleModel::Create();
+   // this has representation {kSplitIndex64, kChar}
+   auto pS = model->MakeField<std::string>("s");
+
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   for (int i = 0; i < 100; ++i) {
+      *pS = std::to_string(i);
+      writer->Fill();
+   }
+   auto &modelRef = const_cast<RNTupleModel &>(writer->GetModel());
+   modelRef.Unfreeze();
+
+   auto &field = modelRef.GetMutableField("s");
+   ROOT::Internal::RNTupleModelChangeset changeset{modelRef};
+   changeset.AddColumnRepr(&field, {{ROOT::ENTupleColumnType::kIndex32, ROOT::ENTupleColumnType::kChar}});
+
+   modelRef.Freeze();
+
+   auto &sink = ROOT::Internal::GetWriterSink(*writer);
+   sink.UpdateSchema(changeset, 0);
+
+   // Keep writing 50 entries with the old active representation, then switch it.
+   for (int i = 0; i < 100; ++i) {
+      if (i == 50) {
+         writer->CommitCluster();
+         ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(field, 1);
+      }
+      *pS = std::to_string(100 + i);
+      writer->Fill();
+   }
+
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // check that we can read data fine
+   auto vF = reader->GetView<std::string>("s");
+   EXPECT_EQ(reader->GetNEntries(), 200);
+   for (auto idx : reader->GetEntryRange()) {
+      EXPECT_EQ(vF(idx), std::to_string(idx));
+   }
+   // check that metadata is correct
+   const auto &desc = reader->GetDescriptor();
+   auto fieldId = desc.FindFieldId("s");
+   const auto &fdesc = desc.GetFieldDescriptor(fieldId);
+   ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 4);
+   EXPECT_EQ(fdesc.GetColumnCardinality(), 2);
+   const auto &col1Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
+   const auto &col2Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[1]);
+   const auto &col3Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[2]);
+   const auto &col4Desc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[3]);
+   EXPECT_EQ(col1Desc.GetType(), ROOT::ENTupleColumnType::kSplitIndex64);
+   EXPECT_EQ(col2Desc.GetType(), ROOT::ENTupleColumnType::kChar);
+   EXPECT_EQ(col3Desc.GetType(), ROOT::ENTupleColumnType::kIndex32);
+   EXPECT_EQ(col4Desc.GetType(), ROOT::ENTupleColumnType::kChar);
+   EXPECT_EQ(col1Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col2Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col3Desc.GetRepresentationIndex(), 1);
+   EXPECT_EQ(col4Desc.GetRepresentationIndex(), 1);
+   EXPECT_EQ(col1Desc.GetIndex(), 0);
+   EXPECT_EQ(col2Desc.GetIndex(), 1);
+   EXPECT_EQ(col3Desc.GetIndex(), 0);
+   EXPECT_EQ(col4Desc.GetIndex(), 1);
+   EXPECT_EQ(col1Desc.GetFirstElementIndex(), 0);
+   EXPECT_EQ(col2Desc.GetFirstElementIndex(), 0);
+   EXPECT_EQ(col3Desc.GetFirstElementIndex(), 0);
+   EXPECT_EQ(col4Desc.GetFirstElementIndex(), 0);
+
+   const auto cluster1Id = desc.FindClusterId(0, 0);
+   const auto &cluster1Desc = desc.GetClusterDescriptor(cluster1Id);
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(1));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(2));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(3));
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_TRUE(cluster1Desc.GetColumnRange(2).IsSuppressed());
+   EXPECT_TRUE(cluster1Desc.GetColumnRange(3).IsSuppressed());
+   EXPECT_EQ(cluster1Desc.GetFirstEntryIndex(), 0);
+   EXPECT_EQ(cluster1Desc.GetNEntries(), 150);
+
+   const auto cluster2Id = desc.FindNextClusterId(cluster1Id);
+   const auto &cluster2Desc = desc.GetClusterDescriptor(cluster2Id);
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(1));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(2));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(3));
+   EXPECT_TRUE(cluster2Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_TRUE(cluster2Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(2).IsSuppressed());
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(3).IsSuppressed());
+   EXPECT_EQ(cluster2Desc.GetFirstEntryIndex(), 150);
+   EXPECT_EQ(cluster2Desc.GetNEntries(), 50);
+}
+
+TEST(RNTuple, LateColumnExtensionDeferred)
+{
+   FileRaii fileGuard("test_ntuple_latecolumnext_deferred.ntuple");
+
+   auto model = RNTupleModel::Create();
+   auto pF = model->MakeField<float>("f");
+
+   auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   for (int i = 0; i < 50; ++i) {
+      *pF = i;
+      writer->Fill();
+   }
+
+   // Add a new field (no new columns)
+   {
+    auto updater = writer->CreateModelUpdater();
+    updater->BeginUpdate();
+    // this has representation {kSplitIndex64, kChar}
+    updater->AddField(std::make_unique<ROOT::RField<std::string>>("s"));
+    updater->CommitUpdate();
+   }
+
+   auto pS = writer->GetModel().GetDefaultEntry().GetPtr<std::string>("s");
+   for (int i = 0; i < 50; ++i) {
+      *pF = 50 + i;
+      *pS = std::to_string(50 + i);
+      writer->Fill();
+   }
+
+   // Add a new column to the new field
+   auto &modelRef = const_cast<RNTupleModel &>(writer->GetModel());
+   modelRef.Unfreeze();
+   auto &field = modelRef.GetMutableField("s");
+   ROOT::Internal::RNTupleModelChangeset changeset{modelRef};
+   changeset.AddColumnRepr(&field, {{ROOT::ENTupleColumnType::kIndex32, ROOT::ENTupleColumnType::kChar}});
+   modelRef.Freeze();
+   auto &sink = ROOT::Internal::GetWriterSink(*writer);
+   sink.UpdateSchema(changeset, 50);
+
+   // Keep writing 50 entries with the old active representation, then switch it.
+   for (int i = 0; i < 100; ++i) {
+      if (i == 50) {
+         writer->CommitCluster();
+         ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(field, 1);
+      }
+      *pF = 100 + i;
+      *pS = std::to_string(100 + i);
+      writer->Fill();
+   }
+
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 200);
+
+   // check that we can read data fine
+   auto prF = reader->GetModel().GetDefaultEntry().GetPtr<float>("f");
+   auto prS = reader->GetModel().GetDefaultEntry().GetPtr<std::string>("s");
+   for (auto idx : reader->GetEntryRange()) {
+      reader->LoadEntry(idx);
+      EXPECT_FLOAT_EQ(*prF, idx);
+      EXPECT_EQ(*prS, idx >= 50 ? std::to_string(idx) : "");
+   }
+
+   // check that metadata is correct
+   const auto &desc = reader->GetDescriptor();
+   auto fieldFId = desc.FindFieldId("f");
+   const auto &ffdesc = desc.GetFieldDescriptor(fieldFId);
+   ASSERT_EQ(ffdesc.GetLogicalColumnIds().size(), 1);
+   EXPECT_EQ(ffdesc.GetColumnCardinality(), 1);
+   auto fieldSId = desc.FindFieldId("s");
+   const auto &fsdesc = desc.GetFieldDescriptor(fieldSId);
+   ASSERT_EQ(fsdesc.GetLogicalColumnIds().size(), 4);
+   EXPECT_EQ(fsdesc.GetColumnCardinality(), 2);
+   const auto &col1Desc = desc.GetColumnDescriptor(ffdesc.GetLogicalColumnIds()[0]);
+   const auto &col2Desc = desc.GetColumnDescriptor(fsdesc.GetLogicalColumnIds()[0]);
+   const auto &col3Desc = desc.GetColumnDescriptor(fsdesc.GetLogicalColumnIds()[1]);
+   const auto &col4Desc = desc.GetColumnDescriptor(fsdesc.GetLogicalColumnIds()[2]);
+   const auto &col5Desc = desc.GetColumnDescriptor(fsdesc.GetLogicalColumnIds()[3]);
+   EXPECT_EQ(col1Desc.GetType(), ROOT::ENTupleColumnType::kSplitReal32);
+   EXPECT_EQ(col2Desc.GetType(), ROOT::ENTupleColumnType::kSplitIndex64);
+   EXPECT_EQ(col3Desc.GetType(), ROOT::ENTupleColumnType::kChar);
+   EXPECT_EQ(col4Desc.GetType(), ROOT::ENTupleColumnType::kIndex32);
+   EXPECT_EQ(col5Desc.GetType(), ROOT::ENTupleColumnType::kChar);
+   EXPECT_EQ(col1Desc.GetFieldId(), fieldFId);
+   EXPECT_EQ(col2Desc.GetFieldId(), fieldSId);
+   EXPECT_EQ(col3Desc.GetFieldId(), fieldSId);
+   EXPECT_EQ(col4Desc.GetFieldId(), fieldSId);
+   EXPECT_EQ(col5Desc.GetFieldId(), fieldSId);
+   EXPECT_EQ(col1Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col2Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col3Desc.GetRepresentationIndex(), 0);
+   EXPECT_EQ(col4Desc.GetRepresentationIndex(), 1);
+   EXPECT_EQ(col5Desc.GetRepresentationIndex(), 1);
+   EXPECT_EQ(col1Desc.GetIndex(), 0);
+   EXPECT_EQ(col2Desc.GetIndex(), 0);
+   EXPECT_EQ(col3Desc.GetIndex(), 1);
+   EXPECT_EQ(col4Desc.GetIndex(), 0);
+   EXPECT_EQ(col5Desc.GetIndex(), 1);
+   EXPECT_EQ(col1Desc.GetFirstElementIndex(), 0);
+   EXPECT_EQ(col2Desc.GetFirstElementIndex(), 50);
+   EXPECT_EQ(col3Desc.GetFirstElementIndex(), 0); // string data column is never deferred
+   EXPECT_EQ(col4Desc.GetFirstElementIndex(), 50);
+   EXPECT_EQ(col5Desc.GetFirstElementIndex(), 0); // string data column is never deferred
+
+   const auto cluster1Id = desc.FindClusterId(0, 0);
+   const auto &cluster1Desc = desc.GetClusterDescriptor(cluster1Id);
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(1));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(2));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(3));
+   ASSERT_TRUE(cluster1Desc.ContainsColumn(4));
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_FALSE(cluster1Desc.GetColumnRange(2).IsSuppressed());
+   EXPECT_TRUE(cluster1Desc.GetColumnRange(3).IsSuppressed());
+   EXPECT_TRUE(cluster1Desc.GetColumnRange(4).IsSuppressed());
+   EXPECT_EQ(cluster1Desc.GetFirstEntryIndex(), 0);
+   EXPECT_EQ(cluster1Desc.GetNEntries(), 150);
+
+   const auto cluster2Id = desc.FindNextClusterId(cluster1Id);
+   const auto &cluster2Desc = desc.GetClusterDescriptor(cluster2Id);
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(0));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(1));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(2));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(3));
+   ASSERT_TRUE(cluster2Desc.ContainsColumn(4));
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(0).IsSuppressed());
+   EXPECT_TRUE(cluster2Desc.GetColumnRange(1).IsSuppressed());
+   EXPECT_TRUE(cluster2Desc.GetColumnRange(2).IsSuppressed());
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(3).IsSuppressed());
+   EXPECT_FALSE(cluster2Desc.GetColumnRange(4).IsSuppressed());
+   EXPECT_EQ(cluster2Desc.GetFirstEntryIndex(), 150);
+   EXPECT_EQ(cluster2Desc.GetNEntries(), 50);
+}

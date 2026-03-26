@@ -121,6 +121,7 @@ class RNTupleWriter {
    friend std::unique_ptr<RNTupleWriter>
    Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntuplePath,
                                       ROOT::Experimental::RFile &file, const ROOT::RNTupleWriteOptions &options);
+   friend Internal::RPageSink &Internal::GetWriterSink(RNTupleWriter &);
 
 private:
    RNTupleFillContext fFillContext;
