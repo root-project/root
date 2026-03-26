@@ -43,6 +43,7 @@ class Command;
 ////////////////////////////////////////////////////////////////////////
 @interface XorDrawingView: NSView
 - (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives;
+- (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd;
 @end
 
 // XorDrawingWindow is a special window: a transparent
@@ -73,6 +74,7 @@ class Command;
    BOOL fDelayedTransient;
    QuartzImage *fShapeCombineMask;
    BOOL fIsDeleted;
+   TVirtualX::EDrawMode fDrawMode; // current draw mode
 
    std::vector<ROOT::MacOSX::X11::Command *> fXorOps;
 }
@@ -129,15 +131,18 @@ class Command;
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 // Trick for crosshair drawing in TCanvas ("pseudo-XOR")
-- (void) addXorWindow;
+- (XorDrawingWindow *) addXorWindow;
+- (XorDrawingWindow *) findXorWindow;
 - (void) adjustXorWindowGeometry;
 - (void) adjustXorWindowGeometry : (XorDrawingWindow *) win;
 - (void) removeXorWindow;
-- (XorDrawingWindow *) findXorWindow;
 - (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
 - (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
 - (void) flushXor;
 - (void) clearXor;
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
+- (TVirtualX::EDrawMode) getDrawMode;
+
 
 //X11Window protocol.
 
@@ -214,7 +219,6 @@ class Command;
    TAttMarker fAttMarker; ///< current marker attribute
    TAttText   fAttText;   ///< current text attribute
 
-   TVirtualX::EDrawMode fDrawMode; // current draw mode
    BOOL fDirectDraw;
 
    BOOL fHasFocus;
