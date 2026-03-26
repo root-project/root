@@ -4108,6 +4108,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const Ro
 ///                                   value suppress output completely, a zero value will only print the error count per p.d.f component,
 ///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
 /// </table>
+///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4144,6 +4146,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
 /// | `YVar(RooRealVar& yvar)`  | Designate given column in dataset as Y value
 /// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
 ///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
@@ -4156,6 +4159,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const Roo
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+///
+/// \deprecated Will be removed in ROOT 6.42. To fit 2D data with errors in and `x` and `y`, use specialized tools like TGraphErrors::Fit(), or build an explicit likelihood model with RooFit.
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
 {
