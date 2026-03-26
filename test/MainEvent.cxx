@@ -106,11 +106,7 @@
 
 #include "Event.h"
 
-#ifdef R__HAS_DEFAULT_LZ4
-constexpr int defaultComp = 4;
-#else
 constexpr int defaultComp = 1;
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
