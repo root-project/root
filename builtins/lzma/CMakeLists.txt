@@ -21,6 +21,13 @@ if(MSVC)
         -DCMAKE_CXXFLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
         -DCMAKE_CXXFLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
         -DCMAKE_CXXFLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG})
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+        if(winrtdebug)
+            set(ROOT_LZMA_BUILD_COMMAND_FLAGS "--config Debug")
+        else()
+            set(ROOT_LZMA_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+        endif()
+    endif()
 else()
     if(CMAKE_OSX_SYSROOT)
         set(liblzma_flags "-isysroot\ ${CMAKE_OSX_SYSROOT}")
@@ -50,8 +57,8 @@ ExternalProject_Add(
     -DLZMADEC=OFF
     -DLZMAINFO=OFF
     ${lzma_extra_cmake_args}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG> --target liblzma
-    INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG> --component liblzma_Development
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_LZMA_BUILD_COMMAND_FLAGS} --target liblzma
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install . ${ROOT_LZMA_BUILD_COMMAND_FLAGS} --component liblzma_Development
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}

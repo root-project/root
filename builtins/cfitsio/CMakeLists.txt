@@ -17,7 +17,7 @@ if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(winrtdebug)
     set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
   else()
-    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Release")
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
   endif()
 endif()
 

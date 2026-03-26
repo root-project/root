@@ -14,11 +14,23 @@ set(FREETYPE_PREFIX ${CMAKE_BINARY_DIR}/builtins/FREETYPE-prefix)
 # The CMake of FreeType will call the static library differently if the CMAKE_BUILD_TYPE is Debug, bu adding a 
 # "d" to the name of the file. This is unusual if compared to the behaviour of other ROOT builtins, where the name
 # changes only between Linux/macOS and Windows.
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetyped${CMAKE_STATIC_LIBRARY_SUFFIX})
+if(MSVC)
+    if(winrtdebug)
+        set(FREETYPE_POSTFIX d)
+    endif()
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+        if(winrtdebug)
+            set(ROOT_FREETYPE_BUILD_COMMAND_FLAGS "--config Debug")
+        else()
+            set(ROOT_FREETYPE_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+        endif()
+    endif()
 else()
-    set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(FREETYPE_POSTFIX d)
+    endif()
 endif()
+set(FREETYPE_LIBRARY ${FREETYPE_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${FREETYPE_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 ExternalProject_Add(
     BUILTIN_FREETYPE
@@ -39,8 +51,8 @@ ExternalProject_Add(
     -DCMAKE_C_VISIBILITY_PRESET=hidden
     -DZLIB_LIBRARY=${ZLIB_LIBRARIES}
     -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG>
-    INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG>
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_FREETYPE_BUILD_COMMAND_FLAGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install . ${ROOT_FREETYPE_BUILD_COMMAND_FLAGS}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}

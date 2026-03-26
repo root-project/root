@@ -14,18 +14,25 @@ set(ROOT_ZLIB_PREFIX ${CMAKE_BINARY_DIR}/builtins/ZLIB-prefix)
 
 # Here we need two cases because the library has two different names on Linux/macOS and Windows
 if(MSVC)
-     set(ROOT_ZLIB_LIBRARY ${ROOT_ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zs${CMAKE_STATIC_LIBRARY_SUFFIX})
-else()
-     set(ROOT_ZLIB_LIBRARY ${ROOT_ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX})
-endif()
-
-if(MSVC)
+    if(winrtdebug)
+        set(ZLIB_POSTFIX d)
+    endif()
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+        if(winrtdebug)
+            set(ROOT_ZLIB_BUILD_COMMAND_FLAGS "--config Debug")
+        else()
+            set(ROOT_ZLIB_BUILD_COMMAND_FLAGS "--config $<IF:$<CONFIG:Debug,RelWithDebInfo>,RelWithDebInfo,Release>")
+        endif()
+    endif()
+    set(ROOT_ZLIB_LIBRARY ${ROOT_ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zs${ZLIB_POSTFIX}${CMAKE_STATIC_LIBRARY_SUFFIX})
     # In the MSVC case, we forward the default C++ configuration flags because
     # they are changed by ROOT in SetUpWindows.cmake.
     set(zlib_extra_cmake_args
         -DCMAKE_CXXFLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
         -DCMAKE_CXXFLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}
         -DCMAKE_CXXFLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG})
+else()
+    set(ROOT_ZLIB_LIBRARY ${ROOT_ZLIB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}z${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
 ExternalProject_Add(
@@ -43,8 +50,8 @@ ExternalProject_Add(
     -DZLIB_BUILD_TESTING=OFF
     -DZLIB_BUILD_SHARED=OFF
     ${zlib_extra_cmake_args}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build . --config $<CONFIG>
-    INSTALL_COMMAND ${CMAKE_COMMAND} --install . --config $<CONFIG>
+    BUILD_COMMAND ${CMAKE_COMMAND} --build . ${ROOT_ZLIB_BUILD_COMMAND_FLAGS}
+    INSTALL_COMMAND ${CMAKE_COMMAND} --install . ${ROOT_ZLIB_BUILD_COMMAND_FLAGS}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1 LOG_TEST 1
     BUILD_BYPRODUCTS ${ROOT_ZLIB_LIBRARY}
     TIMEOUT 600
