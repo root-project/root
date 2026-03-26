@@ -147,12 +147,8 @@ build instructions to build on Linux and MacOS
 
 .. code:: bash
 
-   git clone https://github.com/root-project/cling.git
-   cd ./cling/
-   git checkout tags/v1.2
-   git apply -v ../CppInterOp/patches/llvm/cling1.2-LookupHelper.patch
-   cd ..
-   git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
+   git clone --depth=1 --branch v1.3 https://github.com/root-project/cling.git
+   git clone --depth=1 -b cling-llvm20-20260119-01 https://github.com/root-project/llvm-project.git
    mkdir llvm-project/build
    cd llvm-project/build
    cmake   -DLLVM_ENABLE_PROJECTS=clang                       \
@@ -173,12 +169,8 @@ Use the following build instructions to build on Windows
 
 .. code:: powershell
 
-   git clone https://github.com/root-project/cling.git
-   cd .\cling\
-   git checkout tags/v1.2
-   git apply -v ..\CppInterOp\patches\llvm\cling1.2-LookupHelper.patch
-   cd ..
-   git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
+   git clone --depth=1 --branch v1.3 https://github.com/root-project/cling.git
+   git clone --depth=1 -b cling-llvm20-20260119-01 https://github.com/root-project/llvm-project.git
    $env:ncpus = $([Environment]::ProcessorCount)
    $env:PWD_DIR= $PWD.Path
    $env:CLING_DIR="$env:PWD_DIR\cling"

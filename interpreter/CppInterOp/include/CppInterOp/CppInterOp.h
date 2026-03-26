@@ -102,6 +102,69 @@ enum QualKind : unsigned char {
   Restrict = 1 << 2
 };
 
+/// Enum modelling programming languages.
+enum class InterpreterLanguage : unsigned char {
+  Unknown,
+  Asm,
+  CIR,
+  LLVM_IR,
+  C,
+  CPlusPlus,
+  ObjC,
+  ObjCPlusPlus,
+  OpenCL,
+  OpenCLCXX,
+  CUDA,
+  HIP,
+  HLSL
+};
+
+/// Enum modelling language standards.
+enum class InterpreterLanguageStandard : unsigned char {
+  c89,
+  c94,
+  gnu89,
+  c99,
+  gnu99,
+  c11,
+  gnu11,
+  c17,
+  gnu17,
+  c23,
+  gnu23,
+  c2y,
+  gnu2y,
+  cxx98,
+  gnucxx98,
+  cxx11,
+  gnucxx11,
+  cxx14,
+  gnucxx14,
+  cxx17,
+  gnucxx17,
+  cxx20,
+  gnucxx20,
+  cxx23,
+  gnucxx23,
+  cxx26,
+  gnucxx26,
+  opencl10,
+  opencl11,
+  opencl12,
+  opencl20,
+  opencl30,
+  openclcpp10,
+  openclcpp2021,
+  hlsl,
+  hlsl2015,
+  hlsl2016,
+  hlsl2017,
+  hlsl2018,
+  hlsl2021,
+  hlsl202x,
+  hlsl202y,
+  lang_unspecified
+};
 inline QualKind operator|(QualKind a, QualKind b) {
   return static_cast<QualKind>(static_cast<unsigned char>(a) |
                                static_cast<unsigned char>(b));
@@ -727,6 +790,13 @@ CPPINTEROP_API bool ActivateInterpreter(TInterp_t I);
 /// matter, since the library will function in the same way.
 ///\returns the current interpreter instance, if any.
 CPPINTEROP_API TInterp_t GetInterpreter();
+
+/// Returns the programming language of the interpreter.
+CPPINTEROP_API InterpreterLanguage GetLanguage(TInterp_t I = nullptr);
+
+/// Returns the language standard of the interpreter.
+CPPINTEROP_API InterpreterLanguageStandard
+GetLanguageStandard(TInterp_t I = nullptr);
 
 /// Sets the Interpreter instance with an external interpreter, meant to
 /// be called by an external library that manages it's own interpreter.

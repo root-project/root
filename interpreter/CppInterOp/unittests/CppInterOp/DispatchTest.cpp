@@ -68,4 +68,19 @@ TEST(CPPINTEROP_TEST_MODE, DispatchAPI_CppGetProcAddress_Advanced) {
   EXPECT_NE(demangled_add_double.find(GetQualifiedCompleteNameFn(Decls[1])),
             std::string::npos);
 }
+
+TEST(CPPINTEROP_TEST_MODE, DispatchAPI_LoadUnloadCycle) {
+  Cpp::UnloadDispatchAPI(); // make sure we're no loaded already...
+  EXPECT_FALSE(Cpp::LoadDispatchAPI("some/random/invalid/directory.so"));
+
+  Cpp::UnloadDispatchAPI(); // should reset for next load to be successfull
+  EXPECT_TRUE(Cpp::LoadDispatchAPI(CPPINTEROP_LIB_PATH));
+
+  Cpp::UnloadDispatchAPI(); // should reset for next load to fail
+  EXPECT_FALSE(Cpp::LoadDispatchAPI("some/other/random/invalid/directory.so"));
+
+  // NOTE: minimize side-effects: reload assuming the static set is still
+  // and other test may depend of this being loaded
+  EXPECT_TRUE(Cpp::LoadDispatchAPI(CPPINTEROP_LIB_PATH));
+}
 // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)

@@ -346,30 +346,17 @@ enum CXErrorCode clang_Interpreter_process(CXInterpreter I, const char* code) {
 }
 
 CXValue clang_createValue(void) {
-#ifdef CPPINTEROP_USE_CLING
-  auto val = std::make_unique<cling::Value>();
-#else
-  auto val = std::make_unique<clang::Value>();
-#endif // CPPINTEROP_USE_CLING
-
+  auto val = std::make_unique<compat::Value>();
   return val.release();
 }
 
 void clang_Value_dispose(CXValue V) {
-#ifdef CPPINTEROP_USE_CLING
-  delete static_cast<cling::Value*>(V); // NOLINT(*-owning-memory)
-#else
-  delete static_cast<clang::Value*>(V); // NOLINT(*-owning-memory)
-#endif // CPPINTEROP_USE_CLING
+  delete static_cast<compat::Value*>(V); // NOLINT(*-owning-memory)
 }
 
 enum CXErrorCode clang_Interpreter_evaluate(CXInterpreter I, const char* code,
                                             CXValue V) {
-#ifdef CPPINTEROP_USE_CLING
-  auto* val = static_cast<cling::Value*>(V);
-#else
-  auto* val = static_cast<clang::Value*>(V);
-#endif // CPPINTEROP_USE_CLING
+  auto* val = static_cast<compat::Value*>(V);
 
   if (getInterpreter(I)->evaluate(code, *val))
     return CXError_Failure;
@@ -395,6 +382,17 @@ clang_Interpreter_loadLibrary(CXInterpreter I, const char* lib_stem,
 void clang_Interpreter_unloadLibrary(CXInterpreter I, const char* lib_stem) {
   auto* interp = getInterpreter(I);
   interp->getDynamicLibraryManager()->unloadLibrary(lib_stem);
+}
+
+CXInterpreterLanguage clang_Interpreter_getLanguage(CXInterpreter I) {
+  return static_cast<CXInterpreterLanguage>(
+      Cpp::GetLanguage(getInterpreter(I)));
+}
+
+CXInterpreterLanguageStandard
+clang_Interpreter_getLanguageStandard(CXInterpreter I) {
+  return static_cast<CXInterpreterLanguageStandard>(
+      Cpp::GetLanguageStandard(getInterpreter(I)));
 }
 
 CXString clang_Interpreter_searchLibrariesForSymbol(CXInterpreter I,

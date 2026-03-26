@@ -22,10 +22,8 @@
 #include "clang/Frontend/FrontendOptions.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
-#include "clang/Sema/Sema.h"
-#if CLANG_VERSION_MAJOR >= 19
 #include "clang/Sema/Redeclaration.h"
-#endif
+#include "clang/Sema/Sema.h"
 #include "clang/Serialization/ModuleFileExtension.h"
 
 #include "llvm/ADT/DenseMap.h"
@@ -123,7 +121,7 @@ inline clang::NamedDecl* Named(clang::Sema* S,
                                const clang::DeclContext* Within = nullptr) {
   clang::LookupResult R(*S, Name, clang::SourceLocation(),
                         clang::Sema::LookupOrdinaryName,
-                        Clang_For_Visible_Redeclaration);
+                        RedeclarationKind::ForVisibleRedeclaration);
   Named(S, R, Within);
   return LookupResult2Decl<clang::NamedDecl>(R);
 }

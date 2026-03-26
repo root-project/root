@@ -11,9 +11,6 @@ set_output_directory(TestSharedLib
 
 
 if (EMSCRIPTEN)
-  set_target_properties(TestSharedLib
-    PROPERTIES NO_SONAME 1
-  )
   target_compile_options(TestSharedLib
     PUBLIC "SHELL: ${CPPINTEROP_EXTRA_WASM_FLAGS}"
   )
