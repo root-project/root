@@ -218,7 +218,7 @@ public:
          out << SP << SP << "}\n"; // end j loop
          out << SP  << "}\n"; // end i loop
          if(fReduceOpMode == ReduceMean) {
-            out << SP  << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
+            out << SP << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
             out << SP << SP << "tensor_" << fNY << "[j] /= static_cast<float>(" << reducedLength << ");\n";
             out << SP << "}\n"; // end j loop
          }
