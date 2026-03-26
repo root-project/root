@@ -693,10 +693,21 @@ WinContext_t TGCocoa::GetSelectedContext()
 //______________________________________________________________________________
 void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
-   NSObject<X11Drawable> * drawable = (NSObject<X11Drawable> *) wctxt;
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
 
-   if([drawable setDrawMode : mode])
+   if ([drawable getDrawMode] == kInvert && mode != kInvert)
       fPimpl->fX11CommandBuffer.ClearXOROperations();
+
+   // here also XOR window will be removed
+   [drawable setDrawMode : mode];
+}
+
+//______________________________________________________________________________
+TVirtualX::EDrawMode TGCocoa::GetDrawModeW(WinContext_t wctxt)
+{
+   auto drawable = (NSObject<X11Drawable> *) wctxt;
+
+   return [drawable getDrawMode];
 }
 
 //______________________________________________________________________________

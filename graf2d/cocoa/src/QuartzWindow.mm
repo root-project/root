@@ -2151,20 +2151,19 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (BOOL) setDrawMode : (TVirtualX::EDrawMode) newMode
+- (void) setDrawMode : (TVirtualX::EDrawMode) newMode
 {
-   BOOL res = NO;
-
    if (fDrawMode == TVirtualX::kInvert && newMode != TVirtualX::kInvert) {
-
       [self.fQuartzWindow removeXorWindow];
-
-      res = YES;
    }
 
    fDrawMode = newMode;
+}
 
-   return res;
+//______________________________________________________________________________
+- (TVirtualX::EDrawMode) getDrawMode
+{
+   return fDrawMode;
 }
 
 //______________________________________________________________________________
