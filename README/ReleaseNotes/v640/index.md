@@ -69,6 +69,12 @@ The following people have contributed to this new version:
 
 ## Build System
 
+### Handling of the builtins
+
+* The previously vendored builtins `freetype`, `zlib`, `lzma`, `zstd`, `lz4`, `libpng`, `giflib`, `libjpeg` are now fetched as source tarballs from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as the vast majority of ROOT's builtins, e.g. `xrootd`.
+* For the aforementioned packages and `openssl`, no automatic fall-back to their builtin versions is available any more: the user is informed of that with a helpful message. If desired, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
+* The general direction of the ROOT project is to become more and more reliant on system's packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism.
+
 ## Core Libraries
 
 * ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
@@ -453,10 +459,18 @@ The version of the following packages has been updated:
  
  - cppzeromq: 4.10.0
  - fftw3: 3.3.10
+ - freetype: 2.14.3
  - gsl: 2.8
  - gtest: 1.17.0
+ - libgif
+ - libjpeg-turbo 3.1.3 is now used as a replacement for libjpeg
+ - libpng: 1.6.4
  - libzeromq: 4.3.5
+ - lz4: 1.10.0
+ - lzma: 5.8.2
  - xrootd: 5.9.1
+ - zlib: 1.3.2
+ - zstd: 1.5.7
 
 
 ## Items addressed for this release
