@@ -26,12 +26,6 @@ ROOTTEST_ADD_TEST(WriteFile
                   FIXTURES_REQUIRED root-io-transient-base-build
                   FIXTURES_SETUP root-io-transient-base-WriteFile-fixture)
 
-if(${compression_default} STREQUAL "lz4")
-  set(outref_suffix "LZ4")
-else()
-  set(outref_suffix "ZLIB")
-endif()
-
 set(root_includepaths
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${DEFAULT_ROOT_INCLUDE_PATH}
@@ -44,6 +38,6 @@ string(REPLACE ";" "$<SEMICOLON>" root_includepaths_escaped "${root_includepaths
 
 ROOTTEST_ADD_TEST(hadd_autoload
                   COMMAND hadd -f data_merge.root data1.root data2.root
-                  OUTREF hadd_autoload${outref_suffix}.ref
+                  OUTREF hadd_autoload.ref
                   FIXTURES_REQUIRED root-io-transient-base-WriteFile-fixture
                   ENVIRONMENT ROOT_INCLUDE_PATH=${root_includepaths_escaped})
