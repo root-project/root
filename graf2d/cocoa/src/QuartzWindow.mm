@@ -1127,16 +1127,10 @@ void print_mask_info(ULong_t mask)
     std::vector<ROOT::MacOSX::X11::Command *> xorOps;
 }
 
-- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives
-{
-    xorOps = primitives;
-}
-
 - (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd
 {
    xorOps.push_back(cmd);
 }
-
 
 - (void) drawRect : (NSRect) dirtyRect
 {
@@ -1522,17 +1516,10 @@ void print_mask_info(ULong_t mask)
 
    XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
    res = special;
-   [self adjustXorWindowGeometry:special];
+   [self adjustXorWindowGeometry : special];
    [self addChildWindow : special ordered : NSWindowAbove];
    [special release];
    return res;
-}
-
-//______________________________________________________________________________
-- (void) adjustXorWindowGeometry
-{
-    if (auto win = [self findXorWindow])
-        [self adjustXorWindowGeometry:win];
 }
 
 //______________________________________________________________________________
@@ -1553,7 +1540,6 @@ void print_mask_info(ULong_t mask)
       [win orderOut:nil];
       [self removeChildWindow : win];
    }
-   [self clearXor];
 }
 
 //______________________________________________________________________________
@@ -1568,15 +1554,13 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+- (void) addXorLine : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
 {
    auto xorWindow = [self addXorWindow];
 
    try {
-      std::unique_ptr<ROOT::MacOSX::X11::DrawLineXor> cmd(new ROOT::MacOSX::X11::DrawLineXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      std::unique_ptr<ROOT::MacOSX::X11::DrawLineXor> cmd(new ROOT::MacOSX::X11::DrawLineXor(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
       cmd->setView(view);
-      // fXorOps.push_back(cmd.get());
-      // cmd.release();
 
       auto cv = (XorDrawingView *)xorWindow.contentView;
       [cv addXorCommand : cmd.get()];
@@ -1589,15 +1573,13 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
+- (void) addXorBox : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2
 {
    auto xorWindow = [self addXorWindow];
 
    try {
-      std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(windowID, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
+      std::unique_ptr<ROOT::MacOSX::X11::DrawBoxXor> cmd(new ROOT::MacOSX::X11::DrawBoxXor(-1, ROOT::MacOSX::X11::Point(x1, y1), ROOT::MacOSX::X11::Point(x2, y2)));
       cmd->setView(view);
-      // fXorOps.push_back(cmd.get());
-      // cmd.release();
 
       auto cv = (XorDrawingView *)xorWindow.contentView;
       [cv addXorCommand : cmd.get()];
@@ -1608,28 +1590,6 @@ void print_mask_info(ULong_t mask)
    }
 }
 
-//______________________________________________________________________________
-- (void) flushXor
-{
-   auto xorWindow = [self findXorWindow];
-   if (!xorWindow) {
-      [self clearXor];
-      return;
-   }
-
-   // XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
-   // [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
-   // fXorOps.clear(); // A view will free the memory.
-   // [cv setNeedsDisplay : YES];
-}
-
-//______________________________________________________________________________
-- (void) clearXor
-{
-   for (auto elem : fXorOps)
-      delete elem;
-   fXorOps.clear();
-}
 
 //______________________________________________________________________________
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode

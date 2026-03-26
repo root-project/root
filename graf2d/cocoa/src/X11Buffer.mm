@@ -335,7 +335,6 @@ CommandBuffer::CommandBuffer()
 CommandBuffer::~CommandBuffer()
 {
    ClearCommands();
-   ClearXOROperations();
 }
 
 //______________________________________________________________________________
@@ -500,30 +499,6 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   try {
-      std::unique_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, Point(x1, y1), Point(x2, y2)));
-      fXorOps.push_back(cmd.get());
-      cmd.release();
-   } catch (const std::exception &) {
-      throw;
-   }
-}
-
-//______________________________________________________________________________
-void CommandBuffer::AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   try {
-      std::unique_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, Point(x1, y1), Point(x2, y2)));
-      fXorOps.push_back(cmd.get());
-      cmd.release();
-   } catch (const std::exception &) {
-      throw;
-   }
-}
-
-//______________________________________________________________________________
 void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 {
    assert(impl != 0 && "Flush, impl parameter is null");
@@ -606,55 +581,12 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 }
 
 //______________________________________________________________________________
-void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
-{
-   // The only XOR operations we ever had to support were the drawing
-   // of lines for a crosshair in a TCanvas and drawing the histogram's
-   // range when using a fit panel/interactive fitting. In the past
-   // we were using a deprecated (since 10.14) trick with locking
-   // a focus on a view, drawing, flushing CGContext and then unlocking.
-   // This stopped working since 10.15. So now the only thing
-   // we can do is to draw into a special transparent window which is
-   // attached on top of the canvas.
-   if (!fXorOps.size())
-      return;
-
-   assert(impl != 0 && "FlushXOROps, impl parameter is null");
-
-   NSObject<X11Drawable> * const drawable = impl->GetDrawable(fXorOps.back()->fID);
-   assert([drawable isKindOfClass : [QuartzView class]] &&
-          "FlushXOROps, drawable must be of type QuartzView");
-   QuartzView * const view = (QuartzView *)drawable;
-   for (auto *op : fXorOps)
-       op->setView(view);
-   QuartzWindow * const window = view.fQuartzWindow;
-   auto xorWindow = [window findXorWindow];
-   if (!xorWindow) {
-      ::Warning("FlushXOROps", "No XorDrawingWindow found to draw into");
-       ClearXOROperations();
-       return;
-   }
-
-   XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
-   [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
-   fXorOps.clear(); // A view will free the memory.
-   [cv setNeedsDisplay : YES];
-}
-
-//______________________________________________________________________________
 void CommandBuffer::RemoveOperationsForDrawable(Drawable_t drawable)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
       if (fCommands[i] && fCommands[i]->HasOperand(drawable)) {
          delete fCommands[i];
          fCommands[i] = 0;
-      }
-   }
-
-   for (size_type i = 0; i < fXorOps.size(); ++i) {
-      if (fXorOps[i] && fXorOps[i]->HasOperand(drawable)) {
-         delete fXorOps[i];
-         fXorOps[i] = 0;
       }
    }
 }
@@ -673,32 +605,12 @@ void CommandBuffer::RemoveGraphicsOperationsForWindow(Window_t wid)
 }
 
 //______________________________________________________________________________
-void CommandBuffer::RemoveXORGraphicsOperationsForWindow(Window_t wid)
-{
-   for (size_type i = 0; i < fCommands.size(); ++i) {
-      if (fXorOps[i] && fXorOps[i]->HasOperand(wid)) {
-         delete fXorOps[i];
-         fXorOps[i] = 0;
-      }
-   }
-}
-
-//______________________________________________________________________________
 void CommandBuffer::ClearCommands()
 {
    for (size_type i = 0, e = fCommands.size(); i < e; ++i)
       delete fCommands[i];
 
    fCommands.clear();
-}
-
-//______________________________________________________________________________
-void CommandBuffer::ClearXOROperations()
-{
-   for (size_type i = 0, e = fXorOps.size(); i < e; ++i)
-      delete fXorOps[i];
-
-   fXorOps.clear();
 }
 
 //Clipping machinery.

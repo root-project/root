@@ -586,12 +586,10 @@ void TGCocoa::Update(Int_t mode)
    }
 
    if (fDirectDraw && mode != 2) {
-      // fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
-      //auto windows = NSApplication.sharedApplication.windows;
-      //for (NSWindow *candidate : windows) {
-      //   if ([candidate isKindOfClass:QuartzWindow.class])
-      //      [(QuartzWindow *)candidate flushXor];
-      //}
+      // here was flushing of XOR operation
+      // now XOR operations collected directly by correspondent view and
+      // updated asynchronousely by calling view.setNeedsDisplay(YES)
+      // so there is no need for central instance
    }
 }
 
@@ -701,10 +699,7 @@ void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
    auto drawable = (NSObject<X11Drawable> *) wctxt;
 
-   // if ([drawable getDrawMode] == kInvert && mode != kInvert)
-   //   fPimpl->fX11CommandBuffer.ClearXOROperations();
-
-   // here XOR window and XOR operations will be removed if present
+   // here XOR window and XOR operations can be removed if necessary
    [drawable setDrawMode : mode];
 }
 

@@ -42,7 +42,6 @@ class Command;
 //                                                                    //
 ////////////////////////////////////////////////////////////////////////
 @interface XorDrawingView: NSView
-- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives;
 - (void) addXorCommand : (ROOT::MacOSX::X11::Command *) cmd;
 @end
 
@@ -75,8 +74,6 @@ class Command;
    QuartzImage *fShapeCombineMask;
    BOOL fIsDeleted;
    TVirtualX::EDrawMode fDrawMode; // current draw mode
-
-   std::vector<ROOT::MacOSX::X11::Command *> fXorOps;
 }
 
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
@@ -133,13 +130,10 @@ class Command;
 // Trick for crosshair drawing in TCanvas ("pseudo-XOR")
 - (XorDrawingWindow *) addXorWindow;
 - (XorDrawingWindow *) findXorWindow;
-- (void) adjustXorWindowGeometry;
 - (void) adjustXorWindowGeometry : (XorDrawingWindow *) win;
 - (void) removeXorWindow;
-- (void) addXorLine : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
-- (void) addXorBox : (QuartzView *) view : (Window_t) windowID : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
-- (void) flushXor;
-- (void) clearXor;
+- (void) addXorLine : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
+- (void) addXorBox : (QuartzView *) view : (Int_t) x1 : (Int_t) y1 : (Int_t) x2 : (Int_t) y2;
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
 - (TVirtualX::EDrawMode) getDrawMode;
 
