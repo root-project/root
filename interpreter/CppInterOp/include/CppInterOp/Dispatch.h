@@ -21,18 +21,19 @@
 #error "To use the Dispatch mechanism, do not include CppInterOp.h directly."
 #endif
 
-#include <CppInterOp/CppInterOp.h>
-
-#include <cstdlib>
-#include <iostream>
-#include <mutex>
-
 #ifdef _WIN32
 #include <windows.h>
 #undef LoadLibrary
 #else
 #include <dlfcn.h>
 #endif
+
+#include <CppInterOp/CppInterOp.h>
+
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <mutex>
 
 using CppFnPtrTy = void (*)();
 ///\param[in] procname - the name of the FunctionEntry in the symbol lookup
@@ -62,6 +63,8 @@ extern "C" CPPINTEROP_API CppFnPtrTy CppGetProcAddress(const char* procname);
   DISPATCH_API(IsEnumType, decltype(&CppImpl::IsEnumType))                     \
   DISPATCH_API(GetIntegerTypeFromEnumType,                                     \
                decltype(&CppImpl::GetIntegerTypeFromEnumType))                 \
+  DISPATCH_API(GetLanguage, decltype(&CppImpl::GetLanguage))                   \
+  DISPATCH_API(GetLanguageStandard, decltype(&CppImpl::GetLanguageStandard))   \
   DISPATCH_API(GetReferencedType, decltype(&CppImpl::GetReferencedType))       \
   DISPATCH_API(IsPointerType, decltype(&CppImpl::IsPointerType))               \
   DISPATCH_API(GetPointeeType, decltype(&CppImpl::GetPointeeType))             \
@@ -191,14 +194,18 @@ extern "C" CPPINTEROP_API CppFnPtrTy CppGetProcAddress(const char* procname);
 // TODO: implement overload that takes an existing opened DL handle
 inline void* dlGetProcAddress(const char* name,
                               const char* customLibPath = nullptr) {
-  if (!name)
-    return nullptr;
+  static auto init = std::make_unique<std::once_flag>();
+  static void* (*getProc)(const char*);
 
-  static std::once_flag init;
-  static void* (*getProc)(const char*) = nullptr;
+  // magic reset to keep static init inlined in function
+  if (!name) {
+    init = std::make_unique<std::once_flag>();
+    getProc = nullptr;
+    return nullptr;
+  }
 
   // this is currently not tested in a multiple thread/process setup
-  std::call_once(init, [customLibPath]() {
+  std::call_once(*init, [customLibPath]() {
     const char* path =
         customLibPath ? customLibPath : std::getenv("CPPINTEROP_LIBRARY_PATH");
     if (!path)
@@ -211,6 +218,9 @@ inline void* dlGetProcAddress(const char* name,
           GetProcAddress(h, "CppGetProcAddress"));
       if (!getProc)
         FreeLibrary(h);
+    } else {
+      std::cerr << "[CppInterOp Dispatch] error code=" << GetLastError()
+                << "\n";
     }
 #else
     void* handle = dlopen(path, RTLD_LOCAL | RTLD_NOW);
@@ -218,12 +228,21 @@ inline void* dlGetProcAddress(const char* name,
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
       getProc = reinterpret_cast<void* (*)(const char*)>(
           dlsym(handle, "CppGetProcAddress"));
-      if (!getProc) dlclose(handle);
+      if (!getProc)
+        dlclose(handle);
+    } else {
+      std::cerr << "[CppInterOp Dispatch] " << dlerror() << "\n";
     }
 #endif
   });
 
-  return getProc ? getProc(name) : nullptr;
+  if (!getProc) {
+    init = std::make_unique<std::once_flag>();
+    getProc = nullptr;
+    return nullptr;
+  }
+
+  return getProc(name);
 }
 
 // CppAPIType is used for the extern clauses below
@@ -253,8 +272,10 @@ CPPINTEROP_API_TABLE
 /// \param[in] customLibPath Optional custom path to libclangCppInterOp
 /// \returns true if initialization succeeded, false otherwise
 inline bool LoadDispatchAPI(const char* customLibPath = nullptr) {
+#ifndef NDEBUG
   std::cout << "[CppInterOp Dispatch] Loading CppInterOp API from "
             << (customLibPath ? customLibPath : "default library path") << '\n';
+#endif // NDEBUG
   if (customLibPath) {
     void* test = dlGetProcAddress("GetInterpreter", customLibPath);
     if (!test) {
@@ -286,6 +307,7 @@ inline void UnloadDispatchAPI() {
 #define DISPATCH_API(name, type) name = nullptr;
   CPPINTEROP_API_TABLE
 #undef DISPATCH_API
+  dlGetProcAddress(nullptr, nullptr); // this is a magic reset
 }
 } // namespace CppInternal::Dispatch
 

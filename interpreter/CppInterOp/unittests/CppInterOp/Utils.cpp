@@ -29,14 +29,18 @@ struct DispatchInitializer {
       std::abort();
     }
   }
-  ~DispatchInitializer() { Cpp::UnloadDispatchAPI(); }
+  ~DispatchInitializer() = default;
   DispatchInitializer(const DispatchInitializer&) = delete;
   DispatchInitializer& operator=(const DispatchInitializer&) = delete;
   DispatchInitializer(DispatchInitializer&&) noexcept = default;
   DispatchInitializer& operator=(DispatchInitializer&&) noexcept = default;
 };
-// FIXME: Make this threadsafe by moving it as a function static.
-DispatchInitializer g_dispatch_init;
+// Thread-safe initialization using function-local static
+DispatchInitializer& GetDispatchInitializer() {
+  static DispatchInitializer instance;
+  return instance;
+}
+const DispatchInitializer& g_dispatch_init = GetDispatchInitializer();
 } // namespace
 #endif
 

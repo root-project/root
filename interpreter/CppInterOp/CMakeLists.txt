@@ -13,7 +13,7 @@ option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
 option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
 option(CPPINTEROP_ENABLE_TESTING "Enable the CppInterOp testing infrastructure." ON)
 if(EMSCRIPTEN)
-  set(CPPINTEROP_EXTRA_WASM_FLAGS "-sSUPPORT_LONGJMP=wasm -fwasm-exceptions" CACHE STRING "Extra flags for wasm")
+  set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm")
 endif()
 
 if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
@@ -23,6 +23,13 @@ endif()
 # project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(CppInterOp)
+
+  if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(WARNING "No build type selected. Defaulted CMAKE_BUILD_TYPE=Release.\n"
+      "Valid options are: None, Debug, Release, RelWithDebInfo, MinSizeRel.")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+  endif()
 
   # LLVM/Clang/Cling default paths
   if (DEFINED LLVM_DIR)
@@ -70,13 +77,13 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
 include(GNUInstallDirs)
   ## Define supported version of clang and llvm
 
-  set(CLANG_MIN_SUPPORTED 18.0)
+  set(CLANG_MIN_SUPPORTED 19.0)
   set(CLANG_MAX_SUPPORTED "21.1.x")
   set(CLANG_VERSION_UPPER_BOUND 22.0.0)
-  set(LLD_MIN_SUPPORTED 18.0)
+  set(LLD_MIN_SUPPORTED 19.0)
   set(LLD_MAX_SUPPORTED "21.1.x")
   set(LLD_VERSION_UPPER_BOUND 22.0.0)
-  set(LLVM_MIN_SUPPORTED 18.0)
+  set(LLVM_MIN_SUPPORTED 19.0)
   set(LLVM_MAX_SUPPORTED "21.1.x")
   set(LLVM_VERSION_UPPER_BOUND 22.0.0)
 
@@ -373,6 +380,8 @@ endif ()
 # Fixes "C++ exception handler used, but unwind semantics are not enabled" warning Windows
 if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+  # Required for clang::driver::options::OPT_ see https://github.com/llvm/llvm-project/issues/86028
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Zc:preprocessor")
 endif ()
 
 if (APPLE)

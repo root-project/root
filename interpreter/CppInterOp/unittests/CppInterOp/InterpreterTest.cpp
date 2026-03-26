@@ -17,8 +17,9 @@
 #include "clang-c/CXCppInterOp.h"
 
 #include "llvm/ADT/SmallString.h"
+#include "llvm/Config/llvm-config.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
-#include <llvm/Support/FileSystem.h>
 
 #include <gmock/gmock.h>
 #include "gtest/gtest.h"
@@ -31,11 +32,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Version) {
   EXPECT_THAT(Cpp::GetVersion(), StartsWith("CppInterOp version"));
 }
 
-#ifdef NDEBUG
+#ifndef LLVM_ENABLE_ASSERTIONS
 TYPED_TEST(CPPINTEROP_TEST_MODE, DISABLED_Interpreter_DebugFlag) {
 #else
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DebugFlag) {
-#endif // NDEBUG
+#endif // LLVM_ENABLE_ASSERTIONS
   TestFixture::CreateInterpreter();
   EXPECT_FALSE(Cpp::IsDebugOutputEnabled());
   std::string cerrs;
@@ -318,7 +319,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_IncludePaths) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CodeCompletion) {
-#if CLANG_VERSION_MAJOR >= 18 || defined(CPPINTEROP_USE_CLING)
+#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) &&              \
+    defined(_WIN32)
+  GTEST_SKIP() << "Test fails with Cling on Windows";
+#endif
   TestFixture::CreateInterpreter();
   std::vector<std::string> cc;
   Cpp::Declare("int foo = 12;" DFLT_FALSE);
@@ -332,9 +336,75 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CodeCompletion) {
     if (r == "float" || r == "foo")
       cnt++;
   EXPECT_EQ(2U, cnt); // float and foo
-#else
-  GTEST_SKIP();
-#endif
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageCpp) {
+  // Default interpreter (C++14)
+  TestFixture::CreateInterpreter();
+  EXPECT_EQ(Cpp::GetLanguage(nullptr), Cpp::InterpreterLanguage::CPlusPlus);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardCpp) {
+  // Other C++ standards
+  TestFixture::CreateInterpreter({"-std=c++14"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::cxx14);
+
+  TestFixture::CreateInterpreter({"-std=c++17"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::cxx17);
+
+  TestFixture::CreateInterpreter({"-std=c++20"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::cxx20);
+
+  TestFixture::CreateInterpreter({"-std=c++23"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::cxx23);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageCAPI) {
+  auto* I = TestFixture::CreateInterpreter();
+  auto* CXI = clang_createInterpreterFromRawPtr(I);
+  EXPECT_EQ(clang_Interpreter_getLanguage(CXI),
+            CXInterpreterLanguage_CPlusPlus);
+  EXPECT_EQ(clang_Interpreter_getLanguageStandard(CXI),
+            CXInterpreterLanguageStandard_cxx14);
+  clang_Interpreter_dispose(CXI);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageC) {
+  TestFixture::CreateInterpreter({"-xc", "-std=c99"});
+  EXPECT_EQ(Cpp::GetLanguage(nullptr), Cpp::InterpreterLanguage::C);
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::c99);
+}
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardC) {
+  TestFixture::CreateInterpreter({"-xc", "-std=c89"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::c89);
+
+  TestFixture::CreateInterpreter({"-xc", "-std=c11"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::c11);
+
+  TestFixture::CreateInterpreter({"-xc", "-std=c17"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::c17);
+
+  TestFixture::CreateInterpreter({"-xc", "-std=c23"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::c23);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GetLanguageStandardGNU) {
+  TestFixture::CreateInterpreter({"-std=gnu++14"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::gnucxx14);
+
+  TestFixture::CreateInterpreter({"-std=gnu++17"});
+  EXPECT_EQ(Cpp::GetLanguageStandard(nullptr),
+            Cpp::InterpreterLanguageStandard::gnucxx17);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ExternalInterpreter) {

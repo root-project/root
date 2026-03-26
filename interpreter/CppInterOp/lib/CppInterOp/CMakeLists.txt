@@ -125,9 +125,6 @@ if(EMSCRIPTEN)
   # Replace newlines with spaces
   string(REPLACE "\n" " " SYMBOLS_LIST "${SYMBOLS_LIST}")
 
-  set_target_properties(clangCppInterOp
-    PROPERTIES NO_SONAME 1
-  )
   target_compile_options(clangCppInterOp
     PRIVATE "SHELL: -Oz"
     PRIVATE "SHELL: -flto"

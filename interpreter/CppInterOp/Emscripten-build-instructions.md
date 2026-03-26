@@ -316,8 +316,6 @@ Expand-Archive -Path "$PWD\chrome-win.zip" -DestinationPath "$PWD" -Force -Verbo
 Invoke-WebRequest -Uri "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US" -OutFile "firefox-setup.exe" -Verbose
 & "C:\Program Files\7-Zip\7z.exe" x "firefox-setup.exe"
 $env:PATH="$PWD\core;$PWD\chrome-win;$env:PATH"
-echo "PATH=$env:PATH"
-echo "PATH=$env:PATH" >> $env:GITHUB_ENV
 echo "Running CppInterOpTests in Firefox"
 emrun.bat --browser="firefox.exe" --kill_exit --timeout 60 --browser-args="--headless"  CppInterOpTests.html
 echo "Running DynamicLibraryManagerTests in Firefox"
@@ -357,7 +355,7 @@ emcmake cmake \
           -DXEUS_CPP_RESOURCE_DIR="$LLVM_BUILD_DIR/lib/clang/$LLVM_VERSION" \
           -DSYSROOT_PATH=$SYSROOT_PATH                                   \
           ..
-EMCC_CFLAGS="-sSUPPORT_LONGJMP=wasm -fwasm-exceptions" emmake make -j $(nproc --all) install
+emmake make -j $(nproc --all) install
 ```
 
 and on Windows by executing
@@ -378,9 +376,7 @@ emcmake cmake `
           -DXEUS_CPP_RESOURCE_DIR="$env:LLVM_BUILD_DIR/lib/clang/$env:LLVM_VERSION" `
           -DSYSROOT_PATH="$env:SYSROOT_PATH"                                   `
           ..
-$env:EMCC_CFLAGS="-sSUPPORT_LONGJMP=wasm -fwasm-exceptions"
 emmake make -j $(nproc --all) install
-$env:EMCC_CFLAGS=""
 ```
 
 To build and test Jupyter Lite with this kernel locally on Linux/MacOS you can execute the following

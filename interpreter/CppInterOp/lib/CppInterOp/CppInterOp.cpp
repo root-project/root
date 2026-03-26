@@ -30,6 +30,7 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/DiagnosticSema.h"
+#include "clang/Basic/LangStandard.h"
 #include "clang/Basic/Linkage.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
@@ -41,10 +42,8 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Overload.h"
 #include "clang/Sema/Ownership.h"
-#include "clang/Sema/Sema.h"
-#if CLANG_VERSION_MAJOR >= 19
 #include "clang/Sema/Redeclaration.h"
-#endif
+#include "clang/Sema/Sema.h"
 #include "clang/Sema/TemplateDeduction.h"
 
 #include "llvm/ADT/SmallString.h"
@@ -87,7 +86,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-
+#include <utility>
 // Stream redirect.
 #ifdef _WIN32
 #include <io.h>
@@ -117,25 +116,14 @@ void* __clang_Interpreter_SetValueWithAlloc(void* This, void* OutVal,
                                             void* OpaqueType);
 #endif
 
-#if CLANG_VERSION_MAJOR > 18
 extern "C" void __clang_Interpreter_SetValueNoAlloc(void* This, void* OutVal,
                                                     void* OpaqueType, ...);
-#else
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*);
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, void*);
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, float);
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, double);
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*, long double);
-void __clang_Interpreter_SetValueNoAlloc(void*, void*, void*,
-                                         unsigned long long);
-#endif
 #endif // CPPINTEROP_USE_CLING
 
 namespace CppImpl {
 
 using namespace clang;
 using namespace llvm;
-using namespace std;
 
 struct InterpreterInfo {
   compat::Interpreter* Interpreter = nullptr;
@@ -177,11 +165,14 @@ struct InterpreterInfo {
 // std::deque avoids relocations and calling the dtor of InterpreterInfo.
 static llvm::ManagedStatic<std::deque<InterpreterInfo>> sInterpreters;
 
-static compat::Interpreter& getInterp() {
+static compat::Interpreter& getInterp(TInterp_t I = nullptr) {
+  if (I)
+    return *static_cast<compat::Interpreter*>(I);
   assert(!sInterpreters->empty() &&
          "Interpreter instance must be set before calling this!");
   return *sInterpreters->back().Interpreter;
 }
+
 static clang::Sema& getSema() { return getInterp().getCI()->getSema(); }
 static clang::ASTContext& getASTContext() { return getSema().getASTContext(); }
 
@@ -321,6 +312,13 @@ static void InstantiateFunctionDefinition(Decl* D) {
     getSema().InstantiateFunctionDefinition(SourceLocation(), FD,
                                             /*Recursive=*/true,
                                             /*DefinitionRequired=*/true);
+    // FIXME: this can go into a RAII object
+    clang::DiagnosticsEngine& Diags = getSema().getDiagnostics();
+    if (!FD->isDefined() && Diags.hasErrorOccurred()) {
+      // instantiation failed, need to reset DiagnosticsEngine
+      Diags.Reset(/*soft=*/true);
+      Diags.getClient()->clear();
+    }
   }
 }
 
@@ -414,8 +412,16 @@ bool IsBuiltin(TCppType_t type) {
   QualType Ty = QualType::getFromOpaquePtr(type);
   if (Ty->isBuiltinType() || Ty->isAnyComplexType())
     return true;
-  // FIXME: Figure out how to avoid the string comparison.
-  return llvm::StringRef(Ty.getAsString()).contains("complex");
+  // Check for std::complex<T> specializations.
+  if (const auto* RD = Ty->getAsCXXRecordDecl()) {
+    if (const auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD)) {
+      IdentifierInfo* II = CTSD->getSpecializedTemplate()->getIdentifier();
+      if (II && II->isStr("complex") &&
+          CTSD->getDeclContext()->isStdNamespace())
+        return true;
+    }
+  }
+  return false;
 }
 
 bool IsTemplate(TCppScope_t handle) {
@@ -598,19 +604,24 @@ std::string GetName(TCppType_t klass) {
   return "<unnamed>";
 }
 
-std::string GetCompleteName(TCppType_t klass) {
+static std::string GetCompleteNameImpl(TCppType_t klass, bool qualified) {
   auto& C = getSema().getASTContext();
   auto* D = (Decl*)klass;
 
-  PrintingPolicy Policy = C.getPrintingPolicy();
-  Policy.SuppressUnwrittenScope = true;
-  Policy.SuppressScope = true;
-  Policy.AnonymousTagLocations = false;
-  Policy.SuppressTemplateArgsInCXXConstructors = false;
-  Policy.SuppressDefaultTemplateArgs = false;
-  Policy.AlwaysIncludeTypeForTemplateArgument = true;
-
   if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
+    PrintingPolicy Policy = C.getPrintingPolicy();
+    Policy.SuppressUnwrittenScope = true;
+    if (qualified) {
+      Policy.FullyQualifiedName = true;
+      Policy.SuppressElaboration = true;
+    } else {
+      Policy.SuppressScope = true;
+      Policy.AnonymousTagLocations = false;
+      Policy.SuppressTemplateArgsInCXXConstructors = false;
+      Policy.SuppressDefaultTemplateArgs = false;
+      Policy.AlwaysIncludeTypeForTemplateArgument = true;
+    }
+
     if (auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
       QualType QT = C.getTagDeclType(TD);
@@ -620,12 +631,12 @@ std::string GetCompleteName(TCppType_t klass) {
     if (auto* FD = llvm::dyn_cast<FunctionDecl>(ND)) {
       std::string func_name;
       llvm::raw_string_ostream name_stream(func_name);
-      FD->getNameForDiagnostic(name_stream, Policy, false);
+      FD->getNameForDiagnostic(name_stream, Policy, qualified);
       name_stream.flush();
       return func_name;
     }
 
-    return ND->getNameAsString();
+    return qualified ? ND->getQualifiedNameAsString() : ND->getNameAsString();
   }
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
@@ -633,6 +644,10 @@ std::string GetCompleteName(TCppType_t klass) {
   }
 
   return "<unnamed>";
+}
+
+std::string GetCompleteName(TCppType_t klass) {
+  return GetCompleteNameImpl(klass, /*qualified=*/false);
 }
 
 std::string GetQualifiedName(TCppType_t klass) {
@@ -648,32 +663,8 @@ std::string GetQualifiedName(TCppType_t klass) {
   return "<unnamed>";
 }
 
-// FIXME: Figure out how to merge with GetCompleteName.
 std::string GetQualifiedCompleteName(TCppType_t klass) {
-  auto& C = getSema().getASTContext();
-  auto* D = (Decl*)klass;
-
-  if (auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
-    if (auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
-      std::string type_name;
-      QualType QT = C.getTagDeclType(TD);
-      PrintingPolicy PP = C.getPrintingPolicy();
-      PP.FullyQualifiedName = true;
-      PP.SuppressUnwrittenScope = true;
-      PP.SuppressElaboration = true;
-      QT.getAsStringInternal(type_name, PP);
-
-      return type_name;
-    }
-
-    return ND->getQualifiedNameAsString();
-  }
-
-  if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
-    return "";
-  }
-
-  return "<unnamed>";
+  return GetCompleteNameImpl(klass, /*qualified=*/true);
 }
 
 std::string GetDoxygenComment(TCppScope_t scope, bool strip_comment_markers) {
@@ -1052,7 +1043,7 @@ std::vector<TCppFunction_t> GetFunctionsUsingName(TCppScope_t scope,
   auto& S = getSema();
   DeclarationName DName = &getASTContext().Idents.get(name);
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                        For_Visible_Redeclaration);
+                        RedeclarationKind::ForVisibleRedeclaration);
 
   CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
 
@@ -1241,7 +1232,7 @@ bool GetClassTemplatedMethods(const std::string& name, TCppScope_t parent,
   llvm::StringRef Name(name);
   DeclarationName DName = &getASTContext().Idents.get(name);
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                        For_Visible_Redeclaration);
+                        RedeclarationKind::ForVisibleRedeclaration);
   auto* DC = clang::Decl::castToDeclContext(D);
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
@@ -1827,8 +1818,7 @@ TCppType_t GetUnderlyingType(TCppType_t type) {
 
 std::string GetTypeAsString(TCppType_t var) {
   QualType QT = QualType::getFromOpaquePtr(var);
-  // FIXME: Get the default printing policy from the ASTContext.
-  PrintingPolicy Policy((LangOptions()));
+  PrintingPolicy Policy(getASTContext().getPrintingPolicy());
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
   Policy.SuppressElaboration = true;
@@ -1987,12 +1977,14 @@ TCppType_t GetTypeFromScope(TCppScope_t klass) {
     return 0;
 
   auto* D = (Decl*)klass;
-  ASTContext& C = getASTContext();
 
-  if (ValueDecl* VD = dyn_cast<ValueDecl>(D))
+  if (auto* VD = dyn_cast<ValueDecl>(D))
     return VD->getType().getAsOpaquePtr();
 
-  return C.getTypeDeclType(cast<TypeDecl>(D)).getAsOpaquePtr();
+  if (auto* TD = dyn_cast<TypeDecl>(D))
+    return getASTContext().getTypeDeclType(TD).getAsOpaquePtr();
+
+  return (TCppType_t) nullptr;
 }
 
 // Internal functions that are not needed outside the library are
@@ -2008,7 +2000,7 @@ enum EReferenceType { kNotReference, kLValueReference, kRValueReference };
 
 // FIXME: Use that routine throughout CallFunc's port in places such as
 // make_narg_call.
-static inline void indent(ostringstream& buf, int indent_level) {
+inline void indent(std::ostringstream& buf, int indent_level) {
   static const std::string kIndentString("   ");
   for (int i = 0; i < indent_level; ++i)
     buf << kIndentString;
@@ -2489,9 +2481,9 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
   if (const CXXConstructorDecl* CD = dyn_cast<CXXConstructorDecl>(FD)) {
     if (N <= 1 && llvm::isa<UsingShadowDecl>(FD)) {
       auto SpecMemKind = I.getCI()->getSema().getSpecialMember(CD);
-      if ((N == 0 && SpecMemKind == CXXSpecialMemberKindDefaultConstructor) ||
-          (N == 1 && (SpecMemKind == CXXSpecialMemberKindCopyConstructor ||
-                      SpecMemKind == CXXSpecialMemberKindMoveConstructor))) {
+      if ((N == 0 && SpecMemKind == CXXSpecialMemberKind::DefaultConstructor) ||
+          (N == 1 && (SpecMemKind == CXXSpecialMemberKind::CopyConstructor ||
+                      SpecMemKind == CXXSpecialMemberKind::MoveConstructor))) {
         // Using declarations cannot inject special members; do not call
         // them as such. This might happen by using `Base(Base&, int = 12)`,
         // which is fine to be called as `Derived d(someBase, 42)` but not
@@ -3058,9 +3050,9 @@ static std::string PrepareStructorWrapper(const Decl* D,
   //
   //  Make the wrapper name.
   //
-  string wrapper_name;
+  std::string wrapper_name;
   {
-    ostringstream buf;
+    std::ostringstream buf;
     buf << wrapper_prefix;
     // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
     // string mn;
@@ -3103,7 +3095,7 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
   //
   //--
 
-  static map<const Decl*, void*> gDtorWrapperStore;
+  static std::map<const Decl*, void*> gDtorWrapperStore;
 
   auto I = gDtorWrapperStore.find(D);
   if (I != gDtorWrapperStore.end())
@@ -3113,12 +3105,12 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
   //  Make the wrapper name.
   //
   std::string class_name;
-  string wrapper_name = PrepareStructorWrapper(D, "__dtor", class_name);
+  std::string wrapper_name = PrepareStructorWrapper(D, "__dtor", class_name);
   //
   //  Write the wrapper code.
   //
   int indent_level = 0;
-  ostringstream buf;
+  std::ostringstream buf;
   buf << "__attribute__((used)) ";
   buf << "extern \"C\" void ";
   buf << wrapper_name;
@@ -3199,7 +3191,7 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
   --indent_level;
   buf << "}\n";
   // Done.
-  string wrapper(buf.str());
+  std::string wrapper(buf.str());
   // fprintf(stderr, "%s\n", wrapper.c_str());
   //
   //   Compile the wrapper code.
@@ -3207,7 +3199,7 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
   void* F = compile_wrapper(interp, wrapper_name, wrapper,
                             /*withAccessControl=*/false);
   if (F) {
-    gDtorWrapperStore.insert(make_pair(D, F));
+    gDtorWrapperStore.insert(std::make_pair(D, F));
   } else {
     llvm::errs() << "make_dtor_wrapper"
                  << "Failed to compile\n"
@@ -3419,7 +3411,8 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   if (!T.isWasm())
     AddLibrarySearchPaths(ResourceDir, I);
 
-  I->declare(R"(
+  if (GetLanguage(I) != InterpreterLanguage::C) {
+    I->declare(R"(
     namespace __internal_CppInterOp {
     template <typename Signature>
     struct function;
@@ -3429,6 +3422,7 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
     };
     }  // namespace __internal_CppInterOp
   )");
+  }
 
   sInterpreters->emplace_back(I, /*Owned=*/true);
 
@@ -3445,7 +3439,7 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   // obtain mangled name
   auto* D = static_cast<clang::Decl*>(
       Cpp::GetNamed("__clang_Interpreter_SetValueWithAlloc"));
-  if (auto* FD = llvm::dyn_cast<FunctionDecl>(D)) {
+  if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
     auto GD = GlobalDecl(FD);
     std::string mangledName;
     compat::maybeMangleDeclName(GD, mangledName);
@@ -3454,65 +3448,10 @@ TInterp_t CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
         reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
   }
 #endif
-// llvm < 19 has multiple overloads of __clang_Interpreter_SetValueNoAlloc
-#if CLANG_VERSION_MAJOR < 19
-  // obtain all 6 candidates, and obtain the correct Decl for each overload
-  // using BestOverloadFunctionMatch. We then map the decl to the correct
-  // function pointer (force the compiler to find the right declarion by casting
-  // to the corresponding function pointer signature) and then register it.
-  const std::vector<TCppFunction_t> Methods = Cpp::GetFunctionsUsingName(
-      Cpp::GetGlobalScope(), "__clang_Interpreter_SetValueNoAlloc");
-  std::string mangledName;
-  ASTContext& Ctxt = I->getSema().getASTContext();
-  auto* TAI = Ctxt.VoidPtrTy.getAsOpaquePtr();
 
-  // possible parameter lists for __clang_Interpreter_SetValueNoAlloc overloads
-  // in LLVM 18
-  const std::vector<std::vector<Cpp::TemplateArgInfo>> a_params = {
-      {TAI, TAI, TAI},
-      {TAI, TAI, TAI, TAI},
-      {TAI, TAI, TAI, Ctxt.FloatTy.getAsOpaquePtr()},
-      {TAI, TAI, TAI, Ctxt.DoubleTy.getAsOpaquePtr()},
-      {TAI, TAI, TAI, Ctxt.LongDoubleTy.getAsOpaquePtr()},
-      {TAI, TAI, TAI, Ctxt.UnsignedLongLongTy.getAsOpaquePtr()}};
-
-  using FP0 = void (*)(void*, void*, void*);
-  using FP1 = void (*)(void*, void*, void*, void*);
-  using FP2 = void (*)(void*, void*, void*, float);
-  using FP3 = void (*)(void*, void*, void*, double);
-  using FP4 = void (*)(void*, void*, void*, long double);
-  using FP5 = void (*)(void*, void*, void*, unsigned long long);
-
-  const std::vector<void*> func_pointers = {
-      reinterpret_cast<void*>(
-          static_cast<FP0>(&__clang_Interpreter_SetValueNoAlloc)),
-      reinterpret_cast<void*>(
-          static_cast<FP1>(&__clang_Interpreter_SetValueNoAlloc)),
-      reinterpret_cast<void*>(
-          static_cast<FP2>(&__clang_Interpreter_SetValueNoAlloc)),
-      reinterpret_cast<void*>(
-          static_cast<FP3>(&__clang_Interpreter_SetValueNoAlloc)),
-      reinterpret_cast<void*>(
-          static_cast<FP4>(&__clang_Interpreter_SetValueNoAlloc)),
-      reinterpret_cast<void*>(
-          static_cast<FP5>(&__clang_Interpreter_SetValueNoAlloc))};
-
-  // these symbols are not externed, so we need to mangle their names
-  for (size_t i = 0; i < a_params.size(); ++i) {
-    auto* decl = static_cast<clang::Decl*>(
-        Cpp::BestOverloadFunctionMatch(Methods, {}, a_params[i]));
-    if (auto* fd = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
-      auto gd = clang::GlobalDecl(fd);
-      compat::maybeMangleDeclName(gd, mangledName);
-      DefineAbsoluteSymbol(*I, mangledName.c_str(),
-                           reinterpret_cast<uint64_t>(func_pointers[i]));
-    }
-  }
-#else
   DefineAbsoluteSymbol(
       *I, "__clang_Interpreter_SetValueNoAlloc",
       reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueNoAlloc));
-#endif
 #endif
   return I;
 }
@@ -3553,6 +3492,38 @@ TInterp_t GetInterpreter() {
   if (sInterpreters->empty())
     return nullptr;
   return sInterpreters->back().Interpreter;
+}
+
+InterpreterLanguage GetLanguage(TInterp_t I /*=nullptr*/) {
+  compat::Interpreter* interp = &getInterp(I);
+  const auto& LO = interp->getCI()->getLangOpts();
+
+  // CUDA and HIP reuse C++ language standards, so LangStd alone reports CXX.
+  if (LO.CUDA)
+    return InterpreterLanguage::CUDA;
+  if (LO.HIP)
+    return InterpreterLanguage::HIP;
+
+  auto standard = clang::LangStandard::getLangStandardForKind(LO.LangStd);
+  auto lang = static_cast<InterpreterLanguage>(standard.getLanguage());
+  assert(lang != InterpreterLanguage::Unknown && "Unknown language");
+  assert(static_cast<unsigned char>(lang) <=
+             static_cast<unsigned char>(InterpreterLanguage::HLSL) &&
+         "Unhandled Language");
+  return lang;
+}
+
+InterpreterLanguageStandard GetLanguageStandard(TInterp_t I /*=nullptr*/) {
+  compat::Interpreter* interp = &getInterp(I);
+  const auto& LO = interp->getCI()->getLangOpts();
+  auto langStandard = static_cast<InterpreterLanguageStandard>(LO.LangStd);
+  assert(langStandard != InterpreterLanguageStandard::lang_unspecified &&
+         "Unspecified language standard");
+  assert(static_cast<unsigned char>(langStandard) <=
+             static_cast<unsigned char>(
+                 InterpreterLanguageStandard::lang_unspecified) &&
+         "Unhandled language standard.");
+  return langStandard;
 }
 
 void UseExternalInterpreter(TInterp_t I) {
@@ -3668,11 +3639,7 @@ int Declare(const char* code, bool silent) {
 int Process(const char* code) { return getInterp().process(code); }
 
 intptr_t Evaluate(const char* code, bool* HadError /*=nullptr*/) {
-#ifdef CPPINTEROP_USE_CLING
-  cling::Value V;
-#else
-  clang::Value V;
-#endif // CPPINTEROP_USE_CLING
+  compat::Value V;
 
   if (HadError)
     *HadError = false;
@@ -3806,10 +3773,10 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
   if (auto* FunctionTemplate = dyn_cast<FunctionTemplateDecl>(TemplateD)) {
     FunctionDecl* Specialization = nullptr;
     clang::sema::TemplateDeductionInfo Info(fakeLoc);
-    Template_Deduction_Result Result =
+    TemplateDeductionResult Result =
         S.DeduceTemplateArguments(FunctionTemplate, &TLI, Specialization, Info,
                                   /*IsAddressOfFunction*/ true);
-    if (Result != Template_Deduction_Result_Success) {
+    if (Result != TemplateDeductionResult::Success) {
       // FIXME: Diagnose what happened.
       (void)Result;
     }
