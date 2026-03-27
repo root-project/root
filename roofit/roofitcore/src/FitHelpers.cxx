@@ -963,6 +963,10 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const
 
       const char *rangeName = pc.getString("rangeName", nullptr, true);
       const char *addCoefRangeName = pc.getString("addCoefRange", nullptr, true);
+      int splitRange = pc.getInt("splitRange");
+
+      // Set the fitrange attribute of th PDF, add observables ranges for plotting
+      resetFitrangeAttributes(real, data, baseName, rangeName, splitRange);
 
       cfg.rangeName = rangeName ? rangeName : "";
       cfg.nCPU = pc.getInt("numcpu");
@@ -971,7 +975,7 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const
       cfg.cloneInputData = false;
       cfg.integrateOverBinsPrecision = pc.getDouble("integrate_bins");
       cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
-      cfg.splitCutRange = static_cast<bool>(pc.getInt("split_range"));
+      cfg.splitCutRange = static_cast<bool>(splitRange);
       auto chi2 = std::make_unique<RooChi2Var>(baseName.c_str(), baseName.c_str(), real,
                                                static_cast<RooDataHist &>(data), extended, etype, cfg);
 
