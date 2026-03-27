@@ -3944,15 +3944,27 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
+/// \fn RooAbsReal::chi2FitTo(RooDataHist& data, CmdArgs_t const&... cmdArgs)
+///
+/// Calls RooAbsReal::createChi2 and returns the fit result.
 /// Perform a \f$ \chi^2 \f$ fit to given histogram. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession
 ///
-/// The following named arguments are supported
+/// The following named arguments are supported:
 ///
 /// <table>
-/// <tr><th> <th> Options to control construction of chi2
+/// <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
+///  <tr><td> `DataError()`  <td>  Choose between:
+///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
+///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights squared,
+///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
+///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
+///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
+///    (e.g., the difference between the mean and the 16 % quantile).
+///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
+///    (e.g., the difference between the 84 % quantile and the mean).
+///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
 /// <tr><td> `Extended(bool flag)` <td> **Only applicable when fitting a RooAbsPdf**. Scale the normalized pdf by the number of events predicted by the model instead of scaling by the total data weight.
 ///                                     This imposes a constraint on the predicted number of events analogous to the extended term in a likelihood fit.
 ///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
@@ -3969,6 +3981,16 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
 /// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
+/// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
+/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
+///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
 ///
 /// <tr><th> <th> Options to control flow of fit procedure
 /// <tr><td> `InitialHesse(bool flag)`      <td> Flag controls if HESSE before MIGRAD as well, off by default
@@ -3990,80 +4012,32 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// </table>
 ///
 
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-                const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-                const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+std::unique_ptr<RooFitResult> RooAbsReal::chi2FitToImpl(RooDataHist &data, const RooLinkedList &cmdList)
 {
-  CREATE_CMD_LIST;
-  return chi2FitTo(data,l) ;
+   return RooFit::FitHelpers::fitTo(*this, data, cmdList, true);
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList) and returns fit result.
+/// \fn RooAbsReal::createChi2(RooDataHist& data, CmdArgs_t const&... cmdArgs)
 ///
-/// List of possible commands in the `cmdList`:
-///
-///  <table>
-///  <tr><th> Type of CmdArg    <th>    Effect on \f$ \chi^2 \f$
-///  <tr><td>
-///  <tr><td> `DataError()`  <td>  Choose between:
-///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
-///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
-///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
-///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
-///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
-///    (e.g., the difference between the mean and the 16 % quantile).
-///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
-///    (e.g., the difference between the 84 % quantile and the mean).
-///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
-///  <tr><td>
-///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization
-///  <tr><td>
-///  NumCPU()     <td> Activate parallel processing feature
-///  <tr><td>
-///  Range()      <td> Calculate \f$ \chi^2 \f$ only in selected region
-///  <tr><td>
-///  Verbose()    <td> Verbose output of GOF framework
-///  <tr><td>
-///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
-/// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Define projected observables.
-///                                Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-///
-/// </table>
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, data, cmdList, true));
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
+///
+/// See also RooAbsReal::chi2FitTo for the list of possible command arguments to this function.
 ///
 /// It calculates:
 ///
 ///  \f{align*}{
-///    \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
+///    \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2
 ///    N_\mathrm{PDF,bin} &=
 ///      \begin{cases}
-///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
+///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}
 ///          \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
-///      \end{cases} \\
+///      \end{cases}
 ///    \Delta_\mathrm{bin} &=
 ///      \begin{cases}
-///          \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
-///          \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
+///          \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}
+///          \mathtt{data{\rightarrow}weightError()} &\text{otherwise}
 ///      \end{cases}
 ///  \f}
 ///
@@ -4086,23 +4060,9 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const R
 /// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 /// \return \f$ \chi^2 \f$ variable
 
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
-                                                     const RooCmdArg &arg3, const RooCmdArg &arg4,
-                                                     const RooCmdArg &arg5, const RooCmdArg &arg6,
-                                                     const RooCmdArg &arg7, const RooCmdArg &arg8)
+std::unique_ptr<RooAbsReal> RooAbsReal::createChi2Impl(RooDataHist& data, const RooLinkedList& cmdList)
 {
-   CREATE_CMD_LIST;
-   return createChi2(data, l);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \see RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
-/// \param data hist data
-/// \param cmdList List with RooCmdArg() from the table
-
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
-{
-   return RooFit::makeOwningPtr(RooFit::FitHelpers::createChi2(*this, data, cmdList));
+   return RooFit::FitHelpers::createChi2(*this, data, cmdList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4147,8 +4107,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 }
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
@@ -4156,8 +4114,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
 {
    return RooFit::makeOwningPtr(RooFit::FitHelpers::fitTo(*this, xydata, cmdList, true));
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

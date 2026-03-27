@@ -12,7 +12,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, cpp_signature, _pack_cmd_args
 
 
 class RooAbsReal(object):
@@ -110,8 +110,7 @@ class RooAbsReal(object):
         """
         import ROOT
 
-        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        out = self._createChi2(*args, **kwargs)
+        out = self._createChi2["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
         ROOT.SetOwnership(out, True)
         return out
 
@@ -126,8 +125,7 @@ class RooAbsReal(object):
         """
         import ROOT
 
-        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        out = self._chi2FitTo(*args, **kwargs)
+        out = self._chi2FitTo["RooLinkedList const&"](args[0], _pack_cmd_args(*args[1:], **kwargs))
         ROOT.SetOwnership(out, True)
         return out
 
