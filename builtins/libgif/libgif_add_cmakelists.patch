@@ -1,7 +1,7 @@
 --- /dev/null	2026-03-12 08:23:04
 +++ CMakeLists.txt	2026-03-12 08:20:11
 @@ -0,0 +1,29 @@
-+cmake_minimum_required(VERSION 3.23)
++cmake_minimum_required(VERSION 3.22)
 +project(LibUngif VERSION 1.0) # The version does not matter here
 +
 +add_library(gif-static STATIC
