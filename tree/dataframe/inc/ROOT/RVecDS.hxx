@@ -14,7 +14,7 @@
 #include <ROOT/TSeq.hxx>
 
 #include <algorithm>
-#include <functional>
+#include <any>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,11 +26,7 @@
 #ifndef ROOT_RVECDS
 #define ROOT_RVECDS
 
-namespace ROOT {
-
-namespace Internal {
-
-namespace RDF {
+namespace ROOT::Internal::RDF {
 
 class R__CLING_PTRCHECK(off) RVecDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    TPointerHolder *fPtrHolder;
@@ -63,7 +59,7 @@ class RVecDS final : public ROOT::RDF::RDataSource {
    PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
-   std::function<void()> fDeleteRVecs;
+   std::any fLifeline;
 
    Record_t GetColumnReadersImpl(std::string_view, const std::type_info &) { return {}; }
 
@@ -101,12 +97,12 @@ protected:
    std::string AsString() { return "Numpy data source"; };
 
 public:
-   RVecDS(std::function<void()> deleteRVecs, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colsNameVals)
+   RVecDS(std::any lifeline, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colsNameVals)
       : fColumns(colsNameVals.second...),
         fColNames{colsNameVals.first...},
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
         fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
-        fDeleteRVecs(deleteRVecs)
+        fLifeline{std::move(lifeline)}
    {
    }
 
@@ -122,8 +118,6 @@ public:
             delete ptrHolder;
          }
       }
-      // Release the data associated to this data source
-      fDeleteRVecs();
    }
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
@@ -228,14 +222,12 @@ public:
 //                the data cannot go out of scope as long as the datasource survives.
 template <typename... ColumnTypes>
 std::unique_ptr<RDataFrame>
-MakeRVecDataFrame(std::function<void()> deleteRVecs,
-                  std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colNameProxyPairs)
+MakeRVecDataFrame(std::any lifeline, std::pair<std::string, ROOT::RVec<ColumnTypes>> const &...colNameProxyPairs)
 {
-   return std::make_unique<RDataFrame>(std::make_unique<RVecDS<ColumnTypes...>>(deleteRVecs, colNameProxyPairs...));
+   return std::make_unique<RDataFrame>(
+      std::make_unique<RVecDS<ColumnTypes...>>(std::move(lifeline), colNameProxyPairs...));
 }
 
-} // namespace RDF
-} // namespace Internal
-} // namespace ROOT
+} // namespace ROOT::Internal::RDF
 
 #endif // ROOT_RNUMPYDS
