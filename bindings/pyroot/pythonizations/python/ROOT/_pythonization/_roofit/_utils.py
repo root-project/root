@@ -53,6 +53,37 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
     return args, {}
 
 
+def _pack_cmd_args(*args, **kwargs):
+    # Pack command arguments passed into a RooLinkedList.
+
+    import ROOT
+
+    # If the second argument is already a RooLinkedList, do nothing
+    if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], ROOT.RooLinkedList):
+        return args[0]
+
+    # Transform keyword arguments to RooCmdArgs
+    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+
+    # All keyword arguments should be transformed now
+    assert len(kwargs) == 0
+
+    # Put RooCmdArgs in a RooLinkedList
+    cmd_list = ROOT.RooLinkedList()
+    for cmd in args:
+        if not isinstance(cmd, ROOT.RooCmdArg):
+            raise TypeError("This function only takes RooFit command arguments.")
+        cmd_list.Add(cmd)
+
+    # The RooLinkedList passed to functions like fitTo() is expected to be
+    # non-owning. To make sure that the RooCmdArgs live long enough, we attach
+    # them as an attribute of the output list, such that the Python reference
+    # counter doesn't hit zero.
+    cmd_list._owning_pylist = args
+
+    return cmd_list
+
+
 def _dict_to_flat_map(arg_dict, allowed_val_dict):
     """
     Helper function to convert python dict to std::map.
