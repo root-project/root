@@ -861,6 +861,10 @@ void TClonesArray::Streamer(TBuffer &b)
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
+
+      // ROOT-6788: eliminate empty slots
+      Compress();
+
       //Make sure TStreamerInfo is not optimized, otherwise it will not be
       //possible to support schema evolution in read mode.
       //In case the StreamerInfo has already been computed and optimized,
