@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "gtest/gtest.h"
+#include <gmock/gmock.h>
 
 #include <TFile.h>
 
@@ -294,6 +295,8 @@ struct DatasetGuard {
          x = i;
          t.Fill();
       }
+      TNamed o("tnamed","tnamed");
+      o.Write();
       f.Write();
    }
    DatasetGuard(const DatasetGuard &) = delete;
@@ -337,6 +340,21 @@ TEST_P(RDFRegressionTests, EmptyFileList)
       const std::string expected{"RDataFrame: empty list of input files."};
       EXPECT_EQ(e.what(), expected);
    }
+}
+
+TEST_P(RDFRegressionTests, NonExistingDataset)
+{
+   using ::testing::HasSubstr;
+   using ::testing::ThrowsMessage;
+   DatasetGuard dataset{"events", "NonExistingDataset.root"};
+
+   EXPECT_THAT([&dataset]() { ROOT::RDataFrame df("nonExisting", dataset.fFileName.c_str()); },
+               ThrowsMessage<std::invalid_argument>(
+                  HasSubstr("cannot find dataset \"nonExisting\" in file \"NonExistingDataset.root\"")));
+
+   EXPECT_THAT([&dataset]() { ROOT::RDataFrame df("tnamed", dataset.fFileName.c_str()); },
+               ThrowsMessage<std::invalid_argument>(HasSubstr(
+                  "unsupported data format for dataset \"tnamed\" in file \"NonExistingDataset.root\"")));
 }
 
 // run single-thread tests

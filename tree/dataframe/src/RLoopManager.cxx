@@ -458,8 +458,9 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
             v.second.reset();
       }
    } else {
-      throw std::invalid_argument(
-         "RDataFrame: unsupported data format for dataset. Make sure you use TTree or RNTuple.");
+      std::string errMsg = inFile->Get(datasetName[0].data()) ? "unsupported data format for" : "cannot find";
+      throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName[0]) + "\" in file \"" +
+                                  inFile->GetName() + "\".");
    }
 }
 
@@ -1257,8 +1258,10 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
       return CreateLMFromRNTuple(datasetName, fileNameGlob, defaultColumns);
    }
 
-   throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
-                               "\" in file \"" + inFile->GetName() + "\".");
+   std::string errMsg = inFile->Get(datasetName.data()) ? "unsupported data format for" : "cannot find";
+
+   throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName) + "\" in file \"" +
+                               inFile->GetName() + "\".");
 }
 
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
@@ -1277,8 +1280,10 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
       return CreateLMFromRNTuple(datasetName, fileNameGlobs, defaultColumns);
    }
 
-   throw std::invalid_argument("RDataFrame: unsupported data format for dataset \"" + std::string(datasetName) +
-                               "\" in file \"" + inFile->GetName() + "\".");
+   std::string errMsg = inFile->Get(datasetName.data()) ? "unsupported data format for" : "cannot find";
+
+   throw std::invalid_argument("RDataFrame: " + errMsg + " dataset \"" + std::string(datasetName) + "\" in file \"" +
+                               inFile->GetName() + "\".");
 }
 
 // outlined to pin virtual table
