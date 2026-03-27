@@ -391,6 +391,10 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    fSamples = spec.MoveOutSamples();
    fSampleMap.clear();
 
+   if (!inFile->Get(datasetName[0].data())) {
+      throw std::invalid_argument("RDataFrame: key name \"" + std::string(datasetName) +
+                                  "\" does not exist in file \"" + inFile->GetName() + "\".");
+   }
    const bool isTTree = inFile->Get<TTree>(datasetName[0].data());
    const bool isRNTuple = inFile->Get<ROOT::RNTuple>(datasetName[0].data());
 
@@ -1251,6 +1255,10 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, std::string_vi
 
    auto inFile = OpenFileWithSanityChecks(fileNameGlob);
 
+   if (!inFile->Get(datasetName[0].data())) {
+      throw std::invalid_argument("RDataFrame: key name \"" + std::string(datasetName) +
+                                  "\" does not exist in file \"" + inFile->GetName() + "\".");
+   }
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlob, defaultColumns, /*checkFile=*/false);
    } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
@@ -1271,6 +1279,10 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
 
    auto inFile = OpenFileWithSanityChecks(fileNameGlobs[0]);
 
+   if (!inFile->Get(datasetName[0].data())) {
+      throw std::invalid_argument("RDataFrame: key name \"" + std::string(datasetName) +
+                                  "\" does not exist in file \"" + inFile->GetName() + "\".");
+   }
    if (inFile->Get<TTree>(datasetName.data())) {
       return CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns, /*checkFile=*/false);
    } else if (inFile->Get<ROOT::RNTuple>(datasetName.data())) {
