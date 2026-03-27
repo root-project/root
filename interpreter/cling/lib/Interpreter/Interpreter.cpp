@@ -118,6 +118,7 @@ namespace cling {
       = m_Interpreter->m_IncrParser->endTransaction(m_Transaction);
     if (PRT.getPointer()) {
       assert(PRT.getPointer()==m_Transaction && "Ended different transaction?");
+      m_Interpreter->m_IncrParser->deregisterTransaction(*PRT.getPointer());
       m_Interpreter->m_IncrParser->commitTransaction(PRT);
     }
   }
