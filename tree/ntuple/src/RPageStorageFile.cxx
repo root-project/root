@@ -338,15 +338,15 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
       throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
 
    std::unique_ptr<ROOT::Internal::RRawFile> rawFile;
-   // For local TFiles, TDavixFile, and TNetXNGFile, we want to open a new RRawFile to take advantage of the faster
-   // reading. We check the exact class name to avoid classes inheriting in ROOT (for example TMemFile) or in
+   // For local TFiles, TDavixFile, TCurlFile, and TNetXNGFile, we want to open a new RRawFile to take advantage of the
+   // faster reading. We check the exact class name to avoid classes inheriting in ROOT (for example TMemFile) or in
    // experiment frameworks.
    std::string className = anchor.fFile->IsA()->GetName();
    auto url = anchor.fFile->GetEndpointUrl();
    auto protocol = std::string(url->GetProtocol());
    if (className == "TFile") {
       rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
-   } else if (className == "TDavixFile" || className == "TNetXNGFile") {
+   } else if (className == "TDavixFile" || className == "TCurlFile" || className == "TNetXNGFile") {
       rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl());
    } else {
       rawFile.reset(new ROOT::Internal::RRawFileTFile(anchor.fFile));
