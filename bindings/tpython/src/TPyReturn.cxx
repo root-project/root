@@ -9,6 +9,8 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
+#include "PythonLimitedAPI.h"
+
 // Bindings
 #include "CPyCppyy/API.h"
 #include "TPyReturn.h"
@@ -131,7 +133,7 @@ TPyReturn::operator const char *() const
    if (fPyObject == Py_None) // for void returns
       return 0;
 
-   const char *s = PyUnicode_AsUTF8(fPyObject);
+   const char *s = PyUnicode_AsUTF8AndSize(fPyObject, nullptr);
    if (PyErr_Occurred()) {
       PyErr_Print();
       return 0;
