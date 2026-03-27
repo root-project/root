@@ -69,11 +69,11 @@ The following people have contributed to this new version:
 
 ## Build System
 
-### Handling of the builtins
+### Moving from builtin dependencies to system-provided packages
 
-* The previously vendored builtins `freetype`, `zlib`, `lzma`, `zstd`, `lz4`, `libpng`, `giflib`, `libjpeg` are now fetched as source tarballs from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as the vast majority of ROOT's builtins, e.g. `xrootd`.
-* For the aforementioned packages and `openssl`, no automatic fall-back to their builtin versions is available any more: the user is informed of that with a helpful message. If desired, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
-* The general direction of the ROOT project is to become more and more reliant on system's packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism.
+* The general direction of the ROOT project is to become more and more reliant on system packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism. This allows for timely updates and reduces the size of the installed binaries.
+* The previously vendored builtins `freetype`, `zlib`, `lzma`, `zstd`, `lz4`, `libpng`, `giflib`, `libjpeg`, and `openssl` should be installed in the system if possible. ROOT will not automatically fall-back to their builtin versions if these are not found: the user is informed of that with a helpful message. If installing these dependencies in the system is not possible, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
+* For the builtin versions of `freetype`, `zlib`, `lzma`, `zstd`, `lz4`, `libpng`, `giflib`, `libjpeg`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins, e.g. `openssl` or `xrootd`.
 
 ## Core Libraries
 
