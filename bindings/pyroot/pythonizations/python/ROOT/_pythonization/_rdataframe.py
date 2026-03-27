@@ -549,6 +549,7 @@ def _MakeNumpyDataFrame(np_dict):
     using the keys as column names and the numpy arrays as data.
     """
     import ROOT
+    from ROOT.libROOTPythonizations import PyObjRefCounterAsStdAny
 
     if not isinstance(np_dict, dict):
         raise RuntimeError("Object not convertible: Python object is not a dictionary.")
@@ -558,42 +559,10 @@ def _MakeNumpyDataFrame(np_dict):
 
     args = (_make_name_rvec_pair(key, value) for key, value in np_dict.items())
 
-    # How we keep the NumPy arrays around as long as the RDataSource is alive:
-    #
-    # 1. Create a new dict with references to the NumPy arrays and take
-    #    ownership of it on the C++ side (Py_INCREF). We use a copy of the
-    #    original dict, because otherwise the caller of _MakeNumpyDataFrame
-    #    can invalidate our cache by mutating the np_dict after the call.
-    #
-    # 2. The C++ side gets a deleter std::function, calling Py_DECREF when the
-    #    RDataSource is destroyed.
+    # To keep the NumPy arrays around as long as the RDataSource is alive,
+    # create a new dict with references to the NumPy arrays, and pass a
+    # reference count to the C++ side via std::any. We use a copy of the
+    # original dict, because otherwise the caller of _MakeNumpyDataFrame can
+    # invalidate our cache by mutating the np_dict after the call.
 
-    def _ensure_deleter_declared():
-        # If the function is already known to ROOT, skip declaring again
-        try:
-            ROOT.__ROOT_Internal.MakePyDeleter
-            return
-        except AttributeError:
-            pass
-
-        ROOT.gInterpreter.Declare(
-            r"""
-    #include <Python.h>
-
-    namespace __ROOT_Internal {
-
-    inline std::function<void()> MakePyDeleter(std::uintptr_t ptr) {
-        PyObject *obj = reinterpret_cast<PyObject*>(ptr);
-        Py_INCREF(obj);
-        return [obj](){ Py_DECREF(obj); };
-    }
-
-    } // namespace __ROOT_Internal
-    """
-        )
-
-    _ensure_deleter_declared()
-
-    np_dict_copy = dict(**np_dict)
-    key = id(np_dict_copy)
-    return ROOT.Internal.RDF.MakeRVecDataFrame(ROOT.__ROOT_Internal.MakePyDeleter(key), *args)
+    return ROOT.Internal.RDF.MakeRVecDataFrame(PyObjRefCounterAsStdAny(dict(**np_dict)), *args)
