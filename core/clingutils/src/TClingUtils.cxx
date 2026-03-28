@@ -2049,6 +2049,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
+
+      finalString << "      static_assert(alignof(" << csymbol << "::value_type) <= 4096,\n";
+      finalString << "          \"Class with alignment strictly greater than 4096 are currently not supported in CollectionProxy. \"\n";
+      finalString << "          \"Please report this case to the developers\");\n";
       finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
 
       needCollectionProxy = true;

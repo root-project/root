@@ -80,6 +80,8 @@ public:
          }
       }
       switch (align) {
+         // When adding new cases here, also update the static_assert in TClingUtils.cxx
+         // to explicitly allow the new alignment and to update the error message accordingly.
          case 4096: fn(reinterpret_cast<Cont4096_t*>(obj), std::size_t(4096)); break;
          case 2048: fn(reinterpret_cast<Cont2048_t*>(obj), std::size_t(2048)); break;
          case 1024: fn(reinterpret_cast<Cont1024_t*>(obj), std::size_t(1024)); break;
@@ -92,7 +94,10 @@ public:
          case    8: fn(reinterpret_cast<Cont8_t   *>(obj), std::size_t(   8)); break;
          case    4: fn(reinterpret_cast<Cont4_t   *>(obj), std::size_t(   4)); break;
          case    2: fn(reinterpret_cast<Cont2_t   *>(obj), std::size_t(   2)); break;
-         default:   fn(reinterpret_cast<Cont1_t   *>(obj), std::size_t(   1)); break;
+         case    1: fn(reinterpret_cast<Cont1_t   *>(obj), std::size_t(   1)); break;
+         default:
+            Fatal("TEmulatedCollectionProxy::WithCont", "Unsupported alignment %zu for value class %s",
+                  align, vcl ? vcl->GetName() : "<unknown>");
       }
    }
 protected:
