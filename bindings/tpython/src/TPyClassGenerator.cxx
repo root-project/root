@@ -35,7 +35,7 @@ public:
    ~PyGILRAII() { PyGILState_Release(m_GILState); }
 };
 
-#ifdef Py_LIMITED_API
+#if (defined(Py_LIMITED_API) || PY_VERSION_HEX < 0x30d00f0)
 
 // Implementation of PyObject_GetOptionalAttr and
 // PyObject_GetOptionalAttrString from
