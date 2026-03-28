@@ -262,6 +262,14 @@ Now:
 Results may differ from previous ROOT versions for `n > 100` or `nSigma != 1`.
 The new implementation is statistically consistent and recommended.
 
+### Removal of global expensive object caching in RooFit
+
+The global “expensive object cache” used in RooFit to store numeric integrals and intermediate histogram results has been removed.
+
+While originally intended as a performance optimization, this mechanism could lead to **incorrect results due to cache collisions**: cached integrals or histograms created in one context (e.g. during plotting) could be reused unintentionally in a different context, even when the underlying configuration had changed.
+
+Given the risk of silently incorrect physics results, and the absence of known workflows that depend critically on this feature, this global caching mechanism has been removed. If you encounter performance regressions in workflows involving expensive integrals or convolutions, we encourage you to report your use case and performance regression as a GitHub issue, so that targeted and robust optimizations can be developed,
+
 ## RDataFrame
 
 - The message shown in ROOT 6.38 to inform users about change of default compression setting used by Snapshot (was 101 before 6.38, became 505 in 6.38) is now removed.

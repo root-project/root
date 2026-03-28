@@ -814,18 +814,6 @@ double RooRealIntegral::evaluate() const
 
   case Hybrid:
     {
-      // Cache numeric integrals in >1d expensive object cache
-      RooDouble const* cacheVal(nullptr) ;
-      if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
-        cacheVal = static_cast<RooDouble const*>(expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters()))  ;
-      }
-
-      if (cacheVal) {
-        retVal = *cacheVal ;
-   // std::cout << "using cached value of integral" << GetName() << std::endl ;
-      } else {
-
-
         // Find any function dependents that are AClean
         // and switch them temporarily to ADirty
         bool origState = inhibitDirty() ;
@@ -852,15 +840,6 @@ double RooRealIntegral::evaluate() const
         // Restore integral dependent values
         _intList.assign(_saveInt) ;
         _sumList.assign(_saveSum) ;
-
-        // Cache numeric integrals in >1d expensive object cache
-        if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
-          RooDouble* val = new RooDouble(retVal) ;
-          expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     std::cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
-        }
-
-      }
       break ;
     }
   case Analytic:

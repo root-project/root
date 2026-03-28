@@ -129,33 +129,16 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   // Create and fill cache
   cache = createCache(nset) ;
 
-  // Check if we have contents registered already in global expensive object cache
-  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  fillCacheObject(*cache) ;
 
-  if (histTmp) {
-
-    cache->hist()->reset() ;
-    cache->hist()->add(*histTmp) ;
-
-  } else {
-
-    fillCacheObject(*cache) ;
-
-    auto eoclone = new RooDataHist(*cache->hist()) ;
-    eoclone->removeSelfFromDir() ;
-    expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-
-  }
-
+  auto eoclone = new RooDataHist(*cache->hist()) ;
+  eoclone->removeSelfFromDir() ;
 
   // Store this cache configuration
   int code = _cacheMgr.setObj(nset,nullptr,(static_cast<RooAbsCacheElement*>(cache)),nullptr) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
        << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
-  if (histTmp) {
-    ccoutI(Caching) << " from preexisting content." ;
-  }
   ccoutI(Caching) << std::endl ;
 
   return cache ;

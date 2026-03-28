@@ -4,13 +4,17 @@
 
 #include <RooAbsReal.h>
 #include <RooArgList.h>
+#include <RooBreitWigner.h>
+#include <RooConstVar.h>
+#include <RooFFTConvPdf.h>
+#include <RooFit/ModelConfig.h>
 #include <RooGaussian.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
+#include <RooPlot.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
-#include <RooFit/ModelConfig.h>
 #include <RooWorkspace.h>
 
 #include <ROOT/StringUtils.hxx>
@@ -18,8 +22,6 @@
 #include <TSystem.h>
 
 #include <gtest/gtest.h>
-
-using namespace RooStats;
 
 /// ROOT-9777, cloning a RooWorkspace. The ModelConfig did not get updated
 /// when a workspace was cloned, and was hence pointing to a non-existing workspace.
@@ -41,7 +43,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 
       // now create the model config for this problem
       RooWorkspace ws{"ws"};
-      ModelConfig modelConfig("ModelConfig", &ws);
+      RooFit::ModelConfig modelConfig("ModelConfig", &ws);
       modelConfig.SetPdf(pdf);
       modelConfig.SetParametersOfInterest(RooArgSet(sigma));
       modelConfig.SetGlobalObservables(RooArgSet(mu));
@@ -62,7 +64,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
    if (verbose)
       w2->Print();
 
-   ModelConfig *mc = dynamic_cast<ModelConfig *>(w2->genobj("ModelConfig"));
+   auto *mc = dynamic_cast<RooFit::ModelConfig *>(w2->genobj("ModelConfig"));
    ASSERT_TRUE(mc) << "ModelConfig not retrieved.";
    mc->Print();
 
@@ -92,7 +94,7 @@ protected:
 
       // now create the model config for this problem
       RooWorkspace w("ws");
-      RooStats::ModelConfig modelConfig("ModelConfig", &w);
+      RooFit::ModelConfig modelConfig("ModelConfig", &w);
       modelConfig.SetPdf(pdf);
       modelConfig.SetParametersOfInterest(RooArgSet(sigma));
       modelConfig.SetGlobalObservables(RooArgSet(mu));
@@ -352,4 +354,58 @@ TEST(RooWorkspace, Issue_10282)
 
    ASSERT_NE(ws->set("myset"), nullptr);
    ASSERT_EQ(ws->set("myset")->size(), 0);
+}
+
+void createWorkspaceForIssue10577(RooWorkspace &ws, const double delta = 0)
+{
+   const double xmin = 986;
+   const double xmax = 1090;
+   const double normMin = xmin + delta;
+
+   RooRealVar x("x", "x", xmin, xmax);
+   // range in which the normalizations (integrals) are given
+   x.setRange("norm", normMin, xmax);
+   // to make RooFFTConvPdf provide values in broadest used range
+   x.setRange("cache", std::min(normMin, xmin), xmax);
+   ws.import(x);
+
+   RooRealVar width("gamma", "gamma", 4.266, "MeV/c^{2}");
+   RooRealVar mean("mean", "mean", 1019.461, 1015.0, 1025.0, "MeV/c^{2}");
+   RooRealVar sigma("sigma", "sigma", 1.0, 0.05, 2.5, "MeV/c^{2}");
+
+   RooGaussian det("det", "det", x, RooFit::RooConst(0), sigma);
+   RooBreitWigner bw("bw", "bw", x, mean, width);
+
+   x.setBins(10000, "cache"); // for FFT sampling
+   RooFFTConvPdf signal("signal", "signal", x, bw, det);
+   ws.import(signal, RooFit::RecycleConflictNodes());
+}
+
+// Reproducer from https://github.com/root-project/root/issues/10577
+TEST(RooWorkspace, Issue_10577)
+{
+   auto doPlot = [] {
+      RooWorkspace ws("workspace");
+      createWorkspaceForIssue10577(ws);
+
+      std::unique_ptr<RooPlot> frame{ws.var("x")->frame()};
+      ws.pdf("signal")->plotOn(frame.get());
+   };
+
+   auto doIntegral = [] {
+      RooWorkspace ws("workspace");
+      createWorkspaceForIssue10577(ws, -6);
+
+      RooRealVar &x = *ws.var("x");
+      std::unique_ptr<RooAbsReal> integralObject{
+         ws.pdf("signal")->createIntegral(x, RooFit::NormSet(x), RooFit::Range("norm"))};
+      const double integral = integralObject->getVal();
+      return integral;
+   };
+
+   const double expected = doIntegral();
+   doPlot();
+   const double afterPlot = doIntegral();
+
+   EXPECT_DOUBLE_EQ(afterPlot, expected);
 }
