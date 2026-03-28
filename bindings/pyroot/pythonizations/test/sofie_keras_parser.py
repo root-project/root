@@ -2,7 +2,6 @@ import unittest
 import os
 import shutil
 
-
 from parser_test_function import generate_and_test_inference
 from parser_test_function import is_channels_first_supported
 from generate_keras_functional import generate_keras_functional
@@ -21,6 +20,7 @@ models = [
     "BatchNorm",
     "Conv2D_channels_first",
     "Conv2D_channels_last",
+    "Conv2D_channels_first_padding_same_stride2",
     "Conv2D_padding_same",
     "Conv2D_padding_valid",
     "Dense",

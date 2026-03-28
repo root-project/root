@@ -32,6 +32,9 @@ def is_channels_first_supported() :
       #channel first is not supported on tensorflow CPU versions
       from keras import backend
       if backend.backend() == "tensorflow" :
+         import os
+         if os.environ.get("ROOT_TMVA_SOFIE_KERAS_CPU_CHANNELS_FIRST", "") == "1":
+            return True
          import tensorflow as tf
          if len(tf.config.list_physical_devices("GPU")) == 0:
             return False
