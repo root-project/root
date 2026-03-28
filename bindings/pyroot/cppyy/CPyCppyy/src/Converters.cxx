@@ -444,8 +444,21 @@ static inline PY_LONG_LONG CPyCppyy_PyLong_AsStrictLongLong(PyObject* pyobject)
 static inline bool CArraySetArg(
     PyObject* pyobject, CPyCppyy::Parameter& para, char tc, int size, bool check=true)
 {
+// Case of LowLevelView. In general, they also implement the buffer protocol,
+// but for views around nullptr or C-style arrays without size info the buffer
+// protocol implementation is incomplete and PyObject_GetBuffer will fail.
+    if (CPyCppyy::LowLevelView_Check(pyobject)) {
+        auto llview = ((CPyCppyy::LowLevelView*)pyobject);
+        if (llview->fBufInfo.itemsize != size || !strchr(llview->fBufInfo.format, tc)) {
+            PyErr_Format(PyExc_TypeError,
+                "could not convert argument to buffer or nullptr");
+            return false;
+        }
+
+        para.fValue.fVoidp = llview->get_buf();
+    }
 // general case of loading a C array pointer (void* + type code) as function argument
-    if (pyobject == CPyCppyy::gNullPtrObject || pyobject == CPyCppyy::gDefaultObject)
+    else if (pyobject == CPyCppyy::gNullPtrObject || pyobject == CPyCppyy::gDefaultObject)
         para.fValue.fVoidp = nullptr;
     else {
         Py_ssize_t buflen = CPyCppyy::Utility::GetBuffer(pyobject, tc, size, para.fValue.fVoidp, check);

@@ -513,6 +513,24 @@ class TestLOWLEVEL:
         g = cppyy.gbl
         assert g.test15_templated_arrays_gmpxx.vector.value_type[g.std.vector[g.mpz_class]]
 
+    def test16_empy_llview_as_argument(self):
+        """Verify that empty LowLevelViews from nullptr can be used for C++
+        function calls. This covers the problem that was reported in
+        https://github.com/root-project/root/issues/20687.
+        """
+        import cppyy
+
+        cppyy.cppdef("""
+        int *getCStyleArray() { return nullptr; }
+        void takeCStyleArray(int *arr) {}
+        """)
+
+        ll_view = cppyy.gbl.getCStyleArray()
+
+        assert(len(ll_view) == 0)
+
+        cppyy.gbl.takeCStyleArray(ll_view)
+
 
 class TestMULTIDIMARRAYS:
     def setup_class(cls):
