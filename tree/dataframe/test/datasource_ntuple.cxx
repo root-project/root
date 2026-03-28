@@ -68,6 +68,8 @@ protected:
       auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");
       fldVecElectron->push_back(*fldElectron);
       fldVecElectron->push_back(*fldElectron);
+      auto fldNElectron = std::make_unique<ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>>>("nElectron");
+      model->AddProjectedField(std::move(fldNElectron), [](const std::string &) { return "VecElectron"; });
       {
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNtplName, fFileName);
          ntuple->Fill();
@@ -84,7 +86,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    RNTupleDS ds(fNtplName, fFileName);
 
    auto colNames = ds.GetColumnNames();
-   ASSERT_EQ(15, colNames.size());
+   ASSERT_EQ(16, colNames.size());
 
    EXPECT_TRUE(ds.HasColumn("pt"));
    EXPECT_TRUE(ds.HasColumn("energy"));
@@ -96,12 +98,14 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron"));
    EXPECT_TRUE(ds.HasColumn("VecElectron.pt"));
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_VecElectron.pt"));
+   EXPECT_TRUE(ds.HasColumn("nElectron"));
    EXPECT_FALSE(ds.HasColumn("Address"));
 
    EXPECT_STREQ("std::string", ds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
    EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
+   EXPECT_STREQ("ROOT::RNTupleCardinality<std::uint64_t>", ds.GetTypeName("nElectron").c_str());
 
    try {
       ds.GetTypeName("Address");
@@ -140,6 +144,13 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
    EXPECT_EQ(*max_njets_jitted3, *max_njets_jitted2);
    EXPECT_EQ(2, *max_njets_jitted);
    EXPECT_EQ(3, *max_rvec2);
+}
+
+TEST_F(RNTupleDSTest, ProjectedCardinalityColumn)
+{
+   auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
+
+   EXPECT_EQ(2u, *df.Filter("nElectron == 2").Max("nElectron"));
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)
