@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <type_traits>
 #include <utility>
 
 // clang-format off
@@ -53,25 +54,30 @@ namespace ROOT::Internal::RDF {
 /// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
 /// `R_rdf_sizeof_jets` for a collection named `jets`.
 ///
-/// This field owns the collection offset field but instead of exposing the collection offsets it exposes
-/// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
-/// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
+/// This is similar to the RCardinalityField but it presents itself as an integer type.
+/// The template argument T must be an integral type.
+template <typename T>
 class RRDFCardinalityField final : public ROOT::RFieldBase {
+   static_assert(std::is_integral_v<T>, "T must be an integral type");
+
 protected:
    std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
       return std::make_unique<RRDFCardinalityField>(newName);
    }
-   void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
+   void ConstructValue(void *where) const final { *static_cast<T *>(where) = 0; }
 
    // We construct these fields and know that they match the page source
    void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
 public:
    RRDFCardinalityField(std::string_view name)
-      : ROOT::RFieldBase(name, "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */)
+      : ROOT::RFieldBase(name, ROOT::Internal::GetRenormalizedTypeName(typeid(T)), ROOT::ENTupleStructure::kPlain,
+                         false /* isSimple */)
    {
    }
+   RRDFCardinalityField(const RRDFCardinalityField &other) = delete;
+   RRDFCardinalityField &operator=(const RRDFCardinalityField &other) = delete;
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() override = default;
@@ -92,8 +98,8 @@ public:
       GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
    }
 
-   size_t GetValueSize() const final { return sizeof(std::size_t); }
-   size_t GetAlignment() const final { return alignof(std::size_t); }
+   std::size_t GetValueSize() const final { return sizeof(T); }
+   std::size_t GetAlignment() const final { return alignof(T); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final
@@ -101,7 +107,7 @@ public:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *static_cast<std::size_t *>(to) = size;
+      *static_cast<T *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -110,7 +116,7 @@ public:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
-      *static_cast<std::size_t *>(to) = size;
+      *static_cast<T *>(to) = size;
    }
 };
 
@@ -337,7 +343,7 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
       if (info.fNRepetitions > 0) {
          cardinalityField = std::make_unique<ROOT::Internal::RDF::RArraySizeField>(name, info.fNRepetitions);
       } else {
-         cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField>(name);
+         cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::size_t>>(name);
       }
       cardinalityField->SetOnDiskId(info.fFieldId);
    }

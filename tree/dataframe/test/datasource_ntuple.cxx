@@ -1,4 +1,5 @@
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RVec.hxx>
 
@@ -14,6 +15,7 @@
 #include "ClassWithArrays.h"
 
 #include <limits>
+#include <typeinfo>
 
 #include <TFile.h>
 
@@ -103,7 +105,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 
    EXPECT_STREQ("std::string", ds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
-   EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
+   EXPECT_EQ(ROOT::Internal::GetRenormalizedTypeName(typeid(std::size_t)), ds.GetTypeName("R_rdf_sizeof_jets"));
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
    EXPECT_STREQ("ROOT::RNTupleCardinality<std::uint64_t>", ds.GetTypeName("nElectron").c_str());
 
