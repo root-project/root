@@ -17,7 +17,7 @@ int simpleImages()
    h.Draw();
    // We test png and jpeg only. The creation of the gifs 
    // is affected by an issue on some platforms. See #21561
-   std::vector<std::string> fileNames{"f.jpeg", "f.png"};
+   std::vector<std::string> fileNames{"f.jpeg", "f.png", "f.gif"};
    ImagesRAII iraii(fileNames);
    for (auto &&fileName : fileNames) {
       c.SaveAs(fileName.c_str());
