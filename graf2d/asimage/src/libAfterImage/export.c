@@ -1120,6 +1120,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		if (outfile)
 		{
 #if (GIFLIB_MAJOR>=5)
+			errcode=E_GIF_SUCCEEDED;
 			gif = EGifOpenFileHandle(fileno(outfile), &errcode);
 			if (errcode != E_GIF_SUCCEEDED)
 				ASIM_PrintGifError(errcode);
