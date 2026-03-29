@@ -107,7 +107,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
    EXPECT_EQ(ROOT::Internal::GetRenormalizedTypeName(typeid(std::size_t)), ds.GetTypeName("R_rdf_sizeof_jets"));
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
-   EXPECT_STREQ("ROOT::RNTupleCardinality<std::uint64_t>", ds.GetTypeName("nElectron").c_str());
+   EXPECT_STREQ("std::uint64_t", ds.GetTypeName("nElectron").c_str());
 
    try {
       ds.GetTypeName("Address");
@@ -153,6 +153,8 @@ TEST_F(RNTupleDSTest, ProjectedCardinalityColumn)
    auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
 
    EXPECT_EQ(2u, *df.Filter("nElectron == 2").Max("nElectron"));
+
+   EXPECT_EQ(2u, *df.Filter([](std::uint64_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)

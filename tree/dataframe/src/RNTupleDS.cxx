@@ -331,6 +331,18 @@ void ROOT::RDF::RNTupleDS::AddField(const ROOT::RNTupleDescriptor &desc, std::st
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
+   if (const auto cardinalityField = dynamic_cast<const ROOT::RCardinalityField *>(valueField.get())) {
+      // Cardinality fields in RDataFrame are presented as integers
+      if (cardinalityField->As32Bit()) {
+         valueField =
+            std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint32_t>>(fieldDesc.GetFieldName());
+      } else if (cardinalityField->As64Bit()) {
+         valueField =
+            std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint64_t>>(fieldDesc.GetFieldName());
+      } else {
+         R__ASSERT(false && "cardinality field stored with an unexpected integer type");
+      }
+   }
    valueField->SetOnDiskId(fieldId);
    for (auto &f : *valueField) {
       f.SetOnDiskId(desc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
