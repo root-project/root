@@ -68,8 +68,8 @@ protected:
       auto fldElectron = model->MakeField<Electron>("electron");
       fldElectron->pt = 137.0;
       auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");
-      fldVecElectron->push_back(*fldElectron);
-      fldVecElectron->push_back(*fldElectron);
+      for (int i = 0; i < 128; ++i)
+         fldVecElectron->push_back(*fldElectron);
       auto fldNElectron = std::make_unique<ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>>>("nElectron");
       model->AddProjectedField(std::move(fldNElectron), [](const std::string &) { return "VecElectron"; });
       {
@@ -152,17 +152,21 @@ TEST_F(RNTupleDSTest, ProjectedCardinalityColumn)
 {
    auto df = ROOT::RDF::FromRNTuple(fNtplName, fFileName);
 
-   EXPECT_EQ(2u, *df.Filter("nElectron == 2").Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter("nElectron == 128").Max("nElectron"));
 
-   EXPECT_EQ(2u, *df.Filter([](std::uint64_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::int32_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::uint32_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::int16_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::uint16_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::int8_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](std::uint8_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](char x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
-   EXPECT_EQ(2u, *df.Filter([](bool x) { return x; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint64_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::int32_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint32_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::int16_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint16_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](std::uint8_t x) { return x == 128; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(128u, *df.Filter([](bool x) { return x; }, {"nElectron"}).Max("nElectron"));
+   try {
+      *df.Filter([](std::int8_t x) { return x == 0; }, {"nElectron"}).Count();
+      FAIL() << "integer overflow should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("integer overflow"));
+   }
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)
@@ -206,7 +210,7 @@ static void ReadTest(const std::string &name, const std::string &fname)
    EXPECT_TRUE(All(rvec->at(0) == ROOT::RVecI{1, 2, 3}));
    EXPECT_TRUE(All(vectorasrvec->at(0) == ROOT::RVecF{1.f, 2.f}));
    EXPECT_FLOAT_EQ(137.0, sumElectronPt.GetValue());
-   EXPECT_FLOAT_EQ(2. * 137.0, sumVecElectronPt.GetValue());
+   EXPECT_FLOAT_EQ(128. * 137.0, sumVecElectronPt.GetValue());
 }
 
 static void ChainTest(const std::string &name, const std::string &fname)

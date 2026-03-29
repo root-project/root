@@ -27,6 +27,7 @@
 #include <TSystem.h>
 
 #include <cassert>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -95,6 +96,16 @@ template <typename T>
 class RRDFCardinalityField final : public RRDFCardinalityFieldBase {
    static_assert(std::is_integral_v<T>, "T must be an integral type");
 
+   inline void CheckSize(ROOT::NTupleSize_t size) const
+   {
+      if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, std::uint64_t>)
+         return;
+      if (size > std::numeric_limits<T>::max()) {
+         throw RException(R__FAIL(std::string("integer overflow in field ") + GetFieldName() +
+                                  ". Please read the column with a larger-sized integral type."));
+      }
+   }
+
 protected:
    std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -122,6 +133,7 @@ public:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      CheckSize(size);
       *static_cast<T *>(to) = size;
    }
 
@@ -131,6 +143,7 @@ public:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
+      CheckSize(size);
       *static_cast<T *>(to) = size;
    }
 };
