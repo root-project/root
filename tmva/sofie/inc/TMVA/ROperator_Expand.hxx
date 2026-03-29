@@ -27,6 +27,7 @@ private:
 
    bool fInitialized = false;
    bool fInitializedShape = false;
+   bool fDimShapeValues = false;
    bool fInitBroadcast = false;
 
 public:
@@ -63,7 +64,7 @@ public:
       } else if (model.IsShapeTensor(fNShape)) {
          // case input shape is a shape tensor
          fShapeDim = model.GetShapeTensorValues(fNShape);
-         fInitializedShape = true;
+         fDimShapeValues = true;
       } else {
          // assume shape of input shape is known (size is 1)
          auto shapeOfInputShape = model.GetTensorShape(fNShape);
@@ -112,11 +113,7 @@ public:
          }
       } else {
          // // case input is not initialized
-         // if (shapeX.empty() && shapeDim.empty()) {
-
-         // }
-         // if (fInitializedShape)
-            model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+         model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose()) {
@@ -145,17 +142,27 @@ public:
       std::stringstream out;
       out << SP << "\n//------ Expand " << opName << " --> " << ConvertDimShapeToString(fShapeY) << "\n";
       // need to declare shape parameters for non initialized shapes
-      if (!fInitializedShape) {
+      if (!fInitializedShape && !fDimShapeValues) {
          for (size_t i = 0; i < fShapeDim.size(); i++) {
             out << SP << "size_t " << fShapeDim[i] << " = " << "tensor_" << fNShape << "[" << i << "];\n";
          }
       }
       // No need to broadcast A if it's an initialized tensor or shapes are the same
-      if (!fInitialized && fShapeX != fShapeY) {
-         out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
+      auto lengthX = ConvertDimShapeToLength(fShapeX);
+      auto lengthY = ConvertDimShapeToLength(fShapeY);
+      if (lengthX != lengthY) {
+         out << SP << "if ( (" << lengthX << ") < (" << lengthY << ") ) {\n";
+         out << SP << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast(tensor_" << fNX << ", " << ConvertDimShapeToString(fShapeX) << ", " << ConvertDimShapeToString(fShapeY)
                    << ", tensor_"<<fNY<<");\n";
+         out << SP << "} else {\n";
+         out << SP << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + (" << lengthX << "), tensor_" << fNY << ");\n";
+         out << SP << "}\n";
+      } else {
+         // case of equal length even if shapes are dims
+         out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + (" << lengthX << "), tensor_" << fNY << ");\n";
       }
+
       return out.str();
    }
 

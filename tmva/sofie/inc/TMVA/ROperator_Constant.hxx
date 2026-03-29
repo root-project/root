@@ -124,8 +124,7 @@ public:
             std::cout << "adding constant tensor " << fNY << " with shape " << ConvertShapeToString(fShape)
             << " and values [";
             if (!fIsConstantOfShape) {
-               for (auto v : fValues) std::cout << " " << v;
-               std::cout << "]" << std::endl;
+               ConvertValuesToString(fValues, 10);   // add maximum printing values
             } else {  // for constant of shape is enough to print one value
                std::cout << "... " << fValues[0] << " ....]" << std::endl;
             }

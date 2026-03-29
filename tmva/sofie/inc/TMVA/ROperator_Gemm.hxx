@@ -342,10 +342,10 @@ namespace SOFIE{
             std::vector<Dim> sA(fShapeA.begin(), fShapeA.begin()+dimA-2);
             std::vector<Dim> sB(fShapeB.begin(), fShapeB.begin()+dimB-2);
             std::vector<Dim> mA = {fShapeA[dimA-2], fShapeA[dimA-1]};
-            std::vector<Dim> mB = {fShapeA[dimB-2], fShapeB[dimB-1]};
+            std::vector<Dim> mB = {fShapeB[dimB-2], fShapeB[dimB-1]};
             lengthExtra_A = ConvertDimShapeToLength(sA);
             lengthExtra_B = ConvertDimShapeToLength(sB);
-            // size of A performing matmul is m*k and n*k for B
+            // if A ( b, m, k) and B (b, k, n) these are the strides of A and B ( m*k for A and n*k for B )
             increment_A = ConvertDimShapeToLength(mA);
             increment_B = ConvertDimShapeToLength(mB);
          }
@@ -358,7 +358,8 @@ namespace SOFIE{
             if (extraB)
                out << SP << "size_t " << opName << "_B_offset = 0;\n";
             out << SP << "for (size_t i = 0; i < " << lengthExtra_Y << "; i++){\n";
-            out << SP;
+         } else {
+            out << SP << "{\n";
          }
          // do the bias broadcasting
          if (fBroadcastBias) {
@@ -366,8 +367,9 @@ namespace SOFIE{
             std::vector<size_t> sC =  {fShapeC[dimC-2], fShapeC[dimC-1]};
 
             fAttrBeta = 1.;
-            out << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
-            out << SP << SP << "size_t y_index = ";
+            out << SP << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
+            if (doStackMul) out << SP;
+            out << SP << SP << SP << "size_t y_index = ";
             if (doStackMul) // add offset in caseof stack multiplications (not sure if bias is present in these cases)
                out <<  opName << "_y_offset + ";
             if (sY[1].GetVal() != "1")
@@ -375,7 +377,7 @@ namespace SOFIE{
             else
                out << "j;\n";
 
-            out << SP << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
+            out << SP << SP << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
             std::string bias_index;
             if (sC[0] == 1 && sC[1] == sY[1].dim)
                bias_index = "k";
@@ -387,14 +389,14 @@ namespace SOFIE{
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertShapeToString(fShapeC));
             }
 
-            out << SP << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
+            out << SP << SP << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
+            out << SP << SP << SP << "}\n";
             out << SP << SP << "}\n";
-            out << SP << "}\n";
          }
 
          if (fType == "float"){
 
-            out << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+            out << SP << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
              << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_y_offset";
             out <<   ", "
@@ -416,11 +418,6 @@ namespace SOFIE{
                out << "nullptr";
             out << ");\n";
 
-            if(fActivation == EActivationType::RELU){
-               out << SP << "for (int id = 0; id < " << ConvertDimShapeToLength(fShapeY) << " ; id++){\n";
-               out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
-               out << SP << "}\n";
-            }
          }
 
          if (doStackMul) {
@@ -429,8 +426,15 @@ namespace SOFIE{
                out << SP << SP << opName << "_A_offset += " << increment_A << ";\n";
             if (lengthExtra_B != "1")
                out << SP << SP << opName << "_B_offset += " << increment_B << ";\n";
+         }
+         out << SP << "}\n"; // end of loop on the stacked multiplication or close scope
 
-            out << "}\n"; // end of loop on the stacked multiplications
+         // fuse with Relu
+         if(fActivation == EActivationType::RELU){
+               out << SP << "//--- applying RELU to output\n";
+               out << SP << "for (int id = 0; id < " << ConvertDimShapeToLength(fShapeY) << " ; id++){\n";
+               out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
+               out << SP << "}\n";
          }
 
          return out.str();

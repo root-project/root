@@ -224,10 +224,10 @@ std::string ConvertValToString(T value) {
 
 // convert list of values in a string taking into account the precision
 template<class T>
-std::string ConvertValuesToString(size_t n, const T * data) {
+std::string ConvertValuesToString(size_t n, const T * data, size_t maxprint = -1) {
    std::stringstream ret;
    ret << "{ ";
-   for (size_t i = 0; i < n; i++) {
+   for (size_t i = 0; i < std::min(n,maxprint); i++) {
       if (std::is_floating_point_v<T>)
          ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
       else
@@ -235,13 +235,14 @@ std::string ConvertValuesToString(size_t n, const T * data) {
          ret << (int64_t) data[i];
 
       if (i < n-1) ret << ", ";
+      if (i < n-1 && i == maxprint-1) ret << "..... ";
    }
    ret << "}";
    return ret.str();
 }
 template<class T>
-std::string ConvertValuesToString(const std::vector<T> & data) {
-  return ConvertValuesToString(data.size(), data.data());
+std::string ConvertValuesToString(const std::vector<T> & data, size_t maxprint = 5) {
+  return ConvertValuesToString(data.size(), data.data(), maxprint);
 }
 
 class InitializedTensor {
