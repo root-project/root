@@ -954,6 +954,21 @@ TEST(ONNX, Pow_broadcast){
 
 }
 
+TEST(ONNX, ReduceMean_kFirst)
+{
+   // ReduceMean over axis=0 (kFirst path) on a [3,4] tensor.
+   std::vector<float> input(12);
+   std::iota(input.begin(), input.end(), 0.0f);
+   std::vector<float> correct_output = {4, 5, 6, 7};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMean_kFirst", input);
+
+   EXPECT_EQ(output.size(), correct_output.size());
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
    TEST(ONNX, ReduceProd){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
