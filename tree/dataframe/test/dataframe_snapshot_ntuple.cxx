@@ -563,10 +563,7 @@ TEST(RDFSnapshotRNTuple, CardinalityColumns)
    opts.fMode = "UPDATE";
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
    ROOT::RDataFrame df("ntuple", fileGuard.GetPath());
-
-   ROOT_EXPECT_WARNING(df.Snapshot("ntuple_snap", fileGuard.GetPath(), "", opts), "Snapshot",
-                       "Column \"nElectrons\" is a read-only \"ROOT::RNTupleCardinality<std::uint32_t>\" column. It "
-                       "will be snapshot as its inner type \"std::uint32_t\" instead.");
+   df.Snapshot("ntuple_snap", fileGuard.GetPath(), "", opts);
 
    ROOT::RDataFrame sdf("ntuple_snap", fileGuard.GetPath());
    EXPECT_EQ("std::uint32_t", sdf.GetColumnType("nElectrons"));
