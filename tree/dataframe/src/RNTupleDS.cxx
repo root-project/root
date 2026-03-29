@@ -50,37 +50,29 @@
 // clang-format on
 
 namespace ROOT::Internal::RDF {
-/// An artificial field that transforms an RNTuple column that contains the offset of collections into
-/// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
-/// `R_rdf_sizeof_jets` for a collection named `jets`.
-///
-/// This is similar to the RCardinalityField but it presents itself as an integer type.
-/// The template argument T must be an integral type.
-template <typename T>
-class RRDFCardinalityField final : public ROOT::RFieldBase {
-   static_assert(std::is_integral_v<T>, "T must be an integral type");
-
+class RRDFCardinalityFieldBase : public ROOT::RFieldBase {
 protected:
-   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RRDFCardinalityField>(newName);
-   }
-   void ConstructValue(void *where) const final { *static_cast<T *>(where) = 0; }
-
    // We construct these fields and know that they match the page source
    void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
-public:
-   RRDFCardinalityField(std::string_view name)
-      : ROOT::RFieldBase(name, ROOT::Internal::GetRenormalizedTypeName(typeid(T)), ROOT::ENTupleStructure::kPlain,
-                         false /* isSimple */)
+   RRDFCardinalityFieldBase(std::string_view name, std::string_view type)
+      : ROOT::RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
    {
    }
-   RRDFCardinalityField(const RRDFCardinalityField &other) = delete;
-   RRDFCardinalityField &operator=(const RRDFCardinalityField &other) = delete;
-   RRDFCardinalityField(RRDFCardinalityField &&other) = default;
-   RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
-   ~RRDFCardinalityField() override = default;
+
+   // Field is only used for reading
+   void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final
+   {
+      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+   }
+
+public:
+   RRDFCardinalityFieldBase(const RRDFCardinalityFieldBase &other) = delete;
+   RRDFCardinalityFieldBase &operator=(const RRDFCardinalityFieldBase &other) = delete;
+   RRDFCardinalityFieldBase(RRDFCardinalityFieldBase &&other) = default;
+   RRDFCardinalityFieldBase &operator=(RRDFCardinalityFieldBase &&other) = default;
+   ~RRDFCardinalityFieldBase() override = default;
 
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
@@ -91,12 +83,35 @@ public:
                                                     {});
       return representations;
    }
-   // Field is only used for reading
-   void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final
+};
+
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
+/// `R_rdf_sizeof_jets` for a collection named `jets`.
+///
+/// This is similar to the RCardinalityField but it presents itself as an integer type.
+/// The template argument T must be an integral type.
+template <typename T>
+class RRDFCardinalityField final : public RRDFCardinalityFieldBase {
+   static_assert(std::is_integral_v<T>, "T must be an integral type");
+
+protected:
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+      return std::make_unique<RRDFCardinalityField>(newName);
    }
+   void ConstructValue(void *where) const final { *static_cast<T *>(where) = 0; }
+
+public:
+   RRDFCardinalityField(std::string_view name)
+      : RRDFCardinalityFieldBase(name, ROOT::Internal::GetRenormalizedTypeName(typeid(T)))
+   {
+   }
+   RRDFCardinalityField(const RRDFCardinalityField &other) = delete;
+   RRDFCardinalityField &operator=(const RRDFCardinalityField &other) = delete;
+   RRDFCardinalityField(RRDFCardinalityField &&other) = default;
+   RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
+   ~RRDFCardinalityField() override = default;
 
    std::size_t GetValueSize() const final { return sizeof(T); }
    std::size_t GetAlignment() const final { return alignof(T); }
@@ -150,7 +165,8 @@ private:
 
 public:
    RArraySizeField(std::string_view name, std::size_t arrayLength)
-      : ROOT::RFieldBase(name, "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */),
+      : ROOT::RFieldBase(name, ROOT::Internal::GetRenormalizedTypeName(typeid(std::size_t)),
+                         ROOT::ENTupleStructure::kPlain, false /* isSimple */),
         fArrayLength(arrayLength)
    {
    }
@@ -491,10 +507,10 @@ ROOT::RFieldBase *ROOT::RDF::RNTupleDS::GetFieldWithTypeChecks(std::string_view 
    // The user explicitly requested a type
    const auto requestedType = ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
 
-   // If the field corresponding to the provided name is not a cardinality column and the requested type is different
-   // from the proto field that was created when the data source was constructed, we first have to create an
-   // alternative proto field for the column reader. Otherwise, we can directly use the existing proto field.
-   if (fieldName.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
+   // If the requested type is different from the proto field that was created when the data source was constructed,
+   // we first have to create an alternative proto field for the column reader.
+   // Otherwise, we can directly use the existing proto field.
+   if (requestedType != fColumnTypes[index]) {
       auto &altProtoFields = fAlternativeProtoFields[index];
 
       // If we can find the requested type in the registered alternative protofields, return the corresponding field
@@ -507,12 +523,41 @@ ROOT::RFieldBase *ROOT::RDF::RNTupleDS::GetFieldWithTypeChecks(std::string_view 
       }
 
       // Otherwise, create a new protofield and register it in the alternatives before returning
-      auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(std::string(fieldName), requestedType);
-      if (!newAltProtoFieldOrException) {
-         throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
-                                  "\" for column \"" + std::string(fieldName) + "\"");
+      std::unique_ptr<RFieldBase> newAltProtoField;
+      const std::string strName = std::string(fieldName);
+      if (dynamic_cast<ROOT::Internal::RDF::RRDFCardinalityFieldBase *>(fProtoFields[index].get())) {
+         if (requestedType == "bool") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<bool>>(strName);
+         } else if (requestedType == "char") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<char>>(strName);
+         } else if (requestedType == "std::int8_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::int8_t>>(strName);
+         } else if (requestedType == "std::uint8_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint8_t>>(strName);
+         } else if (requestedType == "std::int16_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::int16_t>>(strName);
+         } else if (requestedType == "std::uint16_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint16_t>>(strName);
+         } else if (requestedType == "std::int32_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::int32_t>>(strName);
+         } else if (requestedType == "std::uint32_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint32_t>>(strName);
+         } else if (requestedType == "std::int64_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::int64_t>>(strName);
+         } else if (requestedType == "std::uint64_t") {
+            newAltProtoField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::uint64_t>>(strName);
+         } else {
+            throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
+                                     "\" for column \"" + std::string(fieldName) + "\"");
+         }
+      } else {
+         auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(strName, requestedType);
+         if (!newAltProtoFieldOrException) {
+            throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
+                                     "\" for column \"" + std::string(fieldName) + "\"");
+         }
+         newAltProtoField = newAltProtoFieldOrException.Unwrap();
       }
-      auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
       newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
       auto *newField = newAltProtoField.get();
       altProtoFields.emplace_back(std::move(newAltProtoField));

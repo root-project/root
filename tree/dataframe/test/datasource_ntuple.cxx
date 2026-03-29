@@ -155,6 +155,14 @@ TEST_F(RNTupleDSTest, ProjectedCardinalityColumn)
    EXPECT_EQ(2u, *df.Filter("nElectron == 2").Max("nElectron"));
 
    EXPECT_EQ(2u, *df.Filter([](std::uint64_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::int32_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::uint32_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::int16_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::uint16_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::int8_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](std::uint8_t x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](char x) { return x == 2; }, {"nElectron"}).Max("nElectron"));
+   EXPECT_EQ(2u, *df.Filter([](bool x) { return x; }, {"nElectron"}).Max("nElectron"));
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)
