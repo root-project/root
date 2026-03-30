@@ -378,6 +378,13 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 }
 
 //______________________________________________________________________________
+void TGQuartz::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLineW(wctxt, 2, &xy[i]);
+}
+
+//______________________________________________________________________________
 void  TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
 {
    auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
