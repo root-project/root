@@ -9,7 +9,7 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 #include "TPyClassGenerator.h"
 #include "TPyReturn.h"

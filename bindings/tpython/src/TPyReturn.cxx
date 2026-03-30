@@ -9,7 +9,7 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 // Bindings
 #include "CPyCppyy/API.h"

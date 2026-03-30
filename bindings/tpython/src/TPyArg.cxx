@@ -10,7 +10,7 @@
 //  *************************************************************************/
 
 // Bindings
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 #include "TPyArg.h"
 

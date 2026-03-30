@@ -9,7 +9,7 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 // Bindings
 // CPyCppyy.h must be go first, since it includes Python.h, which must be
