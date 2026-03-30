@@ -109,16 +109,18 @@ foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE LIBRARIES
 endforeach()
 
 # Request explicit user opt-in for required dependencies
-ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype)
-ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
-ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
+if(asimage)
+  ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype)
+  ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
+  ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
+  # We cannot PNG here because while searching PNG, CMake will also find ZLIB.
+  # If found, CMake will define the default variables and target: 
+  # see https://cmake.org/cmake/help/latest/module/FindZLIB.html).
+  # For this reason, the check has to be put below, after ZLIB is searched for.
+  #ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+endif()
 ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
 ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
-# We cannot PNG here because while searching PNG, CMake will also find ZLIB.
-# If found, CMake will define the default variables and target: 
-# see https://cmake.org/cmake/help/latest/module/FindZLIB.html).
-# For this reason, the check has to be put below, after ZLIB is searched for.
-#ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
 ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
 
@@ -170,9 +172,11 @@ else()
   message(STATUS "Zlib detected")
 endif()
 
-# This check can be added only now because of the reasons explained above, where all
-# other required dependencies are checked.
-ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+if(asimage)
+  # This check can be added only now because of the reasons explained above, where all
+  # other required dependencies are checked.
+  ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+endif()
 
 #---Check for nlohmann/json.hpp---------------------------------------------------------
 if(NOT builtin_nlohmannjson)
