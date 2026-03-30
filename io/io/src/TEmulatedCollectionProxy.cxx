@@ -134,12 +134,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // since under-neath is actually an array.
 
          auto alignedSize = [](size_t in, TClass *align_cl) {
-            constexpr size_t kSizeOfPtr = sizeof(void*);
-            size_t align = align_cl ? align_cl->GetClassAlignment() : kSizeOfPtr;
-            return in + (align - in%align)%align;
+            size_t align = align_cl ? align_cl->GetClassAlignment() : alignof(std::max_align_t);
+            return in + (align - in % align) % align;
          };
-         struct GenerateTemporaryTEnum
-         {
+         struct GenerateTemporaryTEnum {
             TEnum *fTemporaryTEnum = nullptr;
 
             GenerateTemporaryTEnum(UInt_t typecase, const std::string &enumname)
