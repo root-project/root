@@ -119,21 +119,22 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 //////////// internal classes & structures (very private) ////////////////
 
 struct XWindow_t {
-   Int_t    open;                 // 1 if the window is open, 0 if not
-   Int_t    double_buffer;        // 1 if the double buffer is on, 0 if not
-   Int_t    ispixmap;             // 1 if pixmap, 0 if not
-   GdkDrawable *drawing;          // drawing area, equal to window or buffer
-   GdkDrawable *window;           // win32 window
-   GdkDrawable *buffer;           // pixmap used for double buffer
-   UInt_t   width;                // width of the window
-   UInt_t   height;               // height of the window
-   Int_t    clip;                 // 1 if the clipping is on
-   Int_t    xclip;                // x coordinate of the clipping rectangle
-   Int_t    yclip;                // y coordinate of the clipping rectangle
-   UInt_t   wclip;                // width of the clipping rectangle
-   UInt_t   hclip;                // height of the clipping rectangle
-   ULong_t *new_colors;           // new image colors (after processing)
-   Int_t    ncolors;              // number of different colors
+   Int_t    open = 0;             ///< 1 if the window is open, 0 if not
+   Int_t    shared = 0;           ///< 1 if Qt window
+   Int_t    double_buffer = 0;    ///< 1 if the double buffer is on, 0 if not
+   Int_t    ispixmap = 0;         ///< 1 if pixmap, 0 if not
+   GdkDrawable *drawing = nullptr;///< drawing area, equal to window or buffer
+   GdkDrawable *window = nullptr; ///< win32 window
+   GdkDrawable *buffer = nullptr; ///< pixmap used for double buffer
+   UInt_t   width = 0;            ///< width of the window
+   UInt_t   height = 0;           ///< height of the window
+   Int_t    clip = 0;             ///< 1 if the clipping is on
+   Int_t    xclip = 0;            ///< x coordinate of the clipping rectangle
+   Int_t    yclip = 0;            ///< y coordinate of the clipping rectangle
+   UInt_t   wclip = 0;            ///< width of the clipping rectangle
+   UInt_t   hclip = 0;            ///< height of the clipping rectangle
+   ULong_t *new_colors = nullptr; ///< new image colors (after processing)
+   Int_t    ncolors = 0;          ///< number of different colors
 };
 
 
@@ -810,7 +811,6 @@ TGWin32MainThread::TGWin32MainThread()
 TGWin32::TGWin32(): fRefreshTimer(0)
 {
    fScreenNumber = 0;
-   fWindows      = 0;
    fColors       = 0;
 }
 
@@ -829,8 +829,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fCharacterUpX = 1;
    fCharacterUpY = 1;
    fDrawMode = kCopy;
-   fWindows = 0;
-   fMaxNumberOfWindows = 10;
    fXEvent = 0;
    fFillColorModified = kFALSE;
    fFillStyleModified = kFALSE;
@@ -838,9 +836,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fPenModified = kFALSE;
    fMarkerStyleModified = kFALSE;
    fMarkerColorModified = kFALSE;
-
-   fWindows = (XWindow_t*) TStorage::Alloc(fMaxNumberOfWindows*sizeof(XWindow_t));
-   for (int i = 0; i < fMaxNumberOfWindows; i++) fWindows[i].open = 0;
 
    fColors = new TExMap;
 
@@ -920,9 +915,6 @@ void TGWin32::CloseDisplay()
       gSplash = 0;
       delete delSplash;
    }
-
-   if (fWindows) TStorage::Dealloc(fWindows);
-   fWindows = 0;
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
 
@@ -1567,7 +1559,8 @@ void TGWin32::SetTextSize(Float_t textsize)
 
 void TGWin32::ClearWindow()
 {
-   if (!fWindows) return;
+   if (!gCws)
+      return;
 
    if (!gCws->ispixmap && !gCws->double_buffer) {
       gdk_window_set_background(gCws->drawing, (GdkColor *) & GetColor(0).color);
@@ -1586,7 +1579,7 @@ void TGWin32::ClearWindow()
 
 void TGWin32::ClosePixmap()
 {
-   CloseWindow1();
+   CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1594,20 +1587,12 @@ void TGWin32::ClosePixmap()
 
 void TGWin32::CloseWindow()
 {
-   CloseWindow1();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delete current window.
-
-void TGWin32::CloseWindow1()
-{
-   int wid;
-
-   if (gCws->ispixmap) {
-      gdk_pixmap_unref(gCws->window);
-   } else {
-      gdk_window_destroy(gCws->window, kTRUE);
+   if (!gCws->shared) {
+      if (gCws->ispixmap) {
+         gdk_pixmap_unref(gCws->window);
+      } else {
+         gdk_window_destroy(gCws->window, kTRUE);
+      }
    }
 
    if (gCws->buffer) {
@@ -1618,22 +1603,28 @@ void TGWin32::CloseWindow1()
                                (GdkColor *)gCws->new_colors, gCws->ncolors);
 
       delete [] gCws->new_colors;
-      gCws->new_colors = 0;
+      gCws->new_colors = nullptr;
    }
 
    GdiFlush();
    gCws->open = 0;
 
-   if (!fWindows) return;
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second.get() == gCws) {
+         fWindows.erase(iter);
+         gCws = nullptr;
+         break;
+      }
+
+   if (gCws)
+      Fatal("CloseWindow", "Not found gCws in list of windows");
 
    // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (fWindows[wid].open) {
-         gCws = &fWindows[wid];
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second && iter->second->open) {
+         gCws = iter->second.get();
          return;
       }
-   }
-   gCws = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1641,9 +1632,10 @@ void TGWin32::CloseWindow1()
 
 void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0)
+      return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gdk_window_copy_area(gCws->drawing, gGCpxmp, xpos, ypos, gTws->drawing,
                         0, 0, gTws->width, gTws->height);
    GdiFlush();
@@ -1656,7 +1648,8 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 
 void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   if (!fWindows) return;
+   if (!gCws)
+      return;
 
    Int_t x = TMath::Min(x1, x2);
    Int_t y = TMath::Min(y1, y2);
@@ -1696,9 +1689,9 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                             Int_t nx, Int_t ny, Int_t *ic)
 {
-   int i, j, icol, ix, iy, w, h, current_icol;
+   if (!gCws) return;
 
-   if (!fWindows) return;
+   int i, j, icol, ix, iy, w, h, current_icol;
 
    current_icol = -1;
    w = TMath::Max((x2 - x1) / (nx), 1);
@@ -1735,7 +1728,8 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
    static int lastn = 0;
    static GdkPoint *xy = 0;
 
-   if (!fWindows) return;
+   if (!gCws)
+      return;
 
    if (fFillStyleModified) UpdateFillStyle();
    if (fFillColorModified) UpdateFillColor();
@@ -1764,7 +1758,7 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 
 void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   if (!fWindows) return;
+   if (!gCws) return;
 
    if (fLineColorModified) UpdateLineColor();
    if (fPenModified) UpdateLineStyle();
@@ -1792,9 +1786,9 @@ void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
 void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 {
-   int i;
+   if (!gCws) return;
 
-   if (!fWindows) return;
+   int i;
 
    Point_t *xy = new Point_t[n];
 
@@ -1848,11 +1842,11 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 
 void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
 {
+   if (!gCws) return;
+
    int i;
    static int lastn = 0;
    static GdkPoint *xy = 0;
-
-   if (!fWindows) return;
 
    if (fMarkerStyleModified) UpdateMarkerStyle();
    if (fMarkerColorModified) UpdateMarkerColor();
@@ -1971,9 +1965,10 @@ GdkGC *TGWin32::GetGC(Int_t which) const
 
 Int_t TGWin32::GetDoubleBuffer(int wid)
 {
-   if (!fWindows) return 0;
+   if (fWindows.count(wid) == 0)
+      return 0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    if (!gTws->open) {
       return -1;
@@ -1992,8 +1987,6 @@ Int_t TGWin32::GetDoubleBuffer(int wid)
 void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
                           unsigned int &h)
 {
-   if (!fWindows) return;
-
    if (wid < 0) {
       x = 0;
       y = 0;
@@ -2004,7 +1997,9 @@ void TGWin32::GetGeometry(int wid, int &x, int &y, unsigned int &w,
       int depth;
       int width, height;
 
-      gTws = &fWindows[wid];
+      if (fWindows.count(wid) == 0) return;
+
+      gTws = fWindows[wid].get();
       gdk_window_get_geometry((GdkDrawable *) gTws->window, &x, &y,
                               &width, &height, &depth);
 
@@ -2071,8 +2066,8 @@ void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 
 Window_t TGWin32::GetWindowID(int wid)
 {
-   if (!fWindows) return 0;
-   return (Window_t) fWindows[wid].window;
+   if (fWindows.count(wid) == 0) return 0;
+   return (Window_t) fWindows[wid]->window;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2083,13 +2078,51 @@ Window_t TGWin32::GetWindowID(int wid)
 
 void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->open) return;
 
    gdk_window_move((GdkDrawable *) gTws->window, x, y);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add new window handle
+/// Only for private usage
+
+Int_t TGWin32::AddWindowHandle()
+{
+   Int_t maxid = 0;
+   for (auto & pair : fWindows) {
+      if (pair.first > maxid)
+         maxid = pair.first;
+   }
+
+   if (fWindows.size() == (size_t) maxid) {
+      // all ids are in use - just add maximal+1
+      maxid++;
+   } else
+      for (int id = 1; id < maxid; id++) {
+         if (fWindows.count(id) == 0) {
+            maxid = id;
+            break;
+         }
+      }
+
+   fWindows.emplace(maxid, std::make_unique<XWindow_t>());
+
+   auto ctxt = fWindows[maxid].get();
+   ctxt->open = 1;
+   ctxt->shared = 0;
+   ctxt->drawing = nullptr;
+   ctxt->window = nullptr;
+   ctxt->buffer = nullptr;
+   ctxt->new_colors = nullptr;
+   ctxt->ncolors = 0;
+
+   return maxid;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a new pixmap.
@@ -2098,33 +2131,17 @@ void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 {
    int wval, hval;
-   int i, wid;
+   int i;
    int ww, hh, depth;
    wval = w;
    hval = h;
 
-   // Select next free window number
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                                 newsize * sizeof(XWindow_t),
-                                                 fMaxNumberOfWindows *
-                                                 sizeof(XWindow_t));
+   int wid = AddWindowHandle();
 
-      for (i = fMaxNumberOfWindows; i < newsize; i++) fWindows[i].open = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 1;
 
-   depth =gdk_visual_get_best_depth();
+   depth = gdk_visual_get_best_depth();
    gCws->window = (GdkPixmap *) gdk_pixmap_new(GDK_ROOT_PARENT(),wval,hval,depth);
    gdk_drawable_get_size((GdkDrawable *) gCws->window, &ww, &hh);
 
@@ -2139,13 +2156,10 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 
    // Initialise the window structure
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 1;
    gCws->clip = 0;
    gCws->width = wval;
    gCws->height = hval;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -2158,41 +2172,18 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
 {
    GdkWindowAttr attributes;
    unsigned long attr_mask = 0;
-   int wid;
    int xval, yval;
    int wval, hval, depth;
+
+   int wid = AddWindowHandle();
+
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 0;
 
    GdkWindow *wind = (GdkWindow *) win;
 
    gdk_window_get_geometry(wind, &xval, &yval, &wval, &hval, &depth);
 
-   // Select next free window number
-
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows =
-          (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                          newsize * sizeof(XWindow_t),
-                                          fMaxNumberOfWindows *
-                                          sizeof(XWindow_t));
-
-      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
-         fWindows[i].open = 0;
-      }
-
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
    // Create window
    attributes.wclass = GDK_INPUT_OUTPUT;
    attributes.event_mask = 0L;  //GDK_ALL_EVENTS_MASK;
@@ -2241,13 +2232,10 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
    // Initialise the window structure
 
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 0;
    gCws->clip = 0;
    gCws->width = wval;
    gCws->height = hval;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -2698,9 +2686,9 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
     int i;
 
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    if (!gTws->open)
       return;
 
@@ -2743,9 +2731,9 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    wval = w;
    hval = h;
 
-   if (!fWindows) return 0;
+   if (fWindows.count(wid) == 0) return 0;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    // don't do anything when size did not change
    //  if (gTws->width == wval && gTws->height == hval) return 0;
@@ -2790,9 +2778,9 @@ void TGWin32::ResizeWindow(Int_t wid)
    GdkWindow *win, *root = NULL;
    int wval = 0, hval = 0, depth = 0;
 
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
 
    win = (GdkWindow *) gTws->window;
    gdk_window_get_geometry(win, &xval, &yval,
@@ -2837,11 +2825,11 @@ void TGWin32::SelectWindow(int wid)
    int i;
    GdkRectangle rect;
 
-   if (!fWindows || wid < 0 || wid >= fMaxNumberOfWindows || !fWindows[wid].open) {
-      return;
-   }
+   if (fWindows.count(wid) == 0) return;
 
-   gCws = &fWindows[wid];
+   if (!fWindows[wid]->open) return;
+
+   gCws = fWindows[wid].get();
 
    if (gCws->clip && !gCws->ispixmap && !gCws->double_buffer) {
       rect.x = gCws->xclip;
@@ -2893,9 +2881,9 @@ void TGWin32::SetCharacterUp(Float_t chupx, Float_t chupy)
 
 void TGWin32::SetClipOFF(int wid)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gTws->clip = 0;
 
    for (int i = 0; i < kMAXGC; i++) {
@@ -2912,9 +2900,9 @@ void TGWin32::SetClipOFF(int wid)
 void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
                             unsigned int h)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gTws->xclip = x;
    gTws->yclip = y;
    gTws->wclip = w;
@@ -2993,9 +2981,9 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 
 void TGWin32::SetCursor(Int_t wid, ECursor cursor)
 {
-   if (!fWindows) return;
+   if (fWindows.count(wid) == 0) return;
 
-   gTws = &fWindows[wid];
+   gTws = fWindows[wid].get();
    gdk_window_set_cursor((GdkWindow *)gTws->window, (GdkCursor *)fCursors[cursor]);
 }
 
@@ -3025,11 +3013,9 @@ void TGWin32::SetCursor(Window_t id, Cursor_t curid)
 
 void TGWin32::SetDoubleBuffer(int wid, int mode)
 {
-   if (!fWindows) return;
-
    if (wid == 999) {
-      for (int i = 0; i < fMaxNumberOfWindows; i++) {
-         gTws = &fWindows[i];
+      for (auto & pair : fWindows) {
+         gTws = pair.second.get();
          if (gTws->open) {
             switch (mode) {
             case 1:
@@ -3042,7 +3028,9 @@ void TGWin32::SetDoubleBuffer(int wid, int mode)
          }
       }
    } else {
-      gTws = &fWindows[wid];
+      if (fWindows.count(wid) == 0) return;
+
+      gTws = fWindows[wid].get();
       if (!gTws->open) return;
 
       switch (mode) {
@@ -3071,7 +3059,7 @@ void TGWin32::SetDoubleBufferOFF()
 
 void TGWin32::SetDoubleBufferON()
 {
-   if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
+   if (fWindows.size() == 0 || !gTws || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
       gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), //NULL,
@@ -4268,8 +4256,8 @@ void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
    wval = w;
    hval = h;
 
-   if (!fWindows) return;
-   gTws = &fWindows[wid];
+   if (fWindows.count(wid) == 0) return;
+   gTws = fWindows[wid].get();
 //   XWriteBitmapFile(fDisplay,pxname,(Pixmap)gTws->drawing,wval,hval,-1,-1);
 }
 
@@ -7440,34 +7428,16 @@ Int_t TGWin32::AddPixmap(Window_t pix, UInt_t w, UInt_t h)
    SetBitmapDimensionEx(hBmp, w, h, &sz);
    GdkPixmap *newPix = gdk_pixmap_foreign_new(reinterpret_cast<ULongptr_t>(hBmp));
 
-   Int_t wid = 0;
-   for(; wid < fMaxNumberOfWindows; ++wid)
-      if (!fWindows[wid].open)
-         break;
+   Int_t wid = AddWindowHandle();
 
-   if (wid == fMaxNumberOfWindows) {
-      Int_t newSize = fMaxNumberOfWindows + 10;
-
-      fWindows = (XWindow_t *)TStorage::ReAlloc(fWindows, newSize * sizeof(XWindow_t),
-                                                fMaxNumberOfWindows * sizeof(XWindow_t));
-
-      for (Int_t i = fMaxNumberOfWindows; i < newSize; ++i)
-         fWindows[i].open = 0;
-
-      fMaxNumberOfWindows = newSize;
-   }
-
-   fWindows[wid].open = 1;
-   gCws = fWindows + wid;
+   gCws = fWindows[wid].get();
+   gCws->ispixmap = 1;
    gCws->window = newPix;
    gCws->drawing = gCws->window;
-   gCws->buffer = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap = 1;
    gCws->clip = 0;
    gCws->width = w;
    gCws->height = h;
-   gCws->new_colors = 0;
 
    return wid;
 }
@@ -7477,82 +7447,31 @@ Int_t TGWin32::AddPixmap(Window_t pix, UInt_t w, UInt_t h)
 
 Int_t TGWin32::AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h)
 {
-   Int_t wid;
-   // Select next free window number
+   Int_t wid = AddWindowHandle();
 
- again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-   }
+   gCws = fWindows[wid].get();
 
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows =
-          (XWindow_t *) TStorage::ReAlloc(fWindows,
-                                          newsize * sizeof(XWindow_t),
-                                          fMaxNumberOfWindows *
-                                          sizeof(XWindow_t));
-
-      for (int i = fMaxNumberOfWindows; i < newsize; i++) {
-         fWindows[i].open = 0;
-      }
-
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
+   gCws->shared = true;
+   gCws->ispixmap      = 0;
 
    gCws->window = gdk_window_foreign_new(qwid);
 
    gCws->drawing       = gCws->window;
-   gCws->buffer        = 0;
    gCws->double_buffer = 0;
-   gCws->ispixmap      = 0;
    gCws->clip          = 0;
    gCws->width         = w;
    gCws->height        = h;
-   gCws->new_colors    = 0;
 
    return wid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove a window created by Qt (like CloseWindow1()).
+/// Remove a window created by Qt.
 
 void TGWin32::RemoveWindow(ULongptr_t qwid)
 {
-   int wid;
-
    SelectWindow((int)qwid);
-
-   if (gCws->buffer) {
-      gdk_pixmap_unref(gCws->buffer);
-   }
-   if (gCws->new_colors) {
-      gdk_colormap_free_colors((GdkColormap *) fColormap,
-                               (GdkColor *)gCws->new_colors, gCws->ncolors);
-
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
-   }
-
-   GdiFlush();
-   gCws->open = 0;
-
-   if (!fWindows) return;
-
-   // make first window in list the current window
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++) {
-      if (fWindows[wid].open) {
-         gCws = &fWindows[wid];
-         return;
-      }
-   }
-   gCws = 0;
+   CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

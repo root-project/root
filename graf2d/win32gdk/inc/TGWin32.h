@@ -17,6 +17,10 @@
 
 #include "TTF.h"
 
+#include <memory>
+#include <map>
+
+
 
 #ifndef __CLING__
 
@@ -76,12 +80,11 @@ private:
    GdkImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    RenderString(Int_t x, Int_t y, ETextMode mode);
 
-   Int_t            fMaxNumberOfWindows;    ///< Maximum number of windows
-   XWindow_t       *fWindows;               ///< List of windows
+   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap          *fColors;                ///< Hash list of colors
    GdkCursor       *fCursors[kNumCursors];  ///< List of cursors
 
-   void  CloseWindow1();
+   Int_t AddWindowHandle();
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
