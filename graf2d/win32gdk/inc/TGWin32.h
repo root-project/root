@@ -91,7 +91,6 @@ private:
    void  RemovePixmap(GdkDrawable *pix);
    void  SetColor(GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
-   void  SetMarkerType(Int_t type, Int_t n, GdkPoint *xy);
    void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
    Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
    void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
@@ -133,14 +132,10 @@ protected:
    Bool_t      fFillStyleModified;
    Bool_t      fLineColorModified;
    Bool_t      fPenModified;        ///< line syle || width modified
-   Bool_t      fMarkerStyleModified;
-   Bool_t      fMarkerColorModified;
 
    void        UpdateFillColor();
    void        UpdateFillStyle();
    void        UpdateLineColor();
-   void        UpdateMarkerStyle();
-   void        UpdateMarkerColor();
    void        UpdateLineStyle();
 
    // needed by TGWin32TTF
@@ -226,6 +221,11 @@ public:
    Int_t     WriteGIF(char *name) override;
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
    Window_t  GetCurrentWindow() const override;
+
+   //---- Methods used for new graphics -----
+   WinContext_t GetWindowContext(Int_t wid) override;
+   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
