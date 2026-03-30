@@ -84,14 +84,6 @@ extern XPoint *XRotTextExtents(Display*, XFontStruct*, float,
 const int kMAXGC = 7,
           kGCline = 0, kGCmark = 1, kGCfill = 2,
           kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
-// static GC gGClist[kMAXGC];
-// static GC *gGCline = &gGClist[kGCline];  // PolyLines
-// static GC *gGCmark = &gGClist[kGCmark];  // PolyMarker
-// static GC *gGCfill = &gGClist[kGCfill];  // Fill areas
-// static GC *gGCtext = &gGClist[kGCtext];  // Text
-// static GC *gGCinvt = &gGClist[kGCinvt];  // Inverse text
-// static GC *gGCdash = &gGClist[kGCinvt];  // Dashed lines
-// static GC *gGCpxmp = &gGClist[kGCpxmp];  // Pixmap management
 
 static GC gGCecho;                 // Input echo
 
@@ -145,9 +137,6 @@ static XWindow_t *gTws;      // gTws: temporary pointer
 const Int_t kBIGGEST_RGB_VALUE = 65535;
 
 
-// static Int_t  gFillHollow;         // Flag if fill style is hollow
-// static Pixmap gFillPattern = 0;    // Fill pattern
-
 //
 // Text management
 //
@@ -160,16 +149,6 @@ static struct {
 static XFontStruct *gTextFont;              // Current font
 static Int_t        gCurrentFontNumber = 0; // Current font number in gFont[]
 
-//
-// Markers
-//
-// const Int_t kMAXMK = 100;
-// static struct {
-//    int    type;
-//    int    n;
-//    XPoint xy[kMAXMK];
-// } gMarker;                        // Point list to draw marker
-// static int  gMarkerLineWidth = 0;
 static int  gMarkerLineStyle = LineSolid;
 static int  gMarkerCapStyle  = CapRound;
 static int  gMarkerJoinStyle = JoinRound;
@@ -177,14 +156,8 @@ static int  gMarkerJoinStyle = JoinRound;
 //
 // Keep style values for line GC
 //
-// static int  gLineWidth = 0;
-// static int  gLineStyle = LineSolid;
 static int  gCapStyle  = CapButt;
 static int  gJoinStyle = JoinMiter;
-// static char gDashList[10];
-// static int  gDashLength = 0;
-// static int  gDashOffset = 0;
-// static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -1285,20 +1258,6 @@ Int_t TGX11::OpenDisplay(void *disp)
    char vendor[132];
    strlcpy(vendor, XServerVendor((Display*)fDisplay),132);
 
-   // Create primitives graphic contexts
-   // for (i = 0; i < kMAXGC; i++)
-   //    gGClist[i] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
-
-/*
-   XGCValues values;
-   if (XGetGCValues((Display*)fDisplay, *gGCtext, GCForeground|GCBackground, &values)) {
-      XSetForeground((Display*)fDisplay, *gGCinvt, values.background);
-      XSetBackground((Display*)fDisplay, *gGCinvt, values.foreground);
-   } else {
-      Error("OpenDisplay", "cannot get GC values");
-   }
-*/
-
    // Create input echo graphic context
    XGCValues echov;
    echov.foreground = fBlackPixel;
@@ -1480,10 +1439,8 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
    gCws->fWindow = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
    XGetGeometry((Display*)fDisplay, gCws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
-   for (int i = 0; i < kMAXGC; i++) {
-      // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+   for (int i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gCws->fGClist[i], None);
-   }
 
    SetColor(&gCws->fGClist[kGCpxmp], 0);
    XFillRectangle((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCpxmp], 0, 0, ww, hh);
@@ -2005,10 +1962,8 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
          XFreePixmap((Display*)fDisplay,gTws->fBuffer);
          gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin, w, h, fDepth);
       }
-      for (int i = 0; i < kMAXGC; i++) {
-         // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-      }
       SetColor(&gTws->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, w, h);
       SetColor(&gTws->fGClist[kGCpxmp], 1);
@@ -2051,10 +2006,8 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    }
    XGetGeometry((Display*)fDisplay, gTws->fWindow, &root, &xx, &yy, &ww, &hh, &border, &depth);
 
-   for (i = 0; i < kMAXGC; i++) {
-      // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+   for (i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-   }
 
    SetColor(&gTws->fGClist[kGCpxmp], 0);
    XFillRectangle((Display*)fDisplay, gTws->fWindow, gTws->fGClist[kGCpxmp], 0, 0, ww, hh);
@@ -2096,10 +2049,8 @@ void TGX11::ResizeWindow(Int_t wid)
          XFreePixmap((Display*)fDisplay,gTws->fBuffer);
          gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin, wval, hval, fDepth);
       }
-      for (int i = 0; i < kMAXGC; i++) {
-         // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-      }
       SetColor(&gTws->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, wval, hval);
       SetColor(&gTws->fGClist[kGCpxmp], 1);
@@ -2129,15 +2080,11 @@ void TGX11::SelectWindow(int wid)
       region.y      = gCws->fYclip;
       region.width  = gCws->fWclip;
       region.height = gCws->fHclip;
-      for (int i = 0; i < kMAXGC; i++) {
-         // XSetClipRectangles((Display*)fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipRectangles((Display*)fDisplay, gCws->fGClist[i], 0, 0, &region, 1, YXBanded);
-      }
    } else {
-      for (int i = 0; i < kMAXGC; i++) {
-         // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gCws->fGClist[i], None);
-      }
    }
 }
 
@@ -2170,10 +2117,8 @@ void TGX11::SetClipOFF(int wid)
    gTws       = fWindows[wid].get();
    gTws->fClip = 0;
 
-   for (int i = 0; i < kMAXGC; i++) {
-      // XSetClipMask( (Display*)fDisplay, gGClist[i], None );
+   for (int i = 0; i < kMAXGC; i++)
       XSetClipMask( (Display*)fDisplay, gTws->fGClist[i], None );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2197,10 +2142,8 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
       region.y      = gTws->fYclip;
       region.width  = gTws->fWclip;
       region.height = gTws->fHclip;
-      for (int i = 0; i < kMAXGC; i++) {
-         // XSetClipRectangles((Display*)fDisplay, gGClist[i], 0, 0, &region, 1, YXBanded);
+      for (int i = 0; i < kMAXGC; i++)
          XSetClipRectangles((Display*)fDisplay, gTws->fGClist[i], 0, 0, &region, 1, YXBanded);
-      }
    }
 }
 
@@ -2310,10 +2253,8 @@ void TGX11::SetDoubleBufferON()
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth, gTws->fHeight);
       SetColor(&gTws->fGClist[kGCpxmp], 1);
    }
-   for (int i = 0; i < kMAXGC; i++) {
-      // XSetClipMask((Display*)fDisplay, gGClist[i], None);
+   for (int i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-   }
    gTws->fDoubleBuffer  = 1;
    gTws->fDrawing       = gTws->fBuffer;
 }
@@ -2331,29 +2272,14 @@ void TGX11::SetDoubleBufferON()
 void TGX11::SetDrawMode(EDrawMode mode)
 {
    if (fDisplay && gCws) {
+      auto xmode = GXcopy;
+      if (mode == kXor)
+         xmode = GXxor;
+      else if (mode == kInvert)
+         xmode = GXinvert;
 
-      switch (mode) {
-         case kCopy:
-            for (int i = 0; i < kMAXGC; i++) {
-               // XSetFunction((Display*)fDisplay, gGClist[i], GXcopy);
-               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXcopy);
-            }
-            break;
-
-         case kXor:
-            for (int i = 0; i < kMAXGC; i++) {
-               // XSetFunction((Display*)fDisplay, gGClist[i], GXxor);
-               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXxor);
-            }
-            break;
-
-         case kInvert:
-            for (int i = 0; i < kMAXGC; i++) {
-               // XSetFunction((Display*)fDisplay, gGClist[i], GXinvert);
-               XSetFunction((Display*)fDisplay, gCws->fGClist[i], GXinvert);
-            }
-            break;
-      }
+      for (int i = 0; i < kMAXGC; i++)
+         XSetFunction((Display*)fDisplay, gCws->fGClist[i], xmode);
    }
    fDrawMode = mode;
 }
@@ -2363,24 +2289,14 @@ void TGX11::SetDrawMode(EDrawMode mode)
 
 void TGX11::SetFillColor(Color_t cindex)
 {
+   if (cindex < 0) return;
+
    TAttFill::SetFillColor(cindex);
 
    TAttFill arg(gCws->fAttFill);
    arg.SetFillColor(cindex);
 
    SetAttFill((WinContext_t) gCws, arg);
-
-/*
-   if (!gStyle->GetFillColor() && cindex > 1) cindex = 0;
-   if (cindex >= 0) SetColor(gGCfill, Int_t(cindex));
-   fFillColor = cindex;
-
-   // invalidate fill pattern
-   if (gFillPattern != 0) {
-      XFreePixmap((Display*)fDisplay, gFillPattern);
-      gFillPattern = 0;
-   }
-   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2397,13 +2313,6 @@ void TGX11::SetFillStyle(Style_t fstyle)
    arg.SetFillStyle(fstyle);
 
    SetAttFill((WinContext_t) gCws, arg);
-
-/*   if (fFillStyle == fstyle) return;
-   fFillStyle = fstyle;
-   Int_t style = fstyle/1000;
-   Int_t fasi  = fstyle%1000;
-   SetFillStyleIndex(style,fasi);
-   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2413,51 +2322,6 @@ void TGX11::SetFillStyle(Style_t fstyle)
 Style_t TGX11::GetFillStyle() const
 {
    return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set fill area style index.
-
-void TGX11::SetFillStyleIndex(Int_t /* style */, Int_t /* fasi */)
-{
-/*
-   static int current_fasi = 0;
-
-   fFillStyle = 1000*style + fasi;
-
-   switch (style) {
-
-      case 1:         // solid
-         gFillHollow = 0;
-         XSetFillStyle((Display*)fDisplay, *gGCfill, FillSolid);
-         break;
-
-      case 2:         // pattern
-         gFillHollow = 1;
-         break;
-
-      case 3:         // hatch
-         gFillHollow = 0;
-         XSetFillStyle((Display*)fDisplay, *gGCfill, FillStippled);
-         if (fasi != current_fasi) {
-            if (gFillPattern != 0) {
-               XFreePixmap((Display*)fDisplay, gFillPattern);
-               gFillPattern = 0;
-            }
-            int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
-
-            gFillPattern = XCreateBitmapFromData((Display*)fDisplay, fRootWin,
-                                                 (const char*)gStipples[stn], 16, 16);
-
-            XSetStipple( (Display*)fDisplay, *gGCfill, gFillPattern );
-            current_fasi = fasi;
-         }
-         break;
-
-      default:
-         gFillHollow = 1;
-   }
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2492,9 +2356,6 @@ void TGX11::SetLineColor(Color_t cindex)
    arg.SetLineColor(cindex);
 
    SetAttLine((WinContext_t) gCws, arg);
-
-   //SetColor(gGCline, Int_t(cindex));
-   //SetColor(gGCdash, Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2510,27 +2371,7 @@ void TGX11::SetLineColor(Color_t cindex)
 
 void TGX11::SetLineType(int /* n */, int * /* dash */)
 {
-   /*
-   if (n <= 0) {
-      gLineStyle = LineSolid;
-      XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
-                         gLineStyle, gCapStyle, gJoinStyle);
-   } else {
-      gDashSize = TMath::Min((int)sizeof(gDashList),n);
-      gDashLength = 0;
-      for (int i = 0; i < gDashSize; i++ ) {
-         gDashList[i] = dash[i];
-         gDashLength += gDashList[i];
-      }
-      gDashOffset = 0;
-      gLineStyle = LineOnOffDash;
-      if (gLineWidth == 0) gLineWidth =1;
-      XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
-                         gLineStyle, gCapStyle, gJoinStyle);
-      XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
-                         gLineStyle, gCapStyle, gJoinStyle);
-   }
-   */
+   Warning("SetLineType", "DEPRECATED, use SetAttLine() instead");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2544,39 +2385,6 @@ void TGX11::SetLineStyle(Style_t lstyle)
    arg.SetLineStyle(lstyle);
 
    SetAttLine((WinContext_t) gCws, arg);
-/*
-
-   static Int_t dashed[2] = {3,3};
-   static Int_t dotted[2] = {1,2};
-   static Int_t dasheddotted[4] = {3,4,1,4};
-
-   if (fLineStyle != lstyle) { //set style index only if different
-      fLineStyle = lstyle;
-      if (lstyle <= 1 ) {
-         SetLineType(0, nullptr);
-      } else if (lstyle == 2 ) {
-         SetLineType(2, dashed);
-      } else if (lstyle == 3 ) {
-         SetLineType(2, dotted);
-      } else if (lstyle == 4 ) {
-         SetLineType(4, dasheddotted);
-      } else {
-         TString st = (TString)gStyle->GetLineStyleString(lstyle);
-         TObjArray *tokens = st.Tokenize(" ");
-         Int_t nt;
-         nt = tokens->GetEntries();
-         Int_t *linestyle = new Int_t[nt];
-         for (Int_t j = 0; j<nt; j++) {
-            Int_t it;
-            sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
-            linestyle[j] = (Int_t)(it/4);
-         }
-         SetLineType(nt, linestyle);
-         delete [] linestyle;
-         delete tokens;
-      }
-   }
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2601,22 +2409,6 @@ void TGX11::SetLineWidth(Width_t width)
    arg.SetLineWidth(width);
 
    SetAttLine((WinContext_t) gCws, arg);
-
-/*
-
-   if (fLineWidth == width) return;
-   fLineWidth = width;
-
-   if (width == 1 && gLineStyle == LineSolid) gLineWidth = 0;
-   else                                       gLineWidth = width;
-
-   if (gLineWidth < 0) return;
-
-   XSetLineAttributes((Display*)fDisplay, *gGCline, gLineWidth,
-                      gLineStyle, gCapStyle, gJoinStyle);
-   XSetLineAttributes((Display*)fDisplay, *gGCdash, gLineWidth,
-              gLineStyle, gCapStyle, gJoinStyle);
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2659,35 +2451,6 @@ void TGX11::SetMarkerSize(Float_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set marker type.
-///
-///  \param [in] type      : marker type
-///  \param [in] n         : length of marker description
-///  \param [in] xy        : list of points describing marker shape
-///
-///  - if n == 0 marker is a single point
-///  - if TYPE == 0 marker is hollow circle of diameter N
-///  - if TYPE == 1 marker is filled circle of diameter N
-///  - if TYPE == 2 marker is a hollow polygon describe by line XY
-///  - if TYPE == 3 marker is a filled polygon describe by line XY
-///  - if TYPE == 4 marker is described by segmented line XY
-///     e.g. TYPE=4,N=4,XY=(-3,0,3,0,0,-3,0,3) sets a plus shape of 7x7 pixels
-
-void TGX11::SetMarkerType(int /* type */, int /* n */, RXPoint * /* xy */)
-{
-   /*
-   gMarker.type = type;
-   gMarker.n = n < kMAXMK ? n : kMAXMK;
-   if (gMarker.type >= 2) {
-      for (int i = 0; i < gMarker.n; i++) {
-         gMarker.xy[i].x = xy[i].x;
-         gMarker.xy[i].y = xy[i].y;
-      }
-   }
-   */
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set marker style.
 
 void TGX11::SetMarkerStyle(Style_t markerstyle)
@@ -2698,445 +2461,6 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    arg.SetMarkerStyle(markerstyle);
 
    SetAttMarker((WinContext_t) gCws, arg);
-/*
-
-   if (fMarkerStyle == markerstyle) return;
-   static RXPoint shape[30];
-   fMarkerStyle = TMath::Abs(markerstyle);
-   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-   gMarkerLineWidth = TAttMarker::GetMarkerLineWidth(fMarkerStyle);
-
-   // The fast pixel markers need to be treated separately
-   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
-       XSetLineAttributes((Display*)fDisplay, *gGCmark, 0, LineSolid, CapButt, JoinMiter);
-   } else {
-       XSetLineAttributes((Display*)fDisplay, *gGCmark, gMarkerLineWidth,
-                          gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
-   }
-
-   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(gMarkerLineWidth/2.)/4.;
-   Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
-   if (markerstyle == 2) {
-      // + shaped marker
-      shape[0].x = -im;  shape[0].y = 0;
-      shape[1].x =  im;  shape[1].y = 0;
-      shape[2].x = 0  ;  shape[2].y = -im;
-      shape[3].x = 0  ;  shape[3].y = im;
-   } else if (markerstyle == 3 || markerstyle == 31) {
-      // * shaped marker
-      shape[0].x = -im;  shape[0].y = 0;
-      shape[1].x =  im;  shape[1].y = 0;
-      shape[2].x = 0  ;  shape[2].y = -im;
-      shape[3].x = 0  ;  shape[3].y = im;
-      im = Int_t(0.707*Float_t(im) + 0.5);
-      shape[4].x = -im;  shape[4].y = -im;
-      shape[5].x =  im;  shape[5].y = im;
-      shape[6].x = -im;  shape[6].y = im;
-      shape[7].x =  im;  shape[7].y = -im;
-   } else if (markerstyle == 4 || markerstyle == 24) {
-      // O shaped marker
-      SetMarkerType(0,im*2,shape);
-   } else if (markerstyle == 5) {
-      // X shaped marker
-      im = Int_t(0.707*Float_t(im) + 0.5);
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = im;
-      shape[2].x = -im;  shape[2].y = im;
-      shape[3].x =  im;  shape[3].y = -im;
-      SetMarkerType(4,4,shape);
-   } else if (markerstyle == 6) {
-      // + shaped marker (with 1 pixel)
-      shape[0].x = -1 ;  shape[0].y = 0;
-      shape[1].x =  1 ;  shape[1].y = 0;
-      shape[2].x =  0 ;  shape[2].y = -1;
-      shape[3].x =  0 ;  shape[3].y = 1;
-      SetMarkerType(4,4,shape);
-   } else if (markerstyle == 7) {
-      // . shaped marker (with 9 pixel)
-      shape[0].x = -1 ;  shape[0].y = 1;
-      shape[1].x =  1 ;  shape[1].y = 1;
-      shape[2].x = -1 ;  shape[2].y = 0;
-      shape[3].x =  1 ;  shape[3].y = 0;
-      shape[4].x = -1 ;  shape[4].y = -1;
-      shape[5].x =  1 ;  shape[5].y = -1;
-      SetMarkerType(4,6,shape);
-   } else if (markerstyle == 8 || markerstyle == 20) {
-      // O shaped marker (filled)
-      SetMarkerType(1,im*2,shape);
-   } else if (markerstyle == 21) {
-      // full square
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x =  im;  shape[2].y = im;
-      shape[3].x = -im;  shape[3].y = im;
-      shape[4].x = -im;  shape[4].y = -im;
-      SetMarkerType(3,5,shape);
-   } else if (markerstyle == 22) {
-      // full triangle up
-      shape[0].x = -im;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = im;
-      shape[2].x =   0;  shape[2].y = -im;
-      shape[3].x = -im;  shape[3].y = im;
-      SetMarkerType(3,4,shape);
-   } else if (markerstyle == 23) {
-      // full triangle down
-      shape[0].x =   0;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x = -im;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y = im;
-      SetMarkerType(3,4,shape);
-   } else if (markerstyle == 25) {
-      // open square
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x =  im;  shape[2].y = im;
-      shape[3].x = -im;  shape[3].y = im;
-      shape[4].x = -im;  shape[4].y = -im;
-      SetMarkerType(2,5,shape);
-   } else if (markerstyle == 26) {
-      // open triangle up
-      shape[0].x = -im;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = im;
-      shape[2].x =   0;  shape[2].y = -im;
-      shape[3].x = -im;  shape[3].y = im;
-      SetMarkerType(2,4,shape);
-   } else if (markerstyle == 27) {
-      // open losange
-      Int_t imx = Int_t(2.66*MarkerSizeReduced + 0.5);
-      shape[0].x =-imx;  shape[0].y = 0;
-      shape[1].x =   0;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = 0;
-      shape[3].x =   0;  shape[3].y = im;
-      shape[4].x =-imx;  shape[4].y = 0;
-      SetMarkerType(2,5,shape);
-   } else if (markerstyle == 28) {
-      // open cross
-      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y =-imx;
-      shape[1].x =-imx;  shape[1].y =-imx;
-      shape[2].x =-imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y = -im;
-      shape[4].x = imx;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y =-imx;
-      shape[6].x =  im;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = imx;
-      shape[8].x = imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = im;
-      shape[10].x=-imx;  shape[10].y= imx;
-      shape[11].x= -im;  shape[11].y= imx;
-      shape[12].x= -im;  shape[12].y=-imx;
-      SetMarkerType(2,13,shape);
-   } else if (markerstyle == 29) {
-      // full star pentagone
-      Int_t im1 = Int_t(0.66*MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00*MarkerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66*MarkerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y = im4;
-      shape[1].x =-im2;  shape[1].y =-im1;
-      shape[2].x =-im3;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y =-im2;
-      shape[4].x = im3;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y =-im1;
-      shape[6].x =  im;  shape[6].y = im4;
-      shape[7].x = im4;  shape[7].y = im4;
-      shape[8].x =   0;  shape[8].y = im;
-      shape[9].x =-im4;  shape[9].y = im4;
-      shape[10].x= -im;  shape[10].y= im4;
-      SetMarkerType(3,11,shape);
-   } else if (markerstyle == 30) {
-      // open star pentagone
-      Int_t im1 = Int_t(0.66*MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00*MarkerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66*MarkerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y = im4;
-      shape[1].x =-im2;  shape[1].y =-im1;
-      shape[2].x =-im3;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y =-im2;
-      shape[4].x = im3;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y =-im1;
-      shape[6].x =  im;  shape[6].y = im4;
-      shape[7].x = im4;  shape[7].y = im4;
-      shape[8].x =   0;  shape[8].y = im;
-      shape[9].x =-im4;  shape[9].y = im4;
-      shape[10].x= -im;  shape[10].y= im4;
-      SetMarkerType(2,11,shape);
-   } else if (markerstyle == 32) {
-      // open triangle down
-      shape[0].x =   0;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x = -im;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y = im;
-      SetMarkerType(2,4,shape);
-   } else if (markerstyle == 33) {
-      // full losange
-      Int_t imx = Int_t(2.66*MarkerSizeReduced + 0.5);
-      shape[0].x =-imx;  shape[0].y = 0;
-      shape[1].x =   0;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = 0;
-      shape[3].x =   0;  shape[3].y = im;
-      shape[4].x =-imx;  shape[4].y = 0;
-      SetMarkerType(3,5,shape);
-   } else if (markerstyle == 34) {
-      // full cross
-      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y =-imx;
-      shape[1].x =-imx;  shape[1].y =-imx;
-      shape[2].x =-imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y = -im;
-      shape[4].x = imx;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y =-imx;
-      shape[6].x =  im;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = imx;
-      shape[8].x = imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = im;
-      shape[10].x=-imx;  shape[10].y= imx;
-      shape[11].x= -im;  shape[11].y= imx;
-      shape[12].x= -im;  shape[12].y=-imx;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 35) {
-      // diamond with cross
-      shape[0].x =-im;  shape[0].y = 0;
-      shape[1].x =  0;  shape[1].y = -im;
-      shape[2].x = im;  shape[2].y = 0;
-      shape[3].x =  0;  shape[3].y = im;
-      shape[4].x =-im;  shape[4].y = 0;
-      shape[5].x = im;  shape[5].y = 0;
-      shape[6].x =  0;  shape[6].y = im;
-      shape[7].x =  0;  shape[7].y =-im;
-      SetMarkerType(2,8,shape);
-   } else if (markerstyle == 36) {
-      // square with diagonal cross
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x =  im;  shape[2].y = im;
-      shape[3].x = -im;  shape[3].y = im;
-      shape[4].x = -im;  shape[4].y = -im;
-      shape[5].x =  im;  shape[5].y = im;
-      shape[6].x = -im;  shape[6].y = im;
-      shape[7].x =  im;  shape[7].y = -im;
-      SetMarkerType(2,8,shape);
-   } else if (markerstyle == 37) {
-      // open three triangles
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = im2;  shape[2].y =  im;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = -im;  shape[5].y =   0;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  -im;
-      shape[9].x =   0;  shape[9].y =   0;
-      SetMarkerType(2, 10,shape);
-   } else if (markerstyle == 38) {
-      // + shaped marker with octagon
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x = -im;  shape[0].y = 0;
-      shape[1].x = -im;  shape[1].y =-im2;
-      shape[2].x =-im2;  shape[2].y = -im;
-      shape[3].x = im2;  shape[3].y = -im;
-      shape[4].x =  im;  shape[4].y =-im2;
-      shape[5].x =  im;  shape[5].y = im2;
-      shape[6].x = im2;  shape[6].y = im;
-      shape[7].x =-im2;  shape[7].y = im;
-      shape[8].x = -im;  shape[8].y = im2;
-      shape[9].x = -im;  shape[9].y = 0;
-      shape[10].x = im;  shape[10].y = 0;
-      shape[11].x =  0;  shape[11].y = 0;
-      shape[12].x =  0;  shape[12].y = -im;
-      shape[13].x =  0;  shape[13].y = im;
-      shape[14].x =  0;  shape[14].y = 0;
-      SetMarkerType(2,15,shape);
-   } else if (markerstyle == 39) {
-      // filled three triangles
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = im2;  shape[2].y =  im;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = -im;  shape[5].y =   0;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  -im;
-      SetMarkerType(3,9,shape);
-   } else if (markerstyle == 40) {
-      // four open triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      SetMarkerType(2,13,shape);
-   } else if (markerstyle == 41) {
-      // four filled triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 42) {
-      // open double diamonds
-      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
-      shape[0].x=     0;   shape[0].y= im;
-      shape[1].x=  -imx;   shape[1].y= imx;
-      shape[2].x  = -im;   shape[2].y = 0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y = -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y = 0;
-      shape[7].x=   imx;   shape[7].y= imx;
-      shape[8].x=     0;   shape[8].y= im;
-      SetMarkerType(2,9,shape);
-   } else if (markerstyle == 43) {
-      // filled double diamonds
-      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
-      shape[0].x =    0;   shape[0].y =   im;
-      shape[1].x = -imx;   shape[1].y =  imx;
-      shape[2].x =  -im;   shape[2].y =    0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y =  -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y =    0;
-      shape[7].x =  imx;   shape[7].y =  imx;
-      shape[8].x =    0;   shape[8].y =   im;
-      SetMarkerType(3,9,shape);
-   } else if (markerstyle == 44) {
-      // open four triangles plus
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =    0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x =  im2;  shape[3].y =  -im;
-      shape[4].x = -im2;  shape[4].y =  -im;
-      shape[5].x =    0;  shape[5].y =    0;
-      shape[6].x =   im;  shape[6].y =  im2;
-      shape[7].x =   im;  shape[7].y = -im2;
-      shape[8].x =  -im;  shape[8].y =  im2;
-      shape[9].x =  -im;  shape[9].y = -im2;
-      shape[10].x =    0;  shape[10].y =    0;
-      SetMarkerType(2,11,shape);
-   } else if (markerstyle == 45) {
-      // filled four triangles plus
-      Int_t im0 = Int_t(0.4*MarkerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =  im0;  shape[0].y =  im0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x = -im0;  shape[3].y =  im0;
-      shape[4].x =  -im;  shape[4].y =  im2;
-      shape[5].x =  -im;  shape[5].y = -im2;
-      shape[6].x = -im0;  shape[6].y = -im0;
-      shape[7].x = -im2;  shape[7].y =  -im;
-      shape[8].x =  im2;  shape[8].y =  -im;
-      shape[9].x =  im0;  shape[9].y = -im0;
-      shape[10].x =   im;  shape[10].y = -im2;
-      shape[11].x =   im;  shape[11].y =  im2;
-      shape[12].x =  im0;  shape[12].y =  im0;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 46) {
-      // open four triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      SetMarkerType(2,13,shape);
-   } else if (markerstyle == 47) {
-      // filled four triangles X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      SetMarkerType(3,13,shape);
-   } else if (markerstyle == 48) {
-      // four filled squares X
-      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
-      shape[0].x =    0;  shape[0].y =  im2*1.005;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2*0.995;
-      shape[13].x =  im2*0.995;  shape[13].y =    0;
-      shape[14].x =    0;  shape[14].y = -im2*0.995;
-      shape[15].x = -im2*0.995;  shape[15].y =    0;
-      shape[16].x =    0;  shape[16].y =  im2*0.995;
-      SetMarkerType(3,16,shape);
-   } else if (markerstyle == 49) {
-      // four filled squares plus
-      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
-      shape[0].x =-imx;  shape[0].y =-imx*1.005;
-      shape[1].x =-imx;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y =-imx;
-      shape[4].x =  im;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y = imx;
-      shape[6].x = imx;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = im;
-      shape[8].x =-imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = imx;
-      shape[10].x = -im;  shape[10].y = imx;
-      shape[11].x = -im;  shape[11].y =-imx;
-      shape[12].x =-imx;  shape[12].y =-imx*0.995;
-      shape[13].x =-imx;  shape[13].y = imx;
-      shape[14].x = imx;  shape[14].y = imx;
-      shape[15].x = imx;  shape[15].y =-imx;
-      shape[16].x =-imx;  shape[16].y =-imx*1.005;
-      SetMarkerType(3,17,shape);
-   } else {
-      // single dot
-      SetMarkerType(0,0,shape);
-   }
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3332,56 +2656,6 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
 
 void TGX11::SetTextAlign(Short_t talign)
 {
-/*   Int_t txalh = talign/10;
-   Int_t txalv = talign%10;
-   fTextAlignH = txalh;
-   fTextAlignV = txalv;
-
-   switch (txalh) {
-
-      case 0 :
-      case 1 :
-         switch (txalv) {  //left
-            case 1 :
-               fTextAlign = 7;   //bottom
-               break;
-            case 2 :
-               fTextAlign = 4;   //center
-               break;
-            case 3 :
-               fTextAlign = 1;   //top
-               break;
-         }
-         break;
-      case 2 :
-         switch (txalv) { //center
-            case 1 :
-               fTextAlign = 8;   //bottom
-               break;
-            case 2 :
-               fTextAlign = 5;   //center
-               break;
-            case 3 :
-               fTextAlign = 2;   //top
-               break;
-         }
-         break;
-      case 3 :
-         switch (txalv) {  //right
-            case 1 :
-               fTextAlign = 9;   //bottom
-               break;
-            case 2 :
-               fTextAlign = 6;   //center
-               break;
-            case 3 :
-               fTextAlign = 3;   //top
-               break;
-         }
-         break;
-   }
-   */
-
    TAttText::SetTextAlign(talign);
 
    TAttText arg(gCws->fAttText);
@@ -3406,19 +2680,6 @@ void TGX11::SetTextColor(Color_t cindex)
    arg.SetTextColor(cindex);
 
    SetAttText((WinContext_t) gCws, arg);
-
-   /*
-   SetColor(gGCtext, Int_t(cindex));
-
-   XGCValues values;
-   if (XGetGCValues((Display*)fDisplay, *gGCtext, GCForeground | GCBackground, &values)) {
-      XSetForeground( (Display*)fDisplay, *gGCinvt, values.background );
-      XSetBackground( (Display*)fDisplay, *gGCinvt, values.foreground );
-   } else {
-      Error("SetTextColor", "cannot get GC values");
-   }
-   XSetBackground((Display*)fDisplay, *gGCtext, GetColor(0).fPixel);
-   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4165,6 +3426,7 @@ void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
       ctxt->markerType = 4;
    } else if (markerstyle == 4 || markerstyle == 24) {
       // O shaped marker
+      shape.resize(0);
       ctxt->markerType = 0;
       ctxt->markerSize = im*2;
    } else if (markerstyle == 5) {
@@ -4196,6 +3458,7 @@ void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
       ctxt->markerType = 4;
    } else if (markerstyle == 8 || markerstyle == 20) {
       // O shaped marker (filled)
+      shape.resize(0);
       ctxt->markerType = 1;
       ctxt->markerSize = im*2;
    } else if (markerstyle == 21) {

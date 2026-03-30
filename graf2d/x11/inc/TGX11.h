@@ -76,9 +76,7 @@ private:
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
    void   SetColor(void *gc, Int_t ci);
-   void   SetFillStyleIndex(Int_t style, Int_t fasi);
    void   SetInput(Int_t inp);
-   void   SetMarkerType(Int_t type, Int_t n, RXPoint *xy);
    void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
                              Int_t &maxcolors);
    void   MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
