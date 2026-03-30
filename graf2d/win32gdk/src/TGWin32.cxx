@@ -141,6 +141,16 @@ struct XWindow_t {
    ULong_t *new_colors = nullptr; ///< new image colors (after processing)
    Int_t    ncolors = 0;          ///< number of different colors
    GdkGC   *fGClist[kMAXGC];      ///< array of GC objects for concrete window
+   TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
+   GdkLineStyle lineStyle = GDK_LINE_SOLID; ///< current line style
+   Int_t lineWidth = 0;            ///< current line width
+   std::vector<gint8> dashList;    ///< Gtk array for dashes
+   Int_t     dashLength = 0;       ///< total length of dashes
+   Int_t     dashOffset = 0;       ///< current dash offset
+   TAttFill  fAttFill = {-1, -1};  ///< current fill attributes
+   Int_t     fillHollow = 0;       ///< Flag if fill style is hollow
+   Int_t      fillFasi = -1;         ///< fasi parameter for fill pattern
+   GdkPixmap *fillPattern = nullptr; ///< current fill pattern
    TAttMarker fAttMarker = { -1, -1, -1 }; ///< current marker attribute
    Int_t     markerType = 0;          ///< 4 differen kinds of marker
    Int_t     markerSize = 0;          ///< size of simple markers
@@ -159,35 +169,18 @@ GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
 static XWindow_t *gTws;         // gTws: temporary pointer
 
-//
-// gColors[0]           : background also used for b/w screen
-// gColors[1]           : foreground also used for b/w screen
-// gColors[2..kMAXCOL-1]: colors which can be set by SetColor
-//
 const Int_t kBIGGEST_RGB_VALUE = 65535;
-//const Int_t kMAXCOL = 1000;
-//static struct {
-//   Int_t defined;
-//   GdkColor color;
-//} gColors[kMAXCOL];
 
 //
 // Primitives Graphic Contexts global for all windows
 //
 
 static GdkGC *gGClist[kMAXGC];
-static GdkGC *gGCline;          // = gGClist[0];  // PolyLines
-// static GdkGC *gGCmark;          // = gGClist[1];  // PolyMarker
-static GdkGC *gGCfill;          // = gGClist[2];  // Fill areas
 static GdkGC *gGCtext;          // = gGClist[3];  // Text
 static GdkGC *gGCinvt;          // = gGClist[4];  // Inverse text
-static GdkGC *gGCdash;          // = gGClist[5];  // Dashed lines
 static GdkGC *gGCpxmp;          // = gGClist[6];  // Pixmap management
 
 static GdkGC *gGCecho;          // Input echo
-
-static Int_t gFillHollow;       // Flag if fill style is hollow
-static GdkPixmap *gFillPattern; // Fill pattern
 
 //
 // Text management
@@ -204,14 +197,8 @@ static int  gMarkerJoinStyle = GDK_JOIN_ROUND;
 //
 // Keep style values for line GdkGC
 //
-static int  gLineWidth = 0;
-static int  gLineStyle = GDK_LINE_SOLID;
 static int  gCapStyle  = GDK_CAP_BUTT;
 static int  gJoinStyle = GDK_JOIN_MITER;
-static char gDashList[10];
-static int  gDashLength = 0;
-static int  gDashOffset = 0;
-static int  gDashSize   = 0;
 
 //
 // Event masks
@@ -834,10 +821,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fCharacterUpY = 1;
    fDrawMode = kCopy;
    fXEvent = 0;
-   fFillColorModified = kFALSE;
-   fFillStyleModified = kFALSE;
-   fLineColorModified = kFALSE;
-   fPenModified = kFALSE;
 
    fColors = new TExMap;
 
@@ -1005,12 +988,12 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       gdk_gc_set_background(gGClist[i], &GetColor(0).color);
    }
 
-   gGCline = gGClist[0];        // PolyLines
+   // gGCline = gGClist[0];        // PolyLines
    // gGCmark = gGClist[1];        // PolyMarker
-   gGCfill = gGClist[2];        // Fill areas
+   // gGCfill = gGClist[2];        // Fill areas
    gGCtext = gGClist[3];        // Text
    gGCinvt = gGClist[4];        // Inverse text
-   gGCdash = gGClist[5];        // Dashed lines
+   // gGCdash = gGClist[5];        // Dashed lines
    gGCpxmp = gGClist[6];        // Pixmap management
 
    gdk_gc_get_values(gGCtext, &gcvals);
@@ -1597,6 +1580,11 @@ void TGWin32::CloseWindow()
       }
    }
 
+   if (gCws->fillPattern) {
+      gdk_pixmap_unref(gCws->fillPattern);
+      gCws->fillPattern = nullptr;
+   }
+
    if (gCws->buffer) {
       gdk_pixmap_unref(gCws->buffer);
    }
@@ -1653,7 +1641,19 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
 
 void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   if (!gCws)
+   DrawBoxW((WinContext_t) gCws, x1, y1, x2, y2, mode);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a box on specified window.
+/// mode=0 hollow  (kHollow)
+/// mode=1 solid   (kSolid)
+
+void TGWin32::DrawBoxW(WinContext_t wctxt, int x1, int y1, int x2, int y2, EBoxMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
       return;
 
    Int_t x = TMath::Min(x1, x2);
@@ -1662,21 +1662,16 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    Int_t h = TMath::Abs(y2 - y1);
 
    switch (mode) {
+      case kHollow:
+         gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCline], 0, x, y, w, h);
+         break;
 
-   case kHollow:
-      if (fLineColorModified) UpdateLineColor();
-      if (fPenModified) UpdateLineStyle();
-      gdk_win32_draw_rectangle(gCws->drawing, gGCline, 0, x, y, w, h);
-      break;
+      case kFilled:
+         gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCfill], 1, x, y, w, h);
+         break;
 
-   case kFilled:
-      if (fFillStyleModified) UpdateFillStyle();
-      if (fFillColorModified) UpdateFillColor();
-      gdk_win32_draw_rectangle(gCws->drawing, gGCfill, 1, x, y, w, h);
-      break;
-
-   default:
-      break;
+      default:
+         break;
    }
 }
 
@@ -1696,26 +1691,21 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 {
    if (!gCws) return;
 
-   int i, j, icol, ix, iy, w, h, current_icol;
+   int current_icol = -1;
+   int w = TMath::Max((x2 - x1) / (nx), 1);
+   int h = TMath::Max((y1 - y2) / (ny), 1);
+   int ix = x1;
 
-   current_icol = -1;
-   w = TMath::Max((x2 - x1) / (nx), 1);
-   h = TMath::Max((y1 - y2) / (ny), 1);
-   ix = x1;
-
-   if (fFillStyleModified) UpdateFillStyle();
-   if (fFillColorModified) UpdateFillColor();
-
-   for (i = 0; i < nx; i++) {
-      iy = y1 - h;
-      for (j = 0; j < ny; j++) {
-         icol = ic[i + (nx * j)];
+   for (int i = 0; i < nx; i++) {
+      int iy = y1 - h;
+      for (int j = 0; j < ny; j++) {
+         int icol = ic[i + (nx * j)];
          if (icol != current_icol) {
-            gdk_gc_set_foreground(gGCfill, (GdkColor *) & GetColor(icol).color);
+            gdk_gc_set_foreground(gCws->fGClist[kGCfill], (GdkColor *) & GetColor(icol).color);
             current_icol = icol;
          }
 
-         gdk_win32_draw_rectangle(gCws->drawing, gGCfill, kTRUE, ix,  iy, w, h);
+         gdk_win32_draw_rectangle(gCws->drawing, gCws->fGClist[kGCfill], kTRUE, ix,  iy, w, h);
          iy = iy - h;
       }
       ix = ix + w;
@@ -1729,30 +1719,30 @@ void TGWin32::DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
 
 void TGWin32::DrawFillArea(int n, TPoint *xyt)
 {
-   int i;
-   static int lastn = 0;
-   static GdkPoint *xy = 0;
+   DrawFillAreaW((WinContext_t) gCws, n, xyt);
+}
 
-   if (!gCws)
+////////////////////////////////////////////////////////////////////////////////
+/// Fill area described by polygon in a specified window.
+/// n         : number of points
+/// xy(2,n)   : list of points
+
+void TGWin32::DrawFillAreaW(WinContext_t wctxt, int n, TPoint *xyt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
       return;
 
-   if (fFillStyleModified) UpdateFillStyle();
-   if (fFillColorModified) UpdateFillColor();
-
-   if (lastn!=n) {
-      delete [] (GdkPoint *)xy;
-      xy = new GdkPoint[n];
-      lastn = n;
-   }
-   for (i = 0; i < n; i++) {
+   std::vector<GdkPoint> xy(n);
+   for (int i = 0; i < n; i++) {
       xy[i].x = xyt[i].fX;
       xy[i].y = xyt[i].fY;
    }
 
-   if (gFillHollow) {
-      gdk_win32_draw_lines(gCws->drawing, gGCfill, xy, n);
+   if (ctxt->fillHollow) {
+      gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCfill], xy.data(), n);
    } else {
-      gdk_win32_draw_polygon(gCws->drawing, gGCfill, 1, xy, n);
+      gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCfill], 1, xy.data(), n);
    }
 }
 
@@ -1763,24 +1753,25 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 
 void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   if (!gCws) return;
+   DrawLineW((WinContext_t) gCws, x1, y1, x2, y2);
+}
 
-   if (fLineColorModified) UpdateLineColor();
-   if (fPenModified) UpdateLineStyle();
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line on specified window.
+/// x1,y1        : begin of line
+/// x2,y2        : end of line
 
-   if (gLineStyle == GDK_LINE_SOLID) {
-      gdk_draw_line(gCws->drawing, gGCline, x1, y1, x2, y2);
+void TGWin32::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   if (ctxt->lineStyle == GDK_LINE_SOLID) {
+      gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCline], x1, y1, x2, y2);
    } else {
-      int i;
-      gint8 dashes[32];
-      for (i = 0; i < gDashSize; i++) {
-         dashes[i] = (gint8) gDashList[i];
-      }
-      for (i = gDashSize; i < 32; i++) {
-         dashes[i] = (gint8) 0;
-      }
-      gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
-      gdk_draw_line(gCws->drawing, gGCdash, x1, y1, x2, y2);
+      gdk_gc_set_dashes(ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+      gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCdash], x1, y1, x2, y2);
    }
 }
 
@@ -1791,54 +1782,62 @@ void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
 void TGWin32::DrawPolyLine(int n, TPoint * xyt)
 {
-   if (!gCws) return;
+   DrawPolyLineW((WinContext_t) gCws, n, xyt);
+}
 
-   int i;
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a line through all points in specified window.
+/// n         : number of points
+/// xy        : list of points
 
-   Point_t *xy = new Point_t[n];
+void TGWin32::DrawPolyLineW(WinContext_t wctxt, int n, TPoint * xyt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt || (n < 1))
+      return;
 
-   for (i = 0; i < n; i++) {
-      xy[i].fX = xyt[i].fX;
-      xy[i].fY = xyt[i].fY;
+   std::vector<GdkPoint> xy(n);
+   for (int i = 0; i < n; i++) {
+      xy[i].x = xyt[i].fX;
+      xy[i].y = xyt[i].fY;
    }
 
-   if (fLineColorModified) UpdateLineColor();
-   if (fPenModified) UpdateLineStyle();
-
    if (n > 1) {
-      if (gLineStyle == GDK_LINE_SOLID) {
-         gdk_win32_draw_lines(gCws->drawing, gGCline, (GdkPoint *)xy, n);
+      if (ctxt->lineStyle == GDK_LINE_SOLID) {
+         gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCline], xy.data(), n);
       } else {
-         int i;
-         gint8 dashes[32];
-
-         for (i = 0; i < gDashSize; i++) {
-            dashes[i] = (gint8) gDashList[i];
-         }
-         for (i = gDashSize; i < 32; i++) {
-            dashes[i] = (gint8) 0;
-         }
-
-         gdk_gc_set_dashes(gGCdash, gDashOffset, dashes, gDashSize);
-         gdk_win32_draw_lines(gCws->drawing, (GdkGC*)gGCdash, (GdkPoint *)xy, n);
+         gdk_gc_set_dashes(ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
+         gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCdash], xy.data(), n);
 
          // calculate length of line to update dash offset
-         for (i = 1; i < n; i++) {
-            int dx = xy[i].fX - xy[i - 1].fX;
-            int dy = xy[i].fY - xy[i - 1].fY;
+         for (int i = 1; i < n; i++) {
+            int dx = xy[i].x - xy[i - 1].x;
+            int dy = xy[i].y - xy[i - 1].y;
 
             if (dx < 0) dx = -dx;
             if (dy < 0) dy = -dy;
-            gDashOffset += dx > dy ? dx : dy;
+            ctxt->dashOffset += dx > dy ? dx : dy;
          }
-         gDashOffset %= gDashLength;
+         ctxt->dashOffset %= ctxt->dashLength;
       }
    } else {
-      gdk_win32_draw_points( gCws->drawing, gLineStyle == GDK_LINE_SOLID ?
-                              gGCline : gGCdash, (GdkPoint *)xy,1);
+      gdk_win32_draw_points(ctxt->drawing,
+                            ctxt->fGClist[ctxt->lineStyle == GDK_LINE_SOLID ? kGCline : kGCdash],
+                            xy.data(), 1);
    }
-   delete [] xy;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw N segments on specified window
+/// n         : number of segments
+/// xy        : list of points, 2*N size
+
+void TGWin32::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xyt)
+{
+   for(Int_t i = 0; i < 2*n; i += 2)
+      DrawPolyLineW(wctxt, 2, &xyt[i]);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
@@ -3128,31 +3127,14 @@ void TGWin32::SetDrawMode(EDrawMode mode)
 
 void TGWin32::SetFillColor(Color_t cindex)
 {
-   Int_t indx = Int_t(cindex);
+   if (cindex < 0) return;
 
-   if (!gStyle->GetFillColor() && cindex > 1) {
-      indx = 0;
-   }
+   TAttFill::SetFillColor(cindex);
 
-   fFillColor = indx;
-   fFillColorModified = kTRUE;
-}
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillColor(cindex);
 
-////////////////////////////////////////////////////////////////////////////////
-///
-
-void TGWin32::UpdateFillColor()
-{
-   if (fFillColor >= 0) {
-      SetColor(gGCfill, fFillColor);
-   }
-
-   // invalidate fill pattern
-   if (gFillPattern != NULL) {
-      gdk_pixmap_unref(gFillPattern);
-      gFillPattern = NULL;
-   }
-   fFillColorModified = kFALSE;
+   SetAttFill((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3162,58 +3144,77 @@ void TGWin32::UpdateFillColor()
 
 void TGWin32::SetFillStyle(Style_t fstyle)
 {
-   if (fFillStyle==fstyle) return;
+   TAttFill::SetFillStyle(fstyle);
 
-   fFillStyle = fstyle;
-   fFillStyleModified = kTRUE;
+   TAttFill arg(gCws->fAttFill);
+   arg.SetFillStyle(fstyle);
+
+   SetAttFill((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set fill area style index.
+/// Return current fill style
+/// FIXME: Only as temporary solution while some code analyze current fill style
 
-void TGWin32::UpdateFillStyle()
+Style_t TGWin32::GetFillStyle() const
 {
-   static int current_fasi = 0;
+   return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
+}
 
-   Int_t style = fFillStyle / 1000;
-   Int_t fasi = fFillStyle % 1000;
+////////////////////////////////////////////////////////////////////////////////
+/// Set fill attributes for specified window
+
+void TGWin32::SetAttFill(WinContext_t wctxt, const TAttFill &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   Int_t cindex = att.GetFillColor();
+   if (!gStyle->GetFillColor() && cindex > 1)
+      cindex = 0;
+   if (cindex >= 0)
+      SetColor(ctxt->fGClist[kGCfill], Int_t(cindex));
+   ctxt->fAttFill.SetFillColor(cindex);
+
+   Int_t style = att.GetFillStyle() / 1000;
+   Int_t fasi = att.GetFillStyle() % 1000;
 
    switch (style) {
+      case 1:                     // solid
+         ctxt->fillHollow = 0;
+         gdk_gc_set_fill(ctxt->fGClist[kGCfill], GDK_SOLID);
+         break;
 
-   case 1:                     // solid
-      gFillHollow = 0;
-      gdk_gc_set_fill(gGCfill, GDK_SOLID);
-      break;
+      case 2:                     // pattern
+         ctxt->fillHollow = 1;
+         break;
 
-   case 2:                     // pattern
-      gFillHollow = 1;
-      break;
+      case 3:                     // hatch
+         ctxt->fillHollow = 0;
+         gdk_gc_set_fill(ctxt->fGClist[kGCfill], GDK_STIPPLED);
 
-   case 3:                     // hatch
-      gFillHollow = 0;
-      gdk_gc_set_fill(gGCfill, GDK_STIPPLED);
-
-      if (fasi != current_fasi) {
-         if (gFillPattern != NULL) {
-            gdk_pixmap_unref(gFillPattern);
-            gFillPattern = NULL;
+         if (fasi != ctxt->fillFasi) {
+            if (ctxt->fillPattern) {
+               gdk_pixmap_unref(ctxt->fillPattern);
+               ctxt->fillPattern = nullptr;
+            }
+            int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
+            char pattern[32];
+            for (int i = 0; i < 32; ++i)
+               pattern[i] = ~gStipples[stn][i];
+            ctxt->fillPattern = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
+                                                            (const char *)&pattern, 16, 16);
+            gdk_gc_set_stipple(ctxt->fGClist[kGCfill], ctxt->fillPattern);
+            ctxt->fillFasi = fasi;
          }
-         int stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
-         char pattern[32];
-         for (int i=0;i<32;++i)
-            pattern[i] = ~gStipples[stn][i];
-         gFillPattern = gdk_bitmap_create_from_data(GDK_ROOT_PARENT(),
-                                                    (const char *)&pattern, 16, 16);
-         gdk_gc_set_stipple(gGCfill, gFillPattern);
-         current_fasi = fasi;
-      }
-      break;
+         break;
 
-   default:
-      gFillHollow = 1;
+      default:
+         ctxt->fillHollow = 1;
    }
 
-   fFillStyleModified = kFALSE;
+   ctxt->fAttFill.SetFillStyle(att.GetFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3229,20 +3230,14 @@ void TGWin32::SetInput(int inp)
 
 void TGWin32::SetLineColor(Color_t cindex)
 {
-   if ((cindex < 0) || (cindex==fLineColor)) return;
+   if (cindex < 0) return;
 
-   fLineColor =  cindex;
-   fLineColorModified = kTRUE;
-}
+   TAttLine::SetLineColor(cindex);
 
-////////////////////////////////////////////////////////////////////////////////
-///
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineColor(cindex);
 
-void TGWin32::UpdateLineColor()
-{
-   SetColor(gGCline, Int_t(fLineColor));
-   SetColor(gGCdash, Int_t(fLineColor));
-   fLineColorModified = kFALSE;
+   SetAttLine((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3255,31 +3250,9 @@ void TGWin32::UpdateLineColor()
 ///    e.g. N=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
 ///    and a gap of 7 between dashes
 
-void TGWin32::SetLineType(int n, int *dash)
+void TGWin32::SetLineType(int /* n */ , int * /* dash */)
 {
-   if (n <= 0) {
-      gLineStyle = GDK_LINE_SOLID;
-      gdk_gc_set_line_attributes(gGCline, gLineWidth,
-                                 (GdkLineStyle)gLineStyle,
-                                 (GdkCapStyle) gCapStyle,
-                                 (GdkJoinStyle) gJoinStyle);
-   } else {
-      int i;
-      gDashSize = TMath::Min((int)sizeof(gDashList),n);
-      gDashLength = 0;
-      for (i = 0; i < gDashSize; i++) {
-         gDashList[i] = dash[i];
-         gDashLength += gDashList[i];
-      }
-      gDashOffset = 0;
-      gLineStyle = GDK_LINE_ON_OFF_DASH;
-      if (gLineWidth == 0) gLineWidth =1;
-      gdk_gc_set_line_attributes(gGCdash, gLineWidth,
-                                 (GdkLineStyle) gLineStyle,
-                                 (GdkCapStyle) gCapStyle,
-                                 (GdkJoinStyle) gJoinStyle);
-   }
-   fPenModified = kFALSE;
+   Warning("SetLineType", "DEPRECATED, use SetAttLine() instead");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3287,45 +3260,21 @@ void TGWin32::SetLineType(int n, int *dash)
 
 void TGWin32::SetLineStyle(Style_t lstyle)
 {
-   if (fLineStyle == lstyle) return;
+   TAttLine::SetLineStyle(lstyle);
 
-   fLineStyle = lstyle;
-   fPenModified = kTRUE;
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineStyle(lstyle);
+
+   SetAttLine((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update line style
+/// Return current line style
+/// FIXME: Only as temporary solution while some code analyze current line style
 
-void TGWin32::UpdateLineStyle()
+Style_t TGWin32::GetLineStyle() const
 {
-   static Int_t dashed[2] = { 3, 3 };
-   static Int_t dotted[2] = { 1, 2 };
-   static Int_t dasheddotted[4] = { 3, 4, 1, 4 };
-
-   if (fLineStyle <= 1) {
-      SetLineType(0, 0);
-   } else if (fLineStyle == 2) {
-      SetLineType(2, dashed);
-   } else if (fLineStyle == 3) {
-      SetLineType(2, dotted);
-   } else if (fLineStyle == 4) {
-      SetLineType(4, dasheddotted);
-   } else {
-      TString st = (TString)gStyle->GetLineStyleString(fLineStyle);
-      TObjArray *tokens = st.Tokenize(" ");
-      Int_t nt;
-      nt = tokens->GetEntries();
-      Int_t *linestyle = new Int_t[nt];
-      for (Int_t j = 0; j<nt; j++) {
-         Int_t it;
-         sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
-         linestyle[j] = (Int_t)(it/4);
-      }
-      SetLineType(nt,linestyle);
-      delete [] linestyle;
-      delete tokens;
-   }
-   fPenModified = kFALSE;
+   return gCws ? gCws->fAttLine.GetLineStyle() : TAttLine::GetLineStyle();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3334,14 +3283,82 @@ void TGWin32::UpdateLineStyle()
 
 void TGWin32::SetLineWidth(Width_t width)
 {
-   if (fLineWidth == width) return;
-   fLineWidth = width;
+   TAttLine::SetLineWidth(width);
 
-   if (width == 1 && gLineStyle == GDK_LINE_SOLID) gLineWidth = 0;
-   else gLineWidth = width;
+   TAttLine arg(gCws->fAttLine);
+   arg.SetLineWidth(width);
 
-   fPenModified = kTRUE;
+   SetAttLine((WinContext_t) gCws, arg);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current line width
+/// FIXME: Only as temporary solution while some code analyze current line wide
+
+Width_t TGWin32::GetLineWidth() const
+{
+   return gCws ? gCws->fAttLine.GetLineWidth() : TAttLine::GetLineWidth();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set line attributes for specified window.
+
+void TGWin32::SetAttLine(WinContext_t wctxt, const TAttLine &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   SetColor(ctxt->fGClist[kGCline], att.GetLineColor());
+   SetColor(ctxt->fGClist[kGCdash], att.GetLineColor());
+
+   if (ctxt->fAttLine.GetLineStyle() != att.GetLineStyle()) { //set style index only if different
+      if (att.GetLineStyle() <= 1)
+         ctxt->dashList.clear();
+      else if (att.GetLineStyle() == 2)
+         ctxt->dashList = { 3, 3 };
+      else if (att.GetLineStyle() == 3)
+         ctxt->dashList = { 1, 2 };
+      else if (att.GetLineStyle() == 4) {
+         ctxt->dashList = { 3, 4, 1, 4} ;
+      } else {
+         TString st = (TString)gStyle->GetLineStyleString(att.GetLineStyle());
+         auto tokens = st.Tokenize(" ");
+         Int_t nt = tokens->GetEntries();
+         ctxt->dashList.resize(nt);
+         for (Int_t j = 0; j < nt; ++j) {
+            Int_t it;
+            sscanf(tokens->At(j)->GetName(), "%d", &it);
+            ctxt->dashList[j] = (Int_t) (it/4);
+         }
+         delete tokens;
+      }
+      ctxt->dashLength = 0;
+      for (auto elem : ctxt->dashList)
+         ctxt->dashLength += elem;
+      ctxt->dashOffset = 0;
+      ctxt->lineStyle = ctxt->dashList.size() == 0 ? GDK_LINE_SOLID : GDK_LINE_ON_OFF_DASH;
+   }
+
+   ctxt->lineWidth = att.GetLineWidth();
+   if (ctxt->lineWidth == 1 && ctxt->lineStyle == GDK_LINE_SOLID)
+      ctxt->lineWidth = 0;
+
+   if (ctxt->lineStyle == GDK_LINE_SOLID) {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCline], ctxt->lineWidth,
+                                 ctxt->lineStyle,
+                                 (GdkCapStyle) gCapStyle,
+                                 (GdkJoinStyle) gJoinStyle);
+   } else {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCdash], ctxt->lineWidth,
+                                 ctxt->lineStyle,
+                                 (GdkCapStyle) gCapStyle,
+                                 (GdkJoinStyle) gJoinStyle);
+   }
+
+   ctxt->fAttLine = att;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
@@ -4492,11 +4509,14 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
    int nlines[256];
    GdkSegment lines[256][MAX_SEGMENT];
    GdkDrawable *id;
+   GdkGC *lineGC;
 
    if (wid) {
-      id = (GdkDrawable*)wid;
+      id = (GdkDrawable*) wid;
+      lineGC = gdk_gc_new(GDK_ROOT_PARENT());
    } else {
       id = gCws->drawing;
+      lineGC = gCws->fGClist[kGCline];
    }
 
    for (i = 0; i < 256; i++) nlines[i] = 0;
@@ -4519,8 +4539,8 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                lines[icol][n].x2 = x - 1;
                lines[icol][n].y2 = y;
                if (nlines[icol] == MAX_SEGMENT) {
-                  SetColor(gGCline, (int) icol + offset);
-                  gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+                  SetColor(lineGC, (int) icol + offset);
+                  gdk_win32_draw_segments(id, lineGC,
                                        (GdkSegment *) &lines[icol][0], MAX_SEGMENT);
                   nlines[icol] = 0;
                }
@@ -4536,8 +4556,8 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
          lines[icol][n].x2 = x - 1;
          lines[icol][n].y2 = y;
          if (nlines[icol] == MAX_SEGMENT) {
-            SetColor(gGCline, (int) icol + offset);
-            gdk_win32_draw_segments(id, (GdkGC *) gGCline,
+            SetColor(lineGC, (int) icol + offset);
+            gdk_win32_draw_segments(id, lineGC,
                               (GdkSegment *)&lines[icol][0], MAX_SEGMENT);
             nlines[icol] = 0;
          }
@@ -4546,11 +4566,15 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
 
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
-         SetColor(gGCline, i + offset);
-         gdk_win32_draw_segments(id, (GdkGC *) gGCline,
-                           (GdkSegment *)&lines[icol][0], nlines[i]);
+         SetColor(lineGC, i + offset);
+         gdk_win32_draw_segments(id, lineGC,
+                                 (GdkSegment *)&lines[icol][0], nlines[i]);
       }
    }
+
+   if (wid)
+      gdk_gc_unref(lineGC);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
