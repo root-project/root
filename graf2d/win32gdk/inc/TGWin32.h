@@ -128,16 +128,6 @@ protected:
    Handle_t    fXEvent;             ///< Current native (GDK) event
    TObject*    fRefreshTimer;       ///< TGWin32RefreshTimer for GUI thread message handler
 
-   Bool_t      fFillColorModified;
-   Bool_t      fFillStyleModified;
-   Bool_t      fLineColorModified;
-   Bool_t      fPenModified;        ///< line syle || width modified
-
-   void        UpdateFillColor();
-   void        UpdateFillStyle();
-   void        UpdateLineColor();
-   void        UpdateLineStyle();
-
    // needed by TGWin32TTF
    Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
    void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
@@ -203,10 +193,13 @@ public:
    void      SetDrawMode(EDrawMode mode) override;
    void      SetFillColor(Color_t cindex) override;
    void      SetFillStyle(Style_t style) override;
+   Style_t   GetFillStyle() const override;
    void      SetLineColor(Color_t cindex) override;
    void      SetLineType(Int_t n, Int_t *dash) override;
    void      SetLineStyle(Style_t linestyle) override;
+   Style_t   GetLineStyle() const override;
    void      SetLineWidth(Width_t width) override;
+   Width_t   GetLineWidth() const override;
    void      SetMarkerColor(Color_t cindex) override;
    void      SetMarkerSize(Float_t markersize) override;
    void      SetMarkerStyle(Style_t markerstyle) override;
@@ -224,7 +217,15 @@ public:
 
    //---- Methods used for new graphics -----
    WinContext_t GetWindowContext(Int_t wid) override;
+   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
+   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
    void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
+
+   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
+   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
+   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
+   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
    void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
 
    //---- Methods used for GUI -----
