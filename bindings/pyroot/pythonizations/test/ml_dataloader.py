@@ -4725,7 +4725,7 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
         # max samling strategy to guarantee duplicate sampled entires
         max_sampling_ratio = entries_in_rdf_minor / entries_in_rdf_major
-        sampling_ratio = round(uniform(0.01, max_sampling_ratio), 2)
+        sampling_ratio = round(uniform(0.01, max_sampling_ratio - 0.01), 2)
 
         error_message = f"\n Batch size: {batch_size}\
             Number of major entries: {entries_in_rdf_major} \
