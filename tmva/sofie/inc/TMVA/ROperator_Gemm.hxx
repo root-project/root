@@ -351,6 +351,7 @@ namespace SOFIE{
          }
          bool extraA = (doStackMul && lengthExtra_A != "1");
          bool extraB = (doStackMul && lengthExtra_B != "1");
+         auto SP2 = SP;
          if (doStackMul) {
             out << SP << "size_t " << opName << "_y_offset = 0;\n"; // needed if we stack the gemm operations
             if (extraA)
@@ -358,8 +359,7 @@ namespace SOFIE{
             if (extraB)
                out << SP << "size_t " << opName << "_B_offset = 0;\n";
             out << SP << "for (size_t i = 0; i < " << lengthExtra_Y << "; i++){\n";
-         } else {
-            out << SP << "{\n";
+            SP2 += SP;
          }
          // do the bias broadcasting
          if (fBroadcastBias) {
@@ -367,9 +367,8 @@ namespace SOFIE{
             std::vector<size_t> sC =  {fShapeC[dimC-2], fShapeC[dimC-1]};
 
             fAttrBeta = 1.;
-            out << SP << SP << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
-            if (doStackMul) out << SP;
-            out << SP << SP << SP << "size_t y_index = ";
+            out << SP2 << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
+            out << SP2 << SP << "size_t y_index = ";
             if (doStackMul) // add offset in caseof stack multiplications (not sure if bias is present in these cases)
                out <<  opName << "_y_offset + ";
             if (sY[1].GetVal() != "1")
@@ -377,7 +376,7 @@ namespace SOFIE{
             else
                out << "j;\n";
 
-            out << SP << SP << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
+            out << SP2 << SP << "for (size_t k = 0; k < " << sY[1] << "; k++) { \n";
             std::string bias_index;
             if (sC[0] == 1 && sC[1] == sY[1].dim)
                bias_index = "k";
@@ -389,14 +388,14 @@ namespace SOFIE{
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertShapeToString(fShapeC));
             }
 
-            out << SP << SP << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
-            out << SP << SP << SP << "}\n";
-            out << SP << SP << "}\n";
+            out << SP2 << SP << SP << "tensor_" << fNY << "[y_index + k] = " <<  "tensor_" << fNC << "[" << bias_index << "];\n";
+            out << SP2 << SP << "}\n";
+            out << SP2 << "}\n";
          }
 
          if (fType == "float"){
 
-            out << SP << SP << "TMVA::Experimental::SOFIE::Gemm_Call("
+            out << SP2 << "TMVA::Experimental::SOFIE::Gemm_Call("
              << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_y_offset";
             out <<   ", "
@@ -426,8 +425,8 @@ namespace SOFIE{
                out << SP << SP << opName << "_A_offset += " << increment_A << ";\n";
             if (lengthExtra_B != "1")
                out << SP << SP << opName << "_B_offset += " << increment_B << ";\n";
+            out << SP << "}\n"; // end of loop on the stacked multiplication
          }
-         out << SP << "}\n"; // end of loop on the stacked multiplication or close scope
 
          // fuse with Relu
          if(fActivation == EActivationType::RELU){
