@@ -2866,7 +2866,7 @@ TEST(ONNX, ScatterElements)
 
 TEST(ONNX, MatMul_Stacked)
 {
-   // test scatter elements (similar test as in ONNX doc)
+   // test stacked matrix multiplication with same second matrix
    std::vector<float> input1 = {1,2,3,4,5,6,7,8};    // input tensor shape is (2,2,2)
    std::vector<float> input2 = {2,3};                // shape is (2,1)
 
@@ -2874,6 +2874,25 @@ TEST(ONNX, MatMul_Stacked)
 
    // model is dynamic , use N = 2
    ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked", "\"MatMul_Stacked_FromONNX.dat\", 2", 2, input1, input2);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, MatMul_Stacked2)
+{
+   // test stacked matrix multiplication with different second matrix
+   std::vector<float> input1 = {1,2,3,4,5,6,7,8};    // input tensor shape is (2,2,2)
+   std::vector<float> input2 = {2,3,3,2};                // shape is (2,2,1)
+
+   std::vector<float> correct_output = {8,18, 27,37};
+
+   // model is dynamic , use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "MatMul_Stacked2", "\"MatMul_Stacked2_FromONNX.dat\", 2", 2, input1, input2);
 
    // Checking output size
    EXPECT_EQ(output.size(), correct_output.size());
