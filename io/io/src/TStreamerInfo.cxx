@@ -1926,8 +1926,6 @@ void TStreamerInfo::BuildOld()
    Int_t offset = 0;
    TMemberStreamer* streamer = 0;
 
-   constexpr size_t kSizeOfPtr = sizeof(void*);
-
    int nBaze = 0;
 
    if ((fElements->GetEntriesFast() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
@@ -2656,8 +2654,8 @@ void TStreamerInfo::BuildOld()
             // Regular case
             asize = element->GetSize();
          }
-         // align the non-basic data types (required on alpha and IRIX!!)
-         Int_t align = kSizeOfPtr;
+         // Over align the basic data types.
+         Int_t align = alignof(std::max_align_t);
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();
          offset = AlignUp(offset, align);
@@ -3346,11 +3344,10 @@ void TStreamerInfo::ComputeSize()
    }
 
    // On some platform and in some case of layout non-basic data types needs
-   // to be aligned.  So let's be on the safe side and align on the size of
-   // the pointers.  (Question: is that the right thing on x32 ABI ?)
-   constexpr size_t kSizeOfPtr = sizeof(void*);
-   if (fAlignment < kSizeOfPtr) {
-      fAlignment = kSizeOfPtr;
+   // to be aligned.  So let's be on the safe side and align on the alignment
+   // of `std::max_align_t`.
+   if (fAlignment < alignof(std::max_align_t)) {
+      fAlignment = alignof(std::max_align_t);
    }
    if ((fSize % fAlignment) != 0) {
       fSize = (Int_t)AlignUp((size_t)fSize, fAlignment);
@@ -5962,8 +5959,8 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
    TString dmType( TClassEdit::ShortType(dmFull.c_str(),1) );
    Bool_t dmIsPtr = (s1 != dmType);
    const char *dmTitle = "Emulation";
-   //align the non-basic data types (required on alpha and IRIX!!)
-   size_t align = sizeof(void *);
+   // Over align the basic data types.
+   size_t align = alignof(std::max_align_t);
    if (needAlign && offset % align != 0)
       offset = (Int_t)AlignUp((size_t)offset, align);
 
@@ -6018,7 +6015,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
       }
       // a class
       align = std::max(align, clm->GetClassAlignment());
-      if (needAlign && align != sizeof(void *) && ((offset % align) != 0))
+      if (needAlign && align != alignof(std::max_align_t) && ((offset % align) != 0))
          offset = (Int_t)AlignUp((size_t)offset, align);
       if (clm->IsTObject()) {
          return new TStreamerObject(dmName,dmTitle,offset,dmFull.c_str());
@@ -6065,7 +6062,7 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
    i->GetElements()->Delete();
    TStreamerElement *fel = R__CreateEmulatedElement("first", firstname, 0, silent, /*needAlign=*/false);
    Int_t size = 0;
-   size_t align = sizeof(void *);
+   size_t align = alignof(std::max_align_t);
    if (fel) {
       i->GetElements()->Add(fel);
 
