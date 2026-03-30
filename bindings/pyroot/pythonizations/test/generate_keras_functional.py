@@ -1,6 +1,9 @@
+import warnings
+
 def generate_keras_functional(dst_dir):
 
     import numpy as np
+    import keras
     from keras import layers, models
     from parser_test_function import is_channels_first_supported
 
@@ -16,8 +19,14 @@ def generate_keras_functional(dst_dir):
 
         model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
         model.summary()
-        model.fit(x_train, y_train, epochs=1, verbose=0)
-        model.save(f"{dst_dir}/Functional_{name}_test.keras")
+        if len(model.trainable_weights) > 0:
+            model.fit(x_train, y_train, epochs=1, verbose=0)
+
+        with warnings.catch_warnings():
+            # Some object inside TensorFlow/Keras has an outdated __array__ implementation
+            warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*__array__.*copy keyword.*")
+            model.save(f"{dst_dir}/Functional_{name}_test.keras")
+
         print("generated and saved functional model",name)
 
 
@@ -211,7 +220,11 @@ def generate_keras_functional(dst_dir):
     sub = layers.Subtract()([d1, d2])
     mul = layers.Multiply()([d1, d2])
     merged = layers.Concatenate()([add, sub, mul])
-    merged = layers.LeakyReLU(alpha=0.1)(merged)
+    # `alpha` was renamed to `negative_slope` in Keras 3
+    if keras.__version__ >= "3.0":
+        merged = layers.LeakyReLU(negative_slope=0.1)(merged)
+    else:
+        merged = layers.LeakyReLU(alpha=0.1)(merged)
     out = layers.Dense(4, activation="softmax")(merged)
     model = models.Model([inp1, inp2], out)
     train_and_save(model, "Layer_Combination_3")

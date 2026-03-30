@@ -2,10 +2,6 @@ import ROOT
 
 '''
 The test file contains two types of functions:
-    is_accurate:
-        - This function checks whether the inference results from SOFIE and Keras are accurate within a specified
-          tolerance. Since the inference result from Keras is not flattened, the function flattens both tensors before
-          performing the comparison.
 
     generate_and_test_inference:
         - This function accepts the following inputs:
@@ -29,7 +25,7 @@ The test file contains two types of functions:
           shape from the model object.
         - Convert the inference results to NumPy arrays:
           The SOFIE result is of type vector<float>, and the Keras result is a TensorFlow tensor. Both are converted to
-          NumPy arrays before being passed to the is_accurate function for comparison.
+          NumPy arrays before being passed to the np.testing.assert_allclose function for comparison.
 
 '''
 def is_channels_first_supported() :
@@ -41,16 +37,6 @@ def is_channels_first_supported() :
             return False
 
       return True
-
-def is_accurate(tensor_a, tensor_b, tolerance=1e-2):
-    tensor_a = tensor_a.flatten()
-    tensor_b = tensor_b.flatten()
-    for i in range(len(tensor_a)):
-        difference = abs(tensor_a[i] - tensor_b[i])
-        if difference > tolerance:
-            print(tensor_a[i], tensor_b[i])
-            return False
-    return True
 
 def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
 
@@ -81,7 +67,6 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     sofie_model_namespace = getattr(ROOT, "TMVA_SOFIE_" + model_name)
     inference_session = sofie_model_namespace.Session(generated_header_file_path.removesuffix(".hxx") + ".dat")
     keras_model = keras.models.load_model(model_file_path)
-    keras_model.load_weights(model_file_path)
 
     input_tensors = []
     for model_input in keras_model.inputs:
@@ -91,11 +76,17 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     sofie_inference_result = inference_session.infer(*input_tensors)
     sofie_output_tensor_shape = list(rmodel.GetTensorShape(rmodel.GetOutputTensorNames()[0]))   # get output shape
                                                                                                 # from SOFIE
-    keras_inference_result = keras_model(input_tensors)
+    # Keras explicitly forbids input tensor lists of size 1
+    if len(keras_model.inputs) == 1:
+        keras_inference_result = keras_model(input_tensors[0])
+    else:
+        keras_inference_result = keras_model(input_tensors)
     if sofie_output_tensor_shape != list(keras_inference_result.shape):
         raise AssertionError("Output tensor dimensions from SOFIE and Keras do not match")
-    sofie_inference_result = np.asarray(sofie_inference_result)
-    keras_inference_result = np.asarray(keras_inference_result)
-    is_inference_accurate = is_accurate(sofie_inference_result, keras_inference_result)
-    if not is_inference_accurate:
-        raise AssertionError("Inference results from SOFIE and Keras do not match")
+
+    np.testing.assert_allclose(
+        np.asarray(sofie_inference_result).flatten(),
+        np.asarray(keras_inference_result).flatten(),
+        atol=1e-2,
+        rtol=0.  # explicitly disable relative tolerance (NumPy uses |a - b| <= atol + rtol * |b|)
+    )
