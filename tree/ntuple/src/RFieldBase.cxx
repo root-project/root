@@ -85,6 +85,11 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Inter
 {
    field.ConnectPageSource(source);
 }
+void ROOT::Internal::CallConnectExtendedColumnsToPageSinkOnField(RFieldBase &field, ROOT::Internal::RPageSink &sink,
+                                                                 ROOT::NTupleSize_t firstEntry)
+{
+   field.ConnectExtendedColumnsToPageSink(sink, firstEntry);
+}
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
@@ -825,8 +830,17 @@ ROOT::RFieldBase::RColumnRepresentations::Selection_t ROOT::RFieldBase::GetColum
 
 void ROOT::RFieldBase::SetColumnRepresentatives(const RColumnRepresentations::Selection_t &representatives)
 {
-   if (fState != EState::kUnconnected)
-      throw RException(R__FAIL("cannot set column representative once field is connected"));
+   const auto isNewSelectionASuperset = [&]() {
+      if (representatives.size() < fColumnRepresentatives.size())
+         return false;
+      for (auto i = 0u; i < fColumnRepresentatives.size(); ++i)
+         if (representatives[i] != fColumnRepresentatives[i].get())
+            return false;
+      return true;
+   };
+   if (fState != EState::kUnconnected && !(fState == EState::kConnectedToSink && isNewSelectionASuperset()))
+      throw RException(R__FAIL("cannot set column representative once field is connected unless the new selection is a "
+                               "superset of the previous"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
    fColumnRepresentatives.clear();
    fColumnRepresentatives.reserve(representatives.size());
@@ -942,6 +956,23 @@ void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT
    }
 
    fState = EState::kConnectedToSink;
+}
+
+void ROOT::RFieldBase::ConnectExtendedColumnsToPageSink(ROOT::Internal::RPageSink &pageSink,
+                                                        ROOT::NTupleSize_t firstEntry)
+{
+   if (fState != EState::kConnectedToSink)
+      throw RException(
+         R__FAIL("invalid attempt to connect extended columns of a field that is not connected to a sink"));
+
+   const auto nPrev = fAvailableColumns.size();
+   GenerateColumns();
+
+   for (auto i = nPrev, len = fAvailableColumns.size(); i < len; ++i) {
+      auto &column = fAvailableColumns[i];
+      auto firstElementIndex = (column->GetIndex() == 0) ? EntryToColumnElementIndex(firstEntry) : 0;
+      column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
+   }
 }
 
 void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource)

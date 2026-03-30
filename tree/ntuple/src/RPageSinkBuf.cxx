@@ -125,12 +125,20 @@ void ROOT::Internal::RPageSinkBuf::UpdateSchema(const ROOT::Internal::RNTupleMod
       GetProjectedFieldsOfModel(*fInnerModel).Add(std::move(cloned), fieldMap);
       return p;
    };
+   auto cloneAddColumnRepr = [&](const RNTupleModelChangeset::RAddedColumnRepr &repr) {
+      auto &innerField = fInnerModel->GetMutableField(repr.fField->GetFieldName());
+      innerField.SetColumnRepresentatives(repr.fField->GetColumnRepresentatives());
+      ROOT::Internal::CallConnectExtendedColumnsToPageSinkOnField(innerField, *this, firstEntry);
+      return repr;
+   };
    RNTupleModelChangeset innerChangeset{*fInnerModel};
    fInnerModel->Unfreeze();
    std::transform(changeset.fAddedFields.cbegin(), changeset.fAddedFields.cend(),
                   std::back_inserter(innerChangeset.fAddedFields), cloneAddField);
    std::transform(changeset.fAddedProjectedFields.cbegin(), changeset.fAddedProjectedFields.cend(),
                   std::back_inserter(innerChangeset.fAddedProjectedFields), cloneAddProjectedField);
+   std::transform(changeset.fAddedColumnReprs.cbegin(), changeset.fAddedColumnReprs.cend(),
+                  std::back_inserter(innerChangeset.fAddedColumnReprs), cloneAddColumnRepr);
    fInnerModel->Freeze();
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }

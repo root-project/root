@@ -375,8 +375,11 @@ protected:
    {
       const auto r = Base::GetColumnRepresentatives();
       const auto n = r.size();
+      // Note that we don't assume that we have 0 columns here, as this function may be called to extend the
+      // column representations of this field.
+      const auto first = fAvailableColumns.size();
       fAvailableColumns.reserve(n);
-      for (std::uint16_t i = 0; i < n; ++i) {
+      for (auto i = first; i < n; ++i) {
          auto &column = fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(r[i][0], 0, i));
          if (r[i][0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             column->SetBitsOnStorage(fBitWidth);

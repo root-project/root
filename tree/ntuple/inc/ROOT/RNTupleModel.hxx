@@ -402,11 +402,18 @@ You will not normally use this directly; see `RNTupleModel::RUpdater` instead.
 */
 // clang-format on
 struct RNTupleModelChangeset {
+   struct RAddedColumnRepr {
+      ROOT::RFieldBase *fField = nullptr;
+      std::uint16_t fNumNewColumns = 0;
+   };
+
    RNTupleModel &fModel;
    /// Points to the fields in fModel that were added as part of an updater transaction
    std::vector<ROOT::RFieldBase *> fAddedFields;
    /// Points to the projected fields in fModel that were added as part of an updater transaction
    std::vector<ROOT::RFieldBase *> fAddedProjectedFields;
+   /// Points to fields in fModel that had new column representations appended to them.
+   std::vector<RAddedColumnRepr> fAddedColumnReprs;
 
    RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
@@ -420,6 +427,9 @@ struct RNTupleModelChangeset {
    /// \see RNTupleModel::AddProjectedField()
    ROOT::RResult<void>
    AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
+
+   ROOT::RResult<void>
+   AddColumnRepr(ROOT::RFieldBase *field, const ROOT::RFieldBase::RColumnRepresentations::Selection_t &reprs);
 };
 
 } // namespace Internal

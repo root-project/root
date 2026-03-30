@@ -287,6 +287,27 @@ ROOT::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<ROOT::RFieldBase
    return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), std::move(mapping)));
 }
 
+ROOT::RResult<void> ROOT::Internal::RNTupleModelChangeset::AddColumnRepr(
+   ROOT::RFieldBase *field, const ROOT::RFieldBase::RColumnRepresentations::Selection_t &newReprs)
+{
+   auto reprs = field->GetColumnRepresentatives();
+   const auto nPrev = reprs.size();
+   for (auto newRepr : newReprs)
+      // NOTE: we don't need to check for duplicates because SetColumnRepresentatives will do that for us.
+      reprs.push_back(newRepr);
+
+   field->SetColumnRepresentatives(reprs);
+   const auto nNew = field->GetColumnRepresentatives().size();
+   assert(reprs.size() > 0 && reprs[0].size() <= 2);
+   const auto cardinality = static_cast<std::uint16_t>(reprs[0].size());
+   assert(nNew >= nPrev);
+   std::uint16_t nAdded = (nNew - nPrev) * cardinality;
+   if (nAdded > 0)
+      fAddedColumnReprs.push_back(RAddedColumnRepr{field, nAdded});
+
+   return RResult<void>::Success();
+}
+
 void ROOT::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
    RResult<void> nameValid = ROOT::Internal::EnsureValidNameForRNTuple(fieldName, "Field");

@@ -868,6 +868,9 @@ void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNT
          for (const auto &descendant : *f)
             nNewPhysicalColumns += getNColumns(descendant);
       }
+      for (auto added : changeset.fAddedColumnReprs) {
+         nNewPhysicalColumns += added.fNumNewColumns;
+      }
       fDescriptorBuilder.ShiftAliasColumns(nNewPhysicalColumns);
    }
 
@@ -912,6 +915,9 @@ void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNT
       addProjectedField(*f);
       for (auto &descendant : *f)
          addProjectedField(descendant);
+   }
+   for (const auto& [f, _] : changeset.fAddedColumnReprs) {
+      ROOT::Internal::CallConnectExtendedColumnsToPageSinkOnField(*f, *this, firstEntry);
    }
 
    const auto nColumns = descriptor.GetNPhysicalColumns();
