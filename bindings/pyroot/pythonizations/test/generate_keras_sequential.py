@@ -1,5 +1,8 @@
+import warnings
+
 def generate_keras_sequential(dst_dir):
 
+    import keras
     import numpy as np
     from keras import layers, models
     from parser_test_function import is_channels_first_supported
@@ -9,10 +12,15 @@ def generate_keras_sequential(dst_dir):
         x_train = np.random.rand(32, *model.input_shape[1:])
         y_train = np.random.rand(32, *model.output_shape[1:])
         model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
-        model.fit(x_train, y_train, epochs=1, verbose=0)
+        if len(model.trainable_weights) > 0:
+            model.fit(x_train, y_train, epochs=1, verbose=0)
         model.summary()
         print("fitting sequential model",name)
-        model.save(f"{dst_dir}/Sequential_{name}_test.keras")
+
+        with warnings.catch_warnings():
+            # Some object inside TensorFlow/Keras has an outdated __array__ implementation
+            warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*__array__.*copy keyword.*")
+            model.save(f"{dst_dir}/Sequential_{name}_test.keras")
 
 
     # Binary Ops: Add, Subtract, Multiply are not typical in Sequential - skipping those
@@ -183,6 +191,9 @@ def generate_keras_sequential(dst_dir):
     ])
     train_and_save(modelA, "Layer_Combination_1")
 
+    # `alpha` was renamed to `negative_slope` in Keras 3
+    negative_slope_key = "negative_slope" if keras.__version__ >= "3.0" else "alpha"
+
     modelB = models.Sequential([
         layers.Input(shape=(32,32,3)),
         layers.Conv2D(8, (3,3), padding='valid', data_format='channels_last', activation='relu'),
@@ -193,7 +204,7 @@ def generate_keras_sequential(dst_dir):
         layers.Permute((2, 1)),
         layers.Flatten(),
         layers.Dense(32),
-        layers.LeakyReLU(alpha=0.1),
+        layers.LeakyReLU(**{negative_slope_key : 0.1}),
         layers.Dense(10, activation='softmax'),
     ])
     train_and_save(modelB, "Layer_Combination_2")
