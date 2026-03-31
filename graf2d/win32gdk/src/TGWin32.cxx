@@ -175,13 +175,7 @@ static XWindow_t *gTws;         // gTws: temporary pointer
 
 const Int_t kBIGGEST_RGB_VALUE = 65535;
 
-//
-// Primitives Graphic Contexts global for all windows
-//
-
-static GdkGC *gGClist[kMAXGC];
-
-static GdkGC *gGCecho;          // Input echo
+static GdkGC *gGCecho;          // Input echo - global
 
 //
 // Text management
@@ -978,13 +972,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
 
    GetColor(0).fDefined = kTRUE; // default background
    gdk_color_white((GdkColormap *)fColormap, &GetColor(0).color);
-
-   // Create primitives graphic contexts
-   for (i = 0; i < kMAXGC; i++) {
-      gGClist[i]  = gdk_gc_new(GDK_ROOT_PARENT());
-      gdk_gc_set_foreground(gGClist[i], &GetColor(1).color);
-      gdk_gc_set_background(gGClist[i], &GetColor(0).color);
-   }
 
    // Create input echo graphic context
    GdkGCValues echov;
@@ -1991,7 +1978,11 @@ GdkGC *TGWin32::GetGC(Int_t which) const
       return 0;
    }
 
-   return gGClist[which];
+   if (!gCws) {
+      Error("GetGC", "No current window selected");
+      return nullptr;
+   }
+   return gCws->fGClist[which];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2174,7 +2165,6 @@ Int_t TGWin32::AddWindowHandle()
 Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
 {
    int wval, hval;
-   int i;
    int ww, hh, depth;
    wval = w;
    hval = h;
@@ -2188,10 +2178,8 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
    gCws->window = (GdkPixmap *) gdk_pixmap_new(GDK_ROOT_PARENT(),wval,hval,depth);
    gdk_drawable_get_size((GdkDrawable *) gCws->window, &ww, &hh);
 
-   for (i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
+   for (int i = 0; i < kMAXGC; i++)
       gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
-   }
 
    SetColor(gCws, gCws->fGClist[kGCpxmp], 0);
    gdk_win32_draw_rectangle(gCws->window, gCws->fGClist[kGCpxmp], kTRUE,
@@ -2747,10 +2735,8 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
          gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), // NULL,
                                        w, h, gdk_visual_get_best_depth());
       }
-      for (int i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
+      for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
-      }
       SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
       gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], 1, 0, 0, w, h);
       SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
@@ -2796,10 +2782,8 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
    gdk_drawable_get_size(gTws->window, &ww, &hh);
 
-   for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
+   for (int i = 0; i < kMAXGC; i++)
       gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
-   }
 
    SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
    gdk_win32_draw_rectangle(gTws->window, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, ww, hh);
@@ -2842,10 +2826,8 @@ void TGWin32::ResizeWindow(Int_t wid)
                                                      wval, hval, depth);
       }
 
-      for (int i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
+      for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
-      }
 
       SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
       gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, wval, hval);
@@ -2865,9 +2847,6 @@ void TGWin32::ResizeWindow(Int_t wid)
 
 void TGWin32::SelectWindow(int wid)
 {
-   int i;
-   GdkRectangle rect;
-
    if (fWindows.count(wid) == 0) return;
 
    if (!fWindows[wid]->open) return;
@@ -2875,20 +2854,17 @@ void TGWin32::SelectWindow(int wid)
    gCws = fWindows[wid].get();
 
    if (gCws->clip && !gCws->ispixmap && !gCws->double_buffer) {
+      GdkRectangle rect;
       rect.x = gCws->xclip;
       rect.y = gCws->yclip;
       rect.width = gCws->wclip;
       rect.height = gCws->hclip;
 
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_rectangle((GdkGC *) gGClist[i], &rect);
+      for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_rectangle(gCws->fGClist[i], &rect);
-      }
    } else {
-      for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
+      for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
-      }
    }
 }
 
@@ -2931,10 +2907,8 @@ void TGWin32::SetClipOFF(int wid)
    gTws = fWindows[wid].get();
    gTws->clip = 0;
 
-   for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
+   for (int i = 0; i < kMAXGC; i++)
       gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2954,18 +2928,16 @@ void TGWin32::SetClipRegion(int wid, int x, int y, unsigned int w,
    gTws->wclip = w;
    gTws->hclip = h;
    gTws->clip = 1;
-   GdkRectangle rect;
 
    if (gTws->clip && !gTws->ispixmap && !gTws->double_buffer) {
+      GdkRectangle rect;
       rect.x = gTws->xclip;
       rect.y = gTws->yclip;
       rect.width = gTws->wclip;
       rect.height = gTws->hclip;
 
-      for (int i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_rectangle((GdkGC *)gGClist[i], &rect);
+      for (int i = 0; i < kMAXGC; i++)
          gdk_gc_set_clip_rectangle(gTws->fGClist[i], &rect);
-      }
    }
 }
 
@@ -3117,10 +3089,8 @@ void TGWin32::SetDoubleBufferON()
                                gTws->width, gTws->height);
       SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
    }
-   for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
+   for (int i = 0; i < kMAXGC; i++)
       gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
-   }
    gTws->double_buffer = 1;
    gTws->drawing = gTws->buffer;
 }
@@ -7917,8 +7887,6 @@ void TGWin32::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
       func = GDK_INVERT;
 
    for (int i = 0; i < kMAXGC; i++) {
-      if (gGClist[i])
-         gdk_gc_set_function(gGClist[i], func);
       if (ctxt->fGClist[i])
          gdk_gc_set_function(ctxt->fGClist[i], func);
    }
