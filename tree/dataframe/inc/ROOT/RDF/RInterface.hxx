@@ -1361,11 +1361,14 @@ public:
                return true;
          RLogScopedVerbosity showInfo{ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kInfo};
          R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
-            << "\n\tIn ROOT 6.38, the default compression settings of Snapshot have been changed from 101 (ZLIB with "
-               "compression level 1, the TTree default) to 505 (ZSTD with compression level 5). This change may result "
-               "in smaller Snapshot output dataset size by default. In order to suppress this message, set "
-               "'ROOT_RDF_SNAPSHOT_INFO=0' in your environment or set 'ROOT.RDF.Snapshot.Info: 0' in your .rootrc "
-               "file.";
+            << "\n\tIn ROOT 6.38.00, the default compression settings of Snapshot were changed from 101 (ZLIB with "
+               "compression level 1, the TTree default) to 505 (ZSTD with compression level 5). The decision was based "
+               "on empirical evidence available up to that point. New studies summarised at "
+               "https://github.com/root-project/root/pull/21753 show that in certain cases "
+               "compression setting 101 is still the best option for TTree. Thus, this choice is reverted in ROOT "
+               "6.38.06 and later releases. "
+               "In order to suppress this message, set 'ROOT_RDF_SNAPSHOT_INFO=0' in your environment or set "
+               "'ROOT.RDF.Snapshot.Info: 0' in your .rootrc file.";
          return true;
       }();
       // like columnList but with `#var` columns removed
