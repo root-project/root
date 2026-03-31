@@ -496,10 +496,10 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle 
                unichars[i] = 0xF000 + (unsigned char)text[i];
 
             Quartz::TextLine ctLine(unichars, currentFont, atttext.GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
+            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
          } else {
             const Quartz::TextLine ctLine(text, currentFont, atttext.GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y));
+            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
          }
       }
    } catch (const std::exception &e) {
@@ -963,7 +963,7 @@ void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode m
    if (!atttext.GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
 
-   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
+   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "RenderTTFString");
    if (!drawable)
       return;
 
