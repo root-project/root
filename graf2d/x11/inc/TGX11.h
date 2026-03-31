@@ -63,6 +63,8 @@ struct XWindow_t;
 
 class TGX11 : public TVirtualX {
 
+friend struct XWindow_t;
+
 private:
    std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap    *fColors;                ///< Hash list of colors
@@ -108,9 +110,6 @@ protected:
    ULong_t    fBlackPixel;         ///< Value of black pixel in colormap
    ULong_t    fWhitePixel;         ///< Value of white pixel in colormap
    Int_t      fScreenNumber;       ///< Screen number
-   Int_t      fTextAlignH;         ///< Text Alignment Horizontal
-   Int_t      fTextAlignV;         ///< Text Alignment Vertical
-   Int_t      fTextAlign;          ///< Text alignment (set in SetTextAlign) !!! conflict with TAttText
    Float_t    fCharacterUpX;       ///< Character Up vector along X
    Float_t    fCharacterUpY;       ///< Character Up vector along Y
    Float_t    fTextMagnitude;      ///< Text Magnitude
@@ -125,12 +124,17 @@ protected:
    Bool_t     fHasXft;             ///< True when XftFonts are used
 
    // needed by TGX11TTF
+   enum EAlign {
+      kAlignNone,
+      kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
+      kBLeft, kBCenter, kBRight };
+
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
    void      *GetGC(Int_t which) const;
    Window_t  GetWindow(WinContext_t wctxt) const;
    void      *GetGCW(WinContext_t wctxt, Int_t which) const;
-   Int_t      GetTextAlignW(WinContext_t wctxt) const;
+   EAlign     GetTextAlignW(WinContext_t wctxt) const;
 
    XColor_t  &GetColor(Int_t cid);
 

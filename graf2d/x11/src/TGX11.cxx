@@ -124,7 +124,7 @@ struct XWindow_t {
    std::vector<XPoint> markerShape;   ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
    TAttText fAttText;                 ///< current text attribute
-   Int_t textAlign = 0;               ///< selected text align
+   TGX11::EAlign textAlign = TGX11::kAlignNone;     ///< selected text align
    XFontStruct *textFont = nullptr;   ///< selected text font
 };
 
@@ -213,9 +213,6 @@ TGX11::TGX11()
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
    fHasXft             = kFALSE;
-   fTextAlignH         = 1;
-   fTextAlignV         = 1;
-   fTextAlign          = 7;
    fTextMagnitude      = 1;
    for (i = 0; i < kNumCursors; i++) fCursors[i] = 0;
 }
@@ -247,9 +244,6 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fDepth              = 0;
    fHasTTFonts         = kFALSE;
    fHasXft             = kFALSE;
-   fTextAlignH         = 1;
-   fTextAlignV         = 1;
-   fTextAlign          = 7;
    fTextMagnitude      = 1;
    for (i = 0; i < kNumCursors; i++)
       fCursors[i] = 0;
@@ -272,9 +266,6 @@ TGX11::TGX11(TGX11 &&org) : TVirtualX(org)
    fWhitePixel      = org.fWhitePixel;
    fHasTTFonts      = org.fHasTTFonts;
    fHasXft          = org.fHasXft;
-   fTextAlignH      = org.fTextAlignH;
-   fTextAlignV      = org.fTextAlignV;
-   fTextAlign       = org.fTextAlign;
    fTextMagnitude   = org.fTextMagnitude;
    fCharacterUpX    = org.fCharacterUpX;
    fCharacterUpY    = org.fCharacterUpY;
@@ -862,12 +853,12 @@ void TGX11::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float
 
       case kClear:
          XRotDrawAlignedString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, (int) ctxt->textAlign);
          break;
 
       case kOpaque:
          XRotDrawAlignedImageString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, (int) ctxt->textAlign);
          break;
 
       default:
@@ -1077,10 +1068,10 @@ void *TGX11::GetGCW(WinContext_t wctxt, Int_t which) const
 /// Return text align value for specified window context.
 /// Protected method used by TGX11TTF.
 
-Int_t TGX11::GetTextAlignW(WinContext_t wctxt) const
+TGX11::EAlign TGX11::GetTextAlignW(WinContext_t wctxt) const
 {
    auto ctxt = (XWindow_t *) wctxt;
-   return ctxt ? ctxt->textAlign : 0;
+   return ctxt ? ctxt->textAlign : kAlignNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2653,9 +2644,6 @@ void TGX11::SetTextAlign(Short_t talign)
    arg.SetTextAlign(talign);
 
    SetAttText((WinContext_t) gCws, arg);
-
-   // FIXME: member fTextAlign conflicts with TAttText::fTextAlign
-   fTextAlign = gCws->textAlign;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3863,44 +3851,46 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
    Int_t txalh = att.GetTextAlign() / 10;
    Int_t txalv = att.GetTextAlign() % 10;
 
+   ctxt->textAlign = kAlignNone;
+
    switch (txalh) {
       case 0 :
       case 1 :
          switch (txalv) {  //left
             case 1 :
-               ctxt->textAlign = 7;   //bottom
+               ctxt->textAlign = kBLeft;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 4;   //center
+               ctxt->textAlign = kMLeft;   //middle
                break;
             case 3 :
-               ctxt->textAlign = 1;   //top
+               ctxt->textAlign = kTLeft;   //top
                break;
          }
          break;
       case 2 :
          switch (txalv) { //center
             case 1 :
-               ctxt->textAlign = 8;   //bottom
+               ctxt->textAlign = kBCenter;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 5;   //center
+               ctxt->textAlign = kMCenter;   //middle
                break;
             case 3 :
-               ctxt->textAlign = 2;   //top
+               ctxt->textAlign = kTCenter;   //top
                break;
          }
          break;
       case 3 :
          switch (txalv) {  //right
             case 1 :
-               ctxt->textAlign = 9;   //bottom
+               ctxt->textAlign = kBRight;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 6;   //center
+               ctxt->textAlign = kMRight;   //center
                break;
             case 3 :
-               ctxt->textAlign = 3;   //top
+               ctxt->textAlign = kTRight;   //top
                break;
          }
          break;
