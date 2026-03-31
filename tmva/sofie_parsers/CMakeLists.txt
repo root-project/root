@@ -79,6 +79,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseScatterND.cxx
     src/ParseNonZero.cxx
     src/ParseNot.cxx
+    src/ParseClip.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
