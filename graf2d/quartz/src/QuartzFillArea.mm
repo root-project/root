@@ -15,9 +15,9 @@
 
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
+#include "TAttFill.h"
 #include "QuartzLine.h"
 #include "CocoaUtils.h"
-#include "TVirtualX.h"
 #include "RStipples.h"
 #include "TError.h"
 #include "TROOT.h"
@@ -388,12 +388,12 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex, Color_t attr
 }
 
 //______________________________________________________________________________
-bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex, TAttFill *attfill)
+bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex, const TAttFill &attfill)
 {
    assert(ctx != nullptr && "SetFillAreaParameters, ctx parameter is null");
 
-   Style_t attFillStyle = attfill ? attfill->GetFillStyle() : gVirtualX->GetFillStyle();
-   Color_t attFillColor = attfill ? attfill->GetFillColor() : gVirtualX->GetFillColor();
+   Style_t attFillStyle = attfill.GetFillStyle();
+   Color_t attFillColor = attfill.GetFillColor();
 
    const unsigned fillStyle = attFillStyle / 1000;
 
@@ -443,7 +443,7 @@ void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool holl
 }
 
 //______________________________________________________________________________
-void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow, Style_t attFillStyle)
+void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow, const TAttFill &attfill)
 {
    // Draw a filled area through all points.
    // n         : number of points
@@ -459,10 +459,8 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow, Style_t 
       CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
 
    CGContextClosePath(ctx);
-   if (attFillStyle == (Style_t) -1)
-      attFillStyle = gVirtualX->GetFillStyle();
 
-   const unsigned fillStyle = attFillStyle / 1000;
+   const unsigned fillStyle = attfill.GetFillStyle() / 1000;
 
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
