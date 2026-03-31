@@ -173,7 +173,7 @@ void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t 
             return;
          }
       } else {
-         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, &attfill)) {
+         if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
             Error("DrawBoxW", "SetFillAreaParameters failed");
             return;
          }
@@ -241,12 +241,14 @@ void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
                                           n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
-      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, &attfill)) {
+      if (!Quartz::SetFillAreaParameters(ctx, &patternIndex, attfill)) {
          Error("DrawFillAreaW", "SetFillAreaParameters failed");
          return;
       }
 
-      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill.GetFillStyle());//The last argument - do not draw shadows.
+      // kFALSE - do not draw shadows.
+      // last argument - fill style
+      Quartz::DrawFillArea(ctx, n, &fConvertedPoints[0], kFALSE, attfill);
    }
 }
 
