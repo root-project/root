@@ -531,7 +531,7 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
 
-   AlignTTFString();
+   AlignTTFString(wctxt);
    RenderTTFString(wctxt, x, y, mode);
 }
 
@@ -870,7 +870,7 @@ void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
 //TTF related part.
 
 //______________________________________________________________________________
-void TGQuartz::AlignTTFString()
+void TGQuartz::AlignTTFString(WinContext_t wctxt)
 {
    //Comment from TGX11TTF:
    // Compute alignment variables. The alignment is done on the horizontal string
@@ -881,25 +881,27 @@ void TGQuartz::AlignTTFString()
    //This code is from TGX11TTF (with my fixes).
    //It looks like align can not be both X and Y align?
 
-   const EAlign align = EAlign(fTextAlign);
+   auto &atttext = GetAttText(wctxt);
 
+   Int_t txalh = atttext.GetTextAlign() / 10;
+   Int_t txalv = atttext.GetTextAlign() % 10;
+
+   // const EAlign align = EAlign(fTextAlign);
    // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
+   if (txalv == 3) // align == kTLeft || align == kTCenter || align == kTRight)
       fAlign.y = TTF::GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
+   else if (txalv == 2) //  if (align == kMLeft || align == kMCenter || align == kMRight) {
       fAlign.y = TTF::GetAscent() / 2;
-   } else {
+   else
       fAlign.y = 0;
-   }
 
    // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
+   if (txalh == 3) // align == kTRight || align == kMRight || align == kBRight) {
       fAlign.x = TTF::GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
+   else if (txalh == 2) // (align == kTCenter || align == kMCenter || align == kBCenter) {
       fAlign.x = TTF::GetWidth() / 2;
-   } else {
+   else
       fAlign.x = 0;
-   }
 
    FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
    //This shift is from the original code.
@@ -908,7 +910,7 @@ void TGQuartz::AlignTTFString()
 }
 
 //______________________________________________________________________________
-Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
+Bool_t TGQuartz::IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Comment from TGX11TTF:
    // Test if there is really something to render.
@@ -918,14 +920,16 @@ Bool_t TGQuartz::IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    //Comment from TGX11TTF:
    // If w or h is 0, very likely the string is only blank characters
-   if (!w || !h)
+   if (!w || !h || !wctxt)
       return kFALSE;
+
+   auto drawable = (NSObject<X11Drawable> * const) wctxt;
 
    UInt_t width = 0;
    UInt_t height = 0;
    Int_t xy = 0;
 
-   GetWindowSize(GetCurrentWindow(), xy, xy, width, height);
+   GetWindowSize((Drawable_t) drawable.fID, xy, xy, width, height);
 
    // If string falls outside window, there is probably no need to draw it.
    if (x + int(w) <= 0 || x >= int(width))
@@ -986,7 +990,7 @@ void TGQuartz::RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode m
    const Int_t x1 = x - xOff - fAlign.x;
    const Int_t y1 = y + yOff + fAlign.y - h;
 
-   if (!IsTTFStringVisible(x1, y1, w, h))
+   if (!IsTTFStringVisible(wctxt, x1, y1, w, h))
       return;
 
    //By default, all pixels are set to 0 (all components, that's what code in TGX11TTF also does here).

@@ -27,9 +27,6 @@ MacOS X, using CoreGraphics (Quartz).
 
 class TGQuartz : public TGCocoa {
 private:
-   enum EAlign {kNone, kTLeft, kTCenter, kTRight, kMLeft,
-                kMCenter, kMRight, kBLeft, kBCenter, kBRight};
-
    FT_Vector   fAlign; // alignment vector
 public:
    TGQuartz();
@@ -109,8 +106,8 @@ private:
    bool fUseAA;
    bool fUseFAAA;
 
-   void AlignTTFString();
-   Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void AlignTTFString(WinContext_t wctxt);
+   Bool_t IsTTFStringVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void RenderTTFString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode);
    void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
