@@ -486,13 +486,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
 
       if (!result) {
-         auto e = TEnum::GetEnum(resolvedType.c_str());
-         if (e != nullptr) {
-            result = std::make_unique<REnumField>(fieldName, typeName);
-         }
-      }
-
-      if (!result) {
          auto cl = TClass::GetClass(typeName.c_str());
 
          if (cl && cl->GetState() > TClass::kForwardDeclared) {
@@ -548,6 +541,13 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                vecField->fTypeAlias = fieldDesc.GetTypeAlias();
                return vecField;
             }
+         }
+      }
+
+      if (!result) {
+         auto e = TEnum::GetEnum(resolvedType.c_str());
+         if (e != nullptr) {
+            result = std::make_unique<REnumField>(fieldName, typeName);
          }
       }
    } catch (const RException &e) {
