@@ -180,7 +180,6 @@ const Int_t kBIGGEST_RGB_VALUE = 65535;
 //
 
 static GdkGC *gGClist[kMAXGC];
-static GdkGC *gGCpxmp;          // = gGClist[6];  // Pixmap management
 
 static GdkGC *gGCecho;          // Input echo
 
@@ -987,8 +986,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       gdk_gc_set_background(gGClist[i], &GetColor(0).color);
    }
 
-   gGCpxmp = gGClist[6];        // Pixmap management
-
    // Create input echo graphic context
    GdkGCValues echov;
    gdk_color_black(fColormap, &echov.foreground); // = BlackPixel(fDisplay, fScreenNumber);
@@ -1589,10 +1586,10 @@ void TGWin32::ClearWindowW(WinContext_t wctxt)
       gdk_window_clear(ctxt->drawing);
       GdiFlush();
    } else {
-      SetColor(ctxt, gGCpxmp, 0);
-      gdk_win32_draw_rectangle(ctxt->drawing, gGCpxmp, 1,
+      SetColor(ctxt, ctxt->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(ctxt->drawing, ctxt->fGClist[kGCpxmp], 1,
                          0, 0, ctxt->width, ctxt->height);
-      SetColor(ctxt, gGCpxmp, 1);
+      SetColor(ctxt, ctxt->fGClist[kGCpxmp], 1);
    }
 }
 
@@ -1666,7 +1663,7 @@ void TGWin32::CopyPixmap(int wid, int xpos, int ypos)
       return;
 
    gTws = fWindows[wid].get();
-   gdk_window_copy_area(gCws->drawing, gGCpxmp, xpos, ypos, gTws->drawing,
+   gdk_window_copy_area(gCws->drawing, gTws->fGClist[kGCpxmp], xpos, ypos, gTws->drawing,
                         0, 0, gTws->width, gTws->height);
    GdiFlush();
 }
@@ -2196,10 +2193,10 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
       gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
    }
 
-   SetColor(gCws, gGCpxmp, 0);
-   gdk_win32_draw_rectangle(gCws->window,(GdkGC *)gGCpxmp, kTRUE,
+   SetColor(gCws, gCws->fGClist[kGCpxmp], 0);
+   gdk_win32_draw_rectangle(gCws->window, gCws->fGClist[kGCpxmp], kTRUE,
                            0, 0, ww, hh);
-   SetColor(gCws, gGCpxmp, 1);
+   SetColor(gCws, gCws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gCws->drawing = gCws->window;
@@ -2731,8 +2728,6 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
 
 void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 {
-    int i;
-
    if (fWindows.count(wid) == 0) return;
 
    gTws = fWindows[wid].get();
@@ -2752,15 +2747,16 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
          gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), // NULL,
                                        w, h, gdk_visual_get_best_depth());
       }
-      for (i = 0; i < kMAXGC; i++) {
+      for (int i = 0; i < kMAXGC; i++) {
          gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
       }
-      SetColor(gTws, gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
-      SetColor(gTws, gGCpxmp, 1);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], 1, 0, 0, w, h);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
-      if (gTws->double_buffer) gTws->drawing = gTws->buffer;
+      if (gTws->double_buffer)
+         gTws->drawing = gTws->buffer;
    }
    gTws->width = w;
    gTws->height = h;
@@ -2774,7 +2770,6 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
 int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 {
    int wval, hval;
-   int i;
    int ww, hh, depth;
    wval = w;
    hval = h;
@@ -2801,14 +2796,14 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
    gdk_drawable_get_size(gTws->window, &ww, &hh);
 
-   for (i = 0; i < kMAXGC; i++) {
+   for (int i = 0; i < kMAXGC; i++) {
       gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
       gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
    }
 
-   SetColor(gTws, gGCpxmp, 0);
-   gdk_win32_draw_rectangle(gTws->window,(GdkGC *)gGCpxmp, kTRUE, 0, 0, ww, hh);
-   SetColor(gTws, gGCpxmp, 1);
+   SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+   gdk_win32_draw_rectangle(gTws->window, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, ww, hh);
+   SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gTws->drawing = gTws->window;
@@ -2822,16 +2817,13 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 
 void TGWin32::ResizeWindow(Int_t wid)
 {
-   int i;
-   int xval = 0, yval = 0;
-   GdkWindow *win, *root = NULL;
-   int wval = 0, hval = 0, depth = 0;
-
    if (fWindows.count(wid) == 0) return;
+
+   int xval = 0, yval = 0, wval = 0, hval = 0, depth = 0;
 
    gTws = fWindows[wid].get();
 
-   win = (GdkWindow *) gTws->window;
+   auto win = (GdkWindow *) gTws->window;
    gdk_window_get_geometry(win, &xval, &yval,
                            &wval, &hval, &depth);
 
@@ -2850,15 +2842,15 @@ void TGWin32::ResizeWindow(Int_t wid)
                                                      wval, hval, depth);
       }
 
-      for (i = 0; i < kMAXGC; i++) {
+      for (int i = 0; i < kMAXGC; i++) {
          gdk_gc_set_clip_mask((GdkGC *) gGClist[i], (GdkDrawable *)None);
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
       }
 
-      SetColor(gTws, gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer,(GdkGC *)gGCpxmp, kTRUE, 0, 0, wval, hval);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], kTRUE, 0, 0, wval, hval);
 
-      SetColor(gTws, gGCpxmp, 1);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
 
       if (gTws->double_buffer)
          gTws->drawing = gTws->buffer;
@@ -3120,10 +3112,10 @@ void TGWin32::SetDoubleBufferON()
       gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), //NULL,
                                     gTws->width, gTws->height,
                                     gdk_visual_get_best_depth());
-      SetColor(gTws, gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, gTws->width,
-                         gTws->height);
-      SetColor(gTws, gGCpxmp, 1);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 0);
+      gdk_win32_draw_rectangle(gTws->buffer, gTws->fGClist[kGCpxmp], 1, 0, 0,
+                               gTws->width, gTws->height);
+      SetColor(gTws, gTws->fGClist[kGCpxmp], 1);
    }
    for (int i = 0; i < kMAXGC; i++) {
       gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
@@ -4146,7 +4138,7 @@ void TGWin32::SetOpacity(Int_t percent)
    }
 
    // put image back in pixmap on server
-   gdk_draw_image(gCws->drawing, gGCpxmp, (GdkImage *)image,
+   gdk_draw_image(gCws->drawing, gCws->fGClist[kGCpxmp], (GdkImage *)image,
                   0, 0, 0, 0, gCws->width, gCws->height);
    GdiFlush();
 
@@ -4337,7 +4329,7 @@ void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
    auto ctxt = (XWindow_t *) wctxt;
 
    if (ctxt && ctxt->double_buffer) {
-      gdk_window_copy_area(ctxt->window, gGCpxmp, 0, 0,
+      gdk_window_copy_area(ctxt->window, ctxt->fGClist[kGCpxmp], 0, 0,
                            ctxt->drawing, 0, 0, ctxt->width, ctxt->height);
    }
    Update(mode);
