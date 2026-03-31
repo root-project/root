@@ -3334,15 +3334,13 @@ void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
       ctxt->lineStyle = ctxt->dashList.size() == 0 ? LineSolid : LineOnOffDash;
    }
 
-   if (ctxt->fAttLine.GetLineWidth() != att.GetLineWidth()) {
-      ctxt->lineWidth = att.GetLineWidth();
-      if (ctxt->lineStyle == LineSolid) {
-         if (ctxt->lineWidth == 1)
-            ctxt->lineWidth = 0;
-      } else {
-         if (ctxt->lineWidth == 0)
-            ctxt->lineWidth = 1;
-      }
+   ctxt->lineWidth = att.GetLineWidth();
+   if (ctxt->lineStyle == LineSolid) {
+      if (ctxt->lineWidth == 1)
+         ctxt->lineWidth = 0;
+   } else {
+      if (ctxt->lineWidth == 0)
+         ctxt->lineWidth = 1;
    }
 
   if (ctxt->lineWidth >= 0) {
