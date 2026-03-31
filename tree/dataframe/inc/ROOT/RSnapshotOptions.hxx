@@ -56,13 +56,13 @@ Note that for RNTuple, the defaults correspond to those set in RNTupleWriteOptio
 <td><code>fCompressionAlgorithm</code></td>
 <td><code>ROOT::RCompressionSetting::EAlgorithm</code></td>
 <td>Zstd</td>
-<td>Compression algorithm for the output dataset</td>
+<td>Compression algorithm for the output dataset, defaults to ROOT::RCompressionSetting::EAlgorithm::EValues::kUndefined. This is converted to ZLIB by default for TTree and ZSTD by default for RNTuple</td>
 </tr>
 <tr>
 <td><code>fCompressionLevel</code></td>
 <td><code>int</code></td>
 <td>5</td>
-<td>Compression level for the output dataset</td>
+<td>Compression level for the output dataset, defaults to 0 (uncompressed). If the default value of `fCompressionAlgorithm` is not modified, the compression level is changed to 1 by default for TTree and 5 by default for RNTuple</td>
 </tr>
 <tr>
 <td><code>fOutputFormat</code></td>
@@ -184,9 +184,8 @@ struct RSnapshotOptions {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
    ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
-   ECAlgo fCompressionAlgorithm =
-      ROOT::RCompressionSetting::EAlgorithm::kZSTD; ///< Compression algorithm of output file
-   int fCompressionLevel = 5;                       ///< Compression level of output file
+   ECAlgo fCompressionAlgorithm = ECAlgo::kUndefined;                     ///< Compression algorithm of output file
+   int fCompressionLevel = 0;                                             ///< Compression level of output file
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false;  ///< If fMode is "UPDATE", overwrite object in output file if it already exists
    bool fVector2RVec = true;         ///< If set to true will convert std::vector columns to RVec when saving to disk
