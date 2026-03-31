@@ -170,6 +170,26 @@ TEST(RDFSnapshotRNTuple, WriteOpts)
    }
 }
 
+TEST(RDFSnapshotRNTuple, DefaultCompressionSettings)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_default_compression_settings.root"};
+   const std::vector<std::string> columns = {"x"};
+
+   auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
+
+   RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), {"x"}, opts);
+
+   EXPECT_EQ(columns, sdf->GetColumnNames());
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+   // The RNTuple default should be 505
+   EXPECT_EQ(505, compSettings);
+}
+
 TEST(RDFSnapshotRNTuple, Compression)
 {
    FileRAII fileGuard{"RDFSnapshotRNTuple_compression.root"};
