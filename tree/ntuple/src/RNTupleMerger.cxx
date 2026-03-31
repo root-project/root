@@ -1018,7 +1018,7 @@ RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RColumnM
 
       // For each cluster, the "missing columns" are the union of the extraDstColumns and the common columns
       // that are not present in the cluster. We generate zero pages for all of them.
-      missingColumns.resize(extraDstColumns.size());
+      missingColumns.resize(extraDstColumns.size()); // NOTE: this clears all common columns of the previous cluster
       for (size_t i = nCommonColumnsInCluster; i < commonColumns.size(); ++i)
          missingColumns.push_back(commonColumns[i]);
 
@@ -1092,15 +1092,16 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RO
 {
    std::string name = prefix + '.' + srcFieldDesc.GetFieldName();
 
+   // We don't want to try and merge alias columns. Note that subfields of projected fields
+   // must also be projected, so we don't need to check them.
+   if (srcFieldDesc.IsProjectedField())
+      return;
+
    const auto &columnIds = srcFieldDesc.GetLogicalColumnIds();
    columns.reserve(columns.size() + columnIds.size());
    // NOTE: here we can match the src and dst columns by column index because we forbid merging fields with
    // different column representations.
    for (auto i = 0u; i < srcFieldDesc.GetLogicalColumnIds().size(); ++i) {
-      // We don't want to try and merge alias columns
-      if (srcFieldDesc.IsProjectedField())
-         continue;
-
       auto srcColumnId = srcFieldDesc.GetLogicalColumnIds()[i];
       const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
 
