@@ -116,6 +116,9 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 };
 
+enum EAlign { kAlignNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
+              kBLeft, kBCenter, kBRight };
+
 const int kMAXGC = 7,
           kGCline = 0, kGCmark = 1, kGCfill = 2,
           kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
@@ -158,7 +161,7 @@ struct XWindow_t {
    std::vector<GdkPoint> markerShape; ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
    TAttText fAttText;                 ///< current text attributes
-   Int_t textAlign = 0;               ///< selected text align
+   EAlign textAlign = kAlignNone;     ///< selected text align
    FT_Vector  alignVector;            ///< alignment vector
 };
 
@@ -808,7 +811,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
    fUseSysPointers = kFALSE;
-   fTextAlign = 7;
    fTextMagnitude = 1;
    fCharacterUpX = 1;
    fCharacterUpY = 1;
@@ -1153,7 +1155,7 @@ void TGWin32::Align(WinContext_t wctxt)
 {
    auto ctxt = (XWindow_t *) wctxt;
 
-   EAlign align = (EAlign) ctxt->textAlign;
+   auto align = ctxt->textAlign;
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
@@ -3996,44 +3998,46 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
    Int_t txalh = att.GetTextAlign() / 10;
    Int_t txalv = att.GetTextAlign() % 10;
 
+   ctxt->textAlign = kAlignNone;
+
    switch (txalh) {
       case 0 :
       case 1 :
          switch (txalv) {  //left
             case 1 :
-               ctxt->textAlign = 7;   //bottom
+               ctxt->textAlign = kBLeft;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 4;   //center
+               ctxt->textAlign = kMLeft;   //middle
                break;
             case 3 :
-               ctxt->textAlign = 1;   //top
+               ctxt->textAlign = kTLeft;   //top
                break;
          }
          break;
       case 2 :
          switch (txalv) { //center
             case 1 :
-               ctxt->textAlign = 8;   //bottom
+               ctxt->textAlign = kBCenter;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 5;   //center
+               ctxt->textAlign = kMCenter;   //middle
                break;
             case 3 :
-               ctxt->textAlign = 2;   //top
+               ctxt->textAlign = kTCenter;   //top
                break;
          }
          break;
       case 3 :
          switch (txalv) {  //right
             case 1 :
-               ctxt->textAlign = 9;   //bottom
+               ctxt->textAlign = kBRight;   //bottom
                break;
             case 2 :
-               ctxt->textAlign = 6;   //center
+               ctxt->textAlign = kMRight;   //center
                break;
             case 3 :
-               ctxt->textAlign = 3;   //top
+               ctxt->textAlign = kTRight;   //top
                break;
          }
          break;
@@ -4245,9 +4249,6 @@ void TGWin32::SetTextAlign(Short_t talign)
    arg.SetTextAlign(talign);
 
    SetAttText((WinContext_t) gCws, arg);
-
-   // FIXME: member fTextAlign conflicts with TAttText::fTextAlign
-   fTextAlign = gCws->textAlign;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

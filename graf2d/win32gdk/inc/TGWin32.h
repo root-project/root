@@ -68,9 +68,6 @@ class TExMap;
 class TGWin32 : public TVirtualX {
 
 private:
-   enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-                 kBLeft, kBCenter, kBRight };
-
    void    Align(WinContext_t wctxt);
    void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
                      Int_t bx, Int_t by);
@@ -110,7 +107,6 @@ protected:
    Int_t       fScreenNumber;       ///< Screen number
    Bool_t      fHasTTFonts;         ///< True when TrueType fonts are used
    Bool_t      fUseSysPointers;     ///< True when using system mouse pointers
-   Int_t       fTextAlign;          ///< Text alignment (set in SetTextAlign)
    Float_t     fCharacterUpX;       ///< Character Up vector along X
    Float_t     fCharacterUpY;       ///< Character Up vector along Y
    Float_t     fTextMagnitude;      ///< Text Magnitude
