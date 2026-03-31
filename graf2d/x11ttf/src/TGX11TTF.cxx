@@ -208,9 +208,9 @@ Bool_t TGX11TTF::Init(void *display)
 /// then the rotation is applied on the alignment variables.
 /// SetRotation and LayoutGlyphs should have been called before.
 
-void TGX11TTF::Align(Int_t value)
+void TGX11TTF::Align(WinContext_t wctxt)
 {
-   EAlign align = (EAlign) value;
+   auto align = GetTextAlignW(wctxt);
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
@@ -372,7 +372,7 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
-      Align(GetTextAlignW(wctxt));
+      Align(wctxt);
       RenderString(wctxt, x, y, mode);
    }
 }
@@ -391,7 +391,7 @@ void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Fl
       TTF::SetRotationMatrix(angle);
       TTF::PrepareString(text);
       TTF::LayoutGlyphs();
-      Align(GetTextAlignW(wctxt));
+      Align(wctxt);
       RenderString(wctxt, x, y, mode);
    }
 }
@@ -548,7 +548,6 @@ void TGX11TTF::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set specified font.
-
 
 void TGX11TTF::SetAttText(WinContext_t wctxt, const TAttText &att)
 {

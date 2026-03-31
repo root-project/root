@@ -27,26 +27,12 @@ class TXftFontHash;
 class TGX11TTF : public TGX11 {
 
 private:
-   enum EAlign {
-// clang++ <v20 (-Wshadow) complains about shadowing GuiTypes.h global variable kNone. Let's silence warning:
-#if defined(__clang__) && __clang_major__ < 20
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
-      kNone,
-#if defined(__clang__) && __clang_major__ < 20
-#pragma clang diagnostic pop
-#endif
-
-      kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-      kBLeft, kBCenter, kBRight };
-
    FT_Vector   fAlign;                 ///< alignment vector
 #ifdef R__HAS_XFT
    TXftFontHash  *fXftFontHash;        ///< hash table for Xft fonts
 #endif
 
-   void     Align(Int_t value);
+   void     Align(WinContext_t wctxt);
    void     DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, RXImage *xim,
                       Int_t bx, Int_t by);
    Bool_t   IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
