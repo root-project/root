@@ -3079,3 +3079,25 @@ TEST(ONNX, ScatterND_3)
    }
 }
 
+TEST(ONNX, Clip)
+{
+   // test Clip operator : input is [N,2,2] use N= 2 using min/max of -1,1
+   std::vector<float> input = {-2.0,  0.5, 1.5, -0.3, 0.0,  3.0, -1.5,  0.8};
+   std::vector<float> correct_output1 = {-1, 0.5, 1., -0.3, 0., 1.0, -1, 0.8};
+   std::vector<float> correct_output2 = {-1, 0.5, 1.5, -0.3, 0., 3.0, -1, 0.8};
+
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<std::vector<float>>, "Clip", "\"Clip_FromONNX.dat\", 2", 2, input);
+
+   // Checking output size
+
+   EXPECT_EQ(output.size(), 2);
+   EXPECT_EQ(output[0].size(), correct_output1.size());
+   EXPECT_EQ(output[1].size(), correct_output2.size());
+   // Checking output
+   for (size_t i = 0; i < output[0].size(); ++i) {
+      EXPECT_LE(std::abs(output[0][i] - correct_output1[i]), DEFAULT_TOLERANCE);
+   }
+   for (size_t i = 0; i < output[1].size(); ++i) {
+      EXPECT_LE(std::abs(output[1][i] - correct_output2[i]), DEFAULT_TOLERANCE);
+   }
+}

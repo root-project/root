@@ -1160,7 +1160,7 @@ void RModel::GenerateOutput()
       if (isDynamic) {
          std::string outputName = "output_tensor_" + name;
          auto tensor_size = ConvertDimShapeToLength(GetDimTensorShape(name));
-         fGC += " " + outputName + ".resize(" + tensor_size + ");\n";
+         fGC += SP + outputName + ".resize(" + tensor_size + ");\n";
       }
    }
 

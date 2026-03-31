@@ -96,6 +96,7 @@ extern ParserFuncSignature ParseRandom;
 extern ParserFuncSignature ParseScatterElements;
 extern ParserFuncSignature ParseScatterND;
 extern ParserFuncSignature ParseNonZero;
+extern ParserFuncSignature ParseClip;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseGemmRelu;
@@ -253,6 +254,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("ScatterElements", ParseScatterElements);
    RegisterOperator("ScatterND", ParseScatterND);
    RegisterOperator("NonZero", ParseNonZero);
+   RegisterOperator("Clip", ParseClip);
 }
 
 // Destructor of the parser
