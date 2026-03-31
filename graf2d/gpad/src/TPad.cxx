@@ -4211,13 +4211,16 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
 void TPad::PaintHatches(Double_t dy, Double_t angle,
                         Int_t nn, Double_t *xx, Double_t *yy)
 {
-   Int_t i, i1, i2, nbi, m, inv;
+   Int_t i, i1, i2, nbi;
    Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
    const Double_t angr  = TMath::Pi()*(180.-angle)/180.;
    const Double_t epsil = 0.0001;
-   const Int_t maxnbi = 100;
-   Double_t xli[maxnbi], yli[maxnbi], xt1, xt2, yt1, yt2;
-   Double_t ll, x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
+
+   std::vector<Double_t> xli;
+   std::vector<Double_t> yli;
+
+   Double_t xt1, xt2, yt1, yt2;
+   Double_t x, y, x1, x2, y1, y2, a, b, xi, xip, xin, yi, yip;
 
    Double_t rwxmin = gPad->GetX1();
    Double_t rwxmax = gPad->GetX2();
@@ -4259,14 +4262,20 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    while (dy * yindx >= ymin) {
       ycur = dy * yindx--;
       nbi = 0;
+
+      xli.clear();
+      yli.clear();
+
       for (i=2; i<=nn+1; i++) {
          i2 = i;
          i1 = i-1;
          if (i == nn+1) i2=1;
+
          x1  = wndc*ratiox*(xx[i1-1]-rwxmin);
          y1  = hndc*ratioy*(yy[i1-1]-rwymin);
          x2  = wndc*ratiox*(xx[i2-1]-rwxmin);
          y2  = hndc*ratioy*(yy[i2-1]-rwymin);
+
          xt1 = cosa*x1-sina*y1;
          yt1 = sina*x1+cosa*y1;
          xt2 = cosa*x2-sina*y2;
@@ -4283,8 +4292,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
             }
             if ((yi <= ycur) && (ycur < yip)) {
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt1;
+               xli.push_back(xt1);
             }
             continue;
          }
@@ -4293,11 +4301,9 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          if (yt1 == yt2) {
             if (yt1 == ycur) {
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt1;
+               xli.push_back(xt1);
                nbi++;
-               if (nbi >= maxnbi) return;
-               xli[nbi-1] = xt2;
+               xli.push_back(xt2);
             }
             continue;
          }
@@ -4305,6 +4311,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
          // Other line segment
          a = (yt1-yt2)/(xt1-xt2);
          b = (yt2*xt1-xt2*yt1)/(xt1-xt2);
+
          if (xt1 < xt2) {
             xi  = xt1;
             xip = xt2;
@@ -4312,47 +4319,35 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
             xi  = xt2;
             xip = xt1;
          }
+
          xin = (ycur-b)/a;
-         if  ((xi <= xin) && (xin < xip) &&
-              (TMath::Min(yt1,yt2) <= ycur) &&
-              (ycur < TMath::Max(yt1,yt2))) {
+
+         if ((xi <= xin) && (xin < xip) &&
+             (TMath::Min(yt1,yt2) <= ycur) &&
+             (ycur < TMath::Max(yt1,yt2))) {
             nbi++;
-            if (nbi >= maxnbi) return;
-            xli[nbi-1] = xin;
+            xli.push_back(xin);
          }
       }
 
       // Sorting of the x coordinates intersections
-      inv = 0;
-      m   = nbi-1;
-L30:
-      for (i=1; i<=m; i++) {
-         if (xli[i] < xli[i-1]) {
-            inv++;
-            ll       = xli[i-1];
-            xli[i-1] = xli[i];
-            xli[i]   = ll;
-         }
-      }
-      m--;
-      if (inv == 0) goto L50;
-      inv = 0;
-      goto L30;
+      std::sort(xli.begin(), xli.end());
 
       // Draw the hatches
-L50:
       if ((nbi%2 != 0) || (nbi == 0))
          continue;
 
       for (i=0; i<nbi; ++i) {
          // Rotate back the hatches - first calculate y coordinate
-         yli[i] = sinb*xli[i] + cosb*ycur;
+         Double_t ytmp = sinb*xli[i] + cosb*ycur;
          xli[i] = cosb*xli[i] - sinb*ycur;
          // Convert hatches' positions from true NDC to WC to handle cliping
          xli[i] = (xli[i]/wndc)*(rwxmax-rwxmin)+rwxmin;
-         yli[i] = (yli[i]/hndc)*(rwymax-rwymin)+rwymin;
+         ytmp   = (ytmp/hndc)*(rwymax-rwymin)+rwymin;
+         yli.push_back(ytmp);
       }
-      gPad->PaintSegments(nbi/2, xli, yli);
+
+      gPad->PaintSegments(nbi/2, xli.data(), yli.data());
    }
 }
 
