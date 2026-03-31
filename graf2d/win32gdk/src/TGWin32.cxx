@@ -1572,18 +1572,27 @@ void TGWin32::SetTextSize(Float_t textsize)
 
 void TGWin32::ClearWindow()
 {
-   if (!gCws)
+   ClearWindowW((WinContext_t) gCws);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear specified window.
+
+void TGWin32::ClearWindowW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
       return;
 
-   if (!gCws->ispixmap && !gCws->double_buffer) {
-      gdk_window_set_background(gCws->drawing, (GdkColor *) & GetColor(0).color);
-      gdk_window_clear(gCws->drawing);
+   if (!ctxt->ispixmap && !ctxt->double_buffer) {
+      gdk_window_set_background(ctxt->drawing, (GdkColor *) & GetColor(0).color);
+      gdk_window_clear(ctxt->drawing);
       GdiFlush();
    } else {
-      SetColor(gCws, gGCpxmp, 0);
-      gdk_win32_draw_rectangle(gCws->drawing, gGCpxmp, 1,
-                         0, 0, gCws->width, gCws->height);
-      SetColor(gCws, gGCpxmp, 1);
+      SetColor(ctxt, gGCpxmp, 0);
+      gdk_win32_draw_rectangle(ctxt->drawing, gGCpxmp, 1,
+                         0, 0, ctxt->width, ctxt->height);
+      SetColor(ctxt, gGCpxmp, 1);
    }
 }
 
@@ -4296,7 +4305,7 @@ void TGWin32::SetTextColor(Color_t cindex)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TGWin32::Sync(int mode)
+void TGWin32::Sync(int /* mode */)
 {
 }
 
@@ -4311,9 +4320,25 @@ void TGWin32::Sync(int mode)
 
 void TGWin32::UpdateWindow(int mode)
 {
-   if (gCws && gCws->double_buffer) {
-      gdk_window_copy_area(gCws->window, gGCpxmp, 0, 0,
-                           gCws->drawing, 0, 0, gCws->width, gCws->height);
+   UpdateWindowW((WinContext_t) gCws, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update current window
+/// mode : (1) update
+///        (0) sync
+///
+/// Synchronise client and server once (not permanent).
+/// Copy the pixmap ctxt->drawing on the window ctxt->window
+/// if the double buffer is on.
+
+void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+
+   if (ctxt && ctxt->double_buffer) {
+      gdk_window_copy_area(ctxt->window, gGCpxmp, 0, 0,
+                           ctxt->drawing, 0, 0, ctxt->width, ctxt->height);
    }
    Update(mode);
 }
