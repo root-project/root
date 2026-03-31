@@ -303,6 +303,9 @@ std::vector<int> REveGeomDescription::Apex::GetIndexStack() const
 void REveGeomDescription::ImportFile(const char* filename)
 {
    s_geoManager = TGeoManager::Import(filename);
+   if (!s_geoManager) {
+       throw std::runtime_error("Critical Error: Failed to import geometry file");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
