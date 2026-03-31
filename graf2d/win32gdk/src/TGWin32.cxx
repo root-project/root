@@ -141,6 +141,7 @@ struct XWindow_t {
    ULong_t *new_colors = nullptr; ///< new image colors (after processing)
    Int_t    ncolors = 0;          ///< number of different colors
    GdkGC   *fGClist[kMAXGC];      ///< array of GC objects for concrete window
+   TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
    TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
    GdkLineStyle lineStyle = GDK_LINE_SOLID; ///< current line style
    Int_t lineWidth = 0;            ///< current line width
@@ -1579,10 +1580,10 @@ void TGWin32::ClearWindow()
       gdk_window_clear(gCws->drawing);
       GdiFlush();
    } else {
-      SetColor(gGCpxmp, 0);
+      SetColor(gCws, gGCpxmp, 0);
       gdk_win32_draw_rectangle(gCws->drawing, gGCpxmp, 1,
                          0, 0, gCws->width, gCws->height);
-      SetColor(gGCpxmp, 1);
+      SetColor(gCws, gGCpxmp, 1);
    }
 }
 
@@ -2147,6 +2148,8 @@ Int_t TGWin32::AddWindowHandle()
    ctxt->new_colors = nullptr;
    ctxt->ncolors = 0;
 
+   ctxt->drawMode = TVirtualX::kCopy;
+
    // Create primitives graphic contexts
    for (int i = 0; i < kMAXGC; i++) {
       ctxt->fGClist[i]  = gdk_gc_new(GDK_ROOT_PARENT());
@@ -2184,10 +2187,10 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
       gdk_gc_set_clip_mask(gCws->fGClist[i], (GdkDrawable *)None);
    }
 
-   SetColor(gGCpxmp, 0);
+   SetColor(gCws, gGCpxmp, 0);
    gdk_win32_draw_rectangle(gCws->window,(GdkGC *)gGCpxmp, kTRUE,
                            0, 0, ww, hh);
-   SetColor(gGCpxmp, 1);
+   SetColor(gCws, gGCpxmp, 1);
 
    // Initialise the window structure
    gCws->drawing = gCws->window;
@@ -2744,9 +2747,9 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
          gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkBitmap *)None);
       }
-      SetColor(gGCpxmp, 0);
+      SetColor(gTws, gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
-      SetColor(gGCpxmp, 1);
+      SetColor(gTws, gGCpxmp, 1);
 
       if (gTws->double_buffer) gTws->drawing = gTws->buffer;
    }
@@ -2794,9 +2797,9 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
       gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
    }
 
-   SetColor(gGCpxmp, 0);
+   SetColor(gTws, gGCpxmp, 0);
    gdk_win32_draw_rectangle(gTws->window,(GdkGC *)gGCpxmp, kTRUE, 0, 0, ww, hh);
-   SetColor(gGCpxmp, 1);
+   SetColor(gTws, gGCpxmp, 1);
 
    // Initialise the window structure
    gTws->drawing = gTws->window;
@@ -2843,10 +2846,10 @@ void TGWin32::ResizeWindow(Int_t wid)
          gdk_gc_set_clip_mask(gTws->fGClist[i], (GdkDrawable *)None);
       }
 
-      SetColor(gGCpxmp, 0);
+      SetColor(gTws, gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer,(GdkGC *)gGCpxmp, kTRUE, 0, 0, wval, hval);
 
-      SetColor(gGCpxmp, 1);
+      SetColor(gTws, gGCpxmp, 1);
 
       if (gTws->double_buffer)
          gTws->drawing = gTws->buffer;
@@ -2980,12 +2983,12 @@ ULong_t TGWin32::GetPixel(Color_t ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the foreground color in GdkGC.
 
-void TGWin32::SetColor(GdkGC *gc, int ci)
+void TGWin32::SetColor(XWindow_t *ctxt, GdkGC *gc, int ci)
 {
    GdkGCValues gcvals;
    GdkColor color;
 
-   if (ci<=0) ci = 10; //white
+   if (ci <= 0) ci = 10; //white
 
    TColor *clr = gROOT->GetColor(ci);
    if (clr)
@@ -2998,7 +3001,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
       col = GetColor(0);
    }
 
-   if (fDrawMode == kXor) {
+   if (ctxt && ctxt->drawMode == kXor) {
       gdk_gc_get_values(gc, &gcvals);
 
       color.pixel = col.color.pixel ^ gcvals.background.pixel;
@@ -3108,10 +3111,10 @@ void TGWin32::SetDoubleBufferON()
       gTws->buffer = gdk_pixmap_new(GDK_ROOT_PARENT(), //NULL,
                                     gTws->width, gTws->height,
                                     gdk_visual_get_best_depth());
-      SetColor(gGCpxmp, 0);
+      SetColor(gTws, gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, gTws->width,
                          gTws->height);
-      SetColor(gGCpxmp, 1);
+      SetColor(gTws, gGCpxmp, 1);
    }
    for (int i = 0; i < kMAXGC; i++) {
       gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
@@ -3132,20 +3135,7 @@ void TGWin32::SetDoubleBufferON()
 
 void TGWin32::SetDrawMode(EDrawMode mode)
 {
-   GdkFunction func = GDK_COPY;
-   if (mode == kXor)
-      func = GDK_XOR;
-   else if (mode == kInvert)
-      func = GDK_INVERT;
-
-   for (int i = 0; i < kMAXGC; i++) {
-      if (gGClist[i])
-         gdk_gc_set_function(gGClist[i], func);
-      if (gCws && gCws->fGClist[i])
-         gdk_gc_set_function(gCws->fGClist[i], func);
-   }
-
-   fDrawMode = mode;
+   SetDrawModeW((WinContext_t) gCws, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3200,7 +3190,7 @@ void TGWin32::SetAttFill(WinContext_t wctxt, const TAttFill &att)
    if (!gStyle->GetFillColor() && cindex > 1)
       cindex = 0;
    if (cindex >= 0)
-      SetColor(ctxt->fGClist[kGCfill], Int_t(cindex));
+      SetColor(ctxt, ctxt->fGClist[kGCfill], Int_t(cindex));
    ctxt->fAttFill.SetFillColor(cindex);
 
    Int_t style = att.GetFillStyle() / 1000;
@@ -3335,8 +3325,8 @@ void TGWin32::SetAttLine(WinContext_t wctxt, const TAttLine &att)
    if (!ctxt)
       return;
 
-   SetColor(ctxt->fGClist[kGCline], att.GetLineColor());
-   SetColor(ctxt->fGClist[kGCdash], att.GetLineColor());
+   SetColor(ctxt, ctxt->fGClist[kGCline], att.GetLineColor());
+   SetColor(ctxt, ctxt->fGClist[kGCdash], att.GetLineColor());
 
    if (ctxt->fAttLine.GetLineStyle() != att.GetLineStyle()) { //set style index only if different
       if (att.GetLineStyle() <= 1)
@@ -3443,7 +3433,7 @@ void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
    if (!ctxt)
       return;
 
-   SetColor(ctxt->fGClist[kGCmark], att.GetMarkerColor());
+   SetColor(ctxt, ctxt->fGClist[kGCmark], att.GetMarkerColor());
 
    Bool_t changed = (att.GetMarkerSize() != ctxt->fAttMarker.GetMarkerSize()) ||
                     (att.GetMarkerStyle() != ctxt->fAttMarker.GetMarkerStyle());
@@ -4078,7 +4068,7 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
          break;
    }
 
-   SetColor(ctxt->fGClist[kGCtext], att.GetTextColor());
+   SetColor(ctxt, ctxt->fGClist[kGCtext], att.GetTextColor());
 
    GdkGCValues values;
    gdk_gc_get_values(ctxt->fGClist[kGCtext], &values);
@@ -4585,7 +4575,7 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                lines[icol][n].x2 = x - 1;
                lines[icol][n].y2 = y;
                if (nlines[icol] == MAX_SEGMENT) {
-                  SetColor(lineGC, (int) icol + offset);
+                  SetColor(wid ? nullptr : gCws, lineGC, (int) icol + offset);
                   gdk_win32_draw_segments(id, lineGC,
                                        (GdkSegment *) &lines[icol][0], MAX_SEGMENT);
                   nlines[icol] = 0;
@@ -4602,7 +4592,7 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
          lines[icol][n].x2 = x - 1;
          lines[icol][n].y2 = y;
          if (nlines[icol] == MAX_SEGMENT) {
-            SetColor(lineGC, (int) icol + offset);
+            SetColor(wid ? nullptr : gCws, lineGC, (int) icol + offset);
             gdk_win32_draw_segments(id, lineGC,
                               (GdkSegment *)&lines[icol][0], MAX_SEGMENT);
             nlines[icol] = 0;
@@ -4612,7 +4602,7 @@ void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
 
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
-         SetColor(lineGC, i + offset);
+         SetColor(wid ? nullptr : gCws, lineGC, i + offset);
          gdk_win32_draw_segments(id, lineGC,
                                  (GdkSegment *)&lines[icol][0], nlines[i]);
       }
@@ -7891,3 +7881,39 @@ void TGWin32::SetUserThreadId(ULong_t id)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set window draw mode
+
+void TGWin32::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
+{
+   // set TVirtualX member to support old interface
+   fDrawMode = mode;
+
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   GdkFunction func = GDK_COPY;
+   if (mode == kXor)
+      func = GDK_XOR;
+   else if (mode == kInvert)
+      func = GDK_INVERT;
+
+   for (int i = 0; i < kMAXGC; i++) {
+      if (gGClist[i])
+         gdk_gc_set_function(gGClist[i], func);
+      if (ctxt->fGClist[i])
+         gdk_gc_set_function(ctxt->fGClist[i], func);
+   }
+
+   ctxt->drawMode = mode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns window draw mode
+
+TVirtualX::EDrawMode TGWin32::GetDrawModeW(WinContext_t wctxt)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   return ctxt ? ctxt->drawMode : kCopy;
+}
