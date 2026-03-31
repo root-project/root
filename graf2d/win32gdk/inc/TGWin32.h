@@ -87,7 +87,7 @@ private:
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
    void  RemovePixmap(GdkDrawable *pix);
-   void  SetColor(GdkGC *gc, Int_t ci);
+   void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
    void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
    Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
@@ -217,6 +217,8 @@ public:
    void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
    void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
    void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
+   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
+   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
 
    void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
    void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
