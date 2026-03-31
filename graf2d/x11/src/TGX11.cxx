@@ -107,7 +107,7 @@ struct XWindow_t {
    Int_t    fNcolors = 0;             ///< number of different colors
    Bool_t   fShared = 0;              ///< notify when window is shared
    GC       fGClist[kMAXGC];          ///< list of GC object, individual for each window
-   TVirtualX::EDrawMode fDrawMode = TVirtualX::kCopy;    ///< current draw mode
+   TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
    TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
    Int_t     lineWidth = 0;           ///< X11 line width
    Int_t     lineStyle = LineSolid;   ///< X11 line style
@@ -409,10 +409,10 @@ void TGX11::ClearWindowW(WinContext_t wctxt)
       XClearWindow((Display*)fDisplay, ctxt->fDrawing);
       XFlush((Display*)fDisplay);
    } else {
-      SetColor(&ctxt->fGClist[kGCpxmp], 0);
+      SetColor(ctxt, &ctxt->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCpxmp],
                      0, 0, ctxt->fWidth, ctxt->fHeight);
-      SetColor(&ctxt->fGClist[kGCpxmp], 1);
+      SetColor(ctxt, &ctxt->fGClist[kGCpxmp], 1);
    }
 }
 
@@ -1396,7 +1396,7 @@ Int_t TGX11::AddWindowHandle()
 
    auto ctxt = fWindows[maxid].get();
    ctxt->fOpen = 1;
-   ctxt->fDrawMode = TVirtualX::kCopy;
+   ctxt->drawMode = TVirtualX::kCopy;
    for (int n = 0; n < kMAXGC; ++n)
       ctxt->fGClist[n] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
 
@@ -1442,9 +1442,9 @@ Int_t TGX11::OpenPixmap(unsigned int w, unsigned int h)
    for (int i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gCws->fGClist[i], None);
 
-   SetColor(&gCws->fGClist[kGCpxmp], 0);
+   SetColor(gCws, &gCws->fGClist[kGCpxmp], 0);
    XFillRectangle((Display*)fDisplay, gCws->fWindow, gCws->fGClist[kGCpxmp], 0, 0, ww, hh);
-   SetColor(&gCws->fGClist[kGCpxmp], 1);
+   SetColor(gCws, &gCws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gCws->fDrawing       = gCws->fWindow;
@@ -1964,9 +1964,9 @@ void TGX11::RescaleWindow(int wid, unsigned int w, unsigned int h)
       }
       for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, w, h);
-      SetColor(&gTws->fGClist[kGCpxmp], 1);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 1);
       if (gTws->fDoubleBuffer)
          gTws->fDrawing = gTws->fBuffer;
    }
@@ -2009,9 +2009,9 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
    for (i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
 
-   SetColor(&gTws->fGClist[kGCpxmp], 0);
+   SetColor(gTws, &gTws->fGClist[kGCpxmp], 0);
    XFillRectangle((Display*)fDisplay, gTws->fWindow, gTws->fGClist[kGCpxmp], 0, 0, ww, hh);
-   SetColor(&gTws->fGClist[kGCpxmp], 1);
+   SetColor(gTws, &gTws->fGClist[kGCpxmp], 1);
 
    // Initialise the window structure
    gTws->fDrawing = gTws->fWindow;
@@ -2051,9 +2051,9 @@ void TGX11::ResizeWindow(Int_t wid)
       }
       for (int i = 0; i < kMAXGC; i++)
          XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
-      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, wval, hval);
-      SetColor(&gTws->fGClist[kGCpxmp], 1);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 1);
       if (gTws->fDoubleBuffer)
          gTws->fDrawing = gTws->fBuffer;
    }
@@ -2150,7 +2150,7 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the foreground color in GC.
 
-void  TGX11::SetColor(void *gci, int ci)
+void TGX11::SetColor(XWindow_t *ctxt, void *gci, int ci)
 {
    GC gc = *(GC *)gci;
 
@@ -2165,7 +2165,7 @@ void  TGX11::SetColor(void *gci, int ci)
       col = GetColor(0);
    }
 
-   if (fDrawMode == kXor) {
+   if (ctxt && ctxt->drawMode == kXor) {
       XGCValues values;
       XGetGCValues((Display*)fDisplay, gc, GCBackground, &values);
       XSetForeground((Display*)fDisplay, gc, col.fPixel ^ values.background);
@@ -2249,9 +2249,9 @@ void TGX11::SetDoubleBufferON()
    if (!gTws->fBuffer) {
       gTws->fBuffer = XCreatePixmap((Display*)fDisplay, fRootWin,
                                    gTws->fWidth, gTws->fHeight, fDepth);
-      SetColor(&gTws->fGClist[kGCpxmp], 0);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 0);
       XFillRectangle((Display*)fDisplay, gTws->fBuffer, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth, gTws->fHeight);
-      SetColor(&gTws->fGClist[kGCpxmp], 1);
+      SetColor(gTws, &gTws->fGClist[kGCpxmp], 1);
    }
    for (int i = 0; i < kMAXGC; i++)
       XSetClipMask((Display*)fDisplay, gTws->fGClist[i], None);
@@ -2271,17 +2271,7 @@ void TGX11::SetDoubleBufferON()
 
 void TGX11::SetDrawMode(EDrawMode mode)
 {
-   if (fDisplay && gCws) {
-      auto xmode = GXcopy;
-      if (mode == kXor)
-         xmode = GXxor;
-      else if (mode == kInvert)
-         xmode = GXinvert;
-
-      for (int i = 0; i < kMAXGC; i++)
-         XSetFunction((Display*)fDisplay, gCws->fGClist[i], xmode);
-   }
-   fDrawMode = mode;
+   SetDrawModeW((WinContext_t) gCws, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3052,7 +3042,7 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
                lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
                lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
                if (nlines[icol] == maxSegment) {
-                  SetColor(&lineGC, (int)icol+offset);
+                  SetColor(wid ? nullptr : gCws, &lineGC, (int)icol+offset);
                   XDrawSegments((Display*)fDisplay,id,lineGC,&lines[icol][0],
                                 maxSegment);
                   nlines[icol] = 0;
@@ -3066,7 +3056,7 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
          lines[icol][n].x1 = xcur; lines[icol][n].y1 = y;
          lines[icol][n].x2 = x-1;  lines[icol][n].y2 = y;
          if (nlines[icol] == maxSegment) {
-            SetColor(&lineGC, (int)icol+offset);
+            SetColor(wid ? nullptr : gCws, &lineGC, (int)icol+offset);
             XDrawSegments((Display*)fDisplay,id,lineGC,&lines[icol][0],
                           maxSegment);
             nlines[icol] = 0;
@@ -3076,7 +3066,7 @@ void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t n
 
    for (i = 0; i < 256; i++) {
       if (nlines[i] != 0) {
-         SetColor(&lineGC,i+offset);
+         SetColor(wid ? nullptr : gCws, &lineGC,i+offset);
          XDrawSegments((Display*)fDisplay,id,lineGC,&lines[i][0],nlines[i]);
       }
    }
@@ -3271,7 +3261,7 @@ void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
    if (!gStyle->GetFillColor() && cindex > 1)
       cindex = 0;
    if (cindex >= 0)
-      SetColor(&ctxt->fGClist[kGCfill], Int_t(cindex));
+      SetColor(ctxt, &ctxt->fGClist[kGCfill], Int_t(cindex));
    ctxt->fAttFill.SetFillColor(cindex);
 
    Int_t style = att.GetFillStyle() / 1000;
@@ -3364,8 +3354,8 @@ void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
    }
 
    if (att.GetLineColor() >= 0) {
-      SetColor(&ctxt->fGClist[kGCline], (Int_t) att.GetLineColor());
-      SetColor(&ctxt->fGClist[kGCdash], (Int_t) att.GetLineColor());
+      SetColor(ctxt, &ctxt->fGClist[kGCline], (Int_t) att.GetLineColor());
+      SetColor(ctxt, &ctxt->fGClist[kGCdash], (Int_t) att.GetLineColor());
    }
 
    ctxt->fAttLine = att;
@@ -3377,7 +3367,7 @@ void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
    if (!ctxt)
       return;
 
-   SetColor(&ctxt->fGClist[kGCmark], att.GetMarkerColor());
+   SetColor(ctxt, &ctxt->fGClist[kGCmark], att.GetMarkerColor());
 
    Bool_t changed = (att.GetMarkerSize() != ctxt->fAttMarker.GetMarkerSize()) ||
                     (att.GetMarkerStyle() != ctxt->fAttMarker.GetMarkerStyle());
@@ -3917,7 +3907,7 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
          break;
    }
 
-   SetColor(&ctxt->fGClist[kGCtext], att.GetTextColor());
+   SetColor(ctxt, &ctxt->fGClist[kGCtext], att.GetTextColor());
 
    XGCValues values;
    if (XGetGCValues((Display*)fDisplay, ctxt->fGClist[kGCtext], GCForeground | GCBackground, &values)) {
@@ -3945,8 +3935,10 @@ void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
 
 void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 {
+   fDrawMode = mode;
+
    auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
+   if (!ctxt || !fDisplay)
       return;
 
    auto gxmode = GXcopy;
@@ -3957,7 +3949,7 @@ void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
    for (int i = 0; i < kMAXGC; i++)
       XSetFunction((Display*)fDisplay, ctxt->fGClist[i], gxmode);
 
-   ctxt->fDrawMode = mode;
+   ctxt->drawMode = mode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3966,5 +3958,5 @@ void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
 TVirtualX::EDrawMode TGX11::GetDrawModeW(WinContext_t wctxt)
 {
    auto ctxt = (XWindow_t *) wctxt;
-   return ctxt ? ctxt->fDrawMode : kCopy;
+   return ctxt ? ctxt->drawMode : kCopy;
 }

@@ -75,7 +75,7 @@ private:
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
-   void   SetColor(void *gc, Int_t ci);
+   void   SetColor(XWindow_t *ctxt, void *gc, Int_t ci);
    void   SetInput(Int_t inp);
    void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
                              Int_t &maxcolors);
