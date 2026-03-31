@@ -364,6 +364,28 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
    throw std::logic_error(
       "RDataFrame::Snapshot: something went wrong when creating a TTree branch, please report this as a bug.");
 }
+
+auto GetSnapshotCompressionSettings(const ROOT::RDF::RSnapshotOptions &options)
+{
+   using CompAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
+   using OutputFormat = ROOT::RDF::ESnapshotOutputFormat;
+
+   if (options.fOutputFormat == OutputFormat::kTTree || options.fOutputFormat == OutputFormat::kDefault) {
+      // The default compression settings for TTree is 101
+      if (options.fCompressionAlgorithm == CompAlgo::kUndefined) {
+         return ROOT::CompressionSettings(CompAlgo::kZLIB, 1);
+      }
+      return ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel);
+   } else if (options.fOutputFormat == OutputFormat::kRNTuple) {
+      // The default compression settings for RNTuple is 505
+      if (options.fCompressionAlgorithm == CompAlgo::kUndefined) {
+         return ROOT::CompressionSettings(CompAlgo::kZSTD, 5);
+      }
+      return ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel);
+   } else {
+      throw std::invalid_argument("RDataFrame::Snapshot: unrecognized output format");
+   }
+}
 } // namespace
 
 ROOT::Internal::RDF::RBranchData::RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine,
@@ -535,8 +557,7 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetEmptyBranches(TTree *in
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::Initialize()
 {
    fOutputFile.reset(
-      TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
-                  ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
@@ -774,9 +795,9 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::SetEmptyBranches(TTree *
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Initialize()
 {
-   const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
    auto outFile =
-      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs)};
+      std::unique_ptr<TFile>{TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(),
+                                         GetSnapshotCompressionSettings(fOptions))};
    if (!outFile)
       throw std::runtime_error("Snapshot: could not create output file " + fFileName);
    fOutputFile = outFile.get();
@@ -929,7 +950,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    model->Freeze();
 
    ROOT::RNTupleWriteOptions writeOptions;
-   writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+   writeOptions.SetCompression(GetSnapshotCompressionSettings(fOptions));
    writeOptions.SetInitialUnzippedPageSize(fOptions.fInitialUnzippedPageSize);
    writeOptions.SetMaxUnzippedPageSize(fOptions.fMaxUnzippedPageSize);
    writeOptions.SetApproxZippedClusterSize(fOptions.fApproxZippedClusterSize);
@@ -1151,8 +1172,7 @@ ROOT::Internal::RDF::SnapshotHelperWithVariations::SnapshotHelperWithVariations(
 
    TDirectory::TContext fileCtxt;
    fOutputHandle = std::make_shared<SnapshotOutputWriter>(
-      TFile::Open(filename.data(), fOptions.fMode.c_str(), /*ftitle=*/"",
-                  ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      TFile::Open(filename.data(), fOptions.fMode.c_str(), /*ftitle=*/"", GetSnapshotCompressionSettings(fOptions)));
    if (!fOutputHandle->fFile)
       throw std::runtime_error(std::string{"Snapshot: could not create output file "} + std::string{filename});
 

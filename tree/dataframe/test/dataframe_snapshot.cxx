@@ -247,6 +247,22 @@ TEST(RDFSnapshotMore, BasketSizePreservation)
    TestBasketSizePreservation();
 }
 
+// Test for default compression settings
+TEST(RDFSnapshotMore, DefaultCompressionSettings)
+{
+   struct FileGuardRAII {
+      std::string fFilename{"RDFSnapshotMore_default_compression_settings.root"};
+      std::string fTreeName{"tree"};
+      ~FileGuardRAII() { std::remove(fFilename.c_str()); }
+   } fileGuard;
+   ROOT::RDataFrame df{1};
+   df.Define("x", [] { return 42; }).Snapshot(fileGuard.fTreeName, fileGuard.fFilename, {"x"});
+
+   auto f = std::make_unique<TFile>(fileGuard.fFilename.c_str());
+   EXPECT_EQ(f->GetCompressionAlgorithm(), ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB);
+   EXPECT_EQ(f->GetCompressionLevel(), 1);
+}
+
 // fixture that provides fixed and variable sized arrays as RDF columns
 class RDFSnapshotArrays : public ::testing::Test {
 protected:
