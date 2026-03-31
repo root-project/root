@@ -1213,6 +1213,7 @@ void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 
 Window_t TGX11::GetWindowID(int wid)
 {
+   if (fWindows.count(wid) == 0) return 0;
    return (Window_t) fWindows[wid]->fWindow;
 }
 
