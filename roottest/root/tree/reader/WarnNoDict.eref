@@ -1,0 +1,1 @@
+Error in <TTreeReaderValueBase>: The class requested (map<string,bool>) for the branch "col" is an instance of an stl collection and does not have a compiled CollectionProxy. Please generate the dictionary for this collection (map<string,bool>) to avoid writing corrupted data.
