@@ -156,6 +156,9 @@ struct XWindow_t {
    Int_t     markerSize = 0;          ///< size of simple markers
    std::vector<GdkPoint> markerShape; ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
+   TAttText fAttText;                 ///< current text attributes
+   Int_t textAlign = 0;               ///< selected text align
+   FT_Vector  alignVector;            ///< alignment vector
 };
 
 
@@ -176,8 +179,6 @@ const Int_t kBIGGEST_RGB_VALUE = 65535;
 //
 
 static GdkGC *gGClist[kMAXGC];
-static GdkGC *gGCtext;          // = gGClist[3];  // Text
-static GdkGC *gGCinvt;          // = gGClist[4];  // Inverse text
 static GdkGC *gGCpxmp;          // = gGClist[6];  // Pixmap management
 
 static GdkGC *gGCecho;          // Input echo
@@ -813,8 +814,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title), f
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
    fUseSysPointers = kFALSE;
-   fTextAlignH = 1;
-   fTextAlignV = 1;
    fTextAlign = 7;
    fTextMagnitude = 1;
    fCharacterUpX = 1;
@@ -949,7 +948,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    GdkPixmap *pixmp1, *pixmp2;
    GdkColor fore, back;
    GdkColor color;
-   GdkGCValues gcvals;
    int i;
 
    HWND hDesktop = ::GetDesktopWindow();
@@ -988,17 +986,7 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
       gdk_gc_set_background(gGClist[i], &GetColor(0).color);
    }
 
-   // gGCline = gGClist[0];        // PolyLines
-   // gGCmark = gGClist[1];        // PolyMarker
-   // gGCfill = gGClist[2];        // Fill areas
-   gGCtext = gGClist[3];        // Text
-   gGCinvt = gGClist[4];        // Inverse text
-   // gGCdash = gGClist[5];        // Dashed lines
    gGCpxmp = gGClist[6];        // Pixmap management
-
-   gdk_gc_get_values(gGCtext, &gcvals);
-   gdk_gc_set_foreground(gGCinvt, &gcvals.background);
-   gdk_gc_set_background(gGCinvt, &gcvals.foreground);
 
    // Create input echo graphic context
    GdkGCValues echov;
@@ -1176,30 +1164,32 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
 /// then the rotation is applied on the alignment variables.
 /// SetRotation and LayoutGlyphs should have been called before.
 
-void TGWin32::Align(void)
+void TGWin32::Align(WinContext_t wctxt)
 {
-   EAlign align = (EAlign) fTextAlign;
+   auto ctxt = (XWindow_t *) wctxt;
+
+   EAlign align = (EAlign) ctxt->textAlign;
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::GetAscent();
+      ctxt->alignVector.y = TTF::GetAscent();
    } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::GetAscent()/2;
+      ctxt->alignVector.y = TTF::GetAscent()/2;
    } else {
-      fAlign.y = 0;
+      ctxt->alignVector.y = 0;
    }
    // horizontal alignment
    if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::GetWidth();
+      ctxt->alignVector.x = TTF::GetWidth();
    } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::GetWidth()/2;
+      ctxt->alignVector.x = TTF::GetWidth()/2;
    } else {
-      fAlign.x = 0;
+      ctxt->alignVector.x = 0;
    }
 
-   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
-   fAlign.x = fAlign.x >> 6;
-   fAlign.y = fAlign.y >> 6;
+   FT_Vector_Transform(&ctxt->alignVector, TTF::GetRotMatrix());
+   ctxt->alignVector.x = ctxt->alignVector.x >> 6;
+   ctxt->alignVector.y = ctxt->alignVector.y >> 6;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1329,12 +1319,25 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const char *text, ETextMode mode)
 {
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts on specified window.
+/// If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
+
+void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const char *text, ETextMode mode)
+{
+   if (!wctxt) return;
+
    if (!TTF::IsInitialized()) TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
-   Align();
-   RenderString(x, y, mode);
+   Align(wctxt);
+   RenderString(wctxt, x, y, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1344,24 +1347,38 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const wchar_t *text, ETextMode mode)
 {
+   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts on specified window.
+/// If TrueType fonts are not available the
+/// text is drawn with TGWin32::DrawText.
+
+void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                        const wchar_t *text, ETextMode mode)
+{
+   if (!wctxt) return;
+
    if (!TTF::IsInitialized()) TTF::Init();
    TTF::SetRotationMatrix(angle);
    TTF::PrepareString(text);
    TTF::LayoutGlyphs();
-   Align();
-   RenderString(x, y, mode);
+   Align(wctxt);
+   RenderString(wctxt, x, y, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the background of the current window in an XImage.
 
-GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+GdkImage *TGWin32::GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   auto ctxt = (XWindow_t *) wctxt;
+
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
 
    if (x < 0) {
       w += x;
@@ -1375,19 +1392,20 @@ GdkImage *TGWin32::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x+w > width)  w = width - x;
    if (y+h > height) h = height - y;
 
-   return gdk_image_get((GdkDrawable*)cws, x, y, w, h);
+   return gdk_image_get(ctxt->drawing, x, y, w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test if there is really something to render
 
-Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
+Bool_t TGWin32::IsVisible(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   Window_t cws = GetCurrentWindow();
+   auto ctxt = (XWindow_t *) wctxt;
+
    UInt_t width;
    UInt_t height;
    Int_t xy;
-   gVirtualX->GetWindowSize(cws, xy, xy, width, height);
+   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
 
    // If w or h is 0, very likely the string is only blank characters
    if ((int)w == 0 || (int)h == 0)  return kFALSE;
@@ -1403,8 +1421,10 @@ Bool_t TGWin32::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 /// Perform the string rendering in the pad.
 /// LayoutGlyphs should have been called before.
 
-void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
+void TGWin32::RenderString(WinContext_t wctxt, Int_t x, Int_t y, ETextMode mode)
 {
+   auto ctxt = (XWindow_t *) wctxt;
+
    TTF::TTGlyph* glyph = TTF::GetGlyphs();
    GdkGCValues gcvals;
 
@@ -1413,10 +1433,10 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    Int_t Yoff = 0; if (TTF::GetBox().yMin < 0) Yoff = -TTF::GetBox().yMin;
    Int_t w    = TTF::GetBox().xMax + Xoff;
    Int_t h    = TTF::GetBox().yMax + Yoff;
-   Int_t x1   = x-Xoff-fAlign.x;
-   Int_t y1   = y+Yoff+fAlign.y-h;
+   Int_t x1   = x - Xoff - ctxt->alignVector.x;
+   Int_t y1   = y + Yoff + ctxt->alignVector.y - h;
 
-   if (!IsVisible(x1, y1, w, h)) {
+   if (!IsVisible(wctxt, x1, y1, w, h)) {
        return;
    }
 
@@ -1431,12 +1451,12 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    ULong_t   pixel;
    ULong_t   bg;
 
-   gdk_gc_get_values((GdkGC*)GetGC(3), &gcvals);
+   gdk_gc_get_values(ctxt->fGClist[kGCtext], &gcvals);
 
    // get the background
    if (mode == kClear) {
       // if mode == kClear we need to get an image of the background
-      GdkImage *bim = GetBackground(x1, y1, w, h);
+      GdkImage *bim = GetBackground(wctxt, x1, y1, w, h);
       if (!bim) {
          Error("DrawText", "error getting background image");
          return;
@@ -1460,7 +1480,7 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    } else {
       // if mode == kOpaque its simple, we just draw the background
 
-      GdkImage *bim = GetBackground(x1, y1, w, h);
+      GdkImage *bim = GetBackground(wctxt, x1, y1, w, h);
       if (!bim) {
          pixel = gcvals.background.pixel;
       } else {
@@ -1500,8 +1520,7 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    }
 
    // put the Ximage on the screen
-   Window_t cws = GetCurrentWindow();
-   gdk_draw_image((GdkDrawable *)cws, GetGC(6), xim, 0, 0, x1, y1, w, h);
+   gdk_draw_image(ctxt->drawing, ctxt->fGClist[kGCpxmp], xim, 0, 0, x1, y1, w, h);
 
    gdk_image_unref(xim);
 }
@@ -1511,8 +1530,12 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 
 void TGWin32::SetTextFont(Font_t fontnumber)
 {
-   fTextFont = fontnumber;
-   TTF::SetTextFont(fontnumber);
+   TAttText::SetTextFont(fontnumber);
+
+   TAttText arg(gCws->fAttText);
+   arg.SetTextFont(fontnumber);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1525,7 +1548,7 @@ void TGWin32::SetTextFont(Font_t fontnumber)
 /// Set text font to specified name. This function returns 0 if
 /// the specified font is found, 1 if not.
 
-Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
+Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode /* mode */)
 {
    return TTF::SetTextFont(fontname);
 }
@@ -1535,8 +1558,12 @@ Int_t TGWin32::SetTextFont(char *fontname, ETextSetMode mode)
 
 void TGWin32::SetTextSize(Float_t textsize)
 {
-   fTextSize = textsize;
-   TTF::SetTextSize(textsize);
+   TAttText::SetTextSize(textsize);
+
+   TAttText arg(gCws->fAttText);
+   arg.SetTextSize(textsize);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1643,7 +1670,6 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
    DrawBoxW((WinContext_t) gCws, x1, y1, x2, y2, mode);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a box on specified window.
@@ -3411,7 +3437,6 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set marker attributes for speicfied window
 
-
 void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
 {
    auto ctxt = (XWindow_t *) wctxt;
@@ -3998,6 +4023,75 @@ void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set text attributes for speicfied window
+
+void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   Int_t txalh = att.GetTextAlign() / 10;
+   Int_t txalv = att.GetTextAlign() % 10;
+
+   switch (txalh) {
+      case 0 :
+      case 1 :
+         switch (txalv) {  //left
+            case 1 :
+               ctxt->textAlign = 7;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 4;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 1;   //top
+               break;
+         }
+         break;
+      case 2 :
+         switch (txalv) { //center
+            case 1 :
+               ctxt->textAlign = 8;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 5;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 2;   //top
+               break;
+         }
+         break;
+      case 3 :
+         switch (txalv) {  //right
+            case 1 :
+               ctxt->textAlign = 9;   //bottom
+               break;
+            case 2 :
+               ctxt->textAlign = 6;   //center
+               break;
+            case 3 :
+               ctxt->textAlign = 3;   //top
+               break;
+         }
+         break;
+   }
+
+   SetColor(ctxt->fGClist[kGCtext], att.GetTextColor());
+
+   GdkGCValues values;
+   gdk_gc_get_values(ctxt->fGClist[kGCtext], &values);
+   gdk_gc_set_foreground(ctxt->fGClist[kGCinvt], &values.background);
+   gdk_gc_set_background(ctxt->fGClist[kGCinvt], &values.foreground);
+   gdk_gc_set_background(ctxt->fGClist[kGCtext], (GdkColor *) & GetColor(0).color);
+
+   TTF::SetTextFont(att.GetTextFont());
+   TTF::SetTextSize(att.GetTextSize());
+
+   ctxt->fAttText = att;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set opacity of a window. This image manipulation routine works
@@ -4184,59 +4278,15 @@ void TGWin32::SetRGB(int cindex, float r, float g, float b)
 
 void TGWin32::SetTextAlign(Short_t talign)
 {
-   static Short_t current = 0;
-   if (talign==current) return;
-   current = talign;
+   TAttText::SetTextAlign(talign);
 
-   Int_t txalh = talign / 10;
-   Int_t txalv = talign % 10;
-   fTextAlignH = txalh;
-   fTextAlignV = txalv;
+   TAttText arg(gCws->fAttText);
+   arg.SetTextAlign(talign);
 
-   switch (txalh) {
+   SetAttText((WinContext_t) gCws, arg);
 
-   case 0:
-   case 1:
-      switch (txalv) {          //left
-      case 1:
-         fTextAlign = 7;        //bottom
-         break;
-      case 2:
-         fTextAlign = 4;        //center
-         break;
-      case 3:
-         fTextAlign = 1;        //top
-         break;
-      }
-      break;
-   case 2:
-      switch (txalv) {          //center
-      case 1:
-         fTextAlign = 8;        //bottom
-         break;
-      case 2:
-         fTextAlign = 5;        //center
-         break;
-      case 3:
-         fTextAlign = 2;        //top
-         break;
-      }
-      break;
-   case 3:
-      switch (txalv) {          //right
-      case 1:
-         fTextAlign = 9;        //bottom
-         break;
-      case 2:
-         fTextAlign = 6;        //center
-         break;
-      case 3:
-         fTextAlign = 3;        //top
-         break;
-      }
-      break;
-   }
-   TAttText::SetTextAlign(fTextAlign);
+   // FIXME: member fTextAlign conflicts with TAttText::fTextAlign
+   fTextAlign = gCws->textAlign;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4244,18 +4294,14 @@ void TGWin32::SetTextAlign(Short_t talign)
 
 void TGWin32::SetTextColor(Color_t cindex)
 {
-   static Int_t current = 0;
-   GdkGCValues values;
-   if ((cindex < 0) || (Int_t(cindex)==current)) return;
+   if (cindex < 0) return;
 
    TAttText::SetTextColor(cindex);
 
-   SetColor(gGCtext, Int_t(cindex));
-   gdk_gc_get_values(gGCtext, &values);
-   gdk_gc_set_foreground(gGCinvt, &values.background);
-   gdk_gc_set_background(gGCinvt, &values.foreground);
-   gdk_gc_set_background(gGCtext, (GdkColor *) & GetColor(0).color);
-   current = Int_t(cindex);
+   TAttText arg(gCws->fAttText);
+   arg.SetTextColor(cindex);
+
+   SetAttText((WinContext_t) gCws, arg);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
