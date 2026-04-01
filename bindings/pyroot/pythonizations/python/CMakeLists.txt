@@ -110,6 +110,7 @@ set(py_sources
   ROOT/_jupyroot/kernel/magics/__init__.py
   ROOT/_jupyroot/kernel/magics/cppmagic.py
   ROOT/_jupyroot/kernel/magics/jsrootmagic.py
+  ROOT/_jupyroot/kernel/magics/rootbrowsemagic.py
   ROOT/_jupyroot/magics/__init__.py
   ROOT/_jupyroot/magics/cppmagic.py
   ROOT/_jupyroot/magics/jsrootmagic.py
