@@ -12,69 +12,24 @@
 #ifndef ROOT_TPadPainter
 #define ROOT_TPadPainter
 
-#include "TVirtualPadPainter.h"
-#include "GuiTypes.h"
+#include "TPadPainterBase.h"
 
 /*
-TVirtualPadPainter is an attempt to abstract
-painting operation furthermore. gVirtualX can
-be X11 or GDI, but pad painter can be gVirtualX (X11 or GDI),
+TPadPainter is implementation of TVirtualPadPainter interface for TVirtualX.
+gVirtualX can be X11 or GDI, but pad painter can be gVirtualX (X11 or GDI),
 or gl pad painter.
 */
 
 class TVirtualPad;
 
-class TPadPainter : public TVirtualPadPainter {
+class TPadPainter : public TPadPainterBase {
    WinContext_t   fWinContext;
-   Int_t          fSetLineWidth = 0; ///< remember set width to optimize some painting
-   Style_t        fSetFillStyle = 0; ///< remember set fill style to optimize painting
 
 public:
    TPadPainter();
-   //Final overriders for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply delegates to TVirtualX.
 
-   //Line attributes.
-   Color_t  GetLineColor() const override;
-   Style_t  GetLineStyle() const override;
-   Width_t  GetLineWidth() const override;
-
-   void     SetLineColor(Color_t lcolor) override;
-   void     SetLineStyle(Style_t lstyle) override;
-   void     SetLineWidth(Width_t lwidth) override;
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override;
-   Style_t  GetFillStyle() const override;
-   Bool_t   IsTransparent() const override;
-
-   void     SetFillColor(Color_t fcolor) override;
-   void     SetFillStyle(Style_t fstyle) override;
    void     SetOpacity(Int_t percent) override;
-
-   //Text attributes.
-   Short_t  GetTextAlign() const override;
-   Float_t  GetTextAngle() const override;
-   Color_t  GetTextColor() const override;
-   Font_t   GetTextFont()  const override;
-   Float_t  GetTextSize()  const override;
    Float_t  GetTextMagnitude() const override;
-
-   void     SetTextAlign(Short_t align) override;
-   void     SetTextAngle(Float_t tangle) override;
-   void     SetTextColor(Color_t tcolor) override;
-   void     SetTextFont(Font_t tfont) override;
-   void     SetTextSize(Float_t tsize) override;
-   void     SetTextSizePixels(Int_t npixels) override;
-
-   //Marker attributes
-   Color_t  GetMarkerColor() const override;
-   Style_t  GetMarkerStyle() const override;
-   Size_t   GetMarkerSize() const override;
-
-   void     SetMarkerColor(Color_t mcolor) override;
-   void     SetMarkerStyle(Style_t mstyle) override;
-   void     SetMarkerSize(Size_t msize) override;
 
    //Overall attributes
    void      SetAttFill(const TAttFill &att) override;
