@@ -477,9 +477,7 @@ def GetRCanvasDrawers():
 
 def GetVisualDrawers():
     global _visualObjects
-    res = []
-    for obj in _visualObjects:
-        res.append(obj)
+    res = [obj for obj in _visualObjects]
     _visualObjects.clear()
     return res
 
@@ -504,7 +502,7 @@ def NotebookDraw():
         drawer.Draw(display.display)
 
 
-class CaptureDrawnPrimitives(object):
+class CaptureDrawnPrimitives:
     """
     Capture the canvas which is drawn to display it.
     """
@@ -520,7 +518,7 @@ class CaptureDrawnPrimitives(object):
 
 
 
-class NotebookDrawerUrl(object):
+class NotebookDrawerUrl:
     """
     Special drawer for file URL - JSROOT uses url to load file directly, without root
     """
@@ -556,7 +554,7 @@ class NotebookDrawerUrl(object):
 
 
 
-class NotebookDrawerFile(object):
+class NotebookDrawerFile:
     """
     Special drawer for TFile - shows files hierarchy with possibility to draw objects
     """
@@ -566,26 +564,24 @@ class NotebookDrawerFile(object):
        self.drawForce = theForce
 
     def _getFileJsCode(self):
-        f = ROOT.TFile.Open(self.drawFileName)
-        if not f:
-            return f"Fail to open file {self.drawFileName}"
+        base64 = ""
 
-        sz = f.GetSize()
-        if sz > 10000000 and not self.drawForce:
-            f.Close()
-            return f"File size {sz} is too large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
+        with ROOT.TDirectory.TContext(), ROOT.TFile.Open(self.drawFileName) as f:
+            if not f:
+                return f"Fail to open file {self.drawFileName}"
 
-        # create plain buffer and get pointer on it
-        u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
-        addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
+            sz = f.GetSize()
+            if sz > 10000000 and not self.drawForce:
+                return f"File size {sz} is too large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
 
-        if f.ReadBuffer(addrc, 0, sz):
-           f.Close()
-           return f"Fail to read file {self.drawFileName} buffer of size {sz}"
+            # create plain buffer and get pointer on it
+            u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
+            addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
 
-        f.Close()
+            if f.ReadBuffer(addrc, 0, sz):
+                return f"Fail to read file {self.drawFileName} buffer of size {sz}"
 
-        base64 = ROOT.TBase64.Encode(addrc, sz)
+            base64 = ROOT.TBase64.Encode(addrc, sz)
 
         id = _getUniqueDivId()
 
@@ -613,7 +609,7 @@ class NotebookDrawerFile(object):
 
 
 
-class NotebookDrawerJson(object):
+class NotebookDrawerJson:
     """
     Generic class to create JSROOT drawing for the arbitrary object based on json conversion.
     """
@@ -673,8 +669,10 @@ class NotebookDrawerJson(object):
         return thisJsCode
 
     def _getCanvas(self):
+        gPadSave = ROOT.gPad
         c1 = ROOT.TCanvas("__tmp_draw_image_canvas__", "", self._getWidth(), self._getHeight())
         c1.Add(self.drawObject)
+        ROOT.gPad = gPadSave
         return c1
 
     def _getPngImage(self):
@@ -702,7 +700,7 @@ class NotebookDrawerJson(object):
 
 class NotebookDrawerGeometry(NotebookDrawerJson):
     """
-    Drawer for geometry - png is not works with it.
+    Drawer for geometry - png output is not supported.
     """
 
     def __del__(self):
@@ -719,7 +717,7 @@ class NotebookDrawerGeometry(NotebookDrawerJson):
 class NotebookDrawerCanvBase(NotebookDrawerJson):
     """
     Base class for TCanvas/RCanvas drawing.
-    Implementst specific Draw function where canvas update is handled
+    Implements a specific Draw function where canvas updating is handled
     """
 
     def _getCanvasId(self):
@@ -835,6 +833,7 @@ class NotebookDrawerTCanvas(NotebookDrawerCanvBase):
                 palette.Add(colors.At(pal[i]))
             prim.Add(palette)
 
+        # reset global flag to avoid automatic colors storage by canvas
         ROOT.TColor.DefinedColors()
 
         canvas_json = ROOT.TBufferJSON.ConvertToJSON(self.drawObject, 23)
