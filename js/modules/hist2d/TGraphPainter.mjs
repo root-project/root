@@ -1,6 +1,6 @@
 import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFunc, isStr,
          clTPaveStats, clTCutG, clTH1F, clTH2F, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
-import { select as d3_select } from '../d3.mjs';
+import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter, kAxisNormal } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
@@ -75,11 +75,14 @@ class TGraphPainter extends ObjectPainter {
          return true;
 
       let is_normal = false;
-      if (check_axis !== 'y')
-         is_normal ||= (histo.fXaxis.fXmin !== 0.0011) || (histo.fXaxis.fXmax !== 1.1);
+      if (check_axis !== 'y') {
+         is_normal ||= ((histo.fXaxis.fXmin !== 0.0011) && (histo.fXaxis.fXmin !== 0)) ||
+                       ((histo.fXaxis.fXmax !== 1.1) && (histo.fXaxis.fXmax !== 1));
+      }
 
       if (check_axis !== 'x') {
-         is_normal ||= (histo.fYaxis.fXmin !== 0.0011) || (histo.fYaxis.fXmax !== 1.1) ||
+         is_normal ||= ((histo.fYaxis.fXmin !== 0.0011) && (histo.fYaxis.fXmin !== 0)) ||
+                       ((histo.fYaxis.fXmax !== 1.1) && (histo.fYaxis.fXmax !== 1)) ||
                        (histo.fMinimum !== 0.0011) || (histo.fMaximum !== 1.1);
       }
 
@@ -1510,7 +1513,7 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Complete moving */
-   moveEnd(not_changed) {
+   moveEnd(not_changed, evnt) {
       const graph = this.getGraph(), last = graph?.fNpoints - 1;
       let exec = '';
 
@@ -1539,6 +1542,17 @@ class TGraphPainter extends ObjectPainter {
                this.redrawPad();
             else
                this.drawGraph();
+         }
+      } else if (not_changed) {
+         const fp = this.getFramePainter(),
+               m = d3_pointer(evnt, fp.getFrameSvg().node()),
+               fw = fp.getFrameWidth(), fh = fp.getFrameHeight(),
+               valid_x = (m[0] >= 0) && (m[0] <= fw),
+               valid_y = (m[1] >= 0) && (m[1] <= fh);
+         if (valid_x && valid_y) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            fp.processFrameClick({ x: m[0], y: m[1] });
          }
       } else {
          changeBin(this.#move_bin);
@@ -1738,8 +1752,6 @@ class TGraphPainter extends ObjectPainter {
       // do not create stats box when drawing canvas
       if (!st.fOptFit || this.getCanvPainter()?.getRootPad(true)?.fPrimitives?.arr.length)
          return null;
-
-      this.create_stats = true;
 
       stats = create(clTPaveStats);
       Object.assign(stats, {

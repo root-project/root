@@ -1543,9 +1543,8 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Configure user-defined tooltip handler
-     * @desc Hook for the users to get tooltip information when mouse cursor moves over frame area
+     * @desc Hook for the users to get tooltip information when mouse cursor moves over then object
      * Handler function will be called every time when new data is selected
-     * when mouse leave frame area, handler(null) will be called
      * @param {function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
    configureUserTooltipHandler(handler, tmout = 100) {

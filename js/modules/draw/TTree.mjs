@@ -56,6 +56,12 @@ async function drawTreeDrawResult(dom, obj, opt) {
    if (!typ || !isStr(typ))
       return Promise.reject(Error('Object without type cannot be draw with TTree'));
 
+   if (internals._alt_draw) {
+      const v = internals._alt_draw(dom, obj, opt);
+      if (v)
+         return v;
+   }
+
    if (typ.indexOf(clTH1) === 0)
       return TH1Painter.draw(dom, obj, opt);
    if (typ.indexOf(clTH2) === 0)

@@ -307,7 +307,11 @@ class THStackPainter extends ObjectPainter {
             o.auto += ' ' + f;
       });
 
-      o.pads = d.check('PADS');
+      if (d.check('PADS', true)) {
+         o.pads = true;
+         o.pads_columns = d.partAsInt();
+      }
+
       if (o.pads)
          o.nostack = true;
 
@@ -524,7 +528,12 @@ class THStackPainter extends ObjectPainter {
       if (o.pads) {
          pr = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(o.nhist, 0, true);
+            let nx = o.nhist, ny = 0;
+            if (o.pads_columns) {
+               nx = o.pads_columns;
+               ny = Math.ceil(o.nhist / nx);
+            }
+            return pad_painter.divide(nx, ny, true);
          });
       } else {
          if (!o.nostack)

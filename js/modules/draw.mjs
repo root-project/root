@@ -130,22 +130,22 @@ const drawFuncs = { lst: [
    { name: 'kind:Command', icon: 'img_execute', execute: true },
    { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
    { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
-   { name: clTTree, icon: 'img_tree', get_expand: () => import('./tree.mjs').then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect, pm: true },
+   { name: clTTree, icon: 'img_tree', get_expand: () => import('./tree.mjs').then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect, pm: true, transform: true },
    { name: 'TNtuple', sameas: clTTree },
    { name: 'TNtupleD', sameas: clTTree },
-   { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
-   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
-   { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
-   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => import('./rntuple.mjs').then(h => h.tupleHierarchy), draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), dflt: 'expand', pm: true },
-   { name: 'ROOT::RNTupleField', icon: 'img_leaf', draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
+   { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump;dumpall', noinspect: true, transform: true },
+   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump;dumpall', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true, transform: true },
+   { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump;dumpall', ctrl: 'dump', ignore_online: true, always_draw: true, transform: true },
+   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => import('./rntuple.mjs').then(h => h.tupleHierarchy), draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), dflt: 'expand', pm: true, transform: true },
+   { name: 'ROOT::RNTupleField', icon: 'img_leaf', draw: () => import('./draw/RNTuple.mjs').then(h => h.drawRNTuple), opt: ';dump;dumpall', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true, transform: true },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
    { name: clTObjArray, sameas: clTList },
    { name: clTClonesArray, sameas: clTList },
    { name: clTMap, sameas: clTList },
    { name: clTColor, icon: 'img_color' },
-   { name: clTFile, icon: 'img_file', noinspect: true },
-   { name: 'TMemFile', icon: 'img_file', noinspect: true },
+   { name: clTFile, icon: 'img_file', noinspect: true, pm: true },
+   { name: 'TMemFile', icon: 'img_file', noinspect: true, pm: true },
    { name: clTStyle, icon: 'img_question', noexpand: true },
    { name: 'Session', icon: 'img_globe' },
    { name: 'kind:TopFolder', icon: 'img_base' },
@@ -169,19 +169,28 @@ const drawFuncs = { lst: [
 
 
 /** @summary Register draw function for the class
-  * @desc List of supported draw options could be provided, separated  with ';'
   * @param {object} args - arguments
-  * @param {string|regexp} args.name - class name or regexp pattern
+  * @param {string|regexp} args.name - class name or regexp pattern or '*'
   * @param {function} [args.func] - draw function
+  * @param {string} [args.sameas] - let behave same as specified class
   * @param {function} [args.draw] - async function to load draw function
   * @param {function} [args.class] - async function to load painter class with static draw function
   * @param {boolean} [args.direct] - if true, function is just Redraw() method of ObjectPainter
   * @param {string} [args.opt] - list of supported draw options (separated with semicolon) like 'col;scat;'
   * @param {string} [args.icon] - icon name shown for the class in hierarchy browser
   * @param {string} [args.draw_field] - draw only data member from object, like fHistogram
+  * @param {string} [args.noinspect] - disable inspect
+  * @param {string} [args.noexpand] - disable expand
+  * @param {string} [args.pm] - always show plus or minus sign even when no child items exists
+  * @desc List of supported draw options could be provided, separated  with ';'
+  * If args.name parameter is '*', function will be invoked before object drawing.
+  * If such function does not return value - normal drawing will be continued.
   * @protected */
 function addDrawFunc(args) {
-   drawFuncs.lst.push(args);
+   if (args?.name === '*')
+      internals._alt_draw = isFunc(args.func) ? args.func : null;
+   else
+      drawFuncs.lst.push(args);
    return args;
 }
 
@@ -391,6 +400,12 @@ async function draw(dom, obj, opt) {
 
    if (handle.draw_field && obj[handle.draw_field])
       return draw(dom, obj[handle.draw_field], opt || handle.draw_field_opt);
+
+   if (internals._alt_draw && !handle.transform) {
+      const v = internals._alt_draw(dom, obj, opt);
+      if (v)
+         return v;
+   }
 
    if (!canDrawHandle(handle)) {
       if (opt && (opt.indexOf('same') >= 0)) {

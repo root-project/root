@@ -3,7 +3,7 @@
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Clock, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
+import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Timer, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
 
 /**
  * A class for generating text as a single geometry. It is constructed by providing a string of text, and a set of
@@ -11,7 +11,7 @@ import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, M
  *
  * See the {@link FontLoader} page for additional details.
  *
- * `TextGeometry` uses [typeface.json]{@link http://gero3.github.io/facetype.js/} generated fonts.
+ * `TextGeometry` uses [typeface.json](http://gero3.github.io/facetype.js/) generated fonts.
  * Some existing fonts can be found located in `/examples/fonts`.
  *
  * ```js
@@ -46,7 +46,7 @@ class TextGeometry extends ExtrudeGeometry {
 
 		} else {
 
-			const shapes = font.generateShapes( text, parameters.size );
+			const shapes = font.generateShapes( text, parameters.size, parameters.direction );
 
 			// defaults
 
@@ -103,12 +103,13 @@ class Font {
 	 *
 	 * @param {string} text - The text.
 	 * @param {number} [size=100] - The text size.
+	 * @param {string} [direction='ltr'] - Char direction: ltr(left to right), rtl(right to left) & tb(top bottom).
 	 * @return {Array<Shape>} An array of shapes representing the text.
 	 */
-	generateShapes( text, size = 100 ) {
+	generateShapes( text, size = 100, direction = 'ltr' ) {
 
 		const shapes = [];
-		const paths = createPaths( text, size, this.data );
+		const paths = createPaths( text, size, this.data, direction );
 
 		for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
 
@@ -122,7 +123,7 @@ class Font {
 
 }
 
-function createPaths( text, size, data ) {
+function createPaths( text, size, data, direction ) {
 
 	const chars = Array.from( text );
 	const scale = size / data.resolution;
@@ -131,6 +132,12 @@ function createPaths( text, size, data ) {
 	const paths = [];
 
 	let offsetX = 0, offsetY = 0;
+
+	if ( direction == 'rtl' || direction == 'tb' ) {
+
+		chars.reverse();
+
+	}
 
 	for ( let i = 0; i < chars.length; i ++ ) {
 
@@ -144,7 +151,18 @@ function createPaths( text, size, data ) {
 		} else {
 
 			const ret = createPath( char, scale, offsetX, offsetY, data );
-			offsetX += ret.offsetX;
+
+			if ( direction == 'tb' ) {
+
+				offsetX = 0;
+				offsetY += data.ascender * scale;
+
+			} else {
+
+				offsetX += ret.offsetX;
+
+			}
+
 			paths.push( ret.path );
 
 		}
@@ -313,7 +331,7 @@ class OrbitControls extends Controls {
 	 * Constructs a new controls instance.
 	 *
 	 * @param {Object3D} object - The object that is managed by the controls.
-	 * @param {?HTMLDOMElement} domElement - The HTML element used for event listeners.
+	 * @param {?HTMLElement} domElement - The HTML element used for event listeners.
 	 */
 	constructor( object, domElement = null ) {
 
@@ -613,6 +631,8 @@ class OrbitControls extends Controls {
 		 */
 		this.zoom0 = this.object.zoom;
 
+		this._cursorStyle = 'auto';
+
 		// the target DOM element for key events
 		this._domElementKeyEvents = null;
 
@@ -684,6 +704,34 @@ class OrbitControls extends Controls {
 
 	}
 
+	/**
+	 * Defines the visual representation of the cursor.
+	 *
+	 * @type {('auto'|'grab')}
+	 * @default 'auto'
+	 */
+	set cursorStyle( type ) {
+
+		this._cursorStyle = type;
+
+		if ( type === 'grab' ) {
+
+			this.domElement.style.cursor = 'grab';
+
+		} else {
+
+			this.domElement.style.cursor = 'auto';
+
+		}
+
+	}
+
+	get cursorStyle() {
+
+		return this._cursorStyle;
+
+	}
+
 	connect( element ) {
 
 		super.connect( element );
@@ -704,8 +752,8 @@ class OrbitControls extends Controls {
 	disconnect() {
 
 		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
-		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
-		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.ownerDocument.removeEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.ownerDocument.removeEventListener( 'pointerup', this._onPointerUp );
 		this.domElement.removeEventListener( 'pointercancel', this._onPointerUp );
 
 		this.domElement.removeEventListener( 'wheel', this._onMouseWheel );
@@ -763,7 +811,7 @@ class OrbitControls extends Controls {
 	 * Adds key event listeners to the given DOM element.
 	 * `window` is a recommended argument for using this method.
 	 *
-	 * @param {HTMLDOMElement} domElement - The DOM element
+	 * @param {HTMLElement} domElement - The DOM element
 	 */
 	listenToKeyEvents( domElement ) {
 
@@ -813,6 +861,67 @@ class OrbitControls extends Controls {
 		this.update();
 
 		this.state = _STATE.NONE;
+
+	}
+
+	/**
+	 * Programmatically pan the camera.
+	 *
+	 * @param {number} deltaX - The horizontal pan amount in pixels.
+	 * @param {number} deltaY - The vertical pan amount in pixels.
+	 */
+	pan( deltaX, deltaY ) {
+
+		this._pan( deltaX, deltaY );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically dolly in (zoom in for perspective camera).
+	 *
+	 * @param {number} dollyScale - The dolly scale factor.
+	 */
+	dollyIn( dollyScale ) {
+
+		this._dollyIn( dollyScale );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically dolly out (zoom out for perspective camera).
+	 *
+	 * @param {number} dollyScale - The dolly scale factor.
+	 */
+	dollyOut( dollyScale ) {
+
+		this._dollyOut( dollyScale );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically rotate the camera left (around the vertical axis).
+	 *
+	 * @param {number} angle - The rotation angle in radians.
+	 */
+	rotateLeft( angle ) {
+
+		this._rotateLeft( angle );
+		this.update();
+
+	}
+
+	/**
+	 * Programmatically rotate the camera up (around the horizontal axis).
+	 *
+	 * @param {number} angle - The rotation angle in radians.
+	 */
+	rotateUp( angle ) {
+
+		this._rotateUp( angle );
+		this.update();
 
 	}
 
@@ -1680,8 +1789,8 @@ function onPointerDown( event ) {
 
 		this.domElement.setPointerCapture( event.pointerId );
 
-		this.domElement.addEventListener( 'pointermove', this._onPointerMove );
-		this.domElement.addEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.ownerDocument.addEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.ownerDocument.addEventListener( 'pointerup', this._onPointerUp );
 
 	}
 
@@ -1700,6 +1809,12 @@ function onPointerDown( event ) {
 	} else {
 
 		this._onMouseDown( event );
+
+	}
+
+	if ( this._cursorStyle === 'grab' ) {
+
+		this.domElement.style.cursor = 'grabbing';
 
 	}
 
@@ -1731,12 +1846,18 @@ function onPointerUp( event ) {
 
 			this.domElement.releasePointerCapture( event.pointerId );
 
-			this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
-			this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+			this.domElement.ownerDocument.removeEventListener( 'pointermove', this._onPointerMove );
+			this.domElement.ownerDocument.removeEventListener( 'pointerup', this._onPointerUp );
 
 			this.dispatchEvent( _endEvent );
 
 			this.state = _STATE.NONE;
+
+			if ( this._cursorStyle === 'grab' ) {
+
+				this.domElement.style.cursor = 'grab';
+
+			}
 
 			break;
 
@@ -2745,12 +2866,12 @@ class EffectComposer {
 		this.copyPass.material.blending = NoBlending;
 
 		/**
-		 * The internal clock for managing time data.
+		 * The internal timer for managing time data.
 		 *
 		 * @private
-		 * @type {Clock}
+		 * @type {Timer}
 		 */
-		this.clock = new Clock();
+		this.timer = new Timer();
 
 	}
 
@@ -2839,9 +2960,11 @@ class EffectComposer {
 
 		// deltaTime value is in seconds
 
+		this.timer.update();
+
 		if ( deltaTime === undefined ) {
 
-			deltaTime = this.clock.getDelta();
+			deltaTime = this.timer.getDelta();
 
 		}
 
@@ -3074,6 +3197,16 @@ class RenderPass extends Pass {
 		 * @default false
 		 */
 		this.needsSwap = false;
+
+		/**
+		 * This flag indicates that this pass renders the scene itself.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
+		this.isRenderPass = true;
+
 		this._oldClearColor = new Color();
 
 	}
@@ -3164,7 +3297,7 @@ class RenderPass extends Pass {
 /**
  * A utility class providing noise functions.
  *
- * The code is based on [Simplex noise demystified]{@link https://web.archive.org/web/20210210162332/http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf}
+ * The code is based on [Simplex noise demystified](https://web.archive.org/web/20210210162332/http://staffwww.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf)
  * by Stefan Gustavson, 2005.
  *
  * @three_import import { SimplexNoise } from 'three/addons/math/SimplexNoise.js';
@@ -3702,7 +3835,7 @@ const LuminosityHighPassShader = {
  * When using this pass, tone mapping must be enabled in the renderer settings.
  *
  * Reference:
- * - [Bloom in Unreal Engine]{@link https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/}
+ * - [Bloom in Unreal Engine](https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/)
  *
  * ```js
  * const resolution = new THREE.Vector2( window.innerWidth, window.innerHeight );
@@ -3736,7 +3869,7 @@ class UnrealBloomPass extends Pass {
 		this.strength = strength;
 
 		/**
-		 * The Bloom radius.
+		 * The Bloom radius. Must be in the range `[0,1]`.
 		 *
 		 * @type {number}
 		 */
@@ -3825,7 +3958,9 @@ class UnrealBloomPass extends Pass {
 		// gaussian blur materials
 
 		this.separableBlurMaterials = [];
-		const kernelSizeArray = [ 3, 5, 7, 9, 11 ];
+		// These sizes have been changed to account for the altered coefficients-calculation to avoid blockiness,
+		// while retaining the same blur-strength. For details see https://github.com/mrdoob/three.js/pull/31528
+		const kernelSizeArray = [ 6, 10, 14, 18, 22 ];
 		resx = Math.round( this.resolution.x / 2 );
 		resy = Math.round( this.resolution.y / 2 );
 
@@ -3865,6 +4000,7 @@ class UnrealBloomPass extends Pass {
 			uniforms: this.copyUniforms,
 			vertexShader: CopyShader.vertexShader,
 			fragmentShader: CopyShader.fragmentShader,
+			premultipliedAlpha: true,
 			blending: AdditiveBlending,
 			depthTest: false,
 			depthWrite: false,
@@ -4056,10 +4192,11 @@ class UnrealBloomPass extends Pass {
 	_getSeparableBlurMaterial( kernelRadius ) {
 
 		const coefficients = [];
+		const sigma = kernelRadius / 3;
 
 		for ( let i = 0; i < kernelRadius; i ++ ) {
 
-			coefficients.push( 0.39894 * Math.exp( -0.5 * i * i / ( kernelRadius * kernelRadius ) ) / kernelRadius );
+			coefficients.push( 0.39894 * Math.exp( -0.5 * i * i / ( sigma * sigma ) ) / sigma );
 
 		}
 
@@ -4076,34 +4213,46 @@ class UnrealBloomPass extends Pass {
 				'gaussianCoefficients': { value: coefficients } // precomputed Gaussian coefficients
 			},
 
-			vertexShader:
-				`varying vec2 vUv;
+			vertexShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				void main() {
+
 					vUv = uv;
 					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
 				}`,
 
-			fragmentShader:
-				`#include <common>
+			fragmentShader: /* glsl */`
+
+				#include <common>
+
 				varying vec2 vUv;
+
 				uniform sampler2D colorTexture;
 				uniform vec2 invSize;
 				uniform vec2 direction;
 				uniform float gaussianCoefficients[KERNEL_RADIUS];
 
 				void main() {
+
 					float weightSum = gaussianCoefficients[0];
 					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
-					for( int i = 1; i < KERNEL_RADIUS; i ++ ) {
-						float x = float(i);
+
+					for ( int i = 1; i < KERNEL_RADIUS; i ++ ) {
+
+						float x = float( i );
 						float w = gaussianCoefficients[i];
 						vec2 uvOffset = direction * invSize * x;
 						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
 						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
-						diffuseSum += (sample1 + sample2) * w;
-						weightSum += 2.0 * w;
+						diffuseSum += ( sample1 + sample2 ) * w;
+
 					}
-					gl_FragColor = vec4(diffuseSum/weightSum, 1.0);
+
+					gl_FragColor = vec4( diffuseSum, 1.0 );
+
 				}`
 		} );
 
@@ -4129,15 +4278,21 @@ class UnrealBloomPass extends Pass {
 				'bloomRadius': { value: 0.0 }
 			},
 
-			vertexShader:
-				`varying vec2 vUv;
+			vertexShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				void main() {
+
 					vUv = uv;
 					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
 				}`,
 
-			fragmentShader:
-				`varying vec2 vUv;
+			fragmentShader: /* glsl */`
+
+				varying vec2 vUv;
+
 				uniform sampler2D blurTexture1;
 				uniform sampler2D blurTexture2;
 				uniform sampler2D blurTexture3;
@@ -4148,17 +4303,27 @@ class UnrealBloomPass extends Pass {
 				uniform float bloomFactors[NUM_MIPS];
 				uniform vec3 bloomTintColors[NUM_MIPS];
 
-				float lerpBloomFactor(const in float factor) {
+				float lerpBloomFactor( const in float factor ) {
+
 					float mirrorFactor = 1.2 - factor;
-					return mix(factor, mirrorFactor, bloomRadius);
+					return mix( factor, mirrorFactor, bloomRadius );
+
 				}
 
 				void main() {
-					gl_FragColor = bloomStrength * ( lerpBloomFactor(bloomFactors[0]) * vec4(bloomTintColors[0], 1.0) * texture2D(blurTexture1, vUv) +
-						lerpBloomFactor(bloomFactors[1]) * vec4(bloomTintColors[1], 1.0) * texture2D(blurTexture2, vUv) +
-						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
-						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
-						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
+
+					// 3.0 for backwards compatibility with previous alpha-based intensity
+					vec3 bloom = 3.0 * bloomStrength * (
+						lerpBloomFactor( bloomFactors[ 0 ] ) * bloomTintColors[ 0 ] * texture2D( blurTexture1, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 1 ] ) * bloomTintColors[ 1 ] * texture2D( blurTexture2, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 2 ] ) * bloomTintColors[ 2 ] * texture2D( blurTexture3, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 3 ] ) * bloomTintColors[ 3 ] * texture2D( blurTexture4, vUv ).rgb +
+						lerpBloomFactor( bloomFactors[ 4 ] ) * bloomTintColors[ 4 ] * texture2D( blurTexture5, vUv ).rgb
+					);
+
+					float bloomAlpha = max( bloom.r, max( bloom.g, bloom.b ) );
+					gl_FragColor = vec4( bloom, bloomAlpha );
+
 				}`
 		} );
 
@@ -4298,7 +4463,7 @@ class Projector {
 			_face, _faceCount, _facePoolLength = 0,
 			_line, _lineCount, _linePoolLength = 0,
 			_sprite, _spriteCount, _spritePoolLength = 0,
-			_modelMatrix;
+			_modelMatrix, _clipInput = [], _clipOutput = [];
 
 		const
 
@@ -4318,7 +4483,19 @@ class Projector {
 
 			_frustum = new Frustum(),
 
-			_objectPool = [], _vertexPool = [], _facePool = [], _linePool = [], _spritePool = [];
+			_objectPool = [], _vertexPool = [], _facePool = [], _linePool = [], _spritePool = [],
+
+			_clipVertexPool = [],
+			_clipPos1 = new Vector4(),
+			_clipPos2 = new Vector4(),
+			_clipPos3 = new Vector4(),
+			_screenVertexPool = [],
+			_clipInputVertices = [ null, null, null ],
+
+			_clipPlanes = [
+				{ sign: 1 },
+				{ sign: -1 }
+			];
 
 		//
 
@@ -4457,48 +4634,165 @@ class Projector {
 				const v2 = _vertexPool[ b ];
 				const v3 = _vertexPool[ c ];
 
-				if ( checkTriangleVisibility( v1, v2, v3 ) === false ) return;
+				// Get homogeneous clip space positions (before perspective divide)
+				_clipPos1.copy( v1.positionWorld ).applyMatrix4( _viewProjectionMatrix );
+				_clipPos2.copy( v2.positionWorld ).applyMatrix4( _viewProjectionMatrix );
+				_clipPos3.copy( v3.positionWorld ).applyMatrix4( _viewProjectionMatrix );
 
-				if ( material.side === DoubleSide || checkBackfaceCulling( v1, v2, v3 ) === true ) {
+				// Check if triangle needs clipping
+				const nearDist1 = _clipPos1.z + _clipPos1.w;
+				const nearDist2 = _clipPos2.z + _clipPos2.w;
+				const nearDist3 = _clipPos3.z + _clipPos3.w;
+				const farDist1 = - _clipPos1.z + _clipPos1.w;
+				const farDist2 = - _clipPos2.z + _clipPos2.w;
+				const farDist3 = - _clipPos3.z + _clipPos3.w;
 
-					_face = getNextFaceInPool();
+				// Check if completely outside
+				if ( ( nearDist1 < 0 && nearDist2 < 0 && nearDist3 < 0 ) ||
+					( farDist1 < 0 && farDist2 < 0 && farDist3 < 0 ) ) {
 
-					_face.id = object.id;
-					_face.v1.copy( v1 );
-					_face.v2.copy( v2 );
-					_face.v3.copy( v3 );
-					_face.z = ( v1.positionScreen.z + v2.positionScreen.z + v3.positionScreen.z ) / 3;
-					_face.renderOrder = object.renderOrder;
+					return; // Triangle completely clipped
 
-					// face normal
-					_vector3.subVectors( v3.position, v2.position );
-					_vector4.subVectors( v1.position, v2.position );
-					_vector3.cross( _vector4 );
-					_face.normalModel.copy( _vector3 );
-					_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+				}
 
-					for ( let i = 0; i < 3; i ++ ) {
+				// Check if completely inside (no clipping needed)
+				if ( nearDist1 >= 0 && nearDist2 >= 0 && nearDist3 >= 0 &&
+					farDist1 >= 0 && farDist2 >= 0 && farDist3 >= 0 ) {
 
-						const normal = _face.vertexNormalsModel[ i ];
-						normal.fromArray( normals, arguments[ i ] * 3 );
-						normal.applyMatrix3( normalMatrix ).normalize();
+					// No clipping needed - use original path
+					if ( checkTriangleVisibility( v1, v2, v3 ) === false ) return;
 
-						const uv = _face.uvs[ i ];
-						uv.fromArray( uvs, arguments[ i ] * 2 );
+					if ( material.side === DoubleSide || checkBackfaceCulling( v1, v2, v3 ) === true ) {
+
+						_face = getNextFaceInPool();
+
+						_face.id = object.id;
+						_face.v1.copy( v1 );
+						_face.v2.copy( v2 );
+						_face.v3.copy( v3 );
+						_face.z = ( v1.positionScreen.z + v2.positionScreen.z + v3.positionScreen.z ) / 3;
+						_face.renderOrder = object.renderOrder;
+
+						// face normal
+						_vector3.subVectors( v3.position, v2.position );
+						_vector4.subVectors( v1.position, v2.position );
+						_vector3.cross( _vector4 );
+						_face.normalModel.copy( _vector3 );
+						_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+
+						for ( let i = 0; i < 3; i ++ ) {
+
+							const normal = _face.vertexNormalsModel[ i ];
+							normal.fromArray( normals, arguments[ i ] * 3 );
+							normal.applyMatrix3( normalMatrix ).normalize();
+
+							const uv = _face.uvs[ i ];
+							uv.fromArray( uvs, arguments[ i ] * 2 );
+
+						}
+
+						_face.vertexNormalsLength = 3;
+
+						_face.material = material;
+
+						if ( material.vertexColors ) {
+
+							_face.color.fromArray( colors, a * 3 );
+
+						}
+
+						_renderData.elements.push( _face );
 
 					}
 
-					_face.vertexNormalsLength = 3;
+					return;
 
-					_face.material = material;
+				}
 
-					if ( material.vertexColors ) {
+				// Triangle needs clipping
+				_clipInputVertices[ 0 ] = _clipPos1;
+				_clipInputVertices[ 1 ] = _clipPos2;
+				_clipInputVertices[ 2 ] = _clipPos3;
+				const clippedCount = clipTriangle( _clipInputVertices );
 
-						_face.color.fromArray( colors, a * 3 );
+				if ( clippedCount < 3 ) return; // Triangle completely clipped
+
+				// Perform perspective divide on clipped vertices and create screen vertices
+				for ( let i = 0; i < clippedCount; i ++ ) {
+
+					const cv = _clipInput[ i ];
+
+					// Get or create renderable vertex from pool
+					let sv = _screenVertexPool[ i ];
+					if ( ! sv ) {
+
+						sv = new RenderableVertex();
+						_screenVertexPool[ i ] = sv;
 
 					}
 
-					_renderData.elements.push( _face );
+					// Perform perspective divide
+					const invW = 1 / cv.w;
+					sv.positionScreen.set( cv.x * invW, cv.y * invW, cv.z * invW, 1 );
+
+					// Interpolate world position (simplified - using weighted average based on barycentric-like coords)
+					// For a proper implementation, we'd need to track interpolation weights
+					sv.positionWorld.copy( v1.positionWorld );
+
+					sv.visible = true;
+
+				}
+
+				// Triangulate the clipped polygon (simple fan triangulation)
+				for ( let i = 1; i < clippedCount - 1; i ++ ) {
+
+					const tv1 = _screenVertexPool[ 0 ];
+					const tv2 = _screenVertexPool[ i ];
+					const tv3 = _screenVertexPool[ i + 1 ];
+
+					if ( material.side === DoubleSide || checkBackfaceCulling( tv1, tv2, tv3 ) === true ) {
+
+						_face = getNextFaceInPool();
+
+						_face.id = object.id;
+						_face.v1.copy( tv1 );
+						_face.v2.copy( tv2 );
+						_face.v3.copy( tv3 );
+						_face.z = ( tv1.positionScreen.z + tv2.positionScreen.z + tv3.positionScreen.z ) / 3;
+						_face.renderOrder = object.renderOrder;
+
+						// face normal - use original triangle's normal
+						_vector3.subVectors( v3.position, v2.position );
+						_vector4.subVectors( v1.position, v2.position );
+						_vector3.cross( _vector4 );
+						_face.normalModel.copy( _vector3 );
+						_face.normalModel.applyMatrix3( normalMatrix ).normalize();
+
+						// Use original vertex normals and UVs (simplified - proper impl would interpolate)
+						for ( let j = 0; j < 3; j ++ ) {
+
+							const normal = _face.vertexNormalsModel[ j ];
+							normal.fromArray( normals, arguments[ j ] * 3 );
+							normal.applyMatrix3( normalMatrix ).normalize();
+
+							const uv = _face.uvs[ j ];
+							uv.fromArray( uvs, arguments[ j ] * 2 );
+
+						}
+
+						_face.vertexNormalsLength = 3;
+
+						_face.material = material;
+
+						if ( material.vertexColors ) {
+
+							_face.color.fromArray( colors, a * 3 );
+
+						}
+
+						_renderData.elements.push( _face );
+
+					}
 
 				}
 
@@ -4607,7 +4901,7 @@ class Projector {
 
 			if ( sortObjects === true ) {
 
-				_renderData.objects.sort( painterSort );
+				painterSortStable( _renderData.objects, 0, _renderData.objects.length );
 
 			}
 
@@ -4873,7 +5167,7 @@ class Projector {
 
 			if ( sortElements === true ) {
 
-				_renderData.elements.sort( painterSort );
+				painterSortStable( _renderData.elements, 0, _renderData.elements.length );
 
 			}
 
@@ -5017,6 +5311,115 @@ class Projector {
 
 		}
 
+		function painterSortStable( array, start, length ) {
+
+			// A stable insertion sort for sorting render items
+			// This avoids the GC overhead of Array.prototype.sort()
+
+			for ( let i = start + 1; i < start + length; i ++ ) {
+
+				const item = array[ i ];
+				let j = i - 1;
+
+				while ( j >= start && painterSort( array[ j ], item ) > 0 ) {
+
+					array[ j + 1 ] = array[ j ];
+					j --;
+
+				}
+
+				array[ j + 1 ] = item;
+
+			}
+
+		}
+
+		// Sutherland-Hodgman triangle clipping in homogeneous clip space
+		// Returns count of vertices in clipped polygon (0 if completely clipped, 3+ if partially clipped)
+		// Result vertices are in _clipInput array
+		function clipTriangle( vertices ) {
+
+			// Initialize input with the three input vertices
+			_clipInput[ 0 ] = vertices[ 0 ];
+			_clipInput[ 1 ] = vertices[ 1 ];
+			_clipInput[ 2 ] = vertices[ 2 ];
+
+			let inputCount = 3;
+			let outputCount = 0;
+
+			for ( let p = 0; p < _clipPlanes.length; p ++ ) {
+
+				const plane = _clipPlanes[ p ];
+				outputCount = 0;
+
+				if ( inputCount === 0 ) break;
+
+				for ( let i = 0; i < inputCount; i ++ ) {
+
+					const v1 = _clipInput[ i ];
+					const v2 = _clipInput[ ( i + 1 ) % inputCount ];
+
+					const d1 = plane.sign * v1.z + v1.w;
+					const d2 = plane.sign * v2.z + v2.w;
+
+					const v1Inside = d1 >= 0;
+					const v2Inside = d2 >= 0;
+
+					if ( v1Inside && v2Inside ) {
+
+						// Both inside - add v1
+						_clipOutput[ outputCount ++ ] = v1;
+
+					} else if ( v1Inside && ! v2Inside ) {
+
+						// v1 inside, v2 outside - add v1 and intersection
+						_clipOutput[ outputCount ++ ] = v1;
+
+						const t = d1 / ( d1 - d2 );
+						let intersection = _clipVertexPool[ outputCount ];
+						if ( ! intersection ) {
+
+							intersection = new Vector4();
+							_clipVertexPool[ outputCount ] = intersection;
+
+						}
+
+						intersection.lerpVectors( v1, v2, t );
+						_clipOutput[ outputCount ++ ] = intersection;
+
+					} else if ( ! v1Inside && v2Inside ) {
+
+						// v1 outside, v2 inside - add intersection only
+						const t = d1 / ( d1 - d2 );
+						let intersection = _clipVertexPool[ outputCount ];
+						if ( ! intersection ) {
+
+							intersection = new Vector4();
+							_clipVertexPool[ outputCount ] = intersection;
+
+						}
+
+						intersection.lerpVectors( v1, v2, t );
+						_clipOutput[ outputCount ++ ] = intersection;
+
+					}
+
+					// Both outside - add nothing
+
+				}
+
+				// Swap input/output
+				const temp = _clipInput;
+				_clipInput = _clipOutput;
+				_clipOutput = temp;
+				inputCount = outputCount;
+
+			}
+
+			return inputCount;
+
+		}
+
 		function clipLine( s1, s2 ) {
 
 			let alpha1 = 0, alpha2 = 1;
@@ -5127,6 +5530,8 @@ class SVGRenderer {
 
 			_svgNode,
 			_pathCount = 0,
+			_svgObjectCount = 0,
+			_renderListCount = 0,
 
 			_precision = null,
 			_quality = 1,
@@ -5153,6 +5558,8 @@ class SVGRenderer {
 			_viewProjectionMatrix = new Matrix4(),
 
 			_svgPathPool = [],
+			_svgObjectsPool = [],
+			_renderListPool = [],
 
 			_projector = new Projector(),
 			_svg = document.createElementNS( 'http://www.w3.org/2000/svg', 'svg' );
@@ -5160,7 +5567,7 @@ class SVGRenderer {
 		/**
 		 * The DOM where the renderer appends its child-elements.
 		 *
-		 * @type {DOMElement}
+		 * @type {SVGSVGElement}
 		 */
 		this.domElement = _svg;
 
@@ -5223,8 +5630,8 @@ class SVGRenderer {
 		};
 
 		/**
-		 * Sets the render quality. Setting to `high` means This value indicates that the browser
-		 * tries to improve the SVG quality over rendering speed and geometric precision.
+		 * Sets the render quality. Setting to `high` makes the browser improve SVG quality
+		 * over rendering speed and geometric precision.
 		 *
 		 * @param {('low'|'high')} quality - The quality.
 		 */
@@ -5315,6 +5722,49 @@ class SVGRenderer {
 
 		}
 
+		function renderSort( a, b ) {
+
+			const aOrder = a.data.renderOrder !== undefined ? a.data.renderOrder : 0;
+			const bOrder = b.data.renderOrder !== undefined ? b.data.renderOrder : 0;
+
+			if ( aOrder !== bOrder ) {
+
+				return aOrder - bOrder;
+
+			} else {
+
+				const aZ = a.data.z !== undefined ? a.data.z : 0;
+				const bZ = b.data.z !== undefined ? b.data.z : 0;
+
+				return bZ - aZ; // Painter's algorithm: far to near
+
+			}
+
+		}
+
+		function arraySortStable( array, start, length ) {
+
+			// A stable insertion sort for sorting the render list
+			// This avoids the GC overhead of Array.prototype.sort()
+
+			for ( let i = start + 1; i < start + length; i ++ ) {
+
+				const item = array[ i ];
+				let j = i - 1;
+
+				while ( j >= start && renderSort( array[ j ], item ) > 0 ) {
+
+					array[ j + 1 ] = array[ j ];
+					j --;
+
+				}
+
+				array[ j + 1 ] = item;
+
+			}
+
+		}
+
 		/**
 		 * Performs a manual clear with the defined clear color.
 		 */
@@ -5367,10 +5817,7 @@ class SVGRenderer {
 
 			calculateLights( _lights );
 
-			 // reset accumulated path
-
-			_currentPath = '';
-			_currentStyle = '';
+			_renderListCount = 0;
 
 			for ( let e = 0, el = _elements.length; e < el; e ++ ) {
 
@@ -5379,71 +5826,15 @@ class SVGRenderer {
 
 				if ( material === undefined || material.opacity === 0 ) continue;
 
-				_elemBox.makeEmpty();
-
-				if ( element instanceof RenderableSprite ) {
-
-					_v1 = element;
-					_v1.x *= _svgWidthHalf; _v1.y *= - _svgHeightHalf;
-
-					renderSprite( _v1, element, material );
-
-				} else if ( element instanceof RenderableLine ) {
-
-					_v1 = element.v1; _v2 = element.v2;
-
-					_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
-					_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
-
-					_elemBox.setFromPoints( [ _v1.positionScreen, _v2.positionScreen ] );
-
-					if ( _clipBox.intersectsBox( _elemBox ) === true ) {
-
-						renderLine( _v1, _v2, material );
-
-					}
-
-				} else if ( element instanceof RenderableFace ) {
-
-					_v1 = element.v1; _v2 = element.v2; _v3 = element.v3;
-
-					if ( _v1.positionScreen.z < -1 || _v1.positionScreen.z > 1 ) continue;
-					if ( _v2.positionScreen.z < -1 || _v2.positionScreen.z > 1 ) continue;
-					if ( _v3.positionScreen.z < -1 || _v3.positionScreen.z > 1 ) continue;
-
-					_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
-					_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
-					_v3.positionScreen.x *= _svgWidthHalf; _v3.positionScreen.y *= - _svgHeightHalf;
-
-					if ( this.overdraw > 0 ) {
-
-						expand( _v1.positionScreen, _v2.positionScreen, this.overdraw );
-						expand( _v2.positionScreen, _v3.positionScreen, this.overdraw );
-						expand( _v3.positionScreen, _v1.positionScreen, this.overdraw );
-
-					}
-
-					_elemBox.setFromPoints( [
-						_v1.positionScreen,
-						_v2.positionScreen,
-						_v3.positionScreen
-					] );
-
-					if ( _clipBox.intersectsBox( _elemBox ) === true ) {
-
-						renderFace3( _v1, _v2, _v3, element, material );
-
-					}
-
-				}
+				getRenderItem( _renderListCount ++, 'element', element, material );
 
 			}
 
-			flushPath(); // just to flush last svg:path
+			_svgObjectCount = 0;
 
 			scene.traverseVisible( function ( object ) {
 
-				 if ( object.isSVGObject ) {
+				if ( object.isSVGObject ) {
 
 					_vector3.setFromMatrixPosition( object.matrixWorld );
 					_vector3.applyMatrix4( _viewProjectionMatrix );
@@ -5453,14 +5844,108 @@ class SVGRenderer {
 					const x = _vector3.x * _svgWidthHalf;
 					const y = - _vector3.y * _svgHeightHalf;
 
-					const node = object.node;
-					node.setAttribute( 'transform', 'translate(' + x + ',' + y + ')' );
+					const svgObject = getSVGObjectData( _svgObjectCount ++ );
 
-					_svg.appendChild( node );
+					svgObject.node = object.node;
+					svgObject.x = x;
+					svgObject.y = y;
+					svgObject.z = _vector3.z;
+					svgObject.renderOrder = object.renderOrder;
+
+					getRenderItem( _renderListCount ++, 'svgObject', svgObject, null );
 
 				}
 
 			} );
+
+			if ( this.sortElements ) {
+
+				arraySortStable( _renderListPool, 0, _renderListCount );
+
+			}
+
+			// Reset accumulated path
+			_currentPath = '';
+			_currentStyle = '';
+
+			// Render in sorted order
+			for ( let i = 0; i < _renderListCount; i ++ ) {
+
+				const item = _renderListPool[ i ];
+
+				if ( item.type === 'svgObject' ) {
+
+					flushPath(); // Flush any accumulated paths before inserting SVG node
+
+					const svgObject = item.data;
+					const node = svgObject.node;
+					node.setAttribute( 'transform', 'translate(' + svgObject.x + ',' + svgObject.y + ')' );
+					_svg.appendChild( node );
+
+				} else {
+
+					const element = item.data;
+					const material = item.material;
+
+					_elemBox.makeEmpty();
+
+					if ( element instanceof RenderableSprite ) {
+
+						_v1 = element;
+						_v1.x *= _svgWidthHalf; _v1.y *= - _svgHeightHalf;
+
+						renderSprite( _v1, element, material );
+
+					} else if ( element instanceof RenderableLine ) {
+
+						_v1 = element.v1; _v2 = element.v2;
+
+						_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
+						_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
+
+						_elemBox.setFromPoints( [ _v1.positionScreen, _v2.positionScreen ] );
+
+						if ( _clipBox.intersectsBox( _elemBox ) === true ) {
+
+							renderLine( _v1, _v2, material );
+
+						}
+
+					} else if ( element instanceof RenderableFace ) {
+
+						_v1 = element.v1; _v2 = element.v2; _v3 = element.v3;
+
+						_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
+						_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
+						_v3.positionScreen.x *= _svgWidthHalf; _v3.positionScreen.y *= - _svgHeightHalf;
+
+						if ( this.overdraw > 0 ) {
+
+							expand( _v1.positionScreen, _v2.positionScreen, this.overdraw );
+							expand( _v2.positionScreen, _v3.positionScreen, this.overdraw );
+							expand( _v3.positionScreen, _v1.positionScreen, this.overdraw );
+
+						}
+
+						_elemBox.setFromPoints( [
+							_v1.positionScreen,
+							_v2.positionScreen,
+							_v3.positionScreen
+						] );
+
+						if ( _clipBox.intersectsBox( _elemBox ) === true ) {
+
+							renderFace3( _v1, _v2, _v3, element, material );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			flushPath(); // Flush any remaining paths
 
 		};
 
@@ -5700,21 +6185,71 @@ class SVGRenderer {
 
 		function getPathNode( id ) {
 
-			if ( _svgPathPool[ id ] == null ) {
+			let path = _svgPathPool[ id ];
 
-				_svgPathPool[ id ] = document.createElementNS( 'http://www.w3.org/2000/svg', 'path' );
+			if ( path === undefined ) {
+
+				path = document.createElementNS( 'http://www.w3.org/2000/svg', 'path' );
 
 				if ( _quality == 0 ) {
 
-					_svgPathPool[ id ].setAttribute( 'shape-rendering', 'crispEdges' ); //optimizeSpeed
+					path.setAttribute( 'shape-rendering', 'crispEdges' ); //optimizeSpeed
 
 				}
 
-				return _svgPathPool[ id ];
+				_svgPathPool[ id ] = path;
 
 			}
 
-			return _svgPathPool[ id ];
+			return path;
+
+		}
+
+		function getSVGObjectData( id ) {
+
+			let svgObject = _svgObjectsPool[ id ];
+
+			if ( svgObject === undefined ) {
+
+				svgObject = {
+					node: null,
+					x: 0,
+					y: 0,
+					z: 0,
+					renderOrder: 0
+				};
+
+				_svgObjectsPool[ id ] = svgObject;
+
+			}
+
+			return svgObject;
+
+		}
+
+		function getRenderItem( id, type, data, material ) {
+
+			let item = _renderListPool[ id ];
+
+			if ( item === undefined ) {
+
+				item = {
+					type: type,
+					data: data,
+					material: material
+				};
+
+				_renderListPool[ id ] = item;
+
+				return item;
+
+			}
+
+			item.type = type;
+			item.data = data;
+			item.material = material;
+
+			return item;
 
 		}
 

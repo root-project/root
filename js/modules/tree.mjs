@@ -3,7 +3,7 @@ import { BIT, settings, isArrayProto, isRootCollection, isObject, isFunc, isStr,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
-         kUChar, kUShort, kUInt,
+         kUChar, kUShort, kUInt, kULong, kLong,
          kLong64, kULong64, kBool, kFloat16,
          kOffsetL, kOffsetP, kObject, kAny, kObjectp, kTString,
          kStreamer, kStreamLoop, kSTLp, kSTL, kBaseClass, clTBasket,
@@ -899,6 +899,10 @@ class TDrawSelector extends TSelector {
             case 'dump':
                args.dump = true;
                break;
+            case 'dumpall':
+               args.dump = true;
+               args.numentries = this.getNumEntries(tree);
+               break;
             case 'staged':
                args.staged = true;
                break;
@@ -945,7 +949,10 @@ class TDrawSelector extends TSelector {
          }
          if (harg === 'dump')
             args.dump = true;
-         else if (harg === 'elist')
+         else if (harg === 'dumpall') {
+            args.dump = true;
+            args.numentries = this.getNumEntries(tree);
+         } else if (harg === 'elist')
             args.dump_entries = true;
          else if (harg.indexOf('Graph') === 0)
             args.graph = true;
@@ -1121,7 +1128,7 @@ class TDrawSelector extends TSelector {
          this.leaf = args.leaf;
 
          // branch object remains, therefore we need to copy fields to see them all
-         this.copy_fields = ((args.branch.fLeaves?.arr.length > 1) || args.branch.fBranches?.arr.length) && !args.leaf;
+         this.copy_fields = args.copy_fields ?? (((args.branch.fLeaves?.arr.length > 1) || args.branch.fBranches?.arr.length) && !args.leaf);
 
          this.addBranch(branch, 'br0', args.direct_branch); // add branch
 
@@ -1822,6 +1829,7 @@ async function treeProcess(tree, selector, args) {
          case 'TLeafS': datakind = leaf.fIsUnsigned ? kUShort : kShort; break;
          case 'TLeafI': datakind = leaf.fIsUnsigned ? kUInt : kInt; break;
          case 'TLeafL': datakind = leaf.fIsUnsigned ? kULong64 : kLong64; break;
+         case 'TLeafG': datakind = leaf.fIsUnsigned ? kULong : kLong; break;
          case 'TLeafC': datakind = kTString; break;
          default: return null;
       }
@@ -2470,7 +2478,7 @@ async function treeProcess(tree, selector, args) {
 
       for (let k = 0; k < handle.arr.length; ++k) {
          const elem = handle.arr[k];
-         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar))
+         if ((elem.type <= 0) || (elem.type >= kOffsetL) || (elem.type === kCharStar) || (elem.type === kFloat16) || (elem.type === kDouble32))
             handle.process_arrays = false;
       }
 
@@ -2488,7 +2496,7 @@ async function treeProcess(tree, selector, args) {
             elem.fArrayDim = 1;
             elem.fMaxIndex[0] = 10; // 10 if artificial number, will be replaced during reading
 
-            item.arrmember = createMemberStreamer(elem, handle.file);
+            item.arrmember = createMemberStreamer(elem, handle.file, true);
          }
       }
    } else

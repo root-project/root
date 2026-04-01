@@ -281,10 +281,28 @@ function createGrayPalette() {
    return new ColorPalette(palette);
 }
 
+/** @summary Set list of colors for specified color palette
+ * @desc One also can redefine existing palette
+ * Array should contain several colors in RGB format like `rgb(10,10,10)` or `#ff00ff`
+  * @private */
+
+const customPalettes = {};
+
+function setColorPalette(id, colors) {
+   if (!Number.isInteger(id) || (id < 0) || !colors?.length)
+      return false;
+
+   customPalettes[id] = colors;
+   return true;
+}
+
 /** @summary Create color palette
   * @private */
 function getColorPalette(id, grayscale) {
    id = id || settings.Palette;
+   if (customPalettes[id])
+      return new ColorPalette(customPalettes[id], grayscale);
+
    if ((id > 0) && (id < 10))
       return createGrayPalette();
    if (id < 51)
@@ -506,4 +524,5 @@ export { getColor, findColor, addColor, adoptRootColors, convertColor,
          getRootColors, getGrayColors,
          extendRootColors, getRGBfromTColor, createRootColors, toColor,
          kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan,
-         ColorPalette, getColorPalette, clTLinearGradient, clTRadialGradient, decodeWebCanvasColors };
+         ColorPalette, getColorPalette, setColorPalette,
+         clTLinearGradient, clTRadialGradient, decodeWebCanvasColors };

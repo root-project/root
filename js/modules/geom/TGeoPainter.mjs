@@ -2831,7 +2831,6 @@ class TGeoPainter extends ObjectPainter {
                break;
             case 'mix':
                this.#camera.add(new THREE.AmbientLight(0xefefef, p));
-            // eslint-disable-next-line  no-fallthrough
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
                   const l = new THREE.DirectionalLight(0xefefef, p);
