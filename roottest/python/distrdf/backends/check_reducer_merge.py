@@ -406,6 +406,19 @@ class TestReducerMerge:
         snapdf = snap_lazy.GetValue()
         self.check_snapshot_df(snapdf, "snapFile_lazy")
 
+    def test_distributed_snapshot_disallow_update(self, payload):
+        """Test that `Snapshot` cannot be called with option 'UPDATE'"""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        connection, _ = payload
+        df = ROOT.RDataFrame(10, executor=connection)
+        df = df.Define("x", "rdfentry_")
+
+        opts = ROOT.RDF.RSnapshotOptions()
+        opts.fMode = "UPDATE"
+        err_msg = "Opening a file in UPDATE mode is not supported in distributed Snapshot."
+        with pytest.raises(ValueError, match=err_msg):
+            df.Snapshot("snapTree", "snapFileDisallowUpdate.root", ["x"], opts)
+
     def test_redefine_one_column(self, payload):
         """Test that values of one column can be properly redefined."""
         # A simple dataframe with ten sequential numbers from 0 to 9
