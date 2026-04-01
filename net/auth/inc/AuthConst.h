@@ -22,6 +22,8 @@
 
 #include "RtypesCore.h"
 
+namespace ROOT::Deprecated {
+
 // Number of security levels and masks
 const Int_t       kMAXSEC         = 6;
 const Int_t       kMAXSECBUF      = 4096;
@@ -32,5 +34,21 @@ const Int_t       kAUTH_RSATY_MSK = 0x8;
 const Int_t       kMAXRSATRIES    = 100;
 const Int_t       kPRIMELENGTH    = 20;
 const Int_t       kPRIMEEXP       = 40;
+
+} // namespace ROOT::Deprecated
+
+const Int_t kMAXSEC R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::kMAXSEC;
+const Int_t kMAXSECBUF R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::kMAXSECBUF;
+const Int_t kAUTH_REUSE_MSK R__DEPRECATED(6, 42, "the RootAuth library is deprecated") =
+   ROOT::Deprecated::kAUTH_REUSE_MSK;
+const Int_t kAUTH_CRYPT_MSK R__DEPRECATED(6, 42, "the RootAuth library is deprecated") =
+   ROOT::Deprecated::kAUTH_CRYPT_MSK;
+const Int_t kAUTH_SSALT_MSK R__DEPRECATED(6, 42, "the RootAuth library is deprecated") =
+   ROOT::Deprecated::kAUTH_SSALT_MSK;
+const Int_t kAUTH_RSATY_MSK R__DEPRECATED(6, 42, "the RootAuth library is deprecated") =
+   ROOT::Deprecated::kAUTH_RSATY_MSK;
+const Int_t kMAXRSATRIES R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::kMAXRSATRIES;
+const Int_t kPRIMELENGTH R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::kPRIMELENGTH;
+const Int_t kPRIMEEXP R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::kPRIMEEXP;
 
 #endif

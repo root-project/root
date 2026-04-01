@@ -62,7 +62,7 @@ void ResetErrno()
 
 void ErrorInfo(const char *va_(fmt), ...)
 {
-   char    buf[kMAXSECBUF];
+   char    buf[ROOT::Deprecated::kMAXSECBUF];
    va_list ap;
 
    va_start(ap,va_(fmt));
@@ -104,7 +104,7 @@ void Perror(char *buf, int size)
 
 void Error(ErrorHandler_t func, int code, const char *va_(fmt), ...)
 {
-   char    buf[kMAXSECBUF];
+   char    buf[ROOT::Deprecated::kMAXSECBUF];
    va_list ap;
 
    va_start(ap,va_(fmt));

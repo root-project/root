@@ -228,8 +228,8 @@ std::string gServName[3] = { "sockd", "rootd" };
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
 static const int gMAXTABSIZE = 50000000;
 
-static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
-                                                "Unsupported", "Unsupported", "Unsupported" };
+static const std::string gAuthMeth[ROOT::Deprecated::kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
+                                                                  "Unsupported", "Unsupported", "Unsupported" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
 static const std::string gRootdPass  = ".rootdpass";    // special rootd passwd
@@ -248,11 +248,11 @@ static int gClientOld = 0;              // msg sync for old client (<=3.05/07)
 static int gClientProtocol = -1;
 static int gCryptRequired = -1;
 static std::string gCryptToken;
-static int gAllowMeth[kMAXSEC];
+static int gAllowMeth[ROOT::Deprecated::kMAXSEC];
 static int gAnon = 0;
 static int gExistingAuth = 0;
 static int gAuthListSent = 0;
-static int gHaveMeth[kMAXSEC];
+static int gHaveMeth[ROOT::Deprecated::kMAXSEC];
 static EMessageTypes gKindOld;          // msg sync for old client (<=3.05/07)
 static int gMethInit = 0;
 static int gNumAllow = -1;
@@ -286,12 +286,12 @@ static int gSaltRequired = -1;
 static int gSec = -1;
 static int gServerProtocol = -1;
 static EService gService = kROOTD;
-static int gTriedMeth[kMAXSEC];
+static int gTriedMeth[ROOT::Deprecated::kMAXSEC];
 static char gUser[64] = { 0 };
-static char *gUserAllow[kMAXSEC] = { 0 };          // User access control
-static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
-static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
-static char *gUserIgnore[kMAXSEC] = { 0 };
+static char *gUserAllow[ROOT::Deprecated::kMAXSEC] = { 0 };          // User access control
+static unsigned int gUserAlwLen[ROOT::Deprecated::kMAXSEC] = { 0 };
+static unsigned int gUserIgnLen[ROOT::Deprecated::kMAXSEC] = { 0 };
+static char *gUserIgnore[ROOT::Deprecated::kMAXSEC] = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -1472,7 +1472,7 @@ int RpdReUseAuth(const char *sstr, int kind)
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
+      if ((gReUseRequired = (opt & ROOT::Deprecated::kAUTH_REUSE_MSK))) {
          gOffSet = offset;
          if (gRemPid > 0 && gOffSet > -1) {
             auth =
@@ -1628,7 +1628,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
             // Reset mth[kMAXSEC]
             nmet = 0;
-            for (i = 0; i < kMAXSEC; i++) {
+            for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
                mth[i] = -1;
             }
 
@@ -1663,11 +1663,11 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
             if (strlen(tmp) > 1) {
 
-               for (tmet = 0; tmet < kMAXSEC; tmet++) {
+               for (tmet = 0; tmet < ROOT::Deprecated::kMAXSEC; tmet++) {
                   if (!rpdstrcasecmp(gAuthMeth[tmet].c_str(), tmp))
                      break;
                }
-               if (tmet < kMAXSEC) {
+               if (tmet < ROOT::Deprecated::kMAXSEC) {
                   if (gDebug > 2)
                      ErrorInfo("RpdCheckAuthAllow: tmet %d", tmet);
                } else {
@@ -1683,8 +1683,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             jm = -1;
             if (gDebug > 2)
                ErrorInfo("RpdCheckAuthAllow: found method %d (have?:%d)",
-                         tmet, (tmet >= 0 && tmet < kMAXSEC) ? gHaveMeth[tmet] : 0);
-            if (tmet >= 0 && tmet < kMAXSEC) {
+                         tmet, (tmet >= 0 && tmet < ROOT::Deprecated::kMAXSEC) ? gHaveMeth[tmet] : 0);
+            if (tmet >= 0 && tmet < ROOT::Deprecated::kMAXSEC) {
                if (gHaveMeth[tmet] == 1) {
                   int ii;
                   for (ii = 0; ii < nmet; ii++) {
@@ -1788,7 +1788,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          found = 1;
          retval = 1;
          gNumAllow = gNumLeft = nmet;
-         for (i = 0; i < kMAXSEC; i++) {
+         for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
             gAllowMeth[i] = -1;
             gTriedMeth[i] = 0;
             if (i < gNumAllow) {
@@ -1834,13 +1834,13 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
           ("RpdCheckAuthAllow: returning: %d (gNumAllow: %d, gNumLeft:%d)",
            retval, gNumAllow, gNumLeft);
       int i, jm;
-      for (i = 0; i < kMAXSEC; i++) {
+      for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
          jm = gAllowMeth[i];
          if (gUserAlwLen[jm] > 0)
             ErrorInfo("RpdCheckAuthAllow: users allowed for method %d: %s",
                       jm, gUserAllow[jm]);
       }
-      for (i = 0; i < kMAXSEC; i++) {
+      for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
          jm = gAllowMeth[i];
          if (gUserIgnLen[jm] > 0)
             ErrorInfo("RpdCheckAuthAllow: users ignored for method %d: %s",
@@ -2493,7 +2493,7 @@ void RpdInitAuth()
    // Reset
    int i;
    gNumAllow = gNumLeft = 0;
-   for (i = 0; i < kMAXSEC; i++) {
+   for (i = 0; i < ROOT::Deprecated::kMAXSEC; i++) {
       gAllowMeth[i] = -1;
       gHaveMeth[i] = 1;
    }
@@ -2623,9 +2623,9 @@ int RpdUser(const char *sstr)
       user[ulen] = '\0';
       if (nw > 5)
          ruser[rulen] = '\0';
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-      gCryptRequired = (opt & kAUTH_CRYPT_MSK);
-      gSaltRequired  = (opt & kAUTH_SSALT_MSK);
+      gReUseRequired = (opt & ROOT::Deprecated::kAUTH_REUSE_MSK);
+      gCryptRequired = (opt & ROOT::Deprecated::kAUTH_CRYPT_MSK);
+      gSaltRequired  = (opt & ROOT::Deprecated::kAUTH_SSALT_MSK);
       gOffSet = ofs;
 #ifdef R__SSL
       if (gRSASSLKey) {
@@ -3230,7 +3230,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
 
 int RpdSecureSend(char *str)
 {
-   char buftmp[kMAXSECBUF];
+   char buftmp[ROOT::Deprecated::kMAXSECBUF];
    char buflen[20];
 
    int ttmp = 0;
@@ -3238,7 +3238,7 @@ int RpdSecureSend(char *str)
 
    if (gRSAKey == 1) {
       strncpy(buftmp, str, sizeof(buftmp) - 1);
-      buftmp[kMAXSECBUF - 1] = '\0';
+      buftmp[ROOT::Deprecated::kMAXSECBUF - 1] = '\0';
       ttmp = rsa_encode(buftmp, strlen(buftmp) + 1, gRSA_n, gRSA_d);
    } else if (gRSAKey == 2) {
 #ifdef R__SSL
@@ -3275,7 +3275,7 @@ int RpdSecureSend(char *str)
 
 int RpdSecureRecv(char **str)
 {
-   char buftmp[kMAXSECBUF];
+   char buftmp[ROOT::Deprecated::kMAXSECBUF];
    char buflen[20];
 
    int nrec = -1;
@@ -3424,9 +3424,9 @@ int RpdGenRSAKeys(int setrndinit)
    char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
 
    int nAttempts = 0;
-   int thePrimeLen = kPRIMELENGTH;
-   int thePrimeExp = kPRIMEEXP + 5;   // Prime probability = 1-0.5^thePrimeExp
-   while (notOK && nAttempts < kMAXRSATRIES) {
+   int thePrimeLen = ROOT::Deprecated::kPRIMELENGTH;
+   int thePrimeExp = ROOT::Deprecated::kPRIMEEXP + 5;   // Prime probability = 1-0.5^thePrimeExp
+   while (notOK && nAttempts < ROOT::Deprecated::kMAXRSATRIES) {
 
       nAttempts++;
       if (gDebug > 2 && nAttempts > 1) {
@@ -3440,7 +3440,7 @@ int RpdGenRSAKeys(int setrndinit)
 
       // Retry if equal
       int nPrimes = 0;
-      while (rsa_cmp(&p1, &p2) == 0 && nPrimes < kMAXRSATRIES) {
+      while (rsa_cmp(&p1, &p2) == 0 && nPrimes < ROOT::Deprecated::kMAXRSATRIES) {
          nPrimes++;
          if (gDebug > 2)
             ErrorInfo("RpdGenRSAKeys: equal primes: regenerate (%d times)",nPrimes);
@@ -3540,7 +3540,7 @@ int RpdGenRSAKeys(int setrndinit)
 
    if (notOK) {
       ErrorInfo("RpdGenRSAKeys: unable to generate good RSA key pair"
-                " (%d attempts)- return",kMAXRSATRIES);
+                " (%d attempts)- return",ROOT::Deprecated::kMAXRSATRIES);
       return 1;
    }
 
