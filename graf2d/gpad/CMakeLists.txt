@@ -24,6 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     TGroupButton.h
     TInspectCanvas.h
     TPad.h
+    TPadPainterBase.h
     TPadPainter.h
     TPadPainterPS.h
     TPaveClass.h
