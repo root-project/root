@@ -307,7 +307,14 @@ Int_t TStreamerElement::GetExecID() const
       // inheriting from it (see ROOT-7052)
       const TString clName = ExtractClassName(fTypeName);
       const auto cl = TClass::GetClass(clName, kFALSE, kTRUE);
-      if (!cl || (nullptr == cl->GetBaseClass("TRef") && nullptr == cl->GetBaseClass("TRefArray")))
+      // FIXME: The check for HasDataMemberInfo() is likely wrong because it could miss inheritance (chains) from TRef.
+      // However, it is needed to protect against non-loaded classes, also present in TClass::GetBaseClass.
+      if (!cl || !cl->HasDataMemberInfo())
+         return 0;
+      // Only classes inheriting from TObject can inherit from TRef. Do not look inside other classes.
+      if (!cl->IsTObject())
+         return 0;
+      if (nullptr == cl->GetBaseClass("TRef") && nullptr == cl->GetBaseClass("TRefArray"))
          return 0;
    }
 
