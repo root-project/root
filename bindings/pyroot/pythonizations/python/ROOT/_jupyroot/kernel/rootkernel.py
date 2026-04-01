@@ -80,6 +80,9 @@ class ROOTKernel(MetaKernel):
         for streamDict in filter(lambda d: d is not None, streamDicts):
             self.send_response(self.iopub_socket, "stream", streamDict)
 
+    def do_display(self):
+        Display(self.Displayer, self.Display)
+
     def do_execute_direct(self, code, silent=False):
         if not code.strip():
             return
@@ -88,7 +91,7 @@ class ROOTKernel(MetaKernel):
         try:
             RunAsyncAndPrint(self.Executor, code, self.ioHandler, self.print_output, silent, 0.1)
 
-            Display(self.Displayer, self.Display)
+            self.do_display()
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()
