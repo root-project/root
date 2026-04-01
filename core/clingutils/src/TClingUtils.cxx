@@ -698,6 +698,27 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 
          return true;
       }
+
+      // LLVM22: ElaboratedType comparison (dest != t) changed due to
+      // https://github.com/llvm/llvm-project/pull/147835
+      // There is no elaborated type and the codepath above is not taken
+      // for previous elaborated types where we need the enum/class/struct
+      // keywords to be stripped.
+
+      // TODO: Remove this comment once we upstream this.
+      // For types like "enum CustomEnum", SuppressTagKeyword no longer
+      // helps (unless we patch clang) because the keyword is printed
+      // unconditionally in the non-canonical elaborated path.
+      // We are using a patched clang, but we still need to handle this
+      // separately for windows.
+      if (!dest.isNull()) {
+         for (std::string_view kw : {"class ", "struct ", "enum "}) {
+            if (tname.compare(0, kw.size(), kw) == 0) {
+               result = tname.substr(kw.size());
+               return true;
+            }
+         }
+      }
    }
    return false;
 }
