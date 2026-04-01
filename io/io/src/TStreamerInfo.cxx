@@ -3347,10 +3347,8 @@ void TStreamerInfo::ComputeSize()
       fSize = fVirtualInfoLoc[0] + sizeof(TStreamerInfo*);
    }
 
-   // On some platform and in some case of layout non-basic data types needs
-   // to be aligned.  So let's be on the safe side and align on the alignment
-   // of `std::max_align_t`.
-   if (fAlignment < alignof(std::max_align_t)) {
+   // If we have no information use the default alignment.
+   if (!fAlignment) {
       fAlignment = alignof(std::max_align_t);
    }
    if ((fSize % fAlignment) != 0) {
