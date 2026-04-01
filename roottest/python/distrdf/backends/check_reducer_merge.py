@@ -26,7 +26,7 @@ class TestReducerMerge:
 
         """
         return rdf.Define("x", "rdfentry_").Define("y", "rdfentry_*rdfentry_")
-    
+
     def define_two_err_columns(self, rdf):
         """
         Helper method that defines and returns 4 error columns:
@@ -41,9 +41,9 @@ class TestReducerMerge:
         "z = rdfentry_ * rdfentry_ * rdfentry_".
 
         """
-        return rdf.Define("x", "rdfentry_")\
-                  .Define("y", "rdfentry_*rdfentry_")\
-                  .Define("z", "rdfentry_*rdfentry_*rdfentry_")
+        return (
+            rdf.Define("x", "rdfentry_").Define("y", "rdfentry_*rdfentry_").Define("z", "rdfentry_*rdfentry_*rdfentry_")
+        )
 
     def define_four_columns(self, rdf, colnames):
         """Helper method to define four columns."""
@@ -105,8 +105,8 @@ class TestReducerMerge:
     def test_histond_merge(self, payload):
         """Check the working of HistoND merge operation in the reducer."""
         nbins = (10, 10, 10, 10)
-        xmin = (0., 0., 0., 0.)
-        xmax = (100., 100., 100., 100.)
+        xmin = (0.0, 0.0, 0.0, 0.0)
+        xmax = (100.0, 100.0, 100.0, 100.0)
         modelTHND = ("name", "title", 4, nbins, xmin, xmax)
         colnames = ("x0", "x1", "x2", "x3")
 
@@ -369,13 +369,7 @@ class TestReducerMerge:
         # A simple dataframe with ten sequential numbers from 0 to 9
         connection, _ = payload
         df = ROOT.RDataFrame(10, executor=connection)
-        df = (
-            df
-            .Define("a", "rdfentry_")
-            .Define("b", "rdfentry_")
-            .Define("c", "rdfentry_")
-            .Define("d", "rdfentry_")
-        )
+        df = df.Define("a", "rdfentry_").Define("b", "rdfentry_").Define("c", "rdfentry_").Define("d", "rdfentry_")
         expectedcolumns = ["a", "b"]
         df.Snapshot("snapTree_columnlist", "distrdf_dask_snapfile_columnlist.root", expectedcolumns)
 
@@ -485,10 +479,10 @@ class TestReducerMerge:
 
         df = (
             df.Define("vec_v", "std::vector<double>({v, v+1, v+2})")
-              .Define("w", "1./(v+1)")
-              .Define("vec_w", "std::vector<double>({w, w+1, w+2})")
-              .Define("one", "1")
-              .Define("ones", "std::vector<double>({1., 1., 1.})")
+            .Define("w", "1./(v+1)")
+            .Define("vec_w", "std::vector<double>({w, w+1, w+2})")
+            .Define("one", "1")
+            .Define("ones", "std::vector<double>({1., 1., 1.})")
         )
 
         s0 = df.Stats("v")
@@ -537,6 +531,7 @@ class TestReducerMerge:
 
         assert sum_original.GetValue() == 10.0
         assert sum_alias.GetValue() == 10.0
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
