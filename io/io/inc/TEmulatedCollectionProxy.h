@@ -57,7 +57,28 @@ public:
    void WithCont(void *obj, F &&fn) const
    {
       auto *vcl = GetValueClass();
-      std::size_t align = vcl ? vcl->GetClassAlignment() : alignof(std::max_align_t);
+      std::size_t align = alignof(std::max_align_t);
+      if (!fKey && (fVal->fCase & kIsPointer)) {
+         // If the collection contains pointers, we need to use the alignment of a pointer, not of the value class.
+         align = alignof(void*);
+      } else if (vcl) {
+         align = vcl->GetClassAlignment();
+      } else {
+         switch( int(fVal->fKind) ) {
+            case kChar_t:
+            case kUChar_t:  align = alignof(char); break;
+            case kShort_t:
+            case kUShort_t: align = alignof(short); break;
+            case kInt_t:
+            case kUInt_t:   align = alignof(int); break;
+            case kLong_t:
+            case kULong_t:  align = alignof(long); break;
+            case kLong64_t:
+            case kULong64_t:align = alignof(long long); break;
+            case kFloat_t:  align = alignof(float); break;
+            case kDouble_t: align = alignof(double); break;
+         }
+      }
       switch (align) {
          case 4096: fn(reinterpret_cast<Cont4096_t*>(obj), std::size_t(4096)); break;
          case 2048: fn(reinterpret_cast<Cont2048_t*>(obj), std::size_t(2048)); break;
