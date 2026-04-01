@@ -311,6 +311,9 @@ Int_t TStreamerElement::GetExecID() const
       // However, it is needed to protect against non-loaded classes, previously also present in TClass::GetBaseClass.
       if (!cl || !cl->HasDataMemberInfo())
          return 0;
+      // Classes cannot both inherit from TRef/TRefArray and have a collection proxy.
+      if (cl->GetCollectionProxy())
+         return 0;
       // Only classes inheriting from TObject can inherit from TRef. Do not look inside other classes.
       if (!cl->IsTObject())
          return 0;
