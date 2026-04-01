@@ -3990,7 +3990,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       Double_t xb[4] = {x1, x1, x2, x2};
       Double_t yb[4] = {y1, y2, y2, y1};
       PaintFillAreaHatches(4, xb, yb, style);
-   } else if (!pp->IsNative()) {
+   } else if (pp->GetPS()) {
       draw_fill = kTRUE;
       if (style == 0)
          draw_border = kFALSE;
@@ -6272,7 +6272,7 @@ void TPad::SetView(TView *view)
 void TPad::SetAttFillPS(Color_t color, Style_t style)
 {
    if (auto pp = GetPainter())
-      if (!pp->IsNative()) {
+      if (pp->GetPS()) {
          pp->SetFillColor(color);
          pp->SetFillStyle(style);
       }
@@ -6286,7 +6286,7 @@ void TPad::SetAttFillPS(Color_t color, Style_t style)
 void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 {
    if (auto pp = GetPainter())
-      if (!pp->IsNative()) {
+      if (pp->GetPS()) {
          pp->SetLineColor(color);
          pp->SetLineStyle(style);
          pp->SetLineWidth(lwidth);
@@ -6301,7 +6301,7 @@ void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 {
    if (auto pp = GetPainter())
-      if (!pp->IsNative()) {
+      if (pp->GetPS()) {
          pp->SetMarkerColor(color);
          pp->SetMarkerStyle(style);
          pp->SetMarkerSize(msize);
@@ -6316,7 +6316,7 @@ void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
    if (auto pp = GetPainter())
-      if (!pp->IsNative()) {
+      if (pp->GetPS()) {
          pp->SetTextAlign(align);
          pp->SetTextAngle(angle);
          pp->SetTextColor(color);
