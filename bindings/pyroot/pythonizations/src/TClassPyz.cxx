@@ -12,7 +12,7 @@
 // Bindings
 #include "CPyCppyy/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/Cppyy.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
@@ -37,9 +37,19 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
       return nullptr;
 
    if (!CPyCppyy::Instance_Check(pyclass)) {
-      PyErr_Format(PyExc_TypeError,
-         "DynamicCast argument 1 must be a cppyy instance, got '%.200s'",
-         Py_TYPE(pyclass)->tp_name);
+      PyObject *type = PyObject_Type(pyclass);
+      if (!type) {
+         return nullptr;
+      }
+      PyObject *name = PyObject_Str(type);
+      Py_DecRef(type);
+      const char *nameStr = name ? PyUnicode_AsUTF8AndSize(name, nullptr) : nullptr;
+      if (nameStr) {
+         PyErr_Format(PyExc_TypeError, "DynamicCast argument 1 must be a cppyy instance, got '%s'", nameStr);
+      } else {
+         PyErr_SetString(PyExc_TypeError, "DynamicCast argument 1 must be a cppyy instance");
+      }
+      Py_DecRef(name);
       return nullptr;
    }
 
@@ -51,10 +61,14 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 
    if (CPyCppyy::Instance_Check(pyobject)) {
       address = CPyCppyy::Instance_AsVoidPtr(pyobject);
-   } else if (PyInt_Check(pyobject) || PyLong_Check(pyobject)) {
-      address = (void *)PyLong_AsLongLong(pyobject);
    } else {
-      PyROOT::GetBuffer(pyobject, address);
+      long long value = PyLong_AsLongLong(pyobject);
+      if (!PyErr_Occurred()) {
+         address = (void *)value; // pyobject was indeed a PyLong
+      } else {
+         PyErr_Clear();
+         PyROOT::GetBuffer(pyobject, address);
+      }
    }
 
    // Now use binding to return a usable class. Upcast: result is a base.

@@ -10,7 +10,15 @@
  *************************************************************************/
 
 // Bindings
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include <Python.h>
+
+// TODO: refactor public CPyCppyy API such that this forward declaration is not
+// needed anymore. Including "CPyCppyy/API.h" should be enough.
+namespace CPyCppyy {
+typedef Py_ssize_t dim_t;
+} // namespace CPyCppyy
+
+#include "../../cppyy/CPyCppyy/src/Cppyy.h"
 #include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 #include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
 #include "../../cppyy/CPyCppyy/src/Dimensions.h"
@@ -209,7 +217,7 @@ PyObject *PyROOT::GetBranchAttr(PyObject * /*self*/, PyObject *args)
       if (!finalTypeName.empty()) {
          PyObject *outTuple = PyTuple_New(2);
          PyTuple_SetItem(outTuple, 0, PyLong_FromLongLong((intptr_t)finalAddressVoidPtr));
-         PyTuple_SetItem(outTuple, 1, CPyCppyy_PyText_FromString((finalTypeName + "*").c_str()));
+         PyTuple_SetItem(outTuple, 1, PyUnicode_FromString((finalTypeName + "*").c_str()));
          return outTuple;
       }
    }
@@ -221,7 +229,7 @@ PyObject *PyROOT::GetBranchAttr(PyObject * /*self*/, PyObject *args)
       if (wrapper != nullptr) {
          PyObject *outTuple = PyTuple_New(2);
          PyTuple_SetItem(outTuple, 0, wrapper);
-         PyTuple_SetItem(outTuple, 1, CPyCppyy_PyText_FromString(""));
+         PyTuple_SetItem(outTuple, 1, PyUnicode_FromString(""));
          return outTuple;
       }
    }
@@ -242,7 +250,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
    PyObject *name = nullptr, *address = nullptr, *leaflist = nullptr, *bufsize = nullptr;
 
    if (PyArg_ParseTuple(args, "OO!OO!|O!:Branch", &treeObj, &PyUnicode_Type, &name, &address, &PyUnicode_Type,
-                        &leaflist, &PyInt_Type, &bufsize)) {
+                        &leaflist, &PyLong_Type, &bufsize)) {
 
       auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
       if (!tree) {
@@ -267,7 +275,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
             return nullptr;
          }
          if (argc == 5) {
-            branch = tree->Branch(nameString, buf, leaflistString, PyInt_AsLong(bufsize));
+            branch = tree->Branch(nameString, buf, leaflistString, PyLong_AsLong(bufsize));
          } else {
             branch = tree->Branch(nameString, buf, leaflistString);
          }
@@ -294,12 +302,12 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
 
    auto bIsMatch = false;
    if (PyArg_ParseTuple(args, "OO!O!O|O!O!:Branch", &treeObj, &PyUnicode_Type, &name, &PyUnicode_Type, &clName,
-                        &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel)) {
+                        &address, &PyLong_Type, &bufsize, &PyLong_Type, &splitlevel)) {
       bIsMatch = true;
    } else {
       PyErr_Clear();
-      if (PyArg_ParseTuple(args, "OO!O|O!O!", &treeObj, &PyUnicode_Type, &name, &address, &PyInt_Type, &bufsize,
-                           &PyInt_Type, &splitlevel)) {
+      if (PyArg_ParseTuple(args, "OO!O|O!O!", &treeObj, &PyUnicode_Type, &name, &address, &PyLong_Type, &bufsize,
+                           &PyLong_Type, &splitlevel)) {
          bIsMatch = true;
       } else {
          PyErr_Clear();
@@ -349,10 +357,10 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
          if (argc == 4) {
             branch = tree->Branch(nameString, klName.c_str(), buf);
          } else if (argc == 5) {
-            branch = tree->Branch(nameString, klName.c_str(), buf, PyInt_AsLong(bufsize));
+            branch = tree->Branch(nameString, klName.c_str(), buf, PyLong_AsLong(bufsize));
          } else if (argc == 6) {
-            branch = tree->Branch(nameString, klName.c_str(), buf, PyInt_AsLong(bufsize),
-                                  PyInt_AsLong(splitlevel));
+            branch = tree->Branch(nameString, klName.c_str(), buf, PyLong_AsLong(bufsize),
+                                  PyLong_AsLong(splitlevel));
          }
 
          return BindCppObject(branch, Cppyy::GetScope("TBranch"));

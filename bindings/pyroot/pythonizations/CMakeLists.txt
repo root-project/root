@@ -31,6 +31,17 @@ set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
 
+# Use what is in the limited API since Python 3.11, if we build with a lower
+# Python version, we don't bother using the limited API.
+if (Python3_VERSION VERSION_GREATER_EQUAL "3.11")
+  # On Windows we can't use the stable ABI yet: it requires linking against a
+  # different libpython, so as long as we don't build all translation units in
+  # the ROOT Pythonization library with the stable ABI we should not use it.
+  if(NOT MSVC)
+    target_compile_options(${libname} PRIVATE -DPy_LIMITED_API=0x030B0000)
+  endif()
+endif()
+
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
 target_link_libraries(${libname} PUBLIC Core Tree CPyCppyy)

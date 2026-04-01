@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 #include <fcntl.h>
 #ifdef _MSC_VER // Visual Studio
