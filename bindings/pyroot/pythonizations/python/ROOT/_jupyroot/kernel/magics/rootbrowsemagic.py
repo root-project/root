@@ -22,10 +22,16 @@ class RootBrowseMagics(Magic):
         super(RootBrowseMagics, self).__init__(kernel)
 
     @option("arg", default="", help="Show JSROOT browser with file content")
-    def line_rootbrowse(self, args):
+    @option(
+        "-f", "--force",
+        action="store_true",
+        default=False,
+        help="Force opening of large files"
+    )
+    def line_rootbrowse(self, arg, force):
         """Open file and start browser."""
-        if not browseRootFile(args):
-            self.kernel.Error("Not able to open file " + args)
+        if not browseRootFile(arg, force):
+            self.kernel.Error(f"Not able to open file {arg}")
         else:
             self.kernel.do_display()
 
