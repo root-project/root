@@ -1,5 +1,6 @@
 import math
 import pytest
+import textwrap
 import ROOT
 
 
@@ -62,6 +63,22 @@ class TestDeclare:
             """
         )
 
+    def _mydeclare_21758(self):
+        # Tests the regression described at https://github.com/root-project/root/issues/21758
+        # using the same exact code snippet to trigger the hash string starting with a number
+        # which is not a valid C++ identifier and caused the issue.
+        ROOT.RDF.Distributed.DistributeCppCode(textwrap.dedent("""
+            float get_correction(
+                float area,
+                float eta,
+                float pt,
+                float rho,
+                float phi
+                ) {
+                return area + eta + pt + rho + phi; // Placeholder implementation
+            }
+            """))
+
     def _distribute_single_declare_check_filter_and_histo(self, connection):
 
         rdf = ROOT.RDataFrame(10, executor=connection)
@@ -78,6 +95,16 @@ class TestDeclare:
         self._check_rdf_histos_1(rdf)
         self._check_rdf_histos_2(rdf)
 
+    def _distribute_single_declare_21758(self, connection):
+
+        rdf = ROOT.RDataFrame(10, executor=connection)
+
+        self._mydeclare_21758()
+
+        mean_val = rdf.Define("val", "get_correction(42.0f, 42.0f, 42.0f, 42.0f, 42.0f) / 5.0f").Mean("val").GetValue()
+        assert mean_val == pytest.approx(42.0)
+
+
     def test_declares(self, payload):
         """
         Tests for the distribution of headers to the workers and their
@@ -86,6 +113,7 @@ class TestDeclare:
         connection, _ = payload
         self._distribute_single_declare_check_filter_and_histo(connection)
         self._distribute_multiple_declares_check_filter_and_histo(connection)
+        self._distribute_single_declare_21758(connection)
 
 
 if __name__ == "__main__":
