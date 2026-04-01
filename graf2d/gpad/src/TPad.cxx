@@ -6272,10 +6272,8 @@ void TPad::SetView(TView *view)
 void TPad::SetAttFillPS(Color_t color, Style_t style)
 {
    if (auto pp = GetPainter())
-      if (pp->GetPS()) {
-         pp->SetFillColor(color);
-         pp->SetFillStyle(style);
-      }
+      if (pp->GetPS())
+         pp->SetAttFill({color, style});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6286,11 +6284,8 @@ void TPad::SetAttFillPS(Color_t color, Style_t style)
 void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 {
    if (auto pp = GetPainter())
-      if (pp->GetPS()) {
-         pp->SetLineColor(color);
-         pp->SetLineStyle(style);
-         pp->SetLineWidth(lwidth);
-      }
+      if (pp->GetPS())
+         pp->SetAttLine({color, style, lwidth});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6301,11 +6296,8 @@ void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
 {
    if (auto pp = GetPainter())
-      if (pp->GetPS()) {
-         pp->SetMarkerColor(color);
-         pp->SetMarkerStyle(style);
-         pp->SetMarkerSize(msize);
-      }
+      if (pp->GetPS())
+         pp->SetAttMarker({color, style, msize});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6317,12 +6309,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 {
    if (auto pp = GetPainter())
       if (pp->GetPS()) {
-         pp->SetTextAlign(align);
-         pp->SetTextAngle(angle);
-         pp->SetTextColor(color);
-         pp->SetTextFont(font);
-
-         if (font%10 > 2) {
+         if (font % 10 > 2) {
             Float_t wh = (Float_t) XtoPixel(GetX2());
             Float_t hh = (Float_t) YtoPixel(GetY1());
             Float_t dy;
@@ -6334,7 +6321,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
                tsize = dy/(GetY2()-GetY1());
             }
          }
-         pp->SetTextSize(tsize);
+         pp->SetAttText({align, angle, color, font, tsize});
       }
 }
 
