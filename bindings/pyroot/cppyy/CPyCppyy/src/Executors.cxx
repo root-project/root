@@ -523,6 +523,7 @@ CPPYY_IMPL_ARRAY_EXEC(LLong,    long long,               )
 CPPYY_IMPL_ARRAY_EXEC(ULLong,   unsigned long long,      )
 CPPYY_IMPL_ARRAY_EXEC(Float,    float,                   )
 CPPYY_IMPL_ARRAY_EXEC(Double,   double,                  )
+CPPYY_IMPL_ARRAY_EXEC(LDouble,  long double,             )
 CPPYY_IMPL_ARRAY_EXEC(ComplexF, std::complex<float>,     )
 CPPYY_IMPL_ARRAY_EXEC(ComplexD, std::complex<double>,    )
 CPPYY_IMPL_ARRAY_EXEC(ComplexI, std::complex<int>,       )
@@ -1037,6 +1038,7 @@ public:
         gf["unsigned long long ptr"] =      (ef_t)+[](cdims_t d) { return new ULLongArrayExecutor{d};   };
         gf["float ptr"] =                   (ef_t)+[](cdims_t d) { return new FloatArrayExecutor{d};    };
         gf["double ptr"] =                  (ef_t)+[](cdims_t d) { return new DoubleArrayExecutor{d};   };
+        gf["long double ptr"] =             (ef_t)+[](cdims_t d) { return new LDoubleArrayExecutor{d};  };
         gf["std::complex<float> ptr"] =     (ef_t)+[](cdims_t d) { return new ComplexFArrayExecutor{d}; };
         gf["std::complex<double> ptr"] =    (ef_t)+[](cdims_t d) { return new ComplexDArrayExecutor{d}; };
         gf["std::complex<int> ptr"] =       (ef_t)+[](cdims_t d) { return new ComplexIArrayExecutor{d}; };
