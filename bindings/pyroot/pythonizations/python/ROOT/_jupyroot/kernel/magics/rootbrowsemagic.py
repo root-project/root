@@ -26,6 +26,8 @@ class RootBrowseMagics(Magic):
         """Open file and start browser."""
         if not browseRootFile(args):
             self.kernel.Error("Not able to open file " + args)
+        else:
+            self.kernel.do_display()
 
 
 def register_magics(kernel):
