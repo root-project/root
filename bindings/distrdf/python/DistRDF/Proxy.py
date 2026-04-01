@@ -57,7 +57,8 @@ def execute_graph(node: Node) -> None:
             # the workers is contained in the head node
             node.get_head().execute_graph()
 
-def _update_internal_df_with_transformation(node:Node, operation: Operation) -> None:
+
+def _update_internal_df_with_transformation(node: Node, operation: Operation) -> None:
     """Propagate transform operations to the headnode internal RDataFrame"""
     # The parent node is None only if the node is the head node
     parent_node = node.parent if node.parent is not None else node
@@ -65,6 +66,7 @@ def _update_internal_df_with_transformation(node:Node, operation: Operation) -> 
     rdf_operation = getattr(parent_node.rdf_node, operation.name)
     # Call and inject the result in the Python node
     node.rdf_node = rdf_operation(*operation.args, **operation.kwargs)
+
 
 def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
     """Creates a new node and inserts it in the computation graph"""
@@ -144,8 +146,10 @@ class ResultMapProxy(Proxy):
         try:
             return self.proxied_node.value.GetVariation(key)
         except ROOT.std.runtime_error as e:
-            raise KeyError(f"'{key}' is not a valid variation name in this branch of the graph. "
-                           f"Available variations are {self.GetKeys()}") from e
+            raise KeyError(
+                f"'{key}' is not a valid variation name in this branch of the graph. "
+                f"Available variations are {self.GetKeys()}"
+            ) from e
 
     def GetKeys(self) -> List[str]:
         """
@@ -160,13 +164,16 @@ class ResultMapProxy(Proxy):
             # TODO:
             # The event loop has not been triggered yet. Currently we can't retrieve
             # the list of variation names without starting the distributed computations
-            raise RuntimeError(textwrap.dedent(
-                """
+            raise RuntimeError(
+                textwrap.dedent(
+                    """
                 A list of names of systematic variations was requested, but the corresponding map of variations is not
                 present. The variation names cannot be retrieved unless the computation graph has properly run and
                 finished. Something may have gone wrong in the distributed execution, or no variation values were
                 explicitly requested. In the future, it will be possible to get the variation names without triggering.
-                """))
+                """
+                )
+            )
         else:
             if self._keys is None:
                 self._keys = [str(key) for key in self.proxied_node.value.GetKeys()]
@@ -245,20 +252,15 @@ class NodeProxy(Proxy):
                 return getattr(self.proxied_node, attr)
             except AttributeError:
                 if self.proxied_node.operation:
-                    msg = "'{0}' object has no attribute '{1}'".format(
-                        str(self.proxied_node.operation.name),
-                        attr
-                    )
+                    msg = "'{0}' object has no attribute '{1}'".format(str(self.proxied_node.operation.name), attr)
                 else:
-                    msg = "'RDataFrame' object has no attribute '{}'".format(
-                        attr
-                    )
+                    msg = "'RDataFrame' object has no attribute '{}'".format(attr)
                 raise AttributeError(msg)
 
     def GetColumnNames(self):
         """Forward call to the internal RDataFrame object"""
         return self.proxied_node.rdf_node.GetColumnNames()
-    
+
     def GetColumnType(self, column):
         """Forward call to the internal RDataFrame object"""
         return self.proxied_node.rdf_node.GetColumnType(column)
@@ -275,7 +277,7 @@ class NodeProxy(Proxy):
 
 @singledispatch
 def get_proxy_for(operation: Operation.Transformation, node: Node) -> NodeProxy:
-    """"Returns appropriate proxy for the input node"""
+    """ "Returns appropriate proxy for the input node"""
     _update_internal_df_with_transformation(node, operation)
     return NodeProxy(node)
 
