@@ -144,6 +144,55 @@ void TVirtualPadPainter::SetAttText(const TAttText &att)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get fill attributes
+
+const TAttFill &TVirtualPadPainter::GetAttFill() const
+{
+   static TAttFill att;
+   att.SetFillColor(GetFillColor());
+   att.SetFillStyle(GetFillStyle());
+   return att;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get line attributes
+
+const TAttLine &TVirtualPadPainter::GetAttLine() const
+{
+   static TAttLine att;
+   att.SetLineColor(GetLineColor());
+   att.SetLineStyle(GetLineStyle());
+   att.SetLineWidth(GetLineWidth());
+   return att;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get marker attributes
+
+const TAttMarker &TVirtualPadPainter::GetAttMarker() const
+{
+   static TAttMarker att;
+   att.SetMarkerColor(GetMarkerColor());
+   att.SetMarkerSize(GetMarkerSize());
+   att.SetMarkerStyle(GetMarkerStyle());
+   return att;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get text attributes
+
+const TAttText &TVirtualPadPainter::GetAttText() const
+{
+   static TAttText att;
+   att.SetTextAlign(GetTextAlign());
+   att.SetTextAngle(GetTextAngle());
+   att.SetTextColor(GetTextColor());
+   att.SetTextSize(GetTextSize());
+   att.SetTextFont(GetTextFont());
+   return att;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set double buffer mode for specified device, redirect to gVirtualX
 
 void TVirtualPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
