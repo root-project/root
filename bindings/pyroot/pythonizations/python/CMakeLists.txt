@@ -113,6 +113,7 @@ set(py_sources
   ROOT/_jupyroot/magics/__init__.py
   ROOT/_jupyroot/magics/cppmagic.py
   ROOT/_jupyroot/magics/jsrootmagic.py
+  ROOT/_jupyroot/magics/rootbrowsemagic.py
   ROOT/_numbadeclare.py
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py

@@ -205,6 +205,14 @@ def addVisualObject(object, kind="none", option=""):
         _visualObjects.append(NotebookDrawerJson(object))
 
 
+def browseRootFile(fname):
+    f = ROOT.TFile.Open(fname)
+    if f:
+        addVisualObject(f, "tfile")
+        return True
+    return False
+
+
 def _getPlatform():
     return sys.platform
 
@@ -829,7 +837,7 @@ captures = []
 
 def loadMagicsAndCapturers():
     global captures
-    extNames = ["ROOT._jupyroot.magics." + name for name in ["cppmagic", "jsrootmagic"]]
+    extNames = ["ROOT._jupyroot.magics." + name for name in ["cppmagic", "jsrootmagic", "rootbrowsemagic"]]
     ip = get_ipython()
     extMgr = ExtensionManager(ip)
     for extName in extNames:
