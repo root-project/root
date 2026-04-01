@@ -74,6 +74,11 @@ Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
 }});
 """
 
+_jsBrowseUrlCode = """
+Core.buildGUI('{jsDivId}','notebook').then(h => h.openRootFile('{fileUrl}'));
+"""
+
+
 _jsBrowseFileCode = """
 const binaryString = atob('{fileBase64}');
 const bytes = new Uint8Array(binaryString.length);
@@ -199,13 +204,19 @@ def enableJSVis(flag=True):
 
 def addVisualObject(object, kind="none", option=""):
     global _visualObjects
-    if kind == "tfile":
+    if kind == "url":
+        _visualObjects.append(NotebookDrawerUrl(object))
+    elif kind == "tfile":
         _visualObjects.append(NotebookDrawerFile(object, option))
     else:
         _visualObjects.append(NotebookDrawerJson(object))
 
 
 def browseRootFile(fname, force=False):
+    if not force and (fname.startswith("https://") or fname.startswith("http://")):
+        addVisualObject(fname, "url")
+        return True
+
     f = ROOT.TFile.Open(fname)
     if f:
         option = ""
@@ -511,6 +522,41 @@ class CaptureDrawnPrimitives(object):
     def register(self):
         self.shell.events.register("post_execute", self._post_execute)
 
+
+
+class NotebookDrawerUrl(object):
+    """
+    Special drawer for file URL - JSROOT uses url to load file directly, without root
+    """
+
+    def __init__(self, theUrl):
+       self.drawUrl = theUrl
+
+    def _getUrlJsCode(self):
+
+        id = _getUniqueDivId()
+
+        drawHtml = _jsFullWidthDiv.format(
+            jsDivId=id,
+            jsCanvasHeight=_jsCanvasHeight
+        )
+
+        browseUrlCode = _jsBrowseUrlCode.format(
+            jsDivId=id,
+            fileUrl=self.drawUrl
+        )
+
+        thisJsCode = _jsCode.format(
+            jsDivId=id,
+            jsDivHtml=drawHtml,
+            jsDrawCode=browseUrlCode
+        )
+
+        return thisJsCode
+
+    def Draw(self, displayFunction):
+        code = self._getUrlJsCode()
+        displayFunction(display.HTML(code))
 
 
 
