@@ -86,6 +86,11 @@ public:
    virtual void      SetAttMarker(const TAttMarker &att);
    virtual void      SetAttText(const TAttText &att);
 
+   virtual const TAttFill &GetAttFill() const;
+   virtual const TAttLine &GetAttLine() const;
+   virtual const TAttMarker &GetAttMarker() const;
+   virtual const TAttText &GetAttText() const;
+
    //This part is an interface to X11 pixmap management and to save sub-pads off-screens for OpenGL.
    //Currently, must be implemented only for X11/GDI
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap
