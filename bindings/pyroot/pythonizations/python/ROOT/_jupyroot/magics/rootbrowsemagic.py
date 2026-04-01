@@ -31,10 +31,19 @@ class RootBrowseMagics(Magics):
         default="",
         help="Open and browse ROOT file",
     )
+    @argument(
+       "--force",
+       "-f",
+       action="store_true",
+       help="Force opening of large files"
+    )
     def rootbrowse(self, line):
         """start root browser."""
         args = parse_argstring(self.rootbrowse, line)
-        browseRootFile(args.arg)
+        if not args:
+            print("Provide ROOT file name")
+        else:
+            browseRootFile(args.arg, args.force)
 
 
 
