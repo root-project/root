@@ -210,6 +210,8 @@ class BaseBackend(ABC):
         sha256 = hashlib.sha256()
         sha256.update(stripped.encode())
         hex = sha256.hexdigest()
+        # Ensure the hex does not start with a digit, which would be an invalid C++ identifier
+        hex = "ROOT_RDF_DISTRIBUTED_CODE_" + hex
         if cls.strings_to_declare.get(hex, None) is None:
             code_with_guard = f"#ifndef {hex}\n#define {hex}\n{stripped}\n#endif"
             cls.strings_to_declare[hex] = code_with_guard
