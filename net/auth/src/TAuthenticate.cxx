@@ -1164,7 +1164,7 @@ char *ROOT::Deprecated::TAuthenticate::PromptPasswd(const char *prompt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning the globus authorization hook (no longer supported)
 
-GlobusAuth_t ROOT::Deprecated::TAuthenticate::GetGlobusAuthHook()
+ROOT::Deprecated::GlobusAuth_t ROOT::Deprecated::TAuthenticate::GetGlobusAuthHook()
 {
    return nullptr;
 }

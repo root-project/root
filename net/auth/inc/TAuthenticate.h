@@ -34,6 +34,12 @@ class TPluginHandler;
 class TSocket;
 class TVirtualMutex;
 
+struct R__rsa_KEY; // opaque replacement for rsa_KEY
+struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
+struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
+
+R__EXTERN TVirtualMutex *gAuthenticateMutex;
+
 namespace ROOT::Deprecated {
 
 class TAuthenticate;
@@ -41,21 +47,11 @@ class THostAuth;
 class TRootAuth;
 class TRootSecContext;
 
-} // namespace ROOT::Deprecated
-
 typedef Int_t (*CheckSecCtx_t)(const char *subj, ROOT::Deprecated::TRootSecContext *ctx);
 typedef Int_t (*GlobusAuth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det);
 typedef Int_t (*Krb5Auth_t)(ROOT::Deprecated::TAuthenticate *auth, TString &user, TString &det, Int_t version);
 typedef Int_t (*SecureAuth_t)(ROOT::Deprecated::TAuthenticate *auth, const char *user, const char *passwd,
                               const char *remote, TString &det, Int_t version);
-
-R__EXTERN TVirtualMutex *gAuthenticateMutex;
-
-struct R__rsa_KEY; // opaque replacement for rsa_KEY
-struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
-struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
-
-namespace ROOT::Deprecated {
 
 class TAuthenticate : public TObject {
 
@@ -219,6 +215,10 @@ public:
 
 } // namespace ROOT::Deprecated
 
+using CheckSecCtx_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::CheckSecCtx_t;
+using GlobusAuth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::GlobusAuth_t;
+using Krb5Auth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::Krb5Auth_t;
+using SecureAuth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::SecureAuth_t;
 using TAuthenticate R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::TAuthenticate;
 
 #endif
