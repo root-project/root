@@ -23,6 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
+#include <cstddef>
 
 
 enum EDataType {
@@ -45,7 +46,8 @@ class TDataType : public TDictionary {
 
 private:
    TypedefInfo_t    *fInfo;     ///<!pointer to CINT typedef info
-   Int_t             fSize;     //size of type
+   Int_t             fSize;        //size of type
+   std::size_t       fAlignOf;     //alignment of type (0 if unknown)
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
    TString           fTrueName; //Qualified name of the (potential) underlying class, e.g. "MyClass*const*"
@@ -65,6 +67,8 @@ public:
    TDataType(const char *typenam);
    virtual       ~TDataType();
    Int_t          Size() const;
+   /// Return the alignment of the type in bytes, or 0 if unknown.
+   std::size_t    GetAlignOf() const { return fAlignOf; }
    Int_t          GetType() const { return (Int_t)fType; }
    TString        GetTypeName();
    const char    *GetFullTypeName() const;

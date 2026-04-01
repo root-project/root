@@ -48,6 +48,7 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
       SetTitle("Builtin basic type");
       fProperty = 0;
       fSize = 0;
+      fAlignOf = 0;
       fType = kNoType_t;
    }
 }
@@ -72,6 +73,7 @@ TDataType::TDataType(const TDataType& dt) :
   TDictionary(dt),
   fInfo(gCling->TypedefInfo_FactoryCopy(dt.fInfo)),
   fSize(dt.fSize),
+  fAlignOf(dt.fAlignOf),
   fType(dt.fType),
   fProperty(dt.fProperty),
   fTrueName(dt.fTrueName),
@@ -89,6 +91,7 @@ TDataType& TDataType::operator=(const TDataType& dt)
       gCling->TypedefInfo_Delete(fInfo);
       fInfo=gCling->TypedefInfo_FactoryCopy(dt.fInfo);
       fSize=dt.fSize;
+      fAlignOf=dt.fAlignOf;
       fType=dt.fType;
       fProperty=dt.fProperty;
       fTrueName=dt.fTrueName;
@@ -301,69 +304,89 @@ void TDataType::SetType(const char *name)
    fTrueName = name;
    fType = kOther_t;
    fSize = 0;
+   fAlignOf = 0;
 
    if (name==nullptr) {
       return;
    } else if (!strcmp("unsigned int", name)) {
       fType = kUInt_t;
       fSize = sizeof(UInt_t);
+      fAlignOf = alignof(UInt_t);
    } else if (!strcmp("unsigned", name)) {
       fType = kUInt_t;
       fSize = sizeof(UInt_t);
+      fAlignOf = alignof(UInt_t);
    } else if (!strcmp("int", name)) {
       fType = kInt_t;
       fSize = sizeof(Int_t);
+      fAlignOf = alignof(Int_t);
    } else if (!strcmp("unsigned long", name)) {
       fType = kULong_t;
       fSize = sizeof(ULong_t);
+      fAlignOf = alignof(ULong_t);
    } else if (!strcmp("long", name)) {
       fType = kLong_t;
       fSize = sizeof(Long_t);
+      fAlignOf = alignof(Long_t);
    } else if (!strcmp("unsigned long long", name) || !strcmp("ULong64_t",name)) {
       fType = kULong64_t;
       fSize = sizeof(ULong64_t);
+      fAlignOf = alignof(ULong64_t);
    } else if (!strcmp("long long", name) || !strcmp("Long64_t",name)) {
       fType = kLong64_t;
       fSize = sizeof(Long64_t);
+      fAlignOf = alignof(Long64_t);
    } else if (!strcmp("unsigned short", name)) {
       fType = kUShort_t;
       fSize = sizeof(UShort_t);
+      fAlignOf = alignof(UShort_t);
    } else if (!strcmp("short", name)) {
       fType = kShort_t;
       fSize = sizeof(Short_t);
+      fAlignOf = alignof(Short_t);
    } else if (!strcmp("unsigned char", name)) {
       fType = kUChar_t;
       fSize = sizeof(UChar_t);
+      fAlignOf = alignof(UChar_t);
    } else if (!strcmp("char", name)) {
       fType = kChar_t;
       fSize = sizeof(Char_t);
+      fAlignOf = alignof(Char_t);
    } else if (!strcmp("bool", name)) {
       fType = kBool_t;
       fSize = sizeof(Bool_t);
+      fAlignOf = alignof(Bool_t);
    } else if (!strcmp("float", name)) {
       fType = kFloat_t;
       fSize = sizeof(Float_t);
+      fAlignOf = alignof(Float_t);
    } else if (!strcmp("double", name)) {
       fType = kDouble_t;
       fSize = sizeof(Double_t);
+      fAlignOf = alignof(Double_t);
    } else if (!strcmp("signed char", name)) {
       fType = kChar_t; // kDataTypeAliasSignedChar_t;
       fSize = sizeof(Char_t);
+      fAlignOf = alignof(Char_t);
    } else if (!strcmp("void", name)) {
       fType = kVoid_t;
       fSize = 0;
+      fAlignOf = 0;
    }
 
    if (!strcmp("Float16_t", fName.Data())) {
       fSize = sizeof(Float16_t);
+      fAlignOf = alignof(Float16_t);
       fType = kFloat16_t;
    }
    if (!strcmp("Double32_t", fName.Data())) {
       fSize = sizeof(Double32_t);
+      fAlignOf = alignof(Double32_t);
       fType = kDouble32_t;
    }
    if (!strcmp("char*",fName.Data())) {
       fType = kCharStar;
+      fAlignOf = alignof(char*);
    }
    // kCounter =  6, kBits     = 15
 }

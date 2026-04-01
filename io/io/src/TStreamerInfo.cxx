@@ -2653,15 +2653,20 @@ void TStreamerInfo::BuildOld()
             // Regular case
             asize = element->GetSize();
          }
-         // Over align the basic data types.
-         Int_t align = alignof(std::max_align_t);
+         // Use the precise alignment of the element type, falling back to
+         // max_align_t for types whose alignment is not known.
+         std::size_t align = alignof(std::max_align_t);
          if (element->GetClass() && element->GetClass()->GetClassAlignment())
             align = element->GetClass()->GetClassAlignment();
-         offset = AlignUp(offset, align);
+         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+            align = eldt->GetAlignOf();
+         offset = (Int_t)AlignUp((std::size_t)offset, align);
          element->SetOffset(offset);
          offset += asize;
          if (element->GetClass())
             fAlignment = std::max(fAlignment, element->GetClass()->GetClassAlignment());
+         else if (auto *eldt = TDataType::GetDataType((EDataType)element->GetType()); eldt && eldt->GetAlignOf())
+            fAlignment = std::max(fAlignment, eldt->GetAlignOf());
       }
 
       if (!wasCompiled && rules) {
@@ -5974,6 +5979,12 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const std:
       Int_t dsize,dtype;
       dtype = dt->GetType();
       dsize = dt->Size();
+      // Use the precise alignment for the basic type if available.
+      if (needAlign && dt->GetAlignOf()) {
+         align = dt->GetAlignOf();
+         if (offset % align != 0)
+            offset = (Int_t)AlignUp((size_t)offset, align);
+      }
       if (dmIsPtr && dtype != kCharStar) {
          if (!silent)
             Error("Pair Emulation Building","%s is not yet supported in pair emulation",
@@ -6073,6 +6084,8 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
 
       if (fel->GetClass() && fel->GetClass()->GetClassAlignment())
          i->fAlignment = std::max(align, fel->GetClass()->GetClassAlignment());
+      else if (auto *dt = TDataType::GetDataType((EDataType)fel->GetType()); dt && dt->GetAlignOf())
+         i->fAlignment = std::max(align, dt->GetAlignOf());
    } else {
       delete i;
       return 0;
@@ -6085,6 +6098,8 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
       i->GetElements()->Add(second);
       if (second->GetClass() && second->GetClass()->GetClassAlignment())
          i->fAlignment = std::max(align, second->GetClass()->GetClassAlignment());
+      else if (auto *dt = TDataType::GetDataType((EDataType)second->GetType()); dt && dt->GetAlignOf())
+         i->fAlignment = std::max(align, dt->GetAlignOf());
    } else {
       delete i;
       return 0;
