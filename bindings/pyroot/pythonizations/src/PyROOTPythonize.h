@@ -12,7 +12,7 @@
 #ifndef PYROOT_PYTHONIZE_H
 #define PYROOT_PYTHONIZE_H
 
-#include "PythonLimitedAPI.h"
+#include <Python.h>
 
 namespace PyROOT {
 

@@ -10,7 +10,9 @@
 //////////////////////////////////////////////////////////////////////////////
 
 // Bindings
+#ifndef Py_LIMITED_API
 #include "CPPScope.h"
+#endif
 #include "Cppyy.h"
 #include "CallContext.h"     // for Parameter
 
@@ -116,12 +118,14 @@ inline void* CPPInstance::GetObject()
 }
 
 //----------------------------------------------------------------------------
+#ifndef Py_LIMITED_API
 inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
 {
 // Retrieve the C++ type identifier (or raw type if smart).
     if (check_smart || !IsSmart()) return ((CPPClass*)Py_TYPE(this))->fCppType;
     return GetSmartIsA();
 }
+#endif
 
 
 //- object proxy type and type verification ----------------------------------
@@ -132,6 +136,7 @@ extern __declspec(dllimport) PyTypeObject CPPInstance_Type;
 extern PyTypeObject CPPInstance_Type;
 #endif
 
+#ifndef Py_LIMITED_API
 template<typename T>
 inline bool CPPInstance_Check(T* object)
 {
@@ -141,6 +146,7 @@ inline bool CPPInstance_Check(T* object)
         (Py_TYPE(object)->tp_new == CPPInstance_Type.tp_new || \
          PyObject_TypeCheck(object, &CPPInstance_Type));
 }
+#endif
 
 template<typename T>
 inline bool CPPInstance_CheckExact(T* object)

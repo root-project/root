@@ -35,6 +35,12 @@ PyObject* Instance_FromVoidPtr(
 #include <utility>
 #include <vector>
 
+#if PY_VERSION_HEX < 0x030b0000
+namespace CPyCppyy {
+extern dict_lookup_func gDictLookupOrg;
+dict_lookup_func gDictLookupOrg = nullptr;
+} // namespace CPyCppyy
+#endif
 
 // Note: as of py3.11, dictionary objects no longer carry a function pointer for
 // the lookup, so it can no longer be shimmed and "from cppyy.interactive import *"

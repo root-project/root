@@ -13,7 +13,7 @@
 
 #include "CPyCppyy/API.h"
 
-#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/Cppyy.h"
 #include "../../cppyy/CPyCppyy/src/Utility.h"
 
 #include "PyROOTPythonize.h"
