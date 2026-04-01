@@ -85,158 +85,10 @@ gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 ////////////////////////////////////////////////////////////////////////////////
 /// Delegate to gVirtualX.
 
-Color_t TPadPainter::GetLineColor() const
-{
-   return gVirtualX->GetLineColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Style_t TPadPainter::GetLineStyle() const
-{
-   return gVirtualX->GetLineStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Width_t TPadPainter::GetLineWidth() const
-{
-   return gVirtualX->GetLineWidth();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineColor(Color_t lcolor)
-{
-   gVirtualX->SetLineColor(lcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineStyle(Style_t lstyle)
-{
-   gVirtualX->SetLineStyle(lstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetLineWidth(Width_t lwidth)
-{
-   fSetLineWidth = lwidth;
-   gVirtualX->SetLineWidth(lwidth);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Color_t TPadPainter::GetFillColor() const
-{
-   return gVirtualX->GetFillColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Style_t TPadPainter::GetFillStyle() const
-{
-   return gVirtualX->GetFillStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Bool_t TPadPainter::IsTransparent() const
-{
-   //IsTransparent is implemented as inline function in TAttFill.
-   return gVirtualX->IsTransparent();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetFillColor(Color_t fcolor)
-{
-   gVirtualX->SetFillColor(fcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetFillStyle(Style_t fstyle)
-{
-   fSetFillStyle = fstyle;
-   gVirtualX->SetFillStyle(fstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
 void TPadPainter::SetOpacity(Int_t percent)
 {
    gVirtualX->SetOpacity(percent);
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Short_t TPadPainter::GetTextAlign() const
-{
-   return gVirtualX->GetTextAlign();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Float_t TPadPainter::GetTextAngle() const
-{
-   return gVirtualX->GetTextAngle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Color_t TPadPainter::GetTextColor() const
-{
-   return gVirtualX->GetTextColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Font_t TPadPainter::GetTextFont() const
-{
-   return gVirtualX->GetTextFont();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Float_t TPadPainter::GetTextSize() const
-{
-   return gVirtualX->GetTextSize();
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delegate to gVirtualX.
@@ -245,115 +97,6 @@ Float_t TPadPainter::GetTextMagnitude() const
 {
    return gVirtualX->GetTextMagnitude();
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextAlign(Short_t align)
-{
-   gVirtualX->SetTextAlign(align);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextAngle(Float_t tangle)
-{
-   gVirtualX->SetTextAngle(tangle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextColor(Color_t tcolor)
-{
-   gVirtualX->SetTextColor(tcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextFont(Font_t tfont)
-{
-   gVirtualX->SetTextFont(tfont);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextSize(Float_t tsize)
-{
-   gVirtualX->SetTextSize(tsize);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetTextSizePixels(Int_t npixels)
-{
-   gVirtualX->SetTextSizePixels(npixels);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Color_t TPadPainter::GetMarkerColor() const
-{
-   return gVirtualX->GetMarkerColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Style_t TPadPainter::GetMarkerStyle() const
-{
-   return gVirtualX->GetMarkerStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-Size_t TPadPainter::GetMarkerSize() const
-{
-   return gVirtualX->GetMarkerSize();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetMarkerColor(Color_t mcolor)
-{
-   gVirtualX->SetMarkerColor(mcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetMarkerStyle(Style_t mstyle)
-{
-   gVirtualX->SetMarkerStyle(mstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TPadPainter::SetMarkerSize(Size_t msize)
-{
-   gVirtualX->SetMarkerSize(msize);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a gVirtualX Pixmap.
@@ -454,7 +197,9 @@ void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width
 
 void TPadPainter::SetAttFill(const TAttFill &att)
 {
-   fSetFillStyle = att.GetFillStyle();
+   if (&fAttFill != &att)
+      att.Copy(fAttFill);
+
    gVirtualX->SetAttFill(fWinContext, att);
 }
 
@@ -463,7 +208,9 @@ void TPadPainter::SetAttFill(const TAttFill &att)
 
 void TPadPainter::SetAttLine(const TAttLine &att)
 {
-   fSetLineWidth = att.GetLineWidth();
+   if (&fAttLine != &att)
+      att.Copy(fAttLine);
+
    gVirtualX->SetAttLine(fWinContext, att);
 }
 
@@ -472,6 +219,9 @@ void TPadPainter::SetAttLine(const TAttLine &att)
 
 void TPadPainter::SetAttMarker(const TAttMarker &att)
 {
+   if (&fAttMarker != &att)
+      att.Copy(fAttMarker);
+
    gVirtualX->SetAttMarker(fWinContext, att);
 }
 
@@ -480,6 +230,9 @@ void TPadPainter::SetAttMarker(const TAttMarker &att)
 
 void TPadPainter::SetAttText(const TAttText &att)
 {
+   if (&fAttText != &att)
+      att.Copy(fAttText);
+
    gVirtualX->SetAttText(fWinContext, att);
 }
 
@@ -488,7 +241,7 @@ void TPadPainter::SetAttText(const TAttText &att)
 
 void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    const Int_t px1 = gPad->XtoPixel(x1);
@@ -504,7 +257,7 @@ void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    const Int_t px1 = gPad->UtoPixel(u1);
@@ -520,7 +273,7 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 
 void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (fSetLineWidth <= 0 && mode == TVirtualPadPainter::kHollow)
+   if (fAttLine.GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
       return;
 
    Int_t px1 = gPad->XtoPixel(x1);
@@ -547,7 +300,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fSetFillStyle == 0);
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fAttFill.GetFillStyle() == 0);
 }
 
 
@@ -561,7 +314,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
       return;
    }
 
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fSetFillStyle == 0);
+   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fAttFill.GetFillStyle() == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +322,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
 
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -586,7 +339,7 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -603,7 +356,7 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 
 void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -626,7 +379,7 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 
 void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    if (n < 1) {
@@ -657,7 +410,7 @@ void TPadPainter::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 
 void TPadPainter::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
-   if (fSetLineWidth <= 0)
+   if (fAttLine.GetLineWidth() <= 0)
       return;
 
    if (n < 1) {
