@@ -469,29 +469,7 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
       Builder.defineMacro("__STDC_VERSION__", "199409L");
   } else {
     //   -- __cplusplus
-    if (LangOpts.CPlusPlus26)
-      // FIXME: Use correct value for C++26.
-      Builder.defineMacro("__cplusplus", "202400L");
-    else if (LangOpts.CPlusPlus23)
-      Builder.defineMacro("__cplusplus", "202302L");
-    //      [C++20] The integer literal 202002L.
-    else if (LangOpts.CPlusPlus20)
-      Builder.defineMacro("__cplusplus", "202002L");
-    //      [C++17] The integer literal 201703L.
-    else if (LangOpts.CPlusPlus17)
-      Builder.defineMacro("__cplusplus", "201703L");
-    //      [C++14] The name __cplusplus is defined to the value 201402L when
-    //      compiling a C++ translation unit.
-    else if (LangOpts.CPlusPlus14)
-      Builder.defineMacro("__cplusplus", "201402L");
-    //      [C++11] The name __cplusplus is defined to the value 201103L when
-    //      compiling a C++ translation unit.
-    else if (LangOpts.CPlusPlus11)
-      Builder.defineMacro("__cplusplus", "201103L");
-    //      [C++03] The name __cplusplus is defined to the value 199711L when
-    //      compiling a C++ translation unit.
-    else
-      Builder.defineMacro("__cplusplus", "199711L");
+    Builder.defineMacro("__cplusplus", "202900L");
 
     //   -- __STDCPP_DEFAULT_NEW_ALIGNMENT__
     //      [C++17] An integer literal of type std::size_t whose value is the
