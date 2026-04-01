@@ -213,19 +213,15 @@ def addVisualObject(object, kind="none", option=""):
 
 
 def browseRootFile(fname, force=False):
+    if not fname:
+        return False
+
     if not force and (fname.startswith("https://") or fname.startswith("http://")):
         addVisualObject(fname, "url")
         return True
 
-    f = ROOT.TFile.Open(fname)
-    if f:
-        option = ""
-        if force:
-            option = "force"
-        addVisualObject(f, "tfile", option)
-        return True
+    addVisualObject(fname, "tfile", force)
     return False
-
 
 def _getPlatform():
     return sys.platform
@@ -565,21 +561,29 @@ class NotebookDrawerFile(object):
     Special drawer for TFile - shows files hierarchy with possibility to draw objects
     """
 
-    def __init__(self, theObject, theOption=""):
-       self.drawObject = theObject
-       self.drawOption = theOption
+    def __init__(self, theFileName, theForce=False):
+       self.drawFileName = theFileName
+       self.drawForce = theForce
 
     def _getFileJsCode(self):
-        sz = self.drawObject.GetSize()
-        if sz > 10000000 and self.drawOption != "force":
-            return f"File size {sz} is too large for JSROOT display. Use 'force' draw option to show file nevertheless"
+        f = ROOT.TFile.Open(self.drawFileName)
+        if not f:
+            return f"Fail to open file {self.drawFileName}"
+
+        sz = f.GetSize()
+        if sz > 10000000 and not self.drawForce:
+            f.Close()
+            return f"File size {sz} is too large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
 
         # create plain buffer and get pointer on it
         u_buffer = (ctypes.c_ubyte * sz)(*range(sz))
         addrc = ctypes.cast(ctypes.pointer(u_buffer), ctypes.c_char_p)
 
-        if self.drawObject.ReadBuffer(addrc, 0, sz):
-           return f"Fail to read file {self.drawObject.GetName()} buffer of size {sz}"
+        if f.ReadBuffer(addrc, 0, sz):
+           f.Close()
+           return f"Fail to read file {self.drawFileName} buffer of size {sz}"
+
+        f.Close()
 
         base64 = ROOT.TBase64.Encode(addrc, sz)
 
