@@ -205,10 +205,13 @@ def addVisualObject(object, kind="none", option=""):
         _visualObjects.append(NotebookDrawerJson(object))
 
 
-def browseRootFile(fname):
+def browseRootFile(fname, force=False):
     f = ROOT.TFile.Open(fname)
     if f:
-        addVisualObject(f, "tfile")
+        option = ""
+        if force:
+            option = "force"
+        addVisualObject(f, "tfile", option)
         return True
     return False
 
