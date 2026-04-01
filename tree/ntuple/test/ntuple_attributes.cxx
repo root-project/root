@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RNTupleAttrWriting.hxx>
+#include <ROOT/RNTupleAttrReading.hxx>
 
 TEST(RNTupleAttributes, CreateWriter)
 {
@@ -63,33 +64,36 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
    }
 }
 
-TEST(RNTupleAttributes, BasicWriting)
+TEST(RNTupleAttributes, BasicReadingWriting)
 {
-   FileRaii fileGuard("ntuple_attr_basic_writing.root");
+   FileRaii fileGuard("ntuple_attr_basic_readwriting.root");
 
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
-   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto model = RNTupleModel::Create();
-   auto pInt = model->MakeField<int>("int");
-   auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+   /// Writing
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
 
-   auto attrModel = RNTupleModel::Create();
-   auto pAttr = attrModel->MakeField<std::string>("attr");
-   auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("attr");
+      auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
 
-   auto attrRange = attrSetWriter->BeginRange();
-   *pAttr = "My Attribute";
-   for (int i = 0; i < 100; ++i) {
-      *pInt = i;
-      writer->Fill();
+      auto attrRange = attrSetWriter->BeginRange();
+      *pAttr = "My Attribute";
+      for (int i = 0; i < 100; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSetWriter->CommitRange(std::move(attrRange));
+      writer.reset();
+
+      // Cannot create new ranges after closing the main writer
+      EXPECT_THROW((attrRange = attrSetWriter->BeginRange()), ROOT::RException);
    }
-   attrSetWriter->CommitRange(std::move(attrRange));
-   writer.reset();
-
-   // Cannot create new ranges after closing the main writer
-   EXPECT_THROW((attrRange = attrSetWriter->BeginRange()), ROOT::RException);
 
    // Cannot directly fetch the attribute RNTuple from the TFile
    {
@@ -147,6 +151,9 @@ TEST(RNTupleAttributes, BasicWritingWithExplicitEntry)
    for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
       EXPECT_EQ(attrSetIt.GetName(), "AttrSet1");
    }
+
+   auto attrSetReader = reader->OpenAttributeSet("AttrSet1");
+   EXPECT_EQ(attrSetReader->GetNEntries(), 1);
 }
 
 TEST(RNTupleAttributes, NoCommitRange)
@@ -185,6 +192,7 @@ TEST(RNTupleAttributes, MultipleSets)
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
+   /// Writing
    {
       auto model = RNTupleModel::Create();
       auto pInt = model->MakeField<int>("int");
@@ -213,6 +221,7 @@ TEST(RNTupleAttributes, MultipleSets)
       attrSet2->CommitRange(std::move(attrRange2));
    }
 
+   /// Reading
    auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
    auto ntpl = tfile->Get<ROOT::RNTuple>("ntpl");
    auto reader = RNTupleReader::Open(*ntpl);
@@ -222,6 +231,16 @@ TEST(RNTupleAttributes, MultipleSets)
       EXPECT_EQ(attrSetIt.GetName(), "MyAttrSet" + std::to_string(n));
       ++n;
    }
+
+   auto sets = reader->GetDescriptor().GetAttrSetIterable();
+   // NOTE: there is no guaranteed order in which the attribute sets appear in the iterable
+   EXPECT_NE(std::find_if(sets.begin(), sets.end(), [](auto &&s) { return s.GetName() == "MyAttrSet1"; }), sets.end());
+   EXPECT_NE(std::find_if(sets.begin(), sets.end(), [](auto &&s) { return s.GetName() == "MyAttrSet2"; }), sets.end());
+
+   auto attrSetReader1 = reader->OpenAttributeSet("MyAttrSet1");
+   EXPECT_EQ(attrSetReader1->GetNEntries(), 100);
+   auto attrSetReader2 = reader->OpenAttributeSet("MyAttrSet2");
+   EXPECT_EQ(attrSetReader2->GetNEntries(), 1);
 
    // Verify compression
    auto tkeys = tfile->WalkTKeys();
