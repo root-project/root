@@ -2442,5 +2442,32 @@ class TestDATATYPES:
         for i in gbl.make():
             assert i.name == "NAME"
 
+    def test53_long_double_iterator(self):
+        """Test covering ROOT GitHub issue
+        https://github.com/root-project/root/issues/21732
+        """
+
+        import cppyy
+
+        std = cppyy.gbl.std
+
+        N = 5
+        A1 = std.array["int", N]
+        A2 = std.array["long double", N]
+
+        a1 = A1()
+        a2 = A2()
+
+        for i in range(len(a1)):
+            a1[i] = i
+        for i in range(len(a2)):
+            a2[i] = i
+
+        for i, v in enumerate(a1):
+            assert v == a1[i]
+
+        for i, v in enumerate(a2):
+            assert v == a2[i]
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-v', '-ra', __file__]))
