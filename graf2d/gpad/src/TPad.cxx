@@ -3976,11 +3976,14 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
    pp->OnPad(this);
 
-   Int_t style0 = -1111, style = pp->GetFillStyle();
+   TAttFill att = pp->GetAttFill();
+
+   Int_t style0 = -1111, style = att.GetFillStyle();
    Bool_t draw_border = kFALSE, draw_fill = kFALSE;
    if (option && *option == 's') {
       style0 = style;
-      pp->SetFillStyle(0);
+      att.SetFillStyle(0);
+      pp->SetAttFill(att);
       style = 0;
       draw_border = kTRUE;
    } else if (option && *option == 'l')
@@ -4002,11 +4005,13 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       if (style < 3026)
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
       //special case for TAttFillCanvas on real display
-      if (pp->GetFillColor() == 10) {
+      if (att.GetFillColor() == 10) {
          // SL: reproduce old sequence of painting calls, can have some side effects on opaque pads
-         pp->SetFillColor(1);
+         att.SetFillColor(1);
+         pp->SetAttFill(att);
          pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-         pp->SetFillColor(10);
+         att.SetFillColor(10);
+         pp->SetAttFill(att);
       }
    } else if (style >= 4000 && style <= 4100) {
       // For style >=4000 we make the window transparent.
@@ -4017,7 +4022,8 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
          //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
          if (pp->IsCocoa()) {
             style0 = style;
-            pp->SetFillStyle(1000);
+            att.SetFillStyle(1000);
+            pp->SetAttFill(att);
          }
          draw_fill = kTRUE;
       } else {
@@ -4041,8 +4047,10 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    if (draw_border)
       pp->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
 
-   if (style0 != -1111)
-      pp->SetFillStyle(style0);
+   if (style0 != -1111) {
+      att.SetFillStyle(style0);
+      pp->SetAttFill(att);
+   }
 
    Modified();
 }
@@ -4184,13 +4192,9 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
       return;
 
    // Save the current line attributes and change to draw hatches
-   auto lws = pp->GetLineWidth();
-   auto lss = pp->GetLineStyle();
-   auto lcs = pp->GetLineColor();
+   TAttLine saveatt = pp->GetAttLine();
 
-   pp->SetLineStyle(1);
-   pp->SetLineWidth(lw);
-   pp->SetLineColor(pp->GetFillColor());
+   pp->SetAttLine({ pp->GetAttFill().GetFillColor(), 1, lw });
 
    // Draw the hatches
    if (ang1[iAng1] != 5.)
@@ -4198,9 +4202,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    if (ang2[iAng2] != 5.)
       PaintHatches(dy, ang2[iAng2], nn, xx, yy);
 
-   pp->SetLineStyle(lss);
-   pp->SetLineWidth(lws);
-   pp->SetLineColor(lcs);
+   pp->SetAttLine(saveatt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5828,8 +5830,13 @@ void TPad::ResizePad(Option_t *option)
       fPixmapID = 0;
    else if (auto pp = GetPainter()) {
       if (pp->IsNative()) {
-         pp->SetLineWidth(-1);
-         pp->SetTextSize(-1);
+         // TODO: check if this is necessary
+         auto attl = pp->GetAttLine();
+         attl.SetLineColor(-1);
+         pp->SetAttLine(attl);
+         auto attt = pp->GetAttText();
+         attt.SetTextSize(-1);
+         pp->SetAttText(attt);
          // create or re-create off-screen pixmap
          if (fPixmapID) {
             int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
