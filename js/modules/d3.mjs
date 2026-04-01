@@ -610,19 +610,19 @@ function compareValue(compare) {
   };
 }
 
-function chord() {
-  return chord$1(false, false);
+function chord_default() {
+  return chord(false, false);
 }
 
 function chordTranspose() {
-  return chord$1(false, true);
+  return chord(false, true);
 }
 
 function chordDirected() {
-  return chord$1(true, false);
+  return chord(true, false);
 }
 
-function chord$1(directed, transpose) {
+function chord(directed, transpose) {
   var padAngle = 0,
       sortGroups = null,
       sortSubgroups = null,
@@ -1001,7 +1001,7 @@ function ribbon(headRadius) {
   return ribbon;
 }
 
-function ribbon$1() {
+function ribbon_default() {
   return ribbon();
 }
 
@@ -3283,8 +3283,8 @@ function formatDecimal(x) {
 // significant digits p, where x is positive and p is in [1, 21] or undefined.
 // For example, formatDecimalParts(1.23) returns ["123", 0].
 function formatDecimalParts(x, p) {
-  if ((i = (x = p ? x.toExponential(p - 1) : x.toExponential()).indexOf("e")) < 0) return null; // NaN, ±Infinity
-  var i, coefficient = x.slice(0, i);
+  if (!isFinite(x) || x === 0) return null; // NaN, ±Infinity, ±0
+  var i = (x = p ? x.toExponential(p - 1) : x.toExponential()).indexOf("e"), coefficient = x.slice(0, i);
 
   // The string returned by toExponential either has the form \d\.\d+e[-+]\d+
   // (e.g., 1.2e+3) or the form \de[-+]\d+ (e.g., 1e+3).
@@ -3389,7 +3389,7 @@ var prefixExponent;
 
 function formatPrefixAuto(x, p) {
   var d = formatDecimalParts(x, p);
-  if (!d) return x + "";
+  if (!d) return prefixExponent = undefined, x.toPrecision(p);
   var coefficient = d[0],
       exponent = d[1],
       i = exponent - (prefixExponent = Math.max(-8, Math.min(8, Math.floor(exponent / 3))) * 3) + 1,
@@ -3443,7 +3443,7 @@ function formatLocale$1(locale) {
       minus = locale.minus === undefined ? "−" : locale.minus + "",
       nan = locale.nan === undefined ? "NaN" : locale.nan + "";
 
-  function newFormat(specifier) {
+  function newFormat(specifier, options) {
     specifier = formatSpecifier(specifier);
 
     var fill = specifier.fill,
@@ -3468,8 +3468,8 @@ function formatLocale$1(locale) {
 
     // Compute the prefix and suffix.
     // For SI-prefix, the suffix is lazily computed.
-    var prefix = symbol === "$" ? currencyPrefix : symbol === "#" && /[boxX]/.test(type) ? "0" + type.toLowerCase() : "",
-        suffix = symbol === "$" ? currencySuffix : /[%p]/.test(type) ? percent : "";
+    var prefix = (options && options.prefix !== undefined ? options.prefix : "") + (symbol === "$" ? currencyPrefix : symbol === "#" && /[boxX]/.test(type) ? "0" + type.toLowerCase() : ""),
+        suffix = (symbol === "$" ? currencySuffix : /[%p]/.test(type) ? percent : "") + (options && options.suffix !== undefined ? options.suffix : "");
 
     // What format function should we use?
     // Is this an integer type?
@@ -3510,7 +3510,7 @@ function formatLocale$1(locale) {
 
         // Compute the prefix and suffix.
         valuePrefix = (valueNegative ? (sign === "(" ? sign : minus) : sign === "-" || sign === "(" ? "" : sign) + valuePrefix;
-        valueSuffix = (type === "s" ? prefixes[8 + prefixExponent / 3] : "") + valueSuffix + (valueNegative && sign === "(" ? ")" : "");
+        valueSuffix = (type === "s" && !isNaN(value) && prefixExponent !== undefined ? prefixes[8 + prefixExponent / 3] : "") + valueSuffix + (valueNegative && sign === "(" ? ")" : "");
 
         // Break the formatted value into the integer “value” part that can be
         // grouped, and fractional or exponential “suffix” part that is not.
@@ -3555,12 +3555,11 @@ function formatLocale$1(locale) {
   }
 
   function formatPrefix(specifier, value) {
-    var f = newFormat((specifier = formatSpecifier(specifier), specifier.type = "f", specifier)),
-        e = Math.max(-8, Math.min(8, Math.floor(exponent(value) / 3))) * 3,
+    var e = Math.max(-8, Math.min(8, Math.floor(exponent(value) / 3))) * 3,
         k = Math.pow(10, -e),
-        prefix = prefixes[8 + e / 3];
+        f = newFormat((specifier = formatSpecifier(specifier), specifier.type = "f", specifier), {suffix: prefixes[8 + e / 3]});
     return function(value) {
-      return f(k * value) + prefix;
+      return f(k * value);
     };
   }
 
@@ -6877,4 +6876,4 @@ function active(node, name) {
   return null;
 }
 
-export { active, arc, chord, chordDirected, chordTranspose, color, create$1 as create, creator, cubehelix, drag, nodrag as dragDisable, yesdrag as dragEnable, gray, hcl, hsl, interrupt, formatIso as isoFormat, parseIso as isoParse, lab, lch, local, matcher, namespace, namespaces, pointer, pointers, rgb, ribbon$1 as ribbon, ribbonArrow, band as scaleBand, diverging as scaleDiverging, divergingLog as scaleDivergingLog, divergingPow as scaleDivergingPow, divergingSqrt as scaleDivergingSqrt, divergingSymlog as scaleDivergingSymlog, identity as scaleIdentity, implicit as scaleImplicit, linear as scaleLinear, log as scaleLog, ordinal as scaleOrdinal, point as scalePoint, pow as scalePow, quantile as scaleQuantile, quantize as scaleQuantize, radial as scaleRadial, sequential as scaleSequential, sequentialLog as scaleSequentialLog, sequentialPow as scaleSequentialPow, sequentialQuantile as scaleSequentialQuantile, sequentialSqrt as scaleSequentialSqrt, sequentialSymlog as scaleSequentialSymlog, sqrt$1 as scaleSqrt, symlog as scaleSymlog, threshold as scaleThreshold, time as scaleTime, utcTime as scaleUtc, select, selectAll, selection, selector, selectorAll, styleValue as style, tickFormat, timeFormat, defaultLocale as timeFormatDefaultLocale, formatLocale as timeFormatLocale, timeParse, transition, utcFormat, utcParse, version, defaultView as window };
+export { active, arc, chord_default as chord, chordDirected, chordTranspose, color, create$1 as create, creator, cubehelix, drag, nodrag as dragDisable, yesdrag as dragEnable, gray, hcl, hsl, interrupt, formatIso as isoFormat, parseIso as isoParse, lab, lch, local, matcher, namespace, namespaces, pointer, pointers, rgb, ribbon_default as ribbon, ribbonArrow, band as scaleBand, diverging as scaleDiverging, divergingLog as scaleDivergingLog, divergingPow as scaleDivergingPow, divergingSqrt as scaleDivergingSqrt, divergingSymlog as scaleDivergingSymlog, identity as scaleIdentity, implicit as scaleImplicit, linear as scaleLinear, log as scaleLog, ordinal as scaleOrdinal, point as scalePoint, pow as scalePow, quantile as scaleQuantile, quantize as scaleQuantize, radial as scaleRadial, sequential as scaleSequential, sequentialLog as scaleSequentialLog, sequentialPow as scaleSequentialPow, sequentialQuantile as scaleSequentialQuantile, sequentialSqrt as scaleSequentialSqrt, sequentialSymlog as scaleSequentialSymlog, sqrt$1 as scaleSqrt, symlog as scaleSymlog, threshold as scaleThreshold, time as scaleTime, utcTime as scaleUtc, select, selectAll, selection, selector, selectorAll, styleValue as style, tickFormat, timeFormat, defaultLocale as timeFormatDefaultLocale, formatLocale as timeFormatLocale, timeParse, transition, utcFormat, utcParse, version, defaultView as window };

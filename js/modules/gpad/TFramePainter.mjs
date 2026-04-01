@@ -2836,21 +2836,9 @@ class TFramePainter extends FrameInteractive {
          }
          menu.endsub();
 
-         if (pad) {
-            const member = 'fLog' + kind[0];
-            menu.sub('SetLog ' + kind[0], () => {
-               menu.input('Enter log kind: 0 - off, 1 - log10, 2 - log2, 3 - ln, ...', pad[member], 'int', 0, 10000).then(v => {
-                  this.changeAxisLog(kind[0], v);
-               });
-            });
-            menu.addchk(pad[member] === 0, 'linear', () => this.changeAxisLog(kind[0], 0));
-            menu.addchk(pad[member] === 1, 'log10', () => this.changeAxisLog(kind[0], 1));
-            menu.addchk(pad[member] === 2, 'log2', () => this.changeAxisLog(kind[0], 2));
-            menu.addchk(pad[member] === 3, 'ln', () => this.changeAxisLog(kind[0], 3));
-            menu.addchk(pad[member] === 4, 'log4', () => this.changeAxisLog(kind[0], 4));
-            menu.addchk(pad[member] === 8, 'log8', () => this.changeAxisLog(kind[0], 8));
-            menu.endsub();
-         }
+         if (pad)
+            menu.addPadLogMenu(kind[0], pad[`fLog${kind[0]}`], v => this.changeAxisLog(kind[0], v));
+
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
             faxis.SetBit(EAxisBits.kMoreLogLabels, flag);
             if (hist_painter?.getSnapId() && (kind.length === 1))

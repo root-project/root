@@ -1,5 +1,5 @@
 import { settings, internals, browser, gStyle, isObject, isFunc, isStr, clTGaxis, nsSVG, kInspect, getDocument } from '../core.mjs';
-import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
+import { rgb as d3_rgb, select as d3_select, drag as d3_drag, pointer as d3_pointer } from '../d3.mjs';
 import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec, changeObjectMember } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -278,6 +278,20 @@ class JSRootMenu {
 
       this.sub(name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
       values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
+      this.endsub();
+   }
+
+   /** @summary Add log scale selection for pad
+     * @protected */
+   addPadLogMenu(kind, value, func) {
+      this.sub('SetLog ' + kind,
+               () => this.input('Enter log kind: 0 - off, 1 - log10, 2 - log2, 3 - ln, ...', value, 'int', 0, 10000).then(func));
+      this.addchk(value === 0, 'linear', () => func(0));
+      this.addchk(value === 1, 'log10', () => func(1));
+      this.addchk(value === 2, 'log2', () => func(2));
+      this.addchk(value === 3, 'ln', () => func(3));
+      this.addchk(value === 4, 'log4', () => func(4));
+      this.addchk(value === 8, 'log8', () => func(8));
       this.endsub();
    }
 
@@ -726,38 +740,40 @@ class JSRootMenu {
          faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
-      this.sub('Labels');
-      this.addchk(faxis.TestBit(EAxisBits.kCenterLabels), 'Center',
-                  arg => { faxis.SetBit(EAxisBits.kCenterLabels, arg); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
-      this.addchk(faxis.TestBit(EAxisBits.kLabelsVert), 'Rotate',
-                  arg => { faxis.SetBit(EAxisBits.kLabelsVert, arg); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
-      this.addColorMenu('Color', faxis.fLabelColor,
-                        arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
-      this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
-                       arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
-      let a = faxis.fLabelSize >= 1;
-      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
-                       arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
+      if (kind !== 'v') {
+         this.sub('Labels');
+         this.addchk(faxis.TestBit(EAxisBits.kCenterLabels), 'Center',
+                     arg => { faxis.SetBit(EAxisBits.kCenterLabels, arg); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
+         this.addchk(faxis.TestBit(EAxisBits.kLabelsVert), 'Rotate',
+                     arg => { faxis.SetBit(EAxisBits.kLabelsVert, arg); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
+         this.addColorMenu('Color', faxis.fLabelColor,
+                           arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
+         this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
+                          arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
+         const a = faxis.fLabelSize >= 1;
+         this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
+                          arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
 
-      if (frame_painter && (axis_painter?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
-         this.add('Find label', () => this.input('Label id').then(id => {
-            if (!id)
-               return;
-            for (let bin = 0; bin < faxis.fNbins; ++bin) {
-               const lbl = axis_painter.formatLabels(bin);
-               if (lbl === id)
-                  return frame_painter.zoomSingle(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin + 5));
-            }
-         }), 'Zoom into region around specific label');
+         if (frame_painter && (axis_painter?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
+            this.add('Find label', () => this.input('Label id').then(id => {
+               if (!id)
+                  return;
+               for (let bin = 0; bin < faxis.fNbins; ++bin) {
+                  const lbl = axis_painter.formatLabels(bin);
+                  if (lbl === id)
+                     return frame_painter.zoomSingle(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin + 5));
+               }
+            }), 'Zoom into region around specific label');
+         }
+         if (frame_painter && faxis.fLabels) {
+            const ignore = `${kind}_ignore_labels`;
+            this.addchk(!frame_painter[ignore], 'Custom', flag => {
+               frame_painter[ignore] = !flag;
+               painter.interactiveRedraw('pad');
+            }, `Use of custom labels in axis ${kind}`);
+         }
+         this.endsub();
       }
-      if (frame_painter && faxis.fLabels) {
-         const ignore = `${kind}_ignore_labels`;
-         this.addchk(!frame_painter[ignore], 'Custom', flag => {
-            frame_painter[ignore] = !flag;
-            painter.interactiveRedraw('pad');
-         }, `Use of custom labels in axis ${kind}`);
-      }
-      this.endsub();
 
       this.sub('Title');
       this.add('SetTitle', () => {
@@ -784,8 +800,8 @@ class JSRootMenu {
       });
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                        arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
-      a = faxis.fTitleSize >= 1;
-      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
+      const p = faxis.fTitleSize >= 1;
+      this.addSizeMenu('Size', p ? 2 : 0.02, p ? 30 : 0.11, p ? 2 : 0.01, faxis.fTitleSize,
                        arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.endsub();
 
@@ -887,6 +903,9 @@ class JSRootMenu {
       this.addchk(settings.StripAxisLabels, 'Strip labels', flag => { settings.StripAxisLabels = flag; }, 'Provide shorter labels like 10^0 -> 1');
       this.addchk(settings.CutAxisLabels, 'Cut labels', flag => { settings.CutAxisLabels = flag; }, 'Remove labels which may exceed graphical range');
       this.add(`Tilt angle ${settings.AxisTiltAngle}`, () => this.input('Axis tilt angle', settings.AxisTiltAngle, 'int', 0, 180).then(val => { settings.AxisTiltAngle = val; }));
+      this.add(`X format ${settings.XValuesFormat ?? gStyle.fStatFormat}`, () => this.input('X axis format', settings.XValuesFormat).then(val => { settings.XValuesFormat = val; }));
+      this.add(`Y format ${settings.YValuesFormat ?? gStyle.fStatFormat}`, () => this.input('Y axis format', settings.YValuesFormat).then(val => { settings.YValuesFormat = val; }));
+      this.add(`Z format ${settings.ZValuesFormat ?? gStyle.fStatFormat}`, () => this.input('Z axis format', settings.ZValuesFormat).then(val => { settings.ZValuesFormat = val; }));
       this.endsub();
       this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
       this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
@@ -1085,9 +1104,14 @@ class JSRootMenu {
      * @param {string} [kind] - use 'text' (default), 'number', 'float' or 'int'
      * @protected */
    async input(title, value, kind, min, max) {
+      let onchange = null;
+      if (isFunc(kind)) {
+         onchange = kind;
+         kind = '';
+      }
       if (!kind)
          kind = 'text';
-      const inp_type = (kind === 'int') ? 'number' : 'text';
+      const inp_type = (kind === 'int') ? 'number' : 'text', value0 = value;
       let ranges = '';
       if ((value === undefined) || (value === null))
          value = '';
@@ -1100,24 +1124,33 @@ class JSRootMenu {
 
       const main_content =
          '<form><fieldset style="padding:0; border:0">' +
-            `<input type="${inp_type}" value="${value}" ${ranges} style="width:98%;display:block" class="jsroot_dlginp"/>` +
-         '</fieldset></form>';
+         `<input type="${inp_type}" value="${value}" ${ranges} style="width:98%;display:block" class="jsroot_dlginp"/>` +
+         '</fieldset></form>', oninit = !onchange ? null : elem => {
+            const inp = elem.querySelector('.jsroot_dlginp');
+            if (inp)
+               inp.oninput = () => onchange(inp.value);
+         };
 
       return new Promise(resolveFunc => {
-         this.runModal(title, main_content, { btns: true, height: 150, width: 400 }).then(element => {
-            if (!element)
+         this.runModal(title, main_content, { btns: true, height: 150, width: 400, oninit }).then(element => {
+            if (!element) {
+               if (onchange)
+                  onchange(value0);
                return;
-            let val = element.querySelector('.jsroot_dlginp').value;
+            }
+            let val = element.querySelector('.jsroot_dlginp').value, isok = true;
             if (kind === 'float') {
                val = Number.parseFloat(val);
-               if (Number.isFinite(val))
-                  resolveFunc(val);
+               isok = Number.isFinite(val);
             } else if (kind === 'int') {
                val = parseInt(val);
-               if (Number.isInteger(val))
-                  resolveFunc(val);
-            } else
+               isok = Number.isInteger(val);
+            }
+            if (isok) {
+               if (onchange)
+                  onchange(val);
                resolveFunc(val);
+            }
          });
       });
    }
@@ -1576,31 +1609,41 @@ class StandaloneMenu extends JSRootMenu {
       d3_select(`#${dlg_id}`).remove();
       d3_select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9 * browser.screenWidth));
-      modal.block = d3_select('body').append('div')
-                                   .attr('id', `${dlg_id}_block`)
-                                   .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
-      modal.element = d3_select('body')
-                      .append('div')
-                      .attr('id', dlg_id)
-                      .attr('class', 'jsroot_dialog')
-                      .style('position', 'absolute')
-                      .style('width', `${w}px`)
-                      .style('left', '50%')
-                      .style('top', '50%')
-                      .style('z-index', 100001)
-                      .attr('tabindex', '0');
+      const w = Math.min(args.width || 450, Math.round(0.9 * browser.screenWidth)),
+            b = d3_select('body');
+      modal.block = b.append('div')
+                     .attr('id', `${dlg_id}_block`)
+                     .attr('class', 'jsroot_dialog_block')
+                     .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = b.append('div')
+                       .attr('id', dlg_id)
+                       .attr('class', 'jsroot_dialog')
+                       .style('position', 'absolute')
+                       .style('width', `${w}px`)
+                       .style('left', '50%')
+                       .style('top', '50%')
+                       .style('z-index', 100001)
+                       .attr('tabindex', '0');
 
       modal.element.html(
          '<div style=\'position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white\'>' +
-           `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>` +
+           `<div style='flex: 0 1 auto; padding: 5px; cursor: pointer;' class='jsroot_dialog_title'>${title}</div>` +
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>` +
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>' +
               `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>` +
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>'
       );
+
+      const drag_move = d3_drag().on('start', () => { modal.y0 = 0; }).on('drag', evnt => {
+         if (!modal.y0)
+            modal.y0 = d3_pointer(evnt, modal.element.node())[1];
+         let p0 = Math.max(0, d3_pointer(evnt, b.node())[1] - modal.y0);
+         if (b.node().clientHeight)
+            p0 = Math.min(p0, 0.8 * b.node().clientHeight);
+         modal.element.style('top', `${p0}px`);
+      });
+      modal.element.select('.jsroot_dialog_title').call(drag_move);
 
       modal.done = function(res) {
          if (this._done)
@@ -1644,6 +1687,8 @@ class StandaloneMenu extends JSRootMenu {
          f = modal.element.select('.jsroot_dialog_footer').select('button');
       if (!f.empty())
          f.node().focus();
+      if (isFunc(args.oninit))
+         args.oninit(modal.element.node());
       return modal;
    }
 
