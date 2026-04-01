@@ -5769,11 +5769,18 @@ size_t TClass::GetClassAlignment() const
       return fAlignment;
    if ((fState < kEmulated && !fCollectionProxy) || Property() & (kIsNamespace|kIsEnum))
       return 0;
-   // FIX-ALIGN: do we need to have something special for collection proxy?
-   //if (fCollectionProxy)
-   //   return fCollectionProxy->AlignOf();
    if (HasInterpreterInfo()) {
       return gCling->ClassInfo_AlignOf(GetClassInfo());
+   }
+   if (fCollectionProxy) {
+      // If the collection proxy has a dictionary, it will have return earlier,
+      // so we know that the collection proxy is emulated.
+      if (!(fCollectionProxy->GetProperties() & TVirtualCollectionProxy::kIsEmulated)) {
+         Fatal("TClass::GetClassAlignment", "Cannot determine alignment for collection proxy of class %s, returning 0",
+               GetName());
+         return 0;
+      }
+      return alignof(std::vector<char>);
    }
    return GetStreamerInfo()->GetClassAlignment();
 }
