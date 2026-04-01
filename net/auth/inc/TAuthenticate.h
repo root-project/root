@@ -61,7 +61,6 @@ class TAuthenticate : public TObject {
 
 friend class ROOT::Deprecated::TRootAuth;
 friend class ROOT::Deprecated::TRootSecContext;
-friend class TSocket;
 
 public:
    enum ESecurity {
