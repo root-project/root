@@ -31,6 +31,7 @@
 #pragma link C++ class TSliderBox+;
 #pragma link C++ class TView+;
 #pragma link C++ class TViewer3DPad;
+#pragma link C++ class TPadPainterBase;
 #pragma link C++ class TPadPainter;
 #pragma link C++ class TPadPainterPS;
 #pragma link C++ class TRatioPlot+;
