@@ -1,6 +1,7 @@
 import math
-import pytest
 import textwrap
+
+import pytest
 import ROOT
 
 
@@ -19,9 +20,7 @@ class TestDeclare:
         required_numbers = range(5)
         required_size = len(required_numbers)
         required_mean = sum(required_numbers) / float(required_size)
-        required_stdDev = math.sqrt(
-            sum((x - required_mean) ** 2 for x in required_numbers) / required_size
-        )
+        required_stdDev = math.sqrt(sum((x - required_mean) ** 2 for x in required_numbers) / required_size)
 
         # Compare the sizes of equivalent set of numbers
         assert histo.GetEntries() == required_size
@@ -37,9 +36,7 @@ class TestDeclare:
         required_numbers = range(4)
         required_size = len(required_numbers)
         required_mean = sum(required_numbers) / float(required_size)
-        required_stdDev = math.sqrt(
-            sum((x - required_mean) ** 2 for x in required_numbers) / required_size
-        )
+        required_stdDev = math.sqrt(sum((x - required_mean) ** 2 for x in required_numbers) / required_size)
 
         assert histo.GetEntries() == required_size
         assert histo.GetMean() == required_mean
@@ -67,7 +64,8 @@ class TestDeclare:
         # Tests the regression described at https://github.com/root-project/root/issues/21758
         # using the same exact code snippet to trigger the hash string starting with a number
         # which is not a valid C++ identifier and caused the issue.
-        ROOT.RDF.Distributed.DistributeCppCode(textwrap.dedent("""
+        ROOT.RDF.Distributed.DistributeCppCode(
+            textwrap.dedent("""
             float get_correction(
                 float area,
                 float eta,
@@ -77,7 +75,8 @@ class TestDeclare:
                 ) {
                 return area + eta + pt + rho + phi; // Placeholder implementation
             }
-            """))
+            """)
+        )
 
     def _distribute_single_declare_check_filter_and_histo(self, connection):
 
@@ -103,7 +102,6 @@ class TestDeclare:
 
         mean_val = rdf.Define("val", "get_correction(42.0f, 42.0f, 42.0f, 42.0f, 42.0f) / 5.0f").Mean("val").GetValue()
         assert mean_val == pytest.approx(42.0)
-
 
     def test_declares(self, payload):
         """

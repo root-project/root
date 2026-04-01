@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ..Ranges import DataRange
 
 
-def setup_mapper(initialization_fn: Callable, code_to_declare: str) -> None:    
+def setup_mapper(initialization_fn: Callable, code_to_declare: str) -> None:
     """
     Perform initial setup steps common to every mapper function.
     """
@@ -46,14 +46,17 @@ def setup_mapper(initialization_fn: Callable, code_to_declare: str) -> None:
     # Run initialization method to prepare the worker runtime
     # environment
     initialization_fn()
-    
+
     # Declare all user code in one call
     ROOT.gInterpreter.Declare(code_to_declare)
 
 
-def get_mergeable_values(starting_node: ROOT.RDF.RNode, range_id: int,
-                         computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
-                         exec_id: ExecutionIdentifier) -> List:
+def get_mergeable_values(
+    starting_node: ROOT.RDF.RNode,
+    range_id: int,
+    computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
+    exec_id: ExecutionIdentifier,
+) -> List:
     """
     Triggers the computation graph and returns a list of mergeable values.
     """
@@ -78,17 +81,18 @@ class TaskResult:
             for a tree opened in the task and the value is the number of entries
             in that tree. This attribute is not None only in a TTree-based run.
     """
+
     mergeables: Optional[List]
     entries_in_trees: Optional[Ranges.TaskTreeEntries]
 
 
 def distrdf_mapper(
-        current_range: Ranges.DataRange,
-        build_rdf_from_range:  Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]],
-                                        TaskObjects],
-        computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
-        initialization_fn: Callable,
-        code_to_declare: str) -> TaskResult:
+    current_range: Ranges.DataRange,
+    build_rdf_from_range: Callable[[Union[Ranges.EmptySourceRange, Ranges.TreeRangePerc]], TaskObjects],
+    computation_graph_callable: Callable[[ROOT.RDF.RNode, int], List],
+    initialization_fn: Callable,
+    code_to_declare: str,
+) -> TaskResult:
     """
     Maps the computation graph to the input logical range of entries.
     """
@@ -96,13 +100,14 @@ def distrdf_mapper(
     # to better propagate exceptions.
     try:
         setup_mapper(initialization_fn, code_to_declare)
-        
+
         # Build an RDataFrame instance for the current mapper task, based
         # on the type of the head node.
         rdf_plus = build_rdf_from_range(current_range)
         if rdf_plus.rdf is not None:
-            mergeables = get_mergeable_values(rdf_plus.rdf, current_range.id, computation_graph_callable,
-                                              current_range.exec_id)
+            mergeables = get_mergeable_values(
+                rdf_plus.rdf, current_range.id, computation_graph_callable, current_range.exec_id
+            )
         else:
             mergeables = None
     except ROOT.std.exception as e:
@@ -117,7 +122,6 @@ def merge_values(mergeables_out: Iterable, mergeables_in: Iterable) -> Iterable:
     first argument.
     """
     if mergeables_out is not None and mergeables_in is not None:
-
         for mergeable_out, mergeable_in in zip(mergeables_out, mergeables_in):
             Utils.merge_values(mergeable_out, mergeable_in)
 
@@ -133,8 +137,7 @@ def merge_values(mergeables_out: Iterable, mergeables_in: Iterable) -> Iterable:
     return mergeables_out
 
 
-def distrdf_reducer(results_inout: TaskResult,
-                    results_in: TaskResult) -> TaskResult:
+def distrdf_reducer(results_inout: TaskResult, results_in: TaskResult) -> TaskResult:
     """
     Merges two given iterables of values that were returned by two mapper
     function executions. Returns the first argument with its values updated from
@@ -176,7 +179,7 @@ class BaseBackend(ABC):
         shared_libraries (list): List of shared libraries needed for the
             analysis.
     """
- 
+
     initialization = staticmethod(lambda: None)
     headers = set()
     files = set()
@@ -201,11 +204,11 @@ class BaseBackend(ABC):
             **kwargs (dict): Keyword arguments used to execute the function.
         """
         cls.initialization = staticmethod(partial(fun, *args, **kwargs))
-        fun(*args, **kwargs) 
+        fun(*args, **kwargs)
 
     @classmethod
-    def register_declaration(cls, code_to_declare): 
-        
+    def register_declaration(cls, code_to_declare):
+
         stripped = code_to_declare.strip()
         sha256 = hashlib.sha256()
         sha256.update(stripped.encode())
@@ -220,19 +223,19 @@ class BaseBackend(ABC):
 
     @classmethod
     def register_shared_lib(cls, paths_to_shared_libraries):
-        
+
         libraries_to_distribute, pcms_to_distribute = Utils.register_shared_libs(paths_to_shared_libraries)
-        
+
         cls.shared_libraries.update(libraries_to_distribute)
         cls.pcms.update(pcms_to_distribute)
-    
+
     @classmethod
     def register_headers(cls, paths_to_headers):
-        
+
         headers_to_distribute = Utils.register_headers(paths_to_headers)
         cls.headers.update(headers_to_distribute)
-    
-    @classmethod 
+
+    @classmethod
     def register_files(cls, paths_to_files):
         """
         Sends to the workers the generic files needed by the user.
@@ -242,12 +245,15 @@ class BaseBackend(ABC):
                 distributed workers.
         """
         files_to_distribute = Utils.register_files(paths_to_files)
-        cls.files.update(files_to_distribute)    
-    
+        cls.files.update(files_to_distribute)
+
     @abstractmethod
-    def ProcessAndMerge(self, ranges: List[DataRange],
-                        mapper: Callable[..., TaskResult],
-                        reducer: Callable[[TaskResult, TaskResult], TaskResult]) -> TaskResult:
+    def ProcessAndMerge(
+        self,
+        ranges: List[DataRange],
+        mapper: Callable[..., TaskResult],
+        reducer: Callable[[TaskResult, TaskResult], TaskResult],
+    ) -> TaskResult:
         """
         Subclasses must define how to run map-reduce functions on a given
         backend.
