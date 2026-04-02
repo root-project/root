@@ -31,7 +31,6 @@ R__EXTERN const TDatime kROOTTZERO;
 
 // Small class with information for final cleanup
 class TSecContextCleanup;
-class TPwdCtx;
 
 namespace ROOT::Deprecated {
 class TRootSecContext;
@@ -128,6 +127,8 @@ public:
    ClassDefOverride(TSecContextCleanup,0) //Update the remote authentication table
 };
 
+namespace ROOT::Deprecated {
+
 //
 // TPwdCtx
 //
@@ -148,5 +149,8 @@ public:
 
 };
 
+} // namespace ROOT::Deprecated
+
+using TPwdCtx R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TPwdCtx;
 
 #endif
