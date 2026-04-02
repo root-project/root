@@ -163,7 +163,7 @@
 #pragma link C++ class TFileInfo+;
 #pragma link C++ class TFileInfoMeta+;
 #pragma link C++ class TFileCollection+;
-#pragma link C++ class TVirtualAuth;
+#pragma link C++ class ROOT::Deprecated::TVirtualAuth;
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class ROOT::TVirtualRWMutex;
 #pragma link C++ class TLockGuard;

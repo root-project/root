@@ -24,6 +24,8 @@
 class TSecContext;
 class TSocket;
 
+namespace ROOT::Deprecated {
+
 class TVirtualAuth {
 
 public:
@@ -38,5 +40,11 @@ public:
 
    ClassDef(TVirtualAuth,0)  // client auth interface
 };
+
+} // namespace ROOT::Deprecated
+
+using TVirtualAuth R__DEPRECATED(6, 42, "TVirtualAuth is deprecated. ROOT will not provide "
+   "socket authentication anymore but assumes that TSocket connections are between trusted processes. "
+   "Consider using SSH tunneling if you need secure network connections.") = ROOT::Deprecated::TVirtualAuth;
 
 #endif
