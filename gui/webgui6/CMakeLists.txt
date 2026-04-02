@@ -16,7 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     TWebPadOptions.h
     TWebPadPainter.h
     TWebPainting.h
-    TWebPS.h
     TWebSnapshot.h
   SOURCES
     src/TWebCanvas.cxx
@@ -24,7 +23,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     src/TWebMenuItem.cxx
     src/TWebPadPainter.cxx
     src/TWebPainting.cxx
-    src/TWebPS.cxx
     src/TWebSnapshot.cxx
   DEPENDENCIES
     Core

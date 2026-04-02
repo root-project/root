@@ -12,7 +12,6 @@
 
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
-#include "TWebPS.h"
 #include "TWebMenuItem.h"
 #include "ROOT/RWebWindowsManager.hxx"
 #include "THttpServer.h"
@@ -54,6 +53,7 @@
 #include "TView.h"
 #include "TExec.h"
 #include "TVirtualX.h"
+#include "TVirtualPS.h"
 #include "TMath.h"
 #include "TTimer.h"
 #include "TThread.h"
@@ -511,7 +511,7 @@ bool TWebCanvas::IsCustomClass(const TClass *cl)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates representation of the object for painting in web browser
 
-void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
+void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPainting *masterps)
 {
    if (IsJSSupportedClass(obj, masterps != nullptr)) {
       master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -538,15 +538,15 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    TVirtualPS *saveps = gVirtualPS;
 
-   TWebPS *webps = masterps;
+   auto painting = masterps;
    if (!masterps) {
-      webps = new TWebPS;
-      webps->GetPainting()->SetClassName(obj->ClassName());
-      webps->GetPainting()->SetObjectName(obj->GetName());
+      painting = new TWebPainting;
+      painting->SetClassName(obj->ClassName());
+      painting->SetObjectName(obj->GetName());
    }
-   gVirtualPS = webps;
+   gVirtualPS = nullptr;
    if (painter)
-      painter->SetPainting(webps->GetPainting(), webps);
+      painter->SetPainting(painting);
 
    // calling Paint function for the object
    obj->Paint(opt);
@@ -559,7 +559,7 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    }
 
    if (painter)
-      painter->SetPainting(nullptr, nullptr);
+      painter->SetPainting(nullptr);
 
    gVirtualPS = saveps;
 
@@ -567,9 +567,10 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 
    // if there are master PS, do not create separate entries
    if (!masterps) {
-      if (!webps->IsEmptyPainting())
-         master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, webps->TakePainting(), kTRUE);
-      delete webps;
+      if (!painting->IsEmpty())
+         master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kSVG, painting, kTRUE);
+      else
+         delete painting;
    }
 }
 
@@ -685,7 +686,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   TWebPS masterps;
+   auto masterps = std::make_unique<TWebPainting>();
    bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
@@ -833,10 +834,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       primitives->Add(polargram, polargram_drawopt);
 
    auto flush_master = [&]() {
-      if (!usemaster || masterps.IsEmptyPainting()) return;
+      if (!usemaster || masterps->IsEmpty()) return;
 
-      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.TakePainting(), kTRUE);
-      masterps.CreatePainting(); // create for next operations
+      paddata.NewPrimitive(pad).SetSnapshot(TWebSnapshot::kSVG, masterps.release(), kTRUE);
+      masterps = std::make_unique<TWebPainting>(); // create for next operations
    };
 
    auto check_cutg_in_options = [&](const TString &opt) {
@@ -1156,7 +1157,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
-         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? masterps.get() : nullptr);
       }
    }
 
@@ -1794,8 +1795,7 @@ void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
       return;
 
    auto saveps = gVirtualPS;
-   TWebPS ps;
-   gVirtualPS = &ps;
+   gVirtualPS = nullptr;
 
    auto savex = gVirtualX;
    TVirtualX x;
