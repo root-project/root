@@ -30,6 +30,7 @@
 
 class TSocket;
 
+namespace ROOT::Deprecated {
 
 class TFTP : public TObject {
 
@@ -124,5 +125,9 @@ public:
 
    ClassDefOverride(TFTP, 1)  // File Transfer Protocol class using rootd
 };
+
+} // namespace ROOT::Deprecated
+
+using TFTP R__DEPRECATED(6, 42, "TFTP is deprecated") = ROOT::Deprecated::TFTP;
 
 #endif

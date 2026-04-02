@@ -28,7 +28,7 @@
 #pragma link C++ class ROOT::Deprecated::TNetSystem;
 #pragma link C++ class ROOT::Deprecated::TWebFile;
 #pragma link C++ class ROOT::Deprecated::TWebSystem;
-#pragma link C++ class TFTP;
+#pragma link C++ class ROOT::Deprecated::TFTP;
 #pragma link C++ class TSQLServer;
 #pragma link C++ class TSQLResult;
 #pragma link C++ class TSQLRow;
