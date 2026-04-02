@@ -78,6 +78,30 @@ public:
    const TAttMarker  &GetAttMarker()const override { return fAttMarker; }
    const TAttText    &GetAttText() const override { return fAttText; }
 
+   void SetAttFill(const TAttFill &att) override
+   {
+      if (&att != &fAttFill)
+         att.Copy(fAttFill);
+   }
+
+   void SetAttLine(const TAttLine &att) override
+   {
+      if (&att != &fAttLine)
+         att.Copy(fAttLine);
+   }
+
+   void SetAttMarker(const TAttMarker &att) override
+   {
+      if (&att != &fAttMarker)
+         att.Copy(fAttMarker);
+   }
+
+   void SetAttText(const TAttText &att) override
+   {
+      if (&att != &fAttText)
+         att.Copy(fAttText);
+   }
+
    ClassDefOverride(TPadPainterBase, 0)//Pad painter with attributes handling
 };
 
