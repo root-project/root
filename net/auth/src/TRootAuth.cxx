@@ -32,7 +32,7 @@
 /// Invoked when dynamic loading is needed.
 /// Returns 1 on success, 0 on failure.
 
-TSecContext *
+ROOT::Deprecated::TSecContext *
 ROOT::Deprecated::TRootAuth::Authenticate(TSocket *s, const char *host, const char *user, Option_t */*opts*/)
 {
    TSecContext *ctx = 0;

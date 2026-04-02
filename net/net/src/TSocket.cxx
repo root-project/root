@@ -1217,7 +1217,7 @@ Bool_t TSocket::Authenticate(const char *user)
 
             // Authentication was not required: create inactive
             // security context for consistency
-            fSecContext = new TSecContext(user, host, 0, -4, 0, 0);
+            fSecContext = new ROOT::Deprecated::TSecContext(user, host, 0, -4, 0, 0);
             if (gDebug > 3)
                Info("Authenticate", "no authentication required remotely");
 

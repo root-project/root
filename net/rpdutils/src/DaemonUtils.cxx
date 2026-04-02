@@ -188,8 +188,8 @@ void ErrSys(int level, const char *msg, int size)
 Int_t SrvClupImpl(TSeqCollection *secls)
 {
    TIter next(secls);
-   TSecContext *nsc ;
-   while ((nsc = (TSecContext *)next())) {
+   ROOT::Deprecated::TSecContext *nsc ;
+   while ((nsc = (ROOT::Deprecated::TSecContext *)next())) {
       if (!strncmp(nsc->GetID(),"server",6)) {
          int rc = RpdCleanupAuthTab(nsc->GetToken());
          if (gDebug > 0 && rc < 0)
@@ -259,7 +259,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    int clientprotocol = 0;
    rc = RpdInitSession(gService, user, clientprotocol, meth, type, ctoken);
 
-   TSecContext *seccontext = 0;
+   ROOT::Deprecated::TSecContext *seccontext = 0;
    if (rc > 0) {
       string openhost(socket->GetInetAddress().GetHostName());
 
@@ -267,7 +267,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
          // An existing authentication has been re-used: retrieve
          // the related security context
          TIter next(gROOT->GetListOfSecContexts());
-         while ((seccontext = (TSecContext *)next())) {
+         while ((seccontext = (ROOT::Deprecated::TSecContext *)next())) {
             if (!(strncmp(seccontext->GetID(),"server",6))) {
                if (seccontext->GetMethod() == meth) {
                   if (!strcmp(openhost.c_str(),seccontext->GetHost())) {
@@ -282,8 +282,8 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
       if (!seccontext) {
          // New authentication: Fill a SecContext for cleanup
          // in case of interrupt
-         seccontext = new TSecContext(user.c_str(), openhost.c_str(), meth, -1,
-                                      "server", ctoken.c_str());
+         seccontext = new ROOT::Deprecated::TSecContext(user.c_str(), openhost.c_str(), meth, -1,
+                                                        "server", ctoken.c_str());
          if (seccontext) {
             // Add to the list
             secctxlist->Add(seccontext);
