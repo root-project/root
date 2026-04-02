@@ -39,6 +39,12 @@ TUnixSystem or TWinNTSystem).
 
 #include <limits>
 
+Bool_t ROOT::Deprecated::TSocketFriend::IsAuthenticated(const TSocket &s)
+{
+   return s.fSecContext;
+}
+
+
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
 
@@ -1361,7 +1367,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
          sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);
 
       // Cleanup if failure ...
-      if (sock && !sock->IsAuthenticated()) {
+      if (sock && !ROOT::Deprecated::TSocketFriend::IsAuthenticated(*sock)) {
          // Nothing to do except setting the error code (if required) and sock to NULL
          if (err) {
             *err = (Int_t)kErrAuthNotOK;
