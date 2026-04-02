@@ -212,7 +212,7 @@ void TSecContext::DeActivate(Option_t *Opt)
 
 void TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
 {
-   TSecContextCleanup *tscc = new TSecContextCleanup(port, proto, type);
+   auto *tscc = new ROOT::Deprecated::TSecContextCleanup(port, proto, type);
    fCleanup->Add(tscc);
 
 }

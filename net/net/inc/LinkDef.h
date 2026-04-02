@@ -44,7 +44,7 @@
 #pragma link C++ class ROOT::Deprecated::TGridJobStatusList+;
 #pragma link C++ class ROOT::Deprecated::TGridCollection+;
 #pragma link C++ class TSecContext;
-#pragma link C++ class TSecContextCleanup;
+#pragma link C++ class ROOT::Deprecated::TSecContextCleanup;
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;
 #pragma link C++ class TApplicationServer;

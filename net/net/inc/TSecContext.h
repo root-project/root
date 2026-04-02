@@ -29,9 +29,6 @@
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
 R__EXTERN const TDatime kROOTTZERO;
 
-// Small class with information for final cleanup
-class TSecContextCleanup;
-
 namespace ROOT::Deprecated {
 class TRootSecContext;
 }
@@ -97,6 +94,8 @@ public:
    ClassDefOverride(TSecContext,0)  // Class providing host specific authentication information
 };
 
+namespace ROOT::Deprecated {
+
 //
 // TSecContextCleanup
 //
@@ -127,8 +126,6 @@ public:
    ClassDefOverride(TSecContextCleanup,0) //Update the remote authentication table
 };
 
-namespace ROOT::Deprecated {
-
 //
 // TPwdCtx
 //
@@ -151,6 +148,7 @@ public:
 
 } // namespace ROOT::Deprecated
 
+using TSecContextCleanup R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TSecContextCleanup;
 using TPwdCtx R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TPwdCtx;
 
 #endif
