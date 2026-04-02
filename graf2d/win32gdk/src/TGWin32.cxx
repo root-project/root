@@ -2110,6 +2110,10 @@ void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
    gTws = fWindows[wid].get();
    if (!gTws->open) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) gTws->window, x, y);
 }
 
@@ -4809,6 +4813,10 @@ void TGWin32::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
@@ -4820,6 +4828,10 @@ void TGWin32::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w,
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move_resize((GdkWindow *) id, x, y, w, h);
 }
 
@@ -6668,6 +6680,10 @@ void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
    if (!id) return;
 
+   // prevent hiding the titlebar
+   if (x == 0 && y == 0) {
+      x = 1; y = 1;
+   }
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
