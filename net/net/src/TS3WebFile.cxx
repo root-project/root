@@ -33,7 +33,7 @@ As an end user, you must know the Access Key and Secret Access Key
 in order to access each S3 file. They are provided to you by your S3
 service provider. Those two keys can be provided to ROOT when
 initializing an object of this class by two means:
-a. by using the environmental variables S3_ACCESS_KEY and 
+a. by using the environmental variables S3_ACCESS_KEY and
    S3_SECRET_KEY, or
 b. by specifying them when opening each file.
 
@@ -148,8 +148,7 @@ http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html
 /// is useful when the file is set an access control that allows for
 /// any unidentified user to read the file.
 
-TS3WebFile::TS3WebFile(const char* path, Option_t* options)
-           : TWebFile(path, "IO")
+ROOT::Deprecated::TS3WebFile::TS3WebFile(const char* path, Option_t* options) : TWebFile(path, "IO")
 {
    // Make sure this is a valid S3 path. We accept 'as3' as a scheme, for
    // backwards compatibility
@@ -251,7 +250,8 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
 /// A security token may be given by the TOKEN option, in order to allow the
 /// use of a temporary key pair.
 
-Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& secretKey, TString& token)
+Bool_t
+ROOT::Deprecated::TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& secretKey, TString& token)
 {
    TString optStr = (const char*)options;
    if (optStr.IsNull())
@@ -283,7 +283,7 @@ Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& 
 /// file. Uses TS3HTTPRequest to generate an HTTP HEAD request which includes
 /// the authorization header expected by the S3 server.
 
-Int_t TS3WebFile::GetHead()
+Int_t ROOT::Deprecated::TS3WebFile::GetHead()
 {
    fMsgGetHead = fS3Request.GetRequest(TS3HTTPRequest::kHEAD);
    return TWebFile::GetHead();
@@ -297,7 +297,7 @@ Int_t TS3WebFile::GetHead()
 /// the signature of the request, generated using the user's secret access
 /// key.
 
-void TS3WebFile::SetMsgReadBuffer10(const char* redirectLocation, Bool_t tempRedirect)
+void ROOT::Deprecated::TS3WebFile::SetMsgReadBuffer10(const char* redirectLocation, Bool_t tempRedirect)
 {
    TWebFile::SetMsgReadBuffer10(redirectLocation, tempRedirect);
    fMsgReadBuffer10 = fS3Request.GetRequest(TS3HTTPRequest::kGET, kFALSE) + "Range: bytes=";
@@ -307,7 +307,7 @@ void TS3WebFile::SetMsgReadBuffer10(const char* redirectLocation, Bool_t tempRed
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TS3WebFile::ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf)
+Bool_t ROOT::Deprecated::TS3WebFile::ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf)
 {
    // Overwrites TWebFile::ReadBuffers() for reading specified byte ranges.
    // According to the kind of server this file is hosted by, we use a
@@ -342,7 +342,7 @@ Bool_t TS3WebFile::ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf)
 /// For this class, if the server do not support multirange requests
 /// we issue multiple single-range requests instead.
 
-void TS3WebFile::ProcessHttpHeader(const TString& headerLine)
+void ROOT::Deprecated::TS3WebFile::ProcessHttpHeader(const TString& headerLine)
 {
    TPMERegexp rex("^Server: (.+)", "i");
    if (rex.Match(headerLine) != 2)
@@ -362,7 +362,7 @@ void TS3WebFile::ProcessHttpHeader(const TString& headerLine)
 /// Sets the access and secret keys from the environmental variables, if
 /// they are both set. Sets the security session token if it is given.
 
-Bool_t TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
+Bool_t ROOT::Deprecated::TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
                                          const char* tokenEnv, TString& outAccessKey,
                                          TString& outSecretKey, TString& outToken)
 {

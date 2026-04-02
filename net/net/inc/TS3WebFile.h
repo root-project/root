@@ -64,6 +64,7 @@
 
 #include "TS3HTTPRequest.h"
 
+namespace ROOT::Deprecated {
 
 class TS3WebFile: public TWebFile {
 
@@ -104,5 +105,9 @@ public:
 
    ClassDefOverride(TS3WebFile, 0)  // Read a ROOT file from a S3 server
 };
+
+} // namespace ROOT::Deprecated
+
+using TS3WebFile R__DEPRECATED(6, 42, "TS3WebFile is deprecated") = ROOT::Deprecated::TS3WebFile;
 
 #endif // ROOT_TS3WebFile
