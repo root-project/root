@@ -369,15 +369,15 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       return;
    }
 
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
+   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
 
    glBegin(GL_LINES);
    glVertex2d(x1, y1);
    glVertex2d(x2, y2);
    glEnd();
 
-   if (gVirtualX->GetLineWidth() > lineWidthTS) {
-      Double_t pointSize = gVirtualX->GetLineWidth();
+   if (GetAttLine().GetLineWidth() > lineWidthTS) {
+      Double_t pointSize = GetAttLine().GetLineWidth();
       if (pointSize > fLimits.GetMaxPointSize())
          pointSize = fLimits.GetMaxPointSize();
       glPointSize((GLfloat)pointSize);
@@ -412,7 +412,7 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
       return;
    }
 
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
+   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
    const Double_t yRange = gPad->GetY2() - gPad->GetY1();
 
@@ -429,7 +429,7 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
 {
    if (fLocked) return;
 
-   if (IsGradientFill(gVirtualX->GetFillColor())) {
+   if (IsGradientFill(GetAttFill().GetFillColor())) {
       Double_t xs[] = {x1, x2, x2, x1};
       Double_t ys[] = {y1, y1, y2, y2};
       DrawPolygonWithGradient(4, xs, ys);
@@ -437,14 +437,14 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
    }
 
    if (mode == kHollow) {
-      const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, 0, fLimits.GetMaxLineWidth(), kTRUE);
+      const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, 0, fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
       //
       glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       glRectd(x1, y1, x2, y2);
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glLineWidth(1.f);
    } else {
-      const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE);//Set filling parameters.
+      const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());//Set filling parameters.
       glRectd(x1, y1, x2, y2);
    }
 }
@@ -466,15 +466,15 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   if (IsGradientFill(gVirtualX->GetFillColor()))
+   if (IsGradientFill(GetAttFill().GetFillColor()))
       return DrawPolygonWithGradient(n, x, y);
 
-   if (!gVirtualX->GetFillStyle()) {
+   if (!GetAttFill().GetFillStyle()) {
       fIsHollowArea = kTRUE;
       return DrawPolyLine(n, x, y);
    }
 
-   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE);
+   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());
    DrawTesselation(n, x, y);
 }
 
@@ -486,7 +486,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
    if (fLocked) return;
 
-   if (!gVirtualX->GetFillStyle()) {
+   if (!GetAttFill().GetFillStyle()) {
       fIsHollowArea = kTRUE;
       return DrawPolyLine(n, x, y);
    }
@@ -498,7 +498,7 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
       fVs[i * 3 + 1] = y[i];
    }
 
-   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE);
+   const Rgl::Pad::FillAttribSet fillAttribs(fSSet, kFALSE, &GetAttFill());
 
    GLUtesselator *t = (GLUtesselator *)fTess.GetTess();
    gluBeginPolygon(t);
@@ -518,7 +518,7 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
    if (fLocked) return;
 
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
+   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
 
    glBegin(GL_LINE_STRIP);
 
@@ -531,8 +531,8 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
    }
    glEnd();
 
-   if (gVirtualX->GetLineWidth() > lineWidthTS) {
-      Double_t pointSize = gVirtualX->GetLineWidth();
+   if (GetAttLine().GetLineWidth() > lineWidthTS) {
+      Double_t pointSize = GetAttLine().GetLineWidth();
       if (pointSize > fLimits.GetMaxPointSize())
          pointSize = fLimits.GetMaxPointSize();
       glPointSize((GLfloat)pointSize);
@@ -555,7 +555,7 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
    if (fLocked) return;
 
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
+   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
 
    glBegin(GL_LINE_STRIP);
 
@@ -577,7 +577,7 @@ void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
 {
    if (fLocked) return;
 
-   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
+   const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, GetAttLine().GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE, &GetAttLine());
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
    const Double_t yRange = gPad->GetY2() - gPad->GetY1();
    const Double_t x1 = gPad->GetX1(), y1 = gPad->GetY1();
@@ -637,15 +637,15 @@ void TGLPadPainter::DrawPolyMarker()
    const TGLEnableGuard blendGuard(GL_BLEND);
 
    Float_t rgba[4] = {};
-   Rgl::Pad::ExtractRGBA(gVirtualX->GetMarkerColor(), rgba);
+   Rgl::Pad::ExtractRGBA(GetAttMarker().GetMarkerColor(), rgba);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
-   const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())));
+   const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetAttMarker().GetMarkerStyle())));
    glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
 
    const TPoint *xy = &fPoly[0];
-   const Style_t markerStyle = TAttMarker::GetMarkerStyleBase(gVirtualX->GetMarkerStyle());
+   const Style_t markerStyle = TAttMarker::GetMarkerStyleBase(GetAttMarker().GetMarkerStyle());
    const UInt_t n = UInt_t(fPoly.size());
    switch (markerStyle) {
    case kDot:
@@ -1069,10 +1069,8 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
    assert(x != nullptr && "DrawPolygonWithGradient, parameter 'x' is null");
    assert(y != nullptr && "DrawPolygonWithGradient, parameter 'y' is null");
 
-   assert(dynamic_cast<TColorGradient *>(gROOT->GetColor(gVirtualX->GetFillColor())) != nullptr &&
-          "DrawPolygonWithGradient, the current fill color is not a gradient fill");
-   const TColorGradient * const grad =
-         dynamic_cast<TColorGradient *>(gROOT->GetColor(gVirtualX->GetFillColor()));
+   auto grad = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetAttFill().GetFillColor()));
+   assert(grad != nullptr && "DrawPolygonWithGradient, the current fill color is not a gradient fill");
 
    if (fLocked)
       return;

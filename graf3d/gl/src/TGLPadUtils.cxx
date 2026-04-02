@@ -118,14 +118,17 @@ Class to manipulate fill parameters.
 ////////////////////////////////////////////////////////////////////////////////
 ///Polygon stipple, if required.
 
-FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
+FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple, const TAttFill *att)
                   : fStipple(0), fAlpha(1.)
 {
-   const UInt_t style = gVirtualX->GetFillStyle() / 1000;
+   Style_t fillStyle = att ? att->GetFillStyle() : gVirtualX->GetFillStyle();
+   Color_t fillColor = att ? att->GetFillColor() : gVirtualX->GetFillColor();
+
+   const UInt_t style = fillStyle / 1000;
 
    if (!ignoreStipple) {
       if (style == 3) {
-         const UInt_t fasi  = gVirtualX->GetFillStyle() % 1000;
+         const UInt_t fasi  = fillStyle % 1000;
          fStipple = (fasi >= 1 && fasi <=25) ? fasi : 2;
          glPolygonStipple(&set.fStipples[fStipple * PolygonStippleSet::kStippleSize]);
          glEnable(GL_POLYGON_STIPPLE);
@@ -134,7 +137,7 @@ FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
 
    // Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   ExtractRGBA(gVirtualX->GetFillColor(), rgba);
+   ExtractRGBA(fillColor, rgba);
    fAlpha = rgba[3];
    if (fAlpha<1.) {
       glEnable(GL_BLEND);
@@ -171,7 +174,7 @@ Set/unset line attributes.
 ///Set up line parameters.
 ///Smooth.
 
-LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth)
+LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth, const TAttLine *att)
                   : fSmooth(smooth), fStipple(stipple), fSetWidth(setWidth), fAlpha(0.8)
 {
    if (fSmooth) {
@@ -180,6 +183,9 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
    }
+
+   Color_t lineColor = att ? att->GetLineColor() : gVirtualX->GetLineColor();
+   Width_t lineWidth = att ? att->GetLineWidth() : gVirtualX->GetLineWidth();
 
    //Stipple.
    if (fStipple > 1) {
@@ -193,7 +199,7 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
 
    //Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 0.8f};
-   ExtractRGBA(gVirtualX->GetLineColor(), rgba);
+   ExtractRGBA(lineColor, rgba);
    fAlpha = rgba[3];
    if (fAlpha<0.8) {
       glEnable(GL_BLEND);
@@ -203,8 +209,7 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
 
    //Width.
    if (fSetWidth) {
-      const Width_t w = gVirtualX->GetLineWidth();
-      glLineWidth(w > maxWidth ? maxWidth : !w ? 1.f : w);
+      glLineWidth(lineWidth > maxWidth ? maxWidth : !lineWidth ? 1.f : lineWidth);
    }
 }
 
