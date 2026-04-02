@@ -53,7 +53,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TS3HTTPRequest::TS3HTTPRequest()
+ROOT::Deprecated::TS3HTTPRequest::TS3HTTPRequest()
                : fAuthType(kNoAuth), fHost("NoHost")
 {
 }
@@ -61,7 +61,7 @@ TS3HTTPRequest::TS3HTTPRequest()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
+ROOT::Deprecated::TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
    const TString& bucket, const TString& objectKey, EAuthType authType,
    const TString& accessKey, const TString& secretKey)
 {
@@ -77,7 +77,7 @@ TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
+ROOT::Deprecated::TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
                : TObject(r)
 {
    fVerb      = r.fVerb;
@@ -93,7 +93,7 @@ TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns this request's signature
 
-TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) const
+TString ROOT::Deprecated::TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    // Please note, the order of the fields used for computing
    // the signature is important. Make sure that the changes you
@@ -137,7 +137,7 @@ TString TS3HTTPRequest::ComputeSignature(TS3HTTPRequest::EHTTPVerb httpVerb) con
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TString TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) const
+TString ROOT::Deprecated::TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    switch (httpVerb) {
       case kGET:    return TString("GET");
@@ -154,7 +154,7 @@ TString TS3HTTPRequest::HTTPVerbToTString(TS3HTTPRequest::EHTTPVerb httpVerb) co
 /// Sets this request's time stamp according to:
 ///   http://code.google.com/apis/storage/docs/reference-headers.html#date
 
-TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
+ROOT::Deprecated::TS3HTTPRequest& ROOT::Deprecated::TS3HTTPRequest::SetTimeStamp()
 {
    time_t now = time(NULL);
    char result[128];
@@ -179,7 +179,7 @@ TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
 /// will be of the form "GET /mybucket/path/to/my/file HTTP/1.1"
 /// Also note that the path must include the leading '/'.
 
-TString TS3HTTPRequest::MakeRequestLine(TS3HTTPRequest::EHTTPVerb httpVerb) const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeRequestLine(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    return TString::Format("%s /%s%s HTTP/1.1",
                           (const char*)HTTPVerbToTString(httpVerb),
@@ -190,7 +190,7 @@ TString TS3HTTPRequest::MakeRequestLine(TS3HTTPRequest::EHTTPVerb httpVerb) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the 'Host' header to include in the HTTP request.
 
-TString TS3HTTPRequest::MakeHostHeader() const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeHostHeader() const
 {
    return "Host: " + fHost;
 }
@@ -198,7 +198,7 @@ TString TS3HTTPRequest::MakeHostHeader() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the date header for this HTTP request
 
-TString TS3HTTPRequest::MakeDateHeader() const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeDateHeader() const
 {
    return "Date: " + fTimeStamp;
 }
@@ -206,7 +206,7 @@ TString TS3HTTPRequest::MakeDateHeader() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the session security token header for this HTTP request
 
-TString TS3HTTPRequest::MakeTokenHeader() const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeTokenHeader() const
 {
    if (fAuthType != kAmazon)
       return "";
@@ -221,7 +221,7 @@ TString TS3HTTPRequest::MakeTokenHeader() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the authentication prefix
 
-TString TS3HTTPRequest::MakeAuthPrefix() const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeAuthPrefix() const
 {
    switch (fAuthType) {
       case kNoAuth: return "";
@@ -234,7 +234,7 @@ TString TS3HTTPRequest::MakeAuthPrefix() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the authentication header for this HTTP request
 
-TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
+TString ROOT::Deprecated::TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
 {
    if (fAuthType == kNoAuth)
       return "";
@@ -249,7 +249,7 @@ TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the HTTP request ready to be sent to the server
 
-TString TS3HTTPRequest::GetRequest(TS3HTTPRequest::EHTTPVerb httpVerb, Bool_t appendCRLF)
+TString ROOT::Deprecated::TS3HTTPRequest::GetRequest(TS3HTTPRequest::EHTTPVerb httpVerb, Bool_t appendCRLF)
 {
    // Set time stamp before computing this request's signature. The signature
    // includes the date.
