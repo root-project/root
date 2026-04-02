@@ -40,7 +40,6 @@ namespace Cppyy {
 } // namespace Cppyy
 
 // Bindings
-#include "CPyCppyy/PyResult.h"
 #include "CPyCppyy/CommonDefs.h"
 
 // Standard
@@ -193,6 +192,10 @@ CPYCPPYY_EXTERN bool Scope_CheckExact(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_Check(PyObject* pyobject);
 CPYCPPYY_EXTERN bool Instance_CheckExact(PyObject* pyobject);
 
+// memory management: ownership of the underlying C++ object
+CPYCPPYY_EXTERN void Instance_SetPythonOwns(PyObject* pyobject);
+CPYCPPYY_EXTERN void Instance_SetCppOwns(PyObject* pyobject);
+
 // type verifier for sequences
 CPYCPPYY_EXTERN bool Sequence_Check(PyObject* pyobject);
 
@@ -216,9 +219,6 @@ CPYCPPYY_EXTERN bool Import(const std::string& name);
 
 // execute a python statement (e.g. "import sys")
 CPYCPPYY_EXTERN bool Exec(const std::string& cmd);
-
-// evaluate a python expression (e.g. "1+1")
-CPYCPPYY_EXTERN const PyResult Eval(const std::string& expr);
 
 // execute a python stand-alone script, with argv CLI arguments
 CPYCPPYY_EXTERN void ExecScript(const std::string& name, const std::vector<std::string>& args);

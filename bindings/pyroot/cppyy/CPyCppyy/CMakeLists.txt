@@ -7,7 +7,6 @@
 set(headers
     include/CPyCppyy/API.h
     include/CPyCppyy/Reflex.h
-    include/CPyCppyy/PyResult.h
     include/CPyCppyy/CommonDefs.h
     include/CPyCppyy/PyException.h
     include/CPyCppyy/DispatchPtr.h
@@ -38,7 +37,6 @@ set(sources
     src/MemoryRegulator.cxx
     src/ProxyWrappers.cxx
     src/PyException.cxx
-    src/PyResult.cxx
     src/PyStrings.cxx
     src/Pythonize.cxx
     src/TemplateProxy.cxx
