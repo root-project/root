@@ -473,13 +473,13 @@ The version of the following packages has been updated:
  - freetype: 2.14.3
  - gsl: 2.8
  - gtest: 1.17.0
- - libgif
+ - giflib: 5.2.2
  - libjpeg-turbo 3.1.3 is now used as a replacement for libjpeg
  - libpng: 1.6.4
  - libzeromq: 4.3.5
  - lz4: 1.10.0
  - lzma: 5.8.2
- - xrootd: 5.9.1
+ - xrootd: 5.9.2
  - zlib: 1.3.2
  - zstd: 1.5.7
 
