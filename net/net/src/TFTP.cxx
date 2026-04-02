@@ -56,8 +56,8 @@
 #endif
 
 
-Long64_t TFTP::fgBytesWrite = 0;
-Long64_t TFTP::fgBytesRead  = 0;
+Long64_t ROOT::Deprecated::TFTP::fgBytesWrite = 0;
+Long64_t ROOT::Deprecated::TFTP::fgBytesRead  = 0;
 
 
 
@@ -70,7 +70,7 @@ Long64_t TFTP::fgBytesRead  = 0;
 /// An existing connection (TSocket *sock) can also be used to establish
 /// the FTP session.
 
-TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
+ROOT::Deprecated::TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
 {
    fSocket = sock;
 
@@ -91,7 +91,7 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set up the actual connection.
 
-void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
+void ROOT::Deprecated::TFTP::Init(const char *surl, Int_t par, Int_t wsize)
 {
    TUrl url(surl);
    TString hurl(url.GetProtocol());
@@ -145,7 +145,7 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// TFTP dtor. Send close message and close socket.
 
-TFTP::~TFTP()
+ROOT::Deprecated::TFTP::~TFTP()
 {
    Close();
 }
@@ -153,7 +153,7 @@ TFTP::~TFTP()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print some info about the FTP connection.
 
-void TFTP::Print(Option_t *) const
+void ROOT::Deprecated::TFTP::Print(Option_t *) const
 {
    TString secCont;
 
@@ -179,7 +179,7 @@ void TFTP::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print error string depending on error code.
 
-void TFTP::PrintError(const char *where, Int_t err) const
+void ROOT::Deprecated::TFTP::PrintError(const char *where, Int_t err) const
 {
    Error(where, "%s", gRootdErrStr[err]);
 }
@@ -188,7 +188,7 @@ void TFTP::PrintError(const char *where, Int_t err) const
 /// Return status from rootd server and message kind. Returns -1 in
 /// case of error otherwise 8 (sizeof 2 words, status and kind).
 
-Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind) const
+Int_t ROOT::Deprecated::TFTP::Recv(Int_t &status, EMessageTypes &kind) const
 {
    kind   = kROOTD_ERR;
    status = 0;
@@ -204,7 +204,7 @@ Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Make sure the block size is a power of two, with a minimum of 32768.
 
-void TFTP::SetBlockSize(Int_t blockSize)
+void ROOT::Deprecated::TFTP::SetBlockSize(Int_t blockSize)
 {
    if (blockSize < 32768) {
       fBlockSize = 32768;
@@ -230,7 +230,7 @@ void TFTP::SetBlockSize(Int_t blockSize)
 /// the case (e.g. due to a crash), you can force unlock it by prepending
 /// the remoteName with a '-'.
 
-Long64_t TFTP::PutFile(const char *file, const char *remoteName)
+Long64_t ROOT::Deprecated::TFTP::PutFile(const char *file, const char *remoteName)
 {
    if (!IsOpen() || !file || !*file) return -1;
 
@@ -403,7 +403,7 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 /// the case (e.g. due to a crash), you can force unlock it by prepending
 /// the file name with a '-'.
 
-Long64_t TFTP::GetFile(const char *file, const char *localName)
+Long64_t ROOT::Deprecated::TFTP::GetFile(const char *file, const char *localName)
 {
    if (!IsOpen() || !file || !*file) return -1;
 
@@ -625,7 +625,7 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
 /// file and it is < 1024 characters then the contents is echoed back.
 /// Returns 0 in case of success and -1 in case of failure.
 
-Int_t TFTP::ChangeDirectory(const char *dir) const
+Int_t ROOT::Deprecated::TFTP::ChangeDirectory(const char *dir) const
 {
    if (!IsOpen()) return -1;
 
@@ -664,7 +664,7 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
 /// Make a remote directory. Anonymous users may not create directories.
 /// Returns 0 in case of success and -1 in case of failure.
 
-Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
+Int_t ROOT::Deprecated::TFTP::MakeDirectory(const char *dir, Bool_t print) const
 {
    if (!IsOpen()) return -1;
 
@@ -699,7 +699,7 @@ Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
 /// Delete a remote directory. Anonymous users may not delete directories.
 /// Returns 0 in case of success and -1 in case of failure.
 
-Int_t TFTP::DeleteDirectory(const char *dir) const
+Int_t ROOT::Deprecated::TFTP::DeleteDirectory(const char *dir) const
 {
    if (!IsOpen()) return -1;
 
@@ -731,7 +731,7 @@ Int_t TFTP::DeleteDirectory(const char *dir) const
 /// to be listed to ls. Returns 0 in case of success and -1 in case of
 /// failure.
 
-Int_t TFTP::ListDirectory(Option_t *cmd) const
+Int_t ROOT::Deprecated::TFTP::ListDirectory(Option_t *cmd) const
 {
    if (!IsOpen()) return -1;
 
@@ -761,7 +761,7 @@ Int_t TFTP::ListDirectory(Option_t *cmd) const
 /// Print path of remote working directory. Returns 0 in case of succes and
 /// -1 in cse of failure.
 
-Int_t TFTP::PrintDirectory() const
+Int_t ROOT::Deprecated::TFTP::PrintDirectory() const
 {
    if (!IsOpen()) return -1;
 
@@ -787,7 +787,7 @@ Int_t TFTP::PrintDirectory() const
 /// Rename a remote file. Anonymous users may not rename files.
 /// Returns 0 in case of success and -1 in case of failure.
 
-Int_t TFTP::RenameFile(const char *file1, const char *file2) const
+Int_t ROOT::Deprecated::TFTP::RenameFile(const char *file1, const char *file2) const
 {
    if (!IsOpen()) return -1;
 
@@ -818,7 +818,7 @@ Int_t TFTP::RenameFile(const char *file1, const char *file2) const
 /// Delete a remote file. Anonymous users may not delete files.
 /// Returns 0 in case of success and -1 in case of failure.
 
-Int_t TFTP::DeleteFile(const char *file) const
+Int_t ROOT::Deprecated::TFTP::DeleteFile(const char *file) const
 {
    if (!IsOpen()) return -1;
 
@@ -850,7 +850,7 @@ Int_t TFTP::DeleteFile(const char *file) const
 /// chnage permissions. Returns 0 in case of success and -1 in case
 /// of failure.
 
-Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
+Int_t ROOT::Deprecated::TFTP::ChangePermission(const char *file, Int_t mode) const
 {
    if (!IsOpen()) return -1;
 
@@ -881,7 +881,7 @@ Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
 /// Close ftp connection. Returns 0 in case of success and -1 in case of
 /// failure.
 
-Int_t TFTP::Close()
+Int_t ROOT::Deprecated::TFTP::Close()
 {
    if (!IsOpen()) return -1;
 
@@ -911,7 +911,7 @@ Int_t TFTP::Close()
 /// Returns kTRUE in case of success.
 /// Returns kFALSE in case of error.
 
-Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
+Bool_t ROOT::Deprecated::TFTP::OpenDirectory(const char *dir, Bool_t print)
 {
    fDir = kFALSE;
 
@@ -953,7 +953,7 @@ Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
 ////////////////////////////////////////////////////////////////////////////////
 /// Free a remotely open directory via rootd.
 
-void TFTP::FreeDirectory(Bool_t print)
+void ROOT::Deprecated::TFTP::FreeDirectory(Bool_t print)
 {
    if (!IsOpen() || !fDir) return;
 
@@ -985,7 +985,7 @@ void TFTP::FreeDirectory(Bool_t print)
 /// Get directory entry via rootd.
 /// Returns 0 in case no more entries or in case of error.
 
-const char *TFTP::GetDirEntry(Bool_t print)
+const char *ROOT::Deprecated::TFTP::GetDirEntry(Bool_t print)
 {
    static char dirent[1024] = {0};
 
@@ -1026,7 +1026,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
 
-Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
+Int_t ROOT::Deprecated::TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
 {
    TUrl url(path);
 
@@ -1108,7 +1108,7 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
 /// Mode is the same as for the Unix access(2) function.
 /// Attention, bizarre convention of return value!!
 
-Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
+Bool_t ROOT::Deprecated::TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
 {
    if (!IsOpen()) return kTRUE;
 
