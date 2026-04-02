@@ -46,108 +46,10 @@ many of them are set by base sub-objects of 2d primitives
 (2d primitives usually inherit TAttLine or TAttFill etc.).  And these sub-objects
 call gVirtualPS->SetLineWidth ... etc. So, if I save some attributes in my painter,
 it will be mess - at any moment I do not know, where to take line attribute - from
-gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualPS.
+gVirtualX or from my own member. So! All attributed, _ALL_ go to gVirtualPS.
+At the same time attributes copy preserved in the painter -
+so actual value can be requested without asking of gVirtualPS instance
 */
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Color_t TPadPainterPS::GetLineColor() const
-{
-   return fPS->GetLineColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Style_t TPadPainterPS::GetLineStyle() const
-{
-   return fPS->GetLineStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Width_t TPadPainterPS::GetLineWidth() const
-{
-   return fPS->GetLineWidth();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetLineColor(Color_t lcolor)
-{
-   fPS->SetLineColor(lcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetLineStyle(Style_t lstyle)
-{
-   fPS->SetLineStyle(lstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetLineWidth(Width_t lwidth)
-{
-   fPS->SetLineWidth(lwidth);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Color_t TPadPainterPS::GetFillColor() const
-{
-   return fPS->GetFillColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Style_t TPadPainterPS::GetFillStyle() const
-{
-   return fPS->GetFillStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Bool_t TPadPainterPS::IsTransparent() const
-{
-   //IsTransparent is implemented as inline function in TAttFill.
-   return fPS->IsTransparent();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetFillColor(Color_t fcolor)
-{
-   fPS->SetFillColor(fcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetFillStyle(Style_t fstyle)
-{
-   fPS->SetFillStyle(fstyle);
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,167 +60,57 @@ void TPadPainterPS::SetOpacity(Int_t percent)
    fPS->SetFillStyle(4000 + percent);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
+/// Provide fill attributes to gVirtualPS.
 
-Short_t TPadPainterPS::GetTextAlign() const
+void TPadPainterPS::SetAttFill(const TAttFill &att)
 {
-   return fPS->GetTextAlign();
+   if (&att != &fAttFill)
+      att.Copy(fAttFill);
+
+   fPS->SetFillColor(att.GetFillColor());
+   fPS->SetFillStyle(att.GetFillStyle());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
+/// Provide line attributes to gVirtualPS.
 
-Float_t TPadPainterPS::GetTextAngle() const
+void TPadPainterPS::SetAttLine(const TAttLine &att)
 {
-   return fPS->GetTextAngle();
+   if (&att != &fAttLine)
+      att.Copy(fAttLine);
+
+   fPS->SetLineColor(att.GetLineColor());
+   fPS->SetLineStyle(att.GetLineStyle());
+   fPS->SetLineWidth(att.GetLineWidth());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
+/// Provide marker attributes to gVirtualPS.
 
-Color_t TPadPainterPS::GetTextColor() const
+void TPadPainterPS::SetAttMarker(const TAttMarker &att)
 {
-   return fPS->GetTextColor();
+   if (&att != &fAttMarker)
+      att.Copy(fAttMarker);
+
+   fPS->SetMarkerColor(att.GetMarkerColor());
+   fPS->SetMarkerSize(att.GetMarkerSize());
+   fPS->SetMarkerStyle(att.GetMarkerStyle());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
+/// Provide text attributes to gVirtualPS.
 
-Font_t TPadPainterPS::GetTextFont() const
+void TPadPainterPS::SetAttText(const TAttText &att)
 {
-   return fPS->GetTextFont();
-}
+   if (&att != &fAttText)
+      att.Copy(fAttText);
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Float_t TPadPainterPS::GetTextSize() const
-{
-   return fPS->GetTextSize();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Float_t TPadPainterPS::GetTextMagnitude() const
-{
-   // FIXME!!!
-   return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextAlign(Short_t align)
-{
-   fPS->SetTextAlign(align);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextAngle(Float_t tangle)
-{
-   fPS->SetTextAngle(tangle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextColor(Color_t tcolor)
-{
-   fPS->SetTextColor(tcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextFont(Font_t tfont)
-{
-   fPS->SetTextFont(tfont);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextSize(Float_t tsize)
-{
-   fPS->SetTextSize(tsize);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetTextSizePixels(Int_t npixels)
-{
-   fPS->SetTextSizePixels(npixels);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Color_t TPadPainterPS::GetMarkerColor() const
-{
-   return fPS->GetMarkerColor();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Style_t TPadPainterPS::GetMarkerStyle() const
-{
-   return fPS->GetMarkerStyle();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-Size_t TPadPainterPS::GetMarkerSize() const
-{
-   return fPS->GetMarkerSize();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetMarkerColor(Color_t mcolor)
-{
-   fPS->SetMarkerColor(mcolor);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetMarkerStyle(Style_t mstyle)
-{
-   fPS->SetMarkerStyle(mstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualPS.
-
-void TPadPainterPS::SetMarkerSize(Size_t msize)
-{
-   fPS->SetMarkerSize(msize);
+   fPS->SetTextAlign(att.GetTextAlign());
+   fPS->SetTextAngle(att.GetTextAngle());
+   fPS->SetTextColor(att.GetTextColor());
+   fPS->SetTextSize(att.GetTextSize());
+   fPS->SetTextFont(att.GetTextFont());
 }
 
 
@@ -387,7 +179,7 @@ void TPadPainterPS::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wid
 
 void TPadPainterPS::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
    Double_t x[2] = {x1, x2}, y[2] = {y1, y2};
    fPS->DrawPS(2, x, y);
@@ -399,7 +191,7 @@ void TPadPainterPS::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TPadPainterPS::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    Double_t xw[2], yw[2];
@@ -420,7 +212,7 @@ void TPadPainterPS::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
    Int_t style0 = -1;
 
    if (mode == TVirtualPadPainter::kHollow) {
-      if (GetLineWidth() <= 0)
+      if (GetAttLine().GetLineWidth() <= 0)
          return;
       style0 = fPS->GetFillStyle();
       if (style0 > 0)
@@ -465,7 +257,7 @@ void TPadPainterPS::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t
 
 void TPadPainterPS::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -482,7 +274,7 @@ void TPadPainterPS::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys
 
 void TPadPainterPS::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -499,7 +291,7 @@ void TPadPainterPS::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 
 void TPadPainterPS::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    if (n < 2) {
@@ -520,7 +312,7 @@ void TPadPainterPS::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
 
 void TPadPainterPS::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    if (n < 1) {
@@ -536,7 +328,7 @@ void TPadPainterPS::DrawSegments(Int_t n, Double_t *x, Double_t *y)
 
 void TPadPainterPS::DrawSegmentsNDC(Int_t n, Double_t *u, Double_t *v)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    if (n < 1) {
