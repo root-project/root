@@ -41,6 +41,7 @@ namespace ROOT::Deprecated {
 struct TSocketFriend {
    static Bool_t IsAuthenticated(const TSocket &s);
    static void SetSecContext(TSocket &s, TSecContext *ctx);
+   static TSecContext *GetSecContext(const TSocket &s);
 };
 } // namespace ROOT::Deprecated
 
@@ -137,7 +138,9 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   ROOT::Deprecated::TSecContext *GetSecContext() const { return fSecContext; }
+   ROOT::Deprecated::TSecContext *GetSecContext() const
+      R__DEPRECATED(6, 42, "TSocket::GetSecContext is deprecated")
+      { return ROOT::Deprecated::TSocketFriend::GetSecContext(*this); }
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl.Data(); }

@@ -916,8 +916,8 @@ void TNetSystem::Create(const char *url, TSocket *sock)
             fFTP->Close();
             delete fFTP;
          } else {
-            fUser = fFTP->GetSocket()->GetSecContext()->GetUser();
-            fHost = fFTP->GetSocket()->GetSecContext()->GetHost();
+            fUser = ROOT::Deprecated::TSocketFriend::GetSecContext(*fFTP->GetSocket())->GetUser();
+            fHost = ROOT::Deprecated::TSocketFriend::GetSecContext(*fFTP->GetSocket())->GetHost();
             // If responsible for the TFTP connection, remove it from the
             // socket global list to avoid problems with double deletion
             // at final cleanup

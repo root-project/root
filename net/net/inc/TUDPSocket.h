@@ -110,7 +110,8 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   ROOT::Deprecated::TSecContext *GetSecContext() const { return fSecContext; }
+   ROOT::Deprecated::TSecContext *GetSecContext() const
+      R__DEPRECATED(6, 42, "TUDPSocket::GetSecContext is deprecated") { return fSecContext; }
 
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl; }
