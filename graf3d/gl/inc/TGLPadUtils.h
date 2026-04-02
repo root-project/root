@@ -20,7 +20,8 @@
 #include "RtypesCore.h"
 
 class TGLPadPainter;//For friend declarations.
-
+class TAttFill;
+class TAttLine;
 /*
 
 All code here and in corresponding *.cxx file is only
@@ -66,7 +67,7 @@ class FillAttribSet {
    UInt_t fStipple;
    Float_t fAlpha;
 public:
-   FillAttribSet(const PolygonStippleSet & set, Bool_t ignoreStipple);
+   FillAttribSet(const PolygonStippleSet & set, Bool_t ignoreStipple, const TAttFill *att = nullptr);
    ~FillAttribSet();
 };
 
@@ -87,7 +88,7 @@ private:
    Bool_t fSetWidth;
    Float_t fAlpha;
 public:
-   LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth);
+   LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth, const TAttLine *att = nullptr);
    ~LineAttribSet();
 };
 
