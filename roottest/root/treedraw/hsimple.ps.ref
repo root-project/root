@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0
 %%Title: hsimple.ps: c1
-%%Creator: ROOT Version 6.37.01
-%%CreationDate: Fri Oct 17 10:06:23 2025
+%%Creator: ROOT Version 6.39.01
+%%CreationDate: Thu Apr  2 13:00:04 2026
 %%Orientation: Landscape
 %%DocumentNeededResources: ProcSet (FontSetInit)
 %%EndComments
@@ -77,11 +77,11 @@ newpath  gsave  90 r 0 -594 t  28 20 t .25 .25 scale  gsave
 %%Page: 1 1
  gsave  gsave 
  1 1 Zone
- gsave  0 0 t black[  ] 0 sd 3 lw 1 1 1 c 2948 1999 0 0 bf black 1 1 1 c 2358 1599 295 200 bf black 2358 1599 295 200 bl 1 1 1 c 2358 1599 295 200 bf black 2358 1599 295 200 bl 1 1 1 c black 295 200 m 2358 X s 419 248 m -48 Y s 469 224 m -24 Y s 518
- 224 m -24 Y s 568 224 m -24 Y s 618 224 m -24 Y s 667 248 m -48 Y s 717 224 m -24 Y s 766 224 m -24 Y s 816 224 m -24 Y s 866 224 m -24 Y s 915 248 m -48 Y s 965 224 m -24 Y s 1015 224 m -24 Y s 1064 224 m -24 Y s 1114 224 m -24 Y s 1164 248 m -48 Y
- s 1213 224 m -24 Y s 1263 224 m -24 Y s 1313 224 m -24 Y s 1362 224 m -24 Y s 1412 248 m -48 Y s 1462 224 m -24 Y s 1511 224 m -24 Y s 1561 224 m -24 Y s 1611 224 m -24 Y s 1660 248 m -48 Y s 1710 224 m -24 Y s 1760 224 m -24 Y s 1809 224 m -24 Y s
- 1859 224 m -24 Y s 1908 248 m -48 Y s 1958 224 m -24 Y s 2008 224 m -24 Y s 2057 224 m -24 Y s 2107 224 m -24 Y s 2157 248 m -48 Y s 2206 224 m -24 Y s 2256 224 m -24 Y s 2306 224 m -24 Y s 2355 224 m -24 Y s 2405 248 m -48 Y s 2455 224 m -24 Y s
- 2504 224 m -24 Y s 2554 224 m -24 Y s 2604 224 m -24 Y s 2653 248 m -48 Y s 369 224 m -24 Y s 320 224 m -24 Y s
+ gsave  0 0 t black[  ] 0 sd 3 lw 1 1 1 c 2948 1999 0 0 bf black 1 1 1 c 2358 1599 295 200 bf black 2358 1599 295 200 bl 1 1 1 c black 1 1 1 c 2358 1599 295 200 bf black 2358 1599 295 200 bl 1 1 1 c black 295 200 m 2358 X s 419 248 m -48 Y s 469 224
+ m -24 Y s 518 224 m -24 Y s 568 224 m -24 Y s 618 224 m -24 Y s 667 248 m -48 Y s 717 224 m -24 Y s 766 224 m -24 Y s 816 224 m -24 Y s 866 224 m -24 Y s 915 248 m -48 Y s 965 224 m -24 Y s 1015 224 m -24 Y s 1064 224 m -24 Y s 1114 224 m -24 Y s
+ 1164 248 m -48 Y s 1213 224 m -24 Y s 1263 224 m -24 Y s 1313 224 m -24 Y s 1362 224 m -24 Y s 1412 248 m -48 Y s 1462 224 m -24 Y s 1511 224 m -24 Y s 1561 224 m -24 Y s 1611 224 m -24 Y s 1660 248 m -48 Y s 1710 224 m -24 Y s 1760 224 m -24 Y s
+ 1809 224 m -24 Y s 1859 224 m -24 Y s 1908 248 m -48 Y s 1958 224 m -24 Y s 2008 224 m -24 Y s 2057 224 m -24 Y s 2107 224 m -24 Y s 2157 248 m -48 Y s 2206 224 m -24 Y s 2256 224 m -24 Y s 2306 224 m -24 Y s 2355 224 m -24 Y s 2405 248 m -48 Y s
+ 2455 224 m -24 Y s 2504 224 m -24 Y s 2554 224 m -24 Y s 2604 224 m -24 Y s 2653 248 m -48 Y s 369 224 m -24 Y s 320 224 m -24 Y s
  gsave  2948 1999 0 0 C 419.481 133.949 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (4) show NC gr 
  gsave  2948 1999 0 0 C 384.495 133.949 t 0 r /Symbol findfont 63.5352 sf 0 0 m (-) show NC gr 
  gsave  2948 1999 0 0 C 667.737 133.949 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (3) show NC gr 
