@@ -65,8 +65,7 @@ void TPadPainterPS::SetOpacity(Int_t percent)
 
 void TPadPainterPS::SetAttFill(const TAttFill &att)
 {
-   if (&att != &fAttFill)
-      att.Copy(fAttFill);
+   TPadPainterBase::SetAttFill(att);
 
    fPS->SetFillColor(att.GetFillColor());
    fPS->SetFillStyle(att.GetFillStyle());
@@ -77,8 +76,7 @@ void TPadPainterPS::SetAttFill(const TAttFill &att)
 
 void TPadPainterPS::SetAttLine(const TAttLine &att)
 {
-   if (&att != &fAttLine)
-      att.Copy(fAttLine);
+   TPadPainterBase::SetAttLine(att);
 
    fPS->SetLineColor(att.GetLineColor());
    fPS->SetLineStyle(att.GetLineStyle());
@@ -90,8 +88,7 @@ void TPadPainterPS::SetAttLine(const TAttLine &att)
 
 void TPadPainterPS::SetAttMarker(const TAttMarker &att)
 {
-   if (&att != &fAttMarker)
-      att.Copy(fAttMarker);
+   TPadPainterBase::SetAttMarker(att);
 
    fPS->SetMarkerColor(att.GetMarkerColor());
    fPS->SetMarkerSize(att.GetMarkerSize());
@@ -103,8 +100,7 @@ void TPadPainterPS::SetAttMarker(const TAttMarker &att)
 
 void TPadPainterPS::SetAttText(const TAttText &att)
 {
-   if (&att != &fAttText)
-      att.Copy(fAttText);
+   TPadPainterBase::SetAttText(att);
 
    fPS->SetTextAlign(att.GetTextAlign());
    fPS->SetTextAngle(att.GetTextAngle());
