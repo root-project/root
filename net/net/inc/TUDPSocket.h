@@ -28,7 +28,6 @@
 #include "TBits.h"
 #include "TInetAddress.h"
 #include "MessageTypes.h"
-#include "TVirtualAuth.h"
 #include "TSecContext.h"
 #include "TTimeStamp.h"
 #include "TVirtualMutex.h"
