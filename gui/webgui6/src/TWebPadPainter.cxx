@@ -24,6 +24,13 @@ Main classes (like histograms or graphs) should be painted on JavaScript side
 
 */
 
+//////////////////////////////////////////////////////////////////////////
+/// Set opacity - similar to TVirtualPS usecase
+
+void TWebPadPainter::SetOpacity(Int_t percent)
+{
+   fAttFill.SetFillStyle(4000 + percent);
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Store operation identifier with appropriate attributes
@@ -34,16 +41,16 @@ Float_t *TWebPadPainter::StoreOperation(const std::string &oper, unsigned attrki
       return nullptr;
 
    if (attrkind & attrLine)
-      fPainting->AddLineAttr(fPS ? *((TAttLine *) fPS) : *((TAttLine *)this));
+      fPainting->AddLineAttr(GetAttLine());
 
    if (attrkind & attrFill)
-      fPainting->AddFillAttr(fPS ? *((TAttFill *) fPS) : *((TAttFill *)this));
+      fPainting->AddFillAttr(GetAttFill());
 
    if (attrkind & attrMarker)
-      fPainting->AddMarkerAttr(fPS ? *((TAttMarker *) fPS) : *((TAttMarker *)this));
+      fPainting->AddMarkerAttr(GetAttMarker());
 
    if (attrkind & attrText)
-      fPainting->AddTextAttr(fPS ? *((TAttText *)fPS) : *((TAttText *)this));
+      fPainting->AddTextAttr(GetAttText());
 
    fPainting->AddOper(oper);
 
@@ -65,7 +72,7 @@ void TWebPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*wi
 
 void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (GetLineWidth() <= 0)
+   if (GetAttLine().GetLineWidth() <= 0)
       return;
 
    auto buf = StoreOperation("l2", attrLine, 4);
@@ -83,7 +90,8 @@ void TWebPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2
 
 void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (GetLineWidth()<=0) return;
+   if (GetAttLine().GetLineWidth() <= 0)
+      return;
 
    ::Error("DrawLineNDC", "Not supported correctly");
 
@@ -102,7 +110,8 @@ void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t
 
 void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
+   if (GetAttLine().GetLineWidth() <= 0 && mode == TVirtualPadPainter::kHollow)
+      return;
 
    Float_t *buf = nullptr;
 
@@ -124,7 +133,7 @@ void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 
 void TWebPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   if ((GetFillStyle() <= 0) || (nPoints < 3))
+   if ((GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
       return;
 
    auto buf = StoreOperation("f" + std::to_string(nPoints), attrFill, nPoints * 2);
@@ -140,7 +149,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   if ((GetFillStyle() <= 0) || (nPoints < 3))
+   if ((GetAttFill().GetFillStyle() <= 0) || (nPoints < 3))
       return;
 
    auto buf = StoreOperation("f" + std::to_string(nPoints), attrFill, nPoints * 2);
@@ -156,7 +165,7 @@ void TWebPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
-   if ((GetLineWidth() <= 0) || (nPoints < 2))
+   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
 
    auto buf = StoreOperation("l" + std::to_string(nPoints), attrLine, nPoints * 2);
@@ -172,7 +181,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Double_t *xs, const Doubl
 
 void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   if ((GetLineWidth() <= 0) || (nPoints < 2))
+   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
 
    auto buf = StoreOperation("l" + std::to_string(nPoints), attrLine, nPoints * 2);
@@ -188,7 +197,7 @@ void TWebPadPainter::DrawPolyLine(Int_t nPoints, const Float_t *xs, const Float_
 
 void TWebPadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Double_t *v)
 {
-   if ((GetLineWidth() <= 0) || (nPoints < 2))
+   if ((GetAttLine().GetLineWidth() <= 0) || (nPoints < 2))
       return;
 
    ::Error("DrawPolyLineNDC", "Not supported correctly");

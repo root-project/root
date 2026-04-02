@@ -11,27 +11,21 @@
 #ifndef ROOT_TWebPadPainter
 #define ROOT_TWebPadPainter
 
-#include "TVirtualPadPainter.h"
+#include "TPadPainterBase.h"
 
-#include "TAttLine.h"
-#include "TAttFill.h"
-#include "TAttText.h"
-#include "TAttMarker.h"
 #include <string>
 
 #include "TWebPainting.h"
-#include "TWebPS.h"
 
 class TWebCanvas;
 
-class TWebPadPainter : public TVirtualPadPainter, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
+class TWebPadPainter : public TPadPainterBase {
 
 friend class TWebCanvas;
 
 protected:
 
    TWebPainting *fPainting{nullptr};      ///<! object to store all painting, owned by TWebPS object
-   TWebPS *fPS{nullptr};                  ///<! current TWebPS instance
 
    enum { attrLine = 0x1, attrFill = 0x2, attrMarker = 0x4, attrText = 0x8, attrAll = 0xf };
 
@@ -41,51 +35,10 @@ public:
 
    TWebPadPainter() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
-   void SetPainting(TWebPainting *p, TWebPS *ps) { fPainting = p; fPS = ps; }
+   void SetPainting(TWebPainting *p) { fPainting = p; }
 
-   //Final overrides for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply catch attributes.
-   //Line attributes.
-   Color_t  GetLineColor() const override { return fPS ? fPS->GetLineColor() : TAttLine::GetLineColor(); }
-   Style_t  GetLineStyle() const override { return fPS ? fPS->GetLineStyle() : TAttLine::GetLineStyle(); }
-   Width_t  GetLineWidth() const override { return fPS ? fPS->GetLineWidth() : TAttLine::GetLineWidth(); }
 
-   void     SetLineColor(Color_t lcolor) override { if (fPS) fPS->SetLineColor(lcolor); else TAttLine::SetLineColor(lcolor); }
-   void     SetLineStyle(Style_t lstyle) override { if (fPS) fPS->SetLineStyle(lstyle); else TAttLine::SetLineStyle(lstyle); }
-   void     SetLineWidth(Width_t lwidth) override { if (fPS) fPS->SetLineWidth(lwidth); else TAttLine::SetLineWidth(lwidth); }
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override { return fPS ? fPS->GetFillColor() : TAttFill::GetFillColor(); }
-   Style_t  GetFillStyle() const override { return fPS ? fPS->GetFillStyle() : TAttFill::GetFillStyle(); }
-   Bool_t   IsTransparent() const override { return fPS ? fPS->IsTransparent() : TAttFill::IsTransparent(); }
-
-   void     SetFillColor(Color_t fcolor) override { if (fPS) fPS->SetFillColor(fcolor); else TAttFill::SetFillColor(fcolor); }
-   void     SetFillStyle(Style_t fstyle) override { if (fPS) fPS->SetFillStyle(fstyle); else TAttFill::SetFillStyle(fstyle); }
-   void     SetOpacity(Int_t percent) override { if (fPS) fPS->SetFillStyle(4000 + percent); else TAttFill::SetFillStyle(4000 + percent); }
-
-   //Text attributes.
-   Short_t  GetTextAlign() const override { return fPS ? fPS->GetTextAlign() : TAttText::GetTextAlign(); }
-   Float_t  GetTextAngle() const override { return fPS ? fPS->GetTextAngle() : TAttText::GetTextAngle(); }
-   Color_t  GetTextColor() const override { return fPS ? fPS->GetTextColor() : TAttText::GetTextColor(); }
-   Font_t   GetTextFont()  const override { return fPS ? fPS->GetTextFont() : TAttText::GetTextFont(); }
-   Float_t  GetTextSize()  const override { return fPS ? fPS->GetTextSize() : TAttText::GetTextSize(); }
-   Float_t  GetTextMagnitude() const override { return  0; }
-
-   void     SetTextAlign(Short_t align) override { if (fPS) fPS->SetTextAlign(align); else TAttText::SetTextAlign(align); }
-   void     SetTextAngle(Float_t tangle) override { if (fPS) fPS->SetTextAngle(tangle); else TAttText::SetTextAngle(tangle); }
-   void     SetTextColor(Color_t tcolor) override { if (fPS) fPS->SetTextColor(tcolor); else TAttText::SetTextColor(tcolor); }
-   void     SetTextFont(Font_t tfont) override { if (fPS) fPS->SetTextFont(tfont); else TAttText::SetTextFont(tfont); }
-   void     SetTextSize(Float_t tsize) override { if (fPS) fPS->SetTextSize(tsize); else TAttText::SetTextSize(tsize); }
-   void     SetTextSizePixels(Int_t npixels) override { if (fPS) fPS->SetTextSizePixels(npixels); else TAttText::SetTextSizePixels(npixels); }
-
-   //Marker attributes
-   Color_t  GetMarkerColor() const override { return fPS ? fPS->GetMarkerColor() : TAttMarker::GetMarkerColor(); }
-   Style_t  GetMarkerStyle() const override { return fPS ? fPS->GetMarkerStyle() : TAttMarker::GetMarkerStyle(); }
-   Size_t   GetMarkerSize() const override { return fPS ? fPS->GetMarkerSize() : TAttMarker::GetMarkerSize(); }
-
-   void     SetMarkerColor(Color_t mcolor) override { if (fPS) fPS->SetMarkerColor(mcolor); else TAttMarker::SetMarkerColor(mcolor); }
-   void     SetMarkerStyle(Style_t mstyle) override  { if (fPS) fPS->SetMarkerStyle(mstyle); else TAttMarker::SetMarkerStyle(mstyle); }
-   void     SetMarkerSize(Size_t msize) override  { if (fPS) fPS->SetMarkerSize(msize); else TAttMarker::SetMarkerSize(msize); }
+   void     SetOpacity(Int_t percent) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t, UInt_t) override { return -1; }
