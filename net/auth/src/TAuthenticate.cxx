@@ -79,15 +79,15 @@ extern "C" char *crypt(const char *, const char *);
 #   include <openssl/blowfish.h>
 #endif
 
-struct R__rsa_KEY: rsa_KEY { R__rsa_KEY(): rsa_KEY() {} };
-struct R__rsa_KEY_export: rsa_KEY_export {};
-struct R__rsa_NUMBER: rsa_NUMBER {};
-
 #ifdef R__SSL
    static BF_KEY fgBFKey; // Blowfish symmetric key
 #endif
 
 namespace ROOT::Deprecated {
+
+struct R__rsa_KEY: rsa_KEY { R__rsa_KEY(): rsa_KEY() {} };
+struct R__rsa_KEY_export: rsa_KEY_export {};
+struct R__rsa_NUMBER: rsa_NUMBER {};
 
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
