@@ -288,7 +288,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
             // Add to the list
             secctxlist->Add(seccontext);
             // Store SecContext
-            socket->SetSecContext(seccontext);
+            ROOT::Deprecated::TSocketFriend::SetSecContext(*socket, seccontext);
          } else {
             if (gDebug > 0)
                ErrorInfo("SrvAuthImpl: could not create sec context object"
