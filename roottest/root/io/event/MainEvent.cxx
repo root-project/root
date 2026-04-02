@@ -180,7 +180,7 @@ int main(int argc, char** argv)
       // -- Read case
       TFile* hfile = nullptr;
       if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root");
+         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root");
       } else {
          hfile = new TFile(gFilename);
       }
@@ -226,7 +226,8 @@ int main(int argc, char** argv)
       // This file is now becoming the current directory.
       TFile* hfile = 0;
       if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root", "RECREATE", "TTree benchmark ROOT file");
+         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root", "RECREATE",
+                                                "TTree benchmark ROOT file");
       } else {
          hfile = new TFile(gFilename, "RECREATE", "TTree benchmark ROOT file");
       }

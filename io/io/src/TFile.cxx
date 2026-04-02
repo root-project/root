@@ -3985,7 +3985,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                if (h->LoadPlugin() == -1)
                   return nullptr;
                TClass *cl = TClass::GetClass(h->GetClass());
-               if (cl && cl->InheritsFrom("TNetFile"))
+               if (cl && cl->InheritsFrom("ROOT::Deprecated::TNetFile"))
                   f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
                else
                   f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
