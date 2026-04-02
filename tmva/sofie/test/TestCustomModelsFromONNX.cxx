@@ -29,6 +29,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
 #include "input_models/references/MaxPool1d.ref.hxx"
 #include "input_models/references/MaxPool2d.ref.hxx"
+#include "input_models/references/MaxPool2d_CeilMode.ref.hxx"
 #include "input_models/references/MaxPool3d.ref.hxx"
 #include "input_models/references/Max.ref.hxx"
 #include "input_models/references/MaxMultidirectionalBroadcast.ref.hxx"
@@ -802,6 +803,24 @@ TEST(ONNX, MaxPool2d){
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 
+}
+
+TEST(ONNX, MaxPool2d_CeilMode)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // 1x1x5x5 input: values 0..24; MaxPool kernel=2x2 stride=2 ceil_mode=1 -> 1x1x3x3 output
+   std::vector<float> input(25);
+   for (int i = 0; i < 25; i++)
+      input[i] = static_cast<float>(i);
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "MaxPool2d_CeilMode", input);
+   EXPECT_EQ(output.size(), sizeof(MaxPool2d_CeilMode_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = MaxPool2d_CeilMode_ExpectedOutput::output;
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
 }
 
 TEST(ONNX, MaxPool3d){
