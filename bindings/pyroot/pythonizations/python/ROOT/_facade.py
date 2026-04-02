@@ -43,6 +43,86 @@ class _gROOTWrapper(object):
         return setattr(self._gROOT, name, value)
 
 
+class TDirectoryPythonAdapter:
+    """Class analogous to the `ROOT::Internal::TDirectoryAtomicAdapter` on the
+    C++ side, implementing the semantics that is expected from a
+    `TDirectory *&` to the global directory (which is what gDirectory was
+    originally), but in a thread-safe way.
+
+    On the C++ side the following trick is used in TDirectory.h to achieve this
+    We're re-implementing the expected semantics in Python, because the way how
+    it is implemented in C++ is too contrived for it to get Pythonized
+    automatically:
+
+    ```C++
+    #define gDirectory (::ROOT::Internal::TDirectoryAtomicAdapter{})
+    ```
+
+    So in C++, gDirectory is an adapter object that lazily converts to current
+    TDirectory when you use it. It's implemented as as a preprocessor macro,
+    which is then pretending to be a `TDirectory *` to the ROOT reflection system
+    in TROOT.cxx:
+
+    ```C++
+    TGlobalMappedFunction::MakeFunctor("gDirectory", "TDirectory*", TDirectory::CurrentDirectory);
+    ```
+
+    This is quite hacky, and it is ambiguous to the the dynamic Python bindings
+    layer at which point the implicit conversion to the current directory
+    pointer should happen.
+
+    For this reason, it's better to re-implement a specific adapter for Python,
+    which skips all of that.
+
+    Note: the C++ adapter also implements an assignment operator (operator=),
+    but since this concept doesn't exist in Python outside data member
+    re-assignment, it is not implemented here.
+    """
+
+    def _current_directory(self):
+        import ROOT
+
+        return ROOT.TDirectory.CurrentDirectory().load()
+
+    def __getattr__(self, name):
+        return getattr(self._current_directory(), name)
+
+    def __str__(self):
+        return str(self._current_directory())
+
+    def __repr__(self):
+        return repr(self._current_directory())
+
+    def __eq__(self, other):
+        import ROOT
+
+        if other is self:
+            return True
+        cd = self._current_directory()
+        if cd == ROOT.nullptr:
+            return other == ROOT.nullptr
+        return cd.IsEqual(other)
+
+    def __ne__(self, other):
+        import ROOT
+
+        if other is self:
+            return False
+        cd = self._current_directory()
+        if cd == ROOT.nullptr:
+            return other != ROOT.nullptr
+        return not cd.IsEqual(other)
+
+    def __bool__(self):
+        import ROOT
+
+        return self._current_directory() != ROOT.nullptr
+
+    def __cast_cpp__(self):
+        """Casting to TDirectory for use in C++ functions."""
+        return self._current_directory()
+
+
 def _subimport(name):
     # type: (str) -> types.ModuleType
     """
@@ -70,6 +150,10 @@ class ROOTFacade(types.ModuleType):
 
         # Inject gROOT global
         self.gROOT = _gROOTWrapper(self)
+
+        # Inject the gDirectory adapter, mimicking the behavior of the
+        # gDirectory preprocessor macro on the C++ side
+        self.gDirectory = TDirectoryPythonAdapter()
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
@@ -208,7 +292,7 @@ class ROOTFacade(types.ModuleType):
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
             self.app.init_graphics(self._cppyy.gbl.gEnv, self._cppyy.gbl.gSystem)
 
-        # The automatic conversion of ordinary obejcts to smart pointers is
+        # The automatic conversion of ordinary objects to smart pointers is
         # disabled for ROOT because it can cause trouble with overload
         # resolution. If a function has overloads for both ordinary objects and
         # smart pointers, then the implicit conversion to smart pointers can

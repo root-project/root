@@ -16,15 +16,15 @@ class TContextContextManager(unittest.TestCase):
         Check status of gDirectory with default constructor.
         """
         filename = "TContextContextManager_test_default_constructor.root"
-        self.assertIs(ROOT.gDirectory, ROOT.gROOT)
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
 
         with TDirectory.TContext():
             # Create a file to change gDirectory
             testfile = ROOT.TFile(filename, "recreate")
-            self.assertIs(ROOT.gDirectory, testfile)
+            self.assertEqual(ROOT.gDirectory, testfile)
             testfile.Close()
 
-        self.assertIs(ROOT.gDirectory, ROOT.gROOT)
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
         os.remove(filename)
 
     def constructor_onearg(self):
@@ -35,12 +35,12 @@ class TContextContextManager(unittest.TestCase):
 
         file0 = ROOT.TFile(filenames[0], "recreate")
         file1 = ROOT.TFile(filenames[1], "recreate")
-        self.assertIs(ROOT.gDirectory, file1)
+        self.assertEqual(ROOT.gDirectory, file1)
 
         with TDirectory.TContext(file0):
-            self.assertIs(ROOT.gDirectory, file0)
+            self.assertEqual(ROOT.gDirectory, file0)
 
-        self.assertIs(ROOT.gDirectory, file1)
+        self.assertEqual(ROOT.gDirectory, file1)
         file0.Close()
         file1.Close()
         for filename in filenames:
@@ -55,12 +55,12 @@ class TContextContextManager(unittest.TestCase):
         file0 = ROOT.TFile(filenames[0], "recreate")
         file1 = ROOT.TFile(filenames[1], "recreate")
         file2 = ROOT.TFile(filenames[2], "recreate")
-        self.assertIs(ROOT.gDirectory, file2)
+        self.assertEqual(ROOT.gDirectory, file2)
 
         with TDirectory.TContext(file0, file1):
-            self.assertIs(ROOT.gDirectory, file1)
+            self.assertEqual(ROOT.gDirectory, file1)
 
-        self.assertIs(ROOT.gDirectory, file0)
+        self.assertEqual(ROOT.gDirectory, file0)
         file0.Close()
         file1.Close()
         file2.Close()
