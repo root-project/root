@@ -49,6 +49,11 @@ void ROOT::Deprecated::TSocketFriend::SetSecContext(TSocket &s, TSecContext *ctx
    s.fSecContext = ctx;
 }
 
+ROOT::Deprecated::TSecContext *ROOT::Deprecated::TSocketFriend::GetSecContext(const TSocket &s)
+{
+   return s.fSecContext;
+}
+
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;

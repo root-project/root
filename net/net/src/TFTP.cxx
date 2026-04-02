@@ -114,7 +114,7 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    }
 
    fProtocol = fSocket->GetRemoteProtocol();
-   fUser = fSocket->GetSecContext()->GetUser();
+   fUser = ROOT::Deprecated::TSocketFriend::GetSecContext(*fSocket)->GetUser();
 
    fHost       = url.GetHost();
    fPort       = url.GetPort();
@@ -160,9 +160,10 @@ void TFTP::Print(Option_t *) const
    Printf("Local host:           %s", gSystem->HostName());
    Printf("Remote host:          %s [%d]", fHost.Data(), fPort);
    Printf("Remote user:          %s", fUser.Data());
-   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*fSocket))
+   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*fSocket)) {
       Printf("Security context:     %s",
-                                      fSocket->GetSecContext()->AsString(secCont));
+             ROOT::Deprecated::TSocketFriend::GetSecContext(*fSocket)->AsString(secCont));
+   }
    Printf("Rootd protocol vers.: %d", fSocket->GetRemoteProtocol());
    if (fParallel > 1) {
       Printf("Parallel sockets:     %d", fParallel);

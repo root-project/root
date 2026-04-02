@@ -138,8 +138,10 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
    }
 
    // Transmit authentication information, if any
-   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*setupSocket))
-      ROOT::Deprecated::TSocketFriend::SetSecContext(*newPSocket, setupSocket->GetSecContext());
+   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*setupSocket)) {
+      ROOT::Deprecated::TSocketFriend::SetSecContext(*newPSocket,
+                                                     ROOT::Deprecated::TSocketFriend::GetSecContext(*setupSocket));
+   }
 
    // clean up, if needed
    if (size > 0)
