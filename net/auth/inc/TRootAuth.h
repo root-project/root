@@ -25,10 +25,11 @@
 #include "TVirtualAuth.h"
 #include "Rtypes.h"
 
-class TSecContext;
 class TSocket;
 
 namespace ROOT::Deprecated {
+
+class TSecContext;
 
 class TRootAuth : public TVirtualAuth {
 

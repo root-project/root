@@ -51,8 +51,8 @@ protected:
    Int_t         fCompress;       // Compression level and algorithm
    TInetAddress  fLocalAddress;   // local internet address and port #
    Int_t         fRemoteProtocol; // protocol of remote daemon
-   TSecContext  *fSecContext;     // after a successful Authenticate call
-                                  // points to related security context
+   ROOT::Deprecated::TSecContext  *fSecContext; // after a successful Authenticate call
+                                                // points to related security context
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
@@ -110,7 +110,7 @@ public:
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
-   TSecContext          *GetSecContext() const { return fSecContext; }
+   ROOT::Deprecated::TSecContext *GetSecContext() const { return fSecContext; }
 
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
    const char           *GetUrl() const { return fUrl; }
@@ -135,7 +135,7 @@ public:
    void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
-   void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
+   void                  SetSecContext(ROOT::Deprecated::TSecContext *ctx) { fSecContext = ctx; }
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }

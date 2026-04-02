@@ -43,7 +43,7 @@
 #pragma link C++ class ROOT::Deprecated::TGridJobStatus+;
 #pragma link C++ class ROOT::Deprecated::TGridJobStatusList+;
 #pragma link C++ class ROOT::Deprecated::TGridCollection+;
-#pragma link C++ class TSecContext;
+#pragma link C++ class ROOT::Deprecated::TSecContext;
 #pragma link C++ class ROOT::Deprecated::TSecContextCleanup;
 #pragma link C++ class TFileStager;
 #pragma link C++ class TApplicationRemote;

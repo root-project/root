@@ -30,8 +30,8 @@
 R__EXTERN const TDatime kROOTTZERO;
 
 namespace ROOT::Deprecated {
+
 class TRootSecContext;
-}
 
 class TSecContext : public TObject {
 
@@ -94,8 +94,6 @@ public:
    ClassDefOverride(TSecContext,0)  // Class providing host specific authentication information
 };
 
-namespace ROOT::Deprecated {
-
 //
 // TSecContextCleanup
 //
@@ -148,6 +146,7 @@ public:
 
 } // namespace ROOT::Deprecated
 
+using TSecContext R__DEPRECATED(6, 42, "TSecContext is deprecated") = ROOT::Deprecated::TSecContext;
 using TSecContextCleanup R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TSecContextCleanup;
 using TPwdCtx R__DEPRECATED(6, 42, "TPwdCtx is deprecated") = ROOT::Deprecated::TPwdCtx;
 
