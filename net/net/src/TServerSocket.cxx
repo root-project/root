@@ -34,11 +34,11 @@ to the requester. The actual work is done via the TSystem class
 #include "TVirtualMutex.h"
 
 // Hook to server authentication wrapper
-SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
-SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
+ROOT::Deprecated::SrvAuth_t TServerSocket::fgSrvAuthHook = 0;
+ROOT::Deprecated::SrvClup_t TServerSocket::fgSrvAuthClupHook = 0;
 
 // Defaul options for accept
-UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
+UChar_t TServerSocket::fgAcceptOpt = ROOT::Deprecated::kSrvNoAuth;
 
 TVirtualMutex *gSrvAuthenticateMutex = 0;
 
@@ -53,8 +53,8 @@ static void SetAuthOpt(UChar_t &opt, UChar_t mod)
 
    if (!mod) return;
 
-   if ((mod & kSrvAuth))   opt |= kSrvAuth;
-   if ((mod & kSrvNoAuth)) opt &= ~kSrvAuth;
+   if ((mod & ROOT::Deprecated::kSrvAuth))   opt |= ROOT::Deprecated::kSrvAuth;
+   if ((mod & ROOT::Deprecated::kSrvNoAuth)) opt &= ~ROOT::Deprecated::kSrvAuth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ static void SetAuthOpt(UChar_t &opt, UChar_t mod)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 /// Use IsValid() to check the validity of the
 /// server socket. In case server socket is not valid use GetErrorCode()
@@ -130,7 +130,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
-/// The socketBindOption parameter allows to specify how the socket will be 
+/// The socketBindOption parameter allows to specify how the socket will be
 /// bound. See the documentation of ESocketBindOption for the details.
 /// Use IsValid() to check the validity of the
 /// server socket. In case server socket is not valid use GetErrorCode()
@@ -193,20 +193,6 @@ TServerSocket::~TServerSocket()
 /// any open sockets are properly closed on program termination.
 /// In case of error 0 is returned and in case non-blocking I/O is
 /// enabled and no connections are available -1 is returned.
-///
-/// The opt can be used to require client authentication; valid options are
-///
-///    kSrvAuth   =   require client authentication
-///    kSrvNoAuth =   force no client authentication
-///
-/// Example: use Opt = kSrvAuth to require client authentication.
-///
-/// Default options are taken from fgAcceptOpt and are initially
-/// equivalent to kSrvNoAuth; they can be changed with the static
-/// method TServerSocket::SetAcceptOptions(Opt).
-/// The active defaults can be visualized using the static method
-/// TServerSocket::ShowAcceptOptions().
-///
 
 TSocket *TServerSocket::Accept(UChar_t opt)
 {
@@ -221,7 +207,7 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    // Parse Opt
    UChar_t acceptOpt = fgAcceptOpt;
    SetAuthOpt(acceptOpt, opt);
-   Bool_t auth = (Bool_t)(acceptOpt & kSrvAuth);
+   Bool_t auth = (Bool_t)(acceptOpt & ROOT::Deprecated::kSrvAuth);
 
    socket->fSocket  = soc;
    socket->fSecContext = 0;
@@ -297,7 +283,7 @@ void TServerSocket::SetAcceptOptions(UChar_t mod)
 
 void TServerSocket::ShowAcceptOptions()
 {
-   ::Info("ShowAcceptOptions", "Use authentication: %s", (fgAcceptOpt & kSrvAuth) ? "yes" : "no");
+   ::Info("ShowAcceptOptions", "Use authentication: %s", (fgAcceptOpt & ROOT::Deprecated::kSrvAuth) ? "yes" : "no");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +313,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       // Locate SrvAuthenticate
       Func_t f = gSystem->DynFindSymbol(srvlib,"SrvAuthenticate");
       if (f)
-         fgSrvAuthHook = (SrvAuth_t)(f);
+         fgSrvAuthHook = (ROOT::Deprecated::SrvAuth_t)(f);
       else {
          Error("Authenticate", "can't find SrvAuthenticate");
          return kFALSE;
@@ -336,7 +322,7 @@ Bool_t TServerSocket::Authenticate(TSocket *sock)
       // Locate SrvAuthCleanup
       f = gSystem->DynFindSymbol(srvlib,"SrvAuthCleanup");
       if (f)
-         fgSrvAuthClupHook = (SrvClup_t)(f);
+         fgSrvAuthClupHook = (ROOT::Deprecated::SrvClup_t)(f);
       else {
          Warning("Authenticate", "can't find SrvAuthCleanup");
       }

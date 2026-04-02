@@ -17,9 +17,6 @@
 #pragma link C++ global ROOT::Deprecated::gGrid;
 #pragma link C++ global gGridJobStatusList;
 
-#pragma link C++ global kSrvAuth;
-#pragma link C++ global kSrvNoAuth;
-
 #pragma link C++ class TServerSocket;
 #pragma link C++ class TSocket;
 #pragma link C++ class TPServerSocket;
