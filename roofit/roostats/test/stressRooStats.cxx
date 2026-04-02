@@ -77,7 +77,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
             std::cout << "stressRooStats ERROR: reference file must be local file in writing mode" << std::endl;
             return -1;
          }
-         fref = new TWebFile(refFile);
+         fref = TFile::Open(refFile);
       } else {
          fref = new TFile(refFile, writeRef ? "RECREATE" : "");
       }
