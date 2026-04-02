@@ -25,7 +25,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Init a TNetSystem instance to the remote rootd.
 
-TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
+ROOT::Deprecated::TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
 {
    fSystem = 0;
    if (url && strlen(url) > 0) {
@@ -38,7 +38,7 @@ TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-TNetFileStager::~TNetFileStager()
+ROOT::Deprecated::TNetFileStager::~TNetFileStager()
 {
    SafeDelete(fSystem);
    fPrefix = "";
@@ -47,7 +47,7 @@ TNetFileStager::~TNetFileStager()
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the file defined by 'path' is ready to be used.
 
-Bool_t TNetFileStager::IsStaged(const char *path)
+Bool_t ROOT::Deprecated::TNetFileStager::IsStaged(const char *path)
 {
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
@@ -68,7 +68,7 @@ Bool_t TNetFileStager::IsStaged(const char *path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Isolate prefix in url
 
-void TNetFileStager::GetPrefix(const char *url, TString &pfx)
+void ROOT::Deprecated::TNetFileStager::GetPrefix(const char *url, TString &pfx)
 {
    if (gDebug > 1)
       ::Info("TNetFileStager::GetPrefix", "enter: %s", url);
@@ -89,7 +89,7 @@ void TNetFileStager::GetPrefix(const char *url, TString &pfx)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print basic info about this stager
 
-void TNetFileStager::Print(Option_t *) const
+void ROOT::Deprecated::TNetFileStager::Print(Option_t *) const
 {
    Printf("+++ stager: %s  %s", GetName(), fPrefix.Data());
 }
@@ -98,7 +98,7 @@ void TNetFileStager::Print(Option_t *) const
 /// Get actual end-point url for a path
 /// Returns 0 in case of success and 1 if any error occurred
 
-Int_t TNetFileStager::Locate(const char *path, TString &eurl)
+Int_t ROOT::Deprecated::TNetFileStager::Locate(const char *path, TString &eurl)
 {
    if (!IsValid()) {
       GetPrefix(path, fPrefix);
@@ -122,7 +122,7 @@ Int_t TNetFileStager::Locate(const char *path, TString &eurl)
 /// Returns kTRUE if stager 's' is compatible with current stager.
 /// Avoids multiple instantiations of the potentially the same TNetSystem.
 
-Bool_t TNetFileStager::Matches(const char *s)
+Bool_t ROOT::Deprecated::TNetFileStager::Matches(const char *s)
 {
    if (IsValid()) {
       TString pfx;

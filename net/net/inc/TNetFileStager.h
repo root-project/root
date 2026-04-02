@@ -25,6 +25,8 @@
 class TCollection;
 class TNetSystem;
 
+namespace ROOT::Deprecated {
+
 class TNetFileStager : public TFileStager {
 
 private:
@@ -47,5 +49,9 @@ public:
 
    ClassDefOverride(TNetFileStager,0)  // Implementation for a 'rootd' backend
 };
+
+} // namespace ROOT::Deprecated
+
+using TNetFileStager R__DEPRECATED(6, 42, "TNetFileStager is deprecated") = ROOT::Deprecated::TNetFileStager;
 
 #endif
