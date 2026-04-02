@@ -25,7 +25,7 @@
 #pragma link C++ class TMonitor;
 #pragma link C++ class TNetFile;
 #pragma link C++ class ROOT::Deprecated::TNetFileStager;
-#pragma link C++ class TNetSystem;
+#pragma link C++ class ROOT::Deprecated::TNetSystem;
 #pragma link C++ class ROOT::Deprecated::TWebFile;
 #pragma link C++ class ROOT::Deprecated::TWebSystem;
 #pragma link C++ class TFTP;

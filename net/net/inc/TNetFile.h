@@ -81,6 +81,7 @@ public:
    ClassDefOverride(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
 
+namespace ROOT::Deprecated {
 
 class TNetSystem : public TSystem {
 
@@ -121,5 +122,9 @@ public:
 
    ClassDefOverride(TNetSystem,0)  // Directory handler for NetSystem
 };
+
+} // namespace ROOT::Deprecated
+
+using TNetSystem R__DEPRECATED(6, 42, "TNetSystem is deprecated") = ROOT::Deprecated::TNetSystem;
 
 #endif
