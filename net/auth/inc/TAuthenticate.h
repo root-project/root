@@ -38,9 +38,9 @@ struct R__rsa_KEY; // opaque replacement for rsa_KEY
 struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
 struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
 
-R__EXTERN TVirtualMutex *gAuthenticateMutex;
-
 namespace ROOT::Deprecated {
+
+R__EXTERN TVirtualMutex *gAuthenticateMutex;
 
 class TAuthenticate;
 class THostAuth;
@@ -214,6 +214,8 @@ public:
 };
 
 } // namespace ROOT::Deprecated
+
+R__EXTERN TVirtualMutex *&gAuthenticateMutex R__DEPRECATED(6, 42, "the RootAuth library is deprecated");
 
 using CheckSecCtx_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::CheckSecCtx_t;
 using GlobusAuth_t R__DEPRECATED(6, 42, "the RootAuth library is deprecated") = ROOT::Deprecated::GlobusAuth_t;

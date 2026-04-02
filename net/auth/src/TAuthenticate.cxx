@@ -118,9 +118,11 @@ Int_t           TAuthenticate::fgAuthTO = -2;       // Timeout value
 // ID of the main thread as unique identifier
 Int_t           TAuthenticate::fgProcessID = -1;
 
+TVirtualMutex *gAuthenticateMutex = 0;
+
 } // namespace ROOT::Deprecated
 
-TVirtualMutex *gAuthenticateMutex = 0;
+TVirtualMutex *&gAuthenticateMutex = ROOT::Deprecated::gAuthenticateMutex;
 
 // Standard version of Sec Context match checking
 static Int_t StdCheckSecCtx(const char *, ROOT::Deprecated::TRootSecContext *);
