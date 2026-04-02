@@ -110,12 +110,20 @@ private:
 
    mutable std::vector<TPoint> fCircle;
 
+   Size_t fMarkerSize;
+   Width_t fMarkerWidth;
+   Bool_t fSetMarker = kFALSE;
+
    enum {
       kSmallCirclePts = 80,
       kLargeCirclePts = 150
    };
 
 public:
+   void SetMarkerSizeWidth(Size_t size, Width_t width);
+   Size_t GetMarkerSize() const;
+   Width_t GetMarkerWidth() const;
+
    //Each function draw n markers.
    void DrawDot(UInt_t n, const TPoint *xy)const;
    void DrawPlus(UInt_t n, const TPoint *xy)const;

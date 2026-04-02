@@ -641,8 +641,11 @@ void TGLPadPainter::DrawPolyMarker()
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
+
    const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetAttMarker().GetMarkerStyle())));
    glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
+
+   fMarker.SetMarkerSizeWidth(GetAttMarker().GetMarkerSize(), w);
 
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = TAttMarker::GetMarkerStyleBase(GetAttMarker().GetMarkerStyle());
@@ -781,7 +784,7 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
    glMatrixMode(GL_MODELVIEW);
 
    Float_t rgba[4] = {};
-   Rgl::Pad::ExtractRGBA(gVirtualX->GetTextColor(), rgba);
+   Rgl::Pad::ExtractRGBA(GetAttText().GetTextColor(), rgba);
    glColor4fv(rgba);
 
    //10 is the first valid font index.
@@ -789,13 +792,15 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
    //shift - is the shift to access "extended" fonts.
    const Int_t shift = TGLFontManager::GetExtendedFontStartIndex();
 
-   Int_t fontIndex = TMath::Max(Short_t(10), gVirtualX->GetTextFont());
+   Int_t fontIndex = TMath::Max(Short_t(10), GetAttText().GetTextFont());
    if (fontIndex / 10 + shift > TGLFontManager::GetFontFileArray()->GetEntries())
       fontIndex = 20 + shift * 10;
    else
       fontIndex += shift * 10;
 
-   fFM.RegisterFont(TMath::Max(Int_t(gVirtualX->GetTextSize()) - 1, 10),//kTexture does not work if size < 10.
+   fF.SetTextAlign(GetAttText().GetTextAlign());
+
+   fFM.RegisterFont(TMath::Max(Int_t(GetAttText().GetTextSize()) - 1, 10),//kTexture does not work if size < 10.
                                TGLFontManager::GetFontNameFromId(fontIndex),
                                TGLFont::kTexture, fF);
    fF.PreRender();
@@ -819,7 +824,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
 {
    if (fLocked) return;
 
-   if (!gVirtualX->GetTextSize())
+   if (!GetAttText().GetTextSize())
       return;
 
    DrawTextHelper(x, y, text, mode);
@@ -835,7 +840,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextM
 {
    if (fLocked) return;
 
-   if (!gVirtualX->GetTextSize())
+   if (!GetAttText().GetTextSize())
       return;
 
    DrawTextHelper(x, y, text, mode);

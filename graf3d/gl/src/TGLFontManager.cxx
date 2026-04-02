@@ -194,69 +194,37 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
    */
    const Double_t dx = urx - llx, dy = ury - lly;
    Double_t xc = 0., yc = 0.;
-   const UInt_t align = gVirtualX->GetTextAlign();
 
-   //Here's the nice X11 bullshido: you call gVirtualX->SetTextAlign(11),
+   // if align was not set before - use value from gVirtualX
+   const UInt_t align = fTextAlign ? fTextAlign : gVirtualX->GetTextAlign();
+
+   //Timur: Here's the nice X11 bullshido: you call gVirtualX->SetTextAlign(11),
    //later gVirtualX->GetTextAling() will give you 7. Brilliant!
    //But with Cocoa you'll have 11. As it should be, of course.
+   //Sergey: problem with gVirtualX solved, now all platforms works same way
 
-   if (gVirtualX->InheritsFrom("TGCocoa") || true) {
-      const UInt_t hAlign = UInt_t(align / 10);
-      switch (hAlign) {
-      case 1:
-         xc = 0.5 * dx;
-         break;
-      case 2:
-         break;
-      case 3:
-         xc = -0.5 * dy;
-         break;
-      }
+   const UInt_t hAlign = UInt_t(align / 10);
+   const UInt_t vAlign = UInt_t(align % 10);
+   switch (hAlign) {
+   case 1:
+      xc = 0.5 * dx;
+      break;
+   case 2:
+      break;
+   case 3:
+      xc = -0.5 * dy;
+      break;
+   }
 
-      const UInt_t vAlign = UInt_t(align % 10);
-      switch (vAlign) {
-      case 1:
-         yc = 0.5 * dy;
-         break;
-      case 2:
-         break;
-      case 3:
-         yc = -0.5 * dy;
-         break;
-      }
-   } else {
-      switch (align) {
-      case 7:
-         xc += 0.5 * dx;
-         yc += 0.5 * dy;
-         break;
-      case 8:
-         yc += 0.5 * dy;
-         break;
-      case 9:
-         xc -= 0.5 * dx;
-         yc += 0.5 * dy;
-         break;
-      case 4:
-         xc += 0.5 * dx;
-         break;
-      case 5:
-         break;
-      case 6:
-         xc = -0.5 * dx;
-         break;
-      case 1:
-         xc += 0.5 * dx;
-         yc -= 0.5 * dy;
-         break;
-      case 2:
-         yc -= 0.5 * dy;
-         break;
-      case 3:
-         xc -= 0.5 * dx;
-         yc -= 0.5 * dy;
-         break;
-      }
+   switch (vAlign) {
+   case 1:
+      yc = 0.5 * dy;
+      break;
+   case 2:
+      break;
+   case 3:
+      yc = -0.5 * dy;
+      break;
    }
 
    glTranslated(x, y, 0.);
