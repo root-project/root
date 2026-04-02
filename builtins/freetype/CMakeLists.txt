@@ -11,7 +11,7 @@ set(FREETYPE_HASH "e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c89
 
 set(FREETYPE_PREFIX ${CMAKE_BINARY_DIR}/builtins/FREETYPE-prefix)
 
-# The CMake of FreeType will call the static library differently if the CMAKE_BUILD_TYPE is Debug, bu adding a 
+# The CMake of FreeType will call the static library differently if the CMAKE_BUILD_TYPE is Debug, by adding a
 # "d" to the name of the file. This is unusual if compared to the behaviour of other ROOT builtins, where the name
 # changes only between Linux/macOS and Windows.
 if(MSVC)
@@ -60,15 +60,23 @@ ExternalProject_Add(
     TIMEOUT 600
 )
 
+set(incdir ${FREETYPE_PREFIX}/include/freetype2)
+file(MAKE_DIRECTORY "${incdir}")
+
 add_library(Freetype::Freetype IMPORTED STATIC GLOBAL)
 
-# Set the canonical output of find_package according to
-# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
-set(FREETYPE_INCLUDE_DIRS ${FREETYPE_PREFIX}/include/freetype2 PARENT_SCOPE)
-set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY} PARENT_SCOPE)
-set(Freetype_FOUND TRUE PARENT_SCOPE)
-set(Freetype_VERSION ${FREETYPE_VERSION} PARENT_SCOPE)
+set_target_properties(Freetype::Freetype PROPERTIES
+    IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+    IMPORTED_LOCATION "${FREETYPE_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${incdir}")
 
 if(builtin_zlib)
     add_dependencies(BUILTIN_FREETYPE BUILTIN_ZLIB)
 endif()
+
+# Set the canonical output of find_package according to
+# https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#standard-variable-names
+set(FREETYPE_INCLUDE_DIRS ${incdir} PARENT_SCOPE)
+set(FREETYPE_LIBRARIES ${FREETYPE_LIBRARY} PARENT_SCOPE)
+set(Freetype_FOUND TRUE PARENT_SCOPE)
+set(Freetype_VERSION ${FREETYPE_VERSION} PARENT_SCOPE)
