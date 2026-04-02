@@ -32,7 +32,6 @@ TUnixSystem or TWinNTSystem).
 #include "TString.h"
 #include "TSystem.h"
 #include "TUrl.h"
-#include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
 
