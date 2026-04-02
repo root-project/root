@@ -114,7 +114,7 @@ if(asimage)
   ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
   ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
   # We cannot PNG here because while searching PNG, CMake will also find ZLIB.
-  # If found, CMake will define the default variables and target: 
+  # If found, CMake will define the default variables and target:
   # see https://cmake.org/cmake/help/latest/module/FindZLIB.html).
   # For this reason, the check has to be put below, after ZLIB is searched for.
   #ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
@@ -252,9 +252,7 @@ if(NOT builtin_freetype)
     find_package(Freetype REQUIRED)
   else()
     find_package(Freetype)
-    if(FREETYPE_FOUND)
-      set(FREETYPE_INCLUDE_DIR ${FREETYPE_INCLUDE_DIR_freetype2})
-    else()
+    if(NOT FREETYPE_FOUND)
       message(STATUS "FreeType not found. Switching on builtin_freetype option")
       set(builtin_freetype ON CACHE BOOL "Enabled because FreeType not found (${builtin_freetype_description})" FORCE)
     endif()
