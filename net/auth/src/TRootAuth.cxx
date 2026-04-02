@@ -76,7 +76,7 @@ ROOT::Deprecated::TRootAuth::Authenticate(TSocket *s, const char *host, const ch
    } else {
       // Search pointer to relevant TSecContext
       ctx = auth->GetSecContext();
-      s->SetSecContext(ctx);
+      ROOT::Deprecated::TSocketFriend::SetSecContext(*s, ctx);
    }
    // Cleanup
    delete auth;

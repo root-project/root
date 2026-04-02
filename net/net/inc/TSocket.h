@@ -40,6 +40,7 @@ class TSocket;
 namespace ROOT::Deprecated {
 struct TSocketFriend {
    static Bool_t IsAuthenticated(const TSocket &s);
+   static void SetSecContext(TSocket &s, TSecContext *ctx);
 };
 } // namespace ROOT::Deprecated
 
@@ -163,7 +164,9 @@ public:
    void                  SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
-   void                  SetSecContext(ROOT::Deprecated::TSecContext *ctx) { fSecContext = ctx; }
+   void                  SetSecContext(ROOT::Deprecated::TSecContext *ctx)
+      R__DEPRECATED(6, 42, "TSocket::SetSecContext is deprecated")
+      { ROOT::Deprecated::TSocketFriend::SetSecContext(*this, ctx); }
    void                  SetService(const char *service) { fService = service; }
    void                  SetServType(Int_t st) { fServType = (EServiceType)st; }
    void                  SetUrl(const char *url) { fUrl = url; }
