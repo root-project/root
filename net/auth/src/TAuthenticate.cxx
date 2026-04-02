@@ -2151,7 +2151,7 @@ void ROOT::Deprecated::TAuthenticate::Show(Option_t *opt)
    if (sopt.Contains("s", TString::kIgnoreCase)) {
 
       // Print established security contexts
-      TIter next(gROOT->GetListOfSecContexts());
+      TIter next(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
       TSecContext *sc = 0;
       while ((sc = (TSecContext *)next()))
          sc->Print();
@@ -2207,7 +2207,7 @@ Int_t ROOT::Deprecated::TAuthenticate::AuthExists(TString username, Int_t method
 
    // If nothing found, try the all list
    if (!secctx) {
-      next = TIter(gROOT->GetListOfSecContexts());
+      next = TIter(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
       while ((secctx = (TRootSecContext *)next())) {
          if (secctx->GetMethod() == method) {
             if (fRemote == secctx->GetHost()) {
