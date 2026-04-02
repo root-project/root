@@ -70,7 +70,8 @@ to be super user).
 /// for a description of the options and other arguments see Create().
 /// Normally a TNetFile is created via TFile::Open().
 
-TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress, Int_t netopt)
+ROOT::Deprecated::TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress,
+                                     Int_t netopt)
    : TFile(url, strstr(option, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "NET_WITHOUT_GLOBALREGISTRATION" : "NET",
            ftitle, compress),
      fEndpointUrl(url)
@@ -84,7 +85,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
 /// to initialize the TFile base class but not open a connection at this
 /// moment.
 
-TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
+ROOT::Deprecated::TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
    : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
 {
    fSocket    = 0;
@@ -96,7 +97,7 @@ TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// TNetFile dtor. Send close message and close socket.
 
-TNetFile::~TNetFile()
+ROOT::Deprecated::TNetFile::~TNetFile()
 {
    Close();
 }
@@ -104,7 +105,7 @@ TNetFile::~TNetFile()
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a remote file. Requires fOption to be set correctly.
 
-Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
+Int_t ROOT::Deprecated::TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 {
    if (!fSocket) {
 
@@ -139,7 +140,7 @@ Int_t TNetFile::SysOpen(const char * /*file*/, Int_t /*flags*/, UInt_t /*mode*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Close currently open file.
 
-Int_t TNetFile::SysClose(Int_t /*fd*/)
+Int_t ROOT::Deprecated::TNetFile::SysClose(Int_t /*fd*/)
 {
    if (fSocket)
       fSocket->Send(kROOTD_CLOSE);
@@ -151,7 +152,7 @@ Int_t TNetFile::SysClose(Int_t /*fd*/)
 /// Return file stat information. The interface and return value is
 /// identical to TSystem::GetPathInfo().
 
-Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime)
+Int_t ROOT::Deprecated::TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime)
 {
    if (fProtocol < 3) return 1;
 
@@ -203,7 +204,7 @@ Int_t TNetFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags, Long_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Close remote file.
 
-void TNetFile::Close(Option_t *opt)
+void ROOT::Deprecated::TNetFile::Close(Option_t *opt)
 {
    if (!fSocket) return;
 
@@ -220,7 +221,7 @@ void TNetFile::Close(Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Flush file to disk.
 
-void TNetFile::Flush()
+void ROOT::Deprecated::TNetFile::Flush()
 {
    FlushWriteCache();
 
@@ -231,7 +232,7 @@ void TNetFile::Flush()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TNetFile object.
 
-void TNetFile::Init(Bool_t create)
+void ROOT::Deprecated::TNetFile::Init(Bool_t create)
 {
    Seek(0);
 
@@ -242,7 +243,7 @@ void TNetFile::Init(Bool_t create)
 ////////////////////////////////////////////////////////////////////////////////
 /// Retruns kTRUE if file is open, kFALSE otherwise.
 
-Bool_t TNetFile::IsOpen() const
+Bool_t ROOT::Deprecated::TNetFile::IsOpen() const
 {
    return fSocket == 0 ? kFALSE : kTRUE;
 }
@@ -250,7 +251,7 @@ Bool_t TNetFile::IsOpen() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print some info about the net file.
 
-void TNetFile::Print(Option_t *) const
+void ROOT::Deprecated::TNetFile::Print(Option_t *) const
 {
    const char *fname = fUrl.GetFile();
    Printf("URL:           %s",   ((TUrl*)&fUrl)->GetUrl());
@@ -265,7 +266,7 @@ void TNetFile::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print error string depending on error code.
 
-void TNetFile::PrintError(const char *where, Int_t err)
+void ROOT::Deprecated::TNetFile::PrintError(const char *where, Int_t err)
 {
    fErrorCode = err;
    Error(where, "%s", gRootdErrStr[err]);
@@ -280,7 +281,7 @@ void TNetFile::PrintError(const char *where, Int_t err)
 /// and -1 in case of failure, in which case the file cannot be used
 /// anymore.
 
-Int_t TNetFile::ReOpen(Option_t *mode)
+Int_t ROOT::Deprecated::TNetFile::ReOpen(Option_t *mode)
 {
    if (fProtocol < 7) {
       Error("ReOpen", "operation not supported by remote rootd (protocol = %d)",
@@ -295,7 +296,7 @@ Int_t TNetFile::ReOpen(Option_t *mode)
 /// Read specified byte range from remote file via rootd daemon.
 /// Returns kTRUE in case of error.
 
-Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
+Bool_t ROOT::Deprecated::TNetFile::ReadBuffer(char *buf, Int_t len)
 {
    if (!fSocket) return kTRUE;
    if (len == 0)
@@ -368,7 +369,7 @@ end:
 /// Read specified byte range from remote file via rootd daemon.
 /// Returns kTRUE in case of error.
 
-Bool_t TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Bool_t ROOT::Deprecated::TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    SetOffset(pos);
    return ReadBuffer(buf, len);
@@ -379,7 +380,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 /// buffer.
 /// Returns kTRUE in case of error.
 
-Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+Bool_t ROOT::Deprecated::TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    if (!fSocket) return kTRUE;
 
@@ -483,7 +484,7 @@ end:
 /// Write specified byte range to remote file via rootd daemon.
 /// Returns kTRUE in case of error.
 
-Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t ROOT::Deprecated::TNetFile::WriteBuffer(const char *buf, Int_t len)
 {
    if (!fSocket || !fWritable) return kTRUE;
 
@@ -541,7 +542,7 @@ end:
 /// Return status from rootd server and message kind. Returns -1 in
 /// case of error otherwise 8 (sizeof 2 words, status and kind).
 
-Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
+Int_t ROOT::Deprecated::TNetFile::Recv(Int_t &status, EMessageTypes &kind)
 {
    kind   = kROOTD_ERR;
    status = 0;
@@ -557,7 +558,7 @@ Int_t TNetFile::Recv(Int_t &status, EMessageTypes &kind)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set position from where to start reading.
 
-void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
+void ROOT::Deprecated::TNetFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    SetOffset(offset, pos);
 }
@@ -565,9 +566,9 @@ void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect to remote rootd server.
 
-void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
-                             Int_t tcpwindowsize, Bool_t forceOpen,
-                             Bool_t forceRead)
+void ROOT::Deprecated::TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
+                                               Int_t tcpwindowsize, Bool_t forceOpen,
+                                               Bool_t forceRead)
 {
    TString fn = fUrl.GetFile();
 
@@ -654,7 +655,7 @@ zombie:
 /// For a description of the option and other arguments see the TFile ctor.
 /// The preferred interface to this constructor is via TFile::Open().
 
-void TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
+void ROOT::Deprecated::TNetFile::Create(const char * /*url*/, Option_t *option, Int_t netopt)
 {
    Int_t tcpwindowsize = 65535;
 
@@ -743,7 +744,7 @@ zombie:
 ///    TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
 /// for details about the arguments.
 
-void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
+void ROOT::Deprecated::TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 {
    // Import socket
    fSocket = s;
@@ -756,7 +757,7 @@ void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
 /// Return kTRUE if 'url' matches the coordinates of this file.
 /// Check the full URL, including port and FQDN.
 
-Bool_t TNetFile::Matches(const char *url)
+Bool_t ROOT::Deprecated::TNetFile::Matches(const char *url)
 {
    // Run standard check on fUrl, first
    Bool_t rc = TFile::Matches(url);

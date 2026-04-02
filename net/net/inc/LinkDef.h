@@ -23,7 +23,7 @@
 #pragma link C++ class TPSocket;
 #pragma link C++ class TMessage;
 #pragma link C++ class TMonitor;
-#pragma link C++ class TNetFile;
+#pragma link C++ class ROOT::Deprecated::TNetFile;
 #pragma link C++ class ROOT::Deprecated::TNetFileStager;
 #pragma link C++ class ROOT::Deprecated::TNetSystem;
 #pragma link C++ class ROOT::Deprecated::TWebFile;

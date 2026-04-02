@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 //         Read case
    if (read) {
       if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root");
+         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root");
       } else
          hfile = new TFile(filename);
       TTree *tree = (TTree*)hfile->Get("T");
@@ -187,7 +187,8 @@ int main(int argc, char **argv)
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
       if (netf) {
-         hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
+         hfile = new ROOT::Deprecated::TNetFile("root://localhost/root/test/EventNet.root","RECREATE",
+                                                "TTree benchmark ROOT file");
       } else
          hfile = new TFile(filename,"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
