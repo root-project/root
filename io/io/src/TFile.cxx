@@ -13,15 +13,35 @@
 \file TFile.cxx
 \class TFile
 \ingroup IO
-\brief A ROOT file is an on-disk file, usually with extension .root, that stores objects in a file-system-like logical structure, possibly including subdirectory hierarchies.
+\brief A file, usually with extension .root, that stores data and code in the form of serialized objects in a
+file-system-like logical structure, possibly including subdirectory hierarchies.
+\note ROOT files contain data, and executable code, for example through TExec, TMacro, and TFormula instances. As for all files, **do not open ROOT files from an unknown origin!**
 \note See also \ref IO
 \note See also \ref rootio (or `io/doc/TFile` folder in your codebase)
+
+ROOT files a are an efficient mean to store C++ class instances, e.g. data, 
+both as individual objects, in a so called *row-wise fashion*, and in a 
+*so-called columnar fashion*. Also executable code can be stored in ROOT files,
+for example in the form of TMacro, TExec or TFormula instances, and the 
+related federation of classes.
+
+For example, a TCanvas or TPad instance may rely on TExec instances stored in
+their *list of executables* to obtain certain graphics effects: in this case,
+code will be executed upon drawing. A TH1 or a TGraph instance, as well as
+their multidimensional counterparts and derived classes, may also execute code
+upon drawing through TExec instances stored in their *list of functions*.
+Another example of code which is executable is represented by TFormula
+instances, that are the "computational workhorse" of function classes such as
+TF1, its multidimensional counterparts, and related classes. There, jitted C++
+code is executed for example upon evaluation, for example during fits or
+drawing operations, to obtain maximum runtime performance.
+
 
 <details>
 <summary>ROOT file data format specification</summary>
 
 A ROOT file is composed of a header, followed by consecutive data records
-(`TKey` instances) with a well defined format.
+(TKey instances) with a well defined format.
 
 The first data record starts at byte fBEGIN (currently set to kBEGIN).
 Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
@@ -225,18 +245,18 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 /// Option | Description
 /// -------|------------
-/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file is not opened.
-/// RECREATE                          | Create a new file, if the file already exists it will be overwritten.
-/// UPDATE                            | Open an existing file for writing. If no file exists, it is created.
-/// READ                              | Open an existing file for reading (default).
-/// NET                               | Used by derived remote file access classes, not a user callable option.
-/// WEB                               | Used by derived remote http access class, not a user callable option.
-/// READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a user callable option.
+/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file
+/// is not opened. RECREATE                          | Create a new file, if the file already exists it will be
+/// overwritten. UPDATE                            | Open an existing file for writing. If no file exists, it is
+/// created. READ                              | Open an existing file for reading (default). NET | Used by derived
+/// remote file access classes, not a user callable option. WEB                               | Used by derived remote
+/// http access class, not a user callable option. READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a
+/// user callable option.
 ///
 /// If option = "" (default), READ is assumed.
-/// \note Even in READ mode, if the file is the current directory `cd()`, and you create e.g. a new histogram in your code,
-/// the histogram will be appended (but not written) to this directory, and automatically deleted when closing the file.
-/// To avoid this behavior, call hist->SetDirectory(nullptr); after creating it.
+/// \note Even in READ mode, if the file is the current directory `cd()`, and you create e.g. a new histogram in your
+/// code, the histogram will be appended (but not written) to this directory, and automatically deleted when closing the
+/// file. To avoid this behavior, call hist->SetDirectory(nullptr); after creating it.
 ///
 /// The file can be specified as a URL of the form:
 ///
@@ -255,12 +275,12 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 ///     file.tar?filetype=raw
 ///
-/// This is convenient because the many remote file access plugins allow
-/// easy access to/from the many different mass storage systems.
+/// This can be convenient because the many file access plugins allow
+/// easy access to remote endpoints, e.g. mass storage pools.
 /// The title of the file (ftitle) will be shown by the ROOT browsers.
 /// A ROOT file (like a Unix file system) may contain objects and
-/// directories. There are no restrictions for the number of levels
-/// of directories.
+/// directories, as well as executable code. There are no restrictions
+/// for the number of levels of directories.
 /// A ROOT file is designed such that one can write in the file in pure
 /// sequential mode (case of BATCH jobs). In this case, the file may be
 /// read sequentially again without using the file index written
@@ -288,7 +308,9 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// The enumeration ROOT::RCompressionSetting::EAlgorithm associates each
 /// algorithm with a number. There is a utility function to help
 /// to set the value of compress. For example,
+///
 ///     ROOT::CompressionSettings(ROOT::kLZMA, 1)
+///
 /// will build an integer which will set the compression to use
 /// the LZMA algorithm and compression level 1.  These are defined
 /// in the header file <em>Compression.h</em>.
@@ -315,7 +337,7 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// }
 /// ~~~
 /// When opening the file, the system checks the validity of this directory.
-/// If something wrong is detected, an automatic Recovery is performed. In
+/// If something wrong is detected, an automatic recovery is performed. In
 /// this case, the file is scanned sequentially reading all logical blocks
 /// and attempting to rebuild a correct directory (see TFile::Recover).
 /// One can disable the automatic recovery procedure when reading one

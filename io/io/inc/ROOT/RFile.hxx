@@ -2,7 +2,7 @@
 /// \ingroup Base ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-03-19
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. Feedback
 /// is welcome!
 
 #ifndef ROOT7_RFile
@@ -188,6 +188,9 @@ public:
 \class ROOT::Experimental::RFile
 \ingroup RFile
 \brief An interface to read from, or write to, a ROOT file, as well as performing other common operations.
+
+Please refer to the documentation of TFile for the details related to how data and executable code can be stored
+in ROOT files.
 
 ## When and why should you use RFile
 
