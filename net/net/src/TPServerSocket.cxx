@@ -138,7 +138,7 @@ TPSocket *TPServerSocket::Accept(UChar_t Opt)
    }
 
    // Transmit authentication information, if any
-   if (setupSocket->IsAuthenticated())
+   if (ROOT::Deprecated::TSocketFriend::IsAuthenticated(*setupSocket))
       newPSocket->SetSecContext(setupSocket->GetSecContext());
 
    // clean up, if needed

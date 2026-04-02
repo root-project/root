@@ -582,7 +582,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    url += TString(Form("://%s@%s:%d",
                        fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
    fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket, stat);
-   if (!fSocket || (fSocket && !fSocket->IsAuthenticated())) {
+   if (!fSocket || (fSocket && !ROOT::Deprecated::TSocketFriend::IsAuthenticated(*fSocket))) {
       if (sSize > 1)
          Error("TNetFile", "can't open %d-stream connection to rootd on "
                "host %s at port %d", sSize, fUrl.GetHost(), fUrl.GetPort());
