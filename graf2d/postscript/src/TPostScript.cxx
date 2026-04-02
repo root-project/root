@@ -2129,7 +2129,6 @@ void TPostScript::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
    if (gStyle->GetFillColor() <= 0) cindex = 0;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2461,7 +2460,6 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 void TPostScript::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2552,7 +2550,6 @@ void TPostScript::SetLineWidth(Width_t linewidth)
 void TPostScript::SetMarkerColor( Color_t cindex )
 {
    fMarkerColor = cindex;
-   SetColor(Int_t(cindex));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
