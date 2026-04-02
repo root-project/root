@@ -1,5 +1,6 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RNTupleDS.hxx"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
@@ -236,4 +237,93 @@ TEST(RDataFrameUtils, TypeName2TypeID)
    EXPECT_EQ(typeid(std::vector<std::vector<float>>), RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"));
    EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
    EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
+}
+
+TEST(RDataFrameUtils, GetClusterRanges)
+{
+   // Helper RAII class for file cleanup
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      FileRAII(const FileRAII &) = delete;
+      FileRAII &operator=(const FileRAII &) = delete;
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+
+   FileRAII fTTree1("dataframe_interfaceAndUtils_2_tree_1.root");
+   FileRAII fTTree2("dataframe_interfaceAndUtils_2_tree_2.root");
+   FileRAII fRNTuple1("dataframe_interfaceAndUtils_2_rntuple_1.root");
+   FileRAII fRNTuple2("dataframe_interfaceAndUtils_2_rntuple_2.root");
+
+   const int nEntries = 1000;
+   const int clusterSize = 250;
+
+   // Test TTree single file
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fAutoFlush = clusterSize;
+      auto df = ROOT::RDataFrame(nEntries).Define("i", "rdfentry_");
+      df.Snapshot("t", fTTree1.GetPath(), {"i"}, opts);
+      df.Snapshot("t", fTTree2.GetPath(), {"i"}, opts);
+   }
+   {
+      ROOT::RDataFrame dfTTree("t", fTTree1.GetPath());
+      auto rangesTTree = RDFInt::GetDatasetGlobalClusterBoundaries(dfTTree);
+
+      EXPECT_EQ(rangesTTree.size(), nEntries / clusterSize);
+      for (size_t i = 0; i < rangesTTree.size(); ++i) {
+         EXPECT_EQ(rangesTTree[i].first, i * clusterSize);
+         EXPECT_EQ(rangesTTree[i].second, (i + 1) * clusterSize);
+      }
+   }
+
+   // Test TTree multiple files (chain)
+   {
+      ROOT::RDataFrame dfTTreeChain("t", {fTTree1.GetPath(), fTTree2.GetPath()});
+      auto rangesTTreeChain = RDFInt::GetDatasetGlobalClusterBoundaries(dfTTreeChain);
+
+      EXPECT_EQ(rangesTTreeChain.size(), 2 * nEntries / clusterSize);
+      for (size_t i = 0; i < rangesTTreeChain.size(); ++i) {
+         EXPECT_EQ(rangesTTreeChain[i].first, i * clusterSize);
+         EXPECT_EQ(rangesTTreeChain[i].second, (i + 1) * clusterSize);
+      }
+   }
+
+   // Test RNTuple single file
+   {
+      ROOT::RDF::RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      auto df = ROOT::RDataFrame(nEntries).Define("i", "rdfentry_");
+      df.Snapshot("nt", fRNTuple1.GetPath(), {"i"}, opts);
+      df.Snapshot("nt", fRNTuple2.GetPath(), {"i"}, opts);
+   }
+   {
+      auto dfRNTuple = ROOT::RDF::FromRNTuple("nt", fRNTuple1.GetPath());
+      auto rangesRNTuple = RDFInt::GetDatasetGlobalClusterBoundaries(dfRNTuple);
+
+      EXPECT_FALSE(rangesRNTuple.empty());
+      EXPECT_EQ(rangesRNTuple.front().first, 0u);
+      EXPECT_EQ(rangesRNTuple.back().second, ULong64_t(nEntries));
+      for (size_t i = 1; i < rangesRNTuple.size(); ++i) {
+         EXPECT_EQ(rangesRNTuple[i].first, rangesRNTuple[i - 1].second);
+      }
+   }
+
+   // Test RNTuple multiple files
+   {
+      auto dfRNTupleChain =
+         ROOT::RDF::FromRNTuple("nt", std::vector<std::string>{fRNTuple1.GetPath(), fRNTuple2.GetPath()});
+      auto rangesRNTupleChain = RDFInt::GetDatasetGlobalClusterBoundaries(dfRNTupleChain);
+
+      EXPECT_FALSE(rangesRNTupleChain.empty());
+      EXPECT_EQ(rangesRNTupleChain.front().first, 0u);
+      EXPECT_EQ(rangesRNTupleChain.back().second, ULong64_t(2 * nEntries));
+      for (size_t i = 1; i < rangesRNTupleChain.size(); ++i) {
+         EXPECT_EQ(rangesRNTupleChain[i].first, rangesRNTupleChain[i - 1].second);
+      }
+   }
 }
