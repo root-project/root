@@ -197,8 +197,7 @@ void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width
 
 void TPadPainter::SetAttFill(const TAttFill &att)
 {
-   if (&fAttFill != &att)
-      att.Copy(fAttFill);
+   TPadPainterBase::SetAttFill(att);
 
    gVirtualX->SetAttFill(fWinContext, att);
 }
@@ -208,8 +207,7 @@ void TPadPainter::SetAttFill(const TAttFill &att)
 
 void TPadPainter::SetAttLine(const TAttLine &att)
 {
-   if (&fAttLine != &att)
-      att.Copy(fAttLine);
+   TPadPainterBase::SetAttLine(att);
 
    gVirtualX->SetAttLine(fWinContext, att);
 }
@@ -219,8 +217,7 @@ void TPadPainter::SetAttLine(const TAttLine &att)
 
 void TPadPainter::SetAttMarker(const TAttMarker &att)
 {
-   if (&fAttMarker != &att)
-      att.Copy(fAttMarker);
+   TPadPainterBase::SetAttMarker(att);
 
    gVirtualX->SetAttMarker(fWinContext, att);
 }
@@ -230,8 +227,7 @@ void TPadPainter::SetAttMarker(const TAttMarker &att)
 
 void TPadPainter::SetAttText(const TAttText &att)
 {
-   if (&fAttText != &att)
-      att.Copy(fAttText);
+   TPadPainterBase::SetAttText(att);
 
    gVirtualX->SetAttText(fWinContext, att);
 }

@@ -93,14 +93,12 @@ void TGLPadPainter::OnPad(TVirtualPad *pad)
       fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set fill attributes
 
 void TGLPadPainter::SetAttFill(const TAttFill &att)
 {
-   if (&fAttFill != &att)
-      att.Copy(fAttFill);
+   TPadPainterBase::SetAttFill(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
    if (fWinContext && gVirtualX)
@@ -112,8 +110,7 @@ void TGLPadPainter::SetAttFill(const TAttFill &att)
 
 void TGLPadPainter::SetAttLine(const TAttLine &att)
 {
-   if (&fAttLine != &att)
-      att.Copy(fAttLine);
+   TPadPainterBase::SetAttLine(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
    if (fWinContext && gVirtualX)
@@ -125,8 +122,7 @@ void TGLPadPainter::SetAttLine(const TAttLine &att)
 
 void TGLPadPainter::SetAttMarker(const TAttMarker &att)
 {
-   if (&fAttMarker != &att)
-      att.Copy(fAttMarker);
+   TPadPainterBase::SetAttMarker(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
    if (fWinContext && gVirtualX)
@@ -138,8 +134,7 @@ void TGLPadPainter::SetAttMarker(const TAttMarker &att)
 
 void TGLPadPainter::SetAttText(const TAttText &att)
 {
-   if (&fAttText != &att)
-      att.Copy(fAttText);
+   TPadPainterBase::SetAttText(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
    if (fWinContext && gVirtualX)
