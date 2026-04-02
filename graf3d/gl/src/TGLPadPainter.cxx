@@ -69,138 +69,9 @@ TGLPadPainter::TGLPadPainter()
 ////////////////////////////////////////////////////////////////////////////////
 ///Delegate to gVirtualX.
 
-Color_t TGLPadPainter::GetLineColor() const
-{
-   return gVirtualX->GetLineColor();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Style_t TGLPadPainter::GetLineStyle() const
-{
-   return gVirtualX->GetLineStyle();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Width_t TGLPadPainter::GetLineWidth() const
-{
-   return gVirtualX->GetLineWidth();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetLineColor(Color_t lcolor)
-{
-   gVirtualX->SetLineColor(lcolor);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetLineStyle(Style_t lstyle)
-{
-   gVirtualX->SetLineStyle(lstyle);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetLineWidth(Width_t lwidth)
-{
-   gVirtualX->SetLineWidth(lwidth);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Color_t TGLPadPainter::GetFillColor() const
-{
-   return gVirtualX->GetFillColor();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Style_t TGLPadPainter::GetFillStyle() const
-{
-   return gVirtualX->GetFillStyle();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-///IsTransparent is implemented as inline function in TAttFill.
-
-Bool_t TGLPadPainter::IsTransparent() const
-{
-   return gVirtualX->IsTransparent();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetFillColor(Color_t fcolor)
-{
-   gVirtualX->SetFillColor(fcolor);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetFillStyle(Style_t fstyle)
-{
-   gVirtualX->SetFillStyle(fstyle);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
 void TGLPadPainter::SetOpacity(Int_t percent)
 {
    gVirtualX->SetOpacity(percent);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Short_t TGLPadPainter::GetTextAlign() const
-{
-   return gVirtualX->GetTextAlign();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Float_t TGLPadPainter::GetTextAngle() const
-{
-   return gVirtualX->GetTextAngle();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Color_t TGLPadPainter::GetTextColor() const
-{
-   return gVirtualX->GetTextColor();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Font_t TGLPadPainter::GetTextFont() const
-{
-   return gVirtualX->GetTextFont();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-Float_t TGLPadPainter::GetTextSize() const
-{
-   return gVirtualX->GetTextSize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,105 +83,67 @@ Float_t TGLPadPainter::GetTextMagnitude() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
+/// Select pad where current painting will be performed
 
-void TGLPadPainter::SetTextAlign(Short_t align)
+void TGLPadPainter::OnPad(TVirtualPad *pad)
 {
-   gVirtualX->SetTextAlign(align);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetTextAngle(Float_t tangle)
-{
-   gVirtualX->SetTextAngle(tangle);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetTextColor(Color_t tcolor)
-{
-   gVirtualX->SetTextColor(tcolor);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetTextFont(Font_t tfont)
-{
-   gVirtualX->SetTextFont(tfont);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetTextSize(Float_t tsize)
-{
-   gVirtualX->SetTextSize(tsize);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Delegate to gVirtualX.
-
-void TGLPadPainter::SetTextSizePixels(Int_t npixels)
-{
-   gVirtualX->SetTextSizePixels(npixels);
+   // GL painter does not use proper id for sub-pads (see CreateDrawable)
+      // so one always use canvas ID to execute TVirtualX-specific commands
+   if (!fWinContext)
+      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
+/// Set fill attributes
 
-Color_t TGLPadPainter::GetMarkerColor() const
+void TGLPadPainter::SetAttFill(const TAttFill &att)
 {
-   return gVirtualX->GetMarkerColor();
+   if (&fAttFill != &att)
+      att.Copy(fAttFill);
+
+   // TODO: dismiss in the future, gVirtualX attributes not needed in GL
+   if (fWinContext && gVirtualX)
+      gVirtualX->SetAttFill(fWinContext, att);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
+/// Set line attributes
 
-Style_t TGLPadPainter::GetMarkerStyle() const
+void TGLPadPainter::SetAttLine(const TAttLine &att)
 {
-   return gVirtualX->GetMarkerStyle();
+   if (&fAttLine != &att)
+      att.Copy(fAttLine);
+
+   // TODO: dismiss in the future, gVirtualX attributes not needed in GL
+   if (fWinContext && gVirtualX)
+      gVirtualX->SetAttLine(fWinContext, att);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
+/// Set marker attributes
 
-Size_t TGLPadPainter::GetMarkerSize() const
+void TGLPadPainter::SetAttMarker(const TAttMarker &att)
 {
-   return gVirtualX->GetMarkerSize();
+   if (&fAttMarker != &att)
+      att.Copy(fAttMarker);
+
+   // TODO: dismiss in the future, gVirtualX attributes not needed in GL
+   if (fWinContext && gVirtualX)
+      gVirtualX->SetAttMarker(fWinContext, att);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
+/// Set text attributes
 
-void TGLPadPainter::SetMarkerColor(Color_t mcolor)
+void TGLPadPainter::SetAttText(const TAttText &att)
 {
-   gVirtualX->SetMarkerColor(mcolor);
-}
+   if (&fAttText != &att)
+      att.Copy(fAttText);
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TGLPadPainter::SetMarkerStyle(Style_t mstyle)
-{
-   gVirtualX->SetMarkerStyle(mstyle);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delegate to gVirtualX.
-
-void TGLPadPainter::SetMarkerSize(Size_t msize)
-{
-   gVirtualX->SetMarkerSize(msize);
+   // TODO: dismiss in the future, gVirtualX attributes not needed in GL
+   if (fWinContext && gVirtualX)
+      gVirtualX->SetAttText(fWinContext, att);
 }
 
 /*
@@ -376,14 +209,16 @@ void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 
 void TGLPadPainter::SelectDrawable(Int_t /* device */)
 {
+   auto pad = dynamic_cast<TPad *>(gPad);
+   if (!fWinContext && pad)
+      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
+
    if (fLocked)
       return;
 
-   if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
+   if (pad) {
       // GL painter does not use proper id for sub-pads (see CreateDrawable)
       // so one always use canvas ID to execute TVirtualX-specific commands
-      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
-
       Int_t px = 0, py = 0;
 
       pad->XYtoAbsPixel(pad->GetX1(), pad->GetY1(), px, py);
@@ -524,6 +359,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //from TView3D::ExecuteRotateView. This means in fact,
       //that TView3D wants to draw itself in a XOR mode, via
       //gVirtualX.
+      // TODO: only here set line attributes to virtual x
       if (fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert)) {
          gVirtualX->DrawLineW(fWinContext,
                              gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
@@ -570,6 +406,7 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
          const Int_t py1 = gPad->VtoPixel(v1);
          const Int_t px2 = gPad->UtoPixel(u2);
          const Int_t py2 = gPad->VtoPixel(v2);
+         // TODO: only here set line attributes to virtual x
          gVirtualX->DrawLineW(fWinContext, px1, py1, px2, py2);
       }
       return;

@@ -12,7 +12,7 @@
 #ifndef ROOT_TGLPadPainter
 #define ROOT_TGLPadPainter
 
-#include "TVirtualPadPainter.h"
+#include "TPadPainterBase.h"
 #include "TGLFontManager.h"
 #include "TGLPadUtils.h"
 #include "TPoint.h"
@@ -26,7 +26,7 @@ class TRadialGradient;
 The _main_ purpose of TGLPadPainter is to enable 2d gl raphics
 inside standard TPad/TCanvas.
 */
-class TGLPadPainter : public TVirtualPadPainter {
+class TGLPadPainter : public TPadPainterBase {
 private:
    Rgl::Pad::PolygonStippleSet fSSet;
    Rgl::Pad::Tesselator        fTess;
@@ -52,49 +52,17 @@ private:
 public:
    TGLPadPainter();
 
-   //Final overriders for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply delegates to TVirtualX.
-   //Line attributes.
-   Color_t  GetLineColor() const override;
-   Style_t  GetLineStyle() const override;
-   Width_t  GetLineWidth() const override;
-
-   void     SetLineColor(Color_t lcolor) override;
-   void     SetLineStyle(Style_t lstyle) override;
-   void     SetLineWidth(Width_t lwidth) override;
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override;
-   Style_t  GetFillStyle() const override;
-   Bool_t   IsTransparent() const override;
-
-   void     SetFillColor(Color_t fcolor) override;
-   void     SetFillStyle(Style_t fstyle) override;
    void     SetOpacity(Int_t percent) override;
-
-   //Text attributes.
-   Short_t  GetTextAlign() const override;
-   Float_t  GetTextAngle() const override;
-   Color_t  GetTextColor() const override;
-   Font_t   GetTextFont()  const override;
-   Float_t  GetTextSize()  const override;
    Float_t  GetTextMagnitude() const override;
 
-   void     SetTextAlign(Short_t align) override;
-   void     SetTextAngle(Float_t tangle) override;
-   void     SetTextColor(Color_t tcolor) override;
-   void     SetTextFont(Font_t tfont) override;
-   void     SetTextSize(Float_t tsize) override;
-   void     SetTextSizePixels(Int_t npixels) override;
 
-   //Marker attributes
-   Color_t  GetMarkerColor() const override;
-   Style_t  GetMarkerStyle() const override;
-   Size_t   GetMarkerSize() const override;
+   void      OnPad(TVirtualPad *) override;
 
-   void     SetMarkerColor(Color_t mcolor) override;
-   void     SetMarkerStyle(Style_t mstyle) override;
-   void     SetMarkerSize(Size_t msize) override;
+   // Overwrite only attributes setters
+   void      SetAttFill(const TAttFill &att) override;
+   void      SetAttLine(const TAttLine &att) override;
+   void      SetAttMarker(const TAttMarker &att) override;
+   void      SetAttText(const TAttText &att) override;
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
