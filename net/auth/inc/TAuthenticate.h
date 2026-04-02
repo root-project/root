@@ -34,11 +34,11 @@ class TPluginHandler;
 class TSocket;
 class TVirtualMutex;
 
+namespace ROOT::Deprecated {
+
 struct R__rsa_KEY; // opaque replacement for rsa_KEY
 struct R__rsa_KEY_export; // opaque replacement for rsa_KEY_export
 struct R__rsa_NUMBER; // opaque replacement for rsa_NUMBER
-
-namespace ROOT::Deprecated {
 
 R__EXTERN TVirtualMutex *gAuthenticateMutex;
 
