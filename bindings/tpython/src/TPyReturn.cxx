@@ -203,16 +203,20 @@ TPyReturn::operator Double_t() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cast python return value to ROOT object with dictionary (may fail; note that
-/// you have to use the void* converter, as CINT will not call any other).
+/// you have to use the void* converter, as Cling will not call any other).
 
 TPyReturn::operator void *() const
 {
    PyGILRAII gilRaii;
 
    if (fPyObject == Py_None)
-      return 0;
+      return nullptr;
 
-   return static_cast<void *>(CPyCppyy::PyResult{fPyObject});
+   if (CPyCppyy::Instance_Check(fPyObject)) {
+      CPyCppyy::Instance_SetCppOwns(fPyObject);
+      return CPyCppyy::Instance_AsVoidPtr(fPyObject);
+   } else
+      return fPyObject; // borrows reference
 }
 
 ////////////////////////////////////////////////////////////////////////////////

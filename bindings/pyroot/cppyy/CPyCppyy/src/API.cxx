@@ -197,6 +197,32 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 }
 
 //-----------------------------------------------------------------------------
+void CPyCppyy::Instance_SetPythonOwns(PyObject* pyobject)
+{
+    if (!Initialize())
+        return;
+
+// check validity of cast
+    if (!CPPInstance_Check(pyobject))
+        return;
+
+    ((CPPInstance *)pyobject)->PythonOwns();
+}
+
+//-----------------------------------------------------------------------------
+void CPyCppyy::Instance_SetCppOwns(PyObject* pyobject)
+{
+    if (!Initialize())
+        return;
+
+// check validity of cast
+    if (!CPPInstance_Check(pyobject))
+        return;
+
+    ((CPPInstance *)pyobject)->CppOwns();
+}
+
+//-----------------------------------------------------------------------------
 bool CPyCppyy::Sequence_Check(PyObject* pyobject)
 {
 // Extends on PySequence_Check() to determine whether an object can be iterated
@@ -313,10 +339,6 @@ bool CPyCppyy::Import(const std::string& mod_name)
             fullname += ".";
             fullname += CPyCppyy_PyText_AsString(pyClName);
 
-      // force class creation (this will eventually call TPyClassGenerator)
-      // TODO: the following is broken (and should live in Cppyy.cxx) to
-      //         TClass::GetClass(fullname.c_str(), true);
-
             Py_XDECREF(pyClName);
         }
 
@@ -428,61 +450,6 @@ bool CPyCppyy::Exec(const std::string& cmd)
 
     PyErr_Print();
     return false;
-}
-
-//-----------------------------------------------------------------------------
-const CPyCppyy::PyResult CPyCppyy::Eval(const std::string& expr)
-{
-// Evaluate a python expression.
-//
-// Caution: do not hold on to the return value: either store it in a builtin
-// type (implicit casting will work), or in a pointer to a cppyy object (explicit
-// casting to a void* is required).
-    if (!Initialize())
-        return PyResult();
-
-// evaluate the expression
-    PyObject* result =
-        PyRun_String(const_cast<char*>(expr.c_str()), Py_eval_input, gMainDict, gMainDict);
-
-// report errors as appropriate; return void
-    if (!result) {
-        PyErr_Print();
-        return PyResult();
-    }
-
-// results that require no conversion
-    if (result == Py_None || CPPInstance_Check(result) ||
-            PyBytes_Check(result) ||
-            PyFloat_Check(result) || PyLong_Check(result) || PyInt_Check(result))
-        return PyResult(result);
-
-// explicit conversion for python type required
-    PyObject* pyclass = (PyObject*)Py_TYPE(result);
-
-// retrieve class name and the module in which it resides
-    PyObject* name = PyObject_GetAttr(pyclass, PyStrings::gName);
-    PyObject* module = PyObject_GetAttr(pyclass, PyStrings::gModule);
-
- // concat name
-    std::string qname =
-        std::string(CPyCppyy_PyText_AsString(module)) + \
-                    '.' + CPyCppyy_PyText_AsString(name);
-    Py_DECREF(module);
-    Py_DECREF(name);
-
-// locate cppyy style class with this name
-    // TODO: use Cppyy.cxx ...
-    //TClass* klass = TClass::GetClass(qname.c_str());
-    void* klass = nullptr;
-
-// construct general cppyy python object that pretends to be of class 'klass'
-    if (klass)
-        return PyResult(result);
-
-// no conversion, return null pointer object
-    Py_DECREF(result);
-    return PyResult();
 }
 
 //-----------------------------------------------------------------------------
