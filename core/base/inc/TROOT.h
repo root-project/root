@@ -99,10 +99,15 @@ namespace ROOT {
    UInt_t GetThreadPoolSize();
 }
 
+namespace ROOT::Deprecated::Internal {
+TSeqCollection *GetListOfSecContexts(const TROOT &);
+} // namespace ROOT::Deprecated::Internal
+
 class TROOT : public TDirectory {
 
 friend class TCling;
 friend TROOT *ROOT::Internal::GetROOT2();
+friend TSeqCollection *ROOT::Deprecated::Internal::GetListOfSecContexts(const TROOT &);
 
 private:
    Int_t           fLineIsProcessing = 0;   ///< To synchronize multi-threads
@@ -256,7 +261,9 @@ public:
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
-   TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
+   TSeqCollection   *GetListOfSecContexts() const
+      R__DEPRECATED(6, 42, "GetListOfSecContexts is deprecated. See README.AUTH for details.")
+      { return ROOT::Deprecated::Internal::GetListOfSecContexts(*this); }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TCollection      *GetListOfEnums(Bool_t load = kFALSE);

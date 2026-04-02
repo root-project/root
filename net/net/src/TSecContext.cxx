@@ -65,7 +65,7 @@ ROOT::Deprecated::TSecContext::TSecContext(const char *user, const char *host, I
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfSecContexts()->Add(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Add(this);
    }
 }
 
@@ -101,7 +101,7 @@ ROOT::Deprecated::TSecContext::TSecContext(const char *url, Int_t meth, Int_t of
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfSecContexts()->Add(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Add(this);
    }
 }
 
@@ -161,7 +161,7 @@ void ROOT::Deprecated::TSecContext::Cleanup()
       CleanupSecContext(kTRUE);
       DeActivate("R");
       // All have been remotely Deactivated
-      TIter nxtl(gROOT->GetListOfSecContexts());
+      TIter nxtl(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
       TSecContext *nscl;
       while ((nscl = (TSecContext *)nxtl())) {
          if (nscl != this && !strcmp(nscl->GetHost(), fHost.Data())) {
@@ -198,7 +198,7 @@ void ROOT::Deprecated::TSecContext::DeActivate(Option_t *Opt)
    if (remove && fOffSet > -1){
       R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
-      gROOT->GetListOfSecContexts()->Remove(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Remove(this);
    }
 
    // Set inactive

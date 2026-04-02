@@ -170,6 +170,11 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TWinNTSystem.h"
 #endif
 
+TSeqCollection *ROOT::Deprecated::Internal::GetListOfSecContexts(const TROOT &r)
+{
+   return r.fSecContexts;
+}
+
 extern "C" void R__SetZipMode(int);
 
 static DestroyInterpreter_t *gDestroyInterpreter = nullptr;
@@ -2835,7 +2840,7 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
-///  
+///
 /// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)

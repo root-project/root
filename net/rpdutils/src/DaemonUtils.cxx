@@ -266,7 +266,7 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
       if (type == 1) {
          // An existing authentication has been re-used: retrieve
          // the related security context
-         TIter next(gROOT->GetListOfSecContexts());
+         TIter next(ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT));
          while ((seccontext = (ROOT::Deprecated::TSecContext *)next())) {
             if (!(strncmp(seccontext->GetID(),"server",6))) {
                if (seccontext->GetMethod() == meth) {

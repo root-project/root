@@ -93,7 +93,7 @@ void ROOT::Deprecated::TRootSecContext::DeActivate(Option_t *Opt)
    if (remove && fOffSet > -1){
       R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
-      gROOT->GetListOfSecContexts()->Remove(this);
+      ROOT::Deprecated::Internal::GetListOfSecContexts(*gROOT)->Remove(this);
       // Remove also from local lists in THostAuth objects
       TAuthenticate::RemoveSecContext(this);
    }
