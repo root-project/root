@@ -1177,7 +1177,7 @@ Bool_t TSocket::Authenticate(const char *user)
       }
 
       // Get an instance of the interface class
-      TVirtualAuth *auth = (TVirtualAuth *)(h->ExecPlugin(0));
+      auto auth = (ROOT::Deprecated::TVirtualAuth *)(h->ExecPlugin(0));
       if (!auth) {
          Error("Authenticate", "could not instantiate the interface class");
          return rc;
