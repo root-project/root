@@ -45,10 +45,11 @@
 
 static const char *gUserAgent = "User-Agent: ROOT-TWebFile/1.1";
 
-TUrl TWebFile::fgProxy;
+TUrl ROOT::Deprecated::TWebFile::fgProxy;
 
-Long64_t TWebFile::fgMaxFullCacheSize = 500000000;
+Long64_t ROOT::Deprecated::TWebFile::fgMaxFullCacheSize = 500000000;
 
+namespace ROOT::Deprecated {
 
 // Internal class used to manage the socket that may stay open between
 // calls when HTTP/1.1 protocol is used
@@ -61,10 +62,12 @@ public:
    void ReOpen();
 };
 
+} // namespace ROOT::Deprecated
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Open web file socket.
 
-TWebSocket::TWebSocket(TWebFile *f)
+ROOT::Deprecated::TWebSocket::TWebSocket(TWebFile *f)
 {
    fWebFile = f;
    if (!f->fSocket)
@@ -74,7 +77,7 @@ TWebSocket::TWebSocket(TWebFile *f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Close socket in case not HTTP/1.1 protocol or when explicitly requested.
 
-TWebSocket::~TWebSocket()
+ROOT::Deprecated::TWebSocket::~TWebSocket()
 {
    if (!fWebFile->fHTTP11) {
       delete fWebFile->fSocket;
@@ -85,7 +88,7 @@ TWebSocket::~TWebSocket()
 ////////////////////////////////////////////////////////////////////////////////
 /// Re-open web file socket.
 
-void TWebSocket::ReOpen()
+void ROOT::Deprecated::TWebSocket::ReOpen()
 {
    if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
@@ -142,7 +145,7 @@ void TWebSocket::ReOpen()
 /// to see if the file is accessible. The preferred interface to this
 /// constructor is via TFile::Open().
 
-TWebFile::TWebFile(const char *url, Option_t *opt)
+ROOT::Deprecated::TWebFile::TWebFile(const char *url, Option_t *opt)
    : TFile(url, strstr(opt, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "WEB_WITHOUT_GLOBALREGISTRATION" : "WEB"),
      fSocket(0)
 {
@@ -177,7 +180,7 @@ TWebFile::TWebFile(const char *url, Option_t *opt)
 /// the kZombie bit will be set in the TWebFile object. Use IsZombie()
 /// to see if the file is accessible.
 
-TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
+ROOT::Deprecated::TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocket(0)
 {
    TString option = opt;
    fNoProxy = kFALSE;
@@ -195,7 +198,7 @@ TWebFile::TWebFile(TUrl url, Option_t *opt) : TFile(url.GetUrl(), "WEB"), fSocke
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup.
 
-TWebFile::~TWebFile()
+ROOT::Deprecated::TWebFile::~TWebFile()
 {
    delete fSocket;
    if (fFullCache) {
@@ -208,7 +211,7 @@ TWebFile::~TWebFile()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TWebFile object.
 
-void TWebFile::Init(Bool_t readHeadOnly)
+void ROOT::Deprecated::TWebFile::Init(Bool_t readHeadOnly)
 {
    char buf[4];
    int  err;
@@ -268,7 +271,7 @@ void TWebFile::Init(Bool_t readHeadOnly)
 /// Set GET command for use by ReadBuffer(s)10(), handle redirection if
 /// needed. Give full URL so Apache's virtual hosts solution works.
 
-void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedirect)
+void ROOT::Deprecated::TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedirect)
 {
    TUrl oldUrl;
    TString oldBasicUrl;
@@ -355,7 +358,7 @@ void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedir
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if shell var "http_proxy" has been set and should be used.
 
-void TWebFile::CheckProxy()
+void ROOT::Deprecated::TWebFile::CheckProxy()
 {
    if (fNoProxy)
       return;
@@ -382,7 +385,7 @@ void TWebFile::CheckProxy()
 ////////////////////////////////////////////////////////////////////////////////
 /// A TWebFile that has been correctly constructed is always considered open.
 
-Bool_t TWebFile::IsOpen() const
+Bool_t ROOT::Deprecated::TWebFile::IsOpen() const
 {
    return IsZombie() ? kFALSE : kTRUE;
 }
@@ -414,7 +417,7 @@ Int_t TWebFile::ReOpen(Option_t *mode)
 /// Close a Web file. Close the socket connection and delete the cache
 /// See also the TFile::Close() function
 
-void TWebFile::Close(Option_t *option)
+void ROOT::Deprecated::TWebFile::Close(Option_t *option)
 {
    delete fSocket;
    fSocket = nullptr;
@@ -431,7 +434,7 @@ void TWebFile::Close(Option_t *option)
 /// routine connects to the remote host, sends the request and returns
 /// the buffer. Returns kTRUE in case of error.
 
-Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
+Bool_t ROOT::Deprecated::TWebFile::ReadBuffer(char *buf, Int_t len)
 {
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
@@ -469,7 +472,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 /// routine connects to the remote host, sends the request and returns
 /// the buffer. Returns kTRUE in case of error.
 
-Bool_t TWebFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
+Bool_t ROOT::Deprecated::TWebFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
    SetOffset(pos);
    return ReadBuffer(buf, len);
@@ -480,7 +483,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 /// mod-root installed). This routine connects to the remote host, sends the
 /// request and returns the buffer. Returns kTRUE in case of error.
 
-Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
+Bool_t ROOT::Deprecated::TWebFile::ReadBuffer10(char *buf, Int_t len)
 {
    SetMsgReadBuffer10();
 
@@ -519,7 +522,7 @@ Bool_t TWebFile::ReadBuffer10(char *buf, Int_t len)
 /// This function is overloaded by TNetFile, TWebFile, etc.
 /// Returns kTRUE in case of failure.
 
-Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
+Bool_t ROOT::Deprecated::TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    if (!fHasModRoot)
       return ReadBuffers10(buf, pos, len, nbuf);
@@ -568,7 +571,7 @@ Bool_t TWebFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 /// This function is overloaded by TNetFile, TWebFile, etc.
 /// Returns kTRUE in case of failure.
 
-Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
+Bool_t ROOT::Deprecated::TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
 {
    SetMsgReadBuffer10();
 
@@ -602,7 +605,7 @@ Bool_t TWebFile::ReadBuffers10(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf
 /// Such cache can be produced when server suddenly returns full data instead of segments
 /// Returns -1 in case of error, 0 in case of success
 
-Int_t TWebFile::GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
+Int_t ROOT::Deprecated::TWebFile::GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
 {
    if (!fFullCache) return -1;
 
@@ -627,7 +630,7 @@ Int_t TWebFile::GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos
 /// Read request from web server. Returns -1 in case of error,
 /// 0 in case of success.
 
-Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
+Int_t ROOT::Deprecated::TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 {
    TSocket *s;
 
@@ -694,7 +697,8 @@ Int_t TWebFile::GetFromWeb(char *buf, Int_t len, const TString &msg)
 /// Returns -2 in case file does not exist, -1 in case
 /// of error and 0 in case of success.
 
-Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len)
+Int_t ROOT::Deprecated::TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg, Long64_t *seg_pos,
+                                               Int_t *seg_len)
 {
    if (!len) return 0;
 
@@ -977,7 +981,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
 ////////////////////////////////////////////////////////////////////////////////
 /// Set position from where to start reading.
 
-void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
+void ROOT::Deprecated::TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    switch (pos) {
    case kBeg:
@@ -998,7 +1002,7 @@ void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum file size.
 
-Long64_t TWebFile::GetSize() const
+Long64_t ROOT::Deprecated::TWebFile::GetSize() const
 {
    if (!fHasModRoot || fSize >= 0)
       return fSize;
@@ -1033,7 +1037,7 @@ Long64_t TWebFile::GetSize() const
 /// -3 in case HEAD is not supported (dCache HTTP door) and
 /// 0 in case of success.
 
-Int_t TWebFile::GetHead()
+Int_t ROOT::Deprecated::TWebFile::GetHead()
 {
    // Give full URL so Apache's virtual hosts solution works.
    if (fMsgGetHead == "") {
@@ -1200,7 +1204,7 @@ Int_t TWebFile::GetHead()
 /// Returns -1 in case of error, or the number of characters read (>= 0)
 /// otherwise.
 
-Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
+Int_t ROOT::Deprecated::TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
 {
    Int_t n = GetHunk(s, line, maxsize);
    if (n < 0) {
@@ -1263,7 +1267,7 @@ Int_t TWebFile::GetLine(TSocket *s, char *line, Int_t maxsize)
 ///
 /// Reads at most one less than the number of characters specified by maxsize.
 
-Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
+Int_t ROOT::Deprecated::TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
 {
    if (maxsize <= 0) return 0;
 
@@ -1338,8 +1342,8 @@ Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
 /// between START and PEEKED has been read and cannot be "unread"; the
 /// data after PEEKED has only been peeked.
 
-const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
-                                     Int_t peeklen)
+const char *ROOT::Deprecated::TWebFile::HttpTerminator(const char *start, const char *peeked,
+                                                       Int_t peeklen)
 {
 #if 0
    const char *p, *end;
@@ -1373,7 +1377,7 @@ const char *TWebFile::HttpTerminator(const char *start, const char *peeked,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return basic authentication scheme, to be added to the request.
 
-TString TWebFile::BasicAuthentication()
+TString ROOT::Deprecated::TWebFile::BasicAuthentication()
 {
    TString msg;
    if (strlen(fUrl.GetUser())) {
@@ -1392,7 +1396,7 @@ TString TWebFile::BasicAuthentication()
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method setting global proxy URL.
 
-void TWebFile::SetProxy(const char *proxy)
+void ROOT::Deprecated::TWebFile::SetProxy(const char *proxy)
 {
    if (proxy && *proxy) {
       TUrl p(proxy);
@@ -1408,7 +1412,7 @@ void TWebFile::SetProxy(const char *proxy)
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning the global proxy URL.
 
-const char *TWebFile::GetProxy()
+const char *ROOT::Deprecated::TWebFile::GetProxy()
 {
    if (fgProxy.IsValid())
       return fgProxy.GetUrl();
@@ -1420,7 +1424,7 @@ const char *TWebFile::GetProxy()
 /// overwritten by subclasses that exploit the information contained in the
 /// HTTP headers.
 
-void TWebFile::ProcessHttpHeader(const TString&)
+void ROOT::Deprecated::TWebFile::ProcessHttpHeader(const TString&)
 {
 }
 
@@ -1428,7 +1432,7 @@ void TWebFile::ProcessHttpHeader(const TString&)
 /// Static method returning maxmimal size of full cache,
 /// which can be preserved by file instance
 
-Long64_t TWebFile::GetMaxFullCacheSize()
+Long64_t ROOT::Deprecated::TWebFile::GetMaxFullCacheSize()
 {
    return fgMaxFullCacheSize;
 }
@@ -1437,7 +1441,7 @@ Long64_t TWebFile::GetMaxFullCacheSize()
 /// Static method, set maxmimal size of full cache,
 // which can be preserved by file instance
 
-void TWebFile::SetMaxFullCacheSize(Long64_t sz)
+void ROOT::Deprecated::TWebFile::SetMaxFullCacheSize(Long64_t sz)
 {
    fgMaxFullCacheSize = sz;
 }
@@ -1447,7 +1451,7 @@ void TWebFile::SetMaxFullCacheSize(Long64_t sz)
 /// Create helper class that allows directory access via httpd.
 /// The name must start with '-' to bypass the TSystem singleton check.
 
-TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
+ROOT::Deprecated::TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
 {
    SetName("http");
 
@@ -1457,7 +1461,7 @@ TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a directory via httpd. Not supported.
 
-Int_t TWebSystem::MakeDirectory(const char *)
+Int_t ROOT::Deprecated::TWebSystem::MakeDirectory(const char *)
 {
    return -1;
 }
@@ -1466,7 +1470,7 @@ Int_t TWebSystem::MakeDirectory(const char *)
 /// Open a directory via httpd. Returns an opaque pointer to a dir
 /// structure. Returns 0 in case of error.
 
-void *TWebSystem::OpenDirectory(const char *)
+void *ROOT::Deprecated::TWebSystem::OpenDirectory(const char *)
 {
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
@@ -1481,7 +1485,7 @@ void *TWebSystem::OpenDirectory(const char *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Free directory via httpd.
 
-void TWebSystem::FreeDirectory(void *dirp)
+void ROOT::Deprecated::TWebSystem::FreeDirectory(void *dirp)
 {
    if (dirp != fDirp) {
       Error("FreeDirectory", "invalid directory pointer (should never happen)");
@@ -1494,7 +1498,7 @@ void TWebSystem::FreeDirectory(void *dirp)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get directory entry via httpd. Returns 0 in case no more entries.
 
-const char *TWebSystem::GetDirEntry(void *dirp)
+const char *ROOT::Deprecated::TWebSystem::GetDirEntry(void *dirp)
 {
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
@@ -1510,7 +1514,7 @@ const char *TWebSystem::GetDirEntry(void *dirp)
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
 
-Int_t TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
+Int_t ROOT::Deprecated::TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
    TWebFile *f = new TWebFile(path, "HEADONLY");
 
@@ -1538,7 +1542,7 @@ Int_t TWebSystem::GetPathInfo(const char *path, FileStat_t &buf)
 /// Mode is the same as for the Unix access(2) function.
 /// Attention, bizarre convention of return value!!
 
-Bool_t TWebSystem::AccessPathName(const char *path, EAccessMode)
+Bool_t ROOT::Deprecated::TWebSystem::AccessPathName(const char *path, EAccessMode)
 {
    TWebFile *f = new TWebFile(path, "HEADONLY");
    if (f->fWritten == 0) {
@@ -1553,7 +1557,7 @@ Bool_t TWebSystem::AccessPathName(const char *path, EAccessMode)
 /// Unlink, i.e. remove, a file or directory. Returns 0 when successful,
 /// -1 in case of failure. Not supported for httpd.
 
-Int_t TWebSystem::Unlink(const char *)
+Int_t ROOT::Deprecated::TWebSystem::Unlink(const char *)
 {
    return -1;
 }

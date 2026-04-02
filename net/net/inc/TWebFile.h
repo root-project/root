@@ -27,13 +27,16 @@
 #include "TSystem.h"
 
 class TSocket;
-class TWebSocket;
 
+namespace ROOT::Deprecated {
+
+class TWebSocket;
+class TWebSystem;
 
 class TWebFile : public TFile {
 
-friend class TWebSocket;
-friend class TWebSystem;
+friend class ROOT::Deprecated::TWebSocket;
+friend class ROOT::Deprecated::TWebSystem;
 
 private:
    TWebFile() : fSocket(nullptr) {}
@@ -117,5 +120,10 @@ public:
 
    ClassDefOverride(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
 };
+
+} // namespace ROOT::Deprecated
+
+using TWebFile R__DEPRECATED(6, 42, "TWebFile is deprecated") = ROOT::Deprecated::TWebFile;
+using TWebSystem R__DEPRECATED(6, 42, "TWebSystem is deprecated") = ROOT::Deprecated::TWebSystem;
 
 #endif
