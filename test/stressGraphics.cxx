@@ -645,7 +645,7 @@ void print_reports()
       StatusPrint(e.pngfile, "PNG output", FileSize(e.pngfile), ref->pngref, ref->pngerr);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.ps2file, ".C -> .PS file result",
+         Int_t ret_code = StatusPrint(e.ps2file, gWebMode ? ".C -> .SVG file result" : ".C -> .PS file result",
                                       e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
 
 #ifndef __CLING__
