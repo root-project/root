@@ -12,7 +12,7 @@
 #ifndef ROOT_TPadPainterPS
 #define ROOT_TPadPainterPS
 
-#include "TVirtualPadPainter.h"
+#include "TPadPainterBase.h"
 
 /*
 TPadPainterPS is an attempt to abstract
@@ -23,57 +23,23 @@ one also will be able to produce vector-based and binary images  */
 class TVirtualPad;
 class TVirtualPS;
 
-class TPadPainterPS : public TVirtualPadPainter {
+class TPadPainterPS : public TPadPainterBase {
 private:
    TVirtualPS    *fPS = nullptr;
    TVirtualPad   *fPad = nullptr;
 public:
    TPadPainterPS(TVirtualPS *ps);
 
-   //Final overriders for TVirtualPadPainter pure virtual functions.
-   //1. Part, which simply delegates to TVirtualX.
-
-   //Line attributes.
-   Color_t  GetLineColor() const override;
-   Style_t  GetLineStyle() const override;
-   Width_t  GetLineWidth() const override;
-
-   void     SetLineColor(Color_t lcolor) override;
-   void     SetLineStyle(Style_t lstyle) override;
-   void     SetLineWidth(Width_t lwidth) override;
-
-   //Fill attributes.
-   Color_t  GetFillColor() const override;
-   Style_t  GetFillStyle() const override;
-   Bool_t   IsTransparent() const override;
-
-   void     SetFillColor(Color_t fcolor) override;
-   void     SetFillStyle(Style_t fstyle) override;
    void     SetOpacity(Int_t percent) override;
 
-   //Text attributes.
-   Short_t  GetTextAlign() const override;
-   Float_t  GetTextAngle() const override;
-   Color_t  GetTextColor() const override;
-   Font_t   GetTextFont()  const override;
-   Float_t  GetTextSize()  const override;
-   Float_t  GetTextMagnitude() const override;
+   //Overall attributes
+   void      SetAttFill(const TAttFill &att) override;
+   void      SetAttLine(const TAttLine &att) override;
+   void      SetAttMarker(const TAttMarker &att) override;
+   void      SetAttText(const TAttText &att) override;
 
-   void     SetTextAlign(Short_t align) override;
-   void     SetTextAngle(Float_t tangle) override;
-   void     SetTextColor(Color_t tcolor) override;
-   void     SetTextFont(Font_t tfont) override;
-   void     SetTextSize(Float_t tsize) override;
-   void     SetTextSizePixels(Int_t npixels) override;
-
-   //Marker attributes
-   Color_t  GetMarkerColor() const override;
-   Style_t  GetMarkerStyle() const override;
-   Size_t   GetMarkerSize() const override;
-
-   void     SetMarkerColor(Color_t mcolor) override;
-   void     SetMarkerStyle(Style_t mstyle) override;
-   void     SetMarkerSize(Size_t msize) override;
+   //Final overriders for TVirtualPadPainter pure virtual functions.
+   //1. Part, which simply delegates to TVirtualX.
 
    //2. "Off-screen management" part.
    Int_t    CreateDrawable(UInt_t w, UInt_t h) override;
