@@ -126,6 +126,35 @@ class ROOTModule(unittest.TestCase):
                 ROOT.SetHeuristicMemoryPolicy(True)
                 ROOT.SetHeuristicMemoryPolicy(False)
 
+    def test_lazy_gdirectory(self):
+        """Check that gDirectory is always lazy evaluated to the current
+        directory.
+
+        Reproducer for GitHub issue
+        https://github.com/root-project/root/issues/21693
+        """
+        import ROOT
+
+        # Should be gROOT initially
+        self.assertEqual(ROOT.gDirectory, ROOT.gROOT)
+
+        gDirectory_1 = ROOT.gDirectory
+
+        f = ROOT.TFile("Hybrid.root", "RECREATE")
+        f.cd()
+
+        gDirectory_2 = ROOT.gDirectory
+
+        # Now, both gDirectory_1 and _2 should resolve to the current TFile
+        # directory, no matter when the adapters were created.
+        self.assertEqual(gDirectory_1, gDirectory_2)
+        self.assertNotEqual(gDirectory_1, ROOT.gROOT)
+
+        # If we re-assign the gDirectory now, it should be considered
+        ROOT.gDirectory = ROOT.nullptr
+        self.assertEqual(gDirectory_1, ROOT.nullptr)
+        self.assertEqual(gDirectory_2, ROOT.nullptr)
+
 
 if __name__ == "__main__":
     unittest.main()
