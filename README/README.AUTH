@@ -1,3 +1,7 @@
+# NOTE: The auth package is depcreated and will be remove in v6.42.
+ROOT will not provide socket authentication anymore but assumes that TSocket connections are between trusted processes.
+Consider using SSH tunneling if you need secure network connections.
+
 Authentication to ROOT servers (TServerSocket)
 ==============================================
 
