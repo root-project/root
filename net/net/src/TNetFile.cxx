@@ -793,7 +793,7 @@ Bool_t TNetFile::Matches(const char *url)
 /// for cleaning of the underlying TFTP connection; this allows
 /// to have control on the order of the final cleaning.
 
-TNetSystem::TNetSystem(Bool_t ftpowner)
+ROOT::Deprecated::TNetSystem::TNetSystem(Bool_t ftpowner)
            : TSystem("-root", "Net file Helper System")
 {
    // name must start with '-' to bypass the TSystem singleton check
@@ -815,7 +815,7 @@ TNetSystem::TNetSystem(Bool_t ftpowner)
 /// for cleaning of the underlying TFTP connection; this allows
 /// to have control on the order of the final cleaning.
 
-TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
+ROOT::Deprecated::TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
            : TSystem("-root", "Net file Helper System")
 {
    // name must start with '-' to bypass the TSystem singleton check
@@ -829,7 +829,7 @@ TNetSystem::TNetSystem(const char *url, Bool_t ftpowner)
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse and save coordinates of the remote entity (user, host, port, ...)
 
-void TNetSystem::InitRemoteEntity(const char *url)
+void ROOT::Deprecated::TNetSystem::InitRemoteEntity(const char *url)
 {
    TUrl turl(url);
 
@@ -853,7 +853,7 @@ void TNetSystem::InitRemoteEntity(const char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TNetSystem object.
 
-void TNetSystem::Create(const char *url, TSocket *sock)
+void ROOT::Deprecated::TNetSystem::Create(const char *url, TSocket *sock)
 {
    // If we got here protocol must be at least its short form "^root.*:" :
    // make sure that it is in the full form to avoid problems in TFTP
@@ -931,7 +931,7 @@ void TNetSystem::Create(const char *url, TSocket *sock)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-TNetSystem::~TNetSystem()
+ROOT::Deprecated::TNetSystem::~TNetSystem()
 {
    // Close FTP connection
    if (fFTPOwner) {
@@ -955,7 +955,7 @@ TNetSystem::~TNetSystem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a directory via rootd.
 
-Int_t TNetSystem::MakeDirectory(const char *dir)
+Int_t ROOT::Deprecated::TNetSystem::MakeDirectory(const char *dir)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -977,7 +977,7 @@ Int_t TNetSystem::MakeDirectory(const char *dir)
 /// Open a directory and return an opaque pointer to a dir structure.
 /// Returns nullptr in case of error.
 
-void *TNetSystem::OpenDirectory(const char *dir)
+void *ROOT::Deprecated::TNetSystem::OpenDirectory(const char *dir)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -1011,7 +1011,7 @@ void *TNetSystem::OpenDirectory(const char *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Free directory via rootd.
 
-void TNetSystem::FreeDirectory(void *dirp)
+void ROOT::Deprecated::TNetSystem::FreeDirectory(void *dirp)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -1036,7 +1036,7 @@ void TNetSystem::FreeDirectory(void *dirp)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get directory entry via rootd. Returns 0 in case no more entries.
 
-const char *TNetSystem::GetDirEntry(void *dirp)
+const char *ROOT::Deprecated::TNetSystem::GetDirEntry(void *dirp)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -1060,7 +1060,7 @@ const char *TNetSystem::GetDirEntry(void *dirp)
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
 
-Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
+Int_t ROOT::Deprecated::TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -1084,7 +1084,7 @@ Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
 /// Mode is the same as for the Unix access(2) function.
 /// Attention, bizarre convention of return value!!
 
-Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
+Bool_t ROOT::Deprecated::TNetSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // If local, use the local TSystem
    if (fIsLocal) {
@@ -1106,7 +1106,7 @@ Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
 /// Check consistency of this helper with the one required
 /// by 'path' or 'dirptr'.
 
-Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
+Bool_t ROOT::Deprecated::TNetSystem::ConsistentWith(const char *path, void *dirptr)
 {
    // Standard check: only the protocol part of 'path' is required to match
    Bool_t checkstd = TSystem::ConsistentWith(path, dirptr);
@@ -1146,7 +1146,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a path
 
-Int_t TNetSystem::Unlink(const char *path)
+Int_t ROOT::Deprecated::TNetSystem::Unlink(const char *path)
 {
    // If local, use the local TSystem
    if (fIsLocal) {

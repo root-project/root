@@ -23,9 +23,10 @@
 #include "TFileStager.h"
 
 class TCollection;
-class TNetSystem;
 
 namespace ROOT::Deprecated {
+
+class TNetSystem;
 
 class TNetFileStager : public TFileStager {
 
