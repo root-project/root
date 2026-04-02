@@ -2604,8 +2604,6 @@ void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
 void TPostScript::SetTextColor( Color_t cindex )
 {
    fTextColor = cindex;
-
-   SetColor( Int_t(cindex) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
