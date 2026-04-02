@@ -40,7 +40,7 @@
 
 #include "TString.h"
 
-
+namespace ROOT::Deprecated {
 
 class TS3HTTPRequest : public TObject {
 
@@ -159,5 +159,9 @@ inline TS3HTTPRequest& TS3HTTPRequest::SetSessionToken(const TString& token)
    fSessionToken = token;
    return *this;
 }
+
+} // namespace ROOT::Deprecated
+
+using TS3HTTPRequest R__DEPRECATED(6, 42, "TS3HTTPRequest is deprecated") = ROOT::Deprecated::TS3HTTPRequest;
 
 #endif
