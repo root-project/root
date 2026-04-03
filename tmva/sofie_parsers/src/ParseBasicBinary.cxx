@@ -117,12 +117,6 @@ ParserFuncSignature ParseMod = [] (RModelParser_ONNX &parser, const onnx::NodePr
    if (nodeproto.attribute_size() > 0) {
       fmod = nodeproto.attribute(0).i();
    }
-   // case of float or double fmod must be 1
-   if (input_type ==ETensorType::FLOAT || input_type ==ETensorType::FLOAT ) {
-      if (fmod != 1)
-         std::runtime_error("TMVA::SOFIE ONNX parser Mod operator has fmod = 0 for floating inputs");
-   }
-
    std::unique_ptr<ROperator> op;
    std::string output_name = nodeproto.output(0);
 
