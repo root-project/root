@@ -2266,10 +2266,19 @@ endfunction()
 #
 # Arguments:
 #   target       - The CMake target (e.g., a shared library or executable)
-#   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
+#   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX,
+#                  or an absolute directory.
 #----------------------------------------------------------------------------
 function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
-  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
+
+  # Check if install_dir is absolute
+  if(IS_ABSOLUTE "${install_dir}")
+    set(base_dir "${install_dir}")
+  else()
+    set(base_dir "${CMAKE_INSTALL_PREFIX}/${install_dir}")
+  endif()
+
+  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${base_dir}" OUTPUT_VARIABLE to_libdir)
 
   # New path
   if(APPLE)
