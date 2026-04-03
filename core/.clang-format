@@ -1,0 +1,20 @@
+BasedOnStyle: InheritParentConfig
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+  AlignCompound: true
+  PadOperators: true
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignConsecutiveDeclarations:
+  Enabled: true
+  # Part of clang-format 20.1.0
+  AlignFunctionDeclarations: true
+
+# Part of clang-format 22
+# IndentPPDirectives: Leave
+IndentPPDirectives: None
