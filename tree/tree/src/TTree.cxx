@@ -1062,7 +1062,7 @@ TTree::~TTree()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TTree for reading/writing baskets.
 
-TBuffer* TTree::GetTransientBuffer(Int_t size)
+TBuffer* TTree::GetTransientBuffer(ULong64_t size)
 {
    if (fTransientBuffer) {
       if (fTransientBuffer->BufferSize() < size) {

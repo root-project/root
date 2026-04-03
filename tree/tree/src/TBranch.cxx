@@ -523,7 +523,7 @@ TBranch::~TBranch()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TBranch for reading/writing baskets.
 
-TBuffer* TBranch::GetTransientBuffer(Int_t size)
+TBuffer* TBranch::GetTransientBuffer(ULong64_t size)
 {
    if (fTransientBuffer) {
       if (fTransientBuffer->BufferSize() < size) {

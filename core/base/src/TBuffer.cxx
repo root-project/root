@@ -19,8 +19,8 @@ Buffer base class used for serializing objects.
 #include "TClass.h"
 #include "TProcessID.h"
 
-constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
-constexpr Int_t kMaxBufferSize = 0x7FFFFFFE;  // largest possible size before we need to switch to the large buffer format (see TBufferFile::SetByteCount).
+constexpr UInt_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
+constexpr UInt_t kMaxBufferSize = 0x7FFFFFFE;  // largest possible size before we need to switch to the large buffer format (see TBufferFile::SetByteCount).
 constexpr ULong64_t kMaxLargeBufferSize  = 0x7FFFFFFFFFFFFFFE;  // largest possible size.
 
 
@@ -70,7 +70,7 @@ TBuffer::TBuffer(EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBuffer::TBuffer(EMode mode, Long64_t bufsize)
+TBuffer::TBuffer(EMode mode, ULong64_t bufsize)
 {
    if (bufsize > kMaxBufferSize)
       Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", bufsize, kMaxBufferSize);
@@ -101,7 +101,7 @@ TBuffer::TBuffer(EMode mode, Long64_t bufsize)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, ULong64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    if (bufsize > kMaxLargeBufferSize)
       Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%llx.", bufsize, kMaxLargeBufferSize);
@@ -112,12 +112,20 @@ TBuffer::TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocC
 
    SetBit(kIsOwner);
 
+   if (buf && !adopt)
+      ResetBit(kIsOwner);
+
+   SetReAllocFunc( reallocfunc );
+
    if (buf) {
       fBuffer = (char *)buf;
       if ( (fMode&kWrite)!=0 ) {
-         fBufSize -= kExtraSpace;
+         if (fBufSize < kExtraSpace) {
+            Expand( kMinimalSize );
+         } else {
+            fBufSize -= kExtraSpace;
+         }
       }
-      if (!adopt) ResetBit(kIsOwner);
    } else {
       if (fBufSize < kMinimalSize) {
          fBufSize = kMinimalSize;
@@ -126,12 +134,6 @@ TBuffer::TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocC
    }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
-
-   SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,13 +157,13 @@ TBuffer::~TBuffer()
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
-void TBuffer::AutoExpand(Long64_t size_needed)
+void TBuffer::AutoExpand(ULong64_t size_needed)
 {
    if (size_needed > kMaxBufferSize) {
       Fatal("AutoExpand","Request to expand a too large buffer: 0x%llx for a max of 0x%x.", size_needed, kMaxBufferSize);
    }
    if (size_needed > fBufSize) {
-      Long64_t doubling = 2LLU * fBufSize;
+      ULong64_t doubling = 2LLU * fBufSize;
       if (doubling > kMaxBufferSize)
          doubling = kMaxBufferSize;
       if (size_needed > doubling) {
@@ -184,7 +186,7 @@ void TBuffer::AutoExpand(Long64_t size_needed)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-void TBuffer::SetBuffer(void *buf, Long64_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+void TBuffer::SetBuffer(void *buf, ULong64_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    if (newsiz > kMaxBufferSize)
       Fatal("SetBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", newsiz, kMaxBufferSize);
@@ -196,22 +198,22 @@ void TBuffer::SetBuffer(void *buf, Long64_t newsiz, Bool_t adopt, ReAllocCharFun
    else
       ResetBit(kIsOwner);
 
+   SetReAllocFunc( reallocfunc );
+
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
    if (newsiz > 0) {
       if ( (fMode&kWrite)!=0 ) {
-         fBufSize = newsiz - kExtraSpace;
+         if (newsiz >= kExtraSpace) {
+            fBufSize = newsiz - kExtraSpace;
+         } else {
+            Expand( kMinimalSize );
+         }
       } else {
          fBufSize = newsiz;
       }
    }
    fBufMax = fBuffer + fBufSize;
-
-   SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,22 +224,23 @@ void TBuffer::SetBuffer(void *buf, Long64_t newsiz, Bool_t adopt, ReAllocCharFun
 /// In order to avoid losing data, if the current length is greater than
 /// the requested size, we only shrink down to the current length.
 
-void TBuffer::Expand(Long64_t newsize, Bool_t copy)
+void TBuffer::Expand(ULong64_t newsize, Bool_t copy)
 {
-   Int_t l  = Length();
-   if ( (Long64_t(l) > newsize) && copy ) {
+   ULong64_t l  = Length();
+   if ( l > newsize && copy ) {
       newsize = l;
    }
-   const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
+   const ULong64_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
 
    if ( newsize > kMaxLargeBufferSize - kExtraSpace) {
       if (l < kMaxLargeBufferSize) {
          newsize = kMaxLargeBufferSize - extraspace;
       } else {
-         Fatal("Expand","Requested size (%lld) is too large (max is %lld).", newsize, kMaxBufferSize);
+         Fatal("Expand","Requested size (%llu) is too large (max is %llu).", newsize, kMaxLargeBufferSize);
       }
    }
    if ( (fMode&kWrite)!=0 ) {
+      // FIXME-LARGE: The size can overflow and the signature of fReAllocFunc is not large enough to handle the size of the buffer.
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
                               copy ? fBufSize+kExtraSpace : 0);
    } else {
@@ -393,13 +396,13 @@ TVirtualArray *TBuffer::PopDataCache()
 /// Byte-swap N primitive-elements in the buffer.
 /// Bulk API relies on this function.
 
-Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
+Bool_t TBuffer::ByteSwapBuffer(ULong64_t n, EDataType type)
 {
    char *input_buf = GetCurrent();
    if ((type == EDataType::kShort_t) || (type == EDataType::kUShort_t)) {
 #ifdef R__BYTESWAP
       Short_t *buf __attribute__((aligned(8))) = reinterpret_cast<Short_t*>(input_buf);
-      for (int idx=0; idx<n; idx++) {
+      for (unsigned int idx=0; idx<n; idx++) {
          Short_t tmp = *reinterpret_cast<Short_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
          char *tmp_ptr = reinterpret_cast<char *>(&tmp);
          frombuf(tmp_ptr, buf + idx);
@@ -408,7 +411,7 @@ Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
    } else if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
 #ifdef R__BYTESWAP
       Float_t *buf __attribute__((aligned(8))) = reinterpret_cast<Float_t*>(input_buf);
-      for (int idx=0; idx<n; idx++) {
+      for (unsigned int idx=0; idx<n; idx++) {
          Float_t tmp = *reinterpret_cast<Float_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
          char *tmp_ptr = reinterpret_cast<char *>(&tmp);
          frombuf(tmp_ptr, buf + idx);
@@ -417,7 +420,7 @@ Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
    } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
 #ifdef R__BYTESWAP
       Double_t *buf __attribute__((aligned(8))) = reinterpret_cast<Double_t*>(input_buf);
-      for (int idx=0; idx<n; idx++) {
+      for (unsigned int idx=0; idx<n; idx++) {
          Double_t tmp = *reinterpret_cast<Double_t*>(buf + idx); // Makes a copy of the values; frombuf can't handle aliasing.
          char *tmp_ptr = reinterpret_cast<char*>(&tmp);
          frombuf(tmp_ptr, buf + idx);

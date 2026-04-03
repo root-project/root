@@ -243,7 +243,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 /// This function is called by TTreeCloner.
 /// The function returns 0 in case of success, 1 in case of error.
 
-Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree)
+Int_t TBasket::LoadBasketBuffers(ULong64_t pos, ULong64_t len, TFile *file, TTree *tree)
 {
    if (fBufferRef) {
       // Reuse the buffer if it exist.
@@ -378,7 +378,7 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
 ////////////////////////////////////////////////////////////////////////////////
 /// We always create the TBuffer for the basket but it hold the buffer from the cache.
 
-Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, bool mustFree, TFile* file)
+Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, ULong64_t size, bool mustFree, TFile* file)
 {
    if (fBufferRef) {
       fBufferRef->SetBuffer(buffer, size, mustFree);
@@ -408,15 +408,19 @@ Int_t TBasket::ReadBasketBuffersUnzip(char* buffer, Int_t size, bool mustFree, T
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a buffer for reading if it is not already initialized
 
-static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t len, TFile* file)
+static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, ULong64_t len, TFile* file)
 {
    TBuffer* result;
    if (R__likely(bufferRef)) {
       bufferRef->SetReadMode();
-      Int_t curBufferSize = bufferRef->BufferSize();
+      ULong64_t curBufferSize = bufferRef->BufferSize();
       if (curBufferSize < len) {
          // Experience shows that giving 5% "wiggle-room" decreases churn.
-         bufferRef->Expand(Int_t(len*1.05));
+         double newSizeD = len * 1.05;
+         auto newSize = newSizeD < (double)std::numeric_limits<ULong64_t>::max()
+                           ? static_cast<ULong64_t>(newSizeD)
+                           : std::numeric_limits<ULong64_t>::max();
+         bufferRef->Expand(newSize);
       }
       bufferRef->Reset();
       result = bufferRef;
@@ -430,7 +434,7 @@ static inline TBuffer* R__InitializeReadBasketBuffer(TBuffer* bufferRef, Int_t l
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the compressed buffer; either from the TTree or create a local one.
 
-void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
+void inline TBasket::InitializeCompressedBuffer(ULong64_t len, TFile* file)
 {
    bool compressedBufferExists = fCompressedBufferRef != nullptr;
    fCompressedBufferRef = R__InitializeReadBasketBuffer(fCompressedBufferRef, len, file);
@@ -462,7 +466,7 @@ void TBasket::ResetEntryOffset()
 /// There is a lot of code duplication but it was necessary to assure
 /// the expected behavior when there is no cache.
 
-Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
+Int_t TBasket::ReadBasketBuffers(ULong64_t pos, ULong64_t len, TFile *file)
 {
    if(!fBranch->GetDirectory()) {
       return -1;
@@ -607,7 +611,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // Note that in previous versions we didn't allocate buffers until we verified
    // the zip headers; this is no longer beforehand as the buffer lifetime is scoped
    // to the TBranch.
-   uncompressedBufferLen = len > fObjlen+fKeylen ? len : fObjlen+fKeylen;
+   uncompressedBufferLen = len > static_cast<ULong64_t>(fObjlen+fKeylen) ? len : fObjlen+fKeylen;
    fBufferRef = R__InitializeReadBasketBuffer(fBufferRef, uncompressedBufferLen, file);
    rawUncompressedBuffer = fBufferRef->Buffer();
    fBuffer = rawUncompressedBuffer;
@@ -699,7 +703,10 @@ AfterBuffer:
    if (R__unlikely(!fEntryOffset)) {
       fEntryOffset = new Int_t[fNevBuf+1];
       fEntryOffset[0] = fKeylen;
-      Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
+      Warning("ReadBasketBuffers",
+              "basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%llu, len=%llu, fNbytes=%d, fObjlen=%d, trying to "
+              "repair",
+              GetName(), fNevBuf, pos, len, fNbytes, fObjlen);
       return 0;
    }
    if (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) {
@@ -731,7 +738,7 @@ AfterBuffer:
 /// Read first bytes of a logical record starting at position pos
 /// return record length (first 4 bytes of record).
 
-Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
+Int_t TBasket::ReadBasketBytes(ULong64_t pos, TFile *file)
 {
    const Int_t len = 128;
    char buffer[len];
