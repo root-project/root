@@ -70,7 +70,7 @@ echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
 echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
 echo "        ../../tree/                      \\" >> Doxyfile_INPUT
 echo "        ../../sql/                       \\" >> Doxyfile_INPUT
-echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
+#echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT #temporarily disabled until the long runtime of s302_JeffreysPriorDemo.C is understood
 echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__init__.py          \\" >> Doxyfile_INPUT
