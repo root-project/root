@@ -142,7 +142,7 @@ class ROOTFacade(types.ModuleType):
         self.__all__ = module.__all__
         self.__name__ = module.__name__
         self.__file__ = module.__file__
-        self.__cached__ = module.__cached__
+        self.__spec__ = module.__spec__
         self.__path__ = module.__path__
         self.__doc__ = module.__doc__
         self.__package__ = module.__package__
