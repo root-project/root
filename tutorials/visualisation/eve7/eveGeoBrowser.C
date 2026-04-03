@@ -35,14 +35,13 @@ void makeJets(int N_Jets, REveElement *jetHolder)
 void eveGeoBrowser()
 {
    auto eveMng = REveManager::Create();
-   eveMng->AllowMultipleRemoteConnections(false, false);
+   // eveMng->AllowMultipleRemoteConnections(false, false);
 
    TFile::SetCacheFileDir(".");
 
    // initialize RGeomDesc from TGeoNode
    auto data = new REveGeoTopNodeData("http://xrd-cache-1.t2.ucsd.edu/alja/mail/geo/cmsSimGeo2026.root");
    data->InitPath("/tracker:Tracker_1");
-   data->InitPath("/");
    data->RefDescription().SetVisLevel(2);
 
    // make geoTable
