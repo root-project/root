@@ -263,7 +263,7 @@ public:
    virtual bool      GetMakeClass() const;
            TBranch  *GetMother() const;
            TBranch  *GetSubBranch(const TBranch *br) const;
-           TBuffer  *GetTransientBuffer(Int_t size);
+           TBuffer  *GetTransientBuffer(ULong64_t size);
            bool      IsAutoDelete() const;
            bool      IsFolder() const override;
    virtual void      KeepCircular(Long64_t maxEntries);
