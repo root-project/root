@@ -39,11 +39,11 @@ private:
    TBasket& operator=(const TBasket&); ///< TBasket objects are not copiable.
 
    // Internal corner cases for ReadBasketBuffers
-   Int_t ReadBasketBuffersUnzip(char*, Int_t, bool, TFile*);
+   Int_t ReadBasketBuffersUnzip(char*, ULong64_t, bool, TFile*);
    Int_t ReadBasketBuffersUncompressedCase();
 
    // Helper for managing the compressed buffer.
-   void InitializeCompressedBuffer(Int_t len, TFile* file);
+   void InitializeCompressedBuffer(ULong64_t len, TFile* file);
 
    // Handles special logic around deleting / reseting the entry offset pointer.
    void ResetEntryOffset();
@@ -130,9 +130,9 @@ public:
            Int_t   GetNevBufSize() const {return fNevBufSize;}
            Int_t   GetLast() const {return fLast;}
    virtual void    MoveEntries(Int_t dentries);
-   virtual void    PrepareBasket(Long64_t /* entry */) {};
-           Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
-           Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
+   virtual void    PrepareBasket(ULong64_t /* entry */) {};
+           Int_t   ReadBasketBuffers(ULong64_t pos, ULong64_t len, TFile *file);
+           Int_t   ReadBasketBytes(ULong64_t pos, TFile *file);
    virtual void    WriteReset();
 
 // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
@@ -142,7 +142,7 @@ public:
    // Count of resets performed of basket size.
    bool            GetResetAllocationCount() const { return fResetAllocation; }
 
-   Int_t           LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = nullptr);
+   Int_t           LoadBasketBuffers(ULong64_t pos, ULong64_t len, TFile *file, TTree *tree = nullptr);
    Long64_t        CopyTo(TFile *to);
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }

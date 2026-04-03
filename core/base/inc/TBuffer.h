@@ -90,8 +90,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);
-   TBuffer(EMode mode, Long64_t bufsize);
-   TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBuffer(EMode mode, ULong64_t bufsize);
+   TBuffer(EMode mode, ULong64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -99,10 +99,10 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, ULong64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Long64_t offset = 0) { fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(ULong64_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
@@ -110,9 +110,9 @@ public:
    Size_t   BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = nullptr; }
    Size_t   Length()     const { return (Size_t)(fBufCur - fBuffer); }
-   void     Expand(Long64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Long64_t size_needed);  // expand buffer to newsize
-   Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
+   void     Expand(ULong64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
+   void     AutoExpand(ULong64_t size_needed);  // expand buffer to newsize
+   Bool_t   ByteSwapBuffer(ULong64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
