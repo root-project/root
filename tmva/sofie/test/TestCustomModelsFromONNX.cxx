@@ -24,6 +24,7 @@ constexpr auto modelDataSuffix = "_FromONNX.dat";
 #include "input_models/references/ConvWithPadding.ref.hxx"
 #include "input_models/references/ConvWithoutPadding.ref.hxx"
 #include "input_models/references/ConvWithAutopadSameLower.ref.hxx"
+#include "input_models/references/ConvWithAutopadSameUpper.ref.hxx"
 #include "input_models/references/ConvWithStridesPadding.ref.hxx"
 #include "input_models/references/ConvWithStridesNoPadding.ref.hxx"
 #include "input_models/references/ConvWithAsymmetricPadding.ref.hxx"
@@ -675,6 +676,28 @@ TEST(ONNX, ConvWithAutopadSameLower)
    EXPECT_EQ(output.size(), std::size(ConvWithAutopadSameLower_ExpectedOutput::all_ones));
 
    float *correct = ConvWithAutopadSameLower_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, ConvWithAutopadSameUpper)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Input (1,1,5,5) with values 0..24; kernel (1,1,3,3) all-ones, auto_pad=SAME_UPPER, stride=1
+   // Odd kernel: total_pad=2 per dim, begin=1 end=1 (symmetric); output shape (1,1,5,5)
+   std::vector<float> input(25);
+   std::iota(input.begin(), input.end(), 0.0f);
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvWithAutopadSameUpper", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(ConvWithAutopadSameUpper_ExpectedOutput::output) / sizeof(float));
+
+   float *correct = ConvWithAutopadSameUpper_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {

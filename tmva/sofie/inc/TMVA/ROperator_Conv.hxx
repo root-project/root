@@ -137,28 +137,37 @@ public:
                           k2 + (fAttrDilations[1] - 1) * (k2 - 1),
                           k3 + (fAttrDilations[2] - 1) * (k3 - 1)};
 
+      if (fAttrStrides.empty()) {
+         fAttrStrides = {1, 1, 1};
+      }
+      if (fDim < 3)
+         fAttrStrides.resize(3, 1);
+
       if (fAttrAutopad == "NOTSET") {
          if (fAttrPads.empty()) {
             fAttrPads = {1, 1, 1, 1, 1, 1};
          }
       } else if (fAttrAutopad == "SAME_UPPER" || fAttrAutopad == "SAME_LOWER") {
-         if (fDim == 1)
-            fAttrPads = {fAttrKernelShape[0] / 2, fAttrKernelShape[0] / 2};
-         else if (fDim == 2)
-            fAttrPads = {fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2, fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2};
-         else if (fDim == 3)
-            fAttrPads = {fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2, fAttrKernelShape[2] / 2,
-                         fAttrKernelShape[0] / 2, fAttrKernelShape[1] / 2, fAttrKernelShape[2] / 2};
-         // add extra padding at beginning or end (depending if SAME_UPPER or SAME_LOWER)
-         // need to check this!
-         if (fAttrKernelShape[0] % 2 == 1) {
-            (fAttrAutopad == "SAME_UPPER") ? fAttrPads[0]++ : fAttrPads[i1]++;
+         for (size_t d = 0; d < fDim; ++d) {
+            if (input[d + 2].isParam)
+               throw std::runtime_error(
+                  "TMVA SOFIE Conv Op: SAME padding with parametric input shape is not supported");
          }
-         if (fDim > 1 && fAttrKernelShape[1] % 2 == 1) {
-            (fAttrAutopad == "SAME_UPPER") ? fAttrPads[1]++ : fAttrPads[i2]++;
-         }
-         if (fDim > 2 && fAttrKernelShape[2] % 2 == 1) {
-            (fAttrAutopad == "SAME_UPPER") ? fAttrPads[2]++ : fAttrPads[i3]++;
+         // ONNX SAME padding: total_pad = max(0, (ceil(in/stride)-1)*stride + kernel - in)
+         // SAME_UPPER places extra padding at end, SAME_LOWER at beginning
+         fAttrPads.assign(6, 0);
+         for (size_t d = 0; d < fDim; ++d) {
+            size_t inSize = input[d + 2].dim;
+            size_t stride_d = fAttrStrides[d];
+            size_t outSize = (inSize + stride_d - 1) / stride_d;
+            int totalPad = std::max(0, (int)((outSize - 1) * stride_d + fAttrKernelShape[d]) - (int)inSize);
+            if (fAttrAutopad == "SAME_UPPER") {
+               fAttrPads[d] = (size_t)(totalPad / 2);
+               fAttrPads[d + fDim] = (size_t)(totalPad - totalPad / 2);
+            } else {
+               fAttrPads[d] = (size_t)(totalPad - totalPad / 2);
+               fAttrPads[d + fDim] = (size_t)(totalPad / 2);
+            }
          }
       } else if (fAttrAutopad != "VALID") {
          throw
@@ -166,13 +175,6 @@ public:
       }
       // to be sure pad is vector of size 6
       if (fDim < 3) fAttrPads.resize(6, 0);
-
-      if (fAttrStrides.empty()) {
-         fAttrStrides = {1, 1, 1};
-      }
-      if (fDim < 3)
-         fAttrStrides.resize(3, 1);
-
 
       Dim input1 = input[2];
       Dim input2 = (fDim > 1) ? input[3] : Dim{1};
