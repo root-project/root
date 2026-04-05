@@ -13,21 +13,47 @@
 ### \macro_output
 ### \author Lorenzo Moneta
 
+import contextlib
 import os
+import warnings
 
 import numpy as np
 import ROOT
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
+
+
+@contextlib.contextmanager
+def expect_warning(category, message):
+    """Silence a known third-party warning. Raise if it stops firing.
+
+    Notifies us to drop the workaround once the upstream library is fixed.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        yield
+    seen = False
+    for w in caught:
+        if issubclass(w.category, category) and message in str(w.message):
+            seen = True
+        else:
+            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+    if not seen:
+        raise RuntimeError(
+            f"Expected {category.__name__} containing {message!r} was not "
+            "emitted. This tutorial's workaround can probably be removed."
+        )
+
 
 ## generate and train Keras models with different architectures
 
 
 def CreateModel(nlayers=4, nunits=64):
     model = Sequential()
-    model.add(Dense(nunits, activation="relu", input_dim=7))
+    model.add(Input(shape=(7,)))
+    model.add(Dense(nunits, activation="relu"))
     for i in range(1, nlayers):
         model.add(Dense(nunits, activation="relu"))
 
@@ -71,7 +97,16 @@ def PrepareData():
 def TrainModel(model, x, y, name):
     model.fit(x, y, epochs=5, batch_size=50)
     modelFile = name + ".keras"
-    model.save(modelFile)
+    # Keras' internal ``np.array(x)`` (TensorFlow backend) does not yet
+    # implement the NumPy 2.0 ``__array__(copy=...)`` signature, so saving
+    # emits a DeprecationWarning that we cannot fix from user code.
+    if tuple(int(p) for p in np.__version__.split(".")[:2]) >= (2, 0):
+        ctx = expect_warning(DeprecationWarning, "__array__ implementation doesn't accept a copy keyword")
+    else:
+        ctx = contextlib.nullcontext()
+
+    with ctx:
+        model.save(modelFile)
     return modelFile
 
 
