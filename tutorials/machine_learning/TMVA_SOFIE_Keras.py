@@ -9,10 +9,36 @@
 ### \author Sanjiban Sengupta and Lorenzo Moneta
 
 
+import contextlib
+import warnings
+
 import ROOT
 
 # Enable ROOT in batch mode (same effect as -nodraw)
 ROOT.gROOT.SetBatch(True)
+
+
+@contextlib.contextmanager
+def expect_warning(category, message):
+    """Silence a known third-party warning and raise if it stops firing.
+
+    Notifies us to drop the workaround once the upstream library is fixed.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        yield
+    seen = False
+    for w in caught:
+        if issubclass(w.category, category) and message in str(w.message):
+            seen = True
+        else:
+            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+    if not seen:
+        raise RuntimeError(
+            f"Expected {category.__name__} containing {message!r} was not "
+            "emitted. This tutorial's workaround can probably be removed."
+        )
+
 
 # -----------------------------------------------------------------------------
 # Step 1: Create and train a simple Keras model (via embedded Python)
@@ -37,7 +63,18 @@ y_train = randomGenerator.rand(4, 2)
 
 model.compile(loss="mse", optimizer="adam")
 model.fit(x_train, y_train, epochs=3, batch_size=2)
-model.save("KerasModel.keras")
+
+# Keras' internal ``np.array(x)`` (TensorFlow backend) does not yet implement
+# the NumPy 2.0 ``__array__(copy=...)`` signature, so saving the model emits a
+# DeprecationWarning that we cannot fix from user code.
+if tuple(int(p) for p in np.__version__.split(".")[:2]) >= (2, 0):
+    ctx = expect_warning(DeprecationWarning, "__array__ implementation doesn't accept a copy keyword")
+else:
+    ctx = contextlib.nullcontext()
+
+with ctx:
+    model.save("KerasModel.keras")
+
 model.summary()
 
 # -----------------------------------------------------------------------------

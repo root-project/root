@@ -13,12 +13,36 @@
 ## \author Lorenzo Moneta
 
 
+import contextlib
 import inspect
+import warnings
 
 import numpy as np
 import ROOT
 import torch
 import torch.nn as nn
+
+
+@contextlib.contextmanager
+def expect_warning(category, message):
+    """Silence a known third-party warning and raise if it stops firing.
+
+    Notifies us to drop the workaround once the upstream library is fixed.
+    """
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        yield
+    seen = False
+    for w in caught:
+        if issubclass(w.category, category) and message in str(w.message):
+            seen = True
+        else:
+            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+    if not seen:
+        raise RuntimeError(
+            f"Expected {category.__name__} containing {message!r} was not "
+            "emitted. This tutorial's workaround can probably be removed."
+        )
 
 
 def CreateAndTrainModel(modelName):
@@ -64,7 +88,11 @@ def CreateAndTrainModel(modelName):
     print("calling torch.onnx.export with parameters", kwargs)
 
     try:
-        torch.onnx.export(model, dummy_x, modelFile, **kwargs)
+        # torch.onnx.export (dynamo path) pickles its export program through
+        # copyreg, which still references the deprecated LeafSpec. The warning
+        # is emitted from inside PyTorch and cannot be avoided from user code.
+        with expect_warning(FutureWarning, "isinstance(treespec, LeafSpec)"):
+            torch.onnx.export(model, dummy_x, modelFile, **kwargs)
         print("model exported to ONNX as", modelFile)
         return modelFile
     except TypeError:
