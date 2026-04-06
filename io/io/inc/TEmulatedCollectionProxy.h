@@ -191,22 +191,22 @@ public:
    void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE) const override;
 
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
-   UInt_t Sizeof() const override { return sizeof(Cont_t); }
+   size_type Sizeof() const override { return sizeof(Cont_t); }
 
    // Return the address of the value at index 'idx'
-   void *At(UInt_t idx) override;
+   void *At(size_type idx) override;
 
    // Clear the container
    void Clear(const char *opt = "") override;
 
    // Resize the container
-   void Resize(UInt_t n, Bool_t force_delete) override;
+   void Resize(size_type n, Bool_t force_delete) override;
 
    // Return the current size of the container
-   UInt_t Size() const override;
+   size_type Size() const override;
 
    // Block allocation of containees
-   void* Allocate(UInt_t n, Bool_t forceDelete) override;
+   void* Allocate(size_type n, Bool_t forceDelete) override;
 
    // Block commit of containees
    void Commit(void* env) override;
