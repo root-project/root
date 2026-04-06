@@ -701,9 +701,9 @@ compress_stored_data( ASStorage *storage, CARD8 *data, int size, ASFlagType *fla
 	/* TODO: just a stub for now - need to implement compression */
 	int comp_size = size ;
 	CARD8  *buffer = data ;
-	size_t 	buf_size = size ; 
+   // size_t 	buf_size = size ;
 
-	static compute_diff_func_type compute_diff_func[2][4] = 
+   static compute_diff_func_type compute_diff_func[2][4] = 
 	{	{
 			compute_diff32,
 			compute_diff32_8bitshift,
@@ -769,8 +769,8 @@ compress_stored_data( ASStorage *storage, CARD8 *data, int size, ASFlagType *fla
 #endif 
 		}
 		buffer = storage->comp_buf ;
-		buf_size = storage->comp_buf_size ;
-		if( buffer ) 
+      // buf_size = storage->comp_buf_size ;
+      if( buffer ) 
 		{
 			if( get_flags( *flags, ASStorage_Bitmap ) )
 			{	
@@ -874,7 +874,8 @@ decompress_stored_data( ASStorage *storage, CARD8 *data, int size, int uncompres
 {
 	CARD8  *buffer = data ;
 
-	LOCAL_DEBUG_OUT( "size = %d, uncompressed_size = %d, flags = 0x%lX", size, uncompressed_size, flags );
+   (void)uncompressed_size; // silence unused variable warning when LOCAL_DEBUG_OUT is void
+   LOCAL_DEBUG_OUT( "size = %d, uncompressed_size = %d, flags = 0x%lX", size, uncompressed_size, flags );
 	if( get_flags( flags, ASStorage_RLEDiffCompress ))
 	{
 		buffer = storage->comp_buf ;
@@ -999,7 +1000,8 @@ destroy_asstorage_block( ASStorageBlock *block )
 static int
 select_storage_block( ASStorage *storage, int compressed_size, ASFlagType flags, int block_id_start )
 {
-	int i ;
+   (void)flags; // unused variable
+   int i ;
 	int new_block = -1 ; 
 	compressed_size += ASStorageSlot_SIZE;
 	i = block_id_start - 1 ;
@@ -1483,13 +1485,12 @@ convert_slot_to_ref( ASStorage *storage, ASStorageID id )
 	 * there is enough space in its block, otherwise we have to relocate it 
 	 * into different block, which is slower.
 	 */
-	if( block->total_free > sizeof(ASStorageID))
-	{	
-		slot_id = store_data_in_block(  block, (CARD8*)&target_id, 
+   if (block->total_free > (int)sizeof(ASStorageID)) {
+      slot_id = store_data_in_block(  block, (CARD8*)&target_id, 
 										sizeof(ASStorageID), sizeof(ASStorageID), 0, 
 										ASStorage_Reference );
-	}
-	LOCAL_DEBUG_OUT( "block = %p, block->total_free = %d, slot_id = 0x%X", block, block->total_free, slot_id );
+   }
+   LOCAL_DEBUG_OUT( "block = %p, block->total_free = %d, slot_id = 0x%X", block, block->total_free, slot_id );
 	
 	if( slot_id > 0 )
 	{ 	/* We can use fast strategy : now we need to swap contents of the slots */

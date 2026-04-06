@@ -186,7 +186,9 @@ void asim_nonGNUC_debugout( const char *format, ...)
 }
 
 void asim_nonGNUC_debugout_stub( const char *format, ...)
-{}
+{
+   (void)format; // silence unused variable warning
+}
 
 /* from libAfterBase/fs.c : */
 
@@ -194,8 +196,8 @@ int		asim_check_file_mode (const char *file, int mode)
 {
 	struct stat   st;
 
-	if ((stat (file, &st) == -1) || (st.st_mode & S_IFMT) != mode)
-		return (-1);
+   if ((stat(file, &st) == -1) || (int)(st.st_mode & S_IFMT) != mode)
+      return (-1);
 	else
 		return (0);
 }
@@ -534,9 +536,8 @@ asim_mystrncasecmp (const char *s1, const char *s2, size_t n)
 
 	if (s1 == NULL || s2 == NULL)
 		return (s1 == s2) ? 0 : ((s1==NULL)?1:-1);
-	while( i < n )
-	{
-		c1 = s1[i], c2 = s2[i];
+   while ((size_t)i < n) {
+      c1 = s1[i], c2 = s2[i];
 		++i ;
 		if (c1==0)
 			return -c2;
@@ -546,8 +547,8 @@ asim_mystrncasecmp (const char *s1, const char *s2, size_t n)
 			c2 = tolower(c2);
 		if (c1 != c2)
 			return (c1 - c2);
-	}
-	return 0;
+   }
+   return 0;
 }
 
 #ifdef X_DISPLAY_MISSING
@@ -624,28 +625,28 @@ const char *asim_parse_argb_color( const char *color, CARD32 *pargb )
 			}
 		}else if( *color )
 		{
-			/* does not really matter here what screen to use : */
-			Display *dpy = get_default_asvisual()->dpy;
 #ifdef X_DISPLAY_MISSING
 			register const char *ptr = &(color[0]);
             if(!FindColor(color, pargb))
                 return color;
-    		while( !isspace((int)*ptr) && *ptr != '\0' ) ptr++;
-			return ptr;
+            while (!isspace((int)*ptr) && *ptr != '\0')
+               ptr++;
+            return ptr;
 #else
-			if( dpy == NULL )
+         /* does not really matter here what screen to use : */
+         Display *dpy = get_default_asvisual()->dpy;
+         if( dpy == NULL )
 				return color ;
 			else
 			{
-				register const char *ptr = &(color[0]);
-#ifndef X_DISPLAY_MISSING
-				XColor xcol, xcol_scr ;
+            register const char *ptr = &(color[0]);
+            XColor xcol, xcol_scr ;
 /* XXX Not sure if Scr.asv->colormap is always defined here.  If not,
 ** change back to DefaultColormap(dpy,DefaultScreen(dpy)). */
 				if( XLookupColor( dpy, DefaultColormap(dpy,DefaultScreen(dpy)), color, &xcol, &xcol_scr) )
-					*pargb = 0xFF000000|((xcol.red<<8)&0x00FF0000)|(xcol.green&0x0000FF00)|((xcol.blue>>8)&0x000000FF);
-#endif
-				while( !isspace((int)*ptr) && *ptr != '\0' ) ptr++;
+               *pargb = 0xFF000000 | ((xcol.red << 8) & 0x00FF0000) | (xcol.green & 0x0000FF00) |
+                        ((xcol.blue >> 8) & 0x000000FF);
+            while( !isspace((int)*ptr) && *ptr != '\0' ) ptr++;
 				return ptr;
 			}
 #endif
@@ -863,10 +864,10 @@ asim_add_hash_item (ASHashTable * hash, ASHashableValue value, void *data)
 	if (key >= hash->size)
         return ASH_BadParameter;
 
-    if( deallocated_used > 0 )
-        item = deallocated_mem[--deallocated_used];
-    else
-        item = safecalloc (1, sizeof (ASHashItem));
+   if (deallocated_used > 0)
+      item = deallocated_mem[--deallocated_used];
+   else
+      item = safecalloc(1, sizeof(ASHashItem));
 
 	item->next = NULL;
 	item->value = value;
@@ -1011,8 +1012,8 @@ asim_string_hash_value (ASHashableValue value, ASHashKey hash_size)
 			break;
 		hash_key += (((ASHashKey) c) << i);
 		++i ;
-	}while( i < ((sizeof (ASHashKey) - sizeof (char)) << 3) );
-	return hash_key % hash_size;
+   } while ((size_t)i < ((sizeof(ASHashKey) - sizeof(char)) << 3));
+   return hash_key % hash_size;
 }
 
 long
@@ -1040,7 +1041,8 @@ asim_string_compare (ASHashableValue value1, ASHashableValue value2)
 void
 asim_string_destroy_without_data (ASHashableValue value, void *data)
 {
-	if ((char*)value != NULL)
+   (void)data; // silence unused variable warning
+   if ((char*)value != NULL)
 		free ((char*)value);
 }
 
@@ -1062,9 +1064,9 @@ asim_casestring_hash_value (ASHashableValue value, ASHashKey hash_size)
 			c = tolower (c);
 		hash_key += (((ASHashKey) c) << i);
 		++i;
-	}while(i < ((sizeof (ASHashKey) - sizeof (char)) << 3));
+   } while ((size_t)i < ((sizeof(ASHashKey) - sizeof(char)) << 3));
 
-	return hash_key % hash_size;
+   return hash_key % hash_size;
 }
 
 long
@@ -1111,6 +1113,9 @@ asim_get_drawable_size (Drawable d, unsigned int *ret_w, unsigned int *ret_h)
 		if (XGetGeometry (dpy, d, &root, &junk, &junk, ret_w, ret_h, &ujunk, &ujunk) != 0)
 			return 1;
 	}
+#else
+   (void)d;
+   (void)dpy; // silence unused variable warning
 #endif
 	return 0;
 }
@@ -1120,15 +1125,53 @@ int XParseGeometry (  char *string,int *x,int *y,
                       unsigned int *width,    /* RETURN */
 					  unsigned int *height)    /* RETURN */
 {
-	show_error( "Parsing of geometry is not supported without either Xlib opr libAfterBase" );
-	return 0;
+   (void)string;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height; // silence unused variable warning
+   show_error("Parsing of geometry is not supported without either Xlib or libAfterBase");
+   return 0;
 }
-void XDestroyImage( void* d){}
-int XGetWindowAttributes( void*d, Window w, unsigned long m, void* s){  return 0;}
+void XDestroyImage(void *d)
+{
+   (void)d; // silence unused variable warning
+}
+int XGetWindowAttributes(void *d, Window w, unsigned long m, void *s)
+{
+   (void)d;
+   (void)w;
+   (void)m;
+   (void)s; // silence unused variable warning
+   return 0;
+}
 void *XGetImage( void* dpy,Drawable d,int x,int y,unsigned int width,unsigned int height, unsigned long m,int t)
-{return NULL ;}
-unsigned long XGetPixel(void* d, int x, int y){return 0;}
-int XQueryColors(void* a,Colormap c,void* x,int m){return 0;}
+{
+   (void)dpy;
+   (void)d;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height;
+   (void)m;
+   (void)t; // silence unused variable warning
+   return NULL;
+}
+unsigned long XGetPixel(void *d, int x, int y)
+{
+   (void)d;
+   (void)x;
+   (void)y; // silence unused variable warning
+   return 0;
+}
+int XQueryColors(void *a, Colormap c, void *x, int m)
+{
+   (void)a;
+   (void)c;
+   (void)x;
+   (void)m; // silence unused variable warning
+   return 0;
+}
 #endif
 
 
@@ -1303,16 +1346,14 @@ asim_asxml_var_init(void)
 {
 	if ( asxml_var == NULL )
 	{
-		Display *dpy = get_default_asvisual()->dpy;
-
-    	asxml_var = create_ashash(0, string_hash_value, string_compare, string_destroy_without_data);
-    	if (!asxml_var) return;
+      asxml_var = create_ashash(0, string_hash_value, string_compare, string_destroy_without_data);
+      if (!asxml_var) return;
 #ifndef X_DISPLAY_MISSING
-    	if ( dpy != NULL )
-		{
-        	asxml_var_insert("xroot.width",  XDisplayWidth (dpy, DefaultScreen(dpy)));
+      Display *dpy = get_default_asvisual()->dpy;
+      if (dpy != NULL) {
+         asxml_var_insert("xroot.width",  XDisplayWidth (dpy, DefaultScreen(dpy)));
         	asxml_var_insert("xroot.height", XDisplayHeight(dpy, DefaultScreen(dpy)));
-      	}
+      }
 #endif
 	}
 }
@@ -1531,9 +1572,9 @@ int asim_xml_parse(const char* str, xml_elem_t* current, ASHashTable *vocabulary
 
 	/* Find a tag of the form <tag opts>, </tag>, or <tag opts/>. */
 	while (*ptr) {
-		const char* oab = ptr;
+      const char *oab;
 
-		/* Look for an open oab bracket. */
+      /* Look for an open oab bracket. */
 		for (oab = ptr ; *oab && *oab != '<' ; oab++);
 
 		/* If there are no oab brackets left, we're done. */

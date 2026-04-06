@@ -49,14 +49,13 @@ dib_data_to_scanline( ASScanline *buf,
 	switch( bmp_info->biBitCount )
 	{
 		case 1 :
-			for( x = 0 ; x < bmp_info->biWidth ; x++ )
-			{
-				int entry = (data[x>>3]&(1<<(x&0x07)))?cmap_entry_size:0 ;
+         for (x = 0; x < (int)bmp_info->biWidth; x++) {
+            int entry = (data[x>>3]&(1<<(x&0x07)))?cmap_entry_size:0 ;
 				buf->red[x] = cmap[entry+2];
 				buf->green[x] = cmap[entry+1];
 				buf->blue[x] = cmap[entry];
-			}
-			break ;
+         }
+         break ;
 		case 4 :
 			for( x = 0 ; x < (int)bmp_info->biWidth ; x++ )
 			{
@@ -357,7 +356,8 @@ bmp_write16 (FILE *fp, CARD16 *data, int count)
 Bool
 ASImage2bmp ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	Bool success = False;
+   (void)params; // silence unused variable warning
+   Bool success = False;
 	FILE *outfile = NULL ;
 	START_TIME(started);
 
@@ -387,8 +387,8 @@ ASImage2bmp ( ASImage *im, const char *path,  ASImageExportParams *params )
 			bmp_write32( outfile, &bmi->bmiHeader.biCompression, 6 );
 
 			/* writing off the bitmapbits */
-			if (fwrite( bmbits, sizeof(CARD8), bits_size, outfile ) == bits_size)
-				success = True;
+         if ((int)fwrite(bmbits, sizeof(CARD8), bits_size, outfile) == bits_size)
+            success = True;
 				
 			free( bmbits );
 			free( bmi );
@@ -413,9 +413,9 @@ bmp_read32 (FILE *fp, CARD32 *data, int count)
 		CARD8 *raw = (CARD8*)data ;
 #endif
 		total = fread((char*) data, sizeof (CARD8), count<<2, fp)>>2;
-		count = 0 ;
 #ifdef WORDS_BIGENDIAN                         /* BMPs are encoded as Little Endian */
-		while( count < total )
+      count = 0;
+      while( count < total )
 		{
 			data[count] = (raw[0]<<24)|(raw[1]<<16)|(raw[2]<<8)|raw[3];
 			++count ;
@@ -436,9 +436,9 @@ bmp_read16 (FILE *fp, CARD16 *data, int count)
 		CARD8 *raw = (CARD8*)data ;
 #endif
 		total = fread((char*) data, sizeof (CARD8), count<<1, fp)>>1;
-		count = 0 ;
 #ifdef WORDS_BIGENDIAN                         /* BMPs are encoded as Little Endian */
-		while( count < total )
+      count = 0;
+      while( count < total )
 		{
 			data[count] = (raw[0]<<16)|raw[1];
 			++count ;
@@ -512,11 +512,12 @@ read_bmp_image( FILE *infile, size_t data_offset, BITMAPINFOHEADER *bmp_info,
 		size_t ret;
 		cmap = safemalloc( cmap_entries * cmap_entry_size );
 		ret = fread(cmap, sizeof (CARD8), cmap_entries * cmap_entry_size, infile);
-		if (ret != cmap_entries * cmap_entry_size) {
-         if (cmap) free(cmap);
-		   return NULL;
-	   }
-	}
+      if ((int)ret != cmap_entries * cmap_entry_size) {
+         if (cmap)
+            free(cmap);
+         return NULL;
+      }
+   }
 
 	if( add_colormap )
 		data_offset += cmap_entries*cmap_entry_size ;

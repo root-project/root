@@ -410,7 +410,14 @@ pixmap2ximage(ASVisual *asv, Pixmap p, int x, int y, unsigned int width, unsigne
 	}
 	return im;
 #else
-    return NULL ;
+   (void)asv;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height;
+   (void)plane_mask;
+   (void)compression; // silence unused variable warning
+   return NULL;
 #endif
 }
 
@@ -443,7 +450,17 @@ picture2asimage(ASVisual *asv, Pixmap rgb, Pixmap a , int x, int y, unsigned int
 	}
 	return im;
 #else
-    return NULL ;
+   (void)asv;
+   (void)rgb;
+   (void)a;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height;
+   (void)plane_mask;
+   (void)keep_cache;
+   (void)compression; // silence unused variable warning
+   return NULL;
 #endif
 }
 
@@ -467,28 +484,36 @@ put_ximage( ASVisual *asv, XImage *xim, Drawable d, GC gc,
 		src_x = 0;
 	}else if( src_x > xim->width )
 		return False;
-	if( xim->width  > src_x+width )
-		width = xim->width - src_x ;
-	if( src_y < 0 )
-	{
-		height+= src_y ;
-		src_y = 0;
-	}else if( src_y > xim->height )
-		return False;
-	if( xim->height  > src_y+height )
-		height = xim->height - src_y ;
+   if (xim->width > src_x + (int)width)
+      width = xim->width - src_x;
+   if (src_y < 0) {
+      height += src_y;
+      src_y = 0;
+   } else if (src_y > xim->height)
+      return False;
+   if (xim->height > src_y + (int)height)
+      height = xim->height - src_y;
 
-	if( my_gc == NULL )
-	{
-		XGCValues gcv ;
-		my_gc = XCreateGC( asv->dpy, d, 0, &gcv );
-	}
-	ASPutXImage( asv, d, my_gc, xim, src_x, src_y, dest_x, dest_y, width, height );
-	if( my_gc != gc )
+   if (my_gc == NULL) {
+      XGCValues gcv;
+      my_gc = XCreateGC( asv->dpy, d, 0, &gcv );
+   }
+   ASPutXImage(asv, d, my_gc, xim, src_x, src_y, dest_x, dest_y, width, height);
+   if( my_gc != gc )
 		XFreeGC( asv->dpy, my_gc );
 	return True ;
 #else
-	return False ;
+   (void)asv;
+   (void)xim;
+   (void)d;
+   (void)gc;
+   (void)src_x;
+   (void)src_y;
+   (void)dest_x;
+   (void)dest_y;
+   (void)width;
+   (void)height; // silence unused variable warning
+   return False;
 #endif
 }
 
@@ -629,6 +654,16 @@ asimage2drawable_gl(	ASVisual *asv, Drawable d, ASImage *im,
 			glXDestroyGLXPixmap( asv->dpy, glxp);
 		glFinish(); 				   
 		return True;
+#else
+      (void)src_x;
+      (void)src_y;
+      (void)dest_x;
+      (void)dest_y;
+      (void)width;
+      (void)height;
+      (void)d_width;
+      (void)d_height;
+      (void)force_direct; // silence unused variable warning
 #endif /* #ifdef HAVE_GLX */
 	}
 	{
@@ -674,6 +709,18 @@ asimage2drawable( ASVisual *asv, Drawable d, ASImage *im, GC gc,
 		}
 		return res;
 	}
+#else
+   (void)asv;
+   (void)d;
+   (void)im;
+   (void)gc;
+   (void)src_x;
+   (void)src_y;
+   (void)dest_x;
+   (void)dest_y;
+   (void)width;
+   (void)height;
+   (void)use_cached; // silence unused variable warning
 #endif
 	return False ;
 }
@@ -694,15 +741,14 @@ asimage2alpha_drawable( ASVisual *asv, Drawable d, ASImage *im, GC gc,
 
 		XGetGeometry( asv->dpy, d, &root, &dumm, &dumm, &udumm, &udumm, &udumm, &alpha_depth );
 
-		if ( !use_cached || im->alt.mask_ximage == NULL || im->alt.mask_ximage->depth != alpha_depth )
-		{
-			if( (xim = asimage2alpha_ximage (asv, im, (alpha_depth == 1) )) == NULL )
+      if (!use_cached || im->alt.mask_ximage == NULL || im->alt.mask_ximage->depth != (int)alpha_depth) {
+         if( (xim = asimage2alpha_ximage (asv, im, (alpha_depth == 1) )) == NULL )
 			{
 				show_error("cannot export image into alpha XImage.");
 				return None ;
 			}
-		}else
-			xim = im->alt.mask_ximage ;
+      } else
+         xim = im->alt.mask_ximage ;
 		if (xim != NULL )
 		{
 			res = put_ximage( asv, xim, d, gc,	src_x, src_y, dest_x, dest_y, width, height );
@@ -711,6 +757,18 @@ asimage2alpha_drawable( ASVisual *asv, Drawable d, ASImage *im, GC gc,
 		}
 		return res;
 	}
+#else
+   (void)asv;
+   (void)d;
+   (void)im;
+   (void)gc;
+   (void)src_x;
+   (void)src_y;
+   (void)dest_x;
+   (void)dest_y;
+   (void)width;
+   (void)height;
+   (void)use_cached; // silence unused variable warning
 #endif
 	return False ;
 }
@@ -733,6 +791,12 @@ asimage2pixmap(ASVisual *asv, Window root, ASImage *im, GC gc, Bool use_cached)
 		}
 		return p;
 	}
+#else
+   (void)asv;
+   (void)root;
+   (void)im;
+   (void)gc;
+   (void)use_cached; // silence unused variable warning
 #endif
 	return None ;
 }
@@ -770,7 +834,13 @@ asimage2alpha(ASVisual *asv, Window root, ASImage *im, GC gc, Bool use_cached, B
 		XDestroyImage (xim);
 	return mask;
 #else
-	return None ;
+   (void)asv;
+   (void)root;
+   (void)im;
+   (void)gc;
+   (void)use_cached;
+   (void)bitmap; // silence unused variable warning
+   return None ;
 #endif
 }
 

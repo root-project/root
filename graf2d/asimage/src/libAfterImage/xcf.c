@@ -687,7 +687,9 @@ read_xcf_levels( XcfImage *xcf_im, FILE *fp, XcfLevel *head )
 static void
 read_xcf_tiles( XcfImage *xcf_im, FILE *fp, XcfTile *head )
 {
-	while( head )
+   (void)xcf_im;
+   (void)fp; // silence unused variable warning
+   while( head )
 	{
 		head->estimated_size = XCF_TILE_WIDTH*XCF_TILE_HEIGHT*4 ;
 		head = head->next ;
@@ -698,7 +700,9 @@ read_xcf_tiles( XcfImage *xcf_im, FILE *fp, XcfTile *head )
 static void
 read_xcf_tiles_rle( XcfImage *xcf_im, FILE *fp, XcfTile *head )
 {
-	while( head )
+   (void)xcf_im;
+   (void)fp; // silence unused variable warning
+   while( head )
 	{
 		if( head->next )
 			head->estimated_size = head->next->offset - head->offset ;
@@ -735,7 +739,9 @@ void
 decode_xcf_tile( FILE *fp, XcfTile *tile, int bpp,
 			   	 ASScanline *buf, CARD8* tile_buf, int offset_x, int offset_y, int width, int height)
 {
-	int bytes_in, available = width*height ;
+   (void)tile;
+   (void)offset_y; // silence unused variable warning
+   int bytes_in, available = width*height ;
 	int y = 0;
 	int comp = 0 ;
 
@@ -759,8 +765,10 @@ void
 decode_xcf_tile_rle( FILE *fp, XcfTile *tile, int bpp,
 					 ASScanline *buf, CARD8* tile_buf, int offset_x, int offset_y, int width, int height)
 {
-	int bytes_in, available = width*height ;
-	int x = 0, y = 0;
+   (void)tile;
+   (void)offset_y; // silence unused variable warning
+   int bytes_in, available = width * height;
+   int x = 0, y = 0;
 	CARD8	tmp[XCF_TILE_WIDTH] ;
 	int comp = 0 ;
 

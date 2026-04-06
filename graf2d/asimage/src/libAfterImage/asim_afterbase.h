@@ -179,7 +179,7 @@ void asim_nonGNUC_debugout_stub( const char *format, ...);
 #define LOCAL_DEBUG_CALLER_OUT(format,args...) \
     do{ fprintf( stderr, "%s:%s:%s:> called from [%s] with args(" format ")\n", get_application_name(), __FILE__, __FUNCTION__, get_caller_func(), ## args );}while(0)
 #else
-#define LOCAL_DEBUG_OUT(format,args...)
+#define LOCAL_DEBUG_OUT(format, args...)
 #define LOCAL_DEBUG_CALLER_OUT(format,args...)
 #endif /* LOCAL_DEBUG */
 
@@ -233,8 +233,8 @@ void asim_nonGNUC_debugout_stub( const char *format, ...);
 #define START_TIME(started)  time_t started = clock()
 #define SHOW_TIME(s,started) fprintf (stderr, "%s " s " time (clocks): %lu mlsec\n", __FUNCTION__, ((clock () - (started))*100)/CLOCKS_PER_SEC)
 #else
-#define START_TIME(started)  unsigned long started = 0
-#define SHOW_TIME(s,started) started = 0
+#define START_TIME(started)
+#define SHOW_TIME(s, started)
 #endif
 
 /* from libAfterBase/safemalloc.h : */

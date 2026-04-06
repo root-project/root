@@ -115,13 +115,13 @@ Bool create_image_xim( ASVisual *asv, ASImage *im, ASAltImFormats format )
 		format = ASA_ScratchXImage ;
 		do_alpha = True ;
 	}
+   (void)do_alpha; // silence unused variable warning
 
-	if( format == ASA_ScratchXImage || format == ASA_ScratchMaskXImage ) 
-	{	
-		scratch = True ;
+   if (format == ASA_ScratchXImage || format == ASA_ScratchMaskXImage) {
+      scratch = True ;
 		format = (format - ASA_ScratchXImage ) + ASA_XImage ;
-	}		
-	dst = (format == ASA_MaskXImage )? &(im->alt.mask_ximage):&(im->alt.ximage);
+   }
+   dst = (format == ASA_MaskXImage )? &(im->alt.mask_ximage):&(im->alt.ximage);
 	if( *dst == NULL )
 	{
 		int depth = 0 ;
@@ -141,8 +141,10 @@ Bool create_image_xim( ASVisual *asv, ASImage *im, ASAltImFormats format )
 
 Bool create_image_argb32( ASVisual *asv, ASImage *im, ASAltImFormats format )
 {
-	if( im->alt.argb32 == NULL )
-		im->alt.argb32 = safemalloc( im->width*im->height*sizeof(ARGB32) );
+   (void)asv;
+   (void)format; // silence unused variable warning
+   if (im->alt.argb32 == NULL)
+      im->alt.argb32 = safemalloc( im->width*im->height*sizeof(ARGB32) );
 	return True;
 }
 
@@ -151,8 +153,9 @@ Bool create_image_argb32( ASVisual *asv, ASImage *im, ASAltImFormats format )
 static void
 asimage_dup_line (ASImage * im, ColorPart color, unsigned int y1, unsigned int y2, unsigned int length)
 {
-	ASStorageID *part = im->channels[color];
-	if (part[y2] != 0)
+   (void)length; // silence unused variable warning
+   ASStorageID *part = im->channels[color];
+   if (part[y2] != 0)
 	{	
 		forget_data(NULL, part[y2]);
 		part[y2] = 0 ;
@@ -193,6 +196,7 @@ asimage_erase_line( ASImage * im, ColorPart color, unsigned int y )
 void
 copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len )
 {
+   (void)unused; // silence unused variable warning
 #if 1
 #ifdef CARD64
 	CARD64 *dsrc = (CARD64*)src;
@@ -612,27 +616,27 @@ best_output_filter( register CARD32 *line1, register CARD32 *line2, int unused, 
 {/* we carry half of the quantization error onto the surrounding pixels : */
  /*        X    7/16 */
  /* 3/16  5/16  1/16 */
-	register int i ;
-	register CARD32 errp = 0, err = 0, c;
-	c = line1[0];
-	if( (c&0xFFFF0000)!= 0 )
-		c = ( c&0x7F000000 )?0:0x0000FFFF;
-	errp = c&QUANT_ERR_MASK;
-	line1[0] = c>>QUANT_ERR_BITS ;
-	line2[0] += (errp*5)>>4 ;
+ (void)unused; // silence unused variable warning
+ register int i;
+ register CARD32 errp = 0, err = 0, c;
+ c = line1[0];
+ if ((c & 0xFFFF0000) != 0)
+    c = (c & 0x7F000000) ? 0 : 0x0000FFFF;
+ errp = c & QUANT_ERR_MASK;
+ line1[0] = c >> QUANT_ERR_BITS;
+ line2[0] += (errp * 5) >> 4;
 
-	for( i = 1 ; i < len ; ++i )
-	{
-		c = line1[i];
-		if( (c&0xFFFF0000)!= 0 )
-			c = (c&0x7F000000)?0:0x0000FFFF;
-		c += ((errp*7)>>4) ;
-		err = c&QUANT_ERR_MASK;
-		line1[i] = (c&0x7FFF0000)?0x000000FF:(c>>QUANT_ERR_BITS);
-		line2[i-1] += (err*3)>>4 ;
-		line2[i] += ((err*5)>>4)+(errp>>4);
-		errp = err ;
-	}
+ for (i = 1; i < len; ++i) {
+    c = line1[i];
+    if ((c & 0xFFFF0000) != 0)
+       c = (c & 0x7F000000) ? 0 : 0x0000FFFF;
+    c += ((errp * 7) >> 4);
+    err = c & QUANT_ERR_MASK;
+    line1[i] = (c & 0x7FFF0000) ? 0x000000FF : (c >> QUANT_ERR_BITS);
+    line2[i - 1] += (err * 3) >> 4;
+    line2[i] += ((err * 5) >> 4) + (errp >> 4);
+    errp = err;
+ }
 }
 
 static inline void
@@ -720,8 +724,9 @@ fast_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 static inline void
 fine_output_filter_mod( register CARD32 *data, int unused, int len )
 {/* we carry half of the quantization error onto the following pixel : */
-	register int i ;
-	register CARD32 err = 0, c;
+   (void)unused; // silence unused variable warning
+   register int i;
+   register CARD32 err = 0, c;
 	for( i = 0 ; i < len ; ++i )
 	{
 		c = data[i];
@@ -901,6 +906,8 @@ decode_asscanline_ximage( ASImageDecoder *imdec, unsigned int skip, int y )
 			{
 				while(--x >= 0 ) dst[x] = (XGetPixel(xim, x, y) == 0)?0x00:0xFF;
 			}
+#else
+         (void)y; // silence unused variable warning
 #endif
 		}
 		count = MIN(width,xim_width);
@@ -1130,15 +1137,15 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 			int alt_right = (line*bevel->right_outline/bevel->bottom_outline)+1 ;
 
 			alt_left += MAX(imdec->bevel_left-(int)bevel->left_outline,0) ;
-			offset_shade = MIN(alt_left, (int)scl->width );
 
 			if( (int)scl->width < imdec->bevel_right )
 				alt_right -= imdec->bevel_right-(int)scl->width ;
 
-/*	fprintf( stderr, __FUNCTION__ " %d: y_out = %d, alt_left = %d, offset_shade = %d, alt_right = %d, scl->width = %d, out_width = %d\n",
-					 __LINE__, y_out, alt_left, offset_shade, alt_right, scl->width, imdec->out_width );
-  */
-			set_flags( scl->flags, imdec->filter );
+         /*	offset_shade = MIN(alt_left, (int)scl->width ); fprintf( stderr, __FUNCTION__ " %d: y_out = %d, alt_left =
+            %d, offset_shade = %d, alt_right = %d, scl->width = %d, out_width = %d\n",
+                         __LINE__, y_out, alt_left, offset_shade, alt_right, scl->width, imdec->out_width );
+           */
+         set_flags( scl->flags, imdec->filter );
 			draw_solid_bevel_line( scl, alt_left, alt_left, alt_left, alt_right,
 							   	bevel->hi_color, bevel->lo_color,
 							   	bevel->hilo_color, bevel->lolo_color );
@@ -1237,6 +1244,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 	++(imdec->next_line);
 }
 
+#ifndef X_DISPLAY_MISSING
 /* *********************************************************************/
 /*						  ENCODER : 								  */
 inline static void
@@ -1253,6 +1261,7 @@ tile_ximage_line( XImage *xim, unsigned int line, int step, int range )
 		dst_line += xim_step ;
 	}
 }
+#endif
 
 void
 encode_image_scanline_mask_xim( ASImageOutput *imout, ASScanline *to_store )
@@ -1284,6 +1293,9 @@ encode_image_scanline_mask_xim( ASImageOutput *imout, ASScanline *to_store )
 							  (imout->tiling_range ? imout->tiling_range:imout->im->height) );
 		imout->next_line += imout->bottom_to_top;
 	}
+#else
+   (void)imout;
+   (void)to_store; // silence unused variable warning
 #endif
 }
 
@@ -1342,6 +1354,9 @@ encode_image_scanline_xim( ASImageOutput *imout, ASScanline *to_store )
 #endif
 		imout->next_line += imout->bottom_to_top;
 	}
+#else
+   (void)imout;
+   (void)to_store; // silence unused variable warning
 #endif
 }
 

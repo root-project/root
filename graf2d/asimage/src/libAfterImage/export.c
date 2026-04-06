@@ -473,8 +473,8 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 	static const ASPngExportParams defaults = { ASIT_Png, EXPORT_ALPHA, -1 };
 
 	png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, NULL, NULL, NULL );
-    if ( png_ptr != NULL )
-    	if( (info_ptr = png_create_info_struct(png_ptr)) != NULL )
+   if (png_ptr != NULL)
+      if( (info_ptr = png_create_info_struct(png_ptr)) != NULL )
 			if( setjmp(png_jmpbuf(png_ptr)) )
 			{
 				png_destroy_info_struct(png_ptr, (png_infopp) &info_ptr);
@@ -660,7 +660,8 @@ void asim_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 	 
 void asim_png_flush_data(png_structp png_ptr)
 {
- 	/* nothing to do really, but PNG requires it */	
+   (void)png_ptr; // silence unused variable warning
+                  /* nothing to do really, but PNG requires it */
 }	 
 
 
@@ -873,8 +874,11 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2xcf ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	/* More stuff */
-	XcfImage  *xcf_im = NULL;
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   /* More stuff */
+   XcfImage  *xcf_im = NULL;
 	START_TIME(started);
 
 	SHOW_PENDING_IMPLEMENTATION_NOTE("XCF");
@@ -897,7 +901,10 @@ ASImage2xcf ( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2ppm ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	START_TIME(started);
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   START_TIME(started);
 	SHOW_PENDING_IMPLEMENTATION_NOTE("PPM");
 	SHOW_TIME("image export",started);
 	return False;
@@ -910,7 +917,10 @@ ASImage2ppm ( ASImage *im, const char *path,  ASImageExportParams *params )
 Bool
 ASImage2ico ( ASImage *im, const char *path,  ASImageExportParams *params )
 {
-	START_TIME(started);
+   (void)im;
+   (void)path;
+   (void)params; // silence unused variable warning
+   START_TIME(started);
 	SHOW_PENDING_IMPLEMENTATION_NOTE("ICO");
 	SHOW_TIME("image export",started);
 	return False;
@@ -925,8 +935,8 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	GifFileType *gif = NULL ;
 	ColorMapObject *gif_cmap ;
 	Bool dont_save_cmap = False ;
-	static const ASGifExportParams defaultsGif = { ASIT_Gif,EXPORT_ALPHA|EXPORT_APPEND, 3, 127, 10 };
-        ASImageExportParams defaults;
+   static const ASGifExportParams defaultsGif = {ASIT_Gif, EXPORT_ALPHA | EXPORT_APPEND, 3, 127, 10, 0};
+   ASImageExportParams defaults;
 	ASColormap         cmap;
 	int *mapped_im ;
 	int y ;
@@ -1272,8 +1282,8 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 
 	TIFFSetField(out, TIFFTAG_BITSPERSAMPLE,   8);
 	TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-	if( params->tiff.compression_type == -1  )
-		params->tiff.compression_type = defaultsTiff.compression_type ;
+   if (params->tiff.compression_type == (unsigned int)-1)
+      params->tiff.compression_type = defaultsTiff.compression_type ;
 	TIFFSetField(out, TIFFTAG_COMPRESSION,  params->tiff.compression_type);
 	switch (params->tiff.compression_type )
 	{

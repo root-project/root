@@ -300,13 +300,14 @@ void init_asimage_import_params( ASImageImportParams *iparams )
 ASImage *
 file2ASImage( const char *file, ASFlagType what, double gamma, unsigned int compression, ... )
 {
-	int i ;
-	char 		 *paths[MAX_SEARCH_PATHS+1] ;
-	ASImageImportParams iparams ;
-	va_list       ap;
+   (void)what; // silence unused variable warning
+   int i;
+   char *paths[MAX_SEARCH_PATHS + 1];
+   ASImageImportParams iparams;
+   va_list ap;
 
-	init_asimage_import_params( &iparams );
-	iparams.gamma = gamma ;
+   init_asimage_import_params(&iparams);
+   iparams.gamma = gamma ;
 	iparams.compression = compression ;
 	iparams.search_path = &(paths[0]);
 #if 0
@@ -363,6 +364,11 @@ file2pixmap(ASVisual *asv, Window root, const char *realfilename, Pixmap *mask_o
 			XFreePixmap( asv->dpy, *mask_out );
 		*mask_out = mask ;
 	}
+#else
+   (void)asv;
+   (void)root;
+   (void)realfilename;
+   (void)mask_out; // silence unused variable warning
 #endif
 	return trg ;
 }
@@ -405,19 +411,20 @@ get_asimage_file_type( ASImageManager* imageman, const char *file )
 ASImage *
 get_asimage( ASImageManager* imageman, const char *file, ASFlagType what, unsigned int compression )
 {
-	ASImage *im = NULL ;
-	if( imageman && file )
-		if( (im = fetch_asimage(imageman, file )) == NULL )
-		{
-			im = load_image_from_path( file, &(imageman->search_path[0]), imageman->gamma);
-			if( im )
+   (void)what;
+   (void)compression; // silence unused variable warning
+
+   ASImage *im = NULL;
+   if (imageman && file)
+      if ((im = fetch_asimage(imageman, file)) == NULL) {
+         im = load_image_from_path(file, &(imageman->search_path[0]), imageman->gamma);
+         if( im )
 			{
 				store_asimage( imageman, im, file );
 				set_flags( im->flags, ASIM_NAME_IS_FILENAME );
 			}
-
-		}
-	return im;
+      }
+   return im;
 }
 
 void
@@ -578,6 +585,8 @@ reload_asimage_manager( ASImageManager *imman )
 			return True;
 		}
 	}
+#else
+   (void)imman; // silence unused variable warning
 #endif
 	return False;
 }
@@ -738,29 +747,27 @@ direntry2ASImageListEntry( const char *fname, const char *fullname,
 				else
 					tile_height = data->preview_height ;
 			}
-			if( scale_width != im->width || scale_height != im->height )
-			{
-				ASImage *tmp = scale_asimage( data->asv, im, scale_width, scale_height, ASA_ASImage, data->preview_compression, ASIMAGE_QUALITY_DEFAULT );
-				if( tmp != NULL )
-				{
-					destroy_asimage( &im );
-					im = tmp ;
-				}
-			}
-			if( tile_width != im->width || tile_height != im->height )
-			{
-				ASImage *tmp = tile_asimage( data->asv, im, 0, 0, tile_width, tile_height, TINT_NONE, ASA_ASImage, data->preview_compression, ASIMAGE_QUALITY_DEFAULT );
-				if( tmp != NULL )
-				{
-					destroy_asimage( &im );
-					im = tmp ;
-				}
-			}
-		}
+         if (scale_width != (int)im->width || scale_height != (int)im->height) {
+            ASImage *tmp = scale_asimage(data->asv, im, scale_width, scale_height, ASA_ASImage,
+                                         data->preview_compression, ASIMAGE_QUALITY_DEFAULT);
+            if (tmp != NULL) {
+               destroy_asimage(&im);
+               im = tmp;
+            }
+         }
+         if (tile_width != (int)im->width || tile_height != (int)im->height) {
+            ASImage *tmp = tile_asimage(data->asv, im, 0, 0, tile_width, tile_height, TINT_NONE, ASA_ASImage,
+                                        data->preview_compression, ASIMAGE_QUALITY_DEFAULT);
+            if (tmp != NULL) {
+               destroy_asimage(&im);
+               im = tmp;
+            }
+         }
+      }
 
-		curr->preview = im ;
-	}
-	return True;
+      curr->preview = im;
+   }
+   return True;
 }
 #endif
 
@@ -772,7 +779,8 @@ get_asimage_list( ASVisual *asv, const char *dir,
 				  unsigned int *count_ret,
 				  int (*select) (const char *) )
 {
-	ASImageListEntry *im_list = NULL ;
+   (void)gamma; // silence unused variable warning
+   ASImageListEntry *im_list = NULL;
 #ifndef _WIN32
 	struct ASImageListAuxData aux_data ;
 	int count ;
@@ -1353,31 +1361,29 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 						{
 							int i, pixel_i = -1;
 							static CARD8  gray2bit_translation[4] = {0,85,170,255};
-							for ( i = 0 ; i < row_bytes ; ++i )
-							{
-								CARD8 b = row_pointers[y][i];
-								upscaled_gray[++pixel_i] = gray2bit_translation[b&0x03];
-								upscaled_gray[++pixel_i] = gray2bit_translation[(b&0xC)>>2];
-								upscaled_gray[++pixel_i] = gray2bit_translation[(b&0x30)>>4];
-								upscaled_gray[++pixel_i] = gray2bit_translation[(b&0xC0)>>6];
-							}
-							im->channels[IC_RED][y] = store_data( NULL, upscaled_gray, width, rgb_flags, 0);
-						}else if ( bit_depth == 4 )
-						{
-							int i, pixel_i = -1;
-							static CARD8  gray4bit_translation[16] = {0,17,34,51,  68,85,102,119, 136,153,170,187, 204,221,238,255};
-							for ( i = 0 ; i < row_bytes ; ++i )
-							{
-								CARD8 b = row_pointers[y][i];
-								upscaled_gray[++pixel_i] = gray4bit_translation[b&0x0F];
-								upscaled_gray[++pixel_i] = gray4bit_translation[(b&0xF0)>>4];
-							}
-							im->channels[IC_RED][y] = store_data( NULL, upscaled_gray, width, rgb_flags, 0);
-						}else
-							im->channels[IC_RED][y] = store_data( NULL, row_pointers[y], row_bytes, rgb_flags, 1);
-					}
+                     for (i = 0; (size_t)i < row_bytes; ++i) {
+                        CARD8 b = row_pointers[y][i];
+                        upscaled_gray[++pixel_i] = gray2bit_translation[b & 0x03];
+                        upscaled_gray[++pixel_i] = gray2bit_translation[(b & 0xC) >> 2];
+                        upscaled_gray[++pixel_i] = gray2bit_translation[(b & 0x30) >> 4];
+                        upscaled_gray[++pixel_i] = gray2bit_translation[(b&0xC0)>>6];
+                     }
+                     im->channels[IC_RED][y] = store_data(NULL, upscaled_gray, width, rgb_flags, 0);
+                  } else if (bit_depth == 4) {
+                     int i, pixel_i = -1;
+                     static CARD8 gray4bit_translation[16] = {0,   17,  34,  51,  68,  85,  102, 119,
+                                                              136, 153, 170, 187, 204, 221, 238, 255};
+                     for (i = 0; (size_t)i < row_bytes; ++i) {
+                        CARD8 b = row_pointers[y][i];
+                        upscaled_gray[++pixel_i] = gray4bit_translation[b & 0x0F];
+                        upscaled_gray[++pixel_i] = gray4bit_translation[(b & 0xF0) >> 4];
+                     }
+                     im->channels[IC_RED][y] = store_data(NULL, upscaled_gray, width, rgb_flags, 0);
+                  } else
+                     im->channels[IC_RED][y] = store_data(NULL, row_pointers[y], row_bytes, rgb_flags, 1);
+               }
 
-					if( grayscale )
+               if( grayscale )
 					{
 						im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y] );
 						im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y] );
@@ -1721,11 +1727,12 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
 ASImage *
 xcf2ASImage( const char * path, ASImageImportParams *params )
 {
-	ASImage *im = NULL ;
-	/* More stuff */
-	FILE         *infile;					   /* source file */
-	XcfImage  *xcf_im;
-	START_TIME(started);
+   (void)params; // silence unused variable warning
+   ASImage *im = NULL;
+   /* More stuff */
+   FILE *infile; /* source file */
+   XcfImage *xcf_im;
+   START_TIME(started);
 
 	/* we want to open the input file before doing anything else,
 	 * so that the setjmp() error recovery below can assume the file is open.
@@ -1983,26 +1990,24 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 				{
 					unsigned int x ;
 					Bool do_alpha = False ;
-                    image_y = interlaced ? gif_interlaced2y(y, height):y;
-					for (x = 0; x < width; ++x)
-					{
-						int c = row_pointer[x];
-      					if ( c == transparent)
-						{
-							c = bg_color ;
-							do_alpha = True ;
+               image_y = interlaced ? gif_interlaced2y(y, height) : (int)y;
+               for (x = 0; x < width; ++x) {
+                  int c = row_pointer[x];
+                  if (c == transparent) {
+                     c = bg_color;
+                     do_alpha = True ;
 							a[x] = 0 ;
-						}else
-							a[x] = 0x00FF ;
+                  } else
+                     a[x] = 0x00FF;
 
-						r[x] = cmap->Colors[c].Red;
+                  r[x] = cmap->Colors[c].Red;
 		        		g[x] = cmap->Colors[c].Green;
 						b[x] = cmap->Colors[c].Blue;
-	        		}
-					row_pointer += x ;
-					im->channels[IC_RED][image_y]  = store_data( NULL, r, width, ASStorage_RLEDiffCompress, 0);
-				 	im->channels[IC_GREEN][image_y] = store_data( NULL, g, width, ASStorage_RLEDiffCompress, 0);
-					im->channels[IC_BLUE][image_y]  = store_data( NULL, b, width, ASStorage_RLEDiffCompress, 0);
+               }
+               row_pointer += x;
+               im->channels[IC_RED][image_y] = store_data(NULL, r, width, ASStorage_RLEDiffCompress, 0);
+               im->channels[IC_GREEN][image_y] = store_data(NULL, g, width, ASStorage_RLEDiffCompress, 0);
+               im->channels[IC_BLUE][image_y]  = store_data( NULL, b, width, ASStorage_RLEDiffCompress, 0);
 					if( do_alpha )
 						im->channels[IC_ALPHA][image_y]  = store_data( NULL, a, im->width, ASStorage_RLEDiffCompress|ASStorage_Bitmap, 0);
 				}
@@ -2165,51 +2170,49 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
                   uint32_t *bc;
                   TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
 						int all_strip_size = 0;
-						for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); ++strip_no)
-							all_strip_size += bc[strip_no];
-						/* create one large buffer for the image data : */
-						if (data_size < all_strip_size)
-						{
-							data_size = all_strip_size;
+                  for (strip_no = 0; strip_no < (int)TIFFNumberOfStrips(tif); ++strip_no)
+                     all_strip_size += bc[strip_no];
+                  /* create one large buffer for the image data : */
+                  if (data_size < all_strip_size) {
+                     data_size = all_strip_size;
 							_TIFFfree(data);
 							data = _TIFFmalloc(data_size);
-						}
+                  }
 
-						if (planar_config == PLANARCONFIG_CONTIG)
+                  if (planar_config == PLANARCONFIG_CONTIG)
 						{
-							for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); strip_no++)
-							{
-								int bytes_in;
-								if (bits == 12) /* can't use libTIFF's function - it can't handle 12bit data ! */
-								{
-									/* PENTAX cameras claim that data is compressed as runlength packbits -
-									   it is not in fact run-length, which confuses libTIFF
-									 */
-									bytes_in = TIFFReadRawStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
-								}else
-									bytes_in = TIFFReadEncodedStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
+                     for (strip_no = 0; strip_no < (int)TIFFNumberOfStrips(tif); strip_no++) {
+                        int bytes_in;
+                        if (bits == 12) /* can't use libTIFF's function - it can't handle 12bit data ! */
+                        {
+                           /* PENTAX cameras claim that data is compressed as runlength packbits -
+                              it is not in fact run-length, which confuses libTIFF
+                            */
+                           bytes_in =
+                              TIFFReadRawStrip(tif, strip_no, data + loaded_data_size, data_size - loaded_data_size);
+                        } else
+                           bytes_in = TIFFReadEncodedStrip(tif, strip_no, data + loaded_data_size,
+                                                           data_size - loaded_data_size);
 
-LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_no], bytes_in, bytes_per_row);
-								if (bytes_in >= 0)
+                        LOCAL_DEBUG_OUT("strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_no], bytes_in,
+                                        bytes_per_row);
+                        if (bytes_in >= 0)
 									loaded_data_size += bytes_in;
 								else
 								{
 									LOCAL_DEBUG_OUT( "failed reading strip %d", strip_no);
 								}
-							}
-						} else if (planar_config == PLANARCONFIG_SEPARATE)
-						{
-							/* TODO: do something with split channels */
-						}
-					}else
-					{
-						/* TODO: implement support for tiled images */
-					}
+                     }
+                  } else if (planar_config == PLANARCONFIG_SEPARATE) {
+                     /* TODO: do something with split channels */
+                  }
+               } else {
+                  /* TODO: implement support for tiled images */
+               }
 
-					if (loaded_data_size > 0)
-					{
-						int offset;
-						int data_row = 0;
+               if (loaded_data_size > 0) {
+                  int offset;
+                  int data_row = 0;
 						do
 						{
 							offset = data_row * bytes_per_row;
@@ -2242,9 +2245,9 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 							data_row += loaded_rows;
 						}while (offset < loaded_data_size);
 						success = True;
-					}
-				}
-				destroy_asim_strip (&strip);
+               }
+            }
+            destroy_asim_strip (&strip);
 				stop_image_output( &imout );
 
 				if (!success)
@@ -2256,51 +2259,48 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 				{
 					register CARD32 *row = data ;
 					int y = first_row + rows_per_strip ;
-					if( y > height )
-						y = height ;
-					while( --y >= first_row )
-					{
-						int x ;
-						for( x = 0 ; x < width ; ++x )
-						{
-							CARD32 c = row[x] ;
-							if( depth == 4 || depth == 2 )
-								a[x] = TIFFGetA(c);
-							r[x]   = TIFFGetR(c);
-							if( depth > 2 )
+               if (y > (int)height)
+                  y = height;
+               while (--y >= first_row) {
+                  int x;
+                  for (x = 0; x < (int)width; ++x) {
+                     CARD32 c = row[x];
+                     if (depth == 4 || depth == 2)
+                        a[x] = TIFFGetA(c);
+                     r[x] = TIFFGetR(c);
+                     if( depth > 2 )
 							{
 								g[x] = TIFFGetG(c);
 								b[x]  = TIFFGetB(c);
 							}
-						}
-						im->channels[IC_RED][y]  = store_data( NULL, r, width, store_flags, 0);
-						if( depth > 2 )
-						{
-					 		im->channels[IC_GREEN][y] = store_data( NULL, g, width, store_flags, 0);
-							im->channels[IC_BLUE][y]  = store_data( NULL, b, width, store_flags, 0);
-						}else
-						{
-					 		im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y]);
-							im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y]);
-						}
+                  }
+                  im->channels[IC_RED][y] = store_data(NULL, r, width, store_flags, 0);
+                  if (depth > 2) {
+                     im->channels[IC_GREEN][y] = store_data(NULL, g, width, store_flags, 0);
+                     im->channels[IC_BLUE][y] = store_data(NULL, b, width, store_flags, 0);
+                  } else {
+                     im->channels[IC_GREEN][y] = dup_data(NULL, im->channels[IC_RED][y]);
+                     im->channels[IC_BLUE][y] = dup_data(NULL, im->channels[IC_RED][y]);
+                  }
 
-						if( depth == 4 || depth == 2 )
-							im->channels[IC_ALPHA][y]  = store_data( NULL, a, width, store_flags, 0);
-						row += width ;
-					}
-					/* move onto the next strip now : */
-					do
-					{
-						first_row += rows_per_strip ;
-					}while (first_row < height && !TIFFReadRGBAStrip(tif, first_row, (void*)data));
+                  if (depth == 4 || depth == 2)
+                     im->channels[IC_ALPHA][y] = store_data(NULL, a, width, store_flags, 0);
+                  row += width ;
+               }
+               /* move onto the next strip now : */
+               do {
+                  first_row += rows_per_strip ;
+               } while (first_row < (int)height && !TIFFReadRGBAStrip(tif, first_row, (void *)data));
 
-				}while (first_row < height);
-		    }
-			set_asstorage_block_size( NULL, old_storage_block_size );
+            } while (first_row < (int)height);
+         }
+         set_asstorage_block_size(NULL, old_storage_block_size);
 
-			if( b ) free( b );
-			if( g ) free( g );
-			if( r ) free( r );
+         if (b)
+            free(b);
+         if (g)
+            free(g);
+         if( r ) free( r );
 			if( a ) free( a );
 			_TIFFfree(data);
 		}
@@ -2325,6 +2325,11 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 static ASImage *
 load_xml2ASImage( ASImageManager *imman, const char *path, unsigned int compression, int width, int height )
 {
+   (void)imman;
+   (void)path;
+   (void)compression;
+   (void)width;
+   (void)height; // silence unused variable warning
    // Incompatible license
    fprintf(stderr, "ERROR in load_xml2ASImage: XML import is disabled.\n");
    ASImage *im = NULL ;
@@ -2449,8 +2454,9 @@ svg2ASImage( const char * path, ASImageImportParams *params )
 ASImage *
 svg2ASImage( const char * path, ASImageImportParams *params )
 {
-	show_error( "unable to load file \"%s\" - missing SVG image format libraries.\n", path );
-	return NULL ;
+   (void)params; // silence unused variable warning
+   show_error("unable to load file \"%s\" - missing SVG image format libraries.\n", path);
+   return NULL;
 }
 #endif			/* SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG SVG */
 
@@ -2507,15 +2513,21 @@ typedef struct ASTGAImageData
 
 static Bool load_tga_colormapped(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-
-	return True;
+   (void)infile;
+   (void)tga;
+   (void)cmap;
+   (void)buf;
+   (void)read_buf;
+   (void)gamma_table; // silence unused variable warning
+   return True;
 }
 
 static Bool load_tga_truecolor(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-	CARD32 *a = buf->alpha ;
-	CARD32 *r = buf->red ;
-	CARD32 *g = buf->green ;
+   (void)cmap; // silence unused variable warning
+   CARD32 *a = buf->alpha;
+   CARD32 *r = buf->red;
+   CARD32 *g = buf->green ;
 	CARD32 *b = buf->blue ;
 	int bpp = (tga->ImageSpec.Depth+7)/8;
 	int bpl = buf->width*bpp;
@@ -2557,26 +2569,46 @@ static Bool load_tga_truecolor(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cm
 
 static Bool load_tga_bw(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-
-	return True;
+   (void)infile;
+   (void)tga;
+   (void)cmap;
+   (void)buf;
+   (void)read_buf;
+   (void)gamma_table; // silence unused variable warning
+   return True;
 }
 
 static Bool load_tga_rle_colormapped(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-
-	return True;
+   (void)infile;
+   (void)tga;
+   (void)cmap;
+   (void)buf;
+   (void)read_buf;
+   (void)gamma_table; // silence unused variable warning
+   return True;
 }
 
 static Bool load_tga_rle_truecolor(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-
-	return True;
+   (void)infile;
+   (void)tga;
+   (void)cmap;
+   (void)buf;
+   (void)read_buf;
+   (void)gamma_table; // silence unused variable warning
+   return True;
 }
 
 static Bool load_tga_rle_bw(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-
-	return True;
+   (void)infile;
+   (void)tga;
+   (void)cmap;
+   (void)buf;
+   (void)read_buf;
+   (void)gamma_table; // silence unused variable warning
+   return True;
 }
 
 
@@ -2684,7 +2716,9 @@ tga2ASImage( const char * path, ASImageImportParams *params )
 ASImage *
 convert_argb2ASImage( ASVisual *asv, int width, int height, ARGB32 *argb, CARD8 *gamma_table )
 {
-	ASImage *im = NULL ;
+   (void)asv;
+   (void)gamma_table; // silence unused variable warning
+   ASImage *im = NULL ;
 	ASImageOutput  *imout ;
 	im = create_asimage( width, height, 100 );
 	if((imout = start_image_output( NULL, im, ASA_ASImage, 0, ASIMAGE_QUALITY_DEFAULT)) == NULL )

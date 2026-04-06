@@ -763,10 +763,9 @@ parse_short_charset_name( const char *name )
 ASSupportedCharsets
 parse_charset_name( const char *name )
 {
-	ASSupportedCharsets set = 0;
-	int i = 0;
-	if( name == NULL || name[0] == '\0' || name[1] == '\0' ) /* that includes locale "C" */
-		return CHARSET_ISO8859_1 ;
+   int i = 0;
+   if (name == NULL || name[0] == '\0' || name[1] == '\0') /* that includes locale "C" */
+      return CHARSET_ISO8859_1 ;
 	/* if locale name came from LANG env var it may have formatof :
 	 * 		language.charset@modifier
 	 * we only need charset part of it here: */
@@ -929,8 +928,8 @@ parse_charset_name( const char *name )
 				if( name[3] == 'A' || name[3] == 'a' )
 					return CHARSET_CP1252 ;
 			}
-		set = CHARSET_CP1250 ;
-	}else if( name[0] == 'A' || name[0] == 'a' ) /* ARABIC or ASMO-708 */
+      return CHARSET_CP1250;
+   }else if( name[0] == 'A' || name[0] == 'a' ) /* ARABIC or ASMO-708 */
 	{
 		return CHARSET_ISO8859_6 ;
 	}else if( name[0] == 'G' || name[0] == 'g' ) /* GREEK or GREEK8 */
@@ -947,6 +946,7 @@ parse_charset_name( const char *name )
 	}
 
 #if 0
+	ASSupportedCharsets set = 0;
 	while( set < SUPPORTED_CHARSETS_NUM )
 	{
 		char **aliases =&(_as_charset_names[set][0]) ;

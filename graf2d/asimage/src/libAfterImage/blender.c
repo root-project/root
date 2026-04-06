@@ -298,25 +298,23 @@ typedef struct merge_scanlines_func_desc {
 	char *short_desc;
 }merge_scanlines_func_desc;
 
-merge_scanlines_func_desc std_merge_scanlines_func_list[] =
-{
-  { "add", 3, add_scanlines, "color addition with saturation" },
-  { "alphablend", 10, alphablend_scanlines, "alpha-blending" },
-  { "allanon", 7, allanon_scanlines, "color values averaging" },
-  { "colorize", 8, colorize_scanlines, "hue and saturate bottom image same as top image" },
-  { "darken", 6, darken_scanlines, "use lowest color value from both images" },
-  { "diff", 4, diff_scanlines, "use absolute value of the color difference between two images" },
-  { "dissipate", 9, dissipate_scanlines, "randomly alpha-blend images"},
-  { "hue", 3, hue_scanlines, "hue bottom image same as top image"  },
-  { "lighten", 7, lighten_scanlines, "use highest color value from both images" },
-  { "overlay", 7, overlay_scanlines, "some weird image overlaying(see GIMP)" },
-  { "saturate", 8, saturate_scanlines, "saturate bottom image same as top image"},
-  { "screen", 6, screen_scanlines, "another weird image overlaying(see GIMP)" },
-  { "sub", 3, sub_scanlines, "color substraction with saturation" },
-  { "tint", 4, tint_scanlines, "tinting image with image" },
-  { "value", 5, value_scanlines, "value bottom image same as top image" },
-  { NULL, 0, NULL }
-};
+merge_scanlines_func_desc std_merge_scanlines_func_list[] = {
+   {"add", 3, add_scanlines, "color addition with saturation"},
+   {"alphablend", 10, alphablend_scanlines, "alpha-blending"},
+   {"allanon", 7, allanon_scanlines, "color values averaging"},
+   {"colorize", 8, colorize_scanlines, "hue and saturate bottom image same as top image"},
+   {"darken", 6, darken_scanlines, "use lowest color value from both images"},
+   {"diff", 4, diff_scanlines, "use absolute value of the color difference between two images"},
+   {"dissipate", 9, dissipate_scanlines, "randomly alpha-blend images"},
+   {"hue", 3, hue_scanlines, "hue bottom image same as top image"},
+   {"lighten", 7, lighten_scanlines, "use highest color value from both images"},
+   {"overlay", 7, overlay_scanlines, "some weird image overlaying(see GIMP)"},
+   {"saturate", 8, saturate_scanlines, "saturate bottom image same as top image"},
+   {"screen", 6, screen_scanlines, "another weird image overlaying(see GIMP)"},
+   {"sub", 3, sub_scanlines, "color substraction with saturation"},
+   {"tint", 4, tint_scanlines, "tinting image with image"},
+   {"value", 5, value_scanlines, "value bottom image same as top image"},
+   {NULL, 0, NULL, NULL}};
 
 merge_scanlines_func
 blend_scanlines_name2func( const char *name )
@@ -450,6 +448,7 @@ tint_scanlines( ASScanline *bottom, ASScanline *top, int offset )
 			bb[i] = (bb[i]*(tb[i]>>1))>>15 ;
 		}
 	}
+   (void)ba; // silence unused variable warning
 }
 
 void    /* addition with saturation : */

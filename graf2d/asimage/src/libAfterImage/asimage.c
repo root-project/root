@@ -80,22 +80,24 @@ ASVisual *get_default_asvisual()
 
 /* internal buffer used for compression/decompression */
 
-static CARD8 *__as_compression_buffer = NULL ;
-static size_t __as_compression_buffer_len = 0;   /* allocated size */
+// static CARD8 *__as_compression_buffer = NULL ;
+// static size_t __as_compression_buffer_len = 0;   /* allocated size */
 
+/*
 static inline CARD8* get_compression_buffer( size_t size )
 {
-	if( size > __as_compression_buffer_len )
- 		__as_compression_buffer_len = (size+1023)&(~0x03FF) ;
-	return (__as_compression_buffer = realloc( __as_compression_buffer, __as_compression_buffer_len ));
+   if( size > __as_compression_buffer_len )
+      __as_compression_buffer_len = (size+1023)&(~0x03FF) ;
+   return (__as_compression_buffer = realloc( __as_compression_buffer, __as_compression_buffer_len ));
 }
-
+*/
+/*
 static inline void release_compression_buffer( CARD8 *ptr )
 {
-	/* do nothing so far */
+   (void)ptr; // silence unused variable warning
+              // do nothing so far
 }
-
-
+*/
 
 #ifdef TRACK_ASIMAGES
 static ASHashTable *__as_image_registry = NULL ;
@@ -154,6 +156,8 @@ flush_asimage_cache( ASImage *im )
 		XDestroyImage( im->alt.mask_ximage );
         im->alt.mask_ximage = NULL ;
     }
+#else
+   (void)im; // silence unused variable warning
 #endif
 }
 
@@ -232,6 +236,9 @@ check_created_asimage( ASImage *im, unsigned int width, unsigned int height )
 		im = NULL ;
 #ifdef TRACK_ASIMAGES
         show_error( "failed to create ASImage of size %dx%d", width, height );
+#else
+      (void)width;
+      (void)height; // silence unused variable warning
 #endif
     }else
     {
@@ -640,6 +647,8 @@ print_asimage_manager(ASImageManager *imageman)
 {
 #ifdef TRACK_ASIMAGES
     print_ashash( imageman->image_hash, string_print );
+#else
+   (void)imageman; // silence unused variable warning
 #endif    
 }
 
@@ -849,6 +858,7 @@ asimage_add_line_bgra (ASImage * im, register CARD32 * data, unsigned int y)
 unsigned int
 asimage_print_line (ASImage * im, ColorPart color, unsigned int y, unsigned long verbosity)
 {
+   (void)verbosity; // silence unused variable warning
    int colint = (int) color;
 	if (AS_ASSERT(im) || colint < 0 || color >= IC_NUM_CHANNELS )
 		return 0;
@@ -1158,7 +1168,7 @@ vectorize_asimage( ASImage *im, unsigned int max_colors, unsigned int dither,
 }
 
 /* ********************************************************************************/
-/* Convinience function - very fast image cloning :                               */
+/* Convenience function - very fast image cloning :                               */
 /* ********************************************************************************/
 ASImage*
 clone_asimage( ASImage *src, ASFlagType filter )

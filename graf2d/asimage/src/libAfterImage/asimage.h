@@ -1014,23 +1014,32 @@ do{	asimage_add_line((im), IC_RED,   (src).red,   (y)); \
 	if( get_flags((src).flags,SCL_DO_ALPHA))asimage_add_line((im), IC_ALPHA, (src).alpha, (y)); \
   }while(0)
 
-#define SCANLINE_FUNC(f,src,dst,scales,len) \
-do{	if( (src).offset_x > 0 || (dst).offset_x > 0 ) \
-		LOCAL_DEBUG_OUT( "(src).offset_x = %d. (dst).offset_x = %d", (src).offset_x, (dst).offset_x ); \
-	f((src).red+(src).offset_x,  (dst).red+(dst).offset_x,  (scales),(len));		\
-	f((src).green+(src).offset_x,(dst).green+(dst).offset_x,(scales),(len)); 		\
-	f((src).blue+(src).offset_x, (dst).blue+(dst).offset_x, (scales),(len));   	\
-	if(get_flags((src).flags,SCL_DO_ALPHA)) f((src).alpha+(src).offset_x,(dst).alpha+(dst).offset_x,(scales),(len)); \
-  }while(0)
+#define SCANLINE_FUNC(f, src, dst, scales, len)                                                       \
+   do {                                                                                               \
+      if ((src).offset_x > 0 || (dst).offset_x > 0) {                                                 \
+         LOCAL_DEBUG_OUT("(src).offset_x = %d. (dst).offset_x = %d", (src).offset_x, (dst).offset_x); \
+      }                                                                                               \
+      f((src).red + (src).offset_x, (dst).red + (dst).offset_x, (scales), (len));                     \
+      f((src).green + (src).offset_x, (dst).green + (dst).offset_x, (scales), (len));                 \
+      f((src).blue + (src).offset_x, (dst).blue + (dst).offset_x, (scales), (len));                   \
+      if (get_flags((src).flags, SCL_DO_ALPHA))                                                       \
+         f((src).alpha + (src).offset_x, (dst).alpha + (dst).offset_x, (scales), (len));              \
+   } while (0)
 
-#define SCANLINE_FUNC_FILTERED(f,src,dst,scales,len) \
-do{	if( (src).offset_x > 0 || (dst).offset_x > 0 ) \
-		LOCAL_DEBUG_OUT( "(src).offset_x = %d. (dst).offset_x = %d", (src).offset_x, (dst).offset_x ); \
-    if(get_flags((src).flags,SCL_DO_RED)) f((src).red+(src).offset_x,  (dst).red+(dst).offset_x,  (scales),(len));        \
-    if(get_flags((src).flags,SCL_DO_GREEN)) f((src).green+(src).offset_x,(dst).green+(dst).offset_x,(scales),(len));        \
-    if(get_flags((src).flags,SCL_DO_BLUE)) f((src).blue+(src).offset_x, (dst).blue+(dst).offset_x, (scales),(len));    \
-	if(get_flags((src).flags,SCL_DO_ALPHA)) f((src).alpha+(src).offset_x,(dst).alpha+(dst).offset_x,(scales),(len)); \
-  }while(0)
+#define SCANLINE_FUNC_FILTERED(f, src, dst, scales, len)                                              \
+   do {                                                                                               \
+      if ((src).offset_x > 0 || (dst).offset_x > 0) {                                                 \
+         LOCAL_DEBUG_OUT("(src).offset_x = %d. (dst).offset_x = %d", (src).offset_x, (dst).offset_x); \
+      }                                                                                               \
+      if (get_flags((src).flags, SCL_DO_RED))                                                         \
+         f((src).red + (src).offset_x, (dst).red + (dst).offset_x, (scales), (len));                  \
+      if (get_flags((src).flags, SCL_DO_GREEN))                                                       \
+         f((src).green + (src).offset_x, (dst).green + (dst).offset_x, (scales), (len));              \
+      if (get_flags((src).flags, SCL_DO_BLUE))                                                        \
+         f((src).blue + (src).offset_x, (dst).blue + (dst).offset_x, (scales), (len));                \
+      if (get_flags((src).flags, SCL_DO_ALPHA))                                                       \
+         f((src).alpha + (src).offset_x, (dst).alpha + (dst).offset_x, (scales), (len));              \
+   } while (0)
 
 #define CHOOSE_SCANLINE_FUNC(r,src,dst,scales,len) \
  switch(r)                                              							\

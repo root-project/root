@@ -326,29 +326,30 @@ static inline char
 get_xpm_char( ASXpmFile *xpm_file )
 {
 #ifdef HAVE_LIBXPM
-	return '\0';
+   (void)xpm_file; // silence unused variable warning
+   return '\0';
 #else
 	char c;
 	if( xpm_file->curr_byte >= xpm_file->bytes_in )
 	{
-		if( xpm_file->bytes_in > AS_XPM_BUFFER_UNDO )
-		{
-			register char* src = &(xpm_file->buffer[xpm_file->bytes_in-AS_XPM_BUFFER_UNDO]);
+      if (xpm_file->bytes_in > (size_t)AS_XPM_BUFFER_UNDO) {
+         register char* src = &(xpm_file->buffer[xpm_file->bytes_in-AS_XPM_BUFFER_UNDO]);
 			register char* dst = &(xpm_file->buffer[0]);
 			register int i;
-			for( i = 0 ; i < AS_XPM_BUFFER_UNDO ; i++ )
-				dst[i] = src[i];
+         for (i = 0; i < (int)AS_XPM_BUFFER_UNDO; i++)
+            dst[i] = src[i];
 /*			xpm_file->bytes_in = AS_XPM_BUFFER_UNDO+fread( &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]), 1, AS_XPM_BUFFER_SIZE, xpm_file->fp );*/
-			xpm_file->bytes_in = xpm_file->data ?  AS_XPM_BUFFER_UNDO + strlen(*xpm_file->data) : 
-                                 AS_XPM_BUFFER_UNDO+read( xpm_file->fd, &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]), AS_XPM_BUFFER_SIZE );
-			xpm_file->curr_byte = AS_XPM_BUFFER_UNDO ;
-		}
-		if( xpm_file->bytes_in <= AS_XPM_BUFFER_UNDO )
-		{
-			xpm_file->parse_state = XPM_Outside ;
+         xpm_file->bytes_in = xpm_file->data
+                                 ? (size_t)AS_XPM_BUFFER_UNDO + strlen(*xpm_file->data)
+                                 : (size_t)AS_XPM_BUFFER_UNDO +
+                                      read(xpm_file->fd, &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]), AS_XPM_BUFFER_SIZE);
+         xpm_file->curr_byte = (size_t)AS_XPM_BUFFER_UNDO;
+      }
+      if (xpm_file->bytes_in <= (size_t)AS_XPM_BUFFER_UNDO) {
+         xpm_file->parse_state = XPM_Outside ;
 			return '\0';
-		}
-	}
+      }
+   }
 	c = xpm_file->buffer[xpm_file->curr_byte];
 /*	fprintf( stderr, "curr byte = %d ( of %d ), char = %c\n", xpm_file->curr_byte, xpm_file->bytes_in, c ); */
 
@@ -382,10 +383,11 @@ skip_xpm_comments( ASXpmFile *xpm_file )
 		{
 			c = get_xpm_char(xpm_file);
 			if( c == '*' )
-				if( (c=get_xpm_char(xpm_file)) == '/' )
-					xpm_file->parse_state--;
-		}
-	}
+            if (get_xpm_char(xpm_file) == '/') {
+               xpm_file->parse_state--;
+            }
+      }
+   }
 }
 
 static Bool
@@ -762,8 +764,9 @@ lookup_xpm_color( char **colornames, ASHashTable *xpm_color_names )
 void
 string_value_destroy (ASHashableValue value, void *data)
 {
-	if ((char*)value != NULL)
-		free ((char*)value);
+   (void)data; // silence unused variable warning
+   if ((char *)value != NULL)
+      free((char *)value);
 }
 
 Bool
@@ -876,9 +879,10 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 #ifdef HAVE_LIBXPM
 	unsigned int *data = xpm_file->xpmImage.data+k*line ;
 #else
-	unsigned char *data ;
-	if( get_xpm_string( xpm_file ) != XPM_Success)
-		return False ;
+   (void)line; // silence unused variable warning
+   unsigned char *data;
+   if (get_xpm_string(xpm_file) != XPM_Success)
+      return False ;
 	data = (unsigned char*)xpm_file->str_buf ;
 #endif
 	if( cmap )
