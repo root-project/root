@@ -1530,9 +1530,9 @@ void TBufferFile::ReadFastArray(Long64_t *ll, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of n floats from the I/O buffer.
 
-void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
+void TBufferFile::ReadFastArray(Float_t *f, Long64_t n)
 {
-   Int_t l = sizeof(Float_t)*n;
+   auto l = sizeof(Float_t)*n;
    if (ShouldNotReadCollection(l, n)) return;
 
 #ifdef R__BYTESWAP
@@ -1540,7 +1540,7 @@ void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
    bswapcpy32(f, fBufCur, n);
    fBufCur += sizeof(Float_t)*n;
 # else
-   for (int i = 0; i < n; i++)
+   for (Long64_t i = 0; i < n; i++)
       frombuf(fBufCur, &f[i]);
 # endif
 #else
@@ -2333,15 +2333,15 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
 {
    if (n == 0) return;
 
-   constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   constexpr Long64_t dataWidth = static_cast<Long64_t>(sizeof(Float_t));
+   const Long64_t maxElements = (std::numeric_limits<Long64_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
    {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
+      Fatal("WriteFastArray", "Not enough space left in the buffer. %lld elements is greater than the max left of %lld", n, maxElements);
       return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
-   Int_t l = sizeof(Float_t)*n;
+   auto l = sizeof(Float_t)*n;
    if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
 
 #ifdef R__BYTESWAP
@@ -2349,7 +2349,7 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
    bswapcpy32(fBufCur, f, n);
    fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
+   for (Long64_t i = 0; i < n; i++)
       tobuf(fBufCur, f[i]);
 # endif
 #else
