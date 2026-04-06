@@ -9,17 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPSocket                                                             //
-//                                                                      //
-// This class implements parallel client sockets. A parallel socket is  //
-// an endpoint for communication between two machines. It is parallel   //
-// because several TSockets are open at the same time to the same       //
-// destination. This especially speeds up communication over Big Fat    //
-// Pipes (i.e. high bandwidth, high latency WAN connections).           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TPSocket.cxx
+\class TPSocket
+\brief This class implements parallel server sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+A parallel socket is an endpoint for communication between two machines. It is parallel
+because several TSockets are open at the same time to the same
+destination. This especially speeds up communication over Big Fat
+Pipes (i.e. high bandwidth, high latency WAN connections).
+
+**/
 
 #include "TPSocket.h"
 #include "TUrl.h"
