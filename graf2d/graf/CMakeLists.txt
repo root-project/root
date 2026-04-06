@@ -88,7 +88,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    ${FREETYPE_LIBRARIES}
+    Freetype::Freetype
     ZLIB::ZLIB
     mathtext
   DEPENDENCIES
@@ -99,5 +99,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   BUILTINS
     FREETYPE
 )
-
-target_include_directories(Graf PRIVATE ${FREETYPE_INCLUDE_DIRS})

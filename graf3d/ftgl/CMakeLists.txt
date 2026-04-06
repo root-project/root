@@ -38,14 +38,13 @@ ROOT_LINKER_LIBRARY(FTGL
   LIBRARIES
     OpenGL::GL
     OpenGL::GLU
-    ${FREETYPE_LIBRARIES}
+    Freetype::Freetype
     ZLIB::ZLIB
   BUILTINS
     FREETYPE
 )
 
 target_include_directories(FTGL PRIVATE
-      ${FREETYPE_INCLUDE_DIRS}
       ${OPENGL_INCLUDE_DIR}
       ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
 )

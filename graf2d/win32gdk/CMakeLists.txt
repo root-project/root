@@ -10,8 +10,7 @@
 ############################################################################
 
 # use relative paths to avoid filtering in dictionary generator
-include_directories(${FREETYPE_INCLUDE_DIRS}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
                     ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
                     ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/glib)
 
@@ -117,7 +116,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   LIBRARIES
-    ${FREETYPE_LIBRARIES}
+    Freetype::Freetype
     ${gdklib}
     ${gliblib}
     Glu32.lib
