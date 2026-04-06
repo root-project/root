@@ -247,7 +247,7 @@ Bool_t TEmulatedCollectionProxy::IsValid() const
    return  (0 != fCreateEnv.call);
 }
 
-UInt_t TEmulatedCollectionProxy::Size() const
+TVirtualCollectionProxy::size_type TEmulatedCollectionProxy::Size() const
 {
    // Return the current size of the container
 
@@ -452,7 +452,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    }
 }
 
-void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
+void TEmulatedCollectionProxy::Resize(TVirtualCollectionProxy::size_type left, Bool_t force)
 {
    // Resize the container
 
@@ -473,7 +473,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
    Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
 }
 
-void* TEmulatedCollectionProxy::At(UInt_t idx)
+void* TEmulatedCollectionProxy::At(TVirtualCollectionProxy::size_type idx)
 {
    // Return the address of the value at index 'idx'
    if ( fEnv && fEnv->fObject )   {
@@ -488,7 +488,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
    return 0;
 }
 
-void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
+void* TEmulatedCollectionProxy::Allocate(TVirtualCollectionProxy::size_type n, Bool_t forceDelete)
 {
    // Allocate the necessary space.
 
