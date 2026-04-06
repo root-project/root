@@ -26,8 +26,6 @@
 #pragma link C++ class TPSocket;
 #pragma link C++ class TMessage;
 #pragma link C++ class TMonitor;
-#pragma link C++ class TNetFile;
-#pragma link C++ class TNetFileStager;
 #pragma link C++ class TNetSystem;
 #pragma link C++ class TWebFile;
 #pragma link C++ class TWebSystem;

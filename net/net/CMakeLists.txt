@@ -46,8 +46,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     TGridResult.h
     TMessage.h
     TMonitor.h
-    TNetFile.h
-    TNetFileStager.h
     TParallelMergingFile.h
     TPServerSocket.h
     TPSocket.h
@@ -78,8 +76,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     src/TGridResult.cxx
     src/TMessage.cxx
     src/TMonitor.cxx
-    src/TNetFile.cxx
-    src/TNetFileStager.cxx
     src/TParallelMergingFile.cxx
     src/TPServerSocket.cxx
     src/TPSocket.cxx

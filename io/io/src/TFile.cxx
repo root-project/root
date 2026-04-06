@@ -1868,7 +1868,7 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 ///
 /// The value pos[i] is the seek position of block i of length len[i].
 /// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-/// This function is overloaded by TNetFile, TWebFile, etc.
+/// This function is overloaded by TWebFile etc.
 /// Returns kTRUE in case of failure.
 
 Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
@@ -2256,7 +2256,7 @@ Int_t TFile::ReOpen(Option_t *mode)
       }
 
       // open in READ mode
-      fOption = opt;    // set fOption before SysOpen() for TNetFile
+      fOption = opt;    // was setting fOption before SysOpen() for the old TNetFile
 #ifndef WIN32
       fD = SysOpen(fRealName, O_RDONLY, 0666);
 #else
@@ -2278,7 +2278,7 @@ Int_t TFile::ReOpen(Option_t *mode)
       }
 
       // open in UPDATE mode
-      fOption = opt;    // set fOption before SysOpen() for TNetFile
+      fOption = opt;    // was setting fOption before SysOpen() for the old TNetFile
 #ifndef WIN32
       fD = SysOpen(fRealName, O_RDWR | O_CREAT, 0666);
 #else
@@ -3751,24 +3751,19 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// Create / open a file
 ///
 /// The type of the file can be either a
-/// TFile, TNetFile, TWebFile or any TFile derived class for which an
+/// TFile, TWebFile or any TFile derived class for which an
 /// plugin library handler has been registered with the plugin manager
 /// (for the plugin manager see the TPluginManager class). The returned
 /// type of TFile depends on the file name specified by 'url'.
 /// If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
 /// sequentially in the specified order until a successful open.
-/// If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
+/// If the file starts with "root:" a TNetXNGFile object
 /// will be returned, with "http:" a TWebFile, with "file:" a local TFile,
 /// etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
 /// for regular expressions that will be checked) and as last a local file will
 /// be tried.
-/// Before opening a file via TNetFile a check is made to see if the URL
-/// specifies a local file. If that is the case the file will be opened
-/// via a normal TFile. To force the opening of a local file via a
-/// TNetFile use either TNetFile directly or specify as host "localhost".
-/// The netopt argument is only used by TNetFile. For the meaning of the
-/// options and other arguments see the constructors of the individual
-/// file classes. In case of error, it returns a nullptr.
+/// For the meaning of the options and other arguments see the constructors 
+/// of the individual file classes. In case of error, it returns a nullptr.
 ///
 /// For TFile implementations supporting asynchronous file open, see
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
@@ -3984,11 +3979,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
                if (h->LoadPlugin() == -1)
                   return nullptr;
-               TClass *cl = TClass::GetClass(h->GetClass());
-               if (cl && cl->InheritsFrom("TNetFile"))
-                  f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
-               else
-                  f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
+               f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
                // plug-in in the case file name contains information about a special backend (e.g.)

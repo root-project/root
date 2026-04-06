@@ -43,7 +43,7 @@ ULong64_t TSocket::fgBytesRecv = 0;
 //
 // Client "protocol changes"
 //
-// This was in TNetFile and TAuthenticate before, but after the introduction
+// This was in the old TNetFile and TAuthenticate before, but after the introduction
 // of TSocket::CreateAuthSocket the common place for all the clients is TSocket,
 // so this seems to be the right place for a version number
 //
