@@ -1,6 +1,6 @@
 /* This file contains code for unified image loading from many file formats */
 /********************************************************************/
-/* Copyright (c) 2001 Sasha Vasko <sasha at aftercode.net>           */
+/* Copyright (c) 2001 Sasha Vasko <sasha at aftercode.net>          */
 /********************************************************************/
 /*
  * This library is free software; you can redistribute it and/or
@@ -81,8 +81,8 @@ dib_data_to_scanline( ASScanline *buf,
 		case 16 :
 			for( x = 0 ; x < (int)bmp_info->biWidth ; ++x )
 			{
-				CARD8 c1 = data[x] ;
-				CARD8 c2 = data[++x];
+				CARD8 c1 = data[2 * x];
+				CARD8 c2 = data[2 * x + 1];
 				buf->blue[x] =    c1&0x1F;
 				buf->green[x] = ((c1>>5)&0x07)|((c2<<3)&0x18);
 				buf->red[x] =   ((c2>>2)&0x1F);
