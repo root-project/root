@@ -71,7 +71,7 @@ public:
       kCustomAlloc = BIT(5) ///< The collection has a custom allocator.
    };
 
-   using size_type = UInt_t;
+   using size_type = ULong64_t;
 
    /// RAII helper class that ensures that `PushProxy()` / `PopProxy()` are called when entering / leaving a C++ context
    class TPushPop {
