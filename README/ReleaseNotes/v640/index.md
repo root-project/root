@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/EP-SFT,\
  Marta Czurylo, CERN/EP-SFT,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Ned Ganchovski, Proektsoft EOOD,\
  Andrei Gheata, CERN/EP-SFT,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
@@ -29,11 +30,11 @@ The following people have contributed to this new version:
  Giacomo Parolini, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  Jonas Rembser, CERN/EP-SFT,\
+ Sebastian Alba Vives, Instituto Tecnologico de Costa Rica (TEC),\
  Silia Taider, CERN/EP-SFT,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
  Sandro Wenzel, CERN/EP-ALICE,\
- Ned Ganchovski, Proektsoft EOOD,\
 
 ## Deprecations
 
@@ -70,6 +71,7 @@ The following people have contributed to this new version:
   }
   ```
 * The `compression_default` build option was removed. It was supposed to change the default compression algorithm, but didn't actually work with the default parameters of `TFile`.
+* The `TNetFile` and `TNetFileStager` classes were removed: they depended on `rootd` removed in release 6.16.00.
 
 ## Build System
 
