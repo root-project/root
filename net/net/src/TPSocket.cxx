@@ -32,6 +32,7 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
+#include <limits>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel socket. Connect to the named service at address addr.
@@ -640,6 +641,11 @@ oncemore:
       return n;
    }
    len = net2host(len);  //from network to host byte order
+
+   if (len > (std::numeric_limits<decltype(len)>::max() - sizeof(decltype(len)))) {
+      Error("Recv", "Buffer length is %u and %u+sizeof(UInt_t) cannot be represented as an UInt_t.", len, len);
+      return -1;
+   }
 
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = RecvRaw(buf+sizeof(UInt_t), len, kDefault)) <= 0) {
