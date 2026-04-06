@@ -213,7 +213,7 @@ get_gif_saved_images( GifFileType *gif, int subimage, SavedImage **ret, int *ret
 								      ExtCode, ExtData[0], &(ExtData[1]));
 #else
 					temp_save.Function = ExtCode;
-					status = AddExtensionBlock(&temp_save, ExtData[0], (char*)&(ExtData[1]));
+               status = AddExtensionBlock(&temp_save, ExtData[0], (unsigned char *)&(ExtData[1]));
 #endif
 					if (status == GIF_OK)
 						status = DGifGetExtensionNext(gif, &ExtData);

@@ -139,14 +139,13 @@ static inline void
 enlarge_component23( register CARD32 *src, register CARD32 *dst, int *scales, int len )
 {/* expected len >= 2  */
 	register int i = 0, k = 0;
-	register int c1 = src[0], c4 = src[1];
-	if( scales[0] == 1 )
-	{/* special processing for first element - it can be 1 - others can only be 2 or 3 */
-		dst[k] = INTERPOLATE_COLOR1(src[0]) ;
+   register int c1 = src[0], c4;
+   if (scales[0] == 1) { /* special processing for first element - it can be 1 - others can only be 2 or 3 */
+      dst[k] = INTERPOLATE_COLOR1(src[0]) ;
 		++k;
 		++i;
-	}
-	--len; --len ;
+   }
+   --len; --len ;
 	while( i < len )
 	{
 		register int c2 = src[i], c3 = src[i+1] ;
@@ -295,18 +294,19 @@ shrink_component( register CARD32 *src, register CARD32 *dst, int *scales, int l
 static inline void
 shrink_component11( register CARD32 *src, register CARD32 *dst, int *scales, int len )
 {
-	register int i ;
-	for( i = 0 ; i < len ; ++i )
-		dst[i] = AVERAGE_COLOR1(src[i]);
+   (void)scales; // silence unused variable warning
+   register int i;
+   for (i = 0; i < len; ++i)
+      dst[i] = AVERAGE_COLOR1(src[i]);
 }
-
 
 static inline void
 reverse_component( register CARD32 *src, register CARD32 *dst, int *unused, int len )
 {
-	register int i = 0;
-	src += len-1 ;
-	do
+   (void)unused; // silence unused variable warning
+   register int i = 0;
+   src += len - 1;
+   do
 	{
 		dst[i] = src[-i];
 	}while(++i < len );
@@ -315,7 +315,8 @@ reverse_component( register CARD32 *src, register CARD32 *dst, int *unused, int 
 static inline void
 add_component( CARD32 *src, CARD32 *incr, int *scales, int len )
 {
-	len += len&0x01;
+   (void)scales; // silence unused variable warning
+   len += len & 0x01;
 #ifdef HAVE_MMX   
 #if 1
 	if( asimage_use_mmx )
@@ -386,10 +387,10 @@ start_component_interpolation( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, r
 static inline void
 component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, register CARD32 *T, CARD32 *unused, CARD16 kind, int len)
 {
-	register int i;
-	if( kind == 1 )
-	{
-		for( i = 0 ; i < len ; i++ )
+   (void)unused; // silence unused variable warning
+   register int i;
+   if (kind == 1) {
+      for( i = 0 ; i < len ; i++ )
 		{
 #if 1
 			/* its seems that this simple formula is completely sufficient
@@ -403,15 +404,14 @@ component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c
 								   		 (plus-minus)>>2;
 #endif
 		}
-	}else if( kind == 2 )
-	{
-		for( i = 0 ; i < len ; i++ )
+   } else if (kind == 2) {
+      for( i = 0 ; i < len ; i++ )
 		{
     		register int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
 			T[i] = INTERPOLATE_A_COLOR3_V(rc1,rc2,rc3,c4[i]);
 		}
-	}else
-		for( i = 0 ; i < len ; i++ )
+   } else
+      for( i = 0 ; i < len ; i++ )
 		{
     		register int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
 			T[i] = INTERPOLATE_B_COLOR3_V(rc1,rc2,rc3,c4[i]);
@@ -438,9 +438,10 @@ rbitshift_component_mod( register CARD32 *data, int bits, int len )
 void
 print_component( register CARD32 *data, int nonsense, int len )
 {
-	register int i ;
-	for( i = 0 ; i < len ; ++i )
-		fprintf( stderr, " %8.8lX", (long)data[i] );
+   (void)nonsense; // silence unused variable warning
+   register int i;
+   for (i = 0; i < len; ++i)
+      fprintf( stderr, " %8.8lX", (long)data[i] );
 	fprintf( stderr, "\n");
 }
 
@@ -491,9 +492,9 @@ copytintpad_scanline( ASScanline *src, ASScanline *dst, int offset, ARGB32 tint 
 	register int i ;
 	CARD32 chan_tint[4], chan_fill[4] ;
 	int color ;
-	int copy_width = src->width, dst_offset = 0, src_offset = 0;
+   int copy_width, dst_offset = 0, src_offset = 0;
 
-	if( offset+(int)src->width < 0 || offset > (int)dst->width )
+   if( offset+(int)src->width < 0 || offset > (int)dst->width )
 		return;
 	chan_tint[IC_RED]   = ARGB32_RED8  (tint)<<1;
 	chan_tint[IC_GREEN] = ARGB32_GREEN8(tint)<<1;
@@ -892,24 +893,23 @@ scale_asimage( ASVisual *asv, ASImage *src, int to_width, int to_height,
 
 	dst = create_destination_image( to_width, to_height, out_format, compression_out, src->back_color );
 
-	if( to_width == src->width )
-		h_ratio = 0;
-	else if( to_width < src->width )
-		h_ratio = 1;
-	else
-	{
-		if ( quality == ASIMAGE_QUALITY_POOR )
+   if (to_width == (int)src->width)
+      h_ratio = 0;
+   else if (to_width < (int)src->width)
+      h_ratio = 1;
+   else {
+      if ( quality == ASIMAGE_QUALITY_POOR )
 			h_ratio = 1 ;
 		else if( src->width > 1 )
 		{
 			h_ratio = (to_width/(src->width-1))+1;
-			if( h_ratio*(src->width-1) < to_width )
-				++h_ratio ;
-		}else
-			h_ratio = to_width ;
+         if (h_ratio * ((int)src->width - 1) < to_width)
+            ++h_ratio;
+      } else
+         h_ratio = to_width ;
 		++h_ratio ;
-	}
-	scales_h = make_scales( src->width, to_width, ( quality == ASIMAGE_QUALITY_POOR )?0:1 );
+   }
+   scales_h = make_scales( src->width, to_width, ( quality == ASIMAGE_QUALITY_POOR )?0:1 );
 	scales_v = make_scales( src->height, to_height, ( quality == ASIMAGE_QUALITY_POOR  || src->height <= 3)?0:1 );
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
 	{
@@ -927,10 +927,10 @@ scale_asimage( ASVisual *asv, ASImage *src, int to_width, int to_height,
         destroy_asimage( &dst );
 	}else
 	{
-		if( to_height <= src->height ) 					   /* scaling down */
-			scale_image_down( imdec, imout, h_ratio, scales_h, scales_v );
-		else if( quality == ASIMAGE_QUALITY_POOR || src->height <= 3 ) 
-			scale_image_up_dumb( imdec, imout, h_ratio, scales_h, scales_v );
+      if (to_height <= (int)src->height) /* scaling down */
+         scale_image_down(imdec, imout, h_ratio, scales_h, scales_v);
+      else if (quality == ASIMAGE_QUALITY_POOR || src->height <= 3)
+         scale_image_up_dumb( imdec, imout, h_ratio, scales_h, scales_v );
 		else
 			scale_image_up( imdec, imout, h_ratio, scales_h, scales_v );
 		stop_image_output( &imout );
@@ -1054,29 +1054,25 @@ LOCAL_DEBUG_CALLER_OUT( "src = %p, offset_x = %d, offset_y = %d, to_width = %d, 
 	{
 		int y, max_y = to_height;
 LOCAL_DEBUG_OUT("tiling actually...%s", "");
-		if( to_height > src->height )
-		{
-			imout->tiling_step = src->height ;
-			max_y = src->height ;
-		}
-		if( tint != 0 )
-		{
-			for( y = 0 ; y < max_y ; y++  )
-			{
-				imdec->decode_image_scanline( imdec );
-				tint_component_mod( imdec->buffer.red, (CARD16)(ARGB32_RED8(tint)<<1), to_width );
-				tint_component_mod( imdec->buffer.green, (CARD16)(ARGB32_GREEN8(tint)<<1), to_width );
-  				tint_component_mod( imdec->buffer.blue, (CARD16)(ARGB32_BLUE8(tint)<<1), to_width );
-				tint_component_mod( imdec->buffer.alpha, (CARD16)(ARGB32_ALPHA8(tint)<<1), to_width );
-				imout->output_image_scanline( imout, &(imdec->buffer), 1);
-			}
-		}else
-			for( y = 0 ; y < max_y ; y++  )
-			{
-				imdec->decode_image_scanline( imdec );
-				imout->output_image_scanline( imout, &(imdec->buffer), 1);
-			}
-		stop_image_output( &imout );
+if (to_height > (int)src->height) {
+   imout->tiling_step = src->height;
+   max_y = src->height;
+}
+if (tint != 0) {
+   for (y = 0; y < max_y; y++) {
+      imdec->decode_image_scanline(imdec);
+      tint_component_mod(imdec->buffer.red, (CARD16)(ARGB32_RED8(tint) << 1), to_width);
+      tint_component_mod(imdec->buffer.green, (CARD16)(ARGB32_GREEN8(tint) << 1), to_width);
+      tint_component_mod(imdec->buffer.blue, (CARD16)(ARGB32_BLUE8(tint) << 1), to_width);
+      tint_component_mod(imdec->buffer.alpha, (CARD16)(ARGB32_ALPHA8(tint) << 1), to_width);
+      imout->output_image_scanline(imout, &(imdec->buffer), 1);
+   }
+} else
+   for (y = 0; y < max_y; y++) {
+      imdec->decode_image_scanline(imdec);
+      imout->output_image_scanline(imout, &(imdec->buffer), 1);
+   }
+      stop_image_output( &imout );
 	}
 	stop_image_decoding( &imdec );
 
@@ -1246,10 +1242,11 @@ LOCAL_DEBUG_OUT( "min_y = %d, max_y = %d", min_y, max_y );
 static void
 make_gradient_left2right( ASImageOutput *imout, ASScanline *dither_lines, int dither_lines_num, ASFlagType filter )
 {
-	int line ;
+   (void)filter; // silence unused variable warning
+   int line;
 
-	imout->tiling_step = dither_lines_num;
-	for( line = 0 ; line < dither_lines_num ; line++ )
+   imout->tiling_step = dither_lines_num;
+   for( line = 0 ; line < dither_lines_num ; line++ )
 		imout->output_image_scanline( imout, &(dither_lines[line]), 1);
 }
 
@@ -1319,9 +1316,10 @@ LOCAL_DEBUG_CALLER_OUT( "width = %d, height = %d, filetr = 0x%lX, dither_count =
 static void
 make_gradient_diag_width( ASImageOutput *imout, ASScanline *dither_lines, int dither_lines_num, ASFlagType filter, Bool from_bottom )
 {
-	int line = 0;
-	/* using bresengham algorithm again to trigger horizontal shift : */
-	short smaller = imout->im->height;
+   (void)filter; // silence unused variable warning
+   int line = 0;
+   /* using bresengham algorithm again to trigger horizontal shift : */
+   short smaller = imout->im->height;
 	short bigger  = imout->im->width;
 	register int i = 0;
 	int eps;
@@ -1726,10 +1724,10 @@ LOCAL_DEBUG_CALLER_OUT( "dst_x = %d, dst_y = %d, to_width = %d, to_height = %d",
 	if( src == NULL )
 		return NULL ;
 
-	if( to_width == src->width && to_height == src->height && dst_x == 0 && dst_y == 0 )
-		return clone_asimage( src, SCL_DO_ALL );
+   if (to_width == (int)src->width && to_height == (int)src->height && dst_x == 0 && dst_y == 0)
+      return clone_asimage(src, SCL_DO_ALL);
 
-	if( asv == NULL ) 	asv = &__transform_fake_asv ;
+   if( asv == NULL ) 	asv = &__transform_fake_asv ;
 
 	dst = create_destination_image( to_width, to_height, out_format, compression_out, src->back_color);
 
@@ -2281,9 +2279,9 @@ load_gauss_scanline(ASScanline *result, ASImageDecoder *imdec, int horz, GAUSS_C
 		{
 			if( horz == 1 ) 
 			{
-				for( x =  0 ; x < result->width ; ++x ) 
-					res_chan[x] = src_chan[x]<<10 ;
-			}else
+            for (x = 0; x < (int)result->width; ++x)
+               res_chan[x] = src_chan[x] << 10;
+         }else
 			{
 #ifdef USE_PARALLEL_OPTIMIZATION
 				todo[todo_count++] = chan;
@@ -2296,9 +2294,10 @@ load_gauss_scanline(ASScanline *result, ASImageDecoder *imdec, int horz, GAUSS_C
 		else if( get_flags( filter, 0x01<<chan ) )
 		{
 			CARD32 fill = (CARD32)ARGB32_RED8(imdec->buffer.back_color)<<10;
-			for( x =  0 ; x < result->width ; ++x ) res_chan[x] = fill ;
-		}
-	}
+         for (x = 0; x < (int)result->width; ++x)
+            res_chan[x] = fill;
+      }
+   }
 
 #ifdef USE_PARALLEL_OPTIMIZATION
 	switch( 4 - todo_count )
@@ -2381,14 +2380,12 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 
 	if( vert == 1 && horz == 1 ) 
 	{
-	    for (y = 0 ; y < dst->height ; y++)
-		{
-			imdec->decode_image_scanline(imdec);
-	        imout->output_image_scanline(imout, &(imdec->buffer), 1);
-		}
-	}else
-	{
-		ASScanline result;
+      for (y = 0; y < (int)dst->height; y++) {
+         imdec->decode_image_scanline(imdec);
+         imout->output_image_scanline(imout, &(imdec->buffer), 1);
+      }
+   } else {
+      ASScanline result;
 		GAUSS_COEFF_TYPE *horz_gauss = NULL;
 		GAUSS_COEFF_TYPE *horz_gauss_sums = NULL;
 
@@ -2492,12 +2489,13 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 						register ASScanline **ysrc = &lines[y];
 /* surprisingly, having x loops inside y loop yields 30% to 80% better performance */
 						int j = 0;
-						CARD32 *src_chan1 = ysrc[0]->channels[chan];
-						memset( res_chan, 0x00, width*4 );
-/*						for( x = 0 ; x < width ; ++x ) 
-							res_chan[x] = src_chan1[x]*vert_gauss[0];
- */							
-						while( ++j < vert ) 
+                  CARD32 *src_chan1;
+                  memset( res_chan, 0x00, width*4 );
+                  /* src_chan1 = ysrc[0]->channels[chan];
+                     for( x = 0 ; x < width ; ++x )
+                        res_chan[x] = src_chan1[x]*vert_gauss[0];
+                   */
+                  while( ++j < vert ) 
 						{
 							CARD32 *src_chan2 = ysrc[j]->channels[chan];
 							GAUSS_COEFF_TYPE g = vert_gauss[j];
@@ -2609,7 +2607,7 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 			free(horz_gauss_sums);
 		if( horz_gauss )
 			free(horz_gauss);
-	}
+   }
 PRINT_BACKGROUND_OP_TIME;
 
 	stop_image_decoding(&imdec);
@@ -2838,23 +2836,19 @@ LOCAL_DEBUG_CALLER_OUT( "offset_x = %d, offset_y = %d, to_width = %d, to_height 
 		saturation_offset = (saturation_offset<<16) / 100;
 		value_offset = (value_offset<<16)/100 ;
 LOCAL_DEBUG_OUT("adjusting actually...%s", "");
-		if( to_height > src->height )
-		{
-			imout->tiling_step = src->height ;
-			max_y = src->height ;
-		}
-		for( y = 0 ; y < max_y ; y++  )
-		{
-			register int x = imdec->buffer.width;
-			CARD32 *r = imdec->buffer.red;
-			CARD32 *g = imdec->buffer.green;
-			CARD32 *b = imdec->buffer.blue ;
-			long h, s, v ;
-			imdec->decode_image_scanline( imdec );
-			while( --x >= 0 )
-			{
-				if( (h = rgb2hue( r[x], g[x], b[x] )) != 0 )
-				{
+if (to_height > (int)src->height) {
+   imout->tiling_step = src->height;
+   max_y = src->height;
+}
+for (y = 0; y < max_y; y++) {
+   register int x = imdec->buffer.width;
+   CARD32 *r = imdec->buffer.red;
+   CARD32 *g = imdec->buffer.green;
+   CARD32 *b = imdec->buffer.blue;
+   long h, s, v;
+   imdec->decode_image_scanline(imdec);
+   while (--x >= 0) {
+      if ((h = rgb2hue(r[x], g[x], b[x])) != 0) {
 #ifdef DEBUG_HSV_ADJUSTMENT
 					fprintf( stderr, "IN  %d: rgb = #%4.4lX.%4.4lX.%4.4lX hue = %ld(%d)        range is (%ld - %ld, %ld - %ld), dh = %d\n", __LINE__, r[x], g[x], b[x], h, ((h>>8)*360)>>8, from_hue1, to_hue1, from_hue2, to_hue2, hue_offset );
 #endif
@@ -2893,8 +2887,8 @@ LOCAL_DEBUG_OUT("adjusting actually...%s", "");
 			}
 			imdec->buffer.flags = 0xFFFFFFFF ;
 			imout->output_image_scanline( imout, &(imdec->buffer), 1);
-		}
-		stop_image_output( &imout );
+}
+      stop_image_output( &imout );
 	}
 	stop_image_decoding( &imdec );
 
@@ -2922,9 +2916,9 @@ slice_scanline( ASScanline *dst, ASScanline *src, int start_x, int end_x, ASScan
 		dg[x1] = sg[x1] ; 
 		db[x1] = sb[x1] ;	  
 	}
-	if( x1 >= dst->width )
-		return;
-	/* middle portion */
+   if (x1 >= (int)dst->width)
+      return;
+   /* middle portion */
 	max_x2 = (int) dst->width - tail ; 
 	max_x = min(end_x, max_x2);		
 	if( middle ) 
@@ -2947,15 +2941,13 @@ slice_scanline( ASScanline *dst, ASScanline *src, int start_x, int end_x, ASScan
 	{	
 		for( ; x1 < max_x ; ++x1 )
 		{
-  			x2 = x1 ;
-			for( x2 = x1 ; x2 < max_x2 ; x2 += tiling_step )
-			{
-				da[x2] = sa[x1] ; 
+         for (x2 = x1; x2 < max_x2; x2 += tiling_step) {
+            da[x2] = sa[x1] ; 
 				dr[x2] = sr[x1] ; 
 				dg[x2] = sg[x1] ; 
-				db[x2] = sb[x1] ;	  
-			}				  
-		}	 
+				db[x2] = sb[x1] ;
+         }
+      }	 
 	}
 	/* tail portion */
 	x1 = src->width - tail ;
@@ -2998,11 +2990,11 @@ LOCAL_DEBUG_CALLER_OUT( "scale = %d, sx1 = %d, sx2 = %d, sy1 = %d, sy2 = %d, to_
 		slice_x_end = slice_x_start + 1 ;
 	if( slice_y_end == 0 && slice_y_start > 0 ) 
 		slice_y_end = slice_y_start + 1 ;
-	if( slice_x_end > src->width ) 
-		slice_x_end = src->width ;
-	if( slice_y_end > src->height ) 
-		slice_y_end = src->height ;
-	if( slice_x_start > slice_x_end ) 
+   if (slice_x_end > (int)src->width)
+      slice_x_end = src->width;
+   if (slice_y_end > (int)src->height)
+      slice_y_end = src->height;
+   if( slice_x_start > slice_x_end ) 
 		slice_x_start = (slice_x_end > 0 ) ? slice_x_end-1 : 0 ;
 	if( slice_y_start > slice_y_end ) 
 		slice_y_start = (slice_y_end > 0 ) ? slice_y_end-1 : 0 ;
@@ -3104,9 +3096,9 @@ LOCAL_DEBUG_OUT( "sx1 = %d, sx2 = %d, sy1 = %d, sy2 = %d, to_width = %d, to_heig
 			imout->next_line = y2 ; 
 			imdec->next_line = y1 ;
 			max_y = src->height ;
-			if( y2 + max_y - y1 > dst->height ) 
-				max_y = dst->height + y1 - y2 ;
-			LOCAL_DEBUG_OUT( "y1 = %d, max_y = %d", y1, max_y );		   
+         if (y2 + max_y - y1 > (int)dst->height)
+            max_y = dst->height + y1 - y2;
+         LOCAL_DEBUG_OUT( "y1 = %d, max_y = %d", y1, max_y );		   
 			if( x_middle > 0 )
 			{	
 				tmp = scale_asimage2( asv, src, slice_x_start, y1, 
@@ -3157,9 +3149,9 @@ LOCAL_DEBUG_OUT( "sx1 = %d, sx2 = %d, sy1 = %d, sy2 = %d, to_width = %d, to_heig
 			imout->next_line = y2 =  max(max_y2,(int)slice_y_start) ; 
 			imdec->next_line = y1 = src->height - tail ;
 			max_y = src->height ;
-			if( y2 + max_y - y1 > dst->height ) 
-				max_y = dst->height + y1 - y2 ;
-			LOCAL_DEBUG_OUT( "y1 = %d, max_y = %d", y1, max_y );		   
+         if (y2 + max_y - y1 > (int)dst->height)
+            max_y = dst->height + y1 - y2;
+         LOCAL_DEBUG_OUT( "y1 = %d, max_y = %d", y1, max_y );		   
 			for( ; y1 < max_y ; ++y1 )
 			{
 				imdec->decode_image_scanline( imdec );
@@ -3372,10 +3364,9 @@ fprintf (stderr, "color2alpha():%d: color: red = 0x%8.8X green = 0x%8.8X blue = 
 			int x ;
 			ASScanline *srcsl = &(imdec->buffer);
 			imdec->decode_image_scanline( imdec );
-			for (x = 0; x < imdec->buffer.width; ++x)
-			{
-				CARD32 r = srcsl->red[x];
-				CARD32 g = srcsl->green[x];
+         for (x = 0; x < (int)imdec->buffer.width; ++x) {
+            CARD32 r = srcsl->red[x];
+            CARD32 g = srcsl->green[x];
 				CARD32 b = srcsl->blue[x];
 				CARD32 a = srcsl->alpha[x];
 				/* the following logic is stolen from gimp and altered for our color format and beauty*/
@@ -3421,9 +3412,9 @@ fprintf (stderr, "result: %8.8X %8.8X %8.8X %8.8X.\n", src->alpha[x], src->red[x
 
 				}
 				/* end of gimp code */
-			}
-			imout->output_image_scanline( imout, srcsl, 1);
-		}
+         }
+         imout->output_image_scanline(imout, srcsl, 1);
+      }
 		stop_image_output( &imout );
 	}
 	stop_image_decoding( &imdec );

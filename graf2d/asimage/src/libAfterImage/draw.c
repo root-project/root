@@ -1006,8 +1006,10 @@ asim_apply_path( ASDrawContext *ctx, int start_x, int start_y, Bool fill, int fi
 	
 	LOCAL_DEBUG_CALLER_OUT( "start_x = %d, start_y = %d, fill = %d, fill_start_x = %d, fill_start_y = %d",
 							start_x, start_y, fill, fill_start_x, fill_start_y );
+   (void)start_x;
+   (void)start_y; // silence unused variable warning
 
-	/* TODO : contour tracing functionality : */
+   /* TODO : contour tracing functionality : */
 	if( fill ) 
 		asim_flood_fill( ctx, fill_start_x, fill_start_y, 0, fill_threshold==0?CTX_DEFAULT_FILL_THRESHOLD:fill_threshold );	
 

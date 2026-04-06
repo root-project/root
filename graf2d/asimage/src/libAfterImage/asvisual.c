@@ -59,7 +59,9 @@ void _XInitImageFuncPtrs(XImage*);
 int
 asvisual_empty_XErrorHandler (Display * dpy, XErrorEvent * event)
 {
-    return 0;
+   (void)dpy;   // silence unused variable warning
+   (void)event; // silence unused variable warning
+   return 0;
 }
 /***************************************************************************/
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
@@ -103,6 +105,7 @@ ARGB32_manhattan_distance (long a, long b)
  ***************************************************************************/
 int get_bits_per_pixel(Display *dpy, int depth)
 {
+   (void)dpy; // silence unused variable warning
 #if 0
 #ifndef X_DISPLAY_MISSING
  	register ScreenFormat *fmt = dpy->pixmap_format;
@@ -126,8 +129,8 @@ int get_bits_per_pixel(Display *dpy, int depth)
 ASVisual *_set_default_asvisual( ASVisual *new_v );
 
 #ifndef X_DISPLAY_MISSING
-static XColor black_xcol = { 0, 0x0000, 0x0000, 0x0000, DoRed|DoGreen|DoBlue };
-static XColor white_xcol = { 0, 0xFFFF, 0xFFFF, 0xFFFF, DoRed|DoGreen|DoBlue };
+static XColor black_xcol = {0, 0x0000, 0x0000, 0x0000, DoRed | DoGreen | DoBlue, 0};
+static XColor white_xcol = {0, 0xFFFF, 0xFFFF, 0xFFFF, DoRed | DoGreen | DoBlue, 0};
 
 static void find_useable_visual( ASVisual *asv, Display *dpy, int screen,
 	                             Window root, XVisualInfo *list, int nitems,
@@ -236,6 +239,12 @@ query_screen_visual_id( ASVisual *asv, Display *dpy, int screen, Window root, in
 		 { NULL  , 0       , 0     , 15   , DirectColor, 0x0     , 0xE003    , 0x0      , 0            , 0 },
 		 { NULL  , 0       , 0     , 0    , 0          , 0       , 0         , 0        , 0            , 0 },
 		} ;
+#else
+   (void)screen;
+   (void)root;
+   (void)default_depth;
+   (void)visual_id;
+   (void)cmap; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
 	if( asv == NULL )
 		return False ;
@@ -350,6 +359,13 @@ create_asvisual_for_id( Display *dpy, int screen, int default_depth, VisualID vi
             asv = NULL ;
         }
     }
+#else
+   (void)dpy;
+   (void)screen;
+   (void)default_depth;
+   (void)visual_id;
+   (void)cmap;
+   (void)reusable_memory; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
 	_set_default_asvisual( asv );
 	return asv;
@@ -454,11 +470,13 @@ visual2visual_prop( ASVisual *asv, size_t *size_ret,
 	}
 	if( size_ret )
 		*size_ret = size;
+#else
+   (void)size_ret; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
-	if( version_ret )
-		*version_ret = (1<<16)+0;                        /* version is 1.0 */
-	*data_ret = prop ;
-	return True;
+   if (version_ret)
+      *version_ret = (1 << 16) + 0; /* version is 1.0 */
+   *data_ret = prop;
+   return True;
 }
 
 Bool
@@ -518,7 +536,7 @@ visual_prop2visual( ASVisual *asv, Display *dpy, int screen,
 	}else
 		asv->as_colormap_type = ACM_None ;     /* just in case */
 #else
-
+   (void)screen; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
 	return True;
 }
@@ -626,7 +644,8 @@ make_reverse_colormap( unsigned long *cmap, size_t size, int depth, unsigned sho
 ASHashTable *
 make_reverse_colorhash( unsigned long *cmap, size_t size, int depth, unsigned short mask, unsigned short shift )
 {
-	ASHashTable *hash = create_ashash( 0, NULL, NULL, NULL );
+   (void)depth; // silence unused variable warning
+   ASHashTable *hash = create_ashash( 0, NULL, NULL, NULL );
 	register unsigned int i ;
 
 	if( hash )
@@ -695,6 +714,8 @@ setup_pseudo_visual( ASVisual *asv  )
 															  asv->true_depth, 0x000F, 4 );
 		}
 	}
+#else
+   (void)asv; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
 }
 
@@ -886,6 +907,8 @@ setup_as_colormap( ASVisual *asv )
 		asv->as_colormap = cmap ;
 		asv->as_colormap_reverse.hash = make_reverse_colorhash( cmap, 4096, asv->true_depth, 0x000F, 4 );
 	}
+#else
+   (void)asv; // silence unused variable warning
 #endif /*ifndef X_DISPLAY_MISSING */
 }
 
@@ -960,7 +983,17 @@ LOCAL_DEBUG_OUT( "Colormap %lX, parent %lX, %ux%u%+d%+d, bw = %d, class %d",
 						  wclass, asv->visual_info.visual,
 	                      mask, attributes);
 #else
-	return None ;
+   (void)asv;
+   (void)parent;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height;
+   (void)border_width;
+   (void)wclass;
+   (void)mask;
+   (void)attributes; // silence unused variable warning
+   return None;
 #endif /*ifndef X_DISPLAY_MISSING */
 
 }
@@ -980,6 +1013,11 @@ create_visual_gc( ASVisual *asv, Window root, unsigned long mask, XGCValues *gcv
 		if( asv->scratch_window != None )
 			gc = XCreateGC( asv->dpy, asv->scratch_window, gcvalues?mask:0, gcvalues?gcvalues:&scratch_gcv );
 	}
+#else
+      (void)asv;
+      (void)root;
+      (void)mask;
+      (void)gcvalues; // silence unused variable warning
 #endif
 	return gc;
 }
@@ -999,7 +1037,12 @@ create_visual_pixmap( ASVisual *asv, Window root, unsigned int width, unsigned i
 	}
 	return p;
 #else
-	return None ;
+   (void)asv;
+   (void)root;
+   (void)width;
+   (void)height;
+   (void)depth; // silence unused variable warning
+   return None ;
 #endif /*ifndef X_DISPLAY_MISSING */
 }
 
@@ -1020,7 +1063,9 @@ destroy_visual_pixmap( ASVisual *asv, Pixmap *ppmap )
 static int
 quiet_xerror_handler (Display * dpy, XErrorEvent * error)
 {
-    return 0;
+   (void)dpy;   // silence unused variable warning
+   (void)error; // silence unused variable warning
+   return 0;
 }
 
 #endif
@@ -1039,6 +1084,9 @@ get_dpy_drawable_size (Display *drawable_dpy, Drawable d, unsigned int *ret_w, u
 		result = XGetGeometry (drawable_dpy, d, &root, &junk, &junk, ret_w, ret_h, &ujunk, &ujunk);
 		XSetErrorHandler (oldXErrorHandler);
 	}
+#else
+   (void)drawable_dpy;
+   (void)d; // silence unused variable warning
 #endif
 	if ( result == 0)
 	{
@@ -1082,6 +1130,10 @@ get_dpy_window_position (Display *window_dpy, Window root, Window w, int *px, in
 			while( transp_y > rootHeight ) transp_y -= rootHeight ; 
 		}
 	}
+#else
+   (void)window_dpy;
+   (void)root;
+   (void)w; // silence unused variable warning
 #endif
 	if( px ) 
 		*px = x;
@@ -1476,7 +1528,11 @@ XImage *ASGetXImage( ASVisual *asv, Drawable d,
 
 Bool enable_shmem_images (){return False; }
 void disable_shmem_images(){}
-void *check_XImage_shared( XImage *xim ) {return NULL ; }
+void *check_XImage_shared(XImage *xim)
+{
+   (void)xim; // silence unused variable warning
+   return NULL;
+}
 
 Bool ASPutXImage( ASVisual *asv, Drawable d, GC gc, XImage *xim,
                   int src_x, int src_y, int dest_x, int dest_y,
@@ -1487,7 +1543,17 @@ Bool ASPutXImage( ASVisual *asv, Drawable d, GC gc, XImage *xim,
 		return False ;
 	return XPutImage( asv->dpy, d, gc, xim, src_x, src_y, dest_x, dest_y,width, height );
 #else
-	return False;
+   (void)asv;
+   (void)d;
+   (void)gc;
+   (void)xim;
+   (void)src_x;
+   (void)src_y;
+   (void)dest_x;
+   (void)dest_y;
+   (void)width;
+   (void)height; // silence unused variable warning
+   return False;
 #endif
 }
 
@@ -1500,7 +1566,14 @@ XImage * ASGetXImage( ASVisual *asv, Drawable d,
 		return NULL ;
 	return XGetImage( asv->dpy, d, x, y, width, height, plane_mask, ZPixmap );
 #else
-	return NULL ;
+   (void)asv;
+   (void)d;
+   (void)x;
+   (void)y;
+   (void)width;
+   (void)height;
+   (void)plane_mask; // silence unused variable warning
+   return NULL ;
 #endif	
 }
 
@@ -1581,10 +1654,10 @@ create_visual_ximage( ASVisual *asv, unsigned int width, unsigned int height, un
 #endif
 	if( ximage == NULL )
 	{
-		ximage = XCreateImage (asv->dpy, asv->visual_info.visual, (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap,
-                                       0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
-                                       unit, 0);
-		if (ximage != NULL)
+      ximage = XCreateImage(asv->dpy, asv->visual_info.visual,
+                            (depth == 0) ? (unsigned int)asv->visual_info.depth /*true_depth*/ : depth, ZPixmap, 0,
+                            NULL, MAX(width, (unsigned int)1), MAX(height, (unsigned int)1), unit, 0);
+      if (ximage != NULL)
 		{
 			_XInitImageFuncPtrs (ximage);
 			ximage->obdata = NULL;
@@ -1600,7 +1673,11 @@ create_visual_ximage( ASVisual *asv, unsigned int width, unsigned int height, un
 	}
 	return ximage;
 #else
-	return NULL ;
+   (void)asv;
+   (void)width;
+   (void)height;
+   (void)depth; // silence unused variable warning
+   return NULL ;
 #endif /*ifndef X_DISPLAY_MISSING */
 }
 /* this is the vehicle to use static allocated buffer for temporary XImages 
@@ -1635,11 +1712,10 @@ create_visual_scratch_ximage( ASVisual *asv, unsigned int width, unsigned int he
 		   
 	if( ximage == NULL )
 	{
-		ximage = XCreateImage (asv->dpy, asv->visual_info.visual, 
-                                       (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap, 
-                                       0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
-                                       unit, 0);
-		if (ximage != NULL)
+      ximage = XCreateImage(asv->dpy, asv->visual_info.visual,
+                            (depth == 0) ? (unsigned int)asv->visual_info.depth /*true_depth*/ : depth, ZPixmap, 0,
+                            NULL, MAX(width, (unsigned int)1), MAX(height, (unsigned int)1), unit, 0);
+      if (ximage != NULL)
 		{
 			data = get_scratch_data(ximage->bytes_per_line * ximage->height);
 			if( data == NULL ) 
@@ -1722,45 +1798,53 @@ query_pixel_color( ASVisual *asv, unsigned long pixel, CARD32 *r, CARD32 *g, CAR
 
 CARD32 color2pixel32bgr(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	*pixel = ARGB32_RED8(encoded_color)|(ARGB32_GREEN8(encoded_color)<<8)|(ARGB32_BLUE8(encoded_color)<<16);
+   (void)asv; // silence unused variable warning
+   *pixel = ARGB32_RED8(encoded_color)|(ARGB32_GREEN8(encoded_color)<<8)|(ARGB32_BLUE8(encoded_color)<<16);
 	return 0;
 }
 CARD32 color2pixel32rgb(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	*pixel = encoded_color&0x00FFFFFF;
+   (void)asv; // silence unused variable warning
+   *pixel = encoded_color&0x00FFFFFF;
 	return 0;
 }
 CARD32 color2pixel24bgr(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	*pixel = encoded_color&0x00FFFFFF;
+   (void)asv; // silence unused variable warning
+   *pixel = encoded_color&0x00FFFFFF;
 	return 0;
 }
 CARD32 color2pixel24rgb(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	*pixel = encoded_color&0x00FFFFFF;
+   (void)asv; // silence unused variable warning
+   *pixel = encoded_color&0x00FFFFFF;
 	return 0;
 }
 CARD32 color2pixel16bgr(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	register CARD32 c = encoded_color ;
-    *pixel = ((c&0x000000F8)<<8)|((c&0x0000FC00)>>5)|((c&0x00F80000)>>19);
+   (void)asv; // silence unused variable warning
+   register CARD32 c = encoded_color;
+   *pixel = ((c & 0x000000F8) << 8) | ((c & 0x0000FC00) >> 5) | ((c & 0x00F80000) >> 19);
 	return (c>>1)&0x00030103;
 }
 CARD32 color2pixel16rgb(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	register CARD32 c = encoded_color ;
+   (void)asv; // silence unused variable warning
+   register CARD32 c = encoded_color ;
     *pixel = ((c&0x00F80000)>>8)|((c&0x0000FC00)>>5)|((c&0x000000F8)>>3);
 	return (c>>1)&0x00030103;
 }
 CARD32 color2pixel15bgr(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	register CARD32 c = encoded_color ;
+   (void)asv; // silence unused variable warning
+   register CARD32 c = encoded_color ;
     *pixel = ((c&0x000000F8)<<7)|((c&0x0000F800)>>6)|((c&0x00F80000)>>19);
 	return (c>>1)&0x00030303;
 }
 CARD32 color2pixel15rgb(ASVisual *asv, CARD32 encoded_color, unsigned long *pixel)
 {
-	register CARD32 c = encoded_color ;
+   (void)asv; // silence unused variable warning
+   register CARD32 c = encoded_color ;
     *pixel = ((c&0x00F80000)>>9)|((c&0x0000F800)>>6)|((c&0x000000F8)>>3);
 	return (c>>1)&0x00030303;
 }
@@ -1787,21 +1871,69 @@ CARD32 color2pixel_pseudo12bpp( ASVisual *asv, CARD32 encoded_color, unsigned lo
 }
 
 void pixel2color32rgb(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color32bgr(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color24rgb(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color24bgr(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color16rgb(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color16bgr(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color15rgb(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 void pixel2color15bgr(ASVisual *asv, unsigned long pixel, CARD32 *red, CARD32 *green, CARD32 *blue)
-{}
+{
+   (void)asv;
+   (void)pixel;
+   (void)red;
+   (void)green;
+   (void)blue; // silence unused variable warning
+}
 
 void ximage2scanline32(ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
@@ -1809,8 +1941,9 @@ void ximage2scanline32(ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regis
 	register CARD32 *a = sl->alpha+sl->offset_x;
 	int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x);
 	register CARD32 *src = (CARD32*)xim_data ;
-/*	src += sl->offset_x; */
-/*fprintf( stderr, "%d: ", y);*/
+   (void)y; // silence unused variable warning
+   /*	src += sl->offset_x; */
+   /*fprintf( stderr, "%d: ", y);*/
 
 #ifdef WORDS_BIGENDIAN
 	if( !asv->msb_first )
@@ -1841,7 +1974,8 @@ void ximage2scanline32(ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regis
 
 void ximage2scanline16( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
+   (void)y; // silence unused variable warning
+   register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
 	register CARD16 *src = (CARD16*)xim_data ;
     register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 #ifdef WORDS_BIGENDIAN
@@ -1868,7 +2002,8 @@ void ximage2scanline16( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 }
 void ximage2scanline15( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
+   (void)y; // silence unused variable warning
+   register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
 	register CARD16 *src = (CARD16*)xim_data ;
     register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 #ifdef WORDS_BIGENDIAN
@@ -1898,7 +2033,8 @@ void ximage2scanline15( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 void
 ximage2scanline_pseudo3bpp( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
+   (void)xim_data; // silence unused variable warning
+   register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
     register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 
 	do
@@ -2004,6 +2140,7 @@ void scanline2ximage32( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 	register CARD32 *a = sl->alpha+sl->offset_x;
 	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x);
 	register CARD32 *src = (CARD32*)xim_data;
+   (void)y; // silence unused variable warning
 /*	src += sl->offset_x ; */
 /*fprintf( stderr, "%d: ", y);*/
 #ifdef WORDS_BIGENDIAN
@@ -2031,7 +2168,8 @@ void scanline2ximage32( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 
 void scanline2ximage16( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
+   (void)y; // silence unused variable warning
+   register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
 	register CARD16 *src = (CARD16*)xim_data ;
     register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 	register CARD32 c = (r[i]<<20) | (g[i]<<10) | (b[i]);
@@ -2089,7 +2227,8 @@ void scanline2ximage16( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 
 void scanline2ximage15( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
+   (void)y; // silence unused variable warning
+   register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
 	register CARD16 *src = (CARD16*)xim_data ;
     register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 	register CARD32 c = (r[i]<<20) | (g[i]<<10) | (b[i]);
@@ -2151,7 +2290,8 @@ void scanline2ximage15( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  regi
 void
 scanline2ximage_pseudo3bpp( ASVisual *asv, XImage *xim, ASScanline *sl, int y,  register unsigned char *xim_data )
 {
-	register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
+   (void)xim_data; // silence unused variable warning
+   register CARD32 *r = sl->xc1+sl->offset_x, *g = sl->xc2+sl->offset_x, *b = sl->xc3+sl->offset_x;
 	register int i = MIN((unsigned int)(xim->width),sl->width-sl->offset_x)-1;
 	register CARD32 c = (r[i]<<20) | (g[i]<<10) | (b[i]);
 

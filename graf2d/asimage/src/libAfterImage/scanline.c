@@ -307,8 +307,9 @@ typedef void (*ASIMDiagInterpolationFunc) (CARD32 *dst, CARD32 **channs, int wid
 void
 interpolate_channel_v_15x51 (CARD32 *dst, CARD32 **channs, int width, int offset)
 {
-	/* Assumptions :  channs is array of 5 CARD32 pointers not NULL */
-	int x;
+   (void)offset; // silence unused variable warning
+   /* Assumptions :  channs is array of 5 CARD32 pointers not NULL */
+   int x;
 	for (x = 0; x < width; ++x)
 	{
 		int v = (int)channs[1][x]*5+(int)channs[3][x]*5-(int)channs[4][x]-(int)channs[0][x];
@@ -332,8 +333,9 @@ interpolate_channel_v_checkered_15x51 (CARD32 *dst, CARD32 **channs, int width, 
 void
 smooth_channel_v_15x51 (CARD32 *dst, CARD32 **channs, int width, int offset)
 {
-	/* Assumptions :  channs is array of 5 CARD32 pointers not NULL */
-	int x;
+   (void)offset; // silence unused variable warning
+   /* Assumptions :  channs is array of 5 CARD32 pointers not NULL */
+   int x;
 	for (x = 0; x < width; ++x)
 	{
 		int v = (int)(channs[2][x]<<3) + (int)channs[1][x]*5+(int)channs[3][x]*5-(int)channs[4][x]-(int)channs[0][x];
@@ -573,7 +575,8 @@ Bool calculate_green_diff(ASIMStrip *strip, int line, int chan, int offset)
 Bool 
 interpolate_green_diff(ASIMStrip *strip, int line, int chan, int offset)
 {
-	if (line > 0 && line < strip->size-1)
+   (void)offset; // silence unused variable warning
+   if (line > 0 && line < strip->size-1)
 	{
 		ASScanline *above = strip->lines[line-1];
 		ASScanline *below = strip->lines[line+1];
@@ -605,7 +608,8 @@ interpolate_green_diff(ASIMStrip *strip, int line, int chan, int offset)
 Bool 
 interpolate_from_green_diff(ASIMStrip *strip, int line, int chan, int offset)
 {
-	int width = strip->lines[line]->width;
+   (void)offset; // silence unused variable warning
+   int width = strip->lines[line]->width;
 	CARD32 *green = strip->lines[line]->green;
 	CARD32 *dst = strip->lines[line]->channels[chan];
 	int *diff = strip->aux_data[line];
@@ -669,12 +673,13 @@ interpolate_asim_strip_custom_rggb2 (ASIMStrip *strip, ASFlagType filter, Bool f
 						set_flags(strip->lines[line]->flags, ASIM_SCL_InterpolatedH<<chan);
 					}
 				}
-
+#else
+   (void)force_all; // silence unused variable warning
 #endif
 
 #if 1
-	/* interpolation of green */
-	if ( get_flags( filter, SCL_DO_GREEN) )
+   /* interpolation of green */
+   if ( get_flags( filter, SCL_DO_GREEN) )
 	{
 		for (line = 1 ; line < strip->size-1 ; ++line)
 			if (get_flags(strip->lines[line]->flags, SCL_DO_GREEN)
