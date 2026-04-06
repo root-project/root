@@ -9,17 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPServerSocket                                                       //
-//                                                                      //
-// This class implements parallel server sockets. A parallel server     //
-// socket waits for requests to come in over the network. It performs   //
-// some operation based on that request and then possibly returns a     //
-// full duplex parallel socket to the requester. The actual work is     //
-// done via the TSystem class (either TUnixSystem or TWinNTSystem).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TPServerSocket.cxx
+\class TPServerSocket
+\brief This class implements parallel server sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+This class implements parallel server sockets. A parallel server
+socket waits for requests to come in over the network. It performs
+some operation based on that request and then possibly returns a
+full duplex parallel socket to the requester. The actual work is
+done via the TSystem class (either TUnixSystem or TWinNTSystem).
+**/
 
 #include "TPServerSocket.h"
 #include "TROOT.h"
