@@ -3014,7 +3014,7 @@ void TBufferJSON::ReadFastArray(ULong64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// read array of Float_t from buffer
 
-void TBufferJSON::ReadFastArray(Float_t *f, Int_t n)
+void TBufferJSON::ReadFastArray(Float_t *f, Long64_t n)
 {
    JsonReadFastArray(f, n);
 }

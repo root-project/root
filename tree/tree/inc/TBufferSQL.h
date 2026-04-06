@@ -116,7 +116,7 @@ public:
    void     ReadFastArray(ULong_t   *, Int_t ) final;
    void     ReadFastArray(Long64_t  *, Int_t ) final;
    void     ReadFastArray(ULong64_t *, Int_t ) final;
-   void     ReadFastArray(Float_t   *, Int_t ) final;
+   void     ReadFastArray(Float_t   *, Long64_t ) final;
    void     ReadFastArray(Double_t  *, Int_t ) final;
    void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=nullptr) final;
    void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=nullptr) final;
