@@ -90,7 +90,7 @@ class HypoTestInvTool {
 
    public:
    HypoTestInvTool();
-   ~HypoTestInvTool(){};
+   virtual ~HypoTestInvTool() {}
 
    HypoTestInverterResult *RunInverter(RooWorkspace *w, const char *modelSBName, const char *modelBName,
    const char *dataName, int type, int testStatType, bool useCLs, int npoints,
