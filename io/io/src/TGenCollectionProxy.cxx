@@ -47,7 +47,7 @@ public:
    {
    }
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx)  override
+   void* At(TVirtualCollectionProxy::size_type idx)  override
    {
       if ( fEnv && fEnv->fObject ) {
          fEnv->fIdx = idx;
@@ -97,7 +97,7 @@ public:
    {
       // Standard Destructor.
    }
-   void* At(UInt_t idx) override
+   void* At(TVirtualCollectionProxy::size_type idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -143,7 +143,7 @@ public:
    {
       // Standard Destructor.
    }
-   void* At(UInt_t idx) override
+   void* At(TVirtualCollectionProxy::size_type idx) override
    {
       // Return the address of the value at index 'idx'
 
@@ -198,7 +198,7 @@ public:
    {
    }
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx) override
+   void* At(TVirtualCollectionProxy::size_type idx) override
    {
       if ( fEnv && fEnv->fObject ) {
          switch( idx ) {
@@ -240,7 +240,7 @@ public:
    {
    }
    // Return the address of the value at index 'idx'
-   void* At(UInt_t idx) override
+   void* At(TVirtualCollectionProxy::size_type idx) override
    {
       if ( fEnv && fEnv->fObject ) {
          if ( fEnv->fUseTemp ) {
@@ -1015,7 +1015,7 @@ ULong_t TGenCollectionProxy::GetIncrement() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the sizeof the collection object.
 
-UInt_t TGenCollectionProxy::Sizeof() const
+TVirtualCollectionProxy::size_type TGenCollectionProxy::Sizeof() const
 {
    return fClass->Size();
 }
@@ -1065,7 +1065,7 @@ EDataType TGenCollectionProxy::GetType() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the address of the value at index 'idx'
 
-void* TGenCollectionProxy::At(UInt_t idx)
+void* TGenCollectionProxy::At(TVirtualCollectionProxy::size_type idx)
 {
    if ( fEnv && fEnv->fObject ) {
       switch (fSTL_type) {
@@ -1154,7 +1154,7 @@ void TGenCollectionProxy::Clear(const char* opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current size of the container
 
-UInt_t TGenCollectionProxy::Size() const
+TVirtualCollectionProxy::size_type TGenCollectionProxy::Size() const
 {
    if ( fEnv && fEnv->fObject ) {
       if (fEnv->fUseTemp) {
@@ -1170,7 +1170,7 @@ UInt_t TGenCollectionProxy::Size() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the container
 
-void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
+void TGenCollectionProxy::Resize(TVirtualCollectionProxy::size_type n, Bool_t force)
 {
    if ( fEnv && fEnv->fObject ) {
       if ( force && fPointers ) {
@@ -1193,7 +1193,7 @@ void TGenCollectionProxy::Resize(UInt_t n, Bool_t force)
 /// For associative collection, this returns a TStaging object that
 /// need to be deleted manually __or__ returned by calling Commit(TStaging*)
 
-void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
+void* TGenCollectionProxy::Allocate(TVirtualCollectionProxy::size_type n, Bool_t /* forceDelete */ )
 {
    if ( fEnv && fEnv->fObject ) {
       switch ( fSTL_type ) {
