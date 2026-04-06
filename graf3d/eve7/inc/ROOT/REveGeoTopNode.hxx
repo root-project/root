@@ -25,8 +25,8 @@ class REveGeomDescription : public RGeomDescription {
   static TGeoManager* s_geoManager;
 protected:
    std::vector<RGeomNodeVisibility> fVisibilityRec;
-   virtual RGeoItem MakeBrowserItem(const RGeomNode &node, std::vector<int> &stack);
-   virtual bool IsFullModelStreamedAtOnce() { return false; }
+   virtual RGeoItem MakeBrowserItem(const RGeomNode &node, std::vector<int> &stack) override;
+   virtual bool IsFullModelStreamedAtOnce() override { return false; }
 
    class Apex {
       std::vector<std::string> fPath;
@@ -77,7 +77,7 @@ class REveGeomHierarchy : public RGeomHierarchy
 {
    REveGeoTopNodeData* fReceiver{nullptr};
 protected:
-   virtual void WebWindowCallback(unsigned connid, const std::string &kind);
+   virtual void WebWindowCallback(unsigned connid, const std::string &kind) override;
 
 public:
    REveGeomHierarchy(REveGeomDescription &desc, bool th) :
