@@ -209,6 +209,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     OpenGL::GLU
     ${FTGL_LIBRARIES}
     ${GL2PS_LIBRARIES}
+    Freetype::Freetype
+    ZLIB::ZLIB
     ${X11_LIBRARIES}
     ROOTGlad
   DEPENDENCIES
@@ -224,7 +226,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
-     ${FREETYPE_INCLUDE_DIRS}
 )
 
 if(builtin_gl2ps)
