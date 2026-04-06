@@ -79,7 +79,7 @@ class REveGeomHierarchy : public RGeomHierarchy
 {
    REveGeoTopNodeData* fReceiver{nullptr};
 protected:
-   virtual void WebWindowCallback(unsigned connid, const std::string &kind);
+   virtual void WebWindowCallback(unsigned connid, const std::string &kind) override;
 
 public:
    REveGeomHierarchy(REveGeomDescription &desc, bool th) :
