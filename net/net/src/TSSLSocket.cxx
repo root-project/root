@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSSLSocket                                                           //
-//                                                                      //
-// A TSocket wrapped in by SSL.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TSSLSocket.cxx
+\class TSSLSocket
+\brief A TSocket wrapped in by SSL.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+**/
+
 
 #include <openssl/ssl.h>
 #include "TSSLSocket.h"
