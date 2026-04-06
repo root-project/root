@@ -632,8 +632,7 @@ void TDatabasePDG::ReadPDGTableImpl(const char *FileName, bool isParticleListIni
          // read channel number
          // coverity [secure_coding : FALSE]
          if (fscanf(file,"%i",&ich)) {;}
-         // coverity [secure_coding : FALSE]
-         if (fscanf(file,"%s",name  )) {;}
+         if (fscanf(file,"%29s",name  )) {;}
          // coverity [secure_coding : FALSE]
          if (fscanf(file,"%i",&kf   )) {;}
          // coverity [secure_coding : FALSE]
@@ -646,8 +645,7 @@ void TDatabasePDG::ReadPDGTableImpl(const char *FileName, bool isParticleListIni
          } else {
             // coverity [secure_coding : FALSE]
             if (fscanf(file,"%i",&class_number)) {;}
-            // coverity [secure_coding : FALSE]
-            if (fscanf(file,"%s",class_name)) {;}
+            if (fscanf(file,"%29s",class_name)) {;}
             // coverity [secure_coding : FALSE]
             if (fscanf(file,"%i",&charge)) {;}
             // coverity [secure_coding : FALSE]
