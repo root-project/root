@@ -9,17 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TServerSocket                                                        //
-//                                                                      //
-// This class implements server sockets. A server socket waits for      //
-// requests to come in over the network. It performs some operation     //
-// based on that request and then possibly returns a full duplex socket //
-// to the requester. The actual work is done via the TSystem class      //
-// (either TUnixSystem or TWinNTSystem).                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TServerSocket.cxx
+\class TServerSocket
+\brief This class implements server sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+This class implements server sockets. A server socket waits for
+requests to come in over the network. It performs some operation
+based on that request and then possibly returns a full duplex socket
+to the requester. The actual work is done via the TSystem class
+(either TUnixSystem or TWinNTSystem).
+
+**/
+
 
 #include "TServerSocket.h"
 #include "TSocket.h"

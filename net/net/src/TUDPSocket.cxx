@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUDPSocket                                                           //
-//                                                                      //
-// This class implements UDP client sockets. A socket is an endpoint    //
-// for communication between two machines.                              //
-// The actual work is done via the TSystem class (either TUnixSystem    //
-// or TWinNTSystem).                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TUDPSocket.cxx
+\class TUDPSocket
+\brief This class implements UDP client sockets.
+\note This class deals with sockets: the user is entirely responsible for the security of their usage, for example, but
+not limited to, the management of the connections to said sockets.
+
+A socket is an endpoint for communication between two machines. The actual work is done via the TSystem class (either
+TUnixSystem or TWinNTSystem).
+**/
 
 #include "Bytes.h"
 #include "Compression.h"
