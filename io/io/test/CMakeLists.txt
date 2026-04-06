@@ -62,4 +62,12 @@ if(NOT _32BIT)
                     MACRO testByteCount.cxx+
                     OUTREF testByteCount.ref
                     FIXTURES_REQUIRED io-io-tobj-fixture)
+
+  ROOTTEST_COMPILE_MACRO(testLargeCollection.cxx
+                        FIXTURES_SETUP io-io-testcoll-fixture)
+
+  ROOTTEST_ADD_TEST(testLargeCollections
+                    MACRO testLargeCollection.cxx+
+                    OUTREF testLargeCollection.ref
+                    FIXTURES_REQUIRED io-io-testcoll-fixture)
 endif()
