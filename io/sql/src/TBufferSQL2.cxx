@@ -1252,7 +1252,7 @@ void TBufferSQL2::ReadFastArray(ULong64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Float_t from buffer
 
-void TBufferSQL2::ReadFastArray(Float_t *f, Int_t n)
+void TBufferSQL2::ReadFastArray(Float_t *f, Long64_t n)
 {
    SqlReadFastArray(f, n);
 }

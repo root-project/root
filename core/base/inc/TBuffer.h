@@ -322,7 +322,7 @@ public:
    virtual   void     ReadFastArray(ULong_t   *l, Int_t n) = 0;
    virtual   void     ReadFastArray(Long64_t  *l, Int_t n) = 0;
    virtual   void     ReadFastArray(ULong64_t *l, Int_t n) = 0;
-   virtual   void     ReadFastArray(Float_t   *f, Int_t n) = 0;
+   virtual   void     ReadFastArray(Float_t   *f, Long64_t n) = 0;
    virtual   void     ReadFastArray(Double_t  *d, Int_t n) = 0;
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) = 0;
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) = 0;
