@@ -236,7 +236,6 @@ you can create as before the following graphics objects:\n\
   TCutG *cut = (TCutG*)gPad->FindObject(\"CUTG\").\n\n\
   ";
 
-
 const char gHelpPullDownMenus[] = "\
 Each canvas has a menu bar with the following items:\n\
 \"File\" with the items:\n\
@@ -251,6 +250,9 @@ Each canvas has a menu bar with the following items:\n\
         <name.svg >   makes a SVG file\n\
         <name.tex >   makes a TeX file\n\
         <name.gif >   makes a GIF file\n\
+        <name.jpg >   makes a JPEG file\n\
+        <name.png >   makes a PNG file\n\
+        <name.bmp >   makes a BMP file\n\
         <name.C   >   generates a C++ macro to reproduce the canvas\n\
         <name.root>   saves canvas objects in a Root file\n\
      <Save As...  >   brings up the Save As... dialog\n\
@@ -264,8 +266,8 @@ Each canvas has a menu bar with the following items:\n\
            <Pad   >   clears the last selected pad via middle mouse button)\n\
            <Canvas>   clears this canvas.\n\
      <Undo >          not implemented\n\
-     <Redo >          not implemented\n\n"
-"\"View\" with the items:\n\
+     <Redo >          not implemented\n\n\
+\"View\" with the items:\n\
      <Editor      >   toggles the pad editor\n\
      <Toolbar     >   toggles the tool bar\n\
      <Event Status>   toggles the event status bar that shows the identification\n\
@@ -297,7 +299,6 @@ In addition to the tool bar menus, one can set the canvas properties\n\
 by clicking with the right mouse button in the regions closed to the canvas \n\
 borders. This will display a menu to perform operations on a canvas.\n\n\
 ";
-
 
 const char gHelpCanvas[] = "\
 A canvas (see TCanvas) is a top level pad (See TPad).\n\
