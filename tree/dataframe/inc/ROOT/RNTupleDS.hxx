@@ -63,8 +63,17 @@ class RFieldBase;
 class RDataFrame;
 class RNTuple;
 } // namespace ROOT
+namespace ROOT::Detail::RDF {
+class RNodeBase;
+}
+namespace ROOT::RDF {
+template <typename T>
+class RInterface;
+}
 namespace ROOT::Internal::RDF {
 class RNTupleColumnReader;
+std::vector<std::pair<std::uint64_t, std::uint64_t>>
+GetDatasetGlobalClusterBoundaries(const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
 }
 namespace ROOT::Internal {
 class RPageSource;
@@ -205,6 +214,10 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    friend ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
                                                             const std::vector<std::string> &fileNames,
                                                             const std::pair<ULong64_t, ULong64_t> &range);
+
+   // This function needs to acess private members fNTupleName and fFileNames
+   friend std::vector<std::pair<std::uint64_t, std::uint64_t>> ROOT::Internal::RDF::GetDatasetGlobalClusterBoundaries(
+      const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
 
    explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
                       const std::pair<ULong64_t, ULong64_t> &range);
