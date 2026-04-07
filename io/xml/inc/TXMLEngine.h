@@ -38,6 +38,7 @@ protected:
    XMLNodePointer_t ReadNode(XMLNodePointer_t xmlparent, TXMLInputStream *inp, Int_t &resvalue);
    void DisplayError(Int_t error, Int_t linenumber);
    XMLDocPointer_t ParseStream(TXMLInputStream *input);
+   static Bool_t VerifyFilePath(const char *fname);
 
    Bool_t fSkipComments; ///<! if true, do not create comments nodes in document during parsing
 
