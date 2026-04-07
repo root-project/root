@@ -22,7 +22,6 @@ Some contributions to this class have been written by Matthias Wolf (error estim
 // include header file of this class
 #include "RooStats/HypoTestInverterResult.h"
 
-#include "RooStats/HybridResult.h"
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/AsymptoticCalculator.h"
 #include "RooMsgService.h"

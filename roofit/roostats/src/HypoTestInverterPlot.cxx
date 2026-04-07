@@ -23,7 +23,6 @@ hypotheses.
 #include "RooStats/HypoTestInverterPlot.h"
 
 // include other header files
-#include "RooStats/HybridResult.h"
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestPlot.h"
 #include "RooStats/SamplingDistribution.h"

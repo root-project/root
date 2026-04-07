@@ -44,7 +44,6 @@ call HypoTestInverter::UseCLs().
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/HypoTestPlot.h"
 #include "RooStats/HypoTestInverterPlot.h"
-#include "RooStats/HybridResult.h"
 
 #include "RooAbsData.h"
 #include "RooRealVar.h"

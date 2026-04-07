@@ -51,6 +51,8 @@ The following people have contributed to this new version:
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects are deprecated and will be removed in ROOT 6.42.
   These methods implemented a specialized chi-square fit for x-y-data with errors in y and optional errors in x, which is conceptually different from the standard histogram-based chi-square in the **RooDataHist** case and can lead to ambiguous results.
   To fit 2D data with errors in and `x` and `y`, use specialized tools like `TGraphErrors::Fit()`, or build an explicit likelihood model if you want to stay with RooFit.
+* The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method are deprecated and will be removed in ROOT 6.42.
+  We kindly ask users to write their own ROOT-based plotting code, possibly based on the source code of the deprecated **HybridPlot** class, as pre-existing plot helpers are usually failing to be flexible enough for large-scale adoption.
 
 ## Removals
 
