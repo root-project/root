@@ -30,6 +30,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 
 
 struct SXmlAttr_t {
@@ -1348,6 +1349,26 @@ XMLNodePointer_t TXMLEngine::DocGetRootElement(XMLDocPointer_t xmldoc)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Checked that filename does not contains relative path below current directory
+///
+/// Used to prevent access to files below current directory
+
+Bool_t TXMLEngine::VerifyFilePath(const char *fname)
+{
+   if (!fname || !*fname)
+      return kFALSE;
+
+   std::filesystem::path rel = std::filesystem::proximate(fname, std::filesystem::current_path());
+
+   // absolute path not allowed
+   if (rel.is_absolute())
+      return kFALSE;
+
+   // relative path should not start with ".."
+   return rel.empty() || (*rel.begin() != "..");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Parses content of file and tries to produce xml structures.
 /// The maxbuf argument specifies the max size of the XML file to be
 /// parsed. The default value is 100000.
@@ -1864,6 +1885,10 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
                AddNodeContent(xmlparent, lastentity, beg - lastentity);
 
             if (entity->IsSystem()) {
+               if (!VerifyFilePath(entity->GetTitle())) {
+                  resvalue = -15;
+                  return contnode;
+               }
                XMLDocPointer_t entitydoc = ParseFile(entity->GetTitle());
                if (!entitydoc) {
                   resvalue = -14;
@@ -2222,6 +2247,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
 {
    switch (error) {
+   case -15: Error("ParseFile", "Block access to external XML file at line %d", linenumber); break;
    case -14: Error("ParseFile", "Error include external XML file at line %d", linenumber); break;
    case -13: Error("ParseFile", "Error processing DTD part of XML file at line %d", linenumber); break;
    case -12: Error("ParseFile", "DOCTYPE missing after <! at line %d", linenumber); break;
