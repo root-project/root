@@ -182,8 +182,8 @@ int testReadWriteObjectAny()
    // SetBufferOffset does not check against the size,
    // so we can provide and use a larger buffer.
    std::vector<char> databuffer{};
-   databuffer.reserve(8 * 1024 * 1024 * 1024ll);
-   TBufferFile b(TBuffer::kWrite, 8 * 1024 * 1024 * 1024ll - 100, databuffer.data(), false /* don't adopt */, DoNothingAllocator);
+   databuffer.reserve(9 * 1024 * 1024 * 1024ll);
+   TBufferFile b(TBuffer::kWrite, 9 * 1024 * 1024 * 1024ll - 100, databuffer.data(), false /* don't adopt */, DoNothingAllocator);
 
    LargeByteCountsFixture fixture;
    fixture.resize(100); // Small object, should be written with the regular byte count mechanism.
@@ -214,6 +214,17 @@ int testReadWriteObjectAny()
    b.SetReadMode();
    b.SetBufferOffset(startPos);
    errors += readAndCheck("Large object written in long range section", b, 1024 * 1024 * 256);
+
+   // Very Large object written in long range section, should be written with
+   // the large byte count mechanism
+   b.SetWriteMode();
+   b.SetBufferOffset(4 * 1024 * 1024 * 1024ll + 200);
+   startPos = b.GetCurrent() - b.Buffer();
+   fixture.resize(1024 * 1024 * 1024 + 8ll); // a bit more than 4GB of data
+   b.WriteObject(&fixture, false /* cacheReuse */);
+   b.SetReadMode();
+   b.SetBufferOffset(startPos);
+   errors += readAndCheck("Very Large object written in long range section", b, 1024 * 1024 * 1024 + 8);
 
    return errors;
 }
