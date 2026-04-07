@@ -19,6 +19,8 @@
 
 #include "CommonDefs.h"
 
+#include "unistd.h"
+
 // Function that compares to doubles up to an error limit
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-10)
 {
@@ -69,11 +71,15 @@ public:
       out = fdopen (old_stdout, "w");
 
       // Execute the initial script
-      gROOT->ProcessLine(".x $ROOTSYS/tutorials/fit/FittingDemo.C+");
+      TString scriptLine = TString(".x ") + TROOT::GetTutorialDir() + "/math/fit/FittingDemo.C+";
+      gROOT->ProcessLine(scriptLine.Data());
 
       // Get an instance of the TFitEditor
       TCanvas* c1 = static_cast<TCanvas*>( gROOT->FindObject("c1") );
       TH1*      h = static_cast<TH1*>    ( gROOT->FindObject("histo") );
+      if (!c1 || !h) {
+         throw InvalidPointer("In c1 or h initialization");
+      }
 
       f = TFitEditor::GetInstance(c1,h);
 
@@ -222,7 +228,8 @@ public:
    }
 
    int TestUpdate() {
-      gROOT->ProcessLine(".x $ROOTSYS/tutorials/fit/ConfidenceIntervals.C+");
+      TString scriptLine = TString(".x ") + TROOT::GetTutorialsDir() + "/math/fit/ConfidenceIntervals.C+";
+      gROOT->ProcessLine(scriptLine.Data());
       f->DoUpdate();
 
       return 0;
