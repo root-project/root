@@ -49,6 +49,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <limits>
 
 #include "TROOT.h"
 #include "TClass.h"
@@ -1214,12 +1215,44 @@ void TKey::ReadBuffer(char *&buffer)
 void TKey::ReadKeyBuffer(char *&buffer)
 {
    frombuf(buffer, &fNbytes);
+   if (fNbytes < 0) {
+      Error("ReadKeyBuffer", "The value of fNbytes is negative (%d): cannot continue to read the key buffer.", fNbytes);
+      MakeZombie();
+      fNbytes = 0;
+      return;
+   }
    Version_t version;
    frombuf(buffer,&version);
    fVersion = (Int_t)version;
    frombuf(buffer, &fObjlen);
+   if (fObjlen < 0) {
+      Error("ReadKeyBuffer", "The value of fObjlen is negative (%d): cannot continue to read the key buffer.", fObjlen);
+      MakeZombie();
+      fObjlen = 0;
+      return;
+   }
    fDatime.ReadBuffer(buffer);
    frombuf(buffer, &fKeylen);
+   if (fKeylen < 0) {
+      Error("ReadKeyBuffer", "The value of fKeylen is negative (%d): cannot continue to read the key buffer.", fKeylen);
+      MakeZombie();
+      fKeylen = 0;
+      return;
+   }
+
+   if (fNbytes < fKeylen) {
+      Error("ReadKeyBuffer", "fNbytes (%d) < fKeylen (%d): cannot continue to read the key buffer.", fNbytes, fKeylen);
+      MakeZombie();
+      return;
+   }
+
+   constexpr auto maxInt_t = std::numeric_limits<Int_t>::max();
+   if (fKeylen > (maxInt_t - fObjlen)) {
+      Error("ReadKeyBuffer", "fObjlen (%d) + fKeylen (%d) > max int (%d): cannot continue to read the key buffer.", fObjlen, fKeylen, maxInt_t);
+      MakeZombie();
+      return;
+   }
+
    frombuf(buffer, &fCycle);
    if (fVersion > 1000) {
       frombuf(buffer, &fSeekKey);
