@@ -4217,6 +4217,8 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
     auto serverValues = ctx.at(server);
     if(serverValues.empty()) continue;
 
+    if(!server->isValueServer(*this)) continue;
+
     // maybe we are still missing inhibit dirty here
     auto oldOperMode = server->operMode();
     // See note at the bottom of this function to learn why we can only set
