@@ -229,7 +229,7 @@ int calcSumW2CorrectedCovariance(RooAbsReal const &pdf, RooMinimizer &minimizer,
 /// that also should be taken as the default values for RooAbsPdf::fitTo.
 struct MinimizerConfig {
    double recoverFromNaN = 10.;
-   int optConst = 2;
+   int optConst = 0;
    int verbose = 0;
    int doSave = 0;
    int doTimer = 0;

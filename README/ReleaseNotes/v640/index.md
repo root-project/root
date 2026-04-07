@@ -243,6 +243,19 @@ This is new and efficient bracketing root-finding algorithm. It combines bisecti
 - The constructors of **RooDataSet** and **RooDataHist** that combine datasets via `Index()` and `Import()` now validate that the import names correspond to existing states of the index category. If an imported data slice refers to a category label that is not defined in the index category, the constructor now throws an error.
   Previously, such labels were silently added as new category states, which could lead to inconsistent datasets when the state names were not synchronized with the model definition. This change prevents the creation of invalid combined datasets and surfaces configuration problems earlier.
 
+### Deprecation of the the constant term optimization for legacy test statistic classes
+
+The **RooFit::Optimize()** option (constant term optimization) has been deprecated and will be removed in ROOT 6.42.
+This option only affects the `legacy` evaluation backend.
+
+**Important behavior change**: Constant term optimization is now disabled by default when using the legacy backend.
+Previously, it was enabled by default. As a result, users who still rely on the legacy backend may observe *slower fits*.
+
+The default vectorized CPU evaluation backend (introduced in ROOT 6.32) already performs these optimizations automatically and is not affected by this change.
+Users are strongly encouraged to switch to the vectorized CPU backend if they are still using the legacy backend.
+
+If the vectorized backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
+
 ### New implementation of `RooHistError::getPoissonInterval`
 
 **RooHistError::getPoissonInterval** was reimplemented to use an exact chi-square–based construction (Garwood interval) instead of asymptotic approximations and lookup tables.
