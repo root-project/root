@@ -432,6 +432,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(std::string_view n
 ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, std::string_view fileName)
    : RNTupleDS(CreatePageSource(ntupleName, fileName))
 {
+   fNTupleName = ntupleName;
    fFileNames = std::vector<std::string>{std::string{fileName}};
 }
 
