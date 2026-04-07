@@ -57,6 +57,8 @@ public:
 
    ChangeOperModeRAII(ChangeOperModeRAII const &other) = delete;
    ChangeOperModeRAII &operator=(ChangeOperModeRAII const &other) = delete;
+   ChangeOperModeRAII(ChangeOperModeRAII &&other) = delete;
+   ChangeOperModeRAII &operator=(ChangeOperModeRAII &&other) = delete;
 
    ~ChangeOperModeRAII() { _arg->setOperMode(_oldOpMode, /*recurse=*/false); }
 
