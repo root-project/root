@@ -119,7 +119,11 @@ namespace RooStats {
       bool fVerbose;              ///< verbosity flag
 
       ClassDefOverride(HybridPlot,0)   // Provides the plots for an HybridResult
-   };
+   }
+#ifndef ROOFIT_BUILDS_ITSELF
+   R__DEPRECATED(6, 42, "Please write your own ROOT-based plotting code, possibly based on the source code of the deprecated HybridPlot class.")
+#endif
+   ;
 }
 
 #endif
