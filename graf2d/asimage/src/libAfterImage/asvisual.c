@@ -1731,6 +1731,10 @@ create_visual_scratch_ximage( ASVisual *asv, unsigned int width, unsigned int he
 	}
 	return ximage;
 #else
+	(void)asv;
+	(void)width;
+	(void)height;
+	(void)depth;
 	return NULL ;
 #endif /*ifndef X_DISPLAY_MISSING */
 }
