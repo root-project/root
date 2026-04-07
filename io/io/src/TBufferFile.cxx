@@ -440,7 +440,10 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       // The position is above 4GB but was cached using a 32 bit variable.
       startpos = fByteCountStack.back().locator;
       // See below
-      R__ASSERT((fByteCountStack.back().cl == nullptr || clss == fByteCountStack.back().cl)
+      R__ASSERT((fByteCountStack.back().cl == nullptr ||
+                (clss == nullptr && (classname == nullptr || classname[0] == '\0')) ||
+                (clss && clss == fByteCountStack.back().cl) ||
+                (classname && strcmp(classname, fByteCountStack.back().cl->GetName()) == 0))
                 && "Class on the byte count position stack does not match the passed class");
    } else {
       // This assert allows to reject cases that used to be valid (missing or
