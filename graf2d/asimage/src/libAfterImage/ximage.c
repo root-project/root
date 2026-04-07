@@ -411,6 +411,7 @@ pixmap2ximage(ASVisual *asv, Pixmap p, int x, int y, unsigned int width, unsigne
 	return im;
 #else
    (void)asv;
+   (void)p;
    (void)x;
    (void)y;
    (void)width;
