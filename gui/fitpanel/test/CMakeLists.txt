@@ -1,0 +1,11 @@
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+# @author Danilo Piparo CERN
+
+ROOT_EXECUTABLE(fitPanelUnitTesting UnitTesting.cxx LIBRARIES FitPanel Gui)
+ROOT_ADD_TEST(test-fitpanel-UnitTesting COMMAND fitPanelUnitTesting)
+target_include_directories(fitPanelUnitTesting PRIVATE ../src/)
