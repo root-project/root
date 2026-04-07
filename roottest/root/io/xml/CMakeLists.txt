@@ -15,6 +15,11 @@ ROOTTEST_ADD_TEST(enginexml
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                   OUTREF enginexml.ref)
 
+ROOTTEST_ADD_TEST(enginestr
+                  MACRO runenginestr.C
+                  WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                  OUTREF enginestr.ref)
+
 ROOTTEST_ADD_TEST(XmlDir
                   MACRO runXmlDir.C
                   OUTREF XmlDir.ref)
