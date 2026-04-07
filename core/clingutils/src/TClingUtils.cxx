@@ -3251,6 +3251,24 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
+      // LLVM22: In the old API this was:
+      // instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
+
+      // In case of template specializations iterate over the arguments and
+      // fully qualify them as well.
+      if (const auto *TT = llvm::dyn_cast<clang::TagType>(instanceType.getTypePtr())) {
+        // We are asked to fully qualify and we have a Record Type (which
+        // may point to a template specialization) or Template
+        // Specialization Type. We need to fully qualify their arguments.
+
+        const clang::Type *TypePtr = clang::TypeName::getFullyQualifiedTemplateType(
+            Ctx, TT, TT->getKeyword(), prefix, /*WithGlobalNsPrefix=*/false);
+        instanceType = clang::QualType(TypePtr, 0);
+      } else if (const auto *TT = llvm::dyn_cast<clang::TypedefType>(instanceType.getTypePtr())) {
+        instanceType = Ctx.getTypedefType(
+            TT->getKeyword(), prefix, TT->getDecl(),
+            clang::TypeName::getFullyQualifiedType(TT->desugar(), Ctx, /*WithGlobalNsPrefix=*/false));
+      }
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
