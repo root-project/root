@@ -659,15 +659,15 @@ void REveGeoTopNodeViz::CollectShapes(TGeoNode *tnode, std::set<TGeoShape *> &sh
                browsables.push_back(browserShape);
 
                // copy vertices transform vec double to float
-               browsables.back().vertices.reserve(polyShape.fVertices.size());
-               for (size_t i = 0; i < polyShape.fVertices.size(); i++)
-                  browsables.back().vertices.push_back(polyShape.fVertices[i]);
+               browsables.back().vertices.reserve(polyShape.GetVertices().size());
+               for (size_t i = 0; i < polyShape.GetVertices().size(); i++)
+                  browsables.back().vertices.push_back(polyShape.GetVertices()[i]);
 
                // copy indices kip the first integer in the sequence of 4
-               for (size_t i = 0; i < polyShape.fPolyDesc.size(); i += 4) {
-                  browsables.back().indices.push_back(polyShape.fPolyDesc[i + 1]);
-                  browsables.back().indices.push_back(polyShape.fPolyDesc[i + 2]);
-                  browsables.back().indices.push_back(polyShape.fPolyDesc[i + 3]);
+               for (size_t i = 0; i < polyShape.GetPolyDesc().size(); i += 4) {
+                  browsables.back().indices.push_back(polyShape.GetPolyDesc()[i + 1]);
+                  browsables.back().indices.push_back(polyShape.GetPolyDesc()[i + 2]);
+                  browsables.back().indices.push_back(polyShape.GetPolyDesc()[i + 3]);
                }
                // printf("last browsable size indices size %lu \n",  browsables.back().indices.size());
             }
