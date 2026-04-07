@@ -443,7 +443,6 @@ endif()
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   legacy/benchmarks.C
-  legacy/htmlex.C
   legacy/rootalias.C          # Helper macro
   rootlogon.C          # Helper macro
   rootlogoff.C         # Helper macro
