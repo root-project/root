@@ -290,6 +290,10 @@ void TBufferFile::ReadCharStar(char* &s)
    Int_t nch;
    *this >> nch;
    if (nch > 0) {
+      if (nch == std::numeric_limits<Int_t>::max()) {
+         Error("ReadCharStar", "Cannot allocate buffer: maximum capacity exceeded (%d bytes)!", std::numeric_limits<Int_t>::max());
+         return;
+      }
       s = new char[nch+1];
       ReadFastArray(s, nch);
       s[nch] = 0;
