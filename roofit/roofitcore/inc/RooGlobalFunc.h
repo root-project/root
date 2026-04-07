@@ -253,7 +253,11 @@ RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
-RooCmdArg Optimize(Int_t flag=2) ;
+RooCmdArg Optimize(Int_t flag=2)
+#ifndef ROOFIT_BUILDS_ITSELF
+     R__DEPRECATED(6, 42, "Please use the default \"cpu\" likelihood evaluation backend if you want all optimizations.")
+#endif
+   ;
 
 class EvalBackend : public RooCmdArg {
 public:

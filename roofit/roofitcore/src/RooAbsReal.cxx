@@ -3979,7 +3979,9 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
-/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
+/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization.
+///                                               Only relevant for `legacy` evaluation backend and off by default, as the default `cpu` backend already includes this optimization unconditionally.
+///                                               \warning Deprecated option that will be removed in ROOT 6.42!
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
 /// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components

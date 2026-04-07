@@ -419,6 +419,19 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 
 void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
+  static bool hasWarned = false;
+  if (!hasWarned) {
+    std::stringstream ss;
+    ss << "Deprecated constant term optimization detected,\n"
+       << "enabled via RooFit::Optimize() or RooMinimizer::optimizeConst():\n"
+       << "  This functionality only affects the legacy evaluation backend.\n"
+       << "  The vectorized CPU backend performs const term optimization automatically.\n"
+       << "  The option is ignored and will be removed in ROOT 6.42.\n"
+       << "  Should your fit not be possible without the legacy backend, please open a GitHub issue.\n";
+    oocoutW(static_cast<RooAbsArg *>(nullptr), InputArguments) << ss.str() << std::endl;
+    hasWarned = true;
+  }
+
   //   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << std::endl ;
   //   _funcClone->Print("t") ;
 
