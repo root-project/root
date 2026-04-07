@@ -34,9 +34,13 @@ namespace ROOT {
 class RNTupleFillContext;
 class RNTupleReader;
 
-namespace Experimental::Internal {
+namespace Experimental {
+class RNTupleAttrSetReader;
+
+namespace Internal {
 struct RNTupleAttrEntry;
 }
+} // namespace Experimental
 
 // clang-format off
 /**
@@ -52,6 +56,7 @@ class REntry {
    friend class RNTupleFillContext;
    friend class RNTupleModel;
    friend class RNTupleReader;
+   friend class Experimental::RNTupleAttrSetReader;
    friend struct Experimental::Internal::RNTupleAttrEntry;
 
 private:

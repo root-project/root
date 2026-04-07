@@ -44,6 +44,10 @@ class RFieldVisitor;
 class RRawPtrWriteEntry;
 } // namespace Detail
 
+namespace Experimental {
+class RNTupleAttrSetReader;
+}
+
 namespace Internal {
 
 class RPageSink;
@@ -84,6 +88,7 @@ This is and can only be partially enforced through C++.
 class RFieldBase {
    friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Detail::RRawPtrWriteEntry;               // to call Append()
+   friend class ROOT::Experimental::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);

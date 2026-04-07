@@ -23,6 +23,7 @@ HEADERS
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
+  ROOT/RNTupleAttrReading.hxx
   ROOT/RNTupleAttrUtils.hxx
   ROOT/RNTupleAttrWriting.hxx
   ROOT/RNTupleDescriptor.hxx
@@ -68,6 +69,7 @@ SOURCES
   src/RFieldVisitor.cxx
   src/RMiniFile.cxx
   src/RNTuple.cxx
+  src/RNTupleAttrReading.cxx
   src/RNTupleAttrWriting.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
