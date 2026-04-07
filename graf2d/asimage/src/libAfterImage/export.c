@@ -1361,6 +1361,8 @@ Bool
 ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params )
 {
 	SHOW_UNSUPPORTED_NOTE("TIFF",path);
+	(void)im;
+	(void)params; // silence unused variable warning
 	return False ;
 }
 #endif			/* TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF */
