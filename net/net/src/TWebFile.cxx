@@ -399,7 +399,7 @@ Bool_t ROOT::Deprecated::TWebFile::IsOpen() const
 /// and -1 in case of failure, in which case the file cannot be used
 /// anymore. A TWebFile cannot be reopened in update mode.
 
-Int_t TWebFile::ReOpen(Option_t *mode)
+Int_t ROOT::Deprecated::TWebFile::ReOpen(Option_t *mode)
 {
    TString opt = mode;
    opt.ToUpper();
