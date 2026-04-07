@@ -2317,6 +2317,7 @@ ASImage *
 tiff2ASImage( const char * path, ASImageImportParams *params )
 {
 	show_error( "unable to load file \"%s\" - missing TIFF image format libraries.\n", path );
+	(void)params; // silence unused variable warning
 	return NULL ;
 }
 #endif			/* TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF TIFF */
