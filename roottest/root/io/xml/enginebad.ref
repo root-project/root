@@ -1,0 +1,7 @@
+Processing runenginebad.C...
+Error in <TXMLEngine::ParseString>: Block access to external XML file at line 5
+Include from parent directory is not allowed
+Error in <TXMLEngine::ParseString>: Block access to external XML file at line 5
+Include from parent directory is not allowed
+Error in <TXMLEngine::ParseString>: Block access to external XML file at line 5
+Include from top directory is not allowed
