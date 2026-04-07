@@ -1,0 +1,12 @@
+--- /dev/null
++++ CMakeLists.txt
+@@ -0,0 +1,9 @@
++cmake_minimum_required(VERSION 3.23)
++project(xxhash C)
++
++add_library(xxhash STATIC xxhash.h xxhash.c)
++set_target_properties(xxhash PROPERTIES C_VISIBILITY_PRESET hidden POSITION_INDEPENDENT_CODE ON)
++target_sources(xxhash PUBLIC FILE_SET HEADERS BASE_DIRS ./ FILES xxhash.h)
++target_include_directories(xxhash PUBLIC ./)
++add_library(xxHash::xxHash ALIAS xxhash)
++install(TARGETS xxhash FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_PREFIX}/include ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
