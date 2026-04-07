@@ -50,7 +50,6 @@ via the command gObjectTable->Print()
   TContextMenu                3          3       48           144          144
   TMethodArg               2166       2166       44         95304        95304
   TPaveLabel                  1          1      120           120          120
-  THtml                       1          1       32            32           32
   TROOT                       1          0      208           208            0
   TApplication                1          1       28            28           28
   TFileHandler                1          1       20            20           20
