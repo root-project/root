@@ -3018,6 +3018,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    // return bytecount in objTag
    if (objTag) {
       *objTag = (bcnt & ~kByteCountMask);
+      if (*objTag == 0) {
+         // The byte count was stored but is zero, this means the data
+         // did not fit and thus we stored it in 'fByteCounts' instead.
+         // Mark this case by setting startpos to kOverflowCount.
+         *objTag = kOverflowCount;
+         // We do not have access to the caller's "cntpos" and can not
+         // update to kOverflowPosition (unlike the same code in ReadVersion).
+      }
       if (cl)
         fByteCountStack.back().alt = cl;
    }
