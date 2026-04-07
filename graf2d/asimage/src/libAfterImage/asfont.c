@@ -1859,8 +1859,7 @@ draw_text_internal( const char *text, ASFont *font, ASTextAttributes *attr, int 
         get_text_size(  text , font, attr->type, &width, &height ); 
         if ( (width > attr->width)  &&  (strchr(text, ' ')) )
         {
-           char *tryPtr = strchr(
-              text, ' '); // casting away this const could lead to UB, see https://stackoverflow.com/a/14368141/7471760
+           char *tryPtr = strchr( (char *)text, ' '); // casting away this const could lead to UB, see https://stackoverflow.com/a/14368141/7471760
            char *oldTryPtr = tryPtr;
            while (tryPtr) {
               *tryPtr = 0;
