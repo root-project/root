@@ -1080,7 +1080,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */gui/cefdisplay/* \
                          */gui/qt6webdisplay/* \
                          */tutorials/visualisation/webgui/qtweb/* \
-                         */tutorials/roofit/roostats/rs401* \
                          */math/mathcore/src/CDT*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
