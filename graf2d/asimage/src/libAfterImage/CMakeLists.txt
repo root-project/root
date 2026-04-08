@@ -1,10 +1,12 @@
-# libAferImage CMakeLists.txt
-project(AFTERIMAGE)
-cmake_minimum_required(VERSION 3.21)
+# Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+project(AfterImage)
 
 set(LIB_NAME libAfterImage)
-
-set(LIB_DESTINATION "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
 
 set(H_FILES
     afterbase.h
@@ -70,12 +72,10 @@ if(TARGET BUILTIN_FREETYPE)
   add_dependencies(${LIB_NAME} BUILTIN_FREETYPE)
 endif()
 
-target_include_directories(${LIB_NAME} PUBLIC ./)
-target_link_libraries(
-  ${LIB_NAME} PRIVATE ${ASEXTRA_LIBRARIES} Freetype::Freetype ZLIB::ZLIB)
+target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${LIB_NAME} PRIVATE ${ASEXTRA_LIBRARIES} Freetype::Freetype ZLIB::ZLIB)
 if(TARGET X11::X11)
-target_link_libraries(
-  ${LIB_NAME} PRIVATE X11::X11)
+  target_link_libraries(${LIB_NAME} PRIVATE X11::X11)
 endif()
 
 include(CheckIncludeFiles)
@@ -130,7 +130,7 @@ if(WIN32)
   endif()
   target_compile_definitions(
     ${LIB_NAME}
-    PRIVATE NO_DOUBLE_FCLOSE_AFTER_FDOPEN X_DISPLAY_MISSING 
+    PRIVATE NO_DOUBLE_FCLOSE_AFTER_FDOPEN X_DISPLAY_MISSING
             HAVE_UNSIGNED_CHAR HAVE_UNSIGNED_SHORT HAVE_BOOLEAN)
 else()
   target_compile_definitions(
@@ -155,7 +155,5 @@ else()
     target_compile_definitions(
       ${LIB_NAME} PRIVATE X_DISPLAY_MISSING)
   endif()
-  
-endif()
 
-install(TARGETS ${LIB_NAME} DESTINATION ${LIB_DESTINATION})
+endif()
