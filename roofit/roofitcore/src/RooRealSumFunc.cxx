@@ -143,12 +143,6 @@ std::list<double> *RooRealSumFunc::plotSamplingHint(RooAbsRealLValue &obs, doubl
    return RooRealSumPdf::plotSamplingHint(_funcList, obs, xlo, xhi);
 }
 
-//_____________________________________________________________________________
-void RooRealSumFunc::setCacheAndTrackHints(RooArgSet &trackNodes)
-{
-   RooRealSumPdf::setCacheAndTrackHints(_funcList, trackNodes);
-}
-
 /// Customized printing of arguments of a RooRealSumFunc to more intuitively
 /// reflect the contents of the product operator construction.
 

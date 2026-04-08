@@ -49,7 +49,6 @@ public:
   virtual void optimizeCacheMode(const RooArgSet&, RooArgSet&, RooLinkedList& ) {}
 
   /// Interface for constant term node finding calls.
-  virtual void findConstantNodes(const RooArgSet&, RooArgSet& , RooLinkedList&) {}
 
   /// Interface for printing of cache guts in tree mode printing.
   virtual void printCompactTreeHook(std::ostream&, const char *) {}

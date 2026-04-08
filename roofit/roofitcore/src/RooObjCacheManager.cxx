@@ -200,22 +200,3 @@ void RooObjCacheManager::printCompactTreeHook(std::ostream& os, const char *inde
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// If clearOnRedirect is false, forward constant term optimization calls to
-/// cache elements
-
-void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes)
-{
-  if (!_allowOptimize) {
-    return ;
-  }
-
-  for (Int_t i=0 ; i<cacheSize() ; i++) {
-    if (_object[i]) {
-      _object[i]->findConstantNodes(obs,cacheList, processedNodes) ;
-    }
-  }
-}
-
-

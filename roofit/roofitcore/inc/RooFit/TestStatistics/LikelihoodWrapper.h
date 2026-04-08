@@ -16,7 +16,6 @@
 #include "RooFit/TestStatistics/SharedOffset.h"
 
 #include "RooArgSet.h"
-#include "RooAbsArg.h" // enum ConstOpCode
 
 #include <Fit/ParameterSettings.h>
 #include <Math/MinimizerOptions.h>
@@ -94,7 +93,6 @@ public:
    virtual void updateMinuitExternalParameterValues(const std::vector<double> &minuit_external_x);
 
    // The following functions are necessary from MinuitFcnGrad to reach likelihood properties:
-   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
    double defaultErrorLevel() const;
    virtual std::string GetName() const;
    virtual std::string GetTitle() const;

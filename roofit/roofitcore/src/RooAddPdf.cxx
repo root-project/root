@@ -935,16 +935,6 @@ bool RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Label OK'ed components of a RooAddPdf with cache-and-track
-
-void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
-{
-  RooRealSumPdf::setCacheAndTrackHints(_pdfList, trackNodes);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooAddPdf to more intuitively reflect the contents of the
 /// product operator construction
 

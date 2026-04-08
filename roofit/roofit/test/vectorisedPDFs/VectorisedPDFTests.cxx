@@ -479,7 +479,7 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf *pdf)
 
    MyTimer batchTimer("Fitting batch mode " + _name);
    std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit, RooFit::EvalBackend::Cpu(), RooFit::SumW2Error(false),
-                                                   RooFit::Optimize(1), RooFit::PrintLevel(_printLevel), RooFit::Save(),
+                                                   RooFit::PrintLevel(_printLevel), RooFit::Save(),
                                                    _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg())};
    std::cout << batchTimer;
    EXPECT_NE(result, nullptr);

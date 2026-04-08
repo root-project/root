@@ -143,12 +143,31 @@ the cut instead of being selected based on `sqrt(abs(x))`.
 
 * The `RooMinimizer::Strategy` enum has been removed. It named the Minuit strategies that are usually referred to just by integers, but caused confusion because it didn't include the unnamed "Strategy 3". Since people usually set the strategy with integer values anyway, it was decided that the simplest solution to avoid the confusion was simply to remove the `RooMinimizer::Strategy` enum
 
-### Removal of the the constant term optimization for legacy test statistic classes
+### Removal of the constant term optimization for legacy test statistic classes
 
-The **RooFit::Optimize()** option (constant term optimization) has been deprecated in ROOT 6.40 its functionality was now removed.
+The **RooFit::Optimize()** option (constant term optimization) was deprecated in ROOT 6.40, and its functionality is now removed.
 The `RooFit::Optimize()` and `RooMinimizer::optimizeConst()` methods are kept for API consistency across ROOT versions, but they have no effect anymore.
 
-This option only affected the `legacy` evaluation backend.
+In practice this option only affected the `legacy` evaluation backend.
+
+Together with the mechanism itself, the public interfaces that only existed to
+drive it were removed. Code that called or overrode any of the following needs
+to be adapted:
+
+  * `RooAbsArg::constOptimizeTestStatistic()`, `RooAbsArg::findConstantNodes()`,
+    `RooAbsArg::setCacheAndTrackHints()`, `RooAbsArg::canNodeBeCached()` and the
+    `RooAbsArg::ConstOpCode` and `RooAbsArg::CacheMode` enums.
+  * `RooAbsData::cacheArgs()`, `resetCache()`, `setArgStatus()`, `attachCache()`,
+    `optimizeReadingWithCaching()`, `allClientsCached()` and `hasFilledCache()`,
+    together with the corresponding `RooAbsDataStore` interface (`cacheArgs()`,
+    `cacheOwner()`, `attachCache()`, `setArgStatus()`, `resetCache()`,
+    `cachedVars()`, `recalculateCache()` and `forceCacheUpdate()`). Classes
+    deriving from `RooAbsDataStore` no longer need to implement them.
+  * `RooFit::TestStatistics::RooAbsL::constOptimizeTestStatistic()` and
+    `RooFit::TestStatistics::LikelihoodWrapper::constOptimizeTestStatistic()`.
+
+Since the cache-and-track hints are gone, the `"CacheAndTrack"`,
+`"NOCacheAndTrack"` and `"NeverConstant"` attributes no longer have any effect.
 
 The default vectorized CPU evaluation backend (introduced in ROOT 6.32) already performs these optimizations automatically and is not affected by this change.
 Users are strongly encouraged to switch to the vectorized CPU backend if they are still using the legacy backend.

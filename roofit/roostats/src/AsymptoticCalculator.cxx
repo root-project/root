@@ -406,7 +406,6 @@ double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, c
        //LM: RooMinimizer.setPrintLevel has +1 offset - so subtract  here -1
        minim.setPrintLevel(minimPrintLevel-1);
        int status = -1;
-       minim.optimizeConst(2);
        TString minimizer = ""; // empty string to take RooMinimizer default initially
        TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
 
@@ -464,8 +463,6 @@ double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, c
 
        if (fitResult)
           *fitResult = std::move(result);
-
-       minim.optimizeConst(false);
     }
 
     double muTest = 0;

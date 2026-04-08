@@ -17,7 +17,6 @@ if(roofit_multiprocess)
   )
   set(RooFitMPTestStatisticsHeaders
     src/TestStatistics/LikelihoodGradientJob.h
-    src/TestStatistics/ConstantTermsOptimizer.h
     src/TestStatistics/LikelihoodSerial.h
     src/TestStatistics/MinuitFcnGrad.h
     src/TestStatistics/LikelihoodJob.h
@@ -454,7 +453,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooVectorDataStore.cxx
     src/RooWorkspace.cxx
     src/RooWrapperPdf.cxx
-    src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
     src/TestStatistics/LikelihoodWrapper.cxx
