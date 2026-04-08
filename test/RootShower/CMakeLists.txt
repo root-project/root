@@ -39,7 +39,7 @@ file(COPY ".rootshowerrc" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(RootShower ${SOURCES} RootShowerDict.cxx ${RCFILE})
 target_link_libraries(RootShower ROOT::Core ROOT::Rint ROOT::Gui ROOT::RIO ROOT::Hist ROOT::Gpad
-  ROOT::Graf ROOT::EG ROOT::Html ROOT::Geom ROOT::Tree
+  ROOT::Graf ROOT::EG ROOT::Geom ROOT::Tree
 )
 set_target_properties(RootShower PROPERTIES ENABLE_EXPORTS 1)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
