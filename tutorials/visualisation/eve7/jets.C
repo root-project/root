@@ -10,8 +10,6 @@
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveJetCone.hxx>
-#include <ROOT/REveCamera.hxx>
-#include <ROOT/REveTrans.hxx>
 
 namespace REX = ROOT::Experimental;
 
@@ -37,19 +35,7 @@ void makeJets(int N_Jets, REX::REveElement *jetHolder)
 void jets()
 {
    auto eveMng = REX::REveManager::Create();
-   eveMng->AllowMultipleRemoteConnections(false, false);
 
-   auto cam = (REX::REveCamera*)eveMng->FindElementById(8);
-   // auto camTrans = cam->RefCamTrans();
-   REX::REveTrans& camTrans = cam->RefCamTrans();
-   
-   Double_t arr[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1000, -300, 0, 1};
-   camTrans.SetFrom(arr);
-   // auto camTrans1 = cam->RefCamTrans();
-   // camTrans1.Print();
-
-   //eveMng->GetDefaultViewer()->SetCamera(cam);
-   
    REX::REveElement *jetHolder = new REX::REveElement("Jets");
    eveMng->GetEventScene()->AddElement(jetHolder);
    makeJets(7, jetHolder);
