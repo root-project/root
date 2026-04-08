@@ -195,78 +195,6 @@ public:
 
    bool IsTainted() const { return fTainted; }
 
-   /// Add all entries from another statistics object.
-   ///
-   /// Throws an exception if the number of dimensions are not identical.
-   ///
-   /// \param[in] other another statistics object
-   void Add(const RHistStats &other)
-   {
-      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
-      // object.
-      if (fDimensionStats.size() != other.fDimensionStats.size()) {
-         throw std::invalid_argument("number of dimensions not identical in Add");
-      }
-      // For exception safety, first check all dimensions before modifying the object.
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
-            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
-         }
-      }
-
-      fNEntries += other.fNEntries;
-      fSumW += other.fSumW;
-      fSumW2 += other.fSumW2;
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         if (fDimensionStats[i].fEnabled) {
-            fDimensionStats[i].Add(other.fDimensionStats[i]);
-         }
-      }
-      fTainted |= other.fTainted;
-   }
-
-   /// Add all entries from another statistics object using atomic instructions.
-   ///
-   /// Throws an exception if the number of dimensions are not identical.
-   ///
-   /// \param[in] other another statistics object that must not be modified during the operation
-   void AddAtomic(const RHistStats &other)
-   {
-      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
-      // object.
-      if (fDimensionStats.size() != other.fDimensionStats.size()) {
-         throw std::invalid_argument("number of dimensions not identical in AddAtomic");
-      }
-      // For exception safety, first check all dimensions before modifying the object.
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
-            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with AddAtomic");
-         }
-      }
-
-      Internal::AtomicAdd(&fNEntries, other.fNEntries);
-      Internal::AtomicAdd(&fSumW, other.fSumW);
-      Internal::AtomicAdd(&fSumW2, other.fSumW2);
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         if (fDimensionStats[i].fEnabled) {
-            fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
-         }
-      }
-      fTainted |= other.fTainted;
-   }
-
-   /// Clear this statistics object.
-   void Clear()
-   {
-      fNEntries = 0;
-      fSumW = 0;
-      fSumW2 = 0;
-      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
-         fDimensionStats[i].Clear();
-      }
-      fTainted = false;
-   }
-
    /// Compute the number of effective entries.
    ///
    /// \f[
@@ -567,6 +495,78 @@ public:
             Fill(t);
          }
       }
+   }
+
+   /// Add all entries from another statistics object.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object
+   void Add(const RHistStats &other)
+   {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in Add");
+      }
+      // For exception safety, first check all dimensions before modifying the object.
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with Add");
+         }
+      }
+
+      fNEntries += other.fNEntries;
+      fSumW += other.fSumW;
+      fSumW2 += other.fSumW2;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].Add(other.fDimensionStats[i]);
+         }
+      }
+      fTainted |= other.fTainted;
+   }
+
+   /// Add all entries from another statistics object using atomic instructions.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object that must not be modified during the operation
+   void AddAtomic(const RHistStats &other)
+   {
+      // NB: this method does *not* call ThrowIfTainted() to allow adding RHist which may contain a tainted statistics
+      // object.
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in AddAtomic");
+      }
+      // For exception safety, first check all dimensions before modifying the object.
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled != other.fDimensionStats[i].fEnabled) {
+            throw std::invalid_argument("the same dimensions must be enabled to combine statistics with AddAtomic");
+         }
+      }
+
+      Internal::AtomicAdd(&fNEntries, other.fNEntries);
+      Internal::AtomicAdd(&fSumW, other.fSumW);
+      Internal::AtomicAdd(&fSumW2, other.fSumW2);
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         if (fDimensionStats[i].fEnabled) {
+            fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
+         }
+      }
+      fTainted |= other.fTainted;
+   }
+
+   /// Clear this statistics object.
+   void Clear()
+   {
+      fNEntries = 0;
+      fSumW = 0;
+      fSumW2 = 0;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].Clear();
+      }
+      fTainted = false;
    }
 
    /// Scale the histogram statistics.

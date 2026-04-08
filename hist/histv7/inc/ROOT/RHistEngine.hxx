@@ -316,76 +316,6 @@ public:
       SetBinContentImpl(t, std::make_index_sequence<sizeof...(A) - 1>());
    }
 
-   /// Add all bin contents of another histogram.
-   ///
-   /// Throws an exception if the axes configurations are not identical.
-   ///
-   /// \param[in] other another histogram
-   void Add(const RHistEngine &other)
-   {
-      if (fAxes != other.fAxes) {
-         throw std::invalid_argument("axes configurations not identical in Add");
-      }
-      for (std::size_t i = 0; i < fBinContents.size(); i++) {
-         fBinContents[i] += other.fBinContents[i];
-      }
-   }
-
-   /// Add all bin contents of another histogram using atomic instructions.
-   ///
-   /// Throws an exception if the axes configurations are not identical.
-   ///
-   /// \param[in] other another histogram that must not be modified during the operation
-   void AddAtomic(const RHistEngine &other)
-   {
-      if (fAxes != other.fAxes) {
-         throw std::invalid_argument("axes configurations not identical in AddAtomic");
-      }
-      for (std::size_t i = 0; i < fBinContents.size(); i++) {
-         Internal::AtomicAdd(&fBinContents[i], other.fBinContents[i]);
-      }
-   }
-
-   /// Clear all bin contents.
-   void Clear()
-   {
-      for (std::size_t i = 0; i < fBinContents.size(); i++) {
-         fBinContents[i] = {};
-      }
-   }
-
-   /// Clone this histogram engine.
-   ///
-   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
-   ///
-   /// \return the cloned object
-   RHistEngine Clone() const
-   {
-      RHistEngine h(fAxes.Get());
-      for (std::size_t i = 0; i < fBinContents.size(); i++) {
-         h.fBinContents[i] = fBinContents[i];
-      }
-      return h;
-   }
-
-   /// Convert this histogram engine to a different bin content type.
-   ///
-   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
-   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
-   ///
-   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
-   ///
-   /// \return the converted object
-   template <typename U>
-   RHistEngine<U> Convert() const
-   {
-      RHistEngine<U> h(fAxes.Get());
-      for (std::size_t i = 0; i < fBinContents.size(); i++) {
-         h.fBinContents[i] = static_cast<U>(fBinContents[i]);
-      }
-      return h;
-   }
-
    /// Whether this histogram engine type supports weighted filling.
    static constexpr bool SupportsWeightedFilling = !std::is_integral_v<BinContentType>;
 
@@ -632,6 +562,76 @@ public:
             FillAtomic(t);
          }
       }
+   }
+
+   /// Add all bin contents of another histogram.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram
+   void Add(const RHistEngine &other)
+   {
+      if (fAxes != other.fAxes) {
+         throw std::invalid_argument("axes configurations not identical in Add");
+      }
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] += other.fBinContents[i];
+      }
+   }
+
+   /// Add all bin contents of another histogram using atomic instructions.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram that must not be modified during the operation
+   void AddAtomic(const RHistEngine &other)
+   {
+      if (fAxes != other.fAxes) {
+         throw std::invalid_argument("axes configurations not identical in AddAtomic");
+      }
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         Internal::AtomicAdd(&fBinContents[i], other.fBinContents[i]);
+      }
+   }
+
+   /// Clear all bin contents.
+   void Clear()
+   {
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] = {};
+      }
+   }
+
+   /// Clone this histogram engine.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the cloned object
+   RHistEngine Clone() const
+   {
+      RHistEngine h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = fBinContents[i];
+      }
+      return h;
+   }
+
+   /// Convert this histogram engine to a different bin content type.
+   ///
+   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
+   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
+   ///
+   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the converted object
+   template <typename U>
+   RHistEngine<U> Convert() const
+   {
+      RHistEngine<U> h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = static_cast<U>(fBinContents[i]);
+      }
+      return h;
    }
 
    /// Scale all histogram bin contents.

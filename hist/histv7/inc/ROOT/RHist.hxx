@@ -295,63 +295,6 @@ public:
       fStats.Taint();
    }
 
-   /// Add all bin contents and statistics of another histogram.
-   ///
-   /// Throws an exception if the axes configurations are not identical.
-   ///
-   /// \param[in] other another histogram
-   void Add(const RHist &other)
-   {
-      fEngine.Add(other.fEngine);
-      fStats.Add(other.fStats);
-   }
-
-   /// Add all bin contents and statistics of another histogram using atomic instructions.
-   ///
-   /// Throws an exception if the axes configurations are not identical.
-   ///
-   /// \param[in] other another histogram that must not be modified during the operation
-   void AddAtomic(const RHist &other)
-   {
-      fEngine.AddAtomic(other.fEngine);
-      fStats.AddAtomic(other.fStats);
-   }
-
-   /// Clear all bin contents and statistics.
-   void Clear()
-   {
-      fEngine.Clear();
-      fStats.Clear();
-   }
-
-   /// Clone this histogram.
-   ///
-   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
-   ///
-   /// \return the cloned object
-   RHist Clone() const
-   {
-      RHist h(fEngine.Clone());
-      h.fStats = fStats;
-      return h;
-   }
-
-   /// Convert this histogram to a different bin content type.
-   ///
-   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
-   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
-   ///
-   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
-   ///
-   /// \return the converted object
-   template <typename U>
-   RHist<U> Convert() const
-   {
-      RHist<U> h(fEngine.template Convert<U>());
-      h.fStats = fStats;
-      return h;
-   }
-
    /// Fill an entry into the histogram.
    ///
    /// \code
@@ -437,6 +380,63 @@ public:
          fEngine.Fill(args...);
          fStats.Fill(args...);
       }
+   }
+
+   /// Add all bin contents and statistics of another histogram.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram
+   void Add(const RHist &other)
+   {
+      fEngine.Add(other.fEngine);
+      fStats.Add(other.fStats);
+   }
+
+   /// Add all bin contents and statistics of another histogram using atomic instructions.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram that must not be modified during the operation
+   void AddAtomic(const RHist &other)
+   {
+      fEngine.AddAtomic(other.fEngine);
+      fStats.AddAtomic(other.fStats);
+   }
+
+   /// Clear all bin contents and statistics.
+   void Clear()
+   {
+      fEngine.Clear();
+      fStats.Clear();
+   }
+
+   /// Clone this histogram.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the cloned object
+   RHist Clone() const
+   {
+      RHist h(fEngine.Clone());
+      h.fStats = fStats;
+      return h;
+   }
+
+   /// Convert this histogram to a different bin content type.
+   ///
+   /// There is no bounds checking to make sure that the converted values can be represented. Note that it is not
+   /// possible to convert to RBinWithError since the information about individual weights has been lost since filling.
+   ///
+   /// Converting all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the converted object
+   template <typename U>
+   RHist<U> Convert() const
+   {
+      RHist<U> h(fEngine.template Convert<U>());
+      h.fStats = fStats;
+      return h;
    }
 
    /// Scale all histogram bin contents and statistics.
