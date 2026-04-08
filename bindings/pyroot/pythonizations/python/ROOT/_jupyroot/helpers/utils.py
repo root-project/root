@@ -570,6 +570,9 @@ class NotebookDrawerFile:
             if not f:
                 return f"Fail to open file {self.drawFileName}"
 
+            if f.GetVersion() < 30000:
+                return f"File version {f.GetVersion()} is too old and not supported by JSROOT"
+
             sz = f.GetSize()
             if sz > 10000000 and not self.drawForce:
                 return f"File size {sz} is too large for JSROOT display. Use '-f' flag like '%rootbrowse {self.drawFileName} -f' to show file nevertheless"
