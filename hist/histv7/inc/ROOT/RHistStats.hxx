@@ -144,6 +144,9 @@ public:
       fDimensionStats.resize(nDimensions);
    }
 
+   /// \name Accessors
+   /// \{
+
    std::size_t GetNDimensions() const { return fDimensionStats.size(); }
 
    std::uint64_t GetNEntries() const
@@ -194,6 +197,10 @@ public:
    void Taint() { fTainted = true; }
 
    bool IsTainted() const { return fTainted; }
+
+   /// \}
+   /// \name Computations
+   /// \{
 
    /// Compute the number of effective entries.
    ///
@@ -344,6 +351,8 @@ public:
       return (EWX4 - 4 * EWX3 * mean + 6 * EWX2 * mean * mean - 3 * mean * mean * mean * mean) / (var * var) - 3;
    }
 
+   /// \}
+
 private:
    template <std::size_t I, std::size_t N, typename... A>
    void CheckArguments(const std::tuple<A...> &args) const
@@ -396,6 +405,9 @@ private:
    }
 
 public:
+   /// \name Filling
+   /// \{
+
    /// Fill an entry into this statistics object.
    ///
    /// \code
@@ -497,6 +509,10 @@ public:
       }
    }
 
+   /// \}
+   /// \name Operations
+   /// \{
+
    /// Add all entries from another statistics object.
    ///
    /// Throws an exception if the number of dimensions are not identical.
@@ -584,6 +600,8 @@ public:
          }
       }
    }
+
+   /// \}
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistStats"); }
