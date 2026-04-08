@@ -12,6 +12,11 @@
 
 #include "TGComboBox.h"
 
+#include "TF2.h"
+#include "TMath.h"
+#include "TRandom2.h"
+#include "TTree.h"
+
 #include <iostream>
 #include <exception>
 #include <stdexcept>
@@ -34,6 +39,35 @@ int SelectEntry(TGComboBox* cb, const char* name)
    cb->Select(findEntry->EntryId());
 
    return findEntry->EntryId();
+}
+
+void createTree(int n = 100)
+{
+   TTree *tree =  new TTree("tree","2 var gaus tree");
+   double x, y, z, u, v, w;
+   tree->Branch("x", &x, "x/D");
+   tree->Branch("y", &y, "y/D");
+   tree->Branch("z", &z, "z/D");
+   tree->Branch("u", &u, "u/D");
+   tree->Branch("v", &v, "v/D");
+   tree->Branch("w", &w, "w/D");
+   TRandom2 rndm;
+   double origPars[13] = {1,2,3,0.5, 0.5, 0, 3, 0, 4, 0, 5, 1, 10 };
+   TF2 f2("f2", "bigaus", -10, 10,-10, 10);
+   f2.FixParameter(0, 1. / (2. * TMath::Pi() * origPars[1] * origPars[3] * TMath::Sqrt(origPars[4]))); // constant (max-value), irrelevant
+   f2.FixParameter(1, origPars[0]); // mu_x
+   f2.FixParameter(2, origPars[1]); // sigma_x
+   f2.FixParameter(3, origPars[2]); // mu_y
+   f2.FixParameter(4, origPars[3]); // sigma_y
+   f2.FixParameter(5, origPars[4]); // rho
+   for (Int_t i = 0 ; i < n; i++) {
+      f2.GetRandom2(x, y, &rndm);
+      z = rndm.Gaus(origPars[5],origPars[6]);
+      u = rndm.Gaus(origPars[7],origPars[8]);
+      v = rndm.Gaus(origPars[9],origPars[10]);
+      w = rndm.Gaus(origPars[11],origPars[12]);
+      tree->Fill();
+   }
 }
 
 // Class to make the Unit Testing. It is important than the test
@@ -67,7 +101,10 @@ public:
    FitEditorUnitTesting() {
       // Redirect the stdout to a file outputUnitTesting.txt
       old_stdout = dup (fileno (stdout));
-      (void) freopen ("outputUnitTesting.txt", "w", stdout);
+      auto res = freopen ("outputUnitTesting.txt", "w", stdout);
+      if (!res) {
+          throw InvalidPointer("In FitEditorUnitTesting constructor cannot freopen");
+      }
       out = fdopen (old_stdout, "w");
 
       // Execute the initial script
@@ -318,7 +355,7 @@ public:
    }
 
    int TestUpdateTree() {
-      gROOT->ProcessLine(".x ~/tmp/fitpanel/createTree.C++");
+      createTree();
       f->DoUpdate();
       return 0;
    }

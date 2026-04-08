@@ -6,6 +6,6 @@
 
 # @author Danilo Piparo CERN
 
-ROOT_EXECUTABLE(fitPanelUnitTesting UnitTesting.cxx LIBRARIES FitPanel Gui)
+ROOT_EXECUTABLE(fitPanelUnitTesting UnitTesting.cxx LIBRARIES FitPanel Gui Tree Hist MathCore)
 ROOT_ADD_TEST(test-fitpanel-UnitTesting COMMAND fitPanelUnitTesting)
 target_include_directories(fitPanelUnitTesting PRIVATE ../src/)
