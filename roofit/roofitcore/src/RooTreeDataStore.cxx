@@ -165,12 +165,6 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
   // Constructor from existing data set with list of variables that preserves the cache
   initialize();
 
-  attachCache(nullptr,(static_cast<RooTreeDataStore&>(tds))._cachedVars) ;
-
-  // WVE copy values of cached variables here!!!
-  _cacheTree->CopyEntries((static_cast<RooTreeDataStore&>(tds))._cacheTree) ;
-  _cacheOwner = nullptr ;
-
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 }
 
@@ -217,29 +211,6 @@ RooRealVar* RooTreeDataStore::weightVar(const RooArgSet& allVars, const char* wg
   }
   return nullptr ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initialize cache of dataset: attach variables of cache ArgSet
-/// to the corresponding TTree branches
-
-void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVarsIn)
-{
-  // iterate over the cache variables for this dataset
-  _cachedVars.removeAll() ;
-  for (RooAbsArg * var : cachedVarsIn) {
-    var->attachToTree(*_cacheTree,_defTreeBufSize) ;
-    _cachedVars.add(*var) ;
-  }
-  _cacheOwner = newOwner ;
-
-}
-
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -292,9 +263,6 @@ RooTreeDataStore::~RooTreeDataStore()
   if (_tree) {
     delete _tree ;
   }
-  if (_cacheTree) {
-    delete _cacheTree ;
-  }
 }
 
 
@@ -340,12 +308,6 @@ void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
 
   if (notInMemNow) {
     gDirectory->cd(memDir) ;
-  }
-
-  if (!_cacheTree) {
-    _cacheTree = new TTree(TString{name.c_str()} + "_cacheTree", TString{title.c_str()});
-    _cacheTree->SetDirectory(nullptr) ;
-    gDirectory->RecursiveRemove(_cacheTree) ;
   }
 
   if (notInMemNow) {
@@ -522,7 +484,6 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       continue ;
     }
 
-    _cachedVars.assign(static_cast<RooTreeDataStore const*>(ads)->_cachedVars) ;
     fill() ;
   }
 
@@ -554,7 +515,6 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
   checkInit() ;
 
   Int_t ret = _tree->GetEntry(index, 1);
-  _cacheTree->GetEntry(index,1);
 
   if(!ret) return nullptr;
 
@@ -562,11 +522,6 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
     // Raise all dirty flags
     for (auto var : _vars) {
       var->setValueDirty(); // This triggers recalculation of all clients
-    }
-
-    for (auto var : _cachedVars) {
-      var->setValueDirty(); // This triggers recalculation of all clients, but doesn't recalculate self
-      var->clearValueDirty();
     }
   }
 
@@ -936,98 +891,6 @@ void RooTreeDataStore::reset()
 {
   _tree->Reset() ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cache given RooAbsArgs with this tree: The tree is
-/// given direct write access of the args internal cache
-/// the args values is pre-calculated for all data points
-/// in this data collection. Upon a get() call, the
-/// internal cache of 'newVar' will be loaded with the
-/// precalculated value and it's dirty flag will be cleared.
-
-void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool /*skipZeroWeights*/)
-{
-  checkInit() ;
-
-  _cacheOwner = owner ;
-
-  std::unique_ptr<RooArgSet> constExprVarSet{newVarSet.selectByAttrib("ConstantExpression", true)};
-
-  bool doTreeFill = (_cachedVars.empty()) ;
-
-  for (RooAbsArg * arg : *constExprVarSet) {
-    // Attach original newVar to this tree
-    arg->attachToTree(*_cacheTree,_defTreeBufSize) ;
-    //arg->recursiveRedirectServers(_vars) ;
-    _cachedVars.add(*arg) ;
-  }
-
-  // WVE need to reset TTRee buffers to original datamembers here
-  //resetBuffers() ;
-
-  // Refill regular and cached variables of current tree from clone
-  for (int i=0 ; i < _tree->GetEntries() ; i++) {
-    get(i) ;
-
-    // Evaluate the cached variables and store the results
-    for (RooAbsArg * arg : *constExprVarSet) {
-      arg->setValueDirty() ;
-      arg->syncCache(nset) ;
-      if (!doTreeFill) {
-        arg->fillTreeBranch(*_cacheTree) ;
-      }
-    }
-
-    if (doTreeFill) {
-      _cacheTree->Fill() ;
-    }
-  }
-
-  // WVE need to restore TTRee buffers to previous values here
-  //restoreAlternateBuffers() ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Activate or deactivate the branch status of the TTree branch associated
-/// with the given set of dataset observables
-
-void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
-{
-  for (RooAbsArg * arg : set) {
-    RooAbsArg* depArg = _vars.find(arg->GetName()) ;
-    if (!depArg) {
-      coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName()
-             << ") dataset doesn't contain variable " << arg->GetName() << std::endl ;
-      continue ;
-    }
-    depArg->setTreeBranchStatus(*_tree,active) ;
-  }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Remove tree with values of cached observables
-/// and clear list of cached observables
-
-void RooTreeDataStore::resetCache()
-{
-  // Empty list of cached functions
-  _cachedVars.removeAll() ;
-
-  // Delete & recreate cache tree
-  delete _cacheTree ;
-  _cacheTree = nullptr ;
-  createTree(makeTreeName().c_str(), GetTitle());
-
-  return ;
-}
-
 
 
 

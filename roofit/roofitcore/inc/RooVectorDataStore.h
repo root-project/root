@@ -158,18 +158,6 @@ public:
   void attachBuffers(const RooArgSet& extObs) override;
   void resetBuffers() override;
 
-
-  // Constant term  optimizer interface
-  const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
-  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=true) override;
-  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override;
-  void resetCache() override;
-  void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, bool skipZeroWeights) override;
-
-  void setArgStatus(const RooArgSet& set, bool active) override;
-
-  const RooVectorDataStore* cache() const { return _cache ; }
-
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr, std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
   void dump() override;
@@ -184,9 +172,6 @@ public:
 
   void setDirtyProp(bool flag) override {
     _doDirtyProp = flag ;
-    if (_cache) {
-      _cache->setDirtyProp(flag) ;
-    }
   }
 
   const RooArgSet& row() { return _varsww ; }
@@ -559,10 +544,6 @@ public:
 
   RealFullVector* addRealFull(RooAbsReal* real);
 
-  bool hasFilledCache() const override { return _cache ? true : false ; }
-
-  void forceCacheUpdate() override;
-
  private:
   RooArgSet _varsww ;
   RooRealVar* _wgtVar = nullptr; ///< Pointer to weight variable (if set)
@@ -582,11 +563,6 @@ public:
   const double* _extSumW2Array = nullptr;    ///<! External sum of weights array
 
   mutable ULong64_t _currentWeightIndex{0}; ///<
-
-  RooVectorDataStore* _cache = nullptr; ///<! Optimization cache
-  RooAbsArg* _cacheOwner = nullptr; ///<! Cache owner
-
-  bool _forcedUpdate = false; ///<! Request for forced cache update
 
   ClassDefOverride(RooVectorDataStore, 7) // STL-vector-based Data Storage class
 };
