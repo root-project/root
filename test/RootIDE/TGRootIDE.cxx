@@ -145,6 +145,7 @@
 
 
 #include "TROOT.h"
+#include "TVirtualX.h"
 #include "TApplication.h"
 #include "TSystem.h"
 #include "TMacro.h"
@@ -178,7 +179,6 @@
 #include "TUrl.h"
 #include "TSocket.h"
 #include "TImage.h"
-#include "THtml.h"
 #include "TRint.h"
 #include "TProcessID.h"
 #include "Getline.h"
@@ -596,8 +596,7 @@ void TGRootIDE::Build()
    fNbDoc   = 0;
    fCurrentDoc = 0;
    fPid = gSystem->GetPid(); //TProcessID::GetSessionProcessID();
-   fHtml = new THtml();
-
+   
    SetCleanup(kDeepCleanup);
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
@@ -937,9 +936,9 @@ void TGRootIDE::LoadFile(char *fname)
             TString pathtmp = Form("%s/%s.html",
                gSystem->UnixPathName(gSystem->TempDirectory()),
                gSystem->BaseName(fname));
-            fHtml->Convert(fname, fname,
+            /*fHtml->Convert(fname, fname,
                gSystem->UnixPathName(gSystem->TempDirectory()),
-               gSystem->UnixPathName(gSystem->TempDirectory()));
+               gSystem->UnixPathName(gSystem->TempDirectory()));*/
             Selected(Form("file://%s", pathtmp.Data()));
          }
          //gSystem->Unlink(pathtmp.Data());
