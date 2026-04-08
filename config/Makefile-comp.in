@@ -9,3 +9,5 @@ CXX   = @altcxx@
 F77   = @altf77@
 LD    = @altld@
 GCCTOOLCHAIN = @gcctoolchain@
+
+$(warning The use of Makefiles is deprecated since ROOT 6.42 and will be removed in ROOT 7.)
