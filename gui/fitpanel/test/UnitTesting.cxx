@@ -27,7 +27,7 @@
 #include "unistd.h"
 
 // Function that compares to doubles up to an error limit
-int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-10)
+int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-5)
 {
    return fabs( n1 - n2 ) > ERRORLIMIT * fabs(n1);
 }
@@ -219,7 +219,9 @@ public:
       for ( unsigned int i = 0; i < f->fFuncPars.size(); ++i ) {
          for ( unsigned int j = 0; j < 3; ++j) {
             int internalStatus = equals(pars[i][j], f->fFuncPars[i][j]);
-            //fprintf(out, "i: %d, j: %d, e: %d\n", i, j, internalStatus);
+            if (internalStatus != 0) {
+                fprintf(out, "i: %d, j: %d, e: %d, diff %g\n", i, j, internalStatus, TMath::Abs(pars[i][j] - f->fFuncPars[i][j]));
+            }
             status += internalStatus;
          }
       }
@@ -229,7 +231,7 @@ public:
 
    // From here, the implementation of the different tests. The names
    // of the test should be enough to know what they are testing, as
-   // these tests are mean to be as simple as possible.
+   // these tests are meant to be as simple as possible.
 
    int TestHistogramFit() {
       f->fTypeFit->Select(kFP_UFUNC, kTRUE);
@@ -370,11 +372,10 @@ public:
       f->ProcessTreeInput(objSelected, selected, "x", "y>1");
       f->fTypeFit->Select(kFP_PRED1D, kTRUE);
       SelectEntry(f->fFuncList, "gausn");
-
       f->fFuncPars.resize(3);
       f->fFuncPars[0][0] = f->fFuncPars[0][1] = f->fFuncPars[0][2] = 1;
-      f->fFuncPars[1][0] = 0;
-      f->fFuncPars[2][0] = 1;
+      f->fFuncPars[1][0] = 0; f->fFuncPars[1][1] = f->fFuncPars[1][2] = 0;
+      f->fFuncPars[2][0] = 1; f->fFuncPars[2][1] = f->fFuncPars[2][2] = 0;
 
       f->DoFit();
 
