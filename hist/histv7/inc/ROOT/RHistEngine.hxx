@@ -143,6 +143,9 @@ public:
 
    ~RHistEngine() = default;
 
+   /// \name Accessors
+   /// \{
+
    const std::vector<RAxisVariant> &GetAxes() const { return fAxes.Get(); }
    std::size_t GetNDimensions() const { return fAxes.GetNDimensions(); }
    std::uint64_t GetTotalNBins() const { return fBinContents.size(); }
@@ -281,6 +284,9 @@ public:
       fBinContents[index.fIndex] = value;
    }
 
+   /// \}
+   // End the group to ensure that all contained member functions are public.
+
 private:
    template <typename... A, std::size_t... I>
    void SetBinContentImpl(const std::tuple<A...> &args, std::index_sequence<I...>)
@@ -290,6 +296,9 @@ private:
    }
 
 public:
+   /// \name Accessors
+   /// \{
+
    /// Set the content of a single bin.
    ///
    /// \code
@@ -316,8 +325,15 @@ public:
       SetBinContentImpl(t, std::make_index_sequence<sizeof...(A) - 1>());
    }
 
+   /// \}
+
    /// Whether this histogram engine type supports weighted filling.
    static constexpr bool SupportsWeightedFilling = !std::is_integral_v<BinContentType>;
+
+   // SupportsWeightedFilling is not included because it is static, which would mess up the subgrouping below "Public
+   // Member Functions".
+   /// \name Filling
+   /// \{
 
    /// Fill an entry into the histogram.
    ///
@@ -564,6 +580,10 @@ public:
       }
    }
 
+   /// \}
+   /// \name Operations
+   /// \{
+
    /// Add all bin contents of another histogram.
    ///
    /// Throws an exception if the axes configurations are not identical.
@@ -647,6 +667,9 @@ public:
       }
    }
 
+   /// \}
+   // End the group to ensure that all contained member functions are public.
+
 private:
    RHistEngine SliceImpl(const std::vector<RSliceSpec> &sliceSpecs, bool &dropped) const
    {
@@ -700,6 +723,9 @@ private:
    }
 
 public:
+   /// \name Operations
+   /// \{
+
    /// Slice this histogram with an RSliceSpec per dimension.
    ///
    /// With a range, only the specified bins are retained. All other bin contents are transferred to the underflow and
@@ -784,6 +810,8 @@ public:
       std::vector<RSliceSpec> sliceSpecs{args...};
       return Slice(sliceSpecs);
    }
+
+   /// \}
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistEngine"); }

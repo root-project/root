@@ -146,6 +146,9 @@ public:
 
    ~RHist() = default;
 
+   /// \name Accessors
+   /// \{
+
    const RHistEngine<BinContentType> &GetEngine() const { return fEngine; }
    const RHistStats &GetStats() const { return fStats; }
 
@@ -154,12 +157,21 @@ public:
    std::uint64_t GetTotalNBins() const { return fEngine.GetTotalNBins(); }
 
    std::uint64_t GetNEntries() const { return fStats.GetNEntries(); }
+
+   /// \}
+   /// \name Computations
+   /// \{
+
    /// \copydoc RHistStats::ComputeNEffectiveEntries()
    double ComputeNEffectiveEntries() const { return fStats.ComputeNEffectiveEntries(); }
    /// \copydoc RHistStats::ComputeMean()
    double ComputeMean(std::size_t dim = 0) const { return fStats.ComputeMean(dim); }
    /// \copydoc RHistStats::ComputeStdDev()
    double ComputeStdDev(std::size_t dim = 0) const { return fStats.ComputeStdDev(dim); }
+
+   /// \}
+   /// \name Accessors
+   /// \{
 
    /// Get the content of a single bin.
    ///
@@ -295,6 +307,10 @@ public:
       fStats.Taint();
    }
 
+   /// \}
+   /// \name Filling
+   /// \{
+
    /// Fill an entry into the histogram.
    ///
    /// \code
@@ -381,6 +397,10 @@ public:
          fStats.Fill(args...);
       }
    }
+
+   /// \}
+   /// \name Operations
+   /// \{
 
    /// Add all bin contents and statistics of another histogram.
    ///
@@ -558,6 +578,8 @@ public:
       std::vector<RSliceSpec> sliceSpecs{args...};
       return Slice(sliceSpecs);
    }
+
+   /// \}
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHist"); }
