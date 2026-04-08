@@ -262,8 +262,7 @@ public:
    /// \param[in] indices the array of indices for each axis
    /// \param[in] value the new value of the bin content
    /// \par See also
-   /// the \ref SetBinContent(const A &... args) const "variadic function template overload" accepting arguments
-   /// directly
+   /// the \ref SetBinContent(const A &... args) "variadic function template overload" accepting arguments directly
    template <std::size_t N, typename V>
    void SetBinContent(const std::array<RBinIndex, N> &indices, const V &value)
    {
@@ -308,8 +307,8 @@ public:
    ///
    /// \param[in] args the arguments for each axis and the new value of the bin content
    /// \par See also
-   /// the \ref SetBinContent(const std::array<RBinIndex, N> &indices, const V &value) const "function overload"
-   /// accepting `std::array`
+   /// the \ref SetBinContent(const std::array<RBinIndex, N> &indices, const V &value) "function overload" accepting
+   /// `std::array`
    template <typename... A>
    void SetBinContent(const A &...args)
    {
