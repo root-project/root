@@ -894,34 +894,27 @@ sap.ui.define([
          let controls = glViewer.controls;
          
          if (!controls) {
-            sap.m.MessageToast.show("Camera matrix not available");
-            console.error("camBaseMtx not available");
+            sap.m.MessageToast.show("Camera control not available");
+            console.error("controls not available");
             return;
          }
+
+         let camTransMtx = controls.getCamTransMtx();
          
-         let matrixObj = controls.getCamBase();
-
-         if (!matrixObj) {
-            sap.m.MessageToast.show("CamBase not available!");
+         if (!camTransMtx || camTransMtx.length !== 16) {
+            sap.m.MessageToast.show("Camera transform not available!");
             return;
          }
 
-         let matrix = Array.from(matrixObj.elements);
-
-         if (matrix.length !== 16) {
-            sap.m.MessageToast.show("Matrix must have 16 elements!");
-            return;
-         }
-
-         let jsonStr = JSON.stringify(matrix);
-         let mir = 'SetCamBaseMtx("' + jsonStr + '")';
+         let jsonStr = JSON.stringify(camTransMtx);
+         let mir = 'SetCamTransMtx("' + jsonStr + '")';
          
          console.log("Sending MIR:", mir);
          
          this.mgr.SendMIR(mir, viewer.fCameraId, "ROOT::Experimental::REveCamera");
          
          sap.m.MessageToast.show("Camera matrix saved!");
-         console.log("Saved camera matrix:", matrix);
+         console.log("Saved camera matrix:", camTransMtx);
 
       }
    });
